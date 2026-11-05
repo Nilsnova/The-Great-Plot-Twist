@@ -6,13 +6,19 @@ import pytest
 
 from server.flags import UnknownFlagError
 from server.settings import SettingsError, load_settings, settings_from_environment
-from server.tests.helpers import FAKE_PUBLISHABLE_KEY, FAKE_SECRET_KEY, FAKE_URL
+from server.tests.helpers import (
+    FAKE_CRON_SECRET,
+    FAKE_PUBLISHABLE_KEY,
+    FAKE_SECRET_KEY,
+    FAKE_URL,
+)
 
 ALL_VARIABLES = {
     "APP_ENV": "preview",
     "SUPABASE_URL": FAKE_URL,
     "SUPABASE_PUBLISHABLE_KEY": FAKE_PUBLISHABLE_KEY,
     "SUPABASE_SECRET_KEY": FAKE_SECRET_KEY,
+    "CRON_SECRET": FAKE_CRON_SECRET,
     "DEMO_MODE": "true",
     "FEATURE_FLAGS": "raid,sports",
 }
@@ -25,6 +31,7 @@ def test_empty_environment_gives_safe_defaults_for_local_work():
     assert settings.supabase_url == ""
     assert settings.supabase_publishable_key == ""
     assert settings.supabase_secret_key.get_secret_value() == ""
+    assert settings.cron_secret.get_secret_value() == ""
     assert settings.demo_mode is False
     assert not any(settings.flags.values())
 
@@ -36,6 +43,7 @@ def test_every_variable_is_read():
     assert settings.supabase_url == FAKE_URL
     assert settings.supabase_publishable_key == FAKE_PUBLISHABLE_KEY
     assert settings.supabase_secret_key.get_secret_value() == FAKE_SECRET_KEY
+    assert settings.cron_secret.get_secret_value() == FAKE_CRON_SECRET
     assert settings.demo_mode is True
     assert settings.flags["raid"] is True
     assert settings.flags["sports"] is True
@@ -86,6 +94,21 @@ def test_secret_key_is_hidden_in_repr_and_str_but_available_on_purpose():
     assert settings.supabase_secret_key.get_secret_value() == FAKE_SECRET_KEY
 
 
+def test_cron_secret_is_hidden_in_repr_and_str_but_available_on_purpose():
+    settings = load_settings(ALL_VARIABLES)
+
+    assert FAKE_CRON_SECRET not in repr(settings)
+    assert FAKE_CRON_SECRET not in str(settings)
+    assert "not_a_real_secret" not in f"{settings.cron_secret}"
+    assert settings.cron_secret.get_secret_value() == FAKE_CRON_SECRET
+
+
+def test_spaces_around_the_cron_secret_are_removed():
+    settings = load_settings({"CRON_SECRET": f"  {FAKE_CRON_SECRET}  "})
+
+    assert settings.cron_secret.get_secret_value() == FAKE_CRON_SECRET
+
+
 def test_settings_cannot_be_changed_after_they_are_built():
     settings = load_settings({})
 
@@ -98,6 +121,7 @@ def test_settings_from_environment_reads_the_real_environment(monkeypatch):
     monkeypatch.setenv("SUPABASE_URL", FAKE_URL)
     monkeypatch.setenv("SUPABASE_PUBLISHABLE_KEY", FAKE_PUBLISHABLE_KEY)
     monkeypatch.setenv("SUPABASE_SECRET_KEY", FAKE_SECRET_KEY)
+    monkeypatch.setenv("CRON_SECRET", FAKE_CRON_SECRET)
     monkeypatch.setenv("DEMO_MODE", "true")
     monkeypatch.setenv("FEATURE_FLAGS", "raid,sports")
 
@@ -106,3 +130,4 @@ def test_settings_from_environment_reads_the_real_environment(monkeypatch):
     assert settings.app_env == "preview"
     assert settings.demo_mode is True
     assert settings.supabase_url == FAKE_URL
+    assert settings.cron_secret.get_secret_value() == FAKE_CRON_SECRET
