@@ -9,6 +9,7 @@ Where things are (one job per file):
     flags.py           feature flags: which unfinished features are switched on
     clock.py           "what time is it?", replaceable in tests
     auth.py            checks a login token with Supabase and says who the player is
+    sign_in_code.py    swaps the one-time code from the GitHub sign-in for a login token (PKCE)
     supabase_admin.py  server-only calls to the database with the secret key
     wallet.py          the rules for changing a player's coins
     routes/            the URLs of the API (the game calls them; the daily cron calls keepalive)

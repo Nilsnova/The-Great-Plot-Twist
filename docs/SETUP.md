@@ -52,7 +52,7 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 3. Supabase: paste the Client ID and Client Secret into the GitHub provider, switch it on, save.
 4. Supabase: **Authentication > URL Configuration**.
    - Site URL: the production address, e.g. `https://<project>.vercel.app`.
-   - Redirect URLs: `http://localhost:5173/**` and the preview pattern `https://*-<vercel-account-slug>.vercel.app/**`.
+   - Redirect URLs: `http://localhost:5173/**` and the production address `https://<project>.vercel.app/**`. Do **not** add a wildcard for preview addresses (`https://*-<vercel-account-slug>.vercel.app/**`). Anyone can create a Vercel project, and a stranger who can register an address that fits the wildcard (we have not tested whether Vercel allows it) could start a sign-in from their own site and receive a session for any teammate who follows their link. If you need a sign-in on one preview, add that preview's exact address for the test and remove it afterwards. If the wildcard is already in the list, remove it.
 5. Switch the **Email** provider **off** (a new project has it on) and keep magic links, phone and anonymous sign-ins off. The built-in mailer sends 2 emails per hour and only to team members.
 6. **Test:** open **Authentication > Rate Limits** and note whether the free plan lets you raise them. The whole class shares one Wi-Fi address, and sign-in limits are counted per address (for example 30 sign-ins per 5 minutes).
 
@@ -80,19 +80,28 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 
 ## Step 5. Prove it works (15 minutes, once the foundation branch is pushed)
 
-Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 waits for the follow-up pull request.
+Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 waits for the next production deploy that contains the cron entry in `vercel.json`.
 
 | # | Check | Pass when | If it fails |
 |---|---|---|---|
 | 1 | A teammate pushes a branch | Vercel shows the preview as **Ready**, not Blocked | **Test.** Vercel's docs and its newest help article disagree on whether non-owners can deploy on Hobby. Fallback: only Nilsnova merges to `main`, which triggers production. |
 | 2 | Open `/api/health` on the preview | `{"status": "ok", ...}` | Check the `vercel.json` services block and the function logs. |
-| 3 | The daily keep-alive, checked **after** the first successful deploy. It is not in `vercel.json` yet, because cron together with Vercel Services is undocumented. A small follow-up pull request adds it. | Vercel > Cron Jobs lists `/api/keepalive`, and it succeeds on production | **Test.** If cron does not work with Services, use a GitHub Actions schedule (only with Nils' OK) or Supabase Cron. |
+| 3 | The daily keep-alive. The cron entry is now in `vercel.json` (`/api/keepalive`, once a day between 06:00 and 06:59 UTC). Vercel runs crons on **production only**, and cron together with Vercel Services is still undocumented, so confirm it on the next production deploy, with `CRON_SECRET` set for Production (Step 4). | Vercel > Cron Jobs lists `/api/keepalive`, and a run succeeds (`200` in the function log, no `401` or `503`) | **Test.** If the deploy fails because of `crons`, or the entry never shows up, remove it from `vercel.json` and use a GitHub Actions schedule (only with Nils' OK) or Supabase Cron. |
 | 4 | Two test users | each sees only their own rows ([supabase/README.md](../supabase/README.md)) | Stop: fix the access rules before any real data. |
-| 5 | GitHub sign-in on the preview | a round trip ends signed in | Check the callback URL and the redirect list (Step 3). |
+| 5 | GitHub sign-in, on the check page `/auth-check.html` (see below) | a round trip ends with `Signed in as Captain-xxxxxx, coins 0, crews 0` | Check the callback URL and the redirect list (Step 3, and the note below). |
+
+**Before check 5 can work: tell Supabase where the check page lives (one time).** The check page signs in through Supabase and comes back to `/auth-check.html` on the same address, and Supabase sends the browser back only to addresses on its list. In the Supabase dashboard open **Authentication > URL Configuration** and make sure that:
+
+- **Site URL** is `https://the-great-plot-twist.vercel.app`, and
+- **Redirect URLs** lists `https://the-great-plot-twist.vercel.app/**`, next to `http://localhost:5173/**` (and no preview wildcard, see Step 3).
+
+If the address is missing, Supabase sends the browser to the Site URL instead, with a one-time sign-in code in the address bar (never a token), and the check page never sees it. Close that tab (the code is useless without the secret that only the check page's own tab holds), fix the list and try again.
+
+**The check page.** Open `https://the-great-plot-twist.vercel.app/auth-check.html` (use the production address: preview addresses ask for a Vercel login first). It is a team check page, not the game. Press **Sign in with GitHub**. The first sign-in creates your player account, and the page then prints one line from `GET /api/me`: your placeholder name, your coins and how many crews you sit in. **Forget me** clears the login token from the page. The page signs in with Supabase's PKCE flow: it makes a secret and keeps it in its own tab, Supabase sends the browser back with a one-time code (the address never holds a login token, so none ends up in the browser history), and our server swaps the code for a login token (`POST /api/auth/exchange`). The refresh token and GitHub's own token never reach the browser. Do the whole sign-in in one tab: if the page says "This sign-in link does not work any more", the secret was gone (another tab, or the same link used twice), so press the button again. If the page says "Your player record is not set up yet", the account was made before the migration was applied: delete that user under **Authentication > Users** and sign in again ([supabase/README.md](../supabase/README.md#if-someone-signed-in-before-you-ran-the-migration)). The page needs the API on the same address, so it works on Vercel but not (yet) on your laptop, where the Vite dev server does not pass `/api` on to the API.
 
 ## Keep it awake until the demo
 
-Free Supabase projects pause after **7 days of low activity**. The daily keep-alive will run a few small database reads, but it is not in `vercel.json` yet (see Step 5, check 3). Until it is added and checked, nothing keeps the project awake for you. In demo week open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
+Free Supabase projects pause after **7 days of low activity**. The daily keep-alive runs a few small database reads once a day, and its cron entry is in `vercel.json`, but nobody has confirmed yet that Vercel runs it next to Services (see Step 5, check 3). Until check 3 has passed, do not count on it to keep the project awake. In demo week open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
 
 ## Afterwards
 

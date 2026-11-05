@@ -56,9 +56,9 @@
 | Status | Code | Meaning | What the browser does |
 |---|---|---|---|
 | 200 | | It worked. | Show the result. |
-| 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The keep-alive also answers 401 to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
+| 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
 | 403 | `forbidden` | Signed in, but not allowed. Planned for presenter-only routes (`require_host`, package A2). No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. | Show the message. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
 | 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. | Show the message. After `already_applied`, treat the action as done. |
 | 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. | Show the message. Do not resend it unchanged. |
@@ -69,7 +69,7 @@
 
 ## 2. Routes that exist now
 
-Four routes exist, plus FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, and the story in `content` is shortened.
+Seven routes exist, plus FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
 
@@ -86,14 +86,77 @@ GET /api/health
 
 ### GET /api/config
 
-How this server is set up: the environment, demo mode and which feature flags are on. Anyone may call it, and it holds no secret. The game reads it at start-up to show or hide features.
+How this server is set up: the environment, demo mode, which feature flags are on and how to sign in. Anyone may call it, and it holds no secret. The game reads it at start-up to show or hide features, and the sign-in check page reads the Supabase address from it.
 
 ```text
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
+
+`auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the cron secret.
+
+### GET /api/me
+
+Who am I in the game? For signed-in players only. It answers with the caller's own display name, coins and crews. The server reads them with its secret key and a filter on the verified player id (never an id from the request), so the answer can never hold another player's data. Its first user is the sign-in check page, `/auth-check.html` (a plain file in `frontend/public/`: a team check page, not the game, that signs in with GitHub and prints one line from this route).
+
+```text
+GET /api/me
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "displayName": "Captain-3fa85f", "coins": 0, "crews": []}
+```
+
+| Field | Meaning |
+|---|---|
+| `id` | The player's id, from the verified sign-in |
+| `displayName` | `profiles.display_name`. Never the GitHub login name or e-mail address. |
+| `coins` | `wallets.balance`. A new wallet holds 0, which is a normal answer. |
+| `crews` | The crews the player sits in, newest seat first, at most 20. Each one is `{"id", "mode", "status", "seatNo"}`: the crew id, `solo` or `crew`, `forming`, `active` or `finished`, and the player's own seat number (1 to 4). Empty for a player in no crew. |
+
+| Case | Answer |
+|---|---|
+| A good token, and the profile and wallet rows are found | `200` as above |
+| No `Authorization` header, a malformed one, or a token Supabase refuses | `401 unauthorized`, with `WWW-Authenticate: Bearer` |
+| Login is not set up here, or cannot be reached | `503 auth_not_configured` or `503 auth_unavailable` |
+| A good token, but the player has no profile or wallet row: the account was made before the migration was applied, so the sign-up trigger never ran for it | `404 player_not_set_up`. A teammate deletes the user under Authentication > Users and the player signs in again ([supabase/README.md](../supabase/README.md#if-someone-signed-in-before-you-ran-the-migration)). |
+| `SUPABASE_URL` or `SUPABASE_SECRET_KEY` is not set | `503 database_not_configured` |
+| The database cannot be reached | `503 database_unavailable` |
+| The database refuses a read, or answers with something we cannot read | `502 database_error` |
+
+The answer is never cached. The player id stays out of the server's logs. Package A2 extends this route ([section 9](#9-reserved-interfaces)).
+
+### POST /api/auth/exchange
+
+Swaps a one-time sign-in code for a login token. Anyone may call it, because this is how somebody signs in: the proof is the pair of one-time code and secret. Its only user is the sign-in check page. The page signs in with Supabase's PKCE flow, which sends the browser back with a one-time code in the address (`?code=...`) and no token. The page gives that code, and the secret it made before it left for GitHub, to this route. The server swaps them with Supabase and answers with the access token. The refresh token and GitHub's own token stay inside the server, so the browser never holds anything that lasts. The page then calls `GET /api/me` with the access token.
+
+```text
+POST /api/auth/exchange
+Content-Type: application/json
+{"code": "6f1c0c2e-9a52-4b8e-8d3a-0a7c3f1d2b44", "codeVerifier": "<64 characters the page made>"}
+
+200 OK
+Cache-Control: private, no-store
+{"accessToken": "<login token>"}
+```
+
+| Field | Meaning |
+|---|---|
+| `code` | The one-time code from the address. Supabase accepts it once, within 5 minutes. 1 to 200 characters. |
+| `codeVerifier` | The secret the page made before it left for GitHub (PKCE calls it the code verifier). 43 to 128 characters. |
+| `accessToken` | The login token for `Authorization: Bearer`. It stops working after a while (an hour by default in Supabase). |
+
+| Case | Answer |
+|---|---|
+| A good code and the secret that belongs to it | `200` as above |
+| Supabase refuses the code: used before, older than 5 minutes, unknown, or the secret does not fit it | `401 unauthorized`, with `WWW-Authenticate: Bearer`. Supabase's own text is never repeated. |
+| A field is missing, is not text or has the wrong length | `422 validation_error`. Nothing was sent to Supabase. |
+| Login is not set up here, or Supabase cannot be reached, is busy or answers strangely | `503 auth_not_configured` or `503 auth_unavailable` |
+
+The code, the secret and the tokens stay out of the server's logs. Supabase counts requests per address, and every call through this route comes from Vercel's addresses, so a class that signs in together shares one budget. That is fine for a team check page. **The game's own sign-in (package A2) must use the PKCE flow too, never the older "implicit" flow.** The implicit flow puts the refresh token (it never expires on the free plan) and GitHub's token in the address, and the browser writes every address to its history before a page can remove it. A2 can do the exchange itself in the browser with Supabase's client library, and then this route is not needed: it is temporary and goes away with the check page.
 
 ### GET /api/content/{name}
 
@@ -126,9 +189,42 @@ GET /api/content/no-such-content
 {"error": {"code": "content_not_found", "message": "There is no public content with that name."}}
 ```
 
+### GET /api/weather
+
+The real weather of one place, ready for the game (package L1). Anyone may call it, and it holds no secret. It takes no input: the place comes from the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE` (default: Torshavn in the Faroe Islands, a proposal that the team may change at the kickoff), and a query string such as `?place=Paris` is ignored. The weather comes from [Open-Meteo](https://open-meteo.com/) through the cached source in `backend/server/weather/`, so one server instance calls Open-Meteo at most once per 10 minutes, however many players ask.
+
+```text
+GET /api/weather
+
+200 OK
+Cache-Control: public, max-age=300
+{"cloudCover": 1.0, "rain": 0.0, "fog": 0.0, "wind": 0.2, "isDay": false, "summary": "Overcast", "place": "Torshavn, Faroe Islands", "source": "live", "fetchedAt": "2026-11-05T18:03:15Z", "attribution": "Weather data by Open-Meteo.com, adapted for the game"}
+```
+
+| Field | Meaning |
+|---|---|
+| `cloudCover`, `rain`, `fog`, `wind` | Each from 0 to 1, ready for `setWeather` ([section 3](#weather)). The rules that make them are in `backend/server/weather/mapping.py`: the cloud cover divided by 100; the higher of the weather code's rain and the measured precipitation (8 mm an hour is 1); the higher of the weather code's fog and the visibility (10 km or more is 0); the wind speed divided by 60 km/h. Snow shows as lighter rain, because the game has no snow yet. |
+| `isDay` | `true` by day, `false` by night, at the place. |
+| `summary` | The weather in plain words, for example `Light rain, windy`. |
+| `place` | The name of the place the weather belongs to. |
+| `source` | `live`, `cache`, `stale` or `fallback` ([section 1](#1-api-conventions)). |
+| `fetchedAt` | When the numbers were fetched, in UTC. For `fallback` it is the time the answer was recorded. |
+| `attribution` | The credit Open-Meteo asks for, with the note that the numbers were changed: `Weather data by Open-Meteo.com, adapted for the game`. Open-Meteo's CC BY 4.0 licence has three conditions, and the game must meet all of them next to the weather: (1) give the credit, as a link to `https://open-meteo.com/`; (2) link to the licence, with the name `CC BY 4.0` as a link to `https://creativecommons.org/licenses/by/4.0/`; (3) say that the data was changed, which the words "adapted for the game" do. The credit link alone is not enough. `weatherAttribution()` ([section 3](#weather)) gives the words and both addresses. |
+
+| Case | Answer |
+|---|---|
+| Open-Meteo answers | `200`, `source` is `live`, or `cache` for the next 10 minutes |
+| Open-Meteo is down, but an earlier answer exists | `200`, `source` is `stale`, with the time of that earlier answer |
+| Open-Meteo is down from the start | `200`, `source` is `fallback`: one real answer recorded in `backend/content/weather/`, with its own place name and time |
+| Demo mode (`DEMO_MODE=true`) | `200`, `source` is `fallback`; Open-Meteo is never called |
+| Nothing at all: down, and the recorded file is missing or broken | `503 source_unavailable` |
+| Any other method than `GET` | `405 method_not_allowed` |
+
+Only a `200` carries `Cache-Control: public, max-age=300`, so a browser may reuse it for 5 minutes. The open question for Mon 9 about the default place is in [section 11](#11-open-questions-for-mon-9).
+
 ### GET /api/keepalive
 
-Keeps the free Supabase project awake ([ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Only Vercel's daily cron calls it, with the cron secret. It reads one row from `profiles`, `wallet_reasons` and `crews`, stops at the first read that fails, and never answers with database text. The cron entry that will call it is not in `vercel.json` yet.
+Keeps the free Supabase project awake ([ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Only Vercel's daily cron calls it, with the cron secret. It reads one row from `profiles`, `wallet_reasons` and `crews`, stops at the first read that fails, and never answers with database text. The cron entry that calls it is in `vercel.json`: once a day, at some minute between 06:00 and 06:59 UTC (the Hobby plan promises only the hour), on production only. Whether cron really runs together with Vercel Services is confirmed after the next production deploy ([SETUP.md](SETUP.md), Step 5, check 3).
 
 ```text
 GET /api/keepalive
@@ -192,7 +288,17 @@ setWeather({ cloudCover: 0.6, rain: 0.8, fog: 0.2, wind: 0.6 });
 const weatherNow = getWeather(); // a copy: { cloudCover, rain, fog, wind }
 ```
 
-Each field is a number from 0 to 1. A value outside that range is clamped. A field that is missing, unknown or not a finite number keeps its previous value. The live weather package (L1) calls `setWeather` with the values from its reserved route `GET /api/weather`.
+Each field is a number from 0 to 1. A value outside that range is clamped. A field that is missing, unknown or not a finite number keeps its previous value.
+
+The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. All of it must be on screen next to the weather ([section 2](#get-apiweather) says why).
+
+Starting it in the game is a separate step, because `frontend/` belongs to the graphics package. Whoever owns the client does it in these steps:
+
+1. In `frontend/src/main.js`, import it: `import { startLiveWeather, weatherAttribution } from './net/weather.js';`. `setWeather` is already imported there.
+2. Write the `onUpdate(answer)` function. It shows `weatherAttribution(answer)` next to the weather in the HUD, and it may emit `{ type: 'weather_updated', source, fetchedAt }`.
+3. Start it in `startGame()` after the `try { await world.goTo('lighthouse_isle'); } catch ...` block, for example just before `quality(settings.quality)`: `const stopLiveWeather = startLiveWeather({ setWeather, onUpdate });`. Do not start it above that block. When the first place cannot load, that block cleans up and throws without calling `dispose()`, so a timer started earlier would never stop.
+4. Call `stopLiveWeather()` in `dispose()`.
+5. Change the weather sentence in `frontend/GRAPHICS.md`. It says that wind controls the speed of a passage and that weather "makes no API request". With live weather both change: the real wind sets the sailing time, and the game asks `/api/weather`.
 
 ### Other hooks
 
@@ -205,7 +311,7 @@ Each field is a number from 0 to 1. A value outside that range is clamped. A fie
 |---|---|---|
 | `{type: 'travel', to}` and `{type: 'arrived', place}` | G2 | draft |
 | `{type: 'intro_ended', ending}` | S2 | draft |
-| `{type: 'weather_updated', source, fetchedAt}` | L1 | draft |
+| `{type: 'weather_updated', source, fetchedAt}` | L1 | draft; `startLiveWeather` does not emit it itself, whoever wires it in emits it from the `onUpdate` hook |
 | `{type: 'plot_clicked', plot}` | L2 | draft |
 | `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story package S0 (skeleton under review) |
 
@@ -350,12 +456,12 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
 | S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story package S0 (skeleton under review) |
 | S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story package S0 (skeleton under review) |
-| A2 Sign-in, captain names and cloud progress | `GET /api/me` returning `{captainName, coins, kit, place}`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json` | draft |
+| A2 Sign-in, captain names and cloud progress | `GET /api/me` already exists since the sign-in check (section 2, returning `{id, displayName, coins, crews}`): A2 adds `kit` and `place` to it and writes real captain names into `displayName`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json`; sign-in with the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2) | draft |
 | A3 Referee and entry kits | `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit}`; the table `entry_profiles`; the kit coins through `kit_grant` with the fixed `ref` `kit` | draft |
 | A6 Crews and seats | `POST /api/crews` (returns a crew code); `POST /api/crews/join {code}`; `GET /api/crews/me`; crew codes in a new column or table | draft |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
 | A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
-| L1 Live weather | `GET /api/weather?place=` returning `{cloudCover, rain, fog, wind, isDay, source, fetchedAt}`; the event `weather_updated` | draft |
+| L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
 | L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
 | L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story package S0 (skeleton under review) |
 | L4 Island Exchange (the market) | `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings`; the reasons `market_buy` and `market_sell`; `backend/content/companies.json`; the flag `market` | draft |
@@ -414,3 +520,4 @@ What already holds, from the foundation: a reward is paid with `clue_reward` or 
 3. **Switched-off features.** Which status and code does a route answer while its flag is off?
 4. **The keep-alive call.** Vercel Cron, a GitHub Actions schedule (only with Nils' OK) or Supabase Cron, decided after the first deploy ([SETUP.md](SETUP.md), Step 5, check 3).
 5. **Browser contracts after the final look.** G1 confirms that the event bus, the four story trigger ids and `setWeather` stay as written in section 3 when D005 is recorded.
+6. **The default weather place.** Torshavn in the Faroe Islands is the proposal (real fog and storms that suit the story), Lisbon the option (`38.72`, `-9.14`). It is only the default of three settings, so changing it needs no code change. Without a decision the Faroe Islands stay.

@@ -1,0 +1,18 @@
+"""Live weather: the real weather of one place, fetched from Open-Meteo and ready for the game.
+
+This package is the first real outside data source. It follows the pattern in
+server/adapters/base.py (a cache, a timeout and fallbacks) and keeps its three jobs in three
+files, one job each:
+
+    open_meteo.py  talks to Open-Meteo: builds the request, reads the answer into a
+                   WeatherReading. The only file that knows Open-Meteo's field names.
+    source.py      wraps that call in a CachedSource (one call per 10 minutes) with the recorded
+                   answer from backend/content/weather/ as the last fallback.
+    mapping.py     pure arithmetic: turns a WeatherReading into the four sliders the game draws
+                   (cloudCover, rain, fog, wind), plus day or night and a summary in words.
+
+The route that serves it is routes/weather.py (GET /api/weather). The saved answers used for the
+fallback and for the tests are in backend/content/weather/.
+
+Used by: app.py (builds the source once at start-up) and routes/weather.py.
+"""

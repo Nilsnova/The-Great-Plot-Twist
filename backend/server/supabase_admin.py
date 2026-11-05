@@ -15,10 +15,10 @@ What it does:
     function apply_wallet_transaction.
   * select_rows(table, query) reads rows from a table
     (GET {SUPABASE_URL}/rest/v1/<table>?<query>). It can only read, never change anything.
-    The keep-alive route uses it.
+    The keep-alive route and routes/me.py use it.
 
-Used by: wallet.py, routes/keepalive.py, and later any server module that must change data
-players may not touch.
+Used by: wallet.py, routes/keepalive.py, routes/me.py, and later any server module that must
+change data players may not touch.
 """
 
 import logging
