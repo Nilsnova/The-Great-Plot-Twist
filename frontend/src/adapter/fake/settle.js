@@ -9,6 +9,8 @@ export function settleJobs(state) {
     }
     if(job.order==='pin'){pinCard(state,job.cardId,job.seat,job.orderedBy);job.report=`${cardTitles[job.cardId]} is pinned under seat ${job.seat}.`;}
     if(job.order==='man_light'){state.duties.push({seat:job.seat,lightId:job.target});const post=state.night?.posts.find(post=>post.seat===job.seat);if(post)post.reserved=false;job.report='On post at the light.';}
+    if(job.order==='take_post'){const post=state.night?.posts.find(post=>post.seat===job.seat&&post.lightId===job.target);if(post)post.reserved=false;job.report='On post at the light.';}
+    if(job.order==='build_light'){if(job.target==='ruin_light')state.ruinReady=true;else state.stations=true;job.report='The light is ready.';}
     if(job.order==='wait')job.report='Standing by.';
     state.lastReport=job.report;
   }

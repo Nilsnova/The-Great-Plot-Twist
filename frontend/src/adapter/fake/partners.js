@@ -14,13 +14,15 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
   if(order==='fetch'||order==='search'){
     if(order==='search'&&!Object.hasOwn(spotNames,target))return refuse('unknown_spot','That search spot is not registered.');
     if(order==='search'&&['home_driftline'].includes(target))return refuse('players_only','Partners have no home driftline.');
-    cardId=order==='fetch'?target:routes.find(route=>route.spot===target)?.cardId;
+    const spotRoutes=routes.filter(route=>route.spot===target);
+    cardId=order==='fetch'?target:(spotRoutes.find(route=>!state.found[seat].includes(route.cardId)&&routeStatus(state,route,seat,4,true).accepted)??spotRoutes.find(route=>!state.found[seat].includes(route.cardId))??spotRoutes[0])?.cardId;
     if(order==='fetch'&&!cardOpen(state,cardId))return refuse('lead_locked','That card is not an open lead yet.');
     if(cardId&&!cardOpen(state,cardId))cardId=null;
     if(cardId&&state.found[seat].includes(cardId))return refuse('already_have','This card is already in the partner’s satchel.');
     if(cardId){const candidates=routes.filter(route=>route.cardId===cardId&&(order==='fetch'||route.spot===target)&&!route.playersOnly);
       const eligible=candidates.filter(route=>routeStatus(state,route,seat,4,allowPaid).accepted).sort((a,b)=>a.price-b.price);
       if(!eligible.length){const paid=candidates.find(route=>route.price&&routeStatus(state,route,seat,4,true).accepted),timed=candidates.filter(route=>route.window).map(route=>windowStatus(state.now,route.window,4).minutes);
+        const failures=candidates.map(route=>routeStatus(state,route,seat,4,true));if(!paid&&failures.some(result=>result.reason==='no_coins'))return refuse('no_coins','The available shortcut needs more coins.');
         return {...refuse('locked_window',timed.length?`The partner can leave in ${Math.min(...timed)} minutes.`:'This partner cannot use an available free route.'),offer:paid?{seat,order,target,price:paid.price}:null};}
       price=eligible[0].price;}
   }
@@ -31,7 +33,7 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
   }
   if(price>state.coins)return refuse('no_coins','There are not enough play coins.');state.coins-=price;
   state.duties=state.duties.filter(duty=>duty.seat!==seat);
-  if(state.night)state.night.posts=state.night.posts.filter(post=>post.seat!==seat);
+  if(state.night){state.night.posts=state.night.posts.filter(post=>post.seat!==seat);state.night.locks=state.night.locks.filter(lock=>lock.seat!==seat);}
   if(order==='man_light')state.night.posts.push({seat,lightId:target,readyAt:state.now+seconds,reserved:true});
   state.jobs.push({id:++state.jobId,seat,order,target,cardId,price,orderedBy:playerSeat(state),orderedAt:state.now,readyAt:state.now+seconds,done:false});
   return accept(`${member.name} is on the way.`);
