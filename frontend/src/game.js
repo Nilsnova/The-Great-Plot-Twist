@@ -61,7 +61,8 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     start() { active = true; view.start(reducedMotion()); },
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},caseScreen:name=>caseUi?.open(name),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
   });
-  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{hud.setCaptain(view);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}},onArrival:node=>intro.setArrival(node)});
+  const applyCaseView=view=>{hud.setCaptain(view);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
+  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:applyCaseView,onArrival:node=>intro.setArrival(node)});
   const stopListening = on('interact', event => {hud.notify(event.id);if(!intro.active)caseUi.interact(event);});
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
@@ -73,7 +74,8 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
   const createCinematicDemo=new URLSearchParams(location.search).get('demo')==='1'?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
   demo=createCinematicDemo(container,world,{chart,sailing,player:controller.player,view,hud,
     skipCinematic:()=>cinematics.skip(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
-    begin(){shell.play();hud.start();},caption:captions.show,cue:audio.cue});
+    captureCase:()=>({view:caseUi.adapter?.read()??null,world:caseWorld,relit:world.relit}),presentCase:applyCaseView,restoreCase(snapshot){if(snapshot?.view)applyCaseView(snapshot.view);else{caseWorld=snapshot?.world??null;world.setRelightingComplete(!!snapshot?.relit);hud.setCaptain({captain:{name:'Captain pending',coins:null,save:{state:'local',label:'Local intro only'}}});}},
+    begin(){caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
   const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!chart.open};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){

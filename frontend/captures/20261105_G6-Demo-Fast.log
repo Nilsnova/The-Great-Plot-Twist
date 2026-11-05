@@ -1,0 +1,4 @@
+
+> the-great-plot-twist@0.1.0 test:demo
+> node scripts/check-demo.js
+

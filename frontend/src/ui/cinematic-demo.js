@@ -5,7 +5,7 @@ import {node} from './kit/dom.js';
 import {createTour} from '../demo/tour.js';
 export function createCinematicDemo(container,world,ctx={}) {
   if(new URLSearchParams(location.search).get('demo')!=='1')return {active:false,start(){},update(){},dispose(){}};
-  const body=node('div','cinematic-demo-body'),select=node('select'),label=node('label','','Visual beat'),copy=node('p','tour-copy','A 2½-minute local tour. Space skips each beat. No progress or backend writes.');
+  const body=node('div','cinematic-demo-body'),select=node('select'),label=node('label','','Visual beat'),copy=node('p','tour-copy','A short local highlights tour. Space skips each beat. No progress or backend writes.');
   label.append(select);select.setAttribute('aria-label','Cinematic to rehearse');
   cinematicNames.forEach(name=>{const option=node('option','',name.replaceAll('_',' '));option.value=name;select.append(option);});
   const play=createButton({label:'Play visual',onClick:()=>world.cinematic(select.value)}),start=createButton({label:'Start highlights tour',onClick:()=>tour.start()}),next=createButton({label:'Next beat · Space',onClick:()=>tour.advance()}),stop=createButton({label:'End rehearsal',onClick:()=>tour.stop(),variant:'quiet'});
