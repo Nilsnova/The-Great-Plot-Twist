@@ -519,7 +519,7 @@ def test_nothing_secret_appears_in_the_logs_when_everything_works(caplog):
     assert FAKE_SECRET_KEY not in caplog.text
 
 
-# --- the files that ship with this route: the check page and the cron entry ---
+# --- the files that ship with this route: the check page and vercel.json ---
 
 
 @pytest.mark.parametrize("field", ["displayName", "coins", "crews"])
@@ -565,16 +565,20 @@ def test_the_check_page_may_only_run_its_own_script_and_talk_to_its_own_server()
     assert "connect-src 'self'" in page
 
 
-def test_vercel_calls_the_keepalive_route_once_a_day_at_6_utc():
+def test_vercel_json_has_no_cron_entry():
+    # Changed on purpose (5 Nov 2026): these tests used to require a daily "crons" entry for
+    # /api/keepalive. With that entry, every production deploy failed silently on our Vercel
+    # project (cron together with Vercel Services), and the live site stayed on an old version.
+    # The entry was removed in commit 409316e, and the deploys went live again. This test keeps
+    # it from coming back. What calls the keep-alive once a day is a pending decision.
     config = json.loads((REPO_ROOT / "vercel.json").read_text())
 
-    assert config["crons"] == [{"path": "/api/keepalive", "schedule": "0 6 * * *"}]
+    assert "crons" not in config
 
 
-def test_the_path_in_the_cron_entry_is_a_route_of_the_app():
-    # A cron that calls a route which does not exist would fail without anyone noticing, and
-    # the free Supabase project would pause after 7 days.
-    config = json.loads((REPO_ROOT / "vercel.json").read_text())
+def test_the_keepalive_route_still_exists_for_whatever_calls_it():
+    # Whatever ends up calling it daily (see the test above), the route must exist, or the free
+    # Supabase project would pause after 7 days without anyone noticing.
     app_paths = TestClient(create_app(CONFIGURED_SETTINGS)).get("/api/openapi.json").json()["paths"]
 
-    assert config["crons"][0]["path"] in app_paths
+    assert "/api/keepalive" in app_paths
