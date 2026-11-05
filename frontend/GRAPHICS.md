@@ -133,3 +133,30 @@ main.js wires the loop. world/places/registry.js owns identifiers; manager.js ow
 Branch is feat/g2-world-places, based on origin/main f0dc6a0. Root is the sole writer; read-only agents audited architecture and story contracts. Only frontend/ and the authorised G-lane next-step/log lines in docs/STATUS.md change. Claude integrates; no main merge or manual deployment is performed. The previous graphics-foundation branch was merged as 45d2d46 and its issue/PR attempts are historical. The newer foundation main at 393f551 adds docs/INTERFACES.md; its browser contracts were reviewed. The authorised G2 payload extends the older G1 interact example with place, and the registry replaces the proposed content/places.json because content/ is outside this task. Claude can update those draft pointers during integration. Review this branch against main.
 
 Final checks also passed the built game (including reduced-motion chart travel) and both development/production pixel workshops, each decoding all 77 PNGs. Full regeneration reproduced 77 byte-identical files. Commands and results above are scoped to graphics; backend tests were not run because backend code was not changed.
+
+## UI kit
+
+The public entry is src/ui/kit/index.js; import src/ui/kit/kit.css once. Factories return `{element, dispose}`; append element to your container. Components with changing content also expose update(data). All supplied strings use textContent, never interpolated HTML. No framework, DOM test dependency, wallet rule, trading logic or board rule is included. The built `/ui-kit.html` gallery demonstrates real components with fictional sample data and readable 14–17 px text.
+
+| Factory | Use |
+| --- | --- |
+| createPanel({title,body,tone}) | Labelled section; body is text or a caller-owned DOM node |
+| createButton({label,onClick,disabled,variant}) | Native action, primary or quiet; update label/disabled |
+| createIconButton({label,icon,onClick}) | Decorative text icon with a spoken action label |
+| createTabs({items,selected,onChange}) | Items have id/label/body; select(index); arrows/Home/End work |
+| createTable({caption,columns,rows}) | Native table; columns have key/label, rows are display data |
+| createModal({title,body,onClose,onCancel}) | open(parent,focusTarget), close(reason); Escape and invoking focus |
+| createToast({duration}) | show(text,ms), hide(); polite status and owned timeout |
+| createDialogue({speaker,text,choices,portrait,onChoice}) | update(data), complete(), focus(); Enter skips, 1–9/arrows choose |
+| createClueCard({title,body,state,onPin}) | State new/pinned/used; button emits intent without changing board data |
+| createHudBar({coins,place,weather,time,seats}) | Display supplied values; seat has name/kind player or npc |
+| createMiniChart({values,halted,label}) | Native SVG sparkline; no price fetching or trade decisions |
+| createProgress({label,value,max}) | Native labelled progress; values supplied by the feature owner |
+
+Dialogue choices are disabled while text types. Enter or a choice key first reveals the whole line, then a later activation chooses. Screen readers receive the completed line, not a live announcement per character. Reduced motion reveals text immediately. Portrait is {src,alt}; use registered local art. Modals restore the opener's focus, native buttons retain visible focus, and dispose cancels all owned listeners/timers/frames. Dispose child components separately when a panel merely hosts their element. Pure logic tests cover typing/skip, choice keys, supplied integer coin formatting, chart scaling and progress; browser checks cover DOM behaviour and hostile text.
+
+## Cinematics
+
+Planned public contract: world.cinematic(name,params) returns a promise for completion, skip or refusal. Names are three_lights, fog_lift, schooner_reveal, unmask and relighting. Events are plain `{type:'cinematic',name,stage}`; stage is started/completed/skipped/cancelled. Unknown names and overlapping travel/cinematics are refused. Escape skips; reduced motion skips animation. These are visual beats only, not solve/save/reward rules. A finale event whose stage exactly matches a supported name may trigger that beat; the L3 draft has no other assumed stage values.
+
+The crossing beams use registered light ids and beam origins projected onto the sea chart; three_lights defaults to keepers_lamp, harbor_light and islet_signal_station, aiming over the Teeth. The fourth ruin_light participates in relighting. Params and final measured budgets are documented with the completed module. Unmask accepts a reveal art id from the authorised story caller; no culprit mapping, personal identity or reveal prose is bundled. The query-only ?demo=1 selector rehearses visuals without an identity reveal or world-state mutation. Relighting draws the lights/fog; the owning state team separately calls setRelightingComplete after its server decision.

@@ -7,6 +7,7 @@ export default defineConfig({
   build: { rolldownOptions: { input: {
     game: resolve(import.meta.dirname, 'index.html'),
     workshop: resolve(import.meta.dirname, 'asset-library.html'),
+    uiKit: resolve(import.meta.dirname, 'ui-kit.html'),
   } } },
   test: { include: ['tests/**/*.test.js'] },
 });
