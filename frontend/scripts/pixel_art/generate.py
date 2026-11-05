@@ -8,6 +8,9 @@ from props import prop
 from ground import ground
 from destinations import office, beacon, signal, pier, ship
 from nautical import item
+from settlements import assets as settlement_assets
+from place_ground import ground as place_ground, PATHS
+from chart import chart
 
 ROOT=Path(__file__).resolve().parents[2]
 FOLDER=ROOT/'public'/'pixel'
@@ -23,6 +26,10 @@ for name in ['jetty','boat','crate','barrel','rope-coil','lantern','bench','buoy
     assets[name]=prop(name)
 assets.update({'harbour-office':office(),'harbour-beacon':beacon(),'signal-station':signal(),'ferry-pier':pier(),'sailboat':ship(),'dark-schooner':ship(True)})
 for name in ['sealed-letter','torn-page','logbook','compass','brass-star','beacon-fire']:assets[name]=item(name)
+assets.update(settlement_assets())
 for name,image in assets.items():save(image,name,FOLDER)
 save(ground(ROOT),'ground',FOLDER)
+places=ROOT/'public'/'places';places.mkdir(exist_ok=True)
+for id in PATHS:save(place_ground(ROOT,id),id,places)
+save(chart(),'chart',places);save(chart(True),'chart-relit',places)
 print(f'Saved {len(assets)} original pixel sprites and canonical terrain backdrop')

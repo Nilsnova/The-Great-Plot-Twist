@@ -12,7 +12,7 @@ import { createInput } from './core/input.js';
 import { startLoop } from './core/loop.js';
 import { emit, on } from './core/events.js';
 import { createWorld } from './world/places/manager.js';
-import { createLighthousePlace } from './world/places/lighthouse.js';
+import { createPlace } from './world/places/factory.js';
 import { createLifetime } from './world/places/resources.js';
 import { createWater } from './world/water.js';
 import { createSky } from './world/sky.js';
@@ -34,10 +34,7 @@ async function startGame() {
   let active = false, hud, chart, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, transition: (id, options) => sailing.start(id, options),
-    cancelTransition: sailing.skip, createPlace: id => {
-    if (id !== 'lighthouse_isle') throw new Error('This place is still being drawn.');
-    return createLighthousePlace();
-  }, attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+    cancelTransition: sailing.skip, createPlace: id => createPlace({ id }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }

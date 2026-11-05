@@ -20,6 +20,12 @@ const staged = {
   'dark-schooner': [128, 112, 10], 'sealed-letter': [32, 32, 4], 'torn-page': [32, 32, 4],
   logbook: [32, 40, 4], compass: [32, 32, 4], 'brass-star': [24, 24, 4], 'beacon-fire': [32, 48, 4],
 };
+Object.assign(staged, {
+  jail: [112,112,12], 'market-hall': [144,128,12], 'prediction-kiosk': [80,96,12],
+  'sports-pavilion': [144,128,12], cabin: [96,96,12], workshop: [112,112,12],
+  greenhouse: [112,96,12], windmill: [112,160,14], 'notice-board': [48,64,6],
+  'captains-table': [64,48,6], 'build-plot': [144,96,12], 'harbour-office-glow': [128,160,14],
+});
 Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({
   id, file: `${id}.png`, width, height, usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
