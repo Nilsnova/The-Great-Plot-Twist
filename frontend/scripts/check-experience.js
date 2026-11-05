@@ -25,7 +25,7 @@ try {
   check(saved.preferences.quality==='low'&&saved.preferences.master===0.25&&saved.preferences.music===0.2&&saved.preferences.effects===0.8&&saved.preferences.textSpeed===0&&saved.preferences.colourblind,'Every experience preference is saved with bounded values');
   check(Object.keys(saved.preferences).sort().join(',')==='colourblind,effects,master,music,quality,reducedMotion,textSpeed','Preferences contain only documented fields, no account or token data');
   await page.keyboard.press('Escape');await page.getByRole('button',{name:'Credits',exact:true}).click();
-  const credits=await page.locator('.shell-credits').textContent();check((credits.match(/<name>/g)||[]).length===4&&credits.includes('Open-Meteo.com')&&credits.includes('Apache-2.0')&&credits.includes('HPND'),'Credits list four placeholder teammates, data attribution and tool licences');
+  const credits=await page.locator('.shell-credits').textContent();check(await page.locator('.shell-credits ul li').count()===4&&credits.includes('Nils Lenke')&&credits.includes('Open-Meteo.com')&&credits.includes('Binance Vision')&&credits.includes('CC BY-NC-SA 4.0')&&credits.includes('Apache-2.0')&&credits.includes('HPND'),'Credits list four teammates, all data attribution and tool licences');
   await page.keyboard.press('Escape');await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();
   check(await page.locator('[data-preference=quality]').inputValue()==='low'&&await page.locator('[data-preference=colourblind]').isChecked(),'Preferences survive a full page reload');await page.keyboard.press('Escape');
   await startFromTitle(page,{closeIntro:false});

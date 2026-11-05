@@ -197,7 +197,7 @@ Every G5 sound is original executable Web Audio synthesis in `src/audio/`: deter
 
 `src/demo/intro-story.json` is an unchanged public-content copy of `backend/content/story.json` from main `acdd341` (5 November). It contains only the original intro, never the secret case. The tour runs it with the unchanged engine and a memory-only adapter. `src/demo/recorded-weather.json` is a small adapted subset of `backend/content/weather/recorded-fallback.json`: the 5 November 17:00 Torshavn sample, recorded at 17:14:33 UTC. Cloud cover is divided by 100 and wind (13.7 km/h) by 72; precipitation/fog are zero in this recorded sample. Fog and storm tour beats are explicitly labelled local overrides. Credit: **Weather data by Open-Meteo.com, adapted for the game** ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). No provider is called by the demo modules.
 
-The in-game Credits view lists four `<name>` placeholders, no student numbers, Open-Meteo/adaptation/licence links and the same tool licences as this register: Three.js/Vite/Vitest MIT, Playwright Core Apache-2.0 and Pillow HPND. No new dependency was added for G5.
+The in-game Credits view reads `src/shell/team.js`: Nils Lenke and three `<name>` placeholders for teammates to replace in their own first pull requests, with no student numbers. It includes Open-Meteo/adaptation/licence links, Binance live-data credit and Binance Vision recorded-replay credit (CC BY-NC-SA 4.0, reduced to one-minute closing prices for 90 minutes) and the same tool licences as this register: Three.js/Vite/Vitest MIT, Playwright Core Apache-2.0 and Pillow HPND. No new dependency was added for G5.
 
 ### G6 Relighting additions
 
