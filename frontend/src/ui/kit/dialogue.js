@@ -12,13 +12,13 @@ export function createDialogue({ onChoice, ...initial } = {}) {
   let writer, options = [], buttons = [], selected = 0, frame, previous = 0, announced = false;
   function paint() {
     text.textContent = writer.text;
-    buttons.forEach((button,index) => { button.disabled = !writer.done; button.setAttribute('aria-current',String(index===selected)); });
+    buttons.forEach((button,index) => { button.disabled = !writer.done || !!options[index].disabled; button.setAttribute('aria-current',String(index===selected)); });
     const hadSkipFocus = document.activeElement === skip.element;
     skip.element.hidden = writer.done;
-    if (hadSkipFocus && writer.done) (buttons[selected] ?? text).focus();
+    if (hadSkipFocus && writer.done) (buttons.find((button,index)=>index>=selected&&!button.disabled) ?? buttons.find(button=>!button.disabled) ?? text).focus();
     if (writer.done && !announced) { live.textContent = writer.text; announced = true; }
   }
-  function complete() { writer.skip(); cancelAnimationFrame(frame); paint(); (buttons[selected] ?? text).focus(); }
+  function complete() { writer.skip(); cancelAnimationFrame(frame); paint(); (buttons.find((button,index)=>index>=selected&&!button.disabled) ?? buttons.find(button=>!button.disabled) ?? text).focus(); }
   function tick(now) {
     writer.tick(previous ? (now-previous)/1000 : 0); previous = now; paint();
     if (!writer.done) frame = requestAnimationFrame(tick);
@@ -34,11 +34,12 @@ export function createDialogue({ onChoice, ...initial } = {}) {
       image.style.width = `${(data.portrait.width ?? 24)*scale}px`; image.style.height = `${(data.portrait.height ?? 32)*scale}px`; portrait.append(image); }
     options.forEach((option,index) => {
       const li = node('li'), button = node('button','kit-choice',`${index+1}. ${option.label}`); button.type = 'button';
+      button.dataset.choice = option.id;
       button.onclick = () => onChoice?.(option.id,index); button.onfocus = () => { selected=index; };
-      li.append(button); choices.append(li); buttons.push(button);
+      li.append(button); if (option.hint) li.append(node('small','kit-choice-hint',option.hint)); choices.append(li); buttons.push(button);
     });
     paint(); if (!writer.done) frame = requestAnimationFrame(tick);
-    if (keepFocus) (writer.done ? buttons[selected] ?? text : skip.element).focus();
+    if (keepFocus) (writer.done ? buttons.find(button=>!button.disabled) ?? text : skip.element).focus();
   }
   const key = event => {
     if (event.target.closest('input,textarea,select')) return;
@@ -47,10 +48,15 @@ export function createDialogue({ onChoice, ...initial } = {}) {
     if (!next && event.key !== 'Enter') return;
     event.preventDefault(); event.stopPropagation();
     if (!writer.done) { complete(); return; }
+    if (next?.activate && options[next.index].disabled) return;
+    if (next && !next.activate) {
+      const direction = ['ArrowUp','ArrowLeft','End'].includes(event.key) ? -1 : 1;
+      for(let i=0;i<options.length&&options[next.index].disabled;i++) next.index=(next.index+options.length+direction)%options.length;
+    }
     if (next) { selected=next.index; paint(); buttons[selected]?.focus(); if (next.activate) onChoice?.(options[selected].id,selected); }
   };
   element.addEventListener('keydown',key); update(initial);
-  return { element, update, complete, focus() { (writer.done ? buttons[selected] ?? text : skip.element).focus(); },
+  return { element, update, complete, focus() { (writer.done ? buttons.find(button=>!button.disabled) ?? text : skip.element).focus(); },
     dispose() { cancelAnimationFrame(frame); element.removeEventListener('keydown',key); skip.dispose(); element.remove(); },
   };
 }

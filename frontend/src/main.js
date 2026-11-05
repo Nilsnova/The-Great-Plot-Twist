@@ -5,6 +5,8 @@ import './ui/travel.css';
 import './ui/readability.css';
 import './ui/kit/kit.css';
 import './ui/cinematics.css';
+import './ui/intro.css';
+import {createIntro} from './story/intro.js';
 import { createCinematics } from './world/cinematics/controller.js';
 import { createCinematicDemo } from './ui/cinematic-demo.js';
 import { createChart } from './ui/chart.js';
@@ -36,9 +38,9 @@ async function startGame() {
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const character = createCharacter(art, { reducedMotion: reducedMotion() }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
-  let active = false, hud, chart, cinematics, demo, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
+  let active = false, hud, chart, cinematics, demo, intro, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>cinematics?.active ?? false, disposeVisuals(){cinematics?.dispose();demo?.dispose();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>!!(cinematics?.active || intro?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -46,6 +48,7 @@ async function startGame() {
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
   cinematics = createCinematics({container,world,emit,on,reducedMotion,resetInput:input.reset}); world.cinematic = cinematics.play;
+  intro = createIntro({container,world,on,emit,resetInput:input.reset}); world.intro = intro;
   demo = createCinematicDemo(container,world);
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
@@ -64,7 +67,7 @@ async function startGame() {
   quality(settings.quality); graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
-    if (!cinematics.active) {
+    if (!cinematics.active && !intro.active) {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
     if (input.consume('KeyM') && active && !sailing.active) chart.show();
     if (input.consume('Escape')) { if (active) view.start(true); hud.togglePanel(false); }

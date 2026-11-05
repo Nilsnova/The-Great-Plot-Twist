@@ -1,4 +1,5 @@
 // Real-browser smoke checks using an installed Chrome. Saves review screenshots.
+import { stubIntro,dismissIntro } from './intro-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
 import { access, mkdir, writeFile } from 'node:fs/promises';
@@ -28,6 +29,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
+  await stubIntro(page);
   await page.goto(url); await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
   await page.waitForTimeout(1500); // Let shaders and the first shadow map warm up.
   await mkdir('captures', { recursive: true });
@@ -76,7 +78,7 @@ try {
     await page.waitForFunction(id => document.querySelector('.interact')?.dataset.zone === id, zone.id);
     await page.keyboard.down('KeyE');
     await page.waitForFunction(count => window.__received.length >= count, index + 1);
-    await page.waitForTimeout(180); await page.keyboard.up('KeyE');
+    await page.waitForTimeout(180); await page.keyboard.up('KeyE'); await dismissIntro(page);
   }
   const received = await page.evaluate(() => window.__received);
   check(received.length === 4 && received.every((event, index) => event.type === 'interact' && event.id === events[index].id), `All four hooks emit exactly once per held E press: ${JSON.stringify(received)}`);
