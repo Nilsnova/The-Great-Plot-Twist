@@ -1,33 +1,64 @@
-# Active original pixel-art register
+# Original pixel-art register
 
-Nils approved the actual pixel-art gameplay presentation on 5 November 2026 and asked to preserve its style while cleaning and expanding it. The library has **48 original pixel sprites and one baked terrain backdrop**. The active game loads 36 sprites; 12 harbour/mystery assets are staged and stay outside its default preload. All are authored from editable project code. The user-supplied screenshot is local visual inspiration, excluded from Git and runtime distribution; no art, character or map was extracted from it.
+Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-| Family | PNGs | Artwork |
+The shipped library contains **68 sprites and 9 backgrounds/charts, 77 PNGs total**. Sprite sources total 53,788 bytes. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+
+| Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
-| Buildings and layers | 5 | Cottage, matching interior, window-light overlay, boathouse and lighthouse |
-| Forest and nature | 11 | Birch, oak, a second broadleaf crown, pine, rocks, shrub, flowers, grass tuft, fern, reeds and mushrooms |
-| Explorer poses | 9 | Front/back/side standing and two stride poses per view; left is the mirrored side |
-| Coastal props | 11 | Sign, jetty, rowing boat, crate, barrel, rope coil, lantern, bench, buoy, driftwood and gull |
-| Staged harbour/mystery kit | 12 | Harbour office, harbour beacon, signal station, ferry pier, sailboat, dark schooner, sealed letter, torn page, logbook, compass, brass star and beacon fire |
-| Terrain | 1 | Native 1024 × 768 land/grass/path/shore/cliff backdrop using the canonical terrain-height function |
-| **Total** | **49** | **48 sprites + ground.png** |
+| Buildings and layers | 5 | Cottage, interior, matching window light, boathouse, lighthouse |
+| Nature | 11 | Birch, oak, second broadleaf crown, pine, rock, shrub, flowers, grass tuft, fern, reeds, mushrooms |
+| Explorer | 9 | Front/back/side, each with neutral and two stride poses; left mirrors the side |
+| Coastal props | 11 | Sign, jetty, boat, crate, barrel, rope coil, lantern, bench, buoy, driftwood, gull |
+| Selective place/story library | 12 | Harbour office, beacon, signal station, ferry pier, sailboat, dark schooner, sealed letter, torn page, logbook, compass, brass star, beacon fire |
 
-Source PNGs total 69,216 bytes, about 67.6 KiB. The active 36-sprite/ground kit remains 59,904 bytes; staging adds 9,312 source bytes and no game texture requests or draw calls. Native sprite sizes range from 16 × 24 to 96 × 208; building canvases can be 128 × 160. One world unit equals 16 native art pixels. All active textures use nearest sampling, no mipmaps and no antialiasing. Integer display scaling, snapped positions and discrete zoom preserve the pixel grid. PNG alpha supplies transparent backgrounds and hard pixel contact shadows.
+## G2/G3 sprite additions
 
-## Edit and reproduce
+Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors are registered in `src/pixel/catalog.js` at 16 native pixels per world unit. The catalogue's `library` usage means selective loading, including active destination art, rather than default Lighthouse preload.
 
-`src/pixel/catalog.js` defines ids, files, native dimensions and placement anchors. Each PNG lives in `public/pixel/`. Metadata converts native width/height to world units, with the horizontal anchor at centre and the vertical anchor a native-pixel distance from the bottom. The default `loadArt()` kit is pixelArtIds, which selects only entries whose usage is island. The active game requests those PNGs and ground.png. Staged entries use usage library; a future scene can request their ids explicitly. Their art does not implement travel, a harbour, fire behaviour or a story outcome.
+| Sprite id | Native pixels | Purpose and editable source |
+| --- | --- | --- |
+| `harbour-office-glow` | 128 × 160 | Matching office windows, night opacity; settlements.py |
+| `jail` | 112 × 112 | Stone building and barred windows; settlements.py |
+| `market-hall` | 144 × 128 | Island Exchange, green roof and awning; settlements.py |
+| `prediction-kiosk` | 80 × 96 | Map counter and small canopy; settlements.py |
+| `sports-pavilion` | 144 × 128 | Neutral pavilion and pennants; settlements.py |
+| `notice-board` | 48 × 64 | Reward notice, unreadable decorative paper marks; settlements.py |
+| `captains-table` | 64 × 48 | Crew's map/clue table, no conclusions; settlements.py |
+| `cabin` | 96 × 96 | Home plot building; settlements.py |
+| `workshop` | 112 × 112 | Home workshop and crossed tools; settlements.py |
+| `windmill` | 112 × 160 | Static native-pixel sails, home plot; settlements.py |
+| `greenhouse` | 112 × 96 | Glass panels and planted pots; settlements.py |
+| `build-plot` | 144 × 96 | Ground parcel and low corner posts; settlements.py |
+| `back-room` | 96 × 96 | Cove outbuilding; case_places.py, original boathouse source reused |
+| `low-tide-cave` | 112 × 96 | Stone cave entrance; case_places.py |
+| `arena-gate` | 112 × 96 | Stone arch with timber gate; case_places.py |
+| `raid-arch` | 112 × 112 | Tall stone arch and neutral pennants; case_places.py |
+| `watchtower-ruin` | 80 × 144 | Broken masonry tower, future beam origin; case_places.py |
+| `reef` | 96 × 64 | Angular shoreline rocks and water contact; case_places.py |
+| `salvage-yard` | 144 × 112 | Timber hull, shelter and salvage crates; case_places.py |
+| `fog-bank` | 192 × 96 | Translucent clustered fog bands; case_places.py |
 
-`python3 scripts/pixel_art/generate.py` rebuilds the kit. Python Pillow is an authoring dependency, already available in this session; playing/building/testing the app does not need Python. Sources are small files: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py and generate.py. The Node helper scripts/export-pixel-ground.js exports canonical land classes from world/terrain.js rather than guessing the walkable coastline.
+## Backgrounds and charts
 
-The PNG files are original code-authored bitmap assets. No image-generation service, external texture pack, game screenshot, downloaded model or external font is used at runtime. Public/favicon.svg is an original crisp 16-pixel lighthouse mark. Sea/rain/beam/wash effects are original code-generated graphics.
+| File in public/ | Native pixels | Purpose/source |
+| --- | --- | --- |
+| `pixel/ground.png` | 1024 × 768 | Approved Lighthouse terrain; ground.py and canonical terrainHeight |
+| `places/saltreach_harbor.png` | 1024 × 768 | Harbor coast, paths and plaza; place_ground.py |
+| `places/home_islet.png` | 1024 × 768 | Home coast and plot paths; place_ground.py |
+| `places/smugglers_cove.png` | 1024 × 768 | Cove coast and entrance paths; place_ground.py |
+| `places/wreck_point.png` | 1024 × 768 | Salvage beach and paths; place_ground.py |
+| `places/the_teeth.png` | 1024 × 768 | Muted reef islet and paths; place_ground.py |
+| `places/gulls_rest.png` | 1024 × 768 | Locked destination's quiet islet; place_ground.py |
+| `places/chart.png` | 448 × 256 | Marked routes, northern fog, uncharted silhouette; chart.py |
+| `places/chart-relit.png` | 448 × 256 | Chart revealed by the external Relighting gate; chart.py |
 
-## Review and checks
+## Edit, reproduce and inspect
 
-Open `/asset-library.html` for the active pixel workshop. It supports search, family/usage filtering, integer previews, source PNG links and a larger inspection dialog. The gallery labels native dimensions and preview magnification so different-sized sprites are not mistaken for world-scale comparisons.
+From `frontend/`, run `python3 scripts/pixel_art/generate.py`. Pillow is an offline authoring dependency; playing, building and JS testing require no Python. Sources live in `scripts/pixel_art/`: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py, settlements.py, case_places.py, place_ground.py, chart.py and generate.py. The Node helpers export canonical land masks from terrain.js and places/surfaces.js; visual shorelines and walkability use the same functions.
 
-`npm test` includes binary PNG dimension/registration checks, whole-number display scaling, snapping, source provenance/safety and the existing world/input/story contracts. `npm run test:art` decodes all 49 PNGs in real Chrome, checks ground alpha, workshop interactions, active-only requests, integer framebuffer scaling, disabled antialiasing and snapped explorer feet. `npm run test:art:production` repeats the workshop and runtime network checks on the static build. Gameplay/performance and production checks have their own commands in GRAPHICS.md.
+The runtime uses nearest sampling, no mipmaps, a 16-pixel world grid, snapped feet and integer display scaling. The largest textures are 1024 × 768. PNG alpha supplies transparent edges and contact shadows. The chart and sailing scene also use nearest/integer scaling. UI text is separate HTML with readable font sizes, as Nils requested.
 
-Actual review evidence is `captures/20261105_Pixel-*`. Earlier SVGs, their catalogue/viewers and obsolete checks are preserved in archive/paper; they are not active game textures, approved pixel feature kits or implemented future features. The old paper-style counts do not describe the current game.
+Open `/asset-library.html` for the searchable workshop, family/use filters, integer previews and source PNG links. `npm test` checks binary PNG dimensions and registration. `npm run test:art` and `npm run test:art:production` decode all PNGs in real Chrome and check the workshop and selective preload. `npm run test:world` checks the seven places, events, keyboard travel, locks, reduced motion, office glow and ten round trips. Evidence lives in `captures/20261105_World-*` and Pixel-prefixed check files.
 
-Three.js, Vite and Vitest use MIT licences; Playwright Core uses Apache-2.0 and Pillow uses HPND. Package notices accompany their installations. Future external visual assets must be CC0 and recorded here with their exact source and licence before use.
+The favicon is an original SVG lighthouse mark. Water, rain, beams and sky washes are original code graphics. No image-generation service, texture pack, downloaded game art, real company/team logos or external font is used. Retired paper studies remain in archive/paper, excluded from the active build. Three.js, Vite and Vitest use MIT licences, Playwright Core Apache-2.0, and Pillow HPND; package notices accompany their installations.

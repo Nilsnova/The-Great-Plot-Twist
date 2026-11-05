@@ -7,7 +7,7 @@ export function createRenderer(container) {
   renderer.setClearColor('#3d7371'); renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping; renderer.setPixelRatio(1);
   const canvas = renderer.domElement;
-  canvas.setAttribute('aria-label', 'Pixel-art Lighthouse Isle. Use WASD to walk, E to interact, and the wheel to zoom.');
+  canvas.setAttribute('aria-label', 'Pixel-art Saltreach Isles. Use WASD to walk, E to interact, M for the sea chart, and the wheel to zoom.');
   canvas.tabIndex = 0; canvas.style.imageRendering = 'pixelated'; container.append(canvas);
   function resize(camera) {
     const { width, height, scale } = pixelViewport(window.innerWidth, window.innerHeight);

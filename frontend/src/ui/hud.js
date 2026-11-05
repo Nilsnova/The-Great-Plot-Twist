@@ -1,8 +1,9 @@
 // Local DOM interface: arrival card, story prompts and visual debug controls.
+import { places } from '../world/places/registry.js';
 import { settings } from '../config.js';
 import { getWeather, presets, setWeather } from '../world/weather.js';
 
-const names = { cottage: "Keeper's cottage", desk: "Elena's writing desk", shore: 'The old jetty', tower_door: 'Lighthouse door' };
+const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 export function createHud(container, actions) {
   const overlay = document.createElement('div'); overlay.className = 'hud';
   overlay.innerHTML = `
@@ -19,7 +20,7 @@ export function createHud(container, actions) {
     <aside class="island-label" aria-hidden="true"><span>THE KEEPER'S LAST LOG</span><i></i><span>FIELD NOTES &nbsp; / &nbsp; No. 01</span></aside>
     <div class="interact" role="status" hidden><kbd>E</kbd><div><small>Press E</small><strong></strong></div><span aria-hidden="true">↗</span></div>
     <div class="toast" role="status" hidden></div>
-    <footer class="bottom-bar"><div class="controls"><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>E</kbd> investigate</span><span><kbd>SCROLL</kbd> zoom</span></div>
+    <footer class="bottom-bar"><div class="controls"><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>E</kbd> investigate</span><span><kbd>SCROLL</kbd> zoom</span><button class="chart-toggle" aria-label="Open sea chart">Sea chart <kbd>M</kbd></button></div>
       <div class="conditions"><span class="weather-label">Fair skies</span><span class="divider"></span><time>18:24</time><button class="settings-toggle" aria-label="Open visual settings" aria-expanded="false">☷</button></div></footer>
     <section class="debug" aria-label="Visual settings" hidden>
       <div class="panel-heading"><strong>Island atmosphere</strong><button class="close-settings" aria-label="Close visual settings">×</button></div>
@@ -31,6 +32,7 @@ export function createHud(container, actions) {
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
     </section>`;
   container.append(overlay);
+  const timers = [];
   const select = selector => overlay.querySelector(selector);
   const panel = select('.debug'), toggle = select('.settings-toggle');
   function togglePanel(open) {
@@ -38,12 +40,13 @@ export function createHud(container, actions) {
     toggle.setAttribute('aria-expanded', String(!panel.hidden));
     if (panel.hidden) actions.focus();
   }
+  select('.chart-toggle').onclick = () => actions.chart();
   toggle.onclick = () => togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
   select('#explore').onclick = () => {
     select('.arrival').classList.add('departed'); select('.location').hidden = false;
     overlay.classList.add('exploring'); actions.start();
-    window.setTimeout(() => { select('.arrival').hidden = true; }, 650);
-    window.setTimeout(() => { select('.location').hidden = true; }, 5000);
+    timers.push(window.setTimeout(() => { select('.arrival').hidden = true; }, 650));
+    timers.push(window.setTimeout(() => { select('.location').hidden = true; }, 5000));
     actions.focus();
   };
   select('#hour').oninput = event => { settings.hour = Number(event.target.value); };
@@ -55,6 +58,12 @@ export function createHud(container, actions) {
   }; });
   let toastUntil = 0, syncAt = 0;
   return { togglePanel,
+    dispose() { timers.forEach(clearTimeout); overlay.remove(); },
+    arrive(id) {
+      select('.chapter').childNodes[1].textContent = ` ${places[id].name.toUpperCase()} `;
+      select('.location strong').textContent = places[id].name;
+    },
+    message(text) { select('.toast').textContent = text; select('.toast').hidden = false; toastUntil = performance.now() + 3000; },
     notify(id) {
       const toast = select('.toast');
       toast.textContent = names[id]; toast.hidden = false;

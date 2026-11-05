@@ -5,11 +5,11 @@ import { createLighthouse } from './lighthouse.js';
 import { createScenery } from './scenery.js';
 import { createDecorations } from './decorations.js';
 
-export function createIsland(scene, art) {
+export function createIsland(scene, art, terrainTexture) {
   const buildings = createBuildings(art), scenery = createScenery(art);
   const decorations = createDecorations(art);
   const tower = createLighthouse(scene, art);
-  scene.add(createTerrain(), buildings.group, scenery.group, decorations.group);
+  scene.add(createTerrain(terrainTexture), buildings.group, scenery.group, decorations.group);
   return { colliders: [...buildings.colliders, tower.collider, ...scenery.colliders, ...decorations.colliders],
     update(player, time, night, weather) {
       buildings.update(player, night); tower.update(time, night); scenery.update(time, weather.wind, player);

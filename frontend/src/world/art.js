@@ -1,5 +1,6 @@
 // Load selected original PNGs and place anchored sprites on the native pixel grid.
 import * as THREE from 'three';
+import { loadTexture } from './texture.js';
 import { pixelArtIds, pixelById, pixelSizes, snapPixel } from '../pixel/catalog.js';
 export const artSizes = pixelSizes;
 
@@ -8,15 +9,17 @@ export async function loadArt(names = pixelArtIds) {
   const ids = [...new Set(names)];
   for (const id of ids) if (!Object.hasOwn(artSizes, id)) throw new Error(`Unknown drawing: ${id}`);
   const loader = new THREE.TextureLoader(), materials = {};
-  await Promise.all(ids.map(async name => {
+  const results = await Promise.allSettled(ids.map(async name => {
     const path = `pixel/${name}.png`;
-    const texture = await loader.loadAsync(`${import.meta.env.BASE_URL}${path}`);
+    const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`, loader);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter;
     texture.generateMipmaps = false; texture.anisotropy = 1;
     materials[name] = new THREE.MeshBasicMaterial({ map: texture, transparent: true,
       depthTest: false, depthWrite: false, toneMapped: false });
   }));
+  const failed = results.find(result => result.status === 'rejected');
+  if (failed) { Object.values(materials).forEach(material => { material.map.dispose(); material.dispose(); }); throw failed.reason; }
   return materials;
 }
 export function projectPoint(x, z) { return { x, y: -z * 0.72 }; }

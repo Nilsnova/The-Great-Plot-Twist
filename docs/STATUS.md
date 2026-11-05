@@ -114,84 +114,11 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**Done: G1 finish.** Codex's pixel pass is on `main` (`45d2d46`). The brief below is kept for reference.
+**Done on `feat/g2-world-places`, awaiting Claude's integration: G2 + G3 and the authorised home/case visuals.** Seven places share one lifecycle manager, a keyboard sea chart and weather-driven skippable sailing. Saltreach Harbor has eleven hotspots and a night-lit office window visible from the docks. Home has four selectable plots and five building types. Case stubs cover Cove, Wreck Point, the Teeth and locked Gull's Rest. The registry and all event/light contracts are in `frontend/GRAPHICS.md`; every new original sprite is in `frontend/ASSETS.md`.
 
-```text
-Goal:        Bring Codex's final pixel pass from feat/graphics-foundation onto main, inside
-             frontend/, as its own pull request, and write the D005 entry for the look
-             (top-down original pixel art).
-Who:         <teammate, Nils by default> with <agent>. Start only when Codex has reported
-             done and Nils agrees to the merge.
-Read first:  AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md (sections 1, 3 and 9),
-             ROADMAP.md (G1 and "Merge order"), frontend/GRAPHICS.md, frontend/ASSETS.md,
-             docs/DECISIONS.md.
-Scope:       You may change: frontend/ (only what the pixel pass brings), docs/DECISIONS.md
-             (the D005 entry), docs/STATUS.md.
-             Do not touch: backend/, supabase/, content/, vercel.json, README.md and the team
-             policy files. Keep the contracts in frontend/GRAPHICS.md: the event bus, the zone
-             ids cottage, desk, shore and tower_door, and setWeather/getWeather. If one of them
-             must change, stop and ask me.
-             No new dependencies unless I say so. No secrets in any file.
-             Never commit style reference images (for example references/): they are not our
-             art, and this repository is public.
-Git:         Create branch chore/g1-final-pass from main and merge feat/graphics-foundation
-             into it. That branch already merged main (cc7174d) and keeps the frontend/
-             layout, so nothing should need moving. Still check git status: no game files may
-             sit at the repository root (src/, public/, tests/, scripts/, *.html). Commit and
-             push only when I say so.
-Done when:   cd frontend && npm test passes and npm run build works (paste both result lines);
-             the game runs with npm run dev and the four zones still emit interact;
-             frontend/ASSETS.md lists every shipped asset as our own; frontend/GRAPHICS.md says
-             to run its commands inside frontend/; D005 names the style (top-down original
-             pixel art, sprites drawn by code, 16 native pixels per world unit, nearest-neighbour
-             scaling) and says that Nils decided the look on 5 Nov; screenshots of the new look
-             are in the pull request.
-Method:      Small steps. Read the whole diff before you ask for review. One job per file and
-             a header comment in every file.
-Report:      Finish with: changed, verified (exact commands and result lines), not verified,
-             remaining, branch/PR. Then add one line at the top of the Log in docs/STATUS.md
-             and update "Right now" and "Next steps" for the G lane.
-```
-
-**Now: G2 + G3, in progress (Codex, for Nils) on `feat/g2-world-places`.** Nils gave Codex a prompt that fixes every place, hotspot and light id; Codex documents them in `frontend/GRAPHICS.md`. The brief below is kept for reference.
-
-```text
-Goal:        One place at a time and a sea chart for travel. Lighthouse Isle, Saltreach Harbor
-             and the home islet are places; Smugglers' Cove, Wreck Point and the Teeth are
-             chart stops (package G2 in ROADMAP.md).
-Who:         <teammate> with <agent>. Start after G1 finish is merged.
-Read first:  AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md (sections 1 and 5, recipe 4.3),
-             ROADMAP.md (G2, G3, L2), docs/STORY.md (section 2, The world), frontend/GRAPHICS.md,
-             docs/INTERFACES.md (coming with the foundation update), frontend/src/world/island.js,
-             frontend/src/world/zones.js, frontend/src/core/events.js.
-Scope:       You may change: frontend/src/world/ (new places.js and chart.js; island.js wrapped
-             as the place "lighthouse"), frontend/src/main.js (wiring only), frontend/tests/
-             (new places.test.js), content/places.json (new; if content/ does not exist yet,
-             add it with a short README.md), frontend/GRAPHICS.md (the new contracts) and
-             frontend/ASSETS.md (new art). New art follows D005: original top-down pixel art.
-             Do not touch: backend/, supabase/, frontend/src/story/, the four zone ids and the
-             shape of the interact event. No new dependencies unless I say so. No secrets.
-Contract:    Write these in frontend/GRAPHICS.md before you code: createPlace(ctx) returns
-             {group, zones, anchors, colliders, update(dt), dispose()}; world.goTo(placeId);
-             events {type:'travel', to} and {type:'arrived', place}; content/places.json holds
-             place ids, hotspot ids and positions, and chart positions. Ids are lowercase with
-             underscores.
-Watch out:   Reading ../content from frontend/ may need Vite's server.fs.allow setting. Check
-             it with npm run dev, npm run build and on a Vercel preview.
-Git:         Work on branch feat/g2-world-places from main. Commit and push only when I say so.
-Done when:   Vitest covers the travel table (a refused trip changes nothing) and dispose()
-             (nothing is left behind after 10 round trips). cd frontend && npm test and
-             npm run build pass (paste the lines). fps stays within the budget in
-             frontend/GRAPHICS.md after 10 round trips, with no console errors. Screenshots of
-             the chart and one trip are in the pull request.
-             Minimum version first: the chart plus a fade, chart stops as scene panels.
-Method:      Write the tests first and watch them fail. Keep rules and math in files that do
-             not import Three.js, so Vitest can test them. Files under 150 lines, one job each,
-             a header comment in every file, plain names.
-Report:      Finish with: changed, verified (exact commands and result lines), not verified,
-             remaining, branch/PR. Then add one line at the top of the Log in docs/STATUS.md
-             and update "Right now" and "Next steps" for the G lane.
-```
+- **Verified:** 36 Vitest tests in 8 files, production build, original Lighthouse browser regression, 55 world-browser assertions, ten complete round trips with stable resource counts, production/reduced-motion travel, 77 PNGs in development and production, and readable 14–16 px controls/labels at three desktop window sizes. Rebuilding all art reproduced 77 byte-identical PNGs. Evidence and exact commands are in `frontend/GRAPHICS.md` and `frontend/captures/20261105_World-*`.
+- **Next:** Claude reviews and integrates this branch. The story/world-state owner connects `world.setRelightingComplete`; G4 can use the four registered beam origins. Backend saving/building rules remain with L2's owner. S2 can follow when `frontend/src/story/engine.js` and its README land on main; they were absent at `393f551`, so the optional phase was skipped.
+- **Not verified:** other browsers/GPUs, touch controls, a sustained long-session soak, or live backend/story/state integration. No main merge or manual deployment was performed.
 
 ### S Story and Mystery (owner picked today)
 
@@ -477,6 +404,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ## Log
 
 Newest first. One line per finished task: date, who, what, where.
+
+- **2026-11-05.** Codex, for Nils: built G2/G3 Saltreach Isles, four home plots and case-place visuals on `feat/g2-world-places`; 68 original sprites + 9 backgrounds/charts, exact place/hotspot/light events, readable UI, 36 unit tests and real-browser/build/art checks pass; ten round trips retain 96 geometries/27 textures/one place root at 60 FPS. Contracts, asset sources and screenshots are in `frontend/`. Ready for Claude to integrate; no backend/story logic or main merge.
 
 - **2026-11-05, evening.** Claude, for Nils: merged Codex's final pixel pass (`45d2d46`; 27 frontend and 232 backend tests pass, build OK) and these team documents (`c9e710a`) into `main`. Nils decided: the Island Exchange is core (minimum version first; L2 and G3 minimum); the team brings the original story into this repo itself (S1, Claude for Nils, `feat/s1-import-plot-twist`); Codex builds G2 + G3 on `feat/g2-world-places`. Still in progress: foundation wave 2 (`chore/foundation`) and the S0 story detail round (`docs/story-detail`).
 

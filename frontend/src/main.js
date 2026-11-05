@@ -1,15 +1,21 @@
-// Connects world, player, UI and the frame loop. Story logic plugs into events.js.
+// Connects place lifetime, the explorer, weather and the frame loop. No story rules.
 import * as THREE from 'three';
 import './ui/styles.css';
+import './ui/travel.css';
+import './ui/readability.css';
+import { createChart } from './ui/chart.js';
+import { createSailing } from './ui/sailing.js';
 import { settings } from './config.js';
 import { loadArt } from './world/art.js';
+import { pixelArtIds } from './pixel/catalog.js';
 import { createRenderer } from './core/renderer.js';
 import { createInput } from './core/input.js';
 import { startLoop } from './core/loop.js';
 import { emit, on } from './core/events.js';
-import { createIsland } from './world/island.js';
+import { createWorld } from './world/places/manager.js';
+import { createPlace } from './world/places/factory.js';
+import { createLifetime } from './world/places/resources.js';
 import { createWater } from './world/water.js';
-import { createBoat } from './world/boat.js';
 import { createSky } from './world/sky.js';
 import { createWeather, presets, setWeather } from './world/weather.js';
 import { findZone } from './world/zones.js';
@@ -20,34 +26,51 @@ import { createHud } from './ui/hud.js';
 
 async function startGame() {
   const container = document.querySelector('#game'), scene = new THREE.Scene();
-  const art = await loadArt();
+  const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
-  const island = createIsland(scene, art), water = createWater(scene), boat = createBoat(scene, art);
-  const sky = createSky(scene), weather = createWeather(scene);
-  const character = createCharacter(art, { reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
-  scene.add(character.sprite);
-  const controller = createController(character, input, island.colliders), view = createCamera(input);
-  let active = false, hud, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
+  const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
+  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const character = createCharacter(art, { reducedMotion: reducedMotion() }); scene.add(character.sprite);
+  const controller = createController(character, input, []), view = createCamera(input);
+  let active = false, hud, chart, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
+  const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
+  const world = createWorld({ emit, transition: (id, options) => sailing.start(id, options),
+    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
+      isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+  async function travel(id, options) {
+    try { await world.goTo(id, options); }
+    catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
+  }
+  chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
-    start() { active = true; view.start(matchMedia('(prefers-reduced-motion: reduce)').matches); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, quality,
+    start() { active = true; view.start(reducedMotion()); },
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, quality, chart() { if (active) chart.show(); },
   });
   const stopListening = on('interact', event => hud.notify(event.id));
+  const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
+  const stopArrivals = on('arrived', event => hud.arrive(event.place));
+  try { await world.goTo('lighthouse_isle'); }
+  catch (error) {
+    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
+  }
   quality(settings.quality); graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
+    if (input.consume('KeyM') && active && !sailing.active) chart.show();
     if (input.consume('Escape')) { if (active) view.start(true); hud.togglePanel(false); }
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     settings.hour = (settings.hour + delta * (settings.fastTime ? 0.8 : 0.003)) % 24;
-    controller.update(delta, active);
+    controller.update(delta, active && !world.busy && !chart.open);
     const state = weather.update(delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
-    water.update(time, state); boat.update(time, state);
-    island.update(controller.player.position, time, night, state); view.update(delta, controller.player.position);
-    const zone = active ? findZone(controller.player.position) : null;
-    if (input.consume('KeyE') && zone) emit({ type: 'interact', id: zone });
+    water.update(time, state); sailing.update(delta);
+    world.update(delta, { player: controller.player.position, time, night, weather: state });
+    view.update(delta, controller.player.position);
+    const zone = active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
+    if (input.consume('KeyE') && zone) world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
@@ -55,27 +78,19 @@ async function startGame() {
     const info = graphics.renderer.info.render;
     hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night }); input.endFrame();
   }, () => { graphics.renderer.render(scene, view.camera); });
-  // A local dev-only inspection seam; never included in the production build.
+  // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on };
+    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing };
   function dispose() {
-    stop(); stopListening(); input.dispose(); window.removeEventListener('resize', resize);
-    const materials = new Set();
-    scene.traverse(object => {
-      object.geometry?.dispose();
-      if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material));
-    });
-    Object.values(art).forEach(material => materials.add(material));
-    const textures = new Set();
-    materials.forEach(material => { if (material.map) textures.add(material.map); material.dispose(); });
-    textures.forEach(texture => texture.dispose());
+    stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
-    event.preventDefault(); stop();
+    event.preventDefault(); dispose();
     container.innerHTML = '<p class="error">Graphics paused. Reload the page to restore the island.</p>';
-  });
+  }, { once: true });
 }
 startGame().catch(error => {
   console.error(error);

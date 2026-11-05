@@ -12,21 +12,21 @@ export function overlapsCollider(x, z, collider, radius = PLAYER_RADIUS) {
   const closestZ = Math.max(collider.z - collider.depth / 2, Math.min(z, collider.z + collider.depth / 2));
   return Math.hypot(x - closestX, z - closestZ) < radius;
 }
-export function canStand(x, z, colliders = []) {
+export function canStand(x, z, colliders = [], groundAt = groundHeight) {
   // Test the edge of the character as well as its centre to keep feet on land.
   for (let i = 0; i < 8; i++) {
     const angle = i * Math.PI / 4;
-    if (groundHeight(x + Math.cos(angle) * PLAYER_RADIUS, z + Math.sin(angle) * PLAYER_RADIUS) < LAND_LIMIT) return false;
+    if (groundAt(x + Math.cos(angle) * PLAYER_RADIUS, z + Math.sin(angle) * PLAYER_RADIUS) < LAND_LIMIT) return false;
   }
   return !colliders.some(collider => overlapsCollider(x, z, collider));
 }
-export function moveWithCollisions(position, dx, dz, colliders) {
+export function moveWithCollisions(position, dx, dz, colliders, groundAt = groundHeight) {
   let { x, z } = position;
   // Small steps prevent running through thin cottage walls after a slow frame.
   const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / 0.15));
   for (let i = 0; i < steps; i++) {
-    if (canStand(x + dx / steps, z, colliders)) x += dx / steps;
-    if (canStand(x, z + dz / steps, colliders)) z += dz / steps;
+    if (canStand(x + dx / steps, z, colliders, groundAt)) x += dx / steps;
+    if (canStand(x, z + dz / steps, colliders, groundAt)) z += dz / steps;
   }
-  return { x, y: groundHeight(x, z), z };
+  return { x, y: groundAt(x, z), z };
 }

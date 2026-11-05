@@ -1,0 +1,35 @@
+Task: the Saltreach Isles world for "The Great Plot Twist" (packages G2 + G3, plus place stubs)
+You work for Nils Lenke (World and Graphics lane) on a four-person student project. The team builds with coding agents; another agent (Claude) integrates branches into main, and other agents work in parallel on the backend, the database, the story engine and the story content. Every line you write must be easy to explain in a code walkthrough.
+
+Start
+In this folder: git switch -c feat/g2-world-places origin/main (your previous branch is merged into main).
+Read first: AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md, docs/STATUS.md, ROADMAP.md (packages G2, G3, G4, L2), docs/STORY.md (the world and the case; it contains spoilers, keep them out of player-facing text), frontend/GRAPHICS.md and frontend/ASSETS.md (the approved pixel-art rules). If docs/INTERFACES.md exists on main, follow it.
+Work only inside frontend/ plus one log line in docs/STATUS.md (see the end). Do not touch backend/, supabase/, content/, vercel.json or other docs; other agents own them.
+Look
+Keep the approved style exactly: original, code-authored top-down pixel art (the generator in frontend/scripts/pixel_art/), one world unit = 16 native pixels, nearest sampling, integer scaling, snapped positions, gold reserved for light, interaction and clues. All new art is original and authored by our generator; record every new sprite in frontend/ASSETS.md. No external assets.
+
+Build (in this order; commit after each step with a clear message such as feat: add the sea chart)
+Place system (G2). A place manager that loads one place at a time and fully disposes the previous one. Contract: createPlace(ctx) returns { id, group, zones, anchors, colliders, lights, update(dt), dispose() }; world.goTo(placeId); events on the existing bus: { type: 'travel', to }, { type: 'arrived', place }, and every hotspot keeps emitting { type: 'interact', id, place }. Lighthouse Isle becomes the first place without losing anything that works today.
+Sea chart and sailing. A pixel sea chart of the Saltreach Isles: the places below, routes between them, a fog bank over the Teeth, and uncharted silhouettes for places not yet open. Click a place to sail: a short sailing scene (about 5 seconds, skippable) whose speed and wave motion read getWeather().wind, then arrival. A fast-travel option and a fade fallback for low quality.
+Saltreach Harbor (G3). The shared hub: docks, the Harbor Office with its lit window (an important story hint: it must glow at night and be visible from the docks), the Harbor Light, the ferry pier, the jail, the market hall (Island Exchange), the prediction kiosk, the sports pavilion, the signal station, the notice board (the harbor master's reward notice) and the Captain's Table (the crew's clue board). Hotspots only: no story logic, no backend calls.
+Home islet (L2 visuals only). A small islet with 4 build plots, emitting { type: 'plot_clicked', plot }, and pixel sprites for cabin, workshop, windmill, greenhouse and signal station placed by a plain data list (saving comes later from the backend).
+Case place stubs. Smugglers' Cove (back room, low-tide cave, arena gate), Wreck Point (salvage yard, beach), the Teeth (reef, watchtower ruin, raid arch, fog bank) and Gull's Rest (locked until the Relighting). Minimum detail is fine; every hotspot exists and emits its id.
+Ids (use exactly these; the story and backend teams code against them)
+Places: lighthouse_isle, saltreach_harbor, home_islet, smugglers_cove, wreck_point, the_teeth, gulls_rest.
+Hotspots: Lighthouse Isle keeps cottage, desk, shore, tower_door and the anchors stairwell, lamp_room. Harbor: harbor_office, harbor_office_window, harbor_light, ferry_pier, jail, market_hall, prediction_kiosk, sports_pavilion, signal_station, notice_board, captains_table. Islet: plot_1 to plot_4, islet_signal_station. Cove: back_room, low_tide_cave, arena_gate. Wreck Point: salvage_yard, beach. The Teeth: reef, watchtower_ruin, raid_arch, fog_bank.
+Lights that a later finale (G4) will aim: keepers_lamp, harbor_light, islet_signal_station, ruin_light. Give each place's lights an id and a beam origin in lights. If a story document on main already uses different ids for the same thing, keep these ids and add a mapping table in GRAPHICS.md instead of renaming.
+Contracts document
+Add a section "Places, hotspots, lights and events" to frontend/GRAPHICS.md: every place id, hotspot id, anchor, light id and event, with one line each on what it means. Keep the registry in one module (for example frontend/src/world/places/registry.js) so tests and other teams read ids from one place.
+
+Quality
+Performance: keep the existing budget; one place in memory at a time; measure after 10 round trips with the existing browser check scripts and record the numbers in GRAPHICS.md.
+Tests (Vitest), at least: ids unique and complete; the travel table refuses locked places (gulls_rest before the Relighting); dispose() removes every listener and object; every hotspot in the registry exists in its place; events carry the right payloads. npm test and npm run build must pass; run the browser checks too.
+Accessibility: keyboard travel on the chart; reduced-motion skips the sailing scene.
+Do not
+No backend calls, no Supabase, no login, no story or case logic, no coins, no real company or team names in art, no external assets, no secrets.
+
+Optional phase (only if everything above is done and frontend/src/story/engine.js exists on main)
+S2 "Act 1 in the browser": a pixel dialogue panel that shows the intro story at the Lighthouse Isle hotspots using frontend/src/story/engine.js and the story from GET /api/content/intro-story, keeps a move log, shows the ending card and emits { type: 'intro_ended', ending }. Read frontend/src/story/README.md first. Do not change the engine.
+
+Finish
+Push your branch feat/g2-world-places when all checks pass (if the push fails, say so). Do not merge into main; Claude integrates. Add one log line at the top of the Log in docs/STATUS.md and update the G-lane "Next steps" there. Report: changed (files and purpose), verified (exact commands and results), not verified, remaining, branch.

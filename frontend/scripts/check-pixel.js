@@ -8,7 +8,8 @@ import { pixelArt, pixelArtIds } from '../src/pixel/catalog.js';
 const production = process.env.ART_PRODUCTION === '1', url = 'http://127.0.0.1:5176';
 const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(production ? ['preview'] : []), '--host', '127.0.0.1', '--port', '5176', '--strictPort'], { stdio: 'pipe' });
 const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
-const report = { checked: new Date().toISOString(), checks: [], files: pixelArt.length + 1 }, errors = [], external = [];
+const backgroundIds = ['saltreach_harbor','home_islet','smugglers_cove','wreck_point','the_teeth','gulls_rest','chart','chart-relit'];
+const report = { checked: new Date().toISOString(), checks: [], files: pixelArt.length + 9 }, errors = [], external = [];
 const check = (value, label) => { assert.ok(value, label); report.checks.push(label); };
 let browser;
 try {
@@ -25,8 +26,8 @@ try {
   await page.goto(`${url}/asset-library.html`); await page.locator('.sprite-card').last().waitFor();
   check(await page.locator('.sprite-card').count() === pixelArt.length, 'Workshop lists the complete active pixel kit');
   await page.evaluate(async items => {
-    for (const item of [...items, { id: 'ground', file: 'ground.png', width: 1024, height: 768 }]) {
-      const image = new Image(); image.src = `./pixel/${item.file}`; await image.decode();
+    for (const item of items) {
+      const image = new Image(); image.src = `./${item.folder || 'pixel'}/${item.file}`; await image.decode();
       if (image.naturalWidth !== item.width || image.naturalHeight !== item.height) throw new Error(`Wrong native dimensions: ${item.id}`);
       const canvas = document.createElement('canvas'); canvas.width = item.width; canvas.height = item.height;
       const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
@@ -37,8 +38,8 @@ try {
         if (centre !== 255 || pixels[3] !== 0) throw new Error('Ground land/sea alpha mask is wrong');
       }
     }
-  }, pixelArt);
-  check(true, `${pixelArt.length + 1} PNGs decode at their exact native sizes with visible pixels`);
+  }, [...pixelArt, { id:'ground', file:'ground.png', width:1024, height:768 }, ...backgroundIds.map(id => ({ id, file:`${id}.png`, folder:'places', width:id.startsWith('chart') ? 448 : 1024, height:id.startsWith('chart') ? 256 : 768 }))]);
+  check(true, `${pixelArt.length + 9} PNGs decode at their exact native sizes with visible pixels`);
   await page.locator('#search').fill('explorer side');
   check(await page.locator('.sprite-card').count() === 3, 'Search finds the side-facing animation family');
   await page.locator('.sprite-card').first().click();

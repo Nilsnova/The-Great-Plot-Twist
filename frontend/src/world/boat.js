@@ -4,7 +4,7 @@ import { placeArt, projectPoint } from './art.js';
 import { snapPixel } from '../pixel/catalog.js';
 
 export function createBoat(scene, art) {
-  placeArt(scene, art, 'jetty', -2, 25.5);
+  placeArt(scene, art, 'jetty', -2, 25.5).renderOrder = 6;
   const boat = placeArt(scene, art, 'boat', layout.boat.x, layout.boat.z);
   const resting = projectPoint(layout.boat.x, layout.boat.z);
   return { update(time, weather) {

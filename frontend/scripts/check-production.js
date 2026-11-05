@@ -18,7 +18,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto('http://127.0.0.1:4175'); await page.waitForTimeout(1200);
-  assert.equal(await page.locator('canvas').count(), 1);
+  assert.equal(await page.locator('canvas[tabindex="0"]').count(), 1);
   assert.equal(await page.evaluate(() => typeof window.__island), 'undefined');
   assert.equal(await page.locator('.performance').count(), 0);
   await page.getByRole('button', { name: 'Step ashore' }).click();
@@ -29,10 +29,15 @@ try {
   await page.keyboard.press('Escape'); await page.waitForTimeout(100);
   assert.equal(await page.locator('.debug').isHidden(), true);
   assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'CANVAS');
+  await page.getByRole('button', { name: 'Open sea chart' }).click();
+  await page.locator('[data-place=saltreach_harbor]').click();
+  await page.waitForFunction(() => document.querySelector('.chapter').textContent.includes('SALTREACH HARBOR'));
+  assert.equal(await page.locator('.sailing').isHidden(), true);
+  assert.equal(await page.locator('.sailing').isHidden(), true);
   assert.deepEqual(errors, []);
   const result = { checked: new Date().toISOString(), browser: browser.version(),
     checks: ['Static build loads a WebGL canvas', 'No dev inspection global', 'No FPS output in production',
-      'Time slider and quality toggle work', 'Escape restores game focus', 'No browser/WebGL errors'] };
+      'Time slider and quality toggle work', 'Escape restores game focus', 'Keyboard-accessible production chart and reduced-motion travel arrive at Harbor', 'No browser/WebGL errors'] };
   const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
   await mkdir('captures', { recursive: true });
   await writeFile(`captures/${stamp}_${process.env.CAPTURE_PREFIX || 'Illustrated'}-Production-Checks.json`, JSON.stringify(result, null, 2) + '\n');

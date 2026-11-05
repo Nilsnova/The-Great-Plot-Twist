@@ -1,88 +1,135 @@
-# Lighthouse Isle pixel-art graphics
+# Saltreach Isles graphics
 
-Nils explicitly rejected the painted-paper direction on 5 November 2026 and selected the supplied top-down pixel-art forest reference. This is the active direction: richer greens, clustered foliage, dark selective outlines, irregular grass and tan paths, earth/stone ledges, compact characters and a close exploration camera. The earlier SVG library, viewers and obsolete checks are preserved in archive/paper and excluded from active src/public/build. The reference screenshot is inspiration only; every runtime sprite and map is original project artwork.
+The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
-## Run and inspect
+## Run, controls and readability
 
-The app is in `frontend/`, matching current main. From the worktree root run `cd frontend`, then use the Node versions in package.json, `npm install` and `npm run dev`. All app paths and npm commands below are relative to frontend/. Open the printed address and click **Step ashore**. `/asset-library.html` is the active pixel workshop, with search, family filters, native PNG links and integer magnification. `npm run build` produces the static game and workshop in dist; `npm run preview` serves them. The retired paper scene studies are excluded from the production entry points.
-
-The newest screenshots and evidence use `captures/20261105_Pixel-*`. `Forest-Daylight`, `Cottage-Daylight`, `Shore-Daylight`, `Lighthouse-Daylight` and `Lighthouse-Midnight` show actual gameplay views. `First-Playable` records the first pixel iteration; `Nature-Kit` is the asset workshop. Nils approved the actual pixel gameplay capture and asked to keep the style, clean it and build the needed assets.
-
-## Controls
+From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and open Vite's address. Use the Node versions in package.json. `npm run build` writes dist and `npm run preview` serves it. `/asset-library.html` is the searchable pixel workshop.
 
 | Input | Action |
 | --- | --- |
-| WASD / arrows | Walk along the map axes |
-| Shift | Run without a diagonal speed boost |
-| E | Investigate the active location, once per held press |
-| Wheel | Switch between 1× and 2× camera zoom |
-| T | Accelerate the day/night clock |
-| 1 / 2 / 3 / 4 | Clear / overcast / storm / fog |
-| Bottom-right settings | Hour, weather and quality |
-| Escape | Close settings and restore game focus |
+| WASD / arrows, Shift | Walk, run without a diagonal speed boost |
+| E | Interact once per held press |
+| M / Sea chart button | Open the chart; Tab/arrows choose, Enter sails, Esc closes |
+| Enter / Skip passage / Esc | Skip sailing; the landing panel stays until assets finish loading |
+| Fast travel on chart | Skip the passage animation |
+| Wheel | Discrete 1×/2× zoom |
+| T; 1 / 2 / 3 / 4 | Fast clock; clear / overcast / storm / fog |
+| Settings; Escape | Time/weather/quality controls; close and restore game focus |
 
-The close camera follows the player. Partial scenery at frame edges is normal in exploration; extra headroom shows the whole lighthouse when approaching its door at default zoom. A compact arrival card replaces the old large editorial overlay. Its arrival notification clears after five seconds. Roofs switch to a floor/desk cutaway inside the cottage. Foreground trees fade to keep the player readable. The pier is walkable, the sea is not. Keyboard/mouse is required; touch movement is not implemented.
+UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 12 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch movement is not implemented.
 
-## Original art and pixel grid
+The close camera follows the player and keeps extra headroom near the Lighthouse tower. Cottage roofs reveal the interior/desk; foreground trees fade. Piers draw beneath the explorer and are walkable; open sea is blocked. The Harbor Office's matching window overlay glows at night and is visible from the dock spawn. It supplies no story explanation.
 
-The library has **48 original PNG sprites plus one 1024 × 768 terrain backdrop**: 36 active island sprites and 12 staged harbour/mystery drawings. All sprite sources total 33,304 bytes; ground.png is 35,912 bytes. The active core remains 23,992 sprite bytes; none of the 12 staged drawings preloads with it. The active kit includes three buildings with cottage cutaway/light layers, eleven nature assets, eleven coastal props, and nine explorer poses. The staged kit adds the harbour office/beacon/signal station/pier, two sailing vessels and six generic nautical mystery/reward objects, with no feature behaviour or canon outcome. See ASSETS.md. The source of truth for active ids, native dimensions and placement anchors is `src/pixel/catalog.js`.
+## Art, coordinates and ownership
 
-One world unit equals **16 native art pixels**. Texture sampling is nearest-neighbour, mipmaps and antialiasing are disabled, and static pixel sprites use integer magnification. The renderer draws a small native framebuffer and upscales it with CSS `image-rendering: pixelated` by a whole number. At 1440 × 900 it draws 480 × 300 and displays at 3×; at 1600 × 1000 it draws 400 × 250 at 4×. Device DPR does not increase that buffer. Zoom is discrete, positions snap to the art grid, and boats bob in pixel steps without fractional rotation. Low/high quality changes wave/rain density rather than the art scale.
+The library has **68 original sprites and 9 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
-`loadArt(ids = pixelArtIds)` in world/art.js loads only registered pixel PNGs. Reuse its materials with `placeArt(scene, art, id, x, z, scale)`. Unknown/unloaded ids fail clearly. Earlier SVG drawings are not requested by the active game. A future feature team should add its PNGs and metadata, then request its own selected ids.
+One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
-The reproducible editable source is in `scripts/pixel_art/`, split into small Python files for nature, buildings, people, props and ground. To rebuild: `python3 scripts/pixel_art/generate.py`, with Python Pillow installed for authoring. The game and normal JS tests need no Python or image service. The generator calls `scripts/export-pixel-ground.js` to use the canonical terrain function, so the coast is not a separate guessed shape. Grass, paths, texture clusters, cliff face and shore contact pixels bake once into ground.png. Change those generator sources to edit pigment, silhouette or detail, and rebuild the PNGs.
+Logical positions use X/Z and +Y ground height. Drawing projects `{x, y:-z*.72}`; terrain elevation never lifts drawn feet. Render order increases with logical Z except ground/sky/light layers. `places/surfaces.js` is the canonical coast for new places and their offline backgrounds. Existing Lighthouse terrain/collisions are retained. `loadArt(ids = pixelArtIds)` validates ids; placeArt reuses anchored materials. Nine explorer textures are shared; only the current place's scenery/textures are loaded. Sailing's small boat image is loaded on demand.
 
-## Gameplay contracts
+`createPlace({id, ...ctx})` in world/places/factory.js returns `{id, group, zones, anchors, colliders, lights, update(dt, state), dispose()}`. Optional ctx adapters provide texture loading for tests, canvas/camera for plot clicks, and the existing bus. The second argument is optional: update(dt) has its own daylight clock/weather fallback, or ctx.readState supplies state. Main passes `{player,time,night,weather}`; place composition has no story/backend rules. Additional `spawn` and `groundHeight(x,z)` fields configure the controller.
 
-Logical gameplay still uses X/Z ground coordinates and +Y elevation from terrainHeight. Visual projection remains `{ x, y: -z * .72 }`; logical height never lifts drawn feet. Render order increases with logical Z. Native-pixel snapping affects the presentation only. The lighthouse drawing's foot position now agrees with its collision front, keeping the player visible at the existing tower_door stand point.
+`createWorld(ctx)` in places/manager.js exposes current, busy, goTo(id, options), interact(id), update and dispose. Trips follow the marked route network, possibly through intermediate junctions without loading those places. Unknown/locked/same-place/overlapping trips are refused. Travel disposes the departure root, geometries, materials, maps and owned subscriptions before loading the destination. A passage/landing dialog covers the gap, then one new root is attached. Static texture loads time out after 15 seconds and dispose any late result. Failed loads recreate the departure; failed/late attachments dispose their allocations. Repeated dispose is safe. Shared explorer, weather, water and sky are app-owned and disposed on teardown.
 
-`on('interact', handler)` and `emit(event)` in core/events.js keep payloads such as `{ type: 'interact', id: 'desk' }`. The exact ids are **cottage**, **desk**, **shore**, **tower_door**. Zone tests retain the elevation check and normalised proximity; the story owner supplies the outcomes. No story outcome, authentication, save system or multiplayer has been added.
+`world.setRelightingComplete(true)` is an explicit integration hook for the later story/world-state owner, default false. This pass never infers or saves a solve. Reversing the gate still permits departure from Gull's Rest. `homeBuildings` in places/layouts.js is a plain visual placement list. Four plots emit selections; no saving/building economy is implemented.
 
-`setWeather({ cloudCover, rain, fog, wind })` and getWeather in world/weather.js remain the integration hooks. Values clamp to 0–1, omitted/unknown/non-finite values preserve prior state, and returned snapshots are copies. Weather changes rain, the scene wash/mist, sea marks and boat motion. No real-weather API is contacted.
+## Places, hotspots, lights and events
 
-world/lighthouse.js exports logical `anchors`, `stairwell`, `lamp_room`, plus the drawn `cameraAnchors` for cutscenes. Use view.pause, set camera position/zoom from those drawn anchors, and updateProjectionMatrix; view.start resumes follow. Player input needs its own cutscene gate.
+The single registry is `src/world/places/registry.js`. IDs are unique within their namespace; light ids harbor_light and islet_signal_station intentionally also name hotspots. Use these exact machine ids even where descriptive story text differs.
 
-`createCharacter(art, { reducedMotion })` retains `{ group, sprite, face(dx, dz), animate(delta, speed) }`. group.position holds logical data; add sprite to the scene. Front, back and mirrored side profiles cover four directions; walk cadence follows realised movement speed, interleaving two stride poses with the neutral pose. Reduced motion omits stride swapping and cosmetic bounce. A remote player can reuse art and this factory without attaching local input. Multiplayer is not implemented.
-
-## File map
-
-| Area | Purpose |
+| Place id | Meaning |
 | --- | --- |
-| src/main.js, src/config.js | Startup, frame updates, quality and logical layout |
-| src/core/ | Pixel renderer, frame loop, input, events and pure maths |
-| src/pixel/catalog.js, display.js | Active asset register, anchors, grid and integer display calculation |
-| src/pixel/terrain.js | Load the canonical baked terrain drawing |
-| src/pixel/library.js, library.css | Active pixel workshop |
-| src/world/ | Logical terrain, sprite placement, buildings/cutaway, forest, boat, weather and lighthouse |
-| src/player/ | Pixel character, fixed camera, controller and collision rules |
-| src/ui/ | Compact RPG interface and development-only performance |
-| public/pixel/ | 48 original sprites and ground backdrop |
-| archive/paper/ | Preserved superseded art/source; excluded from the shipped public assets |
-| scripts/pixel_art/, export-pixel-ground.js | Editable/reproducible original artwork sources |
-| tests/pixel.test.js | PNG registration/dimensions, display scaling and pixel snapping |
-| scripts/check-pixel.js, check-browser.js, check-production.js | Real-browser art/gameplay/build validation |
-| ../references/20261105_Pixel-Style-Reference.png | User-supplied style reference, excluded from runtime assets |
-| 20261105_Pixel-Direction.txt, ASSET_ROADMAP.txt | Current direction and provisional feature-art mapping |
+| `lighthouse_isle` | Original first island, cottage interior, jetty and lighthouse |
+| `saltreach_harbor` | Shared visual hub, eleven hotspots and nighttime office windows |
+| `home_islet` | Four build plots and a signal station |
+| `smugglers_cove` | Back-room, cave and arena-gate scene stub |
+| `wreck_point` | Salvage yard and beach scene stub |
+| `the_teeth` | Reef, ruined tower, raid arch and fog scene stub |
+| `gulls_rest` | Locked islet, unnamed on the chart until external Relighting |
+
+| Hotspot id | Place and meaning |
+| --- | --- |
+| `cottage` | lighthouse_isle, cottage entrance |
+| `desk` | lighthouse_isle, Elena's writing desk |
+| `shore` | lighthouse_isle, old jetty |
+| `tower_door` | lighthouse_isle, lighthouse entrance |
+| `harbor_office` | saltreach_harbor, office entrance |
+| `harbor_office_window` | saltreach_harbor, visible office window |
+| `harbor_light` | saltreach_harbor, coastal beacon |
+| `ferry_pier` | saltreach_harbor, ferry landing |
+| `jail` | saltreach_harbor, jail entrance |
+| `market_hall` | saltreach_harbor, Island Exchange |
+| `prediction_kiosk` | saltreach_harbor, prediction counter |
+| `sports_pavilion` | saltreach_harbor, sports building |
+| `signal_station` | saltreach_harbor, signal building |
+| `notice_board` | saltreach_harbor, reward notice |
+| `captains_table` | saltreach_harbor, crew clue table |
+| `plot_1` | home_islet, cabin plot |
+| `plot_2` | home_islet, workshop plot |
+| `plot_3` | home_islet, windmill plot |
+| `plot_4` | home_islet, greenhouse plot |
+| `islet_signal_station` | home_islet, signal station |
+| `back_room` | smugglers_cove, back-room entrance |
+| `low_tide_cave` | smugglers_cove, low-tide cave entrance |
+| `arena_gate` | smugglers_cove, arena entrance |
+| `salvage_yard` | wreck_point, salvage shelter |
+| `beach` | wreck_point, wreck beach |
+| `reef` | the_teeth, reef rocks |
+| `watchtower_ruin` | the_teeth, ruined tower |
+| `raid_arch` | the_teeth, raid entrance |
+| `fog_bank` | the_teeth, northern fog edge |
+
+| Anchor id | Meaning |
+| --- | --- |
+| `stairwell` | Lighthouse logical stairwell position, also exported by world/lighthouse.js |
+| `lamp_room` | Lighthouse logical lamp-room position above stairwell |
+
+Drawn camera equivalents remain cameraAnchors in lighthouse.js. view.pause stops follow, direct camera placement/updateProjectionMatrix selects the shot, and view.start resumes. Controller input needs its own gate for future cutscenes.
+
+| Light id | Meaning |
+| --- | --- |
+| `keepers_lamp` | Lighthouse lantern, beamOrigin in drawn X/Y/Z |
+| `harbor_light` | Harbor beacon lantern, beamOrigin in drawn X/Y/Z |
+| `islet_signal_station` | Home signal mast, beamOrigin in drawn X/Y/Z |
+| `ruin_light` | Teeth tower window, beamOrigin in drawn X/Y/Z |
+
+| Event | Meaning |
+| --- | --- |
+| `{type:'travel',to}` | Accepted departure to the exact place id |
+| `{type:'arrived',place}` | Destination attached and controller/camera positioned |
+| `{type:'interact',id,place}` | Exact current hotspot id and owning place; once per E press |
+| `{type:'plot_clicked',plot}` | Home selection, plot is the exact string plot_1 through plot_4 |
+
+Events use existing core/events.js on/emit, with unsubscribe returned by on. Extra place on interact preserves the old id field. Story labels map “Harbor Office” to harbor_office, “Island Exchange” to market_hall, “Captain's Table” to captains_table, “Keeper's lamp” to keepers_lamp and “Relighting” to the external gate; these descriptions introduce no alternate machine ids.
+
+`setWeather({cloudCover,rain,fog,wind})` and getWeather remain in world/weather.js. Values clamp to 0–1; omitted, unknown or invalid values preserve state; snapshots are copies. Wind controls passage speed and waves, with normal travel about 4.2–6.3 seconds. Weather is local state and makes no API request. `createCharacter(art,{reducedMotion})` retains group, sprite, face and animate; group.position holds logical position and sprite is drawn separately. Remote players can reuse it without local controller input.
 
 ## Verification and performance
 
-`npm test` passed 27 tests in 5 files, built-game checks passed, and built pixel-workshop checks passed. The art checker now decodes all 49 PNGs and verifies the staged filter/default-preload boundary. Current final verification is recorded in the Pixel-prefixed JSON files in captures. Run `npm test`, `npm run test:art`, `CAPTURE_PREFIX=Pixel npm run test:browser`, `CAPTURE_PREFIX=Pixel npm run test:production`, and `npm run test:art:production`. Browser checks use installed Chrome or CHROME_PATH; no browser download is needed. GPU checks run sequentially.
+Run from frontend: `npm test`, `npm run build`, `npm run test:world`, `npm run test:readability`, `CAPTURE_PREFIX=World npm run test:browser`, `CAPTURE_PREFIX=World npm run test:production`, `npm run test:art` and `npm run test:art:production`. Browser checks use installed Chrome or CHROME_PATH, no download; GPU runs are sequential. World checks cover all 29 actual hotspots and payloads, pointer plots, keyboard chart/skip, office glow from docks, locks, external unlock, reduced motion, low quality and ten complete Lighthouse↔Harbor round trips. JSON and real gameplay captures use captures/20261105_World-*.
 
-The target remains 60 FPS, <150 draw calls and <150,000 submitted triangles on ordinary integrated graphics. The pixel pipeline uses no shadow maps, bloom, 3D terrain mesh or external network request. The largest texture is the one 1024 × 768 backdrop. Sprite materials/textures are shared; scene teardown disposes all maps, including ground. The final full pixel benchmark measured 60–61 FPS across short samples, up to 100 draw calls and 195 submitted triangles. Earlier samples varied more, so this is not a sustained guarantee. It used a 480 × 300 native framebuffer displayed at 1440 × 900; DPR 2 uses the same native buffer. These samples were on this Mac in headless Chrome 157, not a sustained hardware guarantee. The HUD clock/diagnostics now synchronise at 150 ms intervals; interaction prompts still update every frame. Final post-change evidence is Pixel-Browser-Checks.json.
+The target remains 60 FPS, <150 draw calls and <150,000 submitted triangles. The previous G1 baseline was 60–61 FPS, at most 100 calls/195 triangles in short headless Chrome 157 samples on this Mac. This is not a sustained or cross-device guarantee. The final G2/G3 world run passed 55 browser assertions with no console/WebGL errors or external requests. Six unlocked places measured 60–61 FPS in 90-frame samples, 27–97 calls and 54–192 triangles. The full weather/retina regression measured 57–61 FPS, at most 100 calls and 195 triangles. An earlier diagnostic sample hit 21 FPS immediately after synchronous GPU pixel readback; the final benchmark measures before that visibility diagnostic to avoid timing its artificial stall.
 
-## Continuing work and integration
+| Lighthouse resource/performance check | Before trips | After 10 round trips |
+| --- | ---: | ---: |
+| Active place roots | 1 | 1 |
+| Place root children | 10 | 10 |
+| GPU geometries | 96 | 96 |
+| GPU textures | 27 | 27 |
+| Draw calls | 97 | 97 |
+| Submitted triangles | 192 | 192 |
+| FPS, 90-frame sample | 56 | 60 |
 
-- Refine canopy variety, natural grass/soil boundaries, cliff transitions and environmental clusters against the supplied reference. Keep the player and routes readable; avoid noisy per-pixel detail.
-- Continue the new pixel feature kits from the staged harbour/mystery set. The earlier paper market/arena/companion/boat concepts are not active pixel assets or implemented features. Consult the roadmap input file, whose feature priorities remain provisional.
-- Improve character stride/idle richness and test longer sessions, Safari/Firefox, other GPUs and smaller screens. Current verification is installed Chrome on this Mac, not a cross-device guarantee.
-- The current main layout is frontend/ plus backend/. The pixel pass is integrated into that frontend/ layout, retaining the incoming team documents byte-for-byte; 57 added art/check files were resolved at their relocated paths without changing their content. Feature-branch synchronisation does not merge anything into main. Untracked local ROADMAP/STORY files describe G1 before G2/G3/G4 and S0-owned map inputs; they are planning context, not published frozen contracts.
-- Root remains the sole writer to this graphics worktree. Nils authorised normal pushes of verified work to feat/graphics-foundation and a reviewable PR. No merge into main, force push or deployment is authorised here. A two-hour heartbeat in this chat continues bounded visual improvements under the new direction and reports meaningful changes.
+Every return in the ten-cycle run had the same geometry/texture/object counts. Reduced-motion travel completed in 77 ms including local loads; an unskipped wind=1 passage took 4,216 ms. Readability passed at 1365×768, 1920×1080 and 1100×700: 14 px primary controls, 16 px hotspot/chart names, no chart-label overlap or horizontal overflow, settings inside the viewport. Unit tests: 36 passed in 8 files; production build succeeded. Vite reports the existing Three.js bundle-size advisory (~593 kB game chunk), not a build failure.
 
-## Render loop in three sentences
+Not verified here: Safari/Firefox, other GPUs, mobile/touch controls, live backend/state integration or a sustained long-session soak. G4 finale aiming, saved home construction and story outcomes remain with their owning teams. Optional S2 was skipped because frontend/src/story/engine.js does not exist on origin/main at 393f551 (checked 5 Nov).
 
-The browser requests a frame and the loop measures elapsed time with a cap to avoid large simulation jumps. Main moves the logical player through collision checks, selects and snaps its pixel pose, then updates camera, weather, water, boat, buildings and interface. Three.js draws the ordered sprites and native terrain into a small framebuffer, CSS scales it by an integer, and the browser requests another frame.
+## File map and handoff
 
-Publication handoff: verified graphics commits and the frontend-layout sync are pushed to feat/graphics-foundation. Owning issue is https://github.com/Nilsnova/The-Great-Plot-Twist/issues/2. Draft PR creation was attempted but not completed: the connector returns 403 for PR writes and both native/browser UI access timed out. The branch comparison remains available at https://github.com/Nilsnova/The-Great-Plot-Twist/compare/main...feat/graphics-foundation. No merge into main or deployment was performed.
+main.js wires the loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
 
-Cleanup validation: the static build contains all 49 pixel PNGs and no retired art folder. All 36 approved core PNGs were compared with the previous pushed commit and are byte-identical. The active suite retains movement/input/story, loading/collision, native-grid, asset-registration and motion checks; retired paper-only tests moved with their archived source.
+Branch is feat/g2-world-places, based on origin/main f0dc6a0. Root is the sole writer; read-only agents audited architecture and story contracts. Only frontend/ and the authorised G-lane next-step/log lines in docs/STATUS.md change. Claude integrates; no main merge or manual deployment is performed. The previous graphics-foundation branch was merged as 45d2d46 and its issue/PR attempts are historical. The newer foundation main at 393f551 adds docs/INTERFACES.md; its browser contracts were reviewed. The authorised G2 payload extends the older G1 interact example with place, and the registry replaces the proposed content/places.json because content/ is outside this task. Claude can update those draft pointers during integration. Review this branch against main.
+
+Final checks also passed the built game (including reduced-motion chart travel) and both development/production pixel workshops, each decoding all 77 PNGs. Full regeneration reproduced 77 byte-identical files. Commands and results above are scoped to graphics; backend tests were not run because backend code was not changed.
