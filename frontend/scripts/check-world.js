@@ -75,7 +75,8 @@ try {
   await page.emulateMedia({ reducedMotion: 'no-preference' }); await page.evaluate(() => window.__island.quality('low'));
   await page.evaluate(() => { window.__lowTrip = window.__island.world.goTo('saltreach_harbor'); });
   await page.waitForFunction(() => window.__island.world.current?.id === 'saltreach_harbor');
-  check(await page.locator('.sailing').isHidden(), 'Low-quality fade completes');
+  check(await page.locator('.sailing').isHidden() && await page.locator('.arrival-fade').isVisible(), 'Low quality reveals the landing through a flat fade');
+  await page.locator('.arrival-fade').waitFor({state:'hidden'});
   await page.evaluate(() => { window.__island.quality('high'); window.__island.setWeather({ wind: 1 }); window.__trip = window.__island.world.goTo('wreck_point'); });
   const passageStart = Date.now(); await page.waitForFunction(() => window.__island.world.current?.id === 'wreck_point'); report.windOnePassageMs = Date.now() - passageStart;
   check(report.windOnePassageMs > 3000 && report.windOnePassageMs < 7500, 'Unskipped wind-driven passage lasts about five seconds');

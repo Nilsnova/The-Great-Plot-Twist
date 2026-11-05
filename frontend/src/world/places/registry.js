@@ -27,7 +27,7 @@ export const places = {
   the_teeth: { name: 'The Teeth', chart: [365, 65], spawn: [0, 12], zones: [
     zone('reef', 'Reef', -8, 9), zone('watchtower_ruin', 'Watchtower ruin', -5, -3),
     zone('raid_arch', 'Raid arch', 8, 1), zone('fog_bank', 'Fog bank', 9, -9) ],
-    lights: [{ id: 'ruin_light', beamOrigin: { x: -5, y: 8.9125, z: 0 } }] },
+    lights: [{ id: 'ruin_light', beamOrigin: { x: -5, y: 8.5, z: 0 } }] },
   gulls_rest: { name: 'Gull’s Rest', chart: [407, 34], spawn: [0, 10], locked: true, zones: [] },
 };
 for (const place of Object.values(places)) { place.anchors ??= {}; place.lights ??= []; }

@@ -1,5 +1,6 @@
 // Composes one native-pixel place. Every allocation belongs to its returned root.
 import * as THREE from 'three';
+import { createFrameState } from './frame-state.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
 import { createBeam } from '../beam.js';
@@ -14,6 +15,7 @@ export async function createSettlement(ctx) {
   const ids = [...new Set([...placements.map(p => p.asset), 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
     ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []), ...(id === 'home_islet' ? ['build-plot'] : [])])];
   const art = await (ctx.loadArt ?? loadArt)(ids), group = new THREE.Group(); group.name = `place:${id}`;
+  const frameState = createFrameState(ctx, data.spawn);
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
     backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
@@ -42,6 +44,7 @@ export async function createSettlement(ctx) {
     const place = { ...data, id, group, groundHeight: placeGround(id),
       colliders: [...placements.filter(p => p.collider).map(p => p.collider), ...trees.map(([x,z]) => ({ x, z, radius: .48 }))],
       update(dt, state) {
+        state = frameState(dt, state);
         foliage.forEach(mesh => {
           const p = mesh.userData.ground;
           mesh.material.opacity = state.player.z < p.z && Math.abs(state.player.x - p.x) < 2.2 && p.z - state.player.z < 6 ? .3 : 1;

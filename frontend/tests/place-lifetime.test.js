@@ -13,6 +13,8 @@ describe('real place lifetime', () => {
   it('creates every registered hotspot, safe stand point, anchor and light in every place', async () => {
     for (const id of placeIds) {
       const place = await createPlace({ id, ...adapters });
+      expect(() => place.update(1/60)).not.toThrow();
+      expect(place.lights.every(light => ['x','y','z'].every(axis => Number.isFinite(light.beamOrigin[axis])))).toBe(true);
       expect(place.id).toBe(id); expect(place.zones).toEqual(places[id].zones);
       expect(place.anchors).toEqual(places[id].anchors); expect(place.lights).toEqual(places[id].lights);
       for (const z of place.zones) expect(canStand(z.x, z.z, place.colliders, place.groundHeight), `${id}/${z.id}`).toBe(true);
