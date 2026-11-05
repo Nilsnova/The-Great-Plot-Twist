@@ -16,9 +16,11 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | Branches, features, reviews and handovers | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Instructions for coding agents | [AGENTS.md](AGENTS.md) |
 | Shared technical and product decisions | [Decision log](docs/DECISIONS.md) |
+| What we build, in which order, and the lanes | [ROADMAP.md](ROADMAP.md) |
+| What works right now, next steps per lane and the log | [Status](docs/STATUS.md) |
+| The story and its approved decisions | [Story](docs/STORY.md) |
+| One-time setup of GitHub, Supabase and Vercel | [Setup guide](docs/SETUP.md) |
 
 ## Project status
 
-The team is expanding an existing Plot Twist game. This repository currently contains the collaboration setup; the game code has not been imported yet.
-
-The code import must add exact installation, run and test commands, the deployed URL, and every member’s name and student number. Do not treat an empty repository as a working app.
+A first version is live at [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/): the Lighthouse Isle scene runs in the browser with a Python API behind it, and the original Plot Twist story is still to be imported (package S1 in the [roadmap](ROADMAP.md)). The [status page](docs/STATUS.md) shows what works right now, what each lane does next and the dated log. Before submission, this README also gets the deployed URL, every member’s name and student number, and the exact run and test commands.
