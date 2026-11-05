@@ -5,3 +5,9 @@ dist/
 .env.*
 !.env.example
 .DS_Store
+# Python caches from the optional local art generator.
+__pycache__/
+*.pyc
+
+# User-supplied visual reference is local inspiration, not distributed game art.
+/references/20261105_Pixel-Style-Reference.png
