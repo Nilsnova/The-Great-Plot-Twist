@@ -1,3 +1,5 @@
+// Live data is isolated by a deterministic fixture in these presentation checks.
+import {stubWeather} from './weather-browser-fixture.js';
 // Real-browser smoke checks using an installed Chrome. Saves review screenshots.
 import { stubIntro,dismissIntro } from './intro-browser-fixture.js';
 import { chromium } from 'playwright-core';
@@ -29,7 +31,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
-  await stubIntro(page);
+  await stubWeather(page); await stubIntro(page);
   await page.goto(url); await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
   await page.waitForTimeout(1500); // Let shaders and the first shadow map warm up.
   await mkdir('captures', { recursive: true });
@@ -110,7 +112,7 @@ try {
   check(errors.length === 0, `No browser or WebGL errors (${errors.join('; ')})`);
   await page.close(); // Benchmark one WebGL page at a time on the same GPU.
   const retina = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
-  await retina.goto(url); await retina.waitForTimeout(2000);
+  await stubWeather(retina); await retina.goto(url); await retina.waitForTimeout(2000);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
   check(report.modes['retina-high'].pixelRatio === 1 && report.modes['retina-low'].pixelRatio === 1,

@@ -13,12 +13,13 @@ const choose=async id=>{
 async function visit(id) {
   await page.evaluate(async id=>{const {zones}=await import('/src/world/zones.js');const z=zones.find(z=>z.id===id);window.__island.player.position.set(z.x,z.y,z.z);},id);
   await page.waitForFunction(id=>document.querySelector('.interact')?.dataset.zone===id,id);await page.keyboard.press('KeyE');
-  await page.waitForFunction(()=>document.querySelector('.intro-view')?.dataset.scene);
+  await page.locator('.intro-modal').waitFor({state:'visible'});
+  await page.waitForFunction(id=>window.__island.world.intro.active&&window.__island.world.intro.state&&(window.__island.world.intro.state.ended||window.__island.world.intro.state.scene===id),id);
 }
 try {
   const response=await fetch(env.url+'/api/content/intro-story');check(response.ok,'Vite proxy reaches the actual public intro API');
   const story=await response.json();check(story.start==='cottage'&&story.scenes.lamp_room,'API returns the original story structure');
-  page.on('request',request=>{if(request.url().includes('/api/')){assert.equal(new URL(request.url()).pathname,'/api/content/intro-story');assert.equal(request.method(),'GET');report.apiReads++;}});
+  page.on('request',request=>{if(request.url().includes('/api/')){assert.ok(['/api/content/intro-story','/api/weather'].includes(new URL(request.url()).pathname));assert.equal(request.method(),'GET');if(new URL(request.url()).pathname==='/api/content/intro-story')report.apiReads++;}});
   await page.goto(env.url);await page.waitForFunction(()=>window.__island?.world.current);await page.getByRole('button',{name:'Step ashore'}).click();
   await page.evaluate(()=>{window.__introEvents=[];window.__island.on('intro_ended',event=>window.__introEvents.push(event));});
   await visit('shore');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});

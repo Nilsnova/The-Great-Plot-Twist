@@ -6,6 +6,7 @@ import './ui/readability.css';
 import './ui/kit/kit.css';
 import './ui/cinematics.css';
 import './ui/intro.css';
+import {startLiveWeather,weatherAttribution} from './net/weather.js';
 import {createIntro} from './story/intro.js';
 import { createCinematics } from './world/cinematics/controller.js';
 import { createCinematicDemo } from './ui/cinematic-demo.js';
@@ -64,6 +65,9 @@ async function startGame() {
     stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
+  const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
+    hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
+  }});
   quality(settings.quality); graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
@@ -93,7 +97,7 @@ async function startGame() {
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing };
   function dispose() {
-    stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stopLiveWeather(); stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }

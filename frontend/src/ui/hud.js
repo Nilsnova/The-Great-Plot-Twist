@@ -1,4 +1,5 @@
 // Local DOM interface: arrival card, story prompts and visual debug controls.
+import { node } from './kit/dom.js';
 import { places } from '../world/places/registry.js';
 import { settings } from '../config.js';
 import { getWeather, presets, setWeather } from '../world/weather.js';
@@ -34,6 +35,7 @@ export function createHud(container, actions) {
   container.append(overlay);
   const timers = [];
   const select = selector => overlay.querySelector(selector);
+  const credits = node('div','weather-credit'); credits.hidden = true; select('.conditions').append(credits);
   const panel = select('.debug'), toggle = select('.settings-toggle');
   function togglePanel(open) {
     panel.hidden = open === undefined ? !panel.hidden : !open;
@@ -58,6 +60,13 @@ export function createHud(container, actions) {
   }; });
   let toastUntil = 0, syncAt = 0;
   return { togglePanel,
+    setWeatherCredit(data) {
+      const source=node('a','',data.text),licence=node('a','',data.licenceText);
+      source.href=data.href;licence.href=data.licenceHref;
+      for(const link of [source,licence]) { link.target='_blank';link.rel='noopener noreferrer'; }
+      const licenceGroup=node('span','weather-licence');licenceGroup.append(document.createTextNode('('),licence,document.createTextNode(')'));
+      credits.replaceChildren(source,document.createTextNode(' '),licenceGroup);credits.hidden=false;
+    },
     dispose() { timers.forEach(clearTimeout); overlay.remove(); },
     arrive(id) {
       select('.chapter').childNodes[1].textContent = ` ${places[id].name.toUpperCase()} `;

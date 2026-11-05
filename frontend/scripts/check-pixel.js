@@ -1,3 +1,5 @@
+// Live data is isolated by a deterministic fixture in these presentation checks.
+import {stubWeather} from './weather-browser-fixture.js';
 // Inspect native PNGs, integer scaling, the live game and the built pixel workshop.
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
@@ -21,6 +23,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
   report.browser = browser.version();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await stubWeather(page);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
