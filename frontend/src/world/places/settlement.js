@@ -10,19 +10,20 @@ import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 
 export async function createSettlement(ctx) {
-  const { id } = ctx, data = places[id], placements = layouts[id] ?? [];
+  const { id } = ctx, data = places[id], placements = [...(layouts[id] ?? []),...(ctx.placements??[])];
   const trees = edgeTrees[id] ?? [];
   const ids = [...new Set([...placements.map(p => p.asset), 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
-    ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []), ...(id === 'home_islet' ? ['build-plot'] : [])])];
+    ...(id === 'saltreach_harbor' ? ['harbour-office-glow','wall-of-lights-open','festival-lantern-string'] : []),...(id==='the_teeth'?['false-light']:[]), ...(id === 'home_islet' ? ['build-plot'] : [])])];
   const art = await (ctx.loadArt ?? loadArt)(ids), group = new THREE.Group(); group.name = `place:${id}`;
   const frameState = createFrameState(ctx, data.spawn);
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
     backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
+    const fogMeshes=[];
     placements.forEach(item => {
       const mesh = placeArt(group, art, item.asset, item.x, item.z);
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
-      if (item.asset === 'fog-bank') mesh.renderOrder = 920;
+      if (item.asset === 'fog-bank'){mesh.renderOrder = 920;fogMeshes.push(mesh);}
     });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
@@ -36,8 +37,10 @@ export async function createSettlement(ctx) {
       const { x, y } = light.beamOrigin;
       return { glow: paintedBlob(group, x, y, .6, .38, '#f3d58c', 925, 0), beam: createBeam(group, x, y) };
     });
-    let windowGlow;
+    let windowGlow,wall,festive,teaser;
+    if(id==='the_teeth'){teaser=placeArt(group,art,'false-light',10,-10);teaser.visible=false;teaser.renderOrder=921;}
     if (id === 'saltreach_harbor') {
+      wall=placeArt(group,art,'wall-of-lights-open',12,5.3);wall.visible=false;festive=placeArt(group,art,'festival-lantern-string',-1,7);festive.visible=false;
       windowGlow = placeArt(group, art, 'harbour-office-glow', -8, 8.5);
       windowGlow.material = windowGlow.material.clone(); windowGlow.renderOrder = 922;
     }
@@ -50,7 +53,8 @@ export async function createSettlement(ctx) {
           mesh.material.opacity = state.player.z < p.z && Math.abs(state.player.x - p.x) < 2.2 && p.z - state.player.z < 6 ? .3 : 1;
         });
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
-        lights.forEach(light => { light.glow.material.opacity = state.night * .8; light.beam.update(state.time, state.night); });
+        const brightness=state.relit?Math.max(.65,state.night):state.night;lights.forEach(light => {light.glow.material.opacity=brightness*.8;light.beam.update(state.time,brightness);});
+        fogMeshes.forEach(mesh=>{mesh.visible=!state.relit;});if(wall)wall.visible=!!state.relit;if(festive)festive.visible=!!state.festival;if(teaser)teaser.visible=!state.relit&&state.night>.6&&state.weather.fog>.65;
       }, dispose,
     };
     ctx.decorate?.(place, art, cleanups); return place;

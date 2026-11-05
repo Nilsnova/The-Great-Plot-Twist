@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **182 sprites and 10 backgrounds/charts, 192 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **185 sprites and 10 backgrounds/charts, 195 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
@@ -198,3 +198,15 @@ Every G5 sound is original executable Web Audio synthesis in `src/audio/`: deter
 `src/demo/intro-story.json` is an unchanged public-content copy of `backend/content/story.json` from main `acdd341` (5 November). It contains only the original intro, never the secret case. The tour runs it with the unchanged engine and a memory-only adapter. `src/demo/recorded-weather.json` is a small adapted subset of `backend/content/weather/recorded-fallback.json`: the 5 November 17:00 Torshavn sample, recorded at 17:14:33 UTC. Cloud cover is divided by 100 and wind (13.7 km/h) by 72; precipitation/fog are zero in this recorded sample. Fog and storm tour beats are explicitly labelled local overrides. Credit: **Weather data by Open-Meteo.com, adapted for the game** ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). No provider is called by the demo modules.
 
 The in-game Credits view lists four `<name>` placeholders, no student numbers, Open-Meteo/adaptation/licence links and the same tool licences as this register: Three.js/Vite/Vitest MIT, Playwright Core Apache-2.0 and Pillow HPND. No new dependency was added for G5.
+
+### G6 Relighting additions
+
+Three original, code-authored sprites in `scripts/pixel_art/relighting.py`, registered in `src/pixel/story-catalog.js`. Same project-authored licence as the existing kit; no outside art or fonts. These stay outside the Lighthouse Isle preload.
+
+| Id | Native size | Anchor | Purpose |
+| --- | --- | --- | --- |
+| `lens-hall-open` | 144 × 160 | 12 px | Gull's Rest open-state hall with a ridge lantern, stonework and welcoming windows |
+| `festival-lantern-string` | 160 × 48 | 4 px | Coastal festival lanterns in gold, sea-glass and muted coral |
+| `wall-of-lights-open` | 128 × 96 | 8 px | Harbor's public Wall of Lights; captain names are accessible adapter-supplied HTML |
+
+The kit now contains 185 sprite PNGs plus ten existing backgrounds, 195 PNGs total. Festival fireworks are deterministic WebGL points authored in `src/world/festival.js`, with no audio/image dependency; they are disabled for reduced motion and use fewer points on low quality. New art is display-only and contains no names, case prose or solution. Rebuild with `python3 scripts/pixel_art/generate.py`.

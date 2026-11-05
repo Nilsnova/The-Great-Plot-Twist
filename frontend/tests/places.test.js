@@ -6,8 +6,8 @@ import { createWorld } from '../src/world/places/manager.js';
 describe('place contracts', () => {
   it('contains all seven places and exactly the agreed hotspot and light ids', () => {
     expect(placeIds).toEqual(['lighthouse_isle', 'saltreach_harbor', 'home_islet', 'smugglers_cove', 'wreck_point', 'the_teeth', 'gulls_rest']);
-    expect(new Set(hotspotIds).size).toBe(29);
-    expect(hotspotIds.slice().sort()).toEqual('cottage desk shore tower_door harbor_office harbor_office_window harbor_light ferry_pier jail market_hall prediction_kiosk sports_pavilion signal_station notice_board captains_table plot_1 plot_2 plot_3 plot_4 islet_signal_station back_room low_tide_cave arena_gate salvage_yard beach reef watchtower_ruin raid_arch fog_bank'.split(' ').sort());
+    expect(new Set(hotspotIds).size).toBe(34);
+    expect(hotspotIds.slice().sort()).toEqual('cottage desk shore tower_door harbor_office harbor_office_window harbor_light ferry_pier jail market_hall prediction_kiosk sports_pavilion signal_station notice_board captains_table plot_1 plot_2 plot_3 plot_4 islet_signal_station back_room low_tide_cave arena_gate salvage_yard beach reef watchtower_ruin raid_arch fog_bank keepers_lamp keepers_post_room wall_of_lights home_driftline yard_gate'.split(' ').sort());
     expect(lightIds).toEqual(['keepers_lamp', 'harbor_light', 'islet_signal_station', 'ruin_light']);
     expect(Object.keys(places.lighthouse_isle.anchors)).toEqual(['stairwell', 'lamp_room']);
   });

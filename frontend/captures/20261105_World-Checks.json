@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T20:06:31.043Z",
+  "checked": "2026-11-05T21:15:08.911Z",
   "browser": "157.0.8103.39",
   "viewport": "1440 × 900, DPR 1",
   "checks": [
@@ -12,6 +12,7 @@
     "lighthouse_isle/cottage: exact event, once per held E",
     "lighthouse_isle/shore: exact event, once per held E",
     "lighthouse_isle/tower_door: exact event, once per held E",
+    "lighthouse_isle/keepers_lamp: exact event, once per held E",
     "lighthouse_isle: explorer visible on the path",
     "lighthouse_isle within rendering budget",
     "saltreach_harbor/harbor_office: exact event, once per held E",
@@ -25,6 +26,8 @@
     "saltreach_harbor/signal_station: exact event, once per held E",
     "saltreach_harbor/notice_board: exact event, once per held E",
     "saltreach_harbor/captains_table: exact event, once per held E",
+    "saltreach_harbor/keepers_post_room: exact event, once per held E",
+    "saltreach_harbor/wall_of_lights: exact event, once per held E",
     "saltreach_harbor: explorer visible on the path",
     "saltreach_harbor within rendering budget",
     "home_islet/plot_1: exact event, once per held E",
@@ -32,6 +35,7 @@
     "home_islet/plot_3: exact event, once per held E",
     "home_islet/plot_4: exact event, once per held E",
     "home_islet/islet_signal_station: exact event, once per held E",
+    "home_islet/home_driftline: exact event, once per held E",
     "home_islet: explorer visible on the path",
     "home_islet within rendering budget",
     "Pointer selection emits the exact plot payload",
@@ -41,6 +45,7 @@
     "smugglers_cove: explorer visible on the path",
     "smugglers_cove within rendering budget",
     "wreck_point/salvage_yard: exact event, once per held E",
+    "wreck_point/yard_gate: exact event, once per held E",
     "wreck_point/beach: exact event, once per held E",
     "wreck_point: explorer visible on the path",
     "wreck_point within rendering budget",
@@ -71,13 +76,13 @@
       "programs": 4
     },
     "saltreach_harbor": {
-      "fps": 61,
+      "fps": 60,
       "calls": 50,
       "triangles": 178,
       "geometries": 48,
       "textures": 25,
       "roots": 1,
-      "objects": 46,
+      "objects": 48,
       "programs": 4
     },
     "home_islet": {
@@ -91,7 +96,7 @@
       "programs": 4
     },
     "smugglers_cove": {
-      "fps": 60,
+      "fps": 61,
       "calls": 28,
       "triangles": 54,
       "geometries": 27,
@@ -101,7 +106,7 @@
       "programs": 3
     },
     "wreck_point": {
-      "fps": 61,
+      "fps": 60,
       "calls": 30,
       "triangles": 58,
       "geometries": 29,
@@ -117,13 +122,13 @@
       "geometries": 25,
       "textures": 12,
       "roots": 1,
-      "objects": 23,
+      "objects": 24,
       "programs": 4
     }
   },
   "roundTrips": [
     {
-      "fps": 65,
+      "fps": 62,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -133,7 +138,7 @@
       "programs": 3
     },
     {
-      "fps": 64,
+      "fps": 26,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -144,26 +149,6 @@
     },
     {
       "fps": 63,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 61,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 61,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -183,7 +168,27 @@
       "programs": 3
     },
     {
-      "fps": 63,
+      "fps": 110,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 28,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 87,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -203,7 +208,7 @@
       "programs": 3
     },
     {
-      "fps": 63,
+      "fps": 58,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -213,7 +218,7 @@
       "programs": 3
     },
     {
-      "fps": 62,
+      "fps": 50,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -224,7 +229,7 @@
     }
   ],
   "before": {
-    "fps": 60,
+    "fps": 56,
     "calls": 97,
     "triangles": 192,
     "geometries": 96,
@@ -234,7 +239,7 @@
     "programs": 3
   },
   "after": {
-    "fps": 60,
+    "fps": 61,
     "calls": 97,
     "triangles": 192,
     "geometries": 96,
@@ -243,8 +248,8 @@
     "objects": 10,
     "programs": 3
   },
-  "reducedMotionMs": 108,
-  "windOnePassageMs": 4222,
+  "reducedMotionMs": 874,
+  "windOnePassageMs": 4607,
   "errors": [],
   "externalRequests": []
 }

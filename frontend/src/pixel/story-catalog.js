@@ -10,6 +10,7 @@ for (const id of characterIds) {
   storyDimensions[id+'-portrait'] = [64,80,0];
 }
 Object.assign(storyDimensions, {
+  'lens-hall-open':[144,160,12], 'festival-lantern-string':[160,48,4], 'wall-of-lights-open':[128,96,8],
   'false-light':[96,96,12], 'ghost-schooner':[128,112,10], 'sealed-cargo':[64,64,8], 'anchor-eye-seal':[32,32,0],
   'torn-logbook-page':[48,64,4], 'lighthouse-lens':[48,64,8], 'keepers-star':[32,32,4],
   'wall-lights-plaque':[128,64,4], 'captains-board':[320,192,0], 'clue-frame-new':[144,192,0],

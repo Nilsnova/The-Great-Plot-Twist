@@ -10,6 +10,7 @@ export default defineConfig({
     game: resolve(import.meta.dirname, 'index.html'),
     workshop: resolve(import.meta.dirname, 'asset-library.html'),
     uiKit: resolve(import.meta.dirname, 'ui-kit.html'),
+    caseLab: resolve(import.meta.dirname, 'case-lab.html'),
   } } },
   test: { include: ['tests/**/*.test.js'] },
 });

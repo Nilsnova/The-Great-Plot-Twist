@@ -1,0 +1,17 @@
+{
+  "source": "CASE-FILE.md section 12, draft read-only on 2026-11-05",
+  "fingerprints": [
+    {
+      "label": "unmasking",
+      "prefix": "You pull back ",
+      "length": 155,
+      "sha256": "c975f744c8046422196fa7f7ceda9f2c62c92caed26da0666d15f7894d1a9ffa"
+    },
+    {
+      "label": "twist",
+      "prefix": "Plot twist: th",
+      "length": 67,
+      "sha256": "ea417d0af935cf9578f167fc9ac5d67b683275417f11324cd3df8bb8fadfe0b0"
+    }
+  ]
+}

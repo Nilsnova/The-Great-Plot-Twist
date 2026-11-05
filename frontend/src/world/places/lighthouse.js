@@ -16,6 +16,6 @@ export async function createLighthousePlace(ctx = {}) {
     const texture = await (ctx.loadBackdrop ?? loadBackdrop)('pixel/ground.png');
     const island = createIsland(group, art, texture), boat = createBoat(group, art);
     return { ...places.lighthouse_isle, id: 'lighthouse_isle', group, groundHeight, colliders: island.colliders,
-      update(dt, state) { state = frameState(dt, state); island.update(state.player, state.time, state.night, state.weather); boat.update(state.time, state.weather); }, dispose };
+      update(dt, state) { state = frameState(dt, state); island.update(state.player, state.time, state.relit?Math.max(.65,state.night):state.night, state.weather); boat.update(state.time, state.weather); }, dispose };
   } catch (error) { dispose(); throw error; }
 }
