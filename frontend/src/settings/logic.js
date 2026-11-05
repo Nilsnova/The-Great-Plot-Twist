@@ -1,6 +1,6 @@
 // Bounded preferences only. Used by settings storage and tests, never for account tokens.
 export const PREFERENCES_KEY='plot_twist_preferences_v1';
-export const defaults=Object.freeze({quality:'high',master:0.7,music:0.35,effects:0.65,reducedMotion:null,textSpeed:36,colourblind:false});
+export const defaults=Object.freeze({quality:'high',master:0.7,music:0.35,effects:0.65,reducedMotion:null,textSpeed:36,colourblind:false,showCaptains:'everyone'});
 const volume=value=>typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(1,value)):null;
 export function normalizePreferences(value={}) {
   const result={...defaults};
@@ -9,6 +9,7 @@ export function normalizePreferences(value={}) {
   for(const key of ['master','music','effects'])result[key]=volume(value[key])??defaults[key];
   if([null,true,false].includes(value.reducedMotion))result.reducedMotion=value.reducedMotion;
   if([0,24,36,60].includes(value.textSpeed))result.textSpeed=value.textSpeed;
+  if(['everyone','crew','off'].includes(value.showCaptains))result.showCaptains=value.showCaptains;
   if(typeof value.colourblind==='boolean')result.colourblind=value.colourblind;
   return result;
 }

@@ -16,8 +16,7 @@ export function createIntro(ctx) {
     const token=++request;abort?.abort();abort=new AbortController();const controller=abort;modal.setContent(loading);retry.element.hidden=true;copy.textContent='The story is coming ashore…';
     const timer=setTimeout(()=>controller.abort(),5000);
     try {
-      const response=await fetch('/api/content/intro-story',{signal:controller.signal,headers:{Accept:'application/json'}});
-      if(!response.ok)throw new Error('Story unavailable');const story=await response.json();
+      let story;if(ctx.readStory)story=await ctx.readStory();else{const response=await fetch('/api/content/intro-story',{signal:controller.signal,headers:{Accept:'application/json'}});if(!response.ok)throw new Error('Story unavailable');story=await response.json();}
       if(!story?.scenes?.[story.start]||!story.items)throw new Error('Story unavailable');
       if(disposed||token!==request)return;adapter=createIntroAdapter(story,introJournal());if(resumeRequested)show(!adapter.restored&&introJournal().read()?'This local save no longer matches the intro. A new intro has been opened.':undefined);else visit();
     }catch(error){if(!disposed&&token===request&&active){copy.textContent='The story could not reach the island. Please try again.';retry.element.hidden=false;retry.element.focus();}}

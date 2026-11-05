@@ -89,7 +89,7 @@ describe('presence rendering math',()=>{
   it('shows at most two 16px phone labels in bounded actor-anchored space',()=>{
     const labels=placePresenceLabels(Array.from({length:8},(_,index)=>({point:{x:80+index*5,y:325}})),{width:375,height:667});
     expect(labels).toHaveLength(2);
-    for(const label of labels){expect(label.left).toBeGreaterThanOrEqual(8);expect(label.left+label.width).toBeLessThanOrEqual(367);expect(label.top).toBeGreaterThanOrEqual(223);expect(label.top+label.height).toBeLessThanOrEqual(437);expect(label.height).toBe(26);expect(label.width).toBe(180);}
+    for(const label of labels){expect(label.left).toBeGreaterThanOrEqual(8);expect(label.left+label.width).toBeLessThanOrEqual(367);expect(label.top).toBeGreaterThanOrEqual(258);expect(label.top+label.height).toBeLessThanOrEqual(437);expect(label.height).toBe(26);expect(label.width).toBe(180);}
     for(let a=0;a<labels.length;a++)for(let b=a+1;b<labels.length;b++){
       const left=labels[a],right=labels[b],overlapX=left.left<right.left+right.width&&right.left<left.left+left.width,overlapY=left.top<right.top+right.height&&right.top<left.top+left.height;
       expect(overlapX&&overlapY).toBe(false);

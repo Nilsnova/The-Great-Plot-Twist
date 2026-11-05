@@ -14,7 +14,7 @@ describe('presence HUD',()=>{
       const find=cls=>{let found;const walk=e=>{if(e.className===cls)found=e;e.children.forEach(walk);};walk(hud.element);return found;};
       const status=find('presence-sr-only'),count=find('presence-count'),more=find('presence-more'),strip=find('presence-crew-strip');
       expect(hud.element.attributes['aria-label']).toContain('presence');expect(status.attributes['aria-live']).toBe('polite');
-      expect(find('presence-emotes').hidden).toBe(true);expect(find('presence-connection').textContent).toContain('nearby');
+      expect(find('presence-emotes').hidden).toBe(true);expect(find('presence-connection').textContent).toBe('Live · 3');
       expect(status.textContent).toContain('Captain Shoal (Witness)');expect(count.textContent).toContain('1 shown');expect(count.textContent).toContain('2 hidden');
       expect(more.textContent).toBe('+2 more captains here');
       const seats=[...strip.children];expect(seats).toHaveLength(4);expect(seats[0].attributes['aria-label']).toContain('partner');expect(seats[1].textContent).toContain('Open');

@@ -32,7 +32,7 @@ export function createPresenceHud({send,onCrew=()=>{}}={}){
     setText(more,counts.hidden?`+${counts.hidden} more captain${counts.hidden===1?'':'s'} here`:'');more.hidden=!counts.hidden;
     const people=new Map((model.others??[]).map(person=>[person.id,`${person.name} (${person.kit?.name??'Captain'})`]));
     const names=counts.ids.map(id=>people.get(id)).filter(Boolean);
-    const connectionMessage=model.status==='off'?'Presence off':model.status==='offline'?'Presence offline':model.status==='reconnecting'?'Reconnecting':`${nearby} nearby · ${counts.drawn} shown`;
+    const connectionMessage=model.status==='off'?'Off':model.status==='offline'?'Offline':model.status==='reconnecting'?'Reconnecting':`Live · ${nearby}`;
     const accessibleMessage=model.status==='off'?'Presence is off.':model.status==='offline'?'Presence is offline.':model.status==='reconnecting'?'Reconnecting to captains nearby.':
       `${nearby} captains nearby; ${counts.drawn} shown${names.length?`: ${names.join(', ')}`:''}${counts.hidden?`, ${counts.hidden} more here`:''}.`;
     setText(connection,connectionMessage);setText(status,accessibleMessage);

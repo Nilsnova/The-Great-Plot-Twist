@@ -210,3 +210,7 @@ Three original, code-authored sprites in `scripts/pixel_art/relighting.py`, regi
 | `wall-of-lights-open` | 128 × 96 | 8 px | Harbor's public Wall of Lights; captain names are accessible adapter-supplied HTML |
 
 The kit now contains 185 sprite PNGs plus ten existing backgrounds, 195 PNGs total. Festival fireworks are deterministic WebGL points authored in `src/world/festival.js`, with no audio/image dependency; they are disabled for reduced motion and use fewer points on low quality. New art is display-only and contains no names, case prose or solution. Rebuild with `python3 scripts/pixel_art/generate.py`.
+
+## G7 presence emotes
+
+Five original speech bubbles, authored in `scripts/pixel_art/emotes.py`, registered by id in `pixel/story-catalog.js`: `emote-wave`, `emote-cheer`, `emote-point`, `emote-lantern`, `emote-shrug`. Each is 24 × 24 native pixels with transparent surroundings. No external source, font, logo or character name. Generate with `python3 scripts/pixel_art/generate.py`. Catalogue total: 190 sprites plus 10 backgrounds, 200 PNGs. The existing 195 images are unchanged.

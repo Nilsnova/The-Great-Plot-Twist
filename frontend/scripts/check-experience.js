@@ -15,15 +15,15 @@ try {
   check(await page.getByRole('button',{name:'Continue',exact:true}).isDisabled(),'Continue is disabled without a local intro');
   await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[window.__pad]});});await page.waitForTimeout(60);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForTimeout(80);
   check(await page.evaluate(()=>document.activeElement.textContent==='Settings'&&window.__audioCreated===0),'Gamepad can navigate the cold title without allocating audio');await page.evaluate(()=>window.__pad.buttons[13].pressed=false);
-  await page.getByRole('button',{name:'Credits',exact:true}).focus();await page.keyboard.press('Tab');
-  check(await page.evaluate(()=>document.activeElement.id==='new-game'),'Native title dialog contains keyboard focus');
+  await page.locator('.shell-screen button').last().focus();await page.keyboard.press('Tab');
+  check(await page.evaluate(()=>document.querySelector('.shell-screen[open]').contains(document.activeElement)),'Native title dialog contains keyboard focus');
   await page.getByRole('button',{name:'Settings',exact:true}).click();
   await page.locator('[data-preference=quality]').selectOption('low');
   for(const [key,value] of [['master',25],['music',20],['effects',80]])await page.locator(`[data-preference=${key}]`).evaluate((input,value)=>{input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));},String(value));
   await page.locator('[data-preference=reducedMotion]').selectOption('true');await page.locator('[data-preference=textSpeed]').selectOption('0');await page.locator('[data-preference=colourblind]').check();
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('plot_twist_preferences_v1')));
   check(saved.preferences.quality==='low'&&saved.preferences.master===0.25&&saved.preferences.music===0.2&&saved.preferences.effects===0.8&&saved.preferences.textSpeed===0&&saved.preferences.colourblind,'Every experience preference is saved with bounded values');
-  check(Object.keys(saved.preferences).sort().join(',')==='colourblind,effects,master,music,quality,reducedMotion,textSpeed','Preferences contain only documented fields, no account or token data');
+  check(Object.keys(saved.preferences).sort().join(',')==='colourblind,effects,master,music,quality,reducedMotion,showCaptains,textSpeed','Preferences contain only documented fields, no account or token data');
   await page.keyboard.press('Escape');await page.getByRole('button',{name:'Credits',exact:true}).click();
   const credits=await page.locator('.shell-credits').textContent();check(await page.locator('.shell-credits ul li').count()===4&&credits.includes('Nils Lenke')&&credits.includes('Open-Meteo.com')&&credits.includes('Binance Vision')&&credits.includes('CC BY-NC-SA 4.0')&&credits.includes('Apache-2.0')&&credits.includes('HPND'),'Credits list four teammates, all data attribution and tool licences');
   await page.keyboard.press('Escape');await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();

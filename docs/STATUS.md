@@ -116,11 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**G7 checkpoint 0 complete on `feat/g7-living-world`; G6 is merged.** Credits now read a four-row data list: Nils Lenke and three teammates' own editable placeholders, with no student numbers. They include Open-Meteo, Binance live data, Binance Vision replay/licence and existing asset/tool notices.
+**G7 checkpoint 1 complete on `feat/g7-living-world`; G6 is merged.** One schema-1 adapter now drives bounded live-captain rendering, emotes, crew/connection state, GitHub-only account controls, save conflicts/expiry and safe local/cloud Continue. Gameplay text is larger: controls at least 16 px, case body 18 px and story 19 px.
 
-- **Verified:** 195 Vitest tests in 32 files; build and production spoiler guard; 11 credits browser assertions at 1280/375 px. Evidence is in `frontend/captures/20261105_G7-C0-*`.
-- **Next:** build adapter conformance first, then presence/account, rewards/world partners/log/hints, and finally golden-path/chaos checks and world polish. Shared contract changes go in `frontend/GRAPHICS.md`; Claude mirrors them in the real adapter. This first credits checkpoint is pushed alone so each teammate can make their own first tiny contribution.
-- **Not verified / remaining:** live backend/account/realtime integration, G7 streams 1–8, physical-device/screen-reader checks and deployed G7. Original pixel art and G6 contracts remain intact. No backend, online modules, infrastructure or reserved teammate packages were changed; Claude integrates.
+- **Verified:** reusable conformance suite; all current workspace Vitest tests; build/spoiler guard; 17 presence/account browser assertions, 26 experience assertions and 18 loading assertions. Eight others measured 60 FPS / 105 calls; cold title 20,988 JS bytes, below G5's 21,477. Evidence: `frontend/captures/20261105_G7-C1-*`.
+- **Next / not verified:** streams 4–8 (rewards, NPC life, log/hints, end-to-end/chaos checks and Gull’s Rest); real account/cloud/realtime integration, physical devices, actual screen reader and deployed G7. Claude mirrors the additive contract in GRAPHICS.md and integrates. No backend, online, deployment or reserved teammate files changed.
 
 ### S Story and Mystery (owner picked today)
 
@@ -416,6 +415,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-05, G7 checkpoint 1.** Codex for Nils shipped adapter conformance/fixtures, live-captain interpolation/cap/emotes, account/save presentation and larger readable text on `feat/g7-living-world`; Vitest, build/spoiler guard, 17 live/account, 26 experience and 18 loading checks pass. Eight others: 60 FPS/105 calls; cold title 20,988 bytes. Local fake only; Claude supplies the real adapter.
 
 Newest first. One line per finished task: date, who, what, where.
 

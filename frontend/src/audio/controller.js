@@ -26,7 +26,7 @@ export function createAudio({container,on,caption}) {
   const visibility=()=>{theme();if(document.hidden)context?.suspend().catch(()=>{});};
   window.addEventListener('click',unlock,true);window.addEventListener('pointerdown',unlock,true);window.addEventListener('keydown',unlock,true);document.addEventListener('click',click,true);document.addEventListener('dialogue-blip',blip);document.addEventListener('visibilitychange',visibility);
   const stopPreferences=onPreferences(apply),stopCinematic=on('cinematic',event=>{finale=event.stage==='started';if(finale)cue('beam');theme();});
-  return {get state(){return context?.state??'locked';},cue,
+  return {unlock,get state(){return context?.state??'locked';},cue,
     setScreen(mode){screen=mode;theme();},
     update(dt,{weather,speed=0,night=0,active=false,place}={}) {
       if(!context||disposed)return;ambience.update(weather,screen==='playing'&&active);

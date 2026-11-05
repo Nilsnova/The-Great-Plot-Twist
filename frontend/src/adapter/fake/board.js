@@ -10,7 +10,7 @@ export function pinCard(state,id,seat=playerSeat(state),orderedBy=null) {
   if(state.crew?.status!=='active')return refuse('crew_required','Muster the crew first.');
   if(!(state.found[seat]??[]).includes(id))return refuse('card_not_held','That seat does not hold this card.');
   if(state.pins.some(pin=>pin.cardId===id&&pin.seat===seat))return refuse('already_pinned','This seat already pinned that card.');
-  state.pins.push({cardId:id,seat,orderedBy});
+  state.pins.push({cardId:id,seat,orderedBy,id:`pin-${state.pins.length+1}`,at:Date.now()});
   if((seat===playerSeat(state)||orderedBy===playerSeat(state))&&!state.creditedCards.includes(id)){state.creditedCards.push(id);state.coins+=50;}
   return accept(`${cardTitles[id]} pinned by seat ${seat}.`);
 }
@@ -30,7 +30,7 @@ export function pairCards(state,a,b) {
 export function boardView(state) {
   const held=new Set([...Object.values(state.found).flat(),...state.pins.map(pin=>pin.cardId)]),viewer=playerSeat(state);
   const deductions=deductionData.map(item=>({...item,complete:state.deductions.includes(item.id),finding:'Finding recorded.',clearedTitles:item.clears.map(id=>suspectTitles[id])}));
-  return {cards:[...held].sort().map(id=>{
+  return {pinHighlights:state.pins.map(pin=>({id:pin.id??`${pin.cardId}-${pin.seat}`,cardId:pin.cardId,seat:pin.seat,at:pin.at??0})),cards:[...held].sort().map(id=>{
     const pins=state.pins.filter(pin=>pin.cardId===id),used=deductions.some(item=>item.complete&&item.cards.includes(id));
     return {id,title:cardTitles[id],body:null,state:used?'used':pins.length?'pinned':'new',
       holders:Object.entries(state.found).filter(([,cards])=>cards.includes(id)).map(([seat])=>({seat:Number(seat),label:`Seat ${seat}`})),

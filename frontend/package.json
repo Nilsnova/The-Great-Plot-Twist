@@ -23,7 +23,9 @@
     "test:demo": "node scripts/check-demo.js",
     "test:loading": "npm run build && node scripts/check-loading.js",
     "test:spoilers": "npm run build",
-    "test:case": "node scripts/check-case.js"
+    "test:case": "node scripts/check-case.js",
+    "test:credits": "node scripts/check-credits.js",
+    "test:living": "node scripts/check-living.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

@@ -1,0 +1,56 @@
+// Local account/presence checkpoint: no real auth, realtime, database or backend is used.
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+import {openWorldBrowser,measure} from './world-browser-tools.js';
+import {closeSettings} from './shell-browser-tools.js';
+const env=await openWorldBrowser(),{page}=env,report={checks:[]};
+const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);console.log(`PASS ${label}`);};
+const capture=name=>page.screenshot({path:`captures/20261105_G7-C1-${name}.png`});
+try{
+  await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline rehearsal"}'}));
+  await page.goto(env.url+'/?case=local');await page.locator('.shell-screen[open]').waitFor();
+  await page.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();
+  await page.waitForFunction(()=>window.__plotTwist?.adapter.read().account.state==='signed_in');
+  check(true,'Title sign-in uses the local adapter while APIs are down');
+  await page.getByRole('button',{name:'Account and saves',exact:true}).click();
+  await page.locator('.account-modal[open]').waitFor();await capture('Account');
+  await page.getByRole('button',{name:'Change captain name once'}).click();
+  check(await page.evaluate(()=>!window.__plotTwist.adapter.read().account.canReroll),'Name can be changed once');
+  await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
+  await page.locator('#new-game').click();await page.waitForFunction(()=>window.__island);
+  await page.locator('.intro-modal[open] .intro-view').waitFor();
+  check(true,'The unchanged bundled intro opens without the intro API');await page.keyboard.press('Escape');
+  await page.evaluate(async()=>{const {initialPresenceState}=await import('/src/adapter/fake/presence.js');window.__plotTwist.adapter.dev.setPresence(initialPresenceState({count:30}));});
+  await page.waitForFunction(()=>window.__island.experience.stats.drawn===8);
+  check(await page.evaluate(()=>window.__island.experience.stats.hidden===22),'Thirty nearby captains draw at most eight and keep an overflow count');
+  report.performance=await measure(page);check(report.performance.calls<150,'Eight live captains and effects meet the draw-call budget');await capture('Presence');
+  await page.evaluate(()=>{const adapter=window.__plotTwist.adapter,original=adapter.reportPosition;window.__reports=[];adapter.reportPosition=sample=>{window.__reports.push({at:performance.now(),...sample});return original(sample);};});
+  await page.keyboard.down('ArrowRight');await page.waitForTimeout(1700);await page.keyboard.up('ArrowRight');await page.waitForTimeout(600);
+  const reports=await page.evaluate(()=>window.__reports);check(reports.length>=3&&reports.every((r,i)=>!i||r.at-reports[i-1].at>=490),'World requests position reports no faster than twice a second');
+  check(reports.at(-1).moving===false,'A final stopped position is reported');
+  await page.getByRole('button',{name:'Open visual settings'}).click();
+  await page.locator('[data-preference=showCaptains]').selectOption('off');await page.waitForFunction(()=>window.__island.experience.stats.drawn===0);
+  check(true,'The off preference removes other captains');await page.locator('[data-preference=showCaptains]').selectOption('everyone');await closeSettings(page);
+  await page.waitForFunction(()=>window.__island.experience.stats.drawn>0&&window.__island.experience.stats.drawn<=8);
+  await page.locator('.presence-hud').getByRole('button',{name:'Emotes',exact:true}).click();
+  await page.getByRole('button',{name:'Emote wave',exact:true}).click();
+  await page.waitForFunction(()=>window.__island.scene.getObjectByName('local-captain-emote')?.visible);
+  check(await page.locator('[data-focus=presence-wave]').isDisabled(),'A speech-bubble emote appears and its cooldown comes from the adapter');
+  const before=await page.evaluate(()=>localStorage.getItem('plot_twist_intro_moves_v1'));
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'expired'}));
+  await page.locator('.account-modal[open] .account-banner').waitFor();check(await page.locator('.account-banner').textContent().then(text=>text.includes('this device')),'Expired session explains that device progress remains');
+  await page.getByRole('button',{name:'Sign in again with GitHub',exact:true}).click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().account.state==='signed_in');
+  check(await page.evaluate(()=>localStorage.getItem('plot_twist_intro_moves_v1'))===before,'Signing in again preserves the local intro journal');
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({saveState:'conflict',deviceSave:{state:'saved',kind:'intro',actions:[],place:'lighthouse_isle',label:'This device',updatedAt:null},cloudSave:{state:'saved',kind:'intro',actions:['to_desk'],place:'lighthouse_isle',label:'Cloud copy',updatedAt:null}}));
+  await page.getByRole('button',{name:'Use the cloud save',exact:true}).click();
+  check(await page.evaluate(()=>window.__plotTwist.adapter.read().account.save.source)==='cloud','Save conflict uses the explicitly selected cloud copy');
+  await page.setViewportSize({width:375,height:667});await capture('Account-Phone');
+  check(await page.locator('.account-modal[open]').evaluate(el=>el.scrollWidth<=el.clientWidth),'Account panel wraps at 375 px');await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);await capture('Presence-Phone');
+  const labels=await page.locator('.other-captain-label').evaluateAll(nodes=>nodes.filter(el=>!el.hidden&&el.getClientRects().length).map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height,size:parseFloat(getComputedStyle(el).fontSize)};}));
+  check(labels.length<=8&&labels.every(r=>r.size>=16),'Phone captain names remain at least 16 px');
+  check(labels.every((a,i)=>labels.every((b,j)=>i===j||a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y)),'Phone captain labels do not overlap one another');
+  check(env.errors.every(error=>error.includes('503')),'Only expected offline weather diagnostics occur');
+  check(env.external.length===0,'No external art, fonts or auth requests');console.log(JSON.stringify(report,null,2));
+}catch(error){report.failure=error.message;await capture('Failure');throw error;}
+finally{await writeFile('captures/20261105_G7-C1-Living-Checks.json',JSON.stringify(report,null,2));await env.close();}

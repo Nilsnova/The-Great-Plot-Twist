@@ -63,7 +63,7 @@ export function createHud(container, actions) {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
   let toastUntil = 0, syncAt = 0;
-  return {setCaptain(view){captainName.textContent=view.captain.name;save.textContent=view.captain.save.label;},togglePanel,start(){select('#explore').click();},
+  return {setCaptain(view){captainName.textContent=view.captain.name;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},togglePanel,start(){select('#explore').click();},
     setWeatherCredit(data) {
       const source=node('a','',data.text),licence=node('a','',data.licenceText);
       source.href=data.href;licence.href=data.licenceHref;
