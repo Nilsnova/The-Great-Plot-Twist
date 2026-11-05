@@ -111,7 +111,7 @@ An **owner role** names the kind of work that usually changes a folder. It is a 
 |---|---|---|
 | `backend/` | The Python API, all in one folder. The next rows show what is inside. | Server |
 | `backend/main.py` | Vercel entry only. It builds the app from `backend/server/` (`create_app()`) and hands requests to it. No rules here. | Server |
-| `backend/server/` | The Python package (FastAPI): app, errors, settings, flags, clock, auth, wallet, routes (`health`, `config` and `keepalive`), adapters. All game rules live here. Its `__init__.py` explains each file. | Server |
+| `backend/server/` | The Python package (FastAPI): app, errors, settings, flags, clock, auth, the sign-in code exchange, wallet, routes (`health`, `config`, `me`, `auth_exchange` and `keepalive`), adapters. All game rules live here. Its `__init__.py` explains each file. | Server |
 | `backend/server/tests/` | pytest tests for the server. | Server |
 | `backend/pyproject.toml`, `backend/uv.lock`, `backend/.python-version` | Python packages, tool settings and the Python version. `uv` writes the lock file, so do not edit it by hand. | Server |
 | `frontend/` | The browser client, all in one folder: Three.js and Vite, plain JavaScript. Added by package G1. | Client |
@@ -119,7 +119,7 @@ An **owner role** names the kind of work that usually changes a folder. It is a 
 | `frontend/tests/` | Vitest tests for `frontend/src/`. Added by package G1. | Client |
 | `frontend/public/`, `frontend/index.html`, `frontend/vite.config.js`, `frontend/package.json` | Client build files and the list of npm packages. Added by package G1. | Client |
 | `frontend/GRAPHICS.md`, `frontend/ASSETS.md` | How the client works, its performance budgets, and the register of where each asset came from and its license. Added by package G1, inside `frontend/`. | Client |
-| `vercel.json` | Tells Vercel about the two services, `frontend/` and `backend/`, and where each web address goes. See "How the pieces talk" below. It has no cron entry yet: the daily call to `/api/keepalive` is added after the first deploy ([SETUP.md](SETUP.md), Step 5). | Whole team |
+| `vercel.json` | Tells Vercel about the two services, `frontend/` and `backend/`, and where each web address goes. See "How the pieces talk" below. It holds one cron entry: Vercel calls `/api/keepalive` once a day. Confirm that it runs next to the two services after the next production deploy ([SETUP.md](SETUP.md), Step 5, check 3). | Whole team |
 | `supabase/` | `migrations/` holds the SQL files (names start with a timestamp): tables, constraints, policies, grants and the wallet function. [`README.md`](../supabase/README.md) explains how to apply them and holds the policy and grant matrix and a manual test plan. | Database |
 | `docs/` | These engineering rules, the decision log, the one-time setup guide (`SETUP.md`), the big picture (`ARCHITECTURE.md`) and the shared contracts (`INTERFACES.md`). Longer design notes go here too. | Docs |
 | `specs/` | One spec per work package, started from `_TEMPLATE.md`. | Docs (the package owner writes their own spec) |
@@ -415,6 +415,7 @@ Use this list when you write code and when you review a pull request.
 - [ ] Every table has row-level security **and explicit grants**, and the [policy and grant matrix](../supabase/README.md#who-may-do-what) is up to date. Our Supabase project does not expose new tables by itself, so each right is a `grant` in a migration.
 - [ ] The server checks all input (type, range, length, allowed values). It refuses bad input and never quietly repairs it. The browser's own checks are only for convenience.
 - [ ] The user id comes from the verified sign-in, never from the request.
+- [ ] Sign-in uses Supabase's PKCE flow, never the older implicit flow. The implicit flow puts the refresh token (it never expires on the free plan) and the GitHub token in the address, and the browser writes the address to its history before a page can remove it. PKCE puts only a one-time code in the address. Whoever reviews a sign-in page names the flow and checks the browser history ([INTERFACES.md](INTERFACES.md#post-apiauthexchange)).
 - [ ] No wide-open cross-origin setting (`*`). The site and the API share one address on Vercel, so they need none.
 - [ ] Minimum personal data. Use the sign-in user id as the key. Do not copy emails or real names into our tables. Never log tokens or personal data.
 - [ ] The browser never writes game data. A signed-in player may only read from the database. Every write (names, coins, progress, crews) goes through the server with the secret key, so no table has an insert, update or delete policy or grant for `authenticated`.
