@@ -2,8 +2,10 @@
 import { routeTo, places } from './registry.js';
 export function createWorld(ctx) {
   let current = null, busy = false, disposed = false, relit = false;
+  const idleWaiters=new Set(),wakeIdle=()=>{for(const resolve of idleWaiters)resolve();idleWaiters.clear();};
   return {
     get current() { return current; }, get busy() { return busy || !!ctx.isBlocked?.(); },
+    whenIdle(){return busy&&!disposed?new Promise(resolve=>idleWaiters.add(resolve)):Promise.resolve();},
     get relit() { return relit; },
     canTravel(id) { return !disposed && !!routeTo(current?.id, id, relit); },
     setRelightingComplete(value) { relit = value === true; },
@@ -32,14 +34,14 @@ export function createWorld(ctx) {
           }
         }
         throw error;
-      } finally { busy = false; ctx.finishTransition?.(); }
+      } finally { busy = false; try{ctx.finishTransition?.();}finally{wakeIdle();} }
     },
     interact(id) {
       if (busy || disposed || ctx.isBlocked?.() || !current?.zones.some(zone => zone.id === id)) return false;
       ctx.emit({ type: 'interact', id, place: current.id }); return true;
     },
     update(dt, state) { current?.update(dt, state); },
-    dispose() { if (disposed) return; disposed = true; ctx.cancelTransition?.(); current?.dispose(); current = null; ctx.disposeVisuals?.(); },
+    dispose() { if (disposed) return; disposed = true; wakeIdle();ctx.cancelTransition?.(); current?.dispose(); current = null; ctx.disposeVisuals?.(); },
     get name() { return current ? places[current.id].name : 'At sea'; },
   };
 }

@@ -28,7 +28,7 @@ export const places = {
     zone('reef', 'Reef', -8, 9), zone('watchtower_ruin', 'Watchtower ruin', -5, -3),
     zone('raid_arch', 'Raid arch', 8, 1), zone('fog_bank', 'Fog bank', 9, -9) ],
     lights: [{ id: 'ruin_light', beamOrigin: { x: -5, y: 8.5, z: 0 } }] },
-  gulls_rest: { name: 'Gull’s Rest', chart: [407, 34], spawn: [0, 10], locked: true, zones: [] },
+  gulls_rest: { name: 'Gull’s Rest', chart: [407, 34], spawn: [0, 10], locked: true, zones: [zone('gulls_rest_dock','Gull’s Rest dock',0,13),zone('lens_store','Lens store',0,2),zone('keepers_star','Keeper’s Star',5,7)] },
 };
 for (const place of Object.values(places)) { place.anchors ??= {}; place.lights ??= []; }
 export const placeIds = Object.keys(places);
