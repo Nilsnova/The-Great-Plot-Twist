@@ -1,0 +1,9 @@
+{
+  "stateFrom": {
+    "storm": {"wind": 0.8},
+    "fog": {"fog": 0.5},
+    "rain": {"rain": 0.4}
+  },
+  "night": {"startsHour": 18, "endsHour": 6, "hoursForState": 3},
+  "fogNightRule": {"almanacStartsOn": "2026-11-16"}
+}

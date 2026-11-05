@@ -193,6 +193,45 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 
 **Agreed by, PR and impact:** Nils' rules, 5 Nov 2026. The "chosen here" numbers (breaker freeze, floor 25 % and ceiling 400 % of the start price, 2 % fee, 500 and 2000 coin limits, no limit on sales, 10-minute hold counted from the latest purchase, price kept at a re-base, 5-second price age for trades, 10 trades in 30 seconds, no replay in live mode) are proposals for Nils and the team. Affects the Exchange screen (browser), the story card C6 (a Greyfathom share), the economy simulation, and every package that adds wallet reasons (the list of reasons now has 11 entries; keep the migration order and the Python order the same).
 
+## D018 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06
+
+**Status:** Proposed in the open-world must pull request (`feat/open-world-must`, spec `specs/open-world-must.md`); accepted when a different teammate has reviewed it and it is merged. The choices marked "chosen here" are not in the approved design (`OPEN-WORLD.md` 3.1 to 3.4, 5.4, 10.2, 10.3) and need Nils' OK.
+
+**Decision:**
+
+1. One pure function maps the four weather values of an hour to `storm`, `fog`, `rain` or `calm`, in that order. The thresholds 0.8, 0.5 and 0.4 are start values in `backend/content/weather_states.json`. Cloud cover never changes the state.
+2. Nights run from 18:00 to 06:00 Lisbon time. A night (or a daytime) takes a state when at least 3 of its hours have it, the first of storm, fog and rain; otherwise it is calm (*chosen here*: the design gives states per hour but no rule for a whole night).
+3. The fog-night rule is applied exactly as the design states it: a night is a fog night if it is in the fog state, or if neither of the last two nights was. It looks back 30 nights from tonight and assumes the almanac's every-third-night pattern, counted from 16 Nov 2026 (Day 1), for the nights before that (*chosen here*; no table). A look-back that is a multiple of 3 never stalls (a test tries one lonely real-fog night in each of the three almanac positions).
+4. The single Open-Meteo call (the one `CachedSource`) adds 4 hourly variables, 31 past days and 3 forecast days, in UTC. Open-Meteo counts that as about 2.4 calls, at most about 350 a day per server instance, against a free limit of 10,000 (checked on 5 Nov 2026).
+5. Game time uses `Europe/Lisbon`: the game day starts at 00:00, the bulletin day at 08:00 (the Exchange's market day, and a test checks they agree), the harbor week on Monday at 00:00. Without timezone data the server falls back to UTC, which is right until 28 Mar 2027.
+6. `GET /api/bulletin` is public, computed on request and the same for everyone. Its texts come from two server-only content files. The crew's next-lead line is served signed in by package S3.
+7. The Chapter 2 hook fires at 06:00 Lisbon time at the end of the first calm night among the first three nights that start after the Relighting, or at the end of the third (*chosen here*: the design names only the trigger night). It looks only at nights that are over, so it never shows and then goes away. It reads the world stage through a reader that package L3 provides (until then the coast is always dark).
+8. "Calm and clear" in the design means the `calm` state, so an overcast dry night counts (*chosen here*).
+9. The false-light teaser line says "Watch for the false light" (*chosen here*). The design's "The false light is out." means the opposite after the solve, and it is used there ("The coast is relit. The false light is out. A crew found it.").
+10. The Exchange line of the bulletin reads "Island Exchange: live. No company is paused.", and the `cache` feed is called "recent prices" (*chosen here*). The first draft said "Every company is trading", which contradicted the words for a stale feed ("old prices (trading paused)"), and "cache" is developer talk.
+
+**Why:** The design's "no timers" rule (3.3), no new outside source, no table and no migration. Everything is plain pure functions with tests, worked out from data the server already fetches.
+
+**Alternatives and trade-offs:**
+
+- A `world_nights` table written once per night, with a bulletin snapshot (a migration with a database function, row-level security with no player access, explicit grants and a memory fallback). It is stable across server instances and forecast changes, but too big for the time planned. Rejected for now.
+- 92 days of history instead of 31: exact for longer, but about 6.8 Open-Meteo calls per fetch.
+- A rule on real fog only: not the design's rule.
+- Firing the hook at 18:00 on a forecast: it could appear and then disappear.
+
+**Known limits:**
+
+- Tonight's real-fog label follows the latest forecast, so it can change during the day.
+- After 30 nights without real fog, one fog night can come a night early.
+- Server instances can disagree for up to 10 minutes, because each has its own cache.
+- A freshly started instance during an Open-Meteo outage treats nights as unknown.
+- Without the hours of nights 1 to 3 (an outage on a fresh instance), the Chapter 2 hook fires only at the end of night 3, so instances can show it on different mornings.
+- If the server has no timezone database, look for the log line "No timezone database" after the first preview deploy. If it appears, add the `tzdata` package before 28 Mar 2027 (a team decision about a dependency).
+- The single Open-Meteo request now carries 34 days of hourly data and shares the 3-second timeout (`TIMEOUT_SECONDS` in `weather/open_meteo.py`) with the weather now. It has not been timed against the real service, because no live call was made while building. Before merge, time one call by hand; on the first preview deploy, check that `GET /api/weather` says `source` `live` and a `tonight.state` that is not `null`. If the call takes close to 1 second, raise the timeout.
+- If the weather place moves to Lisbon (an open question for Mon 9; the default is Torshavn), real fog becomes rare and the almanac carries the teaser.
+
+**Agreed by, PR and impact:** Proposed in `feat/open-world-must`. Affects `GET /api/weather` (two new fields), `GET /api/bulletin` (new), three content files, package L3 (`world_state` keeps `relit_at` and provides the reader), package S3 (the next-lead line) and package L5 (weather questions settle on real fog only).
+
 ## Next entry
 
 - **ID / date / title:**
