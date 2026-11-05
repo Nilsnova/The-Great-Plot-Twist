@@ -25,8 +25,8 @@ Nothing here waits for anyone. `main` is live, so clone it and create your branc
 | Lane | Start now | Read first | Next, when it unblocks |
 |---|---|---|---|
 | Everyone | Accept the GitHub invite, set your commit email, clone `main` and run the checks. Open the live site. Settle the open decisions at the team kickoff. | [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), this file, [docs/STATUS.md](docs/STATUS.md) | The first package of your lane |
-| G World and Graphics (Nils, with Codex) | G1: Codex finishes the pixel pass on `feat/graphics-foundation`. The look is decided (D005: original top-down pixel art). Nils agrees when it is ready to merge. | [frontend/GRAPHICS.md](frontend/GRAPHICS.md) | G1 finish: merge that branch into `main` when Codex reports done and Nils agrees. Then G2. |
-| S Story and Mystery | S0 Story detail round, with Nils. Writing only, no code. | [docs/STORY.md](docs/STORY.md), then the original game's `story.json` and README (the solo repository is private; how the S lane gets it is an open decision for Nils) | S1, as soon as the S lane can read the solo game |
+| G World and Graphics (Nils, with Codex) | G1 done: the pixel pass is on `main` (`45d2d46`; D005: original top-down pixel art). Codex now builds G2 + G3 on `feat/g2-world-places`. | [frontend/GRAPHICS.md](frontend/GRAPHICS.md) | G4 finale visuals, once the L3 finale contract exists. |
+| S Story and Mystery | S0 Story detail round (Claude for Nils on `docs/story-detail`, for Nils' approval). S1 is built by Claude for Nils on `feat/s1-import-plot-twist`. | [docs/STORY.md](docs/STORY.md) | S2 Act 1 in the browser, once S1 is on `main`. |
 | A Accounts and Multiplayer | A1-next preparation: get Developer access in the Supabase organization (to read), read the database rules, and read the backend code on `main`. | [docs/SETUP.md](docs/SETUP.md), [supabase/README.md](supabase/README.md), [specs/F0-foundation.md](specs/F0-foundation.md) | When wave 2 is on `main`, Claude applies the migration and runs the security advisor. Then run the other four deploy checks (check 2 has passed), then A2 |
 | L Live Systems | L1 Live weather: the spec, saved Open-Meteo answers and the mapping tests. No network in tests. | `backend/server/adapters/base.py` and `example.py`, [docs/ENGINEERING.md](docs/ENGINEERING.md) recipe 4.4, `setWeather` in [frontend/GRAPHICS.md](frontend/GRAPHICS.md) | L1 code on `feat/l1-live-weather` (from `main`), and the L3 spec for Mon 9 |
 
@@ -68,7 +68,7 @@ One roadmap day is about 4 focused hours by one teammate with a coding agent.
 | L2 | Your home islet | core | M | 2.5 | 1.5 | M2 |
 | L3 | Captain's Table and Night of Three Lights | core | L | 4 | 2.5 | M2 |
 | | **Core total** | | | **37** | **23** | |
-| L4 | Island Exchange | should, 1st (open, see below) | L | 4 | 2 | after M1 |
+| L4 | Island Exchange | core (Nils, 5 Nov; minimum version first) | L | 4 | 2 | M2 |
 | A7 | Lantern Duels | should, 2nd | M | 2.5 | 1.5 | after M1 |
 | L5 | Prediction desk | should, 3rd | M | 2.5 | 1.5 | after M1 |
 | L6 | Sports predictions | should, 4th | M | 2.5 | 1.5 | after M1 |
@@ -76,7 +76,7 @@ One roadmap day is about 4 focused hours by one teammate with a coding agent.
 
 At minimum versions each person carries about 5 to 6.5 days: G about 5 (with Nils' half of S0), S about 6.5, A about 5.5, L about 6 (with S4). Everyone has about 6.5. The S lane is the fullest, so the L-lane owner builds S4 by default (a proposal, open for the team kickoff).
 
-**Open for Nils:** whether Island Exchange (L4) becomes core or stays "should, 1st". The table keeps it as should until he decides. If it became core, the minimum core total would rise from about 23 to about 25 days, and about 1 day would stay spare.
+**Decided by Nils (5 Nov):** Island Exchange (L4) is core. To fit about 26 package days, it ships its minimum version first, and L2 (home islet) and G3 (Saltreach Harbor) ship their minimum versions. The minimum core is then about 25 days, with about 1 day spare. L2 and G3 grow back to full if the M1 check passes.
 
 ### Tiers
 
@@ -110,7 +110,7 @@ The bootstrap is done. `feat/live-skeleton` was merged into `main` on 5 Nov (mer
 
 1. **These docs go to `main` first:** this roadmap, the story, the status page and the README changes, so the whole team plans from the same pages.
 2. **Foundation wave 2 (`chore/foundation`) goes to `main`**, with `docs/ARCHITECTURE.md`, `docs/INTERFACES.md` and the decision entries D002, D003, D004, D012 and D015. It comes before the database work because wave 2 still edits the first migration, and a migration is never edited after it is applied ([docs/ENGINEERING.md](docs/ENGINEERING.md), recipe 4.2). Then Claude applies the migration to the Supabase project and runs the Supabase security advisor (its built-in safety check).
-3. **Codex's final pixel pass (`feat/graphics-foundation`) goes to `main`** when Codex reports done and Nils agrees. The timing is an open decision for Nils. The branch already merged `main` (`cc7174d`) and keeps the `frontend/` layout.
+3. **Done: Codex's final pixel pass is on `main`** (`45d2d46`, merged on 5 Nov evening after the tests and the build passed).
 4. **Every package uses its own `feat/` branch from `main`.** Packages that draw places or screens (G2, S2) wait for step 3, and packages that use the database (A2 and later) wait for step 2.
 
 Peer review stays the rule for every teammate's package (D015).
@@ -186,7 +186,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 
 ### G1 Graphics foundation and the final look
 
-- **Status:** look decided (D005, Nils, 5 Nov): top-down original pixel art. The earlier snapshot (G1 at `9f6a64a`, an illustrated look) is on `main` inside `frontend/`, and the live site runs it today. Nils approved the pixel-art gameplay presentation on 5 Nov. Codex switched the game to it (commit `479cd8d`) and recorded the approval in `frontend/ASSETS.md` on `feat/graphics-foundation` (commit `6f0ecfa`). The game there uses 36 original sprites drawn by code plus a baked terrain backdrop, at 16 native pixels per world unit. The branch already merged `main` (commit `cc7174d`) and keeps the `frontend/` layout. Codex is still finishing, and some work is not committed yet. **G1 finish is to merge that branch into `main` when Codex reports done and Nils agrees.** The timing is an open decision for Nils.
+- **Status:** done. The look is decided (D005, Nils, 5 Nov): original top-down pixel art, 36 sprites drawn by code plus a baked terrain backdrop, at 16 native pixels per world unit (the approval is recorded in `frontend/ASSETS.md`). Codex's final pass is on `main` (`45d2d46`), and the live site runs it.
 - **Milestone:** M0 · **Size:** S · **Tier:** core · **Can start now:** in progress.
 - **Ships:** the lighthouse island in its final style (original top-down pixel art) on `main`: beam, sea, sky, day and night, rain and fog, the explorer and the four story zones.
 - **Depends on:** nothing.
@@ -205,6 +205,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Minimum version:** merge the final pixel pass as it is; tune later.
 
 ### G2 Places and sea chart
+- **Status:** in progress (Codex, for Nils, on `feat/g2-world-places`, together with G3).
 
 - **Milestone:** M1 · **Size:** M · **Tier:** core · **Can start now:** after Codex's final pixel pass is merged, so G2 builds on the final frontend code.
 - **Ships:** a place manager that loads one place at a time (Lighthouse Isle, Saltreach Harbor, your home islet), a sea chart for travel, chart stops for Smugglers' Cove, Wreck Point and the Teeth, and the fog bank that hides Gull's Rest.
@@ -267,10 +268,11 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Minimum version:** the Story v2 change list and the case file. The rest goes into the S3 and S4 specs.
 
 ### S1 Import Plot Twist and Story v2
+- **Status:** in progress (Claude, for Nils, on `feat/s1-import-plot-twist`).
 
-- **Milestone:** M0 · **Size:** M, two pull requests · **Tier:** core · **Can start now:** `main` is live, but the first pull request needs the solo game. How the S lane gets it is an open decision for Nils.
+- **Milestone:** M0 · **Size:** M, two pull requests · **Tier:** core · **Can start now:** yes; in progress (Claude, for Nils).
 - **Ships:** the original game, *The Keeper's Last Log* (engines, story and its 11 tests), inside the team repository. Then the Story v2 edits.
-- **Depends on:** access to the solo game (first pull request); S0's Story v2 change list (second pull request). The solo repository is private. The options for Nils are: make it public, add the builder as a collaborator, or hand over a copy of commit `e235ee4`. This is an open decision.
+- **Depends on:** nothing for the first pull request: Claude copies the original game into this repo for Nils (Nils decided on 5 Nov that nobody needs the private solo repository). The second pull request needs S0's Story v2 change list.
 - **Provides** (proposed paths):
   - `backend/plot_twist/`: `engine.py` with a `save_path=None` option for the server, and the terminal game (`cd backend && uv run python -m plot_twist`);
   - `frontend/src/story/engine.js`: the JavaScript engine as an ES module, the same rule for rule;
@@ -467,7 +469,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 
 ### L4 Island Exchange
 
-- **Milestone:** after M1, only if the cut rule passes · **Size:** L · **Tier:** should, 1st (whether it becomes core is open for Nils) · **Can start now:** no. Reading the data terms can start any time.
+- **Milestone:** M2 · **Size:** L · **Tier:** core (Nils, 5 Nov), minimum version first · **Can start now:** the data terms, the price rules and their tests, yes; the routes after A1.
 - **Ships:** fictional island companies whose prices follow real price moves, amplified, as Nils asked:
   - every real % move is multiplied by a setting from 20 to 100;
   - a price floor, and a circuit breaker that pauses trading after a 30% move;

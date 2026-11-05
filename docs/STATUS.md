@@ -19,7 +19,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 ### What works
 
 - **`main` is live.** The bootstrap merge (`a0e501a`, 5 Nov) put everything built so far on `main`: the team workflow docs, foundation wave 1, the graphics snapshot in `frontend/`, and `vercel.json` with two Vercel Services (`/api` goes to `backend/`, the rest to `frontend/`). Production works at https://the-great-plot-twist.vercel.app/: the page answers 200 with the game (title "The Great Plot Twist · Lighthouse Isle"), `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}`, and `/api/config` answers with all flags off. So Vercel Services with the Python backend works on the Hobby plan (deploy check 2 passed).
-- **The browser game (`frontend/`):** the illustrated lighthouse island (the earlier look; Codex's pixel version is not on `main` yet), a walking explorer, the four story zones (`cottage`, `desk`, `shore`, `tower_door`), day and night, four weather states, and settings. `npm test`: 22 tests in 4 files passed. `npm run build`: built, with the expected chunk-size note for Three.js. (Checked by Claude on 5 Nov, on a copy of commit `d5d6f80`, which has the same files as `main` at `a0e501a`.)
+- **The browser game (`frontend/`):** the pixel-art lighthouse island (D005, Codex's final pass, merged as `45d2d46`), a walking explorer, the four story zones (`cottage`, `desk`, `shore`, `tower_door`), day and night, weather states, and settings. `npm test`: 27 tests in 5 files passed; `npm run build`: built. (Checked by Claude on 5 Nov on `main` at `45d2d46`.)
 - **The Python API (`backend/`):** `GET /api/health`, `GET /api/config`, the sign-in check, the wallet rules, the pattern for outside data and the first migration. `uv run pytest`: 232 passed. `uv run ruff check .`: All checks passed! (Same check, same copy.)
 - **Accounts are ready.** Vercel: the Hobby team "The Great Plot Twist" is connected to the Nilsnova GitHub account, the project is `the-great-plot-twist`, Nils set the environment variables, and the function region should be Dublin (Nils confirms it in the Settings). Supabase: the project `great-plot-twist` (West EU, Ireland) exists, GitHub sign-in is on, and Claude's Supabase connection can reach it, so Claude applies the migration and no teammate has to be invited or paste SQL for that. Email sign-in should be off (Nils confirms). The A-lane teammates still get Developer access in the Supabase organization, to read.
 - **Story, look and plan:** story skeleton v1 is approved ([STORY.md](STORY.md)), the look is decided (D005: original top-down pixel art), and [ROADMAP.md](../ROADMAP.md) v0.2 is written.
@@ -28,7 +28,9 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 | What | Who | Where |
 |---|---|---|
-| Codex's final pixel pass: original top-down pixel art (D005), approved by Nils on 5 Nov (36 sprites drawn by code plus a baked terrain backdrop, which is a ready-made picture of the ground; 16 native pixels per world unit; the approval is recorded in `frontend/ASSETS.md`, commit `6f0ecfa`, and the game was switched to it in `479cd8d`). The branch already merged `main` (`cc7174d`) and keeps the `frontend/` layout. Codex is still finishing, and some work is not committed yet. It goes to `main` when Codex reports done and Nils agrees (G1 finish). | Codex, for Nils | `feat/graphics-foundation` |
+| G2 + G3: the Saltreach Isles world (place system, sea chart and sailing, Saltreach Harbor, home islet visuals, case place stubs; the place, hotspot and light ids are fixed in Nils' Codex prompt and documented in `frontend/GRAPHICS.md` when done) | Codex, for Nils | `feat/g2-world-places` |
+| S1 story engine: the Python engine and the story in `backend/`, an ES-module engine in `frontend/src/story/`, the 11 original tests, a parity test, `GET /api/content/intro-story` | Claude, for Nils | `feat/s1-import-plot-twist` |
+| S0 story detail round: Story v2 edits, the case file, NPC partners, the open world, a timing simulation; for Nils' approval | Claude, for Nils | `docs/story-detail` |
 | Foundation wave 2: the migration aligned with D003 and D004 (starting balance 0, a `wallet_reasons` table, neutral captain names, explicit grants, `crews` and `crew_seats`), the keep-alive route `GET /api/keepalive`, engineering docs with the `frontend/` and `backend/` commands, `docs/ARCHITECTURE.md`, `docs/INTERFACES.md`, and the decision entries D002, D003, D004, D012 (Crews and seats) and D015 (owner-authorized merges) | Claude, for Nils | `chore/foundation` (not pushed yet) |
 | Coordination: roadmap, story, this page, the README update and agent briefs. They go to `main` first (merge order, step 1). | Claude, for Nils | waiting to go to `main` |
 | Owners for lanes S, A and L | the team | today |
@@ -38,7 +40,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 - **The database migration is not applied yet.** It waits for foundation wave 2, which still changes the migration file (a migration is never edited after it is applied or merged). When wave 2 is on `main`, Claude applies the migration through its Supabase connection and runs the Supabase security advisor (its built-in safety check).
 - **Four of the five deploy checks have not run** ([SETUP.md](SETUP.md), step 5). Check 2 passed: `/api/health` answers on production. Check 1 needs a teammate's push, check 3 needs a cron entry for `/api/keepalive` in `vercel.json` (not there yet), check 4 needs the migration, and check 5 needs a GitHub sign-in round trip.
 - **Nils confirms two settings:** that Email sign-in is switched off in Supabase, and that the function region is Dublin in the Vercel settings.
-- **S1 needs the solo game.** The original Plot Twist repository is private. How the S lane gets it is an open decision for Nils (see [Open decisions](#open-decisions)).
+- **S1 is being built** by Claude for Nils on `feat/s1-import-plot-twist`. Nils decided the team brings everything into this repo, so nobody needs the private solo repository.
 - **G2 and S2 wait for Codex's final pixel pass** to be merged (G1 finish). The look itself is decided (D005).
 
 ### Known gaps
@@ -57,9 +59,9 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 **For Nils** (asked on the evening of 5 Nov):
 
-1. **Island Exchange: core, or "should, 1st"?** The roadmap lists it as "should, 1st". If it became core, the minimum core total would rise from about 23 to about 25 days, and about 1 day would stay spare.
-2. **How does the S lane get the private solo repository?** Make it public, add the S-lane teammate as a collaborator, or hand over a copy of commit `e235ee4`. S1 cannot start without it.
-3. **When is Codex's pixel pass merged?** Codex is still finishing. The merge into `main` happens when Codex reports done and Nils agrees (merge order, step 3).
+1. **Decided: the Island Exchange is core** (Nils, 5 Nov). It ships its minimum version first; L2 and G3 ship their minimum versions.
+2. **Decided: nobody needs the private solo repository** (Nils, 5 Nov). Claude imports the story for Nils (S1, in progress).
+3. **Decided and done: Codex's pixel pass is on `main`** (`45d2d46`).
 
 **For the team kickoff** (the four teammates decide together):
 
@@ -112,7 +114,7 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**Next 1: G1 finish.** Bring Codex's final pixel pass to `main` and write the D005 entry. Starts when Codex reports done and Nils agrees (the timing is an open decision for Nils).
+**Done: G1 finish.** Codex's pixel pass is on `main` (`45d2d46`). The brief below is kept for reference.
 
 ```text
 Goal:        Bring Codex's final pixel pass from feat/graphics-foundation onto main, inside
@@ -151,7 +153,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
              and update "Right now" and "Next steps" for the G lane.
 ```
 
-**Next 2: G2 Places and sea chart.** Starts after G1 finish.
+**Now: G2 + G3, in progress (Codex, for Nils) on `feat/g2-world-places`.** Nils gave Codex a prompt that fixes every place, hotspot and light id; Codex documents them in `frontend/GRAPHICS.md`. The brief below is kept for reference.
 
 ```text
 Goal:        One place at a time and a sea chart for travel. Lighthouse Isle, Saltreach Harbor
@@ -176,7 +178,7 @@ Contract:    Write these in frontend/GRAPHICS.md before you code: createPlace(ct
              underscores.
 Watch out:   Reading ../content from frontend/ may need Vite's server.fs.allow setting. Check
              it with npm run dev, npm run build and on a Vercel preview.
-Git:         Work on branch feat/g2-places-sea-chart from main. Commit and push only when I say so.
+Git:         Work on branch feat/g2-world-places from main. Commit and push only when I say so.
 Done when:   Vitest covers the travel table (a refused trip changes nothing) and dispose()
              (nothing is left behind after 10 round trips). cd frontend && npm test and
              npm run build pass (paste the lines). fps stays within the budget in
@@ -202,8 +204,8 @@ Goal:        Turn the approved story skeleton into a detailed case design we can
 Who:         Nils and <S-lane owner>, with <agent>. The humans decide; the agent drafts.
 Read first:  AGENTS.md, CONTRIBUTING.md, docs/STORY.md (all of it), ROADMAP.md (S0, S1, S3, S4,
              A6, L3), docs/ENGINEERING.md (recipe 4.6, Add story content), and the original
-             game's story.json and README (the solo repository is private: ask Nils, because
-             how the S lane gets it is still an open decision).
+             game's story.json (S1 copies it to backend/content/story.json; you do not
+             need the private solo repository).
 Scope:       You may change: docs/STORY.md (answer the items under "Next detail round" and
              "Questions for this round"), new specs/S3-the-light.md and
              specs/S4-npc-partners.md (copied from specs/_TEMPLATE.md), docs/STATUS.md.
@@ -211,7 +213,7 @@ Scope:       You may change: docs/STORY.md (answer the items under "Next detail 
              sections 1 to 9, and the five approved decisions.
              Titles only: no new personal names; Elena stays the only named character.
              Plain English, short sentences, no em dashes.
-Git:         Work on branch docs/s0-story-detail from main. Commit and push only when I say so.
+Git:         Work on branch docs/story-detail from main. Commit and push only when I say so.
 Done when:   1. The Story v2 change list quotes every new line, says where it goes and which
                 test proves it.
              2. The case file has 8 cards (id, text, where found, cheap route for one kit,
@@ -233,15 +235,15 @@ Report:      Finish with: changed, verified (what you checked and how), not veri
              and update "Right now" and "Next steps" for the S lane.
 ```
 
-**Next 2: S1 Import Plot Twist and Story v2.** Can start now on `main`, once the S lane can read the solo game (an open decision for Nils). The second pull request needs S0's change list.
+**In progress: S1 Import Plot Twist and Story v2** (Claude, for Nils, on `feat/s1-import-plot-twist`). The second pull request needs S0's change list.
 
 ```text
 Goal:        Import the original Plot Twist (The Keeper's Last Log) into this repository as a
              copy, so its 11 tests run here (first pull request). Then apply the Story v2 edits
              from S0 (second pull request). Package S1 in ROADMAP.md.
 Who:         <S-lane owner> with <agent>. Source: nilschristophlenke-hash/Plot-Twist, branch
-             main at commit e235ee4. It is private. Nils decides how you get it (open):
-             public, a collaborator invite or a copy. Never change the solo repository.
+             main at commit e235ee4. Claude imports it for Nils (Nils' decision: nobody
+             needs the private solo repository). Never change the solo repository.
 Read first:  AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md (sections 1 and 5, recipe 4.6),
              ROADMAP.md (S1, S2, A3), docs/STORY.md (decision 2 and "Rules for changing the
              story"), backend/pyproject.toml, and in the source: README.md,
@@ -476,12 +478,14 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 Newest first. One line per finished task: date, who, what, where.
 
-- **2026-11-05, evening.** Claude, for Nils: updated ROADMAP.md, docs/STORY.md, this page and the README for the live `main`: the merge order, the pixel-art look (D005), D012 "Crews and seats", D015, the Supabase connection, a new "Open decisions" list and a new README "Project status". These docs are not on `main` yet; they go first in the merge order.
+- **2026-11-05, evening.** Claude, for Nils: merged Codex's final pixel pass (`45d2d46`; 27 frontend and 232 backend tests pass, build OK) and these team documents (`c9e710a`) into `main`. Nils decided: the Island Exchange is core (minimum version first; L2 and G3 minimum); the team brings the original story into this repo itself (S1, Claude for Nils, `feat/s1-import-plot-twist`); Codex builds G2 + G3 on `feat/g2-world-places`. Still in progress: foundation wave 2 (`chore/foundation`) and the S0 story detail round (`docs/story-detail`).
+
+- **2026-11-05, evening.** Claude, for Nils: updated ROADMAP.md, docs/STORY.md, this page and the README for the live `main`: the merge order, the pixel-art look (D005), D012 "Crews and seats", D015, the Supabase connection, a new "Open decisions" list and a new README "Project status". They are on `main` (`c9e710a`).
 - **2026-11-05, evening.** Claude, for Nils: connected Supabase. The project `great-plot-twist` (West EU, Ireland) exists, GitHub sign-in is on, and Claude's Supabase connection has access, so Claude applies the migration and no teammate needs an invite or SQL pasting for that. The migration is not applied yet: it waits for foundation wave 2. Email sign-in should be switched off (Nils to confirm). The A-lane teammates still get Developer access in the Supabase organization, to read.
 - **2026-11-05, evening.** Codex, for Nils: the pixel work so far is committed on `feat/graphics-foundation` (`69523a4` the pixel kit and terrain, `479cd8d` the switch to the approved pixel presentation, `6f0ecfa` the note that records Nils' approval in `frontend/ASSETS.md`). The branch merged `main` in `cc7174d` and keeps the `frontend/` layout. Codex is still finishing, and some work is not committed yet. G1 finish merges the branch when Codex reports done and Nils agrees.
 - **2026-11-05, evening.** Nils approved the pixel-art gameplay presentation. D005 is decided: top-down original pixel art. Codex recorded the approval in `frontend/ASSETS.md` on `feat/graphics-foundation` (commit `6f0ecfa`) and switched the game to it (commit `479cd8d`, "switch Lighthouse Isle to the approved pixel presentation"): 36 original sprites drawn by code plus a baked terrain backdrop, 16 native pixels per world unit, nearest-neighbour scaling. The painted-paper and nautical-journal studies are superseded iteration material.
 - **2026-11-05, evening.** Claude, for Nils: checked production. https://the-great-plot-twist.vercel.app/ answers 200 with the game (title "The Great Plot Twist · Lighthouse Isle"), `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}` and `/api/config` answers with all flags off. Deploy check 2 passed, and Vercel Services with the Python backend works on the Hobby plan. The other four deploy checks have not run. Vercel is set up: the Hobby team "The Great Plot Twist" is connected to the Nilsnova GitHub account, the project is `the-great-plot-twist`, Nils set the environment variables, and the function region should be Dublin (Nils confirms it in the Settings).
-- **2026-11-05, evening.** Claude, for Nils: merged `feat/live-skeleton` into `main` (merge commit `a0e501a`, "Merge the bootstrap: team workflow, foundation (F0 wave 1) and graphics snapshot"). This was a one-time bootstrap exception to the peer-review rule, made under Nils' standing authorization ("you have allowance from me to push everything; ask me only when there are important decisions") so the team can start from a working `main`. D015 records the rule: owner-authorized merges by Claude cover coordination work, and teammates' changes keep peer review. Nobody needs `feat/live-skeleton` any more.
+- **2026-11-05, evening.** Claude, for Nils: merged `feat/live-skeleton` into `main` (merge commit `a0e501a`, "Merge the bootstrap: team workflow, foundation (F0 wave 1) and graphics snapshot"). This was a one-time bootstrap exception to the peer-review rule, made under Nils' standing authorization (push and merge without asking; ask only for important decisions) so the team can start from a working `main`. D015 records the rule: owner-authorized merges by Claude cover coordination work, and teammates' changes keep peer review. Nobody needs `feat/live-skeleton` any more.
 - **2026-11-05, evening.** Claude, for Nils: wrote ROADMAP.md v0.2, docs/STORY.md and this status page, and added four rows to the README's "Start here" table. Checked both test suites on a copy of `d5d6f80` (frontend 22 passed, backend 232 passed, ruff clean). On `feat/live-skeleton`.
 - **2026-11-05, evening.** Nils approved story skeleton v1, "The Light That Shouldn't Be", with five decisions. Decision 4 changed: the class demo is very short and shows highlights only. Recorded in docs/STORY.md; D013 follows with S0.
 - **2026-11-05, afternoon.** Claude, for Nils: started foundation wave 2 (migration aligned with D003 and D004, keep-alive route, docs for the `frontend/` and `backend/` layout). On `chore/foundation`, not pushed yet.
