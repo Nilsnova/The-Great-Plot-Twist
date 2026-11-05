@@ -4,7 +4,8 @@ import * as THREE from 'three';
 export function polygon(group, points, color, order = 0, opacity = 1) {
   const shape = new THREE.Shape(points.map(([x, y]) => new THREE.Vector2(x, y)));
   const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({
-    color, transparent: opacity < 1, opacity, depthTest: false, depthWrite: false,
+    // One transparent queue preserves painted layer order, including solid colours.
+    color, transparent: true, opacity, depthTest: false, depthWrite: false,
     side: THREE.DoubleSide, toneMapped: false,
   }));
   mesh.renderOrder = order; group.add(mesh); return mesh;

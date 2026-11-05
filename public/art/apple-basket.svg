@@ -1,0 +1,12 @@
+<!-- Original basket of orchard fruit, no collection mechanic implied. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="93" ry="12" fill="#557766" opacity=".14"/>
+<path d="M68 143Q62 34 126 42q67 6 64 102" stroke="#a99060" stroke-width="13" fill="none"/>
+<path d="M92 136q-34-45-55-4t34 48m42-50q-7-56-35-47-31 12-10 64m57-14q29-57 56-36 22 23-7 62m-40-11q45-32 68 0 13 31-45 41" fill="#bf7957"/>
+<path d="M107 151q-33-45-53-16-11 26 34 47m52-37q3-49-25-46-29 12-5 55m46 4q42-34 58-3-1 27-46 32" fill="#d29964"/>
+<path d="m95 104 7-17m30 24 6-20m38 55 6-16" stroke="#7d8a61" stroke-width="4" stroke-linecap="round"/>
+<path d="M101 92q-12-21 9-25 14 15-9 25m39 6q13-20 29-9-4 17-29 9" fill="#86a078"/>
+<path d="m37 158 179-1-20 64q-67 22-140-3Z" fill="#c0a66f"/><path d="m147 158 69-1-20 64-46 10Z" fill="#ad9664"/>
+<path d="m48 174 157 1m-150 17 143 0m-135 17 130 0m-118-44 6 57m25-57 2 61m25-60v62m25-62-2 60m28-60-6 56" stroke="#ddc48c" stroke-width="3" fill="none"/>
+<path d="m35 158q90 13 183-1" stroke="#d4bc82" stroke-width="9" stroke-linecap="round" fill="none"/>
+</svg>

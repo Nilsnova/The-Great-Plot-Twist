@@ -1,0 +1,43 @@
+{
+  "checked": "2026-11-05T14:12:22.185Z",
+  "checks": [
+    "Harbour requests only its selected artwork",
+    "harbour stays within render budgets",
+    "harbour disposes the previous scene textures",
+    "garden stays within render budgets",
+    "garden disposes the previous scene textures",
+    "ruins stays within render budgets",
+    "ruins disposes the previous scene textures",
+    "All three scenes render in daylight, dusk, night and rain",
+    "Fit scene resets wheel zoom",
+    "Motion off holds the explorer and its visual pose still",
+    "Motion on resumes the explorer study",
+    "Solid painted foreground stays above a translucent background layer",
+    "No external requests or browser errors ()",
+    "Reduced-motion preference starts with ambient motion off"
+  ],
+  "modes": {
+    "harbour": {
+      "fps": 61,
+      "calls": 54,
+      "triangles": 1286,
+      "textures": 26,
+      "geometries": 42
+    },
+    "garden": {
+      "fps": 61,
+      "calls": 59,
+      "triangles": 1608,
+      "textures": 23,
+      "geometries": 45
+    },
+    "ruins": {
+      "fps": 61,
+      "calls": 54,
+      "triangles": 1286,
+      "textures": 23,
+      "geometries": 42
+    }
+  },
+  "browser": "157.0.8103.39"
+}

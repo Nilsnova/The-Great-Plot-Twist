@@ -1,5 +1,8 @@
 // Existing original drawings and their established map anchors.
 export default [
+  {"id": "explorer-side", "label": "Explorer side", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "explorer-side-walk-1", "label": "Side walking frame 1", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "explorer-side-walk-2", "label": "Side walking frame 2", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
   {"id": "cottage", "label": "Keeper cottage", "size": [8.6, 8.03, 0.107], "roadmap": ["intro"], "usage": "island"},
   {"id": "cottage-interior", "label": "Cottage interior", "size": [8.6, 8.03, 0.107], "roadmap": ["intro"], "usage": "island"},
   {"id": "cottage-glow", "label": "Cottage window light", "size": [8.6, 8.03, 0.107], "roadmap": ["intro"], "usage": "island"},

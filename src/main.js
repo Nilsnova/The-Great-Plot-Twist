@@ -23,7 +23,8 @@ async function startGame() {
   const art = await loadArt();
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const island = createIsland(scene, art), water = createWater(scene), boat = createBoat(scene, art);
-  const sky = createSky(scene), weather = createWeather(scene), character = createCharacter(art);
+  const sky = createSky(scene), weather = createWeather(scene);
+  const character = createCharacter(art, { reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
   scene.add(character.sprite);
   const controller = createController(character, input, island.colliders), view = createCamera(input);
   let active = false, hud, fpsFrames = 0, fpsStart = performance.now(), fps = 0;

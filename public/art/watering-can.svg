@@ -1,0 +1,10 @@
+<!-- Original garden watering can, warm muted painted-paper family. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="127" cy="232" rx="96" ry="12" fill="#557766" opacity=".14"/>
+<path d="M164 105c65-53 91 55 23 69" fill="none" stroke="#6f9180" stroke-width="17"/>
+<path d="m54 140-28-48 15-12 38 42Z" fill="#83a18a"/><path d="m22 84 18-12 7 10-19 12Z" fill="#b9c7a0"/>
+<path d="m63 118 106-10 21 99q-58 29-115 0Z" fill="#7a9a83"/><path d="m143 112 26-4 21 99-37 12Z" fill="#628877"/>
+<ellipse cx="116" cy="117" rx="54" ry="14" fill="#abc1a1"/><ellipse cx="116" cy="116" rx="37" ry="8" fill="#547969"/>
+<path d="M82 115q6-74 58-9" fill="none" stroke="#678a78" stroke-width="11" stroke-linecap="round"/>
+<path d="m87 150 4 40m7-39 3 36m-13 16 53 4" fill="none" stroke="#b0c39d" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+</svg>

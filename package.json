@@ -11,6 +11,8 @@
     "test:browser": "node scripts/check-browser.js",
     "test:art": "node scripts/check-art-library.js",
     "test:art:production": "npm run build && ART_PRODUCTION=1 node scripts/check-art-library.js",
+    "test:studies": "node scripts/check-studies.js",
+    "test:studies:production": "npm run build && ART_PRODUCTION=1 node scripts/check-studies.js",
     "test:production": "npm run build && node scripts/check-production.js"
   },
   "engines": {
