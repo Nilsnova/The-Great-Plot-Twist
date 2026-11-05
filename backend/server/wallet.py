@@ -21,7 +21,8 @@ To add a reason, in one pull request: write a migration with one INSERT into wal
 add the same (reason, direction) pair at the END of WALLET_REASONS. Never rename a reason or
 change its direction.
 
-Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings).
+Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings,
+the Island Exchange).
 
 Example inside a route (a negative number takes coins away, a positive number adds them):
 
@@ -56,7 +57,7 @@ EITHER = "either"  # may go both ways
 DIRECTIONS = (EARN, SPEND, EITHER)
 
 # Every reason a coin balance can change, with its direction. The SAME pairs, in the SAME order,
-# are inserted into the database table wallet_reasons by the foundation migration.
+# are inserted into the database table wallet_reasons by the migrations (oldest first).
 WALLET_REASONS = (
     ("kit_grant", EARN),
     ("clue_reward", EARN),
@@ -66,6 +67,10 @@ WALLET_REASONS = (
     ("clue_purchase", SPEND),
     ("building_purchase", SPEND),
     ("admin_adjust", EITHER),
+    # Added by supabase/migrations/20261106010000_island_exchange.sql (the Island Exchange).
+    ("market_buy", SPEND),
+    ("market_sell", EARN),
+    ("market_fee", SPEND),
 )
 
 

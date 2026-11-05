@@ -1,0 +1,69 @@
+{
+  "about": "The fictional island companies of the Island Exchange. Each one follows ONE real instrument: its game price moves with the real price, amplified (see backend/server/market/rules.py). The companies, their names and their stories are invented. They are not real businesses, and no real person or company is meant.",
+  "nameCheck": "Not done yet. Before the names ship, check each one against published games and real companies (docs/STORY.md, rule 5 of the story rules).",
+  "companies": [
+    {
+      "id": "harbor-trust",
+      "name": "Saltreach Harbor Trust",
+      "ticker": "SHT",
+      "follows": "BTC",
+      "symbol": "BTCUSDT",
+      "startPrice": 60.00,
+      "tagline": "The old harbor bank. When it moves, the whole market feels it."
+    },
+    {
+      "id": "tidewright-works",
+      "name": "Tidewright Works",
+      "ticker": "TIDE",
+      "follows": "ETH",
+      "symbol": "ETHUSDT",
+      "startPrice": 40.00,
+      "tagline": "Builds the locks, cranes and engines that every other island company uses."
+    },
+    {
+      "id": "swiftwater-ferries",
+      "name": "Swiftwater Ferries",
+      "ticker": "SWFT",
+      "follows": "SOL",
+      "symbol": "SOLUSDT",
+      "startPrice": 24.00,
+      "tagline": "Fast boats, quick profits, quick losses."
+    },
+    {
+      "id": "pier-post-courier",
+      "name": "Pier Post Courier",
+      "ticker": "PIER",
+      "follows": "XRP",
+      "symbol": "XRPUSDT",
+      "startPrice": 12.00,
+      "tagline": "Carries letters and payments from pier to pier."
+    },
+    {
+      "id": "market-hall-guild",
+      "name": "Market Hall Guild",
+      "ticker": "MHG",
+      "follows": "BNB",
+      "symbol": "BNBUSDT",
+      "startPrice": 30.00,
+      "tagline": "Runs the stalls in the harbor market hall and takes a little from every sale."
+    },
+    {
+      "id": "two-shores-bureau",
+      "name": "Two Shores Change Bureau",
+      "ticker": "TWSH",
+      "follows": "EUR/USD",
+      "symbol": "EURUSDT",
+      "startPrice": 50.00,
+      "tagline": "Swaps the coins of two coasts. Calm, until it is not."
+    },
+    {
+      "id": "greyfathom-salvage",
+      "name": "Greyfathom Salvage",
+      "ticker": "GREY",
+      "follows": "Gold",
+      "symbol": "PAXGUSDT",
+      "startPrice": 20.00,
+      "tagline": "Raises what the sea has taken. The salvage yard at Wreck Point."
+    }
+  ]
+}

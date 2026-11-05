@@ -7,6 +7,7 @@
     keepalive.py      GET  /api/keepalive      called by Vercel's daily cron, not by the browser
 
 Most of them are called by the browser. keepalive.py is called by Vercel's daily cron instead.
+market.py is the Island Exchange (its rules are in server/market/).
 Each file creates a `router` with its URLs. app.py plugs every router in under /api.
 To add a feature: create a new file here, then add one line in app.py.
 """

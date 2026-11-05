@@ -15,16 +15,28 @@ in a shape the reader understands, and no migration may update, delete or trunca
 The other facts are read from the foundation migration. When a LATER migration changes one of
 those, point FOUNDATION at the newest file that defines it.
 
+The Island Exchange migration (20261106010000_island_exchange.sql) is checked in the last section
+of this file: its three wallet reasons, the arguments that the Python code sends to its two
+functions, and the limits that Python and SQL both know.
+
 Used by: pytest (cd backend && uv run pytest).
 """
 
 import asyncio
 import json
 import re
+from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import httpx
 
+from server.market.companies import load_companies
+from server.market.exchange import REF_PREFIX
+from server.market.rules import Base
+from server.market.store import save_arguments, trade_arguments
+from server.market.trade_rules import TradeAmounts
+from server.routes.market import ACTION_UID_MAX_LENGTH
 from server.tests.helpers import make_admin
 from server.wallet import (
     DIRECTIONS,
@@ -38,6 +50,7 @@ from server.wallet import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MIGRATIONS = sorted((REPO_ROOT / "supabase" / "migrations").glob("*.sql"))
 FOUNDATION = REPO_ROOT / "supabase" / "migrations" / "20261106000000_foundation.sql"
+EXCHANGE = REPO_ROOT / "supabase" / "migrations" / "20261106010000_island_exchange.sql"
 
 # One line of the list of reasons: ('reason', 'direction', 'description')
 # It reads: a bracket, then three texts in single quotes separated by commas. Each text is
@@ -242,3 +255,185 @@ def test_the_sign_up_trigger_never_reads_the_login_details():
     assert "raw_user_meta_data" not in body
     assert "raw_app_meta_data" not in body
     assert "email" not in body
+
+
+# --- the Island Exchange migration ---
+
+
+def find_in_exchange(pattern: str) -> re.Match:
+    """The first place in the Island Exchange migration that matches `pattern`. Fails clearly."""
+    match = re.search(pattern, EXCHANGE.read_text(), re.DOTALL)
+    assert match, f"Could not find this in {EXCHANGE.name}: {pattern}. Did its layout change?"
+    return match
+
+
+def declared_parameters(function_name: str) -> list[str]:
+    """The parameter names of a function in the Island Exchange migration, in order."""
+    text = find_in_exchange(
+        rf"create or replace function public\.{function_name}\((.*?)\)\s+returns"
+    ).group(1)
+    return [parameter.split()[0] for parameter in text.split(",")]
+
+
+def exchange_rows() -> list[tuple[str, str, str]]:
+    """The (reason, direction, description) rows that the Island Exchange migration inserts."""
+    rows = []
+    for values in SEED_INSERT.findall(EXCHANGE.read_text()):
+        rows.extend(SEED_ROW.findall(values))
+    return rows
+
+
+def test_the_exchange_migration_sorts_after_the_foundation_so_the_reasons_keep_their_order():
+    assert MIGRATIONS.index(EXCHANGE) > MIGRATIONS.index(FOUNDATION)
+
+
+def test_the_exchange_migration_adds_market_buy_market_sell_and_market_fee_in_this_order():
+    pairs = [(reason, direction) for reason, direction, _ in exchange_rows()]
+
+    assert pairs == [("market_buy", "spend"), ("market_sell", "earn"), ("market_fee", "spend")]
+
+
+def test_python_ends_its_list_of_reasons_with_the_three_market_reasons():
+    assert WALLET_REASONS[-3:] == (
+        ("market_buy", "spend"),
+        ("market_sell", "earn"),
+        ("market_fee", "spend"),
+    )
+
+
+def test_the_exchange_migration_does_not_touch_the_foundation_reasons():
+    assert EXCHANGE.name not in migrations_that_change_a_reason()
+    assert EXCHANGE.name not in migrations_with_an_unreadable_insert()
+
+
+def test_market_trade_takes_exactly_the_arguments_that_the_server_sends():
+    sent = trade_arguments(
+        "player-1",
+        "harbor-trust",
+        "buy",
+        5,
+        Decimal("60.00"),
+        TradeAmounts(gross=300, fee=6),
+        "market:click-0001",
+        datetime(2026, 11, 5, 8, 0, tzinfo=UTC),
+    )
+
+    assert declared_parameters("market_trade") == list(sent)
+
+
+def test_market_set_base_takes_exactly_the_arguments_that_the_server_sends():
+    base = Base(Decimal("60.00"), Decimal("50000"), datetime(2026, 11, 5, tzinfo=UTC), "live")
+
+    sent = save_arguments("harbor-trust", base)
+
+    assert declared_parameters("market_set_base") == list(sent)
+
+
+def test_market_trade_has_no_default_for_the_ref_or_the_limits():
+    # A call that leaves out the ref or a limit does not exist in the database.
+    parameters = find_in_exchange(
+        r"create or replace function public\.market_trade\((.*?)\)\s+returns"
+    ).group(1)
+
+    assert "default" not in parameters
+
+
+def test_a_trade_ref_in_the_database_can_be_as_long_as_a_wallet_ref():
+    longest = find_in_exchange(
+        r"market_trades_ref_max_length\s+check \(char_length\(ref\) <= (\d+)\)"
+    )
+
+    assert int(longest.group(1)) == MAX_REF_LENGTH
+
+
+def test_a_player_can_trade_with_a_ref_once_in_the_database():
+    find_in_exchange(
+        r"create unique index if not exists market_trades_one_row_per_ref\s+"
+        r"on public\.market_trades \(player_id, ref\)\s*;"
+    )
+
+
+def test_the_actionuid_limit_of_the_route_fits_into_the_ref_with_its_prefix():
+    assert len(REF_PREFIX) + ACTION_UID_MAX_LENGTH <= MAX_REF_LENGTH
+
+
+def test_every_company_id_in_the_data_file_fits_the_pattern_of_the_database():
+    pattern = find_in_exchange(r"market_bases_company_id_format\s+check \(company_id ~ '(.*?)'\)")
+    expression = re.compile(pattern.group(1))
+
+    for company in load_companies():
+        assert expression.fullmatch(company.id), company.id
+
+
+def test_the_three_tables_use_the_same_company_id_pattern():
+    patterns = re.findall(r"check \(company_id ~ '(.*?)'\)", EXCHANGE.read_text())
+
+    assert len(patterns) == 3
+    assert len(set(patterns)) == 1
+
+
+def test_every_new_table_has_row_level_security_and_no_write_policy():
+    text = EXCHANGE.read_text()
+
+    for table in ("market_bases", "market_positions", "market_trades"):
+        assert f"alter table public.{table}" in text and "enable row level security" in text
+    actions = re.findall(r'create policy "[^"]*"\s+on public\.\w+ for (\w+)', text)
+    assert actions == ["select", "select", "select"]
+
+
+def test_the_exchange_migration_takes_every_right_away_before_it_grants():
+    text = EXCHANGE.read_text()
+
+    revoke_at = text.index("revoke all on table")
+    first_grant_at = text.index("grant select on table")
+
+    assert revoke_at < first_grant_at
+    assert "revoke all on sequence public.market_trades_id_seq" in text
+
+
+def test_the_new_functions_are_for_the_server_only():
+    text = EXCHANGE.read_text()
+
+    for function_name in ("market_trade", "market_set_base"):
+        start = rf"function public\.{function_name}\(.*?\)\s+"
+        revoke = rf"revoke all on {start}from public, anon, authenticated;"
+        grant = rf"grant execute on {start}to service_role;"
+        assert re.search(revoke, text, re.DOTALL)
+        assert re.search(grant, text, re.DOTALL)
+    assert "security definer" not in text.lower().replace("not security definer", "")
+
+
+def test_market_trade_takes_the_fee_rate_and_the_purchase_limit_as_arguments():
+    parameters = declared_parameters("market_trade")
+
+    assert parameters[-2:] == ["p_fee_basis_points", "p_max_buy_coins"]
+
+
+def test_market_trade_recomputes_the_coins_from_the_units_and_the_price():
+    text = EXCHANGE.read_text()
+
+    assert "v_exact_gross := ceil(p_units * p_price)" in text  # a buy is rounded up
+    assert "v_exact_gross := floor(p_units * p_price)" in text  # a sell is rounded down
+    assert "p_gross::numeric * p_fee_basis_points / 10000" in text  # the fee is rounded up
+    assert "p_gross <> v_exact_gross" in text
+
+
+def test_market_trade_limits_a_purchase_but_not_a_sale():
+    text = EXCHANGE.read_text()
+
+    assert "if p_side = 'buy' and p_gross > p_max_buy_coins then" in text
+
+
+def test_market_trade_refuses_a_company_without_a_base_and_a_market_day_in_the_future():
+    text = EXCHANGE.read_text()
+
+    assert "raise exception 'unknown_company'" in text
+    assert "p_day_start > now() + interval '1 minute'" in text
+
+
+def test_the_exchange_migration_removes_the_function_of_the_first_draft():
+    # The first draft had 11 arguments. A project that ran it must not keep two versions.
+    find_in_exchange(
+        r"drop function if exists public\.market_trade\(uuid, text, text, bigint, numeric, "
+        r"bigint, bigint, text, integer, bigint, timestamptz\);"
+    )
