@@ -4,7 +4,7 @@
   "items": {
     "brass_key": {
       "name": "Brass key",
-      "description": "Heavy and cold. A tag reads: TOWER DOOR."
+      "description": "Heavy and cold. A tag reads: TOWER DOOR. The tag is stamped with a small seal: an anchor with an open eye."
     },
     "oil_lantern": {
       "name": "Oil lantern",
@@ -26,16 +26,17 @@
     },
     "desk": {
       "title": "The Writing Desk",
-      "text": "Papers, tide tables and a leather logbook cover the desk. One drawer is slightly open.",
+      "text": "Papers, tide tables and a leather logbook cover the desk. Three nights in the tide tables are circled in pencil. A page has been torn out of the logbook. One drawer is slightly open.",
       "notes": [
         {"when": {"missing": ["brass_key"]}, "text": "Something brass glints inside the open drawer."},
-        {"when": {"has": ["brass_key"]}, "text": "The drawer is empty now. You already took the key."}
+        {"when": {"has": ["brass_key"]}, "text": "The drawer is empty now. You already took the key."},
+        {"when": {"flags": ["read_log"]}, "text": "The torn-out page came right after 'Tell the harbor master.' Her pen pressed through to the page beneath, and two words still show: 'old watchtower'."}
       ],
       "actions": [
         {"id": "take_key", "label": "Take the key from the drawer",
          "requires": {"missing": ["brass_key"]}, "hide_when_blocked": true,
          "take": "brass_key",
-         "message": "You take a heavy brass key. Its tag reads: TOWER DOOR."},
+         "message": "You take a heavy brass key. Its tag reads: TOWER DOOR. The tag is stamped with a small seal: an anchor with an open eye."},
         {"id": "read_log", "label": "Read the last entry in the logbook",
          "set": ["read_log"],
          "message": "Elena's handwriting shakes: 'The lights aren't for ships anymore. The man with the red boat signals someone out at sea. If I vanish, do NOT trust him. Tell the harbor master.'"},
@@ -45,11 +46,12 @@
     },
     "shore": {
       "title": "The Boathouse",
-      "text": "Waves slam against the jetty. A fisherman in a yellow coat is tying up a red boat. An old oil lantern hangs on a hook by the boathouse door.",
+      "text": "Waves slam against the jetty. An old oil lantern hangs on a hook by the boathouse door. Across the bay, the harbor master's window glows.",
       "notes": [
+        {"when": {"not_flags": ["warned_harbor"]}, "text": "A fisherman in a yellow coat is tying up a red boat."},
         {"when": {"has": ["oil_lantern"]}, "text": "The hook by the door is empty. The lantern is with you."},
         {"when": {"flags": ["trusted_fisherman"]}, "text": "The fisherman gives you a thin smile. 'I'll keep an eye on the tower for you.'"},
-        {"when": {"flags": ["warned_harbor"]}, "text": "The red boat is gone. Across the bay, the harbor master's window glows. Your message got through."}
+        {"when": {"flags": ["warned_harbor"]}, "text": "After a while, the harbor master's window goes dark, then lights again. Your message got through. Moments later, the red boat slips away from the jetty with no lights showing."}
       ],
       "actions": [
         {"id": "take_lantern", "label": "Take the oil lantern",
@@ -64,6 +66,9 @@
          "requires": {"not_flags": ["trusted_fisherman", "warned_harbor"]}, "hide_when_blocked": true,
          "set": ["warned_harbor"],
          "message": "You give a boy a coin to run your note across to the harbor master: 'Watch the lighthouse tonight.' The fisherman watches you but says nothing."},
+        {"id": "keep_quiet", "label": "Tell no one what you know",
+         "requires": {"not_flags": ["trusted_fisherman", "warned_harbor"]}, "hide_when_blocked": true,
+         "message": "You keep what you know to yourself. The fisherman never looks your way. To him you are just a stranger passing through."},
         {"id": "shore_back", "label": "Climb back up to the cottage", "goto": "cottage",
          "message": "You climb back up the path, rain in your eyes."}
       ]
@@ -122,7 +127,12 @@
     "ending_trapped": {
       "title": "Ending: Locked In the Light",
       "ending": true,
-      "text": "The fisherman laughs through the door. 'Thanks for telling me where to look,' he calls. He has locked the tower from outside. You and Elena are safe but trapped until the morning ferry spots you. By then the red boat and its cargo are long gone. Plot twist: the man you trusted was the one you should have feared."
+      "text": "The fisherman has locked the tower from outside. You and Elena are safe but trapped until the morning ferry spots you. By then the red boat and its cargo are long gone.",
+      "notes": [
+        {"when": {"flags": ["trusted_fisherman"]}, "text": "Through the door, the fisherman laughed. 'Thanks for telling me where to look,' he called. Plot twist: the man you trusted was the one you should have feared."},
+        {"when": {"flags": ["warned_harbor"]}, "text": "Through the door, you heard him talk into a radio: 'No fog tonight. We wait for the next one.' Then his steps faded away. The harbor master never came. Plot twist: the harbor was watching for your signal, and you never sent one."},
+        {"when": {"not_flags": ["trusted_fisherman", "warned_harbor"]}, "text": "Through the door, he called: 'Whoever you are, nobody knows you're up there.' He was right. You had told no one. Plot twist: by trusting no one, you left no one to come for you."}
+      ]
     }
   }
 }
