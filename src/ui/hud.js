@@ -10,22 +10,22 @@ export function createHud(container, actions) {
       <div class="chapter"><span class="status-dot"></span> LIGHTHOUSE ISLE <span class="chapter-number">01 / PROLOGUE</span></div></header>
     <section class="arrival" aria-labelledby="arrival-title">
       <p class="eyebrow">A SMALL ISLAND. AN UNFINISHED STORY.</p>
-      <h1 id="arrival-title">Every light<br>keeps a <em>secret.</em></h1>
+      <h1 id="arrival-title">The keeper’s<br><em>last log.</em></h1>
       <p class="intro-copy">Three nights without a light.<br>One keeper gone. Your story starts ashore.</p>
       <button class="explore" id="explore">Step ashore <span aria-hidden="true">↗</span></button>
-      <p class="arrival-note">AN ISLAND TO EXPLORE · A MYSTERY TO COME</p>
+      <p class="arrival-note">A LITTLE ISLAND WITH A STORY TO TELL</p>
     </section>
     <div class="location" hidden><span class="eyebrow">YOU HAVE ARRIVED</span><strong>Lighthouse Isle</strong><span>Follow the path. Look a little closer.</span></div>
-    <aside class="island-label" aria-hidden="true"><span>THE KEEPER'S LAST LOG</span><i></i><span>38° N &nbsp; / &nbsp; 09° W</span></aside>
+    <aside class="island-label" aria-hidden="true"><span>THE KEEPER'S LAST LOG</span><i></i><span>FIELD NOTES &nbsp; / &nbsp; No. 01</span></aside>
     <div class="interact" role="status" hidden><kbd>E</kbd><div><small>Press E</small><strong></strong></div><span aria-hidden="true">↗</span></div>
     <div class="toast" role="status" hidden></div>
-    <footer class="bottom-bar"><div class="controls"><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>DRAG</kbd> orbit</span><span><kbd>SCROLL</kbd> zoom</span></div>
+    <footer class="bottom-bar"><div class="controls"><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>E</kbd> investigate</span><span><kbd>SCROLL</kbd> zoom</span></div>
       <div class="conditions"><span class="weather-label">Fair skies</span><span class="divider"></span><time>18:24</time><button class="settings-toggle" aria-label="Open visual settings" aria-expanded="false">☷</button></div></footer>
     <section class="debug" aria-label="Visual settings" hidden>
       <div class="panel-heading"><strong>Island atmosphere</strong><button class="close-settings" aria-label="Close visual settings">×</button></div>
       <label for="hour">Time of day <span class="hour-value"></span></label><input id="hour" type="range" min="0" max="23.99" step="0.01" value="${settings.hour}">
       <div class="preset-buttons">${Object.keys(presets).map((name, i) => `<button data-preset="${name}">${i + 1} ${name}</button>`).join('')}</div>
-      <label for="quality">Quality</label><select id="quality"><option value="high">High · soft shadows</option><option value="low">Low · lighter rendering</option></select>
+      <label for="quality">Quality</label><select id="quality"><option value="high">High · full illustration</option><option value="low">Low · lighter effects</option></select>
       <label class="check"><input id="fast-time" type="checkbox"> Speed up time <kbd>T</kbd></label>
       <p class="settings-note">Try midnight, sea mist or a passing storm.</p>
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
@@ -60,7 +60,8 @@ export function createHud(container, actions) {
       toastUntil = performance.now() + 2600;
     },
     update(zone, stats) {
-      const prompt = select('.interact'); prompt.hidden = !zone;
+      overlay.classList.toggle('night', stats?.night > 0.4);
+      const prompt = select('.interact'); prompt.hidden = !zone; prompt.dataset.zone = zone || '';
       if (zone) prompt.querySelector('strong').textContent = names[zone];
       const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60);
       const clock = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 
 export const artSizes = {
-  cottage: [8.6, 8.03, 0.107], 'cottage-interior': [8.6, 8.03, 0.107],
+  cottage: [8.6, 8.03, 0.107], 'cottage-interior': [8.6, 8.03, 0.107], 'cottage-glow': [8.6, 8.03, 0.107],
   lighthouse: [6.6, 13.2, 0.077], boathouse: [6, 5.31, 0.096],
   birch: [4.7, 6.41, 0.07], pine: [4.2, 6.11, 0.072],
   explorer: [1.7, 2.67, 0.068], 'explorer-back': [1.7, 2.67, 0.068],

@@ -1,7 +1,8 @@
-// Public weather API plus one rain particle system. Real APIs can call setWeather.
+// Public weather state plus simple illustrated rain. Integrations use setWeather.
 import * as THREE from 'three';
 import { clamp, seededRandom } from '../core/math.js';
 import { QUALITY } from '../config.js';
+import { projectPoint } from './art.js';
 
 let current = { cloudCover: 0.12, rain: 0, fog: 0.1, wind: 0.18 };
 export const presets = {
@@ -17,38 +18,28 @@ export function clampWeather(previous, changes = {}) {
   }
   return next;
 }
-export function setWeather(changes) {
-  current = clampWeather(current, changes);
-  return getWeather();
-}
+export function setWeather(changes) { current = clampWeather(current, changes); return getWeather(); }
 export const getWeather = () => ({ ...current });
 
 export function createWeather(scene) {
   const random = seededRandom(24), count = QUALITY.high.rainCount;
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < positions.length; i += 3) {
-    positions[i] = random() * 55 - 27.5;
-    positions[i + 1] = random() * 30;
-    positions[i + 2] = random() * 55 - 27.5;
-  }
-  const geometry = new THREE.BufferGeometry();
+  const drops = Array.from({ length: count }, () => ({ x: random() * 100 - 50, y: random() * 75 - 37.5 }));
+  const positions = new Float32Array(count * 6), geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  const rain = new THREE.Points(geometry, new THREE.PointsMaterial({
-    color: '#d5e8e5', size: 0.075, transparent: true, opacity: 0.65, depthWrite: false,
+  const rain = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+    color: '#d4e4cd', transparent: true, opacity: 0.55, depthTest: false, depthWrite: false, toneMapped: false,
   }));
-  rain.frustumCulled = false; scene.add(rain);
+  rain.renderOrder = 930; rain.frustumCulled = false; scene.add(rain);
   return { update(delta, player, quality) {
-    const weather = getWeather(); rain.visible = weather.rain > 0;
-    geometry.setDrawRange(0, Math.floor(QUALITY[quality].rainCount * weather.rain));
-    rain.position.set(player.x, 0, player.z);
+    const weather = getWeather(), point = projectPoint(player.x, player.z);
+    rain.visible = weather.rain > 0; rain.position.set(point.x, point.y, 0);
+    geometry.setDrawRange(0, Math.floor(QUALITY[quality].rainCount * weather.rain) * 2);
     if (!rain.visible) return weather;
-    for (let i = 0; i < positions.length; i += 3) {
-      positions[i] += delta * weather.wind * 5;
-      positions[i + 1] -= delta * 19;
-      if (positions[i] > 27.5) positions[i] = -27.5;
-      if (positions[i + 1] < 0) positions[i + 1] = 30;
-    }
-    geometry.attributes.position.needsUpdate = true;
-    return weather;
+    drops.forEach((drop, i) => {
+      drop.x += delta * weather.wind * 4; drop.y -= delta * 19;
+      if (drop.x > 50) drop.x = -50; if (drop.y < -37.5) drop.y = 37.5;
+      positions.set([drop.x, drop.y, 0, drop.x - 0.1 - weather.wind * 0.15, drop.y + 0.55, 0], i * 6);
+    });
+    geometry.attributes.position.needsUpdate = true; return weather;
   } };
 }

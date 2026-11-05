@@ -1,33 +1,23 @@
-// A single cone with soft edges. Lighthouse.js rotates it and sets night strength.
+// One flat, fading sweep of light, drawn above the night wash.
 import * as THREE from 'three';
 
-export function createBeam() {
-  const geometry = new THREE.ConeGeometry(2.5, 34, 24, 1, true);
-  geometry.rotateZ(Math.PI / 2); geometry.translate(17, 0, 0);
-  const material = new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-    uniforms: { strength: { value: 0 }, color: { value: new THREE.Color('#ffc978') } },
-    vertexShader: `
-      varying float along; varying vec3 viewNormal; varying vec3 toCamera;
-      void main() {
-        along = 1.0 - uv.y;
-        viewNormal = normalMatrix * normal;
-        vec4 point = modelViewMatrix * vec4(position, 1.0);
-        toCamera = -point.xyz;
-        gl_Position = projectionMatrix * point;
-      }`,
-    fragmentShader: `
-      uniform float strength; uniform vec3 color;
-      varying float along; varying vec3 viewNormal; varying vec3 toCamera;
-      void main() {
-        // Face-on surfaces glow; the silhouette and far end fade away.
-        float edge = pow(abs(dot(normalize(viewNormal), normalize(toCamera))), 1.5);
-        float fade = pow(1.0 - along, 1.5);
-        gl_FragColor = vec4(color, strength * edge * fade);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }`,
-  });
-  return new THREE.Mesh(geometry, material);
+export function createBeam(scene, x, y) {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 31, -4.5, 0, 31, 4.5, 0], 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute([1, 0.9, 0.55, 1, 0.9, 0.55, 1, 0.9, 0.55], 3));
+  const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
+    transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+    uniforms: { strength: { value: 0 } },
+    vertexShader: `varying vec2 point; void main() { point = position.xy;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform float strength; varying vec2 point;
+      void main() { float along = clamp(point.x / 31.0, 0.0, 1.0);
+        float edge = 1.0 - smoothstep(0.35, 1.0, abs(point.y) / max(0.01, along * 4.5));
+        gl_FragColor = vec4(1.0, 0.88, 0.57, strength * edge * (1.0 - along)); }`,
+  }));
+  mesh.position.set(x, y, 0); mesh.renderOrder = 920; scene.add(mesh);
+  return { update(time, night) {
+    mesh.rotation.z = time * 0.18; mesh.material.uniforms.strength.value = night * 0.42;
+    mesh.visible = night > 0.02;
+  } };
 }

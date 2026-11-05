@@ -1,31 +1,23 @@
-// Owns the WebGL canvas, resize handling and quality settings. Main starts it.
+// WebGL draws unlit original illustrations. Resize preserves orthographic proportions.
 import * as THREE from 'three';
-import { QUALITY } from '../config.js';
+import { QUALITY, colors } from '../config.js';
 
 export function createRenderer(container) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setClearColor('#758a91');
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.domElement.setAttribute('aria-label', '3D island. Use WASD to walk and drag to orbit the camera.');
+  renderer.setClearColor(colors.water);
+  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping;
+  renderer.domElement.setAttribute('aria-label', 'Illustrated island. Use WASD to walk, E to interact, and the wheel to zoom.');
   renderer.domElement.tabIndex = 0; container.append(renderer.domElement);
   function resize(camera) {
     renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+    const aspect = window.innerWidth / window.innerHeight;
+    const height = Math.max(camera.userData.viewHeight, 68 / aspect);
+    camera.left = -height * aspect / 2; camera.right = height * aspect / 2;
+    camera.top = height / 2; camera.bottom = -height / 2; camera.updateProjectionMatrix();
   }
-  function setQuality(name, scene) {
+  function setQuality(name) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, QUALITY[name].pixelRatio));
-    renderer.shadowMap.enabled = QUALITY[name].shadows;
-    // Recompile the shadow variants when switching quality at runtime.
-    scene.traverse(object => {
-      if (object.isMesh) {
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach(material => { material.needsUpdate = true; });
-      }
-    });
+    renderer.shadowMap.enabled = false;
   }
   return { renderer, resize, setQuality };
 }

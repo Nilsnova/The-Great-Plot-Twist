@@ -30,8 +30,8 @@ try {
   await page.goto(url); await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
   await page.waitForTimeout(1500); // Let shaders and the first shadow map warm up.
   await mkdir('captures', { recursive: true });
-  const capture = name => page.screenshot({ path: `captures/${stamp}_${name}.png` });
-  await capture('Dusk');
+  const capture = name => page.screenshot({ path: `captures/${stamp}_Illustrated-${name}.png` });
+  await capture('Arrival');
   async function measure(name, targetPage = page) {
     await targetPage.waitForTimeout(300);
     const stats = await targetPage.evaluate(async () => {
@@ -46,33 +46,43 @@ try {
     report.modes[name] = stats;
     check(stats.calls < 150 && stats.triangles < 150000 && stats.pixelRatio <= 1.5, `${name} stays within rendering budgets`);
   }
-  await measure('dusk-high');
+  await measure('arrival-high');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  check(await page.evaluate(() => window.__island.camera.zoom === 1), 'Escape leaves the arrival overview intact before starting');
   await page.getByRole('button', { name: 'Step ashore' }).click();
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
   const initial = await page.evaluate(() => ({ ...window.__island.player.position }));
-  await page.keyboard.down('KeyW'); await page.waitForTimeout(400); await page.keyboard.up('KeyW');
+  await page.keyboard.down('KeyW');
+  await page.waitForFunction(start => Math.hypot(window.__island.player.position.x - start.x,
+    window.__island.player.position.z - start.z) > 0.5, initial, { timeout: 2500 });
+  await page.keyboard.up('KeyW');
   const moved = await page.evaluate(() => ({ ...window.__island.player.position }));
   check(Math.hypot(moved.x - initial.x, moved.z - initial.z) > 0.5, 'W walks the explorer');
-  const cameraBefore = await page.evaluate(() => ({ ...window.__island.camera.position }));
+  const cameraBefore = await page.evaluate(() => ({ zoom: window.__island.camera.zoom, rotation: window.__island.camera.quaternion.toArray() }));
   await page.mouse.move(900, 450); await page.mouse.down(); await page.mouse.move(1050, 490, { steps: 8 }); await page.mouse.up();
   await page.mouse.wheel(0, -250); await page.waitForTimeout(400);
-  const cameraAfter = await page.evaluate(() => ({ ...window.__island.camera.position }));
-  check(Math.hypot(cameraAfter.x - cameraBefore.x, cameraAfter.z - cameraBefore.z) > 1, 'Drag and wheel change the orbit camera');
+  const cameraAfter = await page.evaluate(() => ({ zoom: window.__island.camera.zoom, rotation: window.__island.camera.quaternion.toArray() }));
+  check(cameraAfter.zoom > cameraBefore.zoom && cameraAfter.rotation.every((value, i) => value === cameraBefore.rotation[i]), 'Wheel zoom works while the illustrated camera keeps its fixed angle');
   const events = await page.evaluate(async () => {
     const { zones } = await import('/src/world/zones.js'); window.__received = [];
     window.__island.on('interact', event => window.__received.push(event));
     return zones;
   });
-  for (const zone of events) {
+  for (const [index, zone] of events.entries()) {
     await page.evaluate(zone => window.__island.player.position.set(zone.x, zone.y, zone.z), zone);
-    await page.waitForTimeout(120); await page.keyboard.down('KeyE'); await page.waitForTimeout(180); await page.keyboard.up('KeyE');
+    await page.waitForFunction(id => document.querySelector('.interact')?.dataset.zone === id, zone.id);
+    await page.keyboard.down('KeyE');
+    await page.waitForFunction(count => window.__received.length >= count, index + 1);
+    await page.waitForTimeout(180); await page.keyboard.up('KeyE');
   }
   const received = await page.evaluate(() => window.__received);
-  check(received.length === 4 && received.every((event, index) => event.type === 'interact' && event.id === events[index].id), 'All four hooks emit exactly once per held E press');
+  check(received.length === 4 && received.every((event, index) => event.type === 'interact' && event.id === events[index].id), `All four hooks emit exactly once per held E press: ${JSON.stringify(received)}`);
   await page.evaluate(() => { const game = window.__island; game.player.position.set(-7, 4, 7); });
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700); await page.keyboard.up('KeyW');
+  await page.waitForFunction(() => document.querySelector('.toast').hidden);
   await capture('Exploration');
-  await page.evaluate(() => { window.__island.view.overview(); window.__island.settings.hour = 0;
+  await page.evaluate(() => { window.__island.player.position.set(-1, 0, 10);
+    window.__island.view.overview(); window.__island.settings.hour = 0;
     window.__island.setWeather({ cloudCover: 0, rain: 0, fog: 0.1, wind: 0.2 }); });
   await measure('midnight-high'); await capture('Midnight');
   await page.keyboard.press('Digit3'); await measure('storm-high'); await capture('Storm');
@@ -80,11 +90,13 @@ try {
   await page.evaluate(() => { window.__island.settings.hour = 12;
     window.__island.setWeather({ cloudCover: 0.05, rain: 0, fog: 0.05, wind: 0.12 }); });
   await measure('noon-high'); await capture('Daylight');
+  await page.evaluate(() => { window.__island.settings.hour = 18.4; });
+  await measure('dusk-high'); await capture('Dusk');
   await page.getByRole('button', { name: 'Open visual settings' }).click();
   await page.getByRole('button', { name: '4 fog' }).click();
   await page.locator('#quality').selectOption('low'); await measure('fog-low');
   await page.getByRole('button', { name: '3 storm' }).click(); await measure('storm-low');
-  check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality disables shadows and caps pixel ratio at 1');
+  check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality keeps the unlit illustration and caps pixel ratio at 1');
   await page.locator('#quality').selectOption('high'); await page.keyboard.press('Tab');
   await page.locator('#hour').focus(); await page.keyboard.press('Escape');
   await page.locator('.debug').waitFor({ state: 'hidden' });
@@ -94,14 +106,14 @@ try {
   await page.close(); // Benchmark one WebGL page at a time on the same GPU.
   const retina = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
   await retina.goto(url); await retina.waitForTimeout(2000);
-  await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_Retina.png` });
+  await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_Illustrated-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
   check(report.modes['retina-high'].pixelRatio === 1.25 && report.modes['retina-low'].pixelRatio === 1,
     'Retina high caps at 1.25, low at 1');
-  await writeFile(`captures/${stamp}_Retina-Checks.json`, JSON.stringify({
+  await writeFile(`captures/${stamp}_Illustrated-Retina-Checks.json`, JSON.stringify({
     checked: new Date().toISOString(), viewport: '1440 × 900, device DPR 2',
     high: report.modes['retina-high'], low: report.modes['retina-low'],
   }, null, 2) + '\n');
-  await writeFile(`captures/${stamp}_Browser-Checks.json`, JSON.stringify(report, null, 2) + '\n');
+  await writeFile(`captures/${stamp}_Illustrated-Browser-Checks.json`, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report, null, 2));
 } finally { await browser?.close(); server?.kill(); }

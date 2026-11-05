@@ -1,50 +1,34 @@
-// Seeded trees, rocks, flowers and a cliff fence. Island.js batches these props.
+// A small reusable library of illustrated trees, rocks, shrubs and wildflowers.
 import * as THREE from 'three';
-import { colors, layout } from '../config.js';
-import { seededRandom } from '../core/math.js';
+import { placeArt } from './art.js';
 import { terrainHeight } from './terrain.js';
-import { box, cylinder, mesh, postBetween } from './primitives.js';
+import { seededRandom } from '../core/math.js';
 
-export function createScenery() {
-  const group = new THREE.Group(), random = seededRandom(71), colliders = [];
-  const treeSpots = [[-15, -3], [-14, 3], [-12, -9], [-5, -11], [-2, -13],
-    [0, -10], [17, -4], [16, 2], [11, 7], [-14, 9], [-10, -2]];
-  for (const [x, z] of treeSpots) {
-    const y = terrainHeight(x, z), height = 3.5 + random() * 1.4;
-    cylinder(group, 0.16, 0.27, height, colors.darkWood, [x, y + height / 2, z], 6);
-    for (let layer = 0; layer < 3; layer++) {
-      mesh(group, new THREE.ConeGeometry(1.65 - layer * 0.36, 2.4, 6),
-        layer % 2 ? '#6f8b67' : colors.grassDark, [x, y + 2.5 + layer * 0.9, z]);
-    }
-    colliders.push({ x, z, radius: 0.35 });
+export function createScenery(art) {
+  const group = new THREE.Group(), colliders = [], trees = [], random = seededRandom(71);
+  const spots = [[-16, -5], [-13.5, -6.4], [-15, -9.5], [-11, -10], [-5, -13], [-2, -12.4],
+    [0, -13.5], [16, -3], [18, 1], [15, 3], [13, 6.8], [-15, 7], [-12.7, 8.5], [-16, 10]];
+  spots.forEach(([x, z], index) => {
+    const tree = placeArt(group, art, index % 3 ? 'birch' : 'pine', x, z, 0.82 + random() * 0.22);
+    tree.material = tree.material.clone(); trees.push(tree); colliders.push({ x, z, radius: 0.48 });
+  });
+  const clusters = [[-16, 0], [-15, 2], [-10, -5], [5, -13], [14, -8], [17, 7], [9, 11], [-10, 13]];
+  clusters.forEach(([x, z], index) => placeArt(group, art, index % 3 ? 'shrub' : 'rock', x, z, 0.65 + random() * 0.4));
+  for (let i = 0; i < 23; i++) {
+    const x = random() * 38 - 19, z = random() * 31 - 15.5;
+    if (terrainHeight(x, z) < 1.3 || Math.abs(x + 5) < 7 && z > 1) continue;
+    placeArt(group, art, i % 3 ? 'flowers' : 'shrub', x, z, i % 3 ? 0.8 : 0.48);
   }
-  for (let i = 0; i < 60; i++) {
-    const angle = random() * Math.PI * 2;
-    const radius = 0.75 + random() * 0.27;
-    const x = Math.cos(angle) * 26 * radius, z = Math.sin(angle) * 23 * radius;
-    if (z > 15 && x > -10 && x < 4) continue; // Keep the jetty landing clear.
-    const y = terrainHeight(x, z);
-    if (y < -0.6) continue;
-    const rock = mesh(group, new THREE.DodecahedronGeometry(0.5 + random() * 0.8, 0),
-      i % 2 ? colors.rock : '#a2a799', [x, y + 0.2, z]);
-    rock.scale.set(1.4, 0.7 + random(), 1); rock.rotation.set(random(), random(), random());
+  for (const [x, z, size] of [[-20, 1, 0.9], [-18, 10, 0.7], [19, 5, 0.9], [19, -4, 0.6], [12, -16, 0.7], [-10, 18, 0.7]]) {
+    placeArt(group, art, 'rock', x, z, size);
   }
-  for (let i = 0; i < 80; i++) {
-    const x = random() * 35 - 17.5, z = random() * 28 - 14;
-    if (terrainHeight(x, z) < 1.2 || Math.hypot(x, z - 2) < 7) continue;
-    if (Object.values(layout).some(p => Math.hypot(x - p.x, z - p.z) < 5)) continue;
-    const y = terrainHeight(x, z);
-    mesh(group, new THREE.ConeGeometry(0.22, 0.65, 4), '#66845e', [x, y + 0.3, z]);
-    if (i % 3 === 0) mesh(group, new THREE.IcosahedronGeometry(0.14), '#e3bc83', [x + 0.2, y + 0.5, z]);
-  }
-  const fence = [[5.5, -3], [7, -3.8], [8.5, -4.3], [10, -4.8], [11.5, -5.6]];
-  for (let i = 0; i < fence.length; i++) {
-    const [x, z] = fence[i], y = terrainHeight(x, z);
-    box(group, [0.16, 1.1, 0.16], colors.wood, [x, y + 0.55, z]);
-    if (i) {
-      const [px, pz] = fence[i - 1];
-      postBetween(group, [px, terrainHeight(px, pz) + 0.8, pz], [x, y + 0.8, z], 0.045, colors.wood);
-    }
-  }
-  return { group, colliders };
+  placeArt(group, art, 'sign', 0.5, 3.5, 0.8);
+  return { group, colliders, update(time, wind, player) {
+    trees.forEach((tree, index) => {
+      tree.rotation.z = Math.sin(time * 0.7 + index) * wind * 0.012;
+      const base = tree.userData.ground;
+      const hidesPlayer = Math.abs(player.x - base.x) < 1.8 && player.z < base.z && player.z > base.z - 7;
+      tree.material.opacity = hidesPlayer ? 0.42 : 1;
+    });
+  } };
 }

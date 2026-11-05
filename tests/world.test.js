@@ -7,7 +7,7 @@ import { zones, findZone } from '../src/world/zones.js';
 import { canStand, groundHeight, moveWithCollisions, overlapsCollider } from '../src/player/collision.js';
 import { on, emit } from '../src/core/events.js';
 import { anchors } from '../src/world/lighthouse.js';
-import { createBuildings } from '../src/world/buildings.js';
+import { getBuildingColliders } from '../src/world/buildings.js';
 
 describe('time and terrain', () => {
   it('puts the sun below the horizon at midnight and highest at noon', () => {
@@ -90,7 +90,7 @@ describe('movement safety', () => {
     expect(Math.hypot(result.x, result.z)).toBeLessThan(30);
   });
   it('lets a player enter the real cottage doorway and reach the desk without crossing furniture', () => {
-    const { colliders } = createBuildings();
+    const colliders = getBuildingColliders();
     const inside = moveWithCollisions({ x: -7, z: 7 }, 0, -3.3, colliders);
     expect(inside.z).toBeCloseTo(3.7);
     const atDesk = moveWithCollisions(inside, 0.8, 0, colliders);

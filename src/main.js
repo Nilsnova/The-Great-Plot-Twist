@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import './ui/styles.css';
 import { settings } from './config.js';
+import { loadArt } from './world/art.js';
 import { createRenderer } from './core/renderer.js';
 import { createInput } from './core/input.js';
 import { startLoop } from './core/loop.js';
@@ -17,15 +18,16 @@ import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
 
-function startGame() {
+async function startGame() {
   const container = document.querySelector('#game'), scene = new THREE.Scene();
+  const art = await loadArt();
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
-  const island = createIsland(scene), water = createWater(scene), boat = createBoat(scene);
-  const sky = createSky(scene), weather = createWeather(scene), character = createCharacter();
-  scene.add(character.group);
-  const controller = createController(character, input, island.colliders), view = createCamera(input, island.cameraObstacles);
+  const island = createIsland(scene, art), water = createWater(scene), boat = createBoat(scene, art);
+  const sky = createSky(scene), weather = createWeather(scene), character = createCharacter(art);
+  scene.add(character.sprite);
+  const controller = createController(character, input, island.colliders), view = createCamera(input);
   let active = false, hud, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
-  function quality(name) { settings.quality = name; graphics.setQuality(name, scene); water.setQuality(name); }
+  function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(matchMedia('(prefers-reduced-motion: reduce)').matches); },
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, quality,
@@ -35,14 +37,14 @@ function startGame() {
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
-    if (input.consume('Escape')) { view.start(true); hud.togglePanel(false); }
+    if (input.consume('Escape')) { if (active) view.start(true); hud.togglePanel(false); }
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     settings.hour = (settings.hour + delta * (settings.fastTime ? 0.8 : 0.003)) % 24;
-    controller.update(delta, view.yaw, active);
+    controller.update(delta, active);
     const state = weather.update(delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
     water.update(time, state); boat.update(time, state);
-    island.update(controller.player.position, time, night); view.update(delta, controller.player.position);
+    island.update(controller.player.position, time, night, state); view.update(delta, controller.player.position);
     const zone = active ? findZone(controller.player.position) : null;
     if (input.consume('KeyE') && zone) emit({ type: 'interact', id: zone });
     fpsFrames++;
@@ -50,8 +52,8 @@ function startGame() {
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles }); input.endFrame();
-  }, () => { sky.follow(view.camera.position); graphics.renderer.render(scene, view.camera); });
+    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night }); input.endFrame();
+  }, () => { graphics.renderer.render(scene, view.camera); });
   // A local dev-only inspection seam; never included in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on };
@@ -62,6 +64,7 @@ function startGame() {
       object.geometry?.dispose();
       if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material));
     });
+    Object.values(art).forEach(material => { material.map.dispose(); material.dispose(); });
     materials.forEach(material => material.dispose());
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
@@ -71,7 +74,7 @@ function startGame() {
     container.innerHTML = '<p class="error">Graphics paused. Reload the page to restore the island.</p>';
   });
 }
-try { startGame(); } catch (error) {
+startGame().catch(error => {
   console.error(error);
   document.querySelector('#game').innerHTML = '<p class="error">The island could not start. Enable WebGL 2 in a current desktop browser, then reload.</p>';
-}
+});

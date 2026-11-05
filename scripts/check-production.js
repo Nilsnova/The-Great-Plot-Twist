@@ -35,6 +35,6 @@ try {
       'Time slider and quality toggle work', 'Escape restores game focus', 'No browser/WebGL errors'] };
   const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
   await mkdir('captures', { recursive: true });
-  await writeFile(`captures/${stamp}_Production-Checks.json`, JSON.stringify(result, null, 2) + '\n');
+  await writeFile(`captures/${stamp}_Illustrated-Production-Checks.json`, JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result, null, 2));
 } finally { await browser?.close(); server.kill(); }

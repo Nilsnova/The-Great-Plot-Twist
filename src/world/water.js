@@ -1,39 +1,23 @@
-// One low-poly sea mesh. Weather drives wave height; quality changes its grid.
+// The sea is a flat colour with sparse animated brush marks, not a 3D surface.
 import * as THREE from 'three';
-import { colors, QUALITY } from '../config.js';
-import { smoothstep } from '../core/math.js';
+import { seededRandom } from '../core/math.js';
+import { brushLines } from './primitives.js';
+import { QUALITY } from '../config.js';
 
-export function waveHeight(x, z, time, wind) {
-  const strength = 0.04 + wind * 0.18;
-  return Math.sin(x * 0.38 + time * 1.3) * strength
-    + Math.cos(z * 0.47 - time * 0.8) * strength * 0.65;
-}
 export function createWater(scene) {
-  const material = new THREE.MeshStandardMaterial({
-    color: colors.water, flatShading: true, roughness: 0.5, metalness: 0.2,
-  });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(), material);
-  mesh.name = 'Animated low-poly sea'; scene.add(mesh);
-  // A flat far sea hides the square edge of the small animated grid in fog.
-  const horizon = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), material);
-  horizon.rotation.x = -Math.PI / 2; horizon.position.y = -0.42; scene.add(horizon);
-  function setQuality(name) {
-    mesh.geometry.dispose();
-    const segments = QUALITY[name].waterSegments;
-    mesh.geometry = new THREE.PlaneGeometry(230, 230, segments, segments);
-    mesh.geometry.rotateX(-Math.PI / 2);
+  const group = new THREE.Group(), segments = [], random = seededRandom(208);
+  for (let i = 0; i < 160; i++) {
+    const x = random() * 155 - 77.5, y = random() * 90 - 45;
+    const length = 0.6 + random() * 1.1;
+    segments.push([[x, y], [x + length * 0.4, y + 0.08]],
+      [[x + length * 0.4, y + 0.08], [x + length, y + 0.04]]);
   }
-  setQuality('high');
-  return {
-    mesh, setQuality,
+  const lines = brushLines(group, segments, '#b9ceba', 0, 0.55); scene.add(group);
+  return { setQuality(name) { lines.geometry.setDrawRange(0, QUALITY[name].waveMarks * 4); },
     update(time, weather) {
-      const positions = mesh.geometry.attributes.position;
-      for (let i = 0; i < positions.count; i++) {
-        const x = positions.getX(i), z = positions.getZ(i);
-        const fade = 1 - smoothstep(60, 100, Math.hypot(x, z));
-        positions.setY(i, waveHeight(x, z, time, weather.wind) * fade);
-      }
-      positions.needsUpdate = true;
+      group.position.x = Math.sin(time * 0.15) * (0.15 + weather.wind * 0.35);
+      group.position.y = Math.sin(time * 0.55) * (0.04 + weather.wind * 0.12);
+      lines.material.opacity = 0.4 + Math.sin(time * 0.3) * 0.08;
     },
   };
 }
