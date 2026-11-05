@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T17:57:37.680Z",
+  "checked": "2026-11-05T18:20:06.683Z",
   "production": false,
   "checks": [
     "Gallery shows all nine component groups",
@@ -13,6 +13,7 @@
     "HUD formats supplied balance and distinguishes NPC seats",
     "Toast announces plain status text",
     "Supplied HTML-like text stays literal in dialogue, choices, buttons and tables",
+    "Empty-choice dialogue keeps focus and disposing an open modal restores its opener",
     "Reduced-motion dialogue reveals text immediately",
     "Text remains readable at 1365×768",
     "Gallery has no horizontal overflow at 1365×768",

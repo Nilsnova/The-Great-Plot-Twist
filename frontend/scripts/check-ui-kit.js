@@ -37,6 +37,13 @@ try {
       dialogue.dispose();button.dispose();table.dispose();return safe;
     });
     check(safety,'Supplied HTML-like text stays literal in dialogue, choices, buttons and tables');
+    check(await page.evaluate(async()=>{
+      const {createDialogue,createModal,createButton}=await import('/src/ui/kit/index.js');
+      const dialogue=createDialogue({speaker:'Quiet',text:'A still sea.',choices:[]});document.body.append(dialogue.element);dialogue.complete();
+      const focused=document.activeElement===dialogue.element.querySelector('.kit-dialogue-text');dialogue.dispose();
+      const opener=createButton({label:'Open temporary dialog'});document.body.append(opener.element);opener.element.focus();
+      const modal=createModal({title:'Temporary'});modal.open();modal.dispose();const restored=document.activeElement===opener.element;opener.dispose();return focused&&restored;
+    }),'Empty-choice dialogue keeps focus and disposing an open modal restores its opener');
     await page.emulateMedia({reducedMotion:'reduce'});
     check(await page.evaluate(async()=>{
       const {createDialogue}=await import('/src/ui/kit/dialogue.js');

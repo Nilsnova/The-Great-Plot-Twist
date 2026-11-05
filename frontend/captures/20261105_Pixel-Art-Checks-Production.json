@@ -1,8 +1,9 @@
 {
-  "checked": "2026-11-05T17:03:31.316Z",
+  "checked": "2026-11-05T18:24:13.753Z",
   "checks": [
-    "Workshop lists the complete active pixel kit",
-    "77 PNGs decode at their exact native sizes with visible pixels",
+    "Workshop lists public art without finale variants",
+    "Explicit rehearsal gallery lists every registered drawing",
+    "191 PNGs decode at their exact native sizes with visible pixels",
     "Search finds the side-facing animation family",
     "Native sprite detail opens",
     "Escape closes sprite detail",
@@ -12,7 +13,7 @@
     "Production omits development inspection",
     "No browser errors or external requests ()"
   ],
-  "files": 77,
+  "files": 191,
   "browser": "157.0.8103.39",
   "display": {
     "imageRendering": "pixelated",

@@ -1,0 +1,32 @@
+{
+  "checked": "2026-11-05T18:21:42.311Z",
+  "viewport": "1440 × 900, device DPR 2",
+  "high": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "points": 0,
+    "nativeFramebuffer": [
+      480,
+      300
+    ],
+    "integerUpscale": 3,
+    "devicePixelRatio": 2,
+    "pixelRatio": 1,
+    "shadows": false
+  },
+  "low": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "points": 0,
+    "nativeFramebuffer": [
+      480,
+      300
+    ],
+    "integerUpscale": 3,
+    "devicePixelRatio": 2,
+    "pixelRatio": 1,
+    "shadows": false
+  }
+}

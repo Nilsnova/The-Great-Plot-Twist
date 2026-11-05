@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T17:06:29.079Z",
+  "checked": "2026-11-05T18:20:37.331Z",
   "browser": "157.0.8103.39",
   "viewport": "1440 × 900, DPR 1",
   "checks": [
@@ -81,7 +81,7 @@
       "programs": 4
     },
     "home_islet": {
-      "fps": 61,
+      "fps": 60,
       "calls": 40,
       "triangles": 78,
       "geometries": 40,
@@ -101,7 +101,7 @@
       "programs": 3
     },
     "wreck_point": {
-      "fps": 60,
+      "fps": 61,
       "calls": 30,
       "triangles": 58,
       "geometries": 29,
@@ -123,66 +123,6 @@
   },
   "roundTrips": [
     {
-      "fps": 78,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 59,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 67,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 28,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 71,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 67,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
       "fps": 63,
       "calls": 97,
       "triangles": 192,
@@ -203,6 +143,66 @@
       "programs": 3
     },
     {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 64,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 64,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 63,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 64,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
       "fps": 61,
       "calls": 97,
       "triangles": 192,
@@ -213,7 +213,7 @@
       "programs": 3
     },
     {
-      "fps": 69,
+      "fps": 63,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -224,7 +224,7 @@
     }
   ],
   "before": {
-    "fps": 56,
+    "fps": 60,
     "calls": 97,
     "triangles": 192,
     "geometries": 96,
@@ -243,8 +243,8 @@
     "objects": 10,
     "programs": 3
   },
-  "reducedMotionMs": 77,
-  "windOnePassageMs": 4216,
+  "reducedMotionMs": 76,
+  "windOnePassageMs": 4194,
   "errors": [],
   "externalRequests": []
 }

@@ -24,7 +24,7 @@ export function createIntro(ctx) {
     finally{clearTimeout(timer);}
   }
   function open(id) {
-    if(disposed||ctx.world.busy)return false;hotspot=id;active=true;ctx.resetInput?.();modal.open(ctx.container);
+    if(disposed||ctx.world.busy||ctx.world.current?.id!=='lighthouse_isle'||!introHotspots.includes(id))return false;hotspot=id;active=true;ctx.resetInput?.();modal.open(ctx.container);
     if(adapter)visit();else load();return true;
   }
   function perform(id) {

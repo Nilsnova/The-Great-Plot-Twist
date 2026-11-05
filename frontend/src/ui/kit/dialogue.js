@@ -35,7 +35,7 @@ export function createDialogue({ onChoice, ...initial } = {}) {
     options.forEach((option,index) => {
       const li = node('li'), button = node('button','kit-choice',`${index+1}. ${option.label}`); button.type = 'button';
       button.dataset.choice = option.id;
-      button.onclick = () => onChoice?.(option.id,index); button.onfocus = () => { selected=index; };
+      button.onclick = () => onChoice?.(option.id,index); button.onfocus = () => { selected=index; paint(); };
       li.append(button); if (option.hint) li.append(node('small','kit-choice-hint',option.hint)); choices.append(li); buttons.push(button);
     });
     paint(); if (!writer.done) frame = requestAnimationFrame(tick);

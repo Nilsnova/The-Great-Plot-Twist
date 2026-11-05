@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T18:01:37.630Z",
+  "checked": "2026-11-05T18:23:16.114Z",
   "checks": [
     "Normal play has no rehearsal controls",
     "Unknown cinematic is refused without events",
@@ -17,6 +17,8 @@
     "Reduced-motion passage settles quickly",
     "Cinematics release their bitmaps without extra world geometry or textures",
     "Active cinematic stays within rendering budgets",
+    "World disposal cancels a pending shot",
+    "World disposal removes the cinematic dialog",
     "Explicit demo query exposes the rehearsal selector",
     "Demo skip restores control",
     "No browser errors",
@@ -44,8 +46,8 @@
     "objects": 10,
     "programs": 3
   },
-  "threeLightsMs": 8019,
-  "reducedMotionMs": 8,
+  "threeLightsMs": 8018,
+  "reducedMotionMs": 4,
   "after": {
     "fps": 60,
     "calls": 97,

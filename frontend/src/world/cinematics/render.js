@@ -13,6 +13,14 @@ function fog(draw,image,amount,time) {
   if(image)for(let i=0;i<5;i++)draw.drawImage(image,Math.round((i*101+Math.sin(time*.4+i)*6)-25),40+i%2*70);
   draw.globalAlpha=1;
 }
+function deck(draw) {
+  draw.fillStyle='#354a37';draw.beginPath();draw.moveTo(0,171);draw.lineTo(157,133);draw.lineTo(448,150);draw.lineTo(448,256);draw.lineTo(0,256);draw.closePath();draw.fill();
+  draw.fillStyle='#7d6748';draw.fillRect(0,175,448,81);
+  for(let y=180;y<256;y+=13){draw.fillStyle='#ac9161';draw.fillRect(0,y,448,2);draw.fillStyle='#4c5038';draw.fillRect(0,y+3,448,1);}
+  for(let x=24;x<448;x+=86){draw.fillStyle='#414d36';draw.fillRect(x,150,6,34);draw.fillStyle='#a0915e';draw.fillRect(x+1,150,3,5);}
+  draw.fillStyle='#3d503b';draw.fillRect(0,158,448,5);draw.fillStyle='#a49767';draw.fillRect(0,158,448,1);
+  draw.fillStyle='#4a5138';draw.fillRect(24,218,70,25);draw.strokeStyle='#b19a67';draw.strokeRect(27,221,64,19);
+}
 function marker(draw,x,y,bright=1) {
   draw.globalAlpha=bright;draw.fillStyle='#d1b778';draw.fillRect(x-3,y-1,7,3);draw.fillRect(x-1,y-3,3,7);
   draw.fillStyle='#f5dda0';draw.fillRect(x-1,y-1,3,3);draw.globalAlpha=1;
@@ -38,6 +46,7 @@ export function drawShot(draw,shot) {
     draw.globalAlpha=Math.round(p*8)/8;draw.drawImage(images['ghost-schooner'],160,83);draw.globalAlpha=1;fog(draw,images['fog-bank'],.65*(1-p),time);
   }
   if(name==='unmask') {
+    deck(draw);draw.fillStyle='#566448';draw.fillRect(351,100,4,79);draw.drawImage(images['false-light'],306,35);
     const reveal=p>.55&&revealAsset;
     draw.drawImage(images[reveal?revealAsset:'character-masked-captain'],176,50,96,128);
     if(p>.55&&!reveal){draw.fillStyle='#263c32';draw.fillRect(208,82,36,28);draw.fillStyle='#728270';draw.fillRect(221,114+Math.round((p-.55)*50),24,12);}
