@@ -95,7 +95,7 @@ GET /api/config
 {"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
 
-`auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the cron secret.
+`auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
 
 ### GET /api/me
 
@@ -224,7 +224,7 @@ Only a `200` carries `Cache-Control: public, max-age=300`, so a browser may reus
 
 ### GET /api/keepalive
 
-Keeps the free Supabase project awake ([ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Only Vercel's daily cron calls it, with the cron secret. It reads one row from `profiles`, `wallet_reasons` and `crews`, stops at the first read that fails, and never answers with database text. The cron entry that calls it is in `vercel.json`: once a day, at some minute between 06:00 and 06:59 UTC (the Hobby plan promises only the hour), on production only. Whether cron really runs together with Vercel Services is confirmed after the next production deploy ([SETUP.md](SETUP.md), Step 5, check 3).
+Keeps the free Supabase project awake ([ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Only a caller that sends the keep-alive secret may use it. It reads one row from `profiles`, `wallet_reasons` and `crews`, stops at the first read that fails, and never answers with database text. What calls it once a day is an open decision for Nils (question 4 in [section 11](#11-open-questions-for-mon-9)), so nothing calls it yet. It is not Vercel Cron: a `crons` entry in `vercel.json` breaks our deploys while we use Vercel Services, so never add one. The header below is the one Vercel Cron would have sent. Any caller we choose sends the same header.
 
 ```text
 GET /api/keepalive
@@ -499,7 +499,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 - Football backup: OpenLigaDB. No key, an open licence, and made for prediction games. At most one call per league every 30 to 60 seconds during live games, from our server only. Volunteers enter the results, so confirm one with a second source before paying out.
 - Basketball (NBA): balldontlie, with a free key and 5 calls a minute.
 - Players stake play coins into a pool, and the winners share it. No bookmaker odds. Settle only on the final result. Refund everyone when a game is postponed, cancelled or suspended. Keep to league games or 90-minute results, to avoid extra-time rules.
-- Vercel's cron runs at most once a day, so settle when someone opens their stakes after the game.
+- Vercel Cron cannot be used with our setup (see [ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)), so no timer settles games for us. Settle when someone opens their stakes after the game.
 
 **The PvP arena (A7).**
 
@@ -518,6 +518,6 @@ What already holds, from the foundation: a reward is paid with `clue_reward` or 
 1. **JSON names.** Confirm camelCase in JSON (`demoMode`, `actionUid`) and snake_case in Python and SQL. Also confirm the exception for content files, which keep their own spelling (`story.json` uses snake_case keys such as `hide_when_blocked`).
 2. **Repeats.** What does a route answer when an `actionUid` comes a second time: the first answer again, or `409 already_applied` like the wallet?
 3. **Switched-off features.** Which status and code does a route answer while its flag is off?
-4. **The keep-alive call.** Vercel Cron, a GitHub Actions schedule (only with Nils' OK) or Supabase Cron, decided after the first deploy ([SETUP.md](SETUP.md), Step 5, check 3).
+4. **The keep-alive caller.** What calls `GET /api/keepalive` once a day. Vercel Cron is out, because a `crons` entry in `vercel.json` breaks our deploys while we use Services. The options are a scheduled GitHub Actions workflow (only with Nils' OK), a free outside scheduler or uptime monitor that sends the secret, or Supabase Cron (not checked yet). Nils decides. Until then we rely on team activity and a manual check of the Supabase project the day before the demo ([SETUP.md](SETUP.md), Step 5, check 3, and "Keep it awake until the demo").
 5. **Browser contracts after the final look.** G1 confirms that the event bus, the four story trigger ids and `setWeather` stay as written in section 3 when D005 is recorded.
 6. **The default weather place.** Torshavn in the Faroe Islands is the proposal (real fog and storms that suit the story), Lisbon the option (`38.72`, `-9.14`). It is only the default of three settings, so changing it needs no code change. Without a decision the Faroe Islands stay.
