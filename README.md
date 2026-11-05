@@ -20,7 +20,30 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | What works right now, next steps per lane and the log | [Status](docs/STATUS.md) |
 | The story and its approved decisions | [Story](docs/STORY.md) |
 | One-time setup of GitHub, Supabase and Vercel | [Setup guide](docs/SETUP.md) |
+| How the game, the API and the database fit together | [Architecture](docs/ARCHITECTURE.md) |
+| Shared contracts: API routes, browser events, tables, wallet reasons, feature flags | [Interfaces](docs/INTERFACES.md) |
+| Commands to install, run and test, and how we write code | [How we write code, section 3](docs/ENGINEERING.md#3-commands) |
 
 ## Project status
 
-A first version is live at [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/): the Lighthouse Isle scene runs in the browser with a Python API behind it, and the original Plot Twist story is still to be imported (package S1 in the [roadmap](ROADMAP.md)). The [status page](docs/STATUS.md) shows what works right now, what each lane does next and the dated log. Before submission, this README also gets the deployed URL, every member’s name and student number, and the exact run and test commands.
+*Last updated: 5 Nov 2026, evening.*
+
+The team is turning the text mystery Plot Twist into a browser game: a top-down pixel-art island world with GitHub sign-in, a shared mystery and a play-money economy.
+
+- **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
+- **Foundation (package F0) is on `main`:** the API skeleton (health, config and keep-alive routes, the sign-in check, the wallet rules, the pattern for outside data), the first database migration in `supabase/`, `vercel.json` and the docs in `docs/`. No game feature uses it yet.
+- **In progress:** the story engine (S1), the story details (S0), the world, sea chart and harbor (G2 + G3). The [status page](docs/STATUS.md) always shows what works right now, what each lane does next and the dated log.
+
+### What the final README must contain
+
+By the submission on Mon 23 Nov, this README must give the exact installation, run and test commands, the deployed URL, and every member's name and student number. Fill in the placeholders below then, with real values only.
+
+- **Deployed URL:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) (confirm before submission)
+- **Commands:** today in [docs/ENGINEERING.md, section 3](docs/ENGINEERING.md#3-commands). Copy the final ones here.
+
+| Member | Student number |
+|---|---|
+| `<name>` | `<student number>` |
+| `<name>` | `<student number>` |
+| `<name>` | `<student number>` |
+| `<name>` | `<student number>` |

@@ -1,4 +1,4 @@
-# Python project settings for the server (the code in server/ and api/).
+# Python project settings for the server (main.py and the code in server/).
 # Used by: uv (installs packages), pytest (runs tests), ruff (checks style) and Vercel (deploys).
 
 [project]
@@ -27,7 +27,7 @@ dev = [
 [tool.uv]
 package = false
 
-# `uv run pytest` runs only the server tests. The browser tests live in tests/ (Vitest).
+# `uv run pytest` runs only the server tests. The browser tests live in frontend/tests/ (Vitest).
 [tool.pytest.ini_options]
 testpaths = ["server/tests"]
 pythonpath = ["."] # lets tests write "from server.app import ..."

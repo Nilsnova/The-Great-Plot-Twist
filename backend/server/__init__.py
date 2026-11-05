@@ -1,6 +1,6 @@
 """The Great Plot Twist server: the Python code that holds the game rules.
 
-Used by: main.py (Vercel serves it) and the tests in server/tests.
+Used by: backend/main.py (Vercel serves it) and the tests in backend/server/tests/.
 
 Where things are (one job per file):
     app.py             builds the FastAPI app and plugs everything together
@@ -11,7 +11,7 @@ Where things are (one job per file):
     auth.py            checks a login token with Supabase and says who the player is
     supabase_admin.py  server-only calls to the database with the secret key
     wallet.py          the rules for changing a player's coins
-    routes/            the URLs the browser can call
+    routes/            the URLs of the API (the game calls them; the daily cron calls keepalive)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
 """
 

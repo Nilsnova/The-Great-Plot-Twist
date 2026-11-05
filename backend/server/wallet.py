@@ -1,8 +1,9 @@
 """Wallet rules: the only way the server changes a player's coins.
 
-Coins are play money. They cannot be bought or cashed out. Every player starts with
-STARTING_BALANCE coins. One wallet and one ledger serve every money feature (stock exchange,
-prediction markets, sports predictions, arena stakes).
+Coins are play money. They cannot be bought, cashed out or exchanged for real prizes. Every
+player starts with STARTING_BALANCE coins, which is 0. The first coins arrive later, when the
+intro hands out the entry kit (reason kit_grant). One wallet and one ledger serve every money
+feature.
 
 The browser can never write a balance. Only the server does, through ONE atomic database
 function (apply_wallet_transaction) that checks the balance and writes the ledger row in a
@@ -10,27 +11,37 @@ single step. This file does two things:
   1. validate_transaction checks the numbers before any network call (pure, easy to test),
   2. apply_transaction validates, asks the database to do it and returns the new balance.
 
-Every reason has a direction. A purchase or a stake takes coins away (a negative amount). A
-grant, a sale or a payout adds coins (a positive amount). Only admin_adjust may go either way.
-The database checks the same rule, so even a bug here cannot hand out coins.
+Every reason has a direction. "earn" adds coins (a positive amount), "spend" takes coins away
+(a negative amount) and "either" may go both ways (only admin_adjust). The list of reasons lives
+in the database table wallet_reasons. WALLET_REASONS below is its copy in Python, and a test
+fails if the two differ. The database checks the direction too, so even a bug here cannot hand
+out coins.
 
-Used by: every feature route that moves coins (market, predictions, sports, arena).
+To add a reason, in one pull request: write a migration with one INSERT into wallet_reasons and
+add the same (reason, direction) pair at the END of WALLET_REASONS. Never rename a reason or
+change its direction.
+
+Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings).
 
 Example inside a route (a negative number takes coins away, a positive number adds them):
 
     new_balance = await apply_transaction(
-        player.id, -50, "market_buy", ref="order-123", admin=admin
+        player.id, -50, "building_purchase", ref="order-123", admin=admin
     )
 
-The `ref` is what makes a repeated request safe. Make it ONCE per player action (for example
-the order id the browser creates when the player clicks Buy) and send the same one again if the
-request is repeated. The database accepts each player + reason + ref only once.
+The `ref` is what makes a repeated request safe, so EVERY coin change needs one. Make it ONCE per
+player action (for example the order id the browser creates when the player clicks Buy) and send
+the same one again if the request is repeated. The database accepts each player + reason + ref
+only once. A call without a ref is refused with a 422 before it reaches the database, and the
+database refuses it too. For a grant that must happen only once per player, such as the entry
+kit, use a fixed ref (for example "kit").
 """
 
 from server.errors import ApiError
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
-STARTING_BALANCE = 1000
+# A new wallet holds no coins. The database column default must be the same number.
+STARTING_BALANCE = 0
 
 # The biggest change allowed in one transaction, up or down.
 MAX_DELTA = 1_000_000
@@ -38,35 +49,24 @@ MAX_DELTA = 1_000_000
 # The longest `ref` the database accepts (its constraint wallet_transactions_ref_max_length).
 MAX_REF_LENGTH = 120
 
-# Every reason a coin balance can change. The SAME list, in the SAME order, is in the database.
-REASONS = (
-    "starting_grant",
-    "market_buy",
-    "market_sell",
-    "prediction_stake",
-    "prediction_payout",
-    "sports_stake",
-    "sports_payout",
-    "arena_stake",
-    "arena_payout",
-    "admin_adjust",
+# The three directions a reason can have. The database table wallet_reasons uses the same words.
+EARN = "earn"  # always adds coins, so the amount is positive
+SPEND = "spend"  # always takes coins away, so the amount is negative
+EITHER = "either"  # may go both ways
+DIRECTIONS = (EARN, SPEND, EITHER)
+
+# Every reason a coin balance can change, with its direction. The SAME pairs, in the SAME order,
+# are inserted into the database table wallet_reasons by the foundation migration.
+WALLET_REASONS = (
+    ("kit_grant", EARN),
+    ("clue_reward", EARN),
+    ("mystery_reward", EARN),
+    ("event_reward", EARN),
+    ("cargo_sale", EARN),
+    ("clue_purchase", SPEND),
+    ("building_purchase", SPEND),
+    ("admin_adjust", EITHER),
 )
-
-# Reasons that always take coins away (a negative amount). The database has the same list.
-SPEND_REASONS = ("market_buy", "prediction_stake", "sports_stake", "arena_stake")
-
-# Reasons that always add coins (a positive amount). The database has the same list.
-# admin_adjust is in neither list: it may go either way.
-EARN_REASONS = (
-    "starting_grant",
-    "market_sell",
-    "prediction_payout",
-    "sports_payout",
-    "arena_payout",
-)
-
-# Only the sign-up trigger in the database writes this reason, so the server refuses it.
-SIGN_UP_ONLY_REASON = "starting_grant"
 
 
 class InvalidTransaction(ApiError):
@@ -78,6 +78,22 @@ class InvalidTransaction(ApiError):
 
     def __init__(self, message: str) -> None:
         super().__init__(422, "invalid_transaction", message)
+
+
+def find_direction(reason: object) -> str | None:
+    """The direction of a reason ("earn", "spend" or "either"), or None if we do not know it."""
+    for known_reason, direction in WALLET_REASONS:
+        if reason == known_reason:
+            return direction
+    return None
+
+
+def list_reason_names() -> list[str]:
+    """Just the names of the reasons, in the agreed order."""
+    names = []
+    for name, _direction in WALLET_REASONS:
+        names.append(name)
+    return names
 
 
 def check_amount(delta: int) -> None:
@@ -92,27 +108,32 @@ def check_amount(delta: int) -> None:
 
 
 def check_reason(delta: int, reason: str) -> None:
-    """The reason must be on the agreed list, and the sign of the amount must fit it."""
-    if reason not in REASONS:
-        allowed = ", ".join(REASONS)
+    """The reason must be on the agreed list, and the sign of the amount must fit its direction."""
+    direction = find_direction(reason)
+    if direction is None:
+        allowed = ", ".join(list_reason_names())
         raise InvalidTransaction(f"Unknown reason '{reason}'. Allowed reasons: {allowed}.")
-    if reason == SIGN_UP_ONLY_REASON:
-        raise InvalidTransaction(f"{reason} is written only by the sign-up trigger.")
-    if reason in SPEND_REASONS and delta > 0:
-        raise InvalidTransaction(f"{reason} must take coins away (a negative amount).")
-    if reason in EARN_REASONS and delta < 0:
+    # check_amount has already refused zero, so a number is either above or below zero here.
+    if direction == EARN and delta < 0:
         raise InvalidTransaction(f"{reason} must add coins (a positive amount).")
+    if direction == SPEND and delta > 0:
+        raise InvalidTransaction(f"{reason} must take coins away (a negative amount).")
 
 
-def check_ref(ref: str | None) -> None:
-    """The reference is optional, but if it is there it must be short text."""
-    if ref is not None and not isinstance(ref, str):
-        raise InvalidTransaction("The reference must be text.")
-    if ref is not None and len(ref) > MAX_REF_LENGTH:
+def check_ref(ref: str) -> None:
+    """Every coin change needs a ref: non-empty text, at most MAX_REF_LENGTH characters."""
+    # Python does not enforce type hints, so a caller could still pass None. Refuse it here.
+    if ref is None:
+        raise InvalidTransaction(
+            "Every coin change needs a ref, so a repeated request cannot pay twice."
+        )
+    if not isinstance(ref, str) or not ref.strip():
+        raise InvalidTransaction("The reference must be non-empty text.")
+    if len(ref) > MAX_REF_LENGTH:
         raise InvalidTransaction(f"The reference can be at most {MAX_REF_LENGTH} characters.")
 
 
-def validate_transaction(delta: int, reason: str, ref: str | None = None) -> None:
+def validate_transaction(delta: int, reason: str, ref: str) -> None:
     """Check a coin change. Raises InvalidTransaction if it is not allowed."""
     check_amount(delta)
     check_reason(delta, reason)
@@ -130,18 +151,19 @@ async def apply_transaction(
     player_id: str,
     delta: int,
     reason: str,
-    ref: str | None = None,
+    ref: str,
     *,
     admin: SupabaseAdmin,
 ) -> int:
     """Add `delta` coins to the player's wallet (negative takes coins away).
 
-    `ref` links the ledger row to whatever caused it, such as an order id (at most 120
-    characters). Pass one that stays the same when the request is repeated: the database
-    accepts each player + reason + ref only once. Returns the new balance.
+    `ref` is required. It links the ledger row to whatever caused it, such as an order id (at
+    most 120 characters). Pass one that stays the same when the request is repeated: the
+    database accepts each player + reason + ref only once. Returns the new balance.
 
     Raises (all of them become the standard error answer in a route):
-      InvalidTransaction (422)    bad amount, reason or reference. Nothing was sent.
+      InvalidTransaction (422)    bad amount, reason or reference, or no reference. Nothing was
+                                  sent.
       InsufficientFunds (409)     the player cannot afford it.
       AlreadyApplied (409)        this player + reason + ref was done before. Nothing changed.
       SupabaseUnavailable (503)   the OUTCOME IS UNKNOWN: the call may have been saved before it

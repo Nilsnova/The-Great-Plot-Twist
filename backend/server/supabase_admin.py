@@ -4,16 +4,21 @@
 
 SUPABASE_SECRET_KEY skips every row-level-security rule. Whoever holds it can read and change
 every player's data and coins. So:
-  * only server code (api/ and server/) may import this file,
+  * only server code (backend/main.py and backend/server/) may import this file,
   * never copy the key into a VITE_ variable, browser code, a log line, an error message or
     a commit,
   * errors from this file are plain sentences. They never repeat what the database said.
 
-What it does: call_function(name, params) runs a Postgres function through Supabase's REST API
-(POST {SUPABASE_URL}/rest/v1/rpc/<name>). The wallet uses it to run the atomic database function
-apply_wallet_transaction.
+What it does:
+  * call_function(name, params) runs a Postgres function through Supabase's REST API
+    (POST {SUPABASE_URL}/rest/v1/rpc/<name>). The wallet uses it to run the atomic database
+    function apply_wallet_transaction.
+  * select_rows(table, query) reads rows from a table
+    (GET {SUPABASE_URL}/rest/v1/<table>?<query>). It can only read, never change anything.
+    The keep-alive route uses it.
 
-Used by: wallet.py, and later any server module that must change data players may not touch.
+Used by: wallet.py, routes/keepalive.py, and later any server module that must change data
+players may not touch.
 """
 
 import logging
@@ -36,6 +41,9 @@ NEW_STYLE_KEY_PREFIX = "sb_secret_"
 # Database function names are lowercase words joined by underscores. Anything else is refused,
 # so a name can never add extra pieces to the URL.
 FUNCTION_NAME = re.compile(r"[a-z][a-z0-9_]*")
+
+# Table names follow the same rule, for the same reason.
+TABLE_NAME = re.compile(r"[a-z][a-z0-9_]*")
 
 # Postgres error codes (the "code" in the JSON that Supabase sends back).
 RAISED_BY_SQL_FUNCTION = "P0001"  # a `raise exception` inside one of our SQL functions
@@ -165,8 +173,18 @@ def read_reply(response: httpx.Response) -> Any:
     raise SupabaseRejected()
 
 
+def read_rows(reply: Any) -> list[dict[str, Any]]:
+    """A table read answers with a JSON list of rows (an empty list if nothing matched)."""
+    if not isinstance(reply, list):
+        raise SupabaseRejected("The database sent an answer we could not read.")
+    return reply
+
+
 class SupabaseAdmin:
-    """Calls Postgres functions as the server. create_app() makes one and stores it."""
+    """Talks to the database as the server: runs Postgres functions and reads rows.
+
+    create_app() makes one and stores it.
+    """
 
     def __init__(
         self,
@@ -180,18 +198,46 @@ class SupabaseAdmin:
 
     async def call_function(self, name: str, params: dict[str, Any]) -> Any:
         """Run the database function `name` with `params` and return its JSON result."""
-        if not self.base_url or not self._secret_key:
-            raise SupabaseNotConfigured()
+        self.check_configured()
         if not FUNCTION_NAME.fullmatch(name):
             raise ValueError(f"Not a valid database function name: {name!r}")
+        return await self._send("POST", f"{self.base_url}/rest/v1/rpc/{name}", body=params)
 
-        url = f"{self.base_url}/rest/v1/rpc/{name}"
+    async def select_rows(self, table: str, query: dict[str, str]) -> list[dict[str, Any]]:
+        """Read rows from `table`. This only reads: it can never change anything.
+
+        `query` holds the options for the address. For example {"select": "id", "limit": "1"}
+        asks for the id column of at most one row. Returns the rows as a list of dictionaries.
+        """
+        self.check_configured()
+        if not TABLE_NAME.fullmatch(table):
+            raise ValueError(f"Not a valid database table name: {table!r}")
+        reply = await self._send("GET", f"{self.base_url}/rest/v1/{table}", params=query)
+        return read_rows(reply)
+
+    def check_configured(self) -> None:
+        """Stop before any network call if the address or the secret key is missing."""
+        if not self.base_url or not self._secret_key:
+            raise SupabaseNotConfigured()
+
+    async def _send(
+        self,
+        method: str,
+        url: str,
+        params: dict[str, str] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> Any:
+        """Send one request with the secret key. Returns the JSON answer or raises a typed error.
+
+        The leading underscore means: only this class calls it. It can send any kind of request
+        with the secret key, so the public methods above are the only doors to it.
+        """
         try:
             async with httpx.AsyncClient(
                 transport=self.transport, timeout=TIMEOUT_SECONDS
             ) as client:
-                response = await client.post(
-                    url, json=params, headers=build_headers(self._secret_key)
+                response = await client.request(
+                    method, url, params=params, json=body, headers=build_headers(self._secret_key)
                 )
         except (httpx.RequestError, httpx.InvalidURL) as error:
             logger.warning("Database call failed: %s", type(error).__name__)

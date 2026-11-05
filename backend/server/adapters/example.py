@@ -22,8 +22,8 @@ To build a real source (weather, stocks, sports, prediction markets):
      headroom (for example twice the minimum) and do not rely on it for a hard daily quota.
   5. In a route, call `result = await source.get()` and send back result.data together with
      result.source and result.fetched_at, so the browser can show how fresh the data is.
-  6. Test it like server/tests/test_adapters_example.py: pass a fake fetch function and a fake
-     clock, so the tests never use the network.
+  6. Test it like backend/server/tests/test_adapters_example.py: pass a fake fetch function
+     and a fake clock, so the tests never use the network.
 
 Used by: teammates, as a template. No route uses it yet.
 """

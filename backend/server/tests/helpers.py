@@ -1,6 +1,6 @@
 """Small helpers shared by the test files: a fake clock and ready-made settings.
 
-Used by: the other files in server/tests.
+Used by: the other files in backend/server/tests/.
 """
 
 from collections.abc import Callable
@@ -20,13 +20,15 @@ FakeReply = Callable[[httpx.Request], httpx.Response]
 FAKE_URL = "https://fake-project.supabase.co"
 FAKE_PUBLISHABLE_KEY = "sb_publishable_not_a_real_key"
 FAKE_SECRET_KEY = "sb_secret_not_a_real_key"
+FAKE_CRON_SECRET = "cron_not_a_real_secret"
 
-# Settings as they look when Supabase is set up. To change one value in a test, use
-# dataclasses.replace(CONFIGURED_SETTINGS, supabase_url="") and so on.
+# Settings as they look when Supabase and the cron secret are set up. To change one value in a
+# test, use dataclasses.replace(CONFIGURED_SETTINGS, supabase_url="") and so on.
 CONFIGURED_SETTINGS = Settings(
     supabase_url=FAKE_URL,
     supabase_publishable_key=FAKE_PUBLISHABLE_KEY,
     supabase_secret_key=SecretStr(FAKE_SECRET_KEY),
+    cron_secret=SecretStr(FAKE_CRON_SECRET),
 )
 
 
@@ -58,6 +60,15 @@ def make_admin(
         return reply(request)
 
     return SupabaseAdmin(base_url, secret_key, httpx.MockTransport(handler)), seen
+
+
+def fail_with(error_class: type[httpx.RequestError]) -> FakeReply:
+    """A fake-database reply that raises a network error."""
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        raise error_class("pretend network failure", request=request)
+
+    return reply
 
 
 def assert_error(response: Any, status_code: int, code: str) -> None:

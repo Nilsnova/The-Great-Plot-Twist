@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from server import __version__
 from server.auth import PlayerVerifier
 from server.errors import register_error_handlers
-from server.routes import config, health
+from server.routes import config, health, keepalive
 from server.settings import Settings, settings_from_environment
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
 
@@ -70,4 +70,5 @@ def create_app(
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
     app.include_router(config.router, prefix="/api")
+    app.include_router(keepalive.router, prefix="/api")
     return app
