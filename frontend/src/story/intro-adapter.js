@@ -18,17 +18,17 @@ function navigation(game,target) {
   return null;
 }
 export function createIntroAdapter(story,journal={read:()=>null,write(){}}) {
-  let game=new Game(story,memoryStorage()),actions=[];
+  let game=new Game(story,memoryStorage()),actions=[],restored=false;
   const labels=Object.fromEntries(Object.values(story.scenes).flatMap(scene=>(scene.actions??[]).map(action=>[action.id,action.label])));
   try {
     const saved=JSON.parse(journal.read());
     if(saved?.version===1&&Array.isArray(saved.actions)&&saved.actions.length<=1000&&saved.actions.every(id=>typeof id==='string')) {
-      const candidate=replay(story,saved.actions);if(candidate){game=candidate;actions=[...saved.actions];}
+      const candidate=replay(story,saved.actions);if(candidate){game=candidate;actions=[...saved.actions];restored=true;}
     }
   } catch { /* A malformed or old journal starts a fresh local intro. */ }
   function save() { try{journal.write(JSON.stringify({version:1,actions}));}catch{/* Private storage may be unavailable. */} }
   return {
-    get state(){return structuredClone(game.state);},get actions(){return [...actions];},
+    get restored(){return restored;},get state(){return structuredClone(game.state);},get actions(){return [...actions];},
     get view(){return {scene:game.state.scene,title:game.scene.title,text:game.scene.text,ended:game.state.ended,message:game.state.message,
       history:actions.map(id=>({id,label:labels[id]??id})),notes:[...game.sceneNotes()],inventory:game.inventoryDetails().map(item=>({...item})),
       choices:game.visibleActions().map(({action,allowed})=>({id:action.id,label:action.label,disabled:!allowed,hint:allowed?'':action.blocked_message??'This action is not available yet.'}))};},

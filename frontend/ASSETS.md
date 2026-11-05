@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **182 sprites and 9 backgrounds/charts, 191 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **182 sprites and 10 backgrounds/charts, 192 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
@@ -51,6 +51,7 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `places/the_teeth.png` | 1024 × 768 | Muted reef islet and paths; place_ground.py |
 | `places/gulls_rest.png` | 1024 × 768 | Locked destination's quiet islet; place_ground.py |
 | `places/chart.png` | 448 × 256 | Marked routes, northern fog, uncharted silhouette; chart.py |
+| `places/title.png` | 480 × 300 | Static title composition from original ground and sprites; title.py |
 | `places/chart-relit.png` | 448 × 256 | Chart revealed by the external Relighting gate; chart.py |
 
 ## Edit, reproduce and inspect
@@ -187,3 +188,13 @@ All 114 additions below are original code-authored PNGs in public/pixel/. Each o
 crew.py and story_props.py are called by generate.py. Pose palettes and hats/tools distinguish roles at the same 24×32 native scale as the explorer. The false light, misted schooner, eye/anchor seal, cargo, torn page, lens, star, plaque, empty clue-board background, three card frames and coin/wallet icons carry no readable case conclusion. GUI text remains separate HTML. Feature teams can select the card frames or board as art backgrounds while keeping titles/body text accessible.
 
 The normal pixel workshop omits the ten masked-captain variants. An explicit /asset-library.html?demo=1 rehearsal view includes every registered asset. The application has no default title/identity pairing; the story caller supplies any reveal art at the finale. No external image or font was added.
+
+## G5 shell, audio and demo provenance
+
+The title adds one original **480 × 300** background, `public/places/title.png`, registered as `titleBackdrop` in `src/pixel/catalog.js`. `scripts/pixel_art/title.py` composes only our own ground, trees, cottage, lighthouse and small coastal sprites, without smoothing. The main generator rebuilds it alongside the existing art. The current total is **182 sprites + 10 backgrounds/charts = 192 PNGs**. The title displays at whole CSS multiples and crops to the screen; it does not load Three.js. Its small 64 × 64 lighthouse emblem is drawn directly by `src/shell/screens.js`, at integer display sizes.
+
+Every G5 sound is original executable Web Audio synthesis in `src/audio/`: deterministic noise for sea/wind/rain, oscillator envelopes for steps/clicks/blips/horn/beam, and the original 16-step coastal motif in `music.js`. There are no sound recordings or audio files and no external font or asset requests.
+
+`src/demo/intro-story.json` is an unchanged public-content copy of `backend/content/story.json` from main `acdd341` (5 November). It contains only the original intro, never the secret case. The tour runs it with the unchanged engine and a memory-only adapter. `src/demo/recorded-weather.json` is a small adapted subset of `backend/content/weather/recorded-fallback.json`: the 5 November 17:00 Torshavn sample, recorded at 17:14:33 UTC. Cloud cover is divided by 100 and wind (13.7 km/h) by 72; precipitation/fog are zero in this recorded sample. Fog and storm tour beats are explicitly labelled local overrides. Credit: **Weather data by Open-Meteo.com, adapted for the game** ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). No provider is called by the demo modules.
+
+The in-game Credits view lists four `<name>` placeholders, no student numbers, Open-Meteo/adaptation/licence links and the same tool licences as this register: Three.js/Vite/Vitest MIT, Playwright Core Apache-2.0 and Pillow HPND. No new dependency was added for G5.

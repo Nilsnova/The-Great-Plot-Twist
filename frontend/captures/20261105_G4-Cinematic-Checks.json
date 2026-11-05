@@ -1,8 +1,10 @@
 {
-  "checked": "2026-11-05T18:37:13.229Z",
+  "checked": "2026-11-05T20:12:01.263Z",
   "checks": [
     "Normal play has no rehearsal controls",
     "Unknown cinematic is refused without events",
+    "Escape cancels a lazily loading shot before it starts",
+    "Late lazy loading cannot reopen a cancelled shot or emit events",
     "A cinematic blocks travel and hotspot input",
     "Overlapping cinematics are refused",
     "Three-light shot completes",
@@ -26,7 +28,7 @@
   ],
   "shots": {
     "three_lights": {
-      "fps": 60,
+      "fps": 61,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -46,8 +48,8 @@
     "objects": 10,
     "programs": 3
   },
-  "threeLightsMs": 8016,
-  "reducedMotionMs": 11,
+  "threeLightsMs": 8271,
+  "reducedMotionMs": 107,
   "after": {
     "fps": 60,
     "calls": 97,

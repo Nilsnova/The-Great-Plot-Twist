@@ -1,3 +1,5 @@
+import {stubIntro} from './intro-browser-fixture.js';
+import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Verify real finale visuals, ownership, exact events, Escape and reduced motion in Chrome.
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
@@ -6,11 +8,17 @@ const env=await openWorldBrowser(),{page}=env;
 const report={checked:new Date().toISOString(),checks:[],shots:{}};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try {
-  await page.goto(env.url);await page.waitForFunction(()=>window.__island?.world.current);
-  await page.getByRole('button',{name:'Step ashore'}).click();
+  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+
   check(await page.locator('.cinematic-demo').count()===0,'Normal play has no rehearsal controls');
   await page.evaluate(()=>{window.__cinema=[];window.__island.on('cinematic',e=>window.__cinema.push(e));});
   check(await page.evaluate(()=>window.__island.world.cinematic('unknown'))===false,'Unknown cinematic is refused without events');
+  const lazyPattern='**/src/world/cinematics/controller.js*';
+  await page.route(lazyPattern,async route=>{await new Promise(resolve=>setTimeout(resolve,700));await route.continue();});
+  await page.evaluate(()=>{window.__cancelledLoad=window.__island.world.cinematic('fog_lift');});await page.waitForFunction(()=>window.__island.world.busy);await page.keyboard.press('Escape');
+  check(await page.evaluate(async()=>await window.__cancelledLoad===false&&!window.__island.world.busy),'Escape cancels a lazily loading shot before it starts');
+  await page.unroute(lazyPattern);await page.waitForTimeout(750);
+  check(await page.evaluate(()=>window.__cinema.length===0)&&await page.locator('.cinematic-modal').count()===0,'Late lazy loading cannot reopen a cancelled shot or emit events');
   report.before=await measure(page);
   const start=Date.now();await page.evaluate(()=>{window.__shot=window.__island.world.cinematic('three_lights');});
   await page.waitForFunction(()=>document.querySelector('.cinematic-modal progress')?.value>.1);
@@ -40,9 +48,9 @@ try {
   await page.evaluate(()=>{window.__shot=window.__island.world.cinematic('fog_lift');window.__island.world.dispose();});
   check(await page.evaluate(()=>window.__shot.then(result=>result.stage==='cancelled')),'World disposal cancels a pending shot');
   check(await page.locator('.cinematic-modal').count()===0,'World disposal removes the cinematic dialog');
-  await page.goto(env.url+'/?demo=1');await page.waitForFunction(()=>window.__island?.world.current);
+  await page.goto(env.url+'/?demo=1');await startFromTitle(page);
   check(await page.locator('.cinematic-demo').count()===1,'Explicit demo query exposes the rehearsal selector');
-  await page.getByRole('button',{name:'Play visual'}).click();await page.locator('.cinematic-modal').waitFor({state:'visible'});await page.keyboard.press('Escape');
+  await page.locator('.presenter-panel summary').click();await page.getByRole('button',{name:'Play visual'}).click();await page.locator('.cinematic-modal').waitFor({state:'visible'});await page.keyboard.press('Escape');
   await settle(page);check(await page.evaluate(()=>!window.__island.world.busy),'Demo skip restores control');
   check(env.errors.length===0,'No browser errors');check(env.external.length===0,'No external requests');console.log(JSON.stringify(report,null,2));
 } finally {await writeFile('captures/20261105_G4-Cinematic-Checks.json',JSON.stringify(report,null,2));await env.close();}

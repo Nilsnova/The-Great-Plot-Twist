@@ -1,0 +1,11 @@
+{
+  "cloudCover": 1.0,
+  "rain": 0,
+  "fog": 0,
+  "wind": 0.19027777777777777,
+  "source": "recorded",
+  "recordedAt": "2026-11-05T17:14:33Z",
+  "place": "Torshavn, Faroe Islands",
+  "attribution": "Weather data by Open-Meteo.com, adapted for the game",
+  "licence": "CC BY 4.0"
+}

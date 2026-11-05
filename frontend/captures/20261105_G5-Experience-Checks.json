@@ -1,0 +1,45 @@
+{
+  "checked": "2026-11-05T20:11:49.193Z",
+  "checks": [
+    "Cold title allocates neither WebGL nor an AudioContext",
+    "Continue is disabled without a local intro",
+    "Gamepad can navigate the cold title without allocating audio",
+    "Native title dialog contains keyboard focus",
+    "Every experience preference is saved with bounded values",
+    "Preferences contain only documented fields, no account or token data",
+    "Credits list four placeholder teammates, data attribution and tool licences",
+    "Preferences survive a full page reload",
+    "The first trusted input unlocks one Web Audio context",
+    "Saved preferences reach world quality, motion and highlight styling",
+    "Instant text applies to the intro dialogue",
+    "Continue replays the same local journal and scene",
+    "Continue restores inventory from accepted moves",
+    "Pause blocks held movement",
+    "New game resets only the local intro",
+    "Standard gamepad stick moves the player",
+    "Gamepad Menu opens pause once",
+    "Important sound cues have a visible live caption",
+    "Original oscillator voice renders a finite non-silent waveform",
+    "Actual touch drag maps the virtual stick to movement",
+    "Phone settings fit and scroll within the viewport",
+    "Phone HUD and menus create no page overflow",
+    "Phone touch controls and weather footer do not overlap",
+    "Phone chart pans its native pixels without fractional shrinking",
+    "Touch chart and passage controls reach Harbor",
+    "Desktop checks have no browser errors or external asset requests"
+  ],
+  "offlineAudio": {
+    "peak": 0.09328901022672653,
+    "finite": true
+  },
+  "desktop": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 28,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}

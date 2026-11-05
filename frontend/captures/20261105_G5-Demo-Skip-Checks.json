@@ -1,0 +1,30 @@
+{
+  "checked": "2026-11-05T20:16:28.076Z",
+  "checks": [
+    "Bundled original intro slice opens while the API returns 503",
+    "One large key promptly skips every tour step, including a pending cinematic",
+    "Repeated End during a passage settles once and restores the island",
+    "Skipping and cancelling also preserve player progress",
+    "Only expected 503 diagnostics occur; no JavaScript/WebGL errors or external assets"
+  ],
+  "requests": [
+    {
+      "path": "/api/weather",
+      "method": "GET"
+    }
+  ],
+  "timedRunSkipped": true,
+  "skipTimesMs": [
+    15,
+    33,
+    15,
+    100,
+    13,
+    6,
+    62
+  ],
+  "stopDuringPassageMs": 14,
+  "expectedOfflineErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ]
+}

@@ -37,13 +37,15 @@ export function createHud(container, actions) {
   const select = selector => overlay.querySelector(selector);
   const credits = node('div','weather-credit'); credits.hidden = true; select('.conditions').append(credits);
   const panel = select('.debug'), toggle = select('.settings-toggle');
+  select('.chapter').setAttribute('role','status');select('.chapter').setAttribute('aria-atomic','true');
+  if(actions.settings){toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','dialog');}
   function togglePanel(open) {
     panel.hidden = open === undefined ? !panel.hidden : !open;
     toggle.setAttribute('aria-expanded', String(!panel.hidden));
     if (panel.hidden) actions.focus();
   }
   select('.chart-toggle').onclick = () => actions.chart();
-  toggle.onclick = () => togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
+  toggle.onclick = () => actions.settings ? actions.settings() : togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
   select('#explore').onclick = () => {
     select('.arrival').classList.add('departed'); select('.location').hidden = false;
     overlay.classList.add('exploring'); actions.start();
@@ -59,7 +61,7 @@ export function createHud(container, actions) {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
   let toastUntil = 0, syncAt = 0;
-  return { togglePanel,
+  return { togglePanel,start(){select('#explore').click();},
     setWeatherCredit(data) {
       const source=node('a','',data.text),licence=node('a','',data.licenceText);
       source.href=data.href;licence.href=data.licenceHref;

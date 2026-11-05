@@ -14,6 +14,7 @@ from place_ground import ground as place_ground, PATHS
 from chart import chart
 from crew import assets as crew_assets
 from story_props import assets as story_assets
+from title import title_scene
 
 ROOT=Path(__file__).resolve().parents[2]
 FOLDER=ROOT/'public'/'pixel'
@@ -31,8 +32,10 @@ assets.update({'harbour-office':office(),'harbour-beacon':beacon(),'signal-stati
 for name in ['sealed-letter','torn-page','logbook','compass','brass-star','beacon-fire']:assets[name]=item(name)
 assets.update(settlement_assets());assets.update(case_assets());assets.update(crew_assets());assets.update(story_assets())
 for name,image in assets.items():save(image,name,FOLDER)
-save(ground(ROOT),'ground',FOLDER)
+terrain=ground(ROOT)
+save(terrain,'ground',FOLDER)
 places=ROOT/'public'/'places';places.mkdir(exist_ok=True)
 for id in PATHS:save(place_ground(ROOT,id),id,places)
 save(chart(),'chart',places);save(chart(True),'chart-relit',places)
+save(title_scene(assets,terrain),'title',places)
 print(f'Saved {len(assets)} original pixel sprites and canonical terrain backdrop')

@@ -1,10 +1,10 @@
 # Saltreach Isles graphics
 
-The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
+The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
 ## Run, controls and readability
 
-From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and open Vite's address. Use the Node versions in package.json. `npm run build` writes dist and `npm run preview` serves it. `/asset-library.html` is the searchable pixel workshop.
+From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and open Vite's address. Use the Node versions in package.json. `npm run build` writes dist and `npm run preview` serves it. `/asset-library.html` is the searchable pixel workshop; `/ui-kit.html` is the separate component gallery. Choose **New game** on the title, or **Continue** for this browser’s intro save.
 
 | Input | Action |
 | --- | --- |
@@ -15,15 +15,17 @@ From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and ope
 | Fast travel on chart | Skip the passage animation |
 | Wheel | Discrete 1×/2× zoom |
 | T; 1 / 2 / 3 / 4 | Fast clock; clear / overcast / storm / fog |
-| Settings; Escape | Time/weather/quality controls; close and restore game focus |
+| Settings; Escape | Preferences; close the top view or pause/resume the world |
+| Touch stick / Interact / Chart / Menu | Touch movement, investigation, travel and pause |
+| Standard gamepad | Stick/D-pad, A interact, Y chart, Menu pause; D-pad/A in menus |
 
-UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 12 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch movement is not implemented.
+UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 12 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch controls, optional gamepad and 375 px menu/HUD layouts are implemented in G5; see Controls below.
 
 The close camera follows the player and keeps extra headroom near the Lighthouse tower. Cottage roofs reveal the interior/desk; foreground trees fade. Piers draw beneath the explorer and are walkable; open sea is blocked. The Harbor Office's matching window overlay glows at night and is visible from the dock spawn. It supplies no story explanation.
 
 ## Art, coordinates and ownership
 
-The library has **182 original sprites and 9 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
+The library has **182 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
 One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
@@ -128,11 +130,11 @@ The preceding measurements are the G2 baseline. Current G4/S2 evidence is record
 
 ## File map and handoff
 
-main.js wires the loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
+main.js owns the small title bootstrap; game.js wires the loaded world and frame loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
 
-Current branch is feat/g4-ui-kit-story-art, created from main 60bd60e and synchronised with the unchanged S1 and L1/backbone work through c8bac2b, then main’s infrastructure-only cron revert 409316e. Root is the sole writer; read-only agents reviewed accessibility, lifecycle and story boundaries. Only frontend/ and the authorised G-lane next-step/log text in docs/STATUS.md are changed relative to main. Claude integrates; this branch does not merge into main or deploy. Incoming backend, story-engine, weather-client, auth-check and infrastructure files remain unchanged.
+Current branch is feat/g5-experience-layer, created from main acdd341 and synchronised with main 8d0a718, including the unchanged Exchange backend. Root remains the sole writing agent; subagents review read-only. G4/S2 is already merged into main. G5 changes only frontend/ plus the authorised G-lane Next steps and one Log entry in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Incoming backend, API weather client, story engine, account, infrastructure and secret content remain unchanged.
 
-Final checks also passed the built game (including reduced-motion chart travel) and both development/production pixel workshops, each decoding all 77 PNGs. Full regeneration reproduced 77 byte-identical files. Commands and results above are scoped to graphics; backend tests were not run because backend code was not changed.
+The earlier G2 check covered 77 PNGs; the G4 and G5 sections below record their larger libraries and current verification separately. Checks in this file are scoped to graphics. Backend changes are owned and verified by their lanes.
 
 ## UI kit
 
@@ -219,3 +221,86 @@ Final commands run from frontend are listed below. Tests use installed Chrome wi
 The normal three-light shot took 8,016 ms including local loading; reduced motion settled in 11 ms in the sample. Other shots are 5–8 seconds plus bounded local loading, below 15 seconds. Weather/retina regression samples remain around 60 FPS. All 191 original PNGs regenerated byte-identically; see the art reproducibility JSON. The local weather API returned 200 with source live and valid cloud/rain/fog/wind plus attribution on 5 November. The current Vite game chunk is about 611 kB; its existing size advisory is not a build failure.
 
 Not verified: other browsers/GPUs, actual screen-reader software, touch movement, a sustained soak, authenticated cloud saves/referee/rewards, L3 server authorisation/solve-state integration, or long-term provider availability. No new dependency was needed. Incoming engine, weather, backend, auth-check and infrastructure code is unchanged from main. State/referee teams own any award or shared unlock; the kit does not decide balances, trades, deductions or solves.
+
+## Game shell (G5)
+
+`src/main.js` is the small title entry. It owns the shell, audio and preference lifetime, and imports `game.js` only after New game, Continue or the explicit demo action. `shell/controller.js` uses one native dialog for title, pause, settings and credits; all supplied text uses safe DOM helpers. The title's static original backdrop and canvas emblem load without WebGL. New game enters the original intro on Lighthouse Isle and resets only its local move journal. Continue replays that journal and opens its saved scene, inventory or ending. A structurally valid but no-longer-replayable save gets a visible fresh-intro notice. Normal intro content still comes from the existing API, with the existing timeout/retry UI.
+
+Escape closes the top story/chart/cinematic view first; from the world it opens Pause. Resume restores canvas focus. Settings/Credits return to the menu that opened them. The native menu traps Tab/Shift-Tab, restores a visible invoking control, and blocks movement, interaction and travel through the existing world lock. Returning to title does not erase the intro. **A2 hook:** replace the `onPlay(resume)` callback in `main.js` with a cloud-aware loader when that package exists; `game.begin(resume)` and `world.intro.actions` remain presentation/replay hooks. No account token, captain state or server verdict is fabricated here. Integrate feature controllers beside intro/chart in `game.js`, passing the existing world and audio cue callback; keep the title bootstrap small. `window.__island` remains development-only and is not a production integration API.
+
+Credits display four `<name>` placeholders, no student numbers, data/adaptation/licence links and the tool licences from ASSETS.md. They contain no case solution or identity pairing.
+
+## Settings
+
+`settings/logic.js` defines the only stored preference fields: `quality` (`high`/`low`), `master`, `music`, `effects` (0–1), `reducedMotion` (`null` follows the device, or explicit true/false), `textSpeed` (24/36/60 characters per second, 0 instant), and `colourblind` (boolean). Storage key `plot_twist_preferences_v1` contains `{version:1,preferences}` with only those allow-listed fields. Malformed/old values use defaults, volumes clamp, and denied storage keeps the current visit playable. It never stores a login token.
+
+`getPreferences()`, `setPreferences(patch)` and `onPreferences(listener)` are the shared client preference API. `reducedMotion()` resolves the cached system media query and user override. App cleanup removes the media listener. Preferences apply to quality/density, audio buses, dialogue typing, sprite walk/bounce, water/rain, beam movement, sailing, cinematics and CSS transitions. Instant/reduced dialogue completes immediately; existing text speed can change without resetting the line. Cinematics settle to a final still when reduction is enabled. The colour-blind option uses cream/cyan light, double focus/interaction outlines, a diamond status mark and non-colour chart/card distinctions; normal mode keeps gold. Gameplay never depends on colour alone.
+
+## Audio
+
+All sound is original Web Audio code in `src/audio/`, with no audio files. `controller.js` constructs/resumes an AudioContext only after a trusted pointer-down or keydown. There is no autoplay allocation on a cold title. One master bus feeds the destination; music and effects buses feed master, so effective levels are `master × music` and `master × effects`. Zero volume is applied immediately; other changes ramp briefly to avoid clicks. Missing/blocked audio leaves all visual controls usable.
+
+`ambience.js` filters a deterministic noise buffer into sea, wind and rain, following the current four-value weather snapshot rather than just network events, so live weather and overrides both apply. `synth.js` supplies oscillator envelopes for footsteps (actual distance travelled), UI clicks, rate-limited dialogue blips, lighthouse foghorn and beam. `music.js` is an original 16-step coastal theme with a lifted finale variation. Title and cinematic lifecycle select the music; the motif contains no external melody or recording. Visibility suspends the context and scheduling; a later trusted input resumes it.
+
+Important horn/beam/weather cues have captions (`captions.js`, polite live status) in the active modal or world. Clicks have focused/pressed controls, footsteps have player movement, and dialogue blips have visible text. Sound communicates no exclusive clue. Disposal cancels timers/listeners, stops/disconnects sources and buses and closes the context. Audible balance on physical speakers/headphones remains a manual rehearsal item.
+
+## Controls
+
+Desktop keyboard remains WASD/arrows, Shift run, E interact, M chart and wheel zoom. Escape closes an overlay or pauses. Dialogue retains 1–9, arrows and Enter. `core/input.js` combines keyboard with named virtual sources and clears them on blur, reset and disposal. `controls/logic.js` owns deadzones, clamping and positive-y-forward mapping; the existing player controller normalises diagonals and respects analogue strength.
+
+On touch/coarse-pointer screens `controls/touch.js` adds a captured virtual stick plus Interact, Chart and Menu targets, at least 44 CSS pixels. Pointer-up/cancel/lost-capture, blur and overlays release movement. Focused stick arrows also work. `controls/gamepad.js` polls optional standard-mapped pads: left stick/D-pad walk, A interact, Y chart, Menu pause; D-pad up/down moves menu focus, left/right changes selects/sliders, A activates and B/Menu closes. The lightweight title poll also supports D-pad/A before the world is fetched. Missing/denied Gamepad access leaves keyboard/touch running. Rising-edge actions avoid repeat activations; disconnect clears that source. Sound still needs an initial trusted browser click/key.
+
+`ui/devices.css` keeps HUD/menu text readable at 375 px. Settings/credits/intro scroll vertically; the phone chart scrolls horizontally at its original native scale instead of fractional shrinking. Cinematic art likewise retains native pixels in an overflow view on narrow screens. No orientation lock or device-specific backend call is needed.
+
+## Demo tour
+
+Only the exact `?demo=1` query imports the presenter and its local data. Choose **Highlights tour** on the title or **Start highlights tour** in the presenter panel. The automatic script is 153 seconds: intro 24, arrival 16, chart/sailing 22, Harbor 24, fog 14, storm 14 and finale 39. **Space / Next beat** skips the current beat; **End rehearsal** ends it. The panel moves into the active modal so touch and keyboard controls stay available. Individual visual shots remain under its disclosure.
+
+`demo/logic.js` is the pure step machine. `demo/tour.js` owns its waits, generation checks, one active step and shared stop cleanup; it awaits any current travel before restoring the departure place/position, hour and weather. Place assets have the existing bounded load waits. Skip closes the current dialogue/chart/passage/shot, drops stale scripted actions and continues. App disposal cancels waits and subscriptions. No world lock is held over the whole tour, since that would block the tour's own travel/cinematics.
+
+The intro slice uses `demo/intro-story.json`, an unchanged public S1 copy, with the unchanged engine and a memory-only adapter. It neither reads/writes the player journal nor emits `intro_ended`. Recorded weather is a credited local sample; fog/storm are clearly labelled presentation overrides. Incoming live-weather updates do not replace a running tour's overrides. The existing best-effort weather GET may still run, but neither weather nor intro API availability gates the tour. There are no backend writes. Preferences remain the normal app's local preferences, independent of the rehearsal. No board rules, economy, sign-in, rewards or shared solve state are simulated. The unmask uses anonymous staging and supplies no reveal identity.
+
+## G5 verification and performance
+
+Final G5 checks ran on installed headless Chrome 157 on this Mac. Browser/GPU runs were sequential. Desktop benchmarks use 1440 × 900, DPR 1; separate checks cover DPR 2 and a 375 × 667 touch viewport. Exact outputs and screenshots are under `captures/20261105_G5-*`; the retained World, Pixel, UI-kit and cinematic reports contain the current regression results. `G5-Test-Results.json` records the last exit status per command. The run log retains failures that led to fixes as well as the final successful runs.
+
+| Command from frontend/ | Final result |
+| --- | --- |
+| `npm test` | 162 tests, 23 files passed |
+| `npm run build` | three HTML entries built; no large-chunk advisory |
+| `npm run test:loading` | 13 checks: cold title, lazy entries, contrast, phone integer emblem and production boundaries |
+| `npm run test:experience` | 26 checks: shell, preferences, Continue/reset, focus, audio gating/waveform, gamepad, actual emulated touch drag and 375 px layout |
+| `npm run test:demo` | ten checks: complete 153,544 ms tour with APIs returning 503, prompt skips, cancellation, no journal writes/completion event |
+| `DEMO_FAST=1 npm run test:demo` | five focused API-down skip/cancel checks |
+| `npm run test:cinematics` | 24 checks, including delayed-import Escape and stale-load cancellation |
+| `npm run test:world` | 55 checks, all hotspots and ten round trips |
+| `npm run test:intro` | 16 checks, both original endings through the real local API |
+| `npm run test:ui` / `npm run test:ui:production` | 19 / 16 checks |
+| `npm run test:readability` | 1365 × 768, 1920 × 1080 and 1100 × 700; 14 px primary labels, 16 px chart/hotspots, no overlapping chart labels |
+| `CAPTURE_PREFIX=G5 npm run test:browser` | 19 movement, weather, settings and retina checks |
+| `CAPTURE_PREFIX=G5 npm run test:production` | seven static-build checks, including focus and reduced-motion travel |
+| `npm run test:art` / `npm run test:art:production` | all 192 PNGs decode; selective preload/visibility/grid checks pass |
+| `npm run test:weather:wiring` | three checks: existing values, readable attribution and browser errors |
+| `python3 scripts/pixel_art/generate.py` | 192 PNGs regenerated byte-identically |
+| `git diff --check` | passed |
+
+| Measured item | G5 result |
+| --- | ---: |
+| Cold title JavaScript, sum of initial chunks | 21,477 bytes |
+| Same JavaScript, local gzip estimate | 9,795 bytes |
+| Static original title PNG | 29,530 bytes |
+| Primary button text contrast | 6.48:1 |
+| Largest loaded world JS chunk | about 393 kB, deferred until play |
+| Shared Three.js/art JS chunk | about 206 kB, deferred until play |
+| World / active three-light FPS | about 60 / 61 |
+| Active three-light draw calls / triangles | 97 / 192 |
+| Cinematic duration including local image loading | 8,271 ms |
+| Reduced-motion sample | 107 ms |
+| After cinematics and ten travel round trips | 96 geometries, 27 textures, one place root |
+| Full API-down tour | 153,544 ms |
+| Final full-run per-step skip times | 8–65 ms |
+| Repeated End during a passage | 59 ms |
+
+JavaScript sizes are file sums/gzip estimates, not a claim about a particular Wi-Fi download time. The former single G4 game chunk was roughly 611 kB; the title now fetches its small entry before the renderer, destinations, finale, demo data or gallery. Weather first-use may upload an additional app-owned geometry; the post-storm tour sample has 97 geometries/27 textures/one root. Repeated travel and cinematics do not add place roots or retain destination allocations. Normal browser modes measured around 60 FPS, below 150 draw calls and the triangle budget. The only expected errors in the deliberately failed-API tour are its injected 503 resource diagnostics; no JavaScript/WebGL error or external asset request occurred.
+
+Not verified: Safari/Firefox, physical phone/controller hardware, actual screen-reader software, speaker/headphone balance, a prolonged soak, deployed G5, or future authenticated cloud/referee/shared-case integration. Touch and standard-pad behaviour were exercised in Chrome with touch emulation and a controlled standard-pad input. Backend tests were not rerun for incoming unchanged backend code. Claude integrates the feature branch; A2/A3/L3/L4 retain their account, progress, reward, board and trading responsibilities.

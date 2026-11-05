@@ -21,23 +21,23 @@ function deck(draw) {
   draw.fillStyle='#3d503b';draw.fillRect(0,158,448,5);draw.fillStyle='#a49767';draw.fillRect(0,158,448,1);
   draw.fillStyle='#4a5138';draw.fillRect(24,218,70,25);draw.strokeStyle='#b19a67';draw.strokeRect(27,221,64,19);
 }
-function marker(draw,x,y,bright=1) {
-  draw.globalAlpha=bright;draw.fillStyle='#d1b778';draw.fillRect(x-3,y-1,7,3);draw.fillRect(x-1,y-3,3,7);
-  draw.fillStyle='#f5dda0';draw.fillRect(x-1,y-1,3,3);draw.globalAlpha=1;
+function marker(draw,x,y,bright=1,highlight=null) {
+  draw.globalAlpha=bright;draw.fillStyle=highlight??'#d1b778';draw.fillRect(x-3,y-1,7,3);draw.fillRect(x-1,y-3,3,7);
+  draw.fillStyle=highlight??'#f5dda0';draw.fillRect(x-1,y-1,3,3);draw.globalAlpha=1;
 }
-function beam(draw,light,target,progress,index) {
+function beam(draw,light,target,progress,index,highlight) {
   const goal=Math.atan2(target.y-light.y,target.x-light.x),turn=Math.min(1,progress/.7);
   const angle=goal+(1-turn)*(index%2?-.8:.8),length=Math.hypot(target.x-light.x,target.y-light.y);
   const x=light.x+Math.cos(angle)*length,y=light.y+Math.sin(angle)*length,sideX=-Math.sin(angle)*5,sideY=Math.cos(angle)*5;
-  draw.fillStyle='#f1d393';draw.globalAlpha=.22;draw.beginPath();draw.moveTo(light.x,light.y);draw.lineTo(Math.round(x+sideX),Math.round(y+sideY));draw.lineTo(Math.round(x-sideX),Math.round(y-sideY));draw.closePath();draw.fill();
-  draw.globalAlpha=.8;draw.strokeStyle='#e6cd8c';draw.lineWidth=1;draw.beginPath();draw.moveTo(light.x,light.y);draw.lineTo(Math.round(x),Math.round(y));draw.stroke();draw.globalAlpha=1;marker(draw,light.x,light.y);
+  draw.fillStyle=highlight??'#f1d393';draw.globalAlpha=.22;draw.beginPath();draw.moveTo(light.x,light.y);draw.lineTo(Math.round(x+sideX),Math.round(y+sideY));draw.lineTo(Math.round(x-sideX),Math.round(y-sideY));draw.closePath();draw.fill();
+  draw.globalAlpha=.8;draw.strokeStyle=highlight??'#e6cd8c';draw.lineWidth=1;draw.beginPath();draw.moveTo(light.x,light.y);draw.lineTo(Math.round(x),Math.round(y));draw.stroke();draw.globalAlpha=1;marker(draw,light.x,light.y,1,highlight);
 }
 export function drawShot(draw,shot) {
-  const {name,images,p,lights,target,time,wind,revealAsset}=shot;draw.imageSmoothingEnabled=false;draw.globalAlpha=1;
+  const {name,images,p,lights,target,time,wind,revealAsset,highlight}=shot;draw.imageSmoothingEnabled=false;draw.globalAlpha=1;
   if(name==='three_lights'||name==='relighting') {
     draw.drawImage(images.chart,0,0);
-    if(name==='relighting'){draw.globalAlpha=p;draw.drawImage(images['chart-relit'],0,0);draw.globalAlpha=1;lights.forEach((light,i)=>marker(draw,light.x,light.y,Math.min(1,p*2-i*.15)));}
-    else {lights.forEach((light,i)=>beam(draw,light,target,p,i));if(p>.7)marker(draw,target.x,target.y);}
+    if(name==='relighting'){draw.globalAlpha=p;draw.drawImage(images['chart-relit'],0,0);draw.globalAlpha=1;lights.forEach((light,i)=>marker(draw,light.x,light.y,Math.min(1,p*2-i*.15),highlight));}
+    else {lights.forEach((light,i)=>beam(draw,light,target,p,i,highlight));if(p>.7)marker(draw,target.x,target.y,1,highlight);}
     return;
   }
   sea(draw,time,wind);

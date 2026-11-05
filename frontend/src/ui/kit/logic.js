@@ -5,6 +5,7 @@ export function createTypewriter(text, { rate = 36, reducedMotion = false } = {}
     get text() { return letters.slice(0, count).join(''); }, get done() { return count === letters.length; },
     tick(dt) { elapsed += Math.max(0, Number.isFinite(dt) ? dt : 0); count = Math.max(count, Math.min(letters.length, Math.floor(elapsed * rate))); },
     skip() { count = letters.length; },
+    setRate(next){rate=next;elapsed=count/Math.max(1,rate);},
   };
 }
 export function choiceKey(key, index, count) {

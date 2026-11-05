@@ -1,113 +1,36 @@
-// Connects place lifetime, the explorer, weather and the frame loop. No story rules.
-import * as THREE from 'three';
+// Fast title entry. The WebGL world is fetched only after New game, Continue or the tour.
 import './ui/styles.css';
-import './ui/travel.css';
-import './ui/readability.css';
 import './ui/kit/kit.css';
-import './ui/cinematics.css';
-import './ui/intro.css';
-import {startLiveWeather,weatherAttribution} from './net/weather.js';
-import {createIntro} from './story/intro.js';
-import { createCinematics } from './world/cinematics/controller.js';
-import { createCinematicDemo } from './ui/cinematic-demo.js';
-import { createChart } from './ui/chart.js';
-import { createSailing } from './ui/sailing.js';
-import { settings } from './config.js';
-import { loadArt } from './world/art.js';
-import { pixelArtIds } from './pixel/catalog.js';
-import { createRenderer } from './core/renderer.js';
-import { createInput } from './core/input.js';
-import { startLoop } from './core/loop.js';
-import { emit, on } from './core/events.js';
-import { createWorld } from './world/places/manager.js';
-import { createPlace } from './world/places/factory.js';
-import { createLifetime } from './world/places/resources.js';
-import { createWater } from './world/water.js';
-import { createSky } from './world/sky.js';
-import { createWeather, presets, setWeather } from './world/weather.js';
-import { findZone } from './world/zones.js';
-import { createCharacter } from './player/character.js';
-import { createController } from './player/controller.js';
-import { createCamera } from './player/camera.js';
-import { createHud } from './ui/hud.js';
-
-async function startGame() {
-  const container = document.querySelector('#game'), scene = new THREE.Scene();
-  const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
-  const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
-  const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
-  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const character = createCharacter(art, { reducedMotion: reducedMotion() }); scene.add(character.sprite);
-  const controller = createController(character, input, []), view = createCamera(input);
-  let active = false, hud, chart, cinematics, demo, intro, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
-  const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>!!(cinematics?.active || intro?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();}, transition: (id, options) => sailing.start(id, options),
-    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
-      isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
-  async function travel(id, options) {
-    try { await world.goTo(id, options); }
-    catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
-  }
-  cinematics = createCinematics({container,world,emit,on,reducedMotion,resetInput:input.reset}); world.cinematic = cinematics.play;
-  intro = createIntro({container,world,on,emit,resetInput:input.reset}); world.intro = intro;
-  demo = createCinematicDemo(container,world);
-  chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
-  function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
-  hud = createHud(container, {
-    start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, quality, chart() { if (active) chart.show(); },
-  });
-  const stopListening = on('interact', event => hud.notify(event.id));
-  const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
-  const stopArrivals = on('arrived', event => hud.arrive(event.place));
-  try { await world.goTo('lighthouse_isle'); }
-  catch (error) {
-    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
-    createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
-  }
-  const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
-    hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
-  }});
-  quality(settings.quality); graphics.resize(view.camera);
-  const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
-  const stop = startLoop((delta, time) => {
-    if (!cinematics.active && !intro.active) {
-    if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
-    if (input.consume('KeyM') && active && !sailing.active) chart.show();
-    if (input.consume('Escape')) { if (active) view.start(true); hud.togglePanel(false); }
-    for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
-    }
-    settings.hour = (settings.hour + delta * (settings.fastTime ? 0.8 : 0.003)) % 24;
-    controller.update(delta, active && !world.busy && !chart.open);
-    const state = weather.update(delta, controller.player.position, settings.quality);
-    const night = sky.update(settings.hour, state);
-    water.update(time, state); sailing.update(delta); cinematics.update(delta);
-    world.update(delta, { player: controller.player.position, time, night, weather: state });
-    view.update(delta, controller.player.position);
-    const zone = active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
-    if (input.consume('KeyE') && zone) world.interact(zone);
-    fpsFrames++;
-    if (performance.now() - fpsStart >= 500) {
-      fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
-    }
-    const info = graphics.renderer.info.render;
-    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night }); input.endFrame();
-  }, () => { graphics.renderer.render(scene, view.camera); });
-  // Local dev inspection only; Vite removes this branch in the production build.
-  if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing };
-  function dispose() {
-    stopLiveWeather(); stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
-    window.removeEventListener('resize', resize); createLifetime(scene, art)();
-    graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
-  }
-  if (import.meta.hot) import.meta.hot.dispose(dispose);
-  graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
-    event.preventDefault(); dispose();
-    container.innerHTML = '<p class="error">Graphics paused. Reload the page to restore the island.</p>';
-  }, { once: true });
+import './ui/shell.css';
+import {createGamepad} from './controls/gamepad.js';
+import {createShell} from './shell/controller.js';
+import {createSettingsView} from './settings/view.js';
+import {watchSystemMotion} from './settings/preferences.js';
+import {introJournal} from './story/intro-journal.js';
+import {createAudio} from './audio/controller.js';
+import {createCaptions} from './audio/captions.js';
+import {on} from './core/events.js';
+import {node} from './ui/kit/dom.js';
+const container=document.querySelector('#game'),backdrop=node('img','title-backdrop');
+backdrop.src=`${import.meta.env.BASE_URL}places/title.png`;backdrop.alt='';container.append(backdrop);
+const captions=createCaptions(container),audio=createAudio({container,on,caption:captions.show}),stopMotion=watchSystemMotion();
+let runtime=null,pending=null,disposed=false,loading=false;
+async function loadGame() {
+  if(runtime)return runtime;if(pending)return pending;
+  loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
+  pending=import('./game.js').then(module=>module.startGame({container,shell,audio,captions}));
+  try {runtime=await pending;if(disposed){runtime.dispose();return null;}backdrop.hidden=true;return runtime;}
+  catch(error){console.error(error);pending=null;shell.show('title');shell.notice('The coast could not load. Check the connection and WebGL 2, then try again.');return null;}
+  finally{loading=false;status.remove();}
 }
-startGame().catch(error => {
-  console.error(error);
-  document.querySelector('#game').innerHTML = '<p class="error">The island could not start. Enable WebGL 2 in a current desktop browser, then reload.</p>';
+const shell=createShell({container,readSave:()=>introJournal().read(),resetInput(){},focus(){container.querySelector('canvas[tabindex="0"]')?.focus();},
+  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:createSettingsView,hasOverlay:()=>loading||!!runtime?.hasOverlay(),
+  onState(mode){audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
+  async onPlay(resume){const game=await loadGame();await game?.begin(resume);},
+  async onDemo(){const game=await loadGame();game?.startDemo();},
 });
+const titlePad=createGamepad({setVirtual(){},press(){}},{isPlaying:()=>false});let titleFrame;
+function pollTitlePad(){if(disposed||runtime)return;if(!loading)titlePad.update();titleFrame=requestAnimationFrame(pollTitlePad);}
+titleFrame=requestAnimationFrame(pollTitlePad);
+function dispose(){disposed=true;cancelAnimationFrame(titleFrame);titlePad.dispose();runtime?.dispose();shell.dispose();audio.dispose();captions.dispose();stopMotion();}
+if(import.meta.hot)import.meta.hot.dispose(dispose);

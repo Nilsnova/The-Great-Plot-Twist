@@ -38,3 +38,6 @@ export const pixelById = Object.fromEntries(pixelArt.map(item => [item.id, item]
 export const pixelArtIds = pixelArt.filter(item => item.usage === 'island').map(item => item.id);
 export const pixelSizes = Object.fromEntries(pixelArt.map(item => [item.id, item.size]));
 export const snapPixel = value => Math.round(value * PIXELS_PER_UNIT) / PIXELS_PER_UNIT;
+
+// Native static title composition, intentionally outside the world sprite preload.
+export const titleBackdrop={file:'places/title.png',width:480,height:300,source:'title.py'};

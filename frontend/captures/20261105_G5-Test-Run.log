@@ -1,0 +1,1481 @@
+
+$ npm test
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+
+ Test Files  23 passed (23)
+      Tests  162 passed (162)
+   Start at  20:58:47
+   Duration  2.07s (import 48%, tests 34%, transform 14%, worker 4%)
+
+    Isolate  23 workers spawned · ~377ms startup each (spawn + environment, per file)
+             at least ~862ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+$ npm run test:loading
+
+> the-great-plot-twist@0.1.0 test:loading
+> npm run build && node scripts/check-loading.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 114 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:  0.40 kB
+dist/index.html                                   1.30 kB │ gzip:  0.59 kB
+dist/asset-library.html                           2.13 kB │ gzip:  1.03 kB
+dist/.vite/manifest.json                          4.55 kB │ gzip:  0.83 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:  0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:  1.22 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:  2.00 kB
+dist/assets/game-BQZLaQpD.css                     9.14 kB │ gzip:  2.82 kB
+dist/assets/game-DzszxjFZ.css                    11.06 kB │ gzip:  3.20 kB
+dist/assets/uiKit-D87gELtl.js                     0.40 kB │ gzip:  0.28 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:  0.38 kB
+dist/assets/home-DRRQ_O3m.js                      0.97 kB │ gzip:  0.58 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:  0.83 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:  0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:  0.92 kB
+dist/assets/settlement-4dNd9KFm.js                2.16 kB │ gzip:  1.17 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:  1.04 kB
+dist/assets/workshop-BccDFY1r.js                  2.63 kB │ gzip:  1.34 kB
+dist/assets/catalog-CeHP4ApO.js                   2.70 kB │ gzip:  1.25 kB
+dist/assets/kit-gallery-_MjiXu52.js               3.69 kB │ gzip:  1.81 kB
+dist/assets/controller-BDxx8JEf.js                6.75 kB │ gzip:  3.01 kB
+dist/assets/weather-GBmTUEuh.js                   7.92 kB │ gzip:  3.73 kB
+dist/assets/kit-C5u7z2ye.js                       9.71 kB │ gzip:  3.86 kB
+dist/assets/cinematic-demo-B28gQqA7.js           13.35 kB │ gzip:  5.56 kB
+dist/assets/game-ikCW_yI1.js                     14.63 kB │ gzip:  6.53 kB
+dist/assets/art-BtnOyEla.js                     206.22 kB │ gzip: 56.24 kB
+dist/assets/game-DpgZDzfD.js                    392.67 kB │ gzip: 99.99 kB
+
+✓ built in 1.08s
+{
+  "checked": "2026-11-05T19:59:02.105Z",
+  "checks": [
+    "Cold title JavaScript is below 35 kB before gzip",
+    "src/game.js is a separate dynamic entry",
+    "src/world/cinematics/controller.js is a separate dynamic entry",
+    "src/world/places/settlement.js is a separate dynamic entry",
+    "src/world/places/home.js is a separate dynamic entry",
+    "src/ui/kit-gallery.js is a separate dynamic entry",
+    "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "Cold title requests no finale, destination, demo or gallery chunk",
+    "Cold production title allocates no WebGL renderer",
+    "Primary pixel buttons exceed WCAG AA normal-text contrast",
+    "Phone title emblem uses an integer pixel scale",
+    "The loaded production world exposes no dev inspection object",
+    "Production title and world have no browser errors or external asset requests"
+  ],
+  "initialChunks": [
+    "assets/game-ikCW_yI1.js",
+    "assets/modulepreload-polyfill-P2Xu9kJm.js",
+    "assets/modal-DTbPiWct.js",
+    "assets/dom-DPMFhvhq.js",
+    "assets/preload-helper-DclECHGd.js"
+  ],
+  "initialJavaScript": 21333,
+  "initialGzip": 9772,
+  "lazyEntries": [
+    {
+      "key": "src/game.js",
+      "file": "assets/game-DpgZDzfD.js"
+    },
+    {
+      "key": "src/ui/cinematic-demo.js",
+      "file": "assets/cinematic-demo-B28gQqA7.js"
+    },
+    {
+      "key": "src/ui/kit-gallery.js",
+      "file": "assets/kit-gallery-_MjiXu52.js"
+    },
+    {
+      "key": "src/world/cinematics/controller.js",
+      "file": "assets/controller-BDxx8JEf.js"
+    },
+    {
+      "key": "src/world/places/home.js",
+      "file": "assets/home-DRRQ_O3m.js"
+    },
+    {
+      "key": "src/world/places/settlement.js",
+      "file": "assets/settlement-4dNd9KFm.js"
+    }
+  ],
+  "contrast": 6.479354609526834
+}
+
+$ npm run test:experience
+
+> the-great-plot-twist@0.1.0 test:experience
+> node scripts/check-experience.js
+
+{
+  "checked": "2026-11-05T19:59:10.936Z",
+  "checks": [
+    "Cold title allocates neither WebGL nor an AudioContext",
+    "Continue is disabled without a local intro",
+    "Gamepad can navigate the cold title without allocating audio",
+    "Native title dialog contains keyboard focus",
+    "Every experience preference is saved with bounded values",
+    "Preferences contain only documented fields, no account or token data",
+    "Credits list four placeholder teammates, data attribution and tool licences",
+    "Preferences survive a full page reload",
+    "The first trusted input unlocks one Web Audio context",
+    "Saved preferences reach world quality, motion and highlight styling",
+    "Instant text applies to the intro dialogue",
+    "Continue replays the same local journal and scene",
+    "Continue restores inventory from accepted moves",
+    "Pause blocks held movement",
+    "New game resets only the local intro",
+    "Standard gamepad stick moves the player",
+    "Gamepad Menu opens pause once",
+    "Important sound cues have a visible live caption",
+    "Original oscillator voice renders a finite non-silent waveform",
+    "Actual touch drag maps the virtual stick to movement",
+    "Phone settings fit and scroll within the viewport",
+    "Phone HUD and menus create no page overflow",
+    "Phone chart pans its native pixels without fractional shrinking",
+    "Touch chart and passage controls reach Harbor",
+    "Desktop checks have no browser errors or external asset requests"
+  ],
+  "offlineAudio": {
+    "peak": 0.09328901022672653,
+    "finite": true
+  },
+  "desktop": {
+    "fps": 61,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 28,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}
+
+$ npm run test:demo
+
+> the-great-plot-twist@0.1.0 test:demo
+> node scripts/check-demo.js
+
+{
+  "checked": "2026-11-05T19:59:22.499Z",
+  "checks": [
+    "Bundled original intro slice opens while the API returns 503",
+    "Automatic highlights run lasts two to three minutes",
+    "Timed tour reaches intro, arrival, sailing, Harbor, fog, storm and finale",
+    "The entire rehearsal preserves the player journal and emits no intro completion",
+    "Only the existing best-effort weather GET is attempted; no backend writes or intro API dependency",
+    "Tour restores the departure place and does not unlock Relighting",
+    "One large key skips every tour step, including a pending cinematic",
+    "Repeated End during a passage settles once and restores the island",
+    "Skipping and cancelling also preserve player progress",
+    "Only expected 503 diagnostics occur; no JavaScript/WebGL errors or external assets"
+  ],
+  "requests": [
+    {
+      "path": "/api/weather",
+      "method": "GET"
+    }
+  ],
+  "durationMs": 153619,
+  "steps": [
+    "A page from the intro",
+    "Arrival on Lighthouse Isle",
+    "Set a coastal course",
+    "Saltreach Harbor",
+    "Recorded weather · fog override",
+    "Recorded weather · storm override",
+    "The coast in five visual beats",
+    "Presenter · local rehearsal"
+  ],
+  "after": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 97,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "stopDuringPassageMs": 46,
+  "expectedOfflineErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ]
+}
+
+$ npm run test:cinematics
+
+> the-great-plot-twist@0.1.0 test:cinematics
+> node scripts/check-cinematics.js
+
+{
+  "checked": "2026-11-05T20:02:43.016Z",
+  "checks": [
+    "Normal play has no rehearsal controls",
+    "Unknown cinematic is refused without events",
+    "Escape cancels a lazily loading shot before it starts",
+    "Late lazy loading cannot reopen a cancelled shot or emit events",
+    "A cinematic blocks travel and hotspot input",
+    "Overlapping cinematics are refused",
+    "Three-light shot completes",
+    "Normal shot completes within fifteen seconds including loading",
+    "fog_lift: Escape skips and settles the promise",
+    "schooner_reveal: Escape skips and settles the promise",
+    "unmask: Escape skips and settles the promise",
+    "relighting: Escape skips and settles the promise",
+    "Every shot emits exact started and terminal payloads once",
+    "Visuals do not decide Relighting or move the player to another place",
+    "Reduced motion skips animation",
+    "Reduced-motion passage settles quickly",
+    "Cinematics release their bitmaps without extra world geometry or textures",
+    "Active cinematic stays within rendering budgets",
+    "World disposal cancels a pending shot",
+    "World disposal removes the cinematic dialog",
+    "Explicit demo query exposes the rehearsal selector",
+    "Demo skip restores control",
+    "No browser errors",
+    "No external requests"
+  ],
+  "shots": {
+    "three_lights": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    }
+  },
+  "before": {
+    "fps": 61,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "threeLightsMs": 8401,
+  "reducedMotionMs": 30,
+  "after": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}
+
+$ npm run test:world
+
+> the-great-plot-twist@0.1.0 test:world
+> node scripts/check-world.js
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Low quality reveals the landing through a flat fade
+    at check (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-world.js:10:39)
+    at file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-world.js:80:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.17.0
+
+$ npm run test:world
+
+> the-great-plot-twist@0.1.0 test:world
+> node scripts/check-world.js
+
+{
+  "checked": "2026-11-05T20:06:31.043Z",
+  "browser": "157.0.8103.39",
+  "viewport": "1440 × 900, DPR 1",
+  "checks": [
+    "Uncharted Gull’s Rest is locked",
+    "Locked chart selection emits nothing and preserves the place",
+    "Only the passage is in memory during travel",
+    "Keyboard chart travel and skip emit exact travel and arrival payloads",
+    "The lit office window is visible from the dock spawn at night",
+    "lighthouse_isle/desk: exact event, once per held E",
+    "lighthouse_isle/cottage: exact event, once per held E",
+    "lighthouse_isle/shore: exact event, once per held E",
+    "lighthouse_isle/tower_door: exact event, once per held E",
+    "lighthouse_isle: explorer visible on the path",
+    "lighthouse_isle within rendering budget",
+    "saltreach_harbor/harbor_office: exact event, once per held E",
+    "saltreach_harbor/harbor_office_window: exact event, once per held E",
+    "saltreach_harbor/harbor_light: exact event, once per held E",
+    "saltreach_harbor/ferry_pier: exact event, once per held E",
+    "saltreach_harbor/jail: exact event, once per held E",
+    "saltreach_harbor/market_hall: exact event, once per held E",
+    "saltreach_harbor/prediction_kiosk: exact event, once per held E",
+    "saltreach_harbor/sports_pavilion: exact event, once per held E",
+    "saltreach_harbor/signal_station: exact event, once per held E",
+    "saltreach_harbor/notice_board: exact event, once per held E",
+    "saltreach_harbor/captains_table: exact event, once per held E",
+    "saltreach_harbor: explorer visible on the path",
+    "saltreach_harbor within rendering budget",
+    "home_islet/plot_1: exact event, once per held E",
+    "home_islet/plot_2: exact event, once per held E",
+    "home_islet/plot_3: exact event, once per held E",
+    "home_islet/plot_4: exact event, once per held E",
+    "home_islet/islet_signal_station: exact event, once per held E",
+    "home_islet: explorer visible on the path",
+    "home_islet within rendering budget",
+    "Pointer selection emits the exact plot payload",
+    "smugglers_cove/back_room: exact event, once per held E",
+    "smugglers_cove/low_tide_cave: exact event, once per held E",
+    "smugglers_cove/arena_gate: exact event, once per held E",
+    "smugglers_cove: explorer visible on the path",
+    "smugglers_cove within rendering budget",
+    "wreck_point/salvage_yard: exact event, once per held E",
+    "wreck_point/beach: exact event, once per held E",
+    "wreck_point: explorer visible on the path",
+    "wreck_point within rendering budget",
+    "the_teeth/reef: exact event, once per held E",
+    "the_teeth/watchtower_ruin: exact event, once per held E",
+    "the_teeth/raid_arch: exact event, once per held E",
+    "the_teeth/fog_bank: exact event, once per held E",
+    "the_teeth: explorer visible on the path",
+    "the_teeth within rendering budget",
+    "The integration gate opens Gull’s Rest",
+    "Ten round trips retain exactly the same resource and object counts",
+    "After ten round trips: FPS and rendering within budget",
+    "Reduced motion skips sailing",
+    "Low quality reveals the landing through a flat fade",
+    "Unskipped wind-driven passage lasts about five seconds",
+    "No browser errors",
+    "No external requests"
+  ],
+  "places": {
+    "lighthouse_isle": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 99,
+      "textures": 28,
+      "roots": 1,
+      "objects": 10,
+      "programs": 4
+    },
+    "saltreach_harbor": {
+      "fps": 61,
+      "calls": 50,
+      "triangles": 178,
+      "geometries": 48,
+      "textures": 25,
+      "roots": 1,
+      "objects": 46,
+      "programs": 4
+    },
+    "home_islet": {
+      "fps": 60,
+      "calls": 40,
+      "triangles": 78,
+      "geometries": 40,
+      "textures": 16,
+      "roots": 1,
+      "objects": 38,
+      "programs": 4
+    },
+    "smugglers_cove": {
+      "fps": 60,
+      "calls": 28,
+      "triangles": 54,
+      "geometries": 27,
+      "textures": 12,
+      "roots": 1,
+      "objects": 24,
+      "programs": 3
+    },
+    "wreck_point": {
+      "fps": 61,
+      "calls": 30,
+      "triangles": 58,
+      "geometries": 29,
+      "textures": 14,
+      "roots": 1,
+      "objects": 26,
+      "programs": 3
+    },
+    "the_teeth": {
+      "fps": 60,
+      "calls": 27,
+      "triangles": 132,
+      "geometries": 25,
+      "textures": 12,
+      "roots": 1,
+      "objects": 23,
+      "programs": 4
+    }
+  },
+  "roundTrips": [
+    {
+      "fps": 65,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 64,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 63,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 63,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 66,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 63,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    }
+  ],
+  "before": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "after": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "reducedMotionMs": 108,
+  "windOnePassageMs": 4222,
+  "errors": [],
+  "externalRequests": []
+}
+
+$ npm run test:ui
+
+> the-great-plot-twist@0.1.0 test:ui
+> node scripts/check-ui-kit.js
+
+{
+  "checked": "2026-11-05T20:07:13.790Z",
+  "production": false,
+  "checks": [
+    "Gallery shows all nine component groups",
+    "Modal Escape restores the invoking focus",
+    "Tab arrows activate and focus the selected panel",
+    "Skip reveals the full line and enables choices",
+    "Numbered keyboard choice updates the dialogue once",
+    "Clue states are presented without board logic",
+    "Halted sparkline has a readable status",
+    "Native progress exposes the supplied ratio",
+    "HUD formats supplied balance and distinguishes NPC seats",
+    "Toast announces plain status text",
+    "Supplied HTML-like text stays literal in dialogue, choices, buttons and tables",
+    "Empty-choice dialogue keeps focus and disposing an open modal restores its opener",
+    "Reduced-motion dialogue reveals text immediately",
+    "Text remains readable at 1365×768",
+    "Gallery has no horizontal overflow at 1365×768",
+    "Text remains readable at 700×900",
+    "Gallery has no horizontal overflow at 700×900",
+    "No browser errors",
+    "No external requests"
+  ]
+}
+
+$ npm run test:ui:production
+
+> the-great-plot-twist@0.1.0 test:ui:production
+> npm run build && KIT_PRODUCTION=1 node scripts/check-ui-kit.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 114 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   1.30 kB │ gzip:   0.59 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                          4.55 kB │ gzip:   0.83 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:   2.00 kB
+dist/assets/game-BQZLaQpD.css                     9.14 kB │ gzip:   2.82 kB
+dist/assets/game-B920oIWv.css                    11.52 kB │ gzip:   3.29 kB
+dist/assets/uiKit-D87gELtl.js                     0.40 kB │ gzip:   0.28 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/home-DRRQ_O3m.js                      0.97 kB │ gzip:   0.58 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:   0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/settlement-BEdpd9I0.js                2.16 kB │ gzip:   1.17 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:   1.04 kB
+dist/assets/workshop-BccDFY1r.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/catalog-CeHP4ApO.js                   2.70 kB │ gzip:   1.25 kB
+dist/assets/kit-gallery-_MjiXu52.js               3.69 kB │ gzip:   1.81 kB
+dist/assets/controller-CSi194SC.js                6.75 kB │ gzip:   3.01 kB
+dist/assets/weather-GBmTUEuh.js                   7.92 kB │ gzip:   3.73 kB
+dist/assets/kit-C5u7z2ye.js                       9.71 kB │ gzip:   3.86 kB
+dist/assets/cinematic-demo-5PmNxT6X.js           13.36 kB │ gzip:   5.55 kB
+dist/assets/game-Cb0q-qh9.js                     14.71 kB │ gzip:   6.52 kB
+dist/assets/art-BtnOyEla.js                     206.22 kB │ gzip:  56.24 kB
+dist/assets/game-VcDfdcyS.js                    392.85 kB │ gzip: 100.03 kB
+
+✓ built in 841ms
+{
+  "checked": "2026-11-05T20:07:21.058Z",
+  "production": true,
+  "checks": [
+    "Gallery shows all nine component groups",
+    "Modal Escape restores the invoking focus",
+    "Tab arrows activate and focus the selected panel",
+    "Skip reveals the full line and enables choices",
+    "Numbered keyboard choice updates the dialogue once",
+    "Clue states are presented without board logic",
+    "Halted sparkline has a readable status",
+    "Native progress exposes the supplied ratio",
+    "HUD formats supplied balance and distinguishes NPC seats",
+    "Toast announces plain status text",
+    "Text remains readable at 1365×768",
+    "Gallery has no horizontal overflow at 1365×768",
+    "Text remains readable at 700×900",
+    "Gallery has no horizontal overflow at 700×900",
+    "No browser errors",
+    "No external requests"
+  ]
+}
+
+$ npm run test:intro
+
+> the-great-plot-twist@0.1.0 test:intro
+> node scripts/check-intro.js
+
+{
+  "checked": "2026-11-05T20:07:26.321Z",
+  "checks": [
+    "Vite proxy reaches the actual public intro API",
+    "API returns the original story structure",
+    "Physical shore-to-desk visit replays shore_back then to_desk",
+    "Accepted pickup appears in inventory",
+    "Engine notes are visible after a change",
+    "Stairwell plays in the dialogue box",
+    "Lamp room plays in the dialogue box",
+    "The original ending card is shown",
+    "Rescue emits the exact intro_ended payload once",
+    "Reload restores a replayable move journal",
+    "Engine-blocked choices are visibly locked",
+    "A locked choice changes no state or move log",
+    "Trapped ending emits once",
+    "Closing the story restores game focus and controls",
+    "No browser errors",
+    "No external requests"
+  ],
+  "apiReads": 2,
+  "endings": [
+    "ending_rescue",
+    "ending_trapped"
+  ]
+}
+
+$ npm run test:readability
+
+> the-great-plot-twist@0.1.0 test:readability
+> node scripts/check-readability.js
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('.sea-chart') to be visible[22m
+[2m    63 × locator resolved to hidden <dialog data-scale="2" class="sea-chart" aria-labelledby="chart-title">…</dialog>[22m
+
+    at /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-readability.js:17:73 {
+  log: [
+    "  - waiting for locator('.sea-chart') to be visible",
+    '    63 × locator resolved to hidden <dialog data-scale="2" class="sea-chart" aria-labelledby="chart-title">…</dialog>'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.17.0
+
+$ npm run test:browser
+
+> the-great-plot-twist@0.1.0 test:browser
+> node scripts/check-browser.js
+
+{
+  "checked": "2026-11-05T20:10:23.847Z",
+  "browser": "157.0.8103.39",
+  "viewport": "1440 × 900, DPR 1",
+  "modes": {
+    "arrival-high": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "midnight-high": {
+      "fps": 60,
+      "calls": 98,
+      "triangles": 194,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "storm-high": {
+      "fps": 61,
+      "calls": 99,
+      "triangles": 194,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "fog-high": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "noon-high": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "dusk-high": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "fog-low": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "storm-low": {
+      "fps": 60,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "retina-high": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 2,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "retina-low": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 2,
+      "pixelRatio": 1,
+      "shadows": false
+    }
+  },
+  "checks": [
+    "arrival-high stays within rendering budgets",
+    "Escape opens the pause menu",
+    "W walks the explorer",
+    "Wheel zoom works while the pixel camera keeps its fixed angle",
+    "All four hooks emit exactly once per held E press: [{\"type\":\"interact\",\"id\":\"desk\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"cottage\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"shore\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"tower_door\",\"place\":\"lighthouse_isle\"}]",
+    "midnight-high stays within rendering budgets",
+    "storm-high stays within rendering budgets",
+    "fog-high stays within rendering budgets",
+    "noon-high stays within rendering budgets",
+    "dusk-high stays within rendering budgets",
+    "fog-low stays within rendering budgets",
+    "storm-low stays within rendering budgets",
+    "Low quality preserves the native pixel grid and reduces effect density",
+    "Escape closes settings while a form control has focus",
+    "The game makes no external network requests",
+    "No browser or WebGL errors ()",
+    "retina-high stays within rendering budgets",
+    "retina-low stays within rendering budgets",
+    "Pixel renderer uses a DPR-independent native buffer in both qualities"
+  ]
+}
+
+$ npm run test:production
+
+> the-great-plot-twist@0.1.0 test:production
+> npm run build && node scripts/check-production.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 114 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   1.30 kB │ gzip:   0.59 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                          4.55 kB │ gzip:   0.83 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:   2.00 kB
+dist/assets/game-BQZLaQpD.css                     9.14 kB │ gzip:   2.82 kB
+dist/assets/game-B920oIWv.css                    11.52 kB │ gzip:   3.29 kB
+dist/assets/uiKit-D87gELtl.js                     0.40 kB │ gzip:   0.28 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/home-DRRQ_O3m.js                      0.97 kB │ gzip:   0.58 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:   0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/settlement-Btf8Up0v.js                2.16 kB │ gzip:   1.17 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:   1.04 kB
+dist/assets/workshop-BccDFY1r.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/catalog-CeHP4ApO.js                   2.70 kB │ gzip:   1.25 kB
+dist/assets/kit-gallery-_MjiXu52.js               3.69 kB │ gzip:   1.81 kB
+dist/assets/controller-CZ_GMx00.js                6.75 kB │ gzip:   3.01 kB
+dist/assets/weather-GBmTUEuh.js                   7.92 kB │ gzip:   3.73 kB
+dist/assets/kit-C5u7z2ye.js                       9.71 kB │ gzip:   3.86 kB
+dist/assets/cinematic-demo-CPV_dAx6.js           13.36 kB │ gzip:   5.55 kB
+dist/assets/game-CI2ufy0I.js                     14.77 kB │ gzip:   6.55 kB
+dist/assets/art-BtnOyEla.js                     206.22 kB │ gzip:  56.24 kB
+dist/assets/game-C_evY5Le.js                    392.85 kB │ gzip: 100.03 kB
+
+✓ built in 597ms
+{
+  "checked": "2026-11-05T20:11:05.020Z",
+  "browser": "157.0.8103.39",
+  "checks": [
+    "Static build loads a WebGL canvas",
+    "No dev inspection global",
+    "No FPS output in production",
+    "Persisted quality preference applies",
+    "Escape restores game focus",
+    "Keyboard-accessible production chart and reduced-motion travel arrive at Harbor",
+    "No browser/WebGL errors"
+  ]
+}
+
+$ npm run test:art
+
+> the-great-plot-twist@0.1.0 test:art
+> node scripts/check-pixel.js
+
+{
+  "checked": "2026-11-05T20:11:08.431Z",
+  "checks": [
+    "Workshop lists public art without finale variants",
+    "Explicit rehearsal gallery lists every registered drawing",
+    "192 PNGs decode at their exact native sizes with visible pixels",
+    "Search finds the side-facing animation family",
+    "Native sprite detail opens",
+    "Escape closes sprite detail",
+    "Staged-art filter agrees with selective preload metadata",
+    "Game requests only active pixel artwork",
+    "World uses one exact integer upscale factor",
+    "Renderer disables antialiasing",
+    "Explorer feet remain on the native pixel grid",
+    "No browser errors or external requests ()"
+  ],
+  "files": 192,
+  "browser": "157.0.8103.39",
+  "display": {
+    "imageRendering": "pixelated",
+    "width": 480,
+    "height": 300,
+    "cssWidth": 1440,
+    "cssHeight": 900
+  }
+}
+
+$ npm run test:art:production
+
+> the-great-plot-twist@0.1.0 test:art:production
+> npm run build && ART_PRODUCTION=1 node scripts/check-pixel.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 114 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   1.30 kB │ gzip:   0.59 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                          4.55 kB │ gzip:   0.83 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:   2.00 kB
+dist/assets/game-BQZLaQpD.css                     9.14 kB │ gzip:   2.82 kB
+dist/assets/game-B920oIWv.css                    11.52 kB │ gzip:   3.29 kB
+dist/assets/uiKit-D87gELtl.js                     0.40 kB │ gzip:   0.28 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/home-DRRQ_O3m.js                      0.97 kB │ gzip:   0.58 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:   0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/settlement-Btf8Up0v.js                2.16 kB │ gzip:   1.17 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:   1.04 kB
+dist/assets/workshop-BccDFY1r.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/catalog-CeHP4ApO.js                   2.70 kB │ gzip:   1.25 kB
+dist/assets/kit-gallery-_MjiXu52.js               3.69 kB │ gzip:   1.81 kB
+dist/assets/controller-CZ_GMx00.js                6.75 kB │ gzip:   3.01 kB
+dist/assets/weather-GBmTUEuh.js                   7.92 kB │ gzip:   3.73 kB
+dist/assets/kit-C5u7z2ye.js                       9.71 kB │ gzip:   3.86 kB
+dist/assets/cinematic-demo-CPV_dAx6.js           13.36 kB │ gzip:   5.55 kB
+dist/assets/game-CI2ufy0I.js                     14.77 kB │ gzip:   6.55 kB
+dist/assets/art-BtnOyEla.js                     206.22 kB │ gzip:  56.24 kB
+dist/assets/game-C_evY5Le.js                    392.85 kB │ gzip: 100.03 kB
+
+✓ built in 430ms
+{
+  "checked": "2026-11-05T20:11:27.090Z",
+  "checks": [
+    "Workshop lists public art without finale variants",
+    "Explicit rehearsal gallery lists every registered drawing",
+    "192 PNGs decode at their exact native sizes with visible pixels",
+    "Search finds the side-facing animation family",
+    "Native sprite detail opens",
+    "Escape closes sprite detail",
+    "Staged-art filter agrees with selective preload metadata",
+    "Game requests only active pixel artwork",
+    "World uses one exact integer upscale factor",
+    "Production omits development inspection",
+    "No browser errors or external requests ()"
+  ],
+  "files": 192,
+  "browser": "157.0.8103.39",
+  "display": {
+    "imageRendering": "pixelated",
+    "width": 480,
+    "height": 300,
+    "cssWidth": 1440,
+    "cssHeight": 900
+  }
+}
+
+$ npm run test:weather:wiring
+
+> the-great-plot-twist@0.1.0 test:weather:wiring
+> node scripts/check-weather-wiring.js
+
+{
+  "checked": "2026-11-05T20:11:37.684Z",
+  "checks": [
+    "Startup weather response drives the existing four weather values",
+    "Readable attribution links name the source, adaptation and licence beside the weather",
+    "No browser errors or external asset requests"
+  ]
+}
+
+$ npm run test:loading
+
+> the-great-plot-twist@0.1.0 test:loading
+> npm run build && node scripts/check-loading.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 114 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   1.30 kB │ gzip:   0.59 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                          4.55 kB │ gzip:   0.83 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:   2.00 kB
+dist/assets/game-BQZLaQpD.css                     9.14 kB │ gzip:   2.82 kB
+dist/assets/game-B920oIWv.css                    11.52 kB │ gzip:   3.29 kB
+dist/assets/uiKit-D87gELtl.js                     0.40 kB │ gzip:   0.28 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/home-DRRQ_O3m.js                      0.97 kB │ gzip:   0.58 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:   0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/settlement-Btf8Up0v.js                2.16 kB │ gzip:   1.17 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:   1.04 kB
+dist/assets/workshop-BccDFY1r.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/catalog-CeHP4ApO.js                   2.70 kB │ gzip:   1.25 kB
+dist/assets/kit-gallery-_MjiXu52.js               3.69 kB │ gzip:   1.81 kB
+dist/assets/controller-CZ_GMx00.js                6.75 kB │ gzip:   3.01 kB
+dist/assets/weather-GBmTUEuh.js                   7.92 kB │ gzip:   3.73 kB
+dist/assets/kit-C5u7z2ye.js                       9.71 kB │ gzip:   3.86 kB
+dist/assets/cinematic-demo-CPV_dAx6.js           13.36 kB │ gzip:   5.55 kB
+dist/assets/game-CI2ufy0I.js                     14.77 kB │ gzip:   6.55 kB
+dist/assets/art-BtnOyEla.js                     206.22 kB │ gzip:  56.24 kB
+dist/assets/game-C_evY5Le.js                    392.85 kB │ gzip: 100.03 kB
+
+✓ built in 477ms
+{
+  "checked": "2026-11-05T20:11:44.058Z",
+  "checks": [
+    "Cold title JavaScript is below 35 kB before gzip",
+    "src/game.js is a separate dynamic entry",
+    "src/world/cinematics/controller.js is a separate dynamic entry",
+    "src/world/places/settlement.js is a separate dynamic entry",
+    "src/world/places/home.js is a separate dynamic entry",
+    "src/ui/kit-gallery.js is a separate dynamic entry",
+    "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "Cold title requests no finale, destination, demo or gallery chunk",
+    "Cold production title allocates no WebGL renderer",
+    "Primary pixel buttons exceed WCAG AA normal-text contrast",
+    "Phone title emblem uses an integer pixel scale",
+    "The loaded production world exposes no dev inspection object",
+    "Production title and world have no browser errors or external asset requests"
+  ],
+  "initialChunks": [
+    "assets/game-CI2ufy0I.js",
+    "assets/modulepreload-polyfill-P2Xu9kJm.js",
+    "assets/modal-DTbPiWct.js",
+    "assets/dom-DPMFhvhq.js",
+    "assets/preload-helper-DclECHGd.js"
+  ],
+  "initialJavaScript": 21477,
+  "initialGzip": 9792,
+  "lazyEntries": [
+    {
+      "key": "src/game.js",
+      "file": "assets/game-C_evY5Le.js"
+    },
+    {
+      "key": "src/ui/cinematic-demo.js",
+      "file": "assets/cinematic-demo-CPV_dAx6.js"
+    },
+    {
+      "key": "src/ui/kit-gallery.js",
+      "file": "assets/kit-gallery-_MjiXu52.js"
+    },
+    {
+      "key": "src/world/cinematics/controller.js",
+      "file": "assets/controller-CZ_GMx00.js"
+    },
+    {
+      "key": "src/world/places/home.js",
+      "file": "assets/home-DRRQ_O3m.js"
+    },
+    {
+      "key": "src/world/places/settlement.js",
+      "file": "assets/settlement-Btf8Up0v.js"
+    }
+  ],
+  "contrast": 6.479354609526834
+}
+
+$ npm run test:experience
+
+> the-great-plot-twist@0.1.0 test:experience
+> node scripts/check-experience.js
+
+{
+  "checked": "2026-11-05T20:11:49.193Z",
+  "checks": [
+    "Cold title allocates neither WebGL nor an AudioContext",
+    "Continue is disabled without a local intro",
+    "Gamepad can navigate the cold title without allocating audio",
+    "Native title dialog contains keyboard focus",
+    "Every experience preference is saved with bounded values",
+    "Preferences contain only documented fields, no account or token data",
+    "Credits list four placeholder teammates, data attribution and tool licences",
+    "Preferences survive a full page reload",
+    "The first trusted input unlocks one Web Audio context",
+    "Saved preferences reach world quality, motion and highlight styling",
+    "Instant text applies to the intro dialogue",
+    "Continue replays the same local journal and scene",
+    "Continue restores inventory from accepted moves",
+    "Pause blocks held movement",
+    "New game resets only the local intro",
+    "Standard gamepad stick moves the player",
+    "Gamepad Menu opens pause once",
+    "Important sound cues have a visible live caption",
+    "Original oscillator voice renders a finite non-silent waveform",
+    "Actual touch drag maps the virtual stick to movement",
+    "Phone settings fit and scroll within the viewport",
+    "Phone HUD and menus create no page overflow",
+    "Phone touch controls and weather footer do not overlap",
+    "Phone chart pans its native pixels without fractional shrinking",
+    "Touch chart and passage controls reach Harbor",
+    "Desktop checks have no browser errors or external asset requests"
+  ],
+  "offlineAudio": {
+    "peak": 0.09328901022672653,
+    "finite": true
+  },
+  "desktop": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 28,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}
+
+$ npm run test:cinematics
+
+> the-great-plot-twist@0.1.0 test:cinematics
+> node scripts/check-cinematics.js
+
+{
+  "checked": "2026-11-05T20:12:01.263Z",
+  "checks": [
+    "Normal play has no rehearsal controls",
+    "Unknown cinematic is refused without events",
+    "Escape cancels a lazily loading shot before it starts",
+    "Late lazy loading cannot reopen a cancelled shot or emit events",
+    "A cinematic blocks travel and hotspot input",
+    "Overlapping cinematics are refused",
+    "Three-light shot completes",
+    "Normal shot completes within fifteen seconds including loading",
+    "fog_lift: Escape skips and settles the promise",
+    "schooner_reveal: Escape skips and settles the promise",
+    "unmask: Escape skips and settles the promise",
+    "relighting: Escape skips and settles the promise",
+    "Every shot emits exact started and terminal payloads once",
+    "Visuals do not decide Relighting or move the player to another place",
+    "Reduced motion skips animation",
+    "Reduced-motion passage settles quickly",
+    "Cinematics release their bitmaps without extra world geometry or textures",
+    "Active cinematic stays within rendering budgets",
+    "World disposal cancels a pending shot",
+    "World disposal removes the cinematic dialog",
+    "Explicit demo query exposes the rehearsal selector",
+    "Demo skip restores control",
+    "No browser errors",
+    "No external requests"
+  ],
+  "shots": {
+    "three_lights": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    }
+  },
+  "before": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "threeLightsMs": 8271,
+  "reducedMotionMs": 107,
+  "after": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}
+
+$ npm run test:demo
+
+> the-great-plot-twist@0.1.0 test:demo
+> node scripts/check-demo.js
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: One large key promptly skips every tour step, including a pending cinematic
+    at check (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-demo.js:6:33)
+    at file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-demo.js:22:64 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.17.0
+
+$ npm run test:loading
+
+> the-great-plot-twist@0.1.0 test:loading
+> npm run build && node scripts/check-loading.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 114 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   1.30 kB │ gzip:   0.59 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                          4.55 kB │ gzip:   0.83 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:   2.00 kB
+dist/assets/game-BQZLaQpD.css                     9.14 kB │ gzip:   2.82 kB
+dist/assets/game-B920oIWv.css                    11.52 kB │ gzip:   3.29 kB
+dist/assets/uiKit-D87gELtl.js                     0.40 kB │ gzip:   0.28 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/home-DRRQ_O3m.js                      0.97 kB │ gzip:   0.58 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:   0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/settlement-V7Brybm9.js                2.16 kB │ gzip:   1.18 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:   1.04 kB
+dist/assets/workshop-BccDFY1r.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/catalog-CeHP4ApO.js                   2.70 kB │ gzip:   1.25 kB
+dist/assets/kit-gallery-_MjiXu52.js               3.69 kB │ gzip:   1.81 kB
+dist/assets/controller-CzOP7xSQ.js                6.75 kB │ gzip:   3.01 kB
+dist/assets/weather-GBmTUEuh.js                   7.92 kB │ gzip:   3.73 kB
+dist/assets/kit-C5u7z2ye.js                       9.71 kB │ gzip:   3.86 kB
+dist/assets/cinematic-demo-DNExYppm.js           13.41 kB │ gzip:   5.57 kB
+dist/assets/game-BU8Txl9Y.js                     14.77 kB │ gzip:   6.55 kB
+dist/assets/art-BtnOyEla.js                     206.22 kB │ gzip:  56.24 kB
+dist/assets/game-Dqp05IAR.js                    392.85 kB │ gzip: 100.03 kB
+
+✓ built in 581ms
+{
+  "checked": "2026-11-05T20:17:44.363Z",
+  "checks": [
+    "Cold title JavaScript is below 35 kB before gzip",
+    "src/game.js is a separate dynamic entry",
+    "src/world/cinematics/controller.js is a separate dynamic entry",
+    "src/world/places/settlement.js is a separate dynamic entry",
+    "src/world/places/home.js is a separate dynamic entry",
+    "src/ui/kit-gallery.js is a separate dynamic entry",
+    "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "Cold title requests no finale, destination, demo or gallery chunk",
+    "Cold production title allocates no WebGL renderer",
+    "Primary pixel buttons exceed WCAG AA normal-text contrast",
+    "Phone title emblem uses an integer pixel scale",
+    "The loaded production world exposes no dev inspection object",
+    "Production title and world have no browser errors or external asset requests"
+  ],
+  "initialChunks": [
+    "assets/game-BU8Txl9Y.js",
+    "assets/modulepreload-polyfill-P2Xu9kJm.js",
+    "assets/modal-DTbPiWct.js",
+    "assets/dom-DPMFhvhq.js",
+    "assets/preload-helper-DclECHGd.js"
+  ],
+  "initialJavaScript": 21477,
+  "initialGzip": 9795,
+  "lazyEntries": [
+    {
+      "key": "src/game.js",
+      "file": "assets/game-Dqp05IAR.js"
+    },
+    {
+      "key": "src/ui/cinematic-demo.js",
+      "file": "assets/cinematic-demo-DNExYppm.js"
+    },
+    {
+      "key": "src/ui/kit-gallery.js",
+      "file": "assets/kit-gallery-_MjiXu52.js"
+    },
+    {
+      "key": "src/world/cinematics/controller.js",
+      "file": "assets/controller-CzOP7xSQ.js"
+    },
+    {
+      "key": "src/world/places/home.js",
+      "file": "assets/home-DRRQ_O3m.js"
+    },
+    {
+      "key": "src/world/places/settlement.js",
+      "file": "assets/settlement-V7Brybm9.js"
+    }
+  ],
+  "contrast": 6.479354609526834
+}
+
+$ npm run test:demo
+
+> the-great-plot-twist@0.1.0 test:demo
+> node scripts/check-demo.js
+
+{
+  "checked": "2026-11-05T20:17:49.343Z",
+  "checks": [
+    "Bundled original intro slice opens while the API returns 503",
+    "Automatic highlights run lasts two to three minutes",
+    "Timed tour reaches intro, arrival, sailing, Harbor, fog, storm and finale",
+    "The entire rehearsal preserves the player journal and emits no intro completion",
+    "Only the existing best-effort weather GET is attempted; no backend writes or intro API dependency",
+    "Tour restores the departure place and does not unlock Relighting",
+    "One large key promptly skips every tour step, including a pending cinematic",
+    "Repeated End during a passage settles once and restores the island",
+    "Skipping and cancelling also preserve player progress",
+    "Only expected 503 diagnostics occur; no JavaScript/WebGL errors or external assets"
+  ],
+  "requests": [
+    {
+      "path": "/api/weather",
+      "method": "GET"
+    }
+  ],
+  "durationMs": 153544,
+  "steps": [
+    "A page from the intro",
+    "Arrival on Lighthouse Isle",
+    "Set a coastal course",
+    "Saltreach Harbor",
+    "Recorded weather · fog override",
+    "Recorded weather · storm override",
+    "The coast in five visual beats",
+    "Presenter · local rehearsal"
+  ],
+  "after": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 97,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "skipTimesMs": [
+    16,
+    10,
+    13,
+    65,
+    10,
+    8,
+    58
+  ],
+  "stopDuringPassageMs": 59,
+  "expectedOfflineErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ]
+}
+
+$ npm test
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+
+ Test Files  23 passed (23)
+      Tests  162 passed (162)
+   Start at  21:20:34
+   Duration  2.69s (import 48%, tests 29%, transform 16%, worker 7%)
+
+    Isolate  23 workers spawned · ~528ms startup each (spawn + environment, per file)
+             at least ~1.21s faster with isolate: false — reuses workers across files instead of one per file
+

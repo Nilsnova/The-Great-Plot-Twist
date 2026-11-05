@@ -1,3 +1,5 @@
+import {stubIntro} from './intro-browser-fixture.js';
+import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Check readable DOM text and panel bounds at laptop and large-desktop resolutions.
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
@@ -5,8 +7,7 @@ import { openWorldBrowser, settle } from './world-browser-tools.js';
 const env = await openWorldBrowser(), { page } = env;
 const report = { checked: new Date().toISOString(), viewports: [] };
 try {
-  await page.goto(env.url); await page.waitForFunction(() => window.__island?.world.current);
-  await page.getByRole('button', { name: 'Step ashore' }).click();
+  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(async () => { await window.__island.world.goTo('saltreach_harbor', { fast: true }); window.__island.player.position.set(-8,1.03,10.3); window.__island.settings.hour = 12; });
   for (const [width, height] of [[1365,768],[1920,1080],[1100,700]]) {
     await page.setViewportSize({ width, height }); await settle(page);
@@ -26,9 +27,9 @@ try {
     await page.screenshot({ path:`captures/20261105_World-Readable-Chart-${width}.png` });
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name:'Open visual settings' }).click();
-    const panel = await page.locator('.debug').evaluate(node => { const r=node.getBoundingClientRect(); return { left:r.left,top:r.top,right:r.right,bottom:r.bottom }; });
+    const panel = await page.locator('.shell-screen').evaluate(node => { const r=node.getBoundingClientRect(); return { left:r.left,top:r.top,right:r.right,bottom:r.bottom }; });
     assert.ok(panel.left >= 0 && panel.top >= 0 && panel.right <= width && panel.bottom <= height, 'Settings fit the viewport');
-    await page.keyboard.press('Escape'); report.viewports.push({ width,height,fonts,chart,panel });
+    await closeSettings(page); report.viewports.push({ width,height,fonts,chart,panel });
   }
   assert.deepEqual(env.errors, []); report.errors = env.errors; console.log(JSON.stringify(report,null,2));
 } finally { await writeFile('captures/20261105_World-Readability-Checks.json', JSON.stringify(report,null,2)); await env.close(); }

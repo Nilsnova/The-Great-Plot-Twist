@@ -12,7 +12,7 @@ export function content(element, value) {
   if (value instanceof Node) element.append(value);
   else if (value !== undefined) element.textContent = String(value ?? '');
 }
-export const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+export {reducedMotion} from '../../settings/preferences.js';
 
 // Portraits may reference only this build's local pixel-art directory.
 export function portraitSource(src) {
