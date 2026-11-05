@@ -29,7 +29,7 @@ layouts.wreck_point = [building('salvage-yard', -7, -2, 6.7), { asset: 'dark-sch
   { asset: 'driftwood', x: 8, z: 7 }, { asset: 'crate', x: -11, z: 2 }, { asset: 'barrel', x: -12.5, z: 1 },
   { asset: 'rope-coil', x: -3, z: 2 }, { asset: 'rock', x: 13, z: 7 }];
 layouts.the_teeth = [building('watchtower-ruin', -5, -5, 3), building('raid-arch', 8, -1, 5),
-  { asset: 'reef', x: -8, z: 7 }, { asset: 'reef', x: -12, z: 11 }, { asset: 'reef', x: 9, z: -11 },
+  { asset: 'reef', x: -8, z: 7 }, { asset: 'reef', x: -12, z: 11 }, { asset: 'fog-bank', x: 9, z: -11 },
   { asset: 'rock', x: 5, z: 8 }, { asset: 'rock', x: -9, z: -1 }];
 layouts.gulls_rest = [{ asset: 'bench', x: 0, z: 0 }, { asset: 'flowers', x: -3, z: 2 },
   { asset: 'gull', x: 5, z: 8 }, { asset: 'rock', x: 9, z: 5 }];

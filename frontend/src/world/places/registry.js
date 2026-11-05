@@ -38,3 +38,17 @@ export const routes = [['lighthouse_isle', 'saltreach_harbor'], ['saltreach_harb
   ['lighthouse_isle', 'smugglers_cove'], ['saltreach_harbor', 'wreck_point'],
   ['wreck_point', 'the_teeth'], ['the_teeth', 'gulls_rest']];
 export function canTravel(id, relit = false) { return Object.hasOwn(places, id) && (!places[id].locked || relit); }
+// A passage may follow several marked legs; intermediate places need not be loaded.
+export function routeTo(from, to, relit = false) {
+  if (!canTravel(to, relit) || (from && !Object.hasOwn(places, from))) return null;
+  if (!from) return [to];
+  const queue = [[from]], visited = new Set([from]);
+  while (queue.length) {
+    const path = queue.shift(), last = path.at(-1); if (last === to) return path;
+    for (const edge of routes) {
+      const next = edge[0] === last ? edge[1] : edge[1] === last ? edge[0] : null;
+      if (next && !visited.has(next) && canTravel(next, relit)) { visited.add(next); queue.push([...path, next]); }
+    }
+  }
+  return null;
+}

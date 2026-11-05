@@ -1,14 +1,14 @@
 // One owner for place lifetime. Rejected travel leaves the current place untouched.
-import { canTravel, places } from './registry.js';
+import { routeTo, places } from './registry.js';
 export function createWorld(ctx) {
   let current = null, busy = false, disposed = false, relit = false;
   return {
     get current() { return current; }, get busy() { return busy; },
     get relit() { return relit; },
-    canTravel(id) { return !disposed && canTravel(id, relit); },
+    canTravel(id) { return !disposed && !!routeTo(current?.id, id, relit); },
     setRelightingComplete(value) { relit = value === true; },
     async goTo(id, options = {}) {
-      if (disposed || busy || !canTravel(id, relit) || current?.id === id) return false;
+      if (disposed || busy || !routeTo(current?.id, id, relit) || current?.id === id) return false;
       busy = true;
       const previous = current?.id;
       ctx.emit({ type: 'travel', to: id });
@@ -18,17 +18,21 @@ export function createWorld(ctx) {
         if (disposed) return false;
         const next = await ctx.createPlace(id);
         if (disposed) { next.dispose(); return false; }
-        current = next; ctx.attach?.(next);
+        try { ctx.attach?.(next); current = next; }
+        catch (error) { next.dispose(); throw error; }
         ctx.emit({ type: 'arrived', place: id }); return true;
       } catch (error) {
         // A failed asset load returns to the departure place when possible.
         if (previous && !disposed) {
           const restored = await ctx.createPlace(previous);
           if (disposed) restored.dispose();
-          else { current = restored; ctx.attach?.(restored); }
+          else {
+            try { ctx.attach?.(restored); current = restored; }
+            catch (restoreError) { restored.dispose(); throw restoreError; }
+          }
         }
         throw error;
-      } finally { busy = false; }
+      } finally { busy = false; ctx.finishTransition?.(); }
     },
     interact(id) {
       if (busy || disposed || !current?.zones.some(zone => zone.id === id)) return false;

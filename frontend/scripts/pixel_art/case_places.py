@@ -56,6 +56,14 @@ def salvage():
     d.line((70,21,70,47),fill=INK,width=2);poly(d,[(71,22),(86,27),(71,33)],'#b38b5b')
     return im
 
+def fog():
+    im,d=canvas(192,96)
+    for x,y,rx,ry in [(44,50,42,15),(104,39,61,17),(148,62,39,13)]:
+        for yy in range(y-ry,y+ry,3):
+            width=round(rx*max(0,1-((yy-y)/ry)**2)**.5)
+            d.line((x-width,yy,x+width,yy),fill=(165,188,166,115 if yy%2 else 80),width=2)
+    return im
+
 def assets():
-    return {'back-room':boathouse(),'low-tide-cave':cave(),'arena-gate':cave(True),'raid-arch':cave(raid=True),
+    return {'fog-bank':fog(),'back-room':boathouse(),'low-tide-cave':cave(),'arena-gate':cave(True),'raid-arch':cave(raid=True),
             'watchtower-ruin':ruin(),'reef':reef(),'salvage-yard':salvage()}

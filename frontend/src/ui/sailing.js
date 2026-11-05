@@ -7,20 +7,26 @@ export function createSailing(container, reducedMotion, lowQuality) {
   dialog.innerHTML = '<p class="eyebrow">SALTREACH PASSAGE</p><h2 id="sailing-title"></h2><canvas width="320" height="180" aria-label="A small sailing boat crossing the sea"></canvas><p class="sailing-status" role="status">Following the coastal route…</p><button>Skip passage <kbd>Enter</kbd></button>';
   container.append(dialog);
   const canvas = dialog.querySelector('canvas'), draw = canvas.getContext('2d');
-  const boat = new Image(); boat.src = `${import.meta.env.BASE_URL}pixel/sailboat.png`;
+  const boat = new Image();
   let finish = null, progress = 0, time = 0, fade = false;
-  function skip() { const done = finish; finish = null; if (dialog.open) dialog.close(); done?.(); }
+  function skip() {
+    const done = finish; finish = null; dialog.querySelector('.sailing-status').textContent = 'Making landfall…';
+    dialog.querySelector('button').disabled = true; done?.();
+  }
+  function end() { skip(); if (dialog.open) dialog.close(); }
   dialog.querySelector('button').onclick = skip;
   dialog.addEventListener('cancel', event => { event.preventDefault(); event.stopPropagation(); skip(); });
-  return { get active() { return !!finish; }, skip,
+  return { get active() { return dialog.open; }, skip, end,
     start(id, options = {}) {
-      if (finish) skip();
-      if (reducedMotion() || options.fast) return Promise.resolve();
-      fade = lowQuality(); progress = 0; time = 0;
+      if (finish) end();
+      const instant = reducedMotion() || options.fast;
+      fade = lowQuality() || instant;
+      if (!fade && !boat.src) boat.src = `${import.meta.env.BASE_URL}pixel/sailboat.png`; progress = 0; time = 0;
       dialog.classList.toggle('fade-passage', fade);
       dialog.querySelector('h2').textContent = `To ${places[id].name}`;
       dialog.querySelector('.sailing-status').textContent = fade ? 'Arriving…' : 'Following the coastal route…';
-      dialog.showModal(); dialog.querySelector('button').focus();
+      dialog.showModal(); dialog.querySelector('button').disabled = false; dialog.querySelector('button').focus();
+      if (instant) { skip(); return Promise.resolve(); }
       return new Promise(resolve => { finish = resolve; });
     },
     update(dt) {
@@ -41,6 +47,6 @@ export function createSailing(container, reducedMotion, lowQuality) {
       const x = Math.round(42 + progress * 140), y = 38 + Math.round(Math.sin(time * (1 + wind)) * 2);
       if (boat.complete && boat.naturalWidth) draw.drawImage(boat, x, y);
     },
-    dispose() { skip(); dialog.remove(); boat.src = ''; },
+    dispose() { end(); dialog.remove(); boat.removeAttribute('src'); },
   };
 }

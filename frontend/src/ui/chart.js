@@ -42,7 +42,7 @@ export function createChart(container, world, travel, focusGame) {
     show() {
       if (world.busy || dialog.open) return;
       refresh(); const scale = Math.max(1, Math.floor(Math.min((innerWidth - 70) / 448, (innerHeight - 190) / 256)));
-      dialog.style.setProperty('--chart-scale', scale); dialog.showModal();
+      dialog.dataset.scale = String(scale); dialog.style.setProperty('--chart-scale', scale); dialog.showModal();
       buttons.find(b => b.dataset.place === world.current?.id)?.focus();
     },
     dispose() { dialog.close(); dialog.remove(); },

@@ -21,7 +21,7 @@ const staged = {
   logbook: [32, 40, 4], compass: [32, 32, 4], 'brass-star': [24, 24, 4], 'beacon-fire': [32, 48, 4],
 };
 Object.assign(staged, {
-  'back-room': [96,96,8], 'low-tide-cave': [112,96,12], 'arena-gate': [112,96,12],
+  'fog-bank': [192,96,12], 'back-room': [96,96,8], 'low-tide-cave': [112,96,12], 'arena-gate': [112,96,12],
   'raid-arch': [112,112,12], 'watchtower-ruin': [80,144,12], reef: [96,64,8], 'salvage-yard': [144,112,12],
   jail: [112,112,12], 'market-hall': [144,128,12], 'prediction-kiosk': [80,96,12],
   'sports-pavilion': [144,128,12], cabin: [96,96,12], workshop: [112,112,12],

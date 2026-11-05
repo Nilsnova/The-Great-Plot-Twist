@@ -1,7 +1,8 @@
 // A place owns its root, textures, materials, geometry and explicit subscriptions.
 import * as THREE from 'three';
+import { loadTexture } from '../texture.js';
 export async function loadBackdrop(path) {
-  const texture = await new THREE.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}${path}`);
+  const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`);
   texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false; return texture;
 }

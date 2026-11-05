@@ -11,7 +11,9 @@
     "test:browser": "node scripts/check-browser.js",
     "test:art": "node scripts/check-pixel.js",
     "test:art:production": "npm run build && ART_PRODUCTION=1 node scripts/check-pixel.js",
-    "test:production": "npm run build && node scripts/check-production.js"
+    "test:production": "npm run build && node scripts/check-production.js",
+    "test:world": "node scripts/check-world.js",
+    "test:readability": "node scripts/check-readability.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

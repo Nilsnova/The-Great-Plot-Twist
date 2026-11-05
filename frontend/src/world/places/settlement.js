@@ -20,6 +20,7 @@ export async function createSettlement(ctx) {
     placements.forEach(item => {
       const mesh = placeArt(group, art, item.asset, item.x, item.z);
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
+      if (item.asset === 'fog-bank') mesh.renderOrder = 920;
     });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);

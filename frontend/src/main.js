@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import './ui/styles.css';
 import './ui/travel.css';
+import './ui/readability.css';
 import { createChart } from './ui/chart.js';
 import { createSailing } from './ui/sailing.js';
 import { settings } from './config.js';
@@ -34,7 +35,7 @@ async function startGame() {
   let active = false, hud, chart, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, transition: (id, options) => sailing.start(id, options),
-    cancelTransition: sailing.skip, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
+    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     try { await world.goTo(id, options); }
@@ -49,7 +50,11 @@ async function startGame() {
   const stopListening = on('interact', event => hud.notify(event.id));
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
-  await world.goTo('lighthouse_isle');
+  try { await world.goTo('lighthouse_isle'); }
+  catch (error) {
+    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
+  }
   quality(settings.quality); graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
