@@ -14,8 +14,9 @@ export function overlapsCollider(x, z, collider, radius = PLAYER_RADIUS) {
 }
 export function canStand(x, z, colliders = []) {
   // Test the edge of the character as well as its centre to keep feet on land.
-  for (const [dx, dz] of [[0, 0], [PLAYER_RADIUS, 0], [-PLAYER_RADIUS, 0], [0, PLAYER_RADIUS], [0, -PLAYER_RADIUS]]) {
-    if (groundHeight(x + dx, z + dz) < LAND_LIMIT) return false;
+  for (let i = 0; i < 8; i++) {
+    const angle = i * Math.PI / 4;
+    if (groundHeight(x + Math.cos(angle) * PLAYER_RADIUS, z + Math.sin(angle) * PLAYER_RADIUS) < LAND_LIMIT) return false;
   }
   return !colliders.some(collider => overlapsCollider(x, z, collider));
 }

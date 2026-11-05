@@ -32,11 +32,12 @@ export function createBoat(scene) {
   for (const z of [-0.65, 0.65]) box(boat, [1.35, 0.13, 0.3], colors.wood, [0, 0.45, z]);
   postBetween(boat, [-0.9, 0.7, 0.6], [1.3, 0.7, -0.7], 0.04, colors.wood);
   box(boat, [0.28, 0.07, 0.6], colors.wood, [1.3, 0.7, -0.7]).rotation.y = -0.8;
-  boat.position.set(layout.boat.x, 0.15, layout.boat.z); boat.rotation.y = -0.12;
-  scene.add(boat);
+  const floatingBoat = batchStatic(boat);
+  floatingBoat.position.set(layout.boat.x, 0.15, layout.boat.z); floatingBoat.rotation.y = -0.12;
+  scene.add(floatingBoat);
   return { update(time, weather) {
-    boat.position.y = 0.18 + waveHeight(layout.boat.x, layout.boat.z, time, weather.wind);
-    boat.rotation.z = Math.sin(time * 1.4) * (0.025 + weather.wind * 0.08);
-    boat.rotation.x = Math.cos(time * 0.9) * (0.025 + weather.wind * 0.05);
+    floatingBoat.position.y = 0.18 + waveHeight(layout.boat.x, layout.boat.z, time, weather.wind);
+    floatingBoat.rotation.z = Math.sin(time * 1.4) * (0.025 + weather.wind * 0.08);
+    floatingBoat.rotation.x = Math.cos(time * 0.9) * (0.025 + weather.wind * 0.05);
   } };
 }

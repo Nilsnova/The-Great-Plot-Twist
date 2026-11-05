@@ -37,6 +37,7 @@ export function createBuildings() {
   // Writing desk directly beneath the east window, reachable through the door.
   box(cottage, [0.12, 1.2, 1.5], colors.gold, [3.13, 1.65, 0.3], true);
   box(cottage, [1.4, 0.14, 1.6], colors.wood, [2, 1.05, 0.3]);
+  colliders.push({ x: x + 2, z: z + 0.3, width: 1.4, depth: 1.6 });
   for (const px of [1.5, 2.5]) for (const pz of [-0.25, 0.85]) {
     box(cottage, [0.12, 1, 0.12], colors.darkWood, [px, 0.5, pz]);
   }

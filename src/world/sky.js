@@ -38,9 +38,9 @@ export function createSky(scene) {
     color: '#e4ebdf', size: 0.24, transparent: true, depthWrite: false, fog: false,
   }));
   scene.add(starField); scene.fog = new THREE.FogExp2('#b8b5a1', 0.008);
-  const nightTop = new THREE.Color('#172740'), dayTop = new THREE.Color('#779da9');
+  const nightTop = new THREE.Color('#26243f'), dayTop = new THREE.Color('#779da9');
   const nightHorizon = new THREE.Color('#657786'), dayHorizon = new THREE.Color('#d3d9be');
-  const sunset = new THREE.Color('#d99480'), cloudColor = new THREE.Color('#869a9c');
+  const sunset = new THREE.Color('#b98395'), cloudColor = new THREE.Color('#869a9c');
   return { sun, update(hour, weather) {
     const direction = sunPosition(hour);
     const day = smoothstep(-0.22, 0.3, direction.y), night = 1 - day;
@@ -53,7 +53,7 @@ export function createSky(scene) {
     sun.position.set(direction.x * 60, Math.max(0.16, Math.abs(direction.y)) * 65, direction.z * 60);
     sun.color.set(day > 0.45 ? '#ffe1b6' : '#9db9df');
     sun.intensity = (0.75 + day * 2.4) * (1 - weather.cloudCover * 0.66);
-    hemisphere.intensity = (0.7 + day * 1.25) * (1 - weather.cloudCover * 0.38);
+    hemisphere.intensity = (1.2 + day * 0.85) * (1 - weather.cloudCover * 0.38);
     sunDisc.position.set(direction.x * 110, direction.y * 110, direction.z * 110);
     sunDisc.visible = direction.y > -0.08 && weather.cloudCover < 0.85;
     starField.material.opacity = clamp(night - weather.cloudCover, 0, 1) * 0.85;

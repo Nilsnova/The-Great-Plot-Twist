@@ -13,6 +13,9 @@ export function createWater(scene) {
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(), material);
   mesh.name = 'Animated low-poly sea'; scene.add(mesh);
+  // A flat far sea hides the square edge of the small animated grid in fog.
+  const horizon = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), material);
+  horizon.rotation.x = -Math.PI / 2; horizon.position.y = -0.42; scene.add(horizon);
   function setQuality(name) {
     mesh.geometry.dispose();
     const segments = QUALITY[name].waterSegments;

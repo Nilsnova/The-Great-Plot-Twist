@@ -36,7 +36,7 @@ export function createIsland(scene) {
   const roof = batchStatic(buildings.cottageRoof);
   roof.position.copy(buildings.group.children[0].position);
   scene.add(createTerrain(), createPaths(), batchStatic(buildings.group),
-    batchStatic(scenery.group), roof, tower.group);
+    batchStatic(scenery.group), batchStatic(tower.staticParts), roof, tower.group);
   return {
     tower, colliders: [...buildings.colliders, tower.collider, ...scenery.colliders],
     update(player, time, night) {

@@ -17,10 +17,12 @@ export function createLighthouse() {
   const group = new THREE.Group(); group.position.set(x, base, z);
   cylinder(group, 2.45, 2.9, 0.5, colors.rock, [0, 0.25, 0], 12);
   cylinder(group, 1.35, 2.05, 11, colors.wall, [0, 5.8, 0], 12);
-  cylinder(group, 1.62, 1.76, 2.1, '#b96e59', [0, 5.5, 0], 12);
+  cylinder(group, 1.69, 1.83, 2.1, '#b96e59', [0, 5.5, 0], 12);
   cylinder(group, 2.15, 1.4, 0.4, colors.iron, [0, 11.5, 0], 12);
   cylinder(group, 2.1, 2.1, 0.15, colors.iron, [0, 12.15, 0], 12);
-  cylinder(group, 1.55, 1.55, 2.15, '#92b6ad', [0, 13.15, 0], 12);
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(1.55, 1.55, 2.15, 12),
+    new THREE.MeshBasicMaterial({ color: '#92b6ad', transparent: true, opacity: 0.14, depthWrite: false }));
+  glass.position.y = 13.15; group.add(glass);
   for (let i = 0; i < 12; i++) {
     const angle = i * Math.PI / 6;
     box(group, [0.08, 2.3, 0.08], colors.iron, [Math.sin(angle) * 1.6, 13.2, Math.cos(angle) * 1.6]);
@@ -34,6 +36,11 @@ export function createLighthouse() {
   box(group, [0.12, 0.12, 0.18], colors.gold, [0.4, 1.5, 2.09], true);
   for (const height of [4, 8.5]) box(group, [0.38, 0.85, 0.14], colors.iron, [0, height, 1.85 - height * 0.06]);
   const lamp = mesh(group, new THREE.SphereGeometry(0.6, 12, 8), colors.gold, [0, 13.2, 0], true);
+  lamp.material = lamp.material.clone();
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 8),
+    new THREE.MeshBasicMaterial({ color: '#ffc278', transparent: true, opacity: 0.12,
+      depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.position.y = 13.2; group.add(halo);
   // A translucent cone suggests scattering without expensive post-processing.
   const beamGeometry = new THREE.ConeGeometry(4.6, 42, 24, 1, true);
   beamGeometry.rotateZ(Math.PI / 2); beamGeometry.translate(21, 0, 0);
@@ -45,12 +52,17 @@ export function createLighthouse() {
   sweep.add(new THREE.Mesh(beamGeometry, beamMaterial));
   const glow = new THREE.PointLight(colors.gold, 10, 13, 2);
   glow.position.y = 13.2; group.add(glow); // Only the sun casts shadows.
+  const staticParts = new THREE.Group(); staticParts.position.copy(group.position);
+  for (const object of [...group.children]) {
+    if (![lamp, halo, sweep, glow, glass].includes(object)) staticParts.add(object);
+  }
   return {
-    group, collider: { x, z, radius: 2.25 },
+    group, staticParts, collider: { x, z, radius: 2.25 },
     update(time, night) {
       sweep.rotation.y = time * 0.23;
       sweep.visible = night > 0.08;
-      beamMaterial.opacity = night * 0.075;
+      beamMaterial.opacity = night * 0.12;
+      halo.material.opacity = night * 0.16;
       lamp.material.emissiveIntensity = 1 + night * 3;
       glow.intensity = night * 12;
     },

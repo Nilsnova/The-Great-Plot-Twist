@@ -6,7 +6,7 @@ import { groundHeight } from './collision.js';
 export function createCamera(input) {
   const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 300);
   const target = new THREE.Vector3(), desired = new THREE.Vector3();
-  const opening = new THREE.Vector3(43, 31, 53), overviewTarget = new THREE.Vector3(0, 4, 0);
+  const opening = new THREE.Vector3(39, 29, 48), overviewTarget = new THREE.Vector3(-7, 4, 0);
   let yaw = 0.35, pitch = 0.48, distance = 15, arrival = 0, exploring = false;
   camera.position.copy(opening); camera.lookAt(overviewTarget);
   return { camera, get yaw() { return yaw; },
@@ -22,6 +22,18 @@ export function createCamera(input) {
         target.y + Math.sin(pitch) * distance,
         player.z + Math.cos(yaw) * Math.cos(pitch) * distance);
       desired.y = Math.max(desired.y, groundHeight(desired.x, desired.z) + 1.8);
+      // Inside the cottage, a closer top-down view stays above the walls.
+      if (Math.abs(player.x + 7) < 2.9 && Math.abs(player.z - 3) < 2.15) {
+        desired.set(player.x + Math.sin(yaw) * 1.8, target.y + 6.5, player.z + Math.cos(yaw) * 1.8);
+      }
+      // Raise the camera if any terrain along its sightline hides the player.
+      for (let i = 1; i <= 8; i++) {
+        const fraction = i / 9;
+        const x = target.x + (desired.x - target.x) * fraction;
+        const z = target.z + (desired.z - target.z) * fraction;
+        const lineY = target.y + (desired.y - target.y) * fraction;
+        desired.y += Math.max(0, groundHeight(x, z) + 0.5 - lineY) / fraction;
+      }
       // Ease from the sea to the player, then follow without a hard camera snap.
       if (arrival < 4) {
         const blend = smoothstep(0, 4, arrival);
