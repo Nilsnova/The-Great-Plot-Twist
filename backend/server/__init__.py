@@ -13,6 +13,8 @@ Where things are (one job per file):
     supabase_admin.py  server-only calls to the database with the secret key
     wallet.py          the rules for changing a player's coins
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
+    game/              game rules that are bigger than one helper: the home islet (package L2)
+                       and, later, the case. The home islet routes are in routes/islet.py
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
 """
 

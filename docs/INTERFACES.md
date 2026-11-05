@@ -58,18 +58,18 @@
 | 200 | | It worked. | Show the result. |
 | 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
 | 403 | `forbidden` | Signed in, but not allowed. Planned for presenter-only routes (`require_host`, package A2). No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. | Show the message. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row (so do the home islet routes). `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. The home islet adds `no_such_plot` (not one of the five spots) and `no_such_building` (not a building in `buildings.json`). | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
-| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). | Show the message. After `already_applied`, treat the action as done. |
-| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). | Show the message. Do not resend it unchanged. |
+| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). The home islet adds `plot_occupied` (something stands on that plot already), `not_buildable_yet` (the windmill and the greenhouse, until timber has a second source) and `not_enough_timber`. | Show the message. After `already_applied`, treat the action as done. |
+| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). The home islet adds `wrong_plot` (that building belongs on another plot). | Show the message. Do not resend it unchanged. |
 | 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player); the `Retry-After` header says how many seconds to wait. | Wait, then try again. |
 | 500 | `server_error` | A bug on our side. The details go to the server log only. | Say "something went wrong". |
 | 502 | `database_error` | The database refused the call or answered strangely. | Say "something went wrong". |
-| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
+| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable`, `islet_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `islet_unavailable`: the same for `backend/content/buildings.json` and the home islet. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
 
 ## 2. Routes that exist now
 
-Seven routes exist, plus the three routes of the Island Exchange (below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
+Seven routes exist, plus the three routes of the Island Exchange and the two routes of your home islet (both below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
 
@@ -289,6 +289,83 @@ The rules in one list (numbers in `backend/server/market/rules.py` and `trade_ru
 
 The board needs the Exchange migration (it reads `market_bases`). Without a configured database the board still works from memory, which is good enough for a demo on a laptop but not shared between server instances.
 
+### Your home islet (package L2)
+
+Every player has their own home islet, saved to their account. It has five spots, and each spot holds one kind of building: the cabin (`plot_1`, there from the start, free, no levels), the workshop (`plot_2`), the windmill (`plot_3`), the greenhouse (`plot_4`) and the signal station (`islet_signal_station`, the crew's third light in the finale). For now a player can build the workshop and the signal station. The windmill and the greenhouse show as "coming later" until timber has a second source. A level 1 building costs 300 coins and 10 timber, and every player gets 20 timber once, the starter pack. 20 timber buys exactly the station and the workshop, in either order, so nobody can spend the starter timber in a way that blocks the finale. Every number is in `backend/content/buildings.json`, which only the server reads. The home of each route is the comment at the top of `backend/server/routes/islet.py`; the rules are in `backend/server/game/` and are explained in [D021](DECISIONS.md#d021--home-islet-rules--2026-11-05). Play money only: every answer carries a line that says so.
+
+Both routes are for signed-in players only. The player id comes from the verified sign-in, never from the request. There is no feature flag. Both answers carry `Cache-Control: private, no-store`.
+
+| Route | What it does |
+|---|---|
+| `GET /api/islet` | The whole islet: `coins`, `timber`, `signalStationBuilt` and the five `spots` in the order of the place registry. Each spot has a `state` (`built`, `empty` or `locked`), its `cost`, what is `missing` (in the order `coins`, `timber`) and `canBuild`. The server decides `canBuild`; the browser only shows it. A player who has not built yet has no islet row, and the answer shows the starter pack. |
+| `POST /api/islet/build` | `{plot, type, actionUid}` builds level 1. The server takes every price from `buildings.json`; the request carries no number (a `coins` or `playerId` field is a `422`). `type` confirms what the player means: a building on the wrong plot is a `422 wrong_plot`. The ledger reference is `islet:<actionUid>`, so a repeat can never build or charge twice. |
+
+```text
+GET /api/islet
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"coins": 1000, "timber": 20, "signalStationBuilt": false,
+ "playMoneyNote": "Play money. No cash value. It cannot be bought or cashed out.",
+ "spots": [
+  {"plot": "plot_1", "plotName": "Cabin plot", "type": "cabin", "name": "Cabin",
+   "about": "Your home on the islet. It stands from the start and costs nothing.",
+   "state": "built", "level": null, "builtAt": null, "cost": null, "missing": [],
+   "canBuild": false, "lockedNote": null},
+  {"plot": "plot_2", "plotName": "Workshop plot", "type": "workshop", "name": "Workshop", "about": "...",
+   "state": "empty", "level": null, "builtAt": null, "cost": {"coins": 300, "timber": 10},
+   "missing": [], "canBuild": true, "lockedNote": null},
+  {"plot": "plot_3", "plotName": "Windmill plot", "type": "windmill", "name": "Windmill", "about": "...",
+   "state": "locked", "level": null, "builtAt": null, "cost": {"coins": 300, "timber": 10},
+   "missing": [], "canBuild": false,
+   "lockedNote": "Opens when timber starts washing up on your beach, in a later update."},
+  {"plot": "plot_4", "...": "..."},
+  {"plot": "islet_signal_station", "plotName": "Islet signal station", "type": "signal_station",
+   "name": "Signal station", "about": "...", "state": "empty", "level": null, "builtAt": null,
+   "cost": {"coins": 300, "timber": 10}, "missing": [], "canBuild": true, "lockedNote": null}]}
+
+POST /api/islet/build
+Authorization: Bearer <token>
+{"plot": "islet_signal_station", "type": "signal_station", "actionUid": "k3j9x2m4q8w1z7a0"}
+
+200 OK
+Cache-Control: private, no-store
+{"plot": "islet_signal_station", "type": "signal_station", "name": "Signal station", "level": 1,
+ "coinsPaid": 300, "timberPaid": 10, "coins": 700, "timber": 10}
+```
+
+`builtAt` is a UTC time without microseconds, such as `"2026-11-16T10:00:00Z"`. `actionUid` is made once per click (8 to 64 letters, digits, hyphens or underscores) and sent again if the request is repeated.
+
+The checks of a build come in a fixed order, and the first one that fails is the answer. Every refusal changes nothing.
+
+1. The sign-in (`401`), the data file (`503 islet_unavailable`) and the shape of the request (`422 validation_error`).
+2. **A repeat.** If this player has built with this `actionUid` before, the answer is `409 already_applied` and nothing else is asked, whatever has changed since.
+3. **The rules** of `backend/server/game/building.py`: `404 no_such_plot`, `404 no_such_building`, `422 wrong_plot`, `409 plot_occupied` (the cabin), `409 not_buildable_yet`.
+4. **The wallet rules** for the charge (`422 invalid_transaction`; not possible with a checked file).
+5. **The database function `islet_build()`**, in one step: `404 player_not_set_up`, `409 already_applied` (the same click was still running), `409 plot_occupied`, `409 not_enough_timber`, `409 insufficient_funds`, or done.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 401 | `unauthorized` | No sign-in, or a bad one. |
+| 404 | `no_such_plot` | Not one of the five spots. |
+| 404 | `no_such_building` | Not a building in `buildings.json`. |
+| 404 | `player_not_set_up` | The player has no wallet row (the account was made before the migration). Same text as `GET /api/me`. |
+| 409 | `already_applied` | This `actionUid` was used before. Treat the build as done. |
+| 409 | `plot_occupied` | Something already stands on that plot. Always true for the cabin. |
+| 409 | `not_buildable_yet` | The windmill and the greenhouse, until timber has a second source. |
+| 409 | `not_enough_timber` | The player holds less timber than the building needs. |
+| 409 | `insufficient_funds` | Not enough coins. |
+| 422 | `wrong_plot` | That building belongs on another plot. |
+| 422 | `validation_error` | A missing or extra field, a bad pattern, or a number where text belongs. |
+| 502 | `database_error` | The database refused the call or sent a refusal we do not know. A bug, not something a player did. |
+| 503 | `islet_unavailable` | `buildings.json` could not be read when the server started. The rest of the API works. |
+| 503 | `database_unavailable` | **The outcome is unknown.** Call `GET /api/islet`. If the building stands, it is done. Otherwise try again with the **same** `actionUid`. |
+
+**The finale (packages S3 and L3).** The crew's third light is a home signal station. Server code asks `players_with_signal_station(admin, crew_player_ids)` in `backend/server/game/islet_store.py` (one read, at most four ids). In SQL the same fact is `exists (select 1 from public.islet_buildings where player_id = <player> and building_type = 'signal_station')`. A signal station is never removed, so the answer can only change from "no" to "yes", and a check made before the finale's own transaction stays true. The case never charges for the station itself: the finale screen's "Build signal" button maps to `POST /api/islet/build`. `signalStationBuilt` in `GET /api/islet` is for the islet panel only.
+
+The routes need the home islet migration (`20261106070000_home_islet.sql`). Until it is applied, `GET /api/islet` answers `502 database_error`, so do not pass the live transport (`transport: api` in `frontend/src/game.js`) before the migration is applied. Until then the panel runs in unavailable mode and sends no request.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -359,7 +436,8 @@ Starting it in the game is a separate step, because `frontend/` belongs to the g
 | `{type: 'travel', to}` and `{type: 'arrived', place}` | G2 | draft |
 | `{type: 'intro_ended', ending}` | S2 | draft |
 | `{type: 'weather_updated', source, fetchedAt}` | L1 | draft; `startLiveWeather` does not emit it itself, whoever wires it in emits it from the `onUpdate` hook |
-| `{type: 'plot_clicked', plot}` | L2 | draft |
+| `{type: 'plot_clicked', plot}` | G2, L2 | built (G2), opens the islet panel (L2) |
+| `{type: 'islet_changed', built: [plot ids], signalStationBuilt}` | L2 | draft; the islet panel emits it after every good answer, and `built` lists every plot whose state is `built`, the cabin included. The world drawing (`home.js`) will listen and show a building only when it stands. Its home becomes `frontend/GRAPHICS.md` when that listener lands. |
 | `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story package S0 (skeleton under review) |
 
 ## 4. Database tables
@@ -387,6 +465,15 @@ The Island Exchange migration, `supabase/migrations/20261106010000_island_exchan
 `market_trade()` is the only way a trade happens (it checks that the coins and the fee follow from the units and the price, moves the coins through `apply_wallet_transaction()`, changes the position and writes the trade in one step). `market_set_base()` saves a company's base when two server instances look at the same moment. Both are for the server only.
 
 Four database functions come with the first migration: `apply_wallet_transaction()` (the only way coins move, for the server only), `is_crew_member()` (used by the read rules of crews and seats, for signed-in players only), `handle_new_user()` (runs at sign-up and creates a profile, a wallet with 0 coins and an empty save) and `touch_updated_at()` (stamps `updated_at`).
+
+The home islet migration, `supabase/migrations/20261106070000_home_islet.sql` (package L2, run after the first one), adds two tables and one function. It adds no wallet reason: a building is paid with `building_purchase`. The rights follow the same plan: a visitor gets nothing, a signed-in player only reads their own rows, the server writes.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `islets` | player who has built: the timber the player holds, never below 0 (the first build makes the row, with the starter pack) | read their own row | read, add, change (through `islet_build()`) | L2 |
+| `islet_buildings` | building that stands on an islet, never edited or deleted. The primary key is `(player_id, plot)`: one building per plot. The cabin stands from the start and has no row. | read their own rows | read, add (through `islet_build()`) | L2 |
+
+`islet_build()` is the only way a building goes up. In one step it locks the wallet, refuses a repeated ref, makes the islet row with the starter pack if there is none, refuses a plot that holds a building and a build with too little timber, takes the coins through `apply_wallet_transaction()` (reason `building_purchase`) and writes the building. It is for the server only. The prices and the starter pack are arguments, taken from `backend/content/buildings.json`. The finale reads `islet_buildings` (`player_id`, `building_type`): the table and column names are part of this contract.
 
 Details that other packages rely on:
 
@@ -431,7 +518,7 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `event_reward` | earn | A special event in the world |
 | `cargo_sale` | earn | Selling cargo |
 | `clue_purchase` | spend | Buying a clue |
-| `building_purchase` | spend | Building on a home islet |
+| `building_purchase` | spend | Building on a home islet. The refs are `islet:<actionUid>` (the migration `20261106070000`, no new reason) |
 | `admin_adjust` | either | A manual correction by an admin |
 | `market_buy` | spend | Shares bought on the Island Exchange (migration `20261106010000`) |
 | `market_sell` | earn | Shares sold on the Island Exchange (same migration) |
@@ -522,7 +609,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
 | A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
 | L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
-| L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
+| L2 Your home islet | **Built** (the backend and its migration; the migration is not applied yet): `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the tables `islets` and `islet_buildings`; the function `islet_build()`; the events `plot_clicked` (opens the islet panel) and `islet_changed` (draft); `backend/content/buildings.json` (server only); coins through `building_purchase` with the ref `islet:<actionUid>`. See section 2 and D021. The panel is in `frontend/src/screens/islet/`. | built, in review |
 | L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story package S0 (skeleton under review) |
 | L4 Island Exchange (the market) | **Built** (on `main`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/trade {companyId, side, units, actionUid}`; the tables `market_bases`, `market_positions` and `market_trades`; the reasons `market_buy`, `market_sell` and `market_fee`; `backend/content/market/companies.json` and `replay.json`; the setting `MARKET_MULTIPLIER`; the flag `market`. See section 2 and D017. | built, in review |
 | L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions` | draft |
