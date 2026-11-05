@@ -5,8 +5,8 @@ export function createChart(container, world, travel, focusGame) {
   dialog.setAttribute('aria-labelledby', 'chart-title');
   dialog.innerHTML = `<header><div><small>COASTAL SURVEY · 01</small><h2 id="chart-title">The Saltreach Isles</h2></div>
     <button class="chart-close" aria-label="Close sea chart">×</button></header>
-    <div class="chart-map"><img alt="Pixel sea chart with marked routes and a northern fog bank" src="${import.meta.env.BASE_URL}places/chart.png">
-    ${placeIds.map(id => { const p = places[id]; return `<button data-place="${id}" style="left:${p.chart[0] / 448 * 100}%;top:${p.chart[1] / 256 * 100}%"><i aria-hidden="true"></i><span></span></button>`; }).join('')}</div>
+    <div class="chart-scroll"><div class="chart-map"><img alt="Pixel sea chart with marked routes and a northern fog bank" src="${import.meta.env.BASE_URL}places/chart.png">
+    ${placeIds.map(id => { const p = places[id]; return `<button data-place="${id}" style="left:${p.chart[0] / 448 * 100}%;top:${p.chart[1] / 256 * 100}%"><i aria-hidden="true"></i><span></span></button>`; }).join('')}</div></div>
     <footer><p class="chart-status" role="status">Choose a landing.</p><label><input type="checkbox" class="fast-travel"> Fast travel</label></footer>
     <p class="chart-help">Tab or arrow keys to choose · Enter to sail · Esc to close</p>`;
   container.append(dialog);

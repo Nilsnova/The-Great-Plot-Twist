@@ -10,4 +10,7 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 
 .presenter-panel .tour-copy{font-size:14px;line-height:1.6;margin:0}.presenter-panel details{font-size:14px;line-height:1.5}.presenter-panel summary{cursor:pointer;min-height:32px}.presenter-panel.in-dialog{position:static;width:auto;max-width:none;margin-top:18px;padding:16px}.presenter-panel.in-dialog .kit-heading{font-size:17px}.presenter-panel.in-dialog .cinematic-demo-body{gap:10px}.presenter-panel{max-height:calc(100dvh - 180px);overflow:auto}
 
-.title-backdrop{position:fixed;left:50%;top:50%;width:2048px;height:1536px;max-width:none;image-rendering:pixelated;transform:translate(-50%,-50%);pointer-events:none}.shell-loading{position:fixed;inset:40% 20%;padding:24px;background:#243f35;color:#f3e6be;border:3px solid #a7b58c;text-align:center;font-size:18px;line-height:1.6}
+.title-backdrop{position:fixed;left:50%;top:50%;width:calc(480px * var(--title-scale,3));height:calc(300px * var(--title-scale,3));max-width:none;image-rendering:pixelated;transform:translate(-50%,-50%);pointer-events:none}.shell-loading{position:fixed;inset:40% 20%;padding:24px;background:#243f35;color:#f3e6be;border:3px solid #a7b58c;text-align:center;font-size:18px;line-height:1.6}
+#game{position:fixed;inset:0;overflow:hidden}
+
+@media(max-width:700px){.title-backdrop{--title-scale:2}}

@@ -4,6 +4,7 @@ import { node } from '../../ui/kit/dom.js';
 import { places,lightIds } from '../places/registry.js';
 import { pixelById } from '../../pixel/catalog.js';
 import { characterIds } from '../../pixel/story-catalog.js';
+import {getPreferences} from '../../settings/preferences.js';
 import { getWeather } from '../weather.js';
 import { cinematicNames,createTimeline,projectLights,durations } from './logic.js';
 import { loadShotImages,shotAssetIds } from './images.js';
@@ -40,7 +41,7 @@ export function createCinematics(ctx) {
     shot.loader.ready.then(()=>{if(current!==shot)return;shot.ready=true;if(shot.timeline.done){render(shot);finish('skipped');}}).catch(()=>{if(current===shot)finish('cancelled');});
     return result;
   }
-  function render(shot) {drawShot(draw,{...shot,images:shot.loader.images,p:shot.timeline.progress,wind:getWeather().wind});}
+  function render(shot) {drawShot(draw,{...shot,images:shot.loader.images,p:shot.timeline.progress,wind:getWeather().wind,highlight:getPreferences().colourblind?'#d5f5ff':null});}
   const stop=ctx.on('finale',event=>{if(cinematicNames.includes(event.stage))play(event.stage);});
   return {get active(){return !!current;},play,skip(){finish('skipped');},
     update(dt){const shot=current;if(!shot?.ready)return;if(ctx.reducedMotion())shot.timeline.skip();shot.time+=dt;shot.timeline.tick(dt);render(shot);progress.update({value:shot.timeline.progress,max:1});status.textContent='';if(shot.timeline.done)finish('completed');},

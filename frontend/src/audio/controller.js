@@ -6,7 +6,7 @@ import {createAmbience} from './ambience.js';
 import {createMusic} from './music.js';
 export function createAudio({container,on,caption}) {
   let context,master,musicBus,effectsBus,synth,ambience,music,disposed=false,screen='title',finale=false,stride=0,hornAt=0,beamAt=0,lastBlip=0;
-  function apply(){if(!context)return;const p=getPreferences(),mix=mixVolumes(p),now=context.currentTime;master.gain.setTargetAtTime(mix.master,now,0.03);musicBus.gain.setTargetAtTime(p.music,now,0.03);effectsBus.gain.setTargetAtTime(p.effects,now,0.03);}
+  function apply(){if(!context)return;const p=getPreferences(),mix=mixVolumes(p),now=context.currentTime;for(const [bus,value] of [[master,mix.master],[musicBus,p.music],[effectsBus,p.effects]]){bus.gain.cancelScheduledValues(now);if(value===0)bus.gain.setValueAtTime(0,now);else bus.gain.setTargetAtTime(value,now,0.03);}}
   function theme(){music?.set(document.hidden?null:finale?'finale':screen==='title'?'title':null);}
   function unlock(event) {
     if(disposed||!event.isTrusted)return;

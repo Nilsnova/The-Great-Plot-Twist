@@ -6,7 +6,7 @@ export function createLazyCinematics(ctx) {
   function play(name,params={}) {
     if(disposed||pending||ctx.world.busy||!cinematicNames.includes(name))return Promise.resolve(false);
     if(controller)return controller.play(name,params);
-    const token=++generation;ctx.resetInput?.();
+    const token=++generation;ctx.resetInput?.();ctx.caption?.('Preparing the coastal scene · Escape to skip');
     return new Promise(resolve=>{
       pending={resolve,timer:setTimeout(cancelLoad,3000)};
       import('./controller.js').then(module=>{
@@ -17,8 +17,10 @@ export function createLazyCinematics(ctx) {
       }).catch(()=>{if(token===generation)cancelLoad();});
     });
   }
+  const key=event=>{if(pending&&event.code==='Escape'){event.preventDefault();event.stopImmediatePropagation();cancelLoad();ctx.resetInput?.();}};
+  window.addEventListener('keydown',key,true);
   const stop=ctx.on('finale',event=>{if(cinematicNames.includes(event.stage))play(event.stage);});
   return {get active(){return !!pending||!!controller?.active;},play,
     skip(){cancelLoad();controller?.skip();ctx.resetInput?.();},update(dt){controller?.update(dt);},
-    dispose(){if(disposed)return;disposed=true;stop();cancelLoad();controller?.dispose();controller=null;}};
+    dispose(){if(disposed)return;disposed=true;window.removeEventListener('keydown',key,true);stop();cancelLoad();controller?.dispose();controller=null;}};
 }

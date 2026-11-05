@@ -1,0 +1,53 @@
+{
+  "checked": "2026-11-05T19:46:01.302Z",
+  "checks": [
+    "Cold title JavaScript is below 35 kB before gzip",
+    "src/game.js is a separate dynamic entry",
+    "src/world/cinematics/controller.js is a separate dynamic entry",
+    "src/world/places/settlement.js is a separate dynamic entry",
+    "src/world/places/home.js is a separate dynamic entry",
+    "src/ui/kit-gallery.js is a separate dynamic entry",
+    "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "Cold title requests no finale, destination, demo or gallery chunk",
+    "Cold production title allocates no WebGL renderer",
+    "Primary pixel buttons exceed WCAG AA normal-text contrast",
+    "The loaded production world exposes no dev inspection object",
+    "Production title and world have no browser errors or external asset requests"
+  ],
+  "initialChunks": [
+    "assets/game-Dyd-R1qe.js",
+    "assets/modulepreload-polyfill-P2Xu9kJm.js",
+    "assets/modal-B0ZInVU4.js",
+    "assets/dom-DPMFhvhq.js",
+    "assets/preload-helper-DclECHGd.js"
+  ],
+  "initialJavaScript": 18747,
+  "initialGzip": 8814,
+  "lazyEntries": [
+    {
+      "key": "src/game.js",
+      "file": "assets/game-BjsCNhxI.js"
+    },
+    {
+      "key": "src/ui/cinematic-demo.js",
+      "file": "assets/cinematic-demo-BR46VKNE.js"
+    },
+    {
+      "key": "src/ui/kit-gallery.js",
+      "file": "assets/kit-gallery-AaseanMd.js"
+    },
+    {
+      "key": "src/world/cinematics/controller.js",
+      "file": "assets/controller-8F6PJU8E.js"
+    },
+    {
+      "key": "src/world/places/home.js",
+      "file": "assets/home-DRRQ_O3m.js"
+    },
+    {
+      "key": "src/world/places/settlement.js",
+      "file": "assets/settlement-Dv3m7W8J.js"
+    }
+  ],
+  "contrast": 6.479354609526834
+}

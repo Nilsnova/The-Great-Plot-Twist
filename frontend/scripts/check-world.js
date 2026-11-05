@@ -1,3 +1,4 @@
+import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Exercise every real place, accessible chart travel and ten round trips in Chrome.
 import { stubIntro,dismissIntro } from './intro-browser-fixture.js';
 import assert from 'node:assert/strict';
@@ -11,8 +12,7 @@ const capture = name => page.screenshot({ path: `captures/20261105_World-${name}
 const go = async id => { await page.evaluate(id => window.__island.world.goTo(id, { fast: true }), id); await settle(page); };
 try {
   await stubIntro(page);
-  await page.goto(env.url); await page.waitForFunction(() => window.__island?.world.current);
-  await page.getByRole('button', { name: 'Step ashore' }).click();
+  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));

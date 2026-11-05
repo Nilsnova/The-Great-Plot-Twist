@@ -11,7 +11,7 @@ import {createCaptions} from './audio/captions.js';
 import {on} from './core/events.js';
 import {node} from './ui/kit/dom.js';
 const container=document.querySelector('#game'),backdrop=node('img','title-backdrop');
-backdrop.src=`${import.meta.env.BASE_URL}pixel/ground.png`;backdrop.alt='';container.append(backdrop);
+backdrop.src=`${import.meta.env.BASE_URL}places/title.png`;backdrop.alt='';container.append(backdrop);
 const captions=createCaptions(container),audio=createAudio({container,on,caption:captions.show}),stopMotion=watchSystemMotion();
 let runtime=null,pending=null,disposed=false,loading=false;
 async function loadGame() {

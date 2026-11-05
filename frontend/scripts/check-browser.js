@@ -1,3 +1,4 @@
+import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
 // Real-browser smoke checks using an installed Chrome. Saves review screenshots.
@@ -32,7 +33,7 @@ try {
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
   await stubWeather(page); await stubIntro(page);
-  await page.goto(url); await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
+  await page.goto(url);await startFromTitle(page);await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
   await page.waitForTimeout(1500); // Let shaders and the first shadow map warm up.
   await mkdir('captures', { recursive: true });
   const capture = name => page.screenshot({ path: `captures/${stamp}_${prefix}-${name}.png` });
@@ -54,10 +55,9 @@ try {
     check(stats.calls < 150 && stats.triangles < 150000 && stats.pixelRatio <= 1.5, `${name} stays within rendering budgets`);
   }
   await measure('arrival-high');
-  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
-  check(await page.evaluate(() => window.__island.camera.zoom === 1), 'Escape leaves the arrival overview intact before starting');
-  await page.getByRole('button', { name: 'Step ashore' }).click();
-  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await page.keyboard.press('Escape');
+  check(await page.locator('.shell-screen[data-mode=pause]').isVisible(),'Escape opens the pause menu');
+  await page.getByRole('button',{name:'Resume',exact:true}).click();
   const initial = await page.evaluate(() => ({ ...window.__island.player.position }));
   await page.keyboard.down('KeyW');
   await page.waitForFunction(start => Math.hypot(window.__island.player.position.x - start.x,
@@ -100,19 +100,18 @@ try {
   await page.evaluate(() => { window.__island.settings.hour = 18.4; });
   await measure('dusk-high'); await capture('Dusk');
   await page.getByRole('button', { name: 'Open visual settings' }).click();
-  await page.getByRole('button', { name: '4 fog' }).click();
-  await page.locator('#quality').selectOption('low'); await measure('fog-low');
-  await page.getByRole('button', { name: '3 storm' }).click(); await measure('storm-low');
+  await page.evaluate(()=>window.__island.setWeather({fog:1,rain:0}));
+  await page.locator('[data-preference=quality]').selectOption('low'); await measure('fog-low');
+  await page.evaluate(()=>window.__island.setWeather({fog:0.38,rain:1,wind:1})); await measure('storm-low');
   check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality preserves the native pixel grid and reduces effect density');
-  await page.locator('#quality').selectOption('high'); await page.keyboard.press('Tab');
-  await page.locator('#hour').focus(); await page.keyboard.press('Escape');
-  await page.locator('.debug').waitFor({ state: 'hidden' });
-  check(await page.locator('.debug').isHidden(), 'Escape closes settings while a form control has focus');
+  await page.locator('[data-preference=quality]').selectOption('high'); await page.keyboard.press('Tab');
+  await page.locator('[data-preference=quality]').focus();await closeSettings(page,{keyboard:true});
+  check(await page.locator('.shell-screen').isHidden(), 'Escape closes settings while a form control has focus');
   check(external.length === 0, 'The game makes no external network requests');
   check(errors.length === 0, `No browser or WebGL errors (${errors.join('; ')})`);
   await page.close(); // Benchmark one WebGL page at a time on the same GPU.
   const retina = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
-  await stubWeather(retina); await retina.goto(url); await retina.waitForTimeout(2000);
+  await stubWeather(retina);await stubIntro(retina);await retina.goto(url);await startFromTitle(retina);await retina.waitForTimeout(1200);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
   check(report.modes['retina-high'].pixelRatio === 1 && report.modes['retina-low'].pixelRatio === 1,

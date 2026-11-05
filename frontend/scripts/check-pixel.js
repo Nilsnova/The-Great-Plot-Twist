@@ -1,3 +1,5 @@
+import {startFromTitle} from './shell-browser-tools.js';
+import {stubIntro} from './intro-browser-fixture.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
 // Inspect native PNGs, integer scaling, the live game and the built pixel workshop.
@@ -11,8 +13,8 @@ const visibleArt = pixelArt.filter(item => item.visibility !== 'finale');
 const production = process.env.ART_PRODUCTION === '1', url = 'http://127.0.0.1:5176';
 const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(production ? ['preview'] : []), '--host', '127.0.0.1', '--port', '5176', '--strictPort'], { stdio: 'pipe' });
 const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
-const backgroundIds = ['saltreach_harbor','home_islet','smugglers_cove','wreck_point','the_teeth','gulls_rest','chart','chart-relit'];
-const report = { checked: new Date().toISOString(), checks: [], files: pixelArt.length + 9 }, errors = [], external = [];
+const backgroundIds = ['saltreach_harbor','home_islet','smugglers_cove','wreck_point','the_teeth','gulls_rest','chart','chart-relit','title'];
+const report = { checked: new Date().toISOString(), checks: [], files: pixelArt.length + 10 }, errors = [], external = [];
 const check = (value, label) => { assert.ok(value, label); report.checks.push(label); };
 let browser;
 try {
@@ -45,8 +47,8 @@ try {
         if (centre !== 255 || pixels[3] !== 0) throw new Error('Ground land/sea alpha mask is wrong');
       }
     }
-  }, [...pixelArt, { id:'ground', file:'ground.png', width:1024, height:768 }, ...backgroundIds.map(id => ({ id, file:`${id}.png`, folder:'places', width:id.startsWith('chart') ? 448 : 1024, height:id.startsWith('chart') ? 256 : 768 }))]);
-  check(true, `${pixelArt.length + 9} PNGs decode at their exact native sizes with visible pixels`);
+  }, [...pixelArt, { id:'ground', file:'ground.png', width:1024, height:768 }, ...backgroundIds.map(id => ({ id, file:`${id}.png`, folder:'places', width:id==='title'?480:id.startsWith('chart')?448:1024,height:id==='title'?300:id.startsWith('chart')?256:768 }))]);
+  check(true, `${pixelArt.length + 10} PNGs decode at their exact native sizes with visible pixels`);
   await page.locator('#search').fill('explorer side');
   check(await page.locator('.sprite-card').count() === 3, 'Search finds the side-facing animation family');
   await page.locator('.sprite-card').first().click();
@@ -64,11 +66,11 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   const requested = new Set();
   page.on('request', request => { const match = request.url().match(/\/pixel\/([^/?]+\.png)(?:[?#]|$)/); if (match) requested.add(match[1]); });
-  await page.goto(url); await page.getByRole('button', { name: 'Step ashore' }).click();
+  await stubIntro(page);await page.goto(url);await startFromTitle(page);
   await page.waitForTimeout(1100);
   check([...requested].every(file => file === 'ground.png' || pixelArtIds.includes(file.replace('.png', ''))), 'Game requests only active pixel artwork');
   const display = await page.evaluate(() => {
-    const canvas = document.querySelector('canvas'); return { imageRendering: getComputedStyle(canvas).imageRendering,
+    const canvas = document.querySelector('canvas[tabindex="0"]'); return { imageRendering: getComputedStyle(canvas).imageRendering,
       width: canvas.width, height: canvas.height, cssWidth: parseInt(canvas.style.width), cssHeight: parseInt(canvas.style.height) };
   });
   check(display.imageRendering === 'pixelated' && Number.isInteger(display.cssWidth / display.width) && display.cssWidth / display.width === display.cssHeight / display.height, 'World uses one exact integer upscale factor');

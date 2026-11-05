@@ -51,7 +51,7 @@ export async function startGame({container,shell,audio,captions}) {
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
-  cinematics = createLazyCinematics({container,world,emit,on,reducedMotion,resetInput:input.reset}); world.cinematic = cinematics.play;
+  cinematics = createLazyCinematics({container,world,emit,on,reducedMotion,caption:captions.show,resetInput:input.reset}); world.cinematic = cinematics.play;
   intro = createIntro({container,world,on,emit,resetInput:input.reset}); world.intro = intro;
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
   function setUserQuality(name){setPreferences({quality:name});}
