@@ -4,7 +4,7 @@ Nils explicitly rejected the painted-paper direction on 5 November 2026 and sele
 
 ## Run and inspect
 
-Use the Node versions in package.json, then `npm install` and `npm run dev`. Open the printed address and click **Step ashore**. `/asset-library.html` is the active pixel workshop, with search, family filters, native PNG links and integer magnification. `npm run build` produces the static game and workshop in dist; `npm run preview` serves them. The retired paper scene studies are excluded from the production entry points.
+The app is in `frontend/`, matching current main. From the worktree root run `cd frontend`, then use the Node versions in package.json, `npm install` and `npm run dev`. All app paths and npm commands below are relative to frontend/. Open the printed address and click **Step ashore**. `/asset-library.html` is the active pixel workshop, with search, family filters, native PNG links and integer magnification. `npm run build` produces the static game and workshop in dist; `npm run preview` serves them. The retired paper scene studies are excluded from the production entry points.
 
 The newest screenshots and evidence use `captures/20261105_Pixel-*`. `Forest-Daylight`, `Cottage-Daylight`, `Shore-Daylight`, `Lighthouse-Daylight` and `Lighthouse-Midnight` show actual gameplay views. `First-Playable` records the first pixel iteration; `Nature-Kit` is the asset workshop. Nils approved the actual pixel gameplay capture and asked to keep the style, clean it and build the needed assets.
 
@@ -61,7 +61,7 @@ world/lighthouse.js exports logical `anchors`, `stairwell`, `lamp_room`, plus th
 | scripts/pixel_art/, export-pixel-ground.js | Editable/reproducible original artwork sources |
 | tests/pixel.test.js | PNG registration/dimensions, display scaling and pixel snapping |
 | scripts/check-pixel.js, check-browser.js, check-production.js | Real-browser art/gameplay/build validation |
-| references/20261105_Pixel-Style-Reference.png | User-supplied style reference, excluded from runtime assets |
+| ../references/20261105_Pixel-Style-Reference.png | User-supplied style reference, excluded from runtime assets |
 | 20261105_Pixel-Direction.txt, ASSET_ROADMAP.txt | Current direction and provisional feature-art mapping |
 
 ## Verification and performance
@@ -75,7 +75,7 @@ The target remains 60 FPS, <150 draw calls and <150,000 submitted triangles on o
 - Refine canopy variety, natural grass/soil boundaries, cliff transitions and environmental clusters against the supplied reference. Keep the player and routes readable; avoid noisy per-pixel detail.
 - Rebuild the planned feature kits in the new pixel language. The earlier paper market/arena/companion/boat concepts are not active pixel assets or implemented features. Consult the roadmap input file, whose feature priorities remain provisional.
 - Improve character stride/idle richness and test longer sessions, Safari/Firefox, other GPUs and smaller screens. Current verification is installed Chrome on this Mac, not a cross-device guarantee.
-- The live GitHub audit fetched main a0e501a (merged bootstrap/F0/earlier graphics) and feat/live-skeleton d5d6f80 (relocation into frontend/). This authorised graphics checkout remains at root. Coordinate the rename integration with the owning branch; the graphics PR diff from its common ancestor does not delete the newer shared team files. Untracked local ROADMAP/STORY files describe G1 before G2/G3/G4 and S0-owned map inputs; they are planning context, not published frozen contracts.
+- The current main layout is frontend/ plus backend/. The pixel pass is integrated into that frontend/ layout, retaining the incoming team documents byte-for-byte; 57 added art/check files were resolved at their relocated paths without changing their content. Feature-branch synchronisation does not merge anything into main. Untracked local ROADMAP/STORY files describe G1 before G2/G3/G4 and S0-owned map inputs; they are planning context, not published frozen contracts.
 - Root remains the sole writer to this graphics worktree. Nils authorised normal pushes of verified work to feat/graphics-foundation and a reviewable PR. No merge into main, force push or deployment is authorised here. A two-hour heartbeat in this chat continues bounded visual improvements under the new direction and reports meaningful changes.
 
 ## Render loop in three sentences

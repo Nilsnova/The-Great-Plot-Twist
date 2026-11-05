@@ -1,9 +1,30 @@
-# Local dependencies, builds and private settings never belong in Git.
+# Files git must never track. Covers both stacks: Python (server) and Node (browser game).
+
+# Python: virtual environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Node: installed packages and the build output
 node_modules/
 dist/
+
+# Secrets and local settings. Copy .env.example to .env and fill it in locally.
 .env
 .env.*
 !.env.example
+
+# Vercel's local link to the cloud project
+.vercel
+
+# Supabase CLI local state. `supabase link` and `supabase start` write the project ref, the
+# database address and version info here. The migrations in supabase/migrations/ stay tracked.
+supabase/.temp/
+supabase/.branches/
+
+# macOS
 .DS_Store
 # Python caches from the optional local art generator.
 __pycache__/
