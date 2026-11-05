@@ -49,9 +49,9 @@ export function aim(state,id,degrees){
   if(!post||post.reserved)return refuse('post_not_ready','A crew member must reach this post first.');
   if(post.seat!==playerSeat(state)&&!state.duties.some(duty=>duty.seat===post.seat&&duty.lightId===id))return refuse('post_not_owned','Your crew does not control this post.');
   if((night.missUntil[id]??0)>state.now)return refuse('aim_cooldown','Wait five seconds before another lock attempt.');
-  night.bearings[id]=normaliseDegrees(degrees);night.locks=night.locks.filter(lock=>lock.lightId!==id);
+  night.bearings[id]=normaliseDegrees(degrees);
   if(angularDistance(degrees,bearingBetween(light,rehearsalGlow))>5){night.missUntil[id]=state.now+5;return refuse('off_target','No lock. Watch the glow and try another bearing.');}
-  night.locks.push({lightId:id,seat:post.seat,until:state.now+90});settleNight(state);
+  night.locks=night.locks.filter(lock=>lock.lightId!==id);night.locks.push({lightId:id,seat:post.seat,aimedBy:playerSeat(state),until:state.now+90});settleNight(state);
   return accept(state.schooner?'Three lights locked. The fog parts.':'Beam locked · held for 90 seconds.');
 }
 export function settleNight(state){

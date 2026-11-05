@@ -15,6 +15,7 @@ from chart import chart
 from crew import assets as crew_assets
 from story_props import assets as story_assets
 from title import title_scene
+from relighting import assets as relighting_assets
 
 ROOT=Path(__file__).resolve().parents[2]
 FOLDER=ROOT/'public'/'pixel'
@@ -30,7 +31,7 @@ for name in ['jetty','boat','crate','barrel','rope-coil','lantern','bench','buoy
     assets[name]=prop(name)
 assets.update({'harbour-office':office(),'harbour-beacon':beacon(),'signal-station':signal(),'ferry-pier':pier(),'sailboat':ship(),'dark-schooner':ship(True)})
 for name in ['sealed-letter','torn-page','logbook','compass','brass-star','beacon-fire']:assets[name]=item(name)
-assets.update(settlement_assets());assets.update(case_assets());assets.update(crew_assets());assets.update(story_assets())
+assets.update(settlement_assets());assets.update(case_assets());assets.update(crew_assets());assets.update(story_assets());assets.update(relighting_assets())
 for name,image in assets.items():save(image,name,FOLDER)
 terrain=ground(ROOT)
 save(terrain,'ground',FOLDER)

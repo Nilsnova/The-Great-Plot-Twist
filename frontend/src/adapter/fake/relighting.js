@@ -1,0 +1,5 @@
+// World view only; this fake makes no public-world or ledger writes.
+import {accept,refuse} from './state.js';
+export const lanternColours=[{id:'gold',label:'Warm gold',hex:'#f3d58c'},{id:'sea',label:'Sea glass',hex:'#a9d5be'},{id:'rose',label:'Coral rose',hex:'#e9ac94'}];
+export function claimLantern(state,colour){if(!state.worldRelit||state.festivalUntil<=state.now)return refuse('festival_closed','The lantern festival is not open.');if(!lanternColours.some(item=>item.id===colour))return refuse('unknown_colour','Choose one of the supplied lantern colours.');state.lanternColour=colour;return accept('Your free festival lantern colour is ready.');}
+export function worldView(state){return {stage:state.worldRelit?'relit':'dark',lightsOn:state.worldRelit,fogBankGone:state.worldRelit,gullsRestOpen:state.worldRelit,wall:state.wall,festivalRemaining:Math.max(0,state.festivalUntil-state.now),lanternColour:state.lanternColour,canClaimLantern:state.worldRelit&&state.festivalUntil>state.now,colours:lanternColours};}

@@ -18,6 +18,7 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
     cardId=order==='fetch'?target:(spotRoutes.find(route=>!state.found[seat].includes(route.cardId)&&routeStatus(state,route,seat,4,true).accepted)??spotRoutes.find(route=>!state.found[seat].includes(route.cardId))??spotRoutes[0])?.cardId;
     if(order==='fetch'&&!cardOpen(state,cardId))return refuse('lead_locked','That card is not an open lead yet.');
     if(cardId&&!cardOpen(state,cardId))cardId=null;
+    if(order==='search'&&cardId&&!routes.some(route=>route.spot===target&&route.cardId===cardId&&!route.playersOnly))cardId=null;
     if(cardId&&state.found[seat].includes(cardId))return refuse('already_have','This card is already in the partner’s satchel.');
     if(cardId){const candidates=routes.filter(route=>route.cardId===cardId&&(order==='fetch'||route.spot===target)&&!route.playersOnly);
       const eligible=candidates.filter(route=>routeStatus(state,route,seat,4,allowPaid).accepted).sort((a,b)=>a.price-b.price);

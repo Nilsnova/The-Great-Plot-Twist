@@ -8,7 +8,7 @@ export function createBoardScreen({send}) {
     item.append(node('span','case-card-id',card.id),node('h3','',card.title),node('span','kit-badge',card.state));
     if(card.body)item.append(node('p','',card.body));
     item.append(node('p','case-card-credit',`Found: ${card.holders.map(holder=>holder.label).join(', ')||'Crew journal'}`),node('p','case-card-credit',`Pinned: ${card.pinnedBy.map(pin=>pin.label).join(', ')||'Not pinned'}`));
-    item.append(button(card.canPin?'Pin my card':'Pin unavailable',()=>send('pin',card.id),{disabled:!card.canPin,focus:`pin-${card.id}`}));
+    if(card.canPin)item.append(button('Pin my card',()=>send('pin',card.id),{focus:`pin-${card.id}`}));
     item.draggable=card.canPair;item.ondragstart=event=>event.dataTransfer.setData('text/plain',card.id);item.ondragover=event=>event.preventDefault();item.ondrop=event=>{event.preventDefault();send('pair',event.dataTransfer.getData('text/plain'),card.id);};
     return item;
   }

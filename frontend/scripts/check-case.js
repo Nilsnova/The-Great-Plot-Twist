@@ -7,7 +7,7 @@ const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try{
  await page.goto(env.url+'/case-lab.html?demo=1');await page.waitForFunction(()=>window.__caseLab);
  await page.evaluate(async()=>{const {adapter:a,screens}=window.__caseLab;await a.createCrew();await a.muster();for(const [id,seat] of [['C1',1],['C2',2],['C3',1],['C4',2]]){a.dev.give(id,seat);if(seat===1)await a.pin(id);else a.dev.pinForSeat(id,seat);}await a.pair('C1','C2');await screens.open('board');});
- await page.screenshot({path:'captures/20261105_G6-Board.png'});check(await page.locator('.case-card').count()===4,'Board displays four held cards and seat credits');
+ await page.screenshot({path:'captures/20261105_G6-Board.png'});check(await page.locator('.case-clue').count()===4,'Board displays four held cards and seat credits');
  await page.evaluate(()=>window.__caseLab.screens.open('search',{spot:'ferry_pier'}));check(await page.getByRole('button',{name:'Pay 150 coins · Start search'}).count()===1,'Paid shortcut is separately priced');await page.screenshot({path:'captures/20261105_G6-Search.png'});
  await page.evaluate(async()=>{const {adapter:a,screens}=window.__caseLab;await a.buildLight('islet_signal_station');await a.callNightfall();await a.orderPartner(2,'man_light','keepers_lamp');await a.orderPartner(3,'man_light','harbor_light');await a.takePost('islet_signal_station');a.dev.advance(600);await screens.open('finale');});await page.screenshot({path:'captures/20261105_G6-Night.png'});
  check(await page.locator('.case-bearing-input input').count()===4,'Every beam has an accessible native slider');

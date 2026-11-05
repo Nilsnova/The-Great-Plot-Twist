@@ -43,9 +43,9 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
-  let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
+  let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active || caseUi?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active || caseUi?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();festival?.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !demo?.active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -61,7 +61,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     start() { active = true; view.start(reducedMotion()); },
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},caseScreen:name=>caseUi?.open(name),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
   });
-  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>hud.setCaptain(view),onArrival:node=>intro.setArrival(node)});
+  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{hud.setCaptain(view);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}},onArrival:node=>intro.setArrival(node)});
   const stopListening = on('interact', event => {hud.notify(event.id);if(!intro.active)caseUi.interact(event);});
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
@@ -97,7 +97,8 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     const night = sky.update(settings.hour, state);
     audio.update(delta,{weather:state,speed,night,active:active&&!world.busy&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta);
-    world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state });
+    festival?.update(reducedMotion()?0:time,{active:(caseWorld?.festivalRemaining??0)>0,night,reducedMotion:reducedMotion(),quality:settings.quality,player:controller.player.position});
+    world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,relit:world.relit,festival:(caseWorld?.festivalRemaining??0)>0 });
     view.update(delta, controller.player.position);
     const zone = active && !demo?.active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     touch.update(zone,active&&!demo.active&&!world.busy&&!chart.open);

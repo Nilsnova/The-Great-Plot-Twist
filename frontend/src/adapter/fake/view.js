@@ -1,5 +1,6 @@
 // Fake view-model projection. Rule visibility and outcome labels are supplied here, not by screens.
 import {accusationView,revealView} from './reveal.js';
+import {worldView} from './relighting.js';
 import {nightView} from './night.js';
 import {searchView} from './search.js';
 import {partnerView} from './partners.js';
@@ -12,5 +13,5 @@ export function caseView(state) {
     crew:state.crew?{...state.crew,joinPreview:state.joinPreview,seats:state.crew.seats.map(seat=>({...seat,kit:seat.kitId?kits[seat.kitId]:null,cards:(state.found[seat.seat]??[]).map(id=>({id,title:cardTitles[id]}))}))}:{status:'none',code:null,seats:Array.from({length:4},(_,i)=>({seat:i+1,kind:'open',name:'Open seat',kit:null,cards:[]})),joinPreview:state.joinPreview},
     board:boardView(state),
     permissions:{createCrew:!!profile&&!state.crew,joinCrew:!!profile&&!state.crew,muster:state.crew?.status==='forming'},search:searchView(state),partners:partnerView(state),finale:nightView(state),accusation:accusationView(state),reveal:revealView(state),
-    world:{stage:state.worldRelit?'relit':'dark',lightsOn:state.worldRelit,wall:state.wall,festivalRemaining:Math.max(0,state.festivalUntil-state.now),lanternColour:state.lanternColour},effects:state.effects};
+    world:worldView(state),effects:state.effects};
 }
