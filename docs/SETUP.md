@@ -80,13 +80,13 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 
 ## Step 5. Prove it works (15 minutes, once the foundation branch is pushed)
 
-Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 waits for the next production deploy that contains the cron entry in `vercel.json`.
+Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 waits for Nils' decision on what calls the keep-alive route (see "Keep it awake until the demo" below). Do not try to pass it with a `crons` entry in `vercel.json`: that breaks our deploys.
 
 | # | Check | Pass when | If it fails |
 |---|---|---|---|
 | 1 | A teammate pushes a branch | Vercel shows the preview as **Ready**, not Blocked | **Test.** Vercel's docs and its newest help article disagree on whether non-owners can deploy on Hobby. Fallback: only Nilsnova merges to `main`, which triggers production. |
 | 2 | Open `/api/health` on the preview | `{"status": "ok", ...}` | Check the `vercel.json` services block and the function logs. |
-| 3 | The daily keep-alive. The cron entry is now in `vercel.json` (`/api/keepalive`, once a day between 06:00 and 06:59 UTC). Vercel runs crons on **production only**, and cron together with Vercel Services is still undocumented, so confirm it on the next production deploy, with `CRON_SECRET` set for Production (Step 4). | Vercel > Cron Jobs lists `/api/keepalive`, and a run succeeds (`200` in the function log, no `401` or `503`) | **Test.** If the deploy fails because of `crons`, or the entry never shows up, remove it from `vercel.json` and use a GitHub Actions schedule (only with Nils' OK) or Supabase Cron. |
+| 3 | The daily keep-alive. **Waiting for Nils' decision.** Vercel Cron is out: a `crons` entry in `vercel.json` stopped our production deploys on 5 Nov 2026, so `vercel.json` has no cron entry and must never get one while we use Vercel Services. Once Nils has chosen what calls `/api/keepalive` once a day (see below), give that caller the same `CRON_SECRET` value as Production (Step 4). | A run of the caller ends with `200` and `{"status":"ok","reads":3}`. `401` means the secret is missing or wrong. `503` means a setting is missing or the database cannot be read. | Fix the secret or the setting and run it again. Never fall back to a `crons` entry in `vercel.json`. Until the check passes, rely on team activity and a manual check of the Supabase project the day before the demo. |
 | 4 | Two test users | each sees only their own rows ([supabase/README.md](../supabase/README.md)) | Stop: fix the access rules before any real data. |
 | 5 | GitHub sign-in, on the check page `/auth-check.html` (see below) | a round trip ends with `Signed in as Captain-xxxxxx, coins 0, crews 0` | Check the callback URL and the redirect list (Step 3, and the note below). |
 
@@ -101,7 +101,17 @@ If the address is missing, Supabase sends the browser to the Site URL instead, w
 
 ## Keep it awake until the demo
 
-Free Supabase projects pause after **7 days of low activity**. The daily keep-alive runs a few small database reads once a day, and its cron entry is in `vercel.json`, but nobody has confirmed yet that Vercel runs it next to Services (see Step 5, check 3). Until check 3 has passed, do not count on it to keep the project awake. In demo week open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
+Free Supabase projects pause after **7 days of low activity**. The route `GET /api/keepalive` does a few small database reads, which count as activity, but **nothing calls it yet**.
+
+We tried Vercel Cron first. On 5 Nov 2026 a `crons` entry in `vercel.json` stopped our production deploys: production stayed on an old version until commit `409316e` took the entry out. We cannot see a failed deploy from outside, because Vercel keeps serving the last good one. **Never add `crons` back to `vercel.json` while we use Vercel Services.** The full story is in [ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive).
+
+**Open decision for Nils: what calls the route once a day.** Whatever it is must send the header `Authorization: Bearer <CRON_SECRET>`, and the secret goes only into that service's own secret or header setting, never into the repository.
+
+1. A scheduled GitHub Actions workflow in this public repository. It is free on public repositories, but Nils' rule is to ask before any GitHub Actions run, and GitHub turns scheduled workflows off after 60 days without activity in the repository.
+2. A free outside scheduler or uptime monitor that calls the route with the secret. It needs an account that Nils creates.
+3. Supabase Cron, if it is on the free plan and if its activity counts against the pause. We have not checked either.
+
+Until Nils decides, we rely on the team's normal use of the project, which counts as activity. In demo week open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
 
 ## Afterwards
 

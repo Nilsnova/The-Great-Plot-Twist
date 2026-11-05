@@ -10,57 +10,59 @@
 2. update [Right now](#right-now);
 3. update [Next steps per lane](#next-steps-per-lane) for your lane.
 
-Never write keys, tokens, passwords or student numbers in this file. If two pull requests both add log lines, keep both lines when you merge.
+Never write keys, tokens, passwords or student numbers in this file. If two pull requests both add log lines, keep both lines when you merge. Decision numbers (`D0xx`) and migration timestamps work the same way: take the next free one on `origin/main` when you open your pull request, and renumber yours at merge time if another merge took it first (the Exchange decision became D017 that way).
 
 ## Right now
 
-*Last updated: Thu 5 Nov 2026, evening, by Claude (coordinating for Nils).*
+*Last updated: Thu 5 Nov 2026, late evening, by Claude (coordinating for Nils).*
 
 ### What works
 
-- **`main` is live.** The bootstrap merge (`a0e501a`, 5 Nov) put everything built so far on `main`: the team workflow docs, foundation wave 1, the graphics snapshot in `frontend/`, and `vercel.json` with two Vercel Services (`/api` goes to `backend/`, the rest to `frontend/`). Production works at https://the-great-plot-twist.vercel.app/: the page answers 200 with the game (title "The Great Plot Twist · Lighthouse Isle"), `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}`, and `/api/config` answers with all flags off. So Vercel Services with the Python backend works on the Hobby plan (deploy check 2 passed).
-- **The browser game (`frontend/`):** original pixel art (D005) with the Saltreach Isles world from G2 + G3 (merged as `60bd60e`): Lighthouse Isle, the sea chart with sailing driven by the wind value, Saltreach Harbor with its hotspots, the home islet with four plots, the case places and a locked Gull's Rest. The place, hotspot, light and event ids are in [frontend/GRAPHICS.md](../frontend/GRAPHICS.md). The browser story engine (S1) is in `frontend/src/story/` and is not wired to the screen yet (that is S2). `npm test`: 62 tests passed; `npm run build`: built. (Checked by Claude on 5 Nov on `main`.)
-- **The Python API (`backend/`):** `GET /api/health`, `GET /api/config`, the sign-in check, the wallet rules, the pattern for outside data and the first migration. `uv run pytest`: 232 passed. `uv run ruff check .`: All checks passed! (Same check, same copy.)
-- **Accounts are ready.** Vercel: the Hobby team "The Great Plot Twist" is connected to the Nilsnova GitHub account, the project is `the-great-plot-twist`, Nils set the environment variables, and the function region should be Dublin (Nils confirms it in the Settings). Supabase: the project `great-plot-twist` (West EU, Ireland) exists, GitHub sign-in is on, and Claude's Supabase connection can reach it, so Claude applies the migration and no teammate has to be invited or paste SQL for that. Email sign-in should be off (Nils confirms). The A-lane teammates still get Developer access in the Supabase organization, to read.
-- **Story, look and plan:** story skeleton v1 is approved ([STORY.md](STORY.md)), the look is decided (D005: original top-down pixel art), and [ROADMAP.md](../ROADMAP.md) v0.2 is written.
+- **`main` is live** at https://the-great-plot-twist.vercel.app/, and Vercel deploys every push to `main` (two Vercel Services: `/api` goes to `backend/`, the rest to `frontend/`). Checked after the push of `d7857d9`: the game, `/ui-kit.html`, `/api/health`, `/api/config` (with the public sign-in settings) and `/api/weather` answer 200, and `/api/me` answers 401 without a token, as it should.
+- **The browser game (`frontend/`):** original pixel art (D005); the Saltreach Isles world from G2 + G3 (Lighthouse Isle, the sea chart with sailing, Saltreach Harbor, the home islet, the case places); the pixel UI kit with its gallery `/ui-kit.html` (G4); 114 story-art additions; five skippable finale cinematics (rehearse them with `?demo=1`); the playable intro on Lighthouse Isle (S2) with the unchanged story engine, both endings and a local save; live weather from Open-Meteo drives the island (L1). Ids and contracts are in [frontend/GRAPHICS.md](../frontend/GRAPHICS.md). `npm test`: 143 passed; `npm run build`: built.
+- **The Python API (`backend/`):** ten routes: `health`, `config`, `content/{name}`, `weather`, `me`, `auth/exchange` (temporary), `keepalive`, and the Island Exchange (`market`, `market/portfolio`, `market/trade`; trading sits behind the flag `market`, which is off). `uv run pytest`: 1487 passed; `uv run ruff check .`: All checks passed! Tests cannot reach the network (`backend/server/tests/conftest.py`).
+- **The database:** the foundation migration is applied to Supabase (`great-plot-twist`, Ireland; remote version `20261106000000`, the same as the file): seven tables with row-level security, the grants in [supabase/README.md](../supabase/README.md), the wallet reasons and the sign-up trigger. The Island Exchange migration (`20261106010000`) is on `main` but **not applied**: it waits for Nils (review queue, item 1).
+- **Sign-in:** GitHub sign-in through Supabase, checked with the page `/auth-check.html`. The two-account test is in the review queue.
+- **Story, look and plan:** story skeleton v1 is approved ([STORY.md](STORY.md)); the original story is imported unchanged (S1, D007), with a Python and a browser engine that a parity test keeps equal; the look is decided (D005); [ROADMAP.md](../ROADMAP.md) v0.2 is written.
 
 ### In progress
 
 | What | Who | Where |
 |---|---|---|
-| Codex: pixel UI kit, story art, finale visuals (G4) and, once possible, Act 1 in the browser (S2) | Codex, for Nils | `feat/g4-ui-kit-story-art` |
-| L4 Island Exchange core: price rules, keyless crypto feed with a recorded replay, market tables and one atomic trade function, routes | Claude, for Nils | `feat/l4-island-exchange` |
+| Experience layer (G5): title screen and menus, settings, original Web Audio sound, touch controls, the `?demo=1` highlights tour for the class demo, a faster first load | Codex, for Nils | `feat/g5-experience-layer` |
 | S0 story detail round: Story v2 edits, the case file, NPC partners, the open world, a timing simulation; for Nils' approval | Claude, for Nils | `docs/story-detail` |
-| Foundation wave 2: the migration aligned with D003 and D004 (starting balance 0, a `wallet_reasons` table, neutral captain names, explicit grants, `crews` and `crew_seats`), the keep-alive route `GET /api/keepalive`, engineering docs with the `frontend/` and `backend/` commands, `docs/ARCHITECTURE.md`, `docs/INTERFACES.md`, and the decision entries D002, D003, D004, D012 (Crews and seats) and D015 (owner-authorized merges) | Claude, for Nils | `chore/foundation` (not pushed yet) |
-| Coordination: roadmap, story, this page, the README update and agent briefs. They go to `main` first (merge order, step 1). | Claude, for Nils | waiting to go to `main` |
-| Owners for lanes S, A and L | the team | today |
+| Owners for lanes S, A and L | the team | kickoff |
 
 ### Blocked or waiting
 
-- **The database migration is not applied yet.** It waits for foundation wave 2, which still changes the migration file (a migration is never edited after it is applied or merged). When wave 2 is on `main`, Claude applies the migration through its Supabase connection and runs the Supabase security advisor (its built-in safety check).
-- **Four of the five deploy checks have not run** ([SETUP.md](SETUP.md), step 5). Check 2 passed: `/api/health` answers on production. Check 1 needs a teammate's push, check 3 needs a cron entry for `/api/keepalive` in `vercel.json` (not there yet), check 4 needs the migration, and check 5 needs a GitHub sign-in round trip.
+- **The Island Exchange migration waits for Nils** (review queue, item 1). The code is on `main` with the flag `market` off, so nobody can trade. Until the migration is applied, `/api/market` answers `502 database_error` (no screen calls it yet). That answer also shows that Binance answered our Dublin function, because the board fetches prices before it reads the database.
+- **Four of the five deploy checks have not run** ([SETUP.md](SETUP.md), step 5). Check 2 passed: `/api/health` answers on production. Check 1 needs a teammate's push. Check 3, the daily keep-alive, waits for Nils to decide what calls `/api/keepalive`: Vercel Cron cannot be used, because a `crons` entry in `vercel.json` stopped our production deploys (see the Log, 5 Nov evening, and Open decisions below). Check 4 needs the two-user test plan on the migrated database. Check 5 needs a GitHub sign-in round trip on `/auth-check.html`, which is in the review queue for Nils.
 - **Nils confirms two settings:** that Email sign-in is switched off in Supabase, and that the function region is Dublin in the Vercel settings.
-- **S1 is being built** by Claude for Nils on `feat/s1-import-plot-twist`. Nils decided the team brings everything into this repo, so nobody needs the private solo repository.
-- **G2 and S2 wait for Codex's final pixel pass** to be merged (G1 finish). The look itself is decided (D005).
 
 ### Known gaps
 
-- [ENGINEERING.md](ENGINEERING.md) on `main` still says to run every command from the repository root. The code now lives in `frontend/` and `backend/`, so use the commands in [Start here](#start-here-as-a-teammate). Wave 2 brings the corrected commands.
-- [frontend/GRAPHICS.md](../frontend/GRAPHICS.md) still says to run `npm install` in the repository root. Run it inside `frontend/`. G1 finish fixes the text.
-- The Vite dev server does not pass `/api` to the local API yet (ENGINEERING.md, section 3). The first package that calls the API from the browser adds it (L1 or A2) and tells the G lane.
+- The first load is large: the game's main script is about 610 kB, and Vite warns about the chunk size. G5 splits it, so the first load is fast on classroom Wi-Fi.
 - The README's "Project status" now points to the live site and this page. M3 adds the deployed URL, names, student numbers and commands.
 - PR 1 (`docs/team-workflow`): its commits are inside `main` now, so GitHub should show it as merged. If it still shows as open, close it by hand.
-- The decision log ([DECISIONS.md](DECISIONS.md)) has only D001 so far. D002, D003, D004, D012 and D015 arrive with foundation wave 2, and D005 with G1 finish.
-- The setup guide ([SETUP.md](SETUP.md), step 4) still says that `main` has nothing to build. Production already builds and runs, so treat that sentence as out of date.
 
 ### Open decisions
+
+**Waiting for Nils: review queue** (newest first, as of the late evening of 5 Nov). Each item needs Nils to review, set, test, approve or decide. Nothing in this list is done until Nils says so.
+
+1. **Decide on the Island Exchange (L4), now on `main` with the flag off.** First, approve applying its migration `20261106010000_island_exchange.sql` to Supabase. It only adds: three tables, two functions and three wallet reasons. An independent Opus review approved the database part, and the migration applies twice cleanly on a scratch Postgres 17. Then answer the seven questions in [D017](DECISIONS.md) (details there): (a) the multiplier for the class: your rule is 100, and the simulation suggests 20 to 30 (at 100, ETH was paused 45 of 90 minutes in a class-length slot, and crypto prices sit near the floor after a few days); keep 100 as the code default and set `MARKET_MULTIPLIER=25` on Vercel, or change the default; (b) the lowest and highest price, now 25 % and 400 % of the start price; (c) when Binance is away, show the last prices and pause trading, with `DEMO_MODE=true` as plan B (the recording now plays only in demo mode, because anyone could read it in advance); (d) trading on the public recording in demo mode: keep it or switch it off; (e) refuse a trade when the price moved more than a few percent since the player saw it (not built); (f) the two brakes: a trade uses prices at most 5 seconds old, and a player may trade 10 times in 30 seconds; (g) a pull back toward the start price at the daily re-base (not built, because players could predict it).
+2. **Review the story detail round** (S0, branch `docs/story-detail`, arriving soon): Story v2 edits, the case file, NPC partners, the open world and a timing simulation.
+3. **Set the Supabase URLs for the live site** (Supabase dashboard, Authentication > URL Configuration): Site URL `https://the-great-plot-twist.vercel.app`, and the redirect URLs `https://the-great-plot-twist.vercel.app/**` and `http://localhost:5173/**`. Also switch **Email** login off (Authentication > Sign In / Providers). [SETUP.md](SETUP.md), Step 3, explains why.
+4. **Test the sign-in** on `/auth-check.html` with both of Nils' GitHub accounts, after item 3 ([SETUP.md](SETUP.md), Step 5, check 5).
+5. **Approve three changes from the backbone merge:** the temporary route `POST /api/auth/exchange`, the changed test that allows `sessionStorage` for the PKCE code verifier (in `backend/server/tests/test_me.py`), and the new PKCE line in the [safety checklist](ENGINEERING.md#6-safety-checklist).
+6. **Decide what calls `/api/keepalive` once a day.** Vercel Cron is out (see the Log, 5 Nov evening). The options are a scheduled GitHub Actions workflow (free on public repositories, but Nils' rule is to ask before any GitHub Actions run, and GitHub turns schedules off after 60 days without activity in the repository), a free outside scheduler or uptime monitor that calls the route with the secret (it needs an account that Nils creates), or Supabase Cron (not checked: is it on the free plan, and does its activity count against the pause?). Until it is decided we rely on team activity and a manual check of the Supabase project the day before the demo. More in [ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive).
+7. **Decide the default weather place.** Torshavn in the Faroe Islands is the default now, with Lisbon as the option. It is also item 7 on the kickoff list below.
 
 Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](../ROADMAP.md) stands as written.
 
 **For Nils** (asked on the evening of 5 Nov):
 
 1. **Decided: the Island Exchange is core** (Nils, 5 Nov). It ships its minimum version first; L2 and G3 ship their minimum versions.
-2. **Decided: nobody needs the private solo repository** (Nils, 5 Nov). Claude imports the story for Nils (S1, in progress).
+2. **Decided: nobody needs the private solo repository** (Nils, 5 Nov). Claude imports the story for Nils (S1, merged as `589baea`).
 3. **Decided and done: Codex's pixel pass is on `main`** (`45d2d46`).
 
 **For the team kickoff** (the four teammates decide together):
@@ -70,7 +72,7 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 3. **Who creates the free data-API accounts** (CoinGecko Demo, football-data.org, balldontlie)? The keys live only in the Vercel settings, never in the repository, a file or chat.
 4. **Demo format.** Live on a seeded demo world, or recorded? Does the demo show the twist?
 5. **Seat takeover.** When a friend takes over an NPC partner's seat, does the seat keep the partner's kit, or take the friend's own kit?
-6. **What the Exchange daily reset re-bases.** In plain words: what gets set back to its starting point each morning?
+6. **What the Exchange daily reset re-bases.** In plain words: what gets set back to its starting point each morning? D017, rule 4, proposes an answer.
 7. **The default weather location.** Proposal: the Faroe Islands, with Lisbon as an option.
 
 ## Start here as a teammate
@@ -114,10 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**Done on `feat/g4-ui-kit-story-art`, ready for Claude to integrate:** the reusable plain-JS pixel UI kit and built `/ui-kit.html` gallery; 114 original crew/cast poses, portraits and story/UI assets; five skippable G4 visual beats and an explicit `?demo=1` rehearsal selector; S2 with the unchanged S1 engine, real intro API, inventory, notes, atomic hotspot routes, replayable local move log and both original ending cards; L1 startup/cleanup with readable source/licence credit. The total art register is 182 sprites + 9 backgrounds/charts. UI text remains 14–17 px for controls and story content.
+**Merged into `main` as `c52613b` (5 Nov), from `feat/g4-ui-kit-story-art`:** the reusable plain-JS pixel UI kit and built `/ui-kit.html` gallery; 114 original crew/cast poses, portraits and story/UI assets; five skippable G4 visual beats and an explicit `?demo=1` rehearsal selector; S2 with the unchanged S1 engine, real intro API, inventory, notes, atomic hotspot routes, replayable local move log and both original ending cards; L1 startup/cleanup with readable source/licence credit. The total art register is 182 sprites + 9 backgrounds/charts. UI text remains 14 to 17 px for controls and story content.
 
 - **Verified:** 143 Vitest tests in 16 files; build and all gallery, intro, cinematic, weather-wiring, world, readability, production and art browser checks. Both endings were reached through the actual intro API. Active cinematic measured 60 FPS, 97 calls and 192 triangles; resources returned to 96 geometries/27 textures/one place root after shots and ten round trips. All 191 PNGs regenerate byte-identically. A local weather read returned 200/source live. Exact commands, public contracts, screenshots and limits are in `frontend/GRAPHICS.md` and `frontend/ASSETS.md`.
-- **Next:** Claude reviews/integrates the branch. A2/A3 own sign-in, cloud progress and referee/kit awards; L3 supplies solved-crew authorisation, any reveal asset and shared Relighting state; L4 consumes the display-only chart/table/HUD kit. No client wallet, trading, deduction or shared-solve rules were added. Normal play and the public gallery expose no identity pairing; the default unmask/demo stays anonymous.
+- **Next:** G5, the experience layer (title screen and menus, settings, original Web Audio sound, touch controls, the `?demo=1` highlights tour, a faster first load), by Codex on `feat/g5-experience-layer`. A2/A3 own sign-in, cloud progress and referee/kit awards; L3 supplies solved-crew authorisation, any reveal asset and shared Relighting state; L4 consumes the display-only chart/table/HUD kit. No client wallet, trading, deduction or shared-solve rules were added. Normal play and the public gallery expose no identity pairing; the default unmask/demo stays anonymous.
 - **Not verified:** other browsers/GPUs, screen-reader software, touch movement, a sustained soak and live authenticated/shared-case integration. Incoming engine, weather, backend and infrastructure files were synchronised from main unchanged. No merge into main or manual deployment was performed.
 
 ### S Story and Mystery (owner picked today)
@@ -222,6 +224,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
+**Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
+
 **Next 1: A1-next, apply and prove the foundation.** Starts once foundation wave 2 is on `main`. Production is already live, and deploy check 2 has passed.
 
 ```text
@@ -258,11 +262,12 @@ Steps:       1. Agent: cd backend && uv sync && uv run pytest && uv run ruff che
                 each step pass or fail.
              5. The five deploy checks in docs/SETUP.md, step 5 (check 2 already passed on
                 production on 5 Nov; repeat it on a preview): a teammate's push builds a
-                Ready preview; /api/health answers on the preview; the keep-alive runs on
-                production (it needs a cron entry in vercel.json and CRON_SECRET in Vercel; if
-                the entry is missing, mark the check as waiting and open an issue); the two
-                test users each see only their own rows; a GitHub sign-in round trip ends
-                signed in.
+                Ready preview; /api/health answers on the preview; the daily keep-alive
+                (Vercel Cron is out: a crons entry in vercel.json stopped our production
+                deploys on 5 Nov, so never add one while we use Services; what calls
+                /api/keepalive once a day is Nils' open decision, so mark the check as waiting
+                and do not touch vercel.json); the two test users each see only their own
+                rows; a GitHub sign-in round trip ends signed in.
 Done when:   every step is marked pass or fail with evidence (result lines, or screenshots
              without keys); every failure has an issue or a recorded fallback; the D010 entry
              (go or no-go) is in docs/DECISIONS.md; docs/STATUS.md shows the results.
@@ -313,6 +318,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 ```
 
 ### L Live Systems (owner picked today)
+
+**Status (5 Nov, late evening):** L1 live weather is done: merged (`3e80605`) and wired into the game by Codex (`c52613b`). The L4 Island Exchange minimum is on `main` with the flag `market` off (`d7857d9`, decision D017); its migration waits for Nils, and the trading screen comes after his Exchange decisions. Next for the lane: L3 (Next 2 below).
 
 **Next 1: L1 Live weather.** The spec, the saved answers, the tests and the code can all start now, on a branch from `main`.
 
@@ -412,9 +419,10 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 Newest first. One line per finished task: date, who, what, where.
 
+- **2026-11-05, late evening.** Claude, for Nils: merged Codex's G4 and S2 work (`c52613b`: the pixel UI kit and `/ui-kit.html`, 114 story-art additions, five finale cinematics with `?demo=1` rehearsals, the playable intro, live weather wired into the island) and replaced the two tests that still required the removed cron entry with a guard that `vercel.json` has none (`acdd341`). Merged `docs/cron-finding` (`9ec2fad`) and the L4 Island Exchange minimum (`d7857d9`): its decision is D017, because `main` already used D016; the flag `market` stays off, and its migration is not applied (review queue, item 1). While merging, three Exchange tests quietly fetched real Binance prices, because a merged parameter of `create_app` had moved; the optional services of `create_app` are now keyword-only, and the tests refuse every network connection. Cleaned up the last code comments and docs that said Vercel's cron calls the keep-alive. Main: 1487 backend and 143 frontend tests pass, and production picked up `d7857d9`. Codex builds the experience layer (G5) on `feat/g5-experience-layer`.
 - **2026-11-05.** Codex, for Nils: completed the pixel UI kit/gallery, 114 original story-art additions, five skippable G4 cinematic beats, S2 against the unchanged S1 engine (both endings, inventory and replayable moves), and L1 weather startup/credit on `feat/g4-ui-kit-story-art`; 143 unit tests, build, real-API intro and all graphics/browser/art checks pass; active 60 FPS and stable resources after ten round trips. Contracts, 191-PNG asset register and captures are in `frontend/`. Ready for Claude to integrate; no own backend/auth/economy/board changes or main merge.
-
-- **2026-11-05, evening.** Claude, for Nils: the foundation migration is applied to the Supabase project (`great-plot-twist`, Ireland; recorded remotely as version `20261105170942`, name `foundation`) and verified by query: 7 tables, row-level security on all, grants and function rights exactly as in [supabase/README.md](../supabase/README.md), 8 wallet reasons, the sign-up trigger. Security advisor: one warning on Supabase's own `rls_auto_enable()` (low risk; optional follow-up revoke) and the intended `is_crew_member()` for signed-in players. Merged the backbone check: `GET /api/me` (own profile, coins and crews only), `/api/config` with the public auth settings, `POST /api/auth/exchange` (temporary PKCE code exchange for the check page), the check page `/auth-check.html` (PKCE sign-in; tokens never in the browser history) and the daily keep-alive cron in `vercel.json`. Main: 802 backend and 130 frontend tests pass, build OK. Waiting for Nils (review queue): the Supabase redirect URLs for the live site, the two-account sign-in test, and OK for the temporary exchange route, the PKCE test change and the new PKCE checklist line.
+- **2026-11-05, evening.** Claude, for Nils: found why production stopped updating, and aligned the Supabase migration history. (1) Production stayed on `589baea` (the S1 merge) and did not pick up the next two merges, `3e80605` (L1 live weather) and `c8bac2b` (the backbone check, which added a `crons` entry for `/api/keepalive` to `vercel.json`). Commit `409316e` took the entry out, and the next production deploy went live within about 8 minutes: `/api/weather` answers 200, `/api/me` answers 401 without a token (correct) and `/auth-check.html` answers 200. So a `crons` entry in `vercel.json` together with Vercel Services breaks the deploy on our Hobby project. The failed deploy is not visible from outside, because Vercel keeps serving the last good deploy. Never add `crons` back while we use Services. The route `GET /api/keepalive` stays, with `CRON_SECRET`. What calls it once a day is an open decision for Nils (see Open decisions); until then we rely on team activity and a manual check of the Supabase project the day before the demo. (2) The remote migration history now matches the file: the remote version is `20261106000000` (name `foundation`), where it had been recorded as `20261105170942`, so the Supabase CLI and the file agree. The docs were fixed to match, on `docs/cron-finding`: ARCHITECTURE, SETUP, INTERFACES, ENGINEERING, this page, the F0 spec and the docstring of `routes/keepalive.py`.
+- **2026-11-05, evening.** Claude, for Nils: the foundation migration is applied to the Supabase project (`great-plot-twist`, Ireland; recorded remotely as version `20261106000000`, name `foundation`, the same as the file; see the entry above) and verified by query: 7 tables, row-level security on all, grants and function rights exactly as in [supabase/README.md](../supabase/README.md), 8 wallet reasons, the sign-up trigger. Security advisor: one warning on Supabase's own `rls_auto_enable()` (low risk; optional follow-up revoke) and the intended `is_crew_member()` for signed-in players. Merged the backbone check: `GET /api/me` (own profile, coins and crews only), `/api/config` with the public auth settings, `POST /api/auth/exchange` (temporary PKCE code exchange for the check page), the check page `/auth-check.html` (PKCE sign-in; tokens never in the browser history) and a daily keep-alive cron entry in `vercel.json` (taken out again later, see the entry above). Main: 802 backend and 130 frontend tests pass, build OK. Waiting for Nils (review queue): the Supabase redirect URLs for the live site, the two-account sign-in test, and OK for the temporary exchange route, the PKCE test change and the new PKCE checklist line (now listed under Open decisions).
 - **2026-11-05, evening.** Claude, for Nils: merged L1 live weather: `GET /api/weather` (Open-Meteo, one cached call per 10 minutes, a recorded real answer as the fallback, demo mode never calls out, all 29 WMO codes mapped to cloudCover, rain, fog and wind; default place Torshavn, Faroe Islands, an open question for Mon 9) and `startLiveWeather` in `frontend/src/net/weather.js`, not yet wired into `main.js` (Codex wires it with the one line in INTERFACES.md). Credit: Weather data by Open-Meteo.com, adapted for the game (CC BY 4.0).
 - **2026-11-05, evening.** Claude, for Nils: merged G2 + G3 from Codex (`60bd60e`: world manager, sea chart and sailing, Saltreach Harbor, home islet, case places) and S1 (the Plot Twist story engine: the original story unchanged in `backend/content/story.json`, the Python and the ES-module engines, the 11 original tests plus engine-rule tests, a parity test that replays the same moves through both engines, and `GET /api/content/{name}`; decisions D007 and D016). Main after the merge: 387 backend tests and 62 frontend tests pass, build OK. Codex now builds the UI kit, story art and finale visuals on `feat/g4-ui-kit-story-art`; Claude builds the backbone check, L1 weather and the L4 Exchange core on their own branches.
 

@@ -7,19 +7,22 @@ so this file is the full list of what can be configured:
     SUPABASE_URL              address of the Supabase project
     SUPABASE_PUBLISHABLE_KEY  key the browser may also use (row-level security protects data)
     SUPABASE_SECRET_KEY       server-only key. NEVER put it in the browser, a log or the repo.
-    CRON_SECRET               server-only password for the daily keep-alive. Vercel sends it to
-                              /api/keepalive. Optional on your laptop. NEVER in the repo.
+    CRON_SECRET               server-only password for the daily keep-alive. Whatever calls
+                              /api/keepalive once a day sends it. Optional on your laptop.
+                              NEVER in the repo.
     DEMO_MODE                 true or false (default: false)
     FEATURE_FLAGS             comma-separated feature names to switch on (see flags.py)
     WEATHER_PLACE_NAME        name of the place whose real weather the game shows (default:
                               Torshavn, Faroe Islands). Shown on screen. Not secret.
     WEATHER_LATITUDE          that place's latitude in degrees, -90 to 90 (default: 62.01)
     WEATHER_LONGITUDE         that place's longitude in degrees, -180 to 180 (default: -6.77)
+    MARKET_MULTIPLIER         how strongly the Island Exchange amplifies real price moves, a whole
+                              number from 20 to 100 (default: 100). Not a secret.
 
 Used by: app.py (reads the environment once at start-up), auth.py and supabase_admin.py (the
-Supabase address and keys), the routes (env, demo mode, flags, the cron secret), weather/source.py
-(the weather place) and the tests (they pass in a plain dictionary, so no real environment is
-needed).
+Supabase address and keys), the routes (env, demo mode, flags, the keep-alive secret),
+weather/source.py (the weather place) and the tests (they pass in a plain dictionary, so no real
+environment is needed).
 """
 
 import math
@@ -32,6 +35,7 @@ from fastapi import Depends, Request
 from pydantic import SecretStr
 
 from server.flags import default_flags, parse_flags
+from server.market.rules import DEFAULT_MULTIPLIER, MAX_MULTIPLIER, MIN_MULTIPLIER
 
 APP_ENVS = ("local", "preview", "production")
 
@@ -60,7 +64,9 @@ class Settings:
     # SecretStr prints as ********** in logs and error messages. To get the real value on
     # purpose, call .get_secret_value() (only supabase_admin.py and routes/keepalive.py do that).
     supabase_secret_key: SecretStr = SecretStr("")
-    # The password Vercel's cron sends to /api/keepalive. Empty on a laptop: only Vercel calls it.
+    # The password that the daily caller of /api/keepalive sends. The name dates from the time we
+    # planned to use Vercel Cron, which we cannot use. Empty on a laptop: no daily caller runs
+    # there, and the route then answers 503.
     cron_secret: SecretStr = SecretStr("")
     demo_mode: bool = False
     flags: dict[str, bool] = field(default_factory=default_flags)
@@ -69,6 +75,8 @@ class Settings:
     weather_place_name: str = DEFAULT_WEATHER_PLACE_NAME
     weather_latitude: float = DEFAULT_WEATHER_LATITUDE
     weather_longitude: float = DEFAULT_WEATHER_LONGITUDE
+    # How many times a real price move is multiplied in the Island Exchange (market/rules.py).
+    market_multiplier: int = DEFAULT_MULTIPLIER
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -127,6 +135,21 @@ def read_degrees(env: Mapping[str, str], name: str, limit: int, default: float) 
     return value
 
 
+def read_market_multiplier(env: Mapping[str, str]) -> int:
+    """MARKET_MULTIPLIER: a whole number from 20 to 100. Empty or missing means the default."""
+    value = read_text(env, "MARKET_MULTIPLIER")
+    if not value:
+        return DEFAULT_MULTIPLIER
+    if not value.isascii() or not value.isdecimal():
+        raise SettingsError(f"MARKET_MULTIPLIER must be a whole number (got '{value}').")
+    multiplier = int(value)
+    if not MIN_MULTIPLIER <= multiplier <= MAX_MULTIPLIER:
+        raise SettingsError(
+            f"MARKET_MULTIPLIER must be from {MIN_MULTIPLIER} to {MAX_MULTIPLIER} (got {value})."
+        )
+    return multiplier
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     return Settings(
@@ -145,6 +168,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         weather_longitude=read_degrees(
             env, "WEATHER_LONGITUDE", MAX_LONGITUDE, DEFAULT_WEATHER_LONGITUDE
         ),
+        market_multiplier=read_market_multiplier(env),
     )
 
 

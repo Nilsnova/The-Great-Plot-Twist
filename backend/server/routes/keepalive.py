@@ -4,11 +4,12 @@ Why it exists: a free Supabase project pauses itself after 7 days with little ac
 waking it up takes minutes. Once a day this route reads one row from each of three tables
 (profiles, wallet_reasons and crews). That counts as real activity, so the project stays awake.
 
-Who calls it: Vercel's cron, with GET, once a day, from the cron entry for /api/keepalive in
-vercel.json. On the Hobby plan Vercel picks the minute: only the hour (06:00 to 06:59 UTC) is
-promised. Nobody else may call it, because the route asks for a secret first.
+Who calls it: one trusted caller, with GET, once a day. Which one is still an open decision for
+Nils (see docs/ARCHITECTURE.md, "The 7-day pause and the keep-alive"). It is NOT Vercel Cron: a
+crons entry in vercel.json broke our deploys on 5 Nov 2026, so never add one while we use Vercel
+Services. Nobody else may call it, because the route asks for a secret first.
 
-How the caller proves itself: Vercel sends the header
+How the caller proves itself: it sends the header
     Authorization: Bearer <CRON_SECRET>
 CRON_SECRET is a server-only setting (see settings.py and .env.example). The Supabase secret key
 must also be allowed to read the three tables (see the grants in supabase/migrations).
@@ -25,7 +26,7 @@ server log: which table failed, the HTTP status and the database code, never a k
 Try it on your laptop, with the API running and CRON_SECRET set in .env:
     curl -H "Authorization: Bearer <your CRON_SECRET>" http://127.0.0.1:8000/api/keepalive
 
-Used by: Vercel's cron (see vercel.json) and teammates who test it with curl.
+Used by: the daily keep-alive caller (still to be chosen) and teammates who test it with curl.
 """
 
 import hmac
@@ -70,7 +71,7 @@ def not_configured(message: str) -> ApiError:
 
 
 def check_secret(authorization: str | None, cron_secret: str) -> None:
-    """Let the request through only if it carries the cron secret. Raises 503 or 401."""
+    """Let the request through only with the keep-alive secret (CRON_SECRET). Raises 503 or 401."""
     if not cron_secret:
         # With no secret set, nobody can prove who they are, so everybody is refused. We never
         # compare against an empty secret, because an empty token would match it.

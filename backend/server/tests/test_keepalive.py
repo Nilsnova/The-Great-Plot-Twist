@@ -24,7 +24,7 @@ from server.tests.helpers import (
 
 URL = "/api/keepalive"
 
-# The header Vercel sends to its cron routes.
+# The header every caller must send. It has the format that Vercel Cron would have sent.
 RIGHT_HEADER = {"Authorization": f"Bearer {FAKE_CRON_SECRET}"}
 
 # Headers that must be refused. Each one is close to the right one, or plainly wrong.
@@ -125,6 +125,8 @@ def test_the_secret_is_compared_with_hmac_compare_digest(monkeypatch):
 
 
 def test_post_is_not_allowed_because_the_vercel_cron_uses_get():
+    # The name dates from the time we planned to use Vercel Cron, which calls with GET. Any
+    # caller we may choose can send a plain GET too, so the route allows no other method.
     client, seen = make_client()
 
     response = client.post(URL, headers=RIGHT_HEADER)

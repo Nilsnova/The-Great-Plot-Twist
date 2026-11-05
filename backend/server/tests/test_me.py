@@ -9,8 +9,8 @@ In every table the OTHER player's row comes first. A route that forgot its filte
 that row up, and the tests below would catch it.
 
 The last section guards the two files that ship with this route and could drift away from it
-unnoticed: the sign-in check page (frontend/public/auth-check.*) and the cron entry in
-vercel.json. They are read as text, like the migration in test_wallet_matches_migration.py.
+unnoticed: the sign-in check page (frontend/public/auth-check.*) and vercel.json, which must hold
+no cron entry. They are read as text, like the migration in test_wallet_matches_migration.py.
 """
 
 import json
@@ -519,7 +519,7 @@ def test_nothing_secret_appears_in_the_logs_when_everything_works(caplog):
     assert FAKE_SECRET_KEY not in caplog.text
 
 
-# --- the files that ship with this route: the check page and vercel.json ---
+# --- the files that ship with this route: the check page, and vercel.json (no cron entry) ---
 
 
 @pytest.mark.parametrize("field", ["displayName", "coins", "crews"])
