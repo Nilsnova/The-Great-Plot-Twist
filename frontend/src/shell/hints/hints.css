@@ -1,0 +1,7 @@
+.case-hints{display:grid;gap:12px;min-width:0;font:18px/1.6 'Courier New',monospace;color:#ece0b8}
+.case-hints h3,.case-hints h4{margin:0;color:#f3d58c;line-height:1.35}
+.case-hint-controls,.case-hint-actions{display:flex;gap:8px;flex-wrap:wrap}
+.case-hint{min-width:0;padding:14px;border:2px solid #839773;background:#263f31}
+.case-hint p,.case-hint-empty{font-size:16px;line-height:1.6;margin:7px 0;color:#d2d9bb;overflow-wrap:anywhere}
+.case-hints button{font:16px/1.4 'Courier New',monospace;min-height:44px}
+@media(max-width:450px){.case-hint{padding:12px}}
