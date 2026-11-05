@@ -10,7 +10,7 @@ export function createIntro(ctx) {
   const view=createIntroView({onAction:perform,onRestart(){adapter.reset();show();},onClose:close});
   const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){active=false;ctx.resetInput?.();}});modal.element.classList.add('intro-modal');
   function close(){view.pause();active=false;request++;abort?.abort();modal.close();ctx.resetInput?.();}
-  function show(notice){modal.setContent(view.element);view.update(adapter.view,adapter.actions,notice);view.focus();}
+  function show(notice){modal.setContent(view.element);view.update(adapter.view,adapter.actions,notice);view.focus();if(adapter.state.ended)ctx.onEnding?.({ending:adapter.state.scene,actions:adapter.actions});}
   function visit() {const result=adapter.state.ended?null:adapter.visit(hotspot);show(result&&!result.accepted?result.message:undefined);}
   async function load() {
     const token=++request;abort?.abort();abort=new AbortController();const controller=abort;modal.setContent(loading);retry.element.hidden=true;copy.textContent='The story is coming ashore…';
@@ -33,5 +33,5 @@ export function createIntro(ctx) {
   }
   const stop=ctx.on('interact',event=>{if(event.place==='lighthouse_isle'&&introHotspots.includes(event.id))open(event.id);});
   return {get active(){return active;},get actions(){return adapter?.actions??[];},get state(){return adapter?.state??null;},
-    begin(resume=false){return open('cottage',{resume:true,fresh:!resume});},open,close,dispose(){if(disposed)return;disposed=true;stop();close();view.dispose();retry.dispose();modal.dispose();}};
+    setArrival: view.setArrival,begin(resume=false){return open('cottage',{resume:true,fresh:!resume});},open,close,dispose(){if(disposed)return;disposed=true;stop();close();view.dispose();retry.dispose();modal.dispose();}};
 }

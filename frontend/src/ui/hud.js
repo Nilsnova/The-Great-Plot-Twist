@@ -32,6 +32,8 @@ export function createHud(container, actions) {
       <p class="settings-note">Try midnight, sea mist or a passing storm.</p>
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
     </section>`;
+  const captain=node('div','captain-status'),captainName=node('strong','','Captain pending'),save=node('span','','Local intro only');save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
+  const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');for(const [name,label] of [['crew','Crew'],['board','Case board'],['search','Satchel']]){const button=node('button','',label);button.type='button';button.onclick=()=>actions.caseScreen?.(name);caseToolbar.append(button);}overlay.append(caseToolbar);
   container.append(overlay);
   const timers = [];
   const select = selector => overlay.querySelector(selector);
@@ -61,7 +63,7 @@ export function createHud(container, actions) {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
   let toastUntil = 0, syncAt = 0;
-  return { togglePanel,start(){select('#explore').click();},
+  return {setCaptain(view){captainName.textContent=view.captain.name;save.textContent=view.captain.save.label;},togglePanel,start(){select('#explore').click();},
     setWeatherCredit(data) {
       const source=node('a','',data.text),licence=node('a','',data.licenceText);
       source.href=data.href;licence.href=data.licenceHref;

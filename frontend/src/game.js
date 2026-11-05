@@ -12,6 +12,7 @@ import {createTouchControls} from './controls/touch.js';
 import {createGamepad} from './controls/gamepad.js';
 import {getPreferences,setPreferences,onPreferences,reducedMotion,watchSystemMotion} from './settings/preferences.js';
 import {startLiveWeather,weatherAttribution} from './net/weather.js';
+import {createCaseBridge} from './adapter/bridge.js';
 import {createIntro} from './story/intro.js';
 import {createLazyCinematics} from './world/cinematics/lazy.js';
 import { createChart } from './ui/chart.js';
@@ -35,16 +36,16 @@ import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
 
-export async function startGame({container,shell,audio,captions}) {
+export async function startGame({container,shell,audio,captions,caseAdapter}) {
   const scene = new THREE.Scene();
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
-  let active = false, disposed=false, hud, chart, cinematics, demo, intro, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
+  let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active || caseUi?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !demo?.active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -52,14 +53,15 @@ export async function startGame({container,shell,audio,captions}) {
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
   cinematics = createLazyCinematics({container,world,emit,on,reducedMotion,caption:captions.show,resetInput:input.reset}); world.cinematic = cinematics.play;
-  intro = createIntro({container,world,on,emit,resetInput:input.reset}); world.intro = intro;
+  intro = createIntro({container,world,on,emit,resetInput:input.reset,onEnding:receipt=>caseUi?.completeIntro(receipt)}); world.intro = intro;
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
   function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},caseScreen:name=>caseUi?.open(name),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
   });
+  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>hud.setCaptain(view),onArrival:node=>intro.setArrival(node)});
   const stopListening = on('interact', event => hud.notify(event.id));
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
@@ -82,8 +84,8 @@ export async function startGame({container,shell,audio,captions}) {
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
-    gamepad.update();demo.update(delta);
-    if (!shell.blocked && !demo.active && !cinematics.active && !intro.active) {
+    gamepad.update();demo.update(delta);caseUi.tick(delta);
+    if (!shell.blocked && !demo.active && !cinematics.active && !intro.active && !caseUi.active) {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
     if (input.consume('KeyM') && active && !sailing.active) chart.show();
     if (input.consume('Escape')) hud.togglePanel(false);
@@ -109,7 +111,7 @@ export async function startGame({container,shell,audio,captions}) {
   }, () => { graphics.renderer.render(scene, view.camera); });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo };
+    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi };
   function dispose() {
     if(disposed)return;disposed=true;
     touch.dispose();gamepad.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
@@ -120,7 +122,7 @@ export async function startGame({container,shell,audio,captions}) {
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
-  }, { once: true });  return {dispose,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active||demo.active,
+  }, { once: true });  return {dispose,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active,
     setMode(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     async begin(resume=false){if(world.current?.id!=='lighthouse_isle')await world.goTo('lighthouse_isle',{fast:true});hud.start();intro.begin(resume);},
     startDemo(){return demo.start();}};

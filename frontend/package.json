@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
+    "build": "vite build && node scripts/check-spoilers.js",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:browser": "node scripts/check-browser.js",
@@ -21,7 +21,8 @@
     "test:weather:wiring": "node scripts/check-weather-wiring.js",
     "test:experience": "node scripts/check-experience.js",
     "test:demo": "node scripts/check-demo.js",
-    "test:loading": "npm run build && node scripts/check-loading.js"
+    "test:loading": "npm run build && node scripts/check-loading.js",
+    "test:spoilers": "npm run build"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
