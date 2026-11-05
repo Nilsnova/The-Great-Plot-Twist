@@ -6,7 +6,7 @@ The active presentation is an original painted-paper island, selected by Nils on
 
 Use Node 22.12+, 24.x or 26+ as specified in `package.json`. From this repository root, run `npm install`, then `npm run dev`, and open the address Vite prints. Click **Step ashore**. `npm run build` creates the static site in `dist/`; `npm run preview` serves it. Nothing has been deployed or pushed.
 
-`/art/board.html` is a separate local asset review sheet. The latest screenshots and JSON evidence are named `captures/20261105_Illustrated-*`. `Arrival`, `Daylight`, `Dusk`, `Midnight`, `Storm`, `Exploration` and `Retina` are verification captures; `Asset-Study`, `Map-First`, `Play-First`, `Map-Review` and `Play-Review` record visual checkpoints.
+`/asset-library.html` is the full searchable art workshop, built alongside the game. It offers family/roadmap/usage filters, paper/sea/night contrast studies, placement anchors, SVG links and 32/64/96 pixel previews. `/art/board.html` preserves the original 20-drawing study. Latest family sheets and gameplay evidence use `captures/20261105_Roadmap-*`; the earlier `Illustrated-*` files preserve the first illustrated iteration.
 
 ## Controls
 
@@ -25,11 +25,11 @@ Escape before starting keeps the overview intact. The four-second arrival is ski
 
 ## Art system
 
-All 20 SVG assets are original project drawings, about 25 kB combined. Nineteen are loaded locally as shared textures; the twentieth is a small paper-grain tile for the interface. The largest drawing rasterises at 576 pixels on its longest side. There are no downloaded game assets, external fonts, texture packs, CDN requests, bloom, 3D shadow maps or physically lit materials. See `ASSETS.md` for the full register.
+All 108 SVG assets are original project drawings, about 97 KiB of source combined. This expansion adds 88 drawings for the roadmap input areas. Twenty-seven load locally as shared island textures, one is a CSS paper tile, and 80 remain staged in the library. The largest drawing rasterises at 576 pixels on its longest side. There are no downloaded game assets, external fonts, texture packs, CDN requests, bloom, 3D shadow maps or physically lit materials. See `ASSETS.md` for the register and `ASSET_ROADMAP.txt` for source status and feature mapping.
 
-`src/world/art.js` defines drawn sizes and bottom anchors, loads the SVG textures, and creates unlit planes. Change a drawing in `public/art/` to edit its shape, pigment or details. Change `artSizes` only when its world size or ground anchor changes. The colours in `config.js` control procedural sea, ground and paths; SVG colours live in the drawings themselves.
+`src/assets/catalog.js` and its small family files define labels, world sizes, anchors, roadmap tags and usage. `src/world/art.js` re-exports `artSizes`, loads only requested SVGs, and creates unlit planes. Change a drawing in `public/art/` to edit its shape, pigment or details; change its catalogue entry when size or placement anchor changes. `loadArt()` selects the 27 island drawings by default; `loadArt(['sailboat', 'harbour-office'])` selects an optional feature kit. Reuse loaded materials with `placeArt`; unknown or unloaded ids throw. The colours in `config.js` control procedural sea, ground and paths; SVG colours live in the drawings themselves.
 
-The palette uses warm plaster, moss and sea-glass greens, rust roofs and ochre clothing. Sparse paper grain, asymmetrical foliage, roof marks and window details give the drawings a shared material language. Front/back explorer drawings and two walking frames for each view supply simple animation. Horizontal travel mirrors the front-facing drawing.
+Nils confirmed the warm, muted palette during this expansion. It uses warm plaster, moss and sea-glass greens, rust roofs and ochre clothing. Sparse paper grain, asymmetrical foliage, roof marks and window details give the drawings a shared material language. Front/back explorer drawings and two walking frames for each view supply simple animation. Horizontal travel mirrors the front-facing drawing.
 
 ## Coordinates and story contracts
 
@@ -72,26 +72,28 @@ Each application JavaScript file starts with its purpose and stays under 150 lin
 | `src/core/loop.js`, `input.js`, `events.js`, `math.js` | Frame timing, keyboard/pointer state, event bus and pure arithmetic |
 | `src/world/art.js`, `primitives.js` | SVG textures/anchors, world-to-page projection, flat polygons and brush strokes |
 | `src/world/terrain.js`, `paths.js` | Logical land height, illustrated coast/meadow and connecting sand ribbons |
-| `src/world/island.js`, `scenery.js` | Scene assembly, tree/rock/flower placement, canopy fading and wind sway |
+| `src/world/island.js`, `scenery.js`, `decorations.js` | Scene assembly, nature/prop placement, colliders, canopy fading and wind/buoy movement |
 | `src/world/buildings.js` | Illustrated cottage/cutaway, window glow, boathouse and logical colliders |
 | `src/world/lighthouse.js`, `beam.js` | Tower drawing, logical/drawn anchors, lantern glow and flat night sweep |
 | `src/world/water.js`, `boat.js` | Sea brush marks, pier drawing and moving rowing boat |
 | `src/world/sky.js`, `weather.js`, `zones.js` | Day/night wash, mist/rain, weather API and exact story locations |
 | `src/player/character.js`, `controller.js`, `collision.js`, `camera.js` | Drawn explorer, world-aligned movement, shore/wall safety and fixed-view camera |
 | `src/ui/hud.js`, `styles.css` | Paper-and-ink arrival, prompts, controls, settings and dev-only performance |
-| `public/art/*.svg`, `board.html` | Original editable art and a separate review sheet; see asset register |
-| `tests/world.test.js`, `input.test.js`, `illustration.test.js` | World rules, input safety and illustrated coordinate/camera contracts |
-| `scripts/check-browser.js`, `check-production.js` | Real Chrome gameplay/performance and built-site checks |
+| `src/assets/catalog.js`, `sets/*.js` | Single catalogue of artwork, anchors, tags and selective preload usage |
+| `asset-library.html`, `src/library/` | Searchable art workshop, contrast/scale studies and source links |
+| `public/art/*.svg`, `board.html` | 108 original editable drawings and the original study sheet |
+| `tests/world.test.js`, `input.test.js`, `illustration.test.js`, `assets.test.js` | World/input/camera contracts, catalogue safety and collision-safe prop additions |
+| `scripts/check-browser.js`, `check-production.js`, `check-art-library.js` | Real Chrome gameplay/performance, built-site checks, SVG decoding and workshop/network checks |
 | `20261105_Graphics-Brief.txt`, `20261105_Style-References.txt` | Initial brief and the later selected visual direction |
-| `captures/20261105_Illustrated-*` | Iteration screenshots, final captures and reproducible measurement evidence |
+| `captures/20261105_Roadmap-*`, `Illustrated-*` | Current expansion evidence and earlier visual checkpoints |
 
 ## Verification and measured performance
 
-`npm test` passed **18 tests in 3 files**. `npm run build` passed as part of `npm run test:production`, which also passed the built site's canvas, settings, focus and absence of dev-only FPS/inspection hooks. `npm run test:browser` passed movement, fixed-angle zoom, arrival safety, all four held-E interaction checks, weather/quality modes, render budgets, Retina caps and zero external requests or browser/WebGL errors. Browser checks use installed Chrome; set `CHROME_PATH` on other systems. No browser binary is downloaded.
+`npm test` passed **22 tests in 4 files**. `npm run build` passed as part of `npm run test:production`, which also passed the built site's canvas, settings, focus and absence of dev-only FPS/inspection hooks. `npm run test:browser` passed movement, fixed-angle zoom, arrival safety, all four held-E interaction checks, weather/quality modes, render budgets, Retina caps and zero external requests or browser/WebGL errors. Browser checks use installed Chrome; set `CHROME_PATH` on other systems. No browser binary is downloaded.
 
-Measured on 5 November 2026 in Chrome 157, headless, on this Intel i5-8259U / Iris Plus 655 Mac. At 1440 × 900, DPR 1, high sampled **58–61 FPS**, peaking at **75 draw calls and 2,075 submitted triangles**. Low sampled **60 FPS**. At device DPR 2, high rendered at 1.25 and low at 1; both arrival samples measured **60 FPS**. These are short warmed-up samples, not a sustained hardware guarantee. The earlier low-poly snapshot submitted up to 30,428 triangles; the new sampled maximum is about 93% lower.
+Measured on 5 November 2026 in Chrome 157, headless, on this Intel i5-8259U / Iris Plus 655 Mac. With the eight added props, at 1440 × 900, DPR 1, high sampled **52–60 FPS**, peaking at **83 draw calls and 2,091 submitted triangles**. Low sampled **61 FPS**. At device DPR 2, high rendered at 1.25 and sampled **61 FPS**; low rendered at 1 and sampled **60 FPS**. These are short warmed-up samples, not a sustained hardware guarantee. The earlier 20-drawing illustrated scene peaked at 75 calls / 2,075 triangles; the earlier low-poly snapshot submitted up to 30,428 triangles.
 
-The original upper budgets remain <150,000 triangles, <150 draw calls and pixel ratio ≤1.5. The selected illustrated style replaces the old shadowed 3D light/terrain pipeline with flat drawings and ink washes, so it uses no shadow-casting lights. Rain is a single line draw. Texture materials are shared across repeated assets. The detailed final measurements are `captures/20261105_Illustrated-Browser-Checks.json` and `Illustrated-Retina-Checks.json`.
+The original upper budgets remain <150,000 triangles, <150 draw calls and pixel ratio ≤1.5. The selected illustrated style replaces the old shadowed 3D light/terrain pipeline with flat drawings and ink washes, so it uses no shadow-casting lights. Rain is a single line draw. Texture materials are shared across repeated assets. The detailed measurements are `captures/20261105_Roadmap-Island-Browser-Checks.json` and `Roadmap-Island-Retina-Checks.json`. `npm run test:art` checks all 108 SVGs, workshop behaviour and selected-only texture requests; `npm run test:art:production` checks the built workshop. All drawings decoded with visible ink, preserved aspect ratios and source-edge padding. Two independent visual reviews found no blocking issue in the expanded families.
 
 ## Limits and next teammate work
 
@@ -99,7 +101,8 @@ The original upper budgets remain <150,000 triangles, <150 draw calls and pixel 
 - This is a fixed illustrated view, not a rotatable 3D world. Elevation remains logical data. The tower has named camera anchors but no walkable staircase. The cottage is the only enterable building.
 - Collisions are simple X/Z circles and boxes. There is no swimming, jumping, sailing, login, multiplayer, story outcome logic, AI companion or external API. Attach the story package to the existing four ids; connect future weather data to `setWeather`.
 - The main production JavaScript bundle includes Three.js, about 577 kB minified / 148 kB gzip, so Vite emits a chunk-size advisory. Loading and the static build pass. Consider lazy-loading future optional packages.
-- The source art and visual checkpoints are ready for further subjective review. The warm muted palette is the current implementation; no claim of approval of every individual drawing is implied.
+- Future-feature buildings, boats, props, icons and static character studies are staged art. They implement no markets, predictions, arena, co-op, companions or story solutions. The roadmap input file remains a list to classify, not a final approved feature priority. New buildings need logical colliders/interiors when integrated; new characters need animation/behaviour.
+- The source art and visual checkpoints remain ready for subjective iteration. Nils confirmed the palette; that does not imply approval of every individual drawing.
 - All commits stay on `feat/graphics-foundation` for Nils' review. No push, merge, deployment or protected team-document edit was made.
 
 ## Explain the render loop in three sentences

@@ -1,0 +1,12 @@
+{
+  "checked": "2026-11-05T13:54:18.282Z",
+  "browser": "157.0.8103.39",
+  "checks": [
+    "Static build loads a WebGL canvas",
+    "No dev inspection global",
+    "No FPS output in production",
+    "Time slider and quality toggle work",
+    "Escape restores game focus",
+    "No browser/WebGL errors"
+  ]
+}
