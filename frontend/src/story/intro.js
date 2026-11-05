@@ -5,7 +5,7 @@ import {createIntroAdapter,introHotspots} from './intro-adapter.js';
 import {introJournal} from './intro-journal.js';
 import {createIntroView} from './intro-view.js';
 export function createIntro(ctx) {
-  let adapter=null,active=false,disposed=false,request=0,abort=null,hotspot='cottage';
+  let adapter=null,active=false,disposed=false,request=0,abort=null,hotspot='cottage',resumeRequested=false;
   const loading=node('div','intro-loading'),copy=node('p','','The story is coming ashore…'),retry=createButton({label:'Try again',onClick:()=>load()});loading.append(copy,retry.element);
   const view=createIntroView({onAction:perform,onRestart(){adapter.reset();show();},onClose:close});
   const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){active=false;ctx.resetInput?.();}});modal.element.classList.add('intro-modal');
@@ -19,13 +19,13 @@ export function createIntro(ctx) {
       const response=await fetch('/api/content/intro-story',{signal:controller.signal,headers:{Accept:'application/json'}});
       if(!response.ok)throw new Error('Story unavailable');const story=await response.json();
       if(!story?.scenes?.[story.start]||!story.items)throw new Error('Story unavailable');
-      if(disposed||token!==request)return;adapter=createIntroAdapter(story,introJournal());visit();
+      if(disposed||token!==request)return;adapter=createIntroAdapter(story,introJournal());if(resumeRequested)show();else visit();
     }catch(error){if(!disposed&&token===request&&active){copy.textContent='The story could not reach the island. Please try again.';retry.element.hidden=false;retry.element.focus();}}
     finally{clearTimeout(timer);}
   }
-  function open(id) {
-    if(disposed||ctx.world.busy||ctx.world.current?.id!=='lighthouse_isle'||!introHotspots.includes(id))return false;hotspot=id;active=true;ctx.resetInput?.();modal.open(ctx.container);
-    if(adapter)visit();else load();return true;
+  function open(id,{resume=false,fresh=false}={}) {
+    if(disposed||ctx.world.busy||ctx.world.current?.id!=='lighthouse_isle'||!introHotspots.includes(id))return false;hotspot=id;resumeRequested=resume;if(fresh){introJournal().write(JSON.stringify({version:1,actions:[]}));adapter?.reset();}active=true;ctx.resetInput?.();modal.open(ctx.container);
+    if(adapter){if(resumeRequested)show();else visit();}else load();return true;
   }
   function perform(id) {
     const wasEnded=adapter.state.ended,result=adapter.perform(id);show(result.message);
@@ -33,5 +33,5 @@ export function createIntro(ctx) {
   }
   const stop=ctx.on('interact',event=>{if(event.place==='lighthouse_isle'&&introHotspots.includes(event.id))open(event.id);});
   return {get active(){return active;},get actions(){return adapter?.actions??[];},get state(){return adapter?.state??null;},
-    open,close,dispose(){if(disposed)return;disposed=true;stop();close();view.dispose();retry.dispose();modal.dispose();}};
+    begin(resume=false){return open('cottage',{resume:true,fresh:!resume});},open,close,dispose(){if(disposed)return;disposed=true;stop();close();view.dispose();retry.dispose();modal.dispose();}};
 }

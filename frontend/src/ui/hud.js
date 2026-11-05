@@ -59,7 +59,7 @@ export function createHud(container, actions) {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
   let toastUntil = 0, syncAt = 0;
-  return { togglePanel,
+  return { togglePanel,start(){select('#explore').click();},
     setWeatherCredit(data) {
       const source=node('a','',data.text),licence=node('a','',data.licenceText);
       source.href=data.href;licence.href=data.licenceHref;
