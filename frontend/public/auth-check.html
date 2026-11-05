@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  Sign-in check page of The Great Plot Twist. A TEAM CHECK PAGE, not the game.
+  It proves that GitHub sign-in, our server and the database work together.
+
+  This is a plain file in public/: Vite copies it as it is, there is no build step for it.
+  The logic is in auth-check.js, next to this file. Its calls to our server are in
+  auth-check-api.js and its sign-in secret in auth-check-pkce.js.
+  Used by: the four teammates, to test sign-in after a deploy.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Keep search engines away from this page. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- The address of this page may briefly hold a one-time sign-in code. Never tell another site about it. -->
+    <meta name="referrer" content="no-referrer" />
+    <!--
+      A safety net: this page may load only its own script, and may talk only to its own server.
+      Even if someone slipped foreign code into the page, the browser would refuse to run it.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
+    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Sign-in check · The Great Plot Twist</title>
+    <style>
+      /* The look of the game's panels: dark green, parchment text, hard edges, no rounded corners. */
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: #3d7371;
+        color: #e7d6a6;
+        font: 16px/1.6 'Courier New', monospace;
+      }
+      .panel {
+        width: 100%;
+        max-width: 34rem;
+        padding: 24px;
+        background: #263b30;
+        border: 3px solid #9a8657;
+        box-shadow: 6px 6px #14251c; /* a hard shadow with no blur, like pixel art */
+      }
+      .eyebrow { margin: 0; font-size: 12px; letter-spacing: 1px; color: #b4c48e; }
+      h1 { margin: 12px 0; font-size: 28px; line-height: 1.2; }
+      .note { margin: 0 0 12px; font-size: 14px; color: #c7c8a0; }
+      .small { font-size: 13px; color: #a5b584; }
+      .status {
+        min-height: 4em;
+        margin: 20px 0;
+        padding: 12px;
+        background: #1b2c23;
+        border: 2px solid #6d7854;
+        font-weight: bold;
+      }
+      .actions { margin: 0 0 12px; }
+      .button {
+        display: inline-block;
+        margin: 0 8px 8px 0;
+        padding: 10px 14px;
+        border: 2px solid #d1b97d;
+        background: #59633a;
+        color: #fff0c7;
+        font: bold 14px 'Courier New', monospace;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 2px 2px #12291c;
+      }
+      .button:hover { background: #6c7545; }
+      .button:focus-visible { outline: 2px solid #efcf80; outline-offset: 4px; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <p class="eyebrow">The Great Plot Twist · team check page</p>
+      <h1>Sign-in check</h1>
+      <p class="note">
+        This is a check page for the team, <strong>not the game</strong>. It proves that GitHub
+        sign-in, our server and the database work together. The first time you sign in, this
+        creates your player account (with 0 coins). The game will use the same account.
+      </p>
+
+      <!-- The script writes what happens here, as plain text. -->
+      <p id="status" class="status" role="status" aria-live="polite">Loading...</p>
+
+      <p class="actions">
+        <!-- auth-check.js makes a secret first, then sends the browser to Supabase. -->
+        <button id="sign-in" class="button" type="button" hidden>Sign in with GitHub</button>
+        <button id="forget" class="button" type="button" hidden>Forget me</button>
+      </p>
+
+      <p class="note small">
+        The address holds only a one-time code, never a login token. Your login token stays in this
+        page's memory only. It is not saved, not logged and not shown. Reload the page or press
+        "Forget me" and it is gone.
+      </p>
+      <noscript>This page needs JavaScript.</noscript>
+    </main>
+    <script type="module" src="auth-check.js"></script>
+  </body>
+</html>
