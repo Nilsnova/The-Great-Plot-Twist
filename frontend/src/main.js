@@ -3,6 +3,10 @@ import * as THREE from 'three';
 import './ui/styles.css';
 import './ui/travel.css';
 import './ui/readability.css';
+import './ui/kit/kit.css';
+import './ui/cinematics.css';
+import { createCinematics } from './world/cinematics/controller.js';
+import { createCinematicDemo } from './ui/cinematic-demo.js';
 import { createChart } from './ui/chart.js';
 import { createSailing } from './ui/sailing.js';
 import { settings } from './config.js';
@@ -32,15 +36,17 @@ async function startGame() {
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const character = createCharacter(art, { reducedMotion: reducedMotion() }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
-  let active = false, hud, chart, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
+  let active = false, hud, chart, cinematics, demo, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>cinematics?.active ?? false, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
+  cinematics = createCinematics({container,world,emit,on,reducedMotion,resetInput:input.reset}); world.cinematic = cinematics.play;
+  demo = createCinematicDemo(container,world);
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
@@ -52,21 +58,23 @@ async function startGame() {
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stopListening(); stopArrivals(); stopPlots(); cinematics.dispose(); demo.dispose(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   quality(settings.quality); graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
+    if (!cinematics.active) {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
     if (input.consume('KeyM') && active && !sailing.active) chart.show();
     if (input.consume('Escape')) { if (active) view.start(true); hud.togglePanel(false); }
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
+    }
     settings.hour = (settings.hour + delta * (settings.fastTime ? 0.8 : 0.003)) % 24;
     controller.update(delta, active && !world.busy && !chart.open);
     const state = weather.update(delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
-    water.update(time, state); sailing.update(delta);
+    water.update(time, state); sailing.update(delta); cinematics.update(delta);
     world.update(delta, { player: controller.player.position, time, night, weather: state });
     view.update(delta, controller.player.position);
     const zone = active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
@@ -82,7 +90,7 @@ async function startGame() {
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing };
   function dispose() {
-    stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stop(); stopListening(); stopArrivals(); stopPlots(); cinematics.dispose(); demo.dispose(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }

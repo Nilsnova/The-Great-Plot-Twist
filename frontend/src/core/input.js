@@ -15,7 +15,8 @@ export function createInput(canvas) {
     held.add(event.code);
   });
   listen(window, 'keyup', event => held.delete(event.code));
-  listen(window, 'blur', () => { held.clear(); pressed.clear(); pointer.dragging = false; });
+  function reset() { held.clear(); pressed.clear(); pointer.dragging = false; pointer.x = 0; pointer.y = 0; pointer.wheel = 0; }
+  listen(window, 'blur', reset);
   listen(canvas, 'pointerdown', event => {
     if (event.button !== 0) return;
     pointer.dragging = true; canvas.setPointerCapture(event.pointerId);
@@ -28,7 +29,7 @@ export function createInput(canvas) {
   });
   listen(canvas, 'wheel', event => { event.preventDefault(); pointer.wheel += event.deltaY; }, { passive: false });
   return {
-    held, pointer,
+    held, pointer, reset,
     axis(positive, negative) {
       return Number(positive.some(key => held.has(key))) - Number(negative.some(key => held.has(key)));
     },

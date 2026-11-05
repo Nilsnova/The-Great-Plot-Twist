@@ -3,12 +3,12 @@ import { routeTo, places } from './registry.js';
 export function createWorld(ctx) {
   let current = null, busy = false, disposed = false, relit = false;
   return {
-    get current() { return current; }, get busy() { return busy; },
+    get current() { return current; }, get busy() { return busy || !!ctx.isBlocked?.(); },
     get relit() { return relit; },
     canTravel(id) { return !disposed && !!routeTo(current?.id, id, relit); },
     setRelightingComplete(value) { relit = value === true; },
     async goTo(id, options = {}) {
-      if (disposed || busy || !routeTo(current?.id, id, relit) || current?.id === id) return false;
+      if (disposed || busy || ctx.isBlocked?.() || !routeTo(current?.id, id, relit) || current?.id === id) return false;
       busy = true;
       const previous = current?.id;
       ctx.emit({ type: 'travel', to: id });
@@ -35,7 +35,7 @@ export function createWorld(ctx) {
       } finally { busy = false; ctx.finishTransition?.(); }
     },
     interact(id) {
-      if (busy || disposed || !current?.zones.some(zone => zone.id === id)) return false;
+      if (busy || disposed || ctx.isBlocked?.() || !current?.zones.some(zone => zone.id === id)) return false;
       ctx.emit({ type: 'interact', id, place: current.id }); return true;
     },
     update(dt, state) { current?.update(dt, state); },
