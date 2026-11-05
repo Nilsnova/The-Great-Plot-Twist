@@ -19,7 +19,17 @@ from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
 from server.errors import register_error_handlers
 from server.market.exchange import MarketService, market_or_none
-from server.routes import auth_exchange, config, content, health, keepalive, market, me, weather
+from server.routes import (
+    auth_exchange,
+    config,
+    content,
+    crews,
+    health,
+    keepalive,
+    market,
+    me,
+    weather,
+)
 from server.settings import Settings, settings_from_environment
 from server.sign_in_code import CodeExchanger
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
@@ -103,4 +113,5 @@ def create_app(
     app.include_router(me.router, prefix="/api")
     app.include_router(auth_exchange.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
+    app.include_router(crews.router, prefix="/api")
     return app

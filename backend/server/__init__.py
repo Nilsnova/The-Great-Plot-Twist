@@ -14,6 +14,7 @@ Where things are (one job per file):
     wallet.py          the rules for changing a player's coins
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
+    crews/             crews and seats: crew codes, seat rules and flows (the URLs: routes/crews.py)
 """
 
 # The version the API reports at /api/health. It must match "version" in pyproject.toml

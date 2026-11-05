@@ -75,10 +75,34 @@ A crew has up to four seats (numbered 1 to 4). Every seat that is taken holds **
 
 A player can read a crew and its seats only while they sit in that crew. The rule uses the small helper `is_crew_member()`. The helper exists so that the rule for `crew_seats` does not have to read `crew_seats` through its own rule, which would never end. Only the server creates crews and seats.
 
-Two things to know:
+Three things to know:
 
-- **One active crew per player** is enforced by the server, not by the database (for now).
-- If a player is deleted, their seat row is deleted with them, and the seat is free again. If the player who created a crew is deleted, the whole crew and all its seats are deleted.
+- **At most one open crew per player** (a crew that is `forming` or `active`) is kept by the four crew functions below, under a lock on the player's profile, and not by a table rule. By team rule the server writes crews and seats only through those functions (the same rule as the wallet). The database itself guards one seat per player and one seat per NPC partner in a crew (two unique indexes), the kit ids, and the crew code.
+- If a player is deleted, their seat row is deleted with them, and the seat is empty again: a friend who joins fills an empty seat first. If the player who created a crew is deleted, the whole crew and all its seats are deleted.
+- The crew migration changes no row that exists. A crew or a seat written before it (only test rows from the manual test plan) stays as it is.
+
+### Crew codes, the muster and partners (migration 20261106040000, package A6)
+
+`migrations/20261106040000_crew_codes.sql` adds what the crew routes (`backend/server/routes/crews.py`, decision D020) need. Run it **after** the foundation migration. It is safe to run twice and explains itself inside the file. It reads nothing from the entry kits migration of package A3: the server passes each player's kit in.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `crews.code` | The crew code a friend types: 6 symbols from `A-Z` without `I`, `L` and `O`, and `2-9` (for example `K7QF2M`). Unique. A crew made before this migration has no code. | `crew_create()` |
+| `crews.version` | Counts the changes of a crew (starts at 1). A join or the muster works only if the server read the current version, so a request never acts on an old picture of the crew. | `crew_take_seat()`, `crew_start()` |
+| `crews.started_at` | When the muster happened. Empty while the crew is forming. | `crew_start()` |
+| `crew_seats.kit` rule | A seat carries one of `true_keeper`, `witness`, `informant`, `stranger`. Checked for every new or changed row; rows from before are not checked again (`not valid`), so the migration cannot fail on old test data. | the database |
+| Two unique indexes | One seat per player in a crew, and one seat per NPC partner in a crew. | the database |
+| `crew_join_failures` | One row for every wrong crew code a player typed, to slow down guessing. No policy: players see nothing. Rows older than the window are deleted each time the table is used. | `crew_find_by_code()` |
+| `crew_create()` | Starts a crew with the player in seat 1 (mode `solo`, status `forming`). It returns the player's own draft if they already have one (a crew they started and sit in alone), and refuses a player who sits in another open crew. | Run by the server only. |
+| `crew_find_by_code()` | Looks a crew up by its code and answers with the crew and all its seats. Counts wrong guesses: after 10 wrong codes in 10 minutes it refuses **before it looks at the code**, so even a right code is refused and a guesser cannot confirm a hit. | Run by the server only. |
+| `crew_take_seat()` | Seats a friend in an empty seat, or in an NPC partner's seat. The server decides the seat and the kit; the function checks that the crew still has the version the server read. A player who started a crew and sits in it alone gives that draft up by joining another crew, in the same step. | Run by the server only. |
+| `crew_start()` | The muster: seats the NPC partners the server chose in every empty seat, then makes the crew `active`. The crew must have four seats afterwards. | Run by the server only. |
+
+A crew function *returns* `{"status": ...}`, or `{"status": "refused", "reason": ...}` with nothing changed when a rule says no (the same pattern as `market_trade()`). It *raises* only for a bug, such as a bad argument. Every refusal comes before the first change, because a function that returns keeps what it has done so far.
+
+Which seat a friend takes and which kit each NPC partner carries is decided by the server (`backend/server/crews/seats.py`). The database does not repeat those two rules. Two of the choices there wait for Nils and are marked `PENDING` in the code: the kit a seat carries after a friend takes over a partner (built default: the friend's own kit), and the order in which partners fill the missing kits (built default: informant, stranger, true_keeper, witness).
+
+After applying it, the three quick checks show **one more table** (`crew_join_failures`, with row-level security and no policy and no grant for players). Run the crew checks (steps C1 to C8) after step 17 of the manual test plan.
 
 ## The Island Exchange migration
 
@@ -219,13 +243,17 @@ The three actors, and the database role behind each:
 | `wallet_transactions` | update | no access | no access | no access (the ledger is append-only: rows disappear only when their player is deleted, by cascade) |
 | `wallet_transactions` | delete | no access | no access | no access (the ledger is append-only: rows disappear only when their player is deleted, by cascade) |
 | `crews` | read | no access | crews they sit in | yes |
-| `crews` | insert | no access | no access | yes |
-| `crews` | update | no access | no access | yes |
-| `crews` | delete | no access | no access | yes |
+| `crews` | insert | no access | no access | yes \*\*\* |
+| `crews` | update | no access | no access | yes \*\*\* |
+| `crews` | delete | no access | no access | yes \*\*\* |
 | `crew_seats` | read | no access | seats of crews they sit in | yes |
-| `crew_seats` | insert | no access | no access | yes |
-| `crew_seats` | update | no access | no access | yes |
-| `crew_seats` | delete | no access | no access | yes |
+| `crew_seats` | insert | no access | no access | yes \*\*\* |
+| `crew_seats` | update | no access | no access | yes \*\*\* |
+| `crew_seats` | delete | no access | no access | yes \*\*\* |
+| `crew_join_failures` | read | no access | no access | yes |
+| `crew_join_failures` | insert | no access | no access | yes (through `crew_find_by_code()`) |
+| `crew_join_failures` | update | no access | no access | no access |
+| `crew_join_failures` | delete | no access | no access | yes (through `crew_find_by_code()`, rows older than the window) |
 | `market_bases` | read | no access | all rows | yes |
 | `market_bases` | insert | no access | no access | yes \*\* (through `market_set_base()`) |
 | `market_bases` | update | no access | no access | yes \*\* (through `market_set_base()`) |
@@ -243,12 +271,19 @@ The three actors, and the database role behind each:
 
 \*\* The database lets the server write `market_positions` and add `market_trades` rows directly, and add and change `market_bases` rows directly, because the two functions run with the rights of the server. "Through `market_trade()`" and "through `market_set_base()`" in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of `market_trade()`: the arithmetic, the daily cap, the holding time and the wallet. Only the server holds that right, and the code never writes these tables directly.
 
+\*\*\* `crews` and `crew_seats`: the server writes them through the four crew functions (`crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`), a team rule as with the wallet. The database lets the server write the two tables directly, because the functions run with the rights of the server. A direct write would skip the locks, the version check and the rule that a player sits in at most one open crew. The code never writes these tables directly.
+
 Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
 | Function or counter | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
 |---|---|---|---|
 | `apply_wallet_transaction()` | no access | no access | yes |
 | `is_crew_member()` | no access | yes, and it only ever answers for the caller | no access, the server skips RLS and does not need it |
+| `crew_create()` | no access | no access | yes |
+| `crew_find_by_code()` | no access | no access | yes |
+| `crew_take_seat()` | no access | no access | yes |
+| `crew_start()` | no access | no access | yes |
+| `crew_join_failures_id_seq` (the wrong-code counter's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 | `handle_new_user()` | no access | no access | no access, only the sign-up trigger runs it |
 | `touch_updated_at()` | no access | no access | no access, only the triggers run it |
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
@@ -338,7 +373,7 @@ limit 1;
 
 ### 3. The server creates two crews
 
-Crew A is a solo crew: player A in seat 1 and three NPC partners. Crew B has player B in seat 1 and one NPC partner.
+Crew A is a solo crew: player A in seat 1 and three NPC partners. Crew B has player B in seat 1 and one NPC partner. Every seat carries one of the four kit ids (`witness`, `informant`, `stranger`, `true_keeper`), because the crew migration of package A6 checks the kit of every new seat. If only the foundation is applied, the kit is not checked, and these rows work too.
 
 ```sql
 set local role service_role;
@@ -346,12 +381,12 @@ insert into public.crews (id, created_by, mode) values
   ('CREW_A_ID', 'USER_A_ID', 'solo'),
   ('CREW_B_ID', 'USER_B_ID', 'crew');
 insert into public.crew_seats (crew_id, seat_no, player_id, npc_id, kit) values
-  ('CREW_A_ID', 1, 'USER_A_ID', null, 'lantern'),
-  ('CREW_A_ID', 2, null, 'old_salt', 'compass'),
-  ('CREW_A_ID', 3, null, 'deck_hand', null),
-  ('CREW_A_ID', 4, null, 'cook_pete', null),
-  ('CREW_B_ID', 1, 'USER_B_ID', null, 'logbook'),
-  ('CREW_B_ID', 2, null, 'old_salt', null);
+  ('CREW_A_ID', 1, 'USER_A_ID', null, 'witness'),
+  ('CREW_A_ID', 2, null, 'old_salt', 'informant'),
+  ('CREW_A_ID', 3, null, 'deck_hand', 'stranger'),
+  ('CREW_A_ID', 4, null, 'cook_pete', 'true_keeper'),
+  ('CREW_B_ID', 1, 'USER_B_ID', null, 'stranger'),
+  ('CREW_B_ID', 2, null, 'old_salt', 'informant');
 ```
 
 Expected: success, no error. A new crew starts with the status `forming`.
@@ -566,26 +601,26 @@ The server seats an NPC partner in crew B (works):
 
 ```sql
 set local role service_role;
-insert into public.crew_seats (crew_id, seat_no, npc_id, kit) values ('CREW_B_ID', 3, 'deck_hand', 'compass') returning seat_no, npc_id, kit;
+insert into public.crew_seats (crew_id, seat_no, npc_id, kit) values ('CREW_B_ID', 3, 'deck_hand', 'witness') returning seat_no, npc_id, kit;
 ```
 
 Expected: 1 row.
 
-The database guards the shape of a seat, even against the server:
+The database guards the shape of a seat, even against the server. Every statement below carries a valid kit, on purpose: Postgres checks the rules of a table in the order of their names, and `crew_seats_kit_allowed` (added by the crew migration) comes before the rule each statement is meant to test.
 
 ```sql
 set local role service_role;
-insert into public.crew_seats (crew_id, seat_no, npc_id) values ('CREW_B_ID', 5, 'old_salt');
+insert into public.crew_seats (crew_id, seat_no, npc_id, kit) values ('CREW_B_ID', 5, 'old_salt', 'witness');
 ```
 
 Expected: `violates check constraint "crew_seats_seat_no_range"`. Now replace the last line and run again:
 
 | Statement as `service_role` | Expected error mentions |
 |---|---|
-| `insert into public.crew_seats (crew_id, seat_no, npc_id) values ('CREW_B_ID', 4, 'Old Salt');` | `crew_seats_npc_id_format` |
-| `insert into public.crew_seats (crew_id, seat_no, player_id, npc_id) values ('CREW_B_ID', 4, 'USER_A_ID', 'old_salt');` | `crew_seats_player_or_npc` |
-| `insert into public.crew_seats (crew_id, seat_no) values ('CREW_B_ID', 4);` | `crew_seats_player_or_npc` |
-| `insert into public.crew_seats (crew_id, seat_no, npc_id) values ('CREW_B_ID', 2, 'cook_pete');` | `crew_seats_pkey` |
+| `insert into public.crew_seats (crew_id, seat_no, npc_id, kit) values ('CREW_B_ID', 4, 'Old Salt', 'witness');` | `crew_seats_npc_id_format` |
+| `insert into public.crew_seats (crew_id, seat_no, player_id, npc_id, kit) values ('CREW_B_ID', 4, 'USER_A_ID', 'old_salt', 'witness');` | `crew_seats_player_or_npc` |
+| `insert into public.crew_seats (crew_id, seat_no, kit) values ('CREW_B_ID', 4, 'witness');` | `crew_seats_player_or_npc` |
+| `insert into public.crew_seats (crew_id, seat_no, npc_id, kit) values ('CREW_B_ID', 2, 'cook_pete', 'witness');` | `crew_seats_pkey` |
 | `insert into public.crews (created_by, mode) values ('USER_A_ID', 'team');` | `crews_mode_allowed` |
 | `insert into public.crews (created_by, mode, status) values ('USER_A_ID', 'solo', 'paused');` | `crews_status_allowed` |
 
@@ -727,6 +762,211 @@ select
 ```
 
 Expected: all six numbers are 0. Each test player created their own crew, so deleting the players deleted the crews and their seats too.
+
+### Crew checks (steps C1 to C8)
+
+These steps test the crew migration (`20261106040000_crew_codes.sql`, package A6). Run them after the foundation migration and the crew migration are both applied. The entry profiles of package A3 are needed only for the last check of C8. Use **three new test users**, A, B and C (the users of the steps above were deleted in step 17, so create new ones as in the set-up of this plan), and replace `USER_A_ID`, `USER_B_ID` and `USER_C_ID` with their ids. The crew functions get each player's kit from the server, so the blocks below pass the kits in. Run every block in its own run.
+
+We call the next block the **Crew check** and use it again below (default role). It lists the crews that the three players started, with their seats written as `seat player-or-partner kit`:
+
+```sql
+select c.code, c.status, c.mode, c.version, c.started_at is not null as sailed,
+       (select string_agg(
+                 s.seat_no || ' '
+                 || case s.player_id when 'USER_A_ID' then 'A' when 'USER_B_ID' then 'B' when 'USER_C_ID' then 'C' else s.npc_id end
+                 || ' ' || s.kit,
+                 ', ' order by s.seat_no)
+          from public.crew_seats s where s.crew_id = c.id) as seats
+from public.crews c
+where c.created_by in ('USER_A_ID', 'USER_B_ID', 'USER_C_ID')
+order by c.created_at;
+```
+
+**C1. Start a crew, and the same request again.** Player A starts a crew with the code `K7QF2M` and the kit `witness` (the server sends the code and the kit):
+
+```sql
+set local role service_role;
+select public.crew_create('USER_A_ID', 'K7QF2M', 'witness') as result;
+```
+
+Expected: `result` has `status` `created` and a `crewId`. The Crew check shows one row: `K7QF2M`, `forming`, `solo`, version 1, `sailed` false, seats `1 A witness`. Now send the request again with another code, as a double click would:
+
+```sql
+set local role service_role;
+select public.crew_create('USER_A_ID', 'AAAAAA', 'witness') as result;
+```
+
+Expected: `status` `existing` and the same `crewId`. The Crew check still shows one row with the code `K7QF2M`: the second code was not used, and no second crew exists.
+
+**C2. A wrong code adds one failure row and changes no crew.** Player B types a code that no crew has:
+
+```sql
+set local role service_role;
+select public.crew_find_by_code('USER_B_ID', 'ZZZZZZ', 10, 600) as result;
+```
+
+Expected: `status` `refused`, `reason` `wrong_code`. The Crew check is the same as after C1: no crew and no seat changed. The only change is one row in the table of wrong codes (default role):
+
+```sql
+select count(*) as wrong_codes from public.crew_join_failures where player_id = 'USER_B_ID';
+```
+
+Expected: `wrong_codes` is 1. Now the right code:
+
+```sql
+set local role service_role;
+select public.crew_find_by_code('USER_B_ID', 'K7QF2M', 10, 600) as result;
+```
+
+Expected: `status` `found`, `crewStatus` `forming`, `version` 1 and one entry in `seats`: player A in seat 1 with the kit `witness`. A right code adds no row: `wrong_codes` is still 1.
+
+**C3. Ten wrong codes, then even the right code is refused.** Player B types nine more wrong codes, which makes ten:
+
+```sql
+set local role service_role;
+select public.crew_find_by_code('USER_B_ID', 'YYYYYY', 10, 600) as result from generate_series(1, 9);
+```
+
+Expected: nine rows, each `refused` with `wrong_code`. The next try uses the **right** code (a new run):
+
+```sql
+set local role service_role;
+select public.crew_find_by_code('USER_B_ID', 'K7QF2M', 10, 600) as result;
+```
+
+Expected: `status` `refused`, `reason` `too_many_attempts` and `retryAfterSeconds` of about 600 (a little less). The right code is refused **before** the code is looked at, so a guesser cannot find out whether a guess was right. `wrong_codes` stays at 10: a refused try adds no row. Pretend that 11 minutes have passed (default role), then try the right code again:
+
+```sql
+update public.crew_join_failures set attempted_at = now() - interval '11 minutes' where player_id = 'USER_B_ID';
+```
+
+```sql
+set local role service_role;
+select public.crew_find_by_code('USER_B_ID', 'K7QF2M', 10, 600) as result;
+```
+
+Expected: `status` `found`. The old wrong codes were deleted: `wrong_codes` is 0.
+
+**C4. Join seat 2, and an old version gives `changed`.** The server read the crew at version 1 and decided that player B takes seat 2 with B's own kit `stranger`. First a request with an old picture of the crew (version 99, which does not match):
+
+```sql
+set local role service_role;
+select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_B_ID', 2, 'stranger', 99) as result;
+```
+
+Expected: `status` `refused`, `reason` `changed`, and nothing changed (the Crew check is the same as after C1). Now with the version the server read:
+
+```sql
+set local role service_role;
+select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_B_ID', 2, 'stranger', 1) as result;
+```
+
+Expected: `status` `joined`, `seatNo` 2 and `replacedPartner` null (the seat was empty). The Crew check: mode `crew`, version 2, seats `1 A witness, 2 B stranger`.
+
+**C5. A second seat is refused, and so is a second crew.** Player B tries to take seat 3 of the same crew:
+
+```sql
+set local role service_role;
+select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_B_ID', 3, 'stranger', 2) as result;
+```
+
+Expected: `status` `refused`, `reason` `already_seated`. Player A, who now sits in a crew with a friend, cannot start another crew either:
+
+```sql
+set local role service_role;
+select public.crew_create('USER_A_ID', 'BBBBBB', 'witness') as result;
+```
+
+Expected: `status` `refused`, `reason` `already_in_crew`. The Crew check is the same as after C4.
+
+**C6. The muster fills the crew to four seats, and a second start is refused.** The server read the crew at version 2 and chose the Bosun with the kit `informant` for seat 3 and the Cook with the kit `true_keeper` for seat 4:
+
+```sql
+set local role service_role;
+select public.crew_start(
+  (select id from public.crews where code = 'K7QF2M'), 'USER_A_ID',
+  '[{"seatNo": 3, "npcId": "bosun", "kit": "informant"}, {"seatNo": 4, "npcId": "cook", "kit": "true_keeper"}]'::jsonb,
+  2) as result;
+```
+
+Expected: `status` `started`. The Crew check: `active`, mode `crew`, version 3, `sailed` true, seats `1 A witness, 2 B stranger, 3 bosun informant, 4 cook true_keeper`. Send it again with the new version:
+
+```sql
+set local role service_role;
+select public.crew_start(
+  (select id from public.crews where code = 'K7QF2M'), 'USER_A_ID',
+  '[{"seatNo": 3, "npcId": "bosun", "kit": "informant"}, {"seatNo": 4, "npcId": "cook", "kit": "true_keeper"}]'::jsonb,
+  3) as result;
+```
+
+Expected: `status` `refused`, `reason` `already_started`, and the Crew check is the same.
+
+**C7. A friend with a draft takes a partner's seat with their own kit, and the draft is deleted.** Player C starts a crew of their own (a draft) with the kit `stranger`:
+
+```sql
+set local role service_role;
+select public.crew_create('USER_C_ID', 'CCCCCC', 'stranger') as result;
+```
+
+Expected: `status` `created`. Player C first tries seat 1, which player A holds (the server read version 3):
+
+```sql
+set local role service_role;
+select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_C_ID', 1, 'stranger', 3) as result;
+```
+
+Expected: `status` `refused`, `reason` `changed`. Every refusal comes before the first change, so the draft is still there: the Crew check shows the crew `CCCCCC` with the seat `1 C stranger`. Now player C takes the seat of the Bosun, who carries `informant`:
+
+```sql
+set local role service_role;
+select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_C_ID', 3, 'stranger', 3) as result;
+```
+
+Expected: `status` `joined`, `seatNo` 3 and `replacedPartner` `bosun`. The Crew check shows one row: `K7QF2M`, version 4, seats `1 A witness, 2 B stranger, 3 C stranger, 4 cook true_keeper`. The seat carries C's **own** kit (`stranger`), not the Bosun's (a decision that still waits for Nils). The crew `CCCCCC` is gone: the draft was deleted in the same step, with its seat.
+
+**C8. A player cannot run the functions, the database guards crews and seats, and the read of the routes works.** Player A tries to run a crew function:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select public.crew_create('USER_A_ID', 'DDDDDD', 'witness');
+```
+
+Expected: `permission denied for function crew_create`. Now replace the last line and run again. Each one fails the same way:
+
+| Statement as player A | Expected error mentions |
+|---|---|
+| `select public.crew_find_by_code('USER_A_ID', 'K7QF2M', 10, 600);` | `permission denied for function crew_find_by_code` |
+| `select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_A_ID', 2, 'witness', 1);` | `permission denied for function crew_take_seat` |
+| `select public.crew_start((select id from public.crews where code = 'K7QF2M'), 'USER_A_ID', '[]'::jsonb, 1);` | `permission denied for function crew_start` |
+| `select count(*) from public.crew_join_failures;` | `permission denied for table crew_join_failures` |
+| `insert into public.crew_join_failures (player_id) values ('USER_A_ID');` | `permission denied for table crew_join_failures` |
+
+The database also guards crews and seats against the server itself. Put `set local role service_role;` in front of each statement, run it, and read the error. None of them changes anything:
+
+| Statement as `service_role` | Expected error mentions |
+|---|---|
+| `update public.crew_seats set kit = 'lantern' where crew_id = (select id from public.crews where code = 'K7QF2M') and seat_no = 1;` | `crew_seats_kit_allowed` |
+| `insert into public.crews (created_by, mode, code) values ('USER_A_ID', 'solo', 'k7qf2m');` | `crews_code_format` |
+| `insert into public.crews (created_by, mode, code) values ('USER_A_ID', 'solo', 'K7QF2M');` | `crews_code_unique` |
+| `update public.crew_seats set player_id = 'USER_A_ID' where crew_id = (select id from public.crews where code = 'K7QF2M') and seat_no = 2;` | `crew_seats_one_seat_per_player` |
+| `update public.crew_seats set player_id = null, npc_id = 'cook' where crew_id = (select id from public.crews where code = 'K7QF2M') and seat_no = 3;` | `crew_seats_one_seat_per_partner` |
+
+Last, the read that `GET /api/crews/me` makes through Supabase's REST interface. It asks the database to join the crew, its seats and the display name of each player in one request (the join syntax of the REST interface), and it needs the secret key, so **a teammate runs it in their own terminal**, with the values of their private `.env`, and never pastes the key anywhere else. Run it once, now that the crew `K7QF2M` has four seats:
+
+```bash
+set -a; . ./.env; set +a
+curl -s -g "$SUPABASE_URL/rest/v1/crews?select=id,code,status,mode,version,started_at,crew_seats(seat_no,player_id,npc_id,kit,profiles(display_name))&code=eq.K7QF2M" \
+  -H "apikey: $SUPABASE_SECRET_KEY"
+```
+
+If your key does not start with `sb_secret_` (an old-style key), also add `-H "Authorization: Bearer $SUPABASE_SECRET_KEY"`, as `backend/server/supabase_admin.py` does.
+
+Expected: a list with one crew, whose `crew_seats` holds four entries. The entries of players A, B and C carry `"profiles": {"display_name": "Captain-..."}`, and the entry of the Cook, an NPC partner, carries `"profiles": null`. If the answer is an error that talks about a relationship instead, the read in `backend/server/crews/store.py` (`CREW_COLUMNS`) has to change, so tell the team. The player-kit read (`entry_profiles?select=kit&...`) needs the migration of package A3: run it the same way with `rest/v1/entry_profiles?select=kit&limit=1` once that migration is applied.
+
+Finally paste the whole crew migration into the SQL editor again and run it. Expected: no error, and the Crew check still shows what it showed after C7.
+
+Delete the three test users when you are done (**Authentication > Users**). Their crews, seats and wrong codes go with them.
 
 ### Island Exchange checks (steps E1 to E13)
 

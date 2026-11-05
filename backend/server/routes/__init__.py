@@ -5,6 +5,7 @@
     me.py             GET  /api/me             the signed-in player's name, coins and crews
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
+    crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead. Who that
 caller is stays an open decision (docs/ARCHITECTURE.md, "The 7-day pause and the keep-alive").
