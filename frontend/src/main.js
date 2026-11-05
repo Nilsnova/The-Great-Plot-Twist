@@ -7,6 +7,9 @@ import './ui/kit/kit.css';
 import './ui/cinematics.css';
 import './ui/intro.css';
 import './ui/shell.css';
+import './ui/devices.css';
+import {createTouchControls} from './controls/touch.js';
+import {createGamepad} from './controls/gamepad.js';
 import {createAudio} from './audio/controller.js';
 import {createCaptions} from './audio/captions.js';
 import {createShell} from './shell/controller.js';
@@ -76,6 +79,8 @@ async function startGame() {
   shell=createShell({container,readSave:()=>introJournal().read(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
     settingsView:createSettingsView,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     onPlay(resume){hud.start();intro.begin(resume);}});
+  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!shell.blocked&&!world.busy&&!chart.open};
+  const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
     hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
   }});
@@ -83,6 +88,7 @@ async function startGame() {
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
+    gamepad.update();
     if (!shell.blocked && !cinematics.active && !intro.active) {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
     if (input.consume('KeyM') && active && !sailing.active) chart.show();
@@ -98,6 +104,7 @@ async function startGame() {
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state });
     view.update(delta, controller.player.position);
     const zone = active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
+    touch.update(zone,active&&!world.busy&&!chart.open);
     if (input.consume('KeyE') && zone) world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {
@@ -110,7 +117,7 @@ async function startGame() {
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing, shell, audio };
   function dispose() {
-    audio.dispose();captions.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    touch.dispose();gamepad.dispose();audio.dispose();captions.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
