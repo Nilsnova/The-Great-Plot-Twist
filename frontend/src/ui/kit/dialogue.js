@@ -56,7 +56,7 @@ export function createDialogue({ onChoice, ...initial } = {}) {
     if (next) { selected=next.index; paint(); buttons[selected]?.focus(); if (next.activate) onChoice?.(options[selected].id,selected); }
   };
   element.addEventListener('keydown',key); update(initial);
-  return { element, update, complete, focus() { (writer.done ? buttons.find(button=>!button.disabled) ?? text : skip.element).focus(); },
+  return { element, update, complete, pause(){cancelAnimationFrame(frame);}, focus() { (writer.done ? buttons.find(button=>!button.disabled) ?? text : skip.element).focus(); },
     dispose() { cancelAnimationFrame(frame); element.removeEventListener('keydown',key); skip.dispose(); element.remove(); },
   };
 }

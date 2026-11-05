@@ -6,7 +6,7 @@ import { pixelById } from '../../pixel/catalog.js';
 import { characterIds } from '../../pixel/story-catalog.js';
 import { getWeather } from '../weather.js';
 import { cinematicNames,createTimeline,projectLights,durations } from './logic.js';
-import { loadShotImages } from './images.js';
+import { loadShotImages,shotAssetIds } from './images.js';
 import { drawShot } from './render.js';
 const titles={three_lights:'Three lights, one bearing.',fog_lift:'Beyond the fog.',schooner_reveal:'A hull in the mist.',unmask:'The mask falls.',relighting:'The coast relit.'};
 export function createCinematics(ctx) {
@@ -28,7 +28,7 @@ export function createCinematics(ctx) {
     const revealAsset=characterIds.includes(params.revealAsset)&&Object.hasOwn(pixelById,params.revealAsset)?params.revealAsset:null;
     const target=params.target&&Number.isFinite(params.target.x)&&Number.isFinite(params.target.y)?params.target:{x:places.the_teeth.chart[0],y:places.the_teeth.chart[1]};
     if(target.x<0||target.x>448||target.y<0||target.y>256)return Promise.resolve(false);
-    const assets=['chart',...(name==='relighting'?['chart-relit']:[]),...(name==='fog_lift'?['false-light','fog-bank']:[]),...(name==='schooner_reveal'?['ghost-schooner','fog-bank']:[]),...(name==='unmask'?['character-masked-captain','false-light','fog-bank',...(revealAsset?[revealAsset]:[])]:[])];
+    const assets=shotAssetIds(name,revealAsset);
     const shot={name,lights,target,revealAsset,ready:false,time:0,timeline:createTimeline(name,{reducedMotion:ctx.reducedMotion()}),loader:loadShotImages(assets)};
     const result=new Promise(resolve=>{shot.resolve=resolve;});current=shot;ctx.resetInput?.();
     draw.fillStyle='#284b3b';draw.fillRect(0,0,448,256);status.textContent='At the edge of the coast…';progress.update({value:0,max:1,label:'Coastal passage'});

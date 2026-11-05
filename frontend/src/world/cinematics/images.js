@@ -1,5 +1,15 @@
 // Per-shot local bitmap ownership, bounded loading and cancellation of late callbacks.
 import { pixelById } from '../../pixel/catalog.js';
+const shotArt = {
+  three_lights:['chart'], relighting:['chart','chart-relit'],
+  fog_lift:['chart','false-light','fog-bank'], schooner_reveal:['chart','ghost-schooner','fog-bank'],
+  unmask:['chart','character-masked-captain','false-light','fog-bank'],
+};
+export function shotAssetIds(name,revealAsset) {
+  const ids=[...shotArt[name]];
+  if(name==='unmask'&&revealAsset)ids.push(revealAsset);
+  return ids;
+}
 export function loadShotImages(ids) {
   const images={}, cleanups=[];
   const promises=[...new Set(ids)].map(id=>new Promise((resolve,reject)=>{

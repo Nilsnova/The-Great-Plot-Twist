@@ -20,6 +20,6 @@ export function createIntroView({onAction,onRestart,onClose}) {
     moves.replaceChildren(...view.history.map(move=>{const li=node('li','',move.label);li.dataset.action=move.id;return li;}));movesPanel.update({title:`Move log · ${actions.length} accepted`});
     if(!actions.length)moves.append(node('li','','No moves yet.'));
   }
-  return {element,update,focus(){if(ending.element.hidden)dialogue.focus();else restart.element.focus();},
+  return {element,update,pause(){dialogue.pause();},focus(){if(ending.element.hidden)dialogue.focus();else restart.element.focus();},
     dispose(){dialogue.dispose();inventoryPanel.dispose();movesPanel.dispose();ending.dispose();restart.dispose();close.dispose();element.remove();}};
 }

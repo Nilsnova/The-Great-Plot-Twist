@@ -9,7 +9,7 @@ export function createIntro(ctx) {
   const loading=node('div','intro-loading'),copy=node('p','','The story is coming ashore…'),retry=createButton({label:'Try again',onClick:()=>load()});loading.append(copy,retry.element);
   const view=createIntroView({onAction:perform,onRestart(){adapter.reset();show();},onClose:close});
   const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){active=false;ctx.resetInput?.();}});modal.element.classList.add('intro-modal');
-  function close(){active=false;request++;abort?.abort();modal.close();ctx.resetInput?.();}
+  function close(){view.pause();active=false;request++;abort?.abort();modal.close();ctx.resetInput?.();}
   function show(notice){modal.setContent(view.element);view.update(adapter.view,adapter.actions,notice);view.focus();}
   function visit() {const result=adapter.state.ended?null:adapter.visit(hotspot);show(result&&!result.accepted?result.message:undefined);}
   async function load() {
