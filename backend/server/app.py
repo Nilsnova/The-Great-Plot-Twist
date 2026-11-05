@@ -13,11 +13,13 @@ Used by: main.py (Vercel) and the tests (they call create_app with their own set
 from fastapi import FastAPI
 
 from server import __version__
+from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
 from server.errors import register_error_handlers
-from server.routes import config, health, keepalive
+from server.routes import config, health, keepalive, weather
 from server.settings import Settings, settings_from_environment
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
+from server.weather.source import make_weather_source
 
 
 def new_fastapi_app(settings: Settings) -> FastAPI:
@@ -48,10 +50,12 @@ def create_app(
     settings: Settings | None = None,
     verifier: PlayerVerifier | None = None,
     admin: SupabaseAdmin | None = None,
+    weather_source: CachedSource | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
-    Tests pass their own settings, a verifier and an admin client that use fake transports.
+    Tests pass their own settings, a verifier, an admin client and a weather source that use
+    fake transports.
     """
     if settings is None:
         settings = settings_from_environment()
@@ -59,16 +63,21 @@ def create_app(
         verifier = PlayerVerifier(settings)
     if admin is None:
         admin = admin_from_settings(settings)
+    if weather_source is None:
+        weather_source = make_weather_source(settings)
 
     app = new_fastapi_app(settings)
 
-    # Routes find these through the dependencies in settings.py, auth.py and supabase_admin.py.
+    # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py and
+    # routes/weather.py.
     app.state.settings = settings
     app.state.verifier = verifier
     app.state.admin = admin
+    app.state.weather_source = weather_source
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
     app.include_router(config.router, prefix="/api")
     app.include_router(keepalive.router, prefix="/api")
+    app.include_router(weather.router, prefix="/api")
     return app
