@@ -1,6 +1,6 @@
 GRAPHICS STYLE REVIEW — 5 NOVEMBER 2026
 
-Status: references and recommendation for discussion. No replacement style selected yet.
+Status: Nils selected the Carto-inspired illustrated direction on 5 November 2026. The active implementation is original SVG artwork and a fixed illustrated map; see GRAPHICS.md and ASSETS.md. Individual drawings and palette remain open to visual iteration.
 
 User feedback
 The initial low-poly diorama feels cheap because it attempts too much without a distinct visual identity. Explore a less complex, more unique presentation, potentially more top-down and less 3D. Show visual checkpoints for iteration before building out the selected direction.
@@ -23,9 +23,9 @@ Additional reference — Chicory: A Colorful Tale
 Source and screenshots: https://finji.co/games/chicory/
 Visual lesson: bold, consistent line art and readable top-down drawings. Useful if a drawn cartoon world appeals more than pixel art. Producing coherent original drawings still takes work; the painting mechanic is not proposed.
 
-Recommended direction for a first style study (not yet approved)
+Direction selected for implementation
 A top-down nautical journal: fixed camera; flat navy sea; cream and muted teal land; one consistent outline; original simple building and character silhouettes; gold reserved for light, interaction and clues. Use a few moving wave marks and a sweeping flat light shape instead of detailed water and a physically lit 3D scene. Spend detail on the lighthouse, cottage and a small set of clue objects.
 
-Compare one small playable scene or two original concept frames before replacing the whole island. Existing event ids, weather state and story-location data can remain integration contracts. The current game implementation is unchanged by this review.
+The asset sheet and map composition were shown as visual checkpoints before the final rendering pass. Existing event ids, weather state and logical story-location data remain integration contracts. The illustrated scene now replaces the earlier 3D presentation, with original assets and no copied game art.
 
 All references are inspiration only. Reference screenshots remain on their publishers' or developers' sites; none were downloaded or added as game assets.
