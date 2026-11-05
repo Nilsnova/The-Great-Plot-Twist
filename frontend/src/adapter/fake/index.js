@@ -7,11 +7,12 @@ import {startSearch,inspectSpot} from './search.js';
 import {orderPartner} from './partners.js';
 import {settleJobs} from './settle.js';
 import {buildLight,callNightfall,takePost,aim,settleNight} from './night.js';
+import {boardSchooner,accuse,nextReveal} from './reveal.js';
 import {caseView} from './view.js';
 export function createFakeCaseAdapter({timeScale=1,allowBrowse=false}={}) {
   let state=initialCaseState(),disposed=false,lastSecond=-1,notice=null;
   state.allowBrowse=allowBrowse;
-  const listeners=new Set(),handlers={completeIntro,createCrew,joinCrew,muster,pin:pinCard,pair:pairCards,search:startSearch,inspectSpot,orderPartner,buildLight,callNightfall,takePost,aim};
+  const listeners=new Set(),handlers={completeIntro,createCrew,joinCrew,muster,pin:pinCard,pair:pairCards,search:startSearch,inspectSpot,orderPartner,buildLight,callNightfall,takePost,aim,boardSchooner,accuse,nextReveal};
   function read(){return copyView({...caseView(state),notice});}
   function publish(){const event={type:'case_updated',view:read()};for(const listener of listeners)listener(event);}
   function dispatch(name,args){if(disposed)return Promise.resolve({accepted:false,reason:'disposed',message:'The rehearsal has ended.',view:read()});const result=handlers[name]?.(state,...args)??refuse('not_ready','This part of the local case is not ready yet.');settleJobs(state);settleNight(state);notice={...result};state.revision++;publish();return Promise.resolve({...result,view:read()});}
