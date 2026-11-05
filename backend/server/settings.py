@@ -11,6 +11,8 @@ so this file is the full list of what can be configured:
                               /api/keepalive. Optional on your laptop. NEVER in the repo.
     DEMO_MODE                 true or false (default: false)
     FEATURE_FLAGS             comma-separated feature names to switch on (see flags.py)
+    MARKET_MULTIPLIER         how strongly the Island Exchange amplifies real price moves, a whole
+                              number from 20 to 100 (default: 100). Not a secret.
 
 Used by: app.py (reads the environment once at start-up), auth.py and supabase_admin.py (the
 Supabase address and keys), the routes (env, demo mode, flags, the cron secret) and the tests
@@ -26,6 +28,7 @@ from fastapi import Depends, Request
 from pydantic import SecretStr
 
 from server.flags import default_flags, parse_flags
+from server.market.rules import DEFAULT_MULTIPLIER, MAX_MULTIPLIER, MIN_MULTIPLIER
 
 APP_ENVS = ("local", "preview", "production")
 
@@ -48,6 +51,8 @@ class Settings:
     cron_secret: SecretStr = SecretStr("")
     demo_mode: bool = False
     flags: dict[str, bool] = field(default_factory=default_flags)
+    # How many times a real price move is multiplied in the Island Exchange (market/rules.py).
+    market_multiplier: int = DEFAULT_MULTIPLIER
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -71,6 +76,21 @@ def read_demo_mode(env: Mapping[str, str]) -> bool:
     raise SettingsError(f"DEMO_MODE must be 'true' or 'false' (got '{value}').")
 
 
+def read_market_multiplier(env: Mapping[str, str]) -> int:
+    """MARKET_MULTIPLIER: a whole number from 20 to 100. Empty or missing means the default."""
+    value = read_text(env, "MARKET_MULTIPLIER")
+    if not value:
+        return DEFAULT_MULTIPLIER
+    if not value.isascii() or not value.isdecimal():
+        raise SettingsError(f"MARKET_MULTIPLIER must be a whole number (got '{value}').")
+    multiplier = int(value)
+    if not MIN_MULTIPLIER <= multiplier <= MAX_MULTIPLIER:
+        raise SettingsError(
+            f"MARKET_MULTIPLIER must be from {MIN_MULTIPLIER} to {MAX_MULTIPLIER} (got {value})."
+        )
+    return multiplier
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     return Settings(
@@ -82,6 +102,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         cron_secret=SecretStr(read_text(env, "CRON_SECRET")),
         demo_mode=read_demo_mode(env),
         flags=parse_flags(env.get("FEATURE_FLAGS", "")),
+        market_multiplier=read_market_multiplier(env),
     )
 
 

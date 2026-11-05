@@ -15,7 +15,8 @@ from fastapi import FastAPI
 from server import __version__
 from server.auth import PlayerVerifier
 from server.errors import register_error_handlers
-from server.routes import config, health, keepalive
+from server.market.exchange import MarketService, market_or_none
+from server.routes import config, health, keepalive, market
 from server.settings import Settings, settings_from_environment
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
 
@@ -48,10 +49,12 @@ def create_app(
     settings: Settings | None = None,
     verifier: PlayerVerifier | None = None,
     admin: SupabaseAdmin | None = None,
+    market_service: MarketService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
-    Tests pass their own settings, a verifier and an admin client that use fake transports.
+    Tests pass their own settings, a verifier and an admin client that use fake transports, and
+    an Island Exchange service whose price feed and clock are fakes.
     """
     if settings is None:
         settings = settings_from_environment()
@@ -59,16 +62,21 @@ def create_app(
         verifier = PlayerVerifier(settings)
     if admin is None:
         admin = admin_from_settings(settings)
+    if market_service is None:
+        market_service = market_or_none(settings)  # None if its data files are broken
 
     app = new_fastapi_app(settings)
 
-    # Routes find these through the dependencies in settings.py, auth.py and supabase_admin.py.
+    # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py and
+    # market/exchange.py.
     app.state.settings = settings
     app.state.verifier = verifier
     app.state.admin = admin
+    app.state.market = market_service
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
     app.include_router(config.router, prefix="/api")
     app.include_router(keepalive.router, prefix="/api")
+    app.include_router(market.router, prefix="/api")
     return app

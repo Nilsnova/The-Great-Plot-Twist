@@ -74,6 +74,9 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("clue_purchase", "spend"),
         ("building_purchase", "spend"),
         ("admin_adjust", "either"),
+        ("market_buy", "spend"),
+        ("market_sell", "earn"),
+        ("market_fee", "spend"),
     )
 
 
@@ -102,6 +105,9 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "clue_purchase",
         "building_purchase",
         "admin_adjust",
+        "market_buy",
+        "market_sell",
+        "market_fee",
     ]
 
 
