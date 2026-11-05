@@ -1,3 +1,5 @@
+// Live data is isolated by a deterministic fixture in these presentation checks.
+import {stubWeather} from './weather-browser-fixture.js';
 // Inspect native PNGs, integer scaling, the live game and the built pixel workshop.
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
@@ -5,6 +7,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { pixelArt, pixelArtIds } from '../src/pixel/catalog.js';
 
+const visibleArt = pixelArt.filter(item => item.visibility !== 'finale');
 const production = process.env.ART_PRODUCTION === '1', url = 'http://127.0.0.1:5176';
 const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(production ? ['preview'] : []), '--host', '127.0.0.1', '--port', '5176', '--strictPort'], { stdio: 'pipe' });
 const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
@@ -20,11 +23,15 @@ try {
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
   report.browser = browser.version();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await stubWeather(page);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
   await page.goto(`${url}/asset-library.html`); await page.locator('.sprite-card').last().waitFor();
-  check(await page.locator('.sprite-card').count() === pixelArt.length, 'Workshop lists the complete active pixel kit');
+  check(await page.locator('.sprite-card').count() === visibleArt.length, 'Workshop lists public art without finale variants');
+  await page.goto(`${url}/asset-library.html?demo=1`);
+  check(await page.locator('.sprite-card').count() === pixelArt.length, 'Explicit rehearsal gallery lists every registered drawing');
+  await page.goto(`${url}/asset-library.html`);
   await page.evaluate(async items => {
     for (const item of items) {
       const image = new Image(); image.src = `./${item.folder || 'pixel'}/${item.file}`; await image.decode();
@@ -50,7 +57,7 @@ try {
   await mkdir('captures', { recursive: true });
   await page.screenshot({ path: `captures/${stamp}_Pixel-Nature-Kit.png`, fullPage: true });
   await page.locator('#category').selectOption('all'); await page.locator('#usage').selectOption('library');
-  check(await page.locator('.sprite-card').count() === pixelArt.filter(item => item.usage === 'library').length, 'Staged-art filter agrees with selective preload metadata');
+  check(await page.locator('.sprite-card').count() === visibleArt.filter(item => item.usage === 'library').length, 'Staged-art filter agrees with selective preload metadata');
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.locator('#gallery img').evaluateAll(images => Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })));
   await page.screenshot({ path: `captures/${stamp}_Pixel-Staged-Harbour-Kit.png`, fullPage: true });

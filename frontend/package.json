@@ -13,7 +13,12 @@
     "test:art:production": "npm run build && ART_PRODUCTION=1 node scripts/check-pixel.js",
     "test:production": "npm run build && node scripts/check-production.js",
     "test:world": "node scripts/check-world.js",
-    "test:readability": "node scripts/check-readability.js"
+    "test:readability": "node scripts/check-readability.js",
+    "test:ui": "node scripts/check-ui-kit.js",
+    "test:ui:production": "npm run build && KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "test:cinematics": "node scripts/check-cinematics.js",
+    "test:intro": "node scripts/check-intro.js",
+    "test:weather:wiring": "node scripts/check-weather-wiring.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

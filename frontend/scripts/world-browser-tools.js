@@ -1,18 +1,20 @@
 // Shared local Chrome setup and settled frame measurements for the world smoke check.
+import {stubWeather} from './weather-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
 import { access, mkdir } from 'node:fs/promises';
-export async function openWorldBrowser() {
+export async function openWorldBrowser({ preview = false } = {}) {
   const candidates = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
   if (!executablePath) throw new Error('Install Chrome or set CHROME_PATH.');
   const url = process.env.TEST_URL || 'http://127.0.0.1:5175';
-  const server = process.env.TEST_URL ? null : spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5175', '--strictPort'], { stdio: 'pipe' });
+  const server = process.env.TEST_URL ? null : spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(preview ? ['preview'] : []), '--host', '127.0.0.1', '--port', '5175', '--strictPort'], { stdio: 'pipe' });
   try {
     for (let i = 0; i < 60; i++) { try { if ((await fetch(url)).ok) break; } catch { /* Wait for Vite. */ } await new Promise(resolve => setTimeout(resolve, 250)); }
     const browser = await chromium.launch({ executablePath, headless: true });
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await stubWeather(page);
     const errors = [], external = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });

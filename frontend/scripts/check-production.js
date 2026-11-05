@@ -1,3 +1,5 @@
+// Live data is isolated by a deterministic fixture in these presentation checks.
+import {stubWeather} from './weather-browser-fixture.js';
 // Checks the built static site, including the absence of dev-only inspection/FPS.
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
@@ -15,6 +17,7 @@ try {
   browser = await chromium.launch({ executablePath, headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   const errors = [];
+  await stubWeather(page);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto('http://127.0.0.1:4175'); await page.waitForTimeout(1200);

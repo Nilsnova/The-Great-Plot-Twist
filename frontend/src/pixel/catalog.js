@@ -1,4 +1,5 @@
 // The active original pixel kit. One world unit is 16 native art pixels.
+import { storyDimensions } from './story-catalog.js';
 export const PIXELS_PER_UNIT = 16;
 const dimensions = {
   cottage: [128, 128, 14], 'cottage-interior': [128, 128, 14], 'cottage-glow': [128, 128, 14],
@@ -28,9 +29,10 @@ Object.assign(staged, {
   greenhouse: [112,96,12], windmill: [112,160,14], 'notice-board': [48,64,6],
   'captains-table': [64,48,6], 'build-plot': [144,96,12], 'harbour-office-glow': [128,160,14],
 });
+Object.assign(staged, storyDimensions);
 Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({
-  id, file: `${id}.png`, width, height, usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
+  id, file: `${id}.png`, width, height, visibility: id.startsWith('character-masked-captain') ? 'finale' : 'public', usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
 }));
 export const pixelById = Object.fromEntries(pixelArt.map(item => [item.id, item]));
 export const pixelArtIds = pixelArt.filter(item => item.usage === 'island').map(item => item.id);

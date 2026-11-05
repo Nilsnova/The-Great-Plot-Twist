@@ -4,9 +4,12 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   base: './',
+  server: {proxy:{'/api':'http://127.0.0.1:8000'}},
+  preview: {proxy:{'/api':'http://127.0.0.1:8000'}},
   build: { rolldownOptions: { input: {
     game: resolve(import.meta.dirname, 'index.html'),
     workshop: resolve(import.meta.dirname, 'asset-library.html'),
+    uiKit: resolve(import.meta.dirname, 'ui-kit.html'),
   } } },
   test: { include: ['tests/**/*.test.js'] },
 });
