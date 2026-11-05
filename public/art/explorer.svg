@@ -1,0 +1,16 @@
+<!-- Original raincoat explorer, front view. The back view is a separate drawing. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 220" width="168" height="264">
+<ellipse cx="71" cy="205" rx="30" ry="8" fill="#527668" opacity=".18"/>
+<path d="m48 172 18 0-1 29-22 1 0-8Zm29 0 17-1 3 29-22 1Z" fill="#4d7069"/>
+<path d="m43 195 23-1 0 10-27 1 0-6Zm32 0 22-1 5 7-2 4-25 0Z" fill="#42655e"/>
+<path d="m43 106-16 38 8 8 17-23m42-21 17 35-8 10-16-23" fill="#cba157" stroke="#ba8c4b" stroke-width="2" stroke-linejoin="round"/>
+<path d="m44 104q26-11 51 1l7 68q-31 14-65 0Z" fill="#deb766"/>
+<path d="m77 107 18-2 7 68-24 7Z" fill="#cba459"/><path d="m69 119 0 54m-23-25 15 1-1 13-16-1m34-10 15-1 1 13-15 2" stroke="#b89350" stroke-width="2" fill="none"/>
+<circle cx="70" cy="77" r="31" fill="#dcb48a"/>
+<path d="M37 80Q25 42 46 28Q69 16 93 34Q108 50 104 81L94 69Q90 45 65 45Q47 47 45 69Z" fill="#7d9a82"/>
+<path d="M35 65Q63 75 107 62L108 73Q75 88 34 77Z" fill="#597e72"/>
+<path d="M44 44Q62 31 80 39" stroke="#abc0a0" stroke-width="4" fill="none" stroke-linecap="round"/>
+<circle cx="57" cy="82" r="2.5" fill="#4e6960"/><circle cx="81" cy="82" r="2.5" fill="#4e6960"/><path d="m67 88 4 1m-7 8 10 0" stroke="#a57460" stroke-width="2" fill="none" stroke-linecap="round"/>
+<path d="m43 109 27 8 23-11-4 15-18 8-23-9Z" fill="#bd755d"/><path d="m78 123 13-5 4 26-12-2Z" fill="#ad6956"/>
+<circle cx="34" cy="149" r="6" fill="#dab088"/><circle cx="103" cy="150" r="6" fill="#dab088"/>
+</svg>

@@ -1,0 +1,13 @@
+<!-- Original weathered sea-green boathouse, sharing the cottage's roof language. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 230" width="312" height="276">
+<ellipse cx="132" cy="208" rx="98" ry="13" fill="#53776b" opacity=".13"/>
+<path d="m39 112 126 19 1 77-128-17Z" fill="#86a694"/><path d="m165 131 64-42-1 79-62 40Z" fill="#6a9383"/>
+<path d="m24 111 65-66 155 39-75 54Z" fill="#bc7c5b"/><path d="m24 111 13 4 56-55-4-15Z" fill="#d09b70"/><path d="m89 45 155 37 0 8-76 54-3-8 66-49Z" fill="#9c674f"/>
+<path d="m64 104 37-40m-16 53 42-46m-13 50 43-44m-8 50 41-43m-145 6 145 34" stroke="#dea57b" stroke-width="2" fill="none" opacity=".5"/>
+<path d="m59 132 82 11 0 58-83-11Z" fill="#5e7e70"/>
+<path d="m66 137 30 4 0 54-30-4Zm36 5 32 5 0 52-32-4Z" fill="#799382"/>
+<path d="m66 144 30 46m7-42 30 48" stroke="#a6b08b" stroke-width="3"/>
+<path d="m39 158 15 2m94 7 15 2m-14 16 14 2m45-42 10-7m-10 23 10-7" stroke="#b6c09d" stroke-width="2" fill="none"/>
+<path d="m185 133 19-13 0 23-19 12Z" fill="#c5d0ab"/><path d="m194 127 0 22m-9-5 19-13" stroke="#6c8a79" stroke-width="2"/>
+<path d="m28 188 15-2 0 24-16-1Z" fill="#b9a779"/><path d="m28 192 15-2m-16 12 16 0" stroke="#7c8c71" stroke-width="2"/>
+</svg>

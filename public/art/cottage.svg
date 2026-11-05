@@ -1,0 +1,26 @@
+<!-- Original painted-paper cottage. Its front-door base anchors it to the map. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 280" width="420" height="392">
+<defs><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".67" numOctaves="3" seed="8" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="mono"/><feComponentTransfer in="mono" result="fine"><feFuncR type="linear" slope=".12" intercept=".44"/><feFuncG type="linear" slope=".12" intercept=".44"/><feFuncB type="linear" slope=".12" intercept=".44"/></feComponentTransfer><feComposite in="fine" in2="SourceAlpha" operator="in" result="c"/><feBlend in="SourceGraphic" in2="c" mode="soft-light"/></filter></defs>
+<ellipse cx="151" cy="249" rx="112" ry="17" fill="#556f59" opacity=".14"/>
+<g filter="url(#grain)">
+<path d="M40 149 196 170 197 247 40 228Z" fill="#eee2bc"/>
+<path d="M196 170 265 121 264 208 197 247Z" fill="#c8be93"/>
+<path d="M40 222 197 239 264 201 264 211 197 251 40 232Z" fill="#989b79"/>
+<path d="M24 144 98 66 279 109 197 173Z" fill="#b9664e"/>
+<path d="M25 143 39 149 104 83 98 66Z" fill="#d48b65"/>
+<path d="M102 66 278 106 279 116 196 179 192 170 264 113Z" fill="#8e5346"/>
+<path d="m73 130 49-46m-25 61 48-55m-18 62 43-57m-18 65 43-58m-20 63 44-56m-164 1 166 37m-143-57 167 38" fill="none" stroke="#df9b75" stroke-width="2" opacity=".45"/>
+<path d="M184 87 183 39 204 35 217 44 216 97 203 104Z" fill="#b8b18f"/>
+<path d="m204 35 0 57 12 5 1-53Z" fill="#8d9981"/><path d="m180 37 23-5 18 10-18 6-23-6Z" fill="#758573"/>
+<path d="m186 55 15 2m-14 13 15 2m3-21 8 3m-8 19 8 3" stroke="#e0d3ac" stroke-width="2" fill="none"/>
+<path d="M127 182 157 186 158 242 127 238Z" fill="#6d7963"/>
+<path d="m132 187 20 3 1 46-20-2Z" fill="#87917a"/><path d="m137 204 10 1m-10 6 10 1" stroke="#b1b18c" stroke-width="1.5"/><circle cx="149" cy="216" r="2" fill="#e6b559"/>
+<path d="m62 172 39 5 0 35-39-5Z" fill="#9b8264"/><path d="m66 177 31 3 0 26-31-4Z" fill="#e8c975"/><path d="m81 179 0 25m-15-14 31 3" stroke="#687c72" stroke-width="3"/>
+<path d="m60 208 43 5 0 5-43-5Z" fill="#b3946b"/>
+<path d="m216 167 24-16 1 29-24 14Z" fill="#7d8570"/><path d="m220 168 17-11 0 19-17 11Z" fill="#e9cb82"/><path d="m228 162 0 21m-8-10 17-10" stroke="#738575" stroke-width="2"/>
+<path d="m48 218 13 2m44 6 13 2m43 8 17 1" stroke="#c8bf99" stroke-width="2"/>
+<path d="m60 220 30 5-4 13-23-3Z" fill="#a16e56"/>
+<path d="m67 224 2-13m8 14 3-17m4 19 5-13" stroke="#6f8c67" stroke-width="3" stroke-linecap="round"/>
+<circle cx="69" cy="209" r="4" fill="#dbbb72"/><circle cx="80" cy="207" r="4" fill="#c77d58"/><circle cx="89" cy="213" r="3.5" fill="#d7a660"/>
+<path d="m124 242 39 4 3 7-45-5Z" fill="#beb48b"/>
+</g></svg>

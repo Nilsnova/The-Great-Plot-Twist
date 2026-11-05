@@ -1,0 +1,8 @@
+<!-- Original hand-painted path sign. It labels direction without story logic. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 180" width="130" height="180">
+<ellipse cx="66" cy="167" rx="30" ry="7" fill="#6d875f" opacity=".13"/>
+<path d="m60 166 1-127 10 0 2 127Z" fill="#a99b6c"/><path d="m24 42 73-5 21 17-20 17-74 4Z" fill="#c8b283"/>
+<path d="m32 49 54-3m-48 14 48-3" stroke="#e8d7a5" stroke-width="2" fill="none"/>
+<path d="m62 48 17 8-17 10m-18-8 33-2" stroke="#74886a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="64" cy="91" r="2" fill="#78856a"/>
+</svg>

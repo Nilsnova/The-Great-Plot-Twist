@@ -1,0 +1,26 @@
+<!-- Original coastal lighthouse, drawn as painted shapes with a coral band. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 480" width="288" height="576">
+<defs><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="3" seed="5" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="mono"/><feComponentTransfer in="mono" result="fine"><feFuncR type="linear" slope=".12" intercept=".44"/><feFuncG type="linear" slope=".12" intercept=".44"/><feFuncB type="linear" slope=".12" intercept=".44"/></feComponentTransfer><feComposite in="fine" in2="SourceAlpha" operator="in" result="c"/><feBlend in="SourceGraphic" in2="c" mode="soft-light"/></filter></defs>
+<ellipse cx="126" cy="445" rx="96" ry="18" fill="#536e62" opacity=".17"/>
+<g filter="url(#grain)">
+<path d="m39 431 11-20 34-7 22 15 42-7 33 15 22 20-39 9-84-5-42-9Z" fill="#a9b297"/>
+<path d="m54 426 26-11 29 14-18 13-42-2m80-13 22-8 25 10-12 10-33-1" fill="#c6c8aa"/>
+<path d="M91 167 151 165 178 425Q131 449 64 425Z" fill="#eee4bf"/>
+<path d="M136 167 151 165 178 425Q160 435 139 437Z" fill="#c9c5a0"/>
+<path d="M80 276 163 273 167 316Q121 332 76 316Z" fill="#c57861"/>
+<path d="m142 274 21-1 4 43-23 6Z" fill="#ad6958"/>
+<path d="m92 186 13-1-2 26-12 1Z" fill="#708b85"/><path d="m96 191 5 0-1 14-5 1Z" fill="#a8c4b1"/>
+<path d="m116 233 13-2 1 28-14 1Z" fill="#7d9389"/>
+<path d="m113 378q15-9 26 1l3 51-29 2Z" fill="#5e786e"/><path d="m119 383 13 0 2 42-15 1Z" fill="#70877a"/><circle cx="132" cy="404" r="2" fill="#e2b962"/>
+<path d="m87 351 11 0m-10 5 8 0m42-22 12-2m-60-99 8 0m39 114 14-1m-64 49 15 1" stroke="#d0c8a3" stroke-width="2" fill="none"/>
+<path d="M66 163Q119 180 176 162L178 175Q120 194 63 177Z" fill="#809286"/>
+<path d="M75 107Q121 95 165 108L167 160Q121 176 73 161Z" fill="#c2d2b7"/>
+<path d="M80 111 101 108 101 161 79 157Z" fill="#e4d69d"/><path d="m112 106 24 0 2 58-26 1Z" fill="#f2dda0"/>
+<path d="m78 108-2 51m26-53-1 58m36-59 2 60m25-55 2 51" stroke="#627f76" stroke-width="4" fill="none"/>
+<path d="M65 106 121 67 177 105Q122 119 65 106Z" fill="#648b80"/><path d="m121 67 5 41 51-3Z" fill="#52796f"/>
+<path d="m121 67 0-17" stroke="#607f75" stroke-width="3"/><path d="m122 49 0-10 22 8-22 4" fill="#c57861"/>
+<path d="m64 156 0 18m19-14 0 20m20-17 0 20m20-18 0 19m22-21 1 19m20-24 1 19m11-25 1 16" stroke="#647f72" stroke-width="2"/>
+<path d="M64 156Q121 175 178 153" fill="none" stroke="#647f72" stroke-width="3"/>
+<path d="m28 377 43-14 15 24-1 45-48-4Z" fill="#ded4aa"/><path d="m19 379 39-34 31 32-19 14Z" fill="#b46d55"/>
+<path d="m42 393 18-4 0 22-18 3Z" fill="#789183"/><path d="m46 396 10-2 0 13-10 2Z" fill="#ddc982"/>
+</g></svg>
