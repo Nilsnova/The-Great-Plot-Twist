@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { colors, layout } from '../config.js';
 import { terrainHeight } from './terrain.js';
 import { box, cylinder, mesh } from './primitives.js';
+import { createBeam } from './beam.js';
 
 const { x, z } = layout.lighthouse;
 const base = terrainHeight(x, z);
@@ -41,15 +42,9 @@ export function createLighthouse() {
     new THREE.MeshBasicMaterial({ color: '#ffc278', transparent: true, opacity: 0.12,
       depthWrite: false, blending: THREE.AdditiveBlending }));
   halo.position.y = 13.2; group.add(halo);
-  // A translucent cone suggests scattering without expensive post-processing.
-  const beamGeometry = new THREE.ConeGeometry(4.6, 42, 24, 1, true);
-  beamGeometry.rotateZ(Math.PI / 2); beamGeometry.translate(21, 0, 0);
-  const beamMaterial = new THREE.MeshBasicMaterial({
-    color: '#ffd89a', transparent: true, opacity: 0.06,
-    side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending,
-  });
+  const beam = createBeam();
   const sweep = new THREE.Group(); sweep.position.y = 13.2; group.add(sweep);
-  sweep.add(new THREE.Mesh(beamGeometry, beamMaterial));
+  sweep.add(beam);
   const glow = new THREE.PointLight(colors.gold, 10, 13, 2);
   glow.position.y = 13.2; group.add(glow); // Only the sun casts shadows.
   const staticParts = new THREE.Group(); staticParts.position.copy(group.position);
@@ -61,7 +56,7 @@ export function createLighthouse() {
     update(time, night) {
       sweep.rotation.y = time * 0.23;
       sweep.visible = night > 0.08;
-      beamMaterial.opacity = night * 0.12;
+      beam.material.uniforms.strength.value = night * 0.2;
       halo.material.opacity = night * 0.16;
       lamp.material.emissiveIntensity = 1 + night * 3;
       glow.intensity = night * 12;

@@ -7,6 +7,7 @@ import { zones, findZone } from '../src/world/zones.js';
 import { canStand, groundHeight, moveWithCollisions, overlapsCollider } from '../src/player/collision.js';
 import { on, emit } from '../src/core/events.js';
 import { anchors } from '../src/world/lighthouse.js';
+import { createBuildings } from '../src/world/buildings.js';
 
 describe('time and terrain', () => {
   it('puts the sun below the horizon at midnight and highest at noon', () => {
@@ -35,7 +36,7 @@ describe('weather contract', () => {
   it('clamps supplied values and keeps missing values', () => {
     setWeather({ cloudCover: 0.4, rain: 0.2, fog: 0.3, wind: 0.7 });
     expect(setWeather({ rain: 12, wind: -2 })).toEqual({ cloudCover: 0.4, rain: 1, fog: 0.3, wind: 0 });
-    expect(setWeather({ fog: NaN, rain: Infinity })).toEqual(getWeather());
+    expect(setWeather({ fog: NaN, rain: Infinity })).toEqual({ cloudCover: 0.4, rain: 1, fog: 0.3, wind: 0 });
     const copy = getWeather(); copy.rain = 0;
     expect(getWeather().rain).toBe(1);
   });
@@ -87,5 +88,14 @@ describe('movement safety', () => {
     const result = moveWithCollisions({ x: 0, z: 0 }, 35, 35, []);
     expect(canStand(result.x, result.z)).toBe(true);
     expect(Math.hypot(result.x, result.z)).toBeLessThan(30);
+  });
+  it('lets a player enter the real cottage doorway and reach the desk without crossing furniture', () => {
+    const { colliders } = createBuildings();
+    const inside = moveWithCollisions({ x: -7, z: 7 }, 0, -3.3, colliders);
+    expect(inside.z).toBeCloseTo(3.7);
+    const atDesk = moveWithCollisions(inside, 0.8, 0, colliders);
+    expect(findZone(atDesk)).toBe('desk');
+    const blocked = moveWithCollisions(atDesk, 3, 0, colliders);
+    expect(blocked.x).toBeLessThan(-6);
   });
 });

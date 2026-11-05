@@ -4,7 +4,7 @@ export const LAND_LIMIT = 0.38;
 export const PLAYER_RADIUS = 0.34;
 export const START_HOUR = 18.4;
 export const QUALITY = {
-  high: { shadows: true, rainCount: 900, waterSegments: 64, pixelRatio: 1.5 },
+  high: { shadows: true, rainCount: 900, waterSegments: 64, pixelRatio: 1.25 },
   low: { shadows: false, rainCount: 350, waterSegments: 40, pixelRatio: 1 },
 };
 export const settings = { quality: 'high', hour: START_HOUR, fastTime: false };

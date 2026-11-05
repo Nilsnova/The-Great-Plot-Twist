@@ -23,7 +23,7 @@ function startGame() {
   const island = createIsland(scene), water = createWater(scene), boat = createBoat(scene);
   const sky = createSky(scene), weather = createWeather(scene), character = createCharacter();
   scene.add(character.group);
-  const controller = createController(character, input, island.colliders), view = createCamera(input);
+  const controller = createController(character, input, island.colliders), view = createCamera(input, island.cameraObstacles);
   let active = false, hud, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   function quality(name) { settings.quality = name; graphics.setQuality(name, scene); water.setQuality(name); }
   hud = createHud(container, {
@@ -51,13 +51,18 @@ function startGame() {
     }
     const info = graphics.renderer.info.render;
     hud.update(zone, { fps, calls: info.calls, triangles: info.triangles }); input.endFrame();
-  }, () => graphics.renderer.render(scene, view.camera));
+  }, () => { sky.follow(view.camera.position); graphics.renderer.render(scene, view.camera); });
   // A local dev-only inspection seam; never included in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, player: controller.player, settings, quality, setWeather, emit, on };
+    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on };
   function dispose() {
     stop(); stopListening(); input.dispose(); window.removeEventListener('resize', resize);
-    scene.traverse(object => { object.geometry?.dispose(); });
+    const materials = new Set();
+    scene.traverse(object => {
+      object.geometry?.dispose();
+      if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material));
+    });
+    materials.forEach(material => material.dispose());
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);

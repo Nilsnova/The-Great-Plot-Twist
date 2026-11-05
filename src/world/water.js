@@ -1,6 +1,7 @@
 // One low-poly sea mesh. Weather drives wave height; quality changes its grid.
 import * as THREE from 'three';
 import { colors, QUALITY } from '../config.js';
+import { smoothstep } from '../core/math.js';
 
 export function waveHeight(x, z, time, wind) {
   const strength = 0.04 + wind * 0.18;
@@ -28,7 +29,9 @@ export function createWater(scene) {
     update(time, weather) {
       const positions = mesh.geometry.attributes.position;
       for (let i = 0; i < positions.count; i++) {
-        positions.setY(i, waveHeight(positions.getX(i), positions.getZ(i), time, weather.wind));
+        const x = positions.getX(i), z = positions.getZ(i);
+        const fade = 1 - smoothstep(60, 100, Math.hypot(x, z));
+        positions.setY(i, waveHeight(x, z, time, weather.wind) * fade);
       }
       positions.needsUpdate = true;
     },

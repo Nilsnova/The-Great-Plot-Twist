@@ -33,7 +33,11 @@ export function createHud(container, actions) {
   container.append(overlay);
   const select = selector => overlay.querySelector(selector);
   const panel = select('.debug'), toggle = select('.settings-toggle');
-  function togglePanel(open) { panel.hidden = open === undefined ? !panel.hidden : !open; toggle.setAttribute('aria-expanded', String(!panel.hidden)); }
+  function togglePanel(open) {
+    panel.hidden = open === undefined ? !panel.hidden : !open;
+    toggle.setAttribute('aria-expanded', String(!panel.hidden));
+    if (panel.hidden) actions.focus();
+  }
   toggle.onclick = () => togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
   select('#explore').onclick = () => {
     select('.arrival').classList.add('departed'); select('.location').hidden = false;
@@ -42,6 +46,7 @@ export function createHud(container, actions) {
     actions.focus();
   };
   select('#hour').oninput = event => { settings.hour = Number(event.target.value); };
+  select('#quality').value = settings.quality;
   select('#quality').onchange = event => actions.quality(event.target.value);
   select('#fast-time').onchange = event => { settings.fastTime = event.target.checked; };
   overlay.querySelectorAll('[data-preset]').forEach(button => { button.onclick = () => {

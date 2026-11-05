@@ -7,11 +7,12 @@ export function createSky(scene) {
     topColor: { value: new THREE.Color() }, horizonColor: { value: new THREE.Color() },
   };
   const sky = new THREE.Mesh(new THREE.SphereGeometry(180, 24, 12), new THREE.ShaderMaterial({
-    side: THREE.BackSide, depthWrite: false, uniforms,
+    // Fog is an unlit colour. Keeping the sky unlit makes both meet seamlessly.
+    side: THREE.BackSide, depthWrite: false, toneMapped: false, uniforms,
     vertexShader: `varying vec3 direction;
       void main() { direction = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `varying vec3 direction; uniform vec3 topColor; uniform vec3 horizonColor;
-      void main() { float h = pow(max(normalize(direction).y, 0.0), 0.65);
+      void main() { float h = smoothstep(0.0, 0.75, normalize(direction).y);
       gl_FragColor = vec4(mix(horizonColor, topColor, h), 1.0);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
@@ -39,9 +40,11 @@ export function createSky(scene) {
   }));
   scene.add(starField); scene.fog = new THREE.FogExp2('#b8b5a1', 0.008);
   const nightTop = new THREE.Color('#26243f'), dayTop = new THREE.Color('#779da9');
-  const nightHorizon = new THREE.Color('#657786'), dayHorizon = new THREE.Color('#d3d9be');
+  const nightHorizon = new THREE.Color('#3e5267'), dayHorizon = new THREE.Color('#d3d9be');
   const sunset = new THREE.Color('#b98395'), cloudColor = new THREE.Color('#869a9c');
-  return { sun, update(hour, weather) {
+  return { sun,
+    follow(position) { sky.position.copy(position); starField.position.copy(position); },
+    update(hour, weather) {
     const direction = sunPosition(hour);
     const day = smoothstep(-0.22, 0.3, direction.y), night = 1 - day;
     const dusk = 1 - smoothstep(0, 0.4, Math.abs(direction.y));

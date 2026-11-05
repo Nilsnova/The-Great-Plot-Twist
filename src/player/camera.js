@@ -3,16 +3,19 @@ import * as THREE from 'three';
 import { clamp, smoothstep } from '../core/math.js';
 import { groundHeight } from './collision.js';
 
-export function createCamera(input) {
+export function createCamera(input, obstacles = []) {
   const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 300);
   const target = new THREE.Vector3(), desired = new THREE.Vector3();
+  const ray = new THREE.Raycaster(), direction = new THREE.Vector3();
   const opening = new THREE.Vector3(39, 29, 48), overviewTarget = new THREE.Vector3(-7, 4, 0);
   let yaw = 0.35, pitch = 0.48, distance = 15, arrival = 0, exploring = false;
   camera.position.copy(opening); camera.lookAt(overviewTarget);
   return { camera, get yaw() { return yaw; },
+    pause() { exploring = false; },
+    overview() { exploring = false; camera.position.copy(opening); camera.lookAt(overviewTarget); },
     start(skip = false) { exploring = true; if (skip) arrival = 4; },
     update(delta, player) {
-      if (!exploring) { camera.lookAt(overviewTarget); return; }
+      if (!exploring) return;
       arrival = Math.min(4, arrival + delta);
       yaw -= input.pointer.x * 0.005;
       pitch = clamp(pitch + input.pointer.y * 0.004, 0.2, 1.05);
@@ -34,6 +37,11 @@ export function createCamera(input) {
         const lineY = target.y + (desired.y - target.y) * fraction;
         desired.y += Math.max(0, groundHeight(x, z) + 0.5 - lineY) / fraction;
       }
+      // Pull in before a wall or tree; ignore the lifted-away cottage roof.
+      direction.subVectors(desired, target);
+      ray.set(target, direction.clone().normalize()); ray.far = direction.length(); ray.near = 0.35;
+      const hit = ray.intersectObjects(obstacles.filter(object => object.visible), true)[0];
+      if (hit) desired.copy(target).addScaledVector(ray.ray.direction, Math.max(1, hit.distance - 0.5));
       // Ease from the sea to the player, then follow without a hard camera snap.
       if (arrival < 4) {
         const blend = smoothstep(0, 4, arrival);

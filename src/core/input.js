@@ -8,7 +8,8 @@ export function createInput(canvas) {
     cleanups.push(() => target.removeEventListener(event, callback, options));
   };
   listen(window, 'keydown', event => {
-    if (event.target instanceof HTMLElement && event.target.closest('input, select, button, textarea')) return;
+    const editing = event.target instanceof HTMLElement && event.target.closest('input, select, button, textarea');
+    if (editing && event.code !== 'Escape') return;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
     if (!held.has(event.code)) pressed.add(event.code);
     held.add(event.code);

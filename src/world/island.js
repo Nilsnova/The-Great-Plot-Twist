@@ -35,13 +35,16 @@ export function createIsland(scene) {
   buildings.cottageRoof.removeFromParent();
   const roof = batchStatic(buildings.cottageRoof);
   roof.position.copy(buildings.group.children[0].position);
-  scene.add(createTerrain(), createPaths(), batchStatic(buildings.group),
-    batchStatic(scenery.group), batchStatic(tower.staticParts), roof, tower.group);
+  const staticParts = new THREE.Group();
+  staticParts.add(buildings.group, scenery.group, tower.staticParts);
+  const props = batchStatic(staticParts);
+  scene.add(createTerrain(), createPaths(), props, roof, tower.group);
   return {
+    cameraObstacles: [props, roof],
     tower, colliders: [...buildings.colliders, tower.collider, ...scenery.colliders],
     update(player, time, night) {
       const bounds = buildings.cottageBounds;
-      roof.visible = Math.abs(player.x - bounds.x) > 3.5 || Math.abs(player.z - bounds.z) > 2.8;
+      roof.visible = Math.abs(player.x - bounds.x) > 2.8 || Math.abs(player.z - bounds.z) > 2.1;
       tower.update(time, night);
     },
   };
