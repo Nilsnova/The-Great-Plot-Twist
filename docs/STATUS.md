@@ -19,7 +19,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 ### What works
 
 - **`main` is live.** The bootstrap merge (`a0e501a`, 5 Nov) put everything built so far on `main`: the team workflow docs, foundation wave 1, the graphics snapshot in `frontend/`, and `vercel.json` with two Vercel Services (`/api` goes to `backend/`, the rest to `frontend/`). Production works at https://the-great-plot-twist.vercel.app/: the page answers 200 with the game (title "The Great Plot Twist · Lighthouse Isle"), `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}`, and `/api/config` answers with all flags off. So Vercel Services with the Python backend works on the Hobby plan (deploy check 2 passed).
-- **The browser game (`frontend/`):** the pixel-art lighthouse island (D005, Codex's final pass, merged as `45d2d46`), a walking explorer, the four story zones (`cottage`, `desk`, `shore`, `tower_door`), day and night, weather states, and settings. `npm test`: 27 tests in 5 files passed; `npm run build`: built. (Checked by Claude on 5 Nov on `main` at `45d2d46`.)
+- **The browser game (`frontend/`):** original pixel art (D005) with the Saltreach Isles world from G2 + G3 (merged as `60bd60e`): Lighthouse Isle, the sea chart with sailing driven by the wind value, Saltreach Harbor with its hotspots, the home islet with four plots, the case places and a locked Gull's Rest. The place, hotspot, light and event ids are in [frontend/GRAPHICS.md](../frontend/GRAPHICS.md). The browser story engine (S1) is in `frontend/src/story/` and is not wired to the screen yet (that is S2). `npm test`: 62 tests passed; `npm run build`: built. (Checked by Claude on 5 Nov on `main`.)
 - **The Python API (`backend/`):** `GET /api/health`, `GET /api/config`, the sign-in check, the wallet rules, the pattern for outside data and the first migration. `uv run pytest`: 232 passed. `uv run ruff check .`: All checks passed! (Same check, same copy.)
 - **Accounts are ready.** Vercel: the Hobby team "The Great Plot Twist" is connected to the Nilsnova GitHub account, the project is `the-great-plot-twist`, Nils set the environment variables, and the function region should be Dublin (Nils confirms it in the Settings). Supabase: the project `great-plot-twist` (West EU, Ireland) exists, GitHub sign-in is on, and Claude's Supabase connection can reach it, so Claude applies the migration and no teammate has to be invited or paste SQL for that. Email sign-in should be off (Nils confirms). The A-lane teammates still get Developer access in the Supabase organization, to read.
 - **Story, look and plan:** story skeleton v1 is approved ([STORY.md](STORY.md)), the look is decided (D005: original top-down pixel art), and [ROADMAP.md](../ROADMAP.md) v0.2 is written.
@@ -28,8 +28,10 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 | What | Who | Where |
 |---|---|---|
-| G2 + G3: the Saltreach Isles world (place system, sea chart and sailing, Saltreach Harbor, home islet visuals, case place stubs; the place, hotspot and light ids are fixed in Nils' Codex prompt and documented in `frontend/GRAPHICS.md` when done) | Codex, for Nils | `feat/g2-world-places` |
-| S1 story engine: the Python engine and the story in `backend/`, an ES-module engine in `frontend/src/story/`, the 11 original tests, a parity test, `GET /api/content/intro-story` | Claude, for Nils | `feat/s1-import-plot-twist` |
+| Codex: pixel UI kit, story art, finale visuals (G4) and, once possible, Act 1 in the browser (S2) | Codex, for Nils | `feat/g4-ui-kit-story-art` |
+| Backbone: database applied to Supabase and verified, `GET /api/me`, a Sign-in-with-GitHub check page, the daily keep-alive cron | Claude, for Nils | `feat/a1-backbone-check` |
+| L1 real weather: Open-Meteo through the cached adapter, `GET /api/weather`, a browser module | Claude, for Nils | `feat/l1-live-weather` |
+| L4 Island Exchange core: price rules, keyless crypto feed with a recorded replay, market tables and one atomic trade function, routes | Claude, for Nils | `feat/l4-island-exchange` |
 | S0 story detail round: Story v2 edits, the case file, NPC partners, the open world, a timing simulation; for Nils' approval | Claude, for Nils | `docs/story-detail` |
 | Foundation wave 2: the migration aligned with D003 and D004 (starting balance 0, a `wallet_reasons` table, neutral captain names, explicit grants, `crews` and `crew_seats`), the keep-alive route `GET /api/keepalive`, engineering docs with the `frontend/` and `backend/` commands, `docs/ARCHITECTURE.md`, `docs/INTERFACES.md`, and the decision entries D002, D003, D004, D012 (Crews and seats) and D015 (owner-authorized merges) | Claude, for Nils | `chore/foundation` (not pushed yet) |
 | Coordination: roadmap, story, this page, the README update and agent briefs. They go to `main` first (merge order, step 1). | Claude, for Nils | waiting to go to `main` |
@@ -136,7 +138,7 @@ Read first:  AGENTS.md, CONTRIBUTING.md, docs/STORY.md (all of it), ROADMAP.md (
 Scope:       You may change: docs/STORY.md (answer the items under "Next detail round" and
              "Questions for this round"), new specs/S3-the-light.md and
              specs/S4-npc-partners.md (copied from specs/_TEMPLATE.md), docs/STATUS.md.
-             Do not touch: code, content/ files (S1 and S3 write those), the skeleton text in
+             Do not touch: code, backend/content/ files (S1 and S3 write those), the skeleton text in
              sections 1 to 9, and the five approved decisions.
              Titles only: no new personal names; Elena stays the only named character.
              Plain English, short sentences, no em dashes.
@@ -175,37 +177,44 @@ Read first:  AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md (sections 1 and 5, 
              ROADMAP.md (S1, S2, A3), docs/STORY.md (decision 2 and "Rules for changing the
              story"), backend/pyproject.toml, and in the source: README.md,
              plot_twist/engine.py, plot_twist/story.json, web/engine.js and tests/.
-Scope:       Proposed paths. Agree them in the issue first.
-               backend/plot_twist/              engine.py, cli.py, __init__.py, __main__.py
-                                                (the terminal game, started with
-                                                cd backend && uv run python -m plot_twist)
-               backend/plot_twist/tests/        test_acceptance.py, test_web_parity.py (11 tests)
-               frontend/src/story/engine.js     web/engine.js as an ES module, rule for rule
-               frontend/scripts/parity-runner.js  tests/parity_runner.js, rewritten with import
-               content/story.json               plot_twist/story.json
-               content/README.md                the content format and the provenance note
+Scope:       Paths as built in the first pull request. The content location is decision D016
+             (proposed).
+               backend/plot_twist/              engine.py, __init__.py. The terminal game (cli.py)
+                                                is not imported: it is not part of the web game.
+               backend/plot_twist/tests/        test_acceptance.py, test_web_parity.py (the 11
+                                                original tests), parity_runner.mjs (the Node.js
+                                                runner) and the tests added at import
+               frontend/src/story/              engine.js (web/engine.js as an ES module, rule
+                                                for rule), its helpers and a README.md
+               backend/content/story.json       plot_twist/story.json, unchanged
+               backend/content/README.md        the content format and the provenance note
+               backend/server/routes/content.py GET /api/content/intro-story, with its tests, and
+                                                one include_router line in backend/server/app.py
                backend/pyproject.toml           add "plot_twist/tests" to testpaths
                backend/tools/lint_content.py    the content linter (second pull request)
-             Allowed engine changes: read story.json from content/, and a save_path=None option
-             so the server never writes save files. The rules stay frozen.
-             Do not touch: backend/server/, supabase/, frontend/src/world/. Do not import the
-             old web interface (index.html, web/app.js, web/style.css); S2 builds a new one.
-             No new dependencies unless I say so. No secrets.
+             Allowed engine changes: read story.json from backend/content/, and a save_path=None
+             option so the server never writes save files. The rules stay frozen.
+             Do not touch: the rest of backend/server/, supabase/, frontend/src/world/. Do not
+             import the old web interface (index.html, web/app.js, web/style.css); S2 builds a
+             new one. No new dependencies unless I say so. No secrets.
 Git:         First pull request on feat/s1-import-plot-twist, second on feat/s1-story-v2, both
              from main. Commit and push only when I say so.
 Done when:   First pull request: cd backend && uv run pytest runs the 11 original tests plus
              the server tests, all green (paste the summary line); the parity test passes
-             (Python and JavaScript agree); cd frontend && npm test and npm run build pass; the
-             terminal game still starts; content/README.md holds the provenance note (source
-             repository, commit e235ee4, what changed) and the format; the D007 entry is in
+             (Python and JavaScript agree); cd frontend && npm test and npm run build pass;
+             GET /api/content/intro-story answers with the story (a test checks it);
+             backend/content/README.md holds the provenance note (source repository, commit
+             e235ee4, what changed) and the format; the D007 and D016 entries are in
              docs/DECISIONS.md.
              Second pull request (after S0's change list): every line from the change list is
-             in content/story.json, with one test per change (each ending line per decision,
+             in backend/content/story.json, with one test per change (each ending line per decision,
              the read-log flag, "no decision" as a real third path, the planted hints); the
              linter rejects unknown items or flags and flags that are set but never used; the
              parity test still passes.
-Watch out:   The backend on Vercel may not see files outside backend/. A3 checks this on a
-             preview. Say in the pull request how engine.py finds content/story.json.
+Watch out:   The story lives inside backend/ (D016), because the backend on Vercel may not see
+             files outside it. Whether the deployed API finds backend/content/story.json is not
+             checked yet: A3 checks it on a preview. Say in the pull request how engine.py finds
+             the file (it uses the content folder next to the plot_twist package).
 Method:      Move first, change second: the first commit copies the files unchanged, the next
              commits make the small edits, so a reviewer can see each change.
 Report:      Finish with: changed, verified (exact commands and result lines), not verified,
@@ -277,7 +286,7 @@ Read first:  AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md (sections 5 and 6, 
              backend/server/routes/health.py (the style to copy), backend/server/tests/helpers.py.
 Scope:       You may change: new backend/server/routes/me.py and backend/server/names.py,
              backend/server/app.py (one include_router line), new tests in
-             backend/server/tests/, content/names.json (new word lists, no real people's
+             backend/server/tests/, backend/content/names.json (new word lists, no real people's
              names), new frontend/src/online/api.js, a sign-in button in frontend/src/ui/
              (agree the spot with the G lane), frontend/vite.config.js (the /api proxy from
              docs/ENGINEERING.md, section 3, if nobody has added it), a new migration only if
@@ -292,7 +301,7 @@ Contract:    GET /api/me returns {captainName, coins, kit, place}. PUT /api/save
              comes from the verified sign-in (PlayerDep), never from the request body.
 Git:         Work on branch feat/a2-sign-in from main. Commit and push only when I say so.
 Done when:   Tests: 401 without a token; player A cannot read or write player B's data; a stale
-             save version gets 409; names come only from content/names.json, never from a
+             save version gets 409; names come only from backend/content/names.json, never from a
              GitHub login. cd backend && uv run pytest and uv run ruff check . pass, and
              cd frontend && npm test and npm run build pass (paste the lines). By hand: sign
              in, see the captain name and "Saved", then resume in a second browser
@@ -404,6 +413,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ## Log
 
 Newest first. One line per finished task: date, who, what, where.
+
+- **2026-11-05, evening.** Claude, for Nils: merged G2 + G3 from Codex (`60bd60e`: world manager, sea chart and sailing, Saltreach Harbor, home islet, case places) and S1 (the Plot Twist story engine: the original story unchanged in `backend/content/story.json`, the Python and the ES-module engines, the 11 original tests plus engine-rule tests, a parity test that replays the same moves through both engines, and `GET /api/content/{name}`; decisions D007 and D016). Main after the merge: 387 backend tests and 62 frontend tests pass, build OK. Codex now builds the UI kit, story art and finale visuals on `feat/g4-ui-kit-story-art`; Claude builds the backbone check, L1 weather and the L4 Exchange core on their own branches.
 
 - **2026-11-05.** Codex, for Nils: built G2/G3 Saltreach Isles, four home plots and case-place visuals on `feat/g2-world-places`; 68 original sprites + 9 backgrounds/charts, exact place/hotspot/light events, readable UI, 36 unit tests and real-browser/build/art checks pass; ten round trips retain 96 geometries/27 textures/one place root at 60 FPS. Contracts, asset sources and screenshots are in `frontend/`. Ready for Claude to integrate; no backend/story logic or main merge.
 

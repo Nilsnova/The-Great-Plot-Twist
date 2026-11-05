@@ -1,0 +1,128 @@
+{
+  "title": "The Keeper's Last Log",
+  "start": "cottage",
+  "items": {
+    "brass_key": {
+      "name": "Brass key",
+      "description": "Heavy and cold. A tag reads: TOWER DOOR."
+    },
+    "oil_lantern": {
+      "name": "Oil lantern",
+      "description": "Still half full. It throws a warm, steady light."
+    }
+  },
+  "scenes": {
+    "cottage": {
+      "title": "The Keeper's Cottage",
+      "text": "Rain hammers the windows of Keeper Elena Vos's cottage. She has not lit the lighthouse for three nights, and no one has seen her. Her tea is cold on the table. A writing desk sits in the corner, the shore path leads down to the water, and the cliff path climbs toward the dark lighthouse.",
+      "actions": [
+        {"id": "to_desk", "label": "Search the writing desk", "goto": "desk",
+         "message": "You pull out the creaking chair and sit at the desk."},
+        {"id": "to_shore", "label": "Walk down to the shore", "goto": "shore",
+         "message": "You follow the slippery path down to the boathouse."},
+        {"id": "to_tower", "label": "Climb the cliff path to the lighthouse", "goto": "tower_door",
+         "message": "Wind tears at your coat as you reach the foot of the tower."}
+      ]
+    },
+    "desk": {
+      "title": "The Writing Desk",
+      "text": "Papers, tide tables and a leather logbook cover the desk. One drawer is slightly open.",
+      "notes": [
+        {"when": {"missing": ["brass_key"]}, "text": "Something brass glints inside the open drawer."},
+        {"when": {"has": ["brass_key"]}, "text": "The drawer is empty now. You already took the key."}
+      ],
+      "actions": [
+        {"id": "take_key", "label": "Take the key from the drawer",
+         "requires": {"missing": ["brass_key"]}, "hide_when_blocked": true,
+         "take": "brass_key",
+         "message": "You take a heavy brass key. Its tag reads: TOWER DOOR."},
+        {"id": "read_log", "label": "Read the last entry in the logbook",
+         "set": ["read_log"],
+         "message": "Elena's handwriting shakes: 'The lights aren't for ships anymore. The man with the red boat signals someone out at sea. If I vanish, do NOT trust him. Tell the harbor master.'"},
+        {"id": "desk_back", "label": "Go back to the cottage", "goto": "cottage",
+         "message": "You leave the desk and return to the middle of the room."}
+      ]
+    },
+    "shore": {
+      "title": "The Boathouse",
+      "text": "Waves slam against the jetty. A fisherman in a yellow coat is tying up a red boat. An old oil lantern hangs on a hook by the boathouse door.",
+      "notes": [
+        {"when": {"has": ["oil_lantern"]}, "text": "The hook by the door is empty. The lantern is with you."},
+        {"when": {"flags": ["trusted_fisherman"]}, "text": "The fisherman gives you a thin smile. 'I'll keep an eye on the tower for you.'"},
+        {"when": {"flags": ["warned_harbor"]}, "text": "The red boat is gone. Across the bay, the harbor master's window glows. Your message got through."}
+      ],
+      "actions": [
+        {"id": "take_lantern", "label": "Take the oil lantern",
+         "requires": {"missing": ["oil_lantern"]}, "hide_when_blocked": true,
+         "take": "oil_lantern",
+         "message": "You lift the lantern off its hook and light it. It burns steadily."},
+        {"id": "trust_fisherman", "label": "Tell the fisherman that the keeper is missing",
+         "requires": {"not_flags": ["trusted_fisherman", "warned_harbor"]}, "hide_when_blocked": true,
+         "set": ["trusted_fisherman"],
+         "message": "'Missing, you say?' He glances up at the tower. 'Leave it with me. Don't you go up there tonight.' He walks off quickly toward the red boat."},
+        {"id": "warn_harbor", "label": "Say nothing to him and send a note to the harbor master",
+         "requires": {"not_flags": ["trusted_fisherman", "warned_harbor"]}, "hide_when_blocked": true,
+         "set": ["warned_harbor"],
+         "message": "You give a boy a coin to run your note across to the harbor master: 'Watch the lighthouse tonight.' The fisherman watches you but says nothing."},
+        {"id": "shore_back", "label": "Climb back up to the cottage", "goto": "cottage",
+         "message": "You climb back up the path, rain in your eyes."}
+      ]
+    },
+    "tower_door": {
+      "title": "Foot of the Lighthouse",
+      "text": "The lighthouse rises above you into the storm. A heavy iron door blocks the way in.",
+      "notes": [
+        {"when": {"has": ["brass_key"]}, "text": "The brass key in your pocket feels like it would fit the lock."}
+      ],
+      "actions": [
+        {"id": "unlock_door", "label": "Unlock the iron door",
+         "requires": {"has": ["brass_key"]},
+         "blocked_message": "The door is locked tight. You need a key.",
+         "goto": "stairwell",
+         "message": "The brass key turns with a groan. The door swings open onto blackness."},
+        {"id": "tower_back", "label": "Return to the cottage", "goto": "cottage",
+         "message": "You head back to the cottage, out of the wind."}
+      ]
+    },
+    "stairwell": {
+      "title": "The Stairwell",
+      "text": "A spiral staircase climbs into complete darkness. Somewhere above, something thumps against the floor. Parts of the stairs look broken.",
+      "notes": [
+        {"when": {"has": ["oil_lantern"]}, "text": "Your lantern shows where the steps are broken."}
+      ],
+      "actions": [
+        {"id": "climb", "label": "Climb the stairs",
+         "requires": {"has": ["oil_lantern"]},
+         "blocked_message": "It is far too dark. You would fall through the broken steps. You need a light.",
+         "goto": "lamp_room",
+         "message": "Holding the lantern high, you step over the gaps and climb toward the thumping."},
+        {"id": "stair_back", "label": "Go back outside", "goto": "tower_door",
+         "message": "You step back out into the rain."}
+      ]
+    },
+    "lamp_room": {
+      "title": "The Lamp Room",
+      "text": "At the top you find Keeper Elena Vos, tied to a chair next to the great lamp. She has been kicking the floor for help. 'He'll be back soon,' she whispers. 'The fisherman. He uses my light to guide the smugglers in.' Below, you hear an engine. A red boat is heading for the jetty.",
+      "actions": [
+        {"id": "signal", "label": "Light the great lamp and flash the harbor-alarm pattern",
+         "requires": {"flags": ["warned_harbor"]},
+         "blocked_message": "You could flash the lamp, but no one ashore is watching for a signal. You never warned the harbor.",
+         "goto": "ending_rescue",
+         "message": "The beam sweeps across the bay: long, short, long. The harbor master has been watching, and within minutes the coastguard's siren answers."},
+        {"id": "untie", "label": "Untie Elena and hide with her in the dark",
+         "goto": "ending_trapped",
+         "message": "You cut Elena free and crouch behind the lamp. Footsteps come up the stairs, and then a key turns in the lock below."}
+      ]
+    },
+    "ending_rescue": {
+      "title": "Ending: The True Keeper",
+      "ending": true,
+      "text": "Blue lights fill the jetty. The coastguard arrests the fisherman while he is still tying up his red boat. Elena wraps a blanket around your shoulders. 'You read the signs,' she says. 'Maybe the light should be yours now.' Plot twist: the helpful stranger was the smuggler all along, and you stopped him."
+    },
+    "ending_trapped": {
+      "title": "Ending: Locked In the Light",
+      "ending": true,
+      "text": "The fisherman laughs through the door. 'Thanks for telling me where to look,' he calls. He has locked the tower from outside. You and Elena are safe but trapped until the morning ferry spots you. By then the red boat and its cargo are long gone. Plot twist: the man you trusted was the one you should have feared."
+    }
+  }
+}

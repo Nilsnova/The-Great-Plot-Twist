@@ -65,7 +65,7 @@ A contract is written down once, in the place that fits it. INTERFACES.md sums i
 | Browser events | `frontend/GRAPHICS.md`, its contracts section (added by package G1) |
 | Database tables, policies, grants and functions | The comments inside the migration, and [`supabase/README.md`](../supabase/README.md). The policy and grant matrix is there. |
 | Shared lists: wallet reasons and their direction, feature flags, setting names | `WALLET_REASONS` (each reason with its direction) in `backend/server/wallet.py` and the table `wallet_reasons` in the migration, `FLAG_NAMES` in `backend/server/flags.py`, and `.env.example` |
-| Story and world data format | A short `README.md` inside `content/`, written by the first story package |
+| Story and world data format | [`backend/content/README.md`](../backend/content/README.md): the format of `story.json`, the rule for public and secret content, and where the story came from. Written by the first story package (S1). Every later content file gets its own section there (recipe 4.6). |
 | What one package promises | The spec in `specs/`, section "Contracts touched" |
 
 ### How code should look
@@ -111,11 +111,14 @@ An **owner role** names the kind of work that usually changes a folder. It is a 
 |---|---|---|
 | `backend/` | The Python API, all in one folder. The next rows show what is inside. | Server |
 | `backend/main.py` | Vercel entry only. It builds the app from `backend/server/` (`create_app()`) and hands requests to it. No rules here. | Server |
-| `backend/server/` | The Python package (FastAPI): app, errors, settings, flags, clock, auth, wallet, routes (`health`, `config` and `keepalive`), adapters. All game rules live here. Its `__init__.py` explains each file. | Server |
+| `backend/server/` | The Python package (FastAPI): app, errors, settings, flags, clock, auth, wallet, routes (`health`, `config`, `keepalive` and `content`), adapters. All game rules live here. Its `__init__.py` explains each file. | Server |
 | `backend/server/tests/` | pytest tests for the server. | Server |
+| `backend/plot_twist/` | The story engine in Python: the rules of the text adventure (`engine.py`) and its tests in `tests/`, which include the parity test that compares it with the browser engine. Added by package S1. | Story |
+| `backend/content/` | Game content as data, apart from the code: `story.json` today. Public files are served by `GET /api/content/{name}`, and `secret/` is never served. The format is in its `README.md`. Decision D016, proposed. Added by package S1. | Story |
 | `backend/pyproject.toml`, `backend/uv.lock`, `backend/.python-version` | Python packages, tool settings and the Python version. `uv` writes the lock file, so do not edit it by hand. | Server |
 | `frontend/` | The browser client, all in one folder: Three.js and Vite, plain JavaScript. Added by package G1. | Client |
 | `frontend/src/` | The client code. Added by package G1. | Client |
+| `frontend/src/story/` | The story engine in the browser (`engine.js`), equal rule for rule to `backend/plot_twist/engine.py`. It has no DOM code. Added by package S1. | Story |
 | `frontend/tests/` | Vitest tests for `frontend/src/`. Added by package G1. | Client |
 | `frontend/public/`, `frontend/index.html`, `frontend/vite.config.js`, `frontend/package.json` | Client build files and the list of npm packages. Added by package G1. | Client |
 | `frontend/GRAPHICS.md`, `frontend/ASSETS.md` | How the client works, its performance budgets, and the register of where each asset came from and its license. Added by package G1, inside `frontend/`. | Client |
@@ -123,7 +126,6 @@ An **owner role** names the kind of work that usually changes a folder. It is a 
 | `supabase/` | `migrations/` holds the SQL files (names start with a timestamp): tables, constraints, policies, grants and the wallet function. [`README.md`](../supabase/README.md) explains how to apply them and holds the policy and grant matrix and a manual test plan. | Database |
 | `docs/` | These engineering rules, the decision log, the one-time setup guide (`SETUP.md`), the big picture (`ARCHITECTURE.md`) and the shared contracts (`INTERFACES.md`). Longer design notes go here too. | Docs |
 | `specs/` | One spec per work package, started from `_TEMPLATE.md`. | Docs (the package owner writes their own spec) |
-| `content/` | Story and world data. Added later. | Story |
 | `.env.example` | Names of all settings, with empty values. Whoever adds a setting updates it. | Whoever adds the setting |
 | `.gitignore` | Files Git must never track: `.env`, `.venv/`, `node_modules/`, `dist/`, caches. | Whole team |
 | `.github/` | Pull request template and agent entry file. | Whole team |
@@ -340,13 +342,14 @@ A feature flag is a named switch that is **off by default**. It lets unfinished 
 
 ### 4.6 Add story content
 
-Story and world data lives in `content/`, apart from the code. The format is not fixed yet. The first story package decides it and records it in the [decision log](DECISIONS.md). Until then, follow these rules:
+Game content that the server uses lives in `backend/content/`, apart from the code (decision D016, proposed). The format of `story.json` is written in [`backend/content/README.md`](../backend/content/README.md). Read it first, and follow these rules:
 
-1. **Data, not code.** Story text, names and map data go in plain data files in `content/`. Code reads them and never hard-codes story text.
+1. **Data, not code.** Story text, names and map data go in plain data files in `backend/content/`. Code reads them and never hard-codes story text.
 2. **One scene or island per pull request**, so a teammate can read it all.
-3. **Test first.** A test loads every content file and checks that required fields are present and that every link to another scene or island points at something that exists.
+3. **Test first.** A test loads every content file and checks that required fields are present and that every link to another scene or island points at something that exists. For the story, `backend/plot_twist/tests/` already does this.
 4. **Original or licensed only.** Write the text yourself or use material we may reuse. Keep authorship and third-party notices, as AGENTS.md says. Real people's names and private details do not go into the story.
-5. **Describe the format** in a short `README.md` inside `content/` before you add the second file, so the next author follows the same shape.
+5. **Describe the format** of every new content file in `backend/content/README.md`, so the next author follows the same shape.
+6. **Public or secret?** A file the browser needs in order to play is public. Put its name on the list `PUBLIC_CONTENT` in `backend/server/routes/content.py` and add a test in `backend/server/tests/test_content.py`. Anyone on the internet can then read it, so tell the team first (an issue is enough). A file the browser must never see, for example the real solution of the case, goes in `backend/content/secret/`, and its name never goes on that list.
 
 ### 4.7 Add a wallet reason
 
@@ -378,9 +381,10 @@ You will touch: a new file in `supabase/migrations/`, `backend/server/wallet.py`
 | Server rules, wallet rules, settings, flags, sign-in, adapters | `backend/server/tests/` | pytest | `cd backend && uv run pytest` |
 | Python and SQL agree: the wallet reasons with their direction (read from every migration), starting balance, the required and longest `ref`, money function parameters, what the sign-up trigger does | `backend/server/tests/test_wallet_matches_migration.py` | pytest, reading the migrations as text | `cd backend && uv run pytest` |
 | API routes (with a fake signed-in user) | `backend/server/tests/` | pytest and FastAPI's test client | `cd backend && uv run pytest` |
+| The story engine, the format of `story.json`, and the Python and JavaScript engines agreeing (the parity test starts Node.js and is skipped, with a reason, when Node.js is missing) | `backend/plot_twist/tests/` | pytest | `cd backend && uv run pytest` |
 | SQL files: they parse | the `pglast` command in [4.2](#42-add-a-database-table) | pglast through uv | see 4.2, step 9 |
 | Database rules: who may read, who is refused, what the database rejects | the manual test plan in [`supabase/README.md`](../supabase/README.md#manual-test-plan) | Supabase SQL editor | run by a teammate on a Supabase project |
-| Client logic: math, collisions, event bus, zones | `frontend/tests/` | Vitest | `cd frontend && npm test` |
+| Client logic: math, collisions, event bus, zones, the story engine | `frontend/tests/` | Vitest | `cd frontend && npm test` |
 | How the game world looks | by eye, plus the real-browser checks in `frontend/GRAPHICS.md` | browser | `cd frontend && npm run dev`, and a screenshot in the pull request |
 
 1. **Tests before code.** Write the test, run it, watch it fail for the right reason, then write the code. Show the failing and the passing run in your pull request when you can.
