@@ -4,3 +4,7 @@
 @media(max-width:600px) and (max-height:500px){.touch-controls{bottom:115px}.masthead{display:none}.interact{bottom:115px}.weather-credit{display:none}}
 
 .chart-scroll{max-width:100%;overflow:auto}@media(max-width:600px){.chart-map{width:448px;height:256px;max-width:none;aspect-ratio:auto}.chart-map button{font-size:16px}.chart-map button span{max-width:150px}.chart-scroll{border:1px solid #788d69}}
+
+/* Phone controls sit above a full-width conditions strip, without duplicate chart controls. */
+@media(max-width:600px) and (pointer:coarse){.bottom-bar{display:block}.bottom-bar .controls{display:none}.bottom-bar .conditions{width:100%;max-width:none}.conditions .weather-label{display:inline}.conditions .settings-toggle{margin-left:auto}.touch-controls{bottom:180px}.interact{bottom:310px}}
+#game>canvas:focus-visible{outline:3px solid #f3d58c;outline-offset:-4px}html[data-colourblind=true] #game>canvas:focus-visible{outline-offset:-6px!important}

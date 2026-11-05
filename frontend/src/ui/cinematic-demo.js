@@ -15,8 +15,8 @@ export function createCinematicDemo(container,world,ctx={}) {
   let currentProgress=0;
   const tour=createTour({...ctx,container,world,progress(value){currentProgress=value;},announce(step){panel.update({title:step?.title??'Presenter · local rehearsal'});copy.textContent=step?.copy??'Tour finished. Player progress was not changed.';start.element.hidden=!!step;next.element.hidden=!step;stop.element.hidden=!step;progress.element.hidden=!step;details.hidden=!!step;}});
   progress.element.hidden=true;next.element.hidden=true;stop.element.hidden=true;
-  return {get active(){return tour.active;},start:tour.start,stop:tour.stop,
-    update(dt){tour.update(dt);progress.update({value:currentProgress,max:1});const dialog=[...document.querySelectorAll('dialog[open]')].at(-1),parent=tour.active&&dialog?dialog:container;if(panel.element.parentElement!==parent)parent.append(panel.element);panel.element.classList.toggle('in-dialog',parent!==container);panel.element.hidden=!!document.querySelector('.shell-screen[open]');},
+  return {get active(){return tour.active;},get changing(){return tour.changing;},get step(){return tour.step;},start:tour.start,stop:tour.stop,
+    update(dt){tour.update(dt);next.element.disabled=tour.changing;stop.element.disabled=tour.changing;progress.update({value:currentProgress,max:1});const dialog=[...document.querySelectorAll('dialog[open]')].at(-1),parent=tour.active&&dialog?dialog:container;if(panel.element.parentElement!==parent)parent.append(panel.element);panel.element.classList.toggle('in-dialog',parent!==container);panel.element.hidden=!!document.querySelector('.shell-screen[open]');},
     dispose(){tour.dispose();for(const button of [play,start,next,stop])button.dispose();progress.dispose();panel.dispose();},
   };
 }

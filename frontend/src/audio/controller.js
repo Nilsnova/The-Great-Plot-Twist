@@ -24,9 +24,9 @@ export function createAudio({container,on,caption}) {
   }
   const click=event=>{if(event.target.closest('button'))cue('click');},blip=()=>cue('blip');
   const visibility=()=>{theme();if(document.hidden)context?.suspend().catch(()=>{});};
-  window.addEventListener('pointerdown',unlock,true);window.addEventListener('keydown',unlock,true);container.addEventListener('click',click,true);container.addEventListener('dialogue-blip',blip);document.addEventListener('visibilitychange',visibility);
+  window.addEventListener('click',unlock,true);window.addEventListener('pointerdown',unlock,true);window.addEventListener('keydown',unlock,true);document.addEventListener('click',click,true);document.addEventListener('dialogue-blip',blip);document.addEventListener('visibilitychange',visibility);
   const stopPreferences=onPreferences(apply),stopCinematic=on('cinematic',event=>{finale=event.stage==='started';if(finale)cue('beam');theme();});
-  return {get state(){return context?.state??'locked';},get nodeCount(){return context?3:0;},cue,
+  return {get state(){return context?.state??'locked';},cue,
     setScreen(mode){screen=mode;theme();},
     update(dt,{weather,speed=0,night=0,active=false,place}={}) {
       if(!context||disposed)return;ambience.update(weather,screen==='playing'&&active);
@@ -37,6 +37,6 @@ export function createAudio({container,on,caption}) {
         if(night>0.3&&beamAt>35){beamAt=0;cue('beam');}
       }
     },
-    dispose(){if(disposed)return;disposed=true;window.removeEventListener('pointerdown',unlock,true);window.removeEventListener('keydown',unlock,true);container.removeEventListener('click',click,true);container.removeEventListener('dialogue-blip',blip);document.removeEventListener('visibilitychange',visibility);stopPreferences();stopCinematic();music?.dispose();ambience?.dispose();synth?.dispose();master?.disconnect();musicBus?.disconnect();effectsBus?.disconnect();context?.close().catch(()=>{});},
+    dispose(){if(disposed)return;disposed=true;window.removeEventListener('click',unlock,true);window.removeEventListener('pointerdown',unlock,true);window.removeEventListener('keydown',unlock,true);document.removeEventListener('click',click,true);document.removeEventListener('dialogue-blip',blip);document.removeEventListener('visibilitychange',visibility);stopPreferences();stopCinematic();music?.dispose();ambience?.dispose();synth?.dispose();master?.disconnect();musicBus?.disconnect();effectsBus?.disconnect();context?.close().catch(()=>{});},
   };
 }

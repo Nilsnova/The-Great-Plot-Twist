@@ -8,7 +8,8 @@ export function createGamepad(input,{menu,chart,isPlaying}) {
     if(!controls.length)return;const index=controls.indexOf(document.activeElement);controls[(index+direction+controls.length)%controls.length].focus();
   }
   return {update(){
-    const pad=navigator.getGamepads?.()?.find(pad=>pad?.connected&&pad.mapping==='standard');
+    let pads=[];try{pads=navigator.getGamepads?.()??[];}catch{/* Keyboard and touch remain available when permission is denied. */}
+    const pad=pads.find(pad=>pad?.connected&&pad.mapping==='standard');
     if(!pad){previous=[];previousId=null;input.setVirtual('gamepad',{x:0,y:0});return;}
     if(previousId!==pad.id){previous=pad.buttons.map(button=>button.pressed);previousId=pad.id;}
     const buttons=pad.buttons.map(button=>button.pressed),edges=risingButtons(buttons,previous);previous=buttons;

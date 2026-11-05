@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T18:32:52.287Z",
+  "checked": "2026-11-05T20:07:26.321Z",
   "checks": [
     "Vite proxy reaches the actual public intro API",
     "API returns the original story structure",

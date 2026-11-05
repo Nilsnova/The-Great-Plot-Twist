@@ -1,8 +1,9 @@
 {
-  "checked": "2026-11-05T19:51:10.533Z",
+  "checked": "2026-11-05T19:59:10.936Z",
   "checks": [
     "Cold title allocates neither WebGL nor an AudioContext",
     "Continue is disabled without a local intro",
+    "Gamepad can navigate the cold title without allocating audio",
     "Native title dialog contains keyboard focus",
     "Every experience preference is saved with bounded values",
     "Preferences contain only documented fields, no account or token data",

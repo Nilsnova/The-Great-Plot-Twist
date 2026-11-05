@@ -2,6 +2,7 @@
 import './ui/styles.css';
 import './ui/kit/kit.css';
 import './ui/shell.css';
+import {createGamepad} from './controls/gamepad.js';
 import {createShell} from './shell/controller.js';
 import {createSettingsView} from './settings/view.js';
 import {watchSystemMotion} from './settings/preferences.js';
@@ -28,5 +29,8 @@ const shell=createShell({container,readSave:()=>introJournal().read(),resetInput
   async onPlay(resume){const game=await loadGame();await game?.begin(resume);},
   async onDemo(){const game=await loadGame();game?.startDemo();},
 });
-function dispose(){disposed=true;runtime?.dispose();shell.dispose();audio.dispose();captions.dispose();stopMotion();}
+const titlePad=createGamepad({setVirtual(){},press(){}},{isPlaying:()=>false});let titleFrame;
+function pollTitlePad(){if(disposed||runtime)return;if(!loading)titlePad.update();titleFrame=requestAnimationFrame(pollTitlePad);}
+titleFrame=requestAnimationFrame(pollTitlePad);
+function dispose(){disposed=true;cancelAnimationFrame(titleFrame);titlePad.dispose();runtime?.dispose();shell.dispose();audio.dispose();captions.dispose();stopMotion();}
 if(import.meta.hot)import.meta.hot.dispose(dispose);

@@ -37,6 +37,8 @@ export function createHud(container, actions) {
   const select = selector => overlay.querySelector(selector);
   const credits = node('div','weather-credit'); credits.hidden = true; select('.conditions').append(credits);
   const panel = select('.debug'), toggle = select('.settings-toggle');
+  select('.chapter').setAttribute('role','status');select('.chapter').setAttribute('aria-atomic','true');
+  if(actions.settings){toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','dialog');}
   function togglePanel(open) {
     panel.hidden = open === undefined ? !panel.hidden : !open;
     toggle.setAttribute('aria-expanded', String(!panel.hidden));

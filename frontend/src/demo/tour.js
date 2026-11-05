@@ -17,7 +17,7 @@ export function createTour(ctx) {
     if(id==='intro'){story.open();await wait(5000);if(token!==generation)return;story.perform('to_desk');await wait(5000);if(token===generation)story.perform('read_log');return;}
     if(id==='arrival'){await ctx.world.goTo('lighthouse_isle',{fast:true});if(token===generation){ctx.hud.start();standAt('cottage');}}
     if(id==='chart'){ctx.chart.show();await wait(4000);if(token!==generation)return;ctx.chart.close();await ctx.world.goTo('saltreach_harbor');}
-    if(id==='harbor'){await ctx.world.goTo('saltreach_harbor',{fast:true});if(token===generation)standAt('harbor_office');await wait(8000);if(token===generation)standAt('market_hall');await wait(8000);if(token===generation)standAt('captains_table');}
+    if(id==='harbor'){await ctx.world.goTo('saltreach_harbor',{fast:true});if(token===generation)standAt('harbor_office');await wait(8000);if(token!==generation)return;standAt('market_hall');await wait(8000);if(token===generation)standAt('captains_table');}
     if(id==='fog'||id==='storm'){settings.hour=21;ctx.caption(id==='fog'?'Fog settles over the harbor · weather override':'Rain and strong wind · storm override');if(id==='fog')ctx.cue('foghorn');}
     if(id==='finale'){settings.hour=23;for(const name of ['three_lights','fog_lift','schooner_reveal','unmask','relighting']){if(token!==generation)return;await ctx.world.cinematic(name);}}
   }
@@ -33,7 +33,7 @@ export function createTour(ctx) {
   }
   async function advance(){if(!active||changing)return;changing=true;generation++;cancelWait();closeViews();await task;if(!active||disposed)return;if(machine.advance()){launch();changing=false;}else await stop();}
   const key=event=>{if(!active||event.code!=='Space')return;event.preventDefault();event.stopImmediatePropagation();if(!event.repeat)advance();};window.addEventListener('keydown',key,true);
-  return {get active(){return active;},start(){if(active||disposed||ctx.world.busy)return false;ctx.begin();snapshot={weather:getWeather(),hour:settings.hour,place:ctx.world.current?.id??'lighthouse_isle',position:ctx.player.position.clone()};active=true;ctx.resetInput();machine.start();launch();return true;},advance,stop,
+  return {get active(){return active;},get changing(){return changing;},get step(){return machine.step?.id??null;},start(){if(active||disposed||ctx.world.busy)return false;ctx.begin();snapshot={weather:getWeather(),hour:settings.hour,place:ctx.world.current?.id??'lighthouse_isle',position:ctx.player.position.clone()};active=true;ctx.resetInput();machine.start();launch();return true;},advance,stop,
     update(dt){if(!active||changing)return;machine.tick(dt);ctx.progress(machine.progress,machine.index);if(machine.due&&taskDone)advance();},
     dispose(){disposed=true;active=false;generation++;cancelWait();closeViews();story.dispose();window.removeEventListener('keydown',key,true);machine.stop();},
   };

@@ -1,10 +1,10 @@
 # Saltreach Isles graphics
 
-The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
+The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
 ## Run, controls and readability
 
-From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and open Vite's address. Use the Node versions in package.json. `npm run build` writes dist and `npm run preview` serves it. `/asset-library.html` is the searchable pixel workshop.
+From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and open Vite's address. Use the Node versions in package.json. `npm run build` writes dist and `npm run preview` serves it. `/asset-library.html` is the searchable pixel workshop; `/ui-kit.html` is the separate component gallery. Choose **New game** on the title, or **Continue** for this browser’s intro save.
 
 | Input | Action |
 | --- | --- |
@@ -15,15 +15,17 @@ From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and ope
 | Fast travel on chart | Skip the passage animation |
 | Wheel | Discrete 1×/2× zoom |
 | T; 1 / 2 / 3 / 4 | Fast clock; clear / overcast / storm / fog |
-| Settings; Escape | Time/weather/quality controls; close and restore game focus |
+| Settings; Escape | Preferences; close the top view or pause/resume the world |
+| Touch stick / Interact / Chart / Menu | Touch movement, investigation, travel and pause |
+| Standard gamepad | Stick/D-pad, A interact, Y chart, Menu pause; D-pad/A in menus |
 
-UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 12 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch movement is not implemented.
+UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 12 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch controls, optional gamepad and 375 px menu/HUD layouts are implemented in G5; see Controls below.
 
 The close camera follows the player and keeps extra headroom near the Lighthouse tower. Cottage roofs reveal the interior/desk; foreground trees fade. Piers draw beneath the explorer and are walkable; open sea is blocked. The Harbor Office's matching window overlay glows at night and is visible from the dock spawn. It supplies no story explanation.
 
 ## Art, coordinates and ownership
 
-The library has **182 original sprites and 9 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
+The library has **182 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
 One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
@@ -128,11 +130,11 @@ The preceding measurements are the G2 baseline. Current G4/S2 evidence is record
 
 ## File map and handoff
 
-main.js wires the loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
+main.js owns the small title bootstrap; game.js wires the loaded world and frame loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
 
-Current branch is feat/g5-experience-layer, created from main acdd341. Root remains the sole writing agent; subagents review read-only. G4/S2 is already merged into main. G5 changes only frontend/ plus the authorised G-lane Next steps and one Log entry in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Incoming backend, API weather client, story engine, account, infrastructure and secret content remain unchanged.
+Current branch is feat/g5-experience-layer, created from main acdd341 and synchronised with main 8d0a718, including the unchanged Exchange backend. Root remains the sole writing agent; subagents review read-only. G4/S2 is already merged into main. G5 changes only frontend/ plus the authorised G-lane Next steps and one Log entry in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Incoming backend, API weather client, story engine, account, infrastructure and secret content remain unchanged.
 
-Final checks also passed the built game (including reduced-motion chart travel) and both development/production pixel workshops, each decoding all 77 PNGs. Full regeneration reproduced 77 byte-identical files. Commands and results above are scoped to graphics; backend tests were not run because backend code was not changed.
+The earlier G2 check covered 77 PNGs; the G4 and G5 sections below record their larger libraries and current verification separately. Checks in this file are scoped to graphics. Backend changes are owned and verified by their lanes.
 
 ## UI kit
 
@@ -238,7 +240,7 @@ Credits display four `<name>` placeholders, no student numbers, data/adaptation/
 
 All sound is original Web Audio code in `src/audio/`, with no audio files. `controller.js` constructs/resumes an AudioContext only after a trusted pointer-down or keydown. There is no autoplay allocation on a cold title. One master bus feeds the destination; music and effects buses feed master, so effective levels are `master × music` and `master × effects`. Zero volume is applied immediately; other changes ramp briefly to avoid clicks. Missing/blocked audio leaves all visual controls usable.
 
-`ambience.js` filters a deterministic noise buffer into sea, wind and rain, following the current four-value weather snapshot rather than just network events, so live weather and overrides both apply. `synth.js` supplies oscillator envelopes for footsteps (actual distance travelled), UI clicks, rate-limited dialogue blips, lighthouse foghorn and beam. `music.js` is an original 16-note coastal theme with a lifted finale variation. Title and cinematic lifecycle select the music; the motif contains no external melody or recording. Visibility suspends the context and scheduling; a later trusted input resumes it.
+`ambience.js` filters a deterministic noise buffer into sea, wind and rain, following the current four-value weather snapshot rather than just network events, so live weather and overrides both apply. `synth.js` supplies oscillator envelopes for footsteps (actual distance travelled), UI clicks, rate-limited dialogue blips, lighthouse foghorn and beam. `music.js` is an original 16-step coastal theme with a lifted finale variation. Title and cinematic lifecycle select the music; the motif contains no external melody or recording. Visibility suspends the context and scheduling; a later trusted input resumes it.
 
 Important horn/beam/weather cues have captions (`captions.js`, polite live status) in the active modal or world. Clicks have focused/pressed controls, footsteps have player movement, and dialogue blips have visible text. Sound communicates no exclusive clue. Disposal cancels timers/listeners, stops/disconnects sources and buses and closes the context. Audible balance on physical speakers/headphones remains a manual rehearsal item.
 
@@ -246,7 +248,7 @@ Important horn/beam/weather cues have captions (`captions.js`, polite live statu
 
 Desktop keyboard remains WASD/arrows, Shift run, E interact, M chart and wheel zoom. Escape closes an overlay or pauses. Dialogue retains 1–9, arrows and Enter. `core/input.js` combines keyboard with named virtual sources and clears them on blur, reset and disposal. `controls/logic.js` owns deadzones, clamping and positive-y-forward mapping; the existing player controller normalises diagonals and respects analogue strength.
 
-On touch/coarse-pointer screens `controls/touch.js` adds a captured virtual stick plus Interact, Chart and Menu targets, at least 44 CSS pixels. Pointer-up/cancel/lost-capture, blur and overlays release movement. Focused stick arrows also work. `controls/gamepad.js` polls optional standard-mapped pads: left stick/D-pad walk, A interact, Y chart, Menu pause; D-pad up/down moves menu focus, left/right changes selects/sliders, A activates and B/Menu closes. Rising-edge actions avoid repeat activations; disconnect clears that source. Sound still needs an initial trusted browser click/key.
+On touch/coarse-pointer screens `controls/touch.js` adds a captured virtual stick plus Interact, Chart and Menu targets, at least 44 CSS pixels. Pointer-up/cancel/lost-capture, blur and overlays release movement. Focused stick arrows also work. `controls/gamepad.js` polls optional standard-mapped pads: left stick/D-pad walk, A interact, Y chart, Menu pause; D-pad up/down moves menu focus, left/right changes selects/sliders, A activates and B/Menu closes. The lightweight title poll also supports D-pad/A before the world is fetched. Missing/denied Gamepad access leaves keyboard/touch running. Rising-edge actions avoid repeat activations; disconnect clears that source. Sound still needs an initial trusted browser click/key.
 
 `ui/devices.css` keeps HUD/menu text readable at 375 px. Settings/credits/intro scroll vertically; the phone chart scrolls horizontally at its original native scale instead of fractional shrinking. Cinematic art likewise retains native pixels in an overflow view on narrow screens. No orientation lock or device-specific backend call is needed.
 

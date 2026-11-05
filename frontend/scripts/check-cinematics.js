@@ -13,6 +13,12 @@ try {
   check(await page.locator('.cinematic-demo').count()===0,'Normal play has no rehearsal controls');
   await page.evaluate(()=>{window.__cinema=[];window.__island.on('cinematic',e=>window.__cinema.push(e));});
   check(await page.evaluate(()=>window.__island.world.cinematic('unknown'))===false,'Unknown cinematic is refused without events');
+  const lazyPattern='**/src/world/cinematics/controller.js*';
+  await page.route(lazyPattern,async route=>{await new Promise(resolve=>setTimeout(resolve,700));await route.continue();});
+  await page.evaluate(()=>{window.__cancelledLoad=window.__island.world.cinematic('fog_lift');});await page.waitForFunction(()=>window.__island.world.busy);await page.keyboard.press('Escape');
+  check(await page.evaluate(async()=>await window.__cancelledLoad===false&&!window.__island.world.busy),'Escape cancels a lazily loading shot before it starts');
+  await page.unroute(lazyPattern);await page.waitForTimeout(750);
+  check(await page.evaluate(()=>window.__cinema.length===0)&&await page.locator('.cinematic-modal').count()===0,'Late lazy loading cannot reopen a cancelled shot or emit events');
   report.before=await measure(page);
   const start=Date.now();await page.evaluate(()=>{window.__shot=window.__island.world.cinematic('three_lights');});
   await page.waitForFunction(()=>document.querySelector('.cinematic-modal progress')?.value>.1);

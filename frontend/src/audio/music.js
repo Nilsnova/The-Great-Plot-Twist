@@ -1,4 +1,4 @@
-// Original eight-bar coastal motif, scheduled a note at a time with no audio files.
+// Original 16-step coastal motif, scheduled a note at a time with no audio files.
 const melody=[62,69,74,76,74,69,67,null,65,69,72,74,72,69,62,null];
 export function createMusic(context,output,synth) {
   let timer=null,mode=null,index=0;

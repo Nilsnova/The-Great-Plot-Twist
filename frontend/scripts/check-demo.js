@@ -18,9 +18,9 @@ try {
   check(report.requests.every(request=>request.method==='GET'&&request.path==='/api/weather'),'Only the existing best-effort weather GET is attempted; no backend writes or intro API dependency');
   check(await page.evaluate(()=>window.__island.world.current.id==='lighthouse_isle'&&!window.__island.world.relit),'Tour restores the departure place and does not unlock Relighting');report.after=await measure(page);await page.screenshot({path:'captures/20261105_G5-Demo-Finished.png'});
   await page.getByRole('button',{name:'Start highlights tour',exact:true}).click();
-  for(let i=0;i<7;i++){await page.keyboard.press('Space');await page.waitForTimeout(100);}
-  await page.waitForFunction(()=>!window.__island.demo.active);check(true,'One large key skips every tour step, including a pending cinematic');
-  await page.getByRole('button',{name:'Start highlights tour',exact:true}).click();await page.keyboard.press('Space');await page.waitForTimeout(100);await page.keyboard.press('Space');
+  report.skipTimesMs=[];for(let i=0;i<7;i++){const skipStart=Date.now();const step=await page.evaluate(()=>window.__island.demo.step);await page.keyboard.press('Space');await page.waitForFunction(step=>!window.__island.demo.active||(!window.__island.demo.changing&&window.__island.demo.step!==step),step);report.skipTimesMs.push(Date.now()-skipStart);}
+  await page.waitForFunction(()=>!window.__island.demo.active);check(report.skipTimesMs.every(ms=>ms<2000),'One large key promptly skips every tour step, including a pending cinematic');
+  await page.getByRole('button',{name:'Start highlights tour',exact:true}).click();await page.keyboard.press('Space');await page.waitForFunction(()=>window.__island.demo.step==='arrival'&&!window.__island.demo.changing);await page.keyboard.press('Space');
   await page.locator('.sailing[open]').waitFor();const stopStart=Date.now();await page.evaluate(()=>Promise.all([window.__island.demo.stop(),window.__island.demo.stop()]));report.stopDuringPassageMs=Date.now()-stopStart;
   check(await page.evaluate(()=>!window.__island.demo.active&&!window.__island.world.busy&&window.__island.world.current.id==='lighthouse_isle'),'Repeated End during a passage settles once and restores the island');
   check(await page.evaluate(()=>window.__journalWrites===0&&window.__introEnded.length===0),'Skipping and cancelling also preserve player progress');
