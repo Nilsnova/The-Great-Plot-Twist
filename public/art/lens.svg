@@ -1,0 +1,11 @@
+<!-- Original painted-paper lighthouse lens study. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m59 215 17-28 106 0 20 28-23 13-98 0Z" fill="#b7a976"/>
+<ellipse cx="129" cy="137" rx="76" ry="78" fill="#c6b77f"/><ellipse cx="129" cy="133" rx="63" ry="67" fill="#a5c3b0"/>
+<ellipse cx="129" cy="133" rx="49" ry="54" fill="none" stroke="#d0ddbd" stroke-width="6"/><ellipse cx="129" cy="133" rx="34" ry="39" fill="none" stroke="#8fb4a4" stroke-width="5"/>
+<path d="m95 102 54 69m-45-84 65 84" stroke="#e5e8c8" stroke-width="6" opacity=".6"/><path d="m92 215 74 0" stroke="#dfcb94" stroke-width="4"/>
+
+</g></svg>

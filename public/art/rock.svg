@@ -1,0 +1,10 @@
+<!-- Original weathered coastal rocks, made from a few quiet painted facets. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="220" height="165">
+<ellipse cx="101" cy="127" rx="79" ry="11" fill="#638573" opacity=".12"/>
+<path d="m26 109 15-57 47-24 49 17 30 58-19 28-76 2Z" fill="#a4b39d"/>
+<path d="m41 52 47-24 49 17-32 27-49 5Z" fill="#bfcaad"/>
+<path d="m105 72 32-27 30 58-19 28-43-13Z" fill="#91a58f"/>
+<path d="m26 109 30-32 49-5 0 46-33 15Z" fill="#abbba0"/>
+<path d="m129 122 12-22 29-5 16 29-12 13-31-2Z" fill="#b8c4a7"/><path d="m141 100 29-5-14 17-24 4Z" fill="#c9d0b1"/>
+<path d="m53 71 20-7m-27 39 10-4m57-53 9 4m-35 63 8 0" stroke="#d2d6b6" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,12 @@
+<!-- Original painted-paper little tidal pool. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M30 169 47 126 91 111 137 117 180 104 220 135 231 181 207 216 152 231 105 222 61 229 28 200Z" fill="#b8c4a3"/>
+<path d="M47 170 63 139 102 132 139 143 179 126 207 147 215 180 191 205 149 214 108 204 70 213 44 192Z" fill="#7fa99d"/>
+<path d="m51 174 37-10m22 27 40-7m14-24 27-8m-101 49 25-3" stroke="#bcd0b5" stroke-width="3" fill="none"/>
+<path d="m38 165 14-32 24-8-7 21-20 20m121-57 26-4 21 19-29-2m-1 92 23-19 10-1-6 18-23 11" fill="#d1d2af"/>
+<path d="m155 187 6-13 8 7 15-1-8 12 4 14-15-7-12 6 2-14-11-8Z" fill="#bf8764"/>
+
+</g></svg>

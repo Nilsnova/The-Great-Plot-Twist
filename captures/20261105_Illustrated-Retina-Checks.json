@@ -1,0 +1,22 @@
+{
+  "checked": "2026-11-05T13:09:48.133Z",
+  "viewport": "1440 × 900, device DPR 2",
+  "high": {
+    "fps": 60,
+    "calls": 72,
+    "triangles": 2072,
+    "points": 0,
+    "devicePixelRatio": 2,
+    "pixelRatio": 1.25,
+    "shadows": false
+  },
+  "low": {
+    "fps": 60,
+    "calls": 72,
+    "triangles": 2072,
+    "points": 0,
+    "devicePixelRatio": 2,
+    "pixelRatio": 1,
+    "shadows": false
+  }
+}

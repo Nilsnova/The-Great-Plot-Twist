@@ -1,0 +1,14 @@
+<!-- Original painted-paper personal island cabin. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+<path d="m35 181 137 21 0 68-137-18Z" fill="#e7dabb"/><path d="m172 202 57-36v64l-57 40Z" fill="#c5bd95"/>
+<path d="m20 180 62-52 160 37-66 43Z" fill="#bd7759"/><path d="m82 128 160 35v8l-66 43-7-7 60-39Z" fill="#9f6750"/>
+<path d="m42 169 130 31m-107-50 130 31m-105-43-42 39m74-32-44 39m77-30-45 39" stroke="#dda97c" stroke-width="2" fill="none"/>
+<path d="m65 211 25 4v45l-25-4Z" fill="#76937c"/><path d="m111 216 31 5v26l-31-4Z" fill="#8fa78a"/><path d="m116 221 21 3v16l-21-3Z" fill="#e4cb7f"/>
+<path d="m126 223v17" stroke="#8fa78a" stroke-width="2"/>
+<path d="m27 252 146 20 17 13-151-20Z" fill="#c9b381"/><path d="m33 263 140 19v8l-140-18Z" fill="#a99b71"/>
+<path d="m40 262 0-49m114 66 0-50M40 216l114 17" stroke="#a99d71" stroke-width="6" fill="none"/>
+<path d="m191 196 20-14v24l-20 14Z" fill="#d6ce9f"/>
+<path d="m52 198 13 2m89 47 11 2m-67 14 32 4" stroke="#cfc69f" stroke-width="2"/>
+</g></svg>

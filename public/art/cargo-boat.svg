@@ -1,0 +1,12 @@
+<!-- Original painted-paper coastal cargo boat. Staged sailing artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" width="320" height="280"><ellipse cx="160" cy="248" rx="130" ry="15" fill="#9bbbad" opacity=".4"/><g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M25 204 165 229 298 185Q279 236 167 253L48 231Z" fill="#829d81"/><path d="m26 203 141 11 130-29-10 17-119 34-128-21Z" fill="#cbb98c"/>
+<path d="m54 162 53 7v47l-53-7Zm53 7 31-22v48l-31 21Z" fill="#c7b481"/><path d="m54 162 31-22 53 7-31 22Z" fill="#dfcb97"/>
+<path d="m65 173 31 33m-30-7 30-23" stroke="#e4d4a3" stroke-width="5"/>
+<path d="m127 172 48 7 26-21-47-7Z" fill="#d5c28f"/><path d="m127 172 48 7v41l-48-6Zm48 7 26-21v43l-26 19Z" fill="#b5a275"/>
+<path d="m199 160 38 7v32l-38 10Z" fill="#d8d0a5"/><path d="m196 156 20-24 35 15-13 24Z" fill="#739682"/>
+<path d="m226 109 0-64m0 13-56 66m56-66 18 71m-54-29 0 48" stroke="#9e9970" stroke-width="4" fill="none"/>
+<path d="m169 124 14 0 0 20-14 0Z" fill="#b2a478"/><path d="m90 226 60 10" stroke="#b5c29e" stroke-width="3"/>
+
+</g></svg>

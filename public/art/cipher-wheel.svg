@@ -1,0 +1,12 @@
+<!-- Original painted-paper cipher wheel study. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<ellipse cx="129" cy="147" rx="84" ry="78" fill="#bda46d"/><ellipse cx="129" cy="143" rx="75" ry="69" fill="#ddcb98"/>
+<ellipse cx="129" cy="143" rx="53" ry="49" fill="#86a087"/><ellipse cx="129" cy="143" rx="33" ry="31" fill="#c2c69a"/>
+<path d="m129 78v12m0 107v12m-69-66h12m113 0h12m-116-43 9 10m80 67 9 10m-98 0 9-10m80-67 9-10" stroke="#a69365" stroke-width="4"/>
+<path d="m116 107 11-6 10 6m22 22 7 11-7 10m-20 24-11 5-10-5m-24-23-5-11 5-10" stroke="#d7d6a9" stroke-width="4" fill="none"/>
+<path d="m129 120 13 22-13 21-12-21Z" fill="#b9855e"/><circle cx="129" cy="142" r="6" fill="#e3cb93"/>
+
+</g></svg>

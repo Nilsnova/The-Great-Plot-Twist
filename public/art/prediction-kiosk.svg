@@ -1,0 +1,14 @@
+<!-- Original painted-paper question kiosk. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m47 172 115 16 1 79-114-14Z" fill="#c6b17e"/><path d="m162 188 48-30v77l-47 32Z" fill="#a18f68"/>
+<path d="m48 165 114 17 49-31-116-16Z" fill="#e1c895"/>
+<path d="m50 171 0-86m109 99 0-82m50 49 0-72" stroke="#8a926e" stroke-width="8"/>
+<path d="m25 93 67-43 151 24-77 46Z" fill="#ebe1b7"/><path d="m25 93 26 5 70-42-29-6m46 10 24 4-72 39-24-3m49 8 26 3 74-41-28-4" fill="#c78664"/>
+<path d="m25 93 0 14q12 11 24 0 12 13 24 2 12 13 24 3 12 13 24 4 12 12 24 2 12 8 21 2v-13Z" fill="#c7b28b"/>
+<path d="m65 113 62 8v60l-62-9Z" fill="#f2e6c5"/><path d="m82 137q2-16 16-12 18 7 1 18l-3 10" stroke="#678876" stroke-width="8" fill="none"/><circle cx="95" cy="164" r="4" fill="#678876"/>
+<path d="m75 208 25 4v26l-25-3Zm43 6 25 4v26l-25-4Z" fill="#9fb08b"/><path d="m82 220 7 8 9-12m28 9 11 11m0-10-10 10" stroke="#f0dfb5" stroke-width="3" fill="none"/>
+
+</g></svg>

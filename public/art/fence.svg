@@ -1,0 +1,11 @@
+<!-- Original painted-paper uneven picket fence. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m23 154 203-24 0 13-203 24Zm-2 36 205-24 0 13-205 24Z" fill="#b5aa7c"/>
+<path d="m34 224 0-121 12-14 12 11v120Zm51-7 0-121 13-14 13 10v122Zm54-7 0-121 13-14 13 10v122Zm53-7 0-121 13-14 13 10v122Z" fill="#d1bf91"/>
+<path d="m41 115 0 95m52-102 0 94m54-102 0 94m53-102 0 94" stroke="#e9d9ab" stroke-width="3"/>
+<g fill="#8d9775"><circle cx="46" cy="157" r="2.5"/><circle cx="98" cy="151" r="2.5"/><circle cx="152" cy="145" r="2.5"/><circle cx="205" cy="139" r="2.5"/></g>
+
+</g></svg>

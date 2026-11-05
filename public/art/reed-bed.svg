@@ -1,0 +1,11 @@
+<!-- Original painted-paper marsh reed bed. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m68 228 5-119m29 119 9-145m25 145 17-125m16 125 11-101m-89 97-35-82m71 83 35-77m-25 72 42-55" stroke="#89a077" stroke-width="5" fill="none"/>
+<path d="m69 156-23-37 5 35 19 24m37-45 24-31-9 36-17 16m38 16 27-36-10 37-20 20" fill="#a4b486"/>
+<path d="m72 108 1-30m38 7 3-31m40 49 4-28m22 53 4-25" stroke="#c0ab74" stroke-width="10"/>
+<path d="m49 226 139-1" stroke="#b9c195" stroke-width="5"/>
+
+</g></svg>

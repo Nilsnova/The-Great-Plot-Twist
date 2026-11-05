@@ -1,0 +1,11 @@
+<!-- Original painted-paper generic team pennant. Staged play-money or reward artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="77" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m84 232 5-177" stroke="#a3986c" stroke-width="7"/><path d="m91 64 124 30-51 25 34 43-110-24Z" fill="#bf8061"/>
+<path d="m104 82 79 18-37 15 26 24-69-14Z" fill="#ddbe86"/>
+<path d="m125 91 6 10 11 3-8 7-1 12-9-7-12 3 4-12-7-9 13-1Z" fill="#779b7c"/>
+<path d="m62 232 47 0 8 6-62 0Z" fill="#8da180"/>
+
+</g></svg>

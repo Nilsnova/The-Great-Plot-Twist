@@ -1,0 +1,23 @@
+// Existing original drawings and their established map anchors.
+export default [
+  {"id": "cottage", "label": "Keeper cottage", "size": [8.6, 8.03, 0.107], "roadmap": ["intro"], "usage": "island"},
+  {"id": "cottage-interior", "label": "Cottage interior", "size": [8.6, 8.03, 0.107], "roadmap": ["intro"], "usage": "island"},
+  {"id": "cottage-glow", "label": "Cottage window light", "size": [8.6, 8.03, 0.107], "roadmap": ["intro"], "usage": "island"},
+  {"id": "lighthouse", "label": "Lighthouse", "size": [6.6, 13.2, 0.077], "roadmap": ["intro"], "usage": "island"},
+  {"id": "boathouse", "label": "Boathouse", "size": [6, 5.31, 0.096], "roadmap": ["intro", "sailing"], "usage": "island"},
+  {"id": "birch", "label": "Broadleaf tree", "size": [4.7, 6.41, 0.07], "roadmap": ["intro", "building"], "usage": "island"},
+  {"id": "pine", "label": "Coastal pine", "size": [4.2, 6.11, 0.072], "roadmap": ["intro", "building"], "usage": "island"},
+  {"id": "explorer", "label": "Explorer front", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "explorer-back", "label": "Explorer back", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "jetty", "label": "Wooden jetty", "size": [3.25, 6.5, 0.1], "roadmap": ["intro", "sailing"], "usage": "island"},
+  {"id": "boat", "label": "Rowing boat", "size": [3.8, 2.63, 0.25], "roadmap": ["intro", "sailing"], "usage": "island"},
+  {"id": "shrub", "label": "Berry shrub", "size": [2.6, 2.02, 0.12], "roadmap": ["intro", "building"], "usage": "island"},
+  {"id": "rock", "label": "Coastal rocks", "size": [2.8, 2.1, 0.15], "roadmap": ["intro", "building"], "usage": "island"},
+  {"id": "flowers", "label": "Wildflowers", "size": [1.1, 1.18, 0.08], "roadmap": ["intro", "building"], "usage": "island"},
+  {"id": "sign", "label": "Path sign", "size": [1.6, 2.22, 0.08], "roadmap": ["intro", "sailing"], "usage": "island"},
+  {"id": "explorer-walk-1", "label": "Front walking frame 1", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "explorer-walk-2", "label": "Front walking frame 2", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "explorer-back-walk-1", "label": "Back walking frame 1", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "explorer-back-walk-2", "label": "Back walking frame 2", "size": [1.7, 2.67, 0.068], "roadmap": ["intro", "presence"], "usage": "island"},
+  {"id": "paper", "label": "Paper grain tile", "size": [1, 1, 0.5], "roadmap": ["intro"], "usage": "css"},
+];

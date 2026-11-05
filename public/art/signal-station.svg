@@ -1,0 +1,15 @@
+<!-- Original painted-paper signal station. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m45 178 114 18v78l-114-17Z" fill="#ddd6b0"/><path d="m159 196 54-35v77l-54 36Z" fill="#b8bd98"/>
+<path d="m29 175 63-53 138 39-68 39Z" fill="#78968a"/><path d="m91 123 138 36 0 8-68 39-5-6 61-37Z" fill="#5f8073"/>
+<path d="m61 206 33 5v29l-33-4Z" fill="#768f7d"/><path d="m66 211 23 3v16l-23-3Z" fill="#d4c78f"/>
+<path d="m115 212 26 4v52l-26-3Z" fill="#7f9680"/><circle cx="135" cy="244" r="2" fill="#d8bb78"/>
+<path d="m128 136 0-100m-30 94 30-94 31 103m-43-65 24 0m-31 29 38 2m-43 28 47 5" stroke="#889c80" stroke-width="4" fill="none"/>
+<path d="m128 36 0-19m-15 7 31 1m-39 14 46 2" stroke="#6d8f7b" stroke-width="3"/>
+<path d="m64 174 23-5 7-29-19 0Z" fill="#bdc8a3"/><path d="m70 165 13-3 4-17-11 0Z" fill="#839d8b"/>
+
+<path d="m44 242 12 2m-10 6 8 1m112-12 10 2" stroke="#d5cba5" stroke-width="2" opacity=".8" fill="none"/>
+</g></svg>

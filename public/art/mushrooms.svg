@@ -1,0 +1,11 @@
+<!-- Original painted-paper woodland mushrooms. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m70 220 4-52 16 0 3 53Zm72 2 4-71 18-1 4 74Zm55 0 1-32 11-1 2 34Z" fill="#d8c99b"/>
+<path d="M40 166q37-58 78 0Q83 184 40 166Z" fill="#c38762"/><path d="M117 149q37-77 79-2Q154 170 117 149Z" fill="#b96f56"/><path d="M181 189q23-43 47-1Q206 203 181 189Z" fill="#cea075"/>
+<path d="m57 165 43 0m35-17 43 0m13 41 24 0" stroke="#e4c695" stroke-width="3"/>
+<g fill="#e5c995"><circle cx="75" cy="151" r="3"/><circle cx="156" cy="129" r="4"/><circle cx="169" cy="142" r="3"/><circle cx="203" cy="180" r="2"/></g>
+
+</g></svg>

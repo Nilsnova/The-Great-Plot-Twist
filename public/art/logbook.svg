@@ -1,0 +1,12 @@
+<!-- Original painted-paper keeper-style logbook. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m49 63 122-16 31 18-1 155-126 17-26-17Z" fill="#6f927c"/><path d="m60 68 114-13 18 11-115 16Z" fill="#d6d1a8"/>
+<path d="m75 83 126-18v148L76 231Z" fill="#8ca58a"/><path d="m49 63 27 20 0 148-27-19Z" fill="#5d816f"/>
+<path d="m89 97 95-13v110l-95 15Z" stroke="#b8bd91" stroke-width="2" fill="none"/>
+<path d="m127 169 8-37 10-1 8 34-13 11Z" fill="#ded0a0"/><path d="m129 132 10-12 11 9-4 5Z" fill="#c28862"/><path d="m108 183 57-8" stroke="#c1c49a" stroke-width="3"/>
+<path d="m65 83 0 116m121 7 13-2-2 27-7-6-6 8Z" fill="#b9785c"/>
+
+</g></svg>

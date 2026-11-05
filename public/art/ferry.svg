@@ -1,0 +1,13 @@
+<!-- Original painted-paper shared-island ferry. Staged sailing artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" width="320" height="280"><ellipse cx="160" cy="248" rx="130" ry="15" fill="#9bbbad" opacity=".4"/><g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M24 208 192 224 301 177Q281 226 194 247L49 232Z" fill="#6f9685"/><path d="m29 205 163 11 107-39-4 14-103 40-151-14Z" fill="#d7c99a"/>
+<path d="m67 151 114 11 0 54-114-9Z" fill="#e4d8b4"/><path d="m181 162 55-30v50l-55 34Z" fill="#b8bc95"/>
+<path d="m56 148 54-35 137 15-62 41Z" fill="#b87558"/><path d="m112 113 134 13-61 42-5-8 49-31Z" fill="#995f4d"/>
+<path d="m82 169 23 2v22l-23-2Zm43 4 23 2v22l-23-2Zm76-5 19-11v22l-19 12Z" fill="#82a28e"/>
+<path d="m151 183 17 1v29l-17-1Z" fill="#6c8f7b"/>
+<path d="m62 200 0-34m-16 35 143 15 94-35m-94 35 0-31m52 10 0-29m42 14 0-27" stroke="#b7bd94" stroke-width="3" fill="none"/>
+<path d="m115 117 0-56 22 0 1 59Z" fill="#75917b"/><path d="m110 64 33 0" stroke="#b2b894" stroke-width="5"/>
+<path d="m246 130 0-73" stroke="#8d9871" stroke-width="3"/><path d="m248 60 28 7-12 10-16-2Z" fill="#c68a65"/>
+
+</g></svg>

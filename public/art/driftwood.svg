@@ -1,0 +1,11 @@
+<!-- Original painted-paper weathered driftwood. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M35 197 79 168 114 176 166 129 188 131 151 175 215 171 231 188 164 196 119 224 75 217Z" fill="#b8a778"/>
+<path d="m35 197 41 14 46 1 41-24 68 0-16 15-51 1-45 27-44-8Z" fill="#a09b70"/>
+<path d="m57 194 31-15m13 14 52-43m-40 62 45-25 50-7m-123 27 19-7" stroke="#e0cc9b" stroke-width="3" fill="none"/>
+<ellipse cx="93" cy="200" rx="11" ry="6" fill="#948e66"/>
+
+</g></svg>

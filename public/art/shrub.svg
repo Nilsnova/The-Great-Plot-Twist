@@ -1,0 +1,8 @@
+<!-- Original low shrub; the muted berries repeat the buildings' rust accent. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 140" width="216" height="168">
+<ellipse cx="93" cy="120" rx="65" ry="11" fill="#718864" opacity=".12"/>
+<path d="M26 113Q4 91 28 73Q15 45 47 41Q56 14 82 37Q105 7 126 35Q154 26 154 56Q183 67 160 91Q169 121 137 121Q117 137 94 120Q64 136 49 117Q38 127 26 113Z" fill="#8faa78"/>
+<path d="M25 77Q44 62 61 75Q68 47 89 60Q109 41 130 56Q145 47 155 60Q154 32 127 36Q105 8 83 38Q57 16 47 42Q14 46 25 77Z" fill="#aabe86"/>
+<path d="m55 102 8-9m32 16 8-10m23-20 8 5m-82-21 8 3" stroke="#6e8c68" stroke-width="3" fill="none" stroke-linecap="round"/>
+<g fill="#c18a61"><circle cx="61" cy="77" r="4"/><circle cx="68" cy="80" r="3"/><circle cx="120" cy="103" r="4"/><circle cx="128" cy="100" r="3"/></g>
+</svg>

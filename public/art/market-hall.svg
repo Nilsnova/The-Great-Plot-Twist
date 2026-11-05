@@ -1,0 +1,16 @@
+<!-- Original painted-paper island exchange hall. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m30 170 149 20 1 79-150-16Z" fill="#e6dabb"/><path d="m179 190 55-39v76l-54 42Z" fill="#bbb992"/>
+<path d="m18 164 64-43 180 36-79 40Z" fill="#7e9b88"/><path d="m65 121 179 36-77 44 16-4 79-40Z" fill="#617f72"/>
+<path d="m36 187 137 18 12 20-151-20Z" fill="#bd7b5b"/><path d="m42 188 16 2 0 21-17-2m19-18 17 2 1 21-17-2m19-18 17 2 1 21-17-2m20-18 17 2 1 22-17-3m21-18 17 2 1 21-17-2" fill="#e7c58b"/>
+<g fill="#708d79"><path d="M44 250v-25q11-18 23 3v25Z"/><path d="M87 256v-25q11-18 23 3v25Z"/><path d="M130 262v-25q11-18 23 3v25Z"/></g>
+<path d="m73 214 0 43m43-37 0 43m45-37 0 42" stroke="#d5cfaa" stroke-width="8"/>
+<path d="m94 127 0-32 63 9 0 33Z" fill="#ddd0a0"/><path d="m105 120 9-9 11 6 17-9" stroke="#658572" stroke-width="4" fill="none"/>
+<path d="m25 254 154 18 56-42" stroke="#8a9d81" stroke-width="5" fill="none"/>
+<path d="m197 187 20-13v25l-20 15Z" fill="#d1c891"/><path d="m204 184 0 22" stroke="#7f947b" stroke-width="2"/>
+
+<path d="m44 242 12 2m-10 6 8 1m112-12 10 2" stroke="#d5cba5" stroke-width="2" opacity=".8" fill="none"/>
+</g></svg>

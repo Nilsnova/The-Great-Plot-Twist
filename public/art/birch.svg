@@ -1,0 +1,11 @@
+<!-- Original broadleaf tree with asymmetrical foliage and sparse brush marks. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 300" width="264" height="360">
+<ellipse cx="113" cy="279" rx="61" ry="13" fill="#607c60" opacity=".14"/>
+<path d="m102 278 7-152 12 0 6 152Z" fill="#b7af7c"/><path d="m116 278 0-129 5 0 6 129Z" fill="#918f69"/>
+<path d="m111 227-34-53m39 30 31-48m-33 13-24-48" fill="none" stroke="#ada574" stroke-width="8" stroke-linecap="round"/>
+<path d="M45 167Q11 162 21 132Q4 104 31 87Q21 60 51 52Q55 21 87 29Q110 5 131 28Q162 13 174 43Q204 41 201 75Q224 96 201 120Q217 150 188 161Q175 188 145 177Q121 197 96 178Q65 190 45 167Z" fill="#92ad78"/>
+<path d="M28 111Q31 85 61 91Q55 60 91 57Q111 32 139 49Q157 37 175 55Q170 78 194 85Q186 107 160 98Q141 119 115 101Q83 121 65 109Q49 126 28 111Z" fill="#adc38d"/>
+<path d="M31 145Q56 158 75 143Q102 167 126 148Q154 170 177 142Q189 134 200 125Q212 151 185 164Q175 189 146 177Q119 197 95 178Q62 190 45 169Z" fill="#7e9b6d"/>
+<path d="m61 77 6-7m48-28 6 3m47 26 8-4m-76 20 10 0m-61 53 7 2m82-17 6-5m25 22 7-2m-82 20 8-2m-9 89 8 1m-8 17 7 0" stroke="#657f5b" stroke-width="2.5" fill="none" opacity=".5" stroke-linecap="round"/>
+<path d="m80 58 8-2m37 17 8 0m46 25 6-2m-136 5 7-1m59 32 8 1m22 21 7-3" stroke="#c6d29b" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

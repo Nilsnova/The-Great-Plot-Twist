@@ -1,0 +1,4 @@
+<!-- Original arena icon, part of the consistent paper-and-ink interface family. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<path d="M64 12C94 9 117 34 116 64C119 94 95 116 65 116C34 120 12 96 12 65C8 35 35 12 64 12Z" fill="#e2d8b3"/>
+<g fill="none" stroke="#668b74" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="m35 31 59 66m-66-3 64-66M25 86l16 18m45-78 17 16M28 27l13 0-3 13M91 88l11 3 1 12"/><path d="m62 51 15 4v23L64 91 51 78V55Z" fill="#e2d8b3"/></g></svg>

@@ -1,0 +1,13 @@
+<!-- Original painted-paper sailor compass. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<ellipse cx="129" cy="150" rx="82" ry="73" fill="#bca875"/><ellipse cx="129" cy="145" rx="72" ry="65" fill="#e6d9ad"/>
+<ellipse cx="129" cy="145" rx="61" ry="55" fill="#c6caa0"/>
+<path d="m129 91 0 18m0 72v17m-56-53h18m76 0h18m-97-35 13 12m56 46 13 12m-82 0 13-12m56-46 13-12" stroke="#8ca080" stroke-width="3"/>
+<path d="m129 106 13 39-13 36-13-36Z" fill="#be7f60"/><path d="m129 106 0 75-13-36Z" fill="#e9d7a4"/>
+<path d="m93 145 36-13 35 13-35 12Z" fill="#73957e"/><circle cx="129" cy="145" r="7" fill="#ddc18a"/>
+<path d="m113 78 0-16q17-13 33 1v15" stroke="#a7a073" stroke-width="5" fill="none"/>
+
+</g></svg>

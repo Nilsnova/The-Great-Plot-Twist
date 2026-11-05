@@ -1,0 +1,11 @@
+<!-- Original painted-paper small sailing boat. Staged sailing artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" width="320" height="280"><ellipse cx="160" cy="248" rx="130" ry="15" fill="#9bbbad" opacity=".4"/><g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M31 207 126 226 289 185Q259 241 131 251Q67 244 31 207Z" fill="#779e8b"/><path d="M31 207 142 214 289 185 266 205 132 234Z" fill="#d6c69b"/>
+<path d="m152 215 0-177" stroke="#a39569" stroke-width="7"/>
+<path d="M142 54Q103 130 67 180L140 185Z" fill="#eee1b9"/><path d="M163 44Q227 110 248 175L164 186Z" fill="#e2d0a2"/>
+<path d="m170 67 57 101-57 8Z" fill="#c88e67" opacity=".75"/>
+<path d="m151 39 0-20 30 9-29 11" fill="#c4805c"/><path d="m70 180 74 9m19-4 86-9" stroke="#c9b88a" stroke-width="3"/>
+<path d="m129 236 96-20" stroke="#b0c2a2" stroke-width="3"/>
+
+</g></svg>

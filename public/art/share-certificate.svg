@@ -1,0 +1,12 @@
+<!-- Original painted-paper island share certificate. Staged play-money or reward artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="77" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m43 58 167 13-10 150-169-13Z" fill="#e9dcb5"/><path d="m54 70 143 11-8 126-145-12Z" stroke="#a5b18b" stroke-width="4" fill="none"/>
+<path d="m65 85 120 10-1 22-120-10Z" fill="#8da68a"/><path d="m76 93 97 8" stroke="#d8d8ad" stroke-width="3"/>
+<path d="m66 125 113 9m-114 8 111 9m-112 8 68 5" stroke="#b3b58a" stroke-width="3"/>
+<path d="m144 190-8 44 17-10 11 15 8-46Z" fill="#bf8060"/>
+<path d="m137 175 12-10 16 4 9 14-6 15-15 7-16-7-5-15Z" fill="#ceae75"/><path d="m151 173 5 8 9 2-7 6-1 9-8-5-8 3 2-10-6-5 10-1Z" fill="#e8d6a1"/>
+
+</g></svg>
