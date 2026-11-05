@@ -32,7 +32,7 @@ export function createShell(ctx) {
     event.preventDefault();event.stopImmediatePropagation();show('pause');
   };
   window.addEventListener('keydown',key,true);show('title');
-  return {get mode(){return mode;},get blocked(){return mode!=='playing';},show,play,
+  return {notice(text){const message=node('p','shell-note',text);message.setAttribute('role','alert');modal.body.append(message);},get mode(){return mode;},get blocked(){return mode!=='playing';},show,play,
     openSettings(){returnTo=mode==='playing'?'pause':mode;show('settings');},
     dispose(){disposed=true;window.removeEventListener('keydown',key,true);modal.dispose();}};
 }
