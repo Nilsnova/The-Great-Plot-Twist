@@ -56,9 +56,9 @@
 | Status | Code | Meaning | What the browser does |
 |---|---|---|---|
 | 200 | | It worked. | Show the result. |
-| 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The keep-alive also answers 401 to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
+| 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
 | 403 | `forbidden` | Signed in, but not allowed. Planned for presenter-only routes (`require_host`, package A2). No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. | Show the message. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
 | 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. | Show the message. After `already_applied`, treat the action as done. |
 | 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. | Show the message. Do not resend it unchanged. |
@@ -69,7 +69,7 @@
 
 ## 2. Routes that exist now
 
-Five routes exist, plus FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
+Seven routes exist, plus FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
 
@@ -86,14 +86,77 @@ GET /api/health
 
 ### GET /api/config
 
-How this server is set up: the environment, demo mode and which feature flags are on. Anyone may call it, and it holds no secret. The game reads it at start-up to show or hide features.
+How this server is set up: the environment, demo mode, which feature flags are on and how to sign in. Anyone may call it, and it holds no secret. The game reads it at start-up to show or hide features, and the sign-in check page reads the Supabase address from it.
 
 ```text
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
+
+`auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the cron secret.
+
+### GET /api/me
+
+Who am I in the game? For signed-in players only. It answers with the caller's own display name, coins and crews. The server reads them with its secret key and a filter on the verified player id (never an id from the request), so the answer can never hold another player's data. Its first user is the sign-in check page, `/auth-check.html` (a plain file in `frontend/public/`: a team check page, not the game, that signs in with GitHub and prints one line from this route).
+
+```text
+GET /api/me
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "displayName": "Captain-3fa85f", "coins": 0, "crews": []}
+```
+
+| Field | Meaning |
+|---|---|
+| `id` | The player's id, from the verified sign-in |
+| `displayName` | `profiles.display_name`. Never the GitHub login name or e-mail address. |
+| `coins` | `wallets.balance`. A new wallet holds 0, which is a normal answer. |
+| `crews` | The crews the player sits in, newest seat first, at most 20. Each one is `{"id", "mode", "status", "seatNo"}`: the crew id, `solo` or `crew`, `forming`, `active` or `finished`, and the player's own seat number (1 to 4). Empty for a player in no crew. |
+
+| Case | Answer |
+|---|---|
+| A good token, and the profile and wallet rows are found | `200` as above |
+| No `Authorization` header, a malformed one, or a token Supabase refuses | `401 unauthorized`, with `WWW-Authenticate: Bearer` |
+| Login is not set up here, or cannot be reached | `503 auth_not_configured` or `503 auth_unavailable` |
+| A good token, but the player has no profile or wallet row: the account was made before the migration was applied, so the sign-up trigger never ran for it | `404 player_not_set_up`. A teammate deletes the user under Authentication > Users and the player signs in again ([supabase/README.md](../supabase/README.md#if-someone-signed-in-before-you-ran-the-migration)). |
+| `SUPABASE_URL` or `SUPABASE_SECRET_KEY` is not set | `503 database_not_configured` |
+| The database cannot be reached | `503 database_unavailable` |
+| The database refuses a read, or answers with something we cannot read | `502 database_error` |
+
+The answer is never cached. The player id stays out of the server's logs. Package A2 extends this route ([section 9](#9-reserved-interfaces)).
+
+### POST /api/auth/exchange
+
+Swaps a one-time sign-in code for a login token. Anyone may call it, because this is how somebody signs in: the proof is the pair of one-time code and secret. Its only user is the sign-in check page. The page signs in with Supabase's PKCE flow, which sends the browser back with a one-time code in the address (`?code=...`) and no token. The page gives that code, and the secret it made before it left for GitHub, to this route. The server swaps them with Supabase and answers with the access token. The refresh token and GitHub's own token stay inside the server, so the browser never holds anything that lasts. The page then calls `GET /api/me` with the access token.
+
+```text
+POST /api/auth/exchange
+Content-Type: application/json
+{"code": "6f1c0c2e-9a52-4b8e-8d3a-0a7c3f1d2b44", "codeVerifier": "<64 characters the page made>"}
+
+200 OK
+Cache-Control: private, no-store
+{"accessToken": "<login token>"}
+```
+
+| Field | Meaning |
+|---|---|
+| `code` | The one-time code from the address. Supabase accepts it once, within 5 minutes. 1 to 200 characters. |
+| `codeVerifier` | The secret the page made before it left for GitHub (PKCE calls it the code verifier). 43 to 128 characters. |
+| `accessToken` | The login token for `Authorization: Bearer`. It stops working after a while (an hour by default in Supabase). |
+
+| Case | Answer |
+|---|---|
+| A good code and the secret that belongs to it | `200` as above |
+| Supabase refuses the code: used before, older than 5 minutes, unknown, or the secret does not fit it | `401 unauthorized`, with `WWW-Authenticate: Bearer`. Supabase's own text is never repeated. |
+| A field is missing, is not text or has the wrong length | `422 validation_error`. Nothing was sent to Supabase. |
+| Login is not set up here, or Supabase cannot be reached, is busy or answers strangely | `503 auth_not_configured` or `503 auth_unavailable` |
+
+The code, the secret and the tokens stay out of the server's logs. Supabase counts requests per address, and every call through this route comes from Vercel's addresses, so a class that signs in together shares one budget. That is fine for a team check page. **The game's own sign-in (package A2) must use the PKCE flow too, never the older "implicit" flow.** The implicit flow puts the refresh token (it never expires on the free plan) and GitHub's token in the address, and the browser writes every address to its history before a page can remove it. A2 can do the exchange itself in the browser with Supabase's client library, and then this route is not needed: it is temporary and goes away with the check page.
 
 ### GET /api/content/{name}
 
@@ -161,7 +224,7 @@ Only a `200` carries `Cache-Control: public, max-age=300`, so a browser may reus
 
 ### GET /api/keepalive
 
-Keeps the free Supabase project awake ([ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Only Vercel's daily cron calls it, with the cron secret. It reads one row from `profiles`, `wallet_reasons` and `crews`, stops at the first read that fails, and never answers with database text. The cron entry that will call it is not in `vercel.json` yet.
+Keeps the free Supabase project awake ([ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Only Vercel's daily cron calls it, with the cron secret. It reads one row from `profiles`, `wallet_reasons` and `crews`, stops at the first read that fails, and never answers with database text. The cron entry that calls it is in `vercel.json`: once a day, at some minute between 06:00 and 06:59 UTC (the Hobby plan promises only the hour), on production only. Whether cron really runs together with Vercel Services is confirmed after the next production deploy ([SETUP.md](SETUP.md), Step 5, check 3).
 
 ```text
 GET /api/keepalive
@@ -393,7 +456,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
 | S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story package S0 (skeleton under review) |
 | S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story package S0 (skeleton under review) |
-| A2 Sign-in, captain names and cloud progress | `GET /api/me` returning `{captainName, coins, kit, place}`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json` | draft |
+| A2 Sign-in, captain names and cloud progress | `GET /api/me` already exists since the sign-in check (section 2, returning `{id, displayName, coins, crews}`): A2 adds `kit` and `place` to it and writes real captain names into `displayName`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json`; sign-in with the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2) | draft |
 | A3 Referee and entry kits | `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit}`; the table `entry_profiles`; the kit coins through `kit_grant` with the fixed `ref` `kit` | draft |
 | A6 Crews and seats | `POST /api/crews` (returns a crew code); `POST /api/crews/join {code}`; `GET /api/crews/me`; crew codes in a new column or table | draft |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |

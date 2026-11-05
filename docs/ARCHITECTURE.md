@@ -25,7 +25,7 @@ flowchart LR
   subgraph vercelProject["Vercel project, functions in Dublin"]
     frontendService["frontend service<br/>the built game files"]
     backendService["backend service<br/>FastAPI, all the rules"]
-    cronJob["Vercel Cron<br/>once a day, planned"]
+    cronJob["Vercel Cron<br/>once a day, set in vercel.json"]
   end
 
   subgraph supabaseProject["Supabase project, Ireland"]
@@ -45,7 +45,7 @@ flowchart LR
   cronJob -.->|"GET /api/keepalive"| backendService
 ```
 
-Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are planned: no real outside source is wired in yet, and the daily cron call is not in `vercel.json` yet.
+Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are not proven or not built: no real outside source is wired in yet, and the daily cron call is in `vercel.json` but not yet confirmed on Vercel next to the two services.
 
 ## 3. Who may do what
 
@@ -93,7 +93,7 @@ If something on the server's side is down, the answer is `503`. For money that m
 | Settings come from | `.env` in the repository root, passed with `--env-file ../.env` | Vercel environment variables | Vercel environment variables |
 | Database | The team's Supabase project, if your `.env` holds its values. With empty values the API still starts, and the routes that need Supabase answer `503`. | The team's Supabase project | The team's Supabase project |
 | `/api/docs`, the list of routes | yes | yes | no |
-| Daily cron | no | no | yes, once the cron entry exists |
+| Daily cron | no | no | yes: the entry is in `vercel.json`, and Vercel runs it once a day on production |
 
 On your laptop the game and the API are two programs on two ports. On Vercel they share one address. The commands are in [ENGINEERING.md, section 3](ENGINEERING.md#3-commands), including the small Vite setting that package G1 still has to add so the game can reach the API locally.
 
@@ -126,5 +126,5 @@ Free-tier limits that matter to us:
 A free Supabase project pauses after 7 days of low activity. Waking it takes a few minutes in the dashboard, and a paused project can be restored for up to a year.
 
 - **Built:** `GET /api/keepalive` reads one row from each of three tables (`profiles`, `wallet_reasons` and `crews`), which counts as database activity. It answers only a caller that sends `Authorization: Bearer <CRON_SECRET>` ([INTERFACES.md](INTERFACES.md#get-apikeepalive)).
-- **Not built yet:** the daily call. Vercel Cron would make it, but whether cron works together with Vercel Services is not documented. A small follow-up pull request adds the cron entry to `vercel.json` after the first successful deploy, with `CRON_SECRET` set in Vercel ([SETUP.md](SETUP.md), Steps 4 and 5). If cron does not work with Services, the fallback is a GitHub Actions schedule (only with Nils' OK) or Supabase Cron.
+- **In `vercel.json`, not proven yet:** the daily call. Vercel Cron makes it, once a day, but whether cron works together with Vercel Services is not documented. The entry is in `vercel.json` now. Confirm it on the next production deploy, with `CRON_SECRET` set in Vercel ([SETUP.md](SETUP.md), Steps 4 and 5, check 3). If cron does not work with Services, the fallback is a GitHub Actions schedule (only with Nils' OK) or Supabase Cron.
 - **Always in demo week:** open the Supabase dashboard yourself, and check the day before the demo that the project is active. Supabase says a few requests a day usually keep a project awake, but it promises nothing. If the demo is on Fri 4 Dec, it comes 11 days after the submission on Mon 23 Nov, which is longer than the 7 days.
