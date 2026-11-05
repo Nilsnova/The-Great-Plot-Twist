@@ -1,6 +1,6 @@
 # Saltreach Isles graphics
 
-The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
+The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
 ## Run, controls and readability
 
@@ -23,7 +23,7 @@ The close camera follows the player and keeps extra headroom near the Lighthouse
 
 ## Art, coordinates and ownership
 
-The library has **68 original sprites and 9 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
+The library has **182 original sprites and 9 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
 One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
@@ -104,7 +104,7 @@ Drawn camera equivalents remain cameraAnchors in lighthouse.js. view.pause stops
 
 Events use existing core/events.js on/emit, with unsubscribe returned by on. Extra place on interact preserves the old id field. Story labels map “Harbor Office” to harbor_office, “Island Exchange” to market_hall, “Captain's Table” to captains_table, “Keeper's lamp” to keepers_lamp and “Relighting” to the external gate; these descriptions introduce no alternate machine ids.
 
-`setWeather({cloudCover,rain,fog,wind})` and getWeather remain in world/weather.js. Values clamp to 0–1; omitted, unknown or invalid values preserve state; snapshots are copies. Wind controls passage speed and waves, with normal travel about 4.2–6.3 seconds. Weather is local state and makes no API request. `createCharacter(art,{reducedMotion})` retains group, sprite, face and animate; group.position holds logical position and sprite is drawn separately. Remote players can reuse it without local controller input.
+`setWeather({cloudCover,rain,fog,wind})` and getWeather remain in world/weather.js. Values clamp to 0–1; omitted, unknown or invalid values preserve state; snapshots are copies. Wind controls passage speed and waves, with normal travel about 4.2–6.3 seconds. The L1 client now reads GET /api/weather at startup and every ten minutes, so real wind drives sailing and waves. Manual visual presets remain available. `createCharacter(art,{reducedMotion})` retains group, sprite, face and animate; group.position holds logical position and sprite is drawn separately. Remote players can reuse it without local controller input.
 
 ## Verification and performance
 
@@ -124,13 +124,13 @@ The target remains 60 FPS, <150 draw calls and <150,000 submitted triangles. The
 
 Every return in the ten-cycle run had the same geometry/texture/object counts. Reduced-motion travel completed in 77 ms including local loads; an unskipped wind=1 passage took 4,216 ms. Readability passed at 1365×768, 1920×1080 and 1100×700: 14 px primary controls, 16 px hotspot/chart names, no chart-label overlap or horizontal overflow, settings inside the viewport. Unit tests: 36 passed in 8 files; production build succeeded. Vite reports the existing Three.js bundle-size advisory (~593 kB game chunk), not a build failure.
 
-Not verified here: Safari/Firefox, other GPUs, mobile/touch controls, live backend/state integration or a sustained long-session soak. G4 finale aiming, saved home construction and story outcomes remain with their owning teams. Optional S2 was skipped because frontend/src/story/engine.js does not exist on origin/main at 393f551 (checked 5 Nov).
+The preceding measurements are the G2 baseline. Current G4/S2 evidence is recorded below. Other browsers/GPUs, touch movement, a sustained long-session soak, live L3 solved-crew/reward integration and cloud home saving remain unverified or owned by other packages.
 
 ## File map and handoff
 
 main.js wires the loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
 
-Branch is feat/g2-world-places, based on origin/main f0dc6a0. Root is the sole writer; read-only agents audited architecture and story contracts. Only frontend/ and the authorised G-lane next-step/log lines in docs/STATUS.md change. Claude integrates; no main merge or manual deployment is performed. The previous graphics-foundation branch was merged as 45d2d46 and its issue/PR attempts are historical. The newer foundation main at 393f551 adds docs/INTERFACES.md; its browser contracts were reviewed. The authorised G2 payload extends the older G1 interact example with place, and the registry replaces the proposed content/places.json because content/ is outside this task. Claude can update those draft pointers during integration. Review this branch against main.
+Current branch is feat/g4-ui-kit-story-art, created from main 60bd60e and synchronised with the unchanged S1 and L1/backbone work through c8bac2b. Root is the sole writer; read-only agents reviewed accessibility, lifecycle and story boundaries. Only frontend/ and the authorised G-lane next-step/log text in docs/STATUS.md are changed relative to main. Claude integrates; this branch does not merge into main or deploy. Incoming backend, story-engine, weather-client, auth-check and infrastructure files remain unchanged.
 
 Final checks also passed the built game (including reduced-motion chart travel) and both development/production pixel workshops, each decoding all 77 PNGs. Full regeneration reproduced 77 byte-identical files. Commands and results above are scoped to graphics; backend tests were not run because backend code was not changed.
 
@@ -153,10 +153,69 @@ The public entry is src/ui/kit/index.js; import src/ui/kit/kit.css once. Factori
 | createMiniChart({values,halted,label}) | Native SVG sparkline; no price fetching or trade decisions |
 | createProgress({label,value,max}) | Native labelled progress; values supplied by the feature owner |
 
-Dialogue choices are disabled while text types. Enter or a choice key first reveals the whole line, then a later activation chooses. Screen readers receive the completed line, not a live announcement per character. Reduced motion reveals text immediately. Portrait is {src,alt}; use registered local art. Modals restore the opener's focus, native buttons retain visible focus, and dispose cancels all owned listeners/timers/frames. Dispose child components separately when a panel merely hosts their element. Pure logic tests cover typing/skip, choice keys, supplied integer coin formatting, chart scaling and progress; browser checks cover DOM behaviour and hostile text.
+Dialogue choices are disabled while text types; choices can also have disabled and hint fields from the engine. Holding a numbered key does not repeat an action. Enter or a choice key first reveals the whole line, then a later activation chooses. Screen readers receive the completed line, not a live announcement per character. Reduced motion reveals text immediately. Portrait is {src,alt,width,height,scale}; use registered local PNG art. Defaults are 24×32 at integer scale 3; 64×80 portraits use scale 1. External portrait URLs are rejected. Modals restore the opener's focus, native buttons retain visible focus, and dispose cancels all owned listeners/timers/frames. pause() stops a hidden dialogue’s typewriter; update(data) starts its new line. Dispose child components separately when a panel merely hosts their element. Pure logic tests cover typing/skip, choice keys, supplied integer coin formatting, chart scaling and progress; browser checks cover DOM behaviour and hostile text.
 
 ## Cinematics
 
-Planned public contract: world.cinematic(name,params) returns a promise for completion, skip or refusal. Names are three_lights, fog_lift, schooner_reveal, unmask and relighting. Events are plain `{type:'cinematic',name,stage}`; stage is started/completed/skipped/cancelled. Unknown names and overlapping travel/cinematics are refused. Escape skips; reduced motion skips animation. These are visual beats only, not solve/save/reward rules. A finale event whose stage exactly matches a supported name may trigger that beat; the L3 draft has no other assumed stage values.
+world.cinematic(name,params) returns a promise resolving to {name,stage}, or false for invalid/overlapping requests. Events are exactly {type:'cinematic',name,stage}; stage is started, completed, skipped or cancelled. Escape skips. Reduced motion draws the final safe frame and settles as skipped after local art loads. Loading is bounded to 2.5 seconds; the full deadline is duration + 3 seconds, always below 15. World disposal cancels the shot, unsubscribes and removes its dialog/images. One underlying place remains loaded; these shots use an owned 448×256 canvas with nearest/integer magnification, not several simultaneous island scenes.
 
-The crossing beams use registered light ids and beam origins projected onto the sea chart; three_lights defaults to keepers_lamp, harbor_light and islet_signal_station, aiming over the Teeth. The fourth ruin_light participates in relighting. Params and final measured budgets are documented with the completed module. Unmask accepts a reveal art id from the authorised story caller; no culprit mapping, personal identity or reveal prose is bundled. The query-only ?demo=1 selector rehearses visuals without an identity reveal or world-state mutation. Relighting draws the lights/fog; the owning state team separately calls setRelightingComplete after its server decision.
+| Name | Duration | Visual and params |
+| --- | ---: | --- |
+| three_lights | 8s | Three registered light origins turn toward target over the Teeth; optional lights and target |
+| fog_lift | 5s | Pixel fog parts around the ship lamp |
+| schooner_reveal | 6s | The original dark schooner appears through the mist |
+| unmask | 5s | A masked figure on the deck; optional revealAsset supplied by an authorised story caller |
+| relighting | 8s | All four registered lights illuminate and the chart fog lifts |
+
+lights is an array of three unique registered light ids for three_lights, default keepers_lamp/harbor_light/islet_signal_station. Chart origins are place.chart + {beamOrigin.x/2,-beamOrigin.y/2}, snapped to native pixels, using the exact registry metadata. target is {x,y} in native 448×256 chart pixels, default the Teeth marker; out-of-bounds targets are refused. ruin_light is included in relighting. revealAsset may be a registered base character id, never a URL. No culprit mapping, personal identity or reveal line is bundled. Default unmask and the demo remain anonymous. Ordinary art-workshop views omit masked variants; ?demo=1 explicitly includes them for rehearsals.
+
+The existing finale bus listener accepts event.stage only when it exactly matches one of these five visual names. Unknown draft L3 stages are ignored; no server stage enumeration or solve rule is invented. ?demo=1 exposes a keyboard-accessible visual selector in development and production, with no identity parameter or world-state mutation. Relighting is presentation only: the state owner separately calls world.setRelightingComplete after its server decision. Cinematics block movement, hotspots, travel and atmosphere shortcuts and clear held input on entry/exit.
+
+## Act 1 in the browser (S2)
+
+src/story/intro.js listens only to cottage/desk/shore/tower_door on lighthouse_isle. E opens the kit dialogue, lazily reading GET /api/content/intro-story once per page. The original S1 Game, story JSON, saves.js and storage.js remain byte-identical to main. Text, notes, visible/locked actions, inventory and ending content come directly from that engine, inserted with textContent. Stairwell and lamp_room are panel scenes; the player stays at the physical tower hotspot. There are no sign-in, wallet, market or shared-case writes.
+
+intro-adapter.js supplies atomic visit(id), perform(id), reset(), view, state snapshots and a cloned actions[] getter. Plain navigation follows allowed goto edges without item/flag effects or endings; shore→desk records shore_back then to_desk. A whole hotspot path is replayed on a candidate before commit. Refusals change no engine state, journal or action log. View/move labels are copies, so UI code cannot mutate story data. Locked actions show the engine’s reason and ignore numeric activation.
+
+world.intro.actions exposes the accepted move ids for the future referee. Local storage contains only a versioned move journal, replayed with the unchanged engine on reload; malformed/stale journals are discarded and storage failure leaves the game playable. No local ending is an authoritative server verdict. Reaching an ending emits exactly {type:'intro_ended',ending}, where ending is ending_rescue or ending_trapped. It emits once for the accepted ending action, not on reload or reopening its card. A new local intro resets only this journal. Inventory, readable move history, notes, original ending card and return/new-intro buttons are in intro-view.js. Closing pauses hidden typing and restores game focus.
+
+For local play run the API from backend with uv run --frozen uvicorn main:app --host 127.0.0.1 --port 8000, then npm run dev in frontend. Vite dev and preview proxy /api to that server; deployment uses the existing Vercel routing. npm run test:intro requires that local API and plays both endings through the real route. Other graphics smoke checks isolate the intro read with the unchanged real-story fixture; they are not API integration claims.
+
+## Live-weather wiring
+
+The existing startLiveWeather({setWeather,onUpdate}) starts only after Lighthouse place loading succeeds, as INTERFACES.md specifies. Its stop function runs during app disposal. onUpdate renders weatherAttribution(answer) beside the conditions with readable 14 px source/adaptation and CC BY 4.0 links, then emits {type:'weather_updated',source,fetchedAt}. The L1 module, API and provider logic are untouched. The legal/source links are text, not external visual assets. The original manual atmosphere controls still work.
+
+Graphics tests intercept /api/weather with deterministic responses to avoid provider variation; test:weather:wiring proves those values reach getWeather and checks both attribution links. S2 browser tests use the real intro endpoint while weather is isolated. No auth/config/me/trading/board/reward route is called by this graphics implementation.
+
+## G4/S2 verification
+
+Final commands run from frontend are listed below. Tests use installed Chrome with no browser download; browser/GPU runs are sequential. Evidence is in captures/20261105_G4-*, Pixel art-check JSON and the World round-trip/readability reports.
+
+| Command | Result |
+| --- | --- |
+| npm test | 143 tests passed in 16 files |
+| npm run build | built: game, asset workshop and UI-kit gallery |
+| npm run test:ui | 19 browser checks passed |
+| npm run test:ui:production | 16 browser checks passed |
+| npm run test:intro | 16 checks, both original endings through the actual API |
+| npm run test:cinematics | 22 checks; 60 FPS active; Escape/reduced motion/disposal |
+| npm run test:weather:wiring | three checks: values, credits and errors |
+| npm run test:readability | 1365×768, 1920×1080 and 1100×700 passed |
+| npm run test:world | 55 checks; 10 round trips, stable resources |
+| CAPTURE_PREFIX=G4 npm run test:browser | 19 movement/weather/retina checks passed |
+| CAPTURE_PREFIX=G4 npm run test:production | seven built-game checks passed |
+| npm run test:art | 191 PNGs decoded; public/rehearsal visibility and integer scaling passed |
+| npm run test:art:production | 191 PNGs decoded in static build |
+
+| Current performance / ownership | Before | During cinematic | After cinematic / 10 round trips |
+| --- | ---: | ---: | ---: |
+| FPS | 60 | 60 | 60 / 60 |
+| Draw calls | 97 | 97 | 97 / 97 |
+| Triangles | 192 | 192 | 192 / 192 |
+| GPU geometries | 96 | 96 | 96 / 96 |
+| GPU textures | 27 | 27 | 27 / 27 |
+| Place roots | 1 | 1 | 1 |
+
+The normal three-light shot took 8,016 ms including local loading; reduced motion settled in 11 ms in the sample. Other shots are 5–8 seconds plus bounded local loading, below 15 seconds. Weather/retina regression samples remain around 60 FPS. All 191 original PNGs regenerated byte-identically; see the art reproducibility JSON. The local weather API returned 200 with source live and valid cloud/rain/fog/wind plus attribution on 5 November. The current Vite game chunk is about 611 kB; its existing size advisory is not a build failure.
+
+Not verified: other browsers/GPUs, actual screen-reader software, touch movement, a sustained soak, authenticated cloud saves/referee/rewards, L3 server authorisation/solve-state integration, or long-term provider availability. No new dependency was needed. Incoming engine, weather, backend, auth-check and infrastructure code is unchanged from main. State/referee teams own any award or shared unlock; the kit does not decide balances, trades, deductions or solves.

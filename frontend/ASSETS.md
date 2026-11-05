@@ -185,3 +185,5 @@ All 114 additions below are original code-authored PNGs in public/pixel/. Each o
 | wallet-icon | 24 × 24 | story_props.py |
 
 crew.py and story_props.py are called by generate.py. Pose palettes and hats/tools distinguish roles at the same 24×32 native scale as the explorer. The false light, misted schooner, eye/anchor seal, cargo, torn page, lens, star, plaque, empty clue-board background, three card frames and coin/wallet icons carry no readable case conclusion. GUI text remains separate HTML. Feature teams can select the card frames or board as art backgrounds while keeping titles/body text accessible.
+
+The normal pixel workshop omits the ten masked-captain variants. An explicit /asset-library.html?demo=1 rehearsal view includes every registered asset. The application has no default title/identity pairing; the story caller supplies any reveal art at the finale. No external image or font was added.

@@ -3,12 +3,12 @@
 > node scripts/check-browser.js
 
 {
-  "checked": "2026-11-05T18:21:10.469Z",
+  "checked": "2026-11-05T18:34:02.403Z",
   "browser": "157.0.8103.39",
   "viewport": "1440 × 900, DPR 1",
   "modes": {
     "arrival-high": {
-      "fps": 61,
+      "fps": 60,
       "calls": 97,
       "triangles": 192,
       "points": 0,
@@ -36,9 +36,9 @@
       "shadows": false
     },
     "storm-high": {
-      "fps": 60,
-      "calls": 100,
-      "triangles": 195,
+      "fps": 61,
+      "calls": 99,
+      "triangles": 194,
       "points": 0,
       "nativeFramebuffer": [
         480,

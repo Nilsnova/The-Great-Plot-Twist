@@ -3,7 +3,7 @@
 > node scripts/check-world.js
 
 {
-  "checked": "2026-11-05T18:20:37.331Z",
+  "checked": "2026-11-05T18:33:29.289Z",
   "browser": "157.0.8103.39",
   "viewport": "1440 × 900, DPR 1",
   "checks": [
@@ -95,7 +95,7 @@
       "programs": 4
     },
     "smugglers_cove": {
-      "fps": 60,
+      "fps": 61,
       "calls": 28,
       "triangles": 54,
       "geometries": 27,
@@ -137,7 +137,7 @@
       "programs": 3
     },
     {
-      "fps": 62,
+      "fps": 61,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -147,57 +147,7 @@
       "programs": 3
     },
     {
-      "fps": 62,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 64,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 64,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 62,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 63,
-      "calls": 97,
-      "triangles": 192,
-      "geometries": 96,
-      "textures": 27,
-      "roots": 1,
-      "objects": 10,
-      "programs": 3
-    },
-    {
-      "fps": 64,
+      "fps": 61,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -218,6 +168,56 @@
     },
     {
       "fps": 63,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 65,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 64,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -247,8 +247,8 @@
     "objects": 10,
     "programs": 3
   },
-  "reducedMotionMs": 76,
-  "windOnePassageMs": 4194,
+  "reducedMotionMs": 62,
+  "windOnePassageMs": 4215,
   "errors": [],
   "externalRequests": []
 }

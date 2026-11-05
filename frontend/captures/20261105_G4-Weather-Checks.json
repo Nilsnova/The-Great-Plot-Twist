@@ -1,0 +1,8 @@
+{
+  "checked": "2026-11-05T18:37:08.440Z",
+  "checks": [
+    "Startup weather response drives the existing four weather values",
+    "Readable attribution links name the source, adaptation and licence beside the weather",
+    "No browser errors or external asset requests"
+  ]
+}

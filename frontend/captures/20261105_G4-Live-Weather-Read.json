@@ -1,0 +1,12 @@
+{
+  "observedDate": "2026-11-05",
+  "status": 200,
+  "source": "live",
+  "fields": {
+    "cloudCover": 1,
+    "rain": 0,
+    "fog": 0,
+    "wind": 0.19
+  },
+  "attributionPresent": true
+}
