@@ -4,9 +4,9 @@ Why it exists: a free Supabase project pauses itself after 7 days with little ac
 waking it up takes minutes. Once a day this route reads one row from each of three tables
 (profiles, wallet_reasons and crews). That counts as real activity, so the project stays awake.
 
-Who calls it: Vercel's cron, with GET, once a day, as soon as a cron entry for /api/keepalive is
-added to vercel.json (that entry is not there yet). Nobody else may call it, because the route
-asks for a secret first.
+Who calls it: Vercel's cron, with GET, once a day, from the cron entry for /api/keepalive in
+vercel.json. On the Hobby plan Vercel picks the minute: only the hour (06:00 to 06:59 UTC) is
+promised. Nobody else may call it, because the route asks for a secret first.
 
 How the caller proves itself: Vercel sends the header
     Authorization: Bearer <CRON_SECRET>
@@ -25,7 +25,7 @@ server log: which table failed, the HTTP status and the database code, never a k
 Try it on your laptop, with the API running and CRON_SECRET set in .env:
     curl -H "Authorization: Bearer <your CRON_SECRET>" http://127.0.0.1:8000/api/keepalive
 
-Used by: Vercel's cron (once it is added to vercel.json) and teammates who test it with curl.
+Used by: Vercel's cron (see vercel.json) and teammates who test it with curl.
 """
 
 import hmac

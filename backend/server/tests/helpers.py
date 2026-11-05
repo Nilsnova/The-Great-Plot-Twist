@@ -1,10 +1,11 @@
-"""Small helpers shared by the test files: a fake clock and ready-made settings.
+"""Small helpers shared by the test files: a fake clock, ready-made settings and the check page.
 
 Used by: the other files in backend/server/tests/.
 """
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -12,6 +13,9 @@ from pydantic import SecretStr
 
 from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin
+
+# The repository root: this file is in backend/server/tests/, three folders down.
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # A fake server is a function. It receives each request and returns (or raises) the answer.
 FakeReply = Callable[[httpx.Request], httpx.Response]
@@ -79,3 +83,21 @@ def assert_error(response: Any, status_code: int, code: str) -> None:
     assert list(body["error"]) == ["code", "message"]
     assert body["error"]["code"] == code
     assert body["error"]["message"]
+
+
+def read_check_page() -> str:
+    """The text of the sign-in check page, frontend/public/auth-check.html."""
+    return (REPO_ROOT / "frontend" / "public" / "auth-check.html").read_text()
+
+
+# The files of the check page's code: the flow, the calls to our server and the sign-in secret.
+CHECK_SCRIPTS = ("auth-check.js", "auth-check-api.js", "auth-check-pkce.js")
+
+
+def read_check_script_without_comments() -> str:
+    """The code of the check page's scripts. Whole-line comments are left out: they may explain
+    the rules."""
+    lines: list[str] = []
+    for name in CHECK_SCRIPTS:
+        lines += (REPO_ROOT / "frontend" / "public" / name).read_text().splitlines()
+    return "\n".join(line for line in lines if not line.strip().startswith("//"))
