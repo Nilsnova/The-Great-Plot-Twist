@@ -9,7 +9,7 @@ export function createMiniChart({ values = [], halted = false, label = 'Price hi
   function update(data) {
     if (data.values) values = data.values; if (data.halted !== undefined) halted = data.halted; if (data.label !== undefined) label = data.label;
     const points = chartPoints(values); line.setAttribute('points',points.map(p=>p.join(',')).join(' '));
-    caption.textContent = label; title.textContent = `${label}. ${halted ? 'Trading halted.' : 'Historical values.'} ${points.length} samples.`;
+    caption.textContent = label; title.textContent = `${label}. ${halted ? 'Trading halted.' : 'Historical values.'} ${points.length} samples.${points.length ? ` First ${values[0]}, latest ${values.at(-1)}.` : ''}`;
     element.dataset.halted = String(halted); status.textContent = halted ? 'Trading halted' : points.length ? 'Sample history' : 'No data';
   }
   update({}); return { element, update, dispose() { element.remove(); } };

@@ -24,7 +24,9 @@ export function createDialogue({ onChoice, ...initial } = {}) {
     cancelAnimationFrame(frame); buttons = []; choices.replaceChildren(); selected = 0; previous = 0; announced = false; live.textContent = '';
     speaker.textContent = String(data.speaker ?? 'Field notes'); options = (data.choices ?? []).slice(0,9);
     writer = createTypewriter(data.text ?? '',{rate:36,reducedMotion:reducedMotion()}); portrait.replaceChildren(); portrait.hidden = !data.portrait;
-    if (data.portrait) { const image = node('img'); image.src = data.portrait.src; image.alt = data.portrait.alt ?? data.speaker ?? ''; portrait.append(image); }
+    if (data.portrait) { const image = node('img'); image.src = data.portrait.src; image.alt = data.portrait.alt ?? data.speaker ?? '';
+      const scale = Math.max(1,Math.floor(data.portrait.scale ?? 3));
+      image.style.width = `${(data.portrait.width ?? 24)*scale}px`; image.style.height = `${(data.portrait.height ?? 32)*scale}px`; portrait.append(image); }
     options.forEach((option,index) => {
       const li = node('li'), button = node('button','kit-choice',`${index+1}. ${option.label}`); button.type = 'button';
       button.onclick = () => onChoice?.(option.id,index); button.onfocus = () => { selected=index; };

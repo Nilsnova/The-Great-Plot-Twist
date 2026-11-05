@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **68 sprites and 9 backgrounds/charts, 77 PNGs total**. Sprite sources total 53,788 bytes. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **182 sprites and 9 backgrounds/charts, 191 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
@@ -62,3 +62,126 @@ The runtime uses nearest sampling, no mipmaps, a 16-pixel world grid, snapped fe
 Open `/asset-library.html` for the searchable workshop, family/use filters, integer previews and source PNG links. `npm test` checks binary PNG dimensions and registration. `npm run test:art` and `npm run test:art:production` decode all PNGs in real Chrome and check the workshop and selective preload. `npm run test:world` checks the seven places, events, keyboard travel, locks, reduced motion, office glow and ten round trips. Evidence lives in `captures/20261105_World-*` and Pixel-prefixed check files.
 
 The favicon is an original SVG lighthouse mark. Water, rain, beams and sky washes are original code graphics. No image-generation service, texture pack, downloaded game art, real company/team logos or external font is used. Retired paper studies remain in archive/paper, excluded from the active build. Three.js, Vite and Vitest use MIT licences, Playwright Core Apache-2.0, and Pillow HPND; package notices accompany their installations.
+
+## G4 crew, cast and story/UI additions
+
+All 114 additions below are original code-authored PNGs in public/pixel/. Each of ten crew/cast titles has front/back/side idle plus two alternating walk poses (nine ground sprites) and one 64×80 portrait. Left is a mirrored side. characterArtIds(id) selects nine poses; characterArt(loadedArt,id) adapts them to the existing createCharacter factory. Portraits are supplied to dialogue as {src,alt,width:64,height:80,scale:1}. No personal names other than Elena Vos and no case identity mapping are stored. Story props and frames are reusable visual assets, not wallet or board behaviour.
+
+| Sprite id | Native pixels | Editable source |
+| --- | --- | --- |
+| crew-deckhand | 24 × 32 | crew.py |
+| crew-deckhand-walk-1 | 24 × 32 | crew.py |
+| crew-deckhand-walk-2 | 24 × 32 | crew.py |
+| crew-deckhand-back | 24 × 32 | crew.py |
+| crew-deckhand-back-walk-1 | 24 × 32 | crew.py |
+| crew-deckhand-back-walk-2 | 24 × 32 | crew.py |
+| crew-deckhand-side | 24 × 32 | crew.py |
+| crew-deckhand-side-walk-1 | 24 × 32 | crew.py |
+| crew-deckhand-side-walk-2 | 24 × 32 | crew.py |
+| crew-deckhand-portrait | 64 × 80 | crew.py |
+| crew-navigator | 24 × 32 | crew.py |
+| crew-navigator-walk-1 | 24 × 32 | crew.py |
+| crew-navigator-walk-2 | 24 × 32 | crew.py |
+| crew-navigator-back | 24 × 32 | crew.py |
+| crew-navigator-back-walk-1 | 24 × 32 | crew.py |
+| crew-navigator-back-walk-2 | 24 × 32 | crew.py |
+| crew-navigator-side | 24 × 32 | crew.py |
+| crew-navigator-side-walk-1 | 24 × 32 | crew.py |
+| crew-navigator-side-walk-2 | 24 × 32 | crew.py |
+| crew-navigator-portrait | 64 × 80 | crew.py |
+| crew-cook | 24 × 32 | crew.py |
+| crew-cook-walk-1 | 24 × 32 | crew.py |
+| crew-cook-walk-2 | 24 × 32 | crew.py |
+| crew-cook-back | 24 × 32 | crew.py |
+| crew-cook-back-walk-1 | 24 × 32 | crew.py |
+| crew-cook-back-walk-2 | 24 × 32 | crew.py |
+| crew-cook-side | 24 × 32 | crew.py |
+| crew-cook-side-walk-1 | 24 × 32 | crew.py |
+| crew-cook-side-walk-2 | 24 × 32 | crew.py |
+| crew-cook-portrait | 64 × 80 | crew.py |
+| crew-salvager | 24 × 32 | crew.py |
+| crew-salvager-walk-1 | 24 × 32 | crew.py |
+| crew-salvager-walk-2 | 24 × 32 | crew.py |
+| crew-salvager-back | 24 × 32 | crew.py |
+| crew-salvager-back-walk-1 | 24 × 32 | crew.py |
+| crew-salvager-back-walk-2 | 24 × 32 | crew.py |
+| crew-salvager-side | 24 × 32 | crew.py |
+| crew-salvager-side-walk-1 | 24 × 32 | crew.py |
+| crew-salvager-side-walk-2 | 24 × 32 | crew.py |
+| crew-salvager-portrait | 64 × 80 | crew.py |
+| character-harbor-master | 24 × 32 | crew.py |
+| character-harbor-master-walk-1 | 24 × 32 | crew.py |
+| character-harbor-master-walk-2 | 24 × 32 | crew.py |
+| character-harbor-master-back | 24 × 32 | crew.py |
+| character-harbor-master-back-walk-1 | 24 × 32 | crew.py |
+| character-harbor-master-back-walk-2 | 24 × 32 | crew.py |
+| character-harbor-master-side | 24 × 32 | crew.py |
+| character-harbor-master-side-walk-1 | 24 × 32 | crew.py |
+| character-harbor-master-side-walk-2 | 24 × 32 | crew.py |
+| character-harbor-master-portrait | 64 × 80 | crew.py |
+| character-masked-captain | 24 × 32 | crew.py |
+| character-masked-captain-walk-1 | 24 × 32 | crew.py |
+| character-masked-captain-walk-2 | 24 × 32 | crew.py |
+| character-masked-captain-back | 24 × 32 | crew.py |
+| character-masked-captain-back-walk-1 | 24 × 32 | crew.py |
+| character-masked-captain-back-walk-2 | 24 × 32 | crew.py |
+| character-masked-captain-side | 24 × 32 | crew.py |
+| character-masked-captain-side-walk-1 | 24 × 32 | crew.py |
+| character-masked-captain-side-walk-2 | 24 × 32 | crew.py |
+| character-masked-captain-portrait | 64 × 80 | crew.py |
+| character-fisherman | 24 × 32 | crew.py |
+| character-fisherman-walk-1 | 24 × 32 | crew.py |
+| character-fisherman-walk-2 | 24 × 32 | crew.py |
+| character-fisherman-back | 24 × 32 | crew.py |
+| character-fisherman-back-walk-1 | 24 × 32 | crew.py |
+| character-fisherman-back-walk-2 | 24 × 32 | crew.py |
+| character-fisherman-side | 24 × 32 | crew.py |
+| character-fisherman-side-walk-1 | 24 × 32 | crew.py |
+| character-fisherman-side-walk-2 | 24 × 32 | crew.py |
+| character-fisherman-portrait | 64 × 80 | crew.py |
+| character-coastguard-commander | 24 × 32 | crew.py |
+| character-coastguard-commander-walk-1 | 24 × 32 | crew.py |
+| character-coastguard-commander-walk-2 | 24 × 32 | crew.py |
+| character-coastguard-commander-back | 24 × 32 | crew.py |
+| character-coastguard-commander-back-walk-1 | 24 × 32 | crew.py |
+| character-coastguard-commander-back-walk-2 | 24 × 32 | crew.py |
+| character-coastguard-commander-side | 24 × 32 | crew.py |
+| character-coastguard-commander-side-walk-1 | 24 × 32 | crew.py |
+| character-coastguard-commander-side-walk-2 | 24 × 32 | crew.py |
+| character-coastguard-commander-portrait | 64 × 80 | crew.py |
+| character-salvage-foreman | 24 × 32 | crew.py |
+| character-salvage-foreman-walk-1 | 24 × 32 | crew.py |
+| character-salvage-foreman-walk-2 | 24 × 32 | crew.py |
+| character-salvage-foreman-back | 24 × 32 | crew.py |
+| character-salvage-foreman-back-walk-1 | 24 × 32 | crew.py |
+| character-salvage-foreman-back-walk-2 | 24 × 32 | crew.py |
+| character-salvage-foreman-side | 24 × 32 | crew.py |
+| character-salvage-foreman-side-walk-1 | 24 × 32 | crew.py |
+| character-salvage-foreman-side-walk-2 | 24 × 32 | crew.py |
+| character-salvage-foreman-portrait | 64 × 80 | crew.py |
+| character-elena-vos | 24 × 32 | crew.py |
+| character-elena-vos-walk-1 | 24 × 32 | crew.py |
+| character-elena-vos-walk-2 | 24 × 32 | crew.py |
+| character-elena-vos-back | 24 × 32 | crew.py |
+| character-elena-vos-back-walk-1 | 24 × 32 | crew.py |
+| character-elena-vos-back-walk-2 | 24 × 32 | crew.py |
+| character-elena-vos-side | 24 × 32 | crew.py |
+| character-elena-vos-side-walk-1 | 24 × 32 | crew.py |
+| character-elena-vos-side-walk-2 | 24 × 32 | crew.py |
+| character-elena-vos-portrait | 64 × 80 | crew.py |
+| false-light | 96 × 96 | story_props.py |
+| ghost-schooner | 128 × 112 | story_props.py |
+| sealed-cargo | 64 × 64 | story_props.py |
+| anchor-eye-seal | 32 × 32 | story_props.py |
+| torn-logbook-page | 48 × 64 | story_props.py |
+| lighthouse-lens | 48 × 64 | story_props.py |
+| keepers-star | 32 × 32 | story_props.py |
+| wall-lights-plaque | 128 × 64 | story_props.py |
+| captains-board | 320 × 192 | story_props.py |
+| clue-frame-new | 144 × 192 | story_props.py |
+| clue-frame-pinned | 144 × 192 | story_props.py |
+| clue-frame-used | 144 × 192 | story_props.py |
+| coin-icon | 16 × 16 | story_props.py |
+| wallet-icon | 24 × 24 | story_props.py |
+
+crew.py and story_props.py are called by generate.py. Pose palettes and hats/tools distinguish roles at the same 24×32 native scale as the explorer. The false light, misted schooner, eye/anchor seal, cargo, torn page, lens, star, plaque, empty clue-board background, three card frames and coin/wallet icons carry no readable case conclusion. GUI text remains separate HTML. Feature teams can select the card frames or board as art backgrounds while keeping titles/body text accessible.

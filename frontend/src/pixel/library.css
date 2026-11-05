@@ -3,3 +3,6 @@
 
 /* Workshop labels retain readable CSS sizes independently of sprite magnification. */
 :root{font-size:14px}header>p,header>div,#count{font-size:13px}.sprite-card strong{font-size:15px}.sprite-card small,footer,dialog p,dialog a{font-size:12px;line-height:1.6;color:#c5d0ad}dialog h2{font-size:22px}
+
+/* The board stays at native size rather than shrinking into a narrow sprite card. */
+.sprite-card[data-id=captains-board]{grid-column:span 2}
