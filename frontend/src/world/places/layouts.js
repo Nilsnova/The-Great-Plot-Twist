@@ -13,13 +13,16 @@ export const layouts = {
     { asset: 'lantern', x: -1.2, z: 19 },
   ],
 };
-export const homeBuildings = [
+const homeBuildings = [
   { plot: 'plot_1', asset: 'cabin', x: -8, z: 6 },
   { plot: 'plot_2', asset: 'workshop', x: 7, z: 6 },
   { plot: 'plot_3', asset: 'windmill', x: -8, z: -7 },
   { plot: 'plot_4', asset: 'greenhouse', x: 7, z: -7 },
 ];
-export function buildingPlacement(item) { return building(item.asset, item.x, item.z); }
+export { homeBuildings };
+layouts.home_islet = [...homeBuildings.map(item => building(item.asset, item.x, item.z)),
+  building('signal-station', 0, -14), { asset: 'bench', x: 4, z: 13 },
+  { asset: 'barrel', x: -12, z: 7 }, { asset: 'lantern', x: -3, z: 12 }];
 export const edgeTrees = {
   saltreach_harbor: [[-24,-10],[-21,-14],[-15,-16],[-8,-16],[0,-17],[8,-17],[17,-14],[24,-11],[-24,8],[23,7]],
   home_islet: [[-15,6],[-16,0],[-13,-12],[-9,-17],[9,-17],[15,-8],[16,2],[14,11],[-12,13]],

@@ -12,7 +12,7 @@ export async function createSettlement(ctx) {
   const { id } = ctx, data = places[id], placements = layouts[id] ?? [];
   const trees = edgeTrees[id] ?? [];
   const ids = [...new Set([...placements.map(p => p.asset), 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft',
-    ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : [])])];
+    ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []), ...(id === 'home_islet' ? ['build-plot'] : [])])];
   const art = await (ctx.loadArt ?? loadArt)(ids), group = new THREE.Group(); group.name = `place:${id}`;
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {

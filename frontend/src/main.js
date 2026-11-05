@@ -34,7 +34,8 @@ async function startGame() {
   let active = false, hud, chart, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, transition: (id, options) => sailing.start(id, options),
-    cancelTransition: sailing.skip, createPlace: id => createPlace({ id }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+    cancelTransition: sailing.skip, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
+      isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
@@ -46,6 +47,7 @@ async function startGame() {
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, quality, chart() { if (active) chart.show(); },
   });
   const stopListening = on('interact', event => hud.notify(event.id));
+  const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   await world.goTo('lighthouse_isle');
   quality(settings.quality); graphics.resize(view.camera);
@@ -75,7 +77,7 @@ async function startGame() {
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing };
   function dispose() {
-    stop(); stopListening(); stopArrivals(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
