@@ -1,0 +1,11 @@
+<!-- Original painted-paper net drying rack. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m51 232 2-141m144 141-3-156m-141 16 141-15" stroke="#9c936a" stroke-width="9" fill="none"/>
+<path d="M58 98Q127 115 189 85L182 201Q122 230 62 212Z" fill="#a8b597" opacity=".5"/>
+<path d="m62 100 110 101M60 123l92 86M62 148l71 64m-69-39 44 42m-22-111 93 80m-66-77 71 58m-40-58 43 35m-125 54 120-88M65 209l119-76M87 216l95-59m-69 57 67-35m-111-57 38-22m-44 47 72-42" stroke="#7f9b83" stroke-width="2.5" fill="none"/>
+<path d="m62 211 0 12m25-5 0 10m27-9 0 10m29-16 0 12m28-24 0 12" stroke="#c7b78a" stroke-width="4"/>
+
+</g></svg>

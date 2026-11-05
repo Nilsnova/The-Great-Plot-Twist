@@ -1,0 +1,4 @@
+<!-- Original clear weather icon, part of the consistent paper-and-ink interface family. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<path d="M64 12C94 9 117 34 116 64C119 94 95 116 65 116C34 120 12 96 12 65C8 35 35 12 64 12Z" fill="#e2d8b3"/>
+<g fill="none" stroke="#668b74" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="64" cy="64" r="22"/><path d="m64 20v12m0 64v12m-44-44h12m64 0h12M33 33l9 9m44 44 9 9M33 95l9-9m44-44 9-9"/></g></svg>

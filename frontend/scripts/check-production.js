@@ -1,0 +1,40 @@
+// Checks the built static site, including the absence of dev-only inspection/FPS.
+import { chromium } from 'playwright-core';
+import { spawn } from 'node:child_process';
+import { mkdir, writeFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+
+const executablePath = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4175', '--strictPort'], { stdio: 'pipe' });
+let browser;
+try {
+  for (let i = 0; i < 60; i++) {
+    try { if ((await fetch('http://127.0.0.1:4175')).ok) break; } catch { /* Preview is starting. */ }
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  browser = await chromium.launch({ executablePath, headless: true });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto('http://127.0.0.1:4175'); await page.waitForTimeout(1200);
+  assert.equal(await page.locator('canvas').count(), 1);
+  assert.equal(await page.evaluate(() => typeof window.__island), 'undefined');
+  assert.equal(await page.locator('.performance').count(), 0);
+  await page.getByRole('button', { name: 'Step ashore' }).click();
+  await page.getByRole('button', { name: 'Open visual settings' }).click();
+  await page.locator('#hour').evaluate(input => { input.value = '0'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.locator('#quality').selectOption('low'); await page.waitForTimeout(500);
+  assert.equal(await page.locator('time').textContent(), '00:00');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  assert.equal(await page.locator('.debug').isHidden(), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'CANVAS');
+  assert.deepEqual(errors, []);
+  const result = { checked: new Date().toISOString(), browser: browser.version(),
+    checks: ['Static build loads a WebGL canvas', 'No dev inspection global', 'No FPS output in production',
+      'Time slider and quality toggle work', 'Escape restores game focus', 'No browser/WebGL errors'] };
+  const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
+  await mkdir('captures', { recursive: true });
+  await writeFile(`captures/${stamp}_${process.env.CAPTURE_PREFIX || 'Illustrated'}-Production-Checks.json`, JSON.stringify(result, null, 2) + '\n');
+  console.log(JSON.stringify(result, null, 2));
+} finally { await browser?.close(); server.kill(); }

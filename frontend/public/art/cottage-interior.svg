@@ -1,0 +1,18 @@
+<!-- Original cottage cutaway with a writing desk beside the east window. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 280" width="420" height="392">
+<ellipse cx="151" cy="249" rx="112" ry="17" fill="#556f59" opacity=".14"/>
+<path d="M40 141 113 94 265 120 264 210 197 250 40 231Z" fill="#d5cba6"/>
+<path d="m44 227 66-44 149 24-63 37Z" fill="#c8ac7d"/>
+<path d="m61 221 150 23m-134-33 149 23m-132-34 145 23m-128-34 142 22" stroke="#aa926d" stroke-width="2" opacity=".65"/>
+<path d="m40 141 72-47 0 90-72 48Z" fill="#d9d3b2"/>
+<path d="m112 94 153 26-1 87-152-24Z" fill="#ece0b7"/>
+<path d="m40 219 87 13 0 8-87-11Zm118 18 39 6 66-39 0 9-66 39-39-6Z" fill="#929b7e"/>
+<path d="m226 136 25 5 0 37-25-6Z" fill="#87947b"/><path d="m230 141 17 3 0 26-17-4Z" fill="#f0d98a"/><path d="m238 143 0 25m-8-14 17 3" stroke="#83987f" stroke-width="2"/>
+<path d="m197 177 43 7 14 20-45-7Z" fill="#af8056"/><path d="m197 177 12 20 0 6-12-19Z" fill="#896c4e"/>
+<path d="m202 192 0 29m39-23 0 25m-27-20 0 25" stroke="#806d50" stroke-width="4"/>
+<path d="m206 181 22 4 7 10-23-4Z" fill="#f9edc8"/><path d="m213 185 11 2m-8 1 10 2" stroke="#879a8e" stroke-width="1"/>
+<path d="m236 181-2-12 4 1 3 13Z" fill="#677f76"/><path d="m235 170 7-12-2 14Z" fill="#eedaa0"/>
+<path d="m177 210 18 3 0 10-18-3Z" fill="#9e7b55"/><path d="m177 208 0-20 18 4 0 20" stroke="#90744e" stroke-width="4" fill="none"/><path d="m179 222 0 14m13-12 0 12" stroke="#90744e" stroke-width="3"/>
+<path d="m129 174 36 6 18 27-37-7Z" fill="#a6ad85"/><path d="m136 181 23 4 11 17-23-4Z" fill="#d4c892"/>
+<path d="m128 237 29 5 0 7-29-5Z" fill="#98a083"/>
+</svg>

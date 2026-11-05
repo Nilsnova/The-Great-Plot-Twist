@@ -1,0 +1,15 @@
+<!-- Original painted-paper duel arena gate. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m31 262 0-146 40-8 25 14 0 149-40 6Z" fill="#b8b998"/><path d="m56 277 0-158 15-11 25 14v149Z" fill="#9eac8d"/>
+<path d="m167 268 0-145 37-12 28 10v143l-39 14Z" fill="#bac09b"/><path d="m193 278 0-154 12-13 27 10v143Z" fill="#97aa8e"/>
+<path d="M55 130Q122 19 204 131L185 140Q129 59 76 141Z" fill="#ccd0a7"/>
+<path d="M76 141Q128 64 185 140L183 153Q131 85 81 153Z" fill="#99ad8d"/>
+<path d="m108 85 39 4v38l-20 20-20-23Z" fill="#bd7a62"/><path d="m117 98 20 2v22l-9 10-12-12Z" fill="#dfc38b"/>
+<path d="m39 135 0 67 31 4 0-67Z" fill="#7b9a81"/><path d="m176 141 0 64 31 0 0-71Z" fill="#b77b61"/>
+<path d="m45 152 18 2m-18 10 18 2m116-16 18-1m-18 11 18-1" stroke="#d9c99a" stroke-width="3"/>
+<path d="m41 235 17 1m-16 9 10 0m138-7 15-2m-15 12 10-1" stroke="#d4d3ad" stroke-width="2"/>
+
+</g></svg>

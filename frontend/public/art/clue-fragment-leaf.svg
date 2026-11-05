@@ -1,0 +1,11 @@
+<!-- Original painted-paper chart fragment / leaf. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m54 72 53-15 19 19 23-20 49 16 4 49-18 22 18 25-9 50-51 2-20-19-25 19-47-13 7-48-18-25 17-24Z" fill="#e6d8ae"/>
+<path d="M89 169Q68 112 155 93Q177 163 113 182Z" fill="#91aa7c"/>
+<path d="m96 187 47-75m-28 45-25-21m38 2 25-4m-37 20 29 2" stroke="#c4ce9d" stroke-width="4" fill="none"/>
+<path d="m69 100 19-3m58 99 29-1" stroke="#bcae83" stroke-width="3"/>
+
+</g></svg>

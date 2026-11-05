@@ -1,0 +1,30 @@
+ROADMAP ART COVERAGE / 5 NOVEMBER 2026
+
+Source checked
+20261105_Roadmap-Inputs.md, collected by Nils on 5 November 2026, in the course Group-Project folder. It lists feature inputs to classify as core, stretch, later, or dropped; it is not a final feature priority list. ROADMAP.md was absent from both game worktrees and the connected repository's default branch when checked. The sibling worktree's proposed specs/F0-foundation.md supplies the matching feature flags, including raid and live_presence. No changes were made to either source or to the other worktree.
+
+The input brief's older low-poly style is superseded by Nils' later Carto-inspired illustrated direction in this chat. New art continues the existing original painted-paper SVG family.
+Nils explicitly confirmed the warm, muted palette during the expansion review.
+
+Art kits
+Personal islands / building: cabin, workshop, greenhouse, windmill, storage and small settlement props.
+Sailing / shared islands: harbour office, sailing and cargo boats, ferry, mooring equipment and coastal landmarks.
+Island Exchange: market hall, chart display, share certificate, coin and wallet art.
+Prediction markets: question kiosk, question board and forecast token; no real question or sensitive event is depicted.
+Sports predictions: pavilion, generic pennant, fixture-style marks and reward trophy; no real team or provider branding.
+PvP arena: duel gate, challenger character study and arena icon; artwork only.
+Cooperative encounters: ruin/arch studies and raid icon, based on F0's proposed raid flag; encounter design remains open.
+Shared mystery / visible rewards: generic logbook, chart, key, lens, radio and other clue props plus reward art. These are an object library, not canon clues or a new story solution.
+Companion: two character studies and an interface icon. Identity remains a design option; no AI or dialogue service is added.
+Weather / presence: consistent weather and shared-presence icons, alongside the existing visuals and APIs.
+
+Integration boundary
+Catalogue entries say whether art is used in Lighthouse Isle, CSS-only, or staged in the library. Only selected island textures preload. Staged art does not activate a feature, make a claim about the story, change the economy or define an API. The catalogue is the source of truth for sizes, anchors, tags and usage; ASSETS.md describes provenance and the workshop displays it for review.
+
+Quality loop
+Review source SVGs, full family sheets, thumbnail/game scale, alpha bounds, day/night contrast and the actual island. Revise weak silhouettes and anchors before handing over. Keep the full library separate from the active scene's draw-call/texture cost.
+
+Completed expansion
+88 new drawings bring the collection to 108. The catalogue has nine families: 20 original island drawings, 12 buildings, 14 coastal props, 4 sailing assets, 12 nature assets, 15 mystery objects, 8 economy/reward objects, 5 character studies and 18 icons. Twenty-seven drawings preload with the island, 80 are staged, and one paper tile is CSS-only.
+
+Review changes included a tall lean-to workshop, low porch cabin, stronger kiosk glyph, simpler glasshouse divisions, subtle wall weathering and safe roof/flag padding. Two independent final reviews found no blocking visual issue in the new families. The workshop adds 32/64/96 pixel studies; source art remains editable for Nils' next visual iteration.

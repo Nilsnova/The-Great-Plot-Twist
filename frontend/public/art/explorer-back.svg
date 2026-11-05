@@ -1,0 +1,16 @@
+<!-- Original raincoat explorer, back view with a small sea-green backpack. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 220" width="168" height="264">
+<ellipse cx="71" cy="205" rx="30" ry="8" fill="#527668" opacity=".18"/>
+<path d="m48 172 18 0-1 29-22 1 0-8Zm29 0 17-1 3 29-22 1Z" fill="#4d7069"/>
+<path d="m43 195 23-1 0 10-27 1 0-6Zm32 0 22-1 5 7-2 4-25 0Z" fill="#42655e"/>
+<path d="m43 106-16 38 8 8 17-23m42-21 17 35-8 10-16-23" fill="#cba157" stroke="#ba8c4b" stroke-width="2"/>
+<path d="m44 104q26-11 51 1l7 68q-31 14-65 0Z" fill="#deb766"/><path d="m77 107 18-2 7 68-24 7Z" fill="#cba459"/>
+<path d="m46 109 10-6 32 3 8 12-1 42-43 3-9-13Z" fill="#78978a"/>
+<path d="m51 117 36-2 4 23-38 4Z" fill="#92ac95"/><path d="m55 142 33-2-1 15-31 3Z" fill="#628778"/>
+<path d="m58 135 5 0 1 12-6 0m17-14 5 0 1 12-5 0" fill="#c5b981"/>
+<path d="m39 89q-12-48 8-60 23-13 46 5 18 16 11 53L92 104 52 101Z" fill="#7d9a82"/>
+<path d="M35 65Q63 75 107 62L108 76Q75 90 34 78Z" fill="#597e72"/>
+<path d="M44 44Q62 31 80 39" stroke="#abc0a0" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="m43 103 13 8 33-5 7-7-4 14-38 8Z" fill="#bd755d"/>
+<circle cx="34" cy="149" r="6" fill="#dab088"/><circle cx="103" cy="150" r="6" fill="#dab088"/>
+</svg>

@@ -1,0 +1,7 @@
+<!-- Original night window overlay, aligned to cottage.svg and hidden in daylight. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 280" width="420" height="392">
+<ellipse cx="81" cy="192" rx="23" ry="22" fill="#efce7e" opacity=".16"/>
+<ellipse cx="231" cy="173" rx="18" ry="22" fill="#efce7e" opacity=".13"/>
+<path d="m66 177 31 3 0 26-31-4Z" fill="#f3d58c"/><path d="m81 179 0 25m-15-14 31 3" stroke="#8a916a" stroke-width="3"/>
+<path d="m220 168 17-11 0 19-17 11Z" fill="#efcf82"/><path d="m228 162 0 21m-8-10 17-10" stroke="#82916d" stroke-width="2"/>
+</svg>

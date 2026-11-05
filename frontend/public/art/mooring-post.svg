@@ -1,0 +1,11 @@
+<!-- Original painted-paper mooring post. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m87 218 2-117q34-18 69-2l3 120q-36 19-74-1Z" fill="#a5966d"/><path d="m139 101 19-2 3 120-22 7Z" fill="#8c8c66"/>
+<ellipse cx="124" cy="100" rx="36" ry="13" fill="#d0be8c"/><ellipse cx="124" cy="100" rx="23" ry="7" fill="#a99f73"/>
+<path d="m92 135q31 14 62 0m-62 10q31 14 62 0m-61 10q31 14 61 0m-21-19q39-12 48 17l-1 42" stroke="#d4bb84" stroke-width="7" fill="none"/>
+<path d="m104 173 0 38m14-35 0 35" stroke="#c1b382" stroke-width="3"/>
+
+</g></svg>

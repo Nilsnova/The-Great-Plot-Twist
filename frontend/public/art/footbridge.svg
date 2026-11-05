@@ -1,0 +1,12 @@
+<!-- Original painted-paper little timber bridge. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M23 189Q125 111 233 157L232 179Q129 136 24 212Z" fill="#bca77b"/>
+<path d="M26 185Q125 115 231 158L216 168Q126 136 34 202Z" fill="#d2bc8b"/>
+<path d="m48 176 13 12m10-25 15 12m10-22 17 13m9-20 17 14m10-16 16 14m13-12 13 15m15-9 10 15" stroke="#a59169" stroke-width="3"/>
+<path d="m29 188 0-61m48 30 0-56m50 44 0-53m51 57 0-52m51 66 0-53M29 131Q125 53 229 113" stroke="#8c9471" stroke-width="7" fill="none"/>
+<path d="m37 208 0-43m47 18 0-39m51 25 0-36m51 35 0-39m42 52 0-36M37 167Q131 107 228 147" stroke="#a3a07a" stroke-width="6" fill="none"/>
+
+</g></svg>

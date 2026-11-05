@@ -1,0 +1,10 @@
+<!-- Original painted-paper unfurling fern. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m128 231-2-127q-1-28 20-26 23 4 6 24-12 9-16-1" stroke="#789c70" stroke-width="5" fill="none"/>
+<path d="m125 221-52-73m55 71 48-72m-48 51-30-76m31 61 27-68m-31 34-18-45m19 31 16-40" stroke="#83a474" stroke-width="4" fill="none"/>
+<path d="m83 162-27-3 18 19 20 0m-1-3-28 2 20 16 18-5m-1 1-28 8 25 12 15-11m44-37 24-5-16 22-19 0m9-3 28 1-19 18-19-5m8 2 27 7-25 13-15-11m-16-51-21-12 7 22 18 9m19-20 21-14-8 25-19 8" fill="#91ad7c"/>
+
+</g></svg>

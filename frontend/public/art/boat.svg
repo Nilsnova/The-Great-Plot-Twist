@@ -1,0 +1,12 @@
+<!-- Original small rowing boat. Its movement is supplied by world/boat.js. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 180" width="312" height="216">
+<ellipse cx="134" cy="125" rx="89" ry="19" fill="#537d74" opacity=".2"/>
+<path d="M26 102Q49 54 131 50Q200 49 240 89Q215 133 141 143Q56 144 26 102Z" fill="#c7cba9"/>
+<path d="M26 102Q81 139 150 130Q209 123 240 89Q215 133 141 143Q56 144 26 102Z" fill="#91ab98"/>
+<path d="M40 99Q62 65 132 62Q193 61 224 88Q198 120 142 129Q75 133 40 99Z" fill="#a88e63"/>
+<path d="M40 99Q87 120 146 116Q192 110 224 88Q198 120 142 129Q75 133 40 99Z" fill="#bfa577"/>
+<path d="m91 70 18-4 23 58-19 3Zm75-7 16 4 14 40-16 8Z" fill="#ded0a0"/>
+<path d="M26 102Q49 54 131 50Q200 49 240 89" stroke="#e5d7a8" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="m68 138 128-100" stroke="#846f51" stroke-width="5" stroke-linecap="round"/><path d="m181 43 15-17 18 0-7 14-19 10Z" fill="#bea277"/>
+<path d="m49 112 22 5m82 12 22-4m-26-70 23 4" stroke="#ebdfb3" stroke-width="2" fill="none"/>
+</svg>

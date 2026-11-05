@@ -1,0 +1,17 @@
+<!-- Original painted-paper sports pavilion. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m35 157 126 21 62-43 0 110-60 36-128-23Z" fill="#d3cba4"/>
+<path d="m20 157 97-79 125 55-80 55Z" fill="#7c9f8c"/><path d="m117 78 8 61 117-6Z" fill="#628775"/>
+<path d="m37 166 0 89m42-82 0 91m43-82 0 90m43-83 0 90m42-116 0 90" stroke="#94a17e" stroke-width="9"/>
+<path d="m42 185 113 17v50l-113-19Z" fill="#708d77"/>
+<path d="m51 196 41 7v27l-41-6Zm61 10 30 5v27l-30-5Z" fill="#e6d2a0"/>
+<path d="m60 204 22 4m-21 7 14 2m45-1 13 2m-13 7 12 2" stroke="#83936e" stroke-width="3"/>
+<path d="m48 130 117 26 42-30" stroke="#d2be8e" stroke-width="2" fill="none"/>
+<path d="m61 133 9 16 10-11m13 2 9 16 10-11m14 2 8 16 11-12m14 4 8 14 11-16" fill="#c88764"/>
+<path d="m118 78 0-43" stroke="#8d9871" stroke-width="3"/><path d="m119 38 31 8-13 9-18-3Z" fill="#c58560"/>
+
+<path d="m44 242 12 2m-10 6 8 1m112-12 10 2" stroke="#d5cba5" stroke-width="2" opacity=".8" fill="none"/>
+</g></svg>

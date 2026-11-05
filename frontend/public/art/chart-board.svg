@@ -1,0 +1,12 @@
+<!-- Original painted-paper exchange chart board. Staged play-money or reward artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="77" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m49 230 14-165m132 165-9-165" stroke="#9c936b" stroke-width="9"/>
+<path d="m33 74 181 3-7 121-176-5Z" fill="#b6a477"/><path d="m44 85 158 3-5 97-153-4Z" fill="#6f8f78"/>
+<path d="m59 102 0 64 122 2m-122-45 121 3m-121 18 121 3m-96-45-1 65m34-64-1 65m33-64-1 65" stroke="#8fac8b" stroke-width="2" fill="none"/>
+<path d="m60 153 28-25 25 13 24-31 31 7 16-15" stroke="#e0ca8d" stroke-width="5" fill="none"/>
+<path d="m57 186 43 1" stroke="#d0c18d" stroke-width="4"/>
+
+</g></svg>

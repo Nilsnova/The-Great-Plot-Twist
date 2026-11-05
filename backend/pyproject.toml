@@ -1,0 +1,40 @@
+# Python project settings for the server (the code in server/ and api/).
+# Used by: uv (installs packages), pytest (runs tests), ruff (checks style) and Vercel (deploys).
+
+[project]
+name = "the-great-plot-twist"
+version = "0.1.0"
+description = "Python API for The Great Plot Twist"
+requires-python = ">=3.12"
+
+# Packages the server needs when it runs on Vercel.
+dependencies = [
+    "fastapi>=0.162.0",
+    "httpx>=0.28.1",
+    "pydantic>=2.14.3",
+]
+
+# Packages only developers need. `uv sync` installs them, Vercel does not.
+[dependency-groups]
+dev = [
+    "httpx2>=2.16.0", # used only inside FastAPI's TestClient (Starlette dropped httpx there)
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+    "uvicorn>=0.54.0", # a local web server: uv run uvicorn main:app --reload
+]
+
+# This project is an app, not a library, so uv does not build or install it.
+[tool.uv]
+package = false
+
+# `uv run pytest` runs only the server tests. The browser tests live in tests/ (Vitest).
+[tool.pytest.ini_options]
+testpaths = ["server/tests"]
+pythonpath = ["."] # lets tests write "from server.app import ..."
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# E/F: basic mistakes. I: sorted imports. B: likely bugs. UP: modern Python syntax.
+select = ["E", "F", "I", "B", "UP"]

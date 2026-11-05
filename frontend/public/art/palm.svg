@@ -1,0 +1,13 @@
+<!-- Original painted-paper wind-bent island palm. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 320" width="256" height="320">
+<ellipse cx="128" cy="298" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M113 298Q137 220 125 116L141 111Q160 217 135 298Z" fill="#baad7d"/><path d="M131 296Q152 223 138 123" stroke="#9d9c70" stroke-width="6" fill="none"/>
+<path d="m124 266 16-1m-11-24 16-1m-11-25 14-1m-12-23 14-1m-13-23 14-1" stroke="#d6c799" stroke-width="3"/>
+<path d="M132 114Q55 58 20 128Q63 112 132 127Q53 112 34 180Q69 147 137 133Q111 68 62 51Q116 34 141 108Q166 32 217 50Q181 71 150 117Q217 70 239 135Q200 115 151 128Q233 128 218 190Q197 150 142 139Z" fill="#81a888"/>
+<path d="M132 114Q55 58 20 128Q69 93 134 122M141 108Q166 32 217 50Q172 48 146 119M151 128Q233 128 218 190Q219 144 144 135" fill="#a1bb91"/>
+<path d="m134 122-77-25m91 23 48-42m-60 51-71 29m86-24 56 23" stroke="#658f78" stroke-width="3" fill="none"/>
+<g fill="#a78d61"><circle cx="132" cy="127" r="8"/><circle cx="146" cy="130" r="7"/></g>
+
+</g></svg>

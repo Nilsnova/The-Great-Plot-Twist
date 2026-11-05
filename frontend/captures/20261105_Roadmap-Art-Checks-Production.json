@@ -1,0 +1,1322 @@
+{
+  "checked": "2026-11-05T13:55:14.398Z",
+  "checks": [
+    "Workshop lists every registered drawing",
+    "108 SVGs parse, decode, contain ink and preserve aspect ratio without edge clipping",
+    "Search finds the brass key",
+    "Drawing detail opens",
+    "Detail shows 32, 64 and 96 pixel readability studies",
+    "Detail links to editable source",
+    "Placement anchor can be hidden",
+    "Escape closes the drawing detail",
+    "Empty filter result is explained",
+    "Usage filter matches the selective island kit",
+    "Roadmap filter matches source metadata",
+    "sea contrast study works",
+    "night contrast study works",
+    "paper contrast study works",
+    "All nine category counts and rendered review sheets match the catalogue",
+    "Game requests only the 27 island drawings and the CSS paper tile",
+    "Workshop has no external network requests",
+    "No browser errors ()"
+  ],
+  "drawings": [
+    {
+      "id": "cottage",
+      "width": 420,
+      "height": 392,
+      "ink": 79901,
+      "bounds": [
+        33,
+        44,
+        390,
+        372
+      ]
+    },
+    {
+      "id": "cottage-interior",
+      "width": 420,
+      "height": 392,
+      "ink": 65435,
+      "bounds": [
+        54,
+        131,
+        370,
+        372
+      ]
+    },
+    {
+      "id": "cottage-glow",
+      "width": 420,
+      "height": 392,
+      "ink": 5577,
+      "bounds": [
+        81,
+        211,
+        348,
+        299
+      ]
+    },
+    {
+      "id": "lighthouse",
+      "width": 288,
+      "height": 576,
+      "ink": 58164,
+      "bounds": [
+        23,
+        46,
+        265,
+        555
+      ]
+    },
+    {
+      "id": "boathouse",
+      "width": 312,
+      "height": 276,
+      "ink": 42039,
+      "bounds": [
+        29,
+        54,
+        292,
+        264
+      ]
+    },
+    {
+      "id": "birch",
+      "width": 264,
+      "height": 360,
+      "ink": 44446,
+      "bounds": [
+        17,
+        20,
+        254,
+        350
+      ]
+    },
+    {
+      "id": "pine",
+      "width": 242,
+      "height": 352,
+      "ink": 34411,
+      "bounds": [
+        17,
+        15,
+        224,
+        339
+      ]
+    },
+    {
+      "id": "explorer",
+      "width": 168,
+      "height": 264,
+      "ink": 16854,
+      "bounds": [
+        31,
+        27,
+        134,
+        255
+      ]
+    },
+    {
+      "id": "explorer-back",
+      "width": 168,
+      "height": 264,
+      "ink": 16965,
+      "bounds": [
+        31,
+        28,
+        134,
+        255
+      ]
+    },
+    {
+      "id": "jetty",
+      "width": 180,
+      "height": 360,
+      "ink": 32594,
+      "bounds": [
+        30,
+        24,
+        143,
+        337
+      ]
+    },
+    {
+      "id": "boat",
+      "width": 312,
+      "height": 216,
+      "ink": 23984,
+      "bounds": [
+        28,
+        31,
+        291,
+        172
+      ]
+    },
+    {
+      "id": "shrub",
+      "width": 216,
+      "height": 168,
+      "ink": 19251,
+      "bounds": [
+        18,
+        25,
+        204,
+        156
+      ]
+    },
+    {
+      "id": "rock",
+      "width": 220,
+      "height": 165,
+      "ink": 15352,
+      "bounds": [
+        24,
+        30,
+        204,
+        151
+      ]
+    },
+    {
+      "id": "flowers",
+      "width": 130,
+      "height": 140,
+      "ink": 2879,
+      "bounds": [
+        15,
+        46,
+        114,
+        126
+      ]
+    },
+    {
+      "id": "sign",
+      "width": 130,
+      "height": 180,
+      "ink": 4675,
+      "bounds": [
+        24,
+        37,
+        117,
+        173
+      ]
+    },
+    {
+      "id": "explorer-walk-1",
+      "width": 168,
+      "height": 264,
+      "ink": 16851,
+      "bounds": [
+        31,
+        27,
+        134,
+        255
+      ]
+    },
+    {
+      "id": "explorer-walk-2",
+      "width": 168,
+      "height": 264,
+      "ink": 16860,
+      "bounds": [
+        31,
+        27,
+        134,
+        255
+      ]
+    },
+    {
+      "id": "explorer-back-walk-1",
+      "width": 168,
+      "height": 264,
+      "ink": 16962,
+      "bounds": [
+        31,
+        28,
+        134,
+        255
+      ]
+    },
+    {
+      "id": "explorer-back-walk-2",
+      "width": 168,
+      "height": 264,
+      "ink": 16971,
+      "bounds": [
+        31,
+        28,
+        134,
+        255
+      ]
+    },
+    {
+      "id": "paper",
+      "width": 160,
+      "height": 160,
+      "ink": 25599,
+      "bounds": [
+        0,
+        0,
+        159,
+        159
+      ]
+    },
+    {
+      "id": "harbour-office",
+      "width": 256,
+      "height": 300,
+      "ink": 31492,
+      "bounds": [
+        33,
+        17,
+        241,
+        289
+      ]
+    },
+    {
+      "id": "market-hall",
+      "width": 256,
+      "height": 300,
+      "ink": 27378,
+      "bounds": [
+        33,
+        95,
+        240,
+        289
+      ]
+    },
+    {
+      "id": "prediction-kiosk",
+      "width": 256,
+      "height": 300,
+      "ink": 29445,
+      "bounds": [
+        33,
+        50,
+        224,
+        289
+      ]
+    },
+    {
+      "id": "sports-pavilion",
+      "width": 256,
+      "height": 300,
+      "ink": 30011,
+      "bounds": [
+        33,
+        33,
+        223,
+        289
+      ]
+    },
+    {
+      "id": "arena-gate",
+      "width": 256,
+      "height": 300,
+      "ink": 25024,
+      "bounds": [
+        33,
+        74,
+        222,
+        289
+      ]
+    },
+    {
+      "id": "signal-station",
+      "width": 256,
+      "height": 300,
+      "ink": 23130,
+      "bounds": [
+        33,
+        15,
+        222,
+        289
+      ]
+    },
+    {
+      "id": "workshop",
+      "width": 256,
+      "height": 300,
+      "ink": 30205,
+      "bounds": [
+        33,
+        57,
+        223,
+        289
+      ]
+    },
+    {
+      "id": "player-cabin",
+      "width": 256,
+      "height": 300,
+      "ink": 23425,
+      "bounds": [
+        33,
+        128,
+        223,
+        289
+      ]
+    },
+    {
+      "id": "greenhouse",
+      "width": 256,
+      "height": 300,
+      "ink": 27763,
+      "bounds": [
+        33,
+        88,
+        222,
+        289
+      ]
+    },
+    {
+      "id": "windmill",
+      "width": 256,
+      "height": 320,
+      "ink": 21395,
+      "bounds": [
+        33,
+        37,
+        222,
+        309
+      ]
+    },
+    {
+      "id": "watchtower-ruin",
+      "width": 256,
+      "height": 300,
+      "ink": 20592,
+      "bounds": [
+        33,
+        86,
+        222,
+        289
+      ]
+    },
+    {
+      "id": "raid-arch",
+      "width": 256,
+      "height": 300,
+      "ink": 19901,
+      "bounds": [
+        33,
+        64,
+        222,
+        289
+      ]
+    },
+    {
+      "id": "mooring-post",
+      "width": 256,
+      "height": 256,
+      "ink": 13037,
+      "bounds": [
+        46,
+        87,
+        209,
+        242
+      ]
+    },
+    {
+      "id": "rope-coil",
+      "width": 256,
+      "height": 256,
+      "ink": 13516,
+      "bounds": [
+        46,
+        132,
+        223,
+        242
+      ]
+    },
+    {
+      "id": "fishing-net",
+      "width": 256,
+      "height": 256,
+      "ink": 21812,
+      "bounds": [
+        46,
+        71,
+        209,
+        242
+      ]
+    },
+    {
+      "id": "crate",
+      "width": 256,
+      "height": 256,
+      "ink": 18866,
+      "bounds": [
+        46,
+        101,
+        209,
+        242
+      ]
+    },
+    {
+      "id": "barrel",
+      "width": 256,
+      "height": 256,
+      "ink": 16705,
+      "bounds": [
+        46,
+        79,
+        209,
+        242
+      ]
+    },
+    {
+      "id": "lantern",
+      "width": 256,
+      "height": 256,
+      "ink": 14387,
+      "bounds": [
+        46,
+        45,
+        209,
+        242
+      ]
+    },
+    {
+      "id": "bench",
+      "width": 256,
+      "height": 256,
+      "ink": 19524,
+      "bounds": [
+        35,
+        57,
+        222,
+        242
+      ]
+    },
+    {
+      "id": "well",
+      "width": 256,
+      "height": 256,
+      "ink": 20085,
+      "bounds": [
+        43,
+        40,
+        218,
+        242
+      ]
+    },
+    {
+      "id": "fence",
+      "width": 256,
+      "height": 256,
+      "ink": 18809,
+      "bounds": [
+        21,
+        68,
+        225,
+        242
+      ]
+    },
+    {
+      "id": "footbridge",
+      "width": 256,
+      "height": 256,
+      "ink": 13373,
+      "bounds": [
+        23,
+        83,
+        232,
+        242
+      ]
+    },
+    {
+      "id": "stone-steps",
+      "width": 256,
+      "height": 256,
+      "ink": 19203,
+      "bounds": [
+        35,
+        90,
+        224,
+        245
+      ]
+    },
+    {
+      "id": "noticeboard",
+      "width": 256,
+      "height": 256,
+      "ink": 27278,
+      "bounds": [
+        27,
+        35,
+        222,
+        242
+      ]
+    },
+    {
+      "id": "tide-gauge",
+      "width": 256,
+      "height": 256,
+      "ink": 11446,
+      "bounds": [
+        46,
+        40,
+        209,
+        242
+      ]
+    },
+    {
+      "id": "buoy",
+      "width": 256,
+      "height": 256,
+      "ink": 12528,
+      "bounds": [
+        42,
+        69,
+        216,
+        242
+      ]
+    },
+    {
+      "id": "sailboat",
+      "width": 320,
+      "height": 280,
+      "ink": 26286,
+      "bounds": [
+        30,
+        19,
+        289,
+        262
+      ]
+    },
+    {
+      "id": "ferry",
+      "width": 320,
+      "height": 280,
+      "ink": 30287,
+      "bounds": [
+        24,
+        55,
+        300,
+        262
+      ]
+    },
+    {
+      "id": "cargo-boat",
+      "width": 320,
+      "height": 280,
+      "ink": 25958,
+      "bounds": [
+        25,
+        43,
+        297,
+        262
+      ]
+    },
+    {
+      "id": "life-ring",
+      "width": 320,
+      "height": 280,
+      "ink": 23850,
+      "bounds": [
+        30,
+        60,
+        289,
+        262
+      ]
+    },
+    {
+      "id": "willow",
+      "width": 256,
+      "height": 320,
+      "ink": 34526,
+      "bounds": [
+        19,
+        41,
+        223,
+        308
+      ]
+    },
+    {
+      "id": "cypress",
+      "width": 256,
+      "height": 320,
+      "ink": 22068,
+      "bounds": [
+        50,
+        21,
+        205,
+        308
+      ]
+    },
+    {
+      "id": "palm",
+      "width": 256,
+      "height": 320,
+      "ink": 18406,
+      "bounds": [
+        20,
+        46,
+        238,
+        308
+      ]
+    },
+    {
+      "id": "reed-bed",
+      "width": 256,
+      "height": 256,
+      "ink": 9396,
+      "bounds": [
+        46,
+        49,
+        205,
+        244
+      ]
+    },
+    {
+      "id": "fern",
+      "width": 256,
+      "height": 256,
+      "ink": 8695,
+      "bounds": [
+        50,
+        75,
+        205,
+        244
+      ]
+    },
+    {
+      "id": "sea-grass",
+      "width": 256,
+      "height": 256,
+      "ink": 13818,
+      "bounds": [
+        50,
+        75,
+        205,
+        244
+      ]
+    },
+    {
+      "id": "driftwood",
+      "width": 256,
+      "height": 256,
+      "ink": 11311,
+      "bounds": [
+        35,
+        129,
+        230,
+        244
+      ]
+    },
+    {
+      "id": "tide-pool",
+      "width": 256,
+      "height": 256,
+      "ink": 23046,
+      "bounds": [
+        28,
+        104,
+        230,
+        244
+      ]
+    },
+    {
+      "id": "shells",
+      "width": 256,
+      "height": 256,
+      "ink": 14370,
+      "bounds": [
+        34,
+        138,
+        221,
+        244
+      ]
+    },
+    {
+      "id": "mushrooms",
+      "width": 256,
+      "height": 256,
+      "ink": 11198,
+      "bounds": [
+        40,
+        110,
+        227,
+        244
+      ]
+    },
+    {
+      "id": "gull",
+      "width": 256,
+      "height": 256,
+      "ink": 13234,
+      "bounds": [
+        50,
+        86,
+        226,
+        244
+      ]
+    },
+    {
+      "id": "crab",
+      "width": 256,
+      "height": 256,
+      "ink": 11983,
+      "bounds": [
+        23,
+        105,
+        207,
+        244
+      ]
+    },
+    {
+      "id": "logbook",
+      "width": 256,
+      "height": 256,
+      "ink": 28186,
+      "bounds": [
+        49,
+        47,
+        202,
+        241
+      ]
+    },
+    {
+      "id": "sealed-letter",
+      "width": 256,
+      "height": 256,
+      "ink": 24992,
+      "bounds": [
+        33,
+        69,
+        227,
+        241
+      ]
+    },
+    {
+      "id": "torn-chart",
+      "width": 256,
+      "height": 256,
+      "ink": 29248,
+      "bounds": [
+        32,
+        50,
+        220,
+        241
+      ]
+    },
+    {
+      "id": "brass-key",
+      "width": 256,
+      "height": 256,
+      "ink": 11243,
+      "bounds": [
+        53,
+        33,
+        202,
+        241
+      ]
+    },
+    {
+      "id": "pocket-watch",
+      "width": 256,
+      "height": 256,
+      "ink": 20608,
+      "bounds": [
+        53,
+        39,
+        202,
+        241
+      ]
+    },
+    {
+      "id": "compass",
+      "width": 256,
+      "height": 256,
+      "ink": 21731,
+      "bounds": [
+        47,
+        53,
+        210,
+        241
+      ]
+    },
+    {
+      "id": "lens",
+      "width": 256,
+      "height": 256,
+      "ink": 23434,
+      "bounds": [
+        53,
+        59,
+        204,
+        241
+      ]
+    },
+    {
+      "id": "cipher-wheel",
+      "width": 256,
+      "height": 256,
+      "ink": 23026,
+      "bounds": [
+        45,
+        69,
+        212,
+        241
+      ]
+    },
+    {
+      "id": "clue-fragment",
+      "width": 256,
+      "height": 256,
+      "ink": 24890,
+      "bounds": [
+        38,
+        56,
+        204,
+        241
+      ]
+    },
+    {
+      "id": "clue-fragment-wave",
+      "width": 256,
+      "height": 256,
+      "ink": 24946,
+      "bounds": [
+        39,
+        58,
+        206,
+        241
+      ]
+    },
+    {
+      "id": "clue-fragment-star",
+      "width": 256,
+      "height": 256,
+      "ink": 24378,
+      "bounds": [
+        39,
+        55,
+        204,
+        241
+      ]
+    },
+    {
+      "id": "clue-fragment-leaf",
+      "width": 256,
+      "height": 256,
+      "ink": 24376,
+      "bounds": [
+        39,
+        56,
+        202,
+        241
+      ]
+    },
+    {
+      "id": "bottle-note",
+      "width": 256,
+      "height": 256,
+      "ink": 12415,
+      "bounds": [
+        53,
+        52,
+        202,
+        241
+      ]
+    },
+    {
+      "id": "radio",
+      "width": 256,
+      "height": 256,
+      "ink": 25857,
+      "bounds": [
+        43,
+        32,
+        214,
+        241
+      ]
+    },
+    {
+      "id": "telescope",
+      "width": 256,
+      "height": 256,
+      "ink": 12900,
+      "bounds": [
+        48,
+        59,
+        232,
+        241
+      ]
+    },
+    {
+      "id": "coin-stack",
+      "width": 256,
+      "height": 256,
+      "ink": 12109,
+      "bounds": [
+        49,
+        142,
+        206,
+        241
+      ]
+    },
+    {
+      "id": "wallet",
+      "width": 256,
+      "height": 256,
+      "ink": 23224,
+      "bounds": [
+        50,
+        82,
+        216,
+        241
+      ]
+    },
+    {
+      "id": "share-certificate",
+      "width": 256,
+      "height": 256,
+      "ink": 28191,
+      "bounds": [
+        31,
+        58,
+        209,
+        241
+      ]
+    },
+    {
+      "id": "chart-board",
+      "width": 256,
+      "height": 256,
+      "ink": 25093,
+      "bounds": [
+        31,
+        60,
+        213,
+        241
+      ]
+    },
+    {
+      "id": "question-board",
+      "width": 256,
+      "height": 256,
+      "ink": 22827,
+      "bounds": [
+        39,
+        71,
+        209,
+        241
+      ]
+    },
+    {
+      "id": "forecast-token",
+      "width": 256,
+      "height": 256,
+      "ink": 20974,
+      "bounds": [
+        48,
+        78,
+        207,
+        241
+      ]
+    },
+    {
+      "id": "team-pennant",
+      "width": 256,
+      "height": 256,
+      "ink": 10852,
+      "bounds": [
+        51,
+        51,
+        214,
+        241
+      ]
+    },
+    {
+      "id": "trophy",
+      "width": 256,
+      "height": 256,
+      "ink": 13621,
+      "bounds": [
+        42,
+        79,
+        210,
+        241
+      ]
+    },
+    {
+      "id": "harbour-keeper",
+      "width": 180,
+      "height": 260,
+      "ink": 14836,
+      "bounds": [
+        36,
+        37,
+        138,
+        249
+      ]
+    },
+    {
+      "id": "trader",
+      "width": 180,
+      "height": 260,
+      "ink": 15071,
+      "bounds": [
+        32,
+        34,
+        140,
+        249
+      ]
+    },
+    {
+      "id": "rival",
+      "width": 180,
+      "height": 260,
+      "ink": 15368,
+      "bounds": [
+        39,
+        33,
+        140,
+        249
+      ]
+    },
+    {
+      "id": "companion-gull",
+      "width": 180,
+      "height": 260,
+      "ink": 14660,
+      "bounds": [
+        37,
+        51,
+        171,
+        249
+      ]
+    },
+    {
+      "id": "companion-wisp",
+      "width": 180,
+      "height": 260,
+      "ink": 13621,
+      "bounds": [
+        14,
+        43,
+        170,
+        249
+      ]
+    },
+    {
+      "id": "icon-logbook",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-map",
+      "width": 128,
+      "height": 128,
+      "ink": 9005,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-home",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-ship",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-coin",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-market",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-prediction",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-sports",
+      "width": 128,
+      "height": 128,
+      "ink": 9009,
+      "bounds": [
+        11,
+        11,
+        117,
+        116
+      ]
+    },
+    {
+      "id": "icon-arena",
+      "width": 128,
+      "height": 128,
+      "ink": 9026,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-raid",
+      "width": 128,
+      "height": 128,
+      "ink": 9030,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-companion",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-presence",
+      "width": 128,
+      "height": 128,
+      "ink": 9085,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-sun",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-cloud",
+      "width": 128,
+      "height": 128,
+      "ink": 9131,
+      "bounds": [
+        11,
+        11,
+        120,
+        116
+      ]
+    },
+    {
+      "id": "icon-rain",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-fog",
+      "width": 128,
+      "height": 128,
+      "ink": 9019,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-wind",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    },
+    {
+      "id": "icon-reward",
+      "width": 128,
+      "height": 128,
+      "ink": 9003,
+      "bounds": [
+        11,
+        11,
+        116,
+        116
+      ]
+    }
+  ],
+  "browser": "157.0.8103.39"
+}

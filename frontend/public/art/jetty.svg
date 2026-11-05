@@ -1,0 +1,10 @@
+<!-- Original jetty with uneven timber and simple painted posts. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 360" width="180" height="360">
+<path d="m41 31 103-7-8 306-104 8Z" fill="#527e73" opacity=".17"/>
+<path d="m49 35-7 299m89-304-6 300" stroke="#937e58" stroke-width="10"/>
+<g fill="#cbb282" stroke="#b39a6e" stroke-width="1.4">
+<path d="m40 31 102-6 0 18-102 6Z"/><path d="m39 52 103-6-2 18-101 6Z"/><path d="m39 73 100-5 1 17-101 5Z"/><path d="m38 94 102-5-2 18-101 4Z"/><path d="m38 115 101-5-1 18-102 5Z"/><path d="m37 137 101-6-1 18-101 5Z"/><path d="m37 158 101-6-1 18-102 5Z"/><path d="m36 179 102-5-2 18-101 4Z"/><path d="m36 200 100-4 0 18-101 4Z"/><path d="m35 222 101-5-1 18-101 4Z"/><path d="m35 243 101-4-1 18-101 4Z"/><path d="m34 264 102-4-2 18-101 4Z"/><path d="m34 285 100-4 0 18-101 4Z"/><path d="m33 306 102-4-1 18-102 4Z"/>
+</g><path d="m54 62 46-2m-28 66 41-2m-62 67 47-2m-22 65 39-2m-59 58 34-1" stroke="#eee0ab" stroke-width="2" opacity=".6"/>
+<g stroke="#7b805d" stroke-width="7" stroke-linecap="round"><path d="m38 65 1-25m99 20 0-27m-102 143 1-27m98 21 0-27m-101 142 1-27m97 23 0-28"/></g>
+<g fill="#d2c291"><ellipse cx="39" cy="40" rx="4" ry="2"/><ellipse cx="138" cy="33" rx="4" ry="2"/><ellipse cx="37" cy="149" rx="4" ry="2"/><ellipse cx="135" cy="143" rx="4" ry="2"/><ellipse cx="35" cy="258" rx="4" ry="2"/><ellipse cx="132" cy="253" rx="4" ry="2"/></g>
+</svg>

@@ -1,0 +1,9 @@
+<!-- Original painted-paper curling sea grass. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M113 232Q77 153 95 121Q123 149 115 203Q93 119 123 75Q146 127 128 205Q143 115 177 119Q181 155 141 225Q170 171 205 176Q191 208 149 236Q102 246 65 223Q49 189 59 165Q89 168 113 232Z" fill="#8ba87a"/>
+<path d="M113 231Q94 172 98 141m31 82q10-64 37-88m-42 83q1-81 1-118m20 132q26-37 45-44m-80 43q-33-40-42-46" stroke="#b1c295" stroke-width="3" fill="none"/>
+
+</g></svg>

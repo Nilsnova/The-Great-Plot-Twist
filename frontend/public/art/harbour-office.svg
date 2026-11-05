@@ -1,0 +1,18 @@
+<!-- Original painted-paper harbour office. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m44 171 115 15 1 86-115-14Z" fill="#eee2bc"/><path d="m159 186 59-39-1 89-57 36Z" fill="#c7bc91"/>
+<path d="m29 170 70-65 164 43-83 44Z" fill="#b96d53"/><path d="m99 105 133 31-62 53 10 3 83-44Z" fill="#975d4d"/>
+<path d="m42 158 118 30m-96-48 119 31m-91-49 119 31" stroke="#d79b70" stroke-width="2" fill="none"/>
+<path d="m54 204 30 4v34l-30-4Z" fill="#7a9383"/><path d="m58 209 22 2v24l-22-3Z" fill="#ddc879"/><path d="m69 211 0 23m-10-12 21 2" stroke="#799180" stroke-width="2"/>
+<path d="m112 207 28 4v56l-28-4Z" fill="#6e8c7c"/><path d="m117 213 18 3v43l-18-3Z" fill="#86a08a"/><circle cx="134" cy="238" r="2" fill="#daba72"/>
+<path d="m177 192 22-14v27l-22 15Z" fill="#8a9f87"/><path d="m181 194 14-9v16l-14 9Z" fill="#e5cd85"/>
+<path d="m74 126 0-71 42-26 36 25 0 87Z" fill="#ddd4ad"/><path d="m117 30 0 107 35 4V54Z" fill="#b9bb96"/><path d="m64 59 51-42 48 39-13 6-34-30-37 31Z" fill="#709387"/>
+<circle cx="111" cy="73" r="20" fill="#eeE2bc"/><circle cx="111" cy="73" r="16" fill="#a4b496"/><path d="m111 62 0 12 9 3" stroke="#597c6f" stroke-width="3" fill="none"/>
+<path d="m190 137 0-74" stroke="#7e8e73" stroke-width="3"/><path d="m191 65 33 7-16 10-17-1Z" fill="#c58462"/>
+<path d="m47 261 113 15 57-37" stroke="#929e7f" stroke-width="5" fill="none"/>
+
+<path d="m44 242 12 2m-10 6 8 1m112-12 10 2" stroke="#d5cba5" stroke-width="2" opacity=".8" fill="none"/>
+</g></svg>

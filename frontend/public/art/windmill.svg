@@ -1,0 +1,12 @@
+<!-- Original painted-paper coastal windmill. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 320" width="256" height="320">
+<ellipse cx="128" cy="298" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m86 282 10-142 60-9 23 149q-48 20-93 2Z" fill="#d8d1a7"/><path d="m137 133 19-2 23 149-32 9Z" fill="#b3bd98"/>
+<path d="m76 147 51-62 58 56-31 11Z" fill="#7f9e88"/><path d="m128 87 57 54-27 7-22-13Z" fill="#628671"/>
+<path d="m114 241q12-7 24 0l1 44-25 0Z" fill="#708c75"/><path d="m109 187 14-1 0 24-14 1Z" fill="#8ba38b"/>
+<g transform="translate(127 137) rotate(-18)"><path d="M-5-97 8-97 8 98-5 98ZM-95-6 96-6 96 7-95 7Z" fill="#9e946f"/><path d="m-3-94 30 0-1 66-28 0Zm8 98 30 0-1 66-29 0Zm-98-9 66-1 0 29-65 0Zm119 7 66 0 0 28-66 0Z" fill="#e1d4a9" stroke="#a4a17b" stroke-width="3"/><path d="m0-80 25 0m-25 16 25 0m-25 17 25 0m-5 63 25 0m-25 17 25 0m-25 17 25 0m-123-51 0 25m17-25 0 25m17-25 0 25m63-19 0 25m17-25 0 25m17-25 0 25" stroke="#b5b38c" stroke-width="2"/></g>
+<circle cx="127" cy="137" r="12" fill="#b6b58a"/><circle cx="127" cy="137" r="6" fill="#6b8b76"/>
+
+</g></svg>

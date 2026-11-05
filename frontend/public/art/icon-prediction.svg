@@ -1,0 +1,4 @@
+<!-- Original prediction icon, part of the consistent paper-and-ink interface family. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<path d="M64 12C94 9 117 34 116 64C119 94 95 116 65 116C34 120 12 96 12 65C8 35 35 12 64 12Z" fill="#e2d8b3"/>
+<g fill="none" stroke="#668b74" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="M31 32h66v54H67L49 103V86H31Z"/><path d="M53 51q0-14 13-13 17 3 4 16l-6 8"/><circle cx="64" cy="73" r="2" fill="#668b74"/></g></svg>
