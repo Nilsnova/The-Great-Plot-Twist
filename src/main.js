@@ -65,8 +65,10 @@ async function startGame() {
       object.geometry?.dispose();
       if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material));
     });
-    Object.values(art).forEach(material => { material.map.dispose(); material.dispose(); });
-    materials.forEach(material => material.dispose());
+    Object.values(art).forEach(material => materials.add(material));
+    const textures = new Set();
+    materials.forEach(material => { if (material.map) textures.add(material.map); material.dispose(); });
+    textures.forEach(texture => texture.dispose());
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);

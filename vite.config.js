@@ -7,7 +7,6 @@ export default defineConfig({
   build: { rolldownOptions: { input: {
     game: resolve(import.meta.dirname, 'index.html'),
     workshop: resolve(import.meta.dirname, 'asset-library.html'),
-    studies: resolve(import.meta.dirname, 'scene-studies.html'),
   } } },
   test: { include: ['tests/**/*.test.js'] },
 });

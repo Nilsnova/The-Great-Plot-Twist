@@ -1,8 +1,7 @@
-// Shared logical land heights and a flat illustrated coastline. Art ignores elevation.
-import * as THREE from 'three';
-import { layout, colors } from '../config.js';
-import { lerp, smoothstep, seededRandom } from '../core/math.js';
-import { polygon, paintedBlob, brushLines } from './primitives.js';
+// Canonical logical heights and coast tests; the active visual terrain is pixel art.
+import { layout } from '../config.js';
+import { lerp, smoothstep } from '../core/math.js';
+import { createPixelTerrain } from '../pixel/terrain.js';
 import { projectPoint } from './art.js';
 
 function naturalHeight(x, z) {
@@ -37,23 +36,4 @@ export function coastline(height) {
   }
   return points;
 }
-export function createTerrain() {
-  const group = new THREE.Group();
-  polygon(group, coastline(-0.12), '#abc1ac', 1);
-  polygon(group, coastline(0.03), '#dbc799', 2);
-  polygon(group, coastline(0.5), colors.sand, 3);
-  polygon(group, coastline(1.0), colors.grass, 4);
-  for (const [x, z, w, h] of [[-13, -5, 7, 4], [-4, -13, 7, 2.8], [15, 1, 5, 4], [-14, 8, 4, 3]]) {
-    const point = projectPoint(x, z);
-    paintedBlob(group, point.x, point.y, w, h, '#a8bf89', 5, 0.4);
-  }
-  const random = seededRandom(121), marks = [];
-  for (let i = 0; i < 160; i++) {
-    const x = random() * 43 - 21.5, z = random() * 35 - 17.5;
-    if (terrainHeight(x, z) < 1.3) continue;
-    const point = projectPoint(x, z), length = 0.1 + random() * 0.25;
-    marks.push([[point.x, point.y], [point.x + length, point.y + 0.035]]);
-  }
-  brushLines(group, marks, '#839e70', 6, 0.35);
-  return group;
-}
+export const createTerrain = createPixelTerrain;

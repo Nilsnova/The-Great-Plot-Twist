@@ -1,34 +1,27 @@
-// Fixed illustrated view with a gentle arrival, map-follow and optional wheel zoom.
+// Close top-down view. Camera and zoom stay on whole native art pixels.
 import * as THREE from 'three';
-import { clamp, smoothstep } from '../core/math.js';
 import { projectPoint } from '../world/art.js';
+import { snapPixel } from '../pixel/catalog.js';
 
 export function createCamera(input) {
-  const camera = new THREE.OrthographicCamera(-40, 40, 24, -24, 0.1, 200);
-  camera.position.set(-6, 1, 100); camera.lookAt(-6, 1, 0);
-  camera.userData.viewHeight = 48;
-  let exploring = false, arrival = 0, zoom = 1.3;
+  const camera = new THREE.OrthographicCamera(-15, 15, 10, -10, .1, 200);
+  const start = projectPoint(-1, 10);
+  camera.position.set(start.x, snapPixel(start.y + 3.1), 100); camera.lookAt(camera.position.x, camera.position.y, 0);
+  camera.userData.viewHeight = 20;
+  let exploring = false, zoom = 1, wheel = 0;
   return { camera, get yaw() { return 0; },
     pause() { exploring = false; },
-    overview() { exploring = false; camera.position.set(-6, 1, 100); camera.zoom = 1; camera.updateProjectionMatrix(); },
-    start(skip = false) { exploring = true; if (skip) arrival = 4; },
+    overview() { exploring = false; camera.zoom = 1; camera.updateProjectionMatrix(); },
+    start() { exploring = true; },
     update(delta, player) {
       if (!exploring) return;
-      arrival = Math.min(4, arrival + delta);
-      zoom = clamp(zoom - input.pointer.wheel * 0.0015, 1, 2.15);
-      const target = projectPoint(player.x, player.z);
-      const inside = Math.abs(player.x + 7) < 2.75 && Math.abs(player.z - 3) < 2.1;
-      const focusX = clamp(target.x, -6, 6);
-      const focusY = inside ? target.y + 1.2 : clamp(target.y + 4.8, -1.5, 3);
-      const focusZoom = inside ? Math.max(1.8, zoom) : zoom;
-      const blend = smoothstep(0, 4, arrival);
-      const desiredX = arrival < 4 ? -6 + (focusX + 6) * blend : focusX;
-      const desiredY = arrival < 4 ? 1 + (focusY - 1) * blend : focusY;
-      const follow = arrival < 4 ? 1 : 1 - Math.exp(-delta * 3.5);
-      camera.position.x += (desiredX - camera.position.x) * follow;
-      camera.position.y += (desiredY - camera.position.y) * follow;
-      camera.zoom += (1 + (focusZoom - 1) * blend - camera.zoom) * Math.min(1, delta * 8);
-      camera.updateProjectionMatrix();
+      wheel += input.pointer.wheel;
+      if (Math.abs(wheel) >= 120) { zoom = Math.max(1, Math.min(2, zoom + (wheel < 0 ? 1 : -1))); wheel = 0; }
+      const point = projectPoint(player.x, player.z), blend = 1 - Math.exp(-delta * 7);
+      const headroom = Math.hypot(player.x - 9, player.z + 8) < 8 ? 4.2 : 3.1;
+      camera.position.x = snapPixel(camera.position.x + (point.x - camera.position.x) * blend);
+      camera.position.y = snapPixel(camera.position.y + (point.y + headroom - camera.position.y) * blend);
+      camera.zoom = zoom; camera.updateProjectionMatrix();
     },
   };
 }

@@ -42,6 +42,8 @@ try {
         calls: Math.max(...samples.map(sample => sample.calls)),
         triangles: Math.max(...samples.map(sample => sample.triangles)),
         points: Math.max(...samples.map(sample => sample.points)),
+        nativeFramebuffer: [game.renderer.domElement.width, game.renderer.domElement.height],
+        integerUpscale: game.renderer.userData.pixelScale,
         devicePixelRatio, pixelRatio: game.renderer.getPixelRatio(), shadows: game.renderer.shadowMap.enabled };
     });
     report.modes[name] = stats;
@@ -63,7 +65,7 @@ try {
   await page.mouse.move(900, 450); await page.mouse.down(); await page.mouse.move(1050, 490, { steps: 8 }); await page.mouse.up();
   await page.mouse.wheel(0, -250); await page.waitForTimeout(400);
   const cameraAfter = await page.evaluate(() => ({ zoom: window.__island.camera.zoom, rotation: window.__island.camera.quaternion.toArray() }));
-  check(cameraAfter.zoom > cameraBefore.zoom && cameraAfter.rotation.every((value, i) => value === cameraBefore.rotation[i]), 'Wheel zoom works while the illustrated camera keeps its fixed angle');
+  check(cameraAfter.zoom > cameraBefore.zoom && cameraAfter.rotation.every((value, i) => value === cameraBefore.rotation[i]), 'Wheel zoom works while the pixel camera keeps its fixed angle');
   const events = await page.evaluate(async () => {
     const { zones } = await import('/src/world/zones.js'); window.__received = [];
     window.__island.on('interact', event => window.__received.push(event));
@@ -97,7 +99,7 @@ try {
   await page.getByRole('button', { name: '4 fog' }).click();
   await page.locator('#quality').selectOption('low'); await measure('fog-low');
   await page.getByRole('button', { name: '3 storm' }).click(); await measure('storm-low');
-  check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality keeps the unlit illustration and caps pixel ratio at 1');
+  check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality preserves the native pixel grid and reduces effect density');
   await page.locator('#quality').selectOption('high'); await page.keyboard.press('Tab');
   await page.locator('#hour').focus(); await page.keyboard.press('Escape');
   await page.locator('.debug').waitFor({ state: 'hidden' });
@@ -109,8 +111,8 @@ try {
   await retina.goto(url); await retina.waitForTimeout(2000);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
-  check(report.modes['retina-high'].pixelRatio === 1.25 && report.modes['retina-low'].pixelRatio === 1,
-    'Retina high caps at 1.25, low at 1');
+  check(report.modes['retina-high'].pixelRatio === 1 && report.modes['retina-low'].pixelRatio === 1,
+    'Pixel renderer uses a DPR-independent native buffer in both qualities');
   await writeFile(`captures/${stamp}_${prefix}-Retina-Checks.json`, JSON.stringify({
     checked: new Date().toISOString(), viewport: '1440 × 900, device DPR 2',
     high: report.modes['retina-high'], low: report.modes['retina-low'],

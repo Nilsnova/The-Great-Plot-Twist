@@ -4,7 +4,7 @@ import { clamp, seededRandom } from '../core/math.js';
 import { QUALITY } from '../config.js';
 import { projectPoint } from './art.js';
 
-let current = { cloudCover: 0.12, rain: 0, fog: 0.1, wind: 0.18 };
+let current = { cloudCover: 0.05, rain: 0, fog: 0.02, wind: 0.18 };
 export const presets = {
   clear: { cloudCover: 0.05, rain: 0, fog: 0.05, wind: 0.12 },
   overcast: { cloudCover: 0.8, rain: 0, fog: 0.2, wind: 0.4 },
