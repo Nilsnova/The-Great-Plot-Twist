@@ -31,7 +31,7 @@ layouts.wreck_point = [building('salvage-yard', -7, -2, 6.7), { asset: 'dark-sch
 layouts.the_teeth = [building('watchtower-ruin', -5, -5, 3), building('raid-arch', 8, -1, 5),
   { asset: 'reef', x: -8, z: 7 }, { asset: 'reef', x: -12, z: 11 }, { asset: 'fog-bank', x: 9, z: -11 },
   { asset: 'rock', x: 5, z: 8 }, { asset: 'rock', x: -9, z: -1 }];
-layouts.gulls_rest = [{ asset: 'bench', x: 0, z: 0 }, { asset: 'flowers', x: -3, z: 2 },
+layouts.gulls_rest = [{ asset: 'bench', x: -7, z: 3 }, { asset: 'flowers', x: -3, z: 2 },
   { asset: 'gull', x: 5, z: 8 }, { asset: 'rock', x: 9, z: 5 }];
 export const edgeTrees = {
   saltreach_harbor: [[-24,-10],[-21,-14],[-15,-16],[-8,-16],[0,-17],[8,-17],[17,-14],[24,-11],[-24,8],[23,7]],

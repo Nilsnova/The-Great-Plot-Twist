@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T21:13:58.450Z",
+  "checked": "2026-11-05T21:14:27.732Z",
   "checks": [
     "Bundled original intro slice opens while the API returns 503",
     "One large key promptly skips every tour step, including a pending cinematic",
@@ -15,17 +15,17 @@
   ],
   "timedRunSkipped": true,
   "skipTimesMs": [
-    35,
-    40,
-    62,
-    241,
-    287,
-    178,
-    45,
-    307,
-    90
+    21,
+    17,
+    24,
+    110,
+    34,
+    7,
+    8,
+    29,
+    67
   ],
-  "stopDuringPassageMs": 33,
+  "stopDuringPassageMs": 23,
   "expectedOfflineErrors": [
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
   ]

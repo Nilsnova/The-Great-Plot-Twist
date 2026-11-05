@@ -2,3 +2,35 @@
 > the-great-plot-twist@0.1.0 test:demo
 > node scripts/check-demo.js
 
+{
+  "checked": "2026-11-05T21:14:27.732Z",
+  "checks": [
+    "Bundled original intro slice opens while the API returns 503",
+    "One large key promptly skips every tour step, including a pending cinematic",
+    "Repeated End during a passage settles once and restores the island",
+    "Skipping and cancelling also preserve player progress",
+    "Only expected 503 diagnostics occur; no JavaScript/WebGL errors or external assets"
+  ],
+  "requests": [
+    {
+      "path": "/api/weather",
+      "method": "GET"
+    }
+  ],
+  "timedRunSkipped": true,
+  "skipTimesMs": [
+    21,
+    17,
+    24,
+    110,
+    34,
+    7,
+    8,
+    29,
+    67
+  ],
+  "stopDuringPassageMs": 23,
+  "expectedOfflineErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ]
+}

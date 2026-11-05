@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T20:17:44.363Z",
+  "checked": "2026-11-05T21:32:49.482Z",
   "checks": [
     "Cold title JavaScript is below 35 kB before gzip",
     "src/game.js is a separate dynamic entry",
@@ -8,6 +8,11 @@
     "src/world/places/home.js is a separate dynamic entry",
     "src/ui/kit-gallery.js is a separate dynamic entry",
     "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "src/screens/board.js is a separate dynamic entry",
+    "src/screens/finale.js is a separate dynamic entry",
+    "src/screens/reveal.js is a separate dynamic entry",
+    "src/world/places/gulls-rest.js is a separate dynamic entry",
+    "src/world/festival.js is a separate dynamic entry",
     "Cold title requests no finale, destination, demo or gallery chunk",
     "Cold production title allocates no WebGL renderer",
     "Primary pixel buttons exceed WCAG AA normal-text contrast",
@@ -16,38 +21,74 @@
     "Production title and world have no browser errors or external asset requests"
   ],
   "initialChunks": [
-    "assets/game-BU8Txl9Y.js",
+    "assets/game-j9DIe_qk.js",
     "assets/modulepreload-polyfill-P2Xu9kJm.js",
     "assets/modal-DTbPiWct.js",
     "assets/dom-DPMFhvhq.js",
     "assets/preload-helper-DclECHGd.js"
   ],
-  "initialJavaScript": 21477,
-  "initialGzip": 9795,
+  "initialJavaScript": 21639,
+  "initialGzip": 9894,
   "lazyEntries": [
     {
       "key": "src/game.js",
-      "file": "assets/game-Dqp05IAR.js"
+      "file": "assets/game-B3Gta7E7.js"
+    },
+    {
+      "key": "src/screens/accusation.js",
+      "file": "assets/accusation-C2TOQACr.js"
+    },
+    {
+      "key": "src/screens/board.js",
+      "file": "assets/board-vCiDoeyV.js"
+    },
+    {
+      "key": "src/screens/finale.js",
+      "file": "assets/finale-K61mOf-u.js"
+    },
+    {
+      "key": "src/screens/partners.js",
+      "file": "assets/partners-DO9aodRw.js"
+    },
+    {
+      "key": "src/screens/relighting.js",
+      "file": "assets/relighting-DHHkzmWf.js"
+    },
+    {
+      "key": "src/screens/reveal.js",
+      "file": "assets/reveal-B-qudcJz.js"
+    },
+    {
+      "key": "src/screens/search.js",
+      "file": "assets/search-Cv5ZsZ5F.js"
     },
     {
       "key": "src/ui/cinematic-demo.js",
-      "file": "assets/cinematic-demo-DNExYppm.js"
+      "file": "assets/cinematic-demo-CqyijSld.js"
     },
     {
       "key": "src/ui/kit-gallery.js",
-      "file": "assets/kit-gallery-_MjiXu52.js"
+      "file": "assets/kit-gallery-mvJAPum7.js"
     },
     {
       "key": "src/world/cinematics/controller.js",
-      "file": "assets/controller-CzOP7xSQ.js"
+      "file": "assets/controller-PNy5_8az.js"
+    },
+    {
+      "key": "src/world/festival.js",
+      "file": "assets/festival-CcjE_kOS.js"
+    },
+    {
+      "key": "src/world/places/gulls-rest.js",
+      "file": "assets/gulls-rest-Bz3CkdU4.js"
     },
     {
       "key": "src/world/places/home.js",
-      "file": "assets/home-DRRQ_O3m.js"
+      "file": "assets/home-knD8Z-ZL.js"
     },
     {
       "key": "src/world/places/settlement.js",
-      "file": "assets/settlement-V7Brybm9.js"
+      "file": "assets/settlement-wL4X0Hhc.js"
     }
   ],
   "contrast": 6.479354609526834

@@ -20,3 +20,4 @@ describe('arrival and crew adapter',()=>{
     const a=createUnavailableCaseAdapter();expect((await a.completeIntro(receipt([],'ending_rescue'))).accepted).toBe(false);expect(a.read().arrival.status).toBe('pending');expect(a.read().captain.save.label).toBe('Local intro only');
   });
 });
+it('expires join throttling before a crew exists without advancing its case clock',async()=>{const a=createFakeCaseAdapter();await a.completeIntro({ending:'ending_rescue',actions:[]});for(let i=0;i<3;i++)await a.joinCrew('WRONG');expect((await a.joinCrew('LANTERN')).reason).toBe('too_many_tries');for(let i=0;i<610;i++)a.tick(.1);expect(a.read().now).toBe(0);expect((await a.joinCrew('LANTERN')).accepted).toBe(true);});

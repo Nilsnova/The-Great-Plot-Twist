@@ -1,0 +1,87 @@
+[
+  {
+    "command": "npm test",
+    "exit": 0,
+    "ms": 6227
+  },
+  {
+    "command": "npm run build",
+    "exit": 0,
+    "ms": 1158
+  },
+  {
+    "command": "node scripts/check-case.js",
+    "exit": 0,
+    "ms": 6974
+  },
+  {
+    "command": "node scripts/check-world.js",
+    "exit": 0,
+    "ms": 74226
+  },
+  {
+    "command": "node scripts/check-readability.js",
+    "exit": 0,
+    "ms": 56438
+  },
+  {
+    "command": "node scripts/check-browser.js",
+    "exit": 0,
+    "ms": 67889
+  },
+  {
+    "command": "node scripts/check-production.js",
+    "exit": 0,
+    "ms": 11820
+  },
+  {
+    "command": "node scripts/check-pixel.js",
+    "exit": 0,
+    "ms": 23886
+  },
+  {
+    "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+    "exit": 0,
+    "ms": 41913
+  },
+  {
+    "command": "node scripts/check-ui-kit.js",
+    "exit": 0,
+    "ms": 13087
+  },
+  {
+    "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "exit": 0,
+    "ms": 25195
+  },
+  {
+    "command": "node scripts/check-cinematics.js",
+    "exit": 0,
+    "ms": 56155
+  },
+  {
+    "command": "node scripts/check-intro.js",
+    "exit": 0,
+    "ms": 17622
+  },
+  {
+    "command": "node scripts/check-weather-wiring.js",
+    "exit": 0,
+    "ms": 34238
+  },
+  {
+    "command": "node scripts/check-experience.js",
+    "exit": 0,
+    "ms": 20123
+  },
+  {
+    "command": "node scripts/check-demo.js",
+    "exit": 1,
+    "ms": 100958
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "exit": 0,
+    "ms": 16025
+  }
+]

@@ -19,13 +19,13 @@ From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and ope
 | Touch stick / Interact / Chart / Menu | Touch movement, investigation, travel and pause |
 | Standard gamepad | Stick/D-pad, A interact, Y chart, Menu pause; D-pad/A in menus |
 
-UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 12 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch controls, optional gamepad and 375 px menu/HUD layouts are implemented in G5; see Controls below.
+UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 14 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch controls, optional gamepad and 375 px menu/HUD layouts are implemented in G5; see Controls below.
 
 The close camera follows the player and keeps extra headroom near the Lighthouse tower. Cottage roofs reveal the interior/desk; foreground trees fade. Piers draw beneath the explorer and are walkable; open sea is blocked. The Harbor Office's matching window overlay glows at night and is visible from the dock spawn. It supplies no story explanation.
 
 ## Art, coordinates and ownership
 
-The library has **182 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
+The library has **185 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
 One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
@@ -44,7 +44,7 @@ The single registry is `src/world/places/registry.js`. IDs are unique within the
 | Place id | Meaning |
 | --- | --- |
 | `lighthouse_isle` | Original first island, cottage interior, jetty and lighthouse |
-| `saltreach_harbor` | Shared visual hub, eleven hotspots and nighttime office windows |
+| `saltreach_harbor` | Shared visual hub, thirteen hotspots and nighttime office windows |
 | `home_islet` | Four build plots and a signal station |
 | `smugglers_cove` | Back-room, cave and arena-gate scene stub |
 | `wreck_point` | Salvage yard and beach scene stub |
@@ -57,6 +57,7 @@ The single registry is `src/world/places/registry.js`. IDs are unique within the
 | `desk` | lighthouse_isle, Elena's writing desk |
 | `shore` | lighthouse_isle, old jetty |
 | `tower_door` | lighthouse_isle, lighthouse entrance |
+| `keepers_lamp` | lighthouse_isle, separate lamp-post interaction |
 | `harbor_office` | saltreach_harbor, office entrance |
 | `harbor_office_window` | saltreach_harbor, visible office window |
 | `harbor_light` | saltreach_harbor, coastal beacon |
@@ -68,15 +69,19 @@ The single registry is `src/world/places/registry.js`. IDs are unique within the
 | `signal_station` | saltreach_harbor, signal building |
 | `notice_board` | saltreach_harbor, reward notice |
 | `captains_table` | saltreach_harbor, crew clue table |
+| `keepers_post_room` | saltreach_harbor, keeper-permit post counter |
+| `wall_of_lights` | saltreach_harbor, public captain names |
 | `plot_1` | home_islet, cabin plot |
 | `plot_2` | home_islet, workshop plot |
 | `plot_3` | home_islet, windmill plot |
 | `plot_4` | home_islet, greenhouse plot |
 | `islet_signal_station` | home_islet, signal station |
+| `home_driftline` | home_islet, washed-up crate spot |
 | `back_room` | smugglers_cove, back-room entrance |
 | `low_tide_cave` | smugglers_cove, low-tide cave entrance |
 | `arena_gate` | smugglers_cove, arena entrance |
 | `salvage_yard` | wreck_point, salvage shelter |
+| `yard_gate` | wreck_point, timed yard-gate search |
 | `beach` | wreck_point, wreck beach |
 | `reef` | the_teeth, reef rocks |
 | `watchtower_ruin` | the_teeth, ruined tower |
@@ -132,7 +137,7 @@ The preceding measurements are the G2 baseline. Current G4/S2 evidence is record
 
 main.js owns the small title bootstrap; game.js wires the loaded world and frame loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
 
-Current branch is feat/g5-experience-layer, created from main acdd341 and synchronised with main 8d0a718, including the unchanged Exchange backend. Root remains the sole writing agent; subagents review read-only. G4/S2 is already merged into main. G5 changes only frontend/ plus the authorised G-lane Next steps and one Log entry in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Incoming backend, API weather client, story engine, account, infrastructure and secret content remain unchanged.
+Current branch is feat/g6-case-on-screen, created from origin/main 3ca7d38 after Claude merged G5. Root remains the sole writing agent; subagents review read-only. G4/S2 is already merged into main. G6 changes only frontend/ plus the authorised G-lane Next steps and one Log entry in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Incoming backend, API weather client, story engine, account, infrastructure and secret content remain unchanged.
 
 The earlier G2 check covered 77 PNGs; the G4 and G5 sections below record their larger libraries and current verification separately. Checks in this file are scoped to graphics. Backend changes are owned and verified by their lanes.
 
@@ -254,7 +259,7 @@ On touch/coarse-pointer screens `controls/touch.js` adds a captured virtual stic
 
 ## Demo tour
 
-Only the exact `?demo=1` query imports the presenter and its local data. Choose **Highlights tour** on the title or **Start highlights tour** in the presenter panel. The automatic script is 153 seconds: intro 24, arrival 16, chart/sailing 22, Harbor 24, fog 14, storm 14 and finale 39. **Space / Next beat** skips the current beat; **End rehearsal** ends it. The panel moves into the active modal so touch and keyboard controls stay available. Individual visual shots remain under its disclosure.
+Only the exact `?demo=1` query imports the presenter and its local data. Choose **Highlights tour** on the title or **Start highlights tour** in the presenter panel. The current G6 script is 161 seconds and adds the adapter-driven board, three-light controls and restored coast; its nine beats are listed under G6 highlights tour below. **Space / Next beat** skips the current beat; **End rehearsal** ends it. The panel moves into the active modal so touch and keyboard controls stay available. Individual visual shots remain under its disclosure.
 
 `demo/logic.js` is the pure step machine. `demo/tour.js` owns its waits, generation checks, one active step and shared stop cleanup; it awaits any current travel before restoring the departure place/position, hour and weather. Place assets have the existing bounded load waits. Skip closes the current dialogue/chart/passage/shot, drops stale scripted actions and continues. App disposal cancels waits and subscriptions. No world lock is held over the whole tour, since that would block the tour's own travel/cinematics.
 
@@ -309,7 +314,7 @@ Not verified: Safari/Firefox, physical phone/controller hardware, actual screen-
 
 G6 implements screens against one injected client adapter. `startGame({caseAdapter})` accepts the future real adapter; `adapter/bridge.js` owns lazy screen construction and disposal. No screen imports `fetch`, the session, the API client or case rules. `adapter/unavailable.js` is the normal disconnected default and grants no kit/save/solve. Development `?case=local` and the explicit rehearsal workshop `/case-lab.html?demo=1` use a memory-only fake. Nothing in that fake is authoritative or persisted. The S0 drafts were read from the separate story worktree on 5 November and are still awaiting approval; G6's extended paid/ruin/festival screens follow Nils's explicit brief without approving those backend rules.
 
-The contract is `read()` (cloned view), `subscribe(listener)` (returns unsubscribe), `dispose()`, and promise-returning intent methods: `completeIntro({ending,actions})`, `createCrew()`, `joinCrew(code,{confirm})`, `muster()`, `pin(cardId)`, `pair(a,b)`, `search(routeId,{paidConfirmed})`, `orderPartner(seat,order,target,{allowPaid})`, `buildLight(lightId)`, `callNightfall()`, `takePost(lightId)`, `aim(lightId,degrees)`, `boardSchooner()`, `accuse(suspectId)`, `nextReveal()` and `claimLantern(colour)`. Every answer is `{accepted,reason,message,view}`. Screens show the answer; only an adapter may decide gates, prices, pins, deductions, timers, kits, locks or solves.
+The contract is `read()` (cloned view), `subscribe(listener)` (returns unsubscribe), `dispose()`, and promise-returning intent methods: `completeIntro({ending,actions})`, `createCrew()`, `joinCrew(code,{confirm})`, `muster()`, `pin(cardId)`, `pair(a,b)`, `search(routeId,{paidConfirmed})`, `inspectSpot(spotId)`, `orderPartner(seat,order,target,{allowPaid})`, `buildLight(lightId)`, `callNightfall()`, `takePost(lightId)`, `aim(lightId,degrees)`, `boardSchooner()`, `accuse(suspectId)`, `nextReveal()` and `claimLantern(colour)`. Every answer is `{accepted,reason,message,view}`. Screens show the answer; only an adapter may decide gates, prices, pins, deductions, timers, kits, locks or solves.
 
 Views have `{schema:1,mode,revision,now,captain,arrival,crew,permissions,board,search,partners,finale,accusation,reveal,world,notice,effects}`. Captain contains `name`, `coins` and `save:{state,label}`; arrival contains supplied ending/kit/item/start-place/coins/log-card data; crew contains code/status/join preview and four supplied seat models (player/NPC/open). The remaining view sections are the only source of screen availability and outcome text. `case_updated` subscriptions carry `{type:'case_updated',view}`. Revision changes trigger structural rendering, while clock updates refresh only supplied counters. View factories keep inputs and local beam bearings stable. Effects have unique ids so a controller can consume authorised visual beats once.
 
@@ -339,22 +344,87 @@ The registry now includes `keepers_lamp` (Lighthouse Isle), `keepers_post_room` 
 
 The fake uses a fixed rehearsal glow and public light geometry. It requires D1 to call nightfall, three occupied seats at three different ready lights, a reached post, a bearing within five degrees and three overlapping 90-second locks. Misses have a five-second retry. Human climbs take one minute; partner posts take ten. NPCs can hold the keeper/harbor lights; the built home station and optional restored ruin require a player. Building is an explicit priced intent (300 coins/10 timber); the optional ruin requires D3 and takes five case minutes. Failed nights preserve progress and buildings, clear locks and allow retry after three minutes. Each night is private case fog and does not overwrite live weather.
 
-Success supplies uniquely identified `three_lights`, `fog_lift` and `schooner_reveal` effects; the three-light effect carries the actual target and three participating light ids. The bridge closes its case modal before playing effects, then restores that screen. Existing cinematic Escape/reduced-motion behavior and exact `{type:'cinematic',name,stage}` events remain intact. No default unmask identity is supplied. The first case-screen import has a visible status and cancellable Escape; failed imports can be retried. Asynchronous spot requests cannot reopen a closed or superseded screen.
+Success supplies uniquely identified `three_lights`, `fog_lift` and `schooner_reveal` effects; the three-light effect carries the actual target and three participating light ids. The bridge closes its case modal before playing effects, then restores that screen. Existing cinematic Escape/reduced-motion behavior and exact `{type:'cinematic',name,stage}` events remain intact. No default unmask identity is supplied. Light projection is rounded using the same public chart positions as G4. The first case-screen import has a visible status and cancellable Escape; failed imports can be retried. Asynchronous spot requests cannot reopen a closed or superseded screen.
 
 ## Reveal player (G6)
 
 `accusation.js` and `reveal.js` load on demand. Boarding, the masked captain at the wheel, the four title-only suspects, supplied D2–D4 evidence, refusal message and one-minute wait all come from the adapter. `accuse(suspectId)` sends only an id. On an accepted reply the reveal opens; it shows exactly one adapter line at a time and highlights only its `cites` card ids. `nextReveal()` advances through evidence, kit closing, optional log-reader line and last beat in adapter order. HTML text is always assigned with textContent. Nothing in a screen names or determines the culprit.
 
-The fake accepts the single title left uncleared by completed D2–D4, only after boarding the discovered schooner. A wrong accusation changes only the declared retry deadline, never coins, pins or cards. Its every reveal/closing/last line is `[revealed by the server]`; there is no solution mapping or story reveal prose. The first advance requests anonymous `unmask`; the last requests `relighting`. Future real adapters may supply authorised reveal art through the existing cinematic params, while the default remains anonymous. Reasons include `schooner_required`, `evidence_required`, `accusation_cooldown`, `accusation_refused`, `unknown_suspect`, `already_solved`, `reveal_unavailable` and `reveal_complete`.
+The fake accepts the single title left uncleared by completed D2–D4, only after boarding the discovered schooner. A wrong accusation changes only the declared retry deadline, never coins, pins or cards. Its eight ordered reveal slots (nine for a log reader) cover anonymous unmasking, twist, four evidence beats, kit closing, optional log callback and last beat. Every reveal/closing/last line is `[revealed by the server]`; there is no solution mapping or story reveal prose. The first advance requests anonymous `unmask`; the last requests `relighting`. Future real adapters may supply authorised reveal art through the existing cinematic params, while the default remains anonymous. Reasons include `schooner_required`, `evidence_required`, `accusation_cooldown`, `accusation_refused`, `unknown_suspect`, `already_solved`, `reveal_unavailable` and `reveal_complete`.
 
 ## Relighting (G6)
 
 The adapter's `world` view drives `world.setRelightingComplete(view.world.lightsOn === true)`. It supplies stage, public-light state, Wall of Lights captain names, festival remaining time, free lantern colours and the selected colour. Normal disconnected play grants none of these. In the fake an accepted solve authorises the world transition immediately, independently of whether the player advances the reveal; the final reveal beat schedules its presentation cinematic. Unsolved crews' private night/lead state is not overwritten by public Relighting.
 
-Relighting keeps every public beam on in daylight and at night, removes the Teeth's persistent fog-bank sprite, unlocks and names Gull's Rest, and displays the harbor Wall of Lights. Natural weather remains the weather client's data. Before Relighting a false-light sprite appears at the Teeth only on fog nights. `gulls-rest.js` is a separate lazy entry, drawing its open hall and lantern string in the established 16-pixel world scale. `festival.js` is loaded only when a festival view arrives: 48 native-pixel points (24 on low), night only, no reduced-motion fireworks, with one readable festival caption. All allocations have an owning cleanup.
+Relighting keeps every public beam on in daylight and at night, removes the Teeth's persistent fog-bank sprite, unlocks and names Gull's Rest, and displays the harbor Wall of Lights. Natural weather remains the weather client's data. Before Relighting a false-light sprite appears at the Teeth only on fog nights. `gulls-rest.js` is a separate lazy entry, drawing its open hall and lantern string in the established 16-pixel world scale. `festival.js` is loaded only when a festival view arrives: 48 native-pixel points (24 on low), night only, no reduced-motion fireworks, with one readable festival caption. A selected free colour is also shown as a small native-pixel lantern beside the captain, including with reduced motion. All allocations have an owning cleanup.
 
 `relighting.js` displays the supplied captain names and remaining festival time and sends `claimLantern(colour)`. It never spends coins or awards a colour itself. The fake's festival lasts 172,800 case seconds; colours are free and expiry leaves the permanent coast state intact. Reasons include `festival_closed` and `unknown_colour`. New original art and its native dimensions are registered in ASSETS.md. The board's decorative background is confined and muted behind cards; the modal starts at its heading, keeping title/navigation visible.
 
 ### G6 highlights tour
 
 The exact `?demo=1` presenter now follows nine beats in 161 scripted seconds: intro 20, arrival 14, sailing/chart 20, Harbor 20, board 18, fog 12, storm 12, three lights/fog/schooner 27, Relighting/Gull's Rest 18. Space and the large Next button advance every step. The board and night use their real reusable screens with a separate memory-only adapter. `fake/rehearsal.js` seeds only public demonstration states; it cannot accuse or return reveal lines. The tour never shows an unmask or the twist. It uses the bundled intro slice and recorded weather with the APIs unavailable, leaves the original intro action journal and completion event untouched, and restores the actual case presentation, public-world gate, weather, hour, departure place and player position on stop. No real adapter or backend write is used for the tour.
+
+### Case view-model details for the real adapter
+
+The adapter supplies all optional display prose. Missing prose is omitted; player-facing views do not invent findings or reveal lines. Use stable ids and labels, and make every supplied price/availability decision authoritative at dispatch time. A changed quote should be refused and shown again before any paid intent is accepted.
+
+| Section | Fields consumed by screens |
+| --- | --- |
+| `board` | `cards:[{id,title,body,state,holders:[{seat,label}],pinnedBy:[{seat,label}],canPin,canPair}]`, `deductions:[{id,title,complete,finding,clearedTitles,opens}]`, `suspects:[{id,title,cleared,clearedBy}]`, `pairHelp`, `canPair`, `pairWait`, `logLead` |
+| `search` | `activeSpot`, `label`, `clockLabel`, `allowSpotPicker`, `spots:[{id,label}]`, `routes:[{id,title,label,seconds,price,kitName,canStart,statusText}]`, `jobs:[{id,title,total,remaining,done,report}]` |
+| `partners` | `[{seat,name,archetype,status,canOrder,orders:[{id,label}],targets:{order:[{id,label}]},job:{id,order,total,remaining,done,report}}]`; archetypes are deckhand/navigator/cook/salvager |
+| `finale` | `phase` waiting/night/dawn/success, `remaining`, `dawnRemaining`, `status`, `canCall`, `glow:{x,y}`, `chartDescription`, `materials`, `buildJobs`, `lights:[{id,name,x,y,ready,bearing,post:{seat,label,reserved,remaining},lock:{remaining},canTake,canAim,canBuild,buildLabel}]` |
+| `accusation` | `aboard`, `schoonerFound`, `canBoard`, `allowed`, `status`, `cooldown`, `suspects:[{id,title,cleared}]`, `evidence:[{id,title,cards:[{id,title}]}]` |
+| `reveal` | `available`, `index`, `total`, `line:{id,kind,title,text,cites:[cardId]}`, `done`, `canAdvance`, `cards:[{id,title}]`; the fake's `lines` is placeholder-only and not needed by the player |
+| `world` | `stage`, `lightsOn`, `fogBankGone`, `gullsRestOpen`, `wall:[{name,order}]`, `festivalRemaining`, `lanternColour`, `canClaimLantern`, `colours:[{id,label,hex}]` |
+| `effects` | `[{id,type:'cinematic',name,params}]`; ids increase during an adapter lifetime and each visual runs once |
+
+`now`, durations and remaining values are seconds. Screens only format them. `revision` increases for structural/outcome changes; `case_updated` may refresh clock values with the same revision. A real implementation owns its polling/subscription/clock cleanup; `tick(dt)` can be a no-op. The fake's dev helpers are not part of the real interface. Case-screen imports and spot requests are cancellable; screen disposal removes its modal, callbacks and subscription. Important results are visible in the status panel, with textual lock states, cleared labels, cited labels and timers, so no result depends on colour, animation or sound alone. The map has adapter-provided coordinate text as a nonvisual equivalent of the glow geometry. Existing preference controls and native gamepad menu navigation apply to the case UI.
+
+The runtime accepts exactly one adapter at `startGame` construction. The tour owns a different adapter and does not swap or dispose the live one. Closing the case during a cinematic queue cancels its pending return/navigation. A denied Gamepad API leaves keyboard/touch and the rendering loop running. Screen creation after a disposed lazy import is discarded, and background intro handoff failures keep the original local intro save usable.
+
+Join throttling uses a separate local lobby clock in the fake, so the one-minute retry expires before a crew exists while the case clock remains stopped. On navigation, old local action notices are hidden; new refusals/reports remain readable in the active screen. Disconnected-service status stays visible. The masked captain artwork is requested only after the adapter confirms boarding; earlier schooner screens show the gate and the supplied evidence without premature character art.
+
+## G6 verification and performance
+
+Final checks used installed headless Chrome 157 on this Mac, with GPU/browser runs sequential. Captures and exact outputs are retained under `captures/20261105_G6-*`; `G6-Final-Verification.json` is the final per-command result list. `G6-Verification.log` retains the earlier run, including a timed tour interrupted by a development module reload; its stable rerun passed. The focused final logs cover the later lifecycle, readability and firework presentation fixes. The protected story engine/data, API weather client, backend, auth, database and deployment configuration were not edited.
+
+| Exact command from frontend/ | Result |
+| --- | --- |
+| `npm test` | 194 tests in 31 files passed, including fake gates, seats, jobs, accusation/reveal, clocks, beam geometry, VM copies and screen transport boundary |
+| `npm run build` | four HTML entries; no large-chunk advisory; automatic spoiler guard passed for 51 built text files |
+| `npm run test:case` | 35 browser assertions: actual priced tap/timer, mobile screens, accusation/wait/reveal/citations, free colour, cancelled import, Harbor E, restored coast, fireworks and reduced motion |
+| `node scripts/check-world.js` | 60 assertions, all 34 hotspots, exact events and ten round trips with stable owned resources |
+| `node scripts/check-readability.js` | 1365 × 768, 1920 × 1080 and 1100 × 700; readable labels, no chart-label overlap |
+| `CAPTURE_PREFIX=G6 node scripts/check-browser.js` | movement, weather/quality modes, native integer scale and DPR 2 passed |
+| `CAPTURE_PREFIX=G6 node scripts/check-production.js` | seven static-production assertions passed |
+| `node scripts/check-pixel.js` and `ART_PRODUCTION=1 node scripts/check-pixel.js` | all 195 PNGs decode at their native sizes; catalogue visibility/selective preload/grid checks passed |
+| `node scripts/check-ui-kit.js` and `KIT_PRODUCTION=1 node scripts/check-ui-kit.js` | 19 development / 16 production assertions passed |
+| `node scripts/check-cinematics.js` | 24 assertions, including skip, reduced motion, anonymous unmask, events and cleanup |
+| `node scripts/check-intro.js` | 16 assertions, both original endings, real local intro API and accepted move replay |
+| `node scripts/check-weather-wiring.js` | three assertions: existing values, readable attribution and browser errors |
+| `node scripts/check-experience.js` | 26 shell, preferences, controls, audio and phone-layout assertions |
+| `npm run test:demo` | ten assertions: full API-down tour in 168,305 ms; no player-journal writes or completion event; original place/weather/public gate restored |
+| `node scripts/check-loading.js` | 18 production assertions; separate lazy board/finale/reveal/Gull's Rest/festival entries; no cold WebGL allocation |
+| `python3 scripts/pixel_art/generate.py` | all 195 PNGs regenerated byte-identically by SHA-256 |
+| `git diff --check` | passed |
+
+| Measured item | G6 result |
+| --- | ---: |
+| Cold-title initial JavaScript / local gzip estimate | 21,639 / 9,894 bytes |
+| Primary button text contrast | 6.48:1 |
+| Settled world place samples (90 frames) | 60–61 FPS |
+| Existing weather-mode regression samples | 57–61 FPS, at most 100 calls / 195 triangles |
+| Active three-light scene | about 61 FPS, 97 calls / 192 triangles |
+| Open Gull's Rest with night festival and selected lantern | 60 FPS, 31 calls / 56 triangles |
+| Gull's Rest ownership | 30 geometries, 12 textures, one place root |
+| Ten return trips | 96 geometries, 27 textures, one root on every return |
+| After the complete tour | 98 geometries, 27 textures, one root; two app-owned festival buffers remain available for later use and are disposed on teardown |
+| Full timed tour / individual skips | 168,305 ms / 10–147 ms |
+| Repeated End during a passage | 226 ms |
+
+Short four-frame round-trip samples are resource checks, not reliable FPS benchmarks; the performance figures above use the longer settled samples. The first title remains below its 35 kB JavaScript budget. Board, search, partners, night, accusation, reveal, restored-island art and festival rendering load on demand. Important case notices and controls are at least 14 CSS px, body text 16 px and reveal text 18 px. Phone checks at 375 × 667 include every screen and confirm no horizontal modal overflow. The quieter board background, consistent pixel focus, explicit status labels and original hand-authored coastal art keep the interface in the approved style.
+
+Not verified: Safari/Firefox, physical phone/gamepad hardware, actual screen-reader software, a prolonged soak, live authenticated/shared-case/cloud/referee/ledger routes or a deployed G6 build. The production default is deliberately disconnected until Claude supplies the real adapter; it invents no kit, save, reward or solve. S0 draft approval remains Nils's decision. The feature branch is based on main `3ca7d38`; main later advanced independently to `8215825` (keep-alive work), which this branch does not merge or edit. Claude integrates G6. No main merge, force-push, manual deployment, sign-in UI or trading screen is part of this work.
+
+For a walkthrough, begin with `adapter/contract.js`, follow `game.js` into the lazy bridge and `screens/controller.js`, then compare one screen's intent with its fake handler and view projection. `fake/index.js` settles due jobs/night state before dispatch, applies the intent, settles immediate results and publishes a cloned view. To connect the real services, implement the same adapter surface and inject it into `startGame({caseAdapter})`; screens and art do not need transport changes.

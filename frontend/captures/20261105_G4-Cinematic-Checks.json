@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T20:12:01.263Z",
+  "checked": "2026-11-05T21:20:26.653Z",
   "checks": [
     "Normal play has no rehearsal controls",
     "Unknown cinematic is refused without events",
@@ -28,7 +28,7 @@
   ],
   "shots": {
     "three_lights": {
-      "fps": 61,
+      "fps": 56,
       "calls": 97,
       "triangles": 192,
       "geometries": 96,
@@ -39,7 +39,7 @@
     }
   },
   "before": {
-    "fps": 60,
+    "fps": 61,
     "calls": 97,
     "triangles": 192,
     "geometries": 96,
@@ -48,10 +48,10 @@
     "objects": 10,
     "programs": 3
   },
-  "threeLightsMs": 8271,
-  "reducedMotionMs": 107,
+  "threeLightsMs": 8230,
+  "reducedMotionMs": 42,
   "after": {
-    "fps": 60,
+    "fps": 61,
     "calls": 97,
     "triangles": 192,
     "geometries": 96,

@@ -1,0 +1,1162 @@
+
+npm test
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+
+      Tests  188 passed (188)
+ Test Files  30 passed (30)
+   Start at  22:14:54
+   Duration  3.47s (import 42%, tests 39%, transform 14%, worker 4%)
+
+    Isolate  30 workers spawned · ~513ms startup each (spawn + environment, per file)
+             at least ~1.69s faster with isolate: false — reuses workers across files instead of one per file
+
+
+npm run build
+
+> the-great-plot-twist@0.1.0 build
+> vite build && node scripts/check-spoilers.js
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 149 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/case-lab.html                                1.37 kB │ gzip:   0.53 kB
+dist/index.html                                   1.37 kB │ gzip:   0.60 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                          9.30 kB │ gzip:   1.48 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/shell-CtSc63zr.css                    4.11 kB │ gzip:   1.37 kB
+dist/assets/game-9bkjhmof.css                     5.02 kB │ gzip:   1.79 kB
+dist/assets/modal-CYzNvYhY.css                    5.85 kB │ gzip:   2.00 kB
+dist/assets/controller-BTdvHu4o.css               8.33 kB │ gzip:   2.40 kB
+dist/assets/game-H9nKD56r.css                    12.32 kB │ gzip:   3.45 kB
+dist/assets/beam-math-O9vLvuET.js                 0.23 kB │ gzip:   0.19 kB
+dist/assets/gulls-rest-B3vjLGxU.js                0.24 kB │ gzip:   0.20 kB
+dist/assets/contract-DXLgGtWW.js                  0.30 kB │ gzip:   0.23 kB
+dist/assets/uiKit-vX6b4VZn.js                     0.45 kB │ gzip:   0.31 kB
+dist/assets/progress-BI38Q3Jl.js                  0.52 kB │ gzip:   0.33 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/festival-p_7m5Tu3.js                  0.93 kB │ gzip:   0.63 kB
+dist/assets/reveal-CrbHEgv2.js                    0.97 kB │ gzip:   0.56 kB
+dist/assets/home-CACKz1FZ.js                      1.00 kB │ gzip:   0.60 kB
+dist/assets/logic-DpC8Chk3.js                     1.16 kB │ gzip:   0.63 kB
+dist/assets/art-Dz-_XGne.js                       1.16 kB │ gzip:   0.73 kB
+dist/assets/caseLab-DOrMvwWW.js                   1.37 kB │ gzip:   0.81 kB
+dist/assets/relighting-DymrbMfX.js                1.41 kB │ gzip:   0.77 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/accusation-Bu9q3WXK.js                1.65 kB │ gzip:   0.89 kB
+dist/assets/dom-DPMFhvhq.js                       2.00 kB │ gzip:   0.99 kB
+dist/assets/layouts-BecYpvxx.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/search-BEoHDaFH.js                    2.14 kB │ gzip:   1.01 kB
+dist/assets/modal-DTbPiWct.js                     2.39 kB │ gzip:   1.04 kB
+dist/assets/partners-C7qMKyP-.js                  2.56 kB │ gzip:   1.22 kB
+dist/assets/workshop-BOCPj4y2.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/settlement-IgP6zpr2.js                2.68 kB │ gzip:   1.40 kB
+dist/assets/catalog-D77s0kc8.js                   2.80 kB │ gzip:   1.29 kB
+dist/assets/board-DfFIFynO.js                     2.93 kB │ gzip:   1.35 kB
+dist/assets/kit-gallery-mvJAPum7.js               3.72 kB │ gzip:   1.83 kB
+dist/assets/finale-D3oMe0_V.js                    4.53 kB │ gzip:   2.13 kB
+dist/assets/controller-DOOL_Tqq.js                6.79 kB │ gzip:   3.03 kB
+dist/assets/kit-CCo0Q6dP.js                       8.24 kB │ gzip:   3.31 kB
+dist/assets/weather-BgXcojkC.js                   8.26 kB │ gzip:   3.87 kB
+dist/assets/controller-CFGtmird.js                8.50 kB │ gzip:   3.52 kB
+dist/assets/cinematic-demo-CP73L9UM.js           14.31 kB │ gzip:   5.87 kB
+dist/assets/game-E1fGPyPq.js                     14.94 kB │ gzip:   6.65 kB
+dist/assets/fake-BwVU_YFj.js                     30.66 kB │ gzip:  10.72 kB
+dist/assets/texture-CH3Q5Pyu.js                 207.50 kB │ gzip:  55.99 kB
+dist/assets/game-BuCwsglm.js                    398.98 kB │ gzip: 102.35 kB
+
+✓ built in 484ms
+Spoiler guard: 51 built text files contain neither protected reveal sentence.
+
+node scripts/check-case.js
+{
+  "checked": "2026-11-05T21:15:02.805Z",
+  "checks": [
+    "Board displays four held cards and seat credits",
+    "Paid shortcut is separately priced",
+    "Every beam has an accessible native slider",
+    "crew: phone modal has no horizontal overflow",
+    "crew: all visible text is at least 14px",
+    "board: phone modal has no horizontal overflow",
+    "board: all visible text is at least 14px",
+    "search: phone modal has no horizontal overflow",
+    "search: all visible text is at least 14px",
+    "partners: phone modal has no horizontal overflow",
+    "partners: all visible text is at least 14px",
+    "finale: phone modal has no horizontal overflow",
+    "finale: all visible text is at least 14px",
+    "accusation: phone modal has no horizontal overflow",
+    "accusation: all visible text is at least 14px",
+    "reveal: phone modal has no horizontal overflow",
+    "reveal: all visible text is at least 14px",
+    "relighting: phone modal has no horizontal overflow",
+    "relighting: all visible text is at least 14px",
+    "Case workshop has no browser errors",
+    "Case workshop makes no external request"
+  ]
+}
+
+node scripts/check-world.js
+{
+  "checked": "2026-11-05T21:15:08.911Z",
+  "browser": "157.0.8103.39",
+  "viewport": "1440 × 900, DPR 1",
+  "checks": [
+    "Uncharted Gull’s Rest is locked",
+    "Locked chart selection emits nothing and preserves the place",
+    "Only the passage is in memory during travel",
+    "Keyboard chart travel and skip emit exact travel and arrival payloads",
+    "The lit office window is visible from the dock spawn at night",
+    "lighthouse_isle/desk: exact event, once per held E",
+    "lighthouse_isle/cottage: exact event, once per held E",
+    "lighthouse_isle/shore: exact event, once per held E",
+    "lighthouse_isle/tower_door: exact event, once per held E",
+    "lighthouse_isle/keepers_lamp: exact event, once per held E",
+    "lighthouse_isle: explorer visible on the path",
+    "lighthouse_isle within rendering budget",
+    "saltreach_harbor/harbor_office: exact event, once per held E",
+    "saltreach_harbor/harbor_office_window: exact event, once per held E",
+    "saltreach_harbor/harbor_light: exact event, once per held E",
+    "saltreach_harbor/ferry_pier: exact event, once per held E",
+    "saltreach_harbor/jail: exact event, once per held E",
+    "saltreach_harbor/market_hall: exact event, once per held E",
+    "saltreach_harbor/prediction_kiosk: exact event, once per held E",
+    "saltreach_harbor/sports_pavilion: exact event, once per held E",
+    "saltreach_harbor/signal_station: exact event, once per held E",
+    "saltreach_harbor/notice_board: exact event, once per held E",
+    "saltreach_harbor/captains_table: exact event, once per held E",
+    "saltreach_harbor/keepers_post_room: exact event, once per held E",
+    "saltreach_harbor/wall_of_lights: exact event, once per held E",
+    "saltreach_harbor: explorer visible on the path",
+    "saltreach_harbor within rendering budget",
+    "home_islet/plot_1: exact event, once per held E",
+    "home_islet/plot_2: exact event, once per held E",
+    "home_islet/plot_3: exact event, once per held E",
+    "home_islet/plot_4: exact event, once per held E",
+    "home_islet/islet_signal_station: exact event, once per held E",
+    "home_islet/home_driftline: exact event, once per held E",
+    "home_islet: explorer visible on the path",
+    "home_islet within rendering budget",
+    "Pointer selection emits the exact plot payload",
+    "smugglers_cove/back_room: exact event, once per held E",
+    "smugglers_cove/low_tide_cave: exact event, once per held E",
+    "smugglers_cove/arena_gate: exact event, once per held E",
+    "smugglers_cove: explorer visible on the path",
+    "smugglers_cove within rendering budget",
+    "wreck_point/salvage_yard: exact event, once per held E",
+    "wreck_point/yard_gate: exact event, once per held E",
+    "wreck_point/beach: exact event, once per held E",
+    "wreck_point: explorer visible on the path",
+    "wreck_point within rendering budget",
+    "the_teeth/reef: exact event, once per held E",
+    "the_teeth/watchtower_ruin: exact event, once per held E",
+    "the_teeth/raid_arch: exact event, once per held E",
+    "the_teeth/fog_bank: exact event, once per held E",
+    "the_teeth: explorer visible on the path",
+    "the_teeth within rendering budget",
+    "The integration gate opens Gull’s Rest",
+    "Ten round trips retain exactly the same resource and object counts",
+    "After ten round trips: FPS and rendering within budget",
+    "Reduced motion skips sailing",
+    "Low quality reveals the landing through a flat fade",
+    "Unskipped wind-driven passage lasts about five seconds",
+    "No browser errors",
+    "No external requests"
+  ],
+  "places": {
+    "lighthouse_isle": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 99,
+      "textures": 28,
+      "roots": 1,
+      "objects": 10,
+      "programs": 4
+    },
+    "saltreach_harbor": {
+      "fps": 60,
+      "calls": 50,
+      "triangles": 178,
+      "geometries": 48,
+      "textures": 25,
+      "roots": 1,
+      "objects": 48,
+      "programs": 4
+    },
+    "home_islet": {
+      "fps": 60,
+      "calls": 40,
+      "triangles": 78,
+      "geometries": 40,
+      "textures": 16,
+      "roots": 1,
+      "objects": 38,
+      "programs": 4
+    },
+    "smugglers_cove": {
+      "fps": 61,
+      "calls": 28,
+      "triangles": 54,
+      "geometries": 27,
+      "textures": 12,
+      "roots": 1,
+      "objects": 24,
+      "programs": 3
+    },
+    "wreck_point": {
+      "fps": 60,
+      "calls": 30,
+      "triangles": 58,
+      "geometries": 29,
+      "textures": 14,
+      "roots": 1,
+      "objects": 26,
+      "programs": 3
+    },
+    "the_teeth": {
+      "fps": 60,
+      "calls": 27,
+      "triangles": 132,
+      "geometries": 25,
+      "textures": 12,
+      "roots": 1,
+      "objects": 24,
+      "programs": 4
+    }
+  },
+  "roundTrips": [
+    {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 26,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 63,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 62,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 110,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 28,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 87,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 66,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 58,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    {
+      "fps": 50,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    }
+  ],
+  "before": {
+    "fps": 56,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "after": {
+    "fps": 61,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "reducedMotionMs": 874,
+  "windOnePassageMs": 4607,
+  "errors": [],
+  "externalRequests": []
+}
+
+node scripts/check-readability.js
+{
+  "checked": "2026-11-05T21:16:40.760Z",
+  "viewports": [
+    {
+      "width": 1365,
+      "height": 768,
+      "fonts": {
+        ".wordmark": 14,
+        ".chapter": 14,
+        ".controls": 14,
+        ".conditions": 14,
+        ".interact strong": 16
+      },
+      "chart": {
+        "labels": [
+          {
+            "id": "lighthouse_isle",
+            "size": 16,
+            "left": 335.484375,
+            "top": 472.7250061035156,
+            "right": 497.515625,
+            "bottom": 506.3187561035156
+          },
+          {
+            "id": "saltreach_harbor",
+            "size": 16,
+            "left": 582.6875,
+            "top": 434.7250061035156,
+            "right": 754.3125,
+            "bottom": 468.3187561035156
+          },
+          {
+            "id": "home_islet",
+            "size": 16,
+            "left": 781.4921875,
+            "top": 524.7249755859375,
+            "right": 895.5078125,
+            "bottom": 558.3187255859375
+          },
+          {
+            "id": "smugglers_cove",
+            "size": 16,
+            "left": 377.484375,
+            "top": 274.7250061035156,
+            "right": 539.515625,
+            "bottom": 308.3187561035156
+          },
+          {
+            "id": "wreck_point",
+            "size": 16,
+            "left": 748.6875,
+            "top": 306.7250061035156,
+            "right": 872.3125,
+            "bottom": 340.3187561035156
+          },
+          {
+            "id": "the_teeth",
+            "size": 16,
+            "left": 912.2890625,
+            "top": 252.72500610351562,
+            "right": 1016.7109375,
+            "bottom": 286.3187561035156
+          },
+          {
+            "id": "gulls_rest",
+            "size": 16,
+            "left": 935.484375,
+            "top": 168.72500610351562,
+            "right": 1097.515625,
+            "bottom": 202.31875610351562
+          }
+        ],
+        "overflow": false
+      },
+      "panel": {
+        "left": 402.5,
+        "top": 16,
+        "right": 962.5,
+        "bottom": 752
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "fonts": {
+        ".wordmark": 14,
+        ".chapter": 14,
+        ".controls": 14,
+        ".conditions": 14,
+        ".interact strong": 16
+      },
+      "chart": {
+        "labels": [
+          {
+            "id": "lighthouse_isle",
+            "size": 16,
+            "left": 479.984375,
+            "top": 675.7249755859375,
+            "right": 642.015625,
+            "bottom": 709.3187255859375
+          },
+          {
+            "id": "saltreach_harbor",
+            "size": 16,
+            "left": 853.1875,
+            "top": 618.7249755859375,
+            "right": 1024.8125,
+            "bottom": 652.3187255859375
+          },
+          {
+            "id": "home_islet",
+            "size": 16,
+            "left": 1136.9921875,
+            "top": 753.7249755859375,
+            "right": 1251.0078125,
+            "bottom": 787.3187255859375
+          },
+          {
+            "id": "smugglers_cove",
+            "size": 16,
+            "left": 542.984375,
+            "top": 378.7250061035156,
+            "right": 705.015625,
+            "bottom": 412.3187561035156
+          },
+          {
+            "id": "wreck_point",
+            "size": 16,
+            "left": 1090.1875,
+            "top": 426.7250061035156,
+            "right": 1213.8125,
+            "bottom": 460.3187561035156
+          },
+          {
+            "id": "the_teeth",
+            "size": 16,
+            "left": 1330.7890625,
+            "top": 345.7250061035156,
+            "right": 1435.2109375,
+            "bottom": 379.3187561035156
+          },
+          {
+            "id": "gulls_rest",
+            "size": 16,
+            "left": 1395.984375,
+            "top": 230.72500610351562,
+            "right": 1558.015625,
+            "bottom": 264.3187561035156
+          }
+        ],
+        "overflow": false
+      },
+      "panel": {
+        "left": 680,
+        "top": 16,
+        "right": 1240,
+        "bottom": 1064
+      }
+    },
+    {
+      "width": 1100,
+      "height": 700,
+      "fonts": {
+        ".wordmark": 14,
+        ".chapter": 14,
+        ".controls": 14,
+        ".conditions": 14,
+        ".interact strong": 16
+      },
+      "chart": {
+        "labels": [
+          {
+            "id": "lighthouse_isle",
+            "size": 16,
+            "left": 316.34375,
+            "top": 411.7250061035156,
+            "right": 478.375,
+            "bottom": 445.3187561035156
+          },
+          {
+            "id": "saltreach_harbor",
+            "size": 16,
+            "left": 437.546875,
+            "top": 372.7250061035156,
+            "right": 609.171875,
+            "bottom": 406.3187561035156
+          },
+          {
+            "id": "home_islet",
+            "size": 16,
+            "left": 551.3515625,
+            "top": 417.7250061035156,
+            "right": 665.3671875,
+            "bottom": 451.3187561035156
+          },
+          {
+            "id": "smugglers_cove",
+            "size": 16,
+            "left": 337.34375,
+            "top": 292.7250061035156,
+            "right": 499.375,
+            "bottom": 326.3187561035156
+          },
+          {
+            "id": "wreck_point",
+            "size": 16,
+            "left": 532.546875,
+            "top": 328.7250061035156,
+            "right": 656.171875,
+            "bottom": 362.3187561035156
+          },
+          {
+            "id": "the_teeth",
+            "size": 16,
+            "left": 619.1484375,
+            "top": 281.7250061035156,
+            "right": 723.5703125,
+            "bottom": 315.3187561035156
+          },
+          {
+            "id": "gulls_rest",
+            "size": 16,
+            "left": 600.34375,
+            "top": 228.72500610351562,
+            "right": 762.375,
+            "bottom": 262.3187561035156
+          }
+        ],
+        "overflow": false
+      },
+      "panel": {
+        "left": 270,
+        "top": 16,
+        "right": 830,
+        "bottom": 684
+      }
+    }
+  ],
+  "errors": []
+}
+
+node scripts/check-browser.js
+{
+  "checked": "2026-11-05T21:17:18.959Z",
+  "browser": "157.0.8103.39",
+  "viewport": "1440 × 900, DPR 1",
+  "modes": {
+    "arrival-high": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "midnight-high": {
+      "fps": 58,
+      "calls": 98,
+      "triangles": 194,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "storm-high": {
+      "fps": 61,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "fog-high": {
+      "fps": 57,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "noon-high": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "dusk-high": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "fog-low": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "storm-low": {
+      "fps": 60,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "retina-high": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 2,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "retina-low": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 2,
+      "pixelRatio": 1,
+      "shadows": false
+    }
+  },
+  "checks": [
+    "arrival-high stays within rendering budgets",
+    "Escape opens the pause menu",
+    "W walks the explorer",
+    "Wheel zoom works while the pixel camera keeps its fixed angle",
+    "All four hooks emit exactly once per held E press: [{\"type\":\"interact\",\"id\":\"desk\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"cottage\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"shore\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"tower_door\",\"place\":\"lighthouse_isle\"}]",
+    "midnight-high stays within rendering budgets",
+    "storm-high stays within rendering budgets",
+    "fog-high stays within rendering budgets",
+    "noon-high stays within rendering budgets",
+    "dusk-high stays within rendering budgets",
+    "fog-low stays within rendering budgets",
+    "storm-low stays within rendering budgets",
+    "Low quality preserves the native pixel grid and reduces effect density",
+    "Escape closes settings while a form control has focus",
+    "The game makes no external network requests",
+    "No browser or WebGL errors ()",
+    "retina-high stays within rendering budgets",
+    "retina-low stays within rendering budgets",
+    "Pixel renderer uses a DPR-independent native buffer in both qualities"
+  ]
+}
+
+node scripts/check-production.js
+{
+  "checked": "2026-11-05T21:18:35.240Z",
+  "browser": "157.0.8103.39",
+  "checks": [
+    "Static build loads a WebGL canvas",
+    "No dev inspection global",
+    "No FPS output in production",
+    "Persisted quality preference applies",
+    "Escape restores game focus",
+    "Keyboard-accessible production chart and reduced-motion travel arrive at Harbor",
+    "No browser/WebGL errors"
+  ]
+}
+
+node scripts/check-pixel.js
+{
+  "checked": "2026-11-05T21:18:37.636Z",
+  "checks": [
+    "Workshop lists public art without finale variants",
+    "Explicit rehearsal gallery lists every registered drawing",
+    "195 PNGs decode at their exact native sizes with visible pixels",
+    "Search finds the side-facing animation family",
+    "Native sprite detail opens",
+    "Escape closes sprite detail",
+    "Staged-art filter agrees with selective preload metadata",
+    "Game requests only active pixel artwork",
+    "World uses one exact integer upscale factor",
+    "Renderer disables antialiasing",
+    "Explorer feet remain on the native pixel grid",
+    "No browser errors or external requests ()"
+  ],
+  "files": 195,
+  "browser": "157.0.8103.39",
+  "display": {
+    "imageRendering": "pixelated",
+    "width": 480,
+    "height": 300,
+    "cssWidth": 1440,
+    "cssHeight": 900
+  }
+}
+
+ART_PRODUCTION=1 node scripts/check-pixel.js
+{
+  "checked": "2026-11-05T21:19:01.925Z",
+  "checks": [
+    "Workshop lists public art without finale variants",
+    "Explicit rehearsal gallery lists every registered drawing",
+    "195 PNGs decode at their exact native sizes with visible pixels",
+    "Search finds the side-facing animation family",
+    "Native sprite detail opens",
+    "Escape closes sprite detail",
+    "Staged-art filter agrees with selective preload metadata",
+    "Game requests only active pixel artwork",
+    "World uses one exact integer upscale factor",
+    "Production omits development inspection",
+    "No browser errors or external requests ()"
+  ],
+  "files": 195,
+  "browser": "157.0.8103.39",
+  "display": {
+    "imageRendering": "pixelated",
+    "width": 480,
+    "height": 300,
+    "cssWidth": 1440,
+    "cssHeight": 900
+  }
+}
+
+node scripts/check-ui-kit.js
+{
+  "checked": "2026-11-05T21:19:50.330Z",
+  "production": false,
+  "checks": [
+    "Gallery shows all nine component groups",
+    "Modal Escape restores the invoking focus",
+    "Tab arrows activate and focus the selected panel",
+    "Skip reveals the full line and enables choices",
+    "Numbered keyboard choice updates the dialogue once",
+    "Clue states are presented without board logic",
+    "Halted sparkline has a readable status",
+    "Native progress exposes the supplied ratio",
+    "HUD formats supplied balance and distinguishes NPC seats",
+    "Toast announces plain status text",
+    "Supplied HTML-like text stays literal in dialogue, choices, buttons and tables",
+    "Empty-choice dialogue keeps focus and disposing an open modal restores its opener",
+    "Reduced-motion dialogue reveals text immediately",
+    "Text remains readable at 1365×768",
+    "Gallery has no horizontal overflow at 1365×768",
+    "Text remains readable at 700×900",
+    "Gallery has no horizontal overflow at 700×900",
+    "No browser errors",
+    "No external requests"
+  ]
+}
+
+KIT_PRODUCTION=1 node scripts/check-ui-kit.js
+{
+  "checked": "2026-11-05T21:20:05.851Z",
+  "production": true,
+  "checks": [
+    "Gallery shows all nine component groups",
+    "Modal Escape restores the invoking focus",
+    "Tab arrows activate and focus the selected panel",
+    "Skip reveals the full line and enables choices",
+    "Numbered keyboard choice updates the dialogue once",
+    "Clue states are presented without board logic",
+    "Halted sparkline has a readable status",
+    "Native progress exposes the supplied ratio",
+    "HUD formats supplied balance and distinguishes NPC seats",
+    "Toast announces plain status text",
+    "Text remains readable at 1365×768",
+    "Gallery has no horizontal overflow at 1365×768",
+    "Text remains readable at 700×900",
+    "Gallery has no horizontal overflow at 700×900",
+    "No browser errors",
+    "No external requests"
+  ]
+}
+
+node scripts/check-cinematics.js
+{
+  "checked": "2026-11-05T21:20:26.653Z",
+  "checks": [
+    "Normal play has no rehearsal controls",
+    "Unknown cinematic is refused without events",
+    "Escape cancels a lazily loading shot before it starts",
+    "Late lazy loading cannot reopen a cancelled shot or emit events",
+    "A cinematic blocks travel and hotspot input",
+    "Overlapping cinematics are refused",
+    "Three-light shot completes",
+    "Normal shot completes within fifteen seconds including loading",
+    "fog_lift: Escape skips and settles the promise",
+    "schooner_reveal: Escape skips and settles the promise",
+    "unmask: Escape skips and settles the promise",
+    "relighting: Escape skips and settles the promise",
+    "Every shot emits exact started and terminal payloads once",
+    "Visuals do not decide Relighting or move the player to another place",
+    "Reduced motion skips animation",
+    "Reduced-motion passage settles quickly",
+    "Cinematics release their bitmaps without extra world geometry or textures",
+    "Active cinematic stays within rendering budgets",
+    "World disposal cancels a pending shot",
+    "World disposal removes the cinematic dialog",
+    "Explicit demo query exposes the rehearsal selector",
+    "Demo skip restores control",
+    "No browser errors",
+    "No external requests"
+  ],
+  "shots": {
+    "three_lights": {
+      "fps": 56,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    }
+  },
+  "before": {
+    "fps": 61,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "threeLightsMs": 8230,
+  "reducedMotionMs": 42,
+  "after": {
+    "fps": 61,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}
+
+node scripts/check-intro.js
+{
+  "checked": "2026-11-05T21:21:23.070Z",
+  "checks": [
+    "Vite proxy reaches the actual public intro API",
+    "API returns the original story structure",
+    "Physical shore-to-desk visit replays shore_back then to_desk",
+    "Accepted pickup appears in inventory",
+    "Engine notes are visible after a change",
+    "Stairwell plays in the dialogue box",
+    "Lamp room plays in the dialogue box",
+    "The original ending card is shown",
+    "Rescue emits the exact intro_ended payload once",
+    "Reload restores a replayable move journal",
+    "Engine-blocked choices are visibly locked",
+    "A locked choice changes no state or move log",
+    "Trapped ending emits once",
+    "Closing the story restores game focus and controls",
+    "No browser errors",
+    "No external requests"
+  ],
+  "apiReads": 2,
+  "endings": [
+    "ending_rescue",
+    "ending_trapped"
+  ]
+}
+
+node scripts/check-weather-wiring.js
+{
+  "checked": "2026-11-05T21:21:39.379Z",
+  "checks": [
+    "Startup weather response drives the existing four weather values",
+    "Readable attribution links name the source, adaptation and licence beside the weather",
+    "No browser errors or external asset requests"
+  ]
+}
+
+node scripts/check-experience.js
+{
+  "checked": "2026-11-05T21:22:14.225Z",
+  "checks": [
+    "Cold title allocates neither WebGL nor an AudioContext",
+    "Continue is disabled without a local intro",
+    "Gamepad can navigate the cold title without allocating audio",
+    "Native title dialog contains keyboard focus",
+    "Every experience preference is saved with bounded values",
+    "Preferences contain only documented fields, no account or token data",
+    "Credits list four placeholder teammates, data attribution and tool licences",
+    "Preferences survive a full page reload",
+    "The first trusted input unlocks one Web Audio context",
+    "Saved preferences reach world quality, motion and highlight styling",
+    "Instant text applies to the intro dialogue",
+    "Continue replays the same local journal and scene",
+    "Continue restores inventory from accepted moves",
+    "Pause blocks held movement",
+    "New game resets only the local intro",
+    "Standard gamepad stick moves the player",
+    "Gamepad Menu opens pause once",
+    "Important sound cues have a visible live caption",
+    "Original oscillator voice renders a finite non-silent waveform",
+    "Actual touch drag maps the virtual stick to movement",
+    "Phone settings fit and scroll within the viewport",
+    "Phone HUD and menus create no page overflow",
+    "Phone touch controls and weather footer do not overlap",
+    "Phone chart pans its native pixels without fractional shrinking",
+    "Touch chart and passage controls reach Harbor",
+    "Desktop checks have no browser errors or external asset requests"
+  ],
+  "offlineAudio": {
+    "peak": 0.09328901022672653,
+    "finite": true
+  },
+  "desktop": {
+    "fps": 60,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 28,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}
+
+node scripts/check-demo.js
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: TypeError: Cannot read properties of undefined (reading 'demo')
+    at eval (eval at predicate (eval at evaluate (:370:30)), <anonymous>:1:22)
+    at predicate (eval at evaluate (:370:30), <anonymous>:7:27)
+    at next (eval at evaluate (:370:30), <anonymous>:29:33)
+    at eval (eval at evaluate (:370:30), <anonymous>:42:13)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-demo.js:17:37 {
+  log: []
+}
+
+Node.js v24.17.0
+
+node scripts/check-loading.js
+{
+  "checked": "2026-11-05T21:24:18.876Z",
+  "checks": [
+    "Cold title JavaScript is below 35 kB before gzip",
+    "src/game.js is a separate dynamic entry",
+    "src/world/cinematics/controller.js is a separate dynamic entry",
+    "src/world/places/settlement.js is a separate dynamic entry",
+    "src/world/places/home.js is a separate dynamic entry",
+    "src/ui/kit-gallery.js is a separate dynamic entry",
+    "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "src/screens/board.js is a separate dynamic entry",
+    "src/screens/finale.js is a separate dynamic entry",
+    "src/screens/reveal.js is a separate dynamic entry",
+    "src/world/places/gulls-rest.js is a separate dynamic entry",
+    "src/world/festival.js is a separate dynamic entry",
+    "Cold title requests no finale, destination, demo or gallery chunk",
+    "Cold production title allocates no WebGL renderer",
+    "Primary pixel buttons exceed WCAG AA normal-text contrast",
+    "Phone title emblem uses an integer pixel scale",
+    "The loaded production world exposes no dev inspection object",
+    "Production title and world have no browser errors or external asset requests"
+  ],
+  "initialChunks": [
+    "assets/game-CbBVQnqL.js",
+    "assets/modulepreload-polyfill-P2Xu9kJm.js",
+    "assets/modal-DTbPiWct.js",
+    "assets/dom-DPMFhvhq.js",
+    "assets/preload-helper-DclECHGd.js"
+  ],
+  "initialJavaScript": 21639,
+  "initialGzip": 9895,
+  "lazyEntries": [
+    {
+      "key": "src/game.js",
+      "file": "assets/game-C9HKYN8P.js"
+    },
+    {
+      "key": "src/screens/accusation.js",
+      "file": "assets/accusation-DCvywcjP.js"
+    },
+    {
+      "key": "src/screens/board.js",
+      "file": "assets/board-4KjLFCXV.js"
+    },
+    {
+      "key": "src/screens/finale.js",
+      "file": "assets/finale-BVdNxo-m.js"
+    },
+    {
+      "key": "src/screens/partners.js",
+      "file": "assets/partners-r4__rofq.js"
+    },
+    {
+      "key": "src/screens/relighting.js",
+      "file": "assets/relighting-sikModYf.js"
+    },
+    {
+      "key": "src/screens/reveal.js",
+      "file": "assets/reveal-DoDFoNj5.js"
+    },
+    {
+      "key": "src/screens/search.js",
+      "file": "assets/search-BPIbcb3M.js"
+    },
+    {
+      "key": "src/ui/cinematic-demo.js",
+      "file": "assets/cinematic-demo-BpHbGJDt.js"
+    },
+    {
+      "key": "src/ui/kit-gallery.js",
+      "file": "assets/kit-gallery-mvJAPum7.js"
+    },
+    {
+      "key": "src/world/cinematics/controller.js",
+      "file": "assets/controller-BaWBmg_B.js"
+    },
+    {
+      "key": "src/world/festival.js",
+      "file": "assets/festival-ClCrGV_R.js"
+    },
+    {
+      "key": "src/world/places/gulls-rest.js",
+      "file": "assets/gulls-rest-wtDolEAP.js"
+    },
+    {
+      "key": "src/world/places/home.js",
+      "file": "assets/home-CACKz1FZ.js"
+    },
+    {
+      "key": "src/world/places/settlement.js",
+      "file": "assets/settlement-WGnYrZhy.js"
+    }
+  ],
+  "contrast": 6.479354609526834
+}

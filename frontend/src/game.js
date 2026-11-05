@@ -68,7 +68,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    disposed=true;stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   const createCinematicDemo=new URLSearchParams(location.search).get('demo')==='1'?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
@@ -76,7 +76,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     skipCinematic:()=>cinematics.skip(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
     captureCase:()=>({view:caseUi.adapter?.read()??null,world:caseWorld,relit:world.relit}),presentCase:applyCaseView,restoreCase(snapshot){if(snapshot?.view)applyCaseView(snapshot.view);else{caseWorld=snapshot?.world??null;world.setRelightingComplete(!!snapshot?.relit);hud.setCaptain({captain:{name:'Captain pending',coins:null,save:{state:'local',label:'Local intro only'}}});}},
     begin(){caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
-  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!chart.open};
+  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!caseUi.active&&!chart.open};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){
     if(demo.active)return;
@@ -97,13 +97,13 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     const speed=controller.update(delta, active && !demo?.active && !world.busy && !chart.open);
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
-    audio.update(delta,{weather:state,speed,night,active:active&&!world.busy&&!chart.open,place:world.current?.id});
+    audio.update(delta,{weather:state,speed,night,active:active&&!world.busy&&!caseUi.active&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta);
-    festival?.update(reducedMotion()?0:time,{active:(caseWorld?.festivalRemaining??0)>0,night,reducedMotion:reducedMotion(),quality:settings.quality,player:controller.player.position});
+    festival?.update(reducedMotion()?0:time,{active:(caseWorld?.festivalRemaining??0)>0,night,reducedMotion:reducedMotion(),quality:settings.quality,player:controller.player.position,lanternColour:caseWorld?.lanternColour});
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,relit:world.relit,festival:(caseWorld?.festivalRemaining??0)>0 });
     view.update(delta, controller.player.position);
     const zone = active && !demo?.active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
-    touch.update(zone,active&&!demo.active&&!world.busy&&!chart.open);
+    touch.update(zone,active&&!demo.active&&!world.busy&&!caseUi.active&&!chart.open);
     if (input.consume('KeyE') && zone) world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {

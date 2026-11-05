@@ -49,9 +49,8 @@ export function aim(state,id,degrees){
   if(!post||post.reserved)return refuse('post_not_ready','A crew member must reach this post first.');
   if(post.seat!==playerSeat(state)&&!state.duties.some(duty=>duty.seat===post.seat&&duty.lightId===id))return refuse('post_not_owned','Your crew does not control this post.');
   if((night.missUntil[id]??0)>state.now)return refuse('aim_cooldown','Wait five seconds before another lock attempt.');
-  night.bearings[id]=normaliseDegrees(degrees);
   if(angularDistance(degrees,bearingBetween(light,rehearsalGlow))>5){night.missUntil[id]=state.now+5;return refuse('off_target','No lock. Watch the glow and try another bearing.');}
-  night.locks=night.locks.filter(lock=>lock.lightId!==id);night.locks.push({lightId:id,seat:post.seat,aimedBy:playerSeat(state),until:state.now+90});settleNight(state);
+  night.bearings[id]=normaliseDegrees(degrees);night.locks=night.locks.filter(lock=>lock.lightId!==id);night.locks.push({lightId:id,seat:post.seat,aimedBy:playerSeat(state),until:state.now+90});settleNight(state);
   return accept(state.schooner?'Three lights locked. The fog parts.':'Beam locked · held for 90 seconds.');
 }
 export function settleNight(state){
@@ -68,7 +67,7 @@ export function nightView(state){
   return {phase,remaining:night?Math.max(0,night.endsAt-state.now):1200,dawnRemaining:phase==='dawn'?Math.max(0,night.retryAt-state.now):0,
     status:phase==='success'?'The schooner is revealed.':phase==='dawn'?'Dawn. Prepare for another night.':phase==='night'?'Aim toward the glow. Lock three lights from three seats at once.':'Complete D1, then call nightfall.',
     canCall:crewReady&&state.deductions.includes('D1')&&!state.schooner&&phase!=='night'&&(phase!=='dawn'||night.retryAt<=state.now),
-    glow:phase==='night'?rehearsalGlow:null,materials:{coins:state.coins,timber:state.timber},
+    glow:phase==='night'?rehearsalGlow:null,chartDescription:phase==='night'?`Chart coordinates: north is up. Gold glow at x ${rehearsalGlow.x}, y ${rehearsalGlow.y}. ${lightLocations.map(light=>`${light.name}: x ${light.x}, y ${light.y}`).join('; ')}.`:null,materials:{coins:state.coins,timber:state.timber},
     buildJobs:state.jobs.filter(job=>job.order==='build_light').map(job=>({id:job.id,target:job.target,total:job.readyAt-job.orderedAt,remaining:Math.max(0,job.readyAt-state.now),done:job.done,report:job.report})),
     lights:lightLocations.map(light=>{const post=night?.posts.find(post=>post.lightId===light.id),lock=night?.locks.find(lock=>lock.lightId===light.id),built=ready(state,light.id),pendingBuild=state.jobs.some(job=>!job.done&&job.order==='build_light');return {...light,ready:built,post:post?{seat:post.seat,label:state.crew?.seats.find(member=>member.seat===post.seat)?.name??`Seat ${post.seat}`,reserved:post.reserved,remaining:Math.max(0,post.readyAt-state.now)}:null,
       bearing:night?.bearings[light.id]??0,lock:lock?{remaining:Math.max(0,lock.until-state.now)}:null,

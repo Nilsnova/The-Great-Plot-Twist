@@ -15,3 +15,6 @@ body:has(#case-lab){margin:0;background:#1e3c31;color:#ece0b8;overflow:auto}.cas
 @media(max-width:700px){.case-evidence,.case-cited-cards{grid-template-columns:1fr}.case-wheel-scene{gap:8px}.case-wheel-scene img:first-child{width:128px;height:112px}.case-wheel-scene img:last-child{width:48px;height:64px}}
 .case-wall-art{display:block;image-rendering:pixelated;margin:20px 0;width:256px;height:192px}.case-wall-names{font-size:18px;line-height:1.8}.case-lantern-colours{display:flex;gap:12px;flex-wrap:wrap}
 .case-modal *{box-sizing:border-box}.case-modal select,.case-modal input{min-width:0}.case-screen-body{min-width:0}.case-clue{overflow-wrap:anywhere}
+
+[data-colourblind=true] .case-cited-cards .is-cited{background:#d5f5ff;border-color:#f0ffff}
+.case-modal .kit-heading:focus{outline:2px solid #f3d58c;outline-offset:4px}

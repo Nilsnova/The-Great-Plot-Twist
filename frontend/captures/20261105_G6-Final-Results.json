@@ -1,0 +1,18 @@
+[
+  {
+    "command": "npm test",
+    "exit": 0
+  },
+  {
+    "command": "npm run build",
+    "exit": 0
+  },
+  {
+    "command": "npm run test:case",
+    "exit": 0
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "exit": 0
+  }
+]

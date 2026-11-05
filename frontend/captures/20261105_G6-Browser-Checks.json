@@ -1,0 +1,168 @@
+{
+  "checked": "2026-11-05T21:17:18.959Z",
+  "browser": "157.0.8103.39",
+  "viewport": "1440 × 900, DPR 1",
+  "modes": {
+    "arrival-high": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "midnight-high": {
+      "fps": 58,
+      "calls": 98,
+      "triangles": 194,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "storm-high": {
+      "fps": 61,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "fog-high": {
+      "fps": 57,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "noon-high": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "dusk-high": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "fog-low": {
+      "fps": 60,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "storm-low": {
+      "fps": 60,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 1,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "retina-high": {
+      "fps": 60,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 2,
+      "pixelRatio": 1,
+      "shadows": false
+    },
+    "retina-low": {
+      "fps": 61,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        480,
+        300
+      ],
+      "integerUpscale": 3,
+      "devicePixelRatio": 2,
+      "pixelRatio": 1,
+      "shadows": false
+    }
+  },
+  "checks": [
+    "arrival-high stays within rendering budgets",
+    "Escape opens the pause menu",
+    "W walks the explorer",
+    "Wheel zoom works while the pixel camera keeps its fixed angle",
+    "All four hooks emit exactly once per held E press: [{\"type\":\"interact\",\"id\":\"desk\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"cottage\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"shore\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"tower_door\",\"place\":\"lighthouse_isle\"}]",
+    "midnight-high stays within rendering budgets",
+    "storm-high stays within rendering budgets",
+    "fog-high stays within rendering budgets",
+    "noon-high stays within rendering budgets",
+    "dusk-high stays within rendering budgets",
+    "fog-low stays within rendering budgets",
+    "storm-low stays within rendering budgets",
+    "Low quality preserves the native pixel grid and reduces effect density",
+    "Escape closes settings while a form control has focus",
+    "The game makes no external network requests",
+    "No browser or WebGL errors ()",
+    "retina-high stays within rendering budgets",
+    "retina-low stays within rendering budgets",
+    "Pixel renderer uses a DPR-independent native buffer in both qualities"
+  ]
+}

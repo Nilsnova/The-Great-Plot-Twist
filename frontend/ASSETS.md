@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **182 sprites and 10 backgrounds/charts, 192 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **185 sprites and 10 backgrounds/charts, 195 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |

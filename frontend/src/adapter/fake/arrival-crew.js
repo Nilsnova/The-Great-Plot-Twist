@@ -23,10 +23,11 @@ export function muster(state) {
   state.crew.status='active';return accept('Four seats mustered. The case clock is running.');
 }
 export function joinCrew(state,code,{confirm=false}={}) {
-  if(state.now<state.joinWaitUntil)return refuse('too_many_tries','Too many tries. Please wait one minute before trying another code.');
+  if(state.joinWaitUntil&&state.lobbyNow>=state.joinWaitUntil){state.joinAttempts=0;state.joinWaitUntil=0;}
+  if(state.lobbyNow<state.joinWaitUntil)return refuse('too_many_tries','Too many tries. Please wait one minute before trying another code.');
   if(!state.profile)return refuse('kit_required','The referee must confirm a kit first.');
   if(state.crew)return refuse('already_in_crew','You already have a crew.');
-  if(String(code).trim().toUpperCase()!=='LANTERN') {state.joinAttempts++;if(state.joinAttempts>=3)state.joinWaitUntil=state.now+60;return refuse(state.joinAttempts>=3?'too_many_tries':'wrong_code',state.joinAttempts>=3?'Too many tries. Please wait one minute.':'That crew code was not found. Check it and try again.');}
+  if(String(code).trim().toUpperCase()!=='LANTERN') {state.joinAttempts++;if(state.joinAttempts>=3)state.joinWaitUntil=state.lobbyNow+60;return refuse(state.joinAttempts>=3?'too_many_tries':'wrong_code',state.joinAttempts>=3?'Too many tries. Please wait one minute.':'That crew code was not found. Check it and try again.');}
   if(!confirm){state.joinPreview={code:'LANTERN',seat:2,replaces:'Open seat',message:'You will join seat 2 with your own kit.'};return accept('Check your seat before joining.');}
   state.crew={id:'local-joined',code:'LANTERN',status:'forming',seats:[{seat:1,kind:'player',name:'Captain Shoal',kitId:'true_keeper'},{seat:2,kind:'player',name:state.captainName,kitId:state.profile.kitId,isYou:true},emptySeat(3),emptySeat(4)]};
   state.found[2]=state.found[1];state.found[1]=[];state.joinPreview=null;return accept('You joined the crew.');

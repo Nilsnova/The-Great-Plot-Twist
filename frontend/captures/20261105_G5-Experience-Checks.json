@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T20:11:49.193Z",
+  "checked": "2026-11-05T21:22:14.225Z",
   "checks": [
     "Cold title allocates neither WebGL nor an AudioContext",
     "Continue is disabled without a local intro",
