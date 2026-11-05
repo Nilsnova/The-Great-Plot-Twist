@@ -19,3 +19,6 @@ body:has(#case-lab){margin:0;background:#1e3c31;color:#ece0b8;overflow:auto}.cas
 [data-colourblind=true] .case-cited-cards .is-cited{background:#d5f5ff;border-color:#f0ffff}
 .case-modal .kit-heading:focus{outline:2px solid #f3d58c;outline-offset:4px}
 .case-seat-credit{display:inline-block;margin:2px 5px 2px 0;padding:2px 6px;border:1px solid currentColor;font-size:16px}.case-seat-credit[data-seat="1"],.case-clue[data-pin-seat="1"]{--seat-colour:#f3d58c}.case-seat-credit[data-seat="2"],.case-clue[data-pin-seat="2"]{--seat-colour:#a9d5be}.case-seat-credit[data-seat="3"],.case-clue[data-pin-seat="3"]{--seat-colour:#e9ac94}.case-seat-credit[data-seat="4"],.case-clue[data-pin-seat="4"]{--seat-colour:#c7bed4}.case-seat-credit{border-color:var(--seat-colour)}.case-live-pin{animation:case-pin-arrived .9s ease-out 2}@keyframes case-pin-arrived{50%{box-shadow:0 0 0 4px var(--seat-colour,#f3d58c)}}[data-reduced-motion=true] .case-live-pin{animation:none}
+
+/* Phone navigation leaves room for the larger case text. */
+.case-page-picker{display:none}@media(max-width:600px){.case-nav>button{display:none}.case-page-picker{display:block;width:100%;min-height:44px;font:16px/1.5 'Courier New',monospace;padding:9px;background:#20392d;color:#fff0c5;border:2px solid #a7b68b}.case-nav{display:block;width:100%}}

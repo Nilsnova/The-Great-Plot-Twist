@@ -33,7 +33,7 @@ export function createHud(container, actions) {
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
     </section>`;
   const captain=node('div','captain-status'),captainName=node('strong','','Captain pending'),save=node('span','','Local intro only');save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
-  const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');for(const [name,label] of [['crew','Crew'],['board','Case board'],['search','Satchel']]){const button=node('button','',label);button.type='button';button.onclick=()=>actions.caseScreen?.(name);caseToolbar.append(button);}overlay.append(caseToolbar);
+  const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');for(const [name,label] of [['crew','Crew'],['board','Board'],['log','Log'],['hints','What next?']]){const button=node('button','',label);button.type='button';button.onclick=()=>actions.caseScreen?.(name);caseToolbar.append(button);}overlay.append(caseToolbar);
   container.append(overlay);
   const timers = [];
   const select = selector => overlay.querySelector(selector);
@@ -63,7 +63,7 @@ export function createHud(container, actions) {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
   let toastUntil = 0, syncAt = 0;
-  return {setCaptain(view){captainName.textContent=view.captain.name;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},togglePanel,start(){select('#explore').click();},
+  return {setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},togglePanel,start(){select('#explore').click();},
     setWeatherCredit(data) {
       const source=node('a','',data.text),licence=node('a','',data.licenceText);
       source.href=data.href;licence.href=data.licenceHref;

@@ -1,0 +1,5 @@
+// Simulated peers share case progress, never the local wallet; festival time is public-world time.
+import {it,expect} from 'vitest';
+import {createFakeCaseAdapter} from '../src/adapter/fake/index.js';
+it('keeps another human pin reward out of the local wallet',async()=>{const a=createFakeCaseAdapter();await a.completeIntro({ending:'ending_rescue',actions:[]});await a.createCrew();await a.muster();a.dev.setSeats([{seat:2,name:'Captain Wave',kitId:'witness'}]);const before=a.read().captain.coins;expect(a.dev.peerIntent(2,'pin','C2').accepted).toBe(true);expect(a.read().captain.coins).toBe(before);expect(a.read().rewards.contributors).toEqual([2]);a.dispose();});
+it('keeps the festival clock separate from private case fast-forward',()=>{const a=createFakeCaseAdapter();a.dev.rehearse('relighting');const before=a.read().world.festivalRemaining;a.dev.advanceCase(600);expect(a.read().world.festivalRemaining).toBe(before);a.dev.advance(600);expect(a.read().world.festivalRemaining).toBe(before-600);a.dispose();});

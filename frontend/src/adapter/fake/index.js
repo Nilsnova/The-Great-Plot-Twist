@@ -14,10 +14,13 @@ import {initialPresenceState,tickPresence,reportPosition,setEmote} from './prese
 import {initialAccountState,settleAccount,signIn,signOut,rerollName,deleteMyData,resolveSaveConflict,continueGame,syncAccountSave} from './account.js';
 import {resetDeletedPlayer} from './account-reset.js';
 import {faultReply} from './faults.js';
+import {initialRewardState,settleRewards} from './rewards.js';
+import {setSimulatedSeats,asSimulatedSeat} from './simulate.js';
+import {recordPartnerEvent,previewTakeover,confirmTakeover} from './partner-life.js';
 import {caseView} from './view.js';
 
 export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCount=30,localActions=null}={}) {
-  function initial(){const next=initialCaseState();next.account=initialAccountState();next.presence=initialPresenceState({count:presenceCount});if(Array.isArray(localActions))next.account.deviceSave={state:'saved',label:'Intro saved on this device',updatedAt:null,kind:'intro',actions:[...localActions],place:'lighthouse_isle'};return next;}
+  function initial(){const next=initialCaseState();next.account=initialAccountState();next.rewardState=initialRewardState();next.presence=initialPresenceState({count:presenceCount});if(Array.isArray(localActions))next.account.deviceSave={state:'saved',label:'Intro saved on this device',updatedAt:null,kind:'intro',actions:[...localActions],place:'lighthouse_isle'};return next;}
   let state=initial(),disposed=false,lastSecond=-1,notice=null,presenceTime=0,nextFault=null;
   state.allowBrowse=allowBrowse;
   const listeners=new Set();
@@ -33,7 +36,7 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
   }
   function settle(){
     const jobs=settleJobs(state),night=settleNight(state),account=settleAccount(state);
-    return jobs||night||account;
+    settleRewards(state);return jobs||night||account;
   }
   function dispatch(name,args){
     if(disposed)return Promise.resolve({...refuse('disposed','The rehearsal has ended.'),view:read()});
@@ -42,6 +45,7 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
     let result;
     try{if(nextFault){result=faultReply(state,nextFault);nextFault=null;}else result=handlers[name]?.(state,...args)??refuse('not_ready','This local service is not ready yet.');}
     catch{result=refuse('invalid_request','That action could not be read. Please try again.');}
+    if(name==='orderPartner')recordPartnerEvent(state,{seat:args[0],type:result.accepted?'order_accepted':'refusal',reason:result.reason,order:args[1]});
     if(result.accepted&&name==='deleteMyData')resetDeletedPlayer(state,initial,previousName);
     settle();
     const motion=['reportPosition','setEmote'].includes(name);
@@ -56,7 +60,7 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
   function tick(dt){
     if(disposed)return;
     const seconds=Math.max(0,Math.min(.1,Number.isFinite(dt)?dt:0));
-    state.lobbyNow+=seconds;
+    state.lobbyNow+=seconds;state.worldNow+=seconds;
     let changed=settleAccount(state);
     if(state.crew?.status==='active'){
       state.now+=seconds*timeScale;
@@ -70,7 +74,11 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
   }
   const dev={
     setBeam(id,degrees){if(disposed||!state.night||!Number.isFinite(degrees))return;state.night.bearings[id]=degrees;publish();},
-    advanceCase(seconds){if(disposed)return;state.now+=Math.max(0,seconds);if(settleJobs(state)|settleNight(state))state.revision++;publish();},
+    previewTakeover(kitId){return disposed?null:previewTakeover(state,kitId);},
+    confirmTakeover(preview){if(disposed)return refuse('disposed','The rehearsal has ended.');const result=confirmTakeover(state,preview);state.revision++;publish();return result;},
+    setSeats(seats){if(disposed)return;if(setSimulatedSeats(state,seats)){state.revision++;publish();}},
+    peerIntent(seat,method,...args){if(disposed)return {...refuse('disposed','The rehearsal has ended.'),view:read()};settle();const result=asSimulatedSeat(state,seat,method,args,handlers);settle();state.revision++;publish();return {...result,view:read()};},
+    advanceCase(seconds){if(disposed)return;state.now+=Math.max(0,seconds);if(settle())state.revision++;publish();},
     failNext(reason){nextFault=reason;},
     setAccount(patch){if(disposed)return;Object.assign(state.account,copyView(patch));state.revision++;publish();},
     setPresence(patch){if(disposed)return;Object.assign(state.presence,copyView(patch));publish();},
@@ -86,7 +94,7 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
     },
     advance(seconds){
       if(disposed)return;
-      state.lobbyNow+=Math.max(0,seconds);state.now+=Math.max(0,seconds);
+      state.lobbyNow+=Math.max(0,seconds);state.worldNow+=Math.max(0,seconds);state.now+=Math.max(0,seconds);
       if(settle())state.revision++;publish();
     },
     reset(){if(disposed)return;state=initial();state.allowBrowse=allowBrowse;notice=null;nextFault=null;presenceTime=0;publish();},

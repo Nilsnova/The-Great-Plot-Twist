@@ -1,4 +1,5 @@
 // Fake-only card ownership, pin credit, deduction gates and distinct-seat validation.
+import {creditCard,creditDeduction} from './rewards.js';
 import {cardTitles,deductionData,suspectTitles} from './data.js';
 import {accept,refuse,playerSeat} from './state.js';
 export function cardOpen(state,id) {
@@ -11,7 +12,7 @@ export function pinCard(state,id,seat=playerSeat(state),orderedBy=null) {
   if(!(state.found[seat]??[]).includes(id))return refuse('card_not_held','That seat does not hold this card.');
   if(state.pins.some(pin=>pin.cardId===id&&pin.seat===seat))return refuse('already_pinned','This seat already pinned that card.');
   state.pins.push({cardId:id,seat,orderedBy,id:`pin-${state.pins.length+1}`,at:Date.now()});
-  if((seat===playerSeat(state)||orderedBy===playerSeat(state))&&!state.creditedCards.includes(id)){state.creditedCards.push(id);state.coins+=50;}
+  if((seat===playerSeat(state)||orderedBy===playerSeat(state))&&!state.creditedCards.includes(id)){state.creditedCards.push(id);creditCard(state,id);}
   return accept(`${cardTitles[id]} pinned by seat ${seat}.`);
 }
 export function pairCards(state,a,b) {
@@ -24,7 +25,7 @@ export function pairCards(state,a,b) {
   if(!deduction){state.pairWaitUntil=state.now+30;return refuse('wrong_pair','These two cards do not fit together. Try again in 30 seconds.');}
   if(state.deductions.includes(deduction.id))return refuse('already_deduced','That deduction is already on the board.');
   state.deductions.push(deduction.id);
-  if([...first,...second].some(pin=>pin.seat===playerSeat(state)||pin.orderedBy===playerSeat(state)))state.coins+=200;
+  creditDeduction(state,deduction.id,[...first,...second]);
   return accept(`${deduction.id} · ${deduction.title} formed. ${deduction.opens.join(', ')} opened.`);
 }
 export function boardView(state) {

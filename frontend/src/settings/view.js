@@ -15,6 +15,7 @@ export function createSettingsView() {
     input.value=String(values[key]);field(title,input,key,element=>read(element.value));
   }
   select('Show other captains','showCaptains',[['everyone','Everyone · up to eight nearby'],['crew','Crew only'],['off','Off']]);
+  select('First-time hints','hintsEnabled',[['true','On'],['false','Off']],value=>value==='true');
   select('Quality','quality',[['high','High · full weather'],['low','Low · lighter weather']]);
   for(const key of ['master','music','effects']) {
     const input=node('input');input.type='range';input.min='0';input.max='100';input.step='1';input.value=String(Math.round(values[key]*100));input.dataset.preference=key;

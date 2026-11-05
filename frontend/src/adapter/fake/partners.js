@@ -36,7 +36,7 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
   state.duties=state.duties.filter(duty=>duty.seat!==seat);
   if(state.night){state.night.posts=state.night.posts.filter(post=>post.seat!==seat);state.night.locks=state.night.locks.filter(lock=>lock.seat!==seat);}
   if(order==='man_light')state.night.posts.push({seat,lightId:target,readyAt:state.now+seconds,reserved:true});
-  state.jobs.push({id:++state.jobId,seat,order,target,cardId,price,orderedBy:playerSeat(state),orderedAt:state.now,readyAt:state.now+seconds,done:false});
+  state.jobs.push({id:++state.jobId,seat,order,target,spot:order==='search'?target:(routes.find(route=>route.cardId===cardId)?.spot??null),cardId,price,orderedBy:playerSeat(state),orderedAt:state.now,readyAt:state.now+seconds,done:false});
   return accept(`${member.name} is on the way.`);
 }
 export function partnerView(state) {

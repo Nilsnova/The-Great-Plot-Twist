@@ -26,6 +26,7 @@ export function callNightfall(state){
   if(state.night?.phase==='night'||state.schooner)return refuse('night_in_progress','This night has already begun.');
   if(state.night?.phase==='dawn'&&state.night.retryAt>state.now)return refuse('dawn_wait','Wait for the next night.');
   const posts=state.duties.filter(duty=>['keepers_lamp','harbor_light'].includes(duty.lightId)).map(duty=>({...duty,reserved:false,readyAt:state.now}));
+  if(state.night)(state.nightHistory??=[]).push(structuredClone(state.night));
   state.night={phase:'night',startedAt:state.now,endsAt:state.now+1200,retryAt:0,posts,locks:[],missUntil:{},bearings:{}};
   return accept('Nightfall. Three seats must hold three lights at once.');
 }

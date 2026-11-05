@@ -15,7 +15,7 @@ export function rehearse(state,stage){
     if(!state.deductions.includes('D1'))rehearse(state,'board');buildLight(state,'islet_signal_station');settleJobs(state);callNightfall(state);orderPartner(state,2,'man_light','keepers_lamp');orderPartner(state,3,'man_light','harbor_light');takePost(state,'islet_signal_station');state.now+=600;settleJobs(state);
   }
   if(stage==='lock')for(const light of lightLocations.slice(0,3))aim(state,light.id,bearingBetween(light,rehearsalGlow));
-  if(stage==='relighting'){state.worldRelit=true;state.festivalUntil=state.now+172800;state.wall=[{name:state.captainName,order:1}];}
+  if(stage==='relighting'){state.worldRelit=true;state.festivalUntil=(state.worldNow??state.now)+172800;state.wall=[{name:state.captainName,order:1}];}
   // The tour cannot accuse, solve, expose reveal lines or supply reveal art.
   state.revision++;
 }
