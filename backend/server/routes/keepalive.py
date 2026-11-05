@@ -4,8 +4,9 @@ Why it exists: a free Supabase project pauses itself after 7 days with little ac
 waking it up takes minutes. Once a day this route reads one row from each of three tables
 (profiles, wallet_reasons and crews). That counts as real activity, so the project stays awake.
 
-Who calls it: one trusted caller, with GET, once a day. Which one is still an open decision for
-Nils (see docs/ARCHITECTURE.md, "The 7-day pause and the keep-alive"). It is NOT Vercel Cron: a
+Who calls it: one trusted caller, with GET, once a day: the GitHub Actions workflow
+.github/workflows/keepalive.yml (docs/ARCHITECTURE.md, "The 7-day pause and the keep-alive").
+It is NOT Vercel Cron: a
 crons entry in vercel.json broke our deploys on 5 Nov 2026, so never add one while we use Vercel
 Services. Nobody else may call it, because the route asks for a secret first.
 

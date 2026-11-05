@@ -80,13 +80,13 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 
 ## Step 5. Prove it works (15 minutes, once the foundation branch is pushed)
 
-Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 waits for Nils' decision on what calls the keep-alive route (see "Keep it awake until the demo" below). Do not try to pass it with a `crons` entry in `vercel.json`: that breaks our deploys.
+Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 runs the daily keep-alive workflow on GitHub (see "Keep it awake until the demo" below). Do not try to pass it with a `crons` entry in `vercel.json`: that breaks our deploys.
 
 | # | Check | Pass when | If it fails |
 |---|---|---|---|
 | 1 | A teammate pushes a branch | Vercel shows the preview as **Ready**, not Blocked | **Test.** Vercel's docs and its newest help article disagree on whether non-owners can deploy on Hobby. Fallback: only Nilsnova merges to `main`, which triggers production. |
 | 2 | Open `/api/health` on the preview | `{"status": "ok", ...}` | Check the `vercel.json` services block and the function logs. |
-| 3 | The daily keep-alive. **Waiting for Nils' decision.** Vercel Cron is out: a `crons` entry in `vercel.json` stopped our production deploys on 5 Nov 2026, so `vercel.json` has no cron entry and must never get one while we use Vercel Services. Once Nils has chosen what calls `/api/keepalive` once a day (see below), give that caller the same `CRON_SECRET` value as Production (Step 4). | A run of the caller ends with `200` and `{"status":"ok","reads":3}`. `401` means the secret is missing or wrong. `503` means a setting is missing or the database cannot be read. | Fix the secret or the setting and run it again. Never fall back to a `crons` entry in `vercel.json`. Until the check passes, rely on team activity and a manual check of the Supabase project the day before the demo. |
+| 3 | The daily keep-alive: in GitHub open **Actions > Keep Supabase awake > Run workflow** on `main`, or wait for the daily run at 06:17 UTC. Vercel Cron is out: `vercel.json` has no cron entry and must never get one while we use Vercel Services. | The run is green and its log says `keep-alive answered 200`. | `401`: the repository secret `CRON_SECRET` differs from Production's (Step 4). `503`: Production's `CRON_SECRET` is empty or the database cannot be read. Fix the setting and run it again. Never fall back to a `crons` entry in `vercel.json`. |
 | 4 | Two test users | each sees only their own rows ([supabase/README.md](../supabase/README.md)) | Stop: fix the access rules before any real data. |
 | 5 | GitHub sign-in, on the check page `/auth-check.html` (see below) | a round trip ends with `Signed in as Captain-xxxxxx, coins 0, crews 0` | Check the callback URL and the redirect list (Step 3, and the note below). |
 
@@ -101,17 +101,19 @@ If the address is missing, Supabase sends the browser to the Site URL instead, w
 
 ## Keep it awake until the demo
 
-Free Supabase projects pause after **7 days of low activity**. The route `GET /api/keepalive` does a few small database reads, which count as activity, but **nothing calls it yet**.
+Free Supabase projects pause after **7 days of low activity**. The route `GET /api/keepalive` does a few small database reads, which count as activity. **A scheduled GitHub Actions workflow calls it once a day:** `.github/workflows/keepalive.yml`.
 
 We tried Vercel Cron first. On 5 Nov 2026 a `crons` entry in `vercel.json` stopped our production deploys: production stayed on an old version until commit `409316e` took the entry out. We cannot see a failed deploy from outside, because Vercel keeps serving the last good one. **Never add `crons` back to `vercel.json` while we use Vercel Services.** The full story is in [ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive).
 
-**Open decision for Nils: what calls the route once a day.** Whatever it is must send the header `Authorization: Bearer <CRON_SECRET>`, and the secret goes only into that service's own secret or header setting, never into the repository.
+**Decided by Nils on 5 Nov 2026: a scheduled GitHub Actions workflow.** It runs every day at 06:17 UTC and sends the header `Authorization: Bearer <CRON_SECRET>`. It costs nothing because the repository is public, and GitHub turns a schedule off after 60 days without activity in the repository.
 
-1. A scheduled GitHub Actions workflow in this public repository. It is free on public repositories, but Nils' rule is to ask before any GitHub Actions run, and GitHub turns scheduled workflows off after 60 days without activity in the repository.
-2. A free outside scheduler or uptime monitor that calls the route with the secret. It needs an account that Nils creates.
-3. Supabase Cron, if it is on the free plan and if its activity counts against the pause. We have not checked either.
+**One-time setup (Nils, about 3 minutes):**
 
-Until Nils decides, we rely on the team's normal use of the project, which counts as activity. In demo week open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
+1. In Vercel, open the project, then **Settings > Environment Variables**, and copy the value of `CRON_SECRET`. If Vercel does not show it (a sensitive variable), make a new long random value, save it there as the new `CRON_SECRET` for Production, and redeploy (any push to `main` does that).
+2. In GitHub, open the repository's **Settings > Secrets and variables > Actions > New repository secret**, name it `CRON_SECRET` and paste the same value. The secret lives only in these two settings, never in the repository, a file or chat.
+3. Open **Actions > Keep Supabase awake > Run workflow** and run it on `main`. A green run whose log says `keep-alive answered 200` passes check 3.
+
+In demo week, still open the Supabase dashboard the day before the demo and check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
 
 ## Afterwards
 

@@ -1,0 +1,28 @@
+name: Keep Supabase awake
+
+# A free Supabase project pauses after 7 days of low activity. Once a day this job calls our
+# keep-alive route, which reads the database. Vercel Cron is not an option: a crons entry in
+# vercel.json breaks our deploys while we use Vercel Services (docs/ARCHITECTURE.md).
+# Free here because the repository is public. Decided by Nils on 5 Nov 2026.
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # every day at 06:17 UTC; GitHub may start it a few minutes late
+  workflow_dispatch: # lets a team member run it by hand from the Actions tab
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call the keep-alive route
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://the-great-plot-twist.vercel.app/api/keepalive)
+          echo "keep-alive answered $status"
+          test "$status" = "200"

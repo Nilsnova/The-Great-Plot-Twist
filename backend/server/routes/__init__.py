@@ -6,8 +6,8 @@
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
 
-Most of them are called by the browser. keepalive.py is for one daily caller instead. Who that
-caller is stays an open decision (docs/ARCHITECTURE.md, "The 7-day pause and the keep-alive").
+Most of them are called by the browser. keepalive.py is for one daily caller instead: the
+GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).
 market.py is the Island Exchange (its rules are in server/market/).
 Each file creates a `router` with its URLs. app.py plugs every router in under /api.
 To add a feature: create a new file here, then add one line in app.py.

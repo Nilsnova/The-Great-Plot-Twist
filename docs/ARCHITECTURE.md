@@ -33,7 +33,7 @@ flowchart LR
   end
 
   outside["Outside data<br/>weather, prices, results"]
-  keepAliveCaller["Daily keep-alive caller<br/>(decision pending)"]
+  keepAliveCaller["Daily keep-alive caller<br/>(GitHub Actions)"]
 
   browser -->|"every address not starting with /api"| frontendService
   browser -->|"/api/... with the sign-in token"| backendService
@@ -45,7 +45,7 @@ flowchart LR
   keepAliveCaller -.->|"GET /api/keepalive"| backendService
 ```
 
-Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are not proven or not built: only some of the outside data is wired in so far (the live weather from Open-Meteo, `GET /api/weather`, and the Island Exchange prices from Binance, `GET /api/market`), and nothing calls the keep-alive route every day yet. Who will call it is an open decision for Nils. The box sits outside the Vercel project on purpose, because Vercel Cron cannot be used with our setup (see "The 7-day pause and the keep-alive" below).
+Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are not proven or not built: only some of the outside data is wired in so far (the live weather from Open-Meteo, `GET /api/weather`, and the Island Exchange prices from Binance, `GET /api/market`), and the daily keep-alive call, a scheduled GitHub Actions workflow chosen on 5 Nov 2026, is not proven until its first green run. The box sits outside the Vercel project on purpose, because Vercel Cron cannot be used with our setup (see "The 7-day pause and the keep-alive" below).
 
 ## 3. Who may do what
 
@@ -62,7 +62,7 @@ Two values are not secret: the Supabase project URL and the publishable key. The
 | Secret | What it opens | Where it lives |
 |---|---|---|
 | `SUPABASE_SECRET_KEY` | Every table, skipping row-level security | Vercel environment variables, and your private `.env` |
-| `CRON_SECRET` | The keep-alive route | Vercel environment variables, and later also the setting of whatever calls the route once a day (an open decision, see below). Optional in your `.env`: use a made-up value there. |
+| `CRON_SECRET` | The keep-alive route | Vercel environment variables, and the GitHub repository secret `CRON_SECRET` for the daily keep-alive workflow (the same value). Optional in your `.env`: use a made-up value there. |
 | The database password | The database itself | The Supabase dashboard and a password manager |
 | The GitHub sign-in client secret | Our GitHub sign-in app | The Supabase dashboard (and GitHub's page for the app) |
 | Later keys: `MARKET_DATA_API_KEY`, `SPORTS_API_KEY`, `LLM_API_KEY` | Outside services | Vercel environment variables, once their feature is built |
@@ -93,7 +93,7 @@ If something on the server's side is down, the answer is `503`. For money that m
 | Settings come from | `.env` in the repository root, passed with `--env-file ../.env` | Vercel environment variables | Vercel environment variables |
 | Database | The team's Supabase project, if your `.env` holds its values. With empty values the API still starts, and the routes that need Supabase answer `503`. | The team's Supabase project | The team's Supabase project |
 | `/api/docs`, the list of routes | yes | yes | no |
-| Daily keep-alive call | no | no | not yet: the route exists, but nothing calls it once a day. Who will is an open decision (see "The 7-day pause and the keep-alive" below). `vercel.json` holds no cron entry, and must never get one. |
+| Daily keep-alive call | no | no | once a day from the GitHub Actions workflow `.github/workflows/keepalive.yml` (decided 5 Nov 2026; see "The 7-day pause and the keep-alive" below). `vercel.json` holds no cron entry, and must never get one. |
 
 On your laptop the game and the API are two programs on two ports. On Vercel they share one address. The commands are in [ENGINEERING.md, section 3](ENGINEERING.md#3-commands), including the small Vite setting that package G1 still has to add so the game can reach the API locally.
 
@@ -127,9 +127,6 @@ A free Supabase project pauses after 7 days of low activity. Waking it takes a f
 
 - **Built:** `GET /api/keepalive` reads one row from each of three tables (`profiles`, `wallet_reasons` and `crews`), which counts as database activity. It answers only a caller that sends `Authorization: Bearer <CRON_SECRET>` ([INTERFACES.md](INTERFACES.md#get-apikeepalive)). The setting keeps the name `CRON_SECRET` from the time we planned to use Vercel Cron. Whatever calls the route sends that value.
 - **Found on 5 Nov 2026: a cron entry breaks our deploys.** A cron job is a task that runs on a timer. We added one to `vercel.json`, a `crons` entry that called `/api/keepalive` once a day. Production then stayed on `589baea` (the S1 merge) and did not pick up the next two merges, `3e80605` (live weather) and `c8bac2b` (the backbone check, which added the entry). Commit `409316e` took the entry out, and the next production deploy went live within about 8 minutes: `/api/weather` answered 200, `/api/me` answered 401 without a token (correct) and `/auth-check.html` answered 200. So a `crons` entry in `vercel.json` together with Vercel Services breaks the deploy on our Hobby project. We cannot see the failed deploy from outside, because Vercel keeps serving the last good deploy. **Never add `crons` back to `vercel.json` while we use Services.**
-- **Open decision for Nils: what calls the route once a day.** The route stays, with its secret. Nothing calls it yet. The options:
-  - **a.** A scheduled GitHub Actions workflow in this public repository. It is free on public repositories, but Nils' rule is to ask before any GitHub Actions run, and GitHub turns scheduled workflows off after 60 days without activity in the repository.
-  - **b.** A free outside scheduler or uptime monitor that calls the route with the secret. It needs an account that Nils creates.
-  - **c.** Supabase Cron, if it is on the free plan and if its activity counts against the pause. We have not checked either.
-- **Until it is decided:** we rely on the team's normal use of the project, which counts as activity, and on the manual check in the next point.
+- **Decided by Nils on 5 Nov 2026: a scheduled GitHub Actions workflow calls the route once a day.** `.github/workflows/keepalive.yml` runs every day at 06:17 UTC and can also be started by hand from the Actions tab. It sends the repository secret `CRON_SECRET`, which holds the same value as the Vercel setting. It costs nothing because the repository is public. GitHub turns a schedule off after 60 days without activity in the repository, which is after the course. The options not chosen were an outside scheduler (an account Nils would create) and Supabase Cron (not checked).
+- **If a run fails:** GitHub emails the repository owner. `401` means the two secrets differ; `503` means the Vercel setting is empty or the database cannot be read.
 - **Always in demo week:** open the Supabase dashboard yourself, and check the day before the demo that the project is active. Supabase says a few requests a day usually keep a project awake, but it promises nothing. If the demo is on Fri 4 Dec, it comes 11 days after the submission on Mon 23 Nov, which is longer than the 7 days.
