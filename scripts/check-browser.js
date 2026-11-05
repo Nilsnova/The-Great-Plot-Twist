@@ -15,6 +15,7 @@ const server = process.env.TEST_URL ? null : spawn(process.execPath,
 let browser;
 const report = { checked: new Date().toISOString(), browser: '', viewport: '1440 × 900, DPR 1', modes: {}, checks: [] };
 const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }).replaceAll('-', '');
+const prefix = process.env.CAPTURE_PREFIX || 'Illustrated';
 const check = (condition, label) => { assert.ok(condition, label); report.checks.push(label); };
 try {
   for (let attempt = 0; attempt < 60; attempt++) {
@@ -30,7 +31,7 @@ try {
   await page.goto(url); await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
   await page.waitForTimeout(1500); // Let shaders and the first shadow map warm up.
   await mkdir('captures', { recursive: true });
-  const capture = name => page.screenshot({ path: `captures/${stamp}_Illustrated-${name}.png` });
+  const capture = name => page.screenshot({ path: `captures/${stamp}_${prefix}-${name}.png` });
   await capture('Arrival');
   async function measure(name, targetPage = page) {
     await targetPage.waitForTimeout(300);
@@ -106,14 +107,14 @@ try {
   await page.close(); // Benchmark one WebGL page at a time on the same GPU.
   const retina = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
   await retina.goto(url); await retina.waitForTimeout(2000);
-  await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_Illustrated-Retina.png` });
+  await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
   check(report.modes['retina-high'].pixelRatio === 1.25 && report.modes['retina-low'].pixelRatio === 1,
     'Retina high caps at 1.25, low at 1');
-  await writeFile(`captures/${stamp}_Illustrated-Retina-Checks.json`, JSON.stringify({
+  await writeFile(`captures/${stamp}_${prefix}-Retina-Checks.json`, JSON.stringify({
     checked: new Date().toISOString(), viewport: '1440 × 900, device DPR 2',
     high: report.modes['retina-high'], low: report.modes['retina-low'],
   }, null, 2) + '\n');
-  await writeFile(`captures/${stamp}_Illustrated-Browser-Checks.json`, JSON.stringify(report, null, 2) + '\n');
+  await writeFile(`captures/${stamp}_${prefix}-Browser-Checks.json`, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report, null, 2));
 } finally { await browser?.close(); server?.kill(); }
