@@ -6,7 +6,7 @@
 
 **Spoiler warning.** This file names the culprit. The repository is public, so anyone can read it here. In the game, the culprit's name reaches only crews that solved the case.
 
-**Status:** skeleton v1, approved by Nils on 5 Nov 2026 with five decisions; decision 4 changed. The text below is the approved skeleton with short notes added (sections 2, 8 and 9). Next step: the detail round, package S0 in the roadmap.
+**Status:** skeleton v1, approved by Nils on 5 Nov 2026 with five decisions; decision 4 changed. The text below is the approved skeleton with short notes added (sections 2, 8 and 9). The detail round, package S0, is done and approved, except three review changes that wait for Nils' OK: it is in [story/README.md](story/README.md), and the decision log entry is D018 ([DECISIONS.md](DECISIONS.md)).
 
 **About the look.** The look is decided: original top-down pixel art (D005, Nils, 5 Nov). Section 2 keeps its approved wording, with a note beside it.
 
@@ -20,7 +20,7 @@
 
 > *Look superseded by D005: original top-down pixel art.*
 
-- **Lighthouse Isle:** Act 1 (cottage, boathouse, jetty, lighthouse), later the True Keeper's home.
+- **Lighthouse Isle:** Act 1 (cottage, boathouse, jetty, lighthouse). A True Keeper starts the case here, and has a home islet like every player.
 - **Saltreach Harbor** (shared hub): Harbor Office, Harbor Light, ferry, jail, market hall, prediction kiosk, sports pavilion, signal station.
 - **Home islets** (one per player): cabin, workshop, windmill, greenhouse, signal station.
 - **Smugglers' Cove:** back room, low-tide cave, arena gate.
@@ -107,7 +107,7 @@ A 10 to 15 minute daily round that never needs the case. Play money only.
 
 > **Changed by decision 4 (5 Nov):** the class demo is very short and shows highlights only. It is not the live first solve. The beats below stay as the list of candidate highlights. The plan is in [ROADMAP.md](../ROADMAP.md#demo).
 
-The team's crew plays to the finale before class, in the live world (decision 4).
+Before class the team may test the case in the live world, but the relight lock keeps the coast dark until the game opens, so the first real solve stays open for players (decisions 4 and 19 of 5 Nov). The class demo uses the highlights tour (`?demo=1`), which runs in the browser on a stand-in that never touches the live world. The beats below are candidates for it: the phone parts of beats 3 and 5 are dropped with the class join, the Relighting in beat 7 is the tour's own and not the real one, and the tour stops before the unmasking.
 
 1. 0:00 The chart unrolls and a gold beam sweeps; Act 1 on a fresh guest: the note to the harbor master, the ending card.
 2. 1:40 Four arrival cards, one seat held by an NPC partner.
@@ -121,9 +121,9 @@ The team's crew plays to the finale before class, in the live world (decision 4)
 
 > **Cut by the roadmap:** this core list comes to about 50 package days, nearly twice the team's capacity. [ROADMAP.md](../ROADMAP.md#capacity-and-the-cut-rule) v0.2 cuts it into core, should and later, and the M1 cut rule decides how much of the core grows past its minimum version.
 
-**Core:** Act 1 with Story v2 and the referee; crews, seats, NPC partners; the case (8 cards, 4 deductions, finale, accusation, twist); rewards and the Relighting switch; home islet, sailing, salvage, weather, Exchange; phone page for the class; presenter panel.
+**Core:** Act 1 with Story v2 and the referee; crews, seats, NPC partners; the case (8 cards, 4 deductions, finale, accusation, twist); rewards and the Relighting switch; home islet, sailing, salvage, weather, Exchange; live presence (you see the other captains live, core since the late evening of 5 Nov); phone page for the class; presenter panel.
 
-**Later:** prediction and sports pools, duels, harbor orders, Elena's radio bulletin (should, in that order); boarding rounds, storm raids, Light Network, Chapter 2, AI (LLM) voices.
+**Later:** prediction and sports pools (switched off until Nils is sure that play-money bets on real matches are fine for class), duels, harbor orders, Elena's radio bulletin (should, in that order); boarding rounds, storm raids, Light Network, Chapter 2, AI (LLM) voices.
 
 ## Decisions (5 Nov)
 
@@ -153,21 +153,21 @@ This is the work of package S0 (Nils and the S-lane owner), due on Mon 9. Each i
 10. **Relighting switch and rewards.** Ledger reasons, once-per-player references, the spoiler rule, and what crews still on the case see on the chart after the first solve. *Owner:* S0 writes the rules, L3 builds them.
 11. **Demo script and name check.** The demo script is now a short highlights script (decision 4), with a rehearsal plan and fallbacks. A final name check (published games and real companies) covers every place and company name. *Owner:* M3 for the demo, S0 for the name check.
 
-Questions for this round:
+Questions for this round, and their answers:
 
-- When a friend takes over a partner's seat, does the seat keep the partner's kit, or take the friend's own kit?
-- If the home islet ships only at its minimum version (signal station plus one building), which three lights can every kit mix reach?
-- Does the highlights demo show the twist? Showing it spoils the case for classmates who play later.
+- When a friend takes over a partner's seat, does the seat keep the partner's kit, or take the friend's own kit? **Decided by Nils on 5 Nov 2026 (decision 10): the friend's own kit.**
+- If the home islet ships only at its minimum version (signal station plus one building), which three lights can every kit mix reach? **Answered by decision 6 (every crew builds one light) and the review fix that gives every player a home islet:** the Keeper's lamp, the Harbor Light and a home signal station. Every player has a home islet, so every crew builds one for 300 coins and 10 timber. The review fix waits for Nils' OK ([story/README.md](story/README.md#changes-to-the-approval-sheet-after-the-review)).
+- Does the highlights demo show the twist? Showing it spoils the case for classmates who play later. **Still open** ([story/README.md](story/README.md#decisions-still-open-for-nils), open decision 3). The recommendation is to stop at the schooner.
 
-The first and the third question are also on the team kickoff list in [STATUS.md](STATUS.md#open-decisions).
+The third question is also on the team kickoff list in [STATUS.md](STATUS.md#open-decisions).
 
 ## Rules for changing the story
 
 1. **Story changes go through S-lane pull requests.** `backend/content/story.json`, the case file and every other story text change only in a pull request that the S-lane owner has seen and a different human teammate has approved ([CONTRIBUTING.md](../CONTRIBUTING.md)). One scene or island per pull request. The content linter and the solvability proofs stay green ([ENGINEERING.md](ENGINEERING.md), recipe 4.6).
 2. **Story v2 stays small (decision 2).** Edit `story.json` only. The engines stay frozen, so the 11 original tests, the parity test and the referee keep working.
-3. **Never reveal the culprit's name outside solved crews.** Reveal lines, the unmasking and anything else that names the culprit stay on the server and go only to crews that solved the case. They never go into the browser bundle, the shared chart, a public page or a notification. This file is the one exception, because it is the team's design document; hence the spoiler warning at the top.
+3. **Never reveal the culprit's name outside solved crews.** Reveal lines, the unmasking and anything else that names the culprit stay on the server and go only to crews that solved the case. They never go into the browser bundle, the shared chart, a public page or a notification. The exceptions are the team's own design documents and data, because the repository is public: this file, [story/CASE-FILE.md](story/CASE-FILE.md), the case data `backend/content/secret/case.json` and its data page (the section "The case data" in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson)). Each carries a spoiler warning at the top. The data file is server only and is never served; a test proves it.
 4. **Titles only, no personal names.** New characters get titles: the harbor master, the fisherman in the yellow coat, the salvage foreman, the coastguard commander. Elena stays the only named character. Real people's names and private details never go into the story.
 5. **Check every new name.** A new place or company name gets a name check against published games and real companies before it ships.
 6. **Keep the hints fair.** Every reveal line cites a card that all 8 entry profiles can reach. The fairness linter checks this.
-7. **Approved decisions change only with Nils' OK.** Changing one of the five decisions needs a new decision entry that supersedes D013 and keeps the original reason ([DECISIONS.md](DECISIONS.md)).
+7. **Approved decisions change only with Nils' OK.** Changing one of the five decisions needs a new decision entry that supersedes D013, and changing one of the 19 decisions of the story round needs one that supersedes D018. Each keeps the original reason ([DECISIONS.md](DECISIONS.md)).
 8. **Original text only.** We write the story ourselves and keep authorship and third-party notices ([AGENTS.md](../AGENTS.md)).
