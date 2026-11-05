@@ -1,6 +1,6 @@
 # Lighthouse Isle pixel-art graphics
 
-Nils explicitly rejected the painted-paper direction on 5 November 2026 and selected the supplied top-down pixel-art forest reference. This is the active direction: richer greens, clustered foliage, dark selective outlines, irregular grass and tan paths, earth/stone ledges, compact characters and a close exploration camera. The earlier SVG library and scene studies are inactive iteration sources. The reference screenshot is inspiration only; every runtime sprite and map is original project artwork.
+Nils explicitly rejected the painted-paper direction on 5 November 2026 and selected the supplied top-down pixel-art forest reference. This is the active direction: richer greens, clustered foliage, dark selective outlines, irregular grass and tan paths, earth/stone ledges, compact characters and a close exploration camera. The earlier SVG library, viewers and obsolete checks are preserved in archive/paper and excluded from active src/public/build. The reference screenshot is inspiration only; every runtime sprite and map is original project artwork.
 
 ## Run and inspect
 
@@ -25,7 +25,7 @@ The close camera follows the player. Partial scenery at frame edges is normal in
 
 ## Original art and pixel grid
 
-The active kit has **36 original PNG sprites plus one 1024 × 768 terrain backdrop**. The sprite sources total 23,992 bytes; ground.png is 35,912 bytes. The kit includes three buildings with cottage cutaway/light layers, eleven nature assets, eleven coastal props, and nine explorer poses. See ASSETS.md. The source of truth for active ids, native dimensions and placement anchors is `src/pixel/catalog.js`.
+The library has **48 original PNG sprites plus one 1024 × 768 terrain backdrop**: 36 active island sprites and 12 staged harbour/mystery drawings. All sprite sources total 33,304 bytes; ground.png is 35,912 bytes. The active core remains 23,992 sprite bytes; none of the 12 staged drawings preloads with it. The active kit includes three buildings with cottage cutaway/light layers, eleven nature assets, eleven coastal props, and nine explorer poses. The staged kit adds the harbour office/beacon/signal station/pier, two sailing vessels and six generic nautical mystery/reward objects, with no feature behaviour or canon outcome. See ASSETS.md. The source of truth for active ids, native dimensions and placement anchors is `src/pixel/catalog.js`.
 
 One world unit equals **16 native art pixels**. Texture sampling is nearest-neighbour, mipmaps and antialiasing are disabled, and static pixel sprites use integer magnification. The renderer draws a small native framebuffer and upscales it with CSS `image-rendering: pixelated` by a whole number. At 1440 × 900 it draws 480 × 300 and displays at 3×; at 1600 × 1000 it draws 400 × 250 at 4×. Device DPR does not increase that buffer. Zoom is discrete, positions snap to the art grid, and boats bob in pixel steps without fractional rotation. Low/high quality changes wave/rain density rather than the art scale.
 
@@ -57,7 +57,8 @@ world/lighthouse.js exports logical `anchors`, `stairwell`, `lamp_room`, plus th
 | src/world/ | Logical terrain, sprite placement, buildings/cutaway, forest, boat, weather and lighthouse |
 | src/player/ | Pixel character, fixed camera, controller and collision rules |
 | src/ui/ | Compact RPG interface and development-only performance |
-| public/pixel/ | 36 original sprites and ground backdrop |
+| public/pixel/ | 48 original sprites and ground backdrop |
+| archive/paper/ | Preserved superseded art/source; excluded from the shipped public assets |
 | scripts/pixel_art/, export-pixel-ground.js | Editable/reproducible original artwork sources |
 | tests/pixel.test.js | PNG registration/dimensions, display scaling and pixel snapping |
 | scripts/check-pixel.js, check-browser.js, check-production.js | Real-browser art/gameplay/build validation |
@@ -66,14 +67,14 @@ world/lighthouse.js exports logical `anchors`, `stairwell`, `lamp_room`, plus th
 
 ## Verification and performance
 
-`npm test` passed 29 tests in 6 files, built-game checks passed, and built pixel-workshop checks passed. Current final verification is recorded in the Pixel-prefixed JSON files in captures. Run `npm test`, `npm run test:art`, `CAPTURE_PREFIX=Pixel npm run test:browser`, `CAPTURE_PREFIX=Pixel npm run test:production`, and `npm run test:art:production`. Browser checks use installed Chrome or CHROME_PATH; no browser download is needed. GPU checks run sequentially.
+`npm test` passed 27 tests in 5 files, built-game checks passed, and built pixel-workshop checks passed. The art checker now decodes all 49 PNGs and verifies the staged filter/default-preload boundary. Current final verification is recorded in the Pixel-prefixed JSON files in captures. Run `npm test`, `npm run test:art`, `CAPTURE_PREFIX=Pixel npm run test:browser`, `CAPTURE_PREFIX=Pixel npm run test:production`, and `npm run test:art:production`. Browser checks use installed Chrome or CHROME_PATH; no browser download is needed. GPU checks run sequentially.
 
 The target remains 60 FPS, <150 draw calls and <150,000 submitted triangles on ordinary integrated graphics. The pixel pipeline uses no shadow maps, bloom, 3D terrain mesh or external network request. The largest texture is the one 1024 × 768 backdrop. Sprite materials/textures are shared; scene teardown disposes all maps, including ground. The final full pixel benchmark measured 60–61 FPS across short samples, up to 100 draw calls and 195 submitted triangles. Earlier samples varied more, so this is not a sustained guarantee. It used a 480 × 300 native framebuffer displayed at 1440 × 900; DPR 2 uses the same native buffer. These samples were on this Mac in headless Chrome 157, not a sustained hardware guarantee. The HUD clock/diagnostics now synchronise at 150 ms intervals; interaction prompts still update every frame. Final post-change evidence is Pixel-Browser-Checks.json.
 
 ## Continuing work and integration
 
 - Refine canopy variety, natural grass/soil boundaries, cliff transitions and environmental clusters against the supplied reference. Keep the player and routes readable; avoid noisy per-pixel detail.
-- Rebuild the planned feature kits in the new pixel language. The earlier paper market/arena/companion/boat concepts are not active pixel assets or implemented features. Consult the roadmap input file, whose feature priorities remain provisional.
+- Continue the new pixel feature kits from the staged harbour/mystery set. The earlier paper market/arena/companion/boat concepts are not active pixel assets or implemented features. Consult the roadmap input file, whose feature priorities remain provisional.
 - Improve character stride/idle richness and test longer sessions, Safari/Firefox, other GPUs and smaller screens. Current verification is installed Chrome on this Mac, not a cross-device guarantee.
 - The current main layout is frontend/ plus backend/. The pixel pass is integrated into that frontend/ layout, retaining the incoming team documents byte-for-byte; 57 added art/check files were resolved at their relocated paths without changing their content. Feature-branch synchronisation does not merge anything into main. Untracked local ROADMAP/STORY files describe G1 before G2/G3/G4 and S0-owned map inputs; they are planning context, not published frozen contracts.
 - Root remains the sole writer to this graphics worktree. Nils authorised normal pushes of verified work to feat/graphics-foundation and a reviewable PR. No merge into main, force push or deployment is authorised here. A two-hour heartbeat in this chat continues bounded visual improvements under the new direction and reports meaningful changes.
@@ -81,3 +82,7 @@ The target remains 60 FPS, <150 draw calls and <150,000 submitted triangles on o
 ## Render loop in three sentences
 
 The browser requests a frame and the loop measures elapsed time with a cap to avoid large simulation jumps. Main moves the logical player through collision checks, selects and snaps its pixel pose, then updates camera, weather, water, boat, buildings and interface. Three.js draws the ordered sprites and native terrain into a small framebuffer, CSS scales it by an integer, and the browser requests another frame.
+
+Publication handoff: verified graphics commits and the frontend-layout sync are pushed to feat/graphics-foundation. Owning issue is https://github.com/Nilsnova/The-Great-Plot-Twist/issues/2. Draft PR creation was attempted but not completed: the connector returns 403 for PR writes and both native/browser UI access timed out. The branch comparison remains available at https://github.com/Nilsnova/The-Great-Plot-Twist/compare/main...feat/graphics-foundation. No merge into main or deployment was performed.
+
+Cleanup validation: the static build contains all 49 pixel PNGs and no retired art folder. All 36 approved core PNGs were compared with the previous pushed commit and are byte-identical. The active suite retains movement/input/story, loading/collision, native-grid, asset-registration and motion checks; retired paper-only tests moved with their archived source.

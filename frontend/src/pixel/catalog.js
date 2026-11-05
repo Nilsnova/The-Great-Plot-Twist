@@ -14,10 +14,17 @@ for (const view of ['explorer', 'explorer-back', 'explorer-side']) {
   dimensions[view] = [24, 32, 3];
   for (const step of [1, 2]) dimensions[`${view}-walk-${step}`] = [24, 32, 3];
 }
+const staged = {
+  'harbour-office': [128, 160, 14], 'harbour-beacon': [64, 128, 14],
+  'signal-station': [112, 112, 12], 'ferry-pier': [96, 128, 8], sailboat: [96, 112, 10],
+  'dark-schooner': [128, 112, 10], 'sealed-letter': [32, 32, 4], 'torn-page': [32, 32, 4],
+  logbook: [32, 40, 4], compass: [32, 32, 4], 'brass-star': [24, 24, 4], 'beacon-fire': [32, 48, 4],
+};
+Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({
-  id, file: `${id}.png`, width, height, size: [width / 16, height / 16, anchor / height],
+  id, file: `${id}.png`, width, height, usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
 }));
 export const pixelById = Object.fromEntries(pixelArt.map(item => [item.id, item]));
-export const pixelArtIds = pixelArt.map(item => item.id);
+export const pixelArtIds = pixelArt.filter(item => item.usage === 'island').map(item => item.id);
 export const pixelSizes = Object.fromEntries(pixelArt.map(item => [item.id, item.size]));
 export const snapPixel = value => Math.round(value * PIXELS_PER_UNIT) / PIXELS_PER_UNIT;

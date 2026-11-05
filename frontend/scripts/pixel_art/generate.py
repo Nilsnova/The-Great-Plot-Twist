@@ -6,6 +6,8 @@ from buildings import cottage, boathouse, lighthouse
 from people import person
 from props import prop
 from ground import ground
+from destinations import office, beacon, signal, pier, ship
+from nautical import item
 
 ROOT=Path(__file__).resolve().parents[2]
 FOLDER=ROOT/'public'/'pixel'
@@ -19,6 +21,8 @@ for view,name in [('front','explorer'),('back','explorer-back'),('side','explore
     for step in [1,2]:assets[f'{name}-walk-{step}']=person(view,step)
 for name in ['jetty','boat','crate','barrel','rope-coil','lantern','bench','buoy','driftwood','gull','sign']:
     assets[name]=prop(name)
+assets.update({'harbour-office':office(),'harbour-beacon':beacon(),'signal-station':signal(),'ferry-pier':pier(),'sailboat':ship(),'dark-schooner':ship(True)})
+for name in ['sealed-letter','torn-page','logbook','compass','brass-star','beacon-fire']:assets[name]=item(name)
 for name,image in assets.items():save(image,name,FOLDER)
 save(ground(ROOT),'ground',FOLDER)
 print(f'Saved {len(assets)} original pixel sprites and canonical terrain backdrop')

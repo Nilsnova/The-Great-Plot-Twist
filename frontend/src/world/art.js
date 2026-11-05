@@ -1,4 +1,4 @@
-// Load the original native pixel sprites; archived paper studies can still request SVGs.
+// Load selected original PNGs and place anchored sprites on the native pixel grid.
 import * as THREE from 'three';
 import { pixelArtIds, pixelById, pixelSizes, snapPixel } from '../pixel/catalog.js';
 export const artSizes = pixelSizes;

@@ -48,6 +48,12 @@ try {
   await page.locator('#gallery img').evaluateAll(images => Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })));
   await mkdir('captures', { recursive: true });
   await page.screenshot({ path: `captures/${stamp}_Pixel-Nature-Kit.png`, fullPage: true });
+  await page.locator('#category').selectOption('all'); await page.locator('#usage').selectOption('library');
+  check(await page.locator('.sprite-card').count() === pixelArt.filter(item => item.usage === 'library').length, 'Staged-art filter agrees with selective preload metadata');
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.locator('#gallery img').evaluateAll(images => Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })));
+  await page.screenshot({ path: `captures/${stamp}_Pixel-Staged-Harbour-Kit.png`, fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 900 });
   const requested = new Set();
   page.on('request', request => { const match = request.url().match(/\/pixel\/([^/?]+\.png)(?:[?#]|$)/); if (match) requested.add(match[1]); });
   await page.goto(url); await page.getByRole('button', { name: 'Step ashore' }).click();

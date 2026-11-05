@@ -32,3 +32,6 @@ __pycache__/
 
 # User-supplied visual reference is local inspiration, not distributed game art.
 /references/20261105_Pixel-Style-Reference.png
+
+# Local link preserves capture URLs from before the frontend relocation.
+/captures

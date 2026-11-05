@@ -12,11 +12,15 @@ Repository: Nilsnova/The-Great-Plot-Twist. Fetched origin/main a0e501a, which me
 Local planning, not published assignments
 The live-skeleton worktree has untracked ROADMAP.md and docs/STORY.md. They are local planning inputs, not files on the fetched GitHub branches. They identify G1 as this final visual pass, G2 as chart/place management after G1, G3 as the harbour scene, and G4 as finale visuals. S0 supplies canonical map/art placement; proposed interfaces remain provisional. Do not invent or freeze those interfaces while building art.
 
-Next useful staged pixel kit
-Harbour office, small harbour beacon, signal station, ferry landing, sailing/cargo silhouettes and generic nautical mystery/reward props. Keep the assets reviewable in the pixel workshop and selectively loadable. Their existence is not a completed harbour, chart, travel mechanic, story clue or outcome. Canonical places and hotspot positions still come from the story package.
+Completed staged pixel kit
+Twelve staged original pixel drawings: harbour office, harbour beacon, signal station, ferry pier, sailboat, dark schooner, sealed letter, torn page, logbook, compass, brass star and beacon fire. All are in the pixel workshop. The catalogue now has 48 sprites; 36 active ids still preload with the island. Keep the assets reviewable in the pixel workshop and selectively loadable. Their existence is not a completed harbour, chart, travel mechanic, story clue or outcome. Canonical places and hotspot positions still come from the story package.
 
 Earlier broader input source
 20261105_Roadmap-Inputs.md in the course Group-Project folder lists ideas for personal islands/building, sailing/shared islands, play-money markets, predictions, sports, arena, cooperative mystery/rewards, weather/presence and an optional companion. Those ideas still require prioritisation. The earlier paper versions are superseded design studies, not active pixel versions.
 
 Publishing
 Nils explicitly authorised checking GitHub and pushing verified work in the current chat. Push the graphics feature branch normally and keep its issue/draft PR current. Main still requires independent human team review; no force push, merge into main or deployment is authorised. Preserve the other worktrees and shared team documents.
+
+Published progress: graphics branch and frontend-layout sync pushed. Owning issue #2 is live. PR creation remains incomplete because connector writes return 403 and computer-use access times out; use the branch compare page for review until that capability recovers. Full project completion and human review are not implied.
+
+Cleanup: retired paper sources/art/checks moved into archive/paper, preserving files while excluding them from active src/public/build. The 36 approved core pixel PNGs are byte-identical. Current validation:27active tests in5files;49PNGs decoded and staged/default loading checked.
