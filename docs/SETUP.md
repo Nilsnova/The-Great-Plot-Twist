@@ -33,10 +33,11 @@ A variable whose name starts with `VITE_` is copied into the public browser bund
 1. The owner signs in at supabase.com and creates an organization (Free plan) and a project:
    - name: `great-plot-twist`;
    - region: **West EU (Ireland), eu-west-1** (chosen on 5 Nov). Vercel's functions then run in Dublin (`dub1`), next to it;
+   - security options: Data API **on**, "Automatically expose new tables" **off**, "Enable automatic RLS" **on** (see [supabase/README.md](../supabase/README.md#project-settings-this-migration-relies-on));
    - a strong database password, saved only in a password manager.
 2. Invite the other teammates from **Organization > Team** as **Developer**, never Administrator or Owner: Owners and Administrators count against the two-project limit. Invite links expire after 24 hours.
 3. Note from **Project Settings > API Keys**: the Project URL and the publishable key. The secret key stays here until Step 4.
-4. Apply the first migration: open **SQL Editor**, paste [supabase/migrations](../supabase/migrations) in order, run, then follow the two-user test plan in [supabase/README.md](../supabase/README.md).
+4. First switch **Email** off under **Authentication > Sign In / Providers** (see Step 3, point 5), so that nobody can create a user before our rules exist. Then apply the first migration: open **SQL Editor**, paste [supabase/migrations](../supabase/migrations) in order, run, then follow the two-user test plan in [supabase/README.md](../supabase/README.md).
 
 ## Step 3. Sign in with GitHub (10 minutes)
 
@@ -52,13 +53,13 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 4. Supabase: **Authentication > URL Configuration**.
    - Site URL: the production address, e.g. `https://<project>.vercel.app`.
    - Redirect URLs: `http://localhost:5173/**` and the preview pattern `https://*-<vercel-account-slug>.vercel.app/**`.
-5. Do **not** switch on email sign-up or magic links: the built-in mailer sends 2 emails per hour and only to team members.
+5. Switch the **Email** provider **off** (a new project has it on) and keep magic links, phone and anonymous sign-ins off. The built-in mailer sends 2 emails per hour and only to team members.
 6. **Test:** open **Authentication > Rate Limits** and note whether the free plan lets you raise them. The whole class shares one Wi-Fi address, and sign-in limits are counted per address (for example 30 sign-ins per 5 minutes).
 
 ## Step 4. Vercel: hosting (15 minutes)
 
 1. In the browser, sign out of every other GitHub account. Go to vercel.com/signup and choose **Continue with GitHub** as **Nilsnova** (Hobby plan, free, non-commercial use only). Only the owner of a personal repo can import it, and a Hobby account has exactly one GitHub login. If Nilsnova is already linked to another Vercel account, linking it to a new one removes it from the old one.
-2. **Add New > Project**, import `Nilsnova/The-Great-Plot-Twist`. The build settings come from `vercel.json` in the repo (Vercel Services: the game in `frontend/`, the Python API in `backend/`). Until the foundation branch is merged, `main` has nothing to build; that is expected.
+2. **Add New > Project**, import `Nilsnova/The-Great-Plot-Twist`. The build settings come from `vercel.json` in the repo (Vercel Services: the game in `frontend/`, the Python API in `backend/`).
 3. **Settings > Functions > Function Region**: Dublin (`dub1`), next to the Supabase project in Ireland. New projects default to Washington.
 4. **Settings > Environment Variables**, for Production and Preview:
 
@@ -79,17 +80,19 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 
 ## Step 5. Prove it works (15 minutes, once the foundation branch is pushed)
 
+Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 waits for the follow-up pull request.
+
 | # | Check | Pass when | If it fails |
 |---|---|---|---|
 | 1 | A teammate pushes a branch | Vercel shows the preview as **Ready**, not Blocked | **Test.** Vercel's docs and its newest help article disagree on whether non-owners can deploy on Hobby. Fallback: only Nilsnova merges to `main`, which triggers production. |
 | 2 | Open `/api/health` on the preview | `{"status": "ok", ...}` | Check the `vercel.json` services block and the function logs. |
-| 3 | The daily keep-alive | Vercel > Cron Jobs lists `/api/keepalive`, and it succeeds on production | **Test.** Cron together with Services is not documented. Fallback: a GitHub Actions schedule (only with Nils' OK) or Supabase Cron. |
+| 3 | The daily keep-alive, checked **after** the first successful deploy. It is not in `vercel.json` yet, because cron together with Vercel Services is undocumented. A small follow-up pull request adds it. | Vercel > Cron Jobs lists `/api/keepalive`, and it succeeds on production | **Test.** If cron does not work with Services, use a GitHub Actions schedule (only with Nils' OK) or Supabase Cron. |
 | 4 | Two test users | each sees only their own rows ([supabase/README.md](../supabase/README.md)) | Stop: fix the access rules before any real data. |
 | 5 | GitHub sign-in on the preview | a round trip ends signed in | Check the callback URL and the redirect list (Step 3). |
 
 ## Keep it awake until the demo
 
-Free Supabase projects pause after **7 days of low activity**. The daily keep-alive runs a few small database reads. In demo week also open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
+Free Supabase projects pause after **7 days of low activity**. The daily keep-alive will run a few small database reads, but it is not in `vercel.json` yet (see Step 5, check 3). Until it is added and checked, nothing keeps the project awake for you. In demo week open the Supabase dashboard yourself, and the day before the demo check that the project is active. A paused project can be resumed from the dashboard (allow a few minutes).
 
 ## Afterwards
 

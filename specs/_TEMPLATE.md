@@ -68,7 +68,7 @@ sentence, and what it proves. Cover the normal path and the important failure ca
 
 | Test file | Test name | What it proves |
 |---|---|---|
-| `[server/tests/test_topic.py]` | `[test_buy_fails_when_balance_too_low]` | [the failure case is refused and nothing changes] |
+| `[backend/server/tests/test_topic.py]` | `[test_buy_fails_when_balance_too_low]` | [the failure case is refused and nothing changes] |
 
 ## Contracts touched
 

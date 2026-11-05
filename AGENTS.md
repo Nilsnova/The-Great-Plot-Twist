@@ -2,6 +2,8 @@
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), the README and relevant [decisions](docs/DECISIONS.md) before changing files. The shared workflow applies to every teammate and agent.
 
+Technical recipes, commands and the safety checklist for code are in [docs/ENGINEERING.md](docs/ENGINEERING.md). Shared contracts (API routes, events, tables, flags) are in [docs/INTERFACES.md](docs/INTERFACES.md).
+
 - Identify the responsible human, task and branch. Any teammate can authorize their own agent; do not route routine work through a project lead.
 - Inspect the working tree and current code first. Preserve uncommitted work. If the checkout is on `main`, create or switch to the assigned task branch before editing. Never move another writer’s working tree.
 - Use one writing agent per branch/worktree. Coordinate overlapping files and shared interfaces before editing.

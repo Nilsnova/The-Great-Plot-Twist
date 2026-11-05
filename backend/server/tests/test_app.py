@@ -20,12 +20,13 @@ from server.tests.helpers import CONFIGURED_SETTINGS, assert_error
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 ENTRY_FILE = BACKEND_ROOT / "main.py"
 
-# Every environment variable the server reads (see server/settings.py).
+# Every environment variable the server reads (see backend/server/settings.py).
 SETTING_NAMES = (
     "APP_ENV",
     "SUPABASE_URL",
     "SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_SECRET_KEY",
+    "CRON_SECRET",
     "DEMO_MODE",
     "FEATURE_FLAGS",
 )
