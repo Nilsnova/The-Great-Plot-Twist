@@ -1,8 +1,9 @@
 // Local DOM interface: arrival card, story prompts and visual debug controls.
+import { places } from '../world/places/registry.js';
 import { settings } from '../config.js';
 import { getWeather, presets, setWeather } from '../world/weather.js';
 
-const names = { cottage: "Keeper's cottage", desk: "Elena's writing desk", shore: 'The old jetty', tower_door: 'Lighthouse door' };
+const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 export function createHud(container, actions) {
   const overlay = document.createElement('div'); overlay.className = 'hud';
   overlay.innerHTML = `
@@ -31,6 +32,7 @@ export function createHud(container, actions) {
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
     </section>`;
   container.append(overlay);
+  const timers = [];
   const select = selector => overlay.querySelector(selector);
   const panel = select('.debug'), toggle = select('.settings-toggle');
   function togglePanel(open) {
@@ -42,8 +44,8 @@ export function createHud(container, actions) {
   select('#explore').onclick = () => {
     select('.arrival').classList.add('departed'); select('.location').hidden = false;
     overlay.classList.add('exploring'); actions.start();
-    window.setTimeout(() => { select('.arrival').hidden = true; }, 650);
-    window.setTimeout(() => { select('.location').hidden = true; }, 5000);
+    timers.push(window.setTimeout(() => { select('.arrival').hidden = true; }, 650));
+    timers.push(window.setTimeout(() => { select('.location').hidden = true; }, 5000));
     actions.focus();
   };
   select('#hour').oninput = event => { settings.hour = Number(event.target.value); };
@@ -55,6 +57,11 @@ export function createHud(container, actions) {
   }; });
   let toastUntil = 0, syncAt = 0;
   return { togglePanel,
+    dispose() { timers.forEach(clearTimeout); overlay.remove(); },
+    arrive(id) {
+      select('.chapter').childNodes[1].textContent = ` ${places[id].name.toUpperCase()} `;
+      select('.location strong').textContent = places[id].name;
+    },
     notify(id) {
       const toast = select('.toast');
       toast.textContent = names[id]; toast.hidden = false;
