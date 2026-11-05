@@ -20,6 +20,6 @@ export function createController(character, input, colliders) {
     const actualSpeed = Math.hypot(next.x - player.position.x, next.z - player.position.z) / Math.max(delta, 0.001);
     player.position.set(next.x, next.y, next.z);
     if (actualSpeed > 0.05) character.face(dx, dz);
-    character.animate(delta, actualSpeed);
+    character.animate(delta, actualSpeed);return actualSpeed;
   } };
 }

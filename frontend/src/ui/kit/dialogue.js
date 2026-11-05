@@ -21,7 +21,7 @@ export function createDialogue({ onChoice, ...initial } = {}) {
   }
   function complete() { writer.skip(); cancelAnimationFrame(frame); paint(); (buttons.find((button,index)=>index>=selected&&!button.disabled) ?? buttons.find(button=>!button.disabled) ?? text).focus(); }
   function tick(now) {
-    writer.tick(previous ? (now-previous)/1000 : 0); previous = now; paint();
+    const before=writer.text.length;writer.tick(previous ? (now-previous)/1000 : 0); previous = now;if(writer.text.length>before)element.dispatchEvent(new CustomEvent('dialogue-blip',{bubbles:true}));paint();
     if (!writer.done) frame = requestAnimationFrame(tick);
   }
   function update(data) {

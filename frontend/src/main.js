@@ -7,6 +7,8 @@ import './ui/kit/kit.css';
 import './ui/cinematics.css';
 import './ui/intro.css';
 import './ui/shell.css';
+import {createAudio} from './audio/controller.js';
+import {createCaptions} from './audio/captions.js';
 import {createShell} from './shell/controller.js';
 import {createSettingsView} from './settings/view.js';
 import {getPreferences,setPreferences,onPreferences,reducedMotion,watchSystemMotion} from './settings/preferences.js';
@@ -38,6 +40,7 @@ import { createHud } from './ui/hud.js';
 
 async function startGame() {
   const container = document.querySelector('#game'), scene = new THREE.Scene();
+  const captions=createCaptions(container),audio=createAudio({container,on,caption:captions.show});
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
@@ -67,11 +70,11 @@ async function startGame() {
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    audio.dispose();captions.dispose();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   shell=createShell({container,readSave:()=>introJournal().read(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
-    settingsView:createSettingsView,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(mode){input.reset();if(mode==='playing')view.start();else view.pause();},
+    settingsView:createSettingsView,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     onPlay(resume){hud.start();intro.begin(resume);}});
   const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
     hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
@@ -87,9 +90,10 @@ async function startGame() {
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     }
     settings.hour = (settings.hour + (shell.blocked ? 0 : delta) * (settings.fastTime ? 0.8 : 0.003)) % 24;
-    controller.update(delta, active && !world.busy && !chart.open);
+    const speed=controller.update(delta, active && !world.busy && !chart.open);
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
+    audio.update(delta,{weather:state,speed,night,active:active&&!world.busy&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta);
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state });
     view.update(delta, controller.player.position);
@@ -104,9 +108,9 @@ async function startGame() {
   }, () => { graphics.renderer.render(scene, view.camera); });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing, shell };
+    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing, shell, audio };
   function dispose() {
-    stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    audio.dispose();captions.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
