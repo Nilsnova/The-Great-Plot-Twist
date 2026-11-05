@@ -1,41 +1,90 @@
 # Supabase database
 
-This folder holds the database of The Great Plot Twist. Supabase gives us the login (GitHub sign-in), a Postgres database and realtime. Everything the game must remember lives here: who the players are, their saved progress and their coins.
+This folder holds the database of The Great Plot Twist. Supabase gives us the login (GitHub sign-in), a Postgres database and realtime. Everything the game must remember lives here: who the players are, their saved progress, their coins and their crews.
 
-Play money only: coins cannot be bought or cashed out. Every player starts with 1000 coins.
+Play money only: coins cannot be bought, cashed out or exchanged for real prizes. Every player starts with 0 coins. The first coins come later, from the intro entry kit (the `kit_grant` reason).
+
+The browser only reads from this database. Every write comes from our Python server with the secret key.
 
 | File | What it is |
 |---|---|
-| [migrations/20261106000000_foundation.sql](migrations/20261106000000_foundation.sql) | The first migration: four tables, the security rules and three functions. Every table, column and policy is explained inside the file. |
+| [migrations/20261106000000_foundation.sql](migrations/20261106000000_foundation.sql) | The first migration: seven tables, the security rules, the rights of each database role and four functions. Every table, column and policy is explained inside the file. |
+
+## Project settings this migration relies on
+
+Our Supabase project is in West EU (Ireland). These settings were agreed on 5 November 2026:
+
+| Setting | Our value | What it means for the database |
+|---|---|---|
+| Data API | On | The browser and the server reach the tables over the web. So every table needs both locks (rights and row-level security) from the start. |
+| Automatically expose new tables | **Off** | A new table or function has **no rights for anybody** until a migration grants them. That is why the migration grants every right by hand. A new table needs explicit grants too. |
+| Enable automatic RLS | On | A table that someone creates without row-level security gets it switched on automatically. Our migration switches it on by hand for every table as well. |
+| Login | GitHub only. Email and anonymous sign-ins are off. | See [First: allow only GitHub sign-in](#first-allow-only-github-sign-in). |
+| Supabase GitHub integration | Not used | We apply migrations by hand (see below). |
+
+The migration does not depend on the second setting. It first takes every right away from `public`, `anon`, `authenticated` and `service_role`, and then grants back exactly what is needed. It gives the same result on a project where new tables are exposed automatically.
 
 ## What the migration creates
 
 | Name | What it is | Who changes it |
 |---|---|---|
-| `profiles` | One row per player: the display name. No e-mail address. | Created at sign-up. The player may change `display_name` only. |
+| `profiles` | One row per player: the display name. No e-mail address, no login name. | Created at sign-up. Then only the server writes it. The player cannot rename themselves. |
 | `saves` | One row per player: game progress as JSON, at most about 200 KB. | Only the server. The player may read their own save. |
-| `wallets` | One row per player: the coin balance. Never below 0. | Only `apply_wallet_transaction()`. |
-| `wallet_transactions` | The ledger: one row for every change to a wallet. The same player, reason and `ref` can appear only once. | Only `apply_wallet_transaction()` and the sign-up trigger. |
-| `apply_wallet_transaction()` | The only way coins move. One step: check the balance, change it, write the ledger row. Fails with `insufficient_funds` or `wallet_not_found`. The ledger refuses a wrong-way amount or a repeated `ref`, and then nothing changes. | Run by the server only. |
-| `handle_new_user()` | Runs at sign-up (trigger `on_auth_user_created`). Creates the profile, the wallet with 1000 coins, the `starting_grant` ledger row and an empty save. | Runs by itself. |
-| `touch_updated_at()` | Sets `updated_at` to the server time on `saves` and `wallets`. | Runs by itself. |
+| `wallets` | One row per player: the coin balance. Never below 0. Starts at 0. | Only `apply_wallet_transaction()`. |
+| `wallet_reasons` | The list of reasons a balance may change, each with a direction. | Only a new migration. Nobody changes it at run time. |
+| `wallet_transactions` | The ledger: one row for every change to a wallet. Every row has a `ref`, and the same player, reason and `ref` can appear only once. | Only `apply_wallet_transaction()`. |
+| `crews` | One row per crew: a team of up to four seats, with a mode (`solo` or `crew`) and a status (`forming`, `active` or `finished`). | Only the server. |
+| `crew_seats` | One row per taken seat: a player or an NPC partner (a crew mate run by the game). | Only the server. |
+| `apply_wallet_transaction()` | The only way coins move. One step: check the reason and its direction, check the balance, change it, write the ledger row. Fails with `unknown_reason`, `wrong_direction`, `insufficient_funds` or `wallet_not_found`. A `ref` is required: a call without one does not exist. The ledger refuses a blank or repeated `ref`, and then nothing changes. | Run by the server only. |
+| `is_crew_member()` | Answers "does the signed-in player sit in this crew?". The read rules for `crews` and `crew_seats` use it. | Run by the database for signed-in players. |
+| `handle_new_user()` | Runs at sign-up (trigger `on_auth_user_created`). Creates the profile with a placeholder name, a wallet with 0 coins and an empty save. It writes no ledger row. | Runs by itself. |
+| `touch_updated_at()` | Sets `updated_at` to the server time on `saves`, `wallets` and `crews`. | Runs by itself. |
 
-The ledger accepts exactly these ten reasons, in this order. The Python code uses the same list:
-`starting_grant`, `market_buy`, `market_sell`, `prediction_stake`, `prediction_payout`, `sports_stake`, `sports_payout`, `arena_stake`, `arena_payout`, `admin_adjust`.
+### The wallet reasons
 
-Each reason also has a direction, and the ledger checks it. `market_buy`, `prediction_stake`, `sports_stake` and `arena_stake` always take coins away (a negative amount). `starting_grant`, `market_sell`, `prediction_payout`, `sports_payout` and `arena_payout` always add coins (a positive amount). `admin_adjust` may go either way. The Python code repeats the same rule, and it also refuses `starting_grant`, because only the sign-up trigger writes it. The test `server/tests/test_wallet_matches_migration.py` fails if the SQL and the Python ever differ.
+The ledger accepts only the reasons in `wallet_reasons`, in this order. The Python code (`WALLET_REASONS` in `backend/server/wallet.py`) has the same pairs.
 
-The ledger holds one row per player, reason and `ref`. Every money call from the server passes a `ref`, such as an order id. If the same request arrives twice, the second call fails with a unique violation and changes nothing, so nobody pays or is paid twice. The server turns that failure into the answer `already_applied`.
+| Reason | Direction | What it is for |
+|---|---|---|
+| `kit_grant` | earn | Coins that come with the entry kit the intro gives a new player. |
+| `clue_reward` | earn | Coins for a clue a player found or pinned. |
+| `mystery_reward` | earn | Coins for a deduction or for solving the whole mystery. |
+| `event_reward` | earn | Coins from a special event in the world. |
+| `cargo_sale` | earn | Coins from selling cargo. |
+| `clue_purchase` | spend | Coins paid to buy a clue. |
+| `building_purchase` | spend | Coins paid to build on a home islet. |
+| `admin_adjust` | either | A manual correction by an admin. |
 
-The display name is 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at the start or end. At sign-up it is taken from the GitHub login. If nothing usable is left, the player gets `Sailor-` plus the first 6 characters of their id, so a sign-up is never blocked by the name rules.
+The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
+
+The test `backend/server/tests/test_wallet_matches_migration.py` reads the migration and fails if its reasons, directions or starting balance differ from the Python code.
+
+The ledger holds one row per player, reason and `ref`. Every money call needs a `ref`, such as an order id. The ledger column cannot be empty, the ref cannot be blank, and the money function has no default for it, so a call without a `ref` does not exist. If the same request arrives twice, the second call fails with a unique violation and changes nothing, so nobody pays or is paid twice. The server turns that failure into the answer `already_applied`. The entry kit always uses the same `ref`, so a player gets it only once.
+
+### Display names
+
+The display name is 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at the start or end. At sign-up every player gets a neutral placeholder: `Captain-` plus the first 6 characters of their id, for example `Captain-3fa85f`. The name **never** comes from the GitHub login or any other login detail, because names appear on a projector. A later package (A2) generates real captain names on the server. Players cannot change their name, because the browser has no right to write to `profiles`.
+
+### Crews and seats
+
+A crew has up to four seats (numbered 1 to 4). Every seat that is taken holds **either** a player (`player_id`) **or** an NPC partner (`npc_id`), never both and never nobody. An NPC partner is a crew mate that the game runs. That is how the game works for one player alone: the player sits in seat 1 and NPC partners fill the other seats. A seat that nobody holds has no row. An `npc_id` is 2 to 40 characters: a-z, 0-9 and underscore.
+
+A player can read a crew and its seats only while they sit in that crew. The rule uses the small helper `is_crew_member()`. The helper exists so that the rule for `crew_seats` does not have to read `crew_seats` through its own rule, which would never end. Only the server creates crews and seats.
+
+Two things to know:
+
+- **One active crew per player** is enforced by the server, not by the database (for now).
+- If a player is deleted, their seat row is deleted with them, and the seat is free again. If the player who created a crew is deleted, the whole crew and all its seats are deleted.
 
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
 
+Apply it to a project that has none of our tables yet. If you ever tried an earlier draft of this file on a project, use a fresh project instead. The file only creates what is missing, so on top of an old draft it would stop with an error (the money function changed) or run without an error but keep the old tables, the old starting balance and the old rules.
+
 ### First: allow only GitHub sign-in
 
-Every new user gets a wallet with 1000 coins and a profile that all players can see, and the server accepts the login of any sign-in method that is switched on. So only the sign-in we chose may create users.
+Every new user gets a wallet with 0 coins and a profile that all players can see, and the server accepts the login of any sign-in method that is switched on. So only the sign-in we chose may create users.
 
 1. In the dashboard open **Authentication > Sign In / Providers**.
 2. Switch **GitHub** on. A teammate sets up the GitHub app and pastes its keys into the dashboard only, never into this repository.
@@ -66,9 +115,9 @@ supabase db push
 - If the CLI says it needs `supabase/config.toml`, run `supabase init` once. Keep secrets out of that file too.
 - Optional, needs Docker: `supabase start` runs a local copy and `supabase db reset` rebuilds it from the migration files.
 
-### Two quick checks after applying
+### Three quick checks after applying
 
-Run both in the SQL editor.
+Run all three in the SQL editor.
 
 ```sql
 select relname as table_name, relrowsecurity as rls_on
@@ -77,7 +126,7 @@ where relnamespace = 'public'::regnamespace and relkind = 'r'
 order by relname;
 ```
 
-Expected: the four tables `profiles`, `saves`, `wallet_transactions`, `wallets`, each with `rls_on` = true.
+Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true.
 
 ```sql
 select tablename, policyname, cmd
@@ -86,7 +135,17 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
-Expected: 5 policies (2 on `profiles`, 1 on `saves`, 1 on `wallets`, 1 on `wallet_transactions`).
+Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write.
+
+```sql
+select grantee, table_name, string_agg(privilege_type, ', ' order by privilege_type) as rights
+from information_schema.role_table_grants
+where table_schema = 'public' and grantee in ('anon', 'authenticated')
+group by grantee, table_name
+order by grantee, table_name;
+```
+
+Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row.
 
 ### If someone signed in before you ran the migration
 
@@ -96,20 +155,20 @@ The sign-up trigger only fires for new users. An earlier user has no profile, wa
 
 Every table has two locks. Both must say yes.
 
-1. **Table privileges**: may this role use the table at all?
+1. **Table privileges**: may this role use the table at all? Our project does not give any rights automatically, so each one is a `grant` in the migration.
 2. **Row-level security (RLS)**: which rows may it see or change?
 
 The three actors, and the database role behind each:
 
 - **Visitor** (`anon`): someone who is not signed in.
-- **Signed-in player** (`authenticated`): the browser, using the publishable key plus the player's login.
+- **Signed-in player** (`authenticated`): the browser, using the publishable key plus the player's login. It can only read.
 - **Server** (`service_role`): our Python code on Vercel, using the secret key. It skips RLS.
 
 | Table | Action | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
 |---|---|---|---|---|
 | `profiles` | read | no access | all rows | yes |
 | `profiles` | insert | no access | no access | yes |
-| `profiles` | update | no access | own row, `display_name` only | yes |
+| `profiles` | update | no access | no access | yes |
 | `profiles` | delete | no access | no access | yes |
 | `saves` | read | no access | own row | yes |
 | `saves` | insert | no access | no access | yes |
@@ -119,41 +178,59 @@ The three actors, and the database role behind each:
 | `wallets` | insert | no access | no access | no access (only the sign-up trigger makes a wallet) |
 | `wallets` | update | no access | no access | yes * |
 | `wallets` | delete | no access | no access | no access (a wallet goes only when its player is deleted) |
+| `wallet_reasons` | read | no access | all rows | yes |
+| `wallet_reasons` | insert | no access | no access | no access (a new reason arrives with a new migration) |
+| `wallet_reasons` | update | no access | no access | no access |
+| `wallet_reasons` | delete | no access | no access | no access |
 | `wallet_transactions` | read | no access | own rows | yes |
 | `wallet_transactions` | insert | no access | no access | yes * |
-| `wallet_transactions` | update | no access | no access | no access (the ledger is append-only) |
-| `wallet_transactions` | delete | no access | no access | no access (the ledger is append-only) |
+| `wallet_transactions` | update | no access | no access | no access (the ledger is append-only: rows disappear only when their player is deleted, by cascade) |
+| `wallet_transactions` | delete | no access | no access | no access (the ledger is append-only: rows disappear only when their player is deleted, by cascade) |
+| `crews` | read | no access | crews they sit in | yes |
+| `crews` | insert | no access | no access | yes |
+| `crews` | update | no access | no access | yes |
+| `crews` | delete | no access | no access | yes |
+| `crew_seats` | read | no access | seats of crews they sit in | yes |
+| `crew_seats` | insert | no access | no access | yes |
+| `crew_seats` | update | no access | no access | yes |
+| `crew_seats` | delete | no access | no access | yes |
 
-\* The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot.
+\* The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
+
+Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
 | Function or counter | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
 |---|---|---|---|
 | `apply_wallet_transaction()` | no access | no access | yes |
+| `is_crew_member()` | no access | yes, and it only ever answers for the caller | no access, the server skips RLS and does not need it |
 | `handle_new_user()` | no access | no access | no access, only the sign-up trigger runs it |
 | `touch_updated_at()` | no access | no access | no access, only the triggers run it |
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 
 "No access" means the database refuses with `permission denied`, or (for a row that belongs to someone else) shows or changes nothing.
 
+Supabase's security advisor may warn that a signed-in player can run a `SECURITY DEFINER` function. That is `is_crew_member()`, and it is on purpose. It takes a crew id, compares it with the caller's own id (`auth.uid()`), and returns only true or false. It cannot tell anyone who sits in somebody else's crew.
+
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in the four tables and write `profiles` and `saves`. Its table rights are still limited: it can update `wallets` but not insert or delete one, and it can add ledger rows but not edit or delete one.
+- It skips row-level security. It can read every player's rows in all seven tables and write `profiles`, `saves`, `crews` and `crew_seats`. Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
-- The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table.
+- The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table, and the browser has no right to write to any of them.
 
 ## Manual test plan
 
-You need about 25 minutes. It proves the rules for reading and writing, the money function and the ten reasons with two test players, A and B.
+You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
 **Set up**
 
 1. In the dashboard open **Authentication > Users > Add user > Create new user**. Create two users with two e-mail addresses you control (for example your own address with `+a` and `+b` added before the `@`). Tick **Auto Confirm User**. If the dashboard refuses because Email sign-in is switched off, switch it on for the test and off again afterwards.
 2. Copy the **User UID** of each. Below, replace `USER_A_ID` and `USER_B_ID` with them. A text editor's find-and-replace is the quickest way.
-3. Run each block in its own run in the SQL editor, with the role left on the default (`postgres`). The `set local role` line inside a block makes the database treat you as that player for that run.
+3. Replace `CREW_A_ID` with `11111111-1111-4111-8111-111111111111` and `CREW_B_ID` with `22222222-2222-4222-8222-222222222222`. These two crew ids are made up. Step 3 creates the crews with them.
+4. Run each block in its own run in the SQL editor, with the role left on the default (`postgres`). The `set local role` line inside a block makes the database treat you as that player for that run.
 
-Users made this way have no GitHub login, so their display name is `Sailor-` plus 6 characters. That also tests the fallback.
+Users made this way have an e-mail address, but their display name is still `Captain-` plus 6 characters. That also tests that the name does not come from the login details.
 
 ### 1. New players got their starter rows
 
@@ -161,7 +238,6 @@ Users made this way have no GitHub login, so their display name is `Sailor-` plu
 select p.display_name,
        w.balance,
        (select count(*) from public.wallet_transactions t where t.player_id = p.id) as ledger_rows,
-       (select t.reason from public.wallet_transactions t where t.player_id = p.id limit 1) as ledger_reason,
        s.version as save_version,
        s.data as save_data
 from public.profiles p
@@ -170,9 +246,65 @@ join public.saves s on s.player_id = p.id
 where p.id in ('USER_A_ID', 'USER_B_ID');
 ```
 
-Expected: 2 rows. `display_name` is `Sailor-xxxxxx`, `balance` is 1000, `ledger_rows` is 1, `ledger_reason` is `starting_grant`, `save_version` is 1, `save_data` is `{}`.
+Expected: 2 rows. `display_name` is `Captain-xxxxxx` (the first 6 characters of the player's id), `balance` is 0, `ledger_rows` is 0, `save_version` is 1, `save_data` is `{}`.
 
-### 2. Player A sees only their own money and save
+### 2. The server pays out the entry kit and a purchase
+
+Coins arrive only through the money function. Give each player the entry kit of 100 coins, and let player A pay 30 for a building:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 100, 'kit_grant', 'kit') as a_balance,
+       public.apply_wallet_transaction('USER_B_ID', 100, 'kit_grant', 'kit') as b_balance;
+```
+
+Expected: `a_balance` is 100 and `b_balance` is 100.
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', -30, 'building_purchase', 'manual-test-1') as new_balance;
+```
+
+Expected: `new_balance` is 70. Now look at the balance and the ledger of player A (default role). We call this the **balance check** and use it again below:
+
+```sql
+select w.balance,
+       (select count(*) from public.wallet_transactions t where t.player_id = w.player_id) as ledger_rows
+from public.wallets w
+where w.player_id = 'USER_A_ID';
+```
+
+Expected: `balance` 70 and `ledger_rows` 2 (the kit grant and the 30 coin purchase). The last ledger row is `delta` -30, `reason` `building_purchase`, `ref` `manual-test-1`, `balance_after` 70:
+
+```sql
+select delta, reason, ref, balance_after
+from public.wallet_transactions
+where player_id = 'USER_A_ID'
+order by id desc
+limit 1;
+```
+
+### 3. The server creates two crews
+
+Crew A is a solo crew: player A in seat 1 and three NPC partners. Crew B has player B in seat 1 and one NPC partner.
+
+```sql
+set local role service_role;
+insert into public.crews (id, created_by, mode) values
+  ('CREW_A_ID', 'USER_A_ID', 'solo'),
+  ('CREW_B_ID', 'USER_B_ID', 'crew');
+insert into public.crew_seats (crew_id, seat_no, player_id, npc_id, kit) values
+  ('CREW_A_ID', 1, 'USER_A_ID', null, 'lantern'),
+  ('CREW_A_ID', 2, null, 'old_salt', 'compass'),
+  ('CREW_A_ID', 3, null, 'deck_hand', null),
+  ('CREW_A_ID', 4, null, 'cook_pete', null),
+  ('CREW_B_ID', 1, 'USER_B_ID', null, 'logbook'),
+  ('CREW_B_ID', 2, null, 'old_salt', null);
+```
+
+Expected: success, no error. A new crew starts with the status `forming`.
+
+### 4. Player A sees only their own money, save and crew
 
 ```sql
 set local role authenticated;
@@ -181,12 +313,15 @@ select
   (select count(*) from public.profiles)            as profiles_seen,
   (select count(*) from public.wallets)             as wallets_seen,
   (select count(*) from public.wallet_transactions) as ledger_rows_seen,
-  (select count(*) from public.saves)               as saves_seen;
+  (select count(*) from public.saves)               as saves_seen,
+  (select count(*) from public.wallet_reasons)      as reasons_seen,
+  (select count(*) from public.crews)               as crews_seen,
+  (select count(*) from public.crew_seats)          as seats_seen;
 ```
 
-Expected: `profiles_seen` is the number of players in the project (at least 2). `wallets_seen`, `ledger_rows_seen` and `saves_seen` are each 1.
+Expected: `profiles_seen` is the number of players in the project (at least 2). `wallets_seen` and `saves_seen` are each 1, `ledger_rows_seen` is 2, `reasons_seen` is 8, `crews_seen` is 1 and `seats_seen` is 4 (A sees the four seats of their own crew and none of crew B).
 
-### 3. Player B cannot read A's wallet, ledger or save
+### 5. Player B cannot read A's wallet, ledger, save, crew or seats
 
 ```sql
 set local role authenticated;
@@ -195,12 +330,14 @@ select
   (select count(*) from public.profiles            where id        = 'USER_A_ID') as a_profile,
   (select count(*) from public.wallets             where player_id = 'USER_A_ID') as a_wallet,
   (select count(*) from public.wallet_transactions where player_id = 'USER_A_ID') as a_ledger_rows,
-  (select count(*) from public.saves               where player_id = 'USER_A_ID') as a_save;
+  (select count(*) from public.saves               where player_id = 'USER_A_ID') as a_save,
+  (select count(*) from public.crews               where id        = 'CREW_A_ID') as a_crew,
+  (select count(*) from public.crew_seats          where crew_id   = 'CREW_A_ID') as a_seats;
 ```
 
-Expected: `a_profile` is 1 (display names are public). `a_wallet`, `a_ledger_rows` and `a_save` are 0.
+Expected: `a_profile` is 1 (display names are public). `a_wallet`, `a_ledger_rows`, `a_save`, `a_crew` and `a_seats` are all 0.
 
-### 4. Nobody can change their own balance
+### 6. Nobody can change their own balance
 
 ```sql
 set local role authenticated;
@@ -208,22 +345,22 @@ select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authentic
 update public.wallets set balance = 999999 where player_id = 'USER_A_ID';
 ```
 
-Expected: `permission denied for table wallets`. Run step 1 again: the balance is still 1000.
+Expected: `permission denied for table wallets`. Run the balance check from step 2 again: `balance` is still 70 and `ledger_rows` is still 2.
 
-### 5. Nobody can edit the ledger or its counter
+### 7. Nobody can edit the ledger, its counter or the list of reasons
 
 A player cannot add a ledger row:
 
 ```sql
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-insert into public.wallet_transactions (player_id, delta, reason, balance_after)
-values ('USER_A_ID', 500, 'admin_adjust', 1500);
+insert into public.wallet_transactions (player_id, delta, reason, ref, balance_after)
+values ('USER_A_ID', 500, 'admin_adjust', 'manual-test-0', 570);
 ```
 
 Expected: `permission denied for table wallet_transactions`.
 
-Nobody can move the ledger's id counter. If they could, every later money call and sign-up would fail:
+Nobody can move the ledger's id counter. If they could, every later money call would fail:
 
 ```sql
 set local role authenticated;
@@ -233,11 +370,11 @@ select setval('public.wallet_transactions_id_seq', 1, false);
 
 Expected: `permission denied for sequence wallet_transactions_id_seq`. Change the first line to `set local role anon;` and then to `set local role service_role;` and run it again. The answer is the same.
 
-Even the server cannot rewrite the ledger or the wallets by hand:
+Even the server cannot rewrite the ledger, the wallets or the list of reasons by hand:
 
 ```sql
 set local role service_role;
-update public.wallet_transactions set delta = 1000 where player_id = 'USER_A_ID';
+update public.wallet_transactions set delta = 1 where player_id = 'USER_A_ID';
 ```
 
 Expected: `permission denied for table wallet_transactions`. Now replace the last line and run again:
@@ -247,53 +384,67 @@ Expected: `permission denied for table wallet_transactions`. Now replace the las
 | `delete from public.wallet_transactions where player_id = 'USER_A_ID';` | `permission denied for table wallet_transactions` |
 | `insert into public.wallets (player_id) values ('USER_A_ID');` | `permission denied for table wallets` |
 | `delete from public.wallets where player_id = 'USER_A_ID';` | `permission denied for table wallets` |
+| `update public.wallet_reasons set direction = 'earn' where reason = 'clue_purchase';` | `permission denied for table wallet_reasons` |
+| `insert into public.wallet_reasons (reason, direction, description) values ('free_money', 'earn', 'x');` | `permission denied for table wallet_reasons` |
 
-### 6. Players cannot call the money function
+### 8. Players cannot call the money function
 
 ```sql
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-select public.apply_wallet_transaction('USER_A_ID', 500, 'admin_adjust');
+select public.apply_wallet_transaction('USER_A_ID', 500, 'admin_adjust', 'manual-test-0');
 ```
 
 Expected: `permission denied for function apply_wallet_transaction`.
 
-### 7. Someone who is not signed in gets nothing
+### 9. Someone who is not signed in gets nothing
 
 ```sql
 set local role anon;
 select * from public.profiles;
 ```
 
-Expected: `permission denied for table profiles`.
+Expected: `permission denied for table profiles`. Now replace the last line and run again. Each one fails the same way:
 
-### 8. Profile rules
+| Statement as `anon` | Expected error mentions |
+|---|---|
+| `select * from public.crews;` | `permission denied for table crews` |
+| `select * from public.crew_seats;` | `permission denied for table crew_seats` |
+| `select * from public.wallet_reasons;` | `permission denied for table wallet_reasons` |
+| `select * from public.wallets;` | `permission denied for table wallets` |
 
-Rename yourself (works):
+### 10. Profile rules
+
+Names are placeholders at first and only the server changes them. A player cannot rename themselves:
 
 ```sql
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-update public.profiles set display_name = 'Captain A' where id = 'USER_A_ID' returning id, display_name;
+update public.profiles set display_name = 'Captain A' where id = 'USER_A_ID';
 ```
 
-Expected: 1 row with `Captain A`.
+Expected: `permission denied for table profiles`. Now replace the last line and run again. Each one fails the same way:
 
-Rename someone else (silently does nothing):
+| Statement as player A | Expected error mentions |
+|---|---|
+| `update public.profiles set display_name = 'Hacked' where id = 'USER_B_ID';` | `permission denied for table profiles` |
+| `update public.profiles set created_at = now() where id = 'USER_A_ID';` | `permission denied for table profiles` |
+| `insert into public.profiles (id, display_name) values (gen_random_uuid(), 'Intruder');` | `permission denied for table profiles` |
+| `delete from public.profiles where id = 'USER_A_ID';` | `permission denied for table profiles` |
+
+The server gives player A a generated captain name (works):
 
 ```sql
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-update public.profiles set display_name = 'Hacked' where id = 'USER_B_ID' returning id;
+set local role service_role;
+update public.profiles set display_name = 'Brave Puffin 17' where id = 'USER_A_ID' returning id, display_name;
 ```
 
-Expected: 0 rows. Player B keeps their name.
+Expected: 1 row with `Brave Puffin 17`.
 
-Break the name rules (each fails):
+The server breaks the name rules (each fails):
 
 ```sql
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+set local role service_role;
 update public.profiles set display_name = 'x' where id = 'USER_A_ID';
 ```
 
@@ -304,17 +455,7 @@ Expected: `violates check constraint "profiles_display_name_length"`. Now change
 | `'Bad<>Name'` | `profiles_display_name_characters` |
 | `' lead'` (space at the start) | `profiles_display_name_trimmed` |
 
-Change a column players may not touch:
-
-```sql
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-update public.profiles set created_at = now() where id = 'USER_A_ID';
-```
-
-Expected: `permission denied for table profiles`.
-
-### 9. Saves
+### 11. Saves
 
 A player can read their own save, but only the server writes it. Player A tries to change their own save (fails):
 
@@ -350,117 +491,176 @@ update public.saves set data = jsonb_build_object('blob', repeat('x', 250000)) w
 
 Expected: `violates check constraint "saves_data_max_size"`.
 
-### 10. The server moves coins
+### 12. Crews and seats
+
+Players cannot write crews or seats. Player A tries to sit down in crew B (fails):
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+insert into public.crew_seats (crew_id, seat_no, player_id) values ('CREW_B_ID', 3, 'USER_A_ID');
+```
+
+Expected: `permission denied for table crew_seats`. Now replace the last line and run again. Each one fails the same way:
+
+| Statement as player A | Expected error mentions |
+|---|---|
+| `insert into public.crews (created_by, mode) values ('USER_A_ID', 'solo');` | `permission denied for table crews` |
+| `update public.crews set status = 'finished' where id = 'CREW_A_ID';` | `permission denied for table crews` |
+| `update public.crew_seats set kit = 'gold' where crew_id = 'CREW_A_ID' and seat_no = 1;` | `permission denied for table crew_seats` |
+| `delete from public.crew_seats where crew_id = 'CREW_A_ID';` | `permission denied for table crew_seats` |
+
+The server seats an NPC partner in crew B (works):
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', -300, 'market_buy', 'manual-test-1') as new_balance;
+insert into public.crew_seats (crew_id, seat_no, npc_id, kit) values ('CREW_B_ID', 3, 'deck_hand', 'compass') returning seat_no, npc_id, kit;
 ```
 
-Expected: `new_balance` is 700. Now look at the ledger (default role):
+Expected: 1 row.
 
-```sql
-select delta, reason, ref, balance_after
-from public.wallet_transactions
-where player_id = 'USER_A_ID'
-order by id desc
-limit 1;
-```
-
-Expected: `delta` -300, `reason` `market_buy`, `ref` `manual-test-1`, `balance_after` 700.
-
-### 11. A payment that would go below zero fails
+The database guards the shape of a seat, even against the server:
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', -5000, 'market_buy', 'manual-test-2');
+insert into public.crew_seats (crew_id, seat_no, npc_id) values ('CREW_B_ID', 5, 'old_salt');
 ```
 
-Expected: `insufficient_funds`. Nothing changed, which you can check (default role):
+Expected: `violates check constraint "crew_seats_seat_no_range"`. Now replace the last line and run again:
+
+| Statement as `service_role` | Expected error mentions |
+|---|---|
+| `insert into public.crew_seats (crew_id, seat_no, npc_id) values ('CREW_B_ID', 4, 'Old Salt');` | `crew_seats_npc_id_format` |
+| `insert into public.crew_seats (crew_id, seat_no, player_id, npc_id) values ('CREW_B_ID', 4, 'USER_A_ID', 'old_salt');` | `crew_seats_player_or_npc` |
+| `insert into public.crew_seats (crew_id, seat_no) values ('CREW_B_ID', 4);` | `crew_seats_player_or_npc` |
+| `insert into public.crew_seats (crew_id, seat_no, npc_id) values ('CREW_B_ID', 2, 'cook_pete');` | `crew_seats_pkey` |
+| `insert into public.crews (created_by, mode) values ('USER_A_ID', 'team');` | `crews_mode_allowed` |
+| `insert into public.crews (created_by, mode, status) values ('USER_A_ID', 'solo', 'paused');` | `crews_status_allowed` |
+
+Player B sees the three seats of their own crew, and none of crew A:
 
 ```sql
-select w.balance,
-       (select count(*) from public.wallet_transactions t where t.player_id = w.player_id) as ledger_rows
-from public.wallets w
-where w.player_id = 'USER_A_ID';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_B_ID", "role": "authenticated"}', true);
+select seat_no, player_id, npc_id from public.crew_seats order by seat_no;
 ```
 
-Expected: `balance` 700 and `ledger_rows` 2 (the starting grant and the 300 coin payment).
+Expected: 3 rows: seat 1 (player B), seat 2 (`old_salt`) and seat 3 (`deck_hand`).
 
-### 12. Other bad calls to the money function
+### 13. A payment that would go below zero fails
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', -5000, 'building_purchase', 'manual-test-2');
+```
+
+Expected: `insufficient_funds`. Nothing changed. Run the balance check from step 2: `balance` is 70 and `ledger_rows` is 2.
+
+### 14. Other bad calls to the money function
 
 Each call below must fail and change nothing.
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('00000000-0000-0000-0000-000000000000', 10, 'admin_adjust');
+select public.apply_wallet_transaction('00000000-0000-0000-0000-000000000000', 10, 'admin_adjust', 'manual-test-6');
 ```
 
 Expected: `wallet_not_found`.
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', 10, 'cheat');
+select public.apply_wallet_transaction('USER_A_ID', 10, 'cheat', 'manual-test-7');
 ```
 
-Expected: `violates check constraint "wallet_transactions_reason_allowed"`.
+Expected: `unknown_reason`. The old sign-up reason `starting_grant` gets the same answer, because it does not exist any more.
 
 A purchase must take coins away, so a positive amount for it is refused:
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', 30, 'market_buy', 'manual-test-3');
+select public.apply_wallet_transaction('USER_A_ID', 30, 'building_purchase', 'manual-test-3');
 ```
 
-Expected: `violates check constraint "wallet_transactions_spend_takes_coins"`. The same goes the other way round: a sale must add coins.
+Expected: `wrong_direction`. The same goes the other way round: a sale must add coins.
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', -30, 'market_sell', 'manual-test-4');
+select public.apply_wallet_transaction('USER_A_ID', -30, 'cargo_sale', 'manual-test-4');
 ```
 
-Expected: `violates check constraint "wallet_transactions_earn_adds_coins"`.
-
-The same player, reason and reference twice is refused. Step 10 already used `manual-test-1` for `market_buy`:
+Expected: `wrong_direction`. An amount of 0 is refused for every reason, even `admin_adjust`, which may otherwise go either way:
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', -300, 'market_buy', 'manual-test-1');
+select public.apply_wallet_transaction('USER_A_ID', 0, 'admin_adjust', 'manual-test-5');
 ```
 
-Expected: `duplicate key value violates unique constraint "wallet_transactions_one_row_per_ref"`.
+Expected: `wrong_direction`.
 
-After these calls, run the check from step 11 again: `balance` is still 700 and `ledger_rows` is still 2. A refused call changes nothing, not even a little.
+A coin change needs a reference. The money function has no default for it, so a call with only three values does not exist:
 
-### 13. All ten reasons are accepted
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 10, 'admin_adjust');
+```
 
-The server uses each of the ten reasons once, with the right direction: 1 coin is taken away for `market_buy`, `prediction_stake`, `sports_stake` and `arena_stake`, and 1 coin is added for the other six. Run this block once. The Python code refuses `starting_grant`, because only the sign-up trigger should write it, but the database function accepts all ten.
+Expected: `function public.apply_wallet_transaction(unknown, integer, unknown) does not exist`. A reference that is `null`, empty or only spaces is refused by the ledger, and the balance change is rolled back with it. Now replace the last line and run again. Each one fails:
+
+| Statement as `service_role` | Expected error mentions |
+|---|---|
+| `select public.apply_wallet_transaction('USER_A_ID', 10, 'admin_adjust', null);` | `null value in column "ref"` |
+| `select public.apply_wallet_transaction('USER_A_ID', 10, 'admin_adjust', '');` | `wallet_transactions_ref_not_blank` |
+| `select public.apply_wallet_transaction('USER_A_ID', 10, 'admin_adjust', '   ');` | `wallet_transactions_ref_not_blank` |
+
+The same player, reason and reference twice is refused. Step 2 already used `manual-test-1` for `building_purchase`:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', -30, 'building_purchase', 'manual-test-1');
+```
+
+Expected: `duplicate key value violates unique constraint "wallet_transactions_one_row_per_ref"`. The entry kit is protected the same way. Step 2 used the reference `kit`, so a second kit for the same player fails with the same message:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 100, 'kit_grant', 'kit');
+```
+
+After these calls, run the balance check from step 2 again: `balance` is still 70 and `ledger_rows` is still 2. A refused call changes nothing, not even a little.
+
+### 15. All eight reasons are accepted
+
+The server uses each of the eight reasons once, with the right direction: 1 coin is taken away for `clue_purchase` and `building_purchase`, and 1 coin is added for the other six. Run this block once.
 
 ```sql
 set local role service_role;
 select v.reason,
        public.apply_wallet_transaction('USER_A_ID', v.delta, v.reason, 'reason-test') as balance_after
 from (values
-  ('starting_grant', 1),
-  ('market_buy', -1),
-  ('market_sell', 1),
-  ('prediction_stake', -1),
-  ('prediction_payout', 1),
-  ('sports_stake', -1),
-  ('sports_payout', 1),
-  ('arena_stake', -1),
-  ('arena_payout', 1),
+  ('kit_grant', 1),
+  ('clue_reward', 1),
+  ('mystery_reward', 1),
+  ('event_reward', 1),
+  ('cargo_sale', 1),
+  ('clue_purchase', -1),
+  ('building_purchase', -1),
   ('admin_adjust', 1)
 ) as v(reason, delta);
 ```
 
-Expected: 10 rows, one per reason, with `balance_after` going 701, 700, 701, 700, 701, 700, 701, 700, 701, 702. Step 12 already showed that an eleventh name (`cheat`) and a wrong direction are refused. Run the check from step 11: `balance` is 702 and `ledger_rows` is 12.
+Expected: 8 rows, one per reason, with `balance_after` going 71, 72, 73, 74, 75, 74, 73, 74. Step 14 already showed that a ninth name (`cheat`) and a wrong direction are refused. Run the balance check from step 2: `balance` is 74 and `ledger_rows` is 10.
 
-### 14. Running the migration again is harmless
+### 16. Running the migration again is harmless
 
-Paste the whole migration file into the SQL editor again and run it. Expected: no error. Run the check from step 11: `balance` is still 702 and `ledger_rows` is still 12.
+Paste the whole migration file into the SQL editor again and run it. Expected: no error. Run the balance check from step 2: `balance` is still 74 and `ledger_rows` is still 10. The list of reasons still has 8 rows:
 
-### 15. Deleting a player removes their rows
+```sql
+select count(*) as reasons from public.wallet_reasons;
+```
+
+Expected: `reasons` is 8.
+
+### 17. Deleting a player removes their rows
 
 Delete both test users under **Authentication > Users**. Then run:
 
@@ -469,15 +669,18 @@ select
   (select count(*) from public.profiles            where id        in ('USER_A_ID', 'USER_B_ID')) as profiles,
   (select count(*) from public.wallets             where player_id in ('USER_A_ID', 'USER_B_ID')) as wallets,
   (select count(*) from public.wallet_transactions where player_id in ('USER_A_ID', 'USER_B_ID')) as ledger_rows,
-  (select count(*) from public.saves               where player_id in ('USER_A_ID', 'USER_B_ID')) as saves;
+  (select count(*) from public.saves               where player_id in ('USER_A_ID', 'USER_B_ID')) as saves,
+  (select count(*) from public.crews               where id        in ('CREW_A_ID', 'CREW_B_ID')) as crews,
+  (select count(*) from public.crew_seats          where crew_id   in ('CREW_A_ID', 'CREW_B_ID')) as seats;
 ```
 
-Expected: all four numbers are 0.
+Expected: all six numbers are 0. Each test player created their own crew, so deleting the players deleted the crews and their seats too.
 
 ## Changing the database later
 
 - Never edit a migration that has been applied anywhere. Add a new file named `supabase/migrations/<YYYYMMDDHHMMSS>_<topic>.sql` with a later time stamp.
-- A new table needs, in the same file: row-level security switched on, policies, only the grants it really needs, and a comment on the table, every column and every policy. If it has an identity column (`generated always as identity`), also revoke all rights on its counter, as the foundation file does for `wallet_transactions_id_seq`. Copy the style of the foundation file.
-- A new ledger reason must change these places in one pull request: the `wallet_transactions_reason_allowed` check in a new migration, the reason list in the Python code and, unless the reason may go either way like `admin_adjust`, the matching direction check (`wallet_transactions_spend_takes_coins` or `wallet_transactions_earn_adds_coins`) and `SPEND_REASONS` or `EARN_REASONS`. The test `server/tests/test_wallet_matches_migration.py` fails if they differ. Point it at the newest migration that defines the rule.
+- A new table needs, in the same file: row-level security switched on, policies, **explicit grants** (our project gives no rights to a new table, so nothing works until you grant them, and you grant only what is really needed), and a comment on the table, every column and every policy. Take every right away first (`revoke all` from `public`, `anon`, `authenticated` and `service_role`), then grant. The browser only reads, so `authenticated` gets `select` at most. If the table has an identity column (`generated always as identity`), also revoke all rights on its counter, as the foundation file does for `wallet_transactions_id_seq`. Copy the style of the foundation file.
+- A new function needs `revoke ... from public, anon, authenticated` and then `grant execute` only to the role that must run it. Start it with `set search_path = ''`.
+- A new wallet reason is one new migration with one `insert into public.wallet_reasons (reason, direction, description) values (...) on conflict (reason) do nothing;`, plus the same `(reason, direction)` pair added at the **end** of `WALLET_REASONS` in `backend/server/wallet.py`, in the same pull request. Never rename a reason or change its direction, because ledger rows point at it. The test `backend/server/tests/test_wallet_matches_migration.py` reads every migration in order and fails if the two lists differ. Add the reason to the manual test plan (step 15) too.
 - Realtime is not switched on for these tables yet. The work package that needs it adds it.
 - If something here is unclear, open an issue before changing the rules for money.
