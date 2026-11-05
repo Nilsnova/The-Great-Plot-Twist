@@ -163,7 +163,7 @@ The first and the third question are also on the team kickoff list in [STATUS.md
 
 ## Rules for changing the story
 
-1. **Story changes go through S-lane pull requests.** `content/story.json`, the case file and every other story text change only in a pull request that the S-lane owner has seen and a different human teammate has approved ([CONTRIBUTING.md](../CONTRIBUTING.md)). One scene or island per pull request. The content linter and the solvability proofs stay green ([ENGINEERING.md](ENGINEERING.md), recipe 4.6).
+1. **Story changes go through S-lane pull requests.** `backend/content/story.json`, the case file and every other story text change only in a pull request that the S-lane owner has seen and a different human teammate has approved ([CONTRIBUTING.md](../CONTRIBUTING.md)). One scene or island per pull request. The content linter and the solvability proofs stay green ([ENGINEERING.md](ENGINEERING.md), recipe 4.6).
 2. **Story v2 stays small (decision 2).** Edit `story.json` only. The engines stay frozen, so the 11 original tests, the parity test and the referee keep working.
 3. **Never reveal the culprit's name outside solved crews.** Reveal lines, the unmasking and anything else that names the culprit stay on the server and go only to crews that solved the case. They never go into the browser bundle, the shared chart, a public page or a notification. This file is the one exception, because it is the team's design document; hence the spoiler warning at the top.
 4. **Titles only, no personal names.** New characters get titles: the harbor master, the fisherman in the yellow coat, the salvage foreman, the coastguard commander. Elena stays the only named character. Real people's names and private details never go into the story.

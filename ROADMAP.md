@@ -161,7 +161,7 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D004 | Play-money wallet: one ledger, starting balance 0, coins arrive with the entry kit, a reasons table with directions, one row per player, reason and ref | Foundation pull request (A1) | coming with the foundation update |
 | D005 | Look: top-down original pixel art, decided by Nils on 5 Nov (sprites drawn by code, 16 native pixels per world unit, nearest-neighbour scaling, on Vite, Three.js and plain JavaScript). It supersedes the earlier look studies. | G1 finish, with Codex's final pixel pass | decided; the entry is written with G1 finish |
 | D006 | Identity: GitHub sign-in only, generated captain names, preset emotes, no free text | A2 | reserved |
-| D007 | Plot Twist imported as a copy with a provenance note; the solo repository untouched; the `content/` layout | S1 | reserved |
+| D007 | Plot Twist imported as an unchanged copy with a provenance note; the solo repository untouched | S1 | written in the S1 pull request (`feat/s1-import-plot-twist`); proposed until reviewed |
 | D008 | Scope tiers (core, should, later), minimum versions first, the M1 cut rule and the grow order | Kickoff | reserved; the grow order is open for the kickoff |
 | D009 | Contracts v1 frozen in `docs/INTERFACES.md` | Mon 9 | reserved |
 | D010 | Backbone go/no-go result | Tue 10 (A1-next) | reserved |
@@ -169,6 +169,7 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D013 | Story decisions 1 to 5 (5 Nov): own copy per crew and the first solve relights the coast for everyone; Story v2 is small `story.json` edits; NPC partners v1 are scripted errand runners; **the class demo is very short and shows highlights only (changed)**; the culprit is the harbor master, titles only | S0 | decided; to be written |
 | D014 | Live data sources and their free keys: who creates each account and where each key lives (Vercel settings only) | L1 or L4, whichever merges first | reserved (new in v0.2); who creates the accounts is open for the kickoff |
 | D015 | Owner-authorized merges by Claude for coordination work; teammates' changes keep peer review. First use: the bootstrap merge `a0e501a` on 5 Nov | Foundation pull request (A1) | reserved; written in `docs/DECISIONS.md` with the foundation update (new on 5 Nov, evening) |
+| D016 | Server content lives in `backend/content/`; the browser gets public content through `GET /api/content/{name}`; secret content in `backend/content/secret/` is never served; browser-only data stays in `frontend/`. It moves the content paths of S3, S4, A2, A3, L2, L4 and L5. | S1 | proposed in the S1 pull request; stays proposed until Nils accepts it (new on 5 Nov) |
 
 D011 (class join go/no-go after a load test) is released. The phone class join moved to later, and the demo is highlights only.
 
@@ -273,20 +274,22 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Milestone:** M0 · **Size:** M, two pull requests · **Tier:** core · **Can start now:** yes; in progress (Claude, for Nils).
 - **Ships:** the original game, *The Keeper's Last Log* (engines, story and its 11 tests), inside the team repository. Then the Story v2 edits.
 - **Depends on:** nothing for the first pull request: Claude copies the original game into this repo for Nils (Nils decided on 5 Nov that nobody needs the private solo repository). The second pull request needs S0's Story v2 change list.
-- **Provides** (proposed paths):
-  - `backend/plot_twist/`: `engine.py` with a `save_path=None` option for the server, and the terminal game (`cd backend && uv run python -m plot_twist`);
-  - `frontend/src/story/engine.js`: the JavaScript engine as an ES module, the same rule for rule;
-  - `content/story.json` (Story v2) and `content/README.md` (the content format and the provenance note);
-  - `backend/plot_twist/tests/` with the 11 tests, added to `testpaths` in `backend/pyproject.toml`, and `frontend/scripts/parity-runner.js`;
-  - `backend/tools/lint_content.py`.
+- **Provides** (paths as built in the first pull request; the content location is decision D016, proposed):
+  - `backend/plot_twist/`: `engine.py` with a `save_path=None` option for the server. The terminal game (`cli.py`) is not imported, because it is not part of the web game. It can come back later if Nils wants it;
+  - `frontend/src/story/engine.js`: the JavaScript engine as an ES module, the same rules rule for rule, with its `README.md`;
+  - `backend/content/story.json` (Story v1 in the first pull request, Story v2 in the second) and `backend/content/README.md` (the content format and the provenance note);
+  - `GET /api/content/intro-story` (`backend/server/routes/content.py`), public, so the browser can load the story from the API;
+  - `backend/plot_twist/tests/` with the 11 original tests, added to `testpaths` in `backend/pyproject.toml`, and the Node.js runner `parity_runner.mjs` next to the parity test;
+  - `backend/tools/lint_content.py` (second pull request).
 - **Acceptance:**
-  - `cd backend && uv run pytest` runs the 11 original tests and the server tests, all green;
+  - `cd backend && uv run pytest` runs the 11 original tests (9 acceptance and content tests, 2 parity tests) and the server tests, all green;
   - the parity test (the Python and JavaScript engines agree) still passes;
-  - the provenance note (solo repository `main` at `e235ee4`, copied, the solo repository untouched) and D007 are written;
+  - the provenance note (solo repository `main` at `e235ee4`, copied, the solo repository untouched) and D007 are written, and D016 (the content location) is proposed;
+  - `GET /api/content/intro-story` answers 200 with the story file and `Cache-Control: public, max-age=300`, and a name that is not on the public list answers 404 in the standard error shape;
   - Story v2 (second pull request): one ending line per decision, reading the log sets a used flag, "no decision" is a real third path, and the planted hints show for everyone. Each change has a test;
   - the linter rejects unknown items or flags, and flags that are set but never used.
 - **Minimum version:** the import plus the ending lines only.
-- **Watch out:** it is not proven that the backend on Vercel can read files outside `backend/`. A3 checks this on a preview. If it cannot, the server's copy of the content moves under `backend/`, and D007 records it.
+- **Watch out:** D016 puts the server's content under `backend/` from the start, because it is not proven that the backend on Vercel can read files outside `backend/`. What is still not checked is that the deployed API finds `backend/content/story.json`. A3 checks this on a preview.
 
 ### S2 Act 1 in the browser
 
@@ -307,7 +310,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Ships:** the case for one crew (each crew plays its own copy, D013): 8 cards, 4 deductions, the Night of Three Lights finale (with L3), the accusation aboard the schooner and the twist, with a closing line per kit.
 - **Depends on:** S0, S1, A3, A6. L3 builds the board and the finale on the same rules.
 - **Provides:**
-  - `content/case.json`. Server only, because it names the culprit;
+  - `backend/content/secret/case.json`. Server only and never served, because it names the culprit;
   - `backend/server/game/case.py`: find a card at a place, check a deduction, check an accusation. Coin costs are checked first, and a refusal changes nothing;
   - `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`, and `POST /api/case/accuse {suspect, actionUid}`;
   - `reveal_lines(profile, flags)`.
@@ -318,7 +321,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - pytest proves that one seat can never solve alone;
   - a wrong accusation is refused, changes nothing and shows the clearing deduction;
   - a repeated `actionUid` acts once, and a refused action costs nothing;
-  - no file under `frontend/` reads `content/case.json`, and the built site contains no reveal line (checked by a test).
+  - no file under `frontend/` reads `backend/content/secret/case.json`, and the built site contains no reveal line (checked by a test).
 - **Minimum version:** all 8 cards and 4 deductions, with one route per card (no slower routes), and the finale with two lights (L3 minimum).
 
 ### S4 NPC partners
@@ -327,7 +330,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Milestone:** M2 · **Size:** M · **Tier:** core · **Can start now:** after A6 and the S0 partner spec.
 - **Ships:** scripted errand runners (D013, decision 3). An empty seat holds an NPC partner with a kit the crew lacks. You order it to search a place, pin its card or man a light. An errand takes about 10 minutes on the case clock and ends with a scripted line. Partners count as crew, but they never pick card pairs or accuse. A friend can take over a partner's seat with the crew code (A6).
 - **Depends on:** S0, A6, S3 (the card list), and L3 (pinning and manning lights).
-- **Provides:** `backend/server/game/partners.py`; `content/partners.json` (orders, errand times, about 30 lines); `POST /api/crews/me/orders {seat, order, target, actionUid}`.
+- **Provides:** `backend/server/game/partners.py`; `backend/content/partners.json` (orders, errand times, about 30 lines); `POST /api/crews/me/orders {seat, order, target, actionUid}`.
 - **Acceptance:**
   - pytest: a partner never pairs cards or accuses; an impossible order is refused with a line and changes nothing; an errand finishes once, even if the request is repeated;
   - partners fill exactly the kits the crew lacks;
@@ -366,7 +369,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - `frontend/src/online/api.js` with `api.get` and `api.post`: adds the sign-in token and turns 401, 409 and 429 into messages;
   - `GET /api/me` returning `{captainName, coins, kit, place}`, `PUT /api/save {version, data}` and `DELETE /api/me`;
   - a `require_host` check for presenter routes;
-  - `content/names.json`, the word lists.
+  - `backend/content/names.json`, the word lists.
 - **Acceptance:**
   - 401 without a token, and player A cannot read or write player B's data;
   - a stale save version gets 409;
@@ -381,7 +384,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Ships:** "Keep your story". The browser uploads the Act 1 move log, the server replays it with the original Python engine, and the arrival card shows one of four kits: True Keeper, Witness, Informant or Stranger.
 - **Depends on:** S1, A2.
 - **Provides:**
-  - `backend/server/game/referee.py` and `content/entry_kits.json`;
+  - `backend/server/game/referee.py` and `backend/content/entry_kits.json`;
   - `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit}`;
   - the table `entry_profiles` (new migration);
   - kit coins through the wallet, with reason `kit_grant` and ref `kit`, so they are paid once.
@@ -439,7 +442,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Milestone:** M2 · **Size:** M · **Tier:** core · **Can start now:** after G2 and A2.
 - **Ships:** your own islet, saved per account (decision 4 in the roadmap inputs: each player's own island and progress are saved). It has 3 plots and the buildings from the story: cabin, workshop, windmill (it presses lamp oil), greenhouse, and the signal station, which can serve as a finale light.
 - **Depends on:** G2, A2.
-- **Provides:** a `createPlace` module `islet`; `content/buildings.json`; `backend/server/game/building.py`; `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the event `{type:'plot_clicked', plot}`; the table `islets` (new migration); coins through the reason `building_purchase`.
+- **Provides:** a `createPlace` module `islet`; `backend/content/buildings.json`; `backend/server/game/building.py`; `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the event `{type:'plot_clicked', plot}`; the table `islets` (new migration); coins through the reason `building_purchase`.
 - **Acceptance:**
   - out of range, occupied, unaffordable or unknown type: each is refused with no change;
   - the exact cost is charged once, even when the request is sent twice;
@@ -485,7 +488,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Vercel Hobby runs cron jobs at most once a day, so prices refresh when a request finds the cache expired.
   - Before building, read CoinGecko's API terms (sections 4.4, 6.1 and 6.2) on the live page. Whether amplified prices count as "derived data" there is not settled.
 - **Depends on:** A1 (the wallet), A2.
-- **Provides:** `backend/server/adapters/prices.py` (the three sources, in order); `backend/server/game/market.py`; `content/companies.json`; `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings` (new migration); the reasons `market_buy` and `market_sell`, added by migration; the flag `market`.
+- **Provides:** `backend/server/adapters/prices.py` (the three sources, in order); `backend/server/game/market.py`; `backend/content/companies.json`; `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings` (new migration); the reasons `market_buy` and `market_sell`, added by migration; the flag `market`.
 - **Acceptance:**
   - with 100 coins, buying 5 at 12.00 with a 3% fee leaves 38.20;
   - the same replay gives the same prices, and tests use no network;
@@ -502,7 +505,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Primary: Manifold Markets. Reading needs no key. It allows 500 requests a minute per address, so call it from our server and cache. Manifold is itself a play-money site. Credit Manifold on the page.
   - Backup: Polymarket's Gamma API, no key. Use `/events/keyset`; the old `/events` list is deprecated.
   - Do not use Kalshi (its terms forbid caching and sharing the data) or Metaculus (it needs an account and hides the numbers).
-  - A hand-picked allow-list of 20 to 40 questions lives in `content/questions.json`. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths, shootings or elections. Weather questions such as "Fog tonight?" can settle from our own L1 data.
+  - A hand-picked allow-list of 20 to 40 questions lives in `backend/content/questions.json`. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths, shootings or elections. Weather questions such as "Fog tonight?" can settle from our own L1 data.
   - Settlement: once a question is resolved and a grace period of about 1 hour has passed, the YES or NO winners share the pool pro rata. CANCEL or any other result refunds everyone, and so does a pool with no winners.
 - **Depends on:** A1 (the wallet), A2. Shares `backend/server/game/pools.py` with L6; whoever builds first writes it.
 - **Provides:** `backend/server/adapters/predictions.py`; `backend/server/game/pools.py`; `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes` (new migration); the reasons `prediction_stake` and `prediction_payout`, added by migration; the flag `predictions`.

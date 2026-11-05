@@ -16,6 +16,7 @@
 | Wallet reasons | The table `wallet_reasons` (in the migration) and `WALLET_REASONS` in `backend/server/wallet.py` |
 | Feature flags | `FLAG_NAMES` in `backend/server/flags.py` |
 | Setting names | `backend/server/settings.py` and [.env.example](../.env.example) |
+| Game content files (the story) | The format in [backend/content/README.md](../backend/content/README.md), and the list of public names in `backend/server/routes/content.py` |
 | Browser events and hooks | `frontend/GRAPHICS.md`, written by the graphics package (G1) |
 
 **Changing a contract.** Until the freeze, change this page in your pull request. After the freeze, agree the change in an issue first, then change the home and this page in the same pull request, and record the outcome in the [decision log](DECISIONS.md). If the team has not agreed, keep the current contract ([CONTRIBUTING.md](../CONTRIBUTING.md)).
@@ -37,7 +38,7 @@
 ## 1. API conventions
 
 - **One address.** Every route starts with `/api`. On Vercel the game and the API share one address: `vercel.json` sends every `/api/...` request to the backend unchanged, so each route carries the `/api` prefix itself. On your laptop the API runs at `http://127.0.0.1:8000`.
-- **JSON in, JSON out.** Field names in JSON are camelCase, as `demoMode` in `/api/config` already is. Python names and database columns stay snake_case. Names that are data, such as the flag names inside `flags`, keep their own spelling.
+- **JSON in, JSON out.** Field names in JSON are camelCase, as `demoMode` in `/api/config` already is. Python names and database columns stay snake_case. Names that are data, such as the flag names inside `flags`, keep their own spelling. Content files are data too: `GET /api/content/{name}` sends a file as it is, so `story.json` keeps its snake_case keys such as `hide_when_blocked` and `not_flags`.
 - **Sign-in.** A route for signed-in players reads the header `Authorization: Bearer <token>`. The token is the one Supabase gives the browser after the GitHub sign-in. The server asks Supabase whose token it is and remembers a good answer for 60 seconds. In code, a route asks for the player by writing `player: PlayerDep` (`backend/server/auth.py`). The player id always comes from this check, never from the request body.
 - **One error shape.** Every failure answers with the same JSON. The `message` never holds a stack trace, a key or the database's own error text.
 
@@ -68,7 +69,7 @@
 
 ## 2. Routes that exist now
 
-Three routes exist, plus FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`.
+Four routes exist, plus FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, and the story in `content` is shortened.
 
 ### GET /api/health
 
@@ -92,6 +93,37 @@ GET /api/config
 
 200 OK
 {"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}}
+```
+
+### GET /api/content/{name}
+
+Public game content that the browser needs in order to play. Anyone may call it, with no sign-in. Only the names on a fixed list in `backend/server/routes/content.py` exist. Today there is one:
+
+| name | What it is |
+|---|---|
+| `intro-story` | The story of the intro game, *The Keeper's Last Log*: the file `backend/content/story.json`, unchanged |
+
+```text
+GET /api/content/intro-story
+
+200 OK
+Cache-Control: public, max-age=300
+{"title": "The Keeper's Last Log", "start": "cottage", "items": {...}, "scenes": {...}}
+```
+
+The answer is the content file as it is, in the format described in [backend/content/README.md](../backend/content/README.md). Its keys are content data and keep their own spelling (snake_case, for example `hide_when_blocked`), which is an exception to the camelCase rule in section 1. Browsers may keep the answer for five minutes, so a changed story can take up to five minutes to reach a page that is already open. Nothing from `backend/content/secret/` is ever served.
+
+| Case | Answer |
+|---|---|
+| A name on the list | `200` with the content file and the header `Cache-Control: public, max-age=300` |
+| Any other name, including a file name such as `story.json` | `404 content_not_found` in the standard error shape, with no cache header |
+| A name with a slash in it, such as a path | `404 not_found`, because no route matches. Nothing is looked up on disk. |
+
+```text
+GET /api/content/no-such-content
+
+404 Not Found
+{"error": {"code": "content_not_found", "message": "There is no public content with that name."}}
 ```
 
 ### GET /api/keepalive
@@ -307,25 +339,27 @@ The names of all settings are in [.env.example](../.env.example), and [ARCHITECT
 
 Every name here is a draft until the freeze on Mon 9 (D009). Package ids are those of the team roadmap. The package that builds an interface writes the final shape in its spec and in the contract's home, then updates this table.
 
+**Where content files live (D016, proposed).** Content that the server reads lives in `backend/content/`. A file the browser needs in order to play is served by `GET /api/content/{name}`. A file the browser must never see lives in `backend/content/secret/` and is never served. Data that only the browser uses stays in `frontend/`. A `.json` file named in a row below has its path under `backend/content/`, unless the row gives another folder.
+
 | Package | Reserves | Status |
 |---|---|---|
-| G2 Places and sea chart | `createPlace(ctx)` returning `{group, zones, anchors, colliders, update(dt), dispose()}`; `world.goTo(placeId)`; the events `travel` and `arrived`; `content/places.json` (place ids, hotspot ids and positions) | draft |
-| G3 Saltreach Harbor | A place module `harbor` whose hotspots emit `interact` with ids from `content/places.json` | draft |
+| G2 Places and sea chart | `createPlace(ctx)` returning `{group, zones, anchors, colliders, update(dt), dispose()}`; `world.goTo(placeId)`; the events `travel` and `arrived`; the place registry `frontend/src/world/places/registry.js` (place ids, hotspot ids and positions), which replaced the proposed `content/places.json` | draft |
+| G3 Saltreach Harbor | A place module `harbor` whose hotspots emit `interact` with ids from the place registry `frontend/src/world/places/registry.js` | draft |
 | G4 Finale visuals | `world.cinematic('three_lights' \| 'fog_lift' \| 'unmask')`, which listens for the `finale` event | draft; defined by the story package S0 (skeleton under review) |
-| S1 Import Plot Twist | `content/story.json`, with the content format in `content/README.md`; the original Python and JavaScript story engines | draft |
+| S1 Import Plot Twist | `backend/content/story.json`, with the content format in `backend/content/README.md`; `GET /api/content/intro-story`; the story engines `backend/plot_twist/engine.py` and `frontend/src/story/engine.js`; the parity test `backend/plot_twist/tests/test_web_parity.py` with its Node.js runner `parity_runner.mjs` | draft |
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
-| S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `content/case.json`, read only by the server | draft; defined by the story package S0 (skeleton under review) |
-| S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story package S0 (skeleton under review) |
-| A2 Sign-in, captain names and cloud progress | `GET /api/me` returning `{captainName, coins, kit, place}`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `content/names.json` | draft |
+| S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story package S0 (skeleton under review) |
+| S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story package S0 (skeleton under review) |
+| A2 Sign-in, captain names and cloud progress | `GET /api/me` returning `{captainName, coins, kit, place}`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json` | draft |
 | A3 Referee and entry kits | `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit}`; the table `entry_profiles`; the kit coins through `kit_grant` with the fixed `ref` `kit` | draft |
 | A6 Crews and seats | `POST /api/crews` (returns a crew code); `POST /api/crews/join {code}`; `GET /api/crews/me`; crew codes in a new column or table | draft |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
 | A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
 | L1 Live weather | `GET /api/weather?place=` returning `{cloudCover, rain, fog, wind, isDay, source, fetchedAt}`; the event `weather_updated` | draft |
-| L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `content/buildings.json`; coins through `building_purchase` | draft |
+| L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
 | L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story package S0 (skeleton under review) |
-| L4 Island Exchange (the market) | `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings`; the reasons `market_buy` and `market_sell`; `content/companies.json`; the flag `market` | draft |
-| L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `content/questions.json`; the flag `predictions` | draft |
+| L4 Island Exchange (the market) | `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings`; the reasons `market_buy` and `market_sell`; `backend/content/companies.json`; the flag `market` | draft |
+| L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions` | draft |
 | L6 Sports predictions | `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the tables `fixtures` and `sports_stakes`; the reasons `sports_stake` and `sports_payout`; the flag `sports` | draft |
 
 Every reserved table follows recipe 4.2, and every reserved reason recipe 4.7: neither exists until its package adds the migration.
@@ -350,7 +384,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 - Primary: Manifold Markets. Reading needs no key and allows 500 requests a minute per address, so only our server calls it, and it caches the answers. Manifold is a play-money site itself. Credit Manifold on the page.
 - Backup: Polymarket's Gamma API, no key. Use `/events/keyset`, because the old `/events` list is deprecated.
-- A hand-picked allow-list of 20 to 40 questions in `content/questions.json`. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths or elections.
+- A hand-picked allow-list of 20 to 40 questions in `backend/content/questions.json`. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths or elections.
 - Settlement: once a question is resolved and a grace period of about an hour has passed, the winners share the pool. CANCEL, or any result other than YES or NO, refunds everyone.
 
 **Sports predictions (L6).**
@@ -375,7 +409,7 @@ What already holds, from the foundation: a reward is paid with `clue_reward` or 
 
 ## 11. Open questions for Mon 9
 
-1. **JSON names.** Confirm camelCase in JSON (`demoMode`, `actionUid`) and snake_case in Python and SQL.
+1. **JSON names.** Confirm camelCase in JSON (`demoMode`, `actionUid`) and snake_case in Python and SQL. Also confirm the exception for content files, which keep their own spelling (`story.json` uses snake_case keys such as `hide_when_blocked`).
 2. **Repeats.** What does a route answer when an `actionUid` comes a second time: the first answer again, or `409 already_applied` like the wallet?
 3. **Switched-off features.** Which status and code does a route answer while its flag is off?
 4. **The keep-alive call.** Vercel Cron, a GitHub Actions schedule (only with Nils' OK) or Supabase Cron, decided after the first deploy ([SETUP.md](SETUP.md), Step 5, check 3).

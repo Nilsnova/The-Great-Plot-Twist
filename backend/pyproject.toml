@@ -27,9 +27,10 @@ dev = [
 [tool.uv]
 package = false
 
-# `uv run pytest` runs only the server tests. The browser tests live in frontend/tests/ (Vitest).
+# `uv run pytest` runs the server tests and the story engine tests (plot_twist/tests).
+# The browser tests live in ../frontend/tests (Vitest).
 [tool.pytest.ini_options]
-testpaths = ["server/tests"]
+testpaths = ["server/tests", "plot_twist/tests"]
 pythonpath = ["."] # lets tests write "from server.app import ..."
 
 [tool.ruff]
