@@ -8,6 +8,8 @@ import './ui/cinematics.css';
 import './ui/intro.css';
 import './ui/shell.css';
 import {createShell} from './shell/controller.js';
+import {createSettingsView} from './settings/view.js';
+import {getPreferences,setPreferences,onPreferences,reducedMotion,watchSystemMotion} from './settings/preferences.js';
 import {introJournal} from './story/intro-journal.js';
 import {startLiveWeather,weatherAttribution} from './net/weather.js';
 import {createIntro} from './story/intro.js';
@@ -39,8 +41,7 @@ async function startGame() {
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
-  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const character = createCharacter(art, { reducedMotion: reducedMotion() }); scene.add(character.sprite);
+  const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
   let active = false, hud, chart, cinematics, demo, intro, shell, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
@@ -55,10 +56,11 @@ async function startGame() {
   intro = createIntro({container,world,on,emit,resetInput:input.reset}); world.intro = intro;
   demo = createCinematicDemo(container,world);
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
+  function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, quality, chart() { if (active) chart.show(); },
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
   });
   const stopListening = on('interact', event => hud.notify(event.id));
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
@@ -69,12 +71,13 @@ async function startGame() {
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   shell=createShell({container,readSave:()=>introJournal().read(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
-    hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(){input.reset();},
+    settingsView:createSettingsView,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(mode){input.reset();if(mode==='playing')view.start();else view.pause();},
     onPlay(resume){hud.start();intro.begin(resume);}});
   const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
     hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
   }});
-  quality(settings.quality); graphics.resize(view.camera);
+  function applyPreferences(value){quality(value.quality);}
+  const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
     if (!shell.blocked && !cinematics.active && !intro.active) {
@@ -85,10 +88,10 @@ async function startGame() {
     }
     settings.hour = (settings.hour + (shell.blocked ? 0 : delta) * (settings.fastTime ? 0.8 : 0.003)) % 24;
     controller.update(delta, active && !world.busy && !chart.open);
-    const state = weather.update(delta, controller.player.position, settings.quality);
+    const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
-    water.update(time, state); sailing.update(delta); cinematics.update(delta);
-    world.update(delta, { player: controller.player.position, time, night, weather: state });
+    water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta);
+    world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state });
     view.update(delta, controller.player.position);
     const zone = active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     if (input.consume('KeyE') && zone) world.interact(zone);
@@ -103,7 +106,7 @@ async function startGame() {
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing, shell };
   function dispose() {
-    stopLiveWeather(); stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }

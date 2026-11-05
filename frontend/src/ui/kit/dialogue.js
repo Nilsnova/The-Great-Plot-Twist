@@ -1,6 +1,7 @@
 // A reusable readable dialogue box; all content comes from its caller, not story rules.
 import { node, reducedMotion, uniqueId, portraitSource } from './dom.js';
 import { createButton } from './button.js';
+import {getPreferences,onPreferences} from '../../settings/preferences.js';
 import { createTypewriter, choiceKey } from './logic.js';
 export function createDialogue({ onChoice, ...initial } = {}) {
   const element = node('section','kit-dialogue'), portrait = node('div','kit-portrait'), copy = node('div','kit-dialogue-copy');
@@ -27,7 +28,7 @@ export function createDialogue({ onChoice, ...initial } = {}) {
     const keepFocus = element.contains(document.activeElement);
     cancelAnimationFrame(frame); buttons = []; choices.replaceChildren(); selected = 0; previous = 0; announced = false; live.textContent = '';
     speaker.textContent = String(data.speaker ?? 'Field notes'); options = (data.choices ?? []).slice(0,9);
-    writer = createTypewriter(data.text ?? '',{rate:36,reducedMotion:reducedMotion()}); portrait.replaceChildren(); portrait.hidden = !data.portrait;
+    writer = createTypewriter(data.text ?? '',{rate:getPreferences().textSpeed||36,reducedMotion:reducedMotion()||getPreferences().textSpeed===0}); portrait.replaceChildren(); portrait.hidden = !data.portrait;
     const source = data.portrait ? portraitSource(data.portrait.src) : null;
     if (source) { const image = node('img'); image.src = source; image.alt = data.portrait.alt ?? data.speaker ?? '';
       const scale = Number.isInteger(data.portrait.scale) && data.portrait.scale > 0 ? Math.min(4,data.portrait.scale) : 3;
@@ -55,8 +56,9 @@ export function createDialogue({ onChoice, ...initial } = {}) {
     }
     if (next) { selected=next.index; paint(); buttons[selected]?.focus(); if (next.activate) onChoice?.(options[selected].id,selected); }
   };
+  const stopPreferences=onPreferences(()=>{if(reducedMotion()||getPreferences().textSpeed===0)complete();else writer.setRate(getPreferences().textSpeed);});
   element.addEventListener('keydown',key); update(initial);
   return { element, update, complete, pause(){cancelAnimationFrame(frame);}, focus() { (writer.done ? buttons.find(button=>!button.disabled) ?? text : skip.element).focus(); },
-    dispose() { cancelAnimationFrame(frame); element.removeEventListener('keydown',key); skip.dispose(); element.remove(); },
+    dispose() { stopPreferences();cancelAnimationFrame(frame); element.removeEventListener('keydown',key); skip.dispose(); element.remove(); },
   };
 }

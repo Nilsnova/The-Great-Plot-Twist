@@ -43,7 +43,7 @@ export function createHud(container, actions) {
     if (panel.hidden) actions.focus();
   }
   select('.chart-toggle').onclick = () => actions.chart();
-  toggle.onclick = () => togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
+  toggle.onclick = () => actions.settings ? actions.settings() : togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
   select('#explore').onclick = () => {
     select('.arrival').classList.add('departed'); select('.location').hidden = false;
     overlay.classList.add('exploring'); actions.start();

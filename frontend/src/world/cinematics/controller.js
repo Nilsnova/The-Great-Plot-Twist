@@ -43,7 +43,7 @@ export function createCinematics(ctx) {
   function render(shot) {drawShot(draw,{...shot,images:shot.loader.images,p:shot.timeline.progress,wind:getWeather().wind});}
   const stop=ctx.on('finale',event=>{if(cinematicNames.includes(event.stage))play(event.stage);});
   return {get active(){return !!current;},play,skip(){finish('skipped');},
-    update(dt){const shot=current;if(!shot?.ready)return;shot.time+=dt;shot.timeline.tick(dt);render(shot);progress.update({value:shot.timeline.progress,max:1});status.textContent='';if(shot.timeline.done)finish('completed');},
+    update(dt){const shot=current;if(!shot?.ready)return;if(ctx.reducedMotion())shot.timeline.skip();shot.time+=dt;shot.timeline.tick(dt);render(shot);progress.update({value:shot.timeline.progress,max:1});status.textContent='';if(shot.timeline.done)finish('completed');},
     dispose(){if(disposed)return;disposed=true;stop();finish('cancelled');skipButton.dispose();progress.dispose();modal.dispose();},
   };
 }
