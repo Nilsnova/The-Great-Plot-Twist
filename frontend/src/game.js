@@ -62,7 +62,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},caseScreen:name=>caseUi?.open(name),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
   });
   caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>hud.setCaptain(view),onArrival:node=>intro.setArrival(node)});
-  const stopListening = on('interact', event => hud.notify(event.id));
+  const stopListening = on('interact', event => {hud.notify(event.id);if(!intro.active)caseUi.interact(event);});
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }

@@ -8,7 +8,7 @@ import {node,button} from '../screens/helpers.js';
 const container=document.querySelector('#case-lab');container.className='case-lab';
 if(!import.meta.env.DEV&&new URLSearchParams(location.search).get('demo')!=='1')container.append(node('p','','This local workshop requires ?demo=1.'));
 else {
-  const adapter=createFakeCaseAdapter(),screens=createCaseScreens({container,adapter,focus:()=>container.querySelector('button')?.focus()});
+  const adapter=createFakeCaseAdapter({allowBrowse:true}),screens=createCaseScreens({container,adapter,focus:()=>container.querySelector('button')?.focus()});
   const toolbar=node('nav','case-lab-toolbar');toolbar.setAttribute('aria-label','Local rehearsal controls');
   container.append(node('p','case-eyebrow','LOCAL FAKE · UNAPPROVED DRAFT DESIGN'),node('h1','','The case, on screen'),node('p','','A reusable adapter rehearsal. No server calls, saves or real rewards. The fake contains no reveal prose.'),toolbar,screens.arrival);
   for(const name of ['arrival','crew','board','search','partners','finale','accusation','reveal','relighting'])toolbar.append(button(name[0].toUpperCase()+name.slice(1),()=>screens.open(name)));

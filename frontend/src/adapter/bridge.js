@@ -1,4 +1,5 @@
 // Lazy presentation bridge. The caller owns one adapter; Claude can inject the real transport later.
+import {caseScreenFor} from '../world/places/case-spots.js';
 import {createUnavailableCaseAdapter} from './unavailable.js';
 export function createCaseBridge(ctx) {
   let adapter=ctx.adapter??null,host=null,pending=null,disposed=false,loading=false,stop=null;
@@ -16,6 +17,7 @@ export function createCaseBridge(ctx) {
     async completeIntro(receipt){const view=await ensure();if(!disposed){const element=await view?.completeIntro(receipt);if(element)ctx.onArrival?.(element);}},
     tick(dt){host?.tick(dt);},
     async useAdapter(next){host?.dispose();adapter?.dispose?.();adapter=next;host=null;pending=null;await ensure();},
+    interact(event){const target=caseScreenFor(event);if(target)return this.open(target.screen,{spot:target.spot});},
     close(){host?.close();},
     dispose(){if(disposed)return;disposed=true;stop?.();host?.dispose();adapter?.dispose?.();},
   };

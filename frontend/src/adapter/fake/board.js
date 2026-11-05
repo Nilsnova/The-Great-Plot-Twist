@@ -29,10 +29,10 @@ export function pairCards(state,a,b) {
 }
 export function boardView(state) {
   const held=new Set([...Object.values(state.found).flat(),...state.pins.map(pin=>pin.cardId)]),viewer=playerSeat(state);
-  const deductions=deductionData.map(item=>({...item,complete:state.deductions.includes(item.id),finding:'[finding supplied by the server]',clearedTitles:item.clears.map(id=>suspectTitles[id])}));
+  const deductions=deductionData.map(item=>({...item,complete:state.deductions.includes(item.id),finding:'Finding recorded.',clearedTitles:item.clears.map(id=>suspectTitles[id])}));
   return {cards:[...held].sort().map(id=>{
     const pins=state.pins.filter(pin=>pin.cardId===id),used=deductions.some(item=>item.complete&&item.cards.includes(id));
-    return {id,title:cardTitles[id],body:'[card text supplied by the server]',state:used?'used':pins.length?'pinned':'new',
+    return {id,title:cardTitles[id],body:null,state:used?'used':pins.length?'pinned':'new',
       holders:Object.entries(state.found).filter(([,cards])=>cards.includes(id)).map(([seat])=>({seat:Number(seat),label:`Seat ${seat}`})),
       pinnedBy:pins.map(pin=>({seat:pin.seat,label:`Seat ${pin.seat}`})),canPin:state.crew?.status==='active'&&state.found[viewer].includes(id)&&!pins.some(pin=>pin.seat===viewer),canPair:!!pins.length};
   }),deductions,suspects:Object.entries(suspectTitles).map(([id,title])=>({id,title,cleared:deductions.some(item=>item.complete&&item.clears.includes(id)),clearedBy:deductions.find(item=>item.complete&&item.clears.includes(id))?.id??null})),
