@@ -8,6 +8,10 @@ No test uses the network. Two fakes stand in for Supabase:
 In every table the OTHER player's row comes first. A route that forgot its filter would pick
 that row up, and the tests below would catch it.
 
+The route makes four reads: the profile, the wallet, the seats and, last, the entry profile (the
+kit and the start place, package A3). The entry profile is read last on purpose: a test checks that
+a refused seats read stops the route after three reads.
+
 The last section guards the two files that ship with this route and could drift away from it
 unnoticed: the sign-in check page (frontend/public/auth-check.*) and vercel.json, which must hold
 no cron entry. They are read as text, like the migration in test_wallet_matches_migration.py.
@@ -59,6 +63,12 @@ SECOND_CREW_ID = "12121212-3434-5656-7878-909090909090"
 MY_CREW = {"id": CREW_ID, "mode": "solo", "status": "forming"}
 MY_SEAT = {"player_id": PLAYER_ID, "seat_no": 1, "crews": MY_CREW}
 
+# The entry profiles (package A3). The other player is a Stranger who starts in the harbor, and the
+# signed-in player is a True Keeper who starts on the island: a kit or a place that shows up in the
+# wrong answer is easy to spot.
+OTHER_ENTRY = {"player_id": OTHER_PLAYER_ID, "kit": "stranger", "start_place": "saltreach_harbor"}
+MY_ENTRY = {"player_id": PLAYER_ID, "kit": "true_keeper", "start_place": "lighthouse_isle"}
+
 
 def make_tables() -> dict[str, list[dict[str, Any]]]:
     """The rows in the fake database. A fresh copy for each test, so a test may change it."""
@@ -79,6 +89,7 @@ def make_tables() -> dict[str, list[dict[str, Any]]]:
             },
             MY_SEAT,
         ],
+        "entry_profiles": [OTHER_ENTRY, MY_ENTRY],
     }
 
 
@@ -172,11 +183,19 @@ def test_a_signed_in_player_gets_their_name_coins_and_crews():
     response = client.get(URL, headers=RIGHT_HEADER)
 
     assert response.status_code == 200
+    # Changed on purpose (A2): the answer gained captainName, kit and place. The four values it
+    # had before (id, displayName, coins and crews) are unchanged. This player still has the
+    # sign-up placeholder, so there is no captain name yet.
+    # Changed on purpose (A3): kit and place used to be empty. They now come from the entry
+    # profile of a player who has finished Act 1.
     assert response.json() == {
         "id": PLAYER_ID,
         "displayName": NAME,
         "coins": COINS,
         "crews": [{"id": CREW_ID, "mode": "solo", "status": "forming", "seatNo": 1}],
+        "captainName": None,
+        "kit": "true_keeper",
+        "place": "lighthouse_isle",
     }
 
 
@@ -228,19 +247,113 @@ def test_the_answer_may_not_be_kept_by_any_cache():
     assert response.headers["cache-control"] == "private, no-store"
 
 
-# --- what the route asks the database ---
+# --- the captain name, the kit and the place (package A2) ---
 
 
-def test_it_reads_the_profile_the_wallet_and_the_seats_with_get():
+def tables_with_name(display_name: str) -> dict[str, list[dict[str, Any]]]:
+    """The normal rows, but the signed-in player has this display name."""
+    tables = make_tables()
+    tables["profiles"][1]["display_name"] = display_name
+    return tables
+
+
+def test_captain_name_is_null_while_the_name_is_the_placeholder():
+    # NAME is "Captain-" and the first 6 characters of PLAYER_ID: what the sign-up trigger writes.
+    client, _ = make_client()
+
+    body = client.get(URL, headers=RIGHT_HEADER).json()
+
+    assert body["displayName"] == "Captain-111111"
+    assert body["captainName"] is None
+
+
+def test_captain_name_is_the_display_name_once_generated():
+    client, _ = make_client(database_with(tables_with_name("Brave Puffin 17")))
+
+    body = client.get(URL, headers=RIGHT_HEADER).json()
+
+    assert body["displayName"] == "Brave Puffin 17"
+    assert body["captainName"] == "Brave Puffin 17"
+
+
+def test_kit_and_place_are_null_before_act_1():
+    # Changed on purpose (A3): this test used to check the placeholder in the route. It now checks
+    # the real rule. A player who has not finished Act 1 has no entry profile, so both are empty.
+    tables = make_tables()
+    tables["entry_profiles"] = without_the_player(tables["entry_profiles"])
+    client, _ = make_client(database_with(tables))
+
+    body = client.get(URL, headers=RIGHT_HEADER).json()
+
+    assert body["kit"] is None
+    assert body["place"] is None
+
+
+def test_kit_and_place_are_the_ones_in_the_entry_profile():
+    tables = make_tables()
+    tables["entry_profiles"] = [
+        {"player_id": PLAYER_ID, "kit": "informant", "start_place": "saltreach_harbor"}
+    ]
+    client, _ = make_client(database_with(tables))
+
+    body = client.get(URL, headers=RIGHT_HEADER).json()
+
+    assert body["kit"] == "informant"
+    assert body["place"] == "saltreach_harbor"
+
+
+def test_the_kit_is_never_another_players_kit():
+    # Only the other player has finished Act 1. Their row must not leak into this answer, neither
+    # as the kit nor as the place.
+    tables = make_tables()
+    tables["entry_profiles"] = [OTHER_ENTRY]
+    client, _ = make_client(database_with(tables))
+
+    response = client.get(URL, headers=RIGHT_HEADER)
+
+    assert response.json()["kit"] is None
+    assert response.json()["place"] is None
+    assert "stranger" not in response.text
+    assert "saltreach_harbor" not in response.text
+
+
+def test_the_players_own_entry_profile_wins_when_the_other_players_row_comes_first():
+    client, _ = make_client()  # the other player's row is first in the table
+
+    body = client.get(URL, headers=RIGHT_HEADER).json()
+
+    assert (body["kit"], body["place"]) == ("true_keeper", "lighthouse_isle")
+
+
+def test_get_me_only_reads():
+    # A GET must never change anything. In particular it must not give a player a captain name
+    # by itself: that is POST /api/me/name. A route that named players while reading would send a
+    # database function call (a POST) here.
     client, seen = make_client()
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    assert [request.method for request in seen] == ["GET", "GET", "GET"]
+    # Changed on purpose (A3): the fourth read is the entry profile.
+    assert [request.method for request in seen] == ["GET", "GET", "GET", "GET"]
+    assert not any("/rpc/" in request.url.path for request in seen)
+
+
+# --- what the route asks the database ---
+
+
+def test_it_reads_the_profile_the_wallet_the_seats_and_the_entry_profile_with_get():
+    # Changed on purpose (A3): the name of this test and its lists gained the entry profile, which
+    # is read last.
+    client, seen = make_client()
+
+    client.get(URL, headers=RIGHT_HEADER)
+
+    assert [request.method for request in seen] == ["GET", "GET", "GET", "GET"]
     assert [request.url.path for request in seen] == [
         "/rest/v1/profiles",
         "/rest/v1/wallets",
         "/rest/v1/crew_seats",
+        "/rest/v1/entry_profiles",
     ]
 
 
@@ -258,6 +371,8 @@ def test_every_read_is_filtered_on_the_verified_player_id_and_asks_for_few_colum
             "order": "joined_at.desc",
             "limit": "20",
         },
+        # Changed on purpose (A3): the fourth read, for the kit and the start place.
+        {"select": "kit,start_place", "player_id": f"eq.{PLAYER_ID}", "limit": "1"},
     ]
 
 
@@ -266,7 +381,8 @@ def test_the_reads_use_the_supabase_secret_key():
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    assert [request.headers["apikey"] for request in seen] == [FAKE_SECRET_KEY] * 3
+    # Changed on purpose (A3): four reads now.
+    assert [request.headers["apikey"] for request in seen] == [FAKE_SECRET_KEY] * 4
 
 
 def test_the_player_id_comes_from_the_login_and_never_from_the_request():
@@ -437,7 +553,8 @@ def test_a_database_that_refuses_the_read_gives_502_and_hides_its_text(status):
 
 
 def test_a_refused_seats_read_gives_502_and_hides_its_text():
-    # The last read is the only one that asks the database to join two tables.
+    # The seats read is the only one that asks the database to join two tables. It is the third
+    # read, and the route stops there: the entry profile (the fourth read) is never asked for.
     client, seen = make_client(crews_read_fails)
 
     response = client.get(URL, headers=RIGHT_HEADER)
@@ -445,6 +562,26 @@ def test_a_refused_seats_read_gives_502_and_hides_its_text():
     assert_error(response, 502, "database_error")
     assert "relationship" not in response.text
     assert len(seen) == 3
+
+
+def entry_read_fails(request: httpx.Request) -> httpx.Response:
+    """A fake database where the entry profile read is refused and the other reads are fine."""
+    if request.url.path.endswith("/entry_profiles"):
+        error = {"code": "42P01", "message": 'relation "public.entry_profiles" does not exist'}
+        return httpx.Response(404, json=error)
+    return database_with(make_tables())(request)
+
+
+def test_a_refused_entry_profile_read_gives_502_and_hides_its_text():
+    # This is what a server that is deployed before the entry profiles migration is applied would
+    # see. The answer is the standard database error, and it says nothing about the table.
+    client, seen = make_client(entry_read_fails)
+
+    response = client.get(URL, headers=RIGHT_HEADER)
+
+    assert_error(response, 502, "database_error")
+    assert "entry_profiles" not in response.text
+    assert len(seen) == 4
 
 
 @pytest.mark.parametrize(
@@ -461,6 +598,12 @@ def test_a_refused_seats_read_gives_502_and_hides_its_text():
         ("crew_seats", [{"player_id": PLAYER_ID, "seat_no": 1, "crews": {"id": CREW_ID}}]),
         ("crew_seats", [{"player_id": PLAYER_ID, "seat_no": "1", "crews": MY_CREW}]),
         ("crew_seats", [{"player_id": PLAYER_ID, "crews": MY_CREW}]),  # no seat_no
+        ("entry_profiles", [{"player_id": PLAYER_ID, "kit": "witness"}]),  # no start_place
+        ("entry_profiles", [{"player_id": PLAYER_ID, "start_place": "lighthouse_isle"}]),  # no kit
+        ("entry_profiles", [{"player_id": PLAYER_ID, "kit": 7, "start_place": "lighthouse_isle"}]),
+        ("entry_profiles", [{"player_id": PLAYER_ID, "kit": "witness", "start_place": 7}]),
+        ("entry_profiles", [{"player_id": PLAYER_ID, "kit": None, "start_place": None}]),
+        ("entry_profiles", ["not a row"]),
     ],
 )
 def test_a_row_we_cannot_read_gives_502_and_not_a_crash(table_name, strange_rows):

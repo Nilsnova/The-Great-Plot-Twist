@@ -10,6 +10,8 @@ The browser only reads from this database. Every write comes from our Python ser
 |---|---|
 | [migrations/20261106000000_foundation.sql](migrations/20261106000000_foundation.sql) | The first migration: seven tables, the security rules, the rights of each database role and four functions. Every table, column and policy is explained inside the file. |
 | [migrations/20261106010000_island_exchange.sql](migrations/20261106010000_island_exchange.sql) | The second migration, for the Island Exchange (package L4): three wallet reasons, three tables and two functions. Run it after the first. See [The Island Exchange migration](#the-island-exchange-migration). |
+| [migrations/20261106020000_accounts.sql](migrations/20261106020000_accounts.sql) | The third migration, for the accounts (package A2: captain names, cloud progress and "delete my data"): one table and four functions. Run it after the first. See [The accounts migration](#the-accounts-migration-package-a2). |
+| [migrations/20261106030000_entry_profiles.sql](migrations/20261106030000_entry_profiles.sql) | The fourth migration, for the referee and the entry kits (package A3): one table and one function. Run it after the first, and **before** the code that reads it is merged into `main` (see [Apply before you merge](#apply-before-you-merge)). See [The entry kits migration](#the-entry-kits-migration-package-a3). |
 
 ## Project settings this migration relies on
 
@@ -67,7 +69,7 @@ The ledger holds one row per player, reason and `ref`. Every money call needs a 
 
 ### Display names
 
-The display name is 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at the start or end. At sign-up every player gets a neutral placeholder: `Captain-` plus the first 6 characters of their id, for example `Captain-3fa85f`. The name **never** comes from the GitHub login or any other login detail, because names appear on a projector. A later package (A2) generates real captain names on the server. Players cannot change their name, because the browser has no right to write to `profiles`.
+The display name is 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at the start or end. At sign-up every player gets a neutral placeholder: `Captain-` plus the first 6 characters of their id, for example `Captain-3fa85f`. The name **never** comes from the GitHub login or any other login detail, because names appear on a projector. Package A2 generates real captain names on the server (`POST /api/me/name`, from the word lists in `backend/content/names.json`; see [The accounts migration](#the-accounts-migration-package-a2)). Players cannot change their name, because the browser has no right to write to `profiles`.
 
 ### Crews and seats
 
@@ -107,6 +109,41 @@ It refuses a company that has no row in `market_bases` with `unknown_company` (t
 
 After applying it, the three quick checks below show **ten** tables and **ten** policies, and there are **eleven** wallet reasons. Run the Exchange checks at the end of the manual test plan.
 
+## The accounts migration (package A2)
+
+`migrations/20261106020000_accounts.sql` is the database part of package A2: generated captain names, progress in the cloud and "delete my data" (see [INTERFACES.md, section 2](../docs/INTERFACES.md#post-apimename-and-reroll) and decisions [D006 and D018](../docs/DECISIONS.md)). Run it **after** the foundation migration, because it uses the tables `profiles`, `saves`, `crews` and `crew_seats` from there. It is safe to run twice. Everything is explained in the file itself. It adds one table, so the three quick checks below show one more table, one more policy and one more row for `authenticated` than before.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `captain_name_rerolls` | One row per player who used their one captain name re-roll. The primary key is the player id, so a second re-roll is impossible. `action_uid` is the id the browser made for the click, so a repeat of the same request is recognised. | Only the server, through `reroll_captain_name()`. |
+| `assign_captain_name()` | Gives a player their generated name, but only while they still have the sign-up placeholder. A repeat, or a request at the same moment, changes nothing and returns the first name. | Run by the server only. |
+| `reroll_captain_name()` | Changes the name once. It locks the profile, so two re-rolls of one player happen one after the other. It *returns* a refusal such as `{"status": "refused", "reason": "no_rerolls_left"}` (also `already_applied` for a repeat of the same request, and `no_name_yet` before the first name) with nothing changed, and *raises* `same_name` when the server sends the current name again (a bug on the server side). | Run by the server only. |
+| `save_progress()` | Writes a save only if it still has the version the caller read, and then adds 1. It *returns* `{"status": "stale", "version": ...}` when somebody saved first, `too_big` when the data is over 200000 bytes as text (the limit of the table rule), and `missing` when the player has no save. It *raises* `bad_save` for a missing version or data that is not a JSON object. | Run by the server only. |
+| `delete_player()` | Deletes the login in `auth.users`, and the database removes everything else by cascade (see below). First it hands a crew that the player started and that others sit in to the player in the lowest seat. Answers `deleted` or `not_found`. | Run by the server only. |
+
+It also changes the meaning of the column `saves.version`. The foundation file called it the version of the save format, and nothing ever used it that way. Now it **counts the writes**, starting at 1. Two devices of one player cannot overwrite each other: `PUT /api/save` sends the version it last read, and `save_progress()` refuses to write when the save has moved on. The server checks the size of a save first (100000 bytes of compact JSON); the database checks it again at the limit of the table rule (200000 bytes of its own JSON text), because a small JSON can grow a lot when it is written out (a number such as `1e300` becomes 301 digits).
+
+**What "delete my data" deletes.** `delete_player()` deletes the login, and the database follows the cascading foreign keys: the profile, save, wallet, **all ledger rows**, seats, Island Exchange positions and trades, the name re-roll, and every table a later package ties to the player with `references public.profiles (id) on delete cascade`. That is the rule for every later table: if a row must outlive the player, it uses `on delete set null` on a nullable column instead. **The ledger keeps nothing about the player**: the coins are play money, no other player's balance depends on those rows, and a ledger that stayed would still be tied to an account id. A crew that the player started and that other players sit in is **handed over first** to the player in the lowest seat, so friends keep their game. The deleted player's own seat goes with them and is open again. A crew nobody else sits in is deleted with the player. **The handover happens only in `delete_player()` (`DELETE /api/me`).** Deleting a user in the dashboard (**Authentication > Users**) skips it and deletes every crew the user started, with everyone's seats. Whether the team wants this is decision D018, pending Nils.
+
+**What it does not delete.** Supabase Auth keeps its own audit log, the table `auth.audit_log_entries`. It has no foreign key to `auth.users`, so deleting the login does not remove its rows. The `payload` of a row can hold the actor's id and the login e-mail address, and the row can hold an IP address. Supabase's platform logs stay too, and they expire on Supabase's own schedule. Step N6 below counts the audit log rows that a deleted test user leaves. Whether to purge those rows, or to stop Auth writing its audit log to the database (if the Auth settings of the project allow it), is part of the pending "delete my data" decision (D018).
+
+**Why `delete_player()` is `SECURITY DEFINER`.** Deleting from `auth.users` needs the rights of the function owner (the `postgres` role), which the server's role does not have. It is the only `SECURITY DEFINER` function among the new ones, and it is safe for three reasons: only `service_role` may run it, it takes the id from the server (which takes it from the verified login), and it starts with `set search_path = ''` and names every table in full. The other three functions run with the rights of their caller, like `market_trade()`.
+
+## The entry kits migration (package A3)
+
+`migrations/20261106030000_entry_profiles.sql` is the database part of package A3: the referee and the entry kits (see [INTERFACES.md, section 2](../docs/INTERFACES.md#post-apiintrocomplete) and decision [D019](../docs/DECISIONS.md)). Run it **after** the foundation migration, because it uses the tables `profiles` and `wallet_transactions`, the wallet reason `kit_grant` and the function `apply_wallet_transaction()` from there. It is safe to run twice. Everything is explained in the file itself. It adds one table, so the three quick checks below show one more table, one more policy and one more row for `authenticated` than before.
+
+**Apply it before the branch that reads `GET /api/me` is merged into `main`.** That route already exists and is live, and the new code makes it read `entry_profiles` (for `kit` and `place`). A merge into `main` deploys to production at once, and a server that runs without the table answers `502 database_error` on `GET /api/me` for every player. That also breaks the sign-in check page (`/auth-check.html`) and deploy check 5 in [SETUP.md](../docs/SETUP.md). Previews use the same Supabase project, so a preview breaks in the same way. See [Apply before you merge](#apply-before-you-merge).
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `entry_profiles` | One row per player who finished Act 1: the ending, the decision, whether they read the logbook, the kit with its start place and coins, the move count and the SHA-256 of the story file the replay used. The primary key is the player id, so there is exactly one row per player: the first ending counts. | Only the server, through `grant_entry_kit()`. Nobody updates or deletes a row; it goes with its player, by cascade. |
+| `grant_entry_kit()` | Stores the entry profile and pays the kit coins, once, in one step. It locks the player's profile row first, so two requests at the same moment run one after the other. If a profile exists already it changes nothing, pays nothing and returns the **stored** profile with status `stored`. Otherwise it stores the profile and pays the coins through `apply_wallet_transaction()` (reason `kit_grant`, ref `kit`) and returns status `granted`. It *returns* `{"status": "missing"}` for a player with no profile row, and *raises* an error, with nothing changed, if a value breaks a table rule (a kit id that does not exist) or the wallet call fails. | Run by the server only. |
+
+The kit coins are paid by this function and by nothing else. The profile and the payment are one transaction: either both are saved or neither. The ledger accepts the pair (player, `kit_grant`, `kit`) once, which is the last guard against a second payment. Step 2 of the manual test plan pays that same reason and ref by hand to the test users A and B; `grant_entry_kit()` copes with that (it stores the profile and pays nothing more), but use new test users for the entry kit checks below.
+
+The server decides which ending leads to which kit (`backend/content/entry_kits.json`, replayed by `backend/server/game/referee.py`). The table only makes sure that a row holds values of the right kind: one of the four kit ids (the list in the rule `entry_profiles_kit_allowed` is compared with `entry_kits.json` by a test), one of three decisions, a move count from 1 to 300, coins from 1 to 1,000,000 (the limit of a wallet change), ids in the usual format and a story hash of 64 hexadecimal characters.
+
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
@@ -128,7 +165,9 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 2. Open **SQL Editor** and start a new query.
 3. Paste the whole content of `migrations/20261106000000_foundation.sql`.
 4. Click **Run**. Expected: a success message and no error.
-5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The order matters: the files start with a time stamp, so apply them oldest first.
+5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The files start with a time stamp, so apply them oldest first. Steps 5, 6 and 7 each need only the foundation (step 3), not each other, so step 5 can wait until the Exchange goes live (see [Apply before you merge](#apply-before-you-merge) for what that means for the Supabase CLI).
+6. Do the same with `migrations/20261106020000_accounts.sql` (captain names, cloud progress, delete my data), in a new query.
+7. Do the same with `migrations/20261106030000_entry_profiles.sql` (the referee and the entry kits), in a new query. Do this **before** the branch that reads `GET /api/me` is merged into `main`, and before you test a preview of it.
 
 ### Option B: Supabase CLI
 
@@ -146,6 +185,18 @@ supabase db push
 - `--dry-run` only lists the migrations that would run. The CLI remembers which files it has already applied.
 - If the CLI says it needs `supabase/config.toml`, run `supabase init` once. Keep secrets out of that file too.
 - Optional, needs Docker: `supabase start` runs a local copy and `supabase db reset` rebuilds it from the migration files.
+
+### Apply before you merge
+
+Every push to `main` deploys to production at once, and previews use the same Supabase project. So a migration has to be applied **before** the code that needs it reaches `main`, or a preview you want to test. Applying a migration first is safe when it only adds things, as both new files do (the accounts file also re-words the comment on one column): the code that is live does not use the new tables and functions, and each file is safe to run twice. (A migration that changes or removes something the live code uses is a different case and needs its own plan.)
+
+Today this decides the order for one file. `20261106030000_entry_profiles.sql` matters most, because `GET /api/me` already exists and is live, and the new code makes it read `entry_profiles`. Until the table exists, every player gets `502 database_error` there. `20261106020000_accounts.sql` matters less: the new routes (names, saves, delete my data) also answer `502` until it is applied, but no screen calls them yet.
+
+The order to follow: get Nils' OK, apply `20261106020000_accounts.sql` and `20261106030000_entry_profiles.sql`, check a preview, and only then merge the branch into `main`. If a merge has to come first, keep the read of `entry_profiles` out of `backend/server/routes/me.py` (so `kit` and `place` stay `null`) and merge that read after the apply.
+
+A rule that holds for every later migration: when a route that is live today starts to read a new table, apply the migration first. When only new routes or a switched-off feature (a flag that is off) use it, the migration may follow the merge. The Island Exchange was safe to merge first for that reason.
+
+With the Supabase CLI (Option B), the CLI records which files it applied. If you apply `20261106020000` and `20261106030000` while the older `20261106010000_island_exchange.sql` is still unapplied, a later `supabase db push` refuses the older file until you add `--include-all`.
 
 ### Three quick checks after applying
 
@@ -238,10 +289,22 @@ The three actors, and the database role behind each:
 | `market_trades` | insert | no access | no access | yes \*\* (through `market_trade()`) |
 | `market_trades` | update | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
 | `market_trades` | delete | no access | no access | no access (same) |
+| `captain_name_rerolls` | read | no access | own row | yes |
+| `captain_name_rerolls` | insert | no access | no access | yes \*\* (through `reroll_captain_name()`) |
+| `captain_name_rerolls` | update | no access | no access | no access (a re-roll is final) |
+| `captain_name_rerolls` | delete | no access | no access | no access (goes with its player, by cascade) |
+| `entry_profiles` | read | no access | own row | yes |
+| `entry_profiles` | insert | no access | no access | yes \*\* (through `grant_entry_kit()`) |
+| `entry_profiles` | update | no access | no access | no access (the first ending counts) |
+| `entry_profiles` | delete | no access | no access | no access (goes with its player, by cascade) |
 
 \* The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
 \*\* The database lets the server write `market_positions` and add `market_trades` rows directly, and add and change `market_bases` rows directly, because the two functions run with the rights of the server. "Through `market_trade()`" and "through `market_set_base()`" in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of `market_trade()`: the arithmetic, the daily cap, the holding time and the wallet. Only the server holds that right, and the code never writes these tables directly.
+
+The same holds for the two insert rows marked \*\* in the account and entry kit tables: the database lets the server add a row to `captain_name_rerolls` and to `entry_profiles` directly, because `reroll_captain_name()` and `grant_entry_kit()` run with the rights of their caller. "Through `reroll_captain_name()`" and "through `grant_entry_kit()`" are our rule, not something the database enforces. A direct insert into `captain_name_rerolls` would use up a player's one re-roll without changing their name. A direct insert into `entry_profiles` would store a profile without paying the kit coins, and without the lock that makes two requests of one player run one after the other. The code never writes these tables directly.
+
+\*\*\* `delete_player()` is `SECURITY DEFINER`, because it deletes the login in `auth.users`, and that needs the rights of the function owner. It is safe because only `service_role` may run it and the server passes the id of the verified player. It hands every crew the player started to the player in the lowest other seat before it deletes the login.
 
 Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
@@ -255,6 +318,11 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `market_trade()` | no access | no access | yes |
 | `market_set_base()` | no access | no access | yes |
 | `market_trades_id_seq` (the trade history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
+| `assign_captain_name()` | no access | no access | yes |
+| `reroll_captain_name()` | no access | no access | yes |
+| `save_progress()` | no access | no access | yes |
+| `delete_player()` \*\*\* | no access | no access | yes |
+| `grant_entry_kit()` | no access | no access | yes |
 
 "No access" means the database refuses with `permission denied`, or (for a row that belongs to someone else) shows or changes nothing.
 
@@ -265,6 +333,8 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 - It skips row-level security. It can read every player's rows in all ten tables and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see the second footnote of the matrix.
+- On the account functions it may read and add `captain_name_rerolls` rows (only through `reroll_captain_name()`; a re-roll is final, so no update and no delete), and it is the only role that may run `assign_captain_name()`, `reroll_captain_name()`, `save_progress()` and `delete_player()`. `delete_player()` is the most powerful call the server can make: it deletes a login and everything about a player. The Python code passes it only the id of the verified player, and only after the request said `"confirm": true`.
+- On the entry kit table it may read and add `entry_profiles` rows (only through `grant_entry_kit()`; a profile is written once and the first ending counts, so no update and no delete), and it is the only role that may run `grant_entry_kit()`. That function is also the only place where the entry kit coins are paid.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
 - The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table, and the browser has no right to write to any of them.
@@ -937,6 +1007,331 @@ select public.apply_wallet_transaction('USER_A_ID', 10, 'market_buy', 'manual-wr
 Expected: `wrong_direction`. Finally paste the whole Island Exchange migration into the SQL editor again and run it. Expected: no error, the Exchange check for player A still shows what it showed after E12 (`balance` 2141, no units, 3 trades), and `select count(*) from public.wallet_reasons;` still shows 11.
 
 Delete the two test users when you are done (**Authentication > Users**). Their positions and trades go with them.
+
+### Account checks (steps N1 to N6)
+
+These steps test the accounts migration. Run them after the foundation, the Island Exchange and the accounts migrations are all applied. Use **new test users** (create them as in the set-up of this plan, so their names start as placeholders): A and B for N1 to N5, and C and D for N6. Replace `USER_A_ID`, `USER_B_ID`, `USER_C_ID` and `USER_D_ID` with their ids. The placeholder name of a user is `Captain-` and the first 6 characters of the id, which the statements below work out themselves (`'Captain-' || left('USER_A_ID', 6)`). The answers of the functions are JSON, so the order of the keys in your result may differ from the text below. **N6 deletes a user for good: run it on throwaway test users only, never on a real player.**
+
+**N1. A first name is given once.** Both calls ask for a name. The second one is ignored, because the player has a name already:
+
+```sql
+set local role service_role;
+select public.assign_captain_name('USER_A_ID', 'Captain-' || left('USER_A_ID', 6), 'Brave Puffin 17') as first_call,
+       public.assign_captain_name('USER_A_ID', 'Captain-' || left('USER_A_ID', 6), 'Calm Gannet 42') as second_call;
+```
+
+Expected: both answers have `status` `named` and `name` `Brave Puffin 17`, with `rerollsUsed` 0. Check the profile (default role): `select display_name from public.profiles where id = 'USER_A_ID';` shows `Brave Puffin 17`. A player who does not exist gets `{"status": "missing"}`:
+
+```sql
+set local role service_role;
+select public.assign_captain_name('00000000-0000-0000-0000-000000000000', 'Captain-000000', 'Brave Puffin 17');
+```
+
+A name that breaks the rules of the profile is refused by the table, and the player keeps the placeholder:
+
+```sql
+set local role service_role;
+select public.assign_captain_name('USER_B_ID', 'Captain-' || left('USER_B_ID', 6), 'Bad<>Name');
+```
+
+Expected: `violates check constraint "profiles_display_name_characters"`.
+
+**N2. One re-roll, and a second one is refused.** Player B has no name yet, so there is nothing to change:
+
+```sql
+set local role service_role;
+select public.reroll_captain_name('USER_B_ID', 'Captain-' || left('USER_B_ID', 6), 'Wise Otter 55', 'manual-uid-0001') as before_a_name;
+```
+
+Expected: `status` `refused`, `reason` `no_name_yet`. Now player A (who got `Brave Puffin 17` in N1) re-rolls. The second call is the same request again, and the third is another request:
+
+```sql
+set local role service_role;
+select public.reroll_captain_name('USER_A_ID', 'Captain-' || left('USER_A_ID', 6), 'Calm Gannet 42', 'manual-uid-0001') as first_reroll,
+       public.reroll_captain_name('USER_A_ID', 'Captain-' || left('USER_A_ID', 6), 'Wise Otter 55', 'manual-uid-0001') as same_request,
+       public.reroll_captain_name('USER_A_ID', 'Captain-' || left('USER_A_ID', 6), 'Wise Otter 55', 'manual-uid-0002') as another_request;
+```
+
+Expected: `first_reroll` has `status` `named`, `name` `Calm Gannet 42` and `rerollsUsed` 1. `same_request` has `status` `refused`, `reason` `already_applied` and `name` `Calm Gannet 42`. `another_request` has `status` `refused`, `reason` `no_rerolls_left` and `name` `Calm Gannet 42`. Check (default role): `select display_name from public.profiles where id = 'USER_A_ID';` shows `Calm Gannet 42`, and `select count(*) from public.captain_name_rerolls where player_id = 'USER_A_ID';` shows 1.
+
+The server must send a different name. Give player B a name (a new run), and then ask for a re-roll to the very same name (a bug on the server side, so it is an error and not a refusal):
+
+```sql
+set local role service_role;
+select public.assign_captain_name('USER_B_ID', 'Captain-' || left('USER_B_ID', 6), 'Bold Tern 12');
+```
+
+```sql
+set local role service_role;
+select public.reroll_captain_name('USER_B_ID', 'Captain-' || left('USER_B_ID', 6), 'Bold Tern 12', 'manual-uid-0002');
+```
+
+Expected: the first run answers `named`, the second fails with `same_name`. Player B still has no re-roll row: `select count(*) from public.captain_name_rerolls where player_id = 'USER_B_ID';` shows 0.
+
+**N3. A stale save is refused and changes nothing.** A new player's save is at version 1. The first call saves from version 1. The second call also comes from version 1 (a second device that did not know): it is refused. The third call continues from version 2:
+
+```sql
+set local role service_role;
+select public.save_progress('USER_A_ID', 1, '{"intro": {"scene": "shore"}}') as first_save,
+       public.save_progress('USER_A_ID', 1, '{"intro": {"scene": "tower"}}') as stale_save,
+       public.save_progress('USER_A_ID', 2, '{"intro": {"scene": "tower"}}') as second_save;
+```
+
+Expected: `first_save` has `status` `saved`, `version` 2 and an `updatedAt` time. `stale_save` is `{"status": "stale", "version": 2}`, and the save did not change. `second_save` has `status` `saved` and `version` 3. Check (default role): `select version, data from public.saves where player_id = 'USER_A_ID';` shows version 3 and `{"intro": {"scene": "tower"}}`. A save for a player who has none answers `{"status": "missing"}`:
+
+```sql
+set local role service_role;
+select public.save_progress('00000000-0000-0000-0000-000000000000', 1, '{}');
+```
+
+**N4. A save that is too big, and a call that makes no sense.**
+
+```sql
+set local role service_role;
+select public.save_progress('USER_A_ID', 3, jsonb_build_object('blob', repeat('x', 250000))) as result;
+```
+
+Expected: `{"status": "too_big"}`, and the save is still at version 3. A missing or too small version, or data that is not a JSON object, is a bug on the server side and raises an error. Replace the last line and run again. Each one fails:
+
+| Statement as `service_role` | Expected error mentions |
+|---|---|
+| `select public.save_progress('USER_A_ID', 0, '{}');` | `bad_save` |
+| `select public.save_progress('USER_A_ID', null, '{}');` | `bad_save` |
+| `select public.save_progress('USER_A_ID', 3, '[]');` | `bad_save` |
+| `select public.save_progress('USER_A_ID', 3, 'null');` | `bad_save` |
+
+**N5. Nobody but the server can run the four functions or write a re-roll.** A signed-in player tries to run a function:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select public.assign_captain_name('USER_A_ID', 'Captain-' || left('USER_A_ID', 6), 'Hacker 99');
+```
+
+Expected: `permission denied for function assign_captain_name`. Now replace the last line and run again. Each one fails the same way:
+
+| Statement as player A | Expected error mentions |
+|---|---|
+| `select public.reroll_captain_name('USER_A_ID', 'Captain-' \|\| left('USER_A_ID', 6), 'Hacker 99', 'manual-uid-0003');` | `permission denied for function reroll_captain_name` |
+| `select public.save_progress('USER_A_ID', 3, '{"hacked": true}');` | `permission denied for function save_progress` |
+| `select public.delete_player('USER_A_ID');` | `permission denied for function delete_player` |
+| `insert into public.captain_name_rerolls (player_id, action_uid) values ('USER_B_ID', 'manual-uid-0004');` | `permission denied for table captain_name_rerolls` |
+| `update public.captain_name_rerolls set action_uid = 'manual-uid-0005';` | `permission denied for table captain_name_rerolls` |
+| `delete from public.captain_name_rerolls;` | `permission denied for table captain_name_rerolls` |
+
+Change the first line to `set local role anon;` (and drop the `set_config` line) and run any of them: the answer is the same kind of `permission denied`. A player may read their own re-roll row, and only that one:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select player_id, action_uid from public.captain_name_rerolls;
+```
+
+Expected: 1 row, player A with `manual-uid-0001`. Even the server cannot edit a re-roll (a re-roll is final):
+
+```sql
+set local role service_role;
+update public.captain_name_rerolls set action_uid = 'manual-uid-0005';
+```
+
+Expected: `permission denied for table captain_name_rerolls`. The same happens for `delete from public.captain_name_rerolls;`.
+
+**N6. Delete a player (throwaway test users C and D only).** This also proves, on Supabase, that the `postgres` role may delete from `auth.users`: `delete_player()` runs with the rights of its owner. Replace `CREW_C_ID` with `33333333-3333-4333-8333-333333333333`, a made-up crew id. Set up: player C gets a name and 100 coins, player D gets 50 coins, and C starts a crew with D in seat 2:
+
+```sql
+set local role service_role;
+select public.assign_captain_name('USER_C_ID', 'Captain-' || left('USER_C_ID', 6), 'Bold Tern 14') as c_name,
+       public.apply_wallet_transaction('USER_C_ID', 100, 'kit_grant', 'kit') as c_balance,
+       public.apply_wallet_transaction('USER_D_ID', 50, 'kit_grant', 'kit') as d_balance;
+insert into public.crews (id, created_by, mode) values ('CREW_C_ID', 'USER_C_ID', 'crew');
+insert into public.crew_seats (crew_id, seat_no, player_id, kit) values
+  ('CREW_C_ID', 1, 'USER_C_ID', 'witness'),
+  ('CREW_C_ID', 2, 'USER_D_ID', 'stranger');
+```
+
+We call the next block the **delete check** and use it again below (default role):
+
+```sql
+select
+  (select count(*) from auth.users                 where id        = 'USER_C_ID') as login,
+  (select count(*) from public.profiles            where id        = 'USER_C_ID') as profile,
+  (select count(*) from public.wallets             where player_id = 'USER_C_ID') as wallet,
+  (select count(*) from public.wallet_transactions where player_id = 'USER_C_ID') as ledger_rows,
+  (select count(*) from public.saves               where player_id = 'USER_C_ID') as save,
+  (select count(*) from public.crew_seats          where player_id = 'USER_C_ID') as seats,
+  (select created_by::text from public.crews       where id        = 'CREW_C_ID') as crew_started_by;
+```
+
+Expected before the delete: `login`, `profile`, `wallet`, `ledger_rows`, `save` and `seats` are all 1, and `crew_started_by` is `USER_C_ID`. Now delete player C:
+
+```sql
+set local role service_role;
+select public.delete_player('USER_C_ID') as result;
+```
+
+Expected: `{"status": "deleted"}`. Run the delete check again: the six counts are all **0** (the ledger row went too), and `crew_started_by` is now `USER_D_ID`: the crew was handed over to the player in the lowest other seat. The seat of C is open again:
+
+```sql
+select seat_no, player_id from public.crew_seats where crew_id = 'CREW_C_ID';
+```
+
+Expected: 1 row, seat 2 with player D. Player D is untouched: `select balance from public.wallets where player_id = 'USER_D_ID';` shows 50. Deleting again is safe:
+
+```sql
+set local role service_role;
+select public.delete_player('USER_C_ID') as result;
+```
+
+Expected: `{"status": "not_found"}`. If the first call fails with `permission denied for table users`, the owner of the function cannot delete users on this project: tell the team before anyone uses `DELETE /api/me`.
+
+Now record what the delete leaves behind in Supabase Auth's audit log. This is a number to write down, not a pass or fail check (default role):
+
+```sql
+select count(*) from auth.audit_log_entries where payload->>'actor_id' = 'USER_C_ID';
+```
+
+Write the number in the pull request. 0 means Auth has no audit row that names player C (for example because the project does not write its audit log to the database). More than 0 means the audit log kept entries of the deleted player: the table has no link to `auth.users`, the `payload` of a row can hold the login e-mail address, and the row can hold an IP address. Whether to purge those rows, or to stop Auth writing them to the database, is part of the pending "delete my data" decision (D018). Supabase's platform logs are not in this table and also stay until they expire.
+
+Finally delete user D under **Authentication > Users**. Nobody else sits in the crew, so it goes with D: `select count(*) from public.crews where id = 'CREW_C_ID';` shows 0.
+
+Delete the other test users when you are done. Finally paste the whole accounts migration into the SQL editor again and run it. Expected: no error, and the checks of N1 to N3 show what they showed before (the comment on `saves.version` is set again, and nothing else changes).
+
+### Entry kit checks (steps K1 to K5)
+
+These steps test the entry profiles migration. Run them after the foundation, the Island Exchange, the accounts and the entry profiles migrations are all applied. Use **two new test users**, E and F (create them as in the set-up of this plan, so their wallets are at 0 and the ledger has no `kit_grant` row for them). Replace `USER_E_ID` and `USER_F_ID` with their ids. The long run of `a` characters stands for the SHA-256 of the story file: any 64 characters from 0-9 and a-f will do. The answers of the function are JSON, so the order of the keys in your result may differ from the text below.
+
+**K1. The first grant pays.** Player E finishes Act 1 as a Witness:
+
+```sql
+set local role service_role;
+select public.grant_entry_kit('USER_E_ID', 'ending_trapped', 'warned', false, 'witness', 'saltreach_harbor', 1000, 11,
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') as first_grant;
+```
+
+Expected: `status` `granted`, `paid` 1000, `ending` `ending_trapped`, `decision` `warned`, `readLog` false, `kit` `witness`, `startPlace` `saltreach_harbor` and `kitCoins` 1000. We call the next block the **kit check** and use it again below (default role):
+
+```sql
+select w.balance,
+       (select count(*) from public.wallet_transactions t where t.player_id = w.player_id) as ledger_rows,
+       (select count(*) from public.entry_profiles e where e.player_id = w.player_id) as profiles
+from public.wallets w
+where w.player_id = 'USER_E_ID';
+```
+
+Expected: `balance` 1000, `ledger_rows` 1 and `profiles` 1.
+
+**K2. The second grant pays nothing and returns the first profile.** Player E plays Act 1 again and this time ends as a True Keeper, with another log. The first ending counts:
+
+```sql
+set local role service_role;
+select public.grant_entry_kit('USER_E_ID', 'ending_rescue', 'warned', true, 'true_keeper', 'lighthouse_isle', 1000, 12,
+                              'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb') as second_grant;
+```
+
+Expected: `status` `stored`, `paid` 0, and the values of K1, not the values of this call: `ending` `ending_trapped`, `readLog` false, `kit` `witness`, `startPlace` `saltreach_harbor`. Run the kit check again: the same three numbers as in K1.
+
+**K3. The ledger has one kit row, and the ledger itself refuses a second one.**
+
+```sql
+select delta, reason, ref, balance_after
+from public.wallet_transactions
+where player_id = 'USER_E_ID';
+```
+
+Expected: 1 row: `delta` 1000, `reason` `kit_grant`, `ref` `kit`, `balance_after` 1000. Paying the kit again by hand fails:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_E_ID', 1000, 'kit_grant', 'kit');
+```
+
+Expected: `duplicate key value violates unique constraint "wallet_transactions_one_row_per_ref"`. That is the last guard: even outside `grant_entry_kit()` the ledger holds each player, reason and ref once.
+
+**K4. Nobody but the server can run the function or write a profile, and a player reads only their own.** A signed-in player tries to run the function:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_E_ID", "role": "authenticated"}', true);
+select public.grant_entry_kit('USER_E_ID', 'ending_trapped', 'warned', false, 'witness', 'saltreach_harbor', 1000, 11,
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+```
+
+Expected: `permission denied for function grant_entry_kit`. Now replace the last statement and run again. The insert fails the same way (`permission denied for table entry_profiles`):
+
+```sql
+insert into public.entry_profiles (player_id, ending, decision, read_log, kit, start_place, kit_coins, move_count, story_sha256)
+values ('USER_F_ID', 'ending_trapped', 'warned', false, 'witness', 'saltreach_harbor', 1000, 11, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+```
+
+| Statement as player E | Expected error mentions |
+|---|---|
+| `update public.entry_profiles set kit = 'stranger';` | `permission denied for table entry_profiles` |
+| `delete from public.entry_profiles;` | `permission denied for table entry_profiles` |
+
+Change the first line to `set local role anon;` (and drop the `set_config` line) and run any of them, or `select * from public.entry_profiles;`: the answer is the same kind of `permission denied`. A player may read their own profile, and only that one:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_E_ID", "role": "authenticated"}', true);
+select player_id, kit, start_place from public.entry_profiles;
+```
+
+Expected: 1 row, player E, `witness`, `saltreach_harbor`. Put `USER_F_ID` in the second line instead: 0 rows. Even the server cannot change a profile (the first ending counts):
+
+```sql
+set local role service_role;
+update public.entry_profiles set kit = 'stranger';
+```
+
+Expected: `permission denied for table entry_profiles`. The same happens for `delete from public.entry_profiles;`.
+
+**K5. A bad kit id is refused, and nothing changes.** Player F tries to get a kit that does not exist:
+
+```sql
+set local role service_role;
+select public.grant_entry_kit('USER_F_ID', 'ending_trapped', 'warned', false, 'dragon', 'saltreach_harbor', 1000, 11,
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+```
+
+Expected: `violates check constraint "entry_profiles_kit_allowed"`. The whole call was rolled back. Look at player F (default role):
+
+```sql
+select w.balance,
+       (select count(*) from public.wallet_transactions t where t.player_id = w.player_id) as ledger_rows,
+       (select count(*) from public.entry_profiles e where e.player_id = w.player_id) as profiles
+from public.wallets w
+where w.player_id = 'USER_F_ID';
+```
+
+Expected: `balance` 0, `ledger_rows` 0 and `profiles` 0. The other table rules refuse their values the same way. Put `'witness'` back as the kit (the table rules run in the order of their names, so a bad kit id would be reported before anything else), change one other value in the call above and run it again:
+
+| Change this value | Expected error mentions |
+|---|---|
+| the decision `'warned'` to `'maybe'` | `entry_profiles_decision_allowed` |
+| the coins `1000` to `0` (or to `1000001`) | `entry_profiles_kit_coins_range` |
+| the move count `11` to `0` (or to `301`) | `entry_profiles_move_count_range` |
+| the last value, the hash, to 63 characters | `entry_profiles_story_sha256_format` |
+
+A player who does not exist gets a plain answer and not an error:
+
+```sql
+set local role service_role;
+select public.grant_entry_kit('00000000-0000-0000-0000-000000000000', 'ending_trapped', 'warned', false, 'witness', 'saltreach_harbor', 1000, 11,
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+```
+
+Expected: `{"status": "missing"}`. Last, a test user that was paid the kit by hand (as step 2 does) still gets a profile, and is not paid twice. Pay player F by hand, then grant:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_F_ID', 100, 'kit_grant', 'kit') as by_hand,
+       public.grant_entry_kit('USER_F_ID', 'ending_trapped', 'warned', false, 'witness', 'saltreach_harbor', 1000, 11,
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') as grant_result;
+```
+
+Expected: `by_hand` is 100, and `grant_result` has `status` `granted` and `paid` 0. Run the kit check for `USER_F_ID`: `balance` 100, `ledger_rows` 1 and `profiles` 1.
+
+Delete the two test users when you are done (**Authentication > Users**): their entry profiles go with them. Finally paste the whole entry profiles migration into the SQL editor again and run it. Expected: no error, and the kit check for player E still shows what it showed in K1.
 
 ## Changing the database later
 

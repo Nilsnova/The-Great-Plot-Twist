@@ -1,0 +1,63 @@
+{
+  "about": "The four entry kits of the case and how an Act 1 ending maps to one (package A3, decision D019). Server only, never served. The coins and the texts come from the S0 drafts (CASE-FILE.md section 3) and are PENDING Nils' approval of S0. This order is the case-file order, not the order in which NPC partners fill missing kits.",
+  "decisionFlags": {"trusted": "trusted_fisherman", "warned": "warned_harbor"},
+  "logFlag": "read_log",
+  "kits": [
+    {
+      "id": "true_keeper",
+      "name": "True Keeper",
+      "ending": "ending_rescue",
+      "decision": "warned",
+      "startPlace": "lighthouse_isle",
+      "coins": 1000,
+      "cheapCard": "C6",
+      "item": {
+        "id": "keeper_permit",
+        "name": "Keeper's permit",
+        "text": "Opens the keepers' post room behind the Harbor Office."
+      }
+    },
+    {
+      "id": "witness",
+      "name": "Witness",
+      "ending": "ending_trapped",
+      "decision": "warned",
+      "startPlace": "saltreach_harbor",
+      "coins": 1000,
+      "cheapCard": "C2",
+      "item": {
+        "id": "radio_words",
+        "name": "Words through the door",
+        "text": "What you heard the fisherman say into his radio, through the locked tower door. C2 is in your journal from the start."
+      }
+    },
+    {
+      "id": "informant",
+      "name": "Informant",
+      "ending": "ending_trapped",
+      "decision": "trusted",
+      "startPlace": "saltreach_harbor",
+      "coins": 1000,
+      "cheapCard": "C4",
+      "item": {
+        "id": "red_token",
+        "name": "The fisherman's red token",
+        "text": "Opens the smugglers' back room at Smugglers' Cove."
+      }
+    },
+    {
+      "id": "stranger",
+      "name": "Stranger",
+      "ending": "ending_trapped",
+      "decision": "none",
+      "startPlace": "saltreach_harbor",
+      "coins": 1600,
+      "cheapCard": "C5",
+      "item": {
+        "id": "unknown_face",
+        "name": "A face nobody knows",
+        "text": "Greyfathom's yard hires people who took no side. This kit also brings 600 extra coins."
+      }
+    }
+  ]
+}

@@ -9,6 +9,8 @@
 | Path | What it is | Who may see it |
 |---|---|---|
 | `story.json` | The intro story, "The Keeper's Last Log": scenes, items, choices and endings. | Everyone. The browser downloads it from `GET /api/content/intro-story`. |
+| `names.json` | The word lists for generated captain names such as "Brave Puffin 17" (package A2, decision D006). | The server only. It is not on the list of public content and is never served. |
+| `entry_kits.json` | The four entry kits of the case and which Act 1 ending leads to which one (package A3, decision D019). | The server only. It is not on the list of public content and is never served. |
 | `secret/` (does not exist yet) | Content the browser must never see, for example the real solution of a case. | Server code only. It is never served. |
 
 Content is data, not code. The story engine reads it and never contains story text. You can change `story.json` without touching any Python or JavaScript.
@@ -20,7 +22,7 @@ Decision D016 (proposed): game content that the server uses lives in `backend/co
 ## Public and secret content stay apart
 
 - **Public content** is something the browser needs in order to play, such as the intro story. It is served by `GET /api/content/<name>`, with no sign-in. Browsers may keep an answer for five minutes (`Cache-Control: public, max-age=300`), so a changed story can take up to five minutes to reach a page that is already open.
-- **A page can hold an old story.** After `story.json` changes and is deployed, a page that is already open can keep playing the old story for up to five minutes, while the server already uses the new one. So the server must never trust what the browser played. When a later package replays a player's moves on the server (the referee, package A3), the browser should send which story it played, for example the story's hash or a version number, and the server should refuse a move log from a different story with a 409. This is a note for that package, not a rule yet. Also note that `max-age` is an instruction for browsers only. It does not ask Vercel's network to cache the answer (that would need `s-maxage`), so every new visitor still starts the API function. Whether to add `s-maxage` is open (see D016).
+- **A page can hold an old story.** After `story.json` changes and is deployed, a page that is already open can keep playing the old story for up to five minutes, while the server already uses the new one. So the server must never trust what the browser played. The referee (package A3, decision D019) replays a player's moves on the server, and it does not ask which story the browser played: Story v2 only adds actions and changes no rule, so an old move log still replays to the same end state. A log that only a newer story allows is refused as `move_refused`, and the message tells the player to reload the page. The referee stores the SHA-256 of the story file it replayed on with each entry profile, so a later audit knows which story a profile was judged on. Also note that `max-age` is an instruction for browsers only. It does not ask Vercel's network to cache the answer (that would need `s-maxage`), so every new visitor still starts the API function. Whether to add `s-maxage` is open (see D016).
 - **Secret content** goes in `backend/content/secret/`. Nothing in that folder is ever served, and the browser must not be able to work out its text from anything we send.
 - **Being in this folder does not make a file public.** A file is public only when its name is on the list `PUBLIC_CONTENT` in `backend/server/routes/content.py`. A name that is not on the list gets a 404. Never put a path or anything from `secret/` on that list. A test checks that every name on the list is a plain `.json` file directly inside `content/`.
 - To add public content: put the file here, add one line to `PUBLIC_CONTENT`, and add a test in `backend/server/tests/test_content.py`. Anyone on the internet can read public content, so tell the team first (an issue is enough).
@@ -150,3 +152,95 @@ The 11 original tests (9 acceptance and content tests, and 2 parity tests) were 
 This is Story v1. The team writes the next version of the story itself, and nobody needs the solo repository for that.
 
 The solo game also had a terminal version (`cli.py`, started with `python -m plot_twist`). It is not part of the web game, so it was not imported.
+
+## The format of `names.json`
+
+The word lists for generated captain names (package A2, decision D006). The server reads them with `backend/server/account/names.py`. The file is **server only**: its name is not on `PUBLIC_CONTENT`, so `GET /api/content/...` never serves it, and the browser never needs it.
+
+A captain name is **an adjective, a noun and a number from 10 to 99**, for example `Brave Puffin 17`. With 40 adjectives, 40 nouns and 90 numbers there are 144,000 names. Names are not unique (the database allows two players the same name), and a name never comes from the GitHub login or from free text. Names appear on a projector, so **every word must be kind and plain**. Bird names with a slang meaning (booby, shag) are left out on purpose. A human reads every new word before it is added.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `about` | text | A note for people. The server ignores it. |
+| `adjectives` | list of words | The first part of a name. At least 32 words. |
+| `nouns` | list of words | The second part of a name. At least 32 words. |
+
+The rules for a word, which `load_word_lists` checks when the server reads the file:
+
+- One word of 2 to 12 letters, A-Z and a-z only, with a capital first letter. No hyphen, space, digit or accent.
+- No word appears twice, not inside one list and not in both lists.
+- The longest adjective, the longest noun, two spaces and the two digits of the number must fit into 24 characters, which is the limit of `profiles.display_name`. Today that is "Wandering Lighthouse 99": 23 characters.
+
+A file that breaks a rule stops the code with a message that says which word or list is the problem. `backend/server/tests/test_captain_names.py` loads the real file on every test run, so a broken list cannot be merged.
+
+**Changing a list never renames a player.** A player's name is stored in the database when it is given. Adding or removing a word only changes the names that new players and re-rolls draw from. Two players can still draw the same name. That is allowed and rare (about 1 in 144,000 for any two players).
+
+**A human reads every word (pending Nils' decision, N9).** Nils or the S lane reads both lists before a class sees the names. A check by a reviewer found these pairs that could read as teasing on a projector, to look at first:
+
+- `Sturdy`, `Hardy` or `Mighty` with `Whale` or `Walrus`: they can sound like body-shaming.
+- `Windy` with any noun: it invites a fart joke.
+- `Crab`: it is also a slang word.
+
+If a word is dropped, replace it with a neutral word that follows the rules above (one capitalised word of 2 to 12 letters), keep at least 32 words in each list, and keep the longest possible name within 24 characters. `test_captain_names.py` checks all three.
+
+## The format of `entry_kits.json`
+
+The four entry kits of the case, and which Act 1 ending leads to which one (package A3, decision D019). The server reads the file with `backend/server/game/entry_kits.py`. It is **server only**: its name is not on `PUBLIC_CONTENT`, so `GET /api/content/...` never serves it. The browser gets the kit it needs in the answer of `POST /api/intro/complete`.
+
+**Pending Nils' decision (N5).** The coins and the texts come from the S0 story drafts (`CASE-FILE.md`, section 3) and wait for Nils' approval of S0. A test (`test_entry_kits.py`) pins the coins, so changing one is a visible act.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `about` | text | A note for people. The server ignores it. |
+| `decisionFlags` | object | `trusted` and `warned`: the names of the two story flags that stand for the decisions. Today `trusted_fisherman` and `warned_harbor`. |
+| `logFlag` | flag name | The flag that means "read the keeper's last logbook entry": `read_log`. It gives the log card and does not change the kit. |
+| `kits` | list of kits | The kits. Today four. |
+
+The three flag names must be three different flags that some action of `story.json` sets. A test checks that.
+
+### Kit
+
+```json
+{ "id": "witness", "name": "Witness", "ending": "ending_trapped", "decision": "warned",
+  "startPlace": "saltreach_harbor", "coins": 1000, "cheapCard": "C2",
+  "item": { "id": "radio_words", "name": "Words through the door", "text": "..." } }
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | id | `true_keeper`, `witness`, `informant` or `stranger`. The database repeats this list (the rule `entry_profiles_kit_allowed`, and later the seats of a crew), and a test compares it with this file. |
+| `name` | text | What the player sees. |
+| `ending` | scene id | The Act 1 ending scene that leads to this kit. It must be a scene of `story.json` with `"ending": true`. |
+| `decision` | `warned`, `trusted` or `none` | What the player decided at the shore. `none` means neither flag is set. |
+| `startPlace` | place id | Where the player starts the case. It must be a place of the browser registry `frontend/src/world/places/registry.js`: `lighthouse_isle` or `saltreach_harbor`. |
+| `coins` | whole number | The kit coins, paid once through the wallet reason `kit_grant` with the fixed ref `kit`. From 1 to 1,000,000 (the limit of one wallet change). |
+| `cheapCard` | card id | The clue card the player holds from the start, for example `C2`. The case (package S3) shows it. |
+| `item` | object | A small item: `id`, `name` and `text`. |
+
+An **id** is 2 to 40 characters: lowercase letters, digits and underscores. The pair `ending` and `decision` belongs to exactly one kit, and no two kits share an `id`.
+
+### How the 8 end states of today's story map to the 4 kits
+
+| Ending | Flags at the end | Decision | Kit | `readLog` |
+|---|---|---|---|---|
+| `ending_rescue` | `warned_harbor` | warned | True Keeper | no (yes with the logbook) |
+| `ending_trapped` | `warned_harbor` | warned | Witness | no (yes with the logbook) |
+| `ending_trapped` | `trusted_fisherman` | trusted | Informant | no (yes with the logbook) |
+| `ending_trapped` | neither | none | Stranger | no (yes with the logbook) |
+
+The rescue is only possible after warning the harbor master, so there is no rescue with the other two decisions. Reading the logbook gives the same kit with `readLog` true, which makes eight end states. Story v2 adds one action at the shore (`keep_quiet`, which sets no flag), so it still has the same eight end states.
+
+### What `load_entry_kits` checks
+
+A file that breaks a rule stops the code with a message that names the file and the field. The route answers `503 intro_unavailable` for such a file, and the log says why.
+
+- The file is a JSON object with `kits` (a list with at least one kit), `decisionFlags` and `logFlag`.
+- Every kit has all eight fields, with the right kind of value. `coins` is a whole number (not text, not `true`, not a decimal) from 1 to 1,000,000. `decision` is one of the three words.
+- No two kits share an `id`, and none share the pair `ending` and `decision`.
+- The trusted flag, the warned flag and the log flag are three different names.
+
+### Changing the file
+
+- **A changed kit changes what new players get.** A player who has an entry profile keeps it, because the first ending counts (decision D019). The profile stores the kit id, the start place and the coins as they were.
+- **A new ending or a new decision needs a kit.** If the story can end in a way that no kit covers, `kit_for` raises an error and the player gets a 500. `test_referee.py` searches the real story for every end state and fails first.
+- **A new kit id needs a new migration**, because the table `entry_profiles` lists the allowed ids. Never edit the migration that exists.
