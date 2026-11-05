@@ -1,0 +1,58 @@
+# Task: graphics foundation for "The Great Plot Twist" (light 3D, low-poly)
+
+You work for Nils Lenke, the responsible teammate, on a four-person student group project (Nova SBE, Introduction to Programming). All four of us are programming beginners who build with coding agents, so every file you write must be easy to read and to explain line by line in a code walkthrough.
+
+## Where you work
+- Folder: `~/Developer/The-Great-Plot-Twist-graphics`, a git worktree of the repo `Nilsnova/The-Great-Plot-Twist`. The branch `feat/graphics-foundation` is already checked out. Work only in this folder and on this branch.
+- Team rules are in an open pull request. Read them first: `git show origin/docs/team-workflow:AGENTS.md` and `git show origin/docs/team-workflow:CONTRIBUTING.md`. In short: small commits with clear messages (e.g. `feat: add animated water`), never push to main, never force-push, no secrets or private data, report honestly what you verified.
+- Do not create or edit `README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `ROADMAP.md`, or anything in `docs/` or `.github/`. Teammates edit those in parallel.
+- Commit locally. Do not push; Nils reviews and pushes.
+
+## Context
+The game expands Nils' text mystery "The Keeper's Last Log": keeper Elena Vos has vanished and the lighthouse has been dark for three nights. Players start on this intro island, solve its mystery, then sail out into a larger shared world of islands. Other teammates will add logins, multiplayer, the story engine, a real-weather feed and an optional AI companion later. Your job is the visual foundation all of that plugs into. It must create a real wow moment in a class demo without overloading ordinary laptops.
+
+Style: light 3D, low-poly, flat-shaded, warm and atmospheric, like a small island diorama. Our own design: do not copy characters, maps or art from any existing game. Palette idea: warm sand, mossy greens, grey cliff rock, teal to deep-blue water, a dusky purple evening sky, the lighthouse lamp a warm gold.
+
+## Tech (decided)
+- Three.js + Vite, plain JavaScript (ES modules). No TypeScript, no React, no game framework, no physics engine.
+- The Vite app lives at the repository root (`index.html`, `vite.config.js`, `src/`, `public/`) and builds to static files in `dist/`.
+- Set up `package.json`, `index.html` and `vite.config.js` by hand. Do not run a scaffolding command (such as `npm create vite`) that could delete or overwrite existing files.
+- Scripts: `npm run dev`, `npm run build`, `npm run preview`, `npm test` (Vitest).
+- Add a `.gitignore` for `node_modules/`, `dist/`, `.env` and `.DS_Store`. Commit `package-lock.json`.
+- If `npm install` is blocked in your sandbox, stop and tell me the exact command to run. Do not load libraries from a CDN instead.
+
+## Build this (must, in this order)
+1. **Lighthouse Isle**: a low-poly island from a simple height function (flat shading, vertex colours) with
+   - the keeper's cottage, with the writing desk by a window,
+   - a shore with a boathouse and a small rowing boat at a wooden jetty,
+   - a cliff path up to the lighthouse, with an iron door at its foot,
+   - the lighthouse with a lamp room at the top whose lamp glows and sweeps a rotating beam at night.
+   Build everything from Three.js primitives (boxes, cylinders, cones, extrusions) so nothing needs downloading.
+2. **Sea**: animated low-poly water around the island (vertex-displaced waves), the boat gently bobbing.
+3. **Sky and light**: a sky (gradient or the Three.js Sky example), sun direction from a time of day (0 to 24 h), one hemisphere light plus one directional sun light with soft shadows, fog that matches the sky colour. Day/night cycle: key `T` speeds time up; a debug slider sets the hour. Night must look great: lamp glow and beam are mandatory, stars optional.
+4. **Player**: a simple low-poly character built from primitives. WASD or arrow keys to walk, Shift to run, a third-person camera that follows and orbits with the mouse, mouse wheel to zoom. The player walks on the terrain, cannot walk into the sea, and cannot walk through buildings (simple circle or box colliders are enough).
+5. **Story hooks**: trigger zones with these exact ids from the existing story: `cottage`, `desk`, `shore`, `tower_door`. Inside a zone show a small prompt "Press E"; pressing E emits `{ type: 'interact', id }` through a tiny event bus in `src/core/events.js`. Also export named anchor points `stairwell` and `lamp_room` (inside and at the top of the lighthouse) that a later cutscene can move the camera to. No story logic: the story teammate connects to these events later.
+6. **Weather visuals**: `src/world/weather.js` exports `setWeather({ cloudCover, rain, fog, wind })`, each value 0 to 1; missing values keep their current setting. It changes the look: rain particles, fog density, darker light under cloud, higher waves and stronger boat motion with wind. Debug keys 1 to 4 switch presets: clear, overcast, storm, fog. A real-weather API will call this later.
+7. **Performance**: 60 fps target on an ordinary laptop with integrated graphics (e.g. a MacBook Air). Budget: under 150,000 triangles, under 150 draw calls, pixel ratio capped at 1.5, one shadow-casting light with a 2048 shadow map, no large textures. A quality setting (low/high) in `src/config.js` toggles shadows and effects. Show an FPS counter in dev mode only.
+8. **Structure**: one job per file, files short (aim for under 150 lines), a plain-English comment at the top of each file saying what it does and what it connects to:
+   - `src/main.js` (starts everything), `src/config.js` (colours, sizes, quality)
+   - `src/core/`: `renderer.js`, `loop.js`, `input.js`, `events.js`
+   - `src/world/`: `terrain.js`, `island.js`, `water.js`, `sky.js`, `lighthouse.js`, `buildings.js`, `boat.js`, `weather.js`, `zones.js`
+   - `src/player/`: `character.js`, `controller.js`, `camera.js`
+   - `src/ui/`: `hud.js` (interaction prompt, debug panel)
+
+   Keep the maths in small pure functions without Three.js objects so they can be tested: sun position from the hour, terrain height at (x, z), clamping weather values, zone hit tests. Prefer small functions and plain objects over class hierarchies.
+9. **Tests** (Vitest), at least: the sun is below the horizon at midnight and highest near noon; terrain height is above sea level in the island centre and below it at the edge; `setWeather` clamps out-of-range values and keeps missing ones; the zone hit test returns the right id or none. `npm test` must pass and `npm run build` must succeed.
+10. **GRAPHICS.md** at the root (this file is yours): how to run it, the controls, the folder map, the functions other packages use (events, `setWeather`, zones and anchors, where a remote player model would be added later), the performance budget with what you measured, and known limits.
+
+## Nice to have, only after everything above works
+- Subtle bloom on the lamp and the lit windows, a gentle vignette.
+- Seagulls circling the lighthouse, grass swaying in the wind.
+- A skippable 3 to 5 second opening camera flight from the sea to the cottage at dusk: our demo opener.
+
+## Do not
+- No multiplayer, login, story logic, external API calls, analytics, secrets or CDN scripts.
+- No copyrighted assets. Any external model, texture or sound must be CC0 (e.g. Kenney.nl, Quaternius) and listed in `ASSETS.md` with source URL and licence.
+
+## When you finish, report
+Changed (each file and what it does), verified (exact commands and results for `npm test` and `npm run build`), not verified (e.g. the visual look and fps on other machines), remaining work and suggestions, the branch and its commits. Then explain in three sentences how the render loop works, so I can explain it to a teammate.
