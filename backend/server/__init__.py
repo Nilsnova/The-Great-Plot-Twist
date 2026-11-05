@@ -12,7 +12,7 @@ Where things are (one job per file):
     sign_in_code.py    swaps the one-time code from the GitHub sign-in for a login token (PKCE)
     supabase_admin.py  server-only calls to the database with the secret key
     wallet.py          the rules for changing a player's coins
-    routes/            the URLs of the API (the game calls them; the daily cron calls keepalive)
+    routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
 """
 

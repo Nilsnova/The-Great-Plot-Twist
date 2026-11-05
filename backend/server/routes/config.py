@@ -6,7 +6,7 @@ sign in: the sign-in provider (always github) and the address of our Supabase pr
 Everything in it is public. The Supabase address is not a secret: the browser needs it to start
 the GitHub sign-in, and it is visible in the browser's address bar during sign-in anyway. This
 route never returns a key. Not the secret key, not the publishable key (the sign-in check does
-not need it) and not the cron secret.
+not need it) and not the keep-alive secret (CRON_SECRET).
 
 Used by: the game client at start-up (to show or hide features) and the sign-in check page
 (frontend/public/auth-check.html), which needs the Supabase address to start the sign-in.

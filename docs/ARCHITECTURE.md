@@ -13,7 +13,7 @@ The details live elsewhere. One-time account setup is in [SETUP.md](SETUP.md). H
 | The game | The browser client: a top-down 2D world drawn with Three.js and built with Vite, in plain JavaScript. It shows the world and sends what the player wants to do. Its art style is decision D005, written by the graphics package (G1). | `frontend/`, added by G1. It may be missing on your branch. |
 | The API | The Python server (FastAPI). Every game rule lives here, tested with pytest. | `backend/main.py` (the entry Vercel starts) and `backend/server/` |
 | The database | Supabase: Postgres with row-level security, sign-in with GitHub (Supabase Auth), and Realtime (not used yet). | `supabase/migrations/`. How to apply it: [supabase/README.md](../supabase/README.md) |
-| Outside data | Services we read but do not own, such as weather, prices and match results. Only the server calls them, through one adapter file each, with a cache, a timeout and a recorded fallback. | `backend/server/adapters/` (a worked example so far) |
+| Outside data | Services we read but do not own, such as weather, prices and match results. Only the server calls them, through one adapter file each, with a cache, a timeout and a recorded fallback. | `backend/server/adapters/` (the pattern, with a worked example) and `backend/server/weather/` (the live weather from Open-Meteo, the first real source, wired into the game) |
 | Hosting | One Vercel project with two Vercel Services, `frontend/` and `backend/`. | `vercel.json` |
 
 ## 2. The picture
@@ -45,7 +45,7 @@ flowchart LR
   keepAliveCaller -.->|"GET /api/keepalive"| backendService
 ```
 
-Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are not proven or not built: no real outside source is wired in yet, and nothing calls the keep-alive route every day yet. Who will call it is an open decision for Nils. The box sits outside the Vercel project on purpose, because Vercel Cron cannot be used with our setup (see "The 7-day pause and the keep-alive" below).
+Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are not proven or not built: only some of the outside data is wired in so far (the live weather from Open-Meteo, `GET /api/weather`, and the Island Exchange prices from Binance, `GET /api/market`), and nothing calls the keep-alive route every day yet. Who will call it is an open decision for Nils. The box sits outside the Vercel project on purpose, because Vercel Cron cannot be used with our setup (see "The 7-day pause and the keep-alive" below).
 
 ## 3. Who may do what
 

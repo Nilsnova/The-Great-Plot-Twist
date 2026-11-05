@@ -71,7 +71,7 @@ def not_configured(message: str) -> ApiError:
 
 
 def check_secret(authorization: str | None, cron_secret: str) -> None:
-    """Let the request through only if it carries the cron secret. Raises 503 or 401."""
+    """Let the request through only with the keep-alive secret (CRON_SECRET). Raises 503 or 401."""
     if not cron_secret:
         # With no secret set, nobody can prove who they are, so everybody is refused. We never
         # compare against an empty secret, because an empty token would match it.

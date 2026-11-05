@@ -143,7 +143,7 @@ Should (only if the M1 cut rule passes, always behind a feature flag):
 |---|---|---|
 | M0 Foundations | Thu 5 to Sun 8 | `main` is live (done on 5 Nov: the bootstrap is merged and production answers). Foundation wave 2 is on `main`. Codex's final pixel pass is merged and D005 is written. `npm test` and `uv run pytest` are green on `main`. Lane owners are picked. The S0 case file is drafted. The migration is applied and the two-user test plan passes. |
 | Contracts | Mon 9 | All four have reviewed `docs/INTERFACES.md` (D009). Nils has approved S0. The A6 and L3 specs are written. Every core package has an issue. |
-| Backbone go/no-go | Tue 10 | The five deploy checks in [docs/SETUP.md](docs/SETUP.md) pass or have a recorded fallback (D010): a teammate's push builds a Ready preview, `/api/health` answers on the preview, the keep-alive runs on production, two test users each see only their own rows, and a GitHub sign-in round trip works. Check 2 already passed on 5 Nov: `/api/health` answers on production. |
+| Backbone go/no-go | Tue 10 | The five deploy checks in [docs/SETUP.md](docs/SETUP.md) pass or have a recorded fallback (D010): a teammate's push builds a Ready preview, `/api/health` answers on the preview, a call to the daily keep-alive route ends with 200 on production (check 3 waits for Nils to decide what makes that call), two test users each see only their own rows, and a GitHub sign-in round trip works. Check 2 already passed on 5 Nov: `/api/health` answers on production. |
 | M1 Vertical slice | Fri 13 | Act 1 is playable in the browser to an ending. The referee grants a kit. A crew forms, with an NPC partner in an empty seat. You can travel from Lighthouse Isle to the harbor. Live weather shows. First fps check on the presenter laptop. Cut rule applied (D008). |
 | M2 Feature complete | Wed 18, freeze 18:00 | The case works end to end: a crew of four and a solo player with NPC partners both finish (8 cards, 4 deductions, finale, accusation, twist). The Relighting and the rewards happen once. Each islet is saved per account. Solvability proofs are green. The timed playtest is logged. |
 | M3 Ship | Thu 19 to Sun 22 | Deployed checks pass. The README has the deployed URL, every member's name and student number, the commands and demo mode. Each lane has a how-it-works page. `frontend/ASSETS.md` is complete. The highlights demo is rehearsed on Fri 20, explain-back drills run on Thu 19 and Sat 21, final rehearsal on Sun 22. |
@@ -181,7 +181,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - Proposal: it runs on a seeded demo world that is reset afterwards (L3's presenter seed and reset script), so the live world's real first solve stays open for players. A short recording of the same highlights is the fallback. Live on a seeded demo world or recorded is open for the team kickoff.
 - Not needed any more: the 7:30 live script and the phone class join (A5).
 - Still open: the date (Tue 24 Nov or Fri 4 Dec), the slot length and the format. The course has not published them yet.
-- Free Supabase projects pause after 7 days of low activity. The keep-alive runs daily, and someone opens the Supabase dashboard the day before the demo.
+- Free Supabase projects pause after 7 days of low activity. What calls the keep-alive route once a day is an open decision for Nils ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Until then we rely on team activity, and someone opens the Supabase dashboard the day before the demo.
 
 ## Lane G: World and Graphics (Nils, with Codex)
 
@@ -351,7 +351,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - `CachedSource` (cache, timeout and fallbacks) for every outside data source;
   - the wallet: `apply_transaction` in `backend/server/wallet.py` and the one database function behind it;
   - the tables `profiles`, `saves`, `wallets`, `wallet_reasons`, `wallet_transactions`, `crews` and `crew_seats`;
-  - `GET /api/keepalive`, called once a day so the free Supabase project does not pause;
+  - `GET /api/keepalive`, for one daily caller so the free Supabase project does not pause (Nils still has to decide what calls it, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive));
   - `vercel.json` with two Services.
 - **Acceptance:**
   - `cd backend && uv run pytest` and `uv run ruff check .` are green (today on `main`: 232 passed, "All checks passed!"), and the SQL parse check passes;
@@ -485,7 +485,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Budget: the Demo plan allows 100 calls a minute but only 10,000 a month, about 330 a day. A 60-second cache while the exchange is open (08:00 to 22:00) could need up to 840 calls a day for each running server. So refresh only when a request finds the cache expired, and use a cache of about 5 minutes, or let the backup fill the gaps. The spec shows the arithmetic.
   - Backup: Binance market data (`data-api.binance.vision`), no key. It can refuse requests from US addresses (HTTP 451). Our functions run in Dublin, but test from the deployed function.
   - Replay fallback: a trimmed file of 1-minute candles from Binance Vision. Its licence (CC BY-NC-SA 4.0) allows committing it, with the credit "Binance Vision" and the same licence on the file.
-  - Vercel Hobby runs cron jobs at most once a day, so prices refresh when a request finds the cache expired.
+  - Vercel Cron cannot be used with our setup (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)), so no timer refreshes prices: they refresh when a request finds the cache expired.
   - Before building, read CoinGecko's API terms (sections 4.4, 6.1 and 6.2) on the live page. Whether amplified prices count as "derived data" there is not settled.
 - **Depends on:** A1 (the wallet), A2.
 - **Provides:** `backend/server/adapters/prices.py` (the three sources, in order); `backend/server/game/market.py`; `backend/content/companies.json`; `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings` (new migration); the reasons `market_buy` and `market_sell`, added by migration; the flag `market`.
@@ -521,7 +521,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Football backup: OpenLigaDB. No key, an open licence, and made for prediction games. Call it at most once per league every 30 to 60 seconds during live games, from our server only. Volunteers enter the data, so confirm a result with a second source before paying out. It has no Primeira Liga.
   - Basketball (NBA): balldontlie, with a free key and 5 calls a minute. A teammate creates the key (who is open for the team kickoff), and it lives only in the Vercel settings. Its games have a clear `final` status. The NBA plays almost every night, so it is the safest "last night's game" for a morning class.
   - Settle only on the final result (`FINISHED` or `final`). Refund when a game is postponed, cancelled or suspended. Stay with league games or 90-minute results, to avoid extra-time rules. The winners share the pool pro rata, and a pool with no winners refunds. A presenter can settle by hand with the same rules.
-  - Vercel Hobby runs cron jobs at most once a day, so settle when someone opens their stakes after the game. For an 11:00 class, take stakes the evening before.
+  - Vercel Cron cannot be used with our setup (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)), so no timer settles games for us: settle when someone opens their stakes after the game. For an 11:00 class, take stakes the evening before.
 - **Depends on:** A1, A2, and `pools.py` from L5 (or written here).
 - **Provides:** `backend/server/adapters/fixtures.py`; the tables `fixtures` and `sports_stakes` (new migration); `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the reasons `sports_stake` and `sports_payout`, added by migration; the flag `sports`.
 - **Acceptance:** settles only on a final result; refunds when a game is postponed or cancelled; splits the pool pro rata; pays once; shows the credit line; tests use no network.

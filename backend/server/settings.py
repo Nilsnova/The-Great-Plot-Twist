@@ -7,8 +7,9 @@ so this file is the full list of what can be configured:
     SUPABASE_URL              address of the Supabase project
     SUPABASE_PUBLISHABLE_KEY  key the browser may also use (row-level security protects data)
     SUPABASE_SECRET_KEY       server-only key. NEVER put it in the browser, a log or the repo.
-    CRON_SECRET               server-only password for the daily keep-alive. Vercel sends it to
-                              /api/keepalive. Optional on your laptop. NEVER in the repo.
+    CRON_SECRET               server-only password for the daily keep-alive. Whatever calls
+                              /api/keepalive once a day sends it. Optional on your laptop.
+                              NEVER in the repo.
     DEMO_MODE                 true or false (default: false)
     FEATURE_FLAGS             comma-separated feature names to switch on (see flags.py)
     WEATHER_PLACE_NAME        name of the place whose real weather the game shows (default:
@@ -19,9 +20,9 @@ so this file is the full list of what can be configured:
                               number from 20 to 100 (default: 100). Not a secret.
 
 Used by: app.py (reads the environment once at start-up), auth.py and supabase_admin.py (the
-Supabase address and keys), the routes (env, demo mode, flags, the cron secret), weather/source.py
-(the weather place) and the tests (they pass in a plain dictionary, so no real environment is
-needed).
+Supabase address and keys), the routes (env, demo mode, flags, the keep-alive secret),
+weather/source.py (the weather place) and the tests (they pass in a plain dictionary, so no real
+environment is needed).
 """
 
 import math
@@ -63,7 +64,9 @@ class Settings:
     # SecretStr prints as ********** in logs and error messages. To get the real value on
     # purpose, call .get_secret_value() (only supabase_admin.py and routes/keepalive.py do that).
     supabase_secret_key: SecretStr = SecretStr("")
-    # The password Vercel's cron sends to /api/keepalive. Empty on a laptop: only Vercel calls it.
+    # The password that the daily caller of /api/keepalive sends. The name dates from the time we
+    # planned to use Vercel Cron, which we cannot use. Empty on a laptop: no daily caller runs
+    # there, and the route then answers 503.
     cron_secret: SecretStr = SecretStr("")
     demo_mode: bool = False
     flags: dict[str, bool] = field(default_factory=default_flags)
