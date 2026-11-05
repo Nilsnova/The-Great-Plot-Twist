@@ -23,7 +23,7 @@ async function loadGame() {
   catch(error){console.error(error);pending=null;shell.show('title');shell.notice('The coast could not load. Check the connection and WebGL 2, then try again.');return null;}
   finally{loading=false;status.remove();}
 }
-const shell=createShell({container,readSave:()=>introJournal().read(),resetInput(){},focus(){container.querySelector('canvas')?.focus();},
+const shell=createShell({container,readSave:()=>introJournal().read(),resetInput(){},focus(){container.querySelector('canvas[tabindex="0"]')?.focus();},
   demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:createSettingsView,hasOverlay:()=>loading||!!runtime?.hasOverlay(),
   onState(mode){audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
   async onPlay(resume){const game=await loadGame();await game?.begin(resume);},

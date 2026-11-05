@@ -8,16 +8,17 @@ import {places} from '../world/places/registry.js';
 export function createTour(ctx) {
   const machine=createTourMachine(),story=createDemoStory(ctx.container);
   let active=false,disposed=false,changing=false,generation=0,task=Promise.resolve(),snapshot=null,timer=null,wake=null,taskDone=true,stopPromise=null;
-  function wait(ms){return new Promise(resolve=>{wake=resolve;timer=setTimeout(()=>{wake=null;resolve();},ms);});}
+  // A skip may arrive before travel resumes; an obsolete step must not create another timer.
+  function wait(ms,token){if(disposed||token!==generation)return Promise.resolve();return new Promise(resolve=>{wake=resolve;timer=setTimeout(()=>{wake=null;resolve();},ms);});}
   function cancelWait(){clearTimeout(timer);wake?.();wake=null;}
   function closeViews(){story.close();ctx.chart.close();ctx.sailing.skip();ctx.skipCinematic();}
   function standAt(id){const zone=ctx.world.current?.zones.find(zone=>zone.id===id);if(zone){ctx.player.position.set(zone.x,zone.y,zone.z);ctx.view.setPlace(ctx.world.current.id,ctx.player.position);ctx.hud.message(zone.name);}}
   async function enter(token) {
     const id=machine.step.id;ctx.announce(machine.step);setWeather(id==='fog'?presets.fog:id==='storm'?presets.storm:recordedWeather);
-    if(id==='intro'){story.open();await wait(5000);if(token!==generation)return;story.perform('to_desk');await wait(5000);if(token===generation)story.perform('read_log');return;}
+    if(id==='intro'){story.open();await wait(5000,token);if(token!==generation)return;story.perform('to_desk');await wait(5000,token);if(token===generation)story.perform('read_log');return;}
     if(id==='arrival'){await ctx.world.goTo('lighthouse_isle',{fast:true});if(token===generation){ctx.hud.start();standAt('cottage');}}
-    if(id==='chart'){ctx.chart.show();await wait(4000);if(token!==generation)return;ctx.chart.close();await ctx.world.goTo('saltreach_harbor');}
-    if(id==='harbor'){await ctx.world.goTo('saltreach_harbor',{fast:true});if(token===generation)standAt('harbor_office');await wait(8000);if(token!==generation)return;standAt('market_hall');await wait(8000);if(token===generation)standAt('captains_table');}
+    if(id==='chart'){ctx.chart.show();await wait(4000,token);if(token!==generation)return;ctx.chart.close();await ctx.world.goTo('saltreach_harbor');}
+    if(id==='harbor'){await ctx.world.goTo('saltreach_harbor',{fast:true});if(token!==generation)return;standAt('harbor_office');await wait(8000,token);if(token!==generation)return;standAt('market_hall');await wait(8000,token);if(token===generation)standAt('captains_table');}
     if(id==='fog'||id==='storm'){settings.hour=21;ctx.caption(id==='fog'?'Fog settles over the harbor · weather override':'Rain and strong wind · storm override');if(id==='fog')ctx.cue('foghorn');}
     if(id==='finale'){settings.hour=23;for(const name of ['three_lights','fog_lift','schooner_reveal','unmask','relighting']){if(token!==generation)return;await ctx.world.cinematic(name);}}
   }

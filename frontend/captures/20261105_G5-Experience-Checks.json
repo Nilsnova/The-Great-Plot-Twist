@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T19:59:10.936Z",
+  "checked": "2026-11-05T20:11:49.193Z",
   "checks": [
     "Cold title allocates neither WebGL nor an AudioContext",
     "Continue is disabled without a local intro",
@@ -23,6 +23,7 @@
     "Actual touch drag maps the virtual stick to movement",
     "Phone settings fit and scroll within the viewport",
     "Phone HUD and menus create no page overflow",
+    "Phone touch controls and weather footer do not overlap",
     "Phone chart pans its native pixels without fractional shrinking",
     "Touch chart and passage controls reach Harbor",
     "Desktop checks have no browser errors or external asset requests"
@@ -32,7 +33,7 @@
     "finite": true
   },
   "desktop": {
-    "fps": 61,
+    "fps": 60,
     "calls": 97,
     "triangles": 192,
     "geometries": 96,

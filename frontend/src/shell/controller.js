@@ -5,7 +5,7 @@ import {hasLocalIntro,shellTransition} from './logic.js';
 import {credits,menuButton,pixelLogo} from './screens.js';
 export function createShell(ctx) {
   let mode='title',returnTo='title',disposed=false;
-  const modal=createModal({title:'The Great Plot Twist',onCancel(){if(mode==='pause')play();else if(mode!=='title')show(returnTo);}});
+  const modal=createModal({title:'The Great Plot Twist',onClose(){if(mode==='playing'&&!ctx.hasOverlay())ctx.focus();},onCancel(){if(mode==='pause')play();else if(mode!=='title')show(returnTo);}});
   modal.element.classList.add('shell-screen');
   function play() {mode='playing';modal.close();ctx.resetInput();ctx.onState(mode);ctx.focus();}
   function start(resume) {play();ctx.onPlay(resume);}

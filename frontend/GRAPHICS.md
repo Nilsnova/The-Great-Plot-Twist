@@ -226,7 +226,7 @@ Not verified: other browsers/GPUs, actual screen-reader software, touch movement
 
 `src/main.js` is the small title entry. It owns the shell, audio and preference lifetime, and imports `game.js` only after New game, Continue or the explicit demo action. `shell/controller.js` uses one native dialog for title, pause, settings and credits; all supplied text uses safe DOM helpers. The title's static original backdrop and canvas emblem load without WebGL. New game enters the original intro on Lighthouse Isle and resets only its local move journal. Continue replays that journal and opens its saved scene, inventory or ending. A structurally valid but no-longer-replayable save gets a visible fresh-intro notice. Normal intro content still comes from the existing API, with the existing timeout/retry UI.
 
-Escape closes the top story/chart/cinematic view first; from the world it opens Pause. Resume restores canvas focus. Settings/Credits return to the menu that opened them. The native menu traps Tab/Shift-Tab, restores a visible invoking control, and blocks movement, interaction and travel through the existing world lock. Returning to title does not erase the intro. **A2 hook:** replace the `onPlay(resume)` callback in `main.js` with a cloud-aware loader when that package exists; `game.begin(resume)` and `world.intro.actions` remain presentation/replay hooks. No account token, captain state or server verdict is fabricated here.
+Escape closes the top story/chart/cinematic view first; from the world it opens Pause. Resume restores canvas focus. Settings/Credits return to the menu that opened them. The native menu traps Tab/Shift-Tab, restores a visible invoking control, and blocks movement, interaction and travel through the existing world lock. Returning to title does not erase the intro. **A2 hook:** replace the `onPlay(resume)` callback in `main.js` with a cloud-aware loader when that package exists; `game.begin(resume)` and `world.intro.actions` remain presentation/replay hooks. No account token, captain state or server verdict is fabricated here. Integrate feature controllers beside intro/chart in `game.js`, passing the existing world and audio cue callback; keep the title bootstrap small. `window.__island` remains development-only and is not a production integration API.
 
 Credits display four `<name>` placeholders, no student numbers, data/adaptation/licence links and the tool licences from ASSETS.md. They contain no case solution or identity pairing.
 
@@ -259,3 +259,48 @@ Only the exact `?demo=1` query imports the presenter and its local data. Choose 
 `demo/logic.js` is the pure step machine. `demo/tour.js` owns its waits, generation checks, one active step and shared stop cleanup; it awaits any current travel before restoring the departure place/position, hour and weather. Place assets have the existing bounded load waits. Skip closes the current dialogue/chart/passage/shot, drops stale scripted actions and continues. App disposal cancels waits and subscriptions. No world lock is held over the whole tour, since that would block the tour's own travel/cinematics.
 
 The intro slice uses `demo/intro-story.json`, an unchanged public S1 copy, with the unchanged engine and a memory-only adapter. It neither reads/writes the player journal nor emits `intro_ended`. Recorded weather is a credited local sample; fog/storm are clearly labelled presentation overrides. Incoming live-weather updates do not replace a running tour's overrides. The existing best-effort weather GET may still run, but neither weather nor intro API availability gates the tour. There are no backend writes. Preferences remain the normal app's local preferences, independent of the rehearsal. No board rules, economy, sign-in, rewards or shared solve state are simulated. The unmask uses anonymous staging and supplies no reveal identity.
+
+## G5 verification and performance
+
+Final G5 checks ran on installed headless Chrome 157 on this Mac. Browser/GPU runs were sequential. Desktop benchmarks use 1440 × 900, DPR 1; separate checks cover DPR 2 and a 375 × 667 touch viewport. Exact outputs and screenshots are under `captures/20261105_G5-*`; the retained World, Pixel, UI-kit and cinematic reports contain the current regression results. `G5-Test-Results.json` records the last exit status per command. The run log retains failures that led to fixes as well as the final successful runs.
+
+| Command from frontend/ | Final result |
+| --- | --- |
+| `npm test` | 162 tests, 23 files passed |
+| `npm run build` | three HTML entries built; no large-chunk advisory |
+| `npm run test:loading` | 13 checks: cold title, lazy entries, contrast, phone integer emblem and production boundaries |
+| `npm run test:experience` | 26 checks: shell, preferences, Continue/reset, focus, audio gating/waveform, gamepad, actual emulated touch drag and 375 px layout |
+| `npm run test:demo` | ten checks: complete 153,544 ms tour with APIs returning 503, prompt skips, cancellation, no journal writes/completion event |
+| `DEMO_FAST=1 npm run test:demo` | five focused API-down skip/cancel checks |
+| `npm run test:cinematics` | 24 checks, including delayed-import Escape and stale-load cancellation |
+| `npm run test:world` | 55 checks, all hotspots and ten round trips |
+| `npm run test:intro` | 16 checks, both original endings through the real local API |
+| `npm run test:ui` / `npm run test:ui:production` | 19 / 16 checks |
+| `npm run test:readability` | 1365 × 768, 1920 × 1080 and 1100 × 700; 14 px primary labels, 16 px chart/hotspots, no overlapping chart labels |
+| `CAPTURE_PREFIX=G5 npm run test:browser` | 19 movement, weather, settings and retina checks |
+| `CAPTURE_PREFIX=G5 npm run test:production` | seven static-build checks, including focus and reduced-motion travel |
+| `npm run test:art` / `npm run test:art:production` | all 192 PNGs decode; selective preload/visibility/grid checks pass |
+| `npm run test:weather:wiring` | three checks: existing values, readable attribution and browser errors |
+| `python3 scripts/pixel_art/generate.py` | 192 PNGs regenerated byte-identically |
+| `git diff --check` | passed |
+
+| Measured item | G5 result |
+| --- | ---: |
+| Cold title JavaScript, sum of initial chunks | 21,477 bytes |
+| Same JavaScript, local gzip estimate | 9,795 bytes |
+| Static original title PNG | 29,530 bytes |
+| Primary button text contrast | 6.48:1 |
+| Largest loaded world JS chunk | about 393 kB, deferred until play |
+| Shared Three.js/art JS chunk | about 206 kB, deferred until play |
+| World / active three-light FPS | about 60 / 61 |
+| Active three-light draw calls / triangles | 97 / 192 |
+| Cinematic duration including local image loading | 8,271 ms |
+| Reduced-motion sample | 107 ms |
+| After cinematics and ten travel round trips | 96 geometries, 27 textures, one place root |
+| Full API-down tour | 153,544 ms |
+| Final full-run per-step skip times | 8–65 ms |
+| Repeated End during a passage | 59 ms |
+
+JavaScript sizes are file sums/gzip estimates, not a claim about a particular Wi-Fi download time. The former single G4 game chunk was roughly 611 kB; the title now fetches its small entry before the renderer, destinations, finale, demo data or gallery. Weather first-use may upload an additional app-owned geometry; the post-storm tour sample has 97 geometries/27 textures/one root. Repeated travel and cinematics do not add place roots or retain destination allocations. Normal browser modes measured around 60 FPS, below 150 draw calls and the triangle budget. The only expected errors in the deliberately failed-API tour are its injected 503 resource diagnostics; no JavaScript/WebGL error or external asset request occurred.
+
+Not verified: Safari/Firefox, physical phone/controller hardware, actual screen-reader software, speaker/headphone balance, a prolonged soak, deployed G5, or future authenticated cloud/referee/shared-case integration. Touch and standard-pad behaviour were exercised in Chrome with touch emulation and a controlled standard-pad input. Backend tests were not rerun for incoming unchanged backend code. Claude integrates the feature branch; A2/A3/L3/L4 retain their account, progress, reward, board and trading responsibilities.

@@ -8,4 +8,5 @@ export async function startFromTitle(page,{resume=false,closeIntro=true}={}) {
 export async function closeSettings(page,{keyboard=false}={}) {
   if(keyboard)await page.keyboard.press('Escape');else await page.getByRole('button',{name:'Back',exact:true}).click();
   const resume=page.getByRole('button',{name:'Resume',exact:true});if(await resume.isVisible())await resume.click();
+  await page.waitForFunction(()=>document.activeElement?.matches('canvas[tabindex="0"]'));
 }
