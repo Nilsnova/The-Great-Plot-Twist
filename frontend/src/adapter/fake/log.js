@@ -18,8 +18,9 @@ function cardEntries(state){
   const entries=[];
   for(const [seat,cards] of Object.entries(state.found??{}))for(const id of cards??[]){
     const job=(state.jobs??[]).filter(item=>item.done&&item.cardId===id&&String(item.seat)===seat&&['search','fetch'].includes(item.order)).at(-1);
+    const starter=id==='C2'&&state.crew?.seats.find(member=>member.seat===Number(seat))?.kitId==='witness';
     const route=job?routes.find(item=>item.cardId===id&&item.spot===job.spot):null;
-    entries.push({id,title:cardTitles[id]??id,seat:Number(seat),where:job?(spotNames[job.spot]??job.spot):'Crew journal',place:route?.place??null,caseMinute:job?minuteAt(job.readyAt):null});
+    entries.push({id,title:cardTitles[id]??id,seat:Number(seat),where:job?(spotNames[job.spot]??job.spot):starter?'Arrival kit':'Crew journal',place:route?.place??(starter?kits.witness.startPlace:null),caseMinute:job?minuteAt(job.readyAt):starter?0:null});
   }
   return entries;
 }

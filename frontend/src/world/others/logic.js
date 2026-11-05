@@ -36,7 +36,7 @@ export function selectNearby(records,{place,player={x:0,y:0},now,filter='everyon
   return {selected,hidden:blocked||filter==='off'?0:Math.max(0,eligible.length-selected.length)};
 }
 
-export function placePresenceLabels(entries,{width,height,top=258,bottom=230,labelWidth=180,labelHeight=26,gap=6,maxLabels=2}={}){
+export function placePresenceLabels(entries,{width,height,top=280,bottom=230,labelWidth=180,labelHeight=26,gap=6,maxLabels=2}={}){
   const safeWidth=Math.max(0,Math.min(labelWidth,width-16)),maxTop=height-bottom-labelHeight;
   if(safeWidth<=0||maxTop<top)return [];
   const placed=[],max=Math.min(entries.length,maxLabels);

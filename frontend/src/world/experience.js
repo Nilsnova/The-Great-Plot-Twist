@@ -34,7 +34,7 @@ export function createWorldExperience(ctx){
     previous={x:player.position.x,y:player.position.z};
     const filter=ctx.preferences().showCaptains??'everyone',presence=latest.presence;
     if(place)reporter.update({place,...previous,facing,moving:speed>.05},performance.now(),{
-      enabled:!ctx.isDemo()&&!ctx.isIntro()&&filter!=='off'&&['live','reconnecting'].includes(presence.status),
+      enabled:!ctx.isDemo()&&!ctx.isIntro()&&['live','reconnecting'].includes(presence.status),
     });
     const emote=presence.localEmote;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z);localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
     partners?.update(dt,{place,now:Date.now()});

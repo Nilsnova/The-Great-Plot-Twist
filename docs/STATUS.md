@@ -116,10 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**G7 checkpoint 2 complete on `feat/g7-living-world`; G6 is merged.** Live/account presentation is joined by read-only rewards and keepsakes, the Captain’s Log, view-driven hints/What next, partner actors/orders/chart journeys and safe shortcuts. Larger text is preserved; phone case navigation uses one page selector.
+**G7 complete on `feat/g7-living-world`, ready for Claude to integrate.** Live-captain/account presentation, rewards/keepsakes, partner actors/orders/journeys, Captain’s Log/hints/shortcuts and open Gull’s Rest are reusable screens behind the one schema-1 adapter. Gameplay controls are at least 16 px, case body 18 px and story 19 px.
 
-- **Verified:** checkpoint-2 Vitest set, build/spoiler guard and the new screens’ phone/browser checks; crew scene 61 FPS / 53 calls / one place root. Evidence: `frontend/captures/20261106_G7-C2-*` and the C2 screenshots. Contract extensions remain additive schema 1, documented in GRAPHICS.md.
-- **Next / not verified:** full solo/four-human golden path, six-fault chaos matrix, Gull’s Rest and final regression/performance pass (checkpoint 3). Real GitHub/cloud/realtime services, physical devices, actual screen reader and deployed G7 await integration. No backend, online, deployment or teammate-owned packages changed.
+- **Verified:** 284 tests / 47 files; four-entry build and 91-file spoiler guard; all 24 final verification commands. Golden path has 83 milestones across solo/NPC and four-human crews; chaos has 202 assertions across 96 refusals. Cold title 21,080 JS bytes (below G5); eight captains with night storm 60 FPS / 111 calls. Evidence: `frontend/captures/20261106_G7-Final-Verification.json`; contract/usage: `frontend/GRAPHICS.md`.
+- **Next:** Claude integrates and injects the real adapter, mirrors the additive fields/reasons/events and runs conformance; teammates replace their own credit placeholders. Live account/cloud/realtime/case services, physical devices, actual screen-reader software and deployed G7 were not verified here. No backend, online, deployment or reserved teammate files changed; no main merge or manual deploy.
 
 ### S Story and Mystery (owner picked today)
 
@@ -415,6 +415,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-06, G7 checkpoint 3 complete.** Codex for Nils finished Gull’s Rest, full-case/chaos checks, larger text and lifecycle/paid-consent polish on `feat/g7-living-world`. 284 tests, build/91-file spoiler guard and all 24 verification commands pass; 83 golden-path milestones and 96 fault cases/202 assertions; cold title 21,080 bytes, eight captains with storm 60 FPS/111 calls. Ready for Claude’s real-adapter integration; no merge or deploy.
 
 - **2026-11-06, G7 checkpoint 2.** Codex for Nils added adapter-supplied rewards/ledger/keepsakes, partner actors/status/paid consent/takeover rehearsal, Captain’s Log/hints/What next, larger phone text and cancellable shortcuts on `feat/g7-living-world`. Vitest, build/spoiler guard and new-screen browser checks pass; crew scene 61 FPS/53 calls/one root. Full-game/chaos and final regression continue in checkpoint 3.
 

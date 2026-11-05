@@ -1,6 +1,6 @@
 # Saltreach Isles graphics
 
-The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
+The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. G6 puts the case screens behind one adapter; G7 adds account/presence, rewards, partner life, the log and complete local-case checks. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
 ## Run, controls and readability
 
@@ -19,13 +19,13 @@ From the worktree root, `cd frontend`, then `npm install`, `npm run dev` and ope
 | Touch stick / Interact / Chart / Menu | Touch movement, investigation, travel and pause |
 | Standard gamepad | Stick/D-pad, A interact, Y chart, Menu pause; D-pad/A in menus |
 
-UI typography is independent of pixel-art resolution. At verified desktop sizes, main labels and controls use 14 CSS px, hotspot names and chart destinations 16 px, headings 26–32 px, and supporting labels at least 14 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch controls, optional gamepad and 375 px menu/HUD layouts are implemented in G5; see Controls below.
+UI typography is independent of pixel-art resolution. Main labels and controls now use at least 16 CSS px, case body text 18 px, story/reveal text 19 px and headings 26–32 px. Hotspot names and chart destinations use 18 px. Laptop layouts retain readable text rather than shrinking the interface with the art. Chart destinations are native buttons in a modal dialog with focus and keyboard navigation. Reduced motion skips sailing and character stride/bounce. Touch controls, optional gamepad and 375 px menu/HUD layouts are implemented in G5; see Controls below.
 
 The close camera follows the player and keeps extra headroom near the Lighthouse tower. Cottage roofs reveal the interior/desk; foreground trees fade. Piers draw beneath the explorer and are walkable; open sea is blocked. The Harbor Office's matching window overlay glows at night and is visible from the dock spawn. It supplies no story explanation.
 
 ## Art, coordinates and ownership
 
-The library has **185 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
+The library has **190 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
 One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
@@ -87,6 +87,9 @@ The single registry is `src/world/places/registry.js`. IDs are unique within the
 | `watchtower_ruin` | the_teeth, ruined tower |
 | `raid_arch` | the_teeth, raid entrance |
 | `fog_bank` | the_teeth, northern fog edge |
+| `gulls_rest_dock` | gulls_rest, open dock and public festival |
+| `lens_store` | gulls_rest, recovered lens and supplied keepsakes |
+| `keepers_star` | gulls_rest, Keeper’s Star display |
 
 | Anchor id | Meaning |
 | --- | --- |
@@ -312,7 +315,7 @@ Not verified: Safari/Firefox, physical phone/controller hardware, actual screen-
 
 ## Case adapter (G6)
 
-G6 implements screens against one injected client adapter. `startGame({caseAdapter})` accepts the future real adapter; `adapter/bridge.js` owns lazy screen construction and disposal. No screen imports `fetch`, the session, the API client or case rules. `adapter/unavailable.js` is the normal disconnected default and grants no kit/save/solve. Development `?case=local` and the explicit rehearsal workshop `/case-lab.html?demo=1` use a memory-only fake. Nothing in that fake is authoritative or persisted. The S0 drafts were read from the separate story worktree on 5 November and are still awaiting approval; G6's extended paid/ruin/festival screens follow Nils's explicit brief without approving those backend rules.
+G6 implements screens against one injected client adapter. `startGame({caseAdapter})` accepts the future real adapter; `adapter/bridge.js` owns lazy screen construction and disposal. No screen imports `fetch`, the session, the API client or case rules. `adapter/unavailable.js` is the normal disconnected default and grants no kit/save/solve. Development `?case=local` and the explicit rehearsal workshop `/case-lab.html?demo=1` use a memory-only fake. Nothing in that fake is authoritative or persisted. G6 was built from the then-unapproved S0 drafts. G7 follows the approved story round read from the s0final worktree; backend rules remain owned by Claude.
 
 The contract is `read()` (cloned view), `subscribe(listener)` (returns unsubscribe), `dispose()`, and promise-returning intent methods: `completeIntro({ending,actions})`, `createCrew()`, `joinCrew(code,{confirm})`, `muster()`, `pin(cardId)`, `pair(a,b)`, `search(routeId,{paidConfirmed})`, `inspectSpot(spotId)`, `orderPartner(seat,order,target,{allowPaid})`, `buildLight(lightId)`, `callNightfall()`, `takePost(lightId)`, `aim(lightId,degrees)`, `boardSchooner()`, `accuse(suspectId)`, `nextReveal()` and `claimLantern(colour)`. Every answer is `{accepted,reason,message,view}`. Screens show the answer; only an adapter may decide gates, prices, pins, deductions, timers, kits, locks or solves.
 
@@ -425,7 +428,7 @@ Final checks used installed headless Chrome 157 on this Mac, with GPU/browser ru
 
 Short four-frame round-trip samples are resource checks, not reliable FPS benchmarks; the performance figures above use the longer settled samples. The first title remains below its 35 kB JavaScript budget. Board, search, partners, night, accusation, reveal, restored-island art and festival rendering load on demand. Important case notices and controls are at least 14 CSS px, body text 16 px and reveal text 18 px. Phone checks at 375 × 667 include every screen and confirm no horizontal modal overflow. The quieter board background, consistent pixel focus, explicit status labels and original hand-authored coastal art keep the interface in the approved style.
 
-Not verified: Safari/Firefox, physical phone/gamepad hardware, actual screen-reader software, a prolonged soak, live authenticated/shared-case/cloud/referee/ledger routes or a deployed G6 build. The production default is deliberately disconnected until Claude supplies the real adapter; it invents no kit, save, reward or solve. S0 draft approval remains Nils's decision. The feature branch is based on main `3ca7d38`; main later advanced independently to `8215825` (keep-alive work), which this branch does not merge or edit. Claude integrates G6. No main merge, force-push, manual deployment, sign-in UI or trading screen is part of this work.
+Not verified: Safari/Firefox, physical phone/gamepad hardware, actual screen-reader software, a prolonged soak, live authenticated/shared-case/cloud/referee/ledger routes or a deployed G6 build. The production default is deliberately disconnected until Claude supplies the real adapter; it invents no kit, save, reward or solve. This dated G6 verification predates the approved S0 round used in G7. The feature branch is based on main `3ca7d38`; main later advanced independently to `8215825` (keep-alive work), which this branch does not merge or edit. Claude integrates G6. No main merge, force-push, manual deployment, sign-in UI or trading screen is part of this work.
 
 For a walkthrough, begin with `adapter/contract.js`, follow `game.js` into the lazy bridge and `screens/controller.js`, then compare one screen's intent with its fake handler and view projection. `fake/index.js` settles due jobs/night state before dispatch, applies the intent, settles immediate results and publishes a cloned view. To connect the real services, implement the same adapter surface and inject it into `startGame({caseAdapter})`; screens and art do not need transport changes.
 
@@ -494,3 +497,58 @@ The real join adapter supplies the crew screen's takeover preview and confirms t
 `?` lazily opens the shortcut overlay. Its pending import is cancellable. Escape closes the top panel (including pending help), then skips a cinematic, then opens pause. Help blocks movement, preserves the original focused control and reports a failed load with a retry. Phone case navigation uses one labelled native page selector so the 16–19 px text keeps usable vertical room.
 
 Checkpoint 2 checks: `npm test` passed 280 tests / 47 files in the full workspace (including three in-progress Gull’s Rest tests). `npm test -- --exclude tests/gulls-rest.test.js` checks the checkpoint-2 set separately. `npm run build` passed the 91-file spoiler guard. `node scripts/check-life.js` exercised ledger/keepsake gating, original intro records, sealed reveal, hint preferences/What next, timed partner reporting, chart journeys, help/Escape and all new screens at 375 px. The crew scene measured 61 FPS / 53 calls / 184 triangles / one place root. Captures start `20261105_G7-C2-` and final command logs use `20261106_G7-C2-`. Full golden-path/chaos, broad regression and deployed/real-server behavior remain for checkpoint 3.
+
+## Golden path (G7)
+
+`node scripts/check-golden-path.js` plays the unchanged original intro through visible choices, then the complete case with one human/three partners and again with four simulated human seats. It searches through accepted routes, orders/pins/pairs through intents, advances only fake timers, locks the lights, boards, receives a wrong-accusation wait, submits the sole uncleared suspect and finishes the placeholder reveal/festival. It checks reward attribution and idempotent ledger references, keepsakes/epilogues, human-only Wall names, and Gull’s Rest. Rehearsal clock jumps are private to the fake and do not expire a sign-in or fast-forward the public festival. Other human seats have separate wallets/cursors and obey the same fake handlers.
+
+`node scripts/check-chaos.js` injects offline, not_connected, session_expired (401), save_conflict (409), rate_limited (429) and feature_off refusals across the account and each major case intent. Every injected refusal must preserve core progress and show a plain message; session/conflict panels recover explicitly before retry. Neither script makes a backend write. They use the explicit local adapter with every API route held at 503, allow only those expected resource diagnostics, take 1280/375 px captures and record timings/FPS. There is no reveal identity or prose in either harness.
+
+`node scripts/check-g7-regression.js` runs all existing checks plus the new ones sequentially, retaining command, exit status, time and output under `captures/20261106_G7-Final*`. `--resume` retries a failed check and continues; successful commands remain in the report. A failed result is never called passed until its rerun succeeds. Browser modes run one at a time to keep GPU measurements meaningful.
+
+## Gull’s Rest (G7)
+
+The existing lazy `world/places/gulls-rest.js` now exposes three registered zones: `gulls_rest_dock` at (0,13), `lens_store` at (0,2), and `keepers_star` at (5,7), logical X/Z. Dock opens the supplied coast/festival view; the store/star open the supplied keepsake cabinet. The public `world.setRelightingComplete(true)` gate still owns access and naming. Original lens, star and lantern art decorate the open island. Two small geometry batches add shore waves and gulls; lantern flicker shares the existing material. Pixel-grid motion stops with reduced motion. All materials/geometry belong to the single place lifetime, and private case fog never overwrites live weather.
+
+New partner, log, hints, rewards, account, Gull’s Rest and finale screens remain separate lazy chunks. The default adapter remains safely disconnected until Claude injects the real implementation. The display-only Show other captains preference hides remote actors without suppressing the local captain’s own movement reports. Fake cinematic ids remain unique through rehearsal resets, so repeating highlights does not silently drop effects.
+
+### Final G7 client and lifecycle details
+
+`presence` also supplies `localEmote:null|{id,until}`, `canEmote:boolean`, `cooldown:number` and `emotes:[{id,label,available}]`, including safe empty values when disconnected. `until`, peer `at`, `sampledAt` and pin-highlight `at` use client-normalised epoch milliseconds; emote `cooldown` is milliseconds. Case `now`, job/event/reward times and remaining values retain seconds. Each peer may include its own `place`; otherwise the renderer uses `presence.place`, so an ordinary single-room A4 payload works. The conformance suite checks these additive fields without a schema bump.
+
+The composition point in `main.js` owns its adapter. A bridge disposes an adapter only when the bridge created it; injected adapters are unsubscribed, then remain available to title/account or a retried world. Application disposal is idempotent. A failed first island load removes its canvas and allocations before retry. `world.whenIdle()` waits for an existing asset load/passage (independent of overlay gates); New game/Continue cancel transient views, await that passage and verify the destination before opening the original intro. A generation token cancels stale starts when the user returns to title/pause. Closing the intro resets input synchronously; its later native close event cannot discard the player's next key or deactivate a newly opened view.
+
+`npm run test:lifecycle` exercises an intentionally failed ground image, retry with the same signed-in fake account, one canvas/root and exactly one adapter disposal. `npm run test:living`, `test:life`, `test:golden`, `test:chaos` and `test:g7` expose the other focused/full checks. Screens still make no fetch/Supabase/online calls. The original story engine/data, demo story copy, weather-state/client logic, Exchange and home build packages are unchanged.
+
+## G7 final verification and handoff
+
+All 24 commands in `captures/20261106_G7-Final-Verification.json` passed. Each entry names the exact command and retained output in `captures/20261106_G7-Final/`. Checks were run sequentially in installed headless Chrome 157 on this Mac. Earlier iteration failures were fixed and their relevant checks rerun; the manifest records the passing result, with the independent world rerun explicitly noted. No backend/online/deployment files or protected story/weather/trading/home-build packages were edited. The branch began at main `9f5bf97`; main independently advanced to `606ee4a` at the final fetch. No merge/rebase/deploy was performed.
+
+| Verification | Result |
+| --- | --- |
+| `npm test` | 284 tests in 47 files passed, including conformance/fixtures, interpolation/cap, save states, rewards/participation, hint filtering, input reporting, world lifetime and clocks |
+| `npm run build` | four HTML entries; no large-chunk advisory; protected-story spoiler guard passed for 91 built text files |
+| `python3 scripts/pixel_art/generate.py` | all 200 PNGs regenerated; no tracked source image changed |
+| `node scripts/check-living.js` | 19 assertions; bounded reports, own reports stay live when others are hidden, emotes/account recovery and 375 px labels |
+| `node scripts/check-life.js` | 24 assertions; ledger/epilogue gating, log/hints, paid quotes tied to the current order/target, explicit priced tap, journeys, help cancellation/input blocking and 375 px screens |
+| `node scripts/check-lifecycle.js` | 9 assertions; failed initial drawing, retained account/adapter, retry with one canvas/root, 19 px phone story and exactly-once teardown |
+| `node scripts/check-golden-path.js` | 83 milestones; solo/three partners and four simulated humans, all cards/deductions/night/accusation/reveal/rewards/festival/Gull’s Rest |
+| `node scripts/check-chaos.js` | 202 assertions across 96 injected refusals; unchanged progress, safe messages and recovery |
+| Existing browser checks | credits, case, world, desktop readability, weather/retina rendering, static production, pixel catalogue (development/production), UI kit (development/production), cinematics, original intro, weather wiring, experience, full timed tour and loading all passed; exact commands are in the manifest |
+| `git diff --check` | passed |
+
+| Measured sample | Result |
+| --- | ---: |
+| Cold title JS / gzip estimate | 21,080 / 9,830 bytes |
+| Required G5 cold-title ceiling | 21,477 bytes |
+| Eight other captains, clear scene | 61 FPS / 109 calls / 216 triangles |
+| Eight other captains, night storm | 60 FPS / 111 calls / 217 triangles |
+| Partner crew in Harbor | 60 FPS / 53 calls / 184 triangles |
+| Open Gull’s Rest, desktop and 375 px | about 60 FPS / 34 calls / 74 triangles |
+| Complete API-down automatic highlights tour | 161,218 ms |
+| After tour | 60 FPS / 97 calls / one place root |
+| Primary pixel-button text contrast | 6.48:1 |
+
+The optional crew/emote material cache stays app-owned across places; after first use it accounts for 42 additional maps (69 textures after the tour), rather than a place leak. World round trips keep one place root and stable place allocations. Actor geometries and material clones are bounded, and application teardown releases the shared cache. These are settled short-run measurements, not a cross-device or prolonged-soak guarantee.
+
+Not verified: live GitHub/Supabase sign-in, actual shared rooms/cloud saves/case/ledger services, Safari/Firefox, physical phone/gamepad hardware, actual screen-reader software or a deployed G7 build. Claude integrates the branch and implements/injects the real adapter at `adapter/select.js`, mirroring the schema-1 additions and passing the same conformance suite. The local rehearsal never supplies real rewards, backend writes or reveal identity/prose. No graphics work remains within G7; real-service integration and the reserved teammate packages remain with their owners.

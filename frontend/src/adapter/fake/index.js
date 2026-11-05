@@ -97,7 +97,7 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
       state.lobbyNow+=Math.max(0,seconds);state.worldNow+=Math.max(0,seconds);state.now+=Math.max(0,seconds);
       if(settle())state.revision++;publish();
     },
-    reset(){if(disposed)return;state=initial();state.allowBrowse=allowBrowse;notice=null;nextFault=null;presenceTime=0;publish();},
+    reset(){if(disposed)return;const effectId=state.effectId;state=initial();state.effectId=effectId;state.allowBrowse=allowBrowse;notice=null;nextFault=null;presenceTime=0;publish();},
   };
   return bindCaseMethods({read,tick,dev,
     subscribe(listener){if(disposed)return()=>{};listeners.add(listener);return()=>listeners.delete(listener);},

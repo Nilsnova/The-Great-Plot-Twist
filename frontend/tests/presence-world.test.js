@@ -99,3 +99,4 @@ describe('presence rendering math',()=>{
     expect(placePresenceLabels([{point:{x:180,y:90}}],{width:375,height:667})).toHaveLength(0);
   });
 });
+it('uses the room place when individual peer samples omit it',()=>{const previous=globalThis.document;globalThis.document={createElement:()=>labelElement()};try{const layer=createOtherCaptains(new THREE.Scene(),element(),makeArt(),true),sample=peer('room-member',0,0);delete sample.place;layer.ingest({place:'saltreach_harbor',sampledAt:1000,others:[sample]});layer.update(0,{place:'saltreach_harbor',player:{x:0,y:0},now:1000});expect(layer.stats.drawn).toBe(1);layer.dispose();}finally{globalThis.document=previous;}});

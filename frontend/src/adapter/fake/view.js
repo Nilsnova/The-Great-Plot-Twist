@@ -1,3 +1,4 @@
+// Cloned case projection: supplied presentation data, with rules only in fake modules.
 import {partnerLifeView} from './partner-life.js';
 import {rewardsView} from './rewards.js';
 import {caseLogView} from './log.js';

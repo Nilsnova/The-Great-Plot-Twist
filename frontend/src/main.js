@@ -78,7 +78,7 @@ function pollTitlePad(now){
 }
 titleFrame=requestAnimationFrame(pollTitlePad);
 function dispose(){
-  disposed=true;cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();accountHost.dispose();summary.dispose();
+  if(disposed)return;disposed=true;cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();accountHost.dispose();summary.dispose();
   shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
   if(import.meta.env.DEV)delete window.__plotTwist;
 }

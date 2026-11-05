@@ -1,0 +1,240 @@
+{
+  "checked": "2026-11-05T23:36:15.432Z",
+  "viewports": [
+    {
+      "width": 1365,
+      "height": 768,
+      "fonts": {
+        ".wordmark": 16,
+        ".chapter": 16,
+        ".controls": 16,
+        ".conditions": 16,
+        ".interact strong": 18
+      },
+      "chart": {
+        "labels": [
+          {
+            "id": "lighthouse_isle",
+            "size": 18,
+            "left": 326.484375,
+            "top": 470.3046875,
+            "right": 506.515625,
+            "bottom": 506.6015625
+          },
+          {
+            "id": "saltreach_harbor",
+            "size": 18,
+            "left": 573.0859375,
+            "top": 432.3046875,
+            "right": 763.9140625,
+            "bottom": 468.6015625
+          },
+          {
+            "id": "home_islet",
+            "size": 18,
+            "left": 775.484375,
+            "top": 522.3046875,
+            "right": 901.515625,
+            "bottom": 558.6015625
+          },
+          {
+            "id": "smugglers_cove",
+            "size": 18,
+            "left": 368.484375,
+            "top": 272.3046875,
+            "right": 548.515625,
+            "bottom": 308.6015625
+          },
+          {
+            "id": "wreck_point",
+            "size": 18,
+            "left": 742.0859375,
+            "top": 304.3046875,
+            "right": 878.9140625,
+            "bottom": 340.6015625
+          },
+          {
+            "id": "the_teeth",
+            "size": 18,
+            "left": 906.890625,
+            "top": 250.3046875,
+            "right": 1022.109375,
+            "bottom": 286.6015625
+          },
+          {
+            "id": "gulls_rest",
+            "size": 18,
+            "left": 926.484375,
+            "top": 166.3046875,
+            "right": 1106.515625,
+            "bottom": 202.6015625
+          }
+        ],
+        "overflow": false
+      },
+      "panel": {
+        "left": 402.5,
+        "top": 16,
+        "right": 962.5,
+        "bottom": 752
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "fonts": {
+        ".wordmark": 16,
+        ".chapter": 16,
+        ".controls": 16,
+        ".conditions": 16,
+        ".interact strong": 18
+      },
+      "chart": {
+        "labels": [
+          {
+            "id": "lighthouse_isle",
+            "size": 18,
+            "left": 470.984375,
+            "top": 673.3046875,
+            "right": 651.015625,
+            "bottom": 709.6015625
+          },
+          {
+            "id": "saltreach_harbor",
+            "size": 18,
+            "left": 843.5859375,
+            "top": 616.3046875,
+            "right": 1034.4140625,
+            "bottom": 652.6015625
+          },
+          {
+            "id": "home_islet",
+            "size": 18,
+            "left": 1130.984375,
+            "top": 751.3046875,
+            "right": 1257.015625,
+            "bottom": 787.6015625
+          },
+          {
+            "id": "smugglers_cove",
+            "size": 18,
+            "left": 533.984375,
+            "top": 376.3046875,
+            "right": 714.015625,
+            "bottom": 412.6015625
+          },
+          {
+            "id": "wreck_point",
+            "size": 18,
+            "left": 1083.5859375,
+            "top": 424.3046875,
+            "right": 1220.4140625,
+            "bottom": 460.6015625
+          },
+          {
+            "id": "the_teeth",
+            "size": 18,
+            "left": 1325.390625,
+            "top": 343.3046875,
+            "right": 1440.609375,
+            "bottom": 379.6015625
+          },
+          {
+            "id": "gulls_rest",
+            "size": 18,
+            "left": 1386.984375,
+            "top": 228.3046875,
+            "right": 1567.015625,
+            "bottom": 264.6015625
+          }
+        ],
+        "overflow": false
+      },
+      "panel": {
+        "left": 680,
+        "top": 16,
+        "right": 1240,
+        "bottom": 1064
+      }
+    },
+    {
+      "width": 1100,
+      "height": 700,
+      "fonts": {
+        ".wordmark": 16,
+        ".chapter": 16,
+        ".controls": 16,
+        ".conditions": 16,
+        ".interact strong": 18
+      },
+      "chart": {
+        "labels": [
+          {
+            "id": "lighthouse_isle",
+            "size": 18,
+            "left": 272.53125,
+            "top": 409.3046875,
+            "right": 452.5625,
+            "bottom": 445.6015625
+          },
+          {
+            "id": "saltreach_harbor",
+            "size": 18,
+            "left": 393.1328125,
+            "top": 370.3046875,
+            "right": 583.9609375,
+            "bottom": 406.6015625
+          },
+          {
+            "id": "home_islet",
+            "size": 18,
+            "left": 510.53125,
+            "top": 415.3046875,
+            "right": 636.5625,
+            "bottom": 451.6015625
+          },
+          {
+            "id": "smugglers_cove",
+            "size": 18,
+            "left": 293.53125,
+            "top": 290.3046875,
+            "right": 473.5625,
+            "bottom": 326.6015625
+          },
+          {
+            "id": "wreck_point",
+            "size": 18,
+            "left": 491.1328125,
+            "top": 326.3046875,
+            "right": 627.9609375,
+            "bottom": 362.6015625
+          },
+          {
+            "id": "the_teeth",
+            "size": 18,
+            "left": 578.9375,
+            "top": 279.3046875,
+            "right": 694.15625,
+            "bottom": 315.6015625
+          },
+          {
+            "id": "gulls_rest",
+            "size": 18,
+            "left": 556.53125,
+            "top": 226.3046875,
+            "right": 736.5625,
+            "bottom": 262.6015625
+          }
+        ],
+        "overflow": false
+      },
+      "panel": {
+        "left": 270,
+        "top": 218.65625,
+        "right": 830,
+        "bottom": 481.328125
+      }
+    }
+  ],
+  "errors": []
+}

@@ -1,3 +1,4 @@
+// The memory adapter and fixture boundary satisfy the same public presentation contract.
 import {describe,it,expect} from 'vitest';
 import {createFakeCaseAdapter} from '../src/adapter/fake/index.js';
 import {defineAdapterConformance} from '../src/adapter/conformance/suite.js';

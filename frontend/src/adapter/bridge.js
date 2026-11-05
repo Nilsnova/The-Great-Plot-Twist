@@ -2,6 +2,7 @@
 import {caseScreenFor} from '../world/places/case-spots.js';
 import {createUnavailableCaseAdapter} from './unavailable.js';
 export function createCaseBridge(ctx) {
+  const ownsAdapter=!ctx.adapter;
   let adapter=ctx.adapter??null,host=null,pending=null,disposed=false,loading=false,request=0,effectTask=Promise.resolve(),effectId=0,stop=null;
   const status=document.createElement('p');status.className='case-loading';status.setAttribute('role','status');status.hidden=true;ctx.container.append(status);
   function onView(view){ctx.onView?.(view);const effects=(view.effects??[]).filter(item=>item.id>effectId);if(effects.length)effectId=Math.max(...effects.map(item=>item.id));if(!ctx.world?.cinematic)return;
@@ -13,7 +14,7 @@ export function createCaseBridge(ctx) {
     pending=(async()=>{
       if(!adapter){const local=import.meta.env.DEV&&new URLSearchParams(location.search).get('case')==='local';adapter=local?(await import('./fake/index.js')).createFakeCaseAdapter():createUnavailableCaseAdapter();}
       connect();
-      const {createCaseScreens}=await import('../screens/controller.js');if(disposed){adapter.dispose?.();return null;}
+      const {createCaseScreens}=await import('../screens/controller.js');if(disposed){if(ownsAdapter)adapter.dispose?.();return null;}
       host=createCaseScreens({...ctx,adapter,onView:null});return host;
     })().catch(error=>{pending=null;throw error;});return pending;
   }
@@ -25,6 +26,6 @@ export function createCaseBridge(ctx) {
     async completeIntro(receipt){try{const view=await ensure();if(!disposed){const element=await view?.completeIntro(receipt);if(element)ctx.onArrival?.(element,adapter.read());}}catch{if(!disposed){status.hidden=false;status.textContent='Your intro is saved locally. Open Crew to retry the case connection.';}}},
     tick(dt){if(host)host.tick(dt);else adapter?.tick?.(dt);},
     interact(event){const target=caseScreenFor(event);if(target)return this.open(target.screen,{spot:target.spot});},close,
-    dispose(){if(disposed)return;disposed=true;close();window.removeEventListener('keydown',key,true);status.remove();stop?.();host?.dispose();adapter?.dispose?.();},
+    dispose(){if(disposed)return;disposed=true;close();window.removeEventListener('keydown',key,true);status.remove();stop?.();host?.dispose();if(ownsAdapter)adapter?.dispose?.();},
   };
 }

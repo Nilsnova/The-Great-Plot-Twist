@@ -25,7 +25,12 @@
     "test:spoilers": "npm run build",
     "test:case": "node scripts/check-case.js",
     "test:credits": "node scripts/check-credits.js",
-    "test:living": "node scripts/check-living.js"
+    "test:living": "node scripts/check-living.js",
+    "test:life": "node scripts/check-life.js",
+    "test:lifecycle": "node scripts/check-lifecycle.js",
+    "test:golden": "node scripts/check-golden-path.js",
+    "test:chaos": "node scripts/check-chaos.js",
+    "test:g7": "node scripts/check-g7-regression.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

@@ -51,7 +51,8 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
   const positionAt=(record,time)=>samplePosition({...record,time,moving:record.peer.moving});
   function ingest(presence){
     if(disposed)return;input=presence??input;const time=Number.isFinite(input.sampledAt)?input.sampledAt:clock,seen=new Set();
-    for(const peer of input.others??[]){
+    for(const sample of input.others??[]){
+      const peer={...sample,place:sample?.place??input.place};
       if(!peer?.id||!Number.isFinite(peer.x)||!Number.isFinite(peer.y))continue;seen.add(peer.id);
       let record=records.get(peer.id);if(!record)record=createRecord(peer,time);
       else if(shouldSnapSample({place:peer.place,previousPlace:record.place,sampledAt:time,lastReceivedAt:record.receivedAt})){record.from={x:peer.x,y:peer.y};record.to={...record.from};record.fromAt=record.toAt=time;record.joinedAt=time;record.leavingAt=null;record.place=peer.place;}

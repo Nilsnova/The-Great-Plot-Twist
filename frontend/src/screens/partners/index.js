@@ -2,7 +2,7 @@
 import {node,button,secondsLabel} from '../helpers.js';
 import './partners.css';
 
-const valid=['deckhand','navigator','cook','salvager'];
+const valid=['deckhand','navigator','cook','salvager'],portraits=new Set(valid.map(id=>`crew-${id}-portrait`));
 const setText=(el,value)=>{if(el.textContent!==String(value??''))el.textContent=String(value??'');};
 function svgNode(name){return document.createElementNS('http://www.w3.org/2000/svg',name);}
 
@@ -39,9 +39,10 @@ function createCard(partner,send,navigate){
   orderSelect.addEventListener('change',()=>{local.order=orderSelect.value;local.target=targets(current)[0]?.id??'';local.offer=null;updateOffer();fill(targetSelect,targets(current),local.target);});
   targetSelect.addEventListener('change',()=>{local.target=targetSelect.value;local.offer=null;updateOffer();});
   offerCheck.addEventListener('change',()=>{payButton.disabled=!offerCheck.checked;});
+  const matchingOffer=offer=>offer?.seat===seat&&offer.order===local.order&&offer.target===local.target;
   async function place({allowPaid}){
     const reply=await send?.('orderPartner',seat,local.order,local.target,{allowPaid});
-    if(!allowPaid&&reply?.offer)local.offer=reply.offer;
+    if(!allowPaid&&matchingOffer(reply?.offer))local.offer=reply.offer;
     else local.offer=null;
     setText(feedback,reply?.message??'');updateOffer();return reply;
   }
@@ -55,10 +56,10 @@ function createCard(partner,send,navigate){
   function update(model,view){
     current=model;
     const life=model.life??{},archetype=valid.includes(model.archetype)?model.archetype:'deckhand';
-    const base=import.meta.env.BASE_URL??'/';portrait.src=`${base}pixel/${life.portraitId??`crew-${archetype}-portrait`}.png`;
+    const base=import.meta.env.BASE_URL??'/';portrait.src=`${base}pixel/${portraits.has(life.portraitId)?life.portraitId:`crew-${archetype}-portrait`}.png`;
     setText(title,`${model.name} · Seat ${seat}`);setText(report,life.event?.text??model.job?.report??'Ready for an order.');
     boardButton.hidden=life.event?.type!=='pinned_card';
-    const line=life.chartLine;svg.replaceChildren();marker=null;
+    const line=life.chartLine;svg.hidden=!line?.active;svg.style.display=line?.active?'block':'none';svg.replaceChildren();marker=null;
     if(line){
       const segment=svgNode('line');segment.setAttribute('x1',line.from.x);segment.setAttribute('y1',line.from.y);segment.setAttribute('x2',line.to.x);segment.setAttribute('y2',line.to.y);segment.setAttribute('class',line.active?'partner-chart-line active':'partner-chart-line');svg.append(segment);
       marker=svgNode('circle');marker.setAttribute('r','5');marker.setAttribute('class','partner-chart-marker');svg.append(marker);
@@ -67,7 +68,7 @@ function createCard(partner,send,navigate){
     fill(orderSelect,model.orders??[],local.order);local.order=orderSelect.value;
     const choices=targets(model);fill(targetSelect,choices,local.target);local.target=targetSelect.value;
     orderLabel.hidden=!(model.orders?.length);targetLabel.hidden=!choices.length;
-    if(view.notice?.offer?.seat===seat){local.offer=view.notice.offer;updateOffer();}
+    if(matchingOffer(view.notice?.offer)){local.offer=view.notice.offer;updateOffer();}
     else if(view.notice?.seat===seat&&view.notice?.accepted===false&&!local.offer)setText(feedback,view.notice.message);
     tick(model,view);
   }

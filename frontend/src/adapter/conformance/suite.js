@@ -8,6 +8,8 @@ const stringOrNull=value=>expect(value===null||typeof value==='string').toBe(tru
 const allowed=(value,values)=>expect(values).toContain(value);
 function validateExtensions(view){
   const p=view.presence,a=view.account,r=view.rewards,l=view.log,h=view.hints;
+  hasKeys(p,['localEmote','canEmote','cooldown','emotes']);expect(typeof p.canEmote).toBe('boolean');expect(Number.isFinite(p.cooldown)&&p.cooldown>=0).toBe(true);expect(Array.isArray(p.emotes)).toBe(true);
+  if(p.localEmote!==null){hasKeys(p.localEmote,['id','until']);allowed(p.localEmote.id,['wave','cheer','point','lantern','shrug']);expect(Number.isFinite(p.localEmote.until)).toBe(true);}
   allowed(p.status,['live','reconnecting','offline','off']);stringOrNull(p.place);
   expect(Array.isArray(p.others)).toBe(true);expect(Number.isInteger(p.hiddenCount)&&p.hiddenCount>=0).toBe(true);
   expect(Array.isArray(p.crew)).toBe(true);expect(Number.isFinite(p.sampledAt)).toBe(true);

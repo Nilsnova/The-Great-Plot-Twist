@@ -10,7 +10,7 @@ if(!import.meta.env.DEV&&new URLSearchParams(location.search).get('demo')!=='1')
 else {
   const adapter=createFakeCaseAdapter({allowBrowse:true}),screens=createCaseScreens({container,adapter,focus:()=>container.querySelector('button')?.focus()});
   const toolbar=node('nav','case-lab-toolbar');toolbar.setAttribute('aria-label','Local rehearsal controls');
-  container.append(node('p','case-eyebrow','LOCAL FAKE · UNAPPROVED DRAFT DESIGN'),node('h1','','The case, on screen'),node('p','','A reusable adapter rehearsal. No server calls, saves or real rewards. The fake contains no reveal prose.'),toolbar,screens.arrival);
+  container.append(node('p','case-eyebrow','LOCAL REHEARSAL · NO LIVE WRITES'),node('h1','','The case, on screen'),node('p','','A reusable adapter rehearsal. No server calls, saves or real rewards. The fake contains no reveal prose.'),toolbar,screens.arrival);
   for(const name of ['arrival','crew','board','search','partners','finale','accusation','reveal','relighting'])toolbar.append(button(name[0].toUpperCase()+name.slice(1),()=>screens.open(name)));
   toolbar.append(button('Advance 1 case minute',()=>adapter.dev.advance(60)),button('Reset local case',()=>{adapter.dev.reset();adapter.completeIntro({ending:'ending_rescue',actions:['warn_harbor','read_log']});}));
   adapter.completeIntro({ending:'ending_rescue',actions:['warn_harbor','read_log']});

@@ -41,7 +41,7 @@ export function tickPresence(state,dt){
     const anchor=spawns[peer.place]??spawn,baseX=anchor.x+Math.sin(peer.phase*1.7)*1.2,baseY=anchor.y+Math.cos(peer.phase*1.3)*1.2;
     peer.x=baseX+Math.sin(peer.phase)*.6;peer.y=baseY+Math.cos(peer.phase*.73)*.6;
     peer.moving=Math.abs(Math.cos(peer.phase))>.16;peer.facing=facings[Math.floor((peer.phase+Math.PI)*2)%4];
-    if(!peer.emote&&Math.floor(age/6500)%5===peer.id.length%5){peer.emote=emoteIds[peer.id.length%emoteIds.length];peer.emoteUntil=state.now+1800;}
+    if(!peer.emote&&Math.floor(age/6500)%5===offset%5){peer.emote=emoteIds[(offset+cycle)%emoteIds.length];peer.emoteUntil=state.now+1800;}
     if(peer.emoteUntil<=state.now){peer.emote=null;peer.emoteUntil=0;}peer.at=state.now;
   }
   if(state.localEmote?.until<=state.now)state.localEmote=null;

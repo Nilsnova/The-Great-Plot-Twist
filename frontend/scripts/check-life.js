@@ -19,6 +19,16 @@ try{
  check((await card.locator('.partner-life-status').textContent())==='travelling','A supplied partner job starts travelling');
  await page.keyboard.press('Escape');await page.evaluate(()=>window.__island.chart.show());check(await page.locator('.chart-map svg line').count()>0,'Sea chart displays supplied partner journey lines');await page.keyboard.press('Escape');
  await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));await open('partners');check((await card.locator('.partner-life-report').textContent()).includes('ready to report'),'A completed partner errand has a visible report');
+ await page.evaluate(async()=>{const a=window.__plotTwist.adapter;a.dev.give('C3',1);a.dev.give('C4',2);await a.pin('C3');a.dev.pinForSeat('C4',2);await a.pair('C3','C4');});
+ const beforePrice=await page.evaluate(()=>window.__plotTwist.adapter.read().captain.coins);
+ await card.getByLabel('Target',{exact:true}).selectOption('C5');await card.getByRole('button',{name:'Send order',exact:true}).click();
+ check((await card.locator('.partner-paid-offer').textContent()).includes('250 coins'),'Partner quote shows the supplied exact price');
+ await card.getByLabel('Target',{exact:true}).selectOption('C6');await page.waitForTimeout(700);
+ check(await card.locator('.partner-paid-offer').isHidden(),'Changing the target invalidates its old paid quote on later clock updates');
+ await card.getByRole('button',{name:'Send order',exact:true}).click();const pay=card.getByRole('button',{name:'Confirm 200 coins',exact:true});
+ check(await pay.isDisabled()&&await page.evaluate(()=>window.__plotTwist.adapter.read().captain.coins)===beforePrice,'The replacement quote starts with paid consent off and spends nothing');
+ await card.getByRole('checkbox').check();await pay.click();check(await page.evaluate(()=>window.__plotTwist.adapter.read().captain.coins)===beforePrice-200,'Only the explicit priced tap spends the quoted 200 coins');
+ await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));
  await page.keyboard.press('Escape');
  await page.route('**/src/shell/hints/shortcuts.js*',async route=>{await new Promise(resolve=>setTimeout(resolve,200));await route.continue();});
  await page.keyboard.press('?');await page.keyboard.press('Escape');await page.waitForTimeout(450);

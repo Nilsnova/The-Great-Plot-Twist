@@ -8,7 +8,7 @@ export function createIntro(ctx) {
   let adapter=null,active=false,disposed=false,request=0,abort=null,hotspot='cottage',resumeRequested=false;
   const loading=node('div','intro-loading'),copy=node('p','','The story is coming ashore…'),retry=createButton({label:'Try again',onClick:()=>load()});loading.append(copy,retry.element);
   const view=createIntroView({onAction:perform,onRestart(){adapter.reset();show();},onClose:close});
-  const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){active=false;ctx.resetInput?.();}});modal.element.classList.add('intro-modal');
+  const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){if(!modal.element.open)active=false;}});modal.element.classList.add('intro-modal');
   function close(){view.pause();active=false;request++;abort?.abort();modal.close();ctx.resetInput?.();}
   function show(notice){modal.setContent(view.element);view.update(adapter.view,adapter.actions,notice);view.focus();if(adapter.state.ended)ctx.onEnding?.({ending:adapter.state.scene,actions:adapter.actions});}
   function visit() {const result=adapter.state.ended?null:adapter.visit(hotspot);show(result&&!result.accepted?result.message:undefined);}

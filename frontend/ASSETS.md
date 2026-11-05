@@ -214,3 +214,5 @@ The kit now contains 185 sprite PNGs plus ten existing backgrounds, 195 PNGs tot
 ## G7 presence emotes
 
 Five original speech bubbles, authored in `scripts/pixel_art/emotes.py`, registered by id in `pixel/story-catalog.js`: `emote-wave`, `emote-cheer`, `emote-point`, `emote-lantern`, `emote-shrug`. Each is 24 × 24 native pixels with transparent surroundings. No external source, font, logo or character name. Generate with `python3 scripts/pixel_art/generate.py`. Catalogue total: 190 sprites plus 10 backgrounds, 200 PNGs. The existing 195 images are unchanged.
+
+G7 Gull’s Rest reuses `lighthouse-lens`, `keepers-star`, `lantern`, `lens-hall-open` and `festival-lantern-string` in its open state. `world/places/gulls-rest-life.js` authors six small shore-wave quads and three V-shaped gull marks directly in geometry (two draw calls), plus lantern-string flicker. These are original code shapes, snapped to the same 16-pixel grid, with no new image, font or recording. Reduced motion keeps them still; the place lifetime owns every allocation.

@@ -8,7 +8,7 @@ import {settleJobs} from './settle.js';
 import {bearingBetween} from '../../screens/beam-math.js';
 export function rehearse(state,stage){
   if(stage==='board'){
-    Object.assign(state,initialCaseState());completeIntro(state,{ending:'ending_rescue',actions:['read_log']});createCrew(state);muster(state);
+    const effectId=state.effectId;Object.assign(state,initialCaseState(),{effectId});completeIntro(state,{ending:'ending_rescue',actions:['read_log']});createCrew(state);muster(state);
     state.found[1].push('C1');state.found[2].push('C2');pinCard(state,'C1',1);pinCard(state,'C2',2,1);pairCards(state,'C1','C2');
   }
   if(stage==='finale'){

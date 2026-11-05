@@ -48,7 +48,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
-  let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, experience,entryDestination=null,introPassage=false, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null;
+  let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, experience,entryDestination=null,introPassage=false,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, isBlocked:()=>!!(shortcuts.active || shell?.blocked || isAppBlocked?.() || cinematics?.active || intro?.active || caseUi?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();shortcuts.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
@@ -77,7 +77,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
     disposed=true;stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
-    createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
+    createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   const createCinematicDemo=new URLSearchParams(location.search).get('demo')==='1'?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
   demo=createCinematicDemo(container,world,{chart,sailing,player:controller.player,view,hud,
@@ -135,7 +135,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });  return {dispose,hasOverlay:()=>shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active,
-    setMode(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
+    setMode(mode){if(mode!=='playing'){beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       const panel=[...document.querySelectorAll('dialog[open]')].filter(node=>!node.classList.contains('cinematic-modal')&&!node.classList.contains('shell-screen')).at(-1);
@@ -149,15 +149,16 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
       return false;
     },
     async begin(resume=false,continuation){
-      entryDestination=null;
-      if(continuation?.kind==='world'){
-        intro.close();hud.start();await travel(continuation.place??'lighthouse_isle',{fast:true});return;
-      }
-      introPassage=true;
+      const token=++beginRequest;entryDestination=null;introPassage=true;
+      caseUi.close();intro.close();chart.close();cinematics.skip();
       try{
-        if(world.current?.id!=='lighthouse_isle')await world.goTo('lighthouse_isle',{fast:true});
-        hud.start();intro.begin(resume);
-      }finally{introPassage=false;}
+        await demo.stop?.();await world.whenIdle();
+        if(disposed||token!==beginRequest||shell.blocked)return;
+        const destination=continuation?.kind==='world'?(continuation.place??'lighthouse_isle'):'lighthouse_isle';
+        if(world.current?.id!==destination)await travel(destination,{fast:true});
+        if(disposed||token!==beginRequest||shell.blocked||isAppBlocked?.()||world.current?.id!==destination)return;
+        hud.start();if(continuation?.kind!=='world')intro.begin(resume);
+      }finally{if(token===beginRequest)introPassage=false;}
     },
     startDemo(){return demo.start();}};
 }
