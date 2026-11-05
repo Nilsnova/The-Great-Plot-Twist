@@ -1,4 +1,4 @@
-// One memory-only adapter. All temporary game rules live under fake/, never in a screen.
+// One memory-only adapter. Temporary rules live in fake/, never in a screen or transport.
 import {bindCaseMethods,copyView} from '../contract.js';
 import {initialCaseState,refuse} from './state.js';
 import {completeIntro,createCrew,joinCrew,muster} from './arrival-crew.js';
@@ -11,17 +11,62 @@ import {boardSchooner,accuse,nextReveal} from './reveal.js';
 import {claimLantern} from './relighting.js';
 import {rehearse} from './rehearsal.js';
 import {caseView} from './view.js';
+
 export function createFakeCaseAdapter({timeScale=1,allowBrowse=false}={}) {
   let state=initialCaseState(),disposed=false,lastSecond=-1,notice=null;
   state.allowBrowse=allowBrowse;
-  const listeners=new Set(),handlers={completeIntro,createCrew,joinCrew,muster,pin:pinCard,pair:pairCards,search:startSearch,inspectSpot,orderPartner,buildLight,callNightfall,takePost,aim,boardSchooner,accuse,nextReveal,claimLantern};
+  const listeners=new Set();
+  const handlers={completeIntro,createCrew,joinCrew,muster,pin:pinCard,pair:pairCards,
+    search:startSearch,inspectSpot,orderPartner,buildLight,callNightfall,takePost,aim,
+    boardSchooner,accuse,nextReveal,claimLantern};
+
   function read(){return copyView({...caseView(state),notice});}
-  function publish(){const event={type:'case_updated',view:read()};for(const listener of listeners)listener(event);}
-  function dispatch(name,args){if(disposed)return Promise.resolve({accepted:false,reason:'disposed',message:'The rehearsal has ended.',view:read()});settleJobs(state);settleNight(state);const result=handlers[name]?.(state,...args)??refuse('not_ready','This part of the local case is not ready yet.');settleJobs(state);settleNight(state);notice={...result};state.revision++;publish();return Promise.resolve({...result,view:read()});}
-  const adapter={read,subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
-    tick(dt){if(disposed)return;const seconds=Math.max(0,Math.min(.1,Number.isFinite(dt)?dt:0));state.lobbyNow+=seconds;if(state.crew?.status!=='active')return;state.now+=seconds*timeScale;if(settleJobs(state)|settleNight(state)){state.revision++;notice={reason:null,message:state.lastReport};}if(Math.floor(state.now)!==lastSecond){lastSecond=Math.floor(state.now);publish();}},
-    dispose(){disposed=true;listeners.clear();},
-    dev:{rehearse(stage){rehearse(state,stage);notice=null;publish();},give(id,seat=1){if(!state.found[seat].includes(id))state.found[seat].push(id);state.revision++;publish();},pinForSeat(id,seat){const result=pinCard(state,id,seat,1);state.revision++;publish();return result;},advance(seconds){state.lobbyNow+=Math.max(0,seconds);state.now+=Math.max(0,seconds);if(settleJobs(state)|settleNight(state))state.revision++;publish();},reset(){state=initialCaseState();state.allowBrowse=allowBrowse;notice=null;publish();}},
+  function publish(){
+    if(disposed)return;
+    for(const listener of listeners)listener({type:'case_updated',view:read()});
+  }
+  function settle(){
+    const jobs=settleJobs(state),night=settleNight(state);
+    return jobs||night;
+  }
+  function dispatch(name,args){
+    if(disposed)return Promise.resolve({...refuse('disposed','The rehearsal has ended.'),view:read()});
+    settle();
+    let result;
+    try{result=handlers[name]?.(state,...args)??refuse('not_ready','This local service is not ready yet.');}
+    catch{result=refuse('invalid_request','That action could not be read. Please try again.');}
+    settle();notice={...result};state.revision++;publish();
+    return Promise.resolve({...result,view:read()});
+  }
+  function tick(dt){
+    if(disposed)return;
+    const seconds=Math.max(0,Math.min(.1,Number.isFinite(dt)?dt:0));
+    state.lobbyNow+=seconds;
+    if(state.crew?.status!=='active')return;
+    state.now+=seconds*timeScale;
+    if(settle()){state.revision++;notice={reason:null,message:state.lastReport};}
+    if(Math.floor(state.now)!==lastSecond){lastSecond=Math.floor(state.now);publish();}
+  }
+  const dev={
+    rehearse(stage){if(disposed)return;rehearse(state,stage);notice=null;publish();},
+    give(id,seat=1){
+      if(disposed)return;
+      if(!state.found[seat].includes(id))state.found[seat].push(id);
+      state.revision++;publish();
+    },
+    pinForSeat(id,seat){
+      if(disposed)return refuse('disposed','The rehearsal has ended.');
+      const result=pinCard(state,id,seat,1);state.revision++;publish();return result;
+    },
+    advance(seconds){
+      if(disposed)return;
+      state.lobbyNow+=Math.max(0,seconds);state.now+=Math.max(0,seconds);
+      if(settle())state.revision++;publish();
+    },
+    reset(){if(disposed)return;state=initialCaseState();state.allowBrowse=allowBrowse;notice=null;publish();},
   };
-  return bindCaseMethods(adapter,dispatch);
+  return bindCaseMethods({read,tick,dev,
+    subscribe(listener){if(disposed)return()=>{};listeners.add(listener);return()=>listeners.delete(listener);},
+    dispose(){disposed=true;listeners.clear();},
+  },dispatch);
 }
