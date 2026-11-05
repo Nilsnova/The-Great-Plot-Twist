@@ -1,0 +1,12 @@
+<!-- Original painted-paper shell-stamped play coins. Staged play-money or reward artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="77" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m49 192 0 24q39 23 78 0v-24Z" fill="#bd9f64"/><ellipse cx="88" cy="192" rx="39" ry="14" fill="#e0c78a"/>
+<path d="m119 157 0 60q43 24 86 0v-60Z" fill="#c2a56b"/><ellipse cx="162" cy="157" rx="43" ry="15" fill="#e5ce94"/>
+<path d="m119 174q43 25 86 0m-86 18q43 24 86 0m-86 17q43 24 86 0" stroke="#a49365" stroke-width="3" fill="none"/>
+<path d="m141 157 21-9 19 9-19 10Z" fill="#bdab74"/><path d="m155 151 7 11m8-11-8 11" stroke="#e9d8a4" stroke-width="2"/>
+<path d="m69 191 18-7 20 8-20 7Z" fill="#bcaa74"/>
+
+</g></svg>

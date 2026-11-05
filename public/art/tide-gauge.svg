@@ -1,0 +1,11 @@
+<!-- Original painted-paper tide gauge. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m104 232 0-170 24-22 24 22 0 170Z" fill="#c7bd8c"/><path d="m132 49 20 13v170h-20Z" fill="#aaa77a"/>
+<path d="m112 75 21 0m-21 15 12 0m-12 15 21 0m-21 15 12 0m-12 15 21 0m-21 15 12 0m-12 15 21 0m-21 15 12 0m-12 15 21 0m-21 15 12 0" stroke="#668b77" stroke-width="3"/>
+<path d="m73 216q25-13 50 0t50 0" stroke="#8bafa0" stroke-width="6" fill="none"/>
+<circle cx="128" cy="61" r="5" fill="#b87d5c"/>
+
+</g></svg>

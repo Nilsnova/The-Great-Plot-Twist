@@ -1,0 +1,12 @@
+<!-- Original painted-paper island coin pouch. Staged play-money or reward artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="77" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M50 98 179 83Q199 93 203 114L210 213Q141 238 52 217Z" fill="#769580"/>
+<path d="M51 99 179 83Q190 81 194 94L197 118 69 135Z" fill="#92ab8c"/>
+<path d="m58 105 121-15 8 19-119 16Z" fill="#c6bd90"/>
+<path d="m59 145 128-17 2 77-130 9Z" stroke="#b2bb93" stroke-width="2" stroke-dasharray="4 5" fill="none"/>
+<path d="m153 143 57-8 7 47-59 8Z" fill="#5f856f"/><path d="m160 148 44-6 4 32-43 7Z" fill="#bfa773"/><circle cx="185" cy="160" r="6" fill="#d9c58f"/>
+
+</g></svg>

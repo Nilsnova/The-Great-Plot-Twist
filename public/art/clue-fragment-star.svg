@@ -1,0 +1,11 @@
+<!-- Original painted-paper chart fragment / star. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m51 67 48-12 25 20 22-17 55 11 1 54-19 20 22 25-12 49-47-2-23-20-24 21-50-9 9-49-19-26 16-23Z" fill="#eee0b5"/>
+<path d="m125 95 14 32 36 4-26 24 7 36-31-18-32 17 7-35-26-25 36-4Z" fill="#c39562"/>
+<path d="m125 111 0 53m-34-25 34 25 34-24" stroke="#e7cf94" stroke-width="3" fill="none"/>
+<path d="m67 92 23-3m61 102 21 1" stroke="#c4b58a" stroke-width="3"/>
+
+</g></svg>

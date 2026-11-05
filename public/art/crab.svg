@@ -1,0 +1,12 @@
+<!-- Original painted-paper tide-line crab. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m68 201-31-8-10 13m48 9-35 1-8 13m47-3-25 15m109-40 31-8 10 13m-48 9 35 1 8 13m-47-3 25 15" stroke="#b47958" stroke-width="6" fill="none"/>
+<ellipse cx="119" cy="200" rx="53" ry="33" fill="#c48a64"/><path d="M75 194Q120 163 163 195Q133 209 75 194Z" fill="#d3a076"/>
+<path d="m84 184-17-35m87 35 17-35" stroke="#b87556" stroke-width="7"/>
+<path d="m64 153-24-19 8-24 13 19 11-24 10 28Z" fill="#c38160"/><path d="m174 153 24-19-8-24-13 19-11-24-10 28Z" fill="#c38160"/>
+<path d="m102 170 0-13m36 13 0-13" stroke="#af7657" stroke-width="5"/><g fill="#54786a"><circle cx="102" cy="155" r="4"/><circle cx="138" cy="155" r="4"/></g>
+
+</g></svg>

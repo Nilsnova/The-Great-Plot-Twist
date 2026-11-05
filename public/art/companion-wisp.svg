@@ -1,0 +1,11 @@
+<!-- Original lantern wisp companion study. A staged character study, not an assigned story role. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 260" width="180" height="260"><ellipse cx="90" cy="240" rx="43" ry="10" fill="#557766" opacity=".14"/><g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M90 43Q111 71 102 91Q148 101 142 145Q135 180 107 190Q93 210 78 187Q41 172 39 137Q38 102 75 91Q65 69 90 43Z" fill="#c2d0a7"/>
+<path d="M89 63Q104 87 90 102Q125 105 125 138Q124 168 91 177Q57 169 55 139Q54 110 86 104Q72 88 89 63Z" fill="#eee0ad"/>
+<path d="M49 122Q8 106 16 146Q29 155 49 145m89-22q39-12 31 26-18 8-34-4" fill="#91b192"/>
+<path d="m55 181 17 29 18-8 19 10 17-30" fill="#9ebc96"/>
+<path d="m83 118 11-2 8 39-16 0Z" fill="#d5b772"/>
+<g fill="#73977a"><circle cx="74" cy="143" r="3"/><circle cx="107" cy="143" r="3"/></g><path d="m84 156 12 0" stroke="#a9a577" stroke-width="2"/>
+
+</g></svg>

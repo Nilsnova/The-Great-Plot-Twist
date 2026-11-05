@@ -1,0 +1,13 @@
+<!-- Original painted-paper harbour gull. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m110 226 4-34m34 34 2-34" stroke="#b6a16e" stroke-width="5"/><path d="m99 229 24-1m13 1 24-1" stroke="#b6a16e" stroke-width="4"/>
+<path d="M53 164 80 155Q85 115 123 117Q157 113 177 147L199 162 175 177Q145 206 103 192Q73 188 53 164Z" fill="#ece5c9"/>
+<path d="M76 157Q112 132 150 157L134 181Q101 189 76 157Z" fill="#bac9ad"/>
+<path d="M137 142Q136 95 163 87Q194 82 199 109L194 149Z" fill="#f1e9cf"/>
+<path d="m196 112 31 8-31 10Z" fill="#cba95d"/><circle cx="182" cy="108" r="3" fill="#52796a"/>
+<path d="m84 160 47 5" stroke="#8da58c" stroke-width="3"/>
+
+</g></svg>

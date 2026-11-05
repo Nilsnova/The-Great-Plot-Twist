@@ -1,0 +1,11 @@
+<!-- Original painted-paper garden bench. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m35 168 124 19 64-37-126-21Z" fill="#c5b184"/><path d="m35 168 124 19 0 10-124-18Z" fill="#ad9c73"/><path d="m159 187 64-37v11l-64 36Z" fill="#9b916b"/>
+<path d="m45 171-3 54m103-39-1 48m66-77-1 52m-158-68 0-61m144 42 0-61" stroke="#8a9471" stroke-width="8" fill="none"/>
+<path d="m48 95 140-21 12 29-149 22Z" fill="#d3bd8d"/><path d="m49 126 149-23 1 15-149 24Z" fill="#b5a67b"/>
+<path d="m59 107 124-20m-129 72 119 17m-94-32 123 18" stroke="#e5d2a0" stroke-width="2" fill="none"/>
+
+</g></svg>

@@ -1,0 +1,12 @@
+<!-- Original painted-paper message bottle. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m113 59 29-2 0 51 25 25 12 77q-42 32-88 4l5-76 19-29Z" fill="#91b3a0"/>
+<path d="m120 61 14-1 0 55 23 23 11 65q-31 21-64 2l4-64 18-26Z" fill="#b6ccb0"/>
+<path d="m108 54 37-2 0 24-36 2Z" fill="#b59e71"/><path d="m114 54 27-2-3 14-24 1Z" fill="#cfb887"/>
+<path d="m114 141 31-9 12 60-32 10Z" fill="#e8d7aa"/><path d="m124 148 16-4m-13 15 14-4m-10 14 13-4" stroke="#a99f78" stroke-width="2"/>
+<path d="m107 153 4 47" stroke="#d8e0bb" stroke-width="4" fill="none"/>
+
+</g></svg>

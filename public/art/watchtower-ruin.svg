@@ -1,0 +1,15 @@
+<!-- Original painted-paper old watchtower ruin. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m63 274 7-151 22-7 1-30 23 5 0 31 24-6 0-25 24 6 0 34 22-4 13 145q-68 26-136 2Z" fill="#b7c1a0"/>
+<path d="m156 129 30-2 13 145-43 10Z" fill="#97ae92"/>
+<path d="m98 221q20-35 40 2l1 58-42-1Z" fill="#6f8f7b"/>
+<path d="m94 157 25-4 0 26-25 4Z" fill="#829e87"/><path d="m98 162 15-2 0 15-15 2Z" fill="#a7ba98"/>
+<path d="m71 144 34-6m22-3 28-4m-80 40 20-3m33-6 29-4m-84 45 34-3m20-3 33-5m-80 42 20-1m51-4 21-4m-91 38 27 0" stroke="#d1d4ae" stroke-width="3" fill="none"/>
+<path d="m176 148-14 39 3 38-18 31m18-57 21-8m-21 37 19-6" stroke="#779b73" stroke-width="5" fill="none"/>
+<g fill="#8ba87b"><ellipse cx="171" cy="162" rx="7" ry="10"/><ellipse cx="161" cy="193" rx="8" ry="11"/><ellipse cx="183" cy="190" rx="8" ry="7"/><ellipse cx="169" cy="224" rx="8" ry="10"/><ellipse cx="151" cy="254" rx="9" ry="7"/></g>
+<path d="m43 278 9-17 19 3 10 18-22 5Z" fill="#a1b395"/>
+
+</g></svg>

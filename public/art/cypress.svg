@@ -1,0 +1,12 @@
+<!-- Original painted-paper slender coastal cypress. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 320" width="256" height="320">
+<ellipse cx="128" cy="298" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m117 298 2-100 15-1 8 100Z" fill="#a19b74"/>
+<path d="M127 21Q113 51 99 69L102 85Q82 106 86 125Q69 145 78 165Q63 185 75 203Q68 231 89 242Q102 265 124 251Q148 266 163 246Q188 235 178 209Q190 188 177 170Q186 144 171 127Q174 100 158 86L157 68Q139 51 127 21Z" fill="#6c9782"/>
+<path d="M127 21Q113 51 99 69L102 85Q82 106 86 125Q103 141 123 124Q140 139 163 126Q174 99 158 86L157 68Q139 51 127 21Z" fill="#89ac93"/>
+<path d="M78 165Q94 180 111 167Q133 184 152 168Q162 179 177 170Q186 188 178 209Q165 218 151 207Q131 223 111 210Q89 224 75 203Q63 185 78 165Z" fill="#5d8977"/>
+<path d="m121 67 6-13m-19 53 9-12m20 32 10-9m-51 70 8-9m27 14 7-10m-22 51 10-8" stroke="#4e7a69" stroke-width="2" opacity=".55" fill="none"/>
+
+</g></svg>

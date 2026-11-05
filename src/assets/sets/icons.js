@@ -1,0 +1,21 @@
+// Compact interface symbols sharing one stroke weight and paper badge.
+export default [
+  {"id": "icon-logbook", "label": "Logbook icon", "size": [1, 1, 0.5], "roadmap": ["mystery"], "usage": "library"},
+  {"id": "icon-map", "label": "Map icon", "size": [1, 1, 0.5], "roadmap": ["sailing", "mystery"], "usage": "library"},
+  {"id": "icon-home", "label": "Home island icon", "size": [1, 1, 0.5], "roadmap": ["building"], "usage": "library"},
+  {"id": "icon-ship", "label": "Sailing icon", "size": [1, 1, 0.5], "roadmap": ["sailing"], "usage": "library"},
+  {"id": "icon-coin", "label": "Play coin icon", "size": [1, 1, 0.5], "roadmap": ["market", "predictions", "sports", "arena"], "usage": "library"},
+  {"id": "icon-market", "label": "Exchange icon", "size": [1, 1, 0.5], "roadmap": ["market"], "usage": "library"},
+  {"id": "icon-prediction", "label": "Prediction icon", "size": [1, 1, 0.5], "roadmap": ["predictions"], "usage": "library"},
+  {"id": "icon-sports", "label": "Sports icon", "size": [1, 1, 0.5], "roadmap": ["sports"], "usage": "library"},
+  {"id": "icon-arena", "label": "Arena icon", "size": [1, 1, 0.5], "roadmap": ["arena"], "usage": "library"},
+  {"id": "icon-raid", "label": "Cooperative encounter icon", "size": [1, 1, 0.5], "roadmap": ["raid", "mystery"], "usage": "library"},
+  {"id": "icon-companion", "label": "Companion icon", "size": [1, 1, 0.5], "roadmap": ["companion"], "usage": "library"},
+  {"id": "icon-presence", "label": "Shared presence icon", "size": [1, 1, 0.5], "roadmap": ["presence"], "usage": "library"},
+  {"id": "icon-sun", "label": "Clear weather icon", "size": [1, 1, 0.5], "roadmap": ["weather"], "usage": "library"},
+  {"id": "icon-cloud", "label": "Overcast icon", "size": [1, 1, 0.5], "roadmap": ["weather"], "usage": "library"},
+  {"id": "icon-rain", "label": "Rain icon", "size": [1, 1, 0.5], "roadmap": ["weather"], "usage": "library"},
+  {"id": "icon-fog", "label": "Sea mist icon", "size": [1, 1, 0.5], "roadmap": ["weather"], "usage": "library"},
+  {"id": "icon-wind", "label": "Wind icon", "size": [1, 1, 0.5], "roadmap": ["weather"], "usage": "library"},
+  {"id": "icon-reward", "label": "Shared reward icon", "size": [1, 1, 0.5], "roadmap": ["mystery", "sports", "arena", "raid"], "usage": "library"},
+];

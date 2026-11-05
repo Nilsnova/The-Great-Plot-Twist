@@ -1,0 +1,10 @@
+<!-- Original painted-paper shore shell cluster. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="234" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M37 202Q26 157 66 139Q112 143 103 193L73 222Z" fill="#e8d7ae"/><path d="m47 173 27 38m-12-56 12 56m9-56-9 56m22-42-22 42" stroke="#baa982" stroke-width="2.5"/>
+<path d="M101 199Q105 135 163 139Q202 166 168 217L132 229Z" fill="#d9c392"/><path d="m117 160 24 58m-6-69 6 69m18-65-18 65m38-50-38 50" stroke="#b69f77" stroke-width="3"/>
+<path d="M174 221q-11-28 14-43 31-1 34 27l-18 24Z" fill="#c99173"/><path d="m184 192 16 29m3-35-3 35m15-20-15 20" stroke="#e1bf95" stroke-width="2"/>
+
+</g></svg>

@@ -1,0 +1,12 @@
+<!-- Original painted-paper prediction question board. Staged play-money or reward artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="77" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m67 230 0-153m119 153-1-153" stroke="#a5996e" stroke-width="8"/>
+<path d="m41 71 169 6 0 115-171-6Z" fill="#c5b283"/><path d="m52 82 147 6v92l-149-5Z" fill="#e9dbb4"/>
+<path d="M110 115q0-22 22-21 25 4 6 25l-8 12" stroke="#799b7c" stroke-width="8" fill="none"/><circle cx="129" cy="145" r="5" fill="#799b7c"/>
+<path d="m63 154 32 2v21l-32-1Zm94 3 31 1v21l-31-1Z" fill="#a8bb91"/>
+<path d="m70 164 7 8 12-11m75 5 14 10m0-10-14 9" stroke="#e9dfba" stroke-width="3" fill="none"/>
+
+</g></svg>

@@ -1,0 +1,12 @@
+<!-- Original painted-paper portable radio. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m44 108 143 9 0 109-144-9Z" fill="#ae996c"/><path d="m187 117 28-20-1 109-27 20Z" fill="#8a906b"/><path d="m44 108 28-20 143 9-28 20Z" fill="#c9b785"/>
+<path d="m56 122 74 5v75l-74-5Z" fill="#778c71"/><path d="m63 132 61 4m-61 9 61 4m-61 9 61 4m-61 9 61 4m-61 9 61 4" stroke="#adba93" stroke-width="2"/>
+<path d="m144 130 30 2v15l-30-2Z" fill="#d8d0a0"/><path d="m149 139 19 1" stroke="#9aa57b" stroke-width="2"/>
+<circle cx="155" cy="177" r="12" fill="#6d8b74"/><circle cx="155" cy="177" r="5" fill="#cabb88"/>
+<path d="m79 90 0-27q34-23 69 4v26" stroke="#718b73" stroke-width="9" fill="none"/><path d="m186 98 22-64" stroke="#9da47b" stroke-width="4"/>
+
+</g></svg>

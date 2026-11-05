@@ -1,0 +1,12 @@
+<!-- Original painted-paper coastal lantern. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M100 81V64Q124 34 150 63L150 83" stroke="#698979" stroke-width="7" fill="none"/>
+<path d="m83 113 19-31 46-1 25 31Z" fill="#7b9b86"/><path d="m97 111 0 87q27 17 54-1l2-86Z" fill="#e7cc82"/>
+<path d="m86 109 12 5 0 80-12 5Zm69 3 13-4-2 90-12-4Z" fill="#638572"/>
+<path d="m94 118 25 3-2 68-22-5Z" fill="#f4dfa1"/><path d="m124 116 0 78m-29-35 62-1" stroke="#87a085" stroke-width="4"/>
+<path d="m84 198 85 0 6 15-86 7-10-10Z" fill="#6a8b75"/><path d="m90 211 71-3" stroke="#a4b292" stroke-width="3"/>
+
+</g></svg>

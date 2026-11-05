@@ -1,0 +1,15 @@
+<!-- Original painted-paper island workshop. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+<path d="m42 118 103 16 0 137-103-16Z" fill="#c4c398"/><path d="m145 134 37-25 0 133-37 29Z" fill="#8fa589"/>
+<path d="m29 117 43-60 110 34-34 49Z" fill="#ac7657"/><path d="m72 57 110 32v8l-34 48-5-8 27-43Z" fill="#8f654f"/>
+<path d="m46 103 100 29m-79-48 99 29m-72-45-35 45m67-35-33 45" stroke="#d0a47a" stroke-width="2" fill="none"/>
+<path d="m58 158 59 7v90l-59-9Z" fill="#718d76"/><path d="m64 165 46 6v69l-46-7Z" fill="#a9b38c"/>
+<path d="m69 194 35 5m-35 13 35 5m-35 13 35 5" stroke="#d0c89b" stroke-width="3"/>
+<path d="m148 170 60-38 34 22-72 47Z" fill="#b68c62"/><path d="m169 199 70-44v12l-70 47Z" fill="#9d7a58"/>
+<path d="m170 203v68m67-105v71" stroke="#8c9270" stroke-width="8"/><path d="m169 265 68-33 0 10-68 34Z" fill="#b8b48a"/>
+<path d="m182 229 39-20v16l-39 20Z" fill="#d0b784"/><path d="m188 239v20m27-35v22" stroke="#9e946b" stroke-width="4"/>
+<circle cx="93" cy="143" r="15" fill="#d8ca9b"/><path d="m93 133v20m-9-10h18" stroke="#809b7c" stroke-width="3"/>
+<path d="m46 235 8 1m72-48 14 2m-11 56 9 1" stroke="#e0d5a8" stroke-width="3"/>
+</g></svg>

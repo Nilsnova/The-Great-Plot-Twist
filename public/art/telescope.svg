@@ -1,0 +1,13 @@
+<!-- Original painted-paper brass lookout telescope. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m126 144-54 88m60-87 56 86m-57-77-3 78" stroke="#9b9871" stroke-width="7"/>
+<path d="m112 140 31 7 2 16-34-6Z" fill="#8b9e7f"/>
+<path d="m60 101 136-38 18 39-139 43Z" fill="#c0aa70"/><path d="m63 112 137-38 7 17-137 43Z" fill="#ddc388"/>
+<path d="m194 63 18-4 17 39-19 7Z" fill="#8fa48a"/><ellipse cx="220" cy="82" rx="10" ry="23" transform="rotate(-22 220 82)" fill="#719b8a"/>
+<path d="m48 103 16-5 17 47-17 4Z" fill="#99a782"/>
+<path d="m110 89 15 45m40-61 15 44" stroke="#aa9a6c" stroke-width="4"/>
+
+</g></svg>

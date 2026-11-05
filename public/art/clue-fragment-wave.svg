@@ -1,0 +1,10 @@
+<!-- Original painted-paper chart fragment / wave. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m49 75 52-17 26 17 21-17 51 11 8 48-19 26 16 23-6 54-56-1-20-20-23 20-48-9 6-50-18-23 16-24Z" fill="#e4d6aa"/>
+<path d="M71 132q25-24 49 0t50 0m-91 22q25-24 49 0t50 0m-96 21q23-20 47 0t45 0" stroke="#7f9f87" stroke-width="8" fill="none"/>
+<path d="m70 97 28-3m51 99 26 3" stroke="#bdaf83" stroke-width="3"/>
+
+</g></svg>

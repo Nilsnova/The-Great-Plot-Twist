@@ -1,0 +1,12 @@
+<!-- Original painted-paper glasshouse garden. Staged roadmap artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 300" width="256" height="300">
+<ellipse cx="128" cy="278" rx="95" ry="12" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round" transform="translate(18 0) scale(.85 1)">
+
+<path d="m30 177 129 21 72-48-132-24Z" fill="#dbe0b6"/><path d="m30 177 129 21 0 74-129-20Z" fill="#b9ccac"/><path d="m159 198 72-48 0 76-72 46Z" fill="#93b7a1"/>
+<path d="m30 177 70-87 133 51-74 57Z" fill="#d3dec0"/><path d="m70 90 19 7-57 78m99-63-59 76m111-56-63 49" stroke="#82a28a" stroke-width="4" fill="none"/>
+<path d="m30 177 129 21 72-48m-201 64 129 21 72-47m-201 64 129 20 72-46M83 186v76m46-68v74m30-70v74m35-97v73" stroke="#7f9f85" stroke-width="5" fill="none"/>
+<path d="m44 244 0-28m4 12-11-10m10 4 11-18m21 43 0-34m0 15-11-10m12 1 12-20m26 54 0-31m-1 11-11-12m12 3 12-19m39 46 0-32m1 13 13-16" stroke="#709b71" stroke-width="5" fill="none"/>
+<path d="m128 218 23 3v47l-23-3Z" fill="#b7ccad" stroke="#7b9b82" stroke-width="3"/>
+
+</g></svg>

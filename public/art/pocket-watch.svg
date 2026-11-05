@@ -1,0 +1,12 @@
+<!-- Original painted-paper brass pocket watch. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m115 63 0-13q14-16 28 0v13" stroke="#a6a174" stroke-width="6" fill="none"/><path d="m115 65 28 0 0 17-28 0Z" fill="#bda66d"/>
+<ellipse cx="129" cy="152" rx="73" ry="77" fill="#c8b078"/><ellipse cx="129" cy="148" rx="62" ry="66" fill="#e8ddb7"/>
+<ellipse cx="129" cy="148" rx="54" ry="57" fill="#d8d6af"/><path d="m129 100v12m0 73v12m-45-49h12m66 0h12m-77-32 8 8m48 48 8 8m-64 0 8-8m48-48 8-8" stroke="#8ba080" stroke-width="3"/>
+<path d="m129 148-17-29m17 29 26 9" stroke="#668b76" stroke-width="5"/><circle cx="129" cy="148" r="5" fill="#bc8d5d"/>
+<path d="M71 115q9-20 28-27" stroke="#e8cd95" stroke-width="4" fill="none"/>
+
+</g></svg>

@@ -1,0 +1,11 @@
+<!-- Original painted-paper harbour marker buoy. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="82" ry="11" fill="#557766" opacity=".14"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<ellipse cx="129" cy="224" rx="78" ry="14" fill="#97b9a7" opacity=".65"/><path d="M79 204 95 147 108 126 108 99 146 98 146 128 159 149 177 206Q130 233 79 204Z" fill="#d4d6ad"/>
+<path d="m95 147 64 2 9 26q-39 18-82 0Z" fill="#bf7f63"/><path d="m89 176q38 17 79-1l9 31q-49 26-98-2Z" fill="#7d9f88"/>
+<path d="m104 102 0-17q20-25 44-1v18" stroke="#7e9d84" stroke-width="6" fill="none"/><path d="m111 101 31-1v28l-31 1Z" fill="#d9c18b"/>
+<path d="m66 225-22 5m147-6 24-5" stroke="#c5d2b8" stroke-width="3"/>
+
+</g></svg>

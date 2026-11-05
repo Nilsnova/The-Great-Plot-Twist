@@ -1,0 +1,15 @@
+<!-- Original arena visitor study. A staged character study, not an assigned story role. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 260" width="180" height="260"><ellipse cx="90" cy="240" rx="43" ry="10" fill="#557766" opacity=".14"/><g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m61 204 23 0-1 31-27 0Zm37 0 21-1 5 32-26 0Z" fill="#577f70"/><path d="m54 230 30 0v8H51Zm44 0 26 0 5 8H98Z" fill="#436a5e"/>
+<path d="M60 118Q89 106 120 120L141 207 109 219 90 202 71 218 39 208Z" fill="#bc8065"/>
+<path d="m91 121 29-1 21 87-32 12-19-17Z" fill="#a46e5b"/>
+<path d="m62 141 48 22m9-23-47 31" stroke="#d0a07a" stroke-width="15" fill="none"/>
+<path d="M54 89Q45 40 87 33Q131 34 126 89L112 114 68 115Z" fill="#849c7f"/>
+<ellipse cx="90" cy="84" rx="27" ry="30" fill="#d8b48b"/>
+<path d="M55 85Q46 42 87 33Q132 35 127 85L114 63Q85 54 65 67Z" fill="#73917a"/>
+<path d="m62 55q25-18 49-3" stroke="#a9b58c" stroke-width="4" fill="none"/>
+<g fill="#4c695b"><circle cx="78" cy="85" r="2.5"/><circle cx="101" cy="85" r="2.5"/></g><path d="m84 101 13 0" stroke="#a57c60" stroke-width="2"/>
+<path d="m79 118 12 10 13-11" stroke="#e0bf85" stroke-width="4" fill="none"/>
+
+</g></svg>

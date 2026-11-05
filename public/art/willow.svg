@@ -1,0 +1,11 @@
+<!-- Original painted-paper shoreline willow. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 320" width="256" height="320">
+<ellipse cx="128" cy="298" rx="78" ry="11" fill="#557766" opacity=".13"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="m115 297 5-148 15-3 9 152Z" fill="#ada77a"/><path d="m125 231-42-58m46 33 34-49" stroke="#a3a076" stroke-width="9" fill="none"/>
+<path d="M36 190Q7 167 28 137Q13 108 45 90Q39 59 72 60Q93 32 119 51Q145 29 168 55Q205 49 203 86Q236 103 215 136Q235 166 205 189L190 230Q175 228 177 184L157 238Q140 234 147 184L118 224Q102 216 118 173L87 232Q69 224 81 180L54 228Q35 220 47 182Z" fill="#8eae7d"/>
+<path d="M31 126Q54 111 74 127Q79 96 109 110Q130 84 151 105Q180 91 205 112Q211 85 186 76Q176 49 148 61Q119 43 99 64Q68 49 62 79Q30 86 31 126Z" fill="#a9c08c"/>
+<path d="m56 145-8 58m35-67-9 61m37-67-7 59m41-52-7 58m38-53-6 63m30-67-8 55" stroke="#7b9f71" stroke-width="4" fill="none"/>
+
+</g></svg>

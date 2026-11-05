@@ -1,0 +1,10 @@
+<!-- Original painted-paper old brass key. Generic object study, not a canon clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="10" fill="#557766" opacity=".12"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+
+<path d="M92 61q32-23 56 2 24 32-3 55l-7 10 51 63-15 14-14-16-14 11-14-16 13-11-32-42-11-1Q59 127 61 96q0-24 31-35Z" fill="#c6ab6d"/>
+<path d="M93 78q20-15 35 4 14 19-4 30-20 10-32-6-11-14 1-28Z" fill="#eee5c7"/><path d="m137 138 34 43m-89-88q1-21 20-21" stroke="#e2c589" stroke-width="5" fill="none"/>
+<path d="m103 61 6-19q16-13 31 0" stroke="#9c9e72" stroke-width="4" fill="none"/>
+
+</g></svg>
