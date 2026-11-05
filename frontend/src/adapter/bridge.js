@@ -10,6 +10,7 @@ export function createCaseBridge(ctx) {
       host=createCaseScreens({...ctx,adapter,beforeOpen:ctx.beforeOpen});ctx.onView?.(adapter.read());return host;
     })().finally(()=>{loading=false;});return pending;
   }
+  if(adapter)ctx.onView?.(adapter.read());
   return {get active(){return loading||!!host?.active;},get adapter(){return adapter;},
     async open(name,params){const view=await ensure();if(!disposed){ctx.beforeOpen?.();await view?.open(name,params);}},
     async completeIntro(receipt){const view=await ensure();if(!disposed){const element=await view?.completeIntro(receipt);if(element)ctx.onArrival?.(element);}},

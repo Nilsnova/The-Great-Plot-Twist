@@ -1,7 +1,7 @@
 // Mutable memory owned only by the fake. Never saved, fetched or treated as server authority.
 export function initialCaseState() {
   return {revision:0,now:0,captainName:'Captain Lantern',profile:null,coins:0,timber:20,crew:null,joinPreview:null,joinAttempts:0,joinWaitUntil:0,
-    found:{1:[],2:[],3:[],4:[]},pins:[],deductions:[],jobs:[],pairWaitUntil:0,night:null,stations:false,ruinReady:false,
+    found:{1:[],2:[],3:[],4:[]},creditedCards:[],pins:[],deductions:[],jobs:[],pairWaitUntil:0,night:null,stations:false,ruinReady:false,
     schooner:false,aboard:false,accuseWaitUntil:0,solved:false,revealIndex:0,worldRelit:false,festivalUntil:0,wall:[],lanternColour:null,effects:[],effectId:0};
 }
 export const accept=message=>({accepted:true,reason:null,message});
