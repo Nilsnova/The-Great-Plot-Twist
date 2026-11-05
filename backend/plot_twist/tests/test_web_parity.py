@@ -14,6 +14,10 @@ sends all its move lists to Node.js in one run, because starting Node.js takes a
 seconds and the original started it again for each of the 62 lists. The test needs Node.js and
 is skipped, with a reason, when Node.js is not installed.
 
+Story v2 adds two tests at the end of the class. They play the routes that end locked in the tower
+after warning the harbor and after telling no one (the third choice at the shore). The two
+original tests are unchanged. The route lists come from test_story_v2.py.
+
 Used by: pytest (uv run pytest, from the backend folder).
 """
 
@@ -26,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from plot_twist.engine import Game, Story, load_story
+from plot_twist.tests.test_story_v2 import SILENT_TRAPPED, WARNED_TRAPPED
 
 RUNNER = Path(__file__).resolve().parent / "parity_runner.mjs"
 
@@ -96,3 +101,18 @@ class TestWebParity(unittest.TestCase):
             self.assertEqual(python_steps, js["steps"])
             self.assertEqual(js["steps"][-1]["state"]["scene"], ending)
             self.assertTrue(js["steps"][-1]["state"]["ended"])
+
+    def check_trapped_route_matches(self, actions: list[str]) -> None:
+        """Both engines agree at every step of the route, and it ends locked in the tower."""
+        story = load_story()
+        (js,) = self.play_in_javascript(story, [actions])
+        python_steps = self.play_in_python(story, actions)
+        self.assertEqual(python_steps, js["steps"])
+        self.assertEqual(js["steps"][-1]["state"]["scene"], "ending_trapped")
+        self.assertTrue(js["steps"][-1]["state"]["ended"])
+
+    def test_trapped_after_warning_matches(self):
+        self.check_trapped_route_matches(WARNED_TRAPPED)
+
+    def test_trapped_after_telling_no_one_matches(self):
+        self.check_trapped_route_matches(SILENT_TRAPPED)

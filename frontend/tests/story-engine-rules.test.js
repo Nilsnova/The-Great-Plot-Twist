@@ -25,6 +25,11 @@ const NOT_NOW_TEXT = "You can't do that right now.";
 
 const visibleIds = (game) => game.visibleActions().map(({ action }) => action.id);
 
+// The text of the note in a scene that has exactly these conditions. Notes are found by their
+// conditions, not by their place in the list, so adding a note to a scene does not break a test.
+const noteText = (sceneId, when) =>
+  story.scenes[sceneId].notes.find((note) => JSON.stringify(note.when) === JSON.stringify(when)).text;
+
 describe('engine rules the real story cannot show', () => {
   it('R2: an item is never collected twice, even if the story offers it again', () => {
     const offersKeyAgain = structuredClone(story);
@@ -54,8 +59,11 @@ describe('engine rules the real story shows, but A1-A6 never check', () => {
   it('a note is shown only while its conditions hold', () => {
     const game = startGame();
     play(game, 'to_shore', 'trust_fisherman');
-    const trustedNote = story.scenes.shore.notes[1].text;
-    expect(game.sceneNotes()).toEqual([trustedNote]);
+    // The check stays an exact list: a player who trusted the fisherman sees these notes, in this
+    // order, and no other note. Story v2 added the fisherman note, which shows until the harbor is warned.
+    const fishermanNote = noteText('shore', { not_flags: ['warned_harbor'] });
+    const trustedNote = noteText('shore', { flags: ['trusted_fisherman'] });
+    expect(game.sceneNotes()).toEqual([fishermanNote, trustedNote]);
   });
   it('a flag is stored once, even if its action is repeated', () => {
     const game = startGame();

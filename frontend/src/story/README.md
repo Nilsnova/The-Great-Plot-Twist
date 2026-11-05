@@ -75,7 +75,7 @@ Python also has `item_name(item_id)`, which the browser does not need.
 `engine.js` mirrors `backend/plot_twist/engine.py` rule for rule. A rule that differs would make the browser and the server disagree about what a move does.
 
 - **Change a rule in both engines, and in both sets of tests, in the same pull request.**
-- The guard is `backend/plot_twist/tests/test_web_parity.py`. It plays 60 random runs of 60 moves, and both endings, through the two engines and compares every answer, state, visible action and note. Run it with `cd backend && uv run pytest plot_twist/tests/test_web_parity.py -rs`. It needs Node.js. Without Node.js it is skipped, and the skip reason is printed, so run it on a machine that has Node.js before you merge.
+- The guard is `backend/plot_twist/tests/test_web_parity.py`. It plays 60 random runs of 60 moves, both endings and the two Story v2 routes that end locked in the tower (after warning the harbor and after telling no one), through the two engines and compares every answer, state, visible action and note. Run it with `cd backend && uv run pytest plot_twist/tests/test_web_parity.py -rs`. It needs Node.js. Without Node.js it is skipped, and the skip reason is printed, so run it on a machine that has Node.js before you merge.
 - Differences that are allowed because they are not game rules: how progress is stored (Python: an optional file, JavaScript: an injected storage), what the methods return (see the table above), and that JavaScript checks a save against the story before it uses it.
 
 ## How it will meet the island
