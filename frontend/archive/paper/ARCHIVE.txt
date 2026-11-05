@@ -1,0 +1,3 @@
+SUPERSEDED PAPER ITERATION
+
+Nils replaced this direction with the approved pixel-art game on 5 November 2026. These files preserve earlier original art and study sources; they are excluded from the active Vite entries/public assets and Vitest include. They are historical reference, not a supported standalone app. The active implementation, catalogue and authoring sources are under frontend/src/pixel, frontend/public/pixel and frontend/scripts/pixel_art. Reuse original concepts only after redrawing them in the approved style.

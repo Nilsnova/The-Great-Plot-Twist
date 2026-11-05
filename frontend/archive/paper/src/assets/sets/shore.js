@@ -1,5 +1,11 @@
 // Coastal objects; only the selected useful props preload on Lighthouse Isle.
 export default [
+  {"id": "watering-can", "label": "Garden watering can", "size": [1.5, 1.5, 0.09375], "roadmap": ["building"], "usage": "library"},
+  {"id": "herb-planter", "label": "Timber herb planter", "size": [2.6, 2.6, 0.09375], "roadmap": ["building"], "usage": "library"},
+  {"id": "apple-basket", "label": "Orchard fruit basket", "size": [1.3, 1.3, 0.09375], "roadmap": ["building", "market"], "usage": "library"},
+  {"id": "fallen-column", "label": "Fallen stone column", "size": [3.8, 3.8, 0.09375], "roadmap": ["mystery", "raid"], "usage": "library"},
+  {"id": "ruin-wall", "label": "Broken garden wall", "size": [4, 4, 0.09375], "roadmap": ["building", "mystery", "raid"], "usage": "library"},
+  {"id": "waystone", "label": "Weathered waystone", "size": [2, 2, 0.09375], "roadmap": ["mystery", "building"], "usage": "library"},
   {"id": "mooring-post", "label": "Mooring post", "size": [1.25, 1.25, 0.09375], "roadmap": ["sailing"], "usage": "library"},
   {"id": "rope-coil", "label": "Coiled mooring rope", "size": [1.55, 1.55, 0.09375], "roadmap": ["sailing", "building"], "usage": "island"},
   {"id": "fishing-net", "label": "Net drying rack", "size": [3.6, 3.6, 0.09375], "roadmap": ["sailing", "building"], "usage": "library"},

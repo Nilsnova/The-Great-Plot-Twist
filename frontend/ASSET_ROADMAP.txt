@@ -1,30 +1,26 @@
-ROADMAP ART COVERAGE / 5 NOVEMBER 2026
+GRAPHICS PROGRESS AND NEXT ART / 5 NOVEMBER 2026
 
-Source checked
-20261105_Roadmap-Inputs.md, collected by Nils on 5 November 2026, in the course Group-Project folder. It lists feature inputs to classify as core, stretch, later, or dropped; it is not a final feature priority list. ROADMAP.md was absent from both game worktrees and the connected repository's default branch when checked. The sibling worktree's proposed specs/F0-foundation.md supplies the matching feature flags, including raid and live_presence. No changes were made to either source or to the other worktree.
+Accepted direction
+Nils rejected the painted-paper studies, supplied a top-down pixel-art forest reference and then approved the actual pixel gameplay capture as beautiful. Keep this implemented pixel style; clean and expand it. The earlier muted paper palette is superseded. The reference screenshot stays local and is not a runtime/distributed asset.
 
-The input brief's older low-poly style is superseded by Nils' later Carto-inspired illustrated direction in this chat. New art continues the existing original painted-paper SVG family.
-Nils explicitly confirmed the warm, muted palette during the expansion review.
+Current completed core
+36 original pixel sprites and one canonical terrain backdrop: three buildings with cottage cutaway/light layers, eleven nature assets, eleven coastal props, and nine explorer poses. Active PNG registration and anchors live in src/pixel/catalog.js. Runtime requests no earlier paper SVG drawing. Main movement, collisions, four story ids, camera anchors, weather and lighthouse lighting remain connected.
 
-Art kits
-Personal islands / building: cabin, workshop, greenhouse, windmill, storage and small settlement props.
-Sailing / shared islands: harbour office, sailing and cargo boats, ferry, mooring equipment and coastal landmarks.
-Island Exchange: market hall, chart display, share certificate, coin and wallet art.
-Prediction markets: question kiosk, question board and forecast token; no real question or sensitive event is depicted.
-Sports predictions: pavilion, generic pennant, fixture-style marks and reward trophy; no real team or provider branding.
-PvP arena: duel gate, challenger character study and arena icon; artwork only.
-Cooperative encounters: ruin/arch studies and raid icon, based on F0's proposed raid flag; encounter design remains open.
-Shared mystery / visible rewards: generic logbook, chart, key, lens, radio and other clue props plus reward art. These are an object library, not canon clues or a new story solution.
-Companion: two character studies and an interface icon. Identity remains a design option; no AI or dialogue service is added.
-Weather / presence: consistent weather and shared-presence icons, alongside the existing visuals and APIs.
+Live GitHub audit
+Repository: Nilsnova/The-Great-Plot-Twist. Fetched origin/main a0e501a, which merged the bootstrap, F0 foundation and earlier graphics snapshot. The main merge already carries the frontend/ layout; origin/feat/live-skeleton d5d6f80 is the rename commit. This graphics pass now follows that layout. origin/chore/foundation bea3060 supplies the backend groundwork. No open graphics issue/PR was returned before this pass creates its owning records. Main is no longer README-only.
 
-Integration boundary
-Catalogue entries say whether art is used in Lighthouse Isle, CSS-only, or staged in the library. Only selected island textures preload. Staged art does not activate a feature, make a claim about the story, change the economy or define an API. The catalogue is the source of truth for sizes, anchors, tags and usage; ASSETS.md describes provenance and the workshop displays it for review.
+Local planning, not published assignments
+The live-skeleton worktree has untracked ROADMAP.md and docs/STORY.md. They are local planning inputs, not files on the fetched GitHub branches. They identify G1 as this final visual pass, G2 as chart/place management after G1, G3 as the harbour scene, and G4 as finale visuals. S0 supplies canonical map/art placement; proposed interfaces remain provisional. Do not invent or freeze those interfaces while building art.
 
-Quality loop
-Review source SVGs, full family sheets, thumbnail/game scale, alpha bounds, day/night contrast and the actual island. Revise weak silhouettes and anchors before handing over. Keep the full library separate from the active scene's draw-call/texture cost.
+Completed staged pixel kit
+Twelve staged original pixel drawings: harbour office, harbour beacon, signal station, ferry pier, sailboat, dark schooner, sealed letter, torn page, logbook, compass, brass star and beacon fire. All are in the pixel workshop. The catalogue now has 48 sprites; 36 active ids still preload with the island. Keep the assets reviewable in the pixel workshop and selectively loadable. Their existence is not a completed harbour, chart, travel mechanic, story clue or outcome. Canonical places and hotspot positions still come from the story package.
 
-Completed expansion
-88 new drawings bring the collection to 108. The catalogue has nine families: 20 original island drawings, 12 buildings, 14 coastal props, 4 sailing assets, 12 nature assets, 15 mystery objects, 8 economy/reward objects, 5 character studies and 18 icons. Twenty-seven drawings preload with the island, 80 are staged, and one paper tile is CSS-only.
+Earlier broader input source
+20261105_Roadmap-Inputs.md in the course Group-Project folder lists ideas for personal islands/building, sailing/shared islands, play-money markets, predictions, sports, arena, cooperative mystery/rewards, weather/presence and an optional companion. Those ideas still require prioritisation. The earlier paper versions are superseded design studies, not active pixel versions.
 
-Review changes included a tall lean-to workshop, low porch cabin, stronger kiosk glyph, simpler glasshouse divisions, subtle wall weathering and safe roof/flag padding. Two independent final reviews found no blocking visual issue in the new families. The workshop adds 32/64/96 pixel studies; source art remains editable for Nils' next visual iteration.
+Publishing
+Nils explicitly authorised checking GitHub and pushing verified work in the current chat. Push the graphics feature branch normally and keep its issue/draft PR current. Main still requires independent human team review; no force push, merge into main or deployment is authorised. Preserve the other worktrees and shared team documents.
+
+Published progress: graphics branch and frontend-layout sync pushed. Owning issue #2 is live. PR creation remains incomplete because connector writes return 403 and computer-use access times out; use the branch compare page for review until that capability recovers. Full project completion and human review are not implied.
+
+Cleanup: retired paper sources/art/checks moved into archive/paper, preserving files while excluding them from active src/public/build. The 36 approved core pixel PNGs are byte-identical. Current validation:27active tests in5files;49PNGs decoded and staged/default loading checked.

@@ -25,7 +25,7 @@ export function createHud(container, actions) {
       <div class="panel-heading"><strong>Island atmosphere</strong><button class="close-settings" aria-label="Close visual settings">×</button></div>
       <label for="hour">Time of day <span class="hour-value"></span></label><input id="hour" type="range" min="0" max="23.99" step="0.01" value="${settings.hour}">
       <div class="preset-buttons">${Object.keys(presets).map((name, i) => `<button data-preset="${name}">${i + 1} ${name}</button>`).join('')}</div>
-      <label for="quality">Quality</label><select id="quality"><option value="high">High · full illustration</option><option value="low">Low · lighter effects</option></select>
+      <label for="quality">Quality</label><select id="quality"><option value="high">High · full weather</option><option value="low">Low · lighter weather</option></select>
       <label class="check"><input id="fast-time" type="checkbox"> Speed up time <kbd>T</kbd></label>
       <p class="settings-note">Try midnight, sea mist or a passing storm.</p>
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
@@ -43,6 +43,7 @@ export function createHud(container, actions) {
     select('.arrival').classList.add('departed'); select('.location').hidden = false;
     overlay.classList.add('exploring'); actions.start();
     window.setTimeout(() => { select('.arrival').hidden = true; }, 650);
+    window.setTimeout(() => { select('.location').hidden = true; }, 5000);
     actions.focus();
   };
   select('#hour').oninput = event => { settings.hour = Number(event.target.value); };
@@ -52,7 +53,7 @@ export function createHud(container, actions) {
   overlay.querySelectorAll('[data-preset]').forEach(button => { button.onclick = () => {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
-  let toastUntil = 0;
+  let toastUntil = 0, syncAt = 0;
   return { togglePanel,
     notify(id) {
       const toast = select('.toast');
@@ -63,6 +64,10 @@ export function createHud(container, actions) {
       overlay.classList.toggle('night', stats?.night > 0.4);
       const prompt = select('.interact'); prompt.hidden = !zone; prompt.dataset.zone = zone || '';
       if (zone) prompt.querySelector('strong').textContent = names[zone];
+      const now = performance.now();
+      select('.toast').hidden = now > toastUntil;
+      if (now < syncAt) return;
+      syncAt = now + 150; // Clock and diagnostics need not rewrite the DOM every frame.
       const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60);
       const clock = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       select('time').textContent = clock; select('.hour-value').textContent = clock;
@@ -71,7 +76,6 @@ export function createHud(container, actions) {
       const weather = getWeather();
       select('.weather-label').textContent = weather.rain > 0.5 ? 'Rain at sea' : weather.fog > 0.7 ? 'Sea mist' : weather.cloudCover > 0.6 ? 'Overcast' : 'Fair skies';
       if (import.meta.env.DEV && stats) select('.performance').textContent = `${stats.fps} FPS · ${stats.calls} calls · ${stats.triangles.toLocaleString()} triangles`;
-      if (performance.now() > toastUntil) select('.toast').hidden = true;
     },
   };
 }

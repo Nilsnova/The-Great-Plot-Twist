@@ -1,40 +1,33 @@
-# Original illustrated asset register
+# Active original pixel-art register
 
-Nils selected the Carto-inspired painted-paper direction on 5 November 2026 and confirmed the warm, muted palette. All 108 SVGs are original editable project drawings. No character, map, texture, drawing or screenshot from another game is used in the application. No external visual asset or font was downloaded.
+Nils approved the actual pixel-art gameplay presentation on 5 November 2026 and asked to preserve its style while cleaning and expanding it. The library has **48 original pixel sprites and one baked terrain backdrop**. The active game loads 36 sprites; 12 harbour/mystery assets are staged and stay outside its default preload. All are authored from editable project code. The user-supplied screenshot is local visual inspiration, excluded from Git and runtime distribution; no art, character or map was extracted from it.
 
-## Collection
-
-| Family | Drawings | Contents |
+| Family | PNGs | Artwork |
 | --- | ---: | --- |
-| Original island | 20 | Cottage and cutaway/light overlays, lighthouse, boathouse, trees, undergrowth, rocks, sign, jetty, rowing boat, six explorer poses and paper tile |
-| Buildings | 12 | Harbour office, Exchange hall, question kiosk, sports pavilion, arena gate, signal station, workshop, cabin, glasshouse, windmill and two ruins |
-| Coastal life | 14 | Mooring post, rope, net rack, crate, barrel, lantern, bench, well, fence, bridge, steps, noticeboard, tide gauge and buoy |
-| Sailing | 4 | Sailboat, shared-island ferry, cargo boat and life ring |
-| Nature | 12 | Willow, cypress, palm, reeds, fern, sea grass, driftwood, tidal pool, shells, mushrooms, gull and crab |
-| Mystery objects | 15 | Logbook, letter, chart, key, watch, compass, lens, cipher wheel, four distinct chart fragments, message bottle, radio and telescope |
-| Markets and rewards | 8 | Play coins, wallet, share certificate, chart board, question board, forecast token, pennant and trophy |
-| Character studies | 5 | Harbour keeper, trader, arena visitor, satchel gull and lantern wisp |
-| Interface icons | 18 | Logbook, map, home, ship, coin, market, prediction, sports, arena, encounter, companion, presence, five weather states and reward |
-| **Total** | **108** | **20 original drawings plus 88 added for roadmap coverage** |
+| Buildings and layers | 5 | Cottage, matching interior, window-light overlay, boathouse and lighthouse |
+| Forest and nature | 11 | Birch, oak, a second broadleaf crown, pine, rocks, shrub, flowers, grass tuft, fern, reeds and mushrooms |
+| Explorer poses | 9 | Front/back/side standing and two stride poses per view; left is the mirrored side |
+| Coastal props | 11 | Sign, jetty, rowing boat, crate, barrel, rope coil, lantern, bench, buoy, driftwood and gull |
+| Staged harbour/mystery kit | 12 | Harbour office, harbour beacon, signal station, ferry pier, sailboat, dark schooner, sealed letter, torn page, logbook, compass, brass star and beacon fire |
+| Terrain | 1 | Native 1024 × 768 land/grass/path/shore/cliff backdrop using the canonical terrain-height function |
+| **Total** | **49** | **48 sprites + ground.png** |
 
-The collection is 99,104 bytes of SVG source, about 97 KiB. The largest source rasterises at 576 pixels on its longest side. The game loads only 27 shared SVG textures, 31,166 source bytes, plus the CSS paper tile. The 80 staged drawings incur no game texture request or draw call. The paper tile is the remaining CSS-only entry.
+Source PNGs total 69,216 bytes, about 67.6 KiB. The active 36-sprite/ground kit remains 59,904 bytes; staging adds 9,312 source bytes and no game texture requests or draw calls. Native sprite sizes range from 16 × 24 to 96 × 208; building canvases can be 128 × 160. One world unit equals 16 native art pixels. All active textures use nearest sampling, no mipmaps and no antialiasing. Integer display scaling, snapped positions and discrete zoom preserve the pixel grid. PNG alpha supplies transparent backgrounds and hard pixel contact shadows.
 
-## Catalogue and integration
+## Edit and reproduce
 
-`src/assets/catalog.js` and the small files in `src/assets/sets/` are the source of truth for each file's id, label, category, world size, placement anchor, roadmap tags and usage. Each file lives at `public/art/<id>.svg`. `size` is `[width, height, anchorFromBottom]`, with horizontal anchor fixed at centre. Preserve the source aspect ratio. UI icons use a centre anchor; scenery generally uses its ground or water contact point.
+`src/pixel/catalog.js` defines ids, files, native dimensions and placement anchors. Each PNG lives in `public/pixel/`. Metadata converts native width/height to world units, with the horizontal anchor at centre and the vertical anchor a native-pixel distance from the bottom. The default `loadArt()` kit is pixelArtIds, which selects only entries whose usage is island. The active game requests those PNGs and ground.png. Staged entries use usage library; a future scene can request their ids explicitly. Their art does not implement travel, a harbour, fire behaviour or a story outcome.
 
-`src/world/art.js` exports `loadArt(ids)` and `placeArt(scene, art, id, x, z, scale)`. The loader defaults to `islandArtIds`; a feature owner can request only its own ids and reuse those materials. Unknown or unloaded drawings throw a descriptive error. This avoids silent white rectangles and preloading every future feature.
+`python3 scripts/pixel_art/generate.py` rebuilds the kit. Python Pillow is an authoring dependency, already available in this session; playing/building/testing the app does not need Python. Sources are small files: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py and generate.py. The Node helper scripts/export-pixel-ground.js exports canonical land classes from world/terrain.js rather than guessing the walkable coastline.
 
-The eight added island props are crate, barrel, rope coil, lantern, bench, buoy, driftwood and gull. Their placements and logical colliders are in `src/world/decorations.js`; the buoy moves with the wind. Existing story interaction ids and routes remain clear.
+The PNG files are original code-authored bitmap assets. No image-generation service, external texture pack, game screenshot, downloaded model or external font is used at runtime. Public/favicon.svg is an original crisp 16-pixel lighthouse mark. Sea/rain/beam/wash effects are original code-generated graphics.
 
-The other drawings are staged source assets, not implemented features. Building drawings have no new interiors or collision definitions. New character studies are static poses; the existing explorer retains front/back walking animation. Generic mystery objects and four contribution fragments do not establish canon clues, solutions or rewards. Companion art supplies no AI, dialogue or behaviour. Boats supply no sailing controller. `ASSET_ROADMAP.txt` records the source mapping and its provisional status.
+## Review and checks
 
-## Review and verification
+Open `/asset-library.html` for the active pixel workshop. It supports search, family/usage filtering, integer previews, source PNG links and a larger inspection dialog. The gallery labels native dimensions and preview magnification so different-sized sprites are not mistaken for world-scale comparisons.
 
-Open `/asset-library.html` with Vite for the full searchable workshop. Filter by family, roadmap area or usage; compare paper, sea and night backgrounds. Inspect any card for its world dimensions, placement anchor, editable SVG link and 32/64/96 pixel previews. The page is built alongside the game without importing Three.js. `/art/board.html` remains the original 20-drawing study.
+`npm test` includes binary PNG dimension/registration checks, whole-number display scaling, snapping, source provenance/safety and the existing world/input/story contracts. `npm run test:art` decodes all 49 PNGs in real Chrome, checks ground alpha, workshop interactions, active-only requests, integer framebuffer scaling, disabled antialiasing and snapped explorer feet. `npm run test:art:production` repeats the workshop and runtime network checks on the static build. Gameplay/performance and production checks have their own commands in GRAPHICS.md.
 
-`npm run test:art` decodes all drawings in installed Chrome, checks XML, visible pixels, aspect ratio, source-edge padding and texture budget, exercises workshop controls, and verifies the game requests only its selected art. `npm run test:art:production` repeats the workshop and network checks against the built static pages. `tests/assets.test.js` protects the catalogue, safe standalone SVGs, roadmap coverage, selective loading and original story stand points. Final family sheets are `captures/20261105_Roadmap-*-Final.png`; machine-readable evidence is `captures/20261105_Roadmap-Art-Checks.json` and its `-Production` counterpart.
+Actual review evidence is `captures/20261105_Pixel-*`. Earlier SVGs, their catalogue/viewers and obsolete checks are preserved in archive/paper; they are not active game textures, approved pixel feature kits or implemented future features. The old paper-style counts do not describe the current game.
 
-Coastlines, paths, ground marks, sea strokes, rain, lantern halo and lighthouse beam are original code-generated shapes. `public/favicon.svg` is the original lighthouse icon. Typography uses installed system fonts; no font file is distributed. Captures are rendered review evidence, not runtime assets. Earlier primitive 3D code and screenshots remain available in Git history.
-
-Three.js, Vite and Vitest use MIT licences; Playwright Core is an Apache-2.0 development dependency. Installed packages supply their notices. Any future external visual asset must be CC0 and recorded here with its exact source URL and licence before use. Reference screenshots linked in `20261105_Style-References.txt` are inspiration only.
+Three.js, Vite and Vitest use MIT licences; Playwright Core uses Apache-2.0 and Pillow uses HPND. Package notices accompany their installations. Future external visual assets must be CC0 and recorded here with their exact source and licence before use.

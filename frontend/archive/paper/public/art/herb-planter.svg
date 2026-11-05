@@ -1,0 +1,10 @@
+<!-- Original planted timber box, sparse herbs and uneven planks. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="103" ry="12" fill="#557766" opacity=".14"/>
+<path d="m31 156 155-13 38 22-156 19Z" fill="#9b8b60"/><path d="m38 166 147-11 31 11-147 16Z" fill="#706f51"/>
+<path d="m35 168 32 15 5 42-33-17Z" fill="#b59b6b"/><path d="m67 183 157-18-8 44-144 16Z" fill="#ccb581"/>
+<path d="m81 198 130-16m-127 29 123-15" stroke="#e1c897" stroke-width="3" fill="none"/>
+<path d="m82 172 1-79m47 73-5-99m53 91 2-70" stroke="#6e906f" stroke-width="5" fill="none"/>
+<path d="M83 132Q43 118 56 87q36 5 27 45m1-20q2-47 30-43 9 30-30 43m45 18q-41-8-37-38 30-4 37 38m-4-30q-11-42 17-49 23 25-17 49m53 36q-34-12-26-36 32 4 26 36m3-18q-1-40 29-36 7 29-29 36" fill="#8eae7f"/>
+<path d="m82 145-18-21m63 17-19-27m71 27 18-27" stroke="#bac997" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

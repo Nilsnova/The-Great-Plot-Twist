@@ -1,0 +1,9 @@
+<!-- Original weathered waystone with a generic line mark, not a story clue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<ellipse cx="128" cy="232" rx="75" ry="12" fill="#557766" opacity=".14"/>
+<path d="m70 221 9-133 40-37 53 21 10 151-65 9Z" fill="#b8c29c"/><path d="m119 51 53 21 10 151-32 6-8-156Z" fill="#9cb28e"/>
+<path d="m93 101 37-8m-38 18 23-5m-30 86 43 4m-44 11 23 2" stroke="#d7d1a7" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="m106 130 22 12-22 12m22-12-38 0" stroke="#789780" stroke-width="7" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="m157 181 14 7-2 29-24 5Z" fill="#88a67d"/><path d="m104 73-4 14 10 5-4 15" stroke="#92a587" stroke-width="3" fill="none"/>
+<path d="m63 221 9-10 15 1 12 17-34 3m97-6 10-15 19 6 8 15-44 1" fill="#a8ba95"/>
+</svg>

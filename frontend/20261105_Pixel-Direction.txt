@@ -1,0 +1,9 @@
+PIXEL ART DIRECTION / 5 NOVEMBER 2026
+
+Nils rejected the painted-paper scene studies and supplied references/20261105_Pixel-Style-Reference.png as the new target. This supersedes the earlier Carto-inspired direction and muted-palette instructions.
+
+Target characteristics: close top-down exploration view; crisp pixel clusters; layered olive, moss and forest greens; dark selective outlines; textured grass and irregular tan path edges; exposed earth/stone cliffs; overlapping rounded canopies; readable small characters with four-direction poses. Original project maps, characters and buildings only. The supplied screenshot is a review reference, not licensed runtime artwork.
+
+Next work: establish one convincing forest/coastal clearing and its core pixel-art kit, show the actual rendered result for Nils, then expand that consistent family. Preserve logical gameplay, story hooks and the existing saved art as earlier iterations. Do not continue expanding the rejected paper family by default.
+
+Nils subsequently approved the actual pixel-art gameplay screenshot: 'looks beautiful', 'keep the style', 'make it even cleaner'. This is the accepted implementation direction. He authorised checking live GitHub for needed work and pushing verified work to the graphics branch. Main still needs independent team review; no merge or deployment was requested.

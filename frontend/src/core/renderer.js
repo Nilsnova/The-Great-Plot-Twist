@@ -1,23 +1,22 @@
-// WebGL draws unlit original illustrations. Resize preserves orthographic proportions.
+// Integer upscaling and nearest sampling keep a single crisp pixel grid on any DPR.
 import * as THREE from 'three';
-import { QUALITY, colors } from '../config.js';
+import { pixelViewport } from '../pixel/display.js';
 
 export function createRenderer(container) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setClearColor(colors.water);
-  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping;
-  renderer.domElement.setAttribute('aria-label', 'Illustrated island. Use WASD to walk, E to interact, and the wheel to zoom.');
-  renderer.domElement.tabIndex = 0; container.append(renderer.domElement);
+  const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  renderer.setClearColor('#3d7371'); renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NoToneMapping; renderer.setPixelRatio(1);
+  const canvas = renderer.domElement;
+  canvas.setAttribute('aria-label', 'Pixel-art Lighthouse Isle. Use WASD to walk, E to interact, and the wheel to zoom.');
+  canvas.tabIndex = 0; canvas.style.imageRendering = 'pixelated'; container.append(canvas);
   function resize(camera) {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const aspect = window.innerWidth / window.innerHeight;
-    const height = Math.max(camera.userData.viewHeight, 68 / aspect);
-    camera.left = -height * aspect / 2; camera.right = height * aspect / 2;
-    camera.top = height / 2; camera.bottom = -height / 2; camera.updateProjectionMatrix();
+    const { width, height, scale } = pixelViewport(window.innerWidth, window.innerHeight);
+    renderer.setSize(width, height, false);
+    Object.assign(canvas.style, { width: `${width * scale}px`, height: `${height * scale}px`,
+      position: 'absolute', left: `${Math.floor((window.innerWidth - width * scale) / 2)}px`, top: `${Math.floor((window.innerHeight - height * scale) / 2)}px` });
+    camera.left = -width / 32; camera.right = width / 32; camera.top = height / 32; camera.bottom = -height / 32;
+    camera.updateProjectionMatrix(); renderer.userData = { pixelScale: scale, nativeWidth: width, nativeHeight: height };
   }
-  function setQuality(name) {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, QUALITY[name].pixelRatio));
-    renderer.shadowMap.enabled = false;
-  }
+  function setQuality() { renderer.shadowMap.enabled = false; }
   return { renderer, resize, setQuality };
 }

@@ -1,1 +1,2 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#172b35"/><path d="M22 52 27 23h10l5 29Z" fill="#e9dbbf"/><path d="M26 31h12l1 7H25Z" fill="#ba6b51"/><path d="M26 23v-9h12v9Zm-3-9 9-7 9 7Z" fill="#efbe72"/><path d="M14 53h36" stroke="#efbe72" stroke-width="3"/></svg>
+<!-- Original 16-pixel lighthouse mark. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#263b30" d="M0 0h16v16H0z"/><path fill="#bcb69a" d="M6 6h4v7h1v1H5v-1h1z"/><path fill="#ad7551" d="M6 9h4v2H6z"/><path fill="#ead698" d="M5 4h6v3H5z"/><path fill="#547967" d="M4 4h8L8 1z"/><path fill="#324e40" d="M7 5h2v1H7zm0 7h2v2H7z"/></svg>

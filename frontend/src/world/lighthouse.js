@@ -11,14 +11,14 @@ export const anchors = { stairwell: { x, y: base + 1.5, z }, lamp_room: { x, y: 
 export const stairwell = anchors.stairwell;
 export const lamp_room = anchors.lamp_room;
 // Cutscenes can use these drawn positions directly with the fixed orthographic camera.
-const drawnBase = projectPoint(x, z + 3.3);
+const drawnBase = projectPoint(x, z + 2.6);
 export const cameraAnchors = {
   stairwell: { x, y: drawnBase.y + 1.2, z: 100 },
   lamp_room: { x, y: drawnBase.y + 8.61, z: 100 },
 };
 export function createLighthouse(scene, art) {
   // The illustrated door, rather than the rear wall, meets the path's stand point.
-  const frontZ = z + 3.3;
+  const frontZ = z + 2.6;
   const sprite = placeArt(scene, art, 'lighthouse', x, frontZ);
   const point = projectPoint(x, frontZ), lampY = point.y + 8.61;
   const glow = paintedBlob(scene, x, lampY, 0.78, 0.5, '#f3d58c', 925, 0);
