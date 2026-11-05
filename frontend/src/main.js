@@ -53,14 +53,13 @@ async function startGame() {
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();shell?.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
-      isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+      isActive: () => active && !demo?.active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
   cinematics = createCinematics({container,world,emit,on,reducedMotion,resetInput:input.reset}); world.cinematic = cinematics.play;
   intro = createIntro({container,world,on,emit,resetInput:input.reset}); world.intro = intro;
-  demo = createCinematicDemo(container,world);
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
   function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
@@ -77,34 +76,38 @@ async function startGame() {
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   shell=createShell({container,readSave:()=>introJournal().read(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
-    settingsView:createSettingsView,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
+    demo:new URLSearchParams(location.search).get('demo')==='1',onDemo:()=>demo.start(),settingsView:createSettingsView,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active,onState(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     onPlay(resume){hud.start();intro.begin(resume);}});
-  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!shell.blocked&&!world.busy&&!chart.open};
+  demo=createCinematicDemo(container,world,{chart,sailing,player:controller.player,view,hud,
+    skipCinematic:()=>cinematics.skip(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
+    begin(){shell.play();hud.start();},caption:captions.show,cue:audio.cue});
+  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!chart.open};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
-  const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
+  const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){
+    if(demo.active)return;
     hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
   }});
   function applyPreferences(value){quality(value.quality);}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
-    gamepad.update();
-    if (!shell.blocked && !cinematics.active && !intro.active) {
+    gamepad.update();demo.update(delta);
+    if (!shell.blocked && !demo.active && !cinematics.active && !intro.active) {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
     if (input.consume('KeyM') && active && !sailing.active) chart.show();
     if (input.consume('Escape')) hud.togglePanel(false);
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     }
     settings.hour = (settings.hour + (shell.blocked ? 0 : delta) * (settings.fastTime ? 0.8 : 0.003)) % 24;
-    const speed=controller.update(delta, active && !world.busy && !chart.open);
+    const speed=controller.update(delta, active && !demo?.active && !world.busy && !chart.open);
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
     audio.update(delta,{weather:state,speed,night,active:active&&!world.busy&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta);
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state });
     view.update(delta, controller.player.position);
-    const zone = active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
-    touch.update(zone,active&&!world.busy&&!chart.open);
+    const zone = active && !demo?.active && !world.busy && !chart.open ? findZone(controller.player.position, world.current?.zones ?? []) : null;
+    touch.update(zone,active&&!demo.active&&!world.busy&&!chart.open);
     if (input.consume('KeyE') && zone) world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {
@@ -115,7 +118,7 @@ async function startGame() {
   }, () => { graphics.renderer.render(scene, view.camera); });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing, shell, audio };
+    camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing, shell, audio, demo };
   function dispose() {
     touch.dispose();gamepad.dispose();audio.dispose();captions.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();

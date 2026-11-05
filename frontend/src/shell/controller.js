@@ -18,6 +18,7 @@ export function createShell(ctx) {
       modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','THE SALTREACH ISLES'),node('p','shell-copy','A quiet coast. An unfinished story.'));
       const fresh=menuButton('New game',()=>start(false)),resume=menuButton('Continue',()=>start(true));fresh.id='new-game';
       resume.disabled=!hasLocalIntro(ctx.readSave());nav.append(fresh,resume,menuButton('Settings',()=>page('settings'),true),menuButton('Credits',()=>page('credits'),true));
+      if(ctx.demo)nav.append(menuButton('Highlights tour',()=>{play();ctx.onDemo();},true));
       body.append(nav,node('p','shell-note','Continue uses this browser’s intro save.'));
     } else if(mode==='pause') {
       modal.setTitle('A moment ashore');nav.append(menuButton('Resume',play),menuButton('Settings',()=>page('settings'),true),menuButton('Credits',()=>page('credits'),true),menuButton('Return to title',()=>show('title'),true));body.append(nav);
