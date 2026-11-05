@@ -23,6 +23,16 @@ export { homeBuildings };
 layouts.home_islet = [...homeBuildings.map(item => building(item.asset, item.x, item.z)),
   building('signal-station', 0, -14), { asset: 'bench', x: 4, z: 13 },
   { asset: 'barrel', x: -12, z: 7 }, { asset: 'lantern', x: -3, z: 12 }];
+layouts.smugglers_cove = [building('back-room', -8, -1, 4), building('low-tide-cave', 9, 3, 5),
+  building('arena-gate', 0, -10, 5), { asset: 'barrel', x: -11, z: 1 }, { asset: 'rope-coil', x: 5, z: 9 }];
+layouts.wreck_point = [building('salvage-yard', -7, -2, 6.7), { asset: 'dark-schooner', x: 13, z: 15 },
+  { asset: 'driftwood', x: 8, z: 7 }, { asset: 'crate', x: -11, z: 2 }, { asset: 'barrel', x: -12.5, z: 1 },
+  { asset: 'rope-coil', x: -3, z: 2 }, { asset: 'rock', x: 13, z: 7 }];
+layouts.the_teeth = [building('watchtower-ruin', -5, -5, 3), building('raid-arch', 8, -1, 5),
+  { asset: 'reef', x: -8, z: 7 }, { asset: 'reef', x: -12, z: 11 }, { asset: 'reef', x: 9, z: -11 },
+  { asset: 'rock', x: 5, z: 8 }, { asset: 'rock', x: -9, z: -1 }];
+layouts.gulls_rest = [{ asset: 'bench', x: 0, z: 0 }, { asset: 'flowers', x: -3, z: 2 },
+  { asset: 'gull', x: 5, z: 8 }, { asset: 'rock', x: 9, z: 5 }];
 export const edgeTrees = {
   saltreach_harbor: [[-24,-10],[-21,-14],[-15,-16],[-8,-16],[0,-17],[8,-17],[17,-14],[24,-11],[-24,8],[23,7]],
   home_islet: [[-15,6],[-16,0],[-13,-12],[-9,-17],[9,-17],[15,-8],[16,2],[14,11],[-12,13]],

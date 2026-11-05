@@ -17,7 +17,10 @@ export async function createSettlement(ctx) {
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
     backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
-    placements.forEach(item => placeArt(group, art, item.asset, item.x, item.z));
+    placements.forEach(item => {
+      const mesh = placeArt(group, art, item.asset, item.x, item.z);
+      if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
+    });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
       mesh.material = mesh.material.clone(); return mesh;
