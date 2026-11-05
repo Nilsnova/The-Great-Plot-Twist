@@ -15,6 +15,7 @@ export function createModal({ title = 'Details', body = '', onClose, onCancel } 
   return { element, body:bodyNode,
     open(parent = document.body, focusTarget) { if (element.open) return; opener = document.activeElement; if (!element.isConnected) parent.append(element); element.showModal(); (focusTarget ?? closeButton.element).focus(); },
     close, setTitle(text) { heading.textContent = text; }, setContent(value) { content(bodyNode,value); },
-    dispose() { element.removeEventListener('close',closed); close('dispose'); closeButton.dispose(); element.removeEventListener('cancel',cancel); element.removeEventListener('keydown',key); element.remove(); },
+    dispose() { const wasOpen = element.open; element.removeEventListener('close',closed); close('dispose');
+      if (wasOpen) { if (opener?.isConnected) opener.focus({preventScroll:true}); onClose?.('dispose'); } closeButton.dispose(); element.removeEventListener('cancel',cancel); element.removeEventListener('keydown',key); element.remove(); },
   };
 }

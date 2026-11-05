@@ -38,7 +38,7 @@ async function startGame() {
   const controller = createController(character, input, []), view = createCamera(input);
   let active = false, hud, chart, cinematics, demo, fpsFrames = 0, fpsStart = performance.now(), fps = 0;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>cinematics?.active ?? false, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>cinematics?.active ?? false, disposeVisuals(){cinematics?.dispose();demo?.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -58,7 +58,7 @@ async function startGame() {
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    stopListening(); stopArrivals(); stopPlots(); cinematics.dispose(); demo.dispose(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   quality(settings.quality); graphics.resize(view.camera);
@@ -90,7 +90,7 @@ async function startGame() {
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality, setWeather, emit, on, world, chart, sailing };
   function dispose() {
-    stop(); stopListening(); stopArrivals(); stopPlots(); cinematics.dispose(); demo.dispose(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }

@@ -32,7 +32,7 @@ Object.assign(staged, {
 Object.assign(staged, storyDimensions);
 Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({
-  id, file: `${id}.png`, width, height, usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
+  id, file: `${id}.png`, width, height, visibility: id.startsWith('character-masked-captain') ? 'finale' : 'public', usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
 }));
 export const pixelById = Object.fromEntries(pixelArt.map(item => [item.id, item]));
 export const pixelArtIds = pixelArt.filter(item => item.usage === 'island').map(item => item.id);

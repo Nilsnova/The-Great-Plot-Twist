@@ -39,7 +39,7 @@ export function createWorld(ctx) {
       ctx.emit({ type: 'interact', id, place: current.id }); return true;
     },
     update(dt, state) { current?.update(dt, state); },
-    dispose() { if (disposed) return; disposed = true; ctx.cancelTransition?.(); current?.dispose(); current = null; },
+    dispose() { if (disposed) return; disposed = true; ctx.cancelTransition?.(); current?.dispose(); current = null; ctx.disposeVisuals?.(); },
     get name() { return current ? places[current.id].name : 'At sea'; },
   };
 }

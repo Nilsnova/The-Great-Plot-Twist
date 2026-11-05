@@ -20,7 +20,8 @@ export function choiceKey(key, index, count) {
 export const formatCoins = value => Number.isSafeInteger(value) ? new Intl.NumberFormat('en-GB').format(value) : '—';
 export function chartPoints(values, width = 240, height = 72, padding = 4) {
   if (!Array.isArray(values) || !values.length || !values.every(Number.isFinite)) return [];
-  const low = Math.min(...values), high = Math.max(...values);
+  let low = Infinity, high = -Infinity;
+  for (const value of values) { low = Math.min(low,value); high = Math.max(high,value); }
   return values.map((value, index) => [
     Math.round(values.length === 1 ? width/2 : padding + index/(values.length-1)*(width-padding*2)),
     Math.round(low === high ? height/2 : height-padding-(value-low)/(high-low)*(height-padding*2)),
