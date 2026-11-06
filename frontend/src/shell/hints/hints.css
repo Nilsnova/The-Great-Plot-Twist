@@ -5,3 +5,6 @@
 .case-hint p,.case-hint-empty{font-size:16px;line-height:1.6;margin:7px 0;color:#d2d9bb;overflow-wrap:anywhere}
 .case-hints button{font:16px/1.4 'Courier New',monospace;min-height:44px}
 @media(max-width:450px){.case-hint{padding:12px}}
+
+/* Accessibility: keep readable text and full-size native targets. */
+.case-hint p{font-size:18px}

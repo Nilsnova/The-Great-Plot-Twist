@@ -7,3 +7,6 @@
 .captains-log-list li{padding:10px 12px;border-left:3px solid #a8b486;background:#20382c}
 .captains-log-empty,.captains-log-sealed,.captains-log-muted{font-size:16px;line-height:1.6;color:#d2d9bb}
 @media(max-width:450px){.captains-log-section,.captains-log-intro{padding:12px}.captains-log-list li{padding:9px}}
+
+/* Accessibility: keep readable text and full-size native targets. */
+.captains-log-muted,.captains-log-empty,.captains-log-sealed{font-size:18px}

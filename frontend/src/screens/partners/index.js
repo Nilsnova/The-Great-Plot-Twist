@@ -12,19 +12,19 @@ function createCard(partner,send,navigate){
   const head=node('header','partner-life-head'),portrait=node('img','partner-life-portrait');portrait.alt='';portrait.width=64;portrait.height=80;
   const title=node('h3','',`${partner.name} · Seat ${seat}`),status=node('span','partner-life-status');head.append(portrait,title,status);
   const chart=node('div','partner-chart'),svg=svgNode('svg'),chartCaption=node('p','partner-chart-caption');
-  svg.setAttribute('viewBox','0 0 440 230');svg.setAttribute('role','img');
+  svg.setAttribute('viewBox','0 0 440 230');svg.setAttribute('role','img');svg.setAttribute('aria-label',`Route for seat ${seat}`);
   chart.append(svg,chartCaption);
   const report=node('p','partner-life-report');report.setAttribute('aria-live','polite');const timer=node('p','partner-life-timer');
   const postStatus=node('p','partner-life-post');
   const orderLabel=node('label','partner-field'),orderCaption=node('span','', 'Order'),orderSelect=node('select');orderSelect.setAttribute('aria-label','Order');orderSelect.dataset.focus=`order-${seat}`;orderLabel.append(orderCaption,orderSelect);
   const targetLabel=node('label','partner-field'),targetCaption=node('span','', 'Target'),targetSelect=node('select');targetSelect.setAttribute('aria-label','Target');targetSelect.dataset.focus=`target-${seat}`;targetLabel.append(targetCaption,targetSelect);
-  const sendButton=button('Send order',sendOrder,{focus:`send-partner-${seat}`});
+  const sendButton=button('Send order',sendOrder,{focus:`send-partner-${seat}`,ariaLabel:`Send order · Seat ${seat}`});
   const feedback=node('p','partner-life-feedback');
-  const boardButton=button('Open board',()=>navigate('board'),{focus:`partner-board-${seat}`});boardButton.hidden=true;
+  const boardButton=button('Open board',()=>navigate('board'),{focus:`partner-board-${seat}`,ariaLabel:`Open board · Seat ${seat}`});boardButton.hidden=true;
   const offerBox=node('div','partner-paid-offer');offerBox.hidden=true;
   const offerText=node('p',''),offerLabel=node('label','partner-paid-consent'),offerCheck=node('input');offerCheck.type='checkbox';
   offerLabel.append(offerCheck,node('span','','Allow the quoted shortcut for this order'));
-  const payButton=button('Confirm paid route',confirmPaid,{disabled:true,focus:`partner-paid-${seat}`});
+  const payButton=button('Confirm paid route',confirmPaid,{disabled:true,focus:`partner-paid-${seat}`,ariaLabel:`Confirm paid route · Seat ${seat}`});
   offerBox.append(offerText,offerLabel,payButton);
   article.append(head,chart,report,timer,postStatus,boardButton,orderLabel,targetLabel,sendButton,feedback,offerBox);
   let marker=null;
@@ -50,7 +50,7 @@ function createCard(partner,send,navigate){
   function confirmPaid(){return place({allowPaid:true});}
   function updateOffer(){
     offerBox.hidden=!local.offer;
-    if(local.offer){setText(offerText,`Paid route: ${local.offer.price} coins.`);setText(payButton,`Confirm ${local.offer.price} coins`);payButton.disabled=!offerCheck.checked;}
+    if(local.offer){setText(offerText,`Paid route: ${local.offer.price} coins.`);setText(payButton,`Confirm ${local.offer.price} coins`);payButton.setAttribute('aria-label',`Confirm ${local.offer.price} coins · Seat ${seat}`);payButton.disabled=!offerCheck.checked;}
     else {offerCheck.checked=false;payButton.disabled=true;}
   }
   function update(model,view){

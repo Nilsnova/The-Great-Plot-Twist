@@ -4,3 +4,6 @@
 @media(max-width:450px){.presence-hud{right:8px;top:164px;width:min(359px,calc(100vw - 16px));gap:2px;padding:4px 8px}.presence-heading{gap:3px}.presence-connection{font-size:16px;line-height:19px}.presence-heading button{min-height:24px;padding:2px 5px;font-size:16px;white-space:nowrap}.presence-count{display:none}.presence-more{font-size:16px;line-height:19px;padding:0 4px}.presence-seat{padding:1px 2px;font-size:16px;line-height:19px}.presence-seat[data-partner="true"]{padding:0}.presence-emotes{width:min(240px,calc(100vw - 32px));padding:6px}}
 
 @media(max-width:450px){.presence-heading button,.presence-emotes button{min-height:44px}.presence-heading>button:first-of-type{display:none}}
+
+/* Accessibility: keep readable text and full-size native targets. */
+.presence-hud button,.presence-heading button{min-height:44px;min-width:44px}

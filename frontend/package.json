@@ -37,7 +37,9 @@
     "test:bulletin": "node scripts/check-bulletin.js",
     "test:hook": "node scripts/check-hook.js",
     "test:harbor:life": "node scripts/check-harbor-life.js",
-    "test:presenter": "npm run build && node scripts/check-presenter.js"
+    "test:presenter": "npm run build && node scripts/check-presenter.js",
+    "test:a11y": "node scripts/check-a11y.js",
+    "test:g8": "node scripts/check-g8-regression.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

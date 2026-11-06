@@ -18,3 +18,4 @@
 .tonight-chip strong,.tonight-chip span{display:block}
 .tonight-chip[hidden]{display:none}
 @media(max-width:700px){.tonight-chip{top:150px;right:12px;max-width:calc(100vw - 24px);padding:8px 10px}.bulletin-lines{padding-left:24px}}
+.bulletin-credit a{display:inline-flex;align-items:center;min-height:44px}.bulletin-resets summary{min-height:44px}

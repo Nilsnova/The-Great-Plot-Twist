@@ -24,3 +24,7 @@ body:has(#case-lab){margin:0;background:#1e3c31;color:#ece0b8;overflow:auto}.cas
 .case-page-picker{display:none}@media(max-width:600px){.case-nav>button{display:none}.case-page-picker{display:block;width:100%;min-height:44px;font:16px/1.5 'Courier New',monospace;padding:9px;background:#20392d;color:#fff0c5;border:2px solid #a7b68b}.case-nav{display:block;width:100%}}
 
 .case-station-art{display:block;width:80px;height:128px;image-rendering:pixelated;margin:0 auto 12px}
+
+/* Accessibility: keep readable text and full-size native targets. */
+.case-arrival small{font-size:16px}.crew-seat p,.case-suspects p,.case-night-status{font-size:18px}.case-reveal-line{font-size:19px}
+.case-deduction p{font-size:18px}.case-modal{overflow-wrap:anywhere}.case-field{min-width:0}.case-cards{min-width:0}@media(max-width:600px){.case-cards{grid-template-columns:minmax(0,1fr)}.case-clue{width:min(288px,100%)}}

@@ -11,6 +11,7 @@ export function createHints({navigate,preferences={},onPreferences}={}){
   let model={items:[],actions:[]},prefs=normalizeHintPreferences(preferences),buttons=[];
   function addButton(parent,label,onClick,focus){
     const component=createButton({label,onClick,variant:'quiet'});if(focus)component.element.dataset.focus=focus;
+    if(focus?.startsWith('dismiss-'))component.element.setAttribute('aria-label',`Dismiss tip · ${parent.querySelector('h4')?.textContent??focus}`);
     if(focus==='hints-toggle')component.element.setAttribute('aria-pressed',String(prefs.hintsEnabled));
     buttons.push(component);parent.append(component.element);
   }

@@ -10,7 +10,7 @@ export function createBoardScreen({send}) {
     item.append(node('span','case-card-id',card.id),node('h3','',card.title),node('span','kit-badge',card.state));
     if(card.body)item.append(node('p','',card.body));
     item.append(node('p','case-card-credit',`Found: ${card.holders.map(holder=>holder.label).join(', ')||'Crew journal'}`),pinCredits(card));
-    if(card.canPin)item.append(button('Pin my card',()=>send('pin',card.id),{focus:`pin-${card.id}`}));
+    if(card.canPin)item.append(button('Pin my card',()=>send('pin',card.id),{focus:`pin-${card.id}`,ariaLabel:`Pin my card · ${card.id} ${card.title}`}));
     item.draggable=card.canPair;item.ondragstart=event=>event.dataTransfer.setData('text/plain',card.id);item.ondragover=event=>event.preventDefault();item.ondrop=event=>{event.preventDefault();send('pair',event.dataTransfer.getData('text/plain'),card.id);};
     return item;
   }
