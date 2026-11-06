@@ -365,7 +365,7 @@ Cache-Control: public, max-age=300
 | `place` | The name of the place the weather belongs to. |
 | `source` | `live`, `cache`, `stale` or `fallback` ([section 1](#1-api-conventions)). |
 | `fetchedAt` | When the numbers were fetched, in UTC. For `fallback` it is the time the answer was recorded. |
-| `attribution` | The credit Open-Meteo asks for, with the note that the numbers were changed: `Weather data by Open-Meteo.com, adapted for the game`. Open-Meteo's CC BY 4.0 licence has three conditions, and the game must meet all of them next to the weather: (1) give the credit, as a link to `https://open-meteo.com/`; (2) link to the licence, with the name `CC BY 4.0` as a link to `https://creativecommons.org/licenses/by/4.0/`; (3) say that the data was changed, which the words "adapted for the game" do. The credit link alone is not enough. `weatherAttribution()` ([section 3](#weather)) gives the words and both addresses. |
+| `attribution` | The credit Open-Meteo asks for, with the note that the numbers were changed: `Weather data by Open-Meteo.com, adapted for the game`. Open-Meteo's CC BY 4.0 licence has three conditions, and the game meets them in Settings, then Credits (Nils, 6 Nov 2026): (1) give the credit, as a link to `https://open-meteo.com/`; (2) link to the licence, with the name `CC BY 4.0` as a link to `https://creativecommons.org/licenses/by/4.0/`; (3) say that the data was changed, which the words "adapted for the game" do. The credit link alone is not enough. `weatherAttribution()` ([section 3](#weather)) gives the words and both addresses. |
 
 | Case | Answer |
 |---|---|
@@ -525,7 +525,7 @@ const weatherNow = getWeather(); // a copy: { cloudCover, rain, fog, wind }
 
 Each field is a number from 0 to 1. A value outside that range is clamped. A field that is missing, unknown or not a finite number keeps its previous value.
 
-The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. All of it must be on screen next to the weather ([section 2](#get-apiweather) says why).
+The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. Show all of it under Settings, then Credits, as decided by Nils on 6 Nov 2026 ([section 2](#get-apiweather) lists the required credit and licence links).
 
 Starting it in the game is a separate step, because `frontend/` belongs to the graphics package. Whoever owns the client does it in these steps:
 
@@ -630,6 +630,14 @@ Details that other packages rely on:
 - **Saves:** `data` (a JSON object, at most 200,000 bytes as database text; the server accepts at most 100,000 bytes of compact JSON), `version` (starts at 1 and counts the writes: `PUT /api/save` sends the version it last read, and `save_progress()` writes only if that is still the current version and then adds 1) and `updated_at` (set by the database). Only the server writes a save. The migration `20261106020000` changed the meaning of `version`: it was a format version before, and nothing used it.
 - **Realtime** is not switched on for any table yet.
 - **A new table** follows [ENGINEERING.md, recipe 4.2](ENGINEERING.md#42-add-a-database-table): row-level security, read-only policies for players, and explicit grants, because our project gives no rights to a new table by itself.
+
+### Browser account and crew metadata (G9 R7, R10, R12)
+
+`GET /api/me` also returns `rerollsLeft` (1 before the single name reroll is used, otherwise 0) and `isHost` (this verified player's membership in the server's host allowlist). Reading them never generates a name or writes data. The fifth scoped database read is the player's `captain_name_rerolls` row; older profile, wallet, seat and entry reads keep their order.
+
+For A4 crewmate flags, authenticated players may read `crew_seats.player_id` for seats in their own crew through the existing column grant and row-level-security policy. They cannot read an outside crew or change any seat. The R7 scratch checks exercise actual authenticated reads and refused writes; no opaque-id endpoint or schema change is needed.
+
+Weather credits live under Settings, then Credits, with the source link, licence link and adaptation notice together. This is documentation of the agreed presentation, not a change to the weather answer.
 
 ### Case Phase 1 tables and functions
 
