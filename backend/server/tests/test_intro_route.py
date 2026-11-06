@@ -189,7 +189,7 @@ def test_each_of_the_eight_end_states_gets_its_kit_through_the_route(route):
 
 
 def test_the_stranger_gets_1600_coins_and_the_others_1000():
-    # PENDING Nils' decision (N5): the amounts come from the S0 drafts.
+    # N5, settled by the story round (D018): the amounts come from the S0 drafts.
     paid = {}
     for route in ROUTES:
         client, _ = make_client(EntryDatabase())

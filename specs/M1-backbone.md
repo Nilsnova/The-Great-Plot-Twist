@@ -1,13 +1,13 @@
 # Implementation spec: A2, A3 and A6 (M1 backbone)
 
-**For:** the Sonnet builders (A2, then A3, in worktree W1 `/Users/nilslenke/Developer/The-Great-Plot-Twist-a2a3`; A6 in parallel in W2 `/Users/nilslenke/Developer/The-Great-Plot-Twist-a6`, both from `main` 8d0a718), and Claude, who merges.
+**For:** the Sonnet builders (A2, then A3, in worktree W1 (branch `feat/a2-a3-signin-referee`); A6 in parallel in W2 (branch `feat/a6-crews`), both from `main` 8d0a718), and Claude, who merges.
 **M1 target (Fri 13):** Act 1 plays to an ending, the referee grants a kit, and a crew forms with an NPC partner in an empty seat.
 **Written from:** ROADMAP.md (A1, A2, A3, A6, S3, S4, L3, milestones, decision log), AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md, INTERFACES.md, ARCHITECTURE.md, DECISIONS.md, STORY.md, supabase/README.md, both migrations, backend/server (app, auth, supabase_admin, wallet, errors, flags, settings, routes/me.py and its tests, routes/market.py, market/store.py), backend/plot_twist/engine.py, backend/content/story.json, and the story drafts (CASE-FILE.md section 3, STORY-V2-CHANGES.md, NPC-PARTNERS.md sections 4 and 7, content/case/case.json).
 
 **What I checked while writing (nothing in the repo was changed):**
 - The SQL in this spec parses with pglast, including the PL/pgSQL bodies.
 - In my scratchpad I ran a throwaway Postgres: 16.2 from the PyPI wheel `pgserver`, because this machine has no `psql` and no Postgres 17 of its own. On it I applied foundation, exchange and the three migrations of this spec twice, then ran 41 behaviour checks. All passed: names, re-roll, save versions, save size, kit paid once, crew create, code guessing limit, joining, the muster, the draft give-up, the delete with crew handover, and that players cannot run the functions. The server and its data folder were removed afterwards.
-- Every Act 1 route and claim below was replayed on the real `engine.py` and `story.json`. That covers 122 reachable states and 8 end states, the same with `keep_quiet` added; `keep_quiet` is refused on today's story; a 300-move log is accepted.
+- Every Act 1 route and claim below was replayed on the real `engine.py` and `story.json`. That covers 122 reachable states and 8 end states, the same with `keep_quiet` added; `keep_quiet` is refused on today's story (true before Story v2 reached main; see ed13b1d); a 300-move log is accepted.
 - The partner kit rule matches the NPC-PARTNERS.md 4.4 examples table and holds for all 69 kit mixes and all 256 takeover chains.
 
 ---
@@ -51,7 +51,7 @@ Each item is built as the recommended default. Builders mark the "pending" items
 | N2 | Story decision 12: the order in which partners fill missing kits | `informant, stranger, true_keeper, witness` (NPC-PARTNERS.md 4.2). **CASE-FILE.md sections 3 and 9 still say True Keeper, Informant, Stranger, Witness.** The story branch must fix CASE-FILE (NPC-PARTNERS.md section 11 already asks for it). | Nils (pending; decided as built in the story round: D018, decision 12, a team call confirmed at kickoff. The story round also fixed CASE-FILE.md) |
 | N3 | When partners are seated | At the muster: a new route `POST /api/crews/me/start` moves the crew from `forming` to `active` and fills every empty seat. Partners at crew creation were rejected (no open seat would ever exist, so "open seat first" would be meaningless, and S4 7.1 assumes a forming crew has no partners). Partners at case start were rejected (S3 is M2, but M1 needs a partner). | Nils (recommendation; adds a 4th A6 route) |
 | N4 | `DELETE /api/me` | Deletes the login and every row of the player, ledger included. Crews the player started that have other players are handed to the player in the lowest seat. Details in A2.5. Touches personal data, so per ENGINEERING section 1 the team must agree. | Nils (pending) |
-| N5 | Kit coins | true_keeper 1000, witness 1000, informant 1000, stranger 1600, from the S0 drafts (CASE-FILE.md section 3). `entry_kits.json` becomes the source of truth. | Nils, with the S0 approval |
+| N5 | Kit coins | true_keeper 1000, witness 1000, informant 1000, stranger 1600, from the S0 drafts (CASE-FILE.md section 3). `entry_kits.json` becomes the source of truth. | Nils, with the S0 approval (given: the story round, D018) |
 | N6 | The first Act 1 ending counts | A second playthrough never changes the kit, and pays nothing | Nils (recommendation) |
 | N7 | A kit before a crew | Creating or joining a crew needs an entry profile (Act 1 finished) | Nils (recommendation) |
 | N8 | Crew codes and the guessing limit | 6 characters from a 31-symbol alphabet (no 0 O 1 I L); at most 10 wrong codes per player in 10 minutes, counted in the database | Team (D020) |
@@ -798,7 +798,7 @@ Python never calls `apply_transaction` for the kit. The profile and the payment 
 | `test_an_empty_log_is_no_ending` | |
 | `test_301_moves_are_refused_before_any_replay` | |
 | `test_exactly_300_moves_are_accepted` | `["to_desk", "desk_back"] * 145 + SILENT_TRAPPED` gives stranger |
-| `test_keep_quiet_is_refused_on_todays_story` | move 6 |
+| `test_keep_quiet_is_refused_on_todays_story` (true before Story v2 reached main; see ed13b1d) | move 6 |
 | `test_story_v2_keep_quiet_ends_as_a_stranger` | |
 | `test_story_v2_still_has_eight_end_states_with_the_same_kits` | |
 | `test_old_logs_replay_to_the_same_kit_on_story_v2` | all 8 routes |

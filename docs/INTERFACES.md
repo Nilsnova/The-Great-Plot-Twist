@@ -18,6 +18,7 @@
 | Setting names | `backend/server/settings.py` and [.env.example](../.env.example) |
 | Game content files (the story) | The format in [backend/content/README.md](../backend/content/README.md), and the list of public names in `backend/server/routes/content.py` |
 | Browser events and hooks | `frontend/GRAPHICS.md`, written by the graphics package (G1) |
+| Live presence: the rooms, the messages, the `live_*` events | The header comment of `frontend/src/online/realtime.js` (it joins the parts in `frontend/src/net/`: `live-rules.js` holds the rules, `live-rooms.js`, `live-places.js`, `live-sender.js` and `live-view.js` do the work), the access rules in `supabase/migrations/20261106050000_live_presence.sql`, and [section 7](#7-realtime-budget) here. The server side is `backend/server/crew_broadcast.py`. |
 
 **Changing a contract.** Until the freeze, change this page in your pull request. After the freeze, agree the change in an issue first, then change the home and this page in the same pull request, and record the outcome in the [decision log](DECISIONS.md). If the team has not agreed, keep the current contract ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
@@ -58,20 +59,20 @@
 | 200 | | It worked. | Show the result. |
 | 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
 | 403 | `forbidden` | Signed in, but not allowed. A presenter-only route answers it to a player who is not a host: `require_host` (`HostDep`, in `backend/server/hosts.py`; the hosts are the player ids in the setting `HOST_PLAYER_IDS`, package A2). A visitor who is not signed in gets 401 first. No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. The crew routes answer `wrong_code` (no crew has that code; it counts as a wrong guess) and `no_crew` (the player sits in no crew). | Show the message. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row (so do the home islet routes). `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. The crew routes answer `wrong_code` (no crew has that code; it counts as a wrong guess) and `no_crew` (the player sits in no crew). The home islet adds `no_such_plot` (not one of the five spots) and `no_such_building` (not a building in `buildings.json`). | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
-| 409 | `insufficient_funds`, `already_applied`, `stale_save`, `no_rerolls_left`, `no_name_yet` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. `stale_save` is a save written from an old version (another device saved first; nothing changed). `no_rerolls_left` is a second captain name re-roll, and `no_name_yet` a re-roll before the first name. The crew routes add `kit_needed` (Act 1 is not finished, so there is no kit yet), `already_in_crew`, `already_seated` (treat as done), `crew_full`, `crew_finished`, `already_started` (treat as done) and `crew_busy` (the crew changed three times while the request ran: try again). The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). | Show the message. After `already_applied`, treat the action as done. |
-| 422 | `validation_error`, `invalid_transaction`, `save_too_big`, `save_not_json`, `move_refused`, `no_ending` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. `save_too_big` is a save over 100 KB, and `save_not_json` a save that holds a value JSON cannot store, such as NaN. `move_refused` is an Act 1 move log with a move the story does not allow (the message names the first bad move), and `no_ending` a move log that stops before an ending (package A3). The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). | Show the message. Do not resend it unchanged. |
+| 409 | `insufficient_funds`, `already_applied`, `stale_save`, `no_rerolls_left`, `no_name_yet` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. `stale_save` is a save written from an old version (another device saved first; nothing changed). `no_rerolls_left` is a second captain name re-roll, and `no_name_yet` a re-roll before the first name. The crew routes add `kit_needed` (Act 1 is not finished, so there is no kit yet), `already_in_crew`, `already_seated` (treat as done), `crew_full`, `crew_finished`, `already_started` (treat as done) and `crew_busy` (the crew changed three times while the request ran: try again). The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). The home islet adds `plot_occupied` (something stands on that plot already), `not_buildable_yet` (the windmill and the greenhouse, until timber has a second source) and `not_enough_timber`. | Show the message. After `already_applied`, treat the action as done. |
+| 422 | `validation_error`, `invalid_transaction`, `save_too_big`, `save_not_json`, `move_refused`, `no_ending` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. `save_too_big` is a save over 100 KB, and `save_not_json` a save that holds a value JSON cannot store, such as NaN. `move_refused` is an Act 1 move log with a move the story does not allow (the message names the first bad move), and `no_ending` a move log that stops before an ending (package A3). The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). The home islet adds `wrong_plot` (that building belongs on another plot). | Show the message. Do not resend it unchanged. |
 | 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player), and `POST /api/crews/join` after 10 wrong crew codes in 10 minutes (until the wait is over, even a right code is refused). The `Retry-After` header says how many seconds to wait. | Wait, then try again. |
 | 500 | `server_error` | A bug on our side. The details go to the server log only. | Say "something went wrong". |
 | 502 | `database_error` | The database refused the call or answered strangely. | Say "something went wrong". |
-| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable`, `intro_unavailable`, `crew_codes_busy` | The server, or a service it needs, is not set up or not reachable right now. (`crew_codes_busy`: five new crew codes in a row were taken, so no crew was started; try again. `market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `intro_unavailable`: the story or the entry kits file could not be read when `POST /api/intro/complete` was called; nothing was stored. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
+| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable`, `intro_unavailable`, `crew_codes_busy`, `islet_unavailable`, `bulletin_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`crew_codes_busy`: five new crew codes in a row were taken, so no crew was started; try again. `market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `islet_unavailable`: the same for `backend/content/buildings.json` and the home islet. `bulletin_unavailable`: `bulletin.json`, `chapter_two_hook.json` or `weather_states.json` could not be read when the server started; only `GET /api/bulletin` answers this 503, and when it is `weather_states.json`, `GET /api/weather` also sends `state` and `tonight` as `null`. `intro_unavailable`: the story or the entry kits file could not be read when `POST /api/intro/complete` was called; nothing was stored. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
 
 ## 2. Routes that exist now
 
-Case Phase 1 routes on `feat/case-backend` are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the required migrations are applied.
+Case Phase 1 on `feat/case-backend` is specified in [section 10](#case-phase-1-contract-for-g9); keep its flag off until the required migrations are applied.
 
-Seven routes exist, plus the six of the account and the entry kit (packages A2 and A3), the four of crews (A6) and the three of the Island Exchange (all below): 20 in all, and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
+Eight routes exist (`GET /api/bulletin` is new), plus the six of the account and the entry kit (packages A2 and A3), the four of crews (A6), the two of your home islet (L2) and the three of the Island Exchange (all below): 23 in all, and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026, plus its two newer fields as the code works them out for an answer without hours.
 
 ### GET /api/health
 
@@ -281,7 +282,7 @@ The 8 end states of today's story map to 4 kits (the full table and the file for
 - **The first ending counts** (pending Nils' decision N6). A second playthrough never changes the kit and pays nothing. The answer is built from the stored profile, so a double click, a retry after a timeout and a second playthrough all answer the same. This is why the route has no `actionUid`.
 - **The coins move exactly once**, inside the database function `grant_entry_kit()`: it stores the profile and calls the wallet function in one step, with the reason `kit_grant` and the fixed `ref` `kit`. The ledger accepts that pair once per player, so even a bug could not pay twice. The route checks the amount with the wallet rules first and never calls the wallet itself.
 - **No story version in the request.** The server replays on the story it has and stores the SHA-256 of that file with the profile, for audits. Story v2 only adds actions, so an old log still replays to the same end state. A log that only a newer story allows (for example `keep_quiet` before Story v2 is deployed) is refused as `move_refused`.
-- **The coins and texts of the kits** come from the S0 story drafts and wait for Nils' approval of S0 (N5).
+- **The coins and texts of the kits** come from the S0 story drafts. They waited for Nils' approval of S0 (N5); the story round settled them (D018), and the kits in `secret/case.json` are the same.
 
 ### POST /api/auth/exchange
 
@@ -352,7 +353,7 @@ GET /api/weather
 
 200 OK
 Cache-Control: public, max-age=300
-{"cloudCover": 1.0, "rain": 0.0, "fog": 0.0, "wind": 0.2, "isDay": false, "summary": "Overcast", "place": "Torshavn, Faroe Islands", "source": "live", "fetchedAt": "2026-11-05T18:03:15Z", "attribution": "Weather data by Open-Meteo.com, adapted for the game"}
+{"cloudCover": 1.0, "rain": 0.0, "fog": 0.0, "wind": 0.2, "isDay": false, "summary": "Overcast", "place": "Torshavn, Faroe Islands", "source": "live", "fetchedAt": "2026-11-05T18:03:15Z", "attribution": "Weather data by Open-Meteo.com, adapted for the game", "state": "calm", "tonight": {"date": "2026-11-05", "startsAt": "2026-11-05T18:00:00Z", "endsAt": "2026-11-06T06:00:00Z", "isNow": true, "state": null, "isFogNight": false, "fogNightKind": null}}
 ```
 
 | Field | Meaning |
@@ -364,6 +365,10 @@ Cache-Control: public, max-age=300
 | `source` | `live`, `cache`, `stale` or `fallback` ([section 1](#1-api-conventions)). |
 | `fetchedAt` | When the numbers were fetched, in UTC. For `fallback` it is the time the answer was recorded. |
 | `attribution` | The credit Open-Meteo asks for, with the note that the numbers were changed: `Weather data by Open-Meteo.com, adapted for the game`. Open-Meteo's CC BY 4.0 licence has three conditions, and the game must meet all of them next to the weather: (1) give the credit, as a link to `https://open-meteo.com/`; (2) link to the licence, with the name `CC BY 4.0` as a link to `https://creativecommons.org/licenses/by/4.0/`; (3) say that the data was changed, which the words "adapted for the game" do. The credit link alone is not enough. `weatherAttribution()` ([section 3](#weather)) gives the words and both addresses. |
+| `state` | The weather state now: `storm`, `fog`, `rain` or `calm`, the first that applies in that order. A storm starts at a wind of 0.8 (48 km/h), fog at a fog of 0.5 and rain at a rain of 0.4 (the numbers are start values of the design, in `backend/content/weather_states.json`). Cloud cover never changes it. `null` only if that file could not be read when the server started. |
+| `tonight` | The night in progress, or the next one: `date` (the Lisbon date it starts on), `startsAt` and `endsAt` (18:00 to 06:00 Lisbon time, in UTC) and `isNow` (true while it is going on). `state` is the state of the whole night, `null` when the answer has no hours for it (the recorded fallback and demo mode have none). `isFogNight` and `fogNightKind` (`real`, `almanac` or `null`) come from the fog-night rule below. The whole object is `null` only if the rules file could not be read. |
+
+**The fog-night rule.** A night is a fog night if the night is in the fog state, or if neither of the last two nights was a fog night. So there is a fog night at least every third night, and the false-light teaser never stalls in a sunny week. `fogNightKind` is `real` when the weather made the night a fog night (this wins when both apply) and `almanac` when only the rule did ("by the harbor's almanac"). A night or a daytime takes a state when at least 3 of its hours have it (storm first, then fog, then rain, otherwise calm). The rule looks back 30 nights from tonight, and assumes the almanac's pattern, one fog night in every three counted from Day 1 (16 Nov 2026), for the nights before that. The hours come from the same Open-Meteo call as the four values: it also asks for 31 past days and 3 forecast days of hourly weather in UTC. Tonight's real fog follows the latest forecast and then the hours that were seen, so it can appear or go during the day or the night. Details are in `backend/server/weather/fog_nights.py`. **The screens show the false light only before the first solve.** This route always sends the verdict, because after the first solve fog is only weather. Desk questions about the weather (package L5) settle on real fog only: after the night has ended, from its observed hours (the night's state is fog, `backend/server/weather/nights.py`), never from the forecast-based `tonight` of this route.
 
 | Case | Answer |
 |---|---|
@@ -372,9 +377,57 @@ Cache-Control: public, max-age=300
 | Open-Meteo is down from the start | `200`, `source` is `fallback`: one real answer recorded in `backend/content/weather/`, with its own place name and time |
 | Demo mode (`DEMO_MODE=true`) | `200`, `source` is `fallback`; Open-Meteo is never called |
 | Nothing at all: down, and the recorded file is missing or broken | `503 source_unavailable` |
+| `backend/content/weather_states.json` could not be read when the server started | `200`, and `state` and `tonight` are `null`; the other fields are the same |
 | Any other method than `GET` | `405 method_not_allowed` |
 
 Only a `200` carries `Cache-Control: public, max-age=300`, so a browser may reuse it for 5 minutes. The open question for Mon 9 about the default place is in [section 11](#11-open-questions-for-mon-9).
+
+### GET /api/bulletin
+
+The harbor bulletin (open-world must items "the daily frame" and the Chapter 2 hook, see `specs/open-world-must.md`). Anyone may call it, and it holds no secret. It takes no input: a query string and an `Authorization` header are ignored. Every player gets the same answer. The one line that differs by crew, the cheapest next lead, is served signed in by package S3 (for example `GET /api/bulletin/lead`), so this answer stays public and cacheable. It is worked out when somebody asks, from the clock, the weather the server already fetches (the same cached source as `GET /api/weather`, so it causes no extra Open-Meteo request), the stage of the world and two content files that only the server reads: `backend/content/bulletin.json` and `backend/content/chapter_two_hook.json`. There is no timer and no table.
+
+```text
+GET /api/bulletin
+
+200 OK
+Cache-Control: public, max-age=300
+{"day": {"id": "2026-11-16", "startedAt": "2026-11-16T00:00:00Z", "nextDayAt": "2026-11-17T00:00:00Z",
+         "bulletinDay": "2026-11-16", "publishedAt": "2026-11-16T08:00:00Z",
+         "nextBulletinAt": "2026-11-17T08:00:00Z", "harborWeek": "2026-11-16",
+         "nextHarborWeekAt": "2026-11-23T00:00:00Z",
+         "resets": [{"when": "Every day at 00:00", "what": "A new game day begins."}, ...]},
+ "lines": [{"kind": "weather", "text": "Tonight: fog. Tomorrow: calm and clear."},
+           {"kind": "fog", "text": "Fog tonight. Watch for the false light."},
+           {"kind": "calendar", "text": "Day 1. From today the harbor bulletin comes out every morning at 8."}],
+ "weather": {"tonight": {"date": "2026-11-16", "startsAt": "2026-11-16T18:00:00Z",
+                         "endsAt": "2026-11-17T06:00:00Z", "isNow": false, "state": "fog",
+                         "isFogNight": true, "fogNightKind": "real"},
+             "tomorrow": {"date": "2026-11-17", "startsAt": "2026-11-17T06:00:00Z",
+                          "endsAt": "2026-11-17T18:00:00Z", "state": "calm"},
+             "source": "live", "fetchedAt": "2026-11-16T08:55:00Z",
+             "attribution": "Weather data by Open-Meteo.com, adapted for the game"},
+ "exchange": null,
+ "chapterTwoHook": null}
+```
+
+| Field | Meaning |
+|---|---|
+| `day` | The Lisbon clock around now. `id` is the game day (the Lisbon date, 00:00 to 24:00: daily caps reset when it changes). `bulletinDay` is the date of the latest 08:00 (the bulletin is published then, and the Island Exchange starts its market day then too). `harborWeek` is the Monday of the Lisbon week. Each comes with the time the next one begins (`nextDayAt`, `nextBulletinAt`, `nextHarborWeekAt`, in UTC). A day is 23 or 25 hours long on the two clock-change days (28 Mar and 31 Oct 2027), because everything is worked out on the `Europe/Lisbon` clock. `resets` says what resets when, from `bulletin.json`, for a help box. |
+| `lines` | The text lines to show, in this fixed order, at most one of each kind: `weather` ("Tonight: ... Tomorrow: ..." with a word for each state, or "no forecast"); `fog` (only while the coast is dark and tonight is a fog night; one text for `real` and one for `almanac`); `exchange` (the price feed and the paused companies, only while the flag `market` is on and the board answers); `relit` (for 48 hours after the first solve); `hook` (the Chapter 2 hook, in the bulletin of the morning it fires); `calendar` (the dated notice of the bulletin day, if there is one). |
+| `weather` | `tonight` is the same object, made by the same function, as `tonight` in `GET /api/weather`. `tomorrow` is the daytime after tonight (06:00 to 18:00 Lisbon time): `date`, `startsAt`, `endsAt` and `state`. `source`, `fetchedAt` and `attribution` say where the weather comes from, and the credit travels with it because the licence asks for credit wherever the data is shown (the same three conditions as for `GET /api/weather`). |
+| `exchange` | `{"feed": "live", "pausedCompanies": [{"id": "harbor-trust", "name": "Saltreach Harbor Trust"}]}` while the flag `market` is on and the price board can be made, otherwise `null`. `feed` is `live`, `cache`, `stale` or `replay`. The bulletin only looks at the Exchange: it saves nothing. |
+| `chapterTwoHook` | `null` while the coast is dark, and until the hook fires. After that: `{"id": "chapter_two_hook", "notice": {"title", "text"}, "beam": {"chart": {"x", "y"}, "pattern": ["short", "short", "long"], "flash": {"shortSeconds", "longSeconds", "gapSeconds", "pauseSeconds"}}}`. The notice is for the Saltreach Harbor notice board; the beam is data for the sea chart (the chart is 448 by 256). The hook fires at 06:00 Lisbon time at the end of the first calm night among the first three nights that start after the first solve, or at the end of the third of them. It looks only at nights that are over, and once fired it is visible for good. The notice describes the flashes in words and names no exact pattern. |
+
+| Case | Answer |
+|---|---|
+| Normal | `200` as above, with `Cache-Control: public, max-age=300` |
+| Open-Meteo is down and nothing is recorded | `200`. `weather.source`, `fetchedAt` and `attribution` are `null`, the states are `null` (the lines say "no forecast") and the harbor's almanac still decides the fog nights. |
+| The flag `market` is off, the Exchange has no service, or its board cannot be made | `200` with `exchange: null` and no `exchange` line |
+| The world stage cannot be read (the reader of package L3 raises an `ApiError`; any other error is a `500`) | `200` without the `fog`, `relit` and `hook` lines, and `chapterTwoHook: null` |
+| `bulletin.json`, `chapter_two_hook.json` or `weather_states.json` could not be read when the server started | `503 bulletin_unavailable` |
+| Any other method than `GET` | `405 method_not_allowed` |
+
+Until package L3 builds the table `world_state` and its reader, the coast is always dark (`create_app` uses `AlwaysDark`), so `relit`, `hook` and `chapterTwoHook` do not appear yet. Nothing in this answer names the culprit or the case's answers, before or after the first solve (CASE-FILE 14.3, the spoiler rule). The two content files are not on the public list of `GET /api/content/{name}`.
 
 ### GET /api/keepalive
 
@@ -475,6 +528,83 @@ Cache-Control: private, no-store
 - **Safe repeats.** `POST /api/crews` gives the same draft back. `POST /api/crews/join` answers `409 already_seated`, and `POST /api/crews/me/start` answers `409 already_started`: treat both as done. A repeat never makes a second seat or a second crew.
 - **Needs** the crew migration and package A3's table `entry_profiles` (one row per player, with the kit). Before A3's migration is applied the kit read fails with `502 database_error`.
 
+### Your home islet (package L2)
+
+Every player has their own home islet, saved to their account. It has five spots, and each spot holds one kind of building: the cabin (`plot_1`, there from the start, free, no levels), the workshop (`plot_2`), the windmill (`plot_3`), the greenhouse (`plot_4`) and the signal station (`islet_signal_station`, the crew's third light in the finale). For now a player can build the workshop and the signal station. The windmill and the greenhouse show as "coming later" until timber has a second source. A level 1 building costs 300 coins and 10 timber, and every player gets 20 timber once, the starter pack. 20 timber buys exactly the station and the workshop, in either order, so nobody can spend the starter timber in a way that blocks the finale. Every number is in `backend/content/buildings.json`, which only the server reads. The home of each route is the comment at the top of `backend/server/routes/islet.py`; the rules are in `backend/server/game/` and are explained in [D021](DECISIONS.md#d021--home-islet-rules--2026-11-05). Play money only: every answer carries a line that says so.
+
+Both routes are for signed-in players only. The player id comes from the verified sign-in, never from the request. There is no feature flag. Both answers carry `Cache-Control: private, no-store`.
+
+| Route | What it does |
+|---|---|
+| `GET /api/islet` | The whole islet: `coins`, `timber`, `signalStationBuilt` and the five `spots` in the order of the place registry. Each spot has a `state` (`built`, `empty` or `locked`), its `cost`, what is `missing` (in the order `coins`, `timber`) and `canBuild`. The server decides `canBuild`; the browser only shows it. A player who has not built yet has no islet row, and the answer shows the starter pack. |
+| `POST /api/islet/build` | `{plot, type, actionUid}` builds level 1. The server takes every price from `buildings.json`; the request carries no number (a `coins` or `playerId` field is a `422`). `type` confirms what the player means: a building on the wrong plot is a `422 wrong_plot`. The ledger reference is `islet:<actionUid>`, so a repeat can never build or charge twice. |
+
+```text
+GET /api/islet
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"coins": 1000, "timber": 20, "signalStationBuilt": false,
+ "playMoneyNote": "Play money. No cash value. It cannot be bought or cashed out.",
+ "spots": [
+  {"plot": "plot_1", "plotName": "Cabin plot", "type": "cabin", "name": "Cabin",
+   "about": "Your home on the islet. It stands from the start and costs nothing.",
+   "state": "built", "level": null, "builtAt": null, "cost": null, "missing": [],
+   "canBuild": false, "lockedNote": null},
+  {"plot": "plot_2", "plotName": "Workshop plot", "type": "workshop", "name": "Workshop", "about": "...",
+   "state": "empty", "level": null, "builtAt": null, "cost": {"coins": 300, "timber": 10},
+   "missing": [], "canBuild": true, "lockedNote": null},
+  {"plot": "plot_3", "plotName": "Windmill plot", "type": "windmill", "name": "Windmill", "about": "...",
+   "state": "locked", "level": null, "builtAt": null, "cost": {"coins": 300, "timber": 10},
+   "missing": [], "canBuild": false,
+   "lockedNote": "Opens when timber starts washing up on your beach, in a later update."},
+  {"plot": "plot_4", "...": "..."},
+  {"plot": "islet_signal_station", "plotName": "Islet signal station", "type": "signal_station",
+   "name": "Signal station", "about": "...", "state": "empty", "level": null, "builtAt": null,
+   "cost": {"coins": 300, "timber": 10}, "missing": [], "canBuild": true, "lockedNote": null}]}
+
+POST /api/islet/build
+Authorization: Bearer <token>
+{"plot": "islet_signal_station", "type": "signal_station", "actionUid": "k3j9x2m4q8w1z7a0"}
+
+200 OK
+Cache-Control: private, no-store
+{"plot": "islet_signal_station", "type": "signal_station", "name": "Signal station", "level": 1,
+ "coinsPaid": 300, "timberPaid": 10, "coins": 700, "timber": 10}
+```
+
+`builtAt` is a UTC time without microseconds, such as `"2026-11-16T10:00:00Z"`. `actionUid` is made once per click (8 to 64 letters, digits, hyphens or underscores) and sent again if the request is repeated.
+
+The checks of a build come in a fixed order, and the first one that fails is the answer. Every refusal changes nothing.
+
+1. The sign-in (`401`), the data file (`503 islet_unavailable`) and the shape of the request (`422 validation_error`).
+2. **A repeat.** If this player has built with this `actionUid` before, the answer is `409 already_applied` and nothing else is asked, whatever has changed since.
+3. **The rules** of `backend/server/game/building.py`: `404 no_such_plot`, `404 no_such_building`, `422 wrong_plot`, `409 plot_occupied` (the cabin), `409 not_buildable_yet`.
+4. **The wallet rules** for the charge (`422 invalid_transaction`; not possible with a checked file).
+5. **The database function `islet_build()`**, in one step: `404 player_not_set_up`, `409 already_applied` (the same click was still running), `409 plot_occupied`, `409 not_enough_timber`, `409 insufficient_funds`, or done.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 401 | `unauthorized` | No sign-in, or a bad one. |
+| 404 | `no_such_plot` | Not one of the five spots. |
+| 404 | `no_such_building` | Not a building in `buildings.json`. |
+| 404 | `player_not_set_up` | The player has no wallet row (the account was made before the migration). Same text as `GET /api/me`. |
+| 409 | `already_applied` | This `actionUid` was used before. Treat the build as done. |
+| 409 | `plot_occupied` | Something already stands on that plot. Always true for the cabin. |
+| 409 | `not_buildable_yet` | The windmill and the greenhouse, until timber has a second source. |
+| 409 | `not_enough_timber` | The player holds less timber than the building needs. |
+| 409 | `insufficient_funds` | Not enough coins. |
+| 422 | `wrong_plot` | That building belongs on another plot. |
+| 422 | `validation_error` | A missing or extra field, a bad pattern, or a number where text belongs. |
+| 502 | `database_error` | The database refused the call or sent a refusal we do not know. A bug, not something a player did. |
+| 503 | `islet_unavailable` | `buildings.json` could not be read when the server started. The rest of the API works. |
+| 503 | `database_unavailable` | **The outcome is unknown.** Call `GET /api/islet`. If the building stands, it is done. Otherwise try again with the **same** `actionUid`. |
+
+**The finale (packages S3 and L3).** The crew's third light is a home signal station. Server code asks `players_with_signal_station(admin, crew_player_ids)` in `backend/server/game/islet_store.py` (one read, at most four ids). In SQL the same fact is `exists (select 1 from public.islet_buildings where player_id = <player> and building_type = 'signal_station')`. A signal station is never removed, so the answer can only change from "no" to "yes", and a check made before the finale's own transaction stays true. The case never charges for the station itself: the finale screen's "Build signal" button maps to `POST /api/islet/build`. `signalStationBuilt` in `GET /api/islet` is for the islet panel only.
+
+The routes need the home islet migration (`20261106070000_home_islet.sql`). Until it is applied, `GET /api/islet` answers `502 database_error`, so do not pass the live transport (`transport: api` in `frontend/src/game.js`) before the migration is applied. Until then the panel runs in unavailable mode and sends no request.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -523,7 +653,7 @@ const weatherNow = getWeather(); // a copy: { cloudCover, rain, fog, wind }
 
 Each field is a number from 0 to 1. A value outside that range is clamped. A field that is missing, unknown or not a finite number keeps its previous value.
 
-The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. All of it must be on screen next to the weather ([section 2](#get-apiweather) says why).
+The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. The answer also carries `state` and `tonight` ([section 2](#get-apiweather)); the false-light teaser can read `answer.tonight.isFogNight` and must stay off once the world is relit. `startLiveWeather` still passes only the four values to `setWeather`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. All of it must be on screen next to the weather ([section 2](#get-apiweather) says why).
 
 Starting it in the game is a separate step, because `frontend/` belongs to the graphics package. Whoever owns the client does it in these steps:
 
@@ -545,8 +675,10 @@ Starting it in the game is a separate step, because `frontend/` belongs to the g
 | `{type: 'travel', to}` and `{type: 'arrived', place}` | G2 | draft |
 | `{type: 'intro_ended', ending}` | S2 | draft |
 | `{type: 'weather_updated', source, fetchedAt}` | L1 | draft; `startLiveWeather` does not emit it itself, whoever wires it in emits it from the `onUpdate` hook |
-| `{type: 'plot_clicked', plot}` | L2 | draft |
+| `{type: 'plot_clicked', plot}` | G2, L2 | built (G2), opens the islet panel at `plot_1` to `plot_4` (L2). Since G8 the world also sends it for `islet_signal_station`; the panel leaves that hotspot to the finale screen (`world/places/case-spots.js`). |
+| `{type: 'islet_changed', built: [plot ids], signalStationBuilt}` | L2, G8 | built; the islet panel emits it after every good answer, and `built` lists every plot whose state is `built`, the cabin included. The world draws a building only when this event says it stands (`frontend/src/world/islet/state.js`, G8). Its home is `frontend/GRAPHICS.md`. |
 | `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story round (S0, D018) |
+| `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted`, `live_crew_updated` | A4 | built, flag `live_presence` off; payloads in [section 7](#events-for-the-screens) |
 
 ### Talking to the API: api.js and session.js (package A2)
 
@@ -622,11 +754,20 @@ The crew codes migration, `supabase/migrations/20261106040000_crew_codes.sql` (p
 
 Four database functions come with the first migration: `apply_wallet_transaction()` (the only way coins move, for the server only), `is_crew_member()` (used by the read rules of crews and seats, for signed-in players only), `handle_new_user()` (runs at sign-up and creates a profile, a wallet with 0 coins and an empty save) and `touch_updated_at()` (stamps `updated_at`).
 
+The home islet migration, `supabase/migrations/20261106070000_home_islet.sql` (package L2, run after the first one), adds two tables and one function. It adds no wallet reason: a building is paid with `building_purchase`. The rights follow the same plan: a visitor gets nothing, a signed-in player only reads their own rows, the server writes.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `islets` | player who has built: the timber the player holds, never below 0 (the first build makes the row, with the starter pack) | read their own row | read, add, change (through `islet_build()`) | L2 |
+| `islet_buildings` | building that stands on an islet, never edited or deleted. The primary key is `(player_id, plot)`: one building per plot. The cabin stands from the start and has no row. | read their own rows | read, add (through `islet_build()`) | L2 |
+
+`islet_build()` is the only way a building goes up. In one step it locks the wallet, refuses a repeated ref, makes the islet row with the starter pack if there is none, refuses a plot that holds a building and a build with too little timber, takes the coins through `apply_wallet_transaction()` (reason `building_purchase`) and writes the building. It is for the server only. The prices and the starter pack are arguments, taken from `backend/content/buildings.json`. The finale reads `islet_buildings` (`player_id`, `building_type`): the table and column names are part of this contract.
+
 Details that other packages rely on:
 
 - **Display names** (`profiles.display_name`): 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at either end. Not unique. At sign-up every player gets a neutral placeholder: `Captain-` and the first 6 characters of their id. A name never comes from the GitHub login or any other login detail, because names appear on a projector.
 - **Saves:** `data` (a JSON object, at most 200,000 bytes as database text; the server accepts at most 100,000 bytes of compact JSON), `version` (starts at 1 and counts the writes: `PUT /api/save` sends the version it last read, and `save_progress()` writes only if that is still the current version and then adds 1) and `updated_at` (set by the database). Only the server writes a save. The migration `20261106020000` changed the meaning of `version`: it was a format version before, and nothing used it.
-- **Realtime** is not switched on for any table yet.
+- **Realtime.** Postgres Changes is not used; live presence rights are policies on `realtime.messages` (migration `20261106050000_live_presence.sql`, [section 7](#7-realtime-budget)).
 - **A new table** follows [ENGINEERING.md, recipe 4.2](ENGINEERING.md#42-add-a-database-table): row-level security, read-only policies for players, and explicit grants, because our project gives no rights to a new table by itself.
 
 ### Case Phase 1 tables and functions
@@ -680,7 +821,7 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `event_reward` | earn | A special event in the world |
 | `cargo_sale` | earn | Selling cargo |
 | `clue_purchase` | spend | Buying a clue |
-| `building_purchase` | spend | Building on a home islet |
+| `building_purchase` | spend | Building on a home islet. The refs are `islet:<actionUid>` (the migration `20261106070000`, no new reason) |
 | `admin_adjust` | either | A manual correction by an admin |
 | `market_buy` | spend | Shares bought on the Island Exchange (migration `20261106010000`) |
 | `market_sell` | earn | Shares sold on the Island Exchange (same migration) |
@@ -726,6 +867,8 @@ How a crew forms, in four steps. The home is `backend/server/routes/crews.py`; t
 
 ## 7. Realtime budget
 
+Live presence (package A4) runs on Supabase Realtime: players see each other's captains move in the same place, can send preset emotes, and the server can tell a crew the moment something changed. It is built and switched off by the flag `live_presence`. Its migration (`20261106050000`) goes live with group 2, applied by the controller before group 2 reaches `main`. The flag stays off until the checks L1 to L7 of [supabase/README.md](../supabase/README.md#live-presence-checks-steps-l1-to-l7) have passed on the live project (L7 needs the server key), and nothing in the game starts the module yet: the browser adapter of package G9 connects it to the presence screens of G7 and G8 ([below](#what-the-browser-adapter-g9-maps)). The design, the numbers and the reasons are in [specs/A4-live-presence.md](../specs/A4-live-presence.md) and decision D023. Everything sent in these rooms is only for showing: a position, a place or an emote decides nothing in the game (D003).
+
 Supabase Realtime on the free plan is one budget for the whole project:
 
 | Limit | Free plan |
@@ -735,21 +878,131 @@ Supabase Realtime on the free plan is one budget for the whole project:
 | Messages per month | 2 million |
 | Presence messages per second | 20 |
 | Channel joins per second | 100 |
+| Channels per connection | 100 |
 | Size of one broadcast | 256 KB |
 
-**Every delivered copy counts.** A message counts once when it is sent, and once more for every client that receives it. Above the per-second limit, Supabase disconnects clients, and they reconnect only when the load drops. Test traffic counts too.
+**Every delivered copy counts.** A message counts once when it is sent, and once more for every client that receives it. Presence counts too. Above a per-second limit, Supabase first sends a `system` message ("Too many messages per second", "Too many presence messages per second" or "Client presence rate limit exceeded") and then closes the room, and clients reconnect only when the load drops. Above the monthly quota the free plan sends a notice, then a grace period, then restrictions, with no bill. Test traffic counts too.
 
-Two worked examples (our arithmetic):
+**Every room a player joins counts as one connection.** We assume the worst, because Supabase's "concurrent connections" count subscribed channels. A player is in at most 3 rooms (the world, one place room and the crew room), so about 66 players fit in the 200.
 
-- One crew of 4 players in one room, each sending 2 updates a second. One update costs 1 + 3 = 4 messages, so the room costs 4 x 2 x 4 = 32 messages a second, a third of the project's limit. An hour of that is 115,200 messages, so the 2 million a month last about 17 hours of such play.
-- One room of 30 players, each sending 1 update a second: 30 x (1 + 29) = 900 messages a second, 9 times the limit.
+### The rooms
 
-Our rules:
+All rooms are private (`config: { private: true }`): the policies on `realtime.messages` decide who may join and send ([supabase/README.md](../supabase/README.md#the-live-presence-migration)).
 
-1. **Small rooms:** one crew (at most 4 seats) or one duel per channel.
-2. **At most 2 updates per second per player** ([ENGINEERING.md, section 7](ENGINEERING.md#7-performance-budgets)). The client slows itself down, and the server enforces it.
-3. **The server sends with Supabase's Broadcast REST API** and never subscribes to a channel itself: a subscribed server counts as one more receiver and holds a connection.
-4. **Poll when a few seconds of delay are fine.** The team roadmap plans polling for the case board (L3) and the duels (A7), so no core package needs Realtime yet.
+| Room | Topic | Kind | Who may join | Who may send | Used for |
+|---|---|---|---|---|---|
+| World | `live:world` | presence only | any signed-in player | any signed-in player (track) | who is online, in which place and room, with which kit |
+| Place room | `live:place:<placeId>:<room>`, for example `live:place:saltreach_harbor:1` | broadcast only | any signed-in player | any signed-in player | moves and emotes of the captains in that room |
+| Crew room | `live:crew:<crewId>` | broadcast only | only players seated in the crew (`is_crew_member`) | only the server (REST, secret key) | crew events: "something changed, fetch it" |
+
+- **Topics.** Place ids are the ids of `frontend/src/world/places/registry.js` and match `^[a-z][a-z0-9_]{1,39}$`. Room numbers run from 1 to 99. `home_islet` gets no room, because every player has their own islet.
+- **A numbered room holds at most `clamp(floor(120 / online), 4, 9)` captains**: 9 (you plus 8 others) while 13 or fewer are online, 6 with 20 online, 4 with 30 or more.
+- **Room choice on arrival** (`chooseRoom` in `frontend/src/net/live-rules.js`): the lowest-numbered room of the place where a crewmate already is, even if it is full; otherwise the lowest-numbered room with space. If two crewmates arrive at the same moment and land in different rooms, the one in the higher room moves down when the world presence shows the other. A new room waits for its turn: a room of one kind (world, place, crew) starts to join at most once a second.
+- **Why a world room.** The budget formula needs the number of captains online, "a count of the rest" needs to know where everybody is, and a newcomer needs to know who is in its room before anyone moves. One presence update per trip solves all three.
+- **Why numbered rooms.** Every message reaches everyone in its room, so a room's cost grows with the square of its size. One room of 30 would cost 30 messages per move, which at a safe rate is one update every 15 seconds.
+
+### The messages
+
+Payloads are small camelCase JSON with `v: 1`. They never contain free text, a name, a login or an e-mail address. A receiver drops anything that does not match.
+
+| Room | Event | Payload | Sent when |
+|---|---|---|---|
+| World | presence track | `{v, place, room, kit}`. `place` and `room` are null at sea, and `room` is null on the home islet. `kit` matches `^[a-z][a-z_]{1,23}$` or is null. | Once the place room is joined, and on every change of place, room or kit. At most one track every 1.5 s; changes within that window go out together. |
+| Place room | `position` | `{v, id, place, x, z, facing, moving, seq, everyMs}` | While moving, at the allowed rate. Also once on stopping, once right after we announced our place and room, and once 0.2 to 0.8 s after a newcomer appears in the room. Nothing is sent before the announcement: the others ignore a captain they do not know. |
+| Place room | `emote` | `{v, id, emote, seq}` | When the player picks an emote. At most one every 3 s. |
+| Crew room | `crew_event` | `{v, kind, data}` | Only from the server, after it has saved a change. |
+
+- `id` is the sender's player id (Supabase does not tell receivers who sent a broadcast). The presence key is the player id too.
+- `x` and `z` are the player's position in the place (`controller.player.position`), rounded to 2 decimals, between -200 and 200. `facing` is `up`, `down`, `left` or `right`, the same choice as `createCharacter().face(dx, dz)` (exported as `facingFrom`).
+- `seq` starts at the sender's `Date.now()` and grows by 1 per message, so it keeps growing after a page reload. Receivers keep only messages newer than the last `seq` they accepted from that id. `everyMs` is the sender's current gap between updates (500 to 20000).
+- `emote` is one of `wave`, `cheer`, `nod`, `shrug`, `follow_me`, `help` (the list `EMOTES`; decision D006 may rename them).
+- `kind` is `board_changed` (L3), `finale_changed` (L3), `case_changed` (S3), `partner_changed` (S4) or `crew_changed` (A6). `data` is a JSON object of at most 1 KB, usually `{"version": 7}`. It never holds spoilers or another crew's data.
+- **Names are never sent.** The receiver reads `display_name` from `profiles`, one read for up to 50 ids at a time, and keeps the answer for the whole session (a captain that the server renames keeps the old name until the page is loaded again). The text would otherwise come from the sender's browser, and D003 forbids showing names a browser chose.
+
+### Our rules
+
+1. **Small rooms.** See the room sizes above. A crew room only ever receives.
+2. **One allowance per captain, shared by moves, emotes and replies.** The gap between two messages is `max(500 ms, 1000 / rate)`, rounded up to the next 100 ms, with `rate = min(2, 60 / (online x room))` updates a second. `online` is the number of valid keys in the world presence and `room` the captains in our room, counting us. Slow mode (see the guard) halves the rate. Alone in the room, nothing is sent. When the allowance frees up the order is: a queued emote, the stop update, a reply, then the regular update while moving. A message goes out only while the room is joined and the socket is open: otherwise supabase-js posts it over HTTPS (with a console warning), which is a different path with other limits, and we never want that. It also waits until the world presence holds our current place and room, because the others ignore a captain they do not know (the first announcement can wait up to 10 s, see the burst below, and our position follows right after it).
+3. **The browser slows itself down, and our server never sees these messages.** They go from one browser to Supabase and on to the others, so nothing on our side can count or stop them. What protects the budget is the formula above, the guard below, receivers that drop floods, the policies, and the kill switch in [supabase/README.md](../supabase/README.md#changing-the-database-later). The old plan "the server enforces it" was not possible.
+4. **The server sends with Supabase's Broadcast REST API** (`backend/server/crew_broadcast.py`) and never subscribes to a room: a subscribed server counts as one more receiver and holds a connection. Per server instance it sends at most 20 events per crew in any 10 seconds, and at most 5 events in any second over all crews together (a loop that walks over every crew is bounded too: one event costs one message to send and up to 4 to deliver). The whole call takes at most 2 seconds.
+5. **Joins are spread out.** A room of one kind (world, place, crew) starts to join at most once a second, so a place or a crew that changes in every frame cannot flood the project (the free plan allows 100 channel joins a second for everybody). A crew room that the rules refused is joined again only when the game calls `setCrew` again.
+6. **Poll when a few seconds of delay are fine.** L3 (the board) and A7 (the duels) keep polling as their fallback. A crew event lets them poll slowly (for example every 30 seconds) and refresh at once when an event arrives, but only after step L7 of the [manual test plan](../supabase/README.md#live-presence-checks-steps-l1-to-l7) has passed once on the real project: it is the only check that the server's secret key can really send into a crew room.
+
+### The budget in numbers
+
+Our arithmetic. `rate = min(2, 60 / (online x room))` keeps the moves of the whole project at or under 60 of the 100 messages a second, even if every player is walking.
+
+| Case | Online | Room | One update every | Worst case, everyone moving |
+|---|---|---|---|---|
+| A crew of 4, nobody else online | 4 | 4 | 0.5 s | 4 x 2 x 4 = 32 messages a second; 115,200 an hour (57,600 if half are moving) |
+| A place with 8, the only players online | 8 | 8 | 1.1 s | 8 x 0.91 x 8 = 58 a second |
+| A class of 30 | 30 | 4 (rooms shrink) | 2 s | 30 x 0.5 x 4 = 60 a second |
+
+In the class of 30, presence adds about 10 messages a second (two updates per trip, one trip per player every 3 minutes), arrival replies about 3 and crew events about 2. The worst case is about 75 a second and a realistic one about 45, both under 100. A 90-minute class costs at most 324,000 messages for moves. **The start and the reconnect are a burst of their own:** every announcement of a captain is delivered to everyone online, so N captains who announce themselves within W seconds cost about N x N / W deliveries a second near the end of that window. That is why the first announcement waits a random 0 to 5 seconds (the start) plus a random 0 to 10 seconds (after every join of the world room): a class of 30 spreads its first announcements over 15 seconds, about 30 x 30 / 15 = 60 deliveries a second at the busiest moment, plus the joins themselves. A Realtime blip that drops everybody is spread the same way, because the first announcement after each rejoin waits again. Without the wait, 30 captains in 5 seconds would cost about 180 a second. This is our arithmetic and not a measurement, and Supabase's way of averaging its per-second counter is not verified: after the first class, read Realtime > Reports (Presence Events and messages per second), and widen `TRACK_JITTER_MS` in `frontend/src/net/live-rules.js` if the peak comes near 100. **The month is the limit that really binds:** 2 million messages cover about 8 class sessions, or about 35 hours of a crew of 4 playing with half of them moving at any moment.
+
+### The guard
+
+Once a second the browser estimates `(updates a second heard in our room plus those we sent, averaged over the last 10 seconds) x online`: the cost of the whole game if every room were as busy as ours. Above 80, the rate is halved for 5 minutes and the status becomes `slow`. If Supabase says "Too many messages per second", the browser turns on slow mode and waits at least 10 seconds before it joins that room again. After a presence rate-limit message it waits at least 30 seconds. After any other failure it waits `1 s + random x min(30 s, 2 s x 2^tries)`, and the count of tries starts again after 60 seconds of being joined. A room whose error says "Unauthorized" is given up (the world room then reports `offline`). The first join waits a random 0 to 5 seconds, and the first announcement after every join of the world room waits a further random 0 to 10 seconds, so a class that opens the game together stays far under 20 presence tracks and 100 joins a second, and its announcements are spread as the budget above says.
+
+### Events for the screens
+
+The browser module `startRealtime` in `frontend/src/online/realtime.js` emits these on the event bus. The payloads are plain data. A listener that throws does not break the module. A name that is null is shown as "Captain".
+
+| Event | When | Payload |
+|---|---|---|
+| `live_status_changed` | the connection changes state | `{state}`: `connecting`, `live`, `slow`, `offline` or `off` |
+| `live_presence_changed` | the shown set, a count or a name changes | `{place, room, shown: [{id, name, kit, crewmate}], hiddenCount, crew: [{id, name, place}]}`. At most 8 other captains are shown, crewmates first, then by id. `hiddenCount` counts the other captains of our place in all its rooms that are not shown (0 on the home islet). `crew` lists the crew members who are online. |
+| `live_peer_moved` | a shown captain sends a valid position | `{id, x, z, facing, moving, everyMs}` |
+| `live_peer_emoted` | a shown captain sends a valid emote | `{id, emote}` |
+| `live_crew_updated` | the server sends a crew event | `{kind, data}` |
+
+Receivers check everything and drop what fails: the sender must be in our place and room by the world presence, `v` must be 1, the shape and the ranges must match, `place` must be ours, `seq` must be newer, a position must come at least 400 ms after the last accepted one from that captain and an emote at least 2 s after.
+
+On the receiving side the adapter that draws a captain glides it in a straight line from where it is drawn to the new spot over `everyMs` (`glide` in `frontend/src/net/live-rules.js`). It snaps instead when the jump is longer than a captain could sprint in 1.5 x `everyMs` at 6 units a second (`shouldSnap`). The walk animation plays while `moving` is true.
+
+### Wiring it into the game
+
+The package builds the module and its rules. The integrator (after A2 and the screens adapter exist) wires it in with these steps, in the way section 3 describes for the weather:
+
+1. Start it once after sign-in when `/api/config` says `flags.live_presence` is on: `const live = startRealtime({ enabled, playerId, getAccessToken, kit, crew })`. `playerId` comes from `GET /api/me` and `getAccessToken` from A2's session module. The library calls it on every connect, every room join and every 25 seconds, so it should answer from the session in memory and renew the token before it ends (if the token is not renewed, the rooms close about an hour after the last one and every rejoin is refused until a fresh token arrives). `enabled` must be the boolean `true`; anything else keeps the module switched off. `crew` is `{ id, memberIds }` from A6, or null. Import `realtime.js` only from the lazily loaded game code (`src/game.js`) or with `await import()`, never from the title entry: with its helpers it adds about 16.5 kB (6.8 kB gzipped) to the file that imports it, while the library `@supabase/supabase-js` stays a separate chunk of about 214 kB (55 kB gzipped) that loads only when the module starts, and the cold title has a budget of 35 kB, of which about 21.5 kB are used.
+2. Call `live.setPlace(null)` on the `travel` event and `live.setPlace(e.place)` on `arrived`, and call it once right after the start. The module says nothing about where we are until it has been told a place once, so that the first announcement already holds the place and its room. Pass null during the intro, the cinematics and the `?demo=1` tour.
+3. In the game loop, call `live.update({x, z, facing, moving: speed > 0.05})` every frame. The module slows itself down. `live.emote(id)` returns whether the emote will be sent: it is `false` for an emote that is not on the list, inside the 3 second cooldown, and while nobody could see it (alone in the room, the socket closing, or our place not announced yet).
+4. The adapter draws other captains with `createCharacter(art, ...)` and moves them with `glide()`.
+5. Call `live.stop()` in `dispose()` and when the player signs out.
+
+### What the browser adapter (G9) maps
+
+G7 and G8 draw other captains from the case adapter's view (`presence` in `frontend/src/adapter/contract.js`, checked by `frontend/src/adapter/conformance/suite.js`), and A4's module speaks its own words. They were built apart and use different names, so nothing connects them yet. The real browser adapter (package G9, Codex) is the one place that translates; neither side changes its contract for the other.
+
+| What | G7/G8 adapter view and intents | A4 module (`frontend/src/online/realtime.js`) | What G9 does |
+|---|---|---|---|
+| Our position | `reportPosition({place, x, y, facing, moving})`; `y` is the world's z | `live.setPlace(place)` on travel and arrival, then `live.update({x, z, facing, moving})` | pass `y` as `z`; call `setPlace(null)` during the intro, the cinematics and the tour |
+| Others' position | `presence.others[]` with `x`, `y` | `live_peer_moved {id, x, z, facing, moving, everyMs}` | `y` = `z`; keep `everyMs` for the glide |
+| Facing | `front`, `back`, `left`, `right` | `up`, `down`, `left`, `right` (`facingFrom`) | `back` = `up` (moving to a smaller z), `front` = `down` |
+| Emotes | `wave`, `cheer`, `point`, `lantern`, `shrug` (art `public/pixel/emote-*.png`) | `wave`, `cheer`, `nod`, `shrug`, `follow_me`, `help` (`EMOTES` in `live-rules.js`) | only `wave`, `cheer` and `shrug` exist on both sides, and A4's module refuses any other id. One list has to be chosen before the wiring (D006 left emotes to a later package) |
+| Who is shown | `presence.others[]`: `id`, `name`, `kit {id, name}`, `isCrew`, `emote`, `at`; `hiddenCount`; at most 8 (`PRESENCE_LIMITS.visible`) | `live_presence_changed {place, room, shown: [{id, name, kit, crewmate}], hiddenCount, crew}`; at most 8 (`MAX_SHOWN`) | `isCrew` = `crewmate`; `kit` comes as an id or null, so G9 adds the kit's name from the entry kits; `at` is the time a message arrived; a null name shows as "Captain" |
+| Our emote | `setEmote(id)`, refused as `emote_cooldown` or `invalid_emote` | `live.emote(id)` answers `false` inside the 3 s cooldown, for an unknown id, or when nobody could see it | turn `false` into the matching refusal |
+| Connection | `presence.status`: `live`, `reconnecting`, `offline`, `off` | `live_status_changed {state}`: `connecting`, `live`, `slow`, `offline`, `off` | `connecting` = `reconnecting`; `slow` (the guard halved the rate) = `live` |
+
+Two more items from Codex's G8 handoff ([frontend/GRAPHICS.md](../frontend/GRAPHICS.md)) are on G9's list. **The bulletin:** `GET /api/bulletin` already answers with the keys G8's view reads (`day`, `lines`, `weather`, `exchange`, `chapterTwoHook`, all camelCase); G9 adds `status` (`off` by default, `loading`, `ready`, or `unavailable` for `503 bulletin_unavailable`) and must send `weather.attribution` as a string when the server's is null (`frontend/src/adapter/conformance/bulletin.js` checks both). **The log and the board:** G8 also expects nested `log.observations` and earned-only deduction `clears` and `clearedTitles` from the case services (S3, L3), which are not built yet.
+
+### Crew events from the server
+
+`backend/server/crew_broadcast.py` sends one HTTP request per event to `POST {SUPABASE_URL}/realtime/v1/api/broadcast` with the secret key. It is wired into `create_app(..., broadcaster=...)`, and a route asks for it with `BroadcasterDep`. There is no new setting: it uses `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and the flag `live_presence` (while the flag is off it sends nothing).
+
+```python
+sent = await broadcaster.send(crew_id, "board_changed", {"version": 7})   # True if Supabase took it
+```
+
+| Kind | Sent by | After |
+|---|---|---|
+| `board_changed` | L3 | a pin, a deduction, nightfall, a change of post, a beam lock change |
+| `finale_changed` | L3 | the Relighting |
+| `case_changed` | S3 | a card is found or an accusation is made |
+| `partner_changed` | S4 | an NPC errand finishes |
+| `crew_changed` | A6 | someone joins or leaves the crew |
+
+Each caller sends after its database change has succeeded, with `data={"version": n}`, on state changes only and never on every input. A wrong argument (a crew id that is not a uuid, an unknown kind, data over 1 KB) is a bug in the caller and raises `ValueError`. Everything else that can go wrong (the flag is off, Supabase is not set up, more than 20 events for one crew in 10 seconds or more than 5 events in a second over all crews, a refusal, a timeout of 2 seconds for the whole call) returns `False` with one short warning that never holds the key, the crew id or the payload. The list of kinds is `CREW_EVENT_KINDS`, in Python and in `frontend/src/net/live-rules.js`; a test keeps the two equal.
 
 ### Case refresh budget
 
@@ -766,9 +1019,9 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `sports` | sports predictions | L6 |
 | `arena` | Lantern Duels, the turn-based arena | A7 |
 | `raid` | the phone class raid | A5, later |
-| `live_presence` | seeing other captains in the harbor | A4, later |
+| `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
-| `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
+| `case` | every case route, including the later world route | G10; off until all case migrations used by the deployment are applied |
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
 
@@ -776,7 +1029,7 @@ The names of all settings are in [.env.example](../.env.example), and [ARCHITECT
 
 Every name here is a draft until the freeze on Mon 9 (D009). Package ids are those of the team roadmap. The package that builds an interface writes the final shape in its spec and in the contract's home, then updates this table.
 
-**Where content files live (D016, proposed).** Content that the server reads lives in `backend/content/`. A file the browser needs in order to play is served by `GET /api/content/{name}`. A file the browser must never see lives in `backend/content/secret/` and is never served. Data that only the browser uses stays in `frontend/`. A `.json` file named in a row below has its path under `backend/content/`, unless the row gives another folder.
+**Where content files live (D016, proposed).** Content that the server reads lives in `backend/content/`. A file the browser needs in order to play is served by `GET /api/content/{name}`. A file the browser must never see lives in `backend/content/secret/` and is never served. Data that only the browser uses stays in `frontend/`. A `.json` file named in a row below has its path under `backend/content/`, unless the row gives another folder. A third kind is a file that only the server reads but that is not secret: it is not on the public list, and the browser sees it only through a route. The open-world files `weather_states.json`, `bulletin.json` and `chapter_two_hook.json` are of this kind.
 
 | Package | Reserves | Status |
 |---|---|---|
@@ -788,15 +1041,16 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | S3 The shared case | `GET /api/case`, `POST /api/case/search`, `POST /api/case/accuse`, `POST /api/host/case/clock`; private case data never served | Phase 1 built on `feat/case-backend`; section 10 is the contract |
 | S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story round (S0, D018) |
 | A2 Sign-in, captain names and cloud progress | **Built** (the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D022. | built; the sign-in part is pending |
-| A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** the coins and texts of the kits (N5, with the S0 approval) and that the first ending counts (N6). | built, in review |
+| A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** that the first ending counts (N6). The coins and texts of the kits (N5) were settled by the story round (D018). | built, in review |
 | A6 Crews and seats | **Built**: `POST /api/crews` (returns a crew code), `POST /api/crews/join {code}`, `POST /api/crews/me/start` (the muster) and `GET /api/crews/me` (section 2); the columns `crews.code`, `version` and `started_at`, the table `crew_join_failures` and the four crew functions (migration `20261106040000_crew_codes.sql`); `read_open_crew_seat()` in `backend/server/crews/store.py` for S3 and L3. Decision D020. | built, in review |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
-| A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
-| L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
-| L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
+| A4 Live presence | **Built** (flag `live_presence` off; its migration goes live with group 2; G9 connects it to the presence screens, see section 7): the private Realtime rooms `live:world`, `live:place:<place>:<room>` and `live:crew:<crew id>`; the browser module `frontend/src/online/realtime.js` with its parts in `frontend/src/net/` (`live-rules.js`, `live-rooms.js`, `live-places.js`, `live-sender.js`, `live-view.js`); the events `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted` and `live_crew_updated`; the server helper `backend/server/crew_broadcast.py` (`create_app(..., broadcaster=...)`); the migration `20261106050000_live_presence.sql`; the flag `live_presence`. No table, no route. See section 7 and D023. | built, flag off |
+| L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}`, which also sends `state` and `tonight` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
+| Open-world must (W1, D1, H1) | `GET /api/weather` with `state` and `tonight` (the weather states and the fog-night rule); `GET /api/bulletin` returning `{day, lines, weather, exchange, chapterTwoHook}` (the Lisbon day, the daily bulletin and the Chapter 2 hook); the content files `weather_states.json`, `bulletin.json` and `chapter_two_hook.json` (server only, never on the public list); `create_app(..., world_stage=..., clock=...)`; the error `503 bulletin_unavailable` | built (spec `specs/open-world-must.md`); decision D024, proposed |
+| L2 Your home islet | **Built** (the backend, its migration, which goes live with group 2, and the build panel): `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the tables `islets` and `islet_buildings`; the function `islet_build()`; the events `plot_clicked` (opens the islet panel) and `islet_changed` (the panel emits it, G8's world draws what stands); `backend/content/buildings.json` (server only); coins through `building_purchase` with the ref `islet:<actionUid>`. See section 2 and D021. The panel is in `frontend/src/screens/islet/`. | built, in review |
 | L3 Captain's Table board and Night of Three Lights | The shared read is `GET /api/case`; later writes are `/api/board/pin`, `/api/board/pair`, `/api/finale/nightfall`, `/api/finale/post` and `/api/finale/signal`; later `GET /api/world` | Phase 2 and Phase 3 reserved by D027; the old `GET /api/board` reservation is replaced |
 | L4 Island Exchange (the market) | **Built** (on `main`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/trade {companyId, side, units, actionUid}`; the tables `market_bases`, `market_positions` and `market_trades`; the reasons `market_buy`, `market_sell` and `market_fee`; `backend/content/market/companies.json` and `replay.json`; the setting `MARKET_MULTIPLIER`; the flag `market`. See section 2 and D017. | built, in review |
-| L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions` | draft |
+| L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions`; weather questions settle on real fog only: after the night has ended, from its observed hours (the night's state is fog, `backend/server/weather/nights.py`), never from the forecast-based `tonight` of `GET /api/weather` | draft |
 | L6 Sports predictions | `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the tables `fixtures` and `sports_stakes`; the reasons `sports_stake` and `sports_payout`; the flag `sports` | draft |
 
 Every reserved table follows recipe 4.2, and every reserved reason recipe 4.7: neither exists until its package adds the migration.
@@ -839,7 +1093,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 ## 10. The shared mystery
 
-Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); Phase 1's published contract below supersedes its older reservations; later phase routes remain reserved.
+Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); Phase 1's contract below supersedes its older reservations; later phases remain reserved.
 
 What already holds, from the foundation: a reward is paid with `clue_reward` or `mystery_reward` and a `ref` that makes each payout happen once per player, buying a clue uses `clue_purchase`, and a crew's seats can hold NPC partners ([section 6](#6-crews-and-seats)).
 

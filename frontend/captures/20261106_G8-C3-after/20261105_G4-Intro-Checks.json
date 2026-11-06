@@ -1,0 +1,26 @@
+{
+  "checked": "2026-11-06T14:52:15.899Z",
+  "checks": [
+    "Vite proxy reaches the actual public intro API",
+    "API returns the original story structure",
+    "Physical shore-to-desk visit replays shore_back then to_desk",
+    "Accepted pickup appears in inventory",
+    "Engine notes are visible after a change",
+    "Stairwell plays in the dialogue box",
+    "Lamp room plays in the dialogue box",
+    "The original ending card is shown",
+    "Rescue emits the exact intro_ended payload once",
+    "Reload restores a replayable move journal",
+    "Engine-blocked choices are visibly locked",
+    "A locked choice changes no state or move log",
+    "Trapped ending emits once",
+    "Closing the story restores game focus and controls",
+    "No browser errors",
+    "No external requests"
+  ],
+  "apiReads": 2,
+  "endings": [
+    "ending_rescue",
+    "ending_trapped"
+  ]
+}

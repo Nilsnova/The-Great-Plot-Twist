@@ -1,0 +1,212 @@
+[
+  {
+    "id": "tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 8490,
+    "log": "captures/20261106_G8-C3-before/tests.log"
+  },
+  {
+    "id": "build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 1861,
+    "log": "captures/20261106_G8-C3-before/build.log"
+  },
+  {
+    "id": "generator",
+    "command": "python3 scripts/pixel_art/generate.py",
+    "code": 0,
+    "ms": 25691,
+    "log": "captures/20261106_G8-C3-before/generator.log"
+  },
+  {
+    "id": "credits",
+    "command": "node scripts/check-credits.js",
+    "code": 0,
+    "ms": 33717,
+    "log": "captures/20261106_G8-C3-before/credits.log"
+  },
+  {
+    "id": "living",
+    "command": "node scripts/check-living.js",
+    "code": 1,
+    "ms": 67718,
+    "log": "captures/20261106_G8-C3-before/living.log"
+  },
+  {
+    "id": "life",
+    "command": "node scripts/check-life.js",
+    "code": 1,
+    "ms": 73522,
+    "log": "captures/20261106_G8-C3-before/life.log"
+  },
+  {
+    "id": "case",
+    "command": "node scripts/check-case.js",
+    "code": 0,
+    "ms": 52484,
+    "log": "captures/20261106_G8-C3-before/case.log"
+  },
+  {
+    "id": "world",
+    "command": "node scripts/check-world.js",
+    "code": 1,
+    "ms": 189997,
+    "log": "captures/20261106_G8-C3-before/world.log"
+  },
+  {
+    "id": "readability",
+    "command": "node scripts/check-readability.js",
+    "code": 0,
+    "ms": 50231,
+    "log": "captures/20261106_G8-C3-before/readability.log"
+  },
+  {
+    "id": "browser",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-browser.js",
+    "code": 0,
+    "ms": 134453,
+    "log": "captures/20261106_G8-C3-before/browser.log"
+  },
+  {
+    "id": "production",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+    "code": 0,
+    "ms": 46022,
+    "log": "captures/20261106_G8-C3-before/production.log"
+  },
+  {
+    "id": "pixel",
+    "command": "node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 167629,
+    "log": "captures/20261106_G8-C3-before/pixel.log"
+  },
+  {
+    "id": "pixel-production",
+    "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 104456,
+    "log": "captures/20261106_G8-C3-before/pixel-production.log"
+  },
+  {
+    "id": "kit",
+    "command": "node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 35716,
+    "log": "captures/20261106_G8-C3-before/kit.log"
+  },
+  {
+    "id": "kit-production",
+    "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 14138,
+    "log": "captures/20261106_G8-C3-before/kit-production.log"
+  },
+  {
+    "id": "cinematics",
+    "command": "node scripts/check-cinematics.js",
+    "code": 1,
+    "ms": 68416,
+    "log": "captures/20261106_G8-C3-before/cinematics.log"
+  },
+  {
+    "id": "intro",
+    "command": "node scripts/check-intro.js",
+    "code": 1,
+    "ms": 87655,
+    "log": "captures/20261106_G8-C3-before/intro.log"
+  },
+  {
+    "id": "weather",
+    "command": "node scripts/check-weather-wiring.js",
+    "code": 1,
+    "ms": 12245,
+    "log": "captures/20261106_G8-C3-before/weather.log"
+  },
+  {
+    "id": "experience",
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 81690,
+    "log": "captures/20261106_G8-C3-before/experience.log"
+  },
+  {
+    "id": "demo",
+    "command": "node scripts/check-demo.js",
+    "code": 1,
+    "ms": 433168,
+    "log": "captures/20261106_G8-C3-before/demo.log"
+  },
+  {
+    "id": "loading",
+    "command": "node scripts/check-loading.js",
+    "code": 1,
+    "ms": 58856,
+    "log": "captures/20261106_G8-C3-before/loading.log"
+  },
+  {
+    "id": "lifecycle",
+    "command": "node scripts/check-lifecycle.js",
+    "code": 1,
+    "ms": 79206,
+    "log": "captures/20261106_G8-C3-before/lifecycle.log"
+  },
+  {
+    "id": "csp",
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 89284,
+    "log": "captures/20261106_G8-C3-before/csp.log"
+  },
+  {
+    "id": "islet-world",
+    "command": "node scripts/check-islet-world.js",
+    "code": 0,
+    "ms": 52125,
+    "log": "captures/20261106_G8-C3-before/islet-world.log"
+  },
+  {
+    "id": "bulletin",
+    "command": "node scripts/check-bulletin.js",
+    "code": 0,
+    "ms": 35526,
+    "log": "captures/20261106_G8-C3-before/bulletin.log"
+  },
+  {
+    "id": "hook",
+    "command": "node scripts/check-hook.js",
+    "code": 0,
+    "ms": 40680,
+    "log": "captures/20261106_G8-C3-before/hook.log"
+  },
+  {
+    "id": "harbor-life",
+    "command": "node scripts/check-harbor-life.js",
+    "code": 0,
+    "ms": 63874,
+    "log": "captures/20261106_G8-C3-before/harbor-life.log"
+  },
+  {
+    "id": "presenter",
+    "command": "node scripts/check-presenter.js",
+    "code": 0,
+    "ms": 62022,
+    "log": "captures/20261106_G8-C3-before/presenter.log"
+  },
+  {
+    "id": "golden",
+    "command": "node scripts/check-golden-path.js",
+    "code": 1,
+    "ms": 195184,
+    "log": "captures/20261106_G8-C3-before/golden.log"
+  },
+  {
+    "id": "chaos",
+    "command": "node scripts/check-chaos.js",
+    "code": 1,
+    "ms": 136809,
+    "log": "captures/20261106_G8-C3-before/chaos.log"
+  }
+]

@@ -1,0 +1,95 @@
+
+> the-great-plot-twist@0.1.0 build
+> vite build && node scripts/check-spoilers.js
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 189 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   1.69 kB │ gzip:   0.66 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/assets/hints-Bg0Ow_TR.css                    0.55 kB │ gzip:   0.32 kB
+dist/assets/shortcuts-COSQtU7-.css                0.59 kB │ gzip:   0.33 kB
+dist/assets/rewards-e_ANWQxk.css                  0.59 kB │ gzip:   0.36 kB
+dist/assets/log-cXy0R_VT.css                      0.80 kB │ gzip:   0.38 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/account-Br-x_9Vr.css                  1.60 kB │ gzip:   0.60 kB
+dist/assets/presence-Bs1JzQTz.css                 2.32 kB │ gzip:   0.86 kB
+dist/assets/partners-BgknTiSd.css                 2.81 kB │ gzip:   0.87 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/kit-B812IjNa.css                      5.85 kB │ gzip:   2.00 kB
+dist/assets/events-CBKIF1Eo.css                   9.14 kB │ gzip:   2.81 kB
+dist/assets/controller-DG98N6Pb.css               9.47 kB │ gzip:   2.69 kB
+dist/assets/game-BYUo4R6k.css                    13.74 kB │ gzip:   3.75 kB
+dist/assets/intro-story-DtDdPMGU.js               0.05 kB │ gzip:   0.07 kB
+dist/assets/gamepad-CyeV76I6.js                   0.05 kB │ gzip:   0.06 kB
+dist/assets/fake-BGsK1AK2.js                      0.05 kB │ gzip:   0.07 kB
+dist/assets/settlement-V338FrlW.js                0.06 kB │ gzip:   0.07 kB
+dist/assets/controller-Dwh1mPl_.js                0.06 kB │ gzip:   0.08 kB
+dist/assets/preferences--dZT-qzz.js               0.06 kB │ gzip:   0.08 kB
+dist/assets/frame-state-DsqlhAjs.js               0.17 kB │ gzip:   0.17 kB
+dist/assets/beam-math-O9vLvuET.js                 0.23 kB │ gzip:   0.19 kB
+dist/assets/button-BTb4MpEB.js                    0.44 kB │ gzip:   0.30 kB
+dist/assets/panel-BL3PoS8l.js                     0.45 kB │ gzip:   0.31 kB
+dist/assets/dom-BE8XS1OM.js                       0.50 kB │ gzip:   0.32 kB
+dist/assets/progress-yDNkDTr_.js                  0.52 kB │ gzip:   0.33 kB
+dist/assets/uiKit-BuXCueF5.js                     0.53 kB │ gzip:   0.35 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/counter-ZQ7aiccc.js                   0.69 kB │ gzip:   0.44 kB
+dist/assets/logic-AxTj143E.js                     0.70 kB │ gzip:   0.44 kB
+dist/assets/intent-SnvwiGJe.js                    0.73 kB │ gzip:   0.43 kB
+dist/assets/resources-JUl7XFkY.js                 0.77 kB │ gzip:   0.46 kB
+dist/assets/shortcuts-g0lQYDpw.js                 0.96 kB │ gzip:   0.57 kB
+dist/assets/contract-C88Lr6KL.js                  0.96 kB │ gzip:   0.58 kB
+dist/assets/reveal-CPVKVFpQ.js                    0.97 kB │ gzip:   0.57 kB
+dist/assets/home-B7BoCjaC.js                      1.00 kB │ gzip:   0.60 kB
+dist/assets/helpers-K95xZFwK.js                   1.03 kB │ gzip:   0.58 kB
+dist/assets/logic-DpC8Chk3.js                     1.16 kB │ gzip:   0.63 kB
+dist/assets/art-B9zomlDE.js                       1.17 kB │ gzip:   0.73 kB
+dist/assets/weather-DXmmbEFs.js                   1.27 kB │ gzip:   0.76 kB
+dist/assets/relighting-CqSbT5im.js                1.41 kB │ gzip:   0.77 kB
+dist/assets/credits-CnyJNQoi.js                   1.51 kB │ gzip:   0.76 kB
+dist/assets/festival-BI-ShGZW.js                  1.53 kB │ gzip:   0.85 kB
+dist/assets/rewards-CgUmbYtK.js                   1.55 kB │ gzip:   0.81 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/accusation-DHdWiFHu.js                1.69 kB │ gzip:   0.91 kB
+dist/assets/account-host-CiVAyRf9.js              1.72 kB │ gzip:   0.91 kB
+dist/assets/events-Cl-aZ97G.js                    1.85 kB │ gzip:   0.98 kB
+dist/assets/preferences-Cget2aV_.js               1.85 kB │ gzip:   0.91 kB
+dist/assets/partners-Dzb3UZ3N.js                  1.87 kB │ gzip:   1.00 kB
+dist/assets/logic-BNqfh2ay.js                     1.95 kB │ gzip:   1.11 kB
+dist/assets/gamepad-D-UqoPKv.js                   1.98 kB │ gzip:   0.93 kB
+dist/assets/modal-CuQ9uQrw.js                     2.03 kB │ gzip:   0.92 kB
+dist/assets/layouts-c0rT9wjt.js                   2.07 kB │ gzip:   0.92 kB
+dist/assets/search-_7SsxsKM.js                    2.14 kB │ gzip:   1.01 kB
+dist/assets/gulls-rest-ks1th5nN.js                2.32 kB │ gzip:   1.11 kB
+dist/assets/view-6RfJ-web.js                      2.33 kB │ gzip:   1.23 kB
+dist/assets/hints-CChLZL6M.js                     2.36 kB │ gzip:   1.13 kB
+dist/assets/log-BDbBAznl.js                       2.37 kB │ gzip:   0.99 kB
+dist/assets/workshop-oUBwdV-g.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/settlement-CccBt3ls.js                2.71 kB │ gzip:   1.41 kB
+dist/assets/presence-C7ANKMV6.js                  2.98 kB │ gzip:   1.37 kB
+dist/assets/catalog-B_foQvDM.js                   3.05 kB │ gzip:   1.42 kB
+dist/assets/kit-_p6oWojh.js                       3.21 kB │ gzip:   1.51 kB
+dist/assets/board-pOH6l_TV.js                     3.48 kB │ gzip:   1.61 kB
+dist/assets/controller-CaYxyUE4.js                4.64 kB │ gzip:   2.17 kB
+dist/assets/finale-BWn0v97L.js                    4.97 kB │ gzip:   2.28 kB
+dist/assets/partners-DC9l2NNu.js                  5.30 kB │ gzip:   2.38 kB
+dist/assets/others-BMmYQ25d.js                    5.47 kB │ gzip:   2.44 kB
+dist/assets/account-CaACuXNI.js                   5.49 kB │ gzip:   2.30 kB
+dist/assets/intro-view-ByoFwSz9.js                6.39 kB │ gzip:   2.50 kB
+dist/assets/intro-story-COxplonR.js               6.44 kB │ gzip:   2.51 kB
+dist/assets/controller-DtZwWqRc.js                6.89 kB │ gzip:   3.08 kB
+dist/assets/registry-s9nHpBfq.js                  7.27 kB │ gzip:   3.42 kB
+dist/assets/cinematic-demo-Cyk7kb9Y.js            8.09 kB │ gzip:   3.53 kB
+dist/assets/kit-gallery-BWzCtYz-.js               8.42 kB │ gzip:   3.61 kB
+dist/assets/controller-Dh6bWpym.js                9.10 kB │ gzip:   3.58 kB
+dist/assets/game-D-oo4HRG.js                     12.17 kB │ gzip:   5.07 kB
+dist/assets/fake-DUh4X75P.js                     61.39 kB │ gzip:  20.73 kB
+dist/assets/texture-CH3Q5Pyu.js                 207.50 kB │ gzip:  55.99 kB
+dist/assets/game-B0AMeRAE.js                    398.90 kB │ gzip: 102.62 kB
+
+✓ built in 1.05s
+Spoiler guard: 88 text files, 12 protected lines, no suspect elimination data.

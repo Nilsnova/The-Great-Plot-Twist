@@ -1,0 +1,219 @@
+[
+  {
+    "id": "tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 7092,
+    "log": "captures/20261106_G8-C3-after/tests.log"
+  },
+  {
+    "id": "build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 1370,
+    "log": "captures/20261106_G8-C3-after/build.log"
+  },
+  {
+    "id": "generator",
+    "command": "python3 scripts/pixel_art/generate.py",
+    "code": 0,
+    "ms": 20526,
+    "log": "captures/20261106_G8-C3-after/generator.log"
+  },
+  {
+    "id": "credits",
+    "command": "node scripts/check-credits.js",
+    "code": 0,
+    "ms": 6188,
+    "log": "captures/20261106_G8-C3-after/credits.log"
+  },
+  {
+    "id": "living",
+    "command": "node scripts/check-living.js",
+    "code": 0,
+    "ms": 17855,
+    "log": "captures/20261106_G8-C3-after/living.log"
+  },
+  {
+    "id": "life",
+    "command": "node scripts/check-life.js",
+    "code": 0,
+    "ms": 8753,
+    "log": "captures/20261106_G8-C3-after/life.log"
+  },
+  {
+    "id": "case",
+    "command": "node scripts/check-case.js",
+    "code": 0,
+    "ms": 13541,
+    "log": "captures/20261106_G8-C3-after/case.log"
+  },
+  {
+    "id": "readability",
+    "command": "node scripts/check-readability.js",
+    "code": 0,
+    "ms": 5767,
+    "log": "captures/20261106_G8-C3-after/readability.log"
+  },
+  {
+    "id": "browser",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-browser.js",
+    "code": 0,
+    "ms": 31119,
+    "log": "captures/20261106_G8-C3-after/browser.log"
+  },
+  {
+    "id": "production",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+    "code": 0,
+    "ms": 4522,
+    "log": "captures/20261106_G8-C3-after/production.log"
+  },
+  {
+    "id": "pixel",
+    "command": "node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 17068,
+    "log": "captures/20261106_G8-C3-after/pixel.log"
+  },
+  {
+    "id": "pixel-production",
+    "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 8314,
+    "log": "captures/20261106_G8-C3-after/pixel-production.log"
+  },
+  {
+    "id": "kit",
+    "command": "node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 3211,
+    "log": "captures/20261106_G8-C3-after/kit.log"
+  },
+  {
+    "id": "kit-production",
+    "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 3578,
+    "log": "captures/20261106_G8-C3-after/kit-production.log"
+  },
+  {
+    "id": "cinematics",
+    "command": "node scripts/check-cinematics.js",
+    "code": 0,
+    "ms": 27641,
+    "log": "captures/20261106_G8-C3-after/cinematics.log"
+  },
+  {
+    "id": "intro",
+    "command": "node scripts/check-intro.js",
+    "code": 0,
+    "ms": 7896,
+    "log": "captures/20261106_G8-C3-after/intro.log"
+  },
+  {
+    "id": "weather",
+    "command": "node scripts/check-weather-wiring.js",
+    "code": 0,
+    "ms": 3910,
+    "log": "captures/20261106_G8-C3-after/weather.log"
+  },
+  {
+    "id": "demo",
+    "command": "node scripts/check-demo.js",
+    "code": 0,
+    "ms": 181448,
+    "log": "captures/20261106_G8-C3-after/demo.log"
+  },
+  {
+    "id": "loading",
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 8235,
+    "log": "captures/20261106_G8-C3-after/loading.log"
+  },
+  {
+    "id": "lifecycle",
+    "command": "node scripts/check-lifecycle.js",
+    "code": 0,
+    "ms": 6511,
+    "log": "captures/20261106_G8-C3-after/lifecycle.log"
+  },
+  {
+    "id": "csp",
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 7770,
+    "log": "captures/20261106_G8-C3-after/csp.log"
+  },
+  {
+    "id": "islet-world",
+    "command": "node scripts/check-islet-world.js",
+    "code": 0,
+    "ms": 10350,
+    "log": "captures/20261106_G8-C3-after/islet-world.log"
+  },
+  {
+    "id": "bulletin",
+    "command": "node scripts/check-bulletin.js",
+    "code": 0,
+    "ms": 5292,
+    "log": "captures/20261106_G8-C3-after/bulletin.log"
+  },
+  {
+    "id": "hook",
+    "command": "node scripts/check-hook.js",
+    "code": 0,
+    "ms": 7460,
+    "log": "captures/20261106_G8-C3-after/hook.log"
+  },
+  {
+    "id": "harbor-life",
+    "command": "node scripts/check-harbor-life.js",
+    "code": 0,
+    "ms": 12799,
+    "log": "captures/20261106_G8-C3-after/harbor-life.log"
+  },
+  {
+    "id": "chaos",
+    "command": "node scripts/check-chaos.js",
+    "code": 0,
+    "ms": 34397,
+    "log": "captures/20261106_G8-C3-after/chaos.log"
+  },
+  {
+    "id": "a11y",
+    "command": "node scripts/check-a11y.js",
+    "code": 0,
+    "ms": 10304,
+    "log": "captures/20261106_G8-C3-after/a11y.log"
+  },
+  {
+    "id": "world",
+    "command": "node scripts/check-world.js",
+    "code": 0,
+    "ms": 79347,
+    "log": "captures/20261106_G8-C3-after/world.log"
+  },
+  {
+    "id": "experience",
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 90338,
+    "log": "captures/20261106_G8-C3-after/experience.log"
+  },
+  {
+    "id": "golden",
+    "command": "node scripts/check-golden-path.js",
+    "code": 0,
+    "ms": 38790,
+    "log": "captures/20261106_G8-C3-after/golden.log"
+  },
+  {
+    "id": "presenter",
+    "command": "node scripts/check-presenter.js",
+    "code": 0,
+    "ms": 40866,
+    "log": "captures/20261106_G8-C3-after/presenter.log"
+  }
+]

@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: A later tour dialog remains hidden while the presentation is blanked
+    at check (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-presenter.js:8:40)
+    at file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-presenter.js:38:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.17.0

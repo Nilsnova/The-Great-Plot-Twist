@@ -33,7 +33,8 @@ for how the game should look. They are not measurements. Change them freely, and
 matching tests in backend/server/tests/test_weather_mapping.py in the same pull request.
 
 Used by: routes/weather.py (builds the API answer), weather/open_meteo.py (the WeatherReading
-type) and the tests.
+and HourReading types), weather/states.py (the state of an hour is worked out from the same four
+values) and the tests.
 """
 
 import math
@@ -69,6 +70,19 @@ class WeatherReading:
     visibility_m: float | None = None
     wind_speed_kmh: float | None = None
     is_day: bool | None = None
+
+
+@dataclass(frozen=True)
+class HourReading:
+    """The weather during one hour of the forecast: the start of the hour and its numbers.
+
+    `at` is the start of the hour, in UTC. The reading holds the same kind of numbers as the
+    weather right now, but an hourly forecast has no cloud cover and no day or night flag, so
+    those two stay None.
+    """
+
+    at: datetime
+    reading: WeatherReading
 
 
 @dataclass(frozen=True)

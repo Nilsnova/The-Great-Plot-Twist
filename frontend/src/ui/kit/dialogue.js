@@ -1,5 +1,6 @@
 // A reusable readable dialogue box; all content comes from its caller, not story rules.
-import { node, reducedMotion, uniqueId, portraitSource } from './dom.js';
+import {reducedMotion} from '../../settings/preferences.js';
+import { node, uniqueId, portraitSource } from './dom.js';
 import { createButton } from './button.js';
 import {getPreferences,onPreferences} from '../../settings/preferences.js';
 import { createTypewriter, choiceKey } from './logic.js';

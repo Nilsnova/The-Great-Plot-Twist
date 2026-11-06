@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **185 sprites and 10 backgrounds/charts, 195 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **194 sprites and 10 backgrounds/charts, 204 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
@@ -197,7 +197,7 @@ Every G5 sound is original executable Web Audio synthesis in `src/audio/`: deter
 
 `src/demo/intro-story.json` is a byte copy of the public `backend/content/story.json` (Story v2), kept equal by `tests/demo-content.test.js`. It contains only the intro story, never the secret case. The tour runs it with the unchanged engine and a memory-only adapter. `src/demo/recorded-weather.json` is a small adapted subset of `backend/content/weather/recorded-fallback.json`: the 5 November 17:00 Torshavn sample, recorded at 17:14:33 UTC. Cloud cover is divided by 100 and wind (13.7 km/h) by 72; precipitation/fog are zero in this recorded sample. Fog and storm tour beats are explicitly labelled local overrides. Credit: **Weather data by Open-Meteo.com, adapted for the game** ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). No provider is called by the demo modules.
 
-The in-game Credits view lists four `<name>` placeholders, no student numbers, Open-Meteo/adaptation/licence links and the same tool licences as this register: Three.js/Vite/Vitest MIT, Playwright Core Apache-2.0 and Pillow HPND. No new dependency was added for G5.
+The in-game Credits view reads `src/shell/team.js`: Nils Lenke and three `<name>` placeholders for teammates to replace in their own first pull requests, with no student numbers. It includes Open-Meteo/adaptation/licence links, Binance live-data credit and Binance Vision recorded-replay credit (CC BY-NC-SA 4.0, reduced to one-minute closing prices for 90 minutes) and the same tool licences as this register: Three.js/Vite/Vitest MIT, Playwright Core Apache-2.0 and Pillow HPND. No new dependency was added for G5.
 
 ### G6 Relighting additions
 
@@ -210,3 +210,38 @@ Three original, code-authored sprites in `scripts/pixel_art/relighting.py`, regi
 | `wall-of-lights-open` | 128 × 96 | 8 px | Harbor's public Wall of Lights; captain names are accessible adapter-supplied HTML |
 
 The kit now contains 185 sprite PNGs plus ten existing backgrounds, 195 PNGs total. Festival fireworks are deterministic WebGL points authored in `src/world/festival.js`, with no audio/image dependency; they are disabled for reduced motion and use fewer points on low quality. New art is display-only and contains no names, case prose or solution. Rebuild with `python3 scripts/pixel_art/generate.py`.
+
+## G7 presence emotes
+
+Five original speech bubbles, authored in `scripts/pixel_art/emotes.py`, registered by id in `pixel/story-catalog.js`: `emote-wave`, `emote-cheer`, `emote-point`, `emote-lantern`, `emote-shrug`. Each is 24 × 24 native pixels with transparent surroundings. No external source, font, logo or character name. Generate with `python3 scripts/pixel_art/generate.py`. Catalogue total: 190 sprites plus 10 backgrounds, 200 PNGs. The existing 195 images are unchanged.
+
+G7 Gull’s Rest reuses `lighthouse-lens`, `keepers-star`, `lantern`, `lens-hall-open` and `festival-lantern-string` in its open state. `world/places/gulls-rest-life.js` authors six small shore-wave quads and three V-shaped gull marks directly in geometry (two draw calls), plus lantern-string flicker. These are original code shapes, snapped to the same 16-pixel grid, with no new image, font or recording. Reduced motion keeps them still; the place lifetime owns every allocation.
+
+## G8 islet scenery
+
+Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixel/catalog.js` and loaded only on Home islet. `python3 scripts/pixel_art/generate.py` regenerates them with the existing kit; the previous 200 images remain unchanged.
+
+| Sprite id | Native pixels | Purpose |
+| --- | --- | --- |
+| `islet-empty-plot` | 56 × 64 | Timber parcel marker, without miniature text |
+| `islet-locked-sign` | 64 × 72 | Closed padlock sign for plots coming later |
+| `islet-signal-station` | 80 × 128 | Small stone station and cedar signal mast, unlit |
+| `islet-signal-station-lit` | 80 × 128 | Matching station with a steady gold lens at night |
+
+The existing cabin, workshop, windmill and greenhouse retain their approved original art. Visibility comes from the latest accepted building event. Build dust is five pooled code-authored pixel points per plot; the storm mast is original flat pixel geometry. These shapes add no external image or font. All materials, textures, geometry and subscriptions belong to their place lifetime. The signal station keeps the same id and artwork through world and finale presentation.
+
+## G8 harbor life, signal and original sound
+
+No image, font or audio download is used. `world/ambient/harbor-life.js` draws pooled, native-grid cabin smoke, one steady night window, three greenhouse-roof gull marks (only on a built greenhouse) and three extra harbor gulls in clear weather. `world/hook/index.js` draws a tiny offshore signal from four original meshes; its chart equivalent is an accessible UI marker. Geometry is allocated once, and place/app lifetimes release it. Reduced motion keeps ambient details and the signal still.
+
+New sounds are synthesized through the existing Web Audio effects bus in `audio/controller.js`, `synth.js` and `logic.js`:
+
+| Cue | Original source | Maximum source gain | Visible equivalent |
+| --- | --- | ---: | --- |
+| Bulletin paper | Short filtered noise | 0.016 | Open bulletin and caption |
+| Building settles | Short rising tones | 0.035 | Building appearance/dust and caption |
+| Storm flag | Brief noise snap | 0.021 | Raised storm flag and caption |
+| Distant signal | Faint tone | 0.018 | Signal marker/pattern and caption |
+| Lit station | Sustained sine hum | 0.009 | Steady gold station lamp |
+
+The existing original foghorn is reused on supplied fog nights, with a caption. Storm wind/sea/rain use the G5 synthesis. Master/effects preferences multiply these gains; nothing starts before a trusted click or key. The audio owner stops the hum, one-shot voices and semantic listeners on disposal. The same project licences and team authorship apply; no new third-party licence is needed.

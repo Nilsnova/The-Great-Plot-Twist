@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Timed tour reaches intro, arrival, islet build, sailing, Harbor, board, weather, lights and Relighting
+    at check (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-demo.js:7:33)
+    at file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-demo.js:19:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.17.0

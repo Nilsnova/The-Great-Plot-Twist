@@ -1,0 +1,24 @@
+/* Class-tour controls stay readable on the game world and inside its dialogs. */
+.presenter-controls{display:grid;gap:12px;margin-top:14px;font-size:16px;line-height:1.5}
+.presenter-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.presenter-controls .kit-button{min-height:44px;font-size:16px}
+.presenter-control-status{margin:0;font-size:16px;line-height:1.5;color:#e2d2a4}
+.presenter-beat-list,.presenter-speaker-notes{max-height:260px;overflow:auto;padding:12px 16px;border:2px solid #9a8657;background:#1c3026}
+.presenter-beat-list[hidden],.presenter-speaker-notes[hidden]{display:none!important}
+.presenter-beat-list ol,.presenter-speaker-notes ul{display:grid;gap:8px;margin:0;padding-left:24px}
+.presenter-beat-list li button{width:100%;text-align:left;font-size:16px;line-height:1.4}
+.presenter-speaker-notes li{font-size:16px;line-height:1.55}
+.presenter-beat-list button[aria-current="true"]{outline:2px solid #e8ce83;outline-offset:2px}
+.presenter-panel.in-dialog{position:fixed!important;left:24px!important;right:auto!important;bottom:16px!important;top:auto!important;width:320px!important;max-height:calc(100vh - 32px)!important;overflow:auto!important;z-index:1000!important;margin:0!important}
+.presenter-blank{position:fixed;inset:0;z-index:2147483000;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#000;color:#000;cursor:none}
+.presenter-blank::backdrop{background:#000}
+.presenter-blank[open]{display:block}
+body.presenter-blanking dialog:not(.presenter-blank){visibility:hidden!important;pointer-events:none!important}
+body.presenter-blanking dialog:not(.presenter-blank)::backdrop{background:transparent!important}
+.recording-frame{position:fixed!important;inset:0 auto auto 0!important;width:1920px!important;height:1080px!important;max-width:none!important;max-height:none!important;overflow:hidden!important;contain:layout paint!important;cursor:none!important}
+.recording-frame *{cursor:none!important}
+.recording-frame .hud{position:absolute!important;inset:0!important;width:1920px!important;height:1080px!important;overflow:hidden!important}
+.presenter-beat-list h3,.presenter-speaker-notes h3{font-size:18px;line-height:1.4;margin:0 0 10px;color:#f0dfb1}
+@media(min-width:1700px){.presenter-panel.in-dialog{left:24px!important;right:auto!important;width:320px!important;max-height:calc(100vh - 32px)!important}}
+@media(max-width:1699px){.presenter-panel.in-dialog{left:16px!important;right:16px!important;bottom:16px!important;top:auto!important;width:auto!important;max-height:45vh!important;overflow:auto!important}}
+@media(max-width:600px){.presenter-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.presenter-controls .kit-button{width:100%}}

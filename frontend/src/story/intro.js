@@ -8,7 +8,7 @@ export function createIntro(ctx) {
   let adapter=null,active=false,disposed=false,request=0,abort=null,hotspot='cottage',resumeRequested=false;
   const loading=node('div','intro-loading'),copy=node('p','','The story is coming ashore…'),retry=createButton({label:'Try again',onClick:()=>load()});loading.append(copy,retry.element);
   const view=createIntroView({onAction:perform,onRestart(){adapter.reset();show();},onClose:close});
-  const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){active=false;ctx.resetInput?.();}});modal.element.classList.add('intro-modal');
+  const modal=createModal({title:'The Keeper’s Last Log',body:loading,onCancel:close,onClose(){if(!modal.element.open)active=false;}});modal.element.classList.add('intro-modal');
   function close(){view.pause();active=false;request++;abort?.abort();modal.close();ctx.resetInput?.();}
   function show(notice){modal.setContent(view.element);view.update(adapter.view,adapter.actions,notice);view.focus();if(adapter.state.ended)ctx.onEnding?.({ending:adapter.state.scene,actions:adapter.actions});}
   function visit() {const result=adapter.state.ended?null:adapter.visit(hotspot);show(result&&!result.accepted?result.message:undefined);}
@@ -16,8 +16,7 @@ export function createIntro(ctx) {
     const token=++request;abort?.abort();abort=new AbortController();const controller=abort;modal.setContent(loading);retry.element.hidden=true;copy.textContent='The story is coming ashore…';
     const timer=setTimeout(()=>controller.abort(),5000);
     try {
-      const response=await fetch('/api/content/intro-story',{signal:controller.signal,headers:{Accept:'application/json'}});
-      if(!response.ok)throw new Error('Story unavailable');const story=await response.json();
+      let story;if(ctx.readStory)story=await ctx.readStory();else{const response=await fetch('/api/content/intro-story',{signal:controller.signal,headers:{Accept:'application/json'}});if(!response.ok)throw new Error('Story unavailable');story=await response.json();}
       if(!story?.scenes?.[story.start]||!story.items)throw new Error('Story unavailable');
       if(disposed||token!==request)return;adapter=createIntroAdapter(story,introJournal());if(resumeRequested)show(!adapter.restored&&introJournal().read()?'This local save no longer matches the intro. A new intro has been opened.':undefined);else visit();
     }catch(error){if(!disposed&&token===request&&active){copy.textContent='The story could not reach the island. Please try again.';retry.element.hidden=false;retry.element.focus();}}
