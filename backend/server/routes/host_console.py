@@ -53,7 +53,8 @@ async def overview(
                   for status in ("forming", "active", "finished")},
         "flags": settings.flags, "demoMode": settings.demo_mode,
         "expectedMigrations": expected_migrations(rows.schemaObjects, settings.flags),
-        "build": build_stamp(), "weather": weather, "realtimeConnections": None,
+        "build": build_stamp(settings.build_commit),
+        "weather": weather, "realtimeConnections": None,
         "caseClockAvailable": clock_available,
         "keepalive": {"lastSuccessAt": last, "today": last is not None
                       and format_utc_time(last)[:10] == rows.day, "timezone": "UTC"},

@@ -1,9 +1,10 @@
 // Host-only presentation flow. The API remains authoritative; retry UUIDs survive unknown outcomes.
 export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) {
-  let epoch=0, authorized=false, overview=null, records=[],clockIntent=null;
+  let epoch=0, authorized=false, overview=null, records=[],clockIntent=null,clockUncertain=false;
   const actions=new Map(), pending=new Set();
-  function lock(message='Not a host') {
-    epoch++;authorized=false;records=[];overview=null;clockIntent=null;
+  function lock(message='Not a host',discardIntent=true) {
+    epoch++;authorized=false;records=[];overview=null;
+    if(discardIntent){clockIntent=null;clockUncertain=false;actions.clear();}
     view.hide();view.say(message);
   }
   function failure(answer) {
@@ -11,14 +12,15 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
       'Console unavailable. Check the API and migration, then refresh.';
   }
   async function refresh() {
+    if(pending.size){view.say('Wait for the current action before refreshing.');return;}
     const turn=++epoch;authorized=false;view.hide();view.say('Checking host access…');
     api.resetHeaders?.();
     const summary=await api.get('/api/host/overview');
     if(turn!==epoch)return;
-    if(!summary.ok){lock(failure(summary));return;}
+    if(!summary.ok){lock(failure(summary),summary.status===401||summary.status===403);return;}
     const crews=await api.get('/api/host/crews');
     if(turn!==epoch)return;
-    if(!crews.ok){lock(failure(crews));return;}
+    if(!crews.ok){lock(failure(crews),crews.status===401||crews.status===403);return;}
     const config=await api.get('/api/config');
     if(turn!==epoch)return;
     authorized=true;overview={...summary.data,caseClockAvailable:config.ok&&config.data?.capabilities?.hostCaseClock===true};
@@ -33,7 +35,7 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
     try {
       const answer=await api.post(`/api/host/crews/${encodeURIComponent(id)}/close`,{actionUid:actions.get(id)});
       if(turn!==epoch)return;
-      if(answer.ok){await refresh();return;}
+      if(answer.ok){pending.delete(id);await refresh();return;}
       if(answer.status===401 || answer.status===403){lock();return;}
       view.say(answer.status===0 ? 'Outcome unknown. Retry this crew with the same action.' :
         'Crew not closed. It may have changed; refresh before trying again.');
@@ -55,15 +57,18 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
         const outcome=answer.data;
         if(typeof outcome?.accepted!=='boolean'||typeof outcome.message!=='string'||
           (outcome.accepted&&(!Number.isInteger(outcome.now)||outcome.now<0))) {
+          clockUncertain=true;
           view.say('Clock outcome unknown. Retry the same seconds; the action ID is retained.');return;
         }
-        clockIntent=null;
+        clockIntent=null;clockUncertain=false;
         view.say(`${outcome.accepted?'Clock moved':'Clock not moved'}: ${outcome.message??'No message.'}${
           Number.isInteger(outcome.now)?` Case second ${outcome.now}.`:''}${outcome.repeat?' (repeat)':''}`);
       }
       else if(answer.status===403 || answer.status===401)lock();
       else {
-        if(answer.status!==0 && answer.status<500)clockIntent=null;
+        if(answer.status===0 || answer.status>=500)clockUncertain=true;
+        // A later rate limit/refusal cannot tell us whether the earlier unknown write ran.
+        if(!clockUncertain)clockIntent=null;
         view.say(answer.status===404?'No open case crew, or the case feature is off.':
           answer.status===409?'Start your crew before moving its clock.':
           answer.status===429?'Clock rate limit reached. Wait before trying again.':

@@ -12,7 +12,8 @@ function setup() {
   const api = { get:vi.fn(path => Promise.resolve(ok(path.endsWith('overview') ? overview : crews))),
     post:vi.fn(() => Promise.resolve(ok({ status:'closed' }))), headerChecks:() => ({ noStore:true }) };
   const view = { hide:vi.fn(), show:vi.fn(), say:vi.fn(), busy:vi.fn() };
-  return { api, view, controller:createHostController({ api, view, newUid:() => 'action-1' }) };
+  let uid=0;
+  return { api, view, controller:createHostController({ api, view, newUid:() => `action-${++uid}` }) };
 }
 it('asks the server before displaying any host panels', async () => {
   const {api,view,controller} = setup();
@@ -115,6 +116,32 @@ it('retains clock retry identity after an unreadable successful response', async
   await controller.refresh();await controller.setClock(60);await controller.setClock(60);
   expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
   expect(view.say).toHaveBeenLastCalledWith('Clock moved: Moved. Case second 60. (repeat)');
+});
+it('does not lose an uncertain clock UUID when the retry is rate-limited', async () => {
+  const {api,controller}=setup();enableClock(api);
+  const original=api.post;
+  original.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce({ok:false,status:429})
+    .mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:60,repeat:true}));
+  await controller.refresh();
+  await controller.setClock(60);await controller.setClock(60);await controller.setClock(60);
+  expect(original.mock.calls.map(([,body])=>body.actionUid)).toEqual(['action-1','action-1','action-1']);
+});
+it('retains uncertain writes through a temporary failed refresh', async () => {
+  const {api,controller}=setup();enableClock(api);
+  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:60,repeat:true}));
+  await controller.refresh();await controller.setClock(60);
+  api.get.mockResolvedValueOnce({ok:false,status:503});await controller.refresh();
+  enableClock(api);await controller.refresh();await controller.setClock(60);
+  expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
+});
+it('does not invalidate an in-flight write with a refresh', async () => {
+  const {api,view,controller}=setup();enableClock(api);await controller.refresh();
+  let done;api.post.mockImplementation(()=>new Promise(resolve=>{done=resolve;}));
+  const clock=controller.setClock(60),reads=api.get.mock.calls.length;
+  await controller.refresh();expect(api.get).toHaveBeenCalledTimes(reads);
+  expect(view.say).toHaveBeenLastCalledWith('Wait for the current action before refreshing.');
+  done(ok({accepted:true,message:'Moved.',now:60}));await clock;
+  expect(view.say).toHaveBeenLastCalledWith('Clock moved: Moved. Case second 60.');
 });
 it('shows game-rule refusal and rate-limit messages without rendering case data', async () => {
   const {api,view,controller}=setup();enableClock(api);await controller.refresh();

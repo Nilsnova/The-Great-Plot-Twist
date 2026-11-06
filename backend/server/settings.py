@@ -84,6 +84,8 @@ class Settings:
     # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
     # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
     host_player_ids: frozenset[str] = field(default_factory=frozenset)
+    # Public deployment metadata only; never a credential. Unknown on ordinary local runs.
+    build_commit: str = ""
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -199,6 +201,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         ),
         market_multiplier=read_market_multiplier(env),
         host_player_ids=read_host_player_ids(env),
+        build_commit=read_text(env, "VERCEL_GIT_COMMIT_SHA"),
     )
 
 
