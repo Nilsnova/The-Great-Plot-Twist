@@ -17,6 +17,7 @@ from pydantic import (
     model_validator,
 )
 
+from server.crews.seats import PARTNERS
 from server.crews.store import CrewRow, read_row, seat_from_row
 from server.game.case_snapshot import (
     Accusation,
@@ -28,6 +29,12 @@ from server.game.case_snapshot import (
     SeatState,
     Signal,
     Solver,
+)
+from server.game.npc_orders import (
+    ARRIVE_AFTER_MINUTES,
+    ERRAND_MINUTES,
+    PIN_MINUTES,
+    NpcOrder,
 )
 from server.supabase_admin import SupabaseRejected
 
@@ -41,6 +48,7 @@ class StateRow(BaseModel):
     solved_second: int | None = Field(strict=True, ge=0)
     solved_by: StrictStr | None
     world_outcome: StrictStr | None
+    orders_count: int = Field(default=0, strict=True, ge=0)
     night_no: int = Field(default=0, strict=True, ge=0)
     night_started_second: int | None = Field(default=None, strict=True, ge=0)
 
@@ -49,6 +57,106 @@ class StateRow(BaseModel):
         if (self.night_no == 0) != (self.night_started_second is None):
             raise ValueError("A night needs both its number and start.")
         return self
+
+
+NPC_ORDER_SUMMARIES = tuple(
+    (f"npc_latest_seat_{seat}", {"seat_no": f"eq.{seat}"}, 1) for seat in range(1, 5)
+)
+
+
+class NpcOrderRow(BaseModel):
+    crew_id: StrictStr
+    action_uid: str = Field(strict=True, pattern=r"^[A-Za-z0-9_-]{8,64}$")
+    order_no: int = Field(strict=True, ge=1)
+    seat_no: int = Field(strict=True, ge=1, le=4)
+    npc_id: StrictStr
+    kind: Literal["fetch", "man_light"]
+    target: StrictStr
+    ordered_by: StrictStr | None
+    route_id: StrictStr | None = None
+    result_card: StrictStr | None = None
+    price: int = Field(default=0, strict=True, ge=0, le=0)
+    ordered_second: int = Field(strict=True, ge=0)
+    ready_second: int = Field(strict=True, ge=0)
+    arrive_second: int | None = Field(default=None, strict=True, ge=0)
+    found_second: int | None = Field(default=None, strict=True, ge=0)
+    pin_second: int | None = Field(default=None, strict=True, ge=0)
+
+    @model_validator(mode="after")
+    def valid_minimum_order(self) -> Self:
+        if self.npc_id != PARTNERS[self.seat_no][0]:
+            raise ValueError("The partner does not belong to this seat.")
+        if self.kind == "man_light":
+            if (
+                self.target not in ("keepers_lamp", "harbor_light")
+                or self.ready_second != self.ordered_second + ERRAND_MINUTES * 60
+                or any(
+                    value is not None
+                    for value in (
+                        self.route_id,
+                        self.result_card,
+                        self.arrive_second,
+                        self.found_second,
+                        self.pin_second,
+                    )
+                )
+            ):
+                raise ValueError("The public-light order is inconsistent.")
+        else:
+            self.validate_fetch()
+        return self
+
+    def validate_fetch(self) -> None:
+        if self.target not in tuple(f"C{number}" for number in range(1, 9)):
+            raise ValueError("The fetch target is not a card.")
+        if self.result_card != self.target or self.ready_second != self.pin_second:
+            raise ValueError("The fetch result is inconsistent.")
+        if self.route_id is None:
+            if (
+                self.arrive_second is not None
+                or self.found_second is not None
+                or self.pin_second != self.ordered_second + PIN_MINUTES * 60
+            ):
+                raise ValueError("The pin-only order is inconsistent.")
+        elif (
+            not self.route_id.startswith(self.target + ".")
+            or self.arrive_second != self.ordered_second + ARRIVE_AFTER_MINUTES * 60
+            or self.found_second != self.ordered_second + ERRAND_MINUTES * 60
+            or self.pin_second != self.found_second + PIN_MINUTES * 60
+        ):
+            raise ValueError("The fetch deadlines are inconsistent.")
+
+
+def npc_order_from_row(raw: dict) -> NpcOrder:
+    try:
+        parsed = NpcOrderRow.model_validate(raw)
+        columns = {field.name for field in fields(NpcOrder)}
+        return NpcOrder(**parsed.model_dump(include=columns))
+    except (TypeError, ValidationError):
+        raise SupabaseRejected("The partner order could not be read.") from None
+
+
+def npc_history(raw: dict) -> tuple[NpcOrder, ...]:
+    """Keep recent orders plus each seat's latest; an old quiet job must not disappear."""
+    orders = {}
+    for key, filters, limit in (("npc_orders", {}, 40), *NPC_ORDER_SUMMARIES):
+        rows = raw.get(key, [])
+        if not isinstance(rows, list) or len(rows) > limit:
+            raise SupabaseRejected("The partner history could not be read.")
+        seen = set()
+        for row in rows:
+            if not isinstance(row, dict) or row.get("crew_id") != raw["id"]:
+                raise SupabaseRejected("The partner history belongs to another crew.")
+            order = npc_order_from_row(row)
+            if filters and filters["seat_no"] != f"eq.{order.seat_no}":
+                raise SupabaseRejected("The partner history belongs to another seat.")
+            if order.order_no in seen or (
+                order.order_no in orders and orders[order.order_no] != row
+            ):
+                raise SupabaseRejected("The partner history is inconsistent.")
+            orders[order.order_no] = row
+            seen.add(order.order_no)
+    return tuple(npc_order_from_row(orders[number]) for number in sorted(orders, reverse=True))
 
 
 class FindRow(BaseModel):
@@ -272,6 +380,7 @@ def snapshot_from_row(raw: dict, *, read_log: bool, coins: int, viewer: str) -> 
     pins = records(raw, "board_pins", PinRow, Pin)
     posts = records(raw, "finale_posts", PostRow, Post)
     signals = signal_history(raw)
+    orders = npc_history(raw)
     snapshot = CaseSnapshot(
         crew.id,
         crew.status,
@@ -299,7 +408,11 @@ def snapshot_from_row(raw: dict, *, read_log: bool, coins: int, viewer: str) -> 
         world_outcome=None if state is None else state.world_outcome,
         night_no=0 if state is None else state.night_no,
         night_started_second=None if state is None else state.night_started_second,
+        orders_count=0 if state is None else state.orders_count,
+        npc_orders=orders,
         coins=coins,
     )
+    if any(order.order_no > snapshot.orders_count for order in orders):
+        raise SupabaseRejected("The partner order count is inconsistent.")
     validate_finale_history(snapshot)
     return snapshot

@@ -5,6 +5,10 @@ Used by: the case store, pure decisions, views and deterministic tests.
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from server.game.npc_orders import NpcOrder
 
 
 @dataclass(frozen=True)
@@ -127,6 +131,8 @@ class CaseSnapshot:
     posts: tuple[Post, ...] = ()
     signals: tuple[Signal, ...] = ()
     station_ready: bool = False
+    orders_count: int = 0
+    npc_orders: tuple["NpcOrder", ...] = ()
 
     def seat_for_player(self, player_id: str) -> SeatState | None:
         return next((seat for seat in self.seats if seat.player_id == player_id), None)
