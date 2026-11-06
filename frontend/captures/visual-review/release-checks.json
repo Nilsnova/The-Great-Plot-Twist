@@ -1,0 +1,89 @@
+{
+  "frontend": {
+    "passed": 1859,
+    "files": 133,
+    "command": "npm test -- --maxWorkers=2 --reporter=dot"
+  },
+  "finalRoomPermissionRegression": {
+    "passed": 7,
+    "file": "tests/interiors-dom.test.js"
+  },
+  "story": {
+    "checks": 22,
+    "endings": [
+      "ending_rescue",
+      "ending_trapped"
+    ],
+    "apiReads": 2
+  },
+  "integratedUI": {
+    "checks": 20,
+    "viewports": [
+      1280,
+      375,
+      320,
+      844
+    ]
+  },
+  "case": {
+    "checks": 151
+  },
+  "world": {
+    "checks": 62,
+    "before": {
+      "fps": 26,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "after": {
+      "fps": 31,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "roundTrips": 10,
+    "errors": []
+  },
+  "presenter": {
+    "checks": 19,
+    "usedLowQualityFallback": true,
+    "errors": []
+  },
+  "productionCSP": {
+    "pages": 5,
+    "checks": 13,
+    "javascriptErrors": []
+  },
+  "productionBrowser": {
+    "checks": 7
+  },
+  "artBrowser": {
+    "checks": 12,
+    "legacyPNGsDecoded": 260
+  },
+  "build": {
+    "spoilerTextFiles": 145,
+    "protectedFingerprints": 12
+  },
+  "budgets": {
+    "javaScript": 20909,
+    "javaScriptGzip": 9855,
+    "css": 11908,
+    "cssGzip": 4216,
+    "titleImage": 274026
+  },
+  "limitations": [
+    "Real G9 login/cloud-save/multiplayer not integrated",
+    "Physical device/listening rehearsal remains",
+    "Headless performance is not a hardware FPS guarantee"
+  ]
+}

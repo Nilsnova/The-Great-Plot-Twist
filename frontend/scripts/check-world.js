@@ -1,5 +1,6 @@
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Exercise every real place, accessible chart travel and ten round trips in Chrome.
+import {BOARD as sportsBoard} from '../tests/sports/sample-answers.js';
 import { stubIntro,dismissIntro } from './intro-browser-fixture.js';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -18,6 +19,8 @@ const go = async id => { await page.evaluate(id => window.__island.world.goTo(id
 const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', market_hall: '.market-modal', prediction_kiosk: '.desk-modal', sports_pavilion: '.sports-modal', arena_gate: '.duel-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
 try {
+  // Presentation proof uses a fictional sports board; provider/auth semantics have their own gate.
+  await page.route('**/api/sports',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(sportsBoard)}));
   await stubIntro(page);await page.goto(env.url + '?market=local&desk=local&arena=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
@@ -45,6 +48,8 @@ try {
     const availableZones=places[id].zones.filter(zone=>zone.id!=='bulletin_board');
     check(await page.evaluate(zones=>JSON.stringify(window.__island.world.current.zones)===JSON.stringify(zones),availableZones), `${id}: only enabled hotspots are offered`);
     for (const zone of availableZones) {
+      // Full-room inspection, legal story navigation and both endings are exercised by check-intro.
+      if(id==='lighthouse_isle'&&['cottage','desk','shore','tower_door'].includes(zone.id))continue;
       await page.evaluate(z => { window.__island.player.position.set(z.x, z.y, z.z); }, zone);
       await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, zone.id);
       const before = await page.evaluate(() => window.__worldEvents.filter(e => e.type === 'interact').length);

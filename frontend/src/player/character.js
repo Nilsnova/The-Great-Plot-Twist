@@ -1,7 +1,6 @@
 // Original illustrated explorer. Logical terrain height never offsets its drawn feet.
 import * as THREE from 'three';
 import { placeArt, projectPoint } from '../world/art.js';
-import { snapPixel } from '../pixel/catalog.js';
 
 export function createCharacter(art, { reducedMotion = false } = {}) {
   const group = new THREE.Object3D();
@@ -19,7 +18,7 @@ export function createCharacter(art, { reducedMotion = false } = {}) {
       else phase = 0;
       const point = projectPoint(group.position.x, group.position.z);
       const bounce = moving && !reduce ? Math.sin(phase * Math.PI / 2) ** 2 * .035 * amount : 0;
-      sprite.position.set(snapPixel(point.x), snapPixel(point.y + bounce), 0);
+      sprite.position.set(point.x, point.y + bounce, 0);
       sprite.scale.set(flip, 1, 1);
       const clip = [`${facing}-walk-1`, facing, `${facing}-walk-2`, facing];
       const requested = moving && !reduce ? clip[Math.floor(phase) % clip.length] : facing;

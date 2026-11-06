@@ -20,6 +20,7 @@ try {
   const cssFiles=new Set([...seen].flatMap(key=>manifest[key].css??[]));report.initialCss=0;
   for(const file of cssFiles)report.initialCss+=(await readFile('dist/'+file)).length;
   check(report.initialCss<12000,'Cold title CSS is below 12 kB; world styles stay deferred');
+  const titleImage=await readFile('dist/places/title.webp');report.titleImageBytes=titleImage.length;check(titleImage.length<=350000,'Detailed original title WebP stays below its reviewed 350 kB image budget');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
   for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
   await stubIntro(page);await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();

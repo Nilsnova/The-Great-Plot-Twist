@@ -530,3 +530,25 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 - **Decision and reason:**
 - **Alternatives and trade-offs:**
 - **Agreed by / issue or PR / impact:**
+
+
+## D028 · A simpler, detailed island experience · 2026-11-06
+
+**Status:** Requested by Nils in the visual redesign session. Supersedes the low-density rendering,
+position snapping and permanently visible controls in D005; original asset sources remain available.
+
+**Decision:** Use freshly drawn high-density island art, an original illustrated title and continuous
+player/camera motion. Keep world geometry and story/server IDs unchanged. Show short replacing story
+passages, optional Journal history, compact controls hidden by default, and opaque full-screen rooms
+when crossing cottage, boathouse or opened lighthouse doorways. Case screens use a stable frame and
+progressively revealed controls. Multiplayer is visible from the title but only described as connected
+once the G9 adapter has been integrated and verified. The AI companion is canceled.
+
+**Why:** Nils's playtest showed overflowing prose, overlapping HUD panels, a distracting control strip,
+small cutaway rooms and visibly coarse art. Detailed textures and a denser framebuffer improve the
+actual image while short passages and optional secondary controls make the next action clearer.
+
+**Limits:** Rules, reward receipts, original story actions and server-only mystery answers stay intact.
+The detailed title has a reviewed 350 kB transfer ceiling; cold JavaScript/CSS budgets stay unchanged.
+Rendering has explicit quality/DPR/pixel caps and the old textures remain fallback assets. See the
+[execution plan](UX-SIMPLIFICATION.md) and the component evidence in `docs/handoff/`.

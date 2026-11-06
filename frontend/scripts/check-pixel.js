@@ -66,7 +66,7 @@ try {
   await page.screenshot({ path: `captures/${stamp}_Pixel-Staged-Harbour-Kit.png`, fullPage: true });
   await page.setViewportSize({ width: 1440, height: 900 });
   const requested = new Set();
-  page.on('request', request => { const match = request.url().match(/\/pixel\/([^/?]+\.png)(?:[?#]|$)/); if (match) requested.add(match[1]); });
+  page.on('request', request => { const match = request.url().match(/\/pixel\/(?:hd\/)?([^/?]+\.png)(?:[?#]|$)/); if (match) requested.add(match[1]); });
   await stubIntro(page);await page.goto(url);await startFromTitle(page);
   await page.waitForTimeout(1100);
   check([...requested].every(file => file === 'ground.png' || pixelArtIds.includes(file.replace('.png', ''))), 'Game requests only active pixel artwork');
@@ -74,13 +74,13 @@ try {
     const canvas = document.querySelector('canvas[tabindex="0"]'); return { imageRendering: getComputedStyle(canvas).imageRendering,
       width: canvas.width, height: canvas.height, cssWidth: parseInt(canvas.style.width), cssHeight: parseInt(canvas.style.height) };
   });
-  check(display.imageRendering === 'pixelated' && Number.isInteger(display.cssWidth / display.width) && display.cssWidth / display.width === display.cssHeight / display.height, 'World uses one exact integer upscale factor');
+  check(display.imageRendering === 'auto' && display.width*display.height<=1920*1080 && display.width>=display.cssWidth*.5 && display.height>=display.cssHeight*.5, 'World keeps bounded responsive rendering with a usable density floor');
   report.display = display;
   if (!production) {
     await page.evaluate(() => { window.__island.settings.hour = 12; window.__island.setWeather({ cloudCover: .05, rain: 0, fog: .02, wind: .18 }); });
     await page.waitForTimeout(4200); await page.screenshot({ path: `captures/${stamp}_Pixel-Forest-Daylight.png` });
     for (const [name, id] of [['Cottage', 'desk'], ['Shore', 'shore'], ['Lighthouse', 'tower_door']]) {
-      await page.evaluate(async id => { const { zones } = await import('/src/world/zones.js'); const zone = zones.find(zone => zone.id === id); window.__island.player.position.set(zone.x, zone.y, zone.z); }, id);
+      await page.evaluate(async id => { const g=window.__island;g.interiors?.close('capture',{immediate:true});const [x,z]=({desk:[-7,7],shore:[-3,18],tower_door:[9,-3.7]})[id];g.player.position.set(x,g.world.current.groundHeight(x,z),z);g.view.setPlace('lighthouse_isle',g.player.position); }, id);
       await page.waitForTimeout(1000); await page.screenshot({ path: `captures/${stamp}_Pixel-${name}-Daylight.png` });
       if (id === 'tower_door') { await page.evaluate(() => { window.__island.settings.hour = 0; }); await page.waitForTimeout(200); await page.screenshot({ path: `captures/${stamp}_Pixel-Lighthouse-Midnight.png` }); }
     }
@@ -88,9 +88,9 @@ try {
     const drawing = await page.evaluate(() => {
       const game = window.__island, sprites = [];
       game.scene.traverse(object => { if (object.userData.asset === 'explorer') sprites.push(object); });
-      return sprites.every(sprite => Number.isInteger(sprite.position.x * 16) && Number.isInteger(sprite.position.y * 16));
+      return sprites.length===1&&sprites.every(sprite => [sprite.position.x,sprite.position.y].every(Number.isFinite));
     });
-    check(drawing, 'Explorer feet remain on the native pixel grid');
+    check(drawing, 'One explorer uses continuous finite world coordinates');
   } else check(await page.evaluate(() => typeof window.__island === 'undefined'), 'Production omits development inspection');
   check(errors.length === 0 && external.length === 0, `No browser errors or external requests (${errors.join('; ')})`);
   await writeFile(`captures/${stamp}_Pixel-Art-Checks${production ? '-Production' : ''}.json`, JSON.stringify(report, null, 2) + '\n');

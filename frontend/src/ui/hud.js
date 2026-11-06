@@ -5,14 +5,15 @@ import { settings } from '../config.js';
 import { getWeather, presets, setWeather } from '../world/weather.js';
 import { tonightLabel } from '../screens/bulletin/logic.js';
 import '../screens/bulletin/bulletin.css';
+import './quiet-hud.css';
 
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 export function createHud(container, actions) {
-  const overlay = document.createElement('div'); overlay.className = 'hud';
+  const overlay = document.createElement('div'); overlay.className = 'hud hud-quiet';
   overlay.innerHTML = `
-    <header class="masthead"><a class="wordmark" href="./" aria-label="The Great Plot Twist home"><span class="mark">✦</span> THE GREAT PLOT TWIST</a>
-      <div class="chapter"><span class="status-dot"></span> LIGHTHOUSE ISLE <span class="chapter-number">01 / PROLOGUE</span></div></header>
-    <section class="arrival" aria-labelledby="arrival-title">
+    <header class="masthead"><a class="wordmark" href="./" aria-label="The Great Plot Twist home"><span class="mark">✦</span> <span class="hud-brand">Saltreach</span></a>
+      <div class="chapter"><span class="status-dot"></span> Lighthouse Isle <span class="chapter-number">01 / PROLOGUE</span></div></header>
+    <section class="arrival" aria-labelledby="arrival-title" hidden>
       <p class="eyebrow">A SMALL ISLAND. AN UNFINISHED STORY.</p>
       <h1 id="arrival-title">The keeper’s<br><em>last log.</em></h1>
       <p class="intro-copy">Three nights without a light.<br>One keeper gone. Your story starts ashore.</p>
@@ -23,7 +24,8 @@ export function createHud(container, actions) {
     <aside class="island-label" aria-hidden="true"><span>THE KEEPER'S LAST LOG</span><i></i><span>FIELD NOTES &nbsp; / &nbsp; No. 01</span></aside>
     <div class="interact" role="status" hidden><kbd>E</kbd><div><small>Press E</small><strong></strong></div><span aria-hidden="true">↗</span></div>
     <div class="toast" role="status" hidden></div>
-    <footer class="bottom-bar"><div class="controls"><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>E</kbd> investigate</span><span><kbd>SCROLL</kbd> zoom</span><button class="chart-toggle" aria-label="Open sea chart">Sea chart <kbd>M</kbd></button></div>
+    <div class="hud-actions"><button class="journal-toggle" aria-expanded="false">Journal</button><button class="controls-toggle" aria-expanded="false">Controls</button><button class="hud-menu">Menu</button></div>
+    <footer class="bottom-bar"><div class="controls" hidden><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>E</kbd> investigate</span><span><kbd>SCROLL</kbd> zoom</span><button class="chart-toggle" aria-label="Open sea chart">Sea chart <kbd>M</kbd></button></div>
       <div class="conditions"><span class="weather-label">Fair skies</span><span class="divider"></span><time>18:24</time><button class="settings-toggle" aria-label="Open visual settings" aria-expanded="false">☷</button></div></footer>
     <section class="debug" aria-label="Visual settings" hidden>
       <div class="panel-heading"><strong>Island atmosphere</strong><button class="close-settings" aria-label="Close visual settings">×</button></div>
@@ -35,9 +37,20 @@ export function createHud(container, actions) {
       ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
     </section>`;
   const captain=node('div','captain-status'),captainName=node('strong','','Captain pending'),save=node('span','','Local intro only');save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
-  const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');for(const [name,label] of [['crew','Crew'],['board','Board'],['log','Log'],['hints','What next?']]){const button=node('button','',label);button.type='button';button.onclick=()=>actions.caseScreen?.(name);caseToolbar.append(button);}const festivalButton=node('button','','Festival');festivalButton.type='button';festivalButton.hidden=true;festivalButton.onclick=()=>actions.festival?.();caseToolbar.append(festivalButton);overlay.append(caseToolbar);
+  const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');caseToolbar.hidden=true;for(const [name,label] of [['crew','Crew'],['board','Board'],['log','Log'],['hints','What next?']]){const button=node('button','',label);button.type='button';button.onclick=()=>{closeTools();actions.caseScreen?.(name);};caseToolbar.append(button);}const festivalButton=node('button','','Festival');festivalButton.type='button';festivalButton.hidden=true;festivalButton.onclick=()=>{closeTools();actions.festival?.();};caseToolbar.append(festivalButton);overlay.append(caseToolbar);
   const tonightChip=node('aside','tonight-chip');tonightChip.hidden=true;const tonightState=node('strong'),tonightFog=node('span'),tonightStart=node('span');tonightChip.append(tonightState,tonightFog,tonightStart);overlay.append(tonightChip);
   container.append(overlay);
+  const controls=overlay.querySelector('.controls'),controlsToggle=overlay.querySelector('.controls-toggle'),journalToggle=overlay.querySelector('.journal-toggle');
+  controls.setAttribute('aria-label','Game controls');controls.id='island-controls';controlsToggle.setAttribute('aria-controls',controls.id);
+  caseToolbar.id='island-journal';journalToggle.setAttribute('aria-controls',caseToolbar.id);
+  function toggleControls(open){controls.hidden=open===undefined?!controls.hidden:!open;controlsToggle.setAttribute('aria-expanded',String(!controls.hidden));}
+  function closeTools(){caseToolbar.hidden=true;journalToggle.setAttribute('aria-expanded','false');}
+  controlsToggle.onclick=()=>{closeTools();toggleControls();};
+  journalToggle.onclick=()=>{toggleControls(false);caseToolbar.hidden=!caseToolbar.hidden;journalToggle.setAttribute('aria-expanded',String(!caseToolbar.hidden));};
+  overlay.querySelector('.hud-menu').onclick=()=>{closeTools();toggleControls(false);(actions.menu??actions.settings)?.();};
+  function closeQuickPanels(){if(document.querySelector('dialog[open]')||(controls.hidden&&caseToolbar.hidden))return false;const target=controls.hidden?journalToggle:controlsToggle;toggleControls(false);closeTools();target.focus({preventScroll:true});return true;}
+  const escape=event=>{if(event.key==='Escape'&&!event.repeat&&closeQuickPanels()){event.preventDefault();event.stopImmediatePropagation();}};
+  window.addEventListener('keydown',escape,true);
   const timers = [];
   const select = selector => overlay.querySelector(selector);
   const panel = select('.debug'), toggle = select('.settings-toggle');
@@ -78,10 +91,10 @@ export function createHud(container, actions) {
     if(tonightStart.textContent!==startText)tonightStart.textContent=startText;
     const label=[stateText,model.fog,startText].filter(Boolean).join('. ');if(tonightChip.getAttribute('aria-label')!==label)tonightChip.setAttribute('aria-label',label);
   }
-  return {setFestivalAvailable(value){festivalButton.hidden=!value;},setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},setBulletin(view){bulletinModel=view;tonightSyncAt=0;refreshTonight();},togglePanel,start(){select('#explore').click();},
-    dispose() { timers.forEach(clearTimeout); overlay.remove(); },
+  return {setFestivalAvailable(value){festivalButton.hidden=!value;},setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},setBulletin(view){bulletinModel=view;tonightSyncAt=0;refreshTonight();},togglePanel,closeTools,toggleControls,closeQuickPanels,start(){select('#explore').click();},
+    dispose() { window.removeEventListener('keydown',escape,true);timers.forEach(clearTimeout); overlay.remove(); },
     arrive(id) {
-      select('.chapter').childNodes[1].textContent = ` ${places[id].name.toUpperCase()} `;
+      select('.chapter').childNodes[1].textContent = ` ${places[id].name} `;
       select('.location strong').textContent = places[id].name;
     },
     message(text) { select('.toast').textContent = text; select('.toast').hidden = false; toastUntil = performance.now() + 3000; },
@@ -93,7 +106,7 @@ export function createHud(container, actions) {
     update(zone, stats) {
       overlay.classList.toggle('night', stats?.night > 0.4);
       const prompt = select('.interact'); prompt.hidden = !zone; prompt.dataset.zone = zone || '';
-      if (zone) prompt.querySelector('strong').textContent = names[zone];
+      if (zone) prompt.querySelector('strong').textContent = stats?.interactionLabel??names[zone];
       const now = performance.now();
       select('.toast').hidden = now > toastUntil;
       if (now < syncAt) return;

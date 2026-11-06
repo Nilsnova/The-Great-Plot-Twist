@@ -7,8 +7,8 @@
 **Current execution: 6 Nov 2026.** The game and API are live at
 https://the-great-plot-twist.vercel.app/. Group 3, the complete minimum case backend, NPCs,
 server followups and G12 are deployed. Reviewed festival, host and sports code is deployed after
-its migration proofs; festival is enabled but waits for the first Relighting, while sports stays
-off pending its provider key. The stabilization/submission wave is deployed and its final gates pass.
+its migration proofs; festival is enabled but waits for the first Relighting. Sports is enabled
+with a verified live football-data.org feed. The stabilization/submission wave is deployed and its final gates pass.
 G9 is now actively being built in a cloud session; normal browser multiplayer/the complete mystery
 still await its reviewed adapter and end-to-end proofs. The detailed historical package plan remains below.
 
@@ -35,16 +35,15 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
 
 | Area | Current result | Remaining proof or input |
 |---|---|---|
-| Intro, islands, story presentation and sound | Built and deployed; local demo/rehearsal available | Physical laptop/phone/gamepad and listening rehearsal |
+| Intro, islands, story presentation and sound | Detailed art, compact passages, quiet HUD, full-screen rooms and smooth motion; release checks pass | Physical laptop/phone/gamepad and listening rehearsal |
 | Weather, Exchange v2, predictions, duels and presence services | Deployed and enabled | Direct stock/cache smoke needs this cloud's production-host allowlist; normal crew subscription needs G9 |
 | Case, shared board/night, Relighting and NPCs | Backend deployed; all 69 kit mixes and actual solo/four-human HTTP/SQL journeys pass | Complete cloud G9 and prove authenticated browser journeys; RELIGHT_OPEN remains unset |
 | Festival and host tools | Deployed; festival enabled in waiting state; host actions require configured identity | Actual authenticated host/browser rehearsal; festival starts only after the first real Relighting |
-| Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
+| Sports | Enabled; real football-data.org fixtures verified in production | Authenticated browser stakes/retries follow G9 |
 | Reliability, tests, help/privacy, security/notices, devtools | Deployed; combined gates and public read-only verification pass | Authenticated browser/device journey follows G9 |
 | Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
 
-No routine merge permission is needed. G9 is active in the cloud; live sports needs its provider key
-in Vercel. Teammate credit names,
+No routine merge permission or provider key is needed. G9 is active in its cloud session. Teammate credit names,
 submission details and the physical rehearsal are needed before hand-in. Secrets and student
 numbers must stay out of chat and Git. Stabilization adds no database migration or paid service.
 
@@ -610,7 +609,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Basketball (NBA): balldontlie, with a free key and 5 calls a minute. A teammate creates the key (who is open for the team kickoff), and it lives only in the Vercel settings. Its games have a clear `final` status. The NBA plays almost every night, so it is the safest "last night's game" for a morning class.
   - Settle only on the final result (`FINISHED` or `final`). Refund when a game is postponed, cancelled or suspended. Stay with league games or 90-minute results, to avoid extra-time rules. The winners share the pool pro rata, and a pool with no winners refunds. A presenter can settle by hand with the same rules.
   - Vercel Cron cannot be used with our setup (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)), so no timer settles games for us: settle when someone opens their stakes after the game. For an 11:00 class, take stakes the evening before.
-- **Switch:** behind the flag `sports`, which stays off until Nils is sure that play-money bets on real matches are fine for class (decision 18).
+- **Switch:** behind the flag `sports`. Nils approved activation on 6 Nov; the supplied key passed preview and production provider checks, and the flag is enabled.
 - **Depends on:** A1, A2, and `pools.py` from L5 (or written here).
 - **Provides:** `backend/server/adapters/fixtures.py`; the tables `fixtures` and `sports_stakes` (new migration); `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the reasons `sports_stake` and `sports_payout`, added by migration; the flag `sports`.
 - **Acceptance:** settles only on a final result; refunds when a game is postponed or cancelled; splits the pool pro rata; pays once; shows the credit line; tests use no network.
@@ -627,7 +626,6 @@ Not before submission, or only if everything above is green:
 - Storm raids, boarding rounds, the Light Network, harbor orders and Elena's radio bulletin.
 - Chapter 2, *The Unmarked Light*.
 - Hints that cost coins, for solo players who get stuck.
-- AI (language model) voices for partners or a companion: only with a capped server key and Nils' OK.
 - Touch controls, Google sign-in, and continuous integration on GitHub Actions (only with Nils' OK).
 
 ## Weekly rhythm

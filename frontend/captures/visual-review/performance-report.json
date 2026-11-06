@@ -1,0 +1,33 @@
+{
+  "environment": "Headless Chromium, one page at a time; CPU-rendering observation, not a physical-device guarantee",
+  "results": [
+    {
+      "name": "before",
+      "framebuffer": [
+        426,
+        240
+      ],
+      "fps": 54,
+      "medianMs": 16.7,
+      "p95Ms": 24,
+      "calls": 97,
+      "textures": 27,
+      "geometries": 96,
+      "viewHeight": 15
+    },
+    {
+      "name": "after",
+      "framebuffer": [
+        640,
+        360
+      ],
+      "fps": 30,
+      "medianMs": 23.9,
+      "p95Ms": 65.5,
+      "calls": 97,
+      "textures": 27,
+      "geometries": 96,
+      "viewHeight": 20
+    }
+  ]
+}
