@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 CACHE_SECONDS = 60
 TIMEOUT_SECONDS = 3.0
+MAX_TOKEN_LENGTH = 4096  # bound hashing and upstream header size for untrusted input
 
 # Supabase answers with one of these when the token itself is the problem.
 TOKEN_REJECTED_STATUSES = (400, 401, 403)
@@ -84,6 +85,8 @@ def read_bearer_token(header: str | None) -> str:
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise unauthorized("The Authorization header must look like: Bearer <token>")
     token = parts[1]
+    if len(token) > MAX_TOKEN_LENGTH:
+        raise unauthorized("The login token is too long. Please sign in again.")
     # A real token is plain ASCII. Refusing anything else also keeps odd bytes away from httpx,
     # which would otherwise fail with an error that looks like our fault instead of the caller's.
     if not token.isascii():
