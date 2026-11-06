@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from server import __version__
 from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
+from server.cache import DefaultCacheControl
 from server.errors import register_error_handlers
 from server.market.exchange import MarketService, market_or_none
 from server.routes import (
@@ -53,7 +54,7 @@ def new_fastapi_app(settings: Settings) -> FastAPI:
         docs_url = "/api/docs"
         openapi_url = "/api/openapi.json"
 
-    return FastAPI(
+    app = FastAPI(
         title="The Great Plot Twist API",
         description="Game rules, wallet and live data. Every URL starts with /api.",
         version=__version__,
@@ -62,6 +63,8 @@ def new_fastapi_app(settings: Settings) -> FastAPI:
         openapi_url=openapi_url,
         swagger_ui_oauth2_redirect_url=None,
     )
+    app.add_middleware(DefaultCacheControl)
+    return app
 
 
 def create_app(

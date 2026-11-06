@@ -14,7 +14,9 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-*Last updated: Fri 6 Nov 2026, afternoon, by Claude (coordinating for Nils). Group 1 (the story round, A2/A3 and A6) is on `main`, and its four database changes are applied; groups 2 and 3 follow tonight. Since 6 Nov the aim is a feature-complete game by Sun 8 Nov: agent-built work merges without a human review per merge (D015, extended), nothing waits for teammates, and Codex takes the browser side. The tables In progress and Open decisions below are from 5 Nov and are refreshed with group 2.*
+*G10 cloud checkpoint: Fri 6 Nov 2026, by Codex for Nils. Local development is validated; `chore/server-followups` contains the follow-up work for Claude to review. Group 2 has not been confirmed on `main`; group 3 waits. The private case spec, decisions file and Mac-only tests must be supplied before case Phase 1 can start here.*
+
+*Previous live checkpoint: Fri 6 Nov 2026, afternoon, by Claude (coordinating for Nils). Group 1 (the story round, A2/A3 and A6) is on `main`, and its four database changes are applied; groups 2 and 3 follow tonight. Since 6 Nov the aim is a feature-complete game by Sun 8 Nov: agent-built work merges without a human review per merge (D015, extended), nothing waits for teammates, and Codex takes the browser side. The tables In progress and Open decisions below are from 5 Nov and are refreshed with group 2.*
 
 ### What works
 
@@ -29,9 +31,9 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 | What | Who | Where |
 |---|---|---|
-| Experience layer (G5): title screen and menus, settings, original Web Audio sound, touch controls, the `?demo=1` highlights tour for the class demo, a faster first load | Codex, for Nils | `feat/g5-experience-layer` |
-| S0 story detail round: Story v2 edits, the case file, NPC partners, the open world, a timing simulation; for Nils' approval | Claude, for Nils | `docs/story-detail` |
-| Owners for lanes S, A and L | the team | kickoff |
+| Browser integration (G9), separate from this server task | Codex, for Nils | `feat/g9-real-adapter` |
+| Server integration and case backend (G10): group 3 waits for group 2; Phase 1 needs the private spec and prior untracked tests from Nils' Mac | Codex, for Nils; Claude reviews | `integrate/group3`, `feat/case-backend` |
+| Server follow-ups: deletion crew versions, login-token guards, cache defaults, deployed Supabase URL validation | Codex, for Nils; Claude reviews and applies SQL | `chore/server-followups` |
 
 ### Blocked or waiting
 
@@ -46,6 +48,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 - PR 1 (`docs/team-workflow`): its commits are inside `main` now, so GitHub should show it as merged. If it still shows as open, close it by hand.
 
 ### Open decisions
+
+**G10 update, 6 Nov 2026:** D008 is moot; D009 accepts Interfaces v1 as built; D010 gives the backbone a go with deploy check 1 still open; D014 assigns the Finnhub key to Nils and keeps keys only in Vercel. See [DECISIONS.md](DECISIONS.md). Group 3 waits for Claude's group 2 confirmation. Case Phase 1 needs the private spec and prior tests, which are not in this cloud checkout. The rest of the old queue below is historical and must be reconciled against `NILS_DECISIONS_6NOV.md` when that file is available; it is not evidence that a decided item is still pending.
 
 **Changed on 6 Nov (Nils):** no review per merge (D015, extended: Nils reviews at the end or ad hoc), no kickoff and no team check-ins, and nothing waits for teammates. The review items below are dropped; the decisions stay open until Nils decides, and the build follows the recommendation meanwhile.
 
@@ -70,10 +74,10 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 **For the team kickoff** (the four teammates decide together):
 
 1. **Who builds S4 (NPC partners)?** Proposal: the L-lane owner.
-2. **The D008 grow order.** Proposal in ROADMAP.md: S3, L3 and S4 first, then L4, then G2 and G3, then L2, then A7, L5 and L6.
-3. **Who creates the free data-API accounts** (CoinGecko Demo, football-data.org, balldontlie)? The keys live only in the Vercel settings, never in the repository, a file or chat.
+2. **D008 is moot** (Nils, 6 Nov): the earlier grow-order proposal no longer waits for a kickoff.
+3. **D014 records key ownership** (Nils, 6 Nov): Nils owns the Finnhub key; keys live only in Vercel. Other account needs must be checked against the current decisions file.
 4. **Demo format.** Live on a seeded demo world, or recorded? Does the demo show the twist?
-5. **Seat takeover.** When a friend takes over an NPC partner's seat, does the seat keep the partner's kit, or take the friend's own kit?
+5. **Seat takeover is decided** (D018, Nils, recorded 6 Nov): a friend keeps their own Act 1 kit when taking over an NPC partner's seat.
 6. **What the Exchange daily reset re-bases.** In plain words: what gets set back to its starting point each morning? D017, rule 4, proposes an answer.
 7. **The default weather location.** Proposal: the Faroe Islands, with Lisbon as an option.
 
@@ -225,6 +229,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 ```
 
 ### A Accounts and Multiplayer (owner picked today)
+
+**G10 checkpoint, 6 Nov:** follow-up account deletion/version, login, caching and deployed URL checks are prepared on `chore/server-followups` for Claude's review. The new migration is not applied live. Case Phase 1 needs the private spec and prior tests in the cloud; group 3 waits for group 2 confirmation.
 
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
@@ -420,6 +426,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ## Log
 
 Newest first. One line per finished task: date, who, what, where.
+
+- **2026-11-06, G10 cloud checkpoint.** Codex, for Nils: `chore/server-followups` prepares deletion crew-version updates in `20261106140000_followups.sql`, login-token guards, no-store defaults and deployed Supabase URL validation. Checks: 3,154 backend tests passed with all 11 disposable PostgreSQL checks enabled, including concurrent deletion retries and twice-applying the migration; Ruff check and changed-file formatting passed. No live database was contacted or changed. Claude reviews and applies the migration. Group 3 waits for group 2 confirmation; case Phase 1 needs the private spec and prior tests from Nils' Mac.
 
 - **2026-11-06, afternoon.** Claude, for Nils: group 1 is on `main`: the story round (D018), A2/A3 (D022, renumbered from A2's D018) and A6 (D020), merged on `integrate/fri6` and checked by an independent agent (fixes: the secret-scan false alarm, the D020 note, a scratch path in a spec). Its four database changes are applied (`010000` to `040000`, each checked by md5 against its file, versions recorded, object counts as reviewed). The API runs in Dublin (`8ff24cc`). Nils decided: no review per merge (D015, extended), no kickoff or check-ins, feature complete by Sun 8 Nov, and Codex takes the browser side.
 - **2026-11-05, end of day.** Claude, for Nils: A2 and A3 (captain names, cloud saves, delete my data, host check, the browser API client, the referee and entry kits) and A6 (crews and seats) are built and reviewed, and pushed as branches `feat/a2-a3-signin-referee` and `feat/a6-crews`; they merge first on Fri 6 after a check of their database changes against the live database. Still building: A4 live multiplayer, the story round finalize, the case backend spec, L2 home islet, the open-world must items, the Exchange v2 rework with its screen and the content linter, L5 prediction desk, A7 Lantern Duels, a security audit, the stock-API choice, and Codex's G7.

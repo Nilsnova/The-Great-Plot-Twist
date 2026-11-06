@@ -147,6 +147,8 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Nils, 5 Nov 2026. Proposed in the S1 pull request (`feat/s1-import-plot-twist`). Affects S2 (the story in the browser) and A3 (the referee replays the move log with the Python engine).
 
+**Amendment, 6 Nov 2026 (Nils, G10):** Story v2 changed `backend/content/story.json`. The byte-for-byte claim and hash above describe the original import, not the current story file. The engine rules and provenance remain separate from those content edits.
+
 ## D016 · Server content lives in backend/content/; the browser gets public content through the API · 2026-11-05
 
 **Status:** Proposed in the S1 pull request. It stays proposed until Nils accepts it and a different teammate has reviewed it, because it moves the content paths of S3, S4, A2, A3, L2, L4 and L5.
@@ -316,6 +318,32 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 **Alternatives and trade-offs:** Trusting the ending in the request: rejected, a player could pick the best kit. Requiring the story hash and refusing a different story with `409` (the note that backend/content/README.md used to carry): rejected, because an old page would be sent into an error for no reason when the rules are the same. Letting a later playthrough replace the kit: rejected as the default, because the coins differ (1000 and 1600), so a second payout rule would be needed and players could farm kits. A mistaken ending can only be undone by hand: delete the row in the SQL editor (no role has a delete right on the table), and the next submission stores a new profile, but pays nothing, because the ledger already has the kit row. Paying from Python after storing the profile: rejected, two steps can break in between. Trade-offs: the route reads three small files per request (the story, the kits and the story's hash); `GET /api/me` now needs the table `entry_profiles`, so the migration must be applied before the server that reads it is deployed. That means before the branch is merged into `main` (a push to `main` deploys to production at once, and `GET /api/me` is live today) and before a preview of the branch is tested (previews share the one Supabase project). If the merge has to come first, the read of `entry_profiles` in `routes/me.py` is held back (`kit` and `place` stay `null`) and merged after the apply; a server error between the replay and the database call leaves nothing stored, which is why a `503` is safe to repeat.
 
 **Agreed by, PR and impact:** Proposed by Claude for Nils, 5 Nov 2026, in the A3 pull request. D019 was the next free number when A3 was written; the account entry it followed became D022 at merge, because the story round took D018 (no number is reserved for A3 in the roadmap). Pending Nils: N5 (the coins and texts of the kits, with the S0 approval) and N6 (the first ending counts). Affects A6 (a seat carries the entry kit, so the crew routes read `entry_profiles`), S2 (the browser sends the move log), S3 (the start place, the cheap card and the log card), S4 (the kits that NPC partners fill in), and `GET /api/me`.
+
+## D008 · Grow order is moot · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** The earlier proposed grow order is moot. Work is already split into the browser task G9, server task G10 and Claude's integration checkpoints. Follow the dependencies of those tasks rather than waiting for a kickoff to choose the old order.
+
+**Impact:** The old grow-order question in the roadmap is historical. Group 3 still waits for Claude's group 2 confirmation; this decision does not waive that checkpoint.
+
+## D009 · Interfaces v1 as built · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Accept the v1 contracts in [INTERFACES.md](INTERFACES.md) as built. Later server and browser work updates those contracts together rather than inventing a second interface.
+
+## D010 · Backbone go; deployment check 1 remains open · 2026-11-06
+
+**Status:** Go, decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Continue building on the backbone. Deployment check 1 in [SETUP.md](SETUP.md) remains open; it does not block the work. This entry records the decision and does not claim a new live deployment check.
+
+## D014 · Finnhub ownership and key location · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
 ## Next entry
 

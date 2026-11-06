@@ -14,6 +14,18 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106030000_entry_profiles.sql](migrations/20261106030000_entry_profiles.sql) | The referee and the entry kits (package A3): one table and one function. Run it after the foundation, and **before** the code that reads it is merged into `main` (see [Apply before you merge](#apply-before-you-merge)). See [The entry kits migration](#the-entry-kits-migration-package-a3). |
 | [migrations/20261106040000_crew_codes.sql](migrations/20261106040000_crew_codes.sql) | Crew codes, the muster and partners (package A6): three new columns of `crews`, new rules for `crew_seats`, one table and four functions. Run it after the foundation. See [Crew codes, the muster and partners](#crew-codes-the-muster-and-partners-migration-20261106040000-package-a6). |
 
+## G10 follow-up migration (awaiting Claude's application)
+
+`migrations/20261106140000_followups.sql` replaces `delete_player(uuid)` without adding tables, policies, wallet reasons or public functions. It advances each affected crew's version once when account deletion hands over ownership or frees a seat, preserves the lowest-seat successor, and records D018's own-kit rule in the column comment. Prior migration files remain unchanged. Only `service_role` may execute the function, as before.
+
+Claude reviews and applies this file; G10 never connects to the live database. The automated checks run against a new disposable local PostgreSQL with the actual group 1 migrations, apply the follow-up twice, and roll back each test. From `backend/`:
+
+```bash
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/followups_sql
+```
+
+The extra packages are test-only and do not change project dependencies. Normal pytest runs skip these optional database checks unless `CASE_PG_SCRATCH=1` is set. These checks do not prove compatibility with later case or group 2/3 migrations; rerun the integrated migration chain when those files are present.
+
 ## Project settings this migration relies on
 
 Our Supabase project is in West EU (Ireland). These settings were agreed on 5 November 2026:
