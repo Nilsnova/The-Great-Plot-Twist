@@ -53,8 +53,12 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on}),hookWorld=createHookWorld({scene,reducedMotion});
   let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, marketUi=null, marketLoad=null, experience,entryDestination=null,introPassage=false,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null,bulletin=null,weatherAnswer=null;
+  // Prediction desk (L5): the harbor's prediction kiosk opens it. Loaded on first use.
+  let desk=null,deskLoading=null;
+  function openDesk(){deskLoading??=import('./screens/predictions/desk.js').then(module=>{if(disposed)return null;desk=module.createDesk({container,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus()});return desk;});
+    deskLoading.then(panel=>panel?.open()).catch(error=>{deskLoading=null;console.error(error);hud.message('The prediction desk could not load. Try again.');});}
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>!!(shortcuts.active || shell?.blocked || isAppBlocked?.() || cinematics?.active || intro?.active || caseUi?.active || marketUi?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>!!(shortcuts.active || shell?.blocked || isAppBlocked?.() || cinematics?.active || intro?.active || caseUi?.active || marketUi?.active || desk?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !demo?.active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -72,7 +76,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendCaseIntent(caseUi.adapter,name,...args),openCrew:()=>caseUi.open('crew'),isDemo:()=>!!demo?.active,isIntro:()=>intro.active||introPassage,
-    isBlocked:()=>shell.blocked||!!isAppBlocked?.()||intro.active||caseUi.active||cinematics.active||chart.open||sailing.active||marketUi?.active||stopPlots.active});
+    isBlocked:()=>shell.blocked||!!isAppBlocked?.()||intro.active||caseUi.active||cinematics.active||chart.open||sailing.active||marketUi?.active||desk?.active||stopPlots.active});
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>caseAdapter?.dev?.setIsletBuilt?.(built));
   const applyCaseView=view=>{bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
   caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
@@ -96,11 +100,12 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     if (event.id === 'market_hall') { openMarket(); return; }
     caseUi.interact(event);
   });
+  const stopDesk=on('interact',event=>{if(event.id==='prediction_kiosk'&&!intro.active&&!caseUi.active)openDesk();});
   const stopPlots = attachIsletPanel({container, on, emit, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus()});
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    disposed=true;stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); marketUi?.dispose(); hud.dispose(); input.dispose();
+    disposed=true;stopListening();stopDesk();desk?.dispose(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); marketUi?.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   const createCinematicDemo=['demo','perf'].some(key=>new URLSearchParams(location.search).get(key)==='1')?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
@@ -150,7 +155,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, experience,isletState,hookWorld };
   function dispose() {
     if(disposed)return;disposed=true;
-    touch.dispose();gamepad.dispose();marketUi?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    touch.dispose();gamepad.dispose();marketUi?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopDesk(); desk?.dispose(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
@@ -158,7 +163,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
-  }, { once: true });  return {dispose,hasOverlay:()=>shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||!!marketUi?.active||caseUi.active||stopPlots.active,
+  }, { once: true });  return {dispose,hasOverlay:()=>shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||!!marketUi?.active||!!desk?.active||caseUi.active||stopPlots.active,
     setMode(mode){if(mode!=='playing'){beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}

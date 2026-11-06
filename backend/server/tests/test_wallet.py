@@ -79,6 +79,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("market_fee", "spend"),
         ("market_stake", "spend"),
         ("market_payout", "earn"),
+        ("prediction_stake", "spend"),
+        ("prediction_payout", "earn"),
     )
 
 
@@ -112,6 +114,8 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "market_fee",
         "market_stake",
         "market_payout",
+        "prediction_stake",
+        "prediction_payout",
     ]
 
 
@@ -184,13 +188,24 @@ def test_an_unknown_reason_is_rejected_and_the_message_lists_the_allowed_ones(re
     assert "kit_grant" in str(problem.value)
 
 
-@pytest.mark.parametrize("reason", ["clue_purchase", "building_purchase"])
+@pytest.mark.parametrize(
+    "reason", ["clue_purchase", "building_purchase", "market_buy", "market_fee", "prediction_stake"]
+)
 def test_every_spend_reason_is_accepted_with_a_negative_amount(reason):
     validate_transaction(-10, reason, GOOD_REF)
 
 
 @pytest.mark.parametrize(
-    "reason", ["kit_grant", "clue_reward", "mystery_reward", "event_reward", "cargo_sale"]
+    "reason",
+    [
+        "kit_grant",
+        "clue_reward",
+        "mystery_reward",
+        "event_reward",
+        "cargo_sale",
+        "market_sell",
+        "prediction_payout",
+    ],
 )
 def test_every_earn_reason_is_accepted_with_a_positive_amount(reason):
     validate_transaction(10, reason, GOOD_REF)
@@ -201,14 +216,25 @@ def test_admin_adjust_is_accepted_in_both_directions(delta):
     validate_transaction(delta, "admin_adjust", GOOD_REF)
 
 
-@pytest.mark.parametrize("reason", ["clue_purchase", "building_purchase"])
+@pytest.mark.parametrize(
+    "reason", ["clue_purchase", "building_purchase", "market_buy", "market_fee", "prediction_stake"]
+)
 def test_a_spend_reason_with_a_positive_amount_is_refused(reason):
     with pytest.raises(InvalidTransaction, match="must take coins away"):
         validate_transaction(10, reason, GOOD_REF)
 
 
 @pytest.mark.parametrize(
-    "reason", ["kit_grant", "clue_reward", "mystery_reward", "event_reward", "cargo_sale"]
+    "reason",
+    [
+        "kit_grant",
+        "clue_reward",
+        "mystery_reward",
+        "event_reward",
+        "cargo_sale",
+        "market_sell",
+        "prediction_payout",
+    ],
 )
 def test_an_earn_reason_with_a_negative_amount_is_refused(reason):
     with pytest.raises(InvalidTransaction, match="must add coins"):

@@ -351,12 +351,6 @@ def test_a_player_without_a_wallet_is_refused():
         run(read_balance(admin, PLAYER))
 
 
-def test_a_database_that_is_not_set_up_is_not_configured():
-    assert database_is_configured(SupabaseAdmin("", "")) is False
-    assert database_is_configured(SupabaseAdmin("https://x.supabase.co", "")) is False
-    assert database_is_configured(SupabaseAdmin("https://x.supabase.co", "sb_secret_x")) is True
-
-
 # --- the refs ---
 
 
@@ -369,23 +363,8 @@ def test_the_refs_of_an_open_a_close_and_a_close_at_zero_have_their_own_prefixes
 # --- the arguments of exchange_open_position ---
 
 
-def open_args() -> dict:
-    return open_arguments(
-        PLAYER,
-        "harbor-trust",
-        "rising",
-        "live",
-        D("76159.21"),
-        100,
-        2,
-        200,
-        "market:open:click-0001",
-        datetime(2026, 11, 6, 8, 0, tzinfo=UTC),
-    )
-
-
 def test_the_arguments_of_exchange_open_position_use_the_names_of_the_sql_parameters_in_order():
-    assert list(open_args()) == [
+    assert list(sent_arguments()) == [
         "p_player_id",
         "p_company_id",
         "p_side",
@@ -405,7 +384,7 @@ def test_the_arguments_of_exchange_open_position_use_the_names_of_the_sql_parame
 
 
 def test_the_price_the_coins_and_the_day_start_are_sent_as_exact_text_and_whole_numbers():
-    sent = open_args()
+    sent = sent_arguments()
 
     assert sent["p_entry_price"] == "76159.21"
     assert (sent["p_stake"], sent["p_fee"], sent["p_fee_basis_points"]) == (100, 2, 200)
@@ -415,7 +394,7 @@ def test_the_price_the_coins_and_the_day_start_are_sent_as_exact_text_and_whole_
 
 
 def test_the_limits_come_from_positions_py_so_the_numbers_live_in_one_place():
-    sent = open_args()
+    sent = sent_arguments()
 
     assert sent["p_leverage"] == positions.LEVERAGE == 10
     assert sent["p_min_stake"] == positions.MIN_STAKE_COINS == 10
@@ -544,6 +523,31 @@ def test_a_refusal_for_the_daily_cap_carries_the_coins_left():
 def test_an_open_answer_that_is_not_understood_is_a_502(reply):
     with pytest.raises(SupabaseRejected):
         read_open_reply(reply)
+
+
+def test_a_database_that_is_not_set_up_is_not_configured():
+    assert database_is_configured(SupabaseAdmin("", "")) is False
+    assert database_is_configured(SupabaseAdmin("https://x.supabase.co", "")) is False
+    assert database_is_configured(SupabaseAdmin("https://x.supabase.co", "sb_secret_x")) is True
+
+
+# --- the arguments of market_trade ---
+
+
+def sent_arguments() -> dict:
+    """The v2 opening arguments, replacing the original trade request shape."""
+    return open_arguments(
+        PLAYER,
+        "harbor-trust",
+        "rising",
+        "live",
+        D("76159.21"),
+        100,
+        2,
+        200,
+        "market:open:click-0001",
+        datetime(2026, 11, 6, 8, 0, tzinfo=UTC),
+    )
 
 
 # --- the answer of exchange_close_position ---
@@ -681,7 +685,7 @@ def test_the_three_functions_are_called_by_their_sql_names_with_the_arguments():
     admin, seen = make_admin(reply)
     closing = Closing(115, 2, 113, False)
 
-    run(run_open(admin, open_args()))
+    run(run_open(admin, sent_arguments()))
     run(run_close(admin, close_arguments(PLAYER, POSITION, "live", D("1"), closing, 200, "r")))
     run(run_sweep(admin, sweep_arguments([], None)))
 
@@ -710,7 +714,7 @@ def close_args() -> dict:
 def test_an_opening_answer_that_is_not_a_refusal_and_cannot_be_read_is_an_unknown_outcome(reply):
     # The database answered, so its transaction has finished. The coins may have moved.
     with pytest.raises(SupabaseUnavailable):
-        run_with_reply(lambda admin: run_open(admin, open_args()), reply)
+        run_with_reply(lambda admin: run_open(admin, sent_arguments()), reply)
 
 
 @pytest.mark.parametrize("reply", [None, [], "done", {}, {"status": "done"}, {"status": "maybe"}])
@@ -725,14 +729,14 @@ def test_a_closing_answer_that_is_not_a_refusal_and_cannot_be_read_is_an_unknown
 )
 def test_a_refusal_that_cannot_be_read_changed_nothing_so_it_stays_a_rejection(reply):
     with pytest.raises(SupabaseRejected):
-        run_with_reply(lambda admin: run_open(admin, open_args()), reply)
+        run_with_reply(lambda admin: run_open(admin, sent_arguments()), reply)
     with pytest.raises(SupabaseRejected):
         run_with_reply(lambda admin: run_close(admin, close_args()), reply)
 
 
 def test_an_unknown_outcome_is_not_a_rejection():
     with pytest.raises(SupabaseUnavailable) as stopped:
-        run_with_reply(lambda admin: run_open(admin, open_args()), {"status": "maybe"})
+        run_with_reply(lambda admin: run_open(admin, sent_arguments()), {"status": "maybe"})
 
     assert not isinstance(stopped.value, SupabaseRejected)
 

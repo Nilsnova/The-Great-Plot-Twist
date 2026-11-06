@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/99gszRZN58",
+  "answer": {
+    "id": "99gszRZN58",
+    "slug": "was-playing-in-rome-a-bad-idea-for",
+    "question": "Was playing in Rome a bad idea for Sinner in terms of his chances at the French Open?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1780362495763,
+    "isResolved": true,
+    "resolution": "MKT",
+    "resolutionTime": 1780362495763
+  }
+}
