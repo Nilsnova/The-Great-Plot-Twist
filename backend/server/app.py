@@ -21,6 +21,7 @@ from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
 from server.duels.service import DuelService
+from server.cache import DefaultCacheControl
 from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl
@@ -74,7 +75,7 @@ def new_fastapi_app(settings: Settings) -> FastAPI:
         docs_url = "/api/docs"
         openapi_url = "/api/openapi.json"
 
-    return FastAPI(
+    app = FastAPI(
         title="The Great Plot Twist API",
         description="Game rules, wallet and live data. Every URL starts with /api.",
         version=__version__,
@@ -83,6 +84,8 @@ def new_fastapi_app(settings: Settings) -> FastAPI:
         openapi_url=openapi_url,
         swagger_ui_oauth2_redirect_url=None,
     )
+    app.add_middleware(DefaultCacheControl)
+    return app
 
 
 def create_app(

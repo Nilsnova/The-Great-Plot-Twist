@@ -28,13 +28,14 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 ## Project status
 
-*Last updated: 5 Nov 2026, evening.*
+*Last updated: 6 Nov 2026, G10 cloud checkpoint.*
 
 The team is turning the text mystery Plot Twist into a browser game: a top-down pixel-art island world with GitHub sign-in, a shared mystery and a play-money economy.
 
 - **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
-- **Foundation (package F0) is on `main`:** the API skeleton (health, config and keep-alive routes, the sign-in check, the wallet rules, the pattern for outside data), the first database migration in `supabase/`, `vercel.json` and the docs in `docs/`. No game feature uses it yet.
-- **In progress:** the story engine (S1), the story details (S0), the world, sea chart and harbor (G2 + G3). The [status page](docs/STATUS.md) always shows what works right now, what each lane does next and the dated log.
+- **Foundation (package F0) is on `main`:** the API skeleton (health, config and keep-alive routes, the sign-in check, the wallet rules, the pattern for outside data), the first database migration in `supabase/`, `vercel.json` and the docs in `docs/`. Group 1 adds account, referee and crew features on that foundation.
+- **On main:** group 1 includes the story round, account/referee work and crews. G5/G6 browser screens are also present.
+- **In progress:** G9 connects the browser; G10 handles server integration, the case backend and follow-ups. Group 3 waits for Claude to confirm group 2; case Phase 1 in the cloud needs the private spec and tests from Nils' Mac. See the [status page](docs/STATUS.md) for the current checkpoint.
 
 ### What the final README must contain
 

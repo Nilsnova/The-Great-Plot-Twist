@@ -23,7 +23,7 @@ from server.app import create_app
 from server.auth import PlayerVerifier
 from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock, make_admin
 
-TOKEN = "token-of-the-crew-player"
+TOKEN = "test.crew-player.signature"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 # The signed-in player, a friend who sits in the same crew, and a stranger whose data must never

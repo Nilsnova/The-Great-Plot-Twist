@@ -46,7 +46,7 @@ from server.tests.helpers import (
 )
 
 URL = "/api/me"
-TOKEN = "token-of-octocat"
+TOKEN = "test.octocat.signature"
 RIGHT_HEADER = {"Authorization": f"Bearer {TOKEN}"}
 
 # The signed-in player, and another player whose data must never show up.
@@ -438,7 +438,7 @@ def test_without_a_token_it_answers_401_and_reads_nothing():
 def test_a_token_that_supabase_refuses_gets_401_and_reads_nothing():
     client, seen = make_client()
 
-    response = client.get(URL, headers={"Authorization": "Bearer a-token-nobody-issued"})
+    response = client.get(URL, headers={"Authorization": "Bearer test.nobody-issued.signature"})
 
     assert_error(response, 401, "unauthorized")
     assert seen == []

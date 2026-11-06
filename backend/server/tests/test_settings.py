@@ -58,7 +58,47 @@ def test_spaces_are_removed_and_the_address_loses_its_trailing_slash():
 
 
 def test_app_env_ignores_capital_letters():
-    assert load_settings({"APP_ENV": "Production"}).app_env == "production"
+    assert (
+        load_settings({"APP_ENV": "Production", "SUPABASE_URL": FAKE_URL}).app_env == "production"
+    )
+
+
+@pytest.mark.parametrize("app_env", ["preview", "production"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "",
+        "http://project.supabase.co",
+        "https://elsewhere.example",
+        "https://project.supabase.co.evil.example",
+        "https://supabase.co",
+        "https://.supabase.co",
+        "https://user@project.supabase.co",
+        "https://project.supabase.co/rest/v1",
+        "https://project.supabase.co?query=1",
+        "https://project.supabase.co#fragment",
+        "https://[broken",
+        "https://project.supabase.co:invalid",
+    ],
+)
+def test_deployed_settings_require_a_secure_supabase_project_url(app_env, url):
+    with pytest.raises(SettingsError, match="SUPABASE_URL") as problem:
+        load_settings({"APP_ENV": app_env, "SUPABASE_URL": url})
+
+    if url:
+        assert url not in str(problem.value)
+
+
+@pytest.mark.parametrize("app_env", ["preview", "production"])
+def test_deployed_settings_accept_the_supabase_project_url(app_env):
+    assert load_settings({"APP_ENV": app_env, "SUPABASE_URL": FAKE_URL}).supabase_url == FAKE_URL
+
+
+def test_local_settings_still_allow_a_local_database_service():
+    assert (
+        load_settings({"SUPABASE_URL": "http://127.0.0.1:54321/"}).supabase_url
+        == "http://127.0.0.1:54321"
+    )
 
 
 def test_unknown_app_env_is_rejected_with_a_clear_message():

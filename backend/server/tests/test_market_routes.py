@@ -250,7 +250,7 @@ def test_a_board_that_cannot_be_built_is_not_cached(monkeypatch):
     response = client.get("/api/market")
 
     assert_error(response, 503, "market_unavailable")
-    assert "cache-control" not in response.headers
+    assert response.headers["cache-control"] == "no-store"
 
 
 def test_the_board_takes_no_query_parameters_so_nobody_can_skip_the_cache():
