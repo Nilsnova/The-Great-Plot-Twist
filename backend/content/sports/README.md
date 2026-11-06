@@ -11,8 +11,8 @@ had SHA-256 `03e13eafbf78dfe00d7e89dd3bf6643986eb6e8fd86c7664aeb8c5bc0bed88d0` w
 on 6 Nov 2026. The upstream revision above pins both the data and its CC0 1.0 Universal licence;
 the complete licence is retained in `recorded/LICENSE-OpenFootball.md`.
 
-The records are Burnley–Manchester City (0–3), Arsenal–Nottingham Forest (2–1), and
-Bournemouth–West Ham (1–1), all from the opening round of the 2023/24 Premier League.
+The records are Burnley-Manchester City (0-3), Arsenal-Nottingham Forest (2-1), and
+Bournemouth-West Ham (1-1), all from the opening round of the 2023/24 Premier League.
 Their six team names are the team's text labels; no crests, player information or remote assets
 are included. OpenFootball's raw date/time fields have no timezone. The loader interprets these
 English league kickoff times in `Europe/London`, explicitly, rather than labelling them UTC.
@@ -55,7 +55,7 @@ and 5/minute for balldontlie. Unknown statuses, incomplete scores, wrong identit
 and ambiguous NBA timestamps fail closed. The provider credit is supplied as `attribution` for
 Settings > Credits; match names remain plain text without team crests.
 
-A player stakes 1–50 play coins once per fixture, with a separate 200-coin sports cap per Lisbon
+A player stakes 1-50 play coins once per fixture, with a separate 200-coin sports cap per Lisbon
 day. The earliest known cutoff is binding, one hour before kickoff; a reschedule cannot reopen
 it. The prediction desk's shared integer pool rules distribute the pool, deducting 5% of the
 losing side rounded down. Void, winnerless and one-sided pools refund in full. The two existing
