@@ -10,6 +10,10 @@ const report = { checked: new Date().toISOString(), browser: env.browser.version
 const check = (ok, label) => { assert.ok(ok, label); report.checks.push(label); };
 const capture = name => page.screenshot({ path: `captures/20261105_World-${name}.png` });
 const go = async id => { await page.evaluate(id => window.__island.world.goTo(id, { fast: true }), id); await settle(page); };
+// The home islet's spots open the islet panel (package L2) after a lazy import. Close it before
+// dismissIntro looks once, or the panel opens late and swallows the next hotspot's E.
+const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', islet_signal_station: '.islet-modal' };
+const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
 try {
   await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(() => {
@@ -41,7 +45,7 @@ try {
       await page.evaluate(z => { window.__island.player.position.set(z.x, z.y, z.z); }, zone);
       await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, zone.id);
       const before = await page.evaluate(() => window.__worldEvents.filter(e => e.type === 'interact').length);
-      await page.keyboard.down('KeyE'); await page.waitForTimeout(100); await page.keyboard.up('KeyE'); await dismissIntro(page);
+      await page.keyboard.down('KeyE'); await page.waitForTimeout(100); await page.keyboard.up('KeyE'); if (panels[zone.id]) await closePanel(zone.id); await dismissIntro(page);
       check(await page.evaluate(({ before, id, place }) => {
         const events = window.__worldEvents.filter(e => e.type === 'interact');
         return events.length === before + 1 && JSON.stringify(events.at(-1)) === JSON.stringify({ type: 'interact', id, place });
