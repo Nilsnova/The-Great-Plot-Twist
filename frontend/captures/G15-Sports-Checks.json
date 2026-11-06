@@ -1,0 +1,29 @@
+{
+  "checks": [
+    "Public board sends no Authorization header",
+    "Anonymous visitors never request private stakes",
+    "Hostile team names stay plain text",
+    "Play money and source freshness are visible",
+    "Keyboard arrows select My stakes",
+    "Escape restores invoking focus",
+    "Polling stops when the dialog closes",
+    "Review focuses the explicit confirmation",
+    "Stake body contains only the approved intent fields",
+    "Lost-answer retry survives close/reopen and a fixture leaving the public board",
+    "Unavailable result checks never imply a payout",
+    "Settlement sends a fixture only, never an outcome",
+    "recorded: no stake form is offered",
+    "closed: no stake form is offered",
+    "off: no stake form is offered",
+    "unavailable: no stake form is offered",
+    "Phone dialog has no horizontal overflow",
+    "Phone controls remain touch sized",
+    "Disposal removes the modal",
+    "Disposed panel leaves no polling",
+    "Production panel obeys the strict preview CSP",
+    "No external/provider requests",
+    "No unexpected browser errors"
+  ],
+  "production": true,
+  "network": "local intercepted API only"
+}
