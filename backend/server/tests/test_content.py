@@ -154,7 +154,11 @@ def assert_not_served(client: TestClient, path: Path) -> None:
         for address in (f"/api/content/{name}", f"/api/content/{quote(name, safe='')}"):
             response = client.get(address)
             assert response.status_code == 404, address
-            assert response.headers["cache-control"] == "no-store", address
+            if response.request.url.path == "/api/case":
+                # A literal ../case probe normalizes to the disabled private case API.
+                assert response.headers["cache-control"] == "private, no-store", address
+            else:
+                assert response.headers["cache-control"] == "no-store", address
             assert not [text for text in secrets if text in response.text], address
 
 

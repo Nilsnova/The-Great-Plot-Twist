@@ -19,15 +19,19 @@ from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
 from server.cache import DefaultCacheControl
 from server.errors import register_error_handlers
+from server.game.case_cache import CaseCacheControl
+from server.game.case_service import CaseService, case_or_none
 from server.market.exchange import MarketService, market_or_none
 from server.routes import (
     auth_exchange,
     captain_name,
+    case,
     config,
     content,
     crews,
     delete_me,
     health,
+    host_case,
     intro,
     keepalive,
     market,
@@ -75,6 +79,7 @@ def create_app(
     weather_source: CachedSource | None = None,
     exchanger: CodeExchanger | None = None,
     market_service: MarketService | None = None,
+    case_service: CaseService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -94,6 +99,8 @@ def create_app(
         exchanger = CodeExchanger(settings)
     if market_service is None:
         market_service = market_or_none(settings)  # None if its data files are broken
+    if case_service is None:
+        case_service = case_or_none(settings)
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
@@ -101,6 +108,7 @@ def create_app(
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     app = new_fastapi_app(settings)
+    app.add_middleware(CaseCacheControl)
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
     # routes/weather.py, sign_in_code.py and market/exchange.py.
@@ -110,6 +118,7 @@ def create_app(
     app.state.weather_source = weather_source
     app.state.exchanger = exchanger
     app.state.market = market_service
+    app.state.case = case_service
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -125,4 +134,6 @@ def create_app(
     app.include_router(auth_exchange.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
     app.include_router(crews.router, prefix="/api")
+    app.include_router(case.router, prefix="/api")
+    app.include_router(host_case.router, prefix="/api")
     return app
