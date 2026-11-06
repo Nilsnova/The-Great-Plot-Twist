@@ -221,8 +221,37 @@ users and `auth.uid()` needed by the migrations.
 
 ## Gates, checkpoint notes and Claude handover
 
-Final gate counts and checkpoint commits are recorded here after execution.
-No migration is proposed or applied, so there is no migration MD5 to hand over.
-Claude should queue tests for the missing handlers, review the privileged delta
-policy and cache-header recommendation, and choose leveraged fees before tuning.
+Completed on 6 Nov 2026. `origin/main` was fetched and merged before each
+checkpoint; it remained at `c26f303`. The normal gate's 23 skips are precisely
+the scratch tests without extras; all 23 then executed and passed separately.
+The 134 new cases comprise 111 HTTP/model checks and 23 scratch SQL checks.
+No failure, expected failure or unexecuted future handler is counted as passed.
+
+Paste-ready checkpoint notes (under 30 lines):
+
+```text
+G12 — Nils — branch test/g12-economy-abuse; only this branch is pushed; no PR/merge.
+CP1 6f6c11b: economy inventory, 1000 players ×14 days, baseline + assumptions.
+CP2 b14ad55: HTTP abuse tests and real scratch SQL replay/race/RLS/invariant tests.
+CP3: final report and gate evidence (this commit).
+Fix 744ca63: surrogate save input 500 ->422; two failures reproduced first.
+Fix e6eb324: >4096 token rejected locally; upstream-call regression failed first.
+Fix 80adb44: NUL save input rejected before jsonb; two failures reproduced first.
+uv run --frozen pytest -q: 3211 passed, 23 skipped (scratch extras absent).
+uv run --frozen ruff check .: All checks passed.
+uv run --frozen --with pgserver --with 'psycopg[binary]' pytest -q server/tests/abuse/test_scratch_postgres.py: 23 passed.
+Simulation rerun + cmp baseline.json: identical.
+Day14 main median cash: casual965.5, inactive case1000, trader250; marks972.5/1000/257.
+Demo foresight:1000 ->15207; 90005 flat spot round trips never mint coins.
+10x stress: adverse10% destroys stake; recorded ten-minute500 payouts453–546, no fees.
+Medium fixed: malformed Unicode save500. Low fixed: token bound and NUL validation.
+Low decision: privileged SQL delta cap differs from Python; not a player exploit.
+High only if competitive: predictable demo prices. Info: private market cache headers.
+No duplicate payouts or wallet/ledger mismatches in exercised SQL attacks.
+Claude: queue 10x/islet/pool/duel/G10 tests when handlers land; settle leverage fee basis.
+Claude: reconcile SQL delta/sale policy; consider private,no-store market responses.
+No migration created/applied; no MD5. No live DB, .env, secrets or case solution printed.
+Not verified: future handlers, 20-position cap, multi-instance limits, live providers.
+```
+
 The reserved `20261106150000_economy_guards.sql` filename has not been used.
