@@ -1,25 +1,34 @@
-// Integer upscaling and nearest sampling keep a single crisp pixel grid on any DPR.
+// Render at useful screen density while keeping simulation coordinates and framing stable.
 import * as THREE from 'three';
-import { pixelViewport } from '../pixel/display.js';
+import {pixelViewport, worldViewport} from '../pixel/display.js';
 
 export function createRenderer(container) {
-  const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({antialias: false, powerPreference: 'high-performance'});
   renderer.setClearColor('#3d7371'); renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NoToneMapping; renderer.setPixelRatio(1);
+  renderer.toneMapping = THREE.NoToneMapping;
   const canvas = renderer.domElement;
-  canvas.setAttribute('aria-label', 'Pixel-art Saltreach Isles. Use WASD to walk, E to interact, M for the sea chart, and the wheel to zoom.');
-  canvas.tabIndex = 0; canvas.style.imageRendering = 'pixelated'; container.append(canvas);
-  function resize(camera) {
-    // Recording fixes the output frame; normal play follows the browser viewport.
-    const recording=container.classList.contains('recording-frame');
-    const frameWidth=recording?1920:window.innerWidth,frameHeight=recording?1080:window.innerHeight;
-    const { width, height, scale } = pixelViewport(frameWidth, frameHeight);
-    renderer.setSize(width, height, false);
-    Object.assign(canvas.style, { width: `${width * scale}px`, height: `${height * scale}px`,
-      position: 'absolute', left: `${Math.floor((frameWidth - width * scale) / 2)}px`, top: `${Math.floor((frameHeight - height * scale) / 2)}px` });
-    camera.left = -width / 32; camera.right = width / 32; camera.top = height / 32; camera.bottom = -height / 32;
-    camera.updateProjectionMatrix(); renderer.userData = { pixelScale: scale, nativeWidth: width, nativeHeight: height };
+  canvas.setAttribute('aria-label', 'Saltreach Isles. Use WASD to walk, E to interact, M for the sea chart, and the wheel to zoom.');
+  canvas.tabIndex = 0; canvas.style.imageRendering = 'auto'; container.append(canvas);
+  let quality = 'high', currentCamera = null;
+  function resize(camera = currentCamera) {
+    if (!camera) return;
+    currentCamera = camera;
+    const recording = container.classList.contains('recording-frame');
+    const frameWidth = recording ? 1920 : window.innerWidth;
+    const frameHeight = recording ? 1080 : window.innerHeight;
+    const view = pixelViewport(frameWidth, frameHeight, {quality, pixelRatio: window.devicePixelRatio});
+    renderer.setPixelRatio(view.pixelRatio); renderer.setSize(view.width, view.height, false);
+    Object.assign(canvas.style, {width: `${view.width}px`, height: `${view.height}px`,
+      position: 'absolute', left: '0px', top: '0px'});
+    Object.assign(camera, worldViewport(view.width, view.height, camera.userData.viewHeight ?? 20));
+    camera.updateProjectionMatrix();
+    renderer.userData = {pixelScale: 1, nativeWidth: view.drawingWidth, nativeHeight: view.drawingHeight,
+      pixelRatio: view.pixelRatio, quality};
   }
-  function setQuality() { renderer.shadowMap.enabled = false; }
-  return { renderer, resize, setQuality };
+  function setQuality(name) {
+    const next = name === 'low' ? 'low' : 'high'; renderer.shadowMap.enabled = false;
+    if (next === quality) return;
+    quality = next; resize();
+  }
+  return {renderer, resize, setQuality};
 }
