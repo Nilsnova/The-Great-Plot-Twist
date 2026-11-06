@@ -81,6 +81,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("market_payout", "earn"),
         ("prediction_stake", "spend"),
         ("prediction_payout", "earn"),
+        ("arena_stake", "spend"),
+        ("arena_payout", "earn"),
     )
 
 
@@ -116,6 +118,8 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "market_payout",
         "prediction_stake",
         "prediction_payout",
+        "arena_stake",
+        "arena_payout",
     ]
 
 

@@ -24,6 +24,8 @@ Where things are (one job per file):
     weather/           the live weather, the weather states and the fog nights
     daily/             the Lisbon day, the harbor bulletin and the Chapter 2 hook
     market/            the Island Exchange
+    duels/             Lantern Duels: sealed-signal duels between two captains (the rules, what a
+                       captain may see, the database access and the service)
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
     predictions/       the prediction desk: hand-picked Manifold questions and play-coin pools

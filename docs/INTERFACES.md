@@ -697,6 +697,50 @@ The rules in one list (numbers in `backend/server/predictions/stake_rules.py`; t
 
 The desk needs the prediction desk migration (it reads `prediction_pools`, `prediction_stakes` and `prediction_pool_sides`). Without a configured database the routes answer `503 database_not_configured`. The list of questions is `backend/content/predictions/questions.json`; every question stays `pending` (hidden, not stakeable) until a person has read the Manifold question and written their name and the date into `reviewedBy` and `reviewedOn`.
 
+### Lantern Duels (package A7)
+
+Two captains each seal a sequence of lantern signals: Flash, Shade or Mirror. The server opens both envelopes at once and decides every round. A duel is friendly or played for equal play-coin stakes. The whole feature sits behind the flag `arena`, which stays off. The home of each route is the comment at the top of `backend/server/routes/duels.py`; the rules are in `backend/server/duels/` and are explained in [D018](DECISIONS.md#d018--lantern-duels-rules--2026-11-06) (proposed). The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md). Play money only: coins cannot be bought, cashed out or exchanged for real prizes, and the screen says "Simulation, play money".
+
+| Route | Who | What it does |
+|---|---|---|
+| `GET /api/duels` | signed in, flag `arena` on | The rules (so the screen never guesses a number), the caller's coins and held coins, and four short lists: `incoming` (named challenges to me), `openChallenges` (open challenges of other captains), `yours` (my waiting challenges) and `recent` (my ended duels). A summary never carries a signal. Expired challenges of mine are closed and refunded while it is read. **New route**, to be agreed at the Mon 9 freeze. |
+| `POST /api/duels` | signed in, flag `arena` on | Send a challenge: `{opponentName, rounds, stake, signals, actionUid}`. A name makes a named challenge; `null` or no name makes an open one. The challenger's signals are sealed and the stake is held. |
+| `GET /api/duels/{id}` | signed in, flag `arena` on | One duel in full: `yourSignals` (my own) and, once the duel is finished, `reveal`, one entry per round from my side. Who may look: the two captains, and anyone while an open challenge is still open. |
+| `POST /api/duels/{id}/move` | signed in, flag `arena` on | Answer a challenge: `{signals, actionUid}`. Answering is accepting: in one database step the server takes my stake, opens both envelopes, decides every round and pays out. |
+| `POST /api/duels/{id}/cancel` | signed in, flag `arena` on | No body. The challenger withdraws, or the named captain declines. Either way the challenger's stake comes back. **New route**, to be agreed at the Mon 9 freeze. |
+
+```text
+POST /api/duels
+Authorization: Bearer <token>
+{"opponentName": "Captain-3fa85f", "rounds": 5, "stake": 100,
+ "signals": ["flash", "shade", "shade", "mirror", "shade"], "actionUid": "q7x2k9m4ab"}
+
+200 OK
+Cache-Control: private, no-store
+{"duel": {"id": "6f1c0c2e-9a52-4b8e-8d3a-0a7c3f1d2b44", "status": "open", "isOpen": false, "you": "challenger",
+          "challengerName": "Brave Puffin 17", "opponentName": "Captain-3fa85f", "rounds": 5, "oil": 5,
+          "stake": 100, "cutPercent": 5, "winnerTakes": 190,
+          "createdAt": "2026-11-06T10:00:00Z", "expiresAt": "2026-11-07T10:00:00Z", "closedAt": null,
+          "score": null, "yourResult": null, "coinsChange": null, "heldStake": 100,
+          "canAnswer": false, "canWithdraw": true, "canDecline": false,
+          "yourSignals": ["flash", "shade", "shade", "mirror", "shade"], "reveal": null},
+ "coins": 900, "serverTime": "2026-11-06T10:00:00Z"}
+```
+
+The rules in one list (numbers in `backend/server/duels/rules.py`, and `GET /api/duels` sends them in `rules`):
+
+- **Signals and oil.** Flash outshines Shade, Shade leaves Mirror nothing to throw back, and Mirror throws Flash back. The same signal on both sides scores for nobody. Each captain has as much lantern oil as the duel has rounds (3 or 5): Flash burns 2, Mirror 1 and Shade 0. A sequence that burns more is refused (`422 not_enough_oil`). More rounds won wins the duel; equal is a draw.
+- **Sealed means sealed.** Each captain seals all rounds at once: the challenger with the challenge, the other captain with the answer. A signal reaches the other captain only after both envelopes are in, and only as part of the stored reveal. No answer carries it before: not the list, not the detail and not an error. The table `duel_moves` has no right for players at all, and no role may change a sealed signal.
+- **Challenges.** By captain name (the exact display name, in any letter case) or open to any captain except the challenger, where the first answer wins. A named challenge can be answered only by that captain. A duel has 3 or 5 rounds. A captain may have 3 challenges waiting (`409 too_many_waiting`).
+- **Stakes and the cut.** The stake is 0 (friendly), 10, 25, 50 or 100 coins from each captain. The challenger's stake is held when the challenge is sent, the answerer's when they answer. The winner takes the pot minus a cut of 5 %, rounded down to whole coins: 19, 47, 95 or 190. A draw, a withdrawal, a decline and an expiry give every stake back. The cut has no ledger row; it is simply not paid out, and duels never create coins. Two captains may decide 3 staked duels per day with each other, either way round (the day starts at 00:00 Lisbon time; `409 daily_pair_limit`).
+- **Safe repeats.** The ledger ref of every coin movement is `duel:<duel id>` (the reasons `arena_stake` and `arena_payout`; a player has at most one row of each reason per duel, so the ledger itself stops a double stake or a double payout). The `actionUid` (8 to 64 letters, digits, hyphens or underscores, made once per click and sent again on a retry) is the duel's `create_uid` or the answer's `action_uid`; it is never part of a ref. The same challenge sent twice answers `409 already_applied` and creates nothing. The same answer sent twice answers `409 already_applied`; a second answer with another `actionUid` answers `409 already_sealed`, which is also what the challenger hears when answering their own challenge.
+- **Timeouts are lazy.** A challenge can be answered for 24 hours. Nothing runs on a timer (Vercel Cron cannot be used with Services): the next request that touches the duel (the list or the detail of either captain, a cancel, or an answer attempt) closes it as `expired` and gives the challenger's stake back. The database clock decides. A sealed duel has no forfeits: nobody can lose by being offline.
+- **Order of the checks.** Every route resolves the sign-in first (`401`), then the flag (`404 feature_off`, with no database call), then the body (`422`). The player id comes only from the sign-in. Request bodies refuse extra fields.
+- **Polling.** The screen asks `GET /api/duels` every 5 seconds for 2 minutes after an action, then every 30 seconds, and stops after 10 quiet minutes. It never asks while the tab is hidden. One quiet panel makes about 40 calls in 10 minutes. No Realtime, no WebSockets and no timer on the server.
+- **Errors.** `404 feature_off`, `404 no_such_duel`, `404 no_such_captain`, `403 not_your_duel`, `409 already_applied`, `409 already_sealed`, `409 duel_taken`, `409 duel_closed`, `409 duel_expired`, `409 daily_pair_limit`, `409 too_many_waiting`, `409 name_not_unique`, `409 insufficient_funds`, `422 validation_error`, `422 bad_rounds`, `422 bad_stake`, `422 wrong_signal_count`, `422 not_enough_oil`, `422 cannot_duel_yourself`, `502 database_error`, `503 database_not_configured`, `503 database_unavailable` (the OUTCOME IS UNKNOWN: read the list before you try again; never send the same intent again with a new `actionUid`).
+
+The duels need the Lantern Duels migration (`supabase/migrations/20261106110000_lantern_duels.sql`), which is not applied yet. While the flag `arena` is off, every duel route answers `404 feature_off` and touches no database.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -852,6 +896,15 @@ The prediction desk migration, `supabase/migrations/20261106100000_prediction_de
 | `prediction_pool_sides` (a view) | side of a pool: the coins and the players, added up from the stakes | nothing | read | L5 |
 
 `prediction_place_stake()` is the only way a stake happens (it locks the pool, then the wallet, refuses a repeated stake id, a closed pool, a second stake on the question and a stake over the daily cap, moves the coins through `apply_wallet_transaction()` and writes the stake in one step). `prediction_settle_pool()` is the only way a pool is settled (it checks that the payouts name exactly the stakes that get paid and add up, pays everybody in player-id order and marks the pool settled in one step). Both are for the server only and run with the rights of their caller. The trigger `prediction_pools_keep_settled()` makes a settled pool final: any update of a settled `prediction_pools` row fails with `pool_settled`, even from the server, so a settled pool can never be reopened and paid a second time.
+
+The Lantern Duels migration, `supabase/migrations/20261106110000_lantern_duels.sql` (package A7, run after the Island Exchange one), adds two tables and three functions. A visitor gets nothing, and a signed-in player may read their own duels and nothing else.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `duels` | challenge: who, rounds, stake, status and, once decided, the result of every round. It holds no signal. | read the duels they take part in | read, add, change (through `duel_create()`, `duel_answer()` and `duel_void()`); never delete | A7 |
+| `duel_moves` | captain and round: the sealed envelopes, the only place that holds a signal | nothing at all, not even their own rows | read, add (through `duel_create()` and `duel_answer()`); no role may change or delete a row | A7 |
+
+`duel_create()` sends a challenge (the duel, the challenger's envelope and the stake in one step). `duel_answer()` answers it: the answerer's stake and envelope, the reveal, the result and the payout or the refunds in one step; the round results and the outcome are an input from Python, and the database checks only what follows from them. `duel_void()` withdraws, declines or expires a challenge and gives the challenger's stake back. Each is the only way its money change can happen, locks a duel row first and the wallets after it (in player-id order), and is for the server only.
 
 Four database functions come with the first migration: `apply_wallet_transaction()` (the only way coins move, for the server only), `is_crew_member()` (used by the read rules of crews and seats, for signed-in players only), `handle_new_user()` (runs at sign-up and creates a profile, a wallet with 0 coins and an empty save) and `touch_updated_at()` (stamps `updated_at`).
 
@@ -1172,8 +1225,8 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 **The PvP arena (A7).**
 
-- Turn-based duels between two players. The server decides every round with Python rules, and the browser only sends moves. The browser polls for the other player's move, so Realtime is not needed.
-- Optional stakes in play coins: taken once and paid once, with the duel id in the `ref`. A duel that times out refunds both players. Preset emotes only, no free text.
+- **As built (D018, proposed): sealed signals.** Each captain seals all rounds at once, the server opens both envelopes in the same database step that stores the answer, and it decides every round with Python rules (the browser only sends signals, never a result or an amount). Nobody can lose by being offline, so there are no forfeits; live round-by-round duels with timers and forfeits are planned for after 23 Nov. The browser polls `GET /api/duels` (5 seconds for 2 minutes after an action, then 30 seconds, stopping after 10 quiet minutes, never while the tab is hidden), so Realtime is not needed.
+- Optional stakes in play coins: taken once and paid once, with the duel id in the `ref` (`duel:<id>`). A challenge that times out returns every stake that was taken (only the challenger has staked before the answer). Preset emotes only, no free text (none exist yet).
 - Do not build it on WebSockets in Vercel Functions: they are a Beta feature, and on Hobby a connection closes after 300 seconds.
 
 ## 10. The shared mystery
@@ -1192,3 +1245,5 @@ What already holds, from the foundation: a reward is paid with `clue_reward` or 
 6. **The default weather place.** Torshavn in the Faroe Islands is the proposal (real fog and storms that suit the story), Lisbon the option (`38.72`, `-9.14`). It is only the default of three settings, so changing it needs no code change. Without a decision the Faroe Islands stay.
 
 Exchange v2 refusal codes: `market_closed`, `prices_stale`, `company_unavailable`, `company_delisted`, `daily_stake_cap`, `too_many_positions`, `position_closed`, `wrong_price_mode`, `no_such_company`, `no_such_position`.
+
+Lantern Duel refusals include `not_your_duel`, `no_such_duel` and `no_such_captain`; see the route models for the full list.

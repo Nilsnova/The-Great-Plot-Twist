@@ -20,6 +20,7 @@ from server.auth import PlayerVerifier
 from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
+from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.market.exchange import MarketService, market_or_none
@@ -40,6 +41,7 @@ from server.routes import (
     me,
     save,
     predictions,
+    duels,
     weather,
 )
 from server.settings import Settings, settings_from_environment
@@ -87,6 +89,7 @@ def create_app(
     world_stage: WorldStageReader | None = None,
     clock: Clock | None = None,
     prediction_desk: PredictionDesk | None = None,
+    duel_service: DuelService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -118,6 +121,8 @@ def create_app(
         clock = utc_now
     if prediction_desk is None:
         prediction_desk = desk_or_none(settings)  # None if its questions file is broken
+    if duel_service is None:
+        duel_service = DuelService()  # it has no data files, so it always starts
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
@@ -146,6 +151,7 @@ def create_app(
     # chapter_two_hook.json). None if a file cannot be read: the bulletin then answers 503.
     app.state.daily_content = load_daily_content()
     app.state.predictions = prediction_desk
+    app.state.duels = duel_service
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -164,4 +170,5 @@ def create_app(
     app.include_router(crews.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
+    app.include_router(duels.router, prefix="/api")
     return app
