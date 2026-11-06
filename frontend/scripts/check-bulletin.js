@@ -28,7 +28,7 @@ try{
   await page.keyboard.press('KeyE');await page.locator('.case-modal[open] .bulletin-screen').waitFor();
   check(await page.locator('.case-modal[open] .bulletin-screen').isVisible(),'Harbor bulletin opens from its registered hotspot');
   check(await page.locator('.bulletin-lines li').count()===2,'Calm bulletin shows canonical weather and Exchange lines in order');
-  check(await page.locator('.bulletin-weather-credit a').first().getAttribute('href')==='https://open-meteo.com/','Bulletin shows the Open-Meteo credit link');
+  check(await page.locator('.bulletin-weather-credit,.bulletin-credit').count()===0,'Bulletin keeps attribution in Settings → Credits');
   await page.screenshot({path:'captures/20261106_G8-Bulletin-Desktop.png'});report.screenshots.push('captures/20261106_G8-Bulletin-Desktop.png');
   await page.setViewportSize({width:375,height:812});await settle(page);
   const bounds=await page.locator('.case-modal[open] .bulletin-screen').evaluate(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};});

@@ -18,4 +18,4 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 
 /* Accessibility: keep readable text and full-size native targets. */
 .preference input[type=range]{min-height:44px}.preference input[type=checkbox]{width:44px;height:44px}
-.preferences,.preference{min-width:0}.preference select{width:100%;min-width:0}.weather-credit a{display:inline-flex;align-items:center;min-height:44px}.kit-quiet:hover{color:#fff0c5}
+.preferences,.preference{min-width:0}.preference select{width:100%;min-width:0}.shell-credits a{display:inline-flex;align-items:center;min-height:44px}.kit-quiet:hover{color:#fff0c5}

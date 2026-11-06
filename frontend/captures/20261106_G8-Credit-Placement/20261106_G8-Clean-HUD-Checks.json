@@ -1,0 +1,25 @@
+{
+  "checked": "2026-11-06T15:23:47.611Z",
+  "checks": [
+    "Startup weather response still drives all four weather values",
+    "Gameplay has no provider, licence or attribution block",
+    "Weather and time stay compact on desktop and phone",
+    "Settings → Credits retains source, adaptation and licence links",
+    "Credits Back returns to Settings, then gameplay without an attribution overlay",
+    "No browser errors or external asset requests"
+  ],
+  "hud": [
+    {
+      "width": 223.828125,
+      "x": 1032.171875,
+      "y": 718.796875,
+      "height": 58
+    },
+    {
+      "width": 172.5,
+      "x": 190.5,
+      "y": 595,
+      "height": 62
+    }
+  ]
+}

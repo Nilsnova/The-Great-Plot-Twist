@@ -40,7 +40,6 @@ export function createHud(container, actions) {
   container.append(overlay);
   const timers = [];
   const select = selector => overlay.querySelector(selector);
-  const credits = node('div','weather-credit'); credits.hidden = true; select('.conditions').append(credits);
   const panel = select('.debug'), toggle = select('.settings-toggle');
   select('.chapter').setAttribute('role','status');select('.chapter').setAttribute('aria-atomic','true');
   if(actions.settings){toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','dialog');}
@@ -80,13 +79,6 @@ export function createHud(container, actions) {
     const label=[stateText,model.fog,startText].filter(Boolean).join('. ');if(tonightChip.getAttribute('aria-label')!==label)tonightChip.setAttribute('aria-label',label);
   }
   return {setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},setBulletin(view){bulletinModel=view;tonightSyncAt=0;refreshTonight();},togglePanel,start(){select('#explore').click();},
-    setWeatherCredit(data) {
-      const source=node('a','',data.text),licence=node('a','',data.licenceText);
-      source.href=data.href;licence.href=data.licenceHref;
-      for(const link of [source,licence]) { link.target='_blank';link.rel='noopener noreferrer'; }
-      const licenceGroup=node('span','weather-licence');licenceGroup.append(document.createTextNode('('),licence,document.createTextNode(')'));
-      credits.replaceChildren(source,document.createTextNode(' '),licenceGroup);credits.hidden=false;
-    },
     dispose() { timers.forEach(clearTimeout); overlay.remove(); },
     arrive(id) {
       select('.chapter').childNodes[1].textContent = ` ${places[id].name.toUpperCase()} `;

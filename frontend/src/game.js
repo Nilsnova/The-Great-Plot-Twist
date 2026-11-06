@@ -11,7 +11,7 @@ import './ui/devices.css';
 import {createTouchControls} from './controls/touch.js';
 import {createGamepad} from './controls/gamepad.js';
 import {getPreferences,setPreferences,onPreferences,reducedMotion,watchSystemMotion} from './settings/preferences.js';
-import {startLiveWeather,weatherAttribution} from './net/weather.js';
+import {startLiveWeather} from './net/weather.js';
 import {escapePriority} from './shell/escape.js';
 import {createShortcutsHost} from './shell/shortcuts-host.js';
 import {createWorldExperience} from './world/experience.js';
@@ -92,7 +92,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){
     if(demo.active)return;
-    weatherAnswer=answer;hud.setWeatherCredit(weatherAttribution(answer));emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
+    weatherAnswer=answer;emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
   }});
   function applyPreferences(value){quality(value.quality);}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);

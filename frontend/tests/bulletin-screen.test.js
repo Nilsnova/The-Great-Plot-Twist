@@ -11,7 +11,7 @@ class Element{
 }
 function find(root,predicate){if(predicate(root))return root;for(const child of root.children??[]){const match=find(child,predicate);if(match)return match;}return null;}
 describe('bulletin panel',()=>{
-  it('renders supplied ordered lines, Lisbon dates, credit and resets; tick preserves content nodes',()=>{
+  it('renders supplied lines, Lisbon dates and resets without attribution clutter; tick preserves content nodes',()=>{
     const previous=globalThis.document;globalThis.document={createElement:tag=>new Element(tag)};
     try{
       const state=initialBulletinState(Date.parse('2026-11-16T12:00:00Z'));setBulletinScenario(state,'real',Date.parse('2026-11-16T12:00:00Z'));const panel=createBulletinScreen();panel.update({bulletin:bulletinView(state)});
@@ -19,7 +19,7 @@ describe('bulletin panel',()=>{
       expect(first.dataset.kind).toBe('weather');expect(find(panel.element,node=>node.className==='bulletin-lines').children[1].dataset.kind).toBe('fog');
       expect(find(panel.element,node=>node.className==='bulletin-day').textContent).toContain('2026-11-16');
       expect(find(panel.element,node=>node.className==='bulletin-resets').children[1].children).toHaveLength(4);
-      expect(find(panel.element,node=>node.tagName==='a').href).toBe('https://open-meteo.com/');
+      expect(find(panel.element,node=>node.tagName==='a')).toBeNull();
       panel.tick();expect(find(panel.element,node=>node.className==='bulletin-lines').children[0]).toBe(first);
       setBulletinScenario(state,'loading');panel.update({bulletin:bulletinView(state)});expect(find(panel.element,node=>node.className==='bulletin-status').textContent).toBe('The bulletin is not posted yet');
       setBulletinScenario(state,'unavailable');panel.update({bulletin:bulletinView(state)});expect(find(panel.element,node=>node.className==='bulletin-status').textContent).toContain('unavailable');

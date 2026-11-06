@@ -193,9 +193,9 @@ For local play run the API from backend with uv run --frozen uvicorn main:app --
 
 ## Live-weather wiring
 
-The existing startLiveWeather({setWeather,onUpdate}) starts only after Lighthouse place loading succeeds, as INTERFACES.md specifies. Its stop function runs during app disposal. onUpdate renders weatherAttribution(answer) beside the conditions with readable 14 px source/adaptation and CC BY 4.0 links, then emits {type:'weather_updated',source,fetchedAt}. The L1 module, API and provider logic are untouched. The legal/source links are text, not external visual assets. The original manual atmosphere controls still work.
+The existing startLiveWeather({setWeather,onUpdate}) starts only after Lighthouse place loading succeeds, as INTERFACES.md specifies. Its stop function runs during app disposal. onUpdate retains the supplied answer for the world and emits {type:'weather_updated',source,fetchedAt}. Source, adaptation and CC BY 4.0 links appear only under Settings → Credits, as Nils requested on 6 November; they are never mounted in the gameplay HUD. The L1 module, API and provider logic are untouched. The legal/source links are text, not external visual assets. The original manual atmosphere controls still work.
 
-Graphics tests intercept /api/weather with deterministic responses to avoid provider variation; test:weather:wiring proves those values reach getWeather and checks both attribution links. S2 browser tests use the real intro endpoint while weather is isolated. No auth/config/me/trading/board/reward route is called by this graphics implementation.
+Graphics tests intercept /api/weather with deterministic responses to avoid provider variation; test:weather:wiring proves those values reach getWeather and checks both attribution links under Settings → Credits and confirms the gameplay HUD has none. S2 browser tests use the real intro endpoint while weather is isolated. No auth/config/me/trading/board/reward route is called by this graphics implementation.
 
 ## G4/S2 verification
 
@@ -234,7 +234,7 @@ Not verified: other browsers/GPUs, actual screen-reader software, touch movement
 
 `src/main.js` is the small title entry. It owns the shell, audio and preference lifetime, and imports `game.js` only after New game, Continue or the explicit demo action. `shell/controller.js` uses one native dialog for title, pause, settings and credits; all supplied text uses safe DOM helpers. The title's static original backdrop and canvas emblem load without WebGL. New game enters the original intro on Lighthouse Isle and resets only its local move journal. Continue replays that journal and opens its saved scene, inventory or ending. A structurally valid but no-longer-replayable save gets a visible fresh-intro notice. Normal intro content still comes from the existing API, with the existing timeout/retry UI.
 
-Escape closes the top story/chart/cinematic view first; from the world it opens Pause. Resume restores canvas focus. Settings/Credits return to the menu that opened them. The native menu traps Tab/Shift-Tab, restores a visible invoking control, and blocks movement, interaction and travel through the existing world lock. Returning to title does not erase the intro. **A2 hook:** replace the `onPlay(resume)` callback in `main.js` with a cloud-aware loader when that package exists; `game.begin(resume)` and `world.intro.actions` remain presentation/replay hooks. No account token, captain state or server verdict is fabricated here. Integrate feature controllers beside intro/chart in `game.js`, passing the existing world and audio cue callback; keep the title bootstrap small. `window.__island` remains development-only and is not a production integration API.
+Escape closes the top story/chart/cinematic view first; from the world it opens Pause. Resume restores canvas focus. Credits are reached only from Settings. Credits Back/Escape returns to Settings, then Settings returns to the title or pause menu that opened it. The native menu traps Tab/Shift-Tab, restores a visible invoking control, and blocks movement, interaction and travel through the existing world lock. Returning to title does not erase the intro. **A2 hook:** replace the `onPlay(resume)` callback in `main.js` with a cloud-aware loader when that package exists; `game.begin(resume)` and `world.intro.actions` remain presentation/replay hooks. No account token, captain state or server verdict is fabricated here. Integrate feature controllers beside intro/chart in `game.js`, passing the existing world and audio cue callback; keep the title bootstrap small. `window.__island` remains development-only and is not a production integration API.
 
 Credits display four `<name>` placeholders, no student numbers, data/adaptation/licence links and the tool licences from ASSETS.md. They contain no case solution or identity pairing.
 
@@ -288,7 +288,7 @@ Final G5 checks ran on installed headless Chrome 157 on this Mac. Browser/GPU ru
 | `CAPTURE_PREFIX=G5 npm run test:browser` | 19 movement, weather, settings and retina checks |
 | `CAPTURE_PREFIX=G5 npm run test:production` | seven static-build checks, including focus and reduced-motion travel |
 | `npm run test:art` / `npm run test:art:production` | all 192 PNGs decode; selective preload/visibility/grid checks pass |
-| `npm run test:weather:wiring` | three checks: existing values, readable attribution and browser errors |
+| `npm run test:weather:wiring` | weather values, compact gameplay HUD, Settings → Credits attribution, return navigation and browser errors |
 | `python3 scripts/pixel_art/generate.py` | 192 PNGs regenerated byte-identically |
 | `git diff --check` | passed |
 
@@ -407,7 +407,7 @@ Final checks used installed headless Chrome 157 on this Mac, with GPU/browser ru
 | `node scripts/check-ui-kit.js` and `KIT_PRODUCTION=1 node scripts/check-ui-kit.js` | 19 development / 16 production assertions passed |
 | `node scripts/check-cinematics.js` | 24 assertions, including skip, reduced motion, anonymous unmask, events and cleanup |
 | `node scripts/check-intro.js` | 16 assertions, both original endings, real local intro API and accepted move replay |
-| `node scripts/check-weather-wiring.js` | three assertions: existing values, readable attribution and browser errors |
+| `node scripts/check-weather-wiring.js` | weather values, compact gameplay HUD, Settings → Credits attribution, return navigation and browser errors |
 | `node scripts/check-experience.js` | 26 shell, preferences, controls, audio and phone-layout assertions |
 | `npm run test:demo` | ten assertions: full API-down tour in 168,305 ms; no player-journal writes or completion event; original place/weather/public gate restored |
 | `node scripts/check-loading.js` | 18 production assertions; separate lazy board/finale/reveal/Gull's Rest/festival entries; no cold WebGL allocation |
@@ -579,7 +579,7 @@ Schema 1 adds **`bulletin`** to `caseViewKeys`: `{status:'off'|'loading'|'ready'
 
 `day` contains `id`, `startedAt`, `nextDayAt`, `bulletinDay`, `publishedAt`, `nextBulletinAt`, `harborWeek`, `nextHarborWeekAt` and `resets:[{when,what}]`. `lines:[{kind,text}]` are rendered in supplied order with `textContent`. `weather` retains `tonight`, `tomorrow`, `source`, `fetchedAt`, `attribution`; tonight contains `date`, `startsAt`, `endsAt`, `isNow`, `state`, `isFogNight`, `fogNightKind`. `exchange` is null or `{feed,pausedCompanies:[{id,name}]}`. No screen derives a fog-night or reset rule. Dates use `Intl.DateTimeFormat` with `Europe/Lisbon`; countdowns only subtract a display clock from the supplied timestamp, and never decide availability.
 
-The new `bulletin_board` harbor hotspot opens the lazy bulletin screen in the existing case modal. `notice_board` remains the C1 evidence search. Off hides the new board/prompt/HUD chip; loading and unavailable have plain readable status messages. The panel includes the supplied reset list and Open-Meteo attribution/licence. The tonight chip shows the supplied state, fog badge and almanac wording at readable sizes. The existing weather credit stays in the world HUD.
+The new `bulletin_board` harbor hotspot opens the lazy bulletin screen in the existing case modal. `notice_board` remains the C1 evidence search. Off hides the new board/prompt/HUD chip; loading and unavailable have plain readable status messages. The panel includes the supplied reset list. Open-Meteo attribution/licence details are kept in Settings → Credits. The tonight chip shows the supplied state, fog badge and almanac wording at readable sizes. The world HUD contains only compact conditions, time and the Settings button; it contains no attribution or licence block.
 
 At game night, the false-light teaser uses supplied `tonight.isFogNight` when this stream is enabled; missing tonight keeps the old numeric-fog fallback. Relighting always disables the teaser. A storm flag uses the supplied state; the sky keeps its existing game-time cycle. The weather client is unchanged. `adapter/fake/bulletin.js` provides off, loading, unavailable, calm, real fog, almanac fog, storm, festival, hook-placeholder and stale-feed rehearsals through `dev.setBulletin(scenario)`. Normal bulletin wording is checked against the canonical public server copy when available. Hook wording stays a placeholder.
 
@@ -662,7 +662,7 @@ Continue for seven minutes in iPhone Safari with VoiceOver enabled in Accessibil
 | --- | --- | --- |
 | 8–10 | Read title and account controls in portrait. Open Settings and the controls overview. | All controls remain readable, have at least 44 × 44 CSS-pixel targets, and can be reached without sideways scrolling. |
 | 10–12 | Open Account and saves. Read save choices, local-only/expired/offline feedback and deletion confirmation, without confirming deletion. Close it. | Names, states and errors are spoken in context; local progress is clearly distinguished. Focus returns to a useful place. |
-| 12–15 | Inspect Search, Partners, Finale, Log and Rewards. Open the enabled fake bulletin, read Lisbon times and weather credit, and opt into the hook's spoken short/short/long sequence. | Timers and outcomes are available as words. Charts and partner travel have labels/captions. The pattern only speaks after a tap and stops when closed. Reduced motion gives still markers. |
+| 12–15 | Inspect Search, Partners, Finale, Log and Rewards. Open the enabled fake bulletin, read Lisbon times, check weather attribution in Settings → Credits, and opt into the hook's spoken short/short/long sequence. | Timers and outcomes are available as words. Charts and partner travel have labels/captions. The pattern only speaks after a tap and stops when closed. Reduced motion gives still markers. |
 
 ### Other browsers and devices
 
@@ -711,3 +711,14 @@ The pass corrected contextual names for pin/search/order/post/lock/tip controls,
 Raw baseline and corrected-run logs remain under `captures/20261106_G8-C3-before/` and the final run's `iterations/`; failed attempts are retained. QA repairs include owned ephemeral dev/preview servers with awaited cleanup, standard Node HTTP readiness reads, waiting for the visible arrival hand-off, selecting either station lighting pose, recording the short landing fade as it happens, and waiting for the lazy first caption. A world run interrupted by a source update was rerun after the app was frozen. These fixes do not weaken outcome, frame, CSP or spoiler assertions.
 
 Claude must mirror schema-1 `bulletin` with its off default, nested `log.observations`, and earned-only deduction `clears/clearedTitles`; the documented `islet_changed` payload is unchanged. Screens still make no fetch/online imports or rule decisions. Remaining integration work is the live adapter/services and Claude-owned panels, including their Escape checks and local build flow. The optional Exchange tour beat remains omitted until its production-safe rehearsal exists. Do not merge or deploy this branch from this lane.
+
+
+### Gameplay credit placement (Nils, 6 November)
+
+Nils rejected the large provider/licence block in gameplay. It is removed from both the world HUD and harbor bulletin. All source, adaptation and licence details remain in **Settings → Credits**, together with the existing team and tool credits. Credits is no longer a separate title or pause-menu button. Back/Escape from Credits returns to Settings; Settings then returns to its saved title/pause parent. The weather client, schema, supplied values and `weather_updated` event are unchanged.
+
+`check-weather-wiring.js` now proves the four supplied weather values still reach the island, there is no attribution DOM in gameplay, and the source/licence links are reachable through Settings. The conditions strip is **224 × 58 px** at desktop width and **173 × 62 px** on the 375 px phone. Text sizes are unchanged. The credits page has 44 px link targets. The feedback photo and new clean-HUD captures are retained in `captures/20261106_G8-Credit-Placement/`.
+
+After this correction, `npm test` passes 345 tests in 58 files and `npm run build` passes the 97-file/twelve-line spoiler guard. Nine focused browser checks pass: `node scripts/check-weather-wiring.js`, `node scripts/check-credits.js`, `node scripts/check-bulletin.js`, `node scripts/check-experience.js`, `node scripts/check-a11y.js`, `node scripts/check-readability.js`, `node scripts/check-loading.js`, `node scripts/check-production.js`, `node scripts/check-csp.js`. The exact results are in [the credit-placement report](captures/20261106_G8-Credit-Placement/Verification.json), in addition to the earlier complete 31-command G8 run.
+
+The expanded accessibility pass includes Credits: **23 contexts / 69 viewport samples / 202 Tab steps / 1,537 text measurements**, minimum computed contrast **4.694:1**, zero failures/browser errors/external requests. Current cold title JavaScript is **21,080 bytes / 9,956 gzip**, matching the unchanged G7 ceiling. The original pre-feedback checkpoint measurements above remain historical evidence. Future integration must keep data/legal attribution in Settings → Credits and out of gameplay overlays.

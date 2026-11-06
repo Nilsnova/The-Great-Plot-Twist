@@ -7,8 +7,8 @@
 /* At native chart size, stagger long labels without shrinking their text. */
 .sea-chart[data-scale="1"] [data-place=lighthouse_isle] span,.sea-chart[data-scale="1"] [data-place=wreck_point] span{transform:translateY(20px)}
 
-/* The live-weather credit stays beside the conditions, readable at the same 14px size. */
-.conditions{flex-wrap:wrap;max-width:500px}.weather-credit{flex-basis:100%;font-size:16px;line-height:1.5;color:#d1dab8}.weather-credit a{color:#e7d49b;text-underline-offset:3px}.interact{bottom:160px}.debug{bottom:160px}
+/* Keep live conditions compact; data attribution lives in Settings → Credits. */
+.conditions{flex-wrap:wrap;max-width:500px}.interact{bottom:160px}.debug{bottom:160px}
 @media(max-width:700px){.bottom-bar{flex-wrap:wrap;gap:10px}.conditions{max-width:100%;width:100%}.interact,.debug{bottom:235px}.debug{max-height:calc(100vh - 250px);overflow:auto}}
 
 .weather-licence{white-space:nowrap;display:inline-block}

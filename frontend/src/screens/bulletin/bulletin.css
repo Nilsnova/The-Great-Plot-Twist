@@ -1,8 +1,7 @@
 .bulletin-screen{width:100%;max-width:100%;min-width:0;color:#fff0c5;font:18px/1.6 'Courier New',monospace;overflow-wrap:anywhere}
 .bulletin-screen[hidden]{display:none}
 .bulletin-status{font-weight:bold;font-size:19px;margin:0 0 14px}
-.bulletin-day,.bulletin-next,.bulletin-credit{font-size:16px;margin:10px 0}
-.bulletin-credit{display:flex;flex-wrap:wrap;gap:4px}
+.bulletin-day,.bulletin-next{font-size:16px;margin:10px 0}
 .bulletin-screen a{color:#f3d58c;text-decoration:underline;text-underline-offset:3px}
 .bulletin-lines{padding-left:28px;display:grid;gap:12px}
 .bulletin-lines li{padding:12px;border-left:3px solid #d2b877;background:#21392d}
@@ -18,4 +17,4 @@
 .tonight-chip strong,.tonight-chip span{display:block}
 .tonight-chip[hidden]{display:none}
 @media(max-width:700px){.tonight-chip{top:150px;right:12px;max-width:calc(100vw - 24px);padding:8px 10px}.bulletin-lines{padding-left:24px}}
-.bulletin-credit a{display:inline-flex;align-items:center;min-height:44px}.bulletin-resets summary{min-height:44px}
+.bulletin-resets summary{min-height:44px}
