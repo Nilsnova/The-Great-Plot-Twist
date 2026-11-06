@@ -193,6 +193,34 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 
 **Agreed by, PR and impact:** Nils' rules, 5 Nov 2026. The "chosen here" numbers (breaker freeze, floor 25 % and ceiling 400 % of the start price, 2 % fee, 500 and 2000 coin limits, no limit on sales, 10-minute hold counted from the latest purchase, price kept at a re-base, 5-second price age for trades, 10 trades in 30 seconds, no replay in live mode) are proposals for Nils and the team. Affects the Exchange screen (browser), the story card C6 (a Greyfathom share), the economy simulation, and every package that adds wallet reasons (the list of reasons now has 11 entries; keep the migration order and the Python order the same).
 
+## D018 · Live presence on Supabase Realtime · 2026-11-05
+
+**Status:** Decided by Nils on 5 Nov 2026 in its core: live multiplayer must exist, it must stay free, and the library `@supabase/supabase-js` is approved. The details marked "chosen here" are proposed in the A4 pull request (`feat/a4-live-presence`) and need a different teammate's review.
+
+**Decision:** Players see each other's captains move in real time and can send preset emotes, and the server can tell a crew the moment something changed. It runs on Supabase Realtime's free plan, in private rooms only (full design: [specs/A4-live-presence.md](../specs/A4-live-presence.md), contract: [INTERFACES.md, section 7](INTERFACES.md#7-realtime-budget)).
+
+- *Three kinds of room (chosen here).* `live:world` is presence only and shows who is online, in which place and room, with which kit. `live:place:<place>:<room>` is broadcast only and carries moves and preset emotes. `live:crew:<crew id>` is broadcast that players can only receive: only the server sends into it, with the secret key and one HTTP request per event (`backend/server/crew_broadcast.py`).
+- *Numbered place rooms that shrink (chosen here).* A room holds at most `clamp(floor(120 / online), 4, 9)` captains: 9 while 13 or fewer are online, 4 with 30 online (a crew). A newcomer joins the room of a crewmate first, otherwise the first room with space. At most 8 other captains are drawn, crewmates first, and the rest of the place is counted ("+4 more here").
+- *A budget of 60 of the 100 messages a second (chosen here).* Each captain sends at most `min(2, 60 / (captains online x captains in my room))` updates a second, so even a whole class walking at once stays under the limit. A guard in the browser halves the rate for 5 minutes when its estimate of the whole game's cost passes 80, and the browser backs off when Supabase says "Too many messages per second".
+- *Limits against our own bugs (chosen here).* A room of one kind (world, place, crew) starts to join at most once a second, so a place or a crew that changes in every frame cannot flood the project's 100 joins a second. The first announcement after every join of the world room waits a random 0 to 10 seconds, so a class that opens the game together, or a Realtime blip that drops everybody, does not announce itself all at once. The server sends at most 5 crew events a second over all crews (and 20 per crew in 10 seconds), and a call takes at most 2 seconds.
+- *Five policies on `realtime.messages`, all for `authenticated`.* Anonymous visitors get nothing, a crew room is open only to its members (`is_crew_member`), and nobody but the server can send into a crew room. Nils switches off "Allow public access" in the dashboard, so that no public room exists.
+- *Only for showing.* Positions, presence and emotes decide nothing (D003). A payload never holds free text, a name, a login or an e-mail address: names are read from `profiles`, and receivers accept only numbers, known ids and preset emotes.
+- *The flag `live_presence`* switches on the browser module and the server helper. The migration is applied only when the team wants to test it.
+
+**Why:** It is free, it needs no new account (Realtime is part of the Supabase project we already have), and its rooms reuse our crew rule `is_crew_member`. On the free plan every delivered copy of a message counts toward the limits, so the design is mostly about keeping the fan-out small.
+
+**Alternatives and trade-offs:**
+
+- *Cloudflare Durable Objects* on the free Workers plan: a bigger option for later. The fan-out would run in our own code, which gives full control. It needs a Cloudflare account and a second deployment. Not priced in detail.
+- *Peer-to-peer WebRTC:* rejected. School and university networks often block peer connections, it needs a TURN relay (which costs money) and a signalling server, and peers learn each other's IP addresses.
+- *Polling our API:* rejected. 30 players at one request a second would make 108,000 Vercel function calls an hour.
+- *Postgres Changes:* rejected. Every move would be a database write.
+- *WebSockets in Vercel Functions:* rejected. The feature is in beta and a connection is limited to 300 seconds.
+- *One room per place with presence inside it* (the simpler first plan): the cost of a room grows with the square of its size, so a class of 30 in one place would get an update about every 15 seconds, a newcomer could cost up to 870 messages, and the budget could not see how many players are online.
+- Trade-offs: positions are claimed by the browser, so they are cosmetic only. A flooder can shut down live presence for the whole project (the API and the game keep working), which is why there is a kill switch: Realtime > Settings > "Enable Realtime service", or dropping the five policies ([supabase/README.md](../supabase/README.md#changing-the-database-later)). At class scale rooms shrink to 4 and updates slow to every 2 seconds. Every announcement is delivered to everyone online, so the start of a class is a burst of its own (about 60 deliveries a second for 30 captains, spread over 15 seconds; our arithmetic, not measured: read Realtime > Reports after the first class). 2 million messages a month are about 8 class sessions. Every signed-in player can see which place each online captain is in. A2 must renew the login token before it ends, or the rooms close after about an hour.
+
+**Agreed by, PR and impact:** Nils, 5 Nov 2026 (core, free, library). The "chosen here" numbers and the room design are proposals for Nils and the team. Proposed in the A4 pull request. Affects A2 (provides the player id and the login token), A6 (provides the crew members), L3, S3 and S4 (call the broadcast helper after a change), G6 (draws the captains from the `live_*` events) and the integrator who wires the module into `game.js`. The package ships with the flag off and the migration unapplied.
+
 ## Next entry
 
 - **ID / date / title:**

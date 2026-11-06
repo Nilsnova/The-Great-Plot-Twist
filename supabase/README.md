@@ -4,12 +4,13 @@ This folder holds the database of The Great Plot Twist. Supabase gives us the lo
 
 Play money only: coins cannot be bought, cashed out or exchanged for real prizes. Every player starts with 0 coins. The first coins come later, from the intro entry kit (the `kit_grant` reason).
 
-The browser only reads from this database. Every write comes from our Python server with the secret key.
+The browser only reads from this database. Every write comes from our Python server with the secret key. Live presence (other captains moving, preset emotes, hints for a crew) runs on Supabase Realtime and stores nothing in these tables: its only database part is a small set of access rules, described in [The live presence migration](#the-live-presence-migration).
 
 | File | What it is |
 |---|---|
 | [migrations/20261106000000_foundation.sql](migrations/20261106000000_foundation.sql) | The first migration: seven tables, the security rules, the rights of each database role and four functions. Every table, column and policy is explained inside the file. |
 | [migrations/20261106010000_island_exchange.sql](migrations/20261106010000_island_exchange.sql) | The second migration, for the Island Exchange (package L4): three wallet reasons, three tables and two functions. Run it after the first. See [The Island Exchange migration](#the-island-exchange-migration). |
+| [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | The third migration, for live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation migration, and only when the team wants to test live presence. See [The live presence migration](#the-live-presence-migration). |
 
 ## Project settings this migration relies on
 
@@ -22,6 +23,7 @@ Our Supabase project is in West EU (Ireland). These settings were agreed on 5 No
 | Enable automatic RLS | On | A table that someone creates without row-level security gets it switched on automatically. Our migration switches it on by hand for every table as well. |
 | Login | GitHub only. Email and anonymous sign-ins are off. | See [First: allow only GitHub sign-in](#first-allow-only-github-sign-in). |
 | Supabase GitHub integration | Not used | We apply migrations by hand (see below). |
+| Realtime > Settings > "Allow public access" | **Off** (a step for Nils, not done yet) | Every Realtime room must be private, so that the access rules of [the live presence migration](#the-live-presence-migration) decide who may join. While it is on, anyone who holds the public key can use public rooms that our rules never cover, and spend the shared Realtime budget. Like any change on that screen, switching it off disconnects every client; today no client uses Realtime, so nobody notices. |
 
 The migration does not depend on the second setting. It first takes every right away from `public`, `anon`, `authenticated` and `service_role`, and then grants back exactly what is needed. It gives the same result on a project where new tables are exposed automatically.
 
@@ -107,6 +109,39 @@ It refuses a company that has no row in `market_bases` with `unknown_company` (t
 
 After applying it, the three quick checks below show **ten** tables and **ten** policies, and there are **eleven** wallet reasons. Run the Exchange checks at the end of the manual test plan.
 
+## The live presence migration
+
+`migrations/20261106050000_live_presence.sql` is the database part of live presence (package A4; see [INTERFACES.md, section 7](../docs/INTERFACES.md#7-realtime-budget) and decision [D018](../docs/DECISIONS.md)): players see each other's captains move, send preset emotes, and the server tells a crew the moment something changed. All of that runs on Supabase Realtime, which keeps no table of ours. The only database part is the rules that say who may join which room ("private rooms"), written as policies on the Realtime table `realtime.messages`. Run the file **after** the foundation migration, because it uses `is_crew_member()`. It is safe to run twice, and everything is explained in the file itself. It grants nothing on `realtime.messages`: Supabase sets the rights of that table (step L2 below checks them).
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `live_crew_id()` | Reads the crew id out of the topic of a crew room (`live:crew:` and a lowercase uuid). Gives null for any other text and never raises an error, so a malformed topic is refused instead of crashing a policy. | Nobody at run time. Signed-in players run it inside the policies. |
+| Five policies on `realtime.messages` | Who may join and send in the three kinds of room, below. All are `to authenticated`. | Only a new migration. |
+
+| Policy | Allows | In which room |
+|---|---|---|
+| "Live: players can see who is online" (select) | looking at presence | `live:world` |
+| "Live: players can say where they are" (insert) | tracking presence | `live:world` |
+| "Live: players can watch a place room" (select) | listening to broadcasts | `live:place:<place id>:<room 1 to 99>` |
+| "Live: players can move in a place room" (insert) | sending broadcasts | the same place rooms |
+| "Live: crew members can hear their crew room" (select) | listening to broadcasts, only while the player holds a seat in that crew (`is_crew_member`) | `live:crew:<crew id>` |
+
+There is no insert policy for crew rooms (only the server sends there, and its secret key skips row-level security), no policy for `anon` and no policy for any other topic. Without a policy there is no access.
+
+Three things to know:
+
+- **The dashboard switch comes first.** The policies decide only for private rooms. Until "Allow public access" is switched off (see the project settings above), anyone who holds the public key can use public rooms that no policy covers. That gap exists today, before any of this code.
+- **The flag is not the lock.** The flag `live_presence` switches on our browser module and the server helper. A modified browser ignores it, so the policies and the dashboard are the real lock. Until this file is applied, Realtime refuses every private room, so the code stays harmless: apply the file only when the team wants to test live presence.
+- **Positions, presence and emotes are only for showing** (D003). Realtime keeps no client message in a table, and no rule of the game depends on what a browser claims. A forged or flooding client can:
+
+| It can | It cannot |
+|---|---|
+| Join `live:world` and see which place and room every online captain is in (players see this in the game anyway, and names are public to signed-in players). | Join anything without signing in, or join or listen to another crew's room. |
+| Track a fake place, room or kit for itself, join any place room, claim any position, or claim another player's id (the worst result is a misplaced captain that shows another player's server-written name). | Send anything into a crew room, so it cannot fake an event of the server. A refused write is dropped silently. |
+| Flood messages. Each delivered copy counts toward the project's limits, and Supabase may close every player's rooms. The API and the game keep working; only live presence stops. | Use presence in a place room, or broadcast in the world room. Change any game state. Show free text to others, or read anyone's GitHub login or e-mail address (no payload holds them). |
+
+The kill switch, if a flood ever happens, is in [Changing the database later](#changing-the-database-later). The manual checks are the steps L1 to L7 at the end of the manual test plan; L7 (the server's helper) must pass once before any package polls less because of crew events.
+
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
@@ -129,6 +164,7 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 3. Paste the whole content of `migrations/20261106000000_foundation.sql`.
 4. Click **Run**. Expected: a success message and no error.
 5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The order matters: the files start with a time stamp, so apply them oldest first.
+6. Only when the team wants to test live presence: do the same with `migrations/20261106050000_live_presence.sql`, in a new query. Until it is applied, Realtime refuses every private room.
 
 ### Option B: Supabase CLI
 
@@ -145,11 +181,12 @@ supabase db push
 - `supabase link` asks for the database password you chose when you created the project. Type it into the terminal only. Never save it in a file of this repository.
 - `--dry-run` only lists the migrations that would run. The CLI remembers which files it has already applied.
 - If the CLI says it needs `supabase/config.toml`, run `supabase init` once. Keep secrets out of that file too.
+- `supabase db push` applies every migration that is not applied yet, in order, so it would apply the live presence file too. To hold that one back, use the SQL editor.
 - Optional, needs Docker: `supabase start` runs a local copy and `supabase db reset` rebuilds it from the migration files.
 
 ### Three quick checks after applying
 
-Run all three in the SQL editor.
+Run all three in the SQL editor. After the live presence migration, run the fourth one too.
 
 ```sql
 select relname as table_name, relrowsecurity as rls_on
@@ -178,6 +215,15 @@ order by grantee, table_name;
 ```
 
 Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. After the Island Exchange migration: 10 rows.
+
+```sql
+select policyname, cmd, roles
+from pg_policies
+where schemaname = 'realtime' and tablename = 'messages'
+order by policyname;
+```
+
+Expected, after the live presence migration: exactly 5 rows, the five policies in the table above, and `roles` is `{authenticated}` in every row. Any other policy on `realtime.messages` is a policy somebody added by hand: read it, because a rule such as `using (true)` would open every room.
 
 ### If someone signed in before you ran the migration
 
@@ -249,6 +295,7 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 |---|---|---|---|
 | `apply_wallet_transaction()` | no access | no access | yes |
 | `is_crew_member()` | no access | yes, and it only ever answers for the caller | no access, the server skips RLS and does not need it |
+| `live_crew_id()` | no access | yes, a text helper that reads no table | no access, the server skips RLS and does not need it |
 | `handle_new_user()` | no access | no access | no access, only the sign-up trigger runs it |
 | `touch_updated_at()` | no access | no access | no access, only the triggers run it |
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
@@ -258,11 +305,31 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 
 "No access" means the database refuses with `permission denied`, or (for a row that belongs to someone else) shows or changes nothing.
 
+### The live rooms (Realtime, `realtime.messages`)
+
+The live presence migration adds no table. Its rules are policies on the Realtime table `realtime.messages`, and they work per room (topic) and per kind of traffic. They apply to private rooms, so "Allow public access" must be off (see the project settings above).
+
+| Room (topic) | Action | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
+|---|---|---|---|---|
+| `live:world` | look at presence | no access | yes | yes \*\*\* |
+| `live:world` | track presence (say where you are) | no access | yes | not needed |
+| `live:world` | broadcast (listen or send) | no access | no access | yes \*\*\* |
+| `live:place:<place id>:<room 1 to 99>` | listen to broadcasts | no access | yes | yes \*\*\* |
+| `live:place:<place id>:<room 1 to 99>` | send broadcasts | no access | yes | yes \*\*\* |
+| `live:place:<place id>:<room 1 to 99>` | presence | no access | no access | yes \*\*\* |
+| `live:crew:<crew id>` | listen to broadcasts | no access | only if they hold a seat in that crew (`is_crew_member`) | yes \*\*\* |
+| `live:crew:<crew id>` | send broadcasts | no access | no access | yes \*\*\* (the only sender: REST, secret key) |
+| `live:crew:<crew id>` | presence | no access | no access | yes \*\*\* |
+| any other topic | everything | no access | no access | yes \*\*\* |
+
+\*\*\* The server's secret key skips row-level security, so the policies do not limit it. Our rule is that the server only sends crew events (`backend/server/crew_broadcast.py`) and never joins a room. The rights on the table `realtime.messages` itself (the grants) are set by Supabase and not by us; step L2 of the manual test plan reads them.
+
 Supabase's security advisor may warn that a signed-in player can run a `SECURITY DEFINER` function. That is `is_crew_member()`, and it is on purpose. It takes a crew id, compares it with the caller's own id (`auth.uid()`), and returns only true or false. It cannot tell anyone who sits in somebody else's crew.
 
 ## What the server's secret key may do
 
 - It skips row-level security. It can read every player's rows in all ten tables and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It can send into any Realtime room through the Broadcast REST API, because that skips the rules on `realtime.messages`. The server uses this only to tell a crew that something changed (`backend/server/crew_broadcast.py`).
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see the second footnote of the matrix.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
@@ -273,7 +340,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
-The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The checks of the Island Exchange, including its three new reasons, are the steps E1 to E13 at the end of this plan.
+The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The checks of the Island Exchange, including its three new reasons, are the steps E1 to E13 at the end of this plan. The checks of live presence are the steps L1 to L7 after them. Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players).
 
 **Set up**
 
@@ -938,11 +1005,81 @@ Expected: `wrong_direction`. Finally paste the whole Island Exchange migration i
 
 Delete the two test users when you are done (**Authentication > Users**). Their positions and trades go with them.
 
+### Live presence checks (steps L1 to L7)
+
+These steps test the third migration. Run them after the foundation migration and the live presence migration are both applied. L3 uses the two test players and the two crews of the main plan (steps 1 to 3), so run it after step 3 and before step 17; the other steps can run any time.
+
+**L1. The five policies.** Run the fourth quick check (default role):
+
+```sql
+select policyname, cmd, roles
+from pg_policies
+where schemaname = 'realtime' and tablename = 'messages'
+order by policyname;
+```
+
+Expected: exactly 5 rows, all with `roles` `{authenticated}`: "Live: crew members can hear their crew room" (`SELECT`), "Live: players can move in a place room" (`INSERT`), "Live: players can say where they are" (`INSERT`), "Live: players can see who is online" (`SELECT`) and "Live: players can watch a place room" (`SELECT`).
+
+**L2. The rights on the table.** Supabase sets these, not our file:
+
+```sql
+select r.rolname as role,
+       has_table_privilege(r.rolname, 'realtime.messages', 'select') as can_select,
+       has_table_privilege(r.rolname, 'realtime.messages', 'insert') as can_insert
+from pg_roles r
+where r.rolname in ('anon', 'authenticated', 'service_role')
+order by r.rolname;
+```
+
+Expected: `authenticated` has `true` in both columns. If it does not, stop and report it: do not grant anything by hand. If `anon` shows `true` too, that is fine, because `anon` has no policy and row-level security gives it no row.
+
+**L3. The crew rule works for the right player.** Player A sits in crew A (step 3). `set_config('realtime.topic', ...)` stands in for the room that Realtime is checking:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select set_config('realtime.topic', 'live:crew:CREW_A_ID', true);
+select public.is_crew_member(public.live_crew_id(realtime.topic())) as a_hears_crew_a;
+```
+
+Expected: `a_hears_crew_a` is `true`. Run it again with `USER_B_ID` instead of `USER_A_ID`: `false`. If your project's `realtime.topic()` does not read that setting, write the topic into the call instead: `public.live_crew_id('live:crew:CREW_A_ID')`. Then check the helper on its own (default role):
+
+```sql
+select public.live_crew_id('live:crew:CREW_A_ID') as good_topic,
+       public.live_crew_id('live:crew:nope') as bad_topic,
+       public.live_crew_id('live:crew:CREW_A_ID' || 'x') as too_long;
+```
+
+Expected: `good_topic` is `CREW_A_ID`, and `bad_topic` and `too_long` are empty (null), with no error.
+
+**L4. Public rooms are off.** In the dashboard open **Realtime > Settings** and check that "Allow public access" is switched off. Expected: off.
+
+**L5. Running the migration again is harmless.** Paste the whole live presence migration into the SQL editor again and run it. Expected: no error, and the L1 listing is unchanged.
+
+**L6. Players see each other.** Needs the screens adapter and the wiring in the game ([INTERFACES.md, section 7](../docs/INTERFACES.md#wiring-it-into-the-game)), so run it when they exist. Use two GitHub accounts in one crew and a third in another crew, with `FEATURE_FLAGS=live_presence` on a preview or on your laptop. Expected: in Saltreach Harbor all three see each other walk, see each other's emotes, and see "+N more here" for the captains in other rooms; the third player's browser logs no `live_crew_updated` for the first crew.
+
+**L7. The server's helper (required once, before any package polls less because of crew events).** It is the only check that the server's secret key can really send into a crew room, so L3, S3, S4 and A6 keep their normal polling until it has passed on the real project. For a teammate whose own `.env` holds the server key and has `FEATURE_FLAGS=live_presence`. With a member of the crew `CREW_A_ID` looking at the game in a browser (flag on), run the real helper once from the repository root:
+
+```bash
+cd backend && uv run --env-file ../.env python -c "import asyncio; from server.crew_broadcast import broadcaster_from_settings; from server.settings import settings_from_environment; print(asyncio.run(broadcaster_from_settings(settings_from_environment()).send('CREW_A_ID', 'crew_changed', {'version': 1})))"
+```
+
+Expected: it prints `True`, and that member's browser logs `live_crew_updated`. `False` comes with one short warning on the terminal (the flag is off, Supabase is not set up, or Supabase answered with an error status). Never type the key into the command: `--env-file` reads it from your private `.env`.
+
 ## Changing the database later
 
 - Never edit a migration that has been applied anywhere. Add a new file named `supabase/migrations/<YYYYMMDDHHMMSS>_<topic>.sql` with a later time stamp.
 - A new table needs, in the same file: row-level security switched on, policies, **explicit grants** (our project gives no rights to a new table, so nothing works until you grant them, and you grant only what is really needed), and a comment on the table, every column and every policy. Take every right away first (`revoke all` from `public`, `anon`, `authenticated` and `service_role`), then grant. The browser only reads, so `authenticated` gets `select` at most. If the table has an identity column (`generated always as identity`), also revoke all rights on its counter, as the foundation file does for `wallet_transactions_id_seq`. Copy the style of the foundation file.
 - A new function needs `revoke ... from public, anon, authenticated` and then `grant execute` only to the role that must run it. Start it with `set search_path = ''`.
 - A new wallet reason is one new migration with one `insert into public.wallet_reasons (reason, direction, description) values (...) on conflict (reason) do nothing;`, plus the same `(reason, direction)` pair added at the **end** of `WALLET_REASONS` in `backend/server/wallet.py`, in the same pull request. Never rename a reason or change its direction, because ledger rows point at it. The test `backend/server/tests/test_wallet_matches_migration.py` reads every migration in order and fails if the two lists differ. Add the reason to the manual test plan (step 15) too.
-- Realtime is not switched on for these tables yet. The work package that needs it adds it.
+- Realtime does not follow any of these tables (Postgres Changes is not used). Live presence uses Realtime rooms with their own rules on `realtime.messages`. Never add a policy with `using (true)`, or any rule that does not look at the topic, on `realtime.messages`: it would open every room, including every crew room, to every signed-in player.
+- **Kill switch for live presence**, from the fastest to the slowest: (1) Realtime > Settings > "Enable Realtime service" off. It takes effect at once, and the API and the game keep working; only live presence stops. (2) Drop the five policies with the SQL below. Rooms that a player has already joined keep their rights until that player's next login token, at most about an hour. (3) Delete the account of a flooding player under **Authentication > Users**: its current token stays valid until it ends, at most about an hour. To bring live presence back after (2), run the live presence migration again.
+
+  ```sql
+  drop policy if exists "Live: players can see who is online" on realtime.messages;
+  drop policy if exists "Live: players can say where they are" on realtime.messages;
+  drop policy if exists "Live: players can watch a place room" on realtime.messages;
+  drop policy if exists "Live: players can move in a place room" on realtime.messages;
+  drop policy if exists "Live: crew members can hear their crew room" on realtime.messages;
+  ```
 - If something here is unclear, open an issue before changing the rules for money.

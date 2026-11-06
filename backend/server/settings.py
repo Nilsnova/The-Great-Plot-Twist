@@ -19,10 +19,10 @@ so this file is the full list of what can be configured:
     MARKET_MULTIPLIER         how strongly the Island Exchange amplifies real price moves, a whole
                               number from 20 to 100 (default: 100). Not a secret.
 
-Used by: app.py (reads the environment once at start-up), auth.py and supabase_admin.py (the
-Supabase address and keys), the routes (env, demo mode, flags, the keep-alive secret),
-weather/source.py (the weather place) and the tests (they pass in a plain dictionary, so no real
-environment is needed).
+Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and
+crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence),
+the routes (env, demo mode, flags, the keep-alive secret), weather/source.py (the weather place)
+and the tests (they pass in a plain dictionary, so no real environment is needed).
 """
 
 import math
@@ -62,7 +62,8 @@ class Settings:
     supabase_url: str = ""
     supabase_publishable_key: str = ""
     # SecretStr prints as ********** in logs and error messages. To get the real value on
-    # purpose, call .get_secret_value() (only supabase_admin.py and routes/keepalive.py do that).
+    # purpose, call .get_secret_value() (only supabase_admin.py, crew_broadcast.py and
+    # routes/keepalive.py do that).
     supabase_secret_key: SecretStr = SecretStr("")
     # The password that the daily caller of /api/keepalive sends. The name dates from the time we
     # planned to use Vercel Cron, which we cannot use. Empty on a laptop: no daily caller runs

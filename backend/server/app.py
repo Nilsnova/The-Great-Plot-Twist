@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from server import __version__
 from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
+from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.errors import register_error_handlers
 from server.market.exchange import MarketService, market_or_none
 from server.routes import auth_exchange, config, content, health, keepalive, market, me, weather
@@ -58,12 +59,13 @@ def create_app(
     weather_source: CachedSource | None = None,
     exchanger: CodeExchanger | None = None,
     market_service: MarketService | None = None,
+    broadcaster: CrewBroadcaster | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
-    Tests pass their own settings, a verifier, an admin client, a weather source and an
-    exchanger that use fake transports, and an Island Exchange service whose price feed and
-    clock are fakes.
+    Tests pass their own settings, a verifier, an admin client, a weather source, an exchanger
+    and a crew broadcaster that use fake transports, and an Island Exchange service whose price
+    feed and clock are fakes.
     """
     if settings is None:
         settings = settings_from_environment()
@@ -77,6 +79,8 @@ def create_app(
         exchanger = CodeExchanger(settings)
     if market_service is None:
         market_service = market_or_none(settings)  # None if its data files are broken
+    if broadcaster is None:
+        broadcaster = broadcaster_from_settings(settings)
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
@@ -86,13 +90,14 @@ def create_app(
     app = new_fastapi_app(settings)
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
-    # routes/weather.py, sign_in_code.py and market/exchange.py.
+    # routes/weather.py, sign_in_code.py, market/exchange.py and crew_broadcast.py.
     app.state.settings = settings
     app.state.verifier = verifier
     app.state.admin = admin
     app.state.weather_source = weather_source
     app.state.exchanger = exchanger
     app.state.market = market_service
+    app.state.broadcaster = broadcaster
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")

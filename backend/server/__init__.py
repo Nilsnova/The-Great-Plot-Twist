@@ -11,6 +11,7 @@ Where things are (one job per file):
     auth.py            checks a login token with Supabase and says who the player is
     sign_in_code.py    swaps the one-time code from the GitHub sign-in for a login token (PKCE)
     supabase_admin.py  server-only calls to the database with the secret key
+    crew_broadcast.py  tells a crew's browsers that something changed (Supabase Realtime)
     wallet.py          the rules for changing a player's coins
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
