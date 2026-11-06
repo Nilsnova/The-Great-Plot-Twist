@@ -16,8 +16,8 @@ it('maps numbered choices and wraps arrows without accepting absent choices', ()
 });
 it('formats supplied integer coins without inventing missing balances', () => {
   expect(formatCoins(0)).toBe('0'); expect(formatCoins(12345)).toBe('12,345');
-  expect(formatCoins(-12)).toBe('-12'); expect(formatCoins(null)).toBe('—');
-  expect(formatCoins(1.2)).toBe('—'); expect(formatCoins(Infinity)).toBe('—');
+  expect(formatCoins(-12)).toBe('-12'); expect(formatCoins(null)).toBe('?');
+  expect(formatCoins(1.2)).toBe('?'); expect(formatCoins(Infinity)).toBe('?');
 });
 it('scales a sparkline to integer bounds, handles flat data and refuses invalid samples', () => {
   expect(chartPoints([10,20,15],100,40,4)).toEqual([[4,36],[50,4],[96,20]]);

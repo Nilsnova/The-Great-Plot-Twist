@@ -25,8 +25,8 @@ export function createSettingsView() {
   }
   select('Reduced motion','reducedMotion',[['null','Follow device preference'],['true','On · still transitions'],['false','Off · full animation']],value=>value==='null'?null:value==='true');
   select('Text speed','textSpeed',[['24','Relaxed'],['36','Steady'],['60','Quick'],['0','Instant']],Number);
-  const colour=node('input');colour.type='checkbox';colour.checked=values.colourblind;colour.dataset.preference='colourblind';field('Colour-blind-safe highlights',colour,'colourblind',element=>element.checked);
-  const controls=node('section','controls-overview');controls.append(node('h3','','Controls'),node('p','','Keyboard: WASD or arrows to walk, Shift to run, E to interact, M for the chart, wheel to zoom, Escape to close a view or pause. Dialogue: 1–9 for choices, arrows to browse, Enter to confirm.'));
+  const colour=node('input');colour.type='checkbox';colour.checked=values.colourblind;colour.dataset.preference='colourblind';field('Color-blind-safe highlights',colour,'colourblind',element=>element.checked);
+  const controls=node('section','controls-overview');controls.append(node('h3','','Controls'),node('p','','Keyboard: WASD or arrows to walk, Shift to run, E to interact, M for the chart, wheel to zoom, Escape to close a view or pause. Dialogue: 1 to 9 for choices, arrows to browse, Enter to confirm.'));
   controls.append(node('p','','Touch: drag the stick to walk; tap Interact, Chart or Menu. Gamepad (optional): left stick or D-pad, A to interact, Y for chart, Menu to pause. Menus also support D-pad and A.'));
   form.append(controls,status);return form;
 }

@@ -11,7 +11,7 @@ export function fixtureStatus(fixture, now = Date.now()) {
   if (fixture.pool?.status === 'settled') return 'Settled';
   if (fixture.status === 'scheduled') return fixture.canStake && now < Date.parse(fixture.closesAt) ? 'Staking open' : 'Staking closed';
   return ({ playing: 'In play · staking closed', finished: 'Final result', postponed: 'Postponed',
-    cancelled: 'Cancelled', suspended: 'Suspended', unknown: 'Status unavailable' })[fixture.status] ?? 'Unavailable';
+    cancelled: 'Canceled', suspended: 'Suspended', unknown: 'Status unavailable' })[fixture.status] ?? 'Unavailable';
 }
 export function settlementText(stake) {
   if (stake.status !== 'settled') return 'Waiting for a verified result. No payout has been confirmed.';

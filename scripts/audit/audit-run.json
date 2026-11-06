@@ -1,0 +1,15 @@
+{
+  "reviewed_commit": "94a48ad1c445f4cfb70c539daba3fcb1fe7e7d99",
+  "collected_at": "2026-11-06T20:27:05.709648+00:00",
+  "npm_version": "11.9.0",
+  "pip_audit_version": "2.10.1",
+  "npm_exit_code": 0,
+  "pip_audit_exit_code": 0,
+  "python_packages_audited": 28,
+  "npm_lock_entries": 71,
+  "lockfile_sha256": {
+    "frontend/package-lock.json": "83cfe237c9adb3628e12471cdce07aa975b6a4000766a7294c97e54f0511171d",
+    "backend/uv.lock": "3295d359e35fa54f74e1d99e3b01a830dca9c655cc74571ed7eb33a762f01dc3"
+  },
+  "scope": "All locked third-party packages, including development and other-platform entries. Public registry/advisory requests only; no live application access."
+}

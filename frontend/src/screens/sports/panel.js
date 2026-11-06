@@ -158,7 +158,7 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
     fixtures.replaceChildren();
     if (boardError) return showError(fixtures, boardError, 'Current sports fixtures are unavailable. Try again later.');
     if (!board) { fixtures.append(line('Checking the fixture board…')); return; }
-    fixtures.append(line(`${board.rules.minStake}–${board.rules.maxStake} coins per stake · ${board.rules.dailyCap} per day · ${board.rules.poolCutPercent}% pool cut · closes ${board.rules.pickLeadMinutes} minutes before kickoff`, 'sports-rules'));
+    fixtures.append(line(`${board.rules.minStake} to ${board.rules.maxStake} coins per stake · ${board.rules.dailyCap} per day · ${board.rules.poolCutPercent}% pool cut · closes ${board.rules.pickLeadMinutes} minutes before kickoff`, 'sports-rules'));
     if (!board.fixtures.length) fixtures.append(line('No current fixtures are listed. Check back later.', 'sports-empty'));
     for (const fixture of board.fixtures) fixtures.append(fixtureCard(fixture));
   }

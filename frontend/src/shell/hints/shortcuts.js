@@ -5,7 +5,7 @@ import {createModal} from '../../ui/kit/modal.js';
 
 const shortcuts=[
   ['Walk','WASD or arrow keys'],['Run','Shift'],['Interact','E'],['Open the sea chart','M'],['Zoom','Mouse wheel'],
-  ['Dialogue choices','1–9 · arrows to browse · Enter to confirm'],['Close or pause','Escape: close a view, skip a cinematic, then pause'],
+  ['Dialogue choices','1 to 9 · arrows to browse · Enter to confirm'],['Close or pause','Escape: close a view, skip a cinematic, then pause'],
   ['Touch','Drag the stick · tap Interact, Chart or Menu'],['Gamepad','Left stick or D-pad · A interact · Y chart · Menu pause'],
 ];
 

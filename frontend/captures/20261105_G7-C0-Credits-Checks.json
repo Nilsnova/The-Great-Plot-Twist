@@ -1,6 +1,8 @@
 {
   "checks": [
+    "Credits do not appear on the title menu",
     "Four editable team credit rows",
+    "Unknown teammate names are explicit pending credits without raw placeholders",
     "Credits include Nils Lenke",
     "Credits include Open-Meteo.com",
     "Credits include Binance Vision",
@@ -8,8 +10,11 @@
     "Credits include Apache-2.0",
     "Credits include HPND",
     "Recorded replay links its stated licence",
+    "Built Credits serves exact dependency and helper notices",
     "Credits wrap at 1280 px",
     "Credits wrap at 375 px",
+    "Credits Escape returns to Settings",
+    "Settings Escape returns to the title",
     "No browser errors or external requests"
   ]
 }
