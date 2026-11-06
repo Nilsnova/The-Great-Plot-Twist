@@ -126,6 +126,7 @@ class CaseSnapshot:
     night_started_second: int | None = None
     posts: tuple[Post, ...] = ()
     signals: tuple[Signal, ...] = ()
+    station_ready: bool = False
 
     def seat_for_player(self, player_id: str) -> SeatState | None:
         return next((seat for seat in self.seats if seat.player_id == player_id), None)
