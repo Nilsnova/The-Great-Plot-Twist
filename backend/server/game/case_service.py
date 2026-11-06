@@ -11,7 +11,7 @@ from fastapi import Depends, Request
 
 from server.clock import Clock, utc_now
 from server.errors import ApiError
-from server.game import board_service
+from server.game import board_service, npc_service
 from server.game.case_accusation import decide_accusation
 from server.game.case_answers import http_refusal, refusal_answer, repeat_answer
 from server.game.case_clock import case_second
@@ -23,6 +23,7 @@ from server.game.case_routes import decide_route
 from server.game.case_snapshot import CaseSnapshot
 from server.game.case_store import CaseStore, solve_payments
 from server.game.case_view import build_case_view
+from server.game.npc_lines import load_bank
 from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
@@ -47,7 +48,7 @@ class CaseService:
         self.limiter = limiter or ActionLimiter(clock=clock)
         self.broadcaster = broadcaster
         self.stations = stations
-        self.lines = lines
+        self.lines = lines if lines is not None else load_bank()
 
     def store_for(self, admin: SupabaseAdmin) -> CaseStore:
         return CaseStore(admin)
@@ -59,7 +60,9 @@ class CaseService:
         return (
             None
             if snapshot is None
-            else build_case_view(self.data, snapshot, player_id, self.now(snapshot))
+            else build_case_view(
+                self.data, snapshot, player_id, self.now(snapshot), lines=self.lines
+            )
         )
 
     async def enrich(
@@ -115,8 +118,15 @@ class CaseService:
         return {"case": self.view(snapshot, player_id)}
 
     async def remembered(self, store, player_id: str, action: dict, *, admin=None) -> dict:
+        order = None
+        if action["kind"] == "order":
+            uid = action.get("actionUid")
+            if not isinstance(uid, str) or not uid:
+                raise SupabaseRejected("The remembered partner action id could not be read.")
+            order = await store.npc_order_for_action(player_id, uid, action["crewId"])
+        answer = repeat_answer(self.data, action, lines=self.lines, order=order)
         view = await self.fresh_view(store, player_id, action["crewId"], admin=admin)
-        return {**repeat_answer(self.data, action), "case": view}
+        return {**answer, "case": view}
 
     async def search(
         self, admin, player_id, route_id, action_uid, paid_confirmed=False, expected_price=None
@@ -321,6 +331,20 @@ class CaseService:
     ) -> dict:
         return await board_service.signal(self, admin, player_id, light_id, bearing, action_uid)
 
+    async def order_partner(
+        self,
+        admin: SupabaseAdmin,
+        player_id: str,
+        seat_no: int,
+        kind: str,
+        target: str,
+        action_uid: str,
+        allow_paid: bool = False,
+    ) -> dict:
+        return await npc_service.order_partner(
+            self, admin, player_id, seat_no, kind, target, action_uid, allow_paid
+        )
+
 
 def case_or_none(settings: Settings, *, broadcaster=None, stations=None) -> CaseService | None:
     try:
@@ -329,6 +353,7 @@ def case_or_none(settings: Settings, *, broadcaster=None, stations=None) -> Case
             relight_open=settings.relight_open,
             broadcaster=broadcaster,
             stations=stations,
+            lines=load_bank(),
         )
     except (OSError, ValueError, TypeError, KeyError):
         logger.warning("The case content is unavailable; case routes are disabled.")
