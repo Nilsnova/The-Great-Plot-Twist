@@ -1,0 +1,84 @@
+<!doctype html>
+<!-- Privacy and play-money notice. Used by players and the course; public/ copies it into the build. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="What The Great Plot Twist stores, who sees it, how deletion works, and why its coins are only play money.">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./privacy.css">
+  <script src="./privacy.js" defer></script>
+  <title>Privacy &amp; play money · The Great Plot Twist</title>
+</head>
+<body>
+  <a class="skip-link" href="#notice">Skip to the notice</a>
+  <div class="page">
+    <header class="masthead"><a href="./">← Back to the game</a><span>The Great Plot Twist</span></header>
+    <main id="notice">
+      <div class="intro">
+        <p class="eyebrow">A note for players &amp; the course</p>
+        <h1>Privacy &amp;<br>play money</h1>
+        <p class="lede">What we keep, why we keep it, and what you can ask us to remove.</p>
+        <button id="print-notice" type="button" hidden>Print or save this notice</button>
+      </div>
+<p>For players of The Great Plot Twist and the course team. <strong>student project, not legal advice</strong>.</p>
+<p>Last reviewed: 6 November 2026. This describes the current repository, not a check of the live providers&#x27; settings.</p>
+<nav class="contents" aria-label="Notice sections">
+<a href="#what-we-keep-and-why">What we keep and why</a>
+<a href="#who-can-see-it">Who can see it</a>
+<a href="#how-long-it-stays">How long it stays</a>
+<a href="#delete-my-data">Delete my data</a>
+<a href="#your-browser">Your browser</a>
+<a href="#outside-services">Outside services</a>
+<a href="#play-money-only">Play money only</a>
+</nav>
+<section id="what-we-keep-and-why"><h2>What we keep and why</h2>
+<p>You can explore the local game without signing in. When you use account features, GitHub sign-in through Supabase gives the game a player ID. The public game profile uses a generated captain name, not your GitHub name or email. Supabase&#x27;s own login records can still contain account details from sign-in.</p>
+<p>The game database can keep your profile and signup time, saved progress/settings, intro outcome and awarded kit, play-coin balance and coin history, fictional market holdings/trades, crew ownership/membership and name re-roll. It also records the player ID and time of failed crew-code lookups to slow guessing; it does not store the guessed code or an IP address in that counter. These records make progress, shared crews and game rules work. The intro result stores a move count; it has no dedicated column for the complete move log. A cloud save is a flexible JSON object: do not put private messages or secrets in it.</p>
+</section>
+<section id="who-can-see-it"><h2>Who can see it</h2>
+<p>Every signed-in player can read all public profile columns: captain name, player ID and signup time. Your save, wallet, coin history, market records, re-roll and intro result have database rules limiting player reads to your own rows. Crew members can read their crew and seat details, including player IDs, kits, joining code and times. The join API uses the code to assign a seat and then returns crew details; it does not provide a separate preview before joining. Share the code only with people you intend to invite.</p>
+<p>Visitors who are not signed in cannot read application tables directly. The game&#x27;s privileged server and authorised project/database operators can access stored data. Generated names and IDs still link activity to a player; they do not make it anonymous.</p>
+</section>
+<section id="how-long-it-stays"><h2>How long it stays</h2>
+<p>Most account-linked records remain until account deletion. Current progress is replaced when saved; a fictional market position disappears when fully sold. Failed-lookup counters older than the ten-minute counting window are removed on that player&#x27;s next lookup, so inactive counters can last longer. There is no automatic account expiry or agreed course-end deletion date in the code.</p>
+<p>Server memory also briefly remembers verified logins and recent trading requests. The login check is valid for up to 60 seconds; expired memory is removed lazily or when the process ends. Deletion does not explicitly clear these caches. Application errors can produce request paths and tracebacks in logs; do not assume logs are anonymous. Supabase/Vercel logs and backups follow provider settings, which were not checked for this notice. We cannot give an exact retention or backup-erasure time from this code.</p>
+</section>
+<section id="delete-my-data"><h2>Delete my data</h2>
+<p>Contact <strong>Nils through the course page</strong> to ask about your data or request deletion. The server implements an account-deletion operation that requires confirmation, but this notice does not promise that a player-facing button is already available. D022 still marks deletion/audit-policy choices as pending; this notice records what the implementation does.</p>
+<p>When the implemented deletion succeeds, it removes the Supabase login, profile, cloud save, wallet, <strong>all coin-history rows</strong>, fictional holdings/trades, intro result, name re-roll, failed-lookup counters and your crew seats. A shared crew you own is first passed to the other human player in the lowest seat. A crew with no other human member is removed. Other players&#x27; records remain. A timeout needs a follow-up check; it does not prove that deletion failed.</p>
+<p>Deletion <strong>does not</strong> clear Supabase&#x27;s own <code>auth.audit_log_entries</code> (which can contain login email, player ID and IP address), platform logs/backups, your GitHub account or provider records, local browser data, host configuration or existing process caches. Provider retention is separate. The project has not implemented an audit-log purge. Clearing browser data is a separate step; forgetting a login is not account deletion.</p>
+</section>
+<section id="your-browser"><h2>Your browser</h2>
+<p>The game code sets no application cookies and has no advertising or analytics integration found in this review. Sign-in providers and hosting can use their own cookies/logs.</p>
+<ul>
+<li>Local storage keeps graphics/audio/accessibility preferences and the intro action list so the game can resume after reload. There is no expiry. Starting a new intro resets its action list; clearing this site&#x27;s data removes local progress and preferences.</li>
+<li>An older story-storage helper can leave a local save key on a browser that used it; it is not wired to the current intro.</li>
+<li>The team sign-in check keeps a temporary PKCE secret in tab session storage until used, forgotten or the tab session ends.</li>
+<li>Login tokens stay in memory, not application cookies or local storage. Reloading or “Forget me” drops the page&#x27;s token; it does not remove cloud records.</li>
+</ul>
+<p>This privacy page itself adds no cookies, storage or API calls.</p>
+<p>Browser storage keys: <code>plot_twist_preferences_v1</code> (preferences), <code>plot_twist_intro_moves_v1</code> (intro action list), <code>plot-twist-save-v1</code> (older/helper save) and <code>auth-check-verifier</code> (temporary tab-session sign-in secret).</p>
+</section>
+<section id="outside-services"><h2>Outside services</h2>
+<p>GitHub handles sign-in. Your browser visits GitHub and Supabase, so sign-in itself is not server-only. Supabase handles authentication and the database; the project setup chooses <strong>Ireland</strong>. Vercel serves pages and runs the backend, with functions configured in <strong>Dublin</strong>. That does not mean every provider log, backup or CDN request stays there.</p>
+<p>Outside <strong>data-feed calls are server-side only</strong>:</p>
+<ul>
+<li><strong>Open-Meteo</strong> receives the configured game place&#x27;s coordinates and weather fields, not your device&#x27;s location or player ID/token.</li>
+<li><strong>Binance</strong> receives public instrument symbols for game prices, not your game holdings, trades or identity. It does not open a real trading account for you.</li>
+<li><strong>Finnhub</strong> is not integrated; it was a rejected source candidate. No current calls were found.</li>
+<li><strong>Manifold</strong> is reserved for future public question reads and is not implemented. No current calls were found. Any later feed must remain server-side and needs this notice reviewed.</li>
+</ul>
+<p>Providers receiving server calls also see server network metadata. Demo/recorded fallbacks can replace live feeds. No player IDs or login tokens are part of the outside-data query parameters.</p>
+</section>
+<section id="play-money-only"><h2>Play money only</h2>
+<p>Coins, shares, fees, predictions and rewards are game mechanics. They have <strong>no real monetary value</strong>. There are <strong>no real-money purchases</strong>, deposits, cash-outs, exchanges for money or real prizes. A game “buy” or “fee” spends play coins only. Public market data does not make a game trade a real investment.</p>
+<p>Questions or corrections: <strong>Nils through the course page</strong>.</p>
+</section>
+    </main>
+    <footer><p>student project, not legal advice</p><a href="#notice">Back to the top ↑</a></footer>
+  </div>
+</body>
+</html>
