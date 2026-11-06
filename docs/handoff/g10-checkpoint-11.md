@@ -1,0 +1,32 @@
+# G10 checkpoint 11: final follow-ups and cloud startup
+
+- Branch: `chore/server-followups`; completed backend merged as `4fed3e0` from case checkpoint `3098c0a`.
+- The merged source tree exactly equals the validated `feat/case-backend` checkpoint 10 tree.
+- This checkpoint adds only this handoff note; no runtime code changed after the final gates.
+- Complete server minimum: group 3, all four case phases and the required server follow-ups.
+- C includes crew versions on deletion, kit comment, strict token shape/length, URL and cache guards.
+- R1: real disposable API, four fixed users, actual 15-migration chain twice, strict local SQL adapter.
+- R3/R6: sign-in and bulletin flags default off; disabled bulletin returns before data reads.
+- R7/R10/R12: own-crew read proof, reroll/host metadata, weather-credit placement contract.
+- R8 and case writes use bounded shared version-only hints; timed landings never need a job or write.
+- Old API fixtures now satisfy the three-part token contract without weakening runtime verification.
+- Full backend/story: `10907 passed, 104 skipped in 141.56s`.
+- Explicit SQL/API/filter gate: `124 passed in 41.63s`, including every opt-in skip and 20 filter cases.
+- Frontend: `1603 passed`, 100 files; build/spoiler guard: 111 files, 12 protected lines, no elimination.
+- Ruff clean; 156 changed Python files formatted; 15 SQL files parse; timing simulator exits 0.
+- All 69 production-rule crew mixes and the actual solo HTTP/SQL playthrough with three partners pass.
+- SQL covers C/N/W/P, authenticated denial, concurrency, reward replay and deletion/version safety.
+- Migration: `supabase/migrations/20261106140000_followups.sql`.
+- MD5: `3c687ef351147e3d86b99523941233fd`; the four case hashes are in checkpoint 10.
+- Re-ran the saved frozen install script in the documented checkout: success, build/guard passed.
+- Started the guarded CLI and Vite there; functional direct/proxied HTTP checks all passed.
+- Checked health, demo config/weather/story, fixture login, host/reroll metadata, private case and public world.
+- Development API and Vite are running locally; publication/new tasks must restart them.
+- Cloud `install_script` and refreshed `start_skill` are saved; product publication remains user-controlled.
+- Required credential scan/diff checks pass; STATUS, Vercel config, dependencies and main migration bytes match main.
+- Only approved case-data edit is the chart coordinate; fingerprints are unchanged and R13 builds pass.
+- No live Supabase connection/application, external activation, main push, force push or Actions dispatch.
+- Claude reviews/applies 060000, 080000, 120000, 130000 and 140000 before production readers deploy.
+- Keep production `case` off and `RELIGHT_OPEN` unset; deployed PostgREST/hints/edge HIT remain unverified.
+- C8/story wording review, conditional R4 retirement, R5 external settings and optional R9 are recorded in checkpoint 10.
+- Browser G9 remains a separate task; the backend and local harness are ready for its integration.
