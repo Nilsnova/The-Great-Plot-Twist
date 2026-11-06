@@ -1978,7 +1978,7 @@ An unknown card or light gives 404 `no_such_card` or `no_such_light`. Each route
 **Minimum:**
 - `world_state`, moved from `dark` to `relit` **exactly once** by the first accepted accusation in the live world. It is one conditional update, and it happens only while `RELIGHT_OPEN` is true (decision 19 as changed by Nils: no demo world, one server setting).
 - `world_solves`.
-- The Wall of Lights: contributors' captain names and solve order, once per player (C16 pending).
+- The Wall of Lights: contributors' captain names and solve order, once per player (C16, decided by Nils on 6 Nov 2026).
 - Each later solve adds one more light (at most 12 extra) and its names.
 - `GET /api/world`, behind the flag `case`.
 - `world_outcome` for every solver (`reveal.world`).
@@ -2176,7 +2176,7 @@ At acceptance the order stores:
 - a `case_finds` row for the partner seat, ready at `found_second`;
 - a `board_pins` row: `ordered_second` = the order second, `pinned_second` = `pin_second`, `pinned_by` = the ordering player, `by_partner`, `order_no`.
 
-"Settled" means the second has passed. Settling twice changes nothing, and a clock jump (the host clock route) finishes every due order at once (N4). The result and the route are fixed at acceptance (N5). A partner never pays (N19). The pin's 50 coins go to the ordering player at acceptance (C6, pending).
+"Settled" means the second has passed. Settling twice changes nothing, and a clock jump (the host clock route) finishes every due order at once (N4). The result and the route are fixed at acceptance (N5). A partner never pays (N19). The pin's 50 coins go to the ordering player at acceptance (C6, decided by Nils on 6 Nov 2026).
 
 ### 7.3 Rules (pure, `game/npc_orders.py`)
 
@@ -2206,6 +2206,8 @@ Any new order ends a partner's duty: its post gets `ended_second`, and its lock 
 The kit rule is not re-implemented: import `crews.seats.partner_seats` and `NPC_KIT_ORDER`.
 
 ### 7.5 Tables and functions
+
+**G10 implementation amendment, 6 Nov 2026:** an NPC action receipt uses its unique order number as the internal `case_actions.target`. A card/light target cannot distinguish two orders by one player to different partners in the same second. The server recovers the exact player-scoped order row for its original bank variant and salt, including when the row is older than the bounded view. Public intent targets remain card/light ids; function signatures and earlier migrations are unchanged. See D027.
 
 ```sql
 alter table public.case_state add column if not exists orders_count integer not null default 0;
@@ -2374,7 +2376,7 @@ begin
   values (p_crew_id, v_order_no, p_seat_no, p_npc_id, 'fetch', p_card_id, p_player_id,
           case when v_holds then null else p_route_id end, p_card_id, p_price, v_now,
           case when v_holds then null else v_now + p_arrive_seconds end, v_found_at, v_pin_at, v_pin_at);
-  v_revision := public.case_finish(p_crew_id, p_player_id, p_action_uid, 'order', p_card_id, 'fetch', v_now);
+  v_revision := public.case_finish(p_crew_id, p_player_id, p_action_uid, 'order', v_order_no::text, 'fetch', v_now);
   return jsonb_build_object('status', 'done', 'orderNo', v_order_no, 'foundSecond', v_found_at,
                             'pinSecond', v_pin_at, 'coinsPaid', v_paid, 'revision', v_revision);
 end;
@@ -2429,7 +2431,7 @@ begin
                                  ordered_second, ready_second)
   values (p_crew_id, v_order_no, p_seat_no, p_npc_id, 'man_light', p_light_id, p_player_id,
           v_now, v_now + p_travel_seconds);
-  v_revision := public.case_finish(p_crew_id, p_player_id, p_action_uid, 'order', p_light_id, 'man_light', v_now);
+  v_revision := public.case_finish(p_crew_id, p_player_id, p_action_uid, 'order', v_order_no::text, 'man_light', v_now);
   return jsonb_build_object('status', 'done', 'orderNo', v_order_no, 'onPostSecond', v_now + p_travel_seconds,
                             'revision', v_revision);
 end;
@@ -2832,7 +2834,7 @@ Never cut the three lights, the 12 routes, the accusation, the reveal, the rewar
 9. **The culprit's id:** CASE-FILE test 14 says no answer contains "the culprit's id". The accusation must list all four suspect ids, so the test checks that nothing marks the culprit (3.7).
 10. **A6 join preview:** A6 has no preview step, but G6's `joinCrew(code, {confirm})` and NPC-PARTNERS 7.1 step 3 expect one. A6 could add `{"code", "preview": true}`.
 11. **The L2 dependency:** without L2 on `main`, production cannot finish the finale. L2's code is done in its worktree; its migration was still changing at 23:49.
-12. **Pending for Nils:** C4 (no clock pause), C6 (partner pin reward at acceptance), C8 (the glow), C9 (locked solves never reach the Wall), C16 (who goes on the Wall), C18 (boarding as a rule or not).
+12. **Decided by Nils on 6 Nov 2026:** C4 (no clock pause), C6 (partner pin reward at acceptance), C9 (locked solves never reach the Wall), C16 (contributors on the Wall), C18 (boarding is presentation). C8 (the glow) retains the built default pending Nils or the story owner.
 13. **For the team on Mon 9:** C1, **C2 with its consequence** (a 409-style repeat turns a retried refusal into a success), C3 and C11.
 14. **A4:** its spec and code exist. Ask the A4 owner to correct "Who calls it later":
     - S3 sends `case_changed` for searches, accusations and host clock moves;

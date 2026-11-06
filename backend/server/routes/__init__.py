@@ -11,6 +11,7 @@
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
     predictions.py    /api/predictions...     questions, stakes and host settlement
     duels.py          /api/duels...           sealed-signal challenges and moves
+    crew_orders.py    /api/crews/me/orders      fixed partner fetch and light orders
     crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
     case.py           /api/case...             earned view, card searches and accusation
     world.py          GET /api/world           public coast state and Wall of Lights

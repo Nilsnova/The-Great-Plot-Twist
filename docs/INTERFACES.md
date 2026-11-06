@@ -72,9 +72,9 @@
 
 ## 2. Routes that exist now
 
-Case Phases 1 and 2 are specified in [section 10](#case-phase-1-contract-for-g9); keep the flag off until the required migrations are applied.
+All four case phases are specified in [section 10](#case-phase-1-contract-for-g9); keep the flag off until the required migrations are applied.
 
-There are 43 API operations, including ten case operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
+There are 44 API operations, including eleven case operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
 ### GET /api/health
 
@@ -1316,7 +1316,7 @@ Phase 1 search refusal reasons are `lead_locked`, `already_have`, `wrong_kit` an
 | 502 | `database_error` | Unreadable reply or a database guard failure; never a case repeat |
 | 503 | `case_unavailable`, `database_not_configured`, `database_unavailable` | Broken content, missing database or uncertain operation |
 
-The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 2 fills `finale` and `me.timber`; `partners:[]` remains reserved for Phase 4.
+The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 2 fills `finale` and `me.timber`; Phase 4 fills the partner view from its canonical dialogue bank.
 
 `board` contains earned `cards`, open unheld `leads`, `logLead`, `deductions`, identical-shape `suspects`, `canPair` and `pairWait`. An incomplete deduction has exactly `id`, `name` and `complete:false`; it exposes no card pair or clearing information. `search.spots` groups eligible routes by hotspot, and `search.jobs` contains running finds and finds landed in the last 10 minutes. `accusation` carries `schoonerFound`, `allowed`, `cooldown`, `status`, the public suspect list, earned evidence and `lastWrong`.
 
@@ -1353,6 +1353,18 @@ The response is `{stage, lightsOn, fogBankGone, gullsRestOpen, extraLights, solv
 A shared checked reader supplies both the public response and open-world's `WorldStageReader`, including the first `relit_at`. Its state cache lasts 30 seconds. Exchange v2 receives that reader's `relit_check`: after relighting the fee is 1 percent and Greyfathom accepts no new positions. The `case` flag also gates these default consumers before database reads. Explicitly injected test ports remain intact.
 
 The first eligible solve while `RELIGHT_OPEN` is true atomically relights the coast with its payout and crew outcome. Later crews add one light up to 12. Only contributors reach the Wall, once per player. Solves completed while the setting is closed remain private forever. No world-specific crew hint is sent; the normal accusation hint reaches the solving crew and public clients poll the cached world route. Keep `RELIGHT_OPEN` unset until Claude deliberately opens production.
+
+### Case Phase 4 partner order contract
+
+`POST /api/crews/me/orders` uses the case flag, verified crew player, shared rate limits and private/no-store headers. Its strict body is `{seat, order, target, allowPaid:false, actionUid}`: seat is an integer from 1 to 4, order is `fetch` or `man_light`, and target is a card or light id. Extra fields are rejected; `allowPaid:true` gives 422 `paid_errands_off`. A player or missing partner seat gives 409 `not_a_partner`; a seat changed during the request gives 409 `crew_busy`.
+
+Accepted answers add `line`, `order:{number,seat,order,target,orderedAt,arriveAt,foundAt,pinAt,readyAt,price}`, and `coinsPaid` for a fetch. `message` equals `line`; all partner text comes from the validated bank. A fetch arrives at 4 minutes, finds at 10 and pins at 15; a held journal card needs only a 5-minute pin. A man-light order reserves a public light immediately and arrives in 10 minutes. Time results are fixed at acceptance and become visible without settlement writes. Any new order ends the partner's previous post and lock.
+
+Only four game refusal reasons leave this minimum API: `busy`, `wrong_kit`, `locked_window` and `not_ready`. Busy and window waits carry `minutes`. Other internal refusals map to `not_ready` with the appropriate bank line. A refusal writes no order and pays nothing. Partners never choose routes requiring a player, share, world state, log-reader profile or paid shortcut, and never pair, call nightfall, aim or accuse.
+
+A first-card reward goes to the ordering player at order acceptance, once per player/card across crews. Its pending pin counts for contribution credit immediately; pairing still waits for the stored pin time. Repeated actions preserve the original bank line and accepted outcome before any new-target or current-seat checks, omit unstored numeric extras, and never pay or nudge again. Internal receipts use their unique order number; historical lookup remains scoped to the verified player and crew.
+
+`partners[]` contains `seat,name,partnerId,kit,kitName,status,canOrder,orders,targets,satchel,job`. Status is `idle`, `busy` or `on_duty`; only busy disables the buttons. Fetch targets are open leads without a pin row for that seat; public-light targets expose names without readiness hints. Satchel entries are `{id,title,pinned}` only after the card lands. A job carries stored deadlines, countdowns, arrival/done flags and the latest canonical bank line. Valid holder matching prevents replaced partner seats from retaining a post. One `partner_changed` version-only hint is attempted at acceptance; arrivals/finds/pins use countdown refreshes.
 
 ## 11. Open questions for Mon 9
 

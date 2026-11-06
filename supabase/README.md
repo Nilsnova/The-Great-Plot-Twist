@@ -2925,3 +2925,14 @@ The migration replaces `case_after_solve(uuid,boolean,uuid[])` with caller right
 W1 to W9 in `case_sql/test_phase3.py` cover twice-applied migrations, locked and open solves with atomic payouts, later/repeated crews, actual concurrent accusations, the lamp cap, player deletion and Phase 1 hook preservation. The contemporaneous combined group 3 and case chain now has 30 public tables, one view, 16 public policies, five Realtime policies, 17 wallet reasons and 39 public functions; case/world tables add no browser policies or wallet reasons.
 
 Keep `case` off until every migration read by the deployment is applied; leave `RELIGHT_OPEN` unset. Deployed PostgREST and preview edge-cache hits remain manual checks for Claude, never a reason to test against the live database here.
+
+
+## Case Phase 4 migration
+
+`migrations/20261106130000_npc_partners.sql` adds the append-only `npc_orders` history and `case_state.orders_count`. The table has RLS, no player policy or grant, and only select/insert for `service_role`. There is no DELETE or UPDATE grant and no settlement job.
+
+The four caller-rights, empty-search-path functions are `npc_begin(uuid,uuid,text,smallint,text)`, `npc_next_order_no(uuid)`, `npc_fetch_pin(uuid,uuid,text,smallint,text,text,text,text[],jsonb,integer,integer,integer,integer,text,integer,text)` and `npc_man_light(uuid,uuid,text,smallint,text,text,integer,integer)`. Execution belongs only to `service_role`; the API invokes the last two. They reuse the crew lock and repeat check, validate current NPC identity/busy time, store fixed finds/pins or reserve a post, and finish one revision. The minimum API supplies zero price and rejects paid errands.
+
+Both NPC intents store their new order number as the internal action target. This reviewed repair makes two same-target orders in the same second distinguishable for exact bank-line replay. It changes no public field and no prior migration. P1 to P10 and extra receipt/role checks exercise fixed outcomes, once-per-player rewards, pin-only jobs, busy boundaries, light reservations, duty termination, takeover safety and authenticated denial on the actual twice-applied chain.
+
+With group 3 and all four case phases the combined schema has 31 public tables, one view, 16 public policies, five Realtime policies, 17 wallet reasons and 43 public functions. Stream C's 140000 replacement preserves those counts and raises affected crew versions on account deletion. Claude applies new case migrations before deployment; `case` stays off and `RELIGHT_OPEN` stays unset until external activation is deliberately reviewed.

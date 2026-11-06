@@ -248,44 +248,13 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Status:** Proposed in the A3 pull request (`feat/a2-a3-signin-referee`); accepted when reviewed by another teammate and merged. **N6 was decided by Nils on 6 Nov 2026:** the coins and texts of the kits are settled by the approved S0 story round (point 5, D018), and "the first ending counts" is now the decided rule (point 3).
 
-**Decision:** (1) **The server replays the move log.** At the end of Act 1 the browser sends `actions[]`, 1 to 300 action ids (`POST /api/intro/complete`). The server plays them with the original Python engine (`plot_twist/engine.py`) on its own copy of `story.json`. Every move must be accepted by the engine. The first move it does not accept (an unknown id, a move of another scene, a blocked move, a move after the ending) refuses the whole log as `422 move_refused`, and the message names that move. A log that stops before an ending is `422 no_ending`. A refused log stores nothing: the database is not called. The browser never sends an ending, a decision, a kit or a player id; any such field is refused. (2) **Eight end states, four kits.** The ending scene and the decision (read from the story flags `warned_harbor` and `trusted_fisherman`, neither meaning `none`) pick the kit: `ending_rescue` with `warned` is the True Keeper, `ending_trapped` with `warned` the Witness, with `trusted` the Informant, with `none` the Stranger. Reading the logbook (flag `read_log`) does not change the kit: it sets `readLog`, which gives the log card on the case board. The kits, the flag names and the start places are data in `backend/content/entry_kits.json`. Both decision flags set at once cannot happen in the story; if it ever did, the referee raises an error (a 500) and never picks a kit. (3) **The first ending counts** (decided by Nils on 6 Nov 2026, N6). The table `entry_profiles` has one row per player, written once and never changed. A second playthrough returns the stored profile (the stored ending, decision, kit, start place and coins), pays nothing, and says `alreadyGranted: true`. (4) **The coins move once, inside the database.** `grant_entry_kit()` locks the player, stores the profile and calls `apply_wallet_transaction()` with the reason `kit_grant` and the fixed ref `kit`, in one transaction. Python checks the amount with the wallet rules first but never moves the coins. A player who was paid the kit by hand earlier (the manual test plan does that) gets a profile and no second payment. (5) **The kits** (pending S0, N5): True Keeper, Witness and Informant 1000 coins each, Stranger 1600; the start place is `lighthouse_isle` for the True Keeper and `saltreach_harbor` for the others; each kit has a clue card (C6, C2, C4, C5) and a small item. (6) **The story file is identified, not required.** The SHA-256 of `story.json` is stored with each profile, for audits. The request carries no story version, because Story v2 only adds actions and changes no rule, so an old log replays to the same end state. A log that only a newer story allows is refused as `move_refused`, and the message tells the player to reload. This replaces the note in the content README that suggested a `409` for a different story.
+**Decision:** (1) **The server replays the move log.** At the end of Act 1 the browser sends `actions[]`, 1 to 300 action ids (`POST /api/intro/complete`). The server plays them with the original Python engine (`plot_twist/engine.py`) on its own copy of `story.json`. Every move must be accepted by the engine. The first move it does not accept (an unknown id, a move of another scene, a blocked move, a move after the ending) refuses the whole log as `422 move_refused`, and the message names that move. A log that stops before an ending is `422 no_ending`. A refused log stores nothing: the database is not called. The browser never sends an ending, a decision, a kit or a player id; any such field is refused. (2) **Eight end states, four kits.** The ending scene and the decision (read from the story flags `warned_harbor` and `trusted_fisherman`, neither meaning `none`) pick the kit: `ending_rescue` with `warned` is the True Keeper, `ending_trapped` with `warned` the Witness, with `trusted` the Informant, with `none` the Stranger. Reading the logbook (flag `read_log`) does not change the kit: it sets `readLog`, which gives the log card on the case board. The kits, the flag names and the start places are data in `backend/content/entry_kits.json`. Both decision flags set at once cannot happen in the story; if it ever did, the referee raises an error (a 500) and never picks a kit. (3) **The first ending counts** (decided by Nils on 6 Nov 2026, N6). The table `entry_profiles` has one row per player, written once and never changed. A second playthrough returns the stored profile (the stored ending, decision, kit, start place and coins), pays nothing, and says `alreadyGranted: true`. (4) **The coins move once, inside the database.** `grant_entry_kit()` locks the player, stores the profile and calls `apply_wallet_transaction()` with the reason `kit_grant` and the fixed ref `kit`, in one transaction. Python checks the amount with the wallet rules first but never moves the coins. A player who was paid the kit by hand earlier (the manual test plan does that) gets a profile and no second payment. (5) **The kits** (settled by approved S0, N5, D018): True Keeper, Witness and Informant 1000 coins each, Stranger 1600; the start place is `lighthouse_isle` for the True Keeper and `saltreach_harbor` for the others; each kit has a clue card (C6, C2, C4, C5) and a small item. (6) **The story file is identified, not required.** The SHA-256 of `story.json` is stored with each profile, for audits. The request carries no story version, because Story v2 only adds actions and changes no rule, so an old log replays to the same end state. A log that only a newer story allows is refused as `move_refused`, and the message tells the player to reload. This replaces the note in the content README that suggested a `409` for a different story.
 
 **Why:** The browser can be changed by anybody, and a kit pays coins, so the ending has to be re-played where the player cannot touch it. The engine is the same code that wrote the story's rules, so no second set of rules can drift. Putting the profile and the payment into one database function means a crash, a double click or two requests at the same moment can never leave a profile without coins or pay twice, and the ledger's unique index is the last guard. Storing the first profile makes the route safe to repeat without an `actionUid`.
 
 **Alternatives and trade-offs:** Trusting the ending in the request: rejected, a player could pick the best kit. Requiring the story hash and refusing a different story with `409` (the note that backend/content/README.md used to carry): rejected, because an old page would be sent into an error for no reason when the rules are the same. Letting a later playthrough replace the kit: rejected as the default, because the coins differ (1000 and 1600), so a second payout rule would be needed and players could farm kits. A mistaken ending can only be undone by hand: delete the row in the SQL editor (no role has a delete right on the table), and the next submission stores a new profile, but pays nothing, because the ledger already has the kit row. Paying from Python after storing the profile: rejected, two steps can break in between. Trade-offs: the route reads three small files per request (the story, the kits and the story's hash); `GET /api/me` now needs the table `entry_profiles`, so the migration must be applied before the server that reads it is deployed. That means before the branch is merged into `main` (a push to `main` deploys to production at once, and `GET /api/me` is live today) and before a preview of the branch is tested (previews share the one Supabase project). If the merge has to come first, the read of `entry_profiles` in `routes/me.py` is held back (`kit` and `place` stay `null`) and merged after the apply; a server error between the replay and the database call leaves nothing stored, which is why a `503` is safe to repeat.
 
 **Agreed by, PR and impact:** Proposed by Claude for Nils, 5 Nov 2026, in the A3 pull request. D019 was the next free number when A3 was written; the account entry it followed became D022 at merge, because the story round took D018 (no number is reserved for A3 in the roadmap). N5 was settled by the approved S0 story round (D018); N6 (the first ending counts) was decided by Nils on 6 Nov 2026. Affects A6 (a seat carries the entry kit, so the crew routes read `entry_profiles`), S2 (the browser sends the move log), S3 (the start place, the cheap card and the log card), S4 (the kits that NPC partners fill in), and `GET /api/me`.
-
-## D027 · Case backend contracts · 2026-11-06
-
-**Status:** Phase 1 built on `feat/case-backend` for Claude's review. Later phases remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
-
-| Decision | Contract |
-|---|---|
-| C1 | Game refusals are 200 with accepted=false, reason, message and a fresh view. |
-| C2 | A repeated actionUid rebuilds its stored outcome first and adds repeat=true. |
-| C3 | GET /api/case and POST /api/case/search replace the old board-read and free-form act reservations. |
-| C4 | Decided: whole case seconds since muster, no pause; a host moves only their own crew. |
-| C5 | Timed results take effect at their stored acceptance-time deadline, without a settle job. |
-| C6 | Decided: a partner pin's reward is paid when its order is accepted. |
-| C7 | Concurrent searches are allowed; each seat finds each card once. |
-| C8 | The crew sees rounded glow during its own night. The specification's default remains pending Nils or the story owner. |
-| C9 | Decided: a locked solve never later changes the world; its rewards and reveal still happen. |
-| C10 | Case tables are server-only, with RLS and no player grants or policies. |
-| C11 | The case flag defaults off and gates all case routes, including the later world route. |
-| C12 | Light posts remain occupied after dawn. |
-| C13 | A player locks their own light; any crew player may lock a partner-held light. |
-| C14 | Optional route labels are data; absent labels use the card title. |
-| C15 | Every state-changing refusal is logged, so retries preserve refusals. |
-| C16 | Decided: only contributors with a share appear on the Wall of Lights. |
-| C17 | Partner pin credit starts at order acceptance; pairing waits for the actual pin. |
-| C18 | Decided: position and boarding are presentation only, never server prerequisites. |
-| C19 | Any crew player's level-one station readies the crew's home light; only players man it. |
-| C20 | RELIGHT_OPEN=true is accepted only in explicit production; unset is closed. |
-
-**Migration reservations:** Phase 1 060000, Phase 2 080000, Phase 3 120000, Phase 4 130000; stream C 140000. Group 3 owns 090000, 100000 and 110000. All filenames start with 20261106. No historical or reviewed migration is edited.
-
-**Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See [the specification](../specs/case-backend.md) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
 
 ## D008 · Grow order is moot · 2026-11-06
 
@@ -408,12 +377,11 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Proposed in `feat/open-world-must`. Affects `GET /api/weather` (two new fields), `GET /api/bulletin` (new), three content files, package L3 (`world_state` keeps `relit_at` and provides the reader), package S3 (the next-lead line) and package L5 (weather questions settle on real fog only).
 
-## D018 · Prediction desk rules · 2026-11-06
+## D025 · Prediction desk rules · 2026-11-06
 
 **Status:** Proposed in the L5 pull request (`feat/l5-prediction-desk`); accepted when reviewed by another
-teammate and merged. The number is provisional: the controller renumbers it at merge. Base: the roadmap (L5)
-and OPEN-WORLD section 8. Points marked "chosen here" need Nils' OK. The flag `predictions` stays off (Nils'
-decision 18).
+teammate and merged. Renumbered from D018 to D025 at the group 3 integration. Base: the roadmap (L5)
+and OPEN-WORLD section 8. Points marked "chosen here" need Nils' OK. The source flag defaults off. Nils approved switching it on after the group 3 merge and checks on 6 Nov 2026; Claude owns external activation.
 
 **Decision:**
 1. Play-coin pools only: the winners share the pool. No outside odds, no link to a betting site; Manifold's
@@ -465,11 +433,11 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 **Agreed by, PR and impact:** proposal for Nils, 6 Nov 2026. Affects L6 (`pools.py`), the list of wallet reasons
 (13), the kiosk screen and A2 (`hosts.py`).
 
-## D018 · Lantern Duels rules · 2026-11-06
+## D026 · Lantern Duels rules · 2026-11-06
 
-**Status:** Proposed in the A7 pull request (`feat/a7-lantern-duels`); accepted when reviewed by another teammate and merged. The number D018 is a placeholder: the controller renumbers it at merge if another entry took it first (OPEN-WORLD on `s0final` also mentions a D018). The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md).
+**Status:** Proposed in the A7 pull request (`feat/a7-lantern-duels`); accepted when reviewed by another teammate and merged. Renumbered from D018 to D026 at the group 3 integration on 6 Nov 2026. The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md).
 
-**Decision:** Lantern Duels, the PvP arena (package A7), is a duel of **sealed signals** between two captains, behind the flag `arena`, which stays off.
+**Decision:** Lantern Duels, the PvP arena (package A7), is a duel of **sealed signals** between two captains, behind the flag `arena`, which defaults off. Nils approved switching it on after the group 3 merge and checks on 6 Nov 2026; Claude owns external activation.
 
 - *The duel.* Each captain seals a sequence of lantern signals, one per round (3 or 5 rounds): Flash outshines Shade, Shade leaves Mirror nothing to throw back, Mirror throws Flash back, and the same signal twice scores for nobody. Each captain has as much lantern oil as the duel has rounds: Flash burns 2, Mirror 1, Shade 0. More rounds won wins; equal is a draw. The challenger seals with the challenge, the other captain with the answer, and answering *is* accepting: in one database transaction the server stores the answer, opens both envelopes, decides every round and settles the coins. The browser sends only signals, never a result or an amount (D003).
 - *Challenges.* By captain name (the exact display name, in any letter case) or open to any captain, where the first answer wins. Withdraw (the challenger) and decline (the named captain) are one extra route, `POST /api/duels/{id}/cancel`, and the list is `GET /api/duels`; both are new names for the Mon 9 contract review.
@@ -495,7 +463,7 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 ## D027 · Case backend contracts · 2026-11-06
 
-**Status:** Phases 1 to 3 built on `feat/case-backend` for Claude's review. Phase 4 remains gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
+**Status:** All four minimum phases built on `feat/case-backend` for Claude's review. Production activation remains Claude's step. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
 
 | Decision | Contract |
 |---|---|
@@ -533,3 +501,5 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 - **Agreed by / issue or PR / impact:**
 
 **D027 implementation note, 6 Nov:** Phase 2 imports A4/L2 from main before building the board and night. Nils explicitly approved the coordinate-only home light alignment to the public registry (Y 192.87); fingerprints were regenerated unchanged and the frontend build passed. C8 retains the specification default pending story-owner confirmation; no story wording was changed.
+
+**D027 receipt amendment, 6 Nov:** NPC action receipts store the numeric order number as their internal target. Card/light targets alone are ambiguous when one player orders two partners to fetch the same card in the same case second. Exact player/crew/order lookup preserves the original seat, timing, bank variant and line salt for retries, including older orders outside the bounded view. Public request and response shapes are unchanged. Only the new 130000 migration changes; earlier migrations keep their bytes.
