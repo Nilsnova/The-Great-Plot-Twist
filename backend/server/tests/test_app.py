@@ -1,6 +1,7 @@
 """Tests for the app as a whole: the error shape, the /api prefix and the Vercel entry file."""
 
 import importlib.util
+import inspect
 import subprocess
 import sys
 import tomllib
@@ -13,8 +14,9 @@ from fastapi.testclient import TestClient
 
 from server import __version__
 from server.app import create_app
+from server.clock import ClockDep, utc_now
 from server.errors import ApiError, describe_validation_problems
-from server.tests.helpers import CONFIGURED_SETTINGS, assert_error
+from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock, assert_error
 
 # backend/ holds main.py, pyproject.toml and the server/ package.
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -212,3 +214,43 @@ def test_version_in_the_code_matches_pyproject():
         pyproject = tomllib.load(file)
 
     assert pyproject["project"]["version"] == __version__
+
+
+# --- the services of create_app that only tests replace ---
+
+
+SERVICES = ("weather_source", "exchanger", "market_service", "world_stage", "clock")
+
+
+@pytest.mark.parametrize("name", SERVICES)
+def test_the_new_services_are_keyword_only(name):
+    parameter = inspect.signature(create_app).parameters[name]
+
+    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+
+
+def test_the_app_clock_is_the_real_clock_unless_a_test_passes_one():
+    app = create_app(CONFIGURED_SETTINGS)
+
+    assert app.state.clock is utc_now
+
+
+def test_the_app_keeps_the_clock_a_test_passes_in():
+    clock = FakeClock()
+
+    app = create_app(CONFIGURED_SETTINGS, clock=clock)
+
+    assert app.state.clock is clock
+
+
+def test_a_route_can_ask_for_the_clock_of_the_app():
+    clock = FakeClock()
+    app = create_app(CONFIGURED_SETTINGS, clock=clock)
+
+    @app.get("/api/test/time")
+    async def what_time_is_it(now: ClockDep) -> dict[str, str]:
+        return {"now": now().isoformat()}
+
+    response = TestClient(app).get("/api/test/time")
+
+    assert response.json() == {"now": "2026-11-05T12:00:00+00:00"}

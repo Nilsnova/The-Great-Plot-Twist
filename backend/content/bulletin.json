@@ -1,0 +1,30 @@
+{
+  "stateWords": {"storm": "storm", "fog": "fog", "rain": "rain", "calm": "calm and clear"},
+  "noForecast": "no forecast",
+  "weatherLine": "Tonight: {tonight}. Tomorrow: {tomorrow}.",
+  "fogNightLines": {
+    "real": "Fog tonight. Watch for the false light.",
+    "almanac": "The harbor's almanac calls fog tonight. Watch for the false light."
+  },
+  "exchange": {
+    "feedWords": {
+      "live": "live",
+      "cache": "recent prices",
+      "stale": "old prices (trading paused)",
+      "replay": "replay"
+    },
+    "allOpen": "Island Exchange: {feed}. No company is paused.",
+    "somePaused": "Island Exchange: {feed}. Paused: {companies}."
+  },
+  "relitLine": "The coast is relit. The false light is out. A crew found it.",
+  "relitLineHours": 48,
+  "calendar": [
+    {"on": "2026-11-16", "text": "Day 1. From today the harbor bulletin comes out every morning at 8."}
+  ],
+  "resets": [
+    {"when": "Every day at 00:00", "what": "A new game day begins."},
+    {"when": "Every day at 08:00", "what": "The harbor bulletin is published."},
+    {"when": "Every Monday at 00:00", "what": "A new harbor week begins."},
+    {"when": "Never", "what": "Coins, buildings, shares and titles never reset."}
+  ]
+}

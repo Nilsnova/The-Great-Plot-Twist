@@ -16,6 +16,9 @@
 | `names.json` | The word lists for generated captain names such as "Brave Puffin 17" (package A2, decision D006). | The server only. It is not on the list of public content and is never served. |
 | `entry_kits.json` | The four entry kits of the case and which Act 1 ending leads to which one (package A3, decision D019). | The server only. It is not on the list of public content and is never served. |
 | `buildings.json` | The buildings of a home islet (package L2): the five spots, the price of a level 1 building and the starter timber. Format: [buildings.json](#buildingsjson-the-buildings-of-a-home-islet). | The server only. It is not on the list of public content; the browser gets everything through `GET /api/islet`. |
+| `weather_states.json` | The numbers behind the weather states (storm, fog, rain, calm), the hours of a night and the start of the harbor's almanac. | Server only. It is not on the public list. The browser sees the result in `GET /api/weather` (`state`, `tonight`) and `GET /api/bulletin`. |
+| `bulletin.json` | Every word of the harbor bulletin, the dated notices and the list of what resets when. | Server only. The browser sees it in `GET /api/bulletin`. |
+| `chapter_two_hook.json` | The Board notice and the beam of the Chapter 2 hook, "A light where no light was". | Server only. The browser gets it from `GET /api/bulletin` only after the hook has fired. |
 
 Content is data, not code. The story engine reads it and never contains story text. You can change `story.json` without touching any Python or JavaScript.
 
@@ -647,3 +650,56 @@ The tests are in `backend/server/tests/test_building_catalogue.py`. `test_islet_
 - **To open the windmill or the greenhouse** (once timber has a second source, the driftline): set `buildable` to `true`. No code change is needed, because the database already allows a building on those plots.
 - **To add a spot:** write a new migration that replaces the check rule `islet_buildings_plot_fits_building`, and add the spot here and to the place registry. The test fails until all three agree.
 - **A new price** counts for the next build. A building that stands keeps what it cost (`coins_paid` and `timber_paid` in `islet_buildings`).
+
+## The open-world files (server only)
+
+Three files belong to the open world (the weather states, the daily bulletin and the Chapter 2 hook). They are in this folder so they ship with the API, but none of them is on the public list `PUBLIC_CONTENT`, so `GET /api/content/{name}` answers 404 for them (a test checks it). The server reads each one once, when it starts, and checks every field. A mistake is reported with the file name and the field. The server does not stop because of it: the problem goes to the log, the weather route leaves out `state` and `tonight`, and `GET /api/bulletin` answers `503 bulletin_unavailable`. Their tests are in `backend/server/tests/test_weather_states.py` and `test_daily_content.py`, and they also check the real files. The design is `OPEN-WORLD.md` in the story documents (`docs/story/`, on the branch `docs/s0-story-round` until it is merged; sections 3.1 to 3.4, 5.4 and 10.2), and the build spec is `specs/open-world-must.md`.
+
+None of these texts may name the culprit or the case's answers, before or after the first solve (the spoiler rule, CASE-FILE 14.3). A test scans every text for the words that would give it away.
+
+### weather_states.json
+
+```json
+{
+  "stateFrom": {"storm": {"wind": 0.8}, "fog": {"fog": 0.5}, "rain": {"rain": 0.4}},
+  "night": {"startsHour": 18, "endsHour": 6, "hoursForState": 3},
+  "fogNightRule": {"almanacStartsOn": "2026-11-16"}
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `stateFrom` | The value of the game's weather (each from 0 to 1, see `weather/mapping.py`) at which an hour counts as a storm (`wind`), as fog (`fog`) or as rain (`rain`). Each number is above 0 and at most 1. In real units: a wind of 0.8 is 48 km/h, a fog of 0.5 is a visibility of 5 km or less (or a fog weather code) and a rain of 0.4 is 3.2 mm an hour (or a rain weather code of 0.4 or more). **The order is not in the file:** if several apply, storm comes first, then fog, then rain, otherwise calm. Cloud cover never changes the state. |
+| `night.startsHour`, `night.endsHour` | A night runs from `startsHour` (12 to 23) on one date to `endsHour` (2 to 11) on the next, Lisbon time. A night therefore spans midnight and never touches 01:00, the hour in which the Lisbon clocks change. A daytime is the rest of the date. |
+| `night.hoursForState` | A night or a daytime takes a state when this many of its hours have it (1 to 12). |
+| `fogNightRule.almanacStartsOn` | The date from which the harbor's almanac counts one fog night in every three, written `YYYY-MM-DD`. It also counts backwards from that date. |
+
+Other loops may add their own keys to this file later (storm warnings, rainy oil). The loader ignores keys it does not know.
+
+### bulletin.json
+
+| Field | Meaning |
+|---|---|
+| `stateWords` | One word for each weather state: exactly `storm`, `fog`, `rain` and `calm`. |
+| `noForecast` | The words for a night or day whose weather is not known. |
+| `weatherLine` | The first line. It must contain `{tonight}` and `{tomorrow}`, which are replaced by the words above. |
+| `fogNightLines` | The line for a fog night while the coast is dark: exactly `real` (the weather made it) and `almanac` (only the rule did). |
+| `exchange.feedWords` | One phrase for each price feed: exactly `live`, `cache`, `stale` and `replay`. |
+| `exchange.allOpen`, `exchange.somePaused` | The Exchange line. `allOpen` must contain `{feed}`. `somePaused` must contain `{feed}` and `{companies}` (the names of the paused companies, separated by commas). |
+| `relitLine`, `relitLineHours` | The line for the days after the first solve, and for how many hours it is shown (1 to 168). |
+| `calendar` | Dated notices: `{"on": "2026-11-16", "text": "..."}`. A notice is shown in the bulletin of that bulletin day (08:00 to 08:00). A date may appear only once. The list may be empty. |
+| `resets` | What resets when, as `{"when": "Every day at 00:00", "what": "A new game day begins."}`. The list is not empty. The bulletin sends it with the day, for a help box. |
+
+A text is never empty and at most 600 characters. A template may contain only its own placeholders in curly braces.
+
+### chapter_two_hook.json
+
+| Field | Meaning |
+|---|---|
+| `id` | Always `chapter_two_hook`. The browser keeps its "new" mark for the notice by it. |
+| `firesByNight` | The hook fires at the end (06:00 Lisbon time) of the first calm night among the first this many nights after the first solve, or at the end of the last of them (1 to 7). |
+| `bulletinLine` | The one line in the bulletin of the morning it fires. |
+| `notice.title`, `notice.text` | The Board notice. It describes the flashes in words ("a row of long and short flashes", as Elena's drawing in the logbook does) and names no exact pattern, so Chapter 2 can still choose one. It must not name the missing lens: the lens count comes from the ledger at Gull's Rest, which is on the spoiler list. |
+| `beam.chart` | Where the beam is on the sea chart: `x` from 0 to 447 and `y` from 0 to 255 (the chart is 448 by 256). Beyond Gull's Rest at (407, 34). Never shown in a text. |
+| `beam.pattern` | The flashes, 1 to 12 of `short` and `long`, in the order they flash. A proposal for the package that draws the beam. It must not be the harbor alarm, `long, short, long`. |
+| `beam.flash` | The timings in seconds, each above 0 and at most 10: `shortSeconds`, `longSeconds`, `gapSeconds` (between two flashes) and `pauseSeconds` (between two rounds). |

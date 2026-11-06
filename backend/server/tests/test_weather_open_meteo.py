@@ -6,19 +6,39 @@ real.
 
 import asyncio
 import json
+from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
 
 from server.tests.helpers import FakeReply, fail_with
 from server.tests.weather_helpers import (
+    CLEAR_HOUR,
+    FOGGY_HOUR,
+    ONE_HOUR,
+    answer_with_hours,
     answer_with_sample,
+    hourly_block,
+    hours_of,
     load_recorded_file,
     load_sample_answer,
     make_transport,
 )
-from server.weather.mapping import WeatherReading
-from server.weather.open_meteo import CURRENT_VARIABLES, fetch_reading, parse_open_meteo_answer
+from server.weather.mapping import HourReading, WeatherReading
+from server.weather.open_meteo import (
+    CURRENT_VARIABLES,
+    EARLIEST_HOUR,
+    FORECAST_DAYS,
+    HOURLY_VARIABLES,
+    LATEST_HOUR,
+    MAX_HOURLY_ENTRIES,
+    PAST_DAYS,
+    Forecast,
+    fetch_forecast,
+    parse_forecast,
+    parse_hours,
+    parse_open_meteo_answer,
+)
 
 
 def answer_with_current(**current) -> dict:
@@ -97,6 +117,13 @@ def test_nan_and_infinity_in_the_json_become_none():
     assert parse_open_meteo_answer(json.loads(text)) == WeatherReading(wind_speed_kmh=5.0)
 
 
+def test_a_whole_number_of_hundreds_of_digits_becomes_none_and_never_raises():
+    # Python's JSON reader accepts such a number, but it does not fit a float.
+    answer = answer_with_current(weather_code=3, wind_speed_10m=10**400, visibility=-(10**400))
+
+    assert parse_open_meteo_answer(answer) == WeatherReading(weather_code=3)
+
+
 @pytest.mark.parametrize(("code", "expected"), [(3, 3), (3.0, 3), (3.5, None), ("3", None)])
 def test_a_weather_code_must_be_a_whole_number(code, expected):
     reading = parse_open_meteo_answer(answer_with_current(weather_code=code, wind_speed_10m=1))
@@ -134,9 +161,9 @@ def test_an_answer_with_no_usable_weather_in_it_is_refused(answer):
 
 
 def fetch(reply: FakeReply, latitude: float = 12.5, longitude: float = -45.25):
-    """Run fetch_reading on a fake network. Returns the reading and the requests it sent."""
+    """Run fetch_forecast on a fake network. Returns the forecast and the requests it sent."""
     transport, seen = make_transport(reply)
-    return asyncio.run(fetch_reading(latitude, longitude, transport)), seen
+    return asyncio.run(fetch_forecast(latitude, longitude, transport)), seen
 
 
 def test_the_request_goes_to_the_open_meteo_forecast_address_with_get():
@@ -179,10 +206,11 @@ def test_the_request_carries_no_key_and_no_login():
     assert "key" not in seen[0].url.query.decode().lower()
 
 
-def test_a_good_answer_becomes_a_reading():
-    reading, _ = fetch(answer_with_sample("rain"))
+def test_a_good_answer_becomes_a_forecast():
+    forecast, _ = fetch(answer_with_sample("rain"))
 
-    assert reading == parse_open_meteo_answer(load_sample_answer("rain"))
+    # The saved sample has no hourly block, so there are no hours.
+    assert forecast == Forecast(parse_open_meteo_answer(load_sample_answer("rain")), ())
 
 
 @pytest.mark.parametrize("status", [400, 429, 500, 503])
@@ -207,3 +235,300 @@ def test_an_answer_without_weather_is_raised():
 def test_a_network_failure_is_raised(error_class):
     with pytest.raises(error_class):
         fetch(fail_with(error_class))
+
+
+# --- asking for hours: 31 days back, 3 days ahead, in UTC ---
+
+
+def test_the_request_asks_for_hours_31_days_back_and_3_days_ahead_in_utc():
+    _, seen = fetch(answer_with_sample("rain"))
+
+    params = seen[0].url.params
+    assert params["hourly"] == "weather_code,precipitation,visibility,wind_speed_10m"
+    assert params["past_days"] == "31"
+    assert params["forecast_days"] == "3"
+    assert params["timezone"] == "GMT"
+
+
+def test_the_hourly_variables_asked_for_are_exactly_the_ones_the_parser_reads():
+    assert HOURLY_VARIABLES == ("weather_code", "precipitation", "visibility", "wind_speed_10m")
+
+
+def test_the_days_asked_for_are_named_constants():
+    assert (PAST_DAYS, FORECAST_DAYS) == (31, 3)
+
+
+def test_the_request_counts_as_few_open_meteo_calls():
+    # Open-Meteo counts a request as more than one call when it asks for more than 10 variables
+    # or more than 14 days. We ask for 6 + 4 variables over 34 days: about 2.4 calls.
+    _, seen = fetch(answer_with_sample("rain"))
+
+    params = seen[0].url.params
+    variables = len(params["current"].split(",")) + len(params["hourly"].split(","))
+    days = int(params["past_days"]) + int(params["forecast_days"])
+    assert variables <= 10
+    assert days <= 35
+
+
+# --- reading the hourly block ---
+
+FIRST_HOUR = datetime(2026, 11, 5, 17, 0, tzinfo=UTC)
+
+
+def body_with_hours(hours) -> dict:
+    """The smallest answer parse_hours accepts: a UTC answer with an hourly block."""
+    return {"utc_offset_seconds": 0, "hourly": hourly_block(hours)}
+
+
+def test_the_hourly_block_becomes_hours_in_utc():
+    body = {
+        "utc_offset_seconds": 0,
+        "hourly": {
+            "time": ["2026-11-05T17:00", "2026-11-05T18:00"],
+            "weather_code": [63, 45],
+            "precipitation": [2.5, 0.0],
+            "visibility": [8000.0, 300.0],
+            "wind_speed_10m": [31.2, 6.0],
+        },
+    }
+
+    assert parse_hours(body) == (
+        HourReading(
+            FIRST_HOUR,
+            WeatherReading(
+                weather_code=63,
+                precipitation_mm_per_hour=2.5,
+                visibility_m=8000.0,
+                wind_speed_kmh=31.2,
+            ),
+        ),
+        HourReading(
+            FIRST_HOUR + timedelta(hours=1),
+            WeatherReading(
+                weather_code=45,
+                precipitation_mm_per_hour=0.0,
+                visibility_m=300.0,
+                wind_speed_kmh=6.0,
+            ),
+        ),
+    )
+
+
+def test_every_hour_has_a_time_with_a_timezone():
+    hours = parse_hours(body_with_hours(hours_of(FIRST_HOUR, 3, CLEAR_HOUR)))
+
+    assert [hour.at.tzinfo for hour in hours] == [UTC, UTC, UTC]
+
+
+def test_hourly_precipitation_is_already_per_hour():
+    # Open-Meteo's hourly precipitation is the sum of the preceding hour: millimetres per hour.
+    hours = parse_hours(body_with_hours({FIRST_HOUR: {"precipitation": 4.0, "weather_code": 63}}))
+
+    assert hours[0].reading.precipitation_mm_per_hour == 4.0
+
+
+def test_the_hours_come_in_the_order_of_the_block():
+    body = body_with_hours(hours_of(FIRST_HOUR, 4, FOGGY_HOUR))
+
+    assert [hour.at for hour in parse_hours(body)] == [
+        FIRST_HOUR + timedelta(hours=step) for step in range(4)
+    ]
+
+
+def test_a_missing_hourly_block_gives_no_hours_and_keeps_the_weather_now():
+    answer = load_sample_answer("rain")
+
+    forecast = parse_forecast(answer)
+
+    assert forecast.hours == ()
+    assert forecast.now == parse_open_meteo_answer(answer)
+
+
+def test_a_forecast_holds_the_weather_now_and_the_hours():
+    answer = answer_with_hours("fog", hours_of(FIRST_HOUR, 2, FOGGY_HOUR))
+
+    forecast = parse_forecast(answer)
+
+    assert forecast.now == parse_open_meteo_answer(answer)
+    assert len(forecast.hours) == 2
+
+
+def test_a_forecast_without_weather_now_is_refused_even_with_hours():
+    answer = {"utc_offset_seconds": 0, "hourly": hourly_block(hours_of(FIRST_HOUR, 2, CLEAR_HOUR))}
+
+    with pytest.raises(ValueError, match="Open-Meteo"):
+        parse_forecast(answer)
+
+
+def test_hourly_lists_of_different_lengths_are_ignored():
+    body = body_with_hours(hours_of(FIRST_HOUR, 3, CLEAR_HOUR))
+    body["hourly"]["wind_speed_10m"] = [8.0, 8.0]
+
+    assert parse_hours(body) == ()
+
+
+@pytest.mark.parametrize("offset", [3600, -3600, 1, None, "0", True])
+def test_an_hourly_block_in_another_timezone_is_ignored(offset):
+    body = body_with_hours(hours_of(FIRST_HOUR, 3, CLEAR_HOUR))
+    body["utc_offset_seconds"] = offset
+
+    assert parse_hours(body) == ()
+
+
+def test_an_hourly_block_without_the_utc_offset_is_ignored():
+    body = body_with_hours(hours_of(FIRST_HOUR, 3, CLEAR_HOUR))
+    del body["utc_offset_seconds"]
+
+    assert parse_hours(body) == ()
+
+
+def test_an_hour_without_any_weather_number_is_left_out():
+    second = FIRST_HOUR + timedelta(hours=1)
+    nothing = {"weather_code": None, "precipitation": None, "visibility": None}
+    body = body_with_hours({FIRST_HOUR: CLEAR_HOUR, second: nothing})
+
+    assert [hour.at for hour in parse_hours(body)] == [FIRST_HOUR]
+
+
+def test_an_hour_with_only_one_weather_number_is_kept():
+    body = body_with_hours({FIRST_HOUR: {"wind_speed_10m": 12.0}})
+
+    assert parse_hours(body)[0].reading == WeatherReading(wind_speed_kmh=12.0)
+
+
+def test_an_hour_with_a_time_we_cannot_read_is_left_out():
+    body = body_with_hours(hours_of(FIRST_HOUR, 2, CLEAR_HOUR))
+    body["hourly"]["time"][0] = "five o'clock"
+
+    assert [hour.at for hour in parse_hours(body)] == [FIRST_HOUR + timedelta(hours=1)]
+
+
+@pytest.mark.parametrize("text", ["0001-01-01T00:00:00+05:00", "9999-12-31T23:00:00-05:00"])
+def test_an_hour_too_close_to_the_edge_of_the_calendar_is_left_out_and_never_raises(text):
+    body = body_with_hours(hours_of(FIRST_HOUR, 1, CLEAR_HOUR))
+    body["hourly"]["time"] = [text]
+
+    assert parse_hours(body) == ()
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "0001-01-01T00:00",
+        "0001-01-01T05:00",
+        "1999-12-31T23:00",
+        "9000-01-01T01:00",
+        "9999-12-31T23:00",
+    ],
+)
+def test_an_hour_outside_the_years_a_forecast_can_have_is_left_out(text):
+    # Without the limits an hour in the year 1 got through, and then the date arithmetic of the
+    # nights (weather/nights.py) failed on it with an OverflowError.
+    body = body_with_hours(hours_of(FIRST_HOUR, 1, CLEAR_HOUR))
+    body["hourly"]["time"] = [text]
+
+    assert parse_hours(body) == ()
+
+
+def test_an_hour_in_the_year_1_is_left_out_and_the_other_hours_are_kept():
+    body = body_with_hours(hours_of(FIRST_HOUR, 2, CLEAR_HOUR))
+    body["hourly"]["time"][0] = "0001-01-01T00:00"
+
+    assert [hour.at for hour in parse_hours(body)] == [FIRST_HOUR + ONE_HOUR]
+
+
+@pytest.mark.parametrize("edge", [EARLIEST_HOUR, LATEST_HOUR])
+def test_the_first_and_the_last_hour_of_the_allowed_range_are_read(edge):
+    body = body_with_hours({edge: CLEAR_HOUR})
+
+    assert [hour.at for hour in parse_hours(body)] == [edge]
+
+
+@pytest.mark.parametrize("outside", [EARLIEST_HOUR - ONE_HOUR, LATEST_HOUR + ONE_HOUR])
+def test_the_hour_just_outside_the_allowed_range_is_left_out(outside):
+    body = body_with_hours({outside: CLEAR_HOUR})
+
+    assert parse_hours(body) == ()
+
+
+def test_an_hour_with_an_offset_in_its_time_is_turned_into_utc():
+    body = body_with_hours(hours_of(FIRST_HOUR, 1, CLEAR_HOUR))
+    body["hourly"]["time"] = ["2026-11-05T18:00+01:00"]
+
+    assert parse_hours(body)[0].at == FIRST_HOUR
+
+
+def test_values_that_are_not_numbers_in_the_hourly_block_become_none():
+    body = body_with_hours({FIRST_HOUR: {"weather_code": 63}})
+    body["hourly"]["visibility"] = ["far"]
+    body["hourly"]["wind_speed_10m"] = [True]
+
+    assert parse_hours(body)[0].reading == WeatherReading(weather_code=63)
+
+
+def test_a_whole_number_of_hundreds_of_digits_in_the_hourly_block_leaves_out_only_that_number():
+    body = body_with_hours({FIRST_HOUR: {"weather_code": 63}})
+    body["hourly"]["wind_speed_10m"] = [10**400]
+
+    assert parse_hours(body)[0].reading == WeatherReading(weather_code=63)
+
+
+def test_a_huge_number_in_the_hourly_block_does_not_lose_the_good_weather_now():
+    # Before the fix the OverflowError failed the whole fetch, and the source fell back to older
+    # data, so the good weather now was lost together with the hours.
+    answer = answer_with_hours("rain", hours_of(FIRST_HOUR, 2, CLEAR_HOUR))
+    answer["hourly"]["wind_speed_10m"] = [10**400, 8.0]
+
+    forecast, _ = fetch(lambda request: httpx.Response(200, json=answer))
+
+    assert forecast.now == parse_open_meteo_answer(load_sample_answer("rain"))
+    assert len(forecast.hours) == 2
+
+
+def test_an_hourly_block_with_the_most_entries_allowed_is_read():
+    first = FIRST_HOUR - timedelta(days=PAST_DAYS)
+    body = body_with_hours(hours_of(first, MAX_HOURLY_ENTRIES, CLEAR_HOUR))
+
+    assert len(parse_hours(body)) == MAX_HOURLY_ENTRIES
+
+
+def test_an_hourly_block_that_is_too_long_is_ignored():
+    first = FIRST_HOUR - timedelta(days=PAST_DAYS)
+    body = body_with_hours(hours_of(first, MAX_HOURLY_ENTRIES + 1, CLEAR_HOUR))
+
+    assert parse_hours(body) == ()
+
+
+def test_the_most_entries_allowed_cover_the_days_asked_for_plus_two_spare_days():
+    assert MAX_HOURLY_ENTRIES == (PAST_DAYS + FORECAST_DAYS) * 24 + 48
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        None,
+        "text",
+        42,
+        [],
+        {},
+        {"utc_offset_seconds": 0},
+        {"utc_offset_seconds": 0, "hourly": None},
+        {"utc_offset_seconds": 0, "hourly": []},
+        {"utc_offset_seconds": 0, "hourly": {}},
+        {"utc_offset_seconds": 0, "hourly": {"time": "2026-11-05T17:00"}},
+        {"utc_offset_seconds": 0, "hourly": {"time": [1, 2], "weather_code": [1, 2]}},
+        {"utc_offset_seconds": 0, "hourly": {"time": [None], "weather_code": [None]}},
+        {"utc_offset_seconds": 0, "hourly": {"time": ["2026-11-05T17:00"]}},
+        {"utc_offset_seconds": 0, "hourly": {"time": ["2026-11-05T17:00"], "weather_code": 3}},
+    ],
+)
+def test_an_odd_hourly_block_gives_no_hours_and_never_raises(body):
+    assert parse_hours(body) == ()
+
+
+def test_a_good_hourly_block_reaches_the_forecast_through_the_fake_network():
+    reply = answer_with_hours("rain", hours_of(FIRST_HOUR, 5, FOGGY_HOUR))
+    forecast, _ = fetch(lambda request: httpx.Response(200, json=reply))
+
+    assert len(forecast.hours) == 5
+    assert forecast.hours[0].reading.weather_code == 45

@@ -193,3 +193,35 @@ def test_the_app_mounts_no_folder_of_static_files():
     routes = create_app(CONFIGURED_SETTINGS).routes
 
     assert [route for route in routes if isinstance(route, Mount)] == []
+
+
+# --- the open-world files are for the server only ---
+
+# The three content files of the open world (weather states, the daily bulletin and the Chapter 2
+# hook). They are read by the server and shown only through GET /api/weather and GET /api/bulletin.
+OPEN_WORLD_FILES = ("weather_states.json", "bulletin.json", "chapter_two_hook.json")
+
+
+def test_the_open_world_files_are_not_public_content():
+    assert set(PUBLIC_CONTENT.values()).isdisjoint(OPEN_WORLD_FILES)
+    assert all((CONTENT_DIR / filename).is_file() for filename in OPEN_WORLD_FILES)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "bulletin",
+        "bulletin.json",
+        "chapter-two-hook",
+        "chapter_two_hook",
+        "chapter_two_hook.json",
+        "weather-states",
+        "weather_states",
+        "weather_states.json",
+    ],
+)
+def test_the_open_world_files_cannot_be_read_through_the_content_route(name):
+    response = make_client().get(f"/api/content/{name}")
+
+    assert_error(response, 404, "content_not_found")
+    assert "A light where no light was" not in response.text

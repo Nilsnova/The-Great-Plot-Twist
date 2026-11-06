@@ -18,14 +18,18 @@ from server.adapters.base import SourceUnavailable
 from server.tests.helpers import FakeClock, FakeReply, fail_with
 from server.tests.weather_helpers import (
     BACKEND_ROOT,
+    FOGGY_HOUR,
     LISBON_SETTINGS,
     WEATHER_CONTENT,
+    answer_with_hours,
     answer_with_sample,
+    hours_of,
     load_recorded_file,
     load_sample_answer,
     make_slow_transport,
     make_transport,
     replies_in_order,
+    reply_with_answer,
 )
 from server.weather.open_meteo import parse_open_meteo_answer
 from server.weather.source import (
@@ -40,6 +44,7 @@ from server.weather.source import (
 )
 
 RECORDED_AT = datetime(2026, 11, 5, 17, 14, 33, tzinfo=UTC)
+FIRST_HOUR = datetime(2026, 11, 5, 17, 0, tzinfo=UTC)
 
 SECRET_LOOKING_WORDS = ("apikey", "api_key", "secret", "token", "password", "bearer")
 
@@ -220,6 +225,56 @@ def test_failures_are_logged_without_the_address(caplog):
     assert "weather" in caplog.text
     assert "ConnectError" in caplog.text
     assert "open-meteo.com" not in caplog.text
+
+
+# --- the hours: the same cached answer carries them ---
+
+
+def reply_with_four_foggy_hours() -> FakeReply:
+    return reply_with_answer(answer_with_hours("rain", hours_of(FIRST_HOUR, 4, FOGGY_HOUR)))
+
+
+def test_the_cached_data_carries_the_hours():
+    clock = FakeClock()
+    source, seen = make_source(reply_with_four_foggy_hours(), clock)
+    first = asyncio.run(source.get())
+
+    clock.advance(TTL_SECONDS - 1)
+    second = asyncio.run(source.get())
+
+    assert len(first.data.hours) == 4
+    assert second.source == "cache"
+    assert second.data.hours == first.data.hours
+    assert len(seen) == 1
+
+
+def test_a_stale_answer_keeps_its_hours():
+    clock = FakeClock()
+    reply = replies_in_order(reply_with_four_foggy_hours(), fail_with(httpx.ConnectError))
+    source, _ = make_source(reply, clock)
+    first = asyncio.run(source.get())
+
+    clock.advance(TTL_SECONDS)
+    second = asyncio.run(source.get())
+
+    assert second.source == "stale"
+    assert second.data.hours == first.data.hours
+
+
+def test_an_answer_without_an_hourly_block_gives_a_reading_with_no_hours():
+    source, _ = make_source(answer_with_sample("rain"))
+
+    result = asyncio.run(source.get())
+
+    assert result.data.hours == ()
+
+
+def test_the_recorded_fallback_has_no_hours():
+    # The answer recorded on 5 Nov 2026 was made before we asked for hours.
+    recorded = load_recorded_weather()
+
+    assert recorded is not None
+    assert recorded.data.hours == ()
 
 
 # --- demo mode: only the recorded answer ---

@@ -12,10 +12,14 @@
     crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
     islet.py          GET  /api/islet          your home islet: coins, timber, the five spots
                       POST /api/islet/build    build level 1 of a building on your islet
+    weather.py        GET  /api/weather        the real weather, the weather state and tonight
+    bulletin.py       GET  /api/bulletin       the harbor bulletin and the Chapter 2 hook
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the
 GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).
 market.py is the Island Exchange (its rules are in server/market/).
-Each file creates a `router` with its URLs. app.py plugs every router in under /api.
+bulletin_answer.py is the one file here without a URL: it holds the shape of the bulletin's answer,
+so bulletin.py stays short.
+Each file with URLs creates a `router`. app.py plugs every router in under /api.
 To add a feature: create a new file here, then add one line in app.py.
 """
