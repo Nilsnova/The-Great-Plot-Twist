@@ -1,5 +1,6 @@
-"""Pure festival rules; no routes, persistence, clocks or duel creation.
+"""Festival lifecycle, scoped views and atomic claim/ring coordination.
 
-G10 owns the first Relighting timestamp. A7 owns actual duels. Callers must check
-the festival flag and apply these decisions atomically when storage is added.
+G10 owns the immutable first Relighting time and extra-light counter. The authored
+pure timer/claim/FIFO helpers remain immutable; SQL stores exact action receipts and
+reuses A7's existing duel functions. routes/festival.py applies feature/auth gates.
 """

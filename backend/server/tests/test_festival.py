@@ -34,9 +34,14 @@ def test_no_first_solve_means_no_festival_even_far_in_the_future():
 
 @pytest.mark.parametrize(
     ("offset", "phase", "remaining"),
-    [(-1, "waiting", 0), (0, "active", DURATION), (1, "active", DURATION - 1),
-     (DURATION - 0.5, "active", 0.5), (DURATION, "ended", 0),
-     (DURATION + 1, "ended", 0)],
+    [
+        (-1, "waiting", 0),
+        (0, "active", DURATION),
+        (1, "active", DURATION - 1),
+        (DURATION - 0.5, "active", 0.5),
+        (DURATION, "ended", 0),
+        (DURATION + 1, "ended", 0),
+    ],
 )
 def test_timer_boundaries(offset, phase, remaining):
     timer = festival_timer(START, START + timedelta(seconds=offset), DURATION)
@@ -78,8 +83,11 @@ def test_invalid_duration_is_refused(duration):
 @pytest.mark.parametrize("naive_start", [True, False])
 def test_naive_dates_are_refused(naive_start):
     with pytest.raises(ValueError, match="timezone"):
-        festival_timer(START.replace(tzinfo=None) if naive_start else START,
-                       START if naive_start else START.replace(tzinfo=None), DURATION)
+        festival_timer(
+            START.replace(tzinfo=None) if naive_start else START,
+            START if naive_start else START.replace(tzinfo=None),
+            DURATION,
+        )
 
 
 @pytest.mark.parametrize("lamp", LAMPS)
@@ -113,8 +121,14 @@ def test_unknown_lamp_does_not_change_claims():
     assert claim_lamp("player-a", "missing", LAMPS, (), ACTIVE).status == "unknown_lamp"
 
 
-@pytest.mark.parametrize("first,now", [(None, START), (START, START - timedelta(seconds=1)),
-                                      (START, START + timedelta(seconds=DURATION))])
+@pytest.mark.parametrize(
+    "first,now",
+    [
+        (None, START),
+        (START, START - timedelta(seconds=1)),
+        (START, START + timedelta(seconds=DURATION)),
+    ],
+)
 def test_closed_festival_hides_claims_and_refuses_new_ones(first, now):
     timer = festival_timer(first, now, DURATION)
     claims = (LampClaim(LAMPS[0], "player-a"),)
@@ -170,8 +184,10 @@ def test_queue_requires_active_festival_and_arena(first, arena):
 
 def test_expiry_refuses_pairing_even_when_somebody_is_waiting():
     timer = festival_timer(START, START + timedelta(seconds=DURATION), DURATION)
-    assert join_ring("player-b", ("player-a",), frozenset(), timer,
-                     arena_enabled=True).status == "closed"
+    assert (
+        join_ring("player-b", ("player-a",), frozenset(), timer, arena_enabled=True).status
+        == "closed"
+    )
 
 
 @pytest.mark.parametrize("player", ["", " "])

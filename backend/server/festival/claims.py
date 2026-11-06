@@ -17,9 +17,7 @@ class ClaimDecision:
     claims: tuple[LampClaim, ...]
 
 
-def visible_claims(
-    claims: tuple[LampClaim, ...], timer: FestivalTimer
-) -> tuple[LampClaim, ...]:
+def visible_claims(claims: tuple[LampClaim, ...], timer: FestivalTimer) -> tuple[LampClaim, ...]:
     """Claims expire at the festival boundary, without erasing durable replay records."""
     return claims if timer.phase == "active" else ()
 
