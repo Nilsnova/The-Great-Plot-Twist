@@ -2,7 +2,11 @@
 
     health.py         GET  /api/health         is the API alive?
     config.py         GET  /api/config         which features are on, and how to sign in
-    me.py             GET  /api/me             the signed-in player's name, coins and crews
+    me.py             GET  /api/me             the player's name, coins, crews, kit and start place
+    captain_name.py   POST /api/me/name        gives a captain name; /reroll changes it once
+    save.py           GET, PUT /api/save       the player's progress in the cloud
+    delete_me.py      DELETE /api/me           deletes the player and all their data
+    intro.py          POST /api/intro/complete replays the Act 1 move log and gives the entry kit
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
 

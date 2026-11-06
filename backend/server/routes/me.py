@@ -10,8 +10,9 @@ The player id always comes from that verified login (`PlayerDep`, see auth.py). 
 from the address, the headers or the body, so a player can only ask about themselves.
 
     GET /api/me
-      200  {"id": "<player id>", "displayName": "Captain-3fa85f", "coins": 0,
-            "crews": [{"id": "<crew id>", "mode": "solo", "status": "forming", "seatNo": 1}]}
+      200  {"id": "<player id>", "displayName": "Brave Puffin 17", "coins": 0,
+            "crews": [{"id": "<crew id>", "mode": "solo", "status": "forming", "seatNo": 1}],
+            "captainName": "Brave Puffin 17", "kit": "witness", "place": "saltreach_harbor"}
       401  unauthorized          no token, a malformed one, or one that Supabase refuses
       404  player_not_set_up     the login is fine, but the player has no profile or wallet row
                                  (the sign-up trigger never ran for an account that was made
@@ -22,13 +23,30 @@ from the address, the headers or the body, so a player can only ask about themse
 
 What the fields mean:
   * displayName is profiles.display_name. It is never the GitHub login name or e-mail address.
+    A new player has the sign-up placeholder ("Captain-3fa85f") until POST /api/me/name gives them
+    a generated captain name (routes/captain_name.py).
+  * captainName is displayName once the player has a generated captain name, and null while
+    displayName is still the placeholder. It is worked out here, with no extra read. This route
+    only reads: it never gives a name, so asking for it never changes anything.
+  * kit and place are the entry kit id and the start place of a player who finished Act 1, and
+    null before that. They come from the table entry_profiles, which the referee fills in
+    (POST /api/intro/complete, package A3). A player has at most one row there.
   * coins is wallets.balance. A new wallet holds 0, which is a normal answer.
   * crews are the crews the player sits in, newest seat first, at most MAX_CREWS. seatNo is the
     player's own seat number (1 to 4) in that crew. The list is empty for a player in no crew.
 
-How it reads: three reads with the server's secret key (SUPABASE_SECRET_KEY), which skips
-row-level security. So the filter on the verified player id in each read is the ONLY thing that
-keeps another player's rows out of the answer. The tests check every filter.
+How it reads: four reads with the server's secret key (SUPABASE_SECRET_KEY), which skips
+row-level security: the profile, the wallet, the seats and, last, the entry profile. So the filter
+on the verified player id in each read is the ONLY thing that keeps another player's rows out of
+the answer. The tests check every filter. The entry profile comes last on purpose: a refused read
+earlier in the list stops the route before it is asked for.
+
+The fourth read needs the table entry_profiles (migration 20261106030000). A server that is
+deployed before that migration is applied answers 502 database_error here, to every player. This
+route is live today and a push to main deploys to production at once, so apply the migration
+BEFORE the branch that holds this read is merged into main (a preview shares the same database, so
+it breaks the same way). If the merge has to come first, hold this read back (kit and place stay
+null) and merge it after the apply. See supabase/README.md, "Apply before you merge".
 
 The answer holds personal data, so it carries `Cache-Control: private, no-store`: the hosting
 network and proxies must not keep a copy. For the same reason the player id stays out of our
@@ -44,8 +62,10 @@ from typing import Any
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, StrictInt, StrictStr, ValidationError
 
+from server.account.names import is_placeholder
 from server.auth import PlayerDep
 from server.errors import ApiError
+from server.game.entry_profile_store import read_kit_and_place
 from server.supabase_admin import AdminDep, SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
@@ -72,6 +92,9 @@ class MeResponse(BaseModel):
     displayName: str  # camelCase on purpose, like the other JSON keys the browser reads
     coins: int
     crews: list[CrewSummary]
+    captainName: str | None
+    kit: str | None
+    place: str | None
 
 
 # The rows we read from the database, as small models. The database sends plain JSON, and a
@@ -161,4 +184,14 @@ async def get_me(player: PlayerDep, admin: AdminDep, response: Response) -> MeRe
     display_name = await read_display_name(admin, player.id)
     coins = await read_coins(admin, player.id)
     crews = await read_crews(admin, player.id)
-    return MeResponse(id=player.id, displayName=display_name, coins=coins, crews=crews)
+    entry = await read_kit_and_place(admin, player.id)  # None until the player finished Act 1
+    captain_name = None if is_placeholder(display_name, player.id) else display_name
+    return MeResponse(
+        id=player.id,
+        displayName=display_name,
+        coins=coins,
+        crews=crews,
+        captainName=captain_name,
+        kit=entry.kit if entry else None,
+        place=entry.place if entry else None,
+    )
