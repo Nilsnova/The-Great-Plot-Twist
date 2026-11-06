@@ -9,10 +9,10 @@ from datetime import UTC, datetime
 from itertools import permutations
 from uuid import UUID
 
-from server.game.case_board import deduction_for_pair, two_seats_pinned
+from server.game.board_rules import decide_pair, decide_pin
 from server.game.case_clock import minute_of, minutes_until_open
 from server.game.case_data import CaseData, Deduction, Route
-from server.game.case_routes import decide_route, held_cards
+from server.game.case_routes import decide_route
 from server.game.case_snapshot import CaseSnapshot, Find, Formed, Pin, SeatState
 
 
@@ -110,9 +110,9 @@ def _find_for_card(
 
 
 def apply_pin(
-    snapshot: CaseSnapshot, seat: SeatState, find: Find, now: int
+    data: CaseData, snapshot: CaseSnapshot, seat: SeatState, find: Find, now: int
 ) -> tuple[CaseSnapshot, int]:
-    """Mirror an instant player pin; Phase 2 replaces the precheck with decide_pin."""
+    """Mirror the pin only after the production decision accepts it."""
     existing = next(
         (
             pin
@@ -125,7 +125,8 @@ def apply_pin(
         return snapshot, existing.pinned_second
     pinned_second = max(now, find.ready_second)
     _require(
-        find.card_id in held_cards((find,), pinned_second), "An unfinished find cannot be pinned."
+        decide_pin(data, snapshot, seat, find.card_id, pinned_second).accepted,
+        "The production pin rule refused a planned step.",
     )
     pin = Pin(seat.seat_no, find.card_id, pinned_second, pinned_second, seat.player_id)
     return replace(
@@ -137,14 +138,10 @@ def apply_pair(
     data: CaseData, snapshot: CaseSnapshot, deduction: Deduction, actor: SeatState, now: int
 ) -> CaseSnapshot:
     """Use production pair identity and two-seat eligibility before mirroring the write."""
-    actual = deduction_for_pair(data, *deduction.cards)
+    decision = decide_pair(data, snapshot, actor, *deduction.cards, now)
     _require(
-        actual is not None and actual.id == deduction.id,
+        decision.accepted and decision.target == deduction.id,
         "The production pair rule refused a planned step.",
-    )
-    _require(
-        two_seats_pinned(snapshot.pins, *deduction.cards, now),
-        "A deduction needs two different seats.",
     )
     formed = Formed(deduction.id, now, actor.player_id, actor.seat_no)
     return replace(
@@ -161,8 +158,8 @@ def _pair_candidate(
     snapshot, second = _find_for_card(
         data, snapshot, right, deduction.cards[1], proof.finished_second
     )
-    snapshot, left_ready = apply_pin(snapshot, left, first, proof.finished_second)
-    snapshot, right_ready = apply_pin(snapshot, right, second, proof.finished_second)
+    snapshot, left_ready = apply_pin(data, snapshot, left, first, proof.finished_second)
+    snapshot, right_ready = apply_pin(data, snapshot, right, second, proof.finished_second)
     finished = max(proof.finished_second, left_ready, right_ready)
     snapshot = apply_pair(data, snapshot, deduction, left, finished)
     return CardProof(
