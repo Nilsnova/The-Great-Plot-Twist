@@ -22,6 +22,10 @@ describe('bulletin adapter integration',()=>{
     expect(caseScreenFor({id:'bulletin_board'})).toEqual({screen:'bulletin'});
     expect(caseScreenFor({id:'notice_board'})).toEqual({screen:'search',spot:'notice_board'});
   });
+  it('records only the supplied generic hook observation',()=>{
+    const adapter=createFakeCaseAdapter();adapter.dev.setBulletin('hook');
+    expect(adapter.read().log.observations).toEqual([{id:'chapter_two_hook',text:'A light flashing far out at sea'}]);adapter.dispose();
+  });
   it('only mirrors an accepted building list into the fake finale readiness',()=>{
     const adapter=createFakeCaseAdapter();
     adapter.dev.setIsletBuilt(['plot_1','islet_signal_station']);

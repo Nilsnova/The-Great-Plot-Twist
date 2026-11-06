@@ -4,7 +4,7 @@ export function emptyExtensions(){
     presence:{status:'off',place:null,others:[],hiddenCount:0,crew:[],sampledAt:0,localEmote:null,canEmote:false,cooldown:0,emotes:[]},
     account:{state:'signed_out',captainName:null,canReroll:false,hasKit:false,canContinue:false,save:{state:'idle',label:'Local intro only',updatedAt:null}},
     rewards:{balance:null,recent:[],ledger:[],keepsakes:[],epilogue:[],wallEntry:null,festivalBadge:false,contributors:[]},
-    log:{intro:null,cards:[],deductions:[],partnerReports:[],nights:[],reveal:[]},
+    log:{intro:null,cards:[],deductions:[],partnerReports:[],nights:[],reveal:[],observations:[]},
     hints:{items:[],actions:[]},
     continuation:null,
     bulletin:{status:'off',day:null,lines:[],weather:null,exchange:null,chapterTwoHook:null},

@@ -31,6 +31,7 @@ export function createLogScreen({send,navigate}={}){
       element.append(section('Deductions',model.deductions,item=>node('p','',`${item.id} · ${item.title} · ${item.cards.join(' + ')}`),'No deductions have been recorded yet.'));
       element.append(section('Partner reports',model.partnerReports,item=>node('p','',`${item.name} · ${item.report}${Number.isFinite(item.caseMinute)?` · Case minute ${item.caseMinute}`:''}`),'No partner reports yet.'));
       element.append(section('Nights',model.nights,item=>node('p','',`${item.phase} · ${item.report}${Number.isFinite(item.startedAt)?` · Began at case minute ${item.startedAt}`:''}${item.lights?.length?` · Lights held: ${item.lights.join(', ')}`:''}`),'No night has been recorded yet.'));
+      if(model.observations?.length)element.append(section('At sea',model.observations,item=>node('p','',item.text),''));
       if(model.reveal?.length)element.append(section('The reveal',model.reveal,item=>node('p','',`${item.title} · ${item.text}${item.cites?.length?` · Cards: ${item.cites.join(', ')}`:''}`),'The reveal remains sealed until the accepted solve.'));
       else element.append(node('p','captains-log-sealed','The reveal remains sealed until the accepted solve.'));
     });

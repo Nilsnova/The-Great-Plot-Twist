@@ -1,4 +1,5 @@
 // Deterministic bulletin rehearsal data; no server-only story text or hook wording.
+import {fakeHook} from './hook.js';
 export const bulletinScenarioIds=['calm','real','almanac','storm','relit','hook','stale','loading','unavailable','off'];
 const scenarios=new Set(bulletinScenarioIds);
 export const canonicalBulletinCopy={
@@ -41,7 +42,6 @@ function weather(baseMs,tonightState,isNow,isFogNight=false,fogNightKind=null){
   const p=lisbonParts(tomorrowStart),tomorrow={date:dateString(utcDate(p.year,p.month,p.day)),startsAt:new Date(tomorrowStart).toISOString(),endsAt:new Date(tomorrowEnd).toISOString(),state:'calm'};
   return {tonight:current,tomorrow,source:'fallback',fetchedAt:new Date(baseMs).toISOString(),attribution:'Weather data by Open-Meteo.com, adapted for the game'};
 }
-function hook(){return {id:'chapter_two_hook',notice:{title:'[notice supplied by the server]',text:'[notice supplied by the server]'},beam:{chart:{x:440,y:12},pattern:['short','short','long'],flash:{shortSeconds:.4,longSeconds:1.2,gapSeconds:.5,pauseSeconds:4}}};}
 export function initialBulletinState(nowMs=Date.now()){return {scenario:'off',baseMs:nowMs};}
 export function setBulletinScenario(state,scenario,nowMs=Date.now()){if(!scenarios.has(scenario)||!Number.isFinite(nowMs))return false;state.bulletinScenario=scenario;state.bulletinBaseMs=nowMs;return true;}
 export function bulletinView(state){
@@ -59,7 +59,7 @@ export function bulletinView(state){
   if(scenario==='calm'){exchange={feed:'live',pausedCompanies:[]};lines.push({kind:'exchange',text:canonicalBulletinCopy.exchange.allOpen.replace('{feed}',canonicalBulletinCopy.exchange.feedWords.live)});}
   if(scenario==='stale'){const company={id:'harbor-trust',name:'Saltreach Harbor Trust'};exchange={feed:'stale',pausedCompanies:[company]};lines.push({kind:'exchange',text:canonicalBulletinCopy.exchange.somePaused.replace('{feed}',canonicalBulletinCopy.exchange.feedWords.stale).replace('{companies}',company.name)});}
   if(scenario==='relit')lines.push({kind:'relit',text:canonicalBulletinCopy.relitLine});
-  if(scenario==='hook'){chapterTwoHook=hook();lines.push({kind:'hook',text:'[bulletin line supplied by the server]'});}
+  if(scenario==='hook'){chapterTwoHook=fakeHook();lines.push({kind:'hook',text:'[bulletin line supplied by the server]'});}
   const calendar=canonicalBulletinCopy.calendar.find(item=>item.on===today.bulletinDay);if(calendar)lines.push({kind:'calendar',text:calendar.text});
   return {status:'ready',day:today,lines,weather:tonight,exchange,chapterTwoHook};
 }

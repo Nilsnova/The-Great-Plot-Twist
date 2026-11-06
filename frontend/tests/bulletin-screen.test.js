@@ -2,10 +2,12 @@ import {describe,it,expect} from 'vitest';
 import {createBulletinScreen} from '../src/screens/bulletin/index.js';
 import {bulletinView,initialBulletinState,setBulletinScenario} from '../src/adapter/fake/bulletin.js';
 class Element{
-  constructor(tag){this.tagName=tag;this.children=[];this.dataset={};this.attributes={};this.hidden=false;this.textContent='';this.className='';}
+  constructor(tag){this.tagName=tag;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.hidden=false;this.textContent='';this.className='';}
   append(...children){for(const child of children){this.children.push(child);child.parentElement=this;}}
   replaceChildren(...children){this.children=[];this.append(...children);}
-  setAttribute(name,value){this.attributes[name]=String(value);}remove(){this.removed=true;}
+  setAttribute(name,value){this.attributes[name]=String(value);}removeAttribute(name){delete this.attributes[name];}
+  addEventListener(name,callback){this.listeners[name]=callback;}removeEventListener(name){delete this.listeners[name];}
+  click(){this.listeners.click?.({});}remove(){this.removed=true;}
 }
 function find(root,predicate){if(predicate(root))return root;for(const child of root.children??[]){const match=find(child,predicate);if(match)return match;}return null;}
 describe('bulletin panel',()=>{
@@ -21,6 +23,13 @@ describe('bulletin panel',()=>{
       panel.tick();expect(find(panel.element,node=>node.className==='bulletin-lines').children[0]).toBe(first);
       setBulletinScenario(state,'loading');panel.update({bulletin:bulletinView(state)});expect(find(panel.element,node=>node.className==='bulletin-status').textContent).toBe('The bulletin is not posted yet');
       setBulletinScenario(state,'unavailable');panel.update({bulletin:bulletinView(state)});expect(find(panel.element,node=>node.className==='bulletin-status').textContent).toContain('unavailable');
+      setBulletinScenario(state,'hook');const hooked=bulletinView(state);panel.update({bulletin:hooked});
+      expect(find(panel.element,node=>node.className==='bulletin-hook').hidden).toBe(false);
+      expect(find(panel.element,node=>node.className==='bulletin-hook').children[1].textContent).toBe('[notice supplied by the server]');
+      const announce=find(panel.element,node=>node.dataset.focus==='hook-announcements'),live=find(panel.element,node=>node.className==='bulletin-hook-status');
+      expect(live.textContent).toBe('');announce.click();expect(live.textContent).toBe('Short flash, 1 of 3.');announce.click();expect(live.textContent).toBe('Flash announcements stopped.');
+      announce.click();expect(live.textContent).toContain('Short flash');panel.close();expect(live.textContent).toBe('Flash announcements stopped.');
+      panel.dispose();
     }finally{globalThis.document=previous;}
   });
 });

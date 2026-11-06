@@ -36,7 +36,8 @@ function validateExtensions(view){
   for(const entry of [...r.recent,...r.ledger]){hasKeys(entry,['id','amount','reason','label','at']);expect(typeof entry.id).toBe('string');expect(Number.isFinite(entry.amount)).toBe(true);expect(typeof entry.reason).toBe('string');expect(typeof entry.label).toBe('string');}
   for(const item of r.keepsakes){hasKeys(item,['id','title','description','owned']);expect(typeof item.owned).toBe('boolean');}
   for(const item of r.epilogue){hasKeys(item,['id','text']);expect(typeof item.text).toBe('string');}
-  for(const key of ['cards','deductions','partnerReports','nights','reveal'])expect(Array.isArray(l[key])).toBe(true);
+  for(const key of ['cards','deductions','partnerReports','nights','reveal','observations'])expect(Array.isArray(l[key])).toBe(true);
+  for(const item of l.observations)expect(item).toMatchObject({id:expect.any(String),text:expect.any(String)});
   expect(Array.isArray(h.items)).toBe(true);expect(Array.isArray(h.actions)).toBe(true);
   for(const item of h.items)hasKeys(item,['id','title','body']);
   for(const action of h.actions)hasKeys(action,['id','label','screen','params','available','priority']);
