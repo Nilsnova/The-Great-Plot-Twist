@@ -1,6 +1,6 @@
 # Case minimum, server followups and economy release · 6 Nov 2026
 
-Used by: Nils and integrating agents; source branch integrate/case-npc, following live main40ba1d5.
+Used by: Nils and integrating agents; source branch integrate/case-npc, following live main `40ba1d5`.
 
 - Completed the four minimum case-backend phases: earned clues, shared board, three-light night,
   once-only Relighting and free NPC partners. The original applied files remain byte-identical.
@@ -16,19 +16,19 @@ Used by: Nils and integrating agents; source branch integrate/case-npc, followin
   locked reveal and exact repeats. Ledger sums match stored paid rewards; a new crew sees no old
   reveal. The disposable server has no production credentials or network database transport.
 - Server followups add private/default no-store responses, secure deployed URL and bounded
-  three-part-token validation, own-account host/reroll metadata and bounded crew hints. The local
+  three-part token validation, own-account host/reroll metadata and bounded crew hints. The local
   fixture API is explicitly opt-in, refuses Vercel, binds loopback and cleans up its scratch database.
 - Fixed account-deletion ownership/version races before applying the new file: affected crews
   lock in UUID order before the auth row; handover runs with a fresh snapshot. Independent
   **15 permanent SQL checks and 100 concurrent trials** pass, including overlapping crews/retries.
 - G12 now tests actual Exchange v2 RPCs/math, retains save encoding/NUL and early token bounds,
   and reproduces the 1,000-player/14-day/seed12 simulation byte for byte. Original authored commits
-  are preserved. G12 needs **no migration**; reserved150000 remains unused.
+  are preserved. G12 needs **no migration**; reserved `150000` remains unused.
 - Final combined backend/story gate with disposable PostgreSQL: **10,859 passed**. Ruff and diff
-  checks pass. Independent NPC code review:281 focused checks. Independent followups/G12 review:
- 669 focused plus315 Exchange/world/case checks; obsolete malformed-token fixture expectations
+  checks pass. Independent NPC code review: 281 focused checks. Independent followups/G12 review:
+  669 focused plus 315 Exchange/world/case checks; obsolete malformed-token fixture expectations
   were adapted, retaining real upstream rejection for valid-shaped forged tokens.
-- Frontend source/assets are unchanged in this release; Phase2's1,603-test/build/spoiler proof
+- Frontend source/assets are unchanged in this release; Phase 2's 1,603-test/build/spoiler proof
   remains applicable. Redacted Gitleaks uses only the exact existing RFC7636 public-vector exclusion.
 - Applied **one file at a time**, passing repository text directly, then proving exact stored MD5:
 
@@ -39,7 +39,7 @@ Used by: Nils and integrating agents; source branch integrate/case-npc, followin
 
 Counts after each file: **31 tables +1 view /16 public policies /5 realtime policies /17 reasons
 /43 project functions excluding rls_auto_enable /8 sequences /6 public triggers**.
-Security advisors show known items only:15 intentional server-only RLS/no-policy INFOs, intended
+Security advisors show known items only: 15 intentional server-only RLS/no-policy INFOs, intended
 is_crew_member, Supabase rls_auto_enable and the email-disabled leaked-password notice.
 [Advisor explanations](https://supabase.com/docs/guides/database/database-linter).
 

@@ -22,19 +22,19 @@ starting resources and production rules. Code and per-file SQL reviews pass. Rev
 Live counts are **31 tables +1 view /43 project functions /17 wallet reasons**, with expected-only
 security advisors. See the [complete release proof](handoff/case-complete-release.md).
 
-Phase3 production baseline is main `40ba1d5`, deployment `dpl_9yCGpVwrFygtV57MXrov3fiSJLAJ` READY.
-Health/config are200 and the four group3 flags are enabled. The release activates case/bulletin
+Phase 3 production baseline is main `40ba1d5`, deployment `dpl_9yCGpVwrFygtV57MXrov3fiSJLAJ` READY.
+Health/config are 200 and the four group 3 flags are enabled. The release activates case/bulletin
 only after verifying its new deployment, then redeploys and verifies config. RELIGHT_OPEN remains
 unset; the live coast stays dark. G9 is **paused until Nils' laptop returns**, so the complete mystery
 and normal browser multiplayer still await its adapter despite the passing backend proofs.
 
-Next: festival backend/UI and reserved160000, host-console integration170000 and sports180000 are
-being built against the current contracts. G12 required no150000 migration. Sports-provider keys
+Next: festival backend/UI and reserved `160000`, host-console integration `170000` and sports `180000` are
+being built against the current contracts. G12 required no `150000` migration. Sports-provider keys
 are not configured in Vercel; live sports will stay off until its credential and proofs are ready.
 The ChatGPT helper requires an approved official website client. Direct live stock/cache-HIT checks
 still need the production hostname allowed by this cloud environment's network policy.
 
-Phase1 main63e1e8c, Phase2 mainc365985 and Phase3 main40ba1d5 are already released; their proofs are
+Phase1 main63e1e8c, Phase2 mainc365985 and Phase3 main `40ba1d5` are already released; their proofs are
 retained under docs/handoff. Original music, ambience and effects are built with separate controls.
 The older status paragraphs below are historical checkpoints.
 
@@ -458,7 +458,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
-- **6 Nov, Codex:** minimum case/NPC, server followups and Exchange-v2 economy checks integrated;10,859 backend tests pass, all69 mixes and two actual API/SQL solves proven. Applied130000/140000 sequentially with exact hashes, versions, counts and known-only advisors. See [complete proof](handoff/case-complete-release.md).
+- **6 Nov, Codex:** minimum case/NPC, server followups and Exchange-v2 economy checks integrated; 10,859 backend tests pass, all 69 mixes and two actual API/SQL solves proven. Applied 130000/140000 sequentially with exact hashes, versions, counts and known-only advisors. See [complete proof](handoff/case-complete-release.md).
 
 - **6 Nov, Codex:** Phase 2 production verified healthy with approved flags and private POST-only routes. Phase 3 shared world/Exchange integration passes 10,309 backend tests; reviewed 120000 applied and hash/version/counts/advisors proven, singleton remains dark. See [Phase 3 proof](handoff/case-phase3-release.md).
 
