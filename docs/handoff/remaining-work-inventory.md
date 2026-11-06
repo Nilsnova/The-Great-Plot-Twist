@@ -1,5 +1,7 @@
 # Remaining work to "feature complete at minimum versions" (Sun 8 Nov 2026, Lisbon)
 
+> Historical inventory from earlier on 6 Nov. Current release state and remaining blockers are in [STATUS](../STATUS.md) and [the live-extras proof](live-extras-release.md).
+
 Read-only inventory, Fri 6 Nov 2026, 15:25 Lisbon (16:25 CET). I changed no file, ref or worktree, started nothing and used no network. Hours below are agent wall-clock per workflow, including its gates and the independent review. They come from Roadmap v0.3 and from today's measured pace, so they are estimates and not usage-limit forecasts. No case secret appears here: case routes are given by method, path, inputs and output fields only.
 
 ## 1. Answer first

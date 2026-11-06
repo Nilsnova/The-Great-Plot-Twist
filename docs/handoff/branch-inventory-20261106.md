@@ -1,5 +1,7 @@
 # Branch and handoff inventory · 6 Nov 2026
 
+> Historical inventory from earlier on 6 Nov. Current release state and remaining blockers are in [STATUS](../STATUS.md) and [the live-extras proof](live-extras-release.md).
+
 Used by: Nils and Codex for the integration order. Ref inventory only; a branch is not a shipped feature.
 
 Main at inventory: 60f7fd0. All branch tips are preserved.
