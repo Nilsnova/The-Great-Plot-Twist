@@ -20,3 +20,10 @@ Used by: Nils and the integrating agent; branch integrate/case-phase1, based on 
 - Remaining: Phase2 board/night, Phase3 world rewards/Relighting, Phase4 partners, final hardening;
   migrations 080000,120000,130000 then 140000 in the authorized order. G9 is implemented in another cloud
   session. Direct live-market pricing verification awaits this cloud environment's network allowlist.
+
+## Final registry proof
+
+Installed the exact existing frontend dependencies and ran the five registry checks that were optional
+skips in the full backend run. Adopted Nils-approved coordinate-only correction 2093652 (home light chart
+Y 192.87); registry and solvability now 43 passed. Regenerated 12 reveal fingerprints unchanged; production
+build/spoiler guard passed again. No protected story line or applied migration changed.

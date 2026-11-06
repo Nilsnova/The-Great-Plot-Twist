@@ -2839,7 +2839,7 @@ The test-only packages stay in uv's cache. Claude reviews and applies the three 
 
 ## Case Phase 1 migration
 
-`migrations/20261106060000_case_rules.sql` is additive and awaits Claude's review and live application. The case flag remains off. No earlier migration or wallet-reason list changes. The full sorted local chain runs twice in the disposable database checks, preserving any later replacement of the empty world hook.
+`migrations/20261106060000_case_rules.sql` is additive and was independently reviewed and applied by Codex on 6 Nov 2026. Stored MD5 matches `278a16fcf87bbf2f46d81ec803f1e94b` and history version is `20261106060000`. The case flag remains off. No earlier migration or wallet-reason list changes. The full sorted local chain runs twice in the disposable database checks, preserving any later replacement of the empty world hook.
 
 | Table | anon | authenticated | service_role |
 |---|---|---|---|
@@ -2885,3 +2885,5 @@ The fixture asserts a local Unix socket, applies every migration twice, runs che
 12. Refuse authenticated reads of every case table and execution of every case function.
 13. A stale case revision or crew version changes no accusation, action, solver or wallet row.
 14. A host clock move changes only its own crew, logs the action and increments revision; forming crews refuse.
+
+After case Phase 1, cumulative totals are 24 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 32 project functions excluding rls_auto_enable, 6 sequences and 6 public triggers. The six new tables are server-only; RLS-without-policy advisor INFO notices are intended.
