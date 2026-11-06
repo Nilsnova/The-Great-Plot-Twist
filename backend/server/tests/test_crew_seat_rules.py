@@ -4,8 +4,8 @@ The rules are pure functions, so these tests need no database and no network.
 
 The examples table below is worked out by hand from the rule (the partners fill the missing kits
 in the order informant, stranger, true_keeper, witness), not by running the code. The two
-decisions that still wait for Nils are pinned by their own tests, so changing either one is a
-deliberate act:
+decisions that Nils made in the story round (D018) are pinned by their own tests, so changing
+either one is a deliberate act:
   * story decision 12: the order in which partners fill missing kits,
   * story decision 10: a friend who takes over a partner's seat keeps their own kit.
 """
@@ -64,7 +64,7 @@ def test_there_are_four_kits_and_four_seats():
 
 
 def test_the_kit_order_is_informant_stranger_true_keeper_witness():
-    # PENDING Nils' decision (story decision 12). Pinned here: change it on purpose or not at all.
+    # Story decision 12, decided by Nils (D018). Pinned here: change it on purpose or not at all.
     assert NPC_KIT_ORDER == ("informant", "stranger", "true_keeper", "witness")
 
 
@@ -262,7 +262,7 @@ def test_four_players_leave_no_seat():
 
 
 def test_the_seat_takes_the_friends_own_kit():
-    # PENDING Nils' decision (story decision 10). Pinned here: the friend keeps their own kit.
+    # Story decision 10, decided by Nils (D018). Pinned here: the friend keeps their own kit.
     assert FRIEND_KEEPS_OWN_KIT is True
     assert kit_after_takeover("witness", "informant") == "witness"
 

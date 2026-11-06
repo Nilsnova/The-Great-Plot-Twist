@@ -103,7 +103,7 @@ Three things to know:
 
 A crew function *returns* `{"status": ...}`, or `{"status": "refused", "reason": ...}` with nothing changed when a rule says no (the same pattern as `market_trade()`). It *raises* only for a bug, such as a bad argument. Every refusal comes before the first change, because a function that returns keeps what it has done so far.
 
-Which seat a friend takes and which kit each NPC partner carries is decided by the server (`backend/server/crews/seats.py`). The database does not repeat those two rules. Two of the choices there are marked `PENDING` in the code: the kit a seat carries after a friend takes over a partner (built: the friend's own kit), and the order in which partners fill the missing kits (built: informant, stranger, true_keeper, witness). Nils decided both in the story round, as built (D018, decisions 10 and 12; decision 12 is a team call, confirmed at kickoff).
+Which seat a friend takes and which kit each NPC partner carries is decided by the server (`backend/server/crews/seats.py`). The database does not repeat those two rules. Two of the choices there waited for Nils: the kit a seat carries after a friend takes over a partner (built: the friend's own kit), and the order in which partners fill the missing kits (built: informant, stranger, true_keeper, witness). Nils decided both in the story round, as built (D018, decisions 10 and 12; decision 12 is a team call, confirmed at kickoff).
 
 It adds one table (`crew_join_failures`, with row-level security and no policy and no grant for players), and no policy and no wallet reason: see the totals under [Three quick checks after applying](#three-quick-checks-after-applying). Run the crew checks (steps C1 to C8) after step 17 of the manual test plan.
 

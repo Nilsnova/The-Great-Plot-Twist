@@ -79,8 +79,9 @@ Common errors (standard shape, see errors.py):
 Safe repeats: POST /api/crews gives the same draft back; join answers 409 already_seated; start
 answers 409 already_started. A repeat never makes a second seat or a second crew.
 
-Decisions that still wait for Nils (marked in server/crews/seats.py): the kit a seat carries
-after a friend takes it over, and the order in which partners fill the missing kits.
+Two seat choices in server/crews/seats.py were decided by Nils in the story round (D018): the
+kit a seat carries after a friend takes it over, and the order in which partners fill the
+missing kits.
 
 Needs the crew migration (20261106040000) and the entry profiles of package A3.
 

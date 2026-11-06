@@ -27,14 +27,13 @@ from dataclasses import dataclass
 # backend/content/entry_kits.json (package A3). A test compares them.
 KITS = ("true_keeper", "witness", "informant", "stranger")
 
-# PENDING Nils' decision (story decision 12): the order in which partners fill the kits that
-# the players are missing. Built default: informant, stranger, true_keeper, witness
-# (NPC-PARTNERS.md 4.2). The case file CASE-FILE.md still lists another order; the story branch
-# must fix that file.
+# Decided by Nils in the story round (D018, decision 12; a team call, confirmed at kickoff):
+# the order in which partners fill the kits that the players are missing. NPC-PARTNERS.md 4.2
+# and CASE-FILE.md list the same order.
 NPC_KIT_ORDER = ("informant", "stranger", "true_keeper", "witness")
 
-# PENDING Nils' decision (story decision 10): which kit a seat carries after a friend takes
-# over a partner's seat. Built default: the friend keeps their own kit. If this is False, the
+# Decided by Nils in the story round (D018, decision 10): which kit a seat carries after a
+# friend takes over a partner's seat. The friend keeps their own kit. If this is False, the
 # seat keeps the kit of the partner who stepped aside.
 FRIEND_KEEPS_OWN_KIT = True
 
@@ -137,7 +136,7 @@ def kit_after_takeover(friend_kit: str, replaced_partner_kit: str | None) -> str
     """The kit a seat carries after a friend sits down in it.
 
     `replaced_partner_kit` is the kit of the partner who stepped aside, or None if the seat was
-    empty. See FRIEND_KEEPS_OWN_KIT (a decision that still waits for Nils).
+    empty. See FRIEND_KEEPS_OWN_KIT (decided by Nils in the story round, D018).
     """
     if replaced_partner_kit is None or FRIEND_KEEPS_OWN_KIT:
         return friend_kit

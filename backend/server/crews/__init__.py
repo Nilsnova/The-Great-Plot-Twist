@@ -14,6 +14,7 @@ Where things are (one job per file):
     store.py     the database: three reads and the four crew functions, and checking their answers
     service.py   the flows (start a crew, join, muster, my crew) and their errors
 
-The decisions that still wait for Nils are marked "PENDING Nils' decision" in seats.py and in
-docs/DECISIONS.md (D020).
+The two seat choices that D020 left to Nils (the partner kit order and the kit after a
+takeover) were decided in the story round (D018, decisions 10 and 12). seats.py says so at
+its two constants.
 """
