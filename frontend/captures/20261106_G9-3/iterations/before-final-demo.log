@@ -1,0 +1,18 @@
+5:32:11 PM [vite] (client) [Unhandled rejection] TypeError: Cannot read properties of undefined (reading 'demo')
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: TypeError: Cannot read properties of undefined (reading 'demo')
+    at eval (eval at predicate (eval at evaluate (:370:30)), <anonymous>:1:22)
+    at predicate (eval at evaluate (:370:30), <anonymous>:7:27)
+    at next (eval at evaluate (:370:30), <anonymous>:29:33)
+    at eval (eval at evaluate (:370:30), <anonymous>:42:13)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-demo.js:17:37 {
+  log: []
+}
+
+Node.js v24.17.0

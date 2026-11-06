@@ -18,5 +18,5 @@ export function faultReply(state,reason){
     if(state.account.cloudSave.state==='idle')state.account.cloudSave={...empty,label:'Cloud rehearsal copy'};
     state.account.saveState='conflict';
   }
-  return refuse(reason,messages[reason]??'That action could not be completed. Please try again.');
+  return {...refuse(reason,messages[reason]??'That action could not be completed. Please try again.'),...(reason==='rate_limited'?{retryAfterSeconds:4}:{})};
 }

@@ -12,3 +12,6 @@
 @media(max-width:650px){.kit-dialogue{padding:16px;gap:14px;flex-direction:column}.kit-portrait{width:88px}.kit-panel{padding:17px}.kit-modal{padding:15px}.kit-table th,.kit-table td{font-size:16px;padding:9px 5px}.kit-hud-bar{gap:12px}.kit-heading{font-size:20px}}@media(prefers-reduced-motion:reduce){.kit-modal,.kit-dialogue{scroll-behavior:auto}}
 
 .kit-portrait[hidden],.kit-dialogue[hidden],.kit-panel[hidden],.kit-button[hidden],.kit-toast[hidden],.kit-tabpanel[hidden]{display:none!important}
+
+.server-call{padding:10px 12px;border-left:3px solid #edcf8c;background:#263e31;color:#f5edcf;font:18px/1.5 'Courier New',monospace;overflow-wrap:anywhere}.server-call p{margin:0}.server-call-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}.server-call-actions .kit-button{min-height:44px;font-size:16px}.server-call[hidden],.server-call [hidden]{display:none!important}
+.server-call>.case-notice,.server-call>.account-feedback{padding:0;border:0;background:none;margin:0;font-size:18px;line-height:1.5}

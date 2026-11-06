@@ -48,6 +48,7 @@ const validResult=result=>{
   expect(Object.keys(result.view)).toEqual(expect.arrayContaining(caseViewKeys));
   if(result.accepted)expect(result.reason).toBeNull();
   else expect(caseReasons).toContain(result.reason);
+  if(result.retryAfterSeconds!==undefined){expect(result.accepted).toBe(false);expect(result.reason).toBe('rate_limited');expect(typeof result.retryAfterSeconds).toBe('number');expect(Number.isFinite(result.retryAfterSeconds)&&result.retryAfterSeconds>=0&&result.retryAfterSeconds<=86400).toBe(true);}
 };
 
 /** Register reusable adapter checks. Driver: {options,probes,prepare,sequence,assertProgress,stableView}. */

@@ -1,0 +1,62 @@
+[
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "seconds": 7.67
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "seconds": 1.68
+  },
+  {
+    "command": "node scripts/check-call-states.js",
+    "exitCode": 0,
+    "seconds": 10.58
+  },
+  {
+    "command": "node scripts/check-chaos.js",
+    "exitCode": 0,
+    "seconds": 34.23
+  },
+  {
+    "command": "node scripts/check-golden-path.js",
+    "exitCode": 0,
+    "seconds": 33.18
+  },
+  {
+    "command": "node scripts/check-ui-kit.js",
+    "exitCode": 0,
+    "seconds": 3.9
+  },
+  {
+    "command": "node scripts/check-case.js",
+    "exitCode": 0,
+    "seconds": 16.26
+  },
+  {
+    "command": "node scripts/check-intro.js",
+    "exitCode": 0,
+    "seconds": 11.49
+  },
+  {
+    "command": "node scripts/check-lifecycle.js",
+    "exitCode": 0,
+    "seconds": 8.03
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "exitCode": 0,
+    "seconds": 7.95
+  },
+  {
+    "command": "node scripts/check-a11y.js",
+    "exitCode": 0,
+    "seconds": 11.64
+  },
+  {
+    "command": "node scripts/check-demo.js",
+    "exitCode": 1,
+    "seconds": 81.65
+  }
+]

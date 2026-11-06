@@ -32,5 +32,11 @@ for (const state of ['new','pinned','used']) {
 showcase('07 / Clue-card states',{element:cards,dispose(){}},true);
 const chart = kit.createMiniChart({label:'Island Exchange · fictional sample',values:[10,12,9,15,14,18,16,20]}); showcase('08 / Mini chart',chart);
 const halted = kit.createMiniChart({label:'Island Exchange · halted sample',values:[10,13,16,11,14,12],halted:true}); showcase('09 / Halted chart',halted);
+for(const phase of ['loading','empty','error','offline','expired','rate_limited']){
+  const state=kit.createServerCallState({label:`sample ${phase}`,onRetry:()=>state.succeed({message:'Sample retry accepted.'}),onSignIn:()=>state.showMessage('Sign-in intent goes to the adapter.')});
+  if(phase==='loading')state.loading();else if(phase==='empty')state.succeed({empty:true,message:'No records yet.'});
+  else state.fail({reason:({error:'internal_error',expired:'session_expired'})[phase]??phase,message:'The sample request could not be completed.',retryAfterSeconds:4});
+  showcase(`Request / ${phase}`,state);
+}
 const note = node('p','kit-gallery-note','All components accept plain data, use textContent, keep visible focus and release their listeners or animation when disposed. Sample balances and charts are display data only.'); root.append(note);
 if (import.meta.hot) import.meta.hot.dispose(()=>{components.forEach(c=>c.dispose());root.replaceChildren();});

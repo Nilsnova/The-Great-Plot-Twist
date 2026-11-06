@@ -1,6 +1,8 @@
 // Account and save presentation. All state and decisions arrive through supplied view data.
 import './account.css';
 import {node} from '../helpers.js';
+import {createServerCallState} from '../../ui/kit/server-call-state.js';
+import {intentFailure} from '../../adapter/intent.js';
 import {createButton} from '../../ui/kit/button.js';
 
 const accountStates={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account error'};
@@ -12,7 +14,8 @@ function stateLabel(value,labels){return labels[value]??(String(value??'').repla
 
 export function createAccountScreen({send,navigate}){
   const element=node('section','account-screen');element.setAttribute('aria-label','Account and saved games');
-  let view={},feedback='',busy=false,deleteArmed=false,buttons=[];
+  let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0;
+  const call=createServerCallState({messageElement:node('p','account-feedback'),label:'account action',onRetry:()=>lastIntent&&invoke(...lastIntent)});
   function action(parent,label,method,args=[],focus,disabled=false){
     const component=createButton({label,disabled,onClick:()=>invoke(method,...args)});if(focus)component.element.dataset.focus=focus;
     buttons.push(component);parent.append(component.element);return component.element;
@@ -66,19 +69,19 @@ export function createAccountScreen({send,navigate}){
       }else action(actions,'Delete my data','armDelete',[],'account-delete',busy);
     }
     if(feedback){const status=node('p','account-feedback',feedback);status.setAttribute('role','status');element.append(status);}
-    restoreRequestedFocus();
+    element.append(call.element);restoreRequestedFocus();
   }
   let focusKey=null;
   function restoreRequestedFocus(){if(!focusKey)return;const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey);(target??element.querySelector('button:not(:disabled),input,select'))?.focus({preventScroll:true});focusKey=null;}
   async function invoke(method,...args){
     if(method==='armDelete'){deleteArmed=true;feedback='Review the full deletion notice and press Confirm deletion to continue.';focusKey='account-delete-confirm';refresh();return;}
-    if(busy)return;busy=true;feedback='';
-    try{const result=await send?.(method,...args);feedback=result?.message??(result?.accepted?'Request accepted.':'The request could not be completed.');if(result?.accepted&&method==='deleteMyData')deleteArmed=false;if(result?.accepted&&method==='continueGame')navigate?.('continue',result);}
-    catch{feedback='The account service could not answer. Your saved progress is unchanged.';}
-    finally{busy=false;refresh();}
+    if(busy||disposed)return;busy=true;const token=++request;feedback='';lastIntent=[method,...args];call.loading();refresh();
+    try{const result=await send?.(method,...args);if(disposed||token!==request)return;if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());if(result?.accepted&&method==='deleteMyData')deleteArmed=false;if(result?.accepted&&method==='continueGame')navigate?.('continue',result);}
+    catch(error){if(!disposed&&token===request)call.fail(intentFailure(error));}
+    finally{busy=false;if(!disposed)refresh();}
   }
   function refresh(){focusKey=element.contains(document.activeElement)?document.activeElement.dataset.focus:focusKey;render();if(focusKey){const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey);(target??element.querySelector('button:not(:disabled),input,select'))?.focus({preventScroll:true});focusKey=null;}}
   function update(next){view=next??{};if(accountOf(view).state==='signed_out')deleteArmed=false;refresh();}
   refresh();
-  return {element,update,tick(){},dispose(){clearButtons();element.remove();}};
+  return {element,update,signIn:()=>invoke('signIn'),tick(){},close(){request++;call.clear();},dispose(){disposed=true;call.dispose();clearButtons();element.remove();}};
 }

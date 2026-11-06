@@ -6,7 +6,7 @@ import {createShell} from './shell/controller.js';
 import {createLazyAccountHost} from './shell/lazy-account.js';
 import {createAccountSummary} from './screens/account/summary.js';
 import {createClientAdapter} from './adapter/select.js';
-import {sendCaseIntent} from './adapter/intent.js';
+async function sendCaseIntent(...args){return (await import('./adapter/intent.js')).sendCaseIntent(...args);}
 import {introJournal} from './story/intro-journal.js';
 import {createLazyAudio} from './audio/lazy.js';
 import {createCaptions} from './audio/captions.js';
@@ -25,7 +25,7 @@ const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:resu
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
   updateAccount(result.view);
-  if(!result.accepted){await accountHost.open();accountHost.notice?.(result.message);}
+  if(!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
   return result;
 }
 const summary=createAccountSummary({send,openAccount:()=>accountHost.open()});
@@ -43,7 +43,7 @@ async function loadGame(){
 async function play(resume,ready){
   const token=++playRequest;
   const result=resume?(ready??await sendCaseIntent(adapter,'continueGame')):null;
-  if(result&&!result.accepted){await accountHost.open();accountHost.notice?.(result.message);return;}
+  if(result&&!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>play(true));return;}
   const continuation=result?.view?.continuation;
   if(continuation?.source==='cloud'&&Array.isArray(continuation.actions))introJournal().write(JSON.stringify({version:1,actions:continuation.actions}));
   shell.play();const game=await loadGame();
