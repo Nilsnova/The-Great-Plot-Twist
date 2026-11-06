@@ -23,6 +23,8 @@ Crew and case screens can be rehearsed with a local fake. They show the intended
 
 **Muster with NPC partners** fills empty seats so a smaller group can rehearse a full crew. Partners carry their own kits. In **Partners**, choose an offered order and target, then **Send order**. Read the travel/work timer and return for the report. Partners can search, pin cards and take light posts; they do not choose your deductions, accuse for you or supply puzzle hints. A friend's join must be confirmed by the crew screen; never assume an empty seat is already reserved.
 
+Local-fake examples: [a forming crew with open seats](../frontend/public/help/crew-rehearsal.png), then [three NPC partners after muster](../frontend/public/help/partners-rehearsal.png). These show no live players, usable crew invitation, rewards or case progress.
+
 ## The case, without solutions
 
 **Local rehearsal only in this build.** The case is about investigating a dangerous light at sea. Explore at your own pace and use the information your crew actually discovers.
