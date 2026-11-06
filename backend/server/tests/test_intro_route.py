@@ -287,11 +287,6 @@ FORGED_LOGS = {
     "an action of another scene": (["take_key"], "move_refused", "Move 1"),
     "a move after the ending": (WARNED_RESCUE + ["to_desk"], "move_refused", "Move 12"),
     "the rescue without the warning": (TO_SHORE + TO_LAMP + ["signal"], "move_refused", "Move 10"),
-    "keep_quiet, which today's story does not have": (
-        TO_SHORE + ["keep_quiet"] + TO_LAMP + ["untie"],
-        "move_refused",
-        "Move 6",
-    ),
     "moves that stop before an ending": (["to_desk"], "no_ending", "stop before an ending"),
     "moves that stop one move before the ending": (
         WARNED_RESCUE[:-1],
@@ -692,3 +687,15 @@ def test_silent_players_with_and_without_the_log_are_both_strangers():
 
     assert plain["kit"] == with_log["kit"]
     assert (plain["readLog"], with_log["readLog"]) == (False, True)
+
+
+def test_keep_quiet_from_story_v2_gives_the_stranger_kit():
+    # Story v2 added keep_quiet at the shore. It sets no flag, so the player ends as a Stranger.
+    client, _ = make_client(EntryDatabase())
+
+    response = complete(client, TO_SHORE + ["keep_quiet"] + TO_LAMP + ["untie"])
+
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["ending"], body["decision"]) == ("ending_trapped", "none")
+    assert body["kit"]["id"] == "stranger"

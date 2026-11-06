@@ -287,13 +287,14 @@ def test_both_decision_flags_at_once_is_a_content_error_and_never_a_kit():
 # --- Story v2 ---
 
 
-def test_keep_quiet_is_refused_on_todays_story():
+def test_keep_quiet_ends_as_a_stranger_on_todays_story():
+    # Story v2 is on main, so keep_quiet is a move of today's story and no longer a forged one.
     log = TO_SHORE + ["keep_quiet"] + TO_LAMP + ["untie"]
 
-    refusal = refusal_of(log)
+    verdict = judge(STORY, KITS, log)
 
-    assert refusal.code == "move_refused"
-    assert f"Move {len(TO_SHORE) + 1}" in refusal.message  # move 6
+    assert (verdict.ending, verdict.decision) == ("ending_trapped", "none")
+    assert kit_for(KITS, verdict.ending, verdict.decision).id == "stranger"
 
 
 def test_story_v2_keep_quiet_ends_as_a_stranger():

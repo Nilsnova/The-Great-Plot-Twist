@@ -5,7 +5,9 @@ route (test_intro_route.py) all need the same facts about the story, so they liv
 
   * the eight routes to the eight end states of today's story, each with the kit it must give,
   * end_states(), a search that finds every end state of ANY story (it does not trust the routes),
-  * story_v2_fixture(), today's story plus the one action that Story v2 adds (keep_quiet).
+  * story_v2_fixture(), today's story with the one action that Story v2 adds (keep_quiet). Since
+    Story v2 is on main, today's story has that action itself, and the fixture adds it only when it
+    is missing.
 
 The routes were replayed on the real engine and the real story.json: today's story has 122
 reachable states, 8 of them end states. A route is a list of action ids, in the order the player
@@ -166,8 +168,9 @@ def end_states(story: Story) -> set[StateKey]:
 
 
 # The one action Story v2 adds at the shore (STORY-V2-CHANGES.md, change 5): a third choice that
-# sets no flag, for the player who takes no side. It is the stand-in the tests use until the story
-# branch is merged, and it changes no rule of the engine: it has no goto, no take and no set.
+# sets no flag, for the player who takes no side. It was the stand-in the tests used before Story v2
+# reached main, and it changes no rule of the engine: it has no goto, no take and no set. Today's
+# story.json has its own keep_quiet, so story_v2_fixture() leaves the story as it is.
 KEEP_QUIET = {
     "id": "keep_quiet",
     "label": "Say nothing to anyone",
@@ -178,9 +181,13 @@ KEEP_QUIET = {
 
 
 def story_v2_fixture() -> Story:
-    """A copy of today's story with keep_quiet added at the shore, right after warn_harbor."""
+    """A copy of today's story with keep_quiet at the shore, right after warn_harbor.
+
+    The action is added only when the story does not have it yet, so the shore never holds two.
+    """
     story = copy.deepcopy(load_story())
     actions = story["scenes"]["shore"]["actions"]
-    position = [action["id"] for action in actions].index("warn_harbor") + 1
-    actions.insert(position, copy.deepcopy(KEEP_QUIET))
+    ids = [action["id"] for action in actions]
+    if "keep_quiet" not in ids:
+        actions.insert(ids.index("warn_harbor") + 1, copy.deepcopy(KEEP_QUIET))
     return story
