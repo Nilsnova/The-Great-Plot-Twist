@@ -85,6 +85,10 @@ missing kits.
 
 Needs the crew migration (20261106040000) and the entry profiles of package A3.
 
+Successful join and muster send a version-only crew_changed hint through the shared A4
+broadcaster. It has a one-second budget; a failed hint leaves the successful API answer intact.
+Reads, refused writes and repeated intents send no hint. live_presence remains off by default.
+
 Used by: the game client (the crew screen) once it exists, and later the case board (S3, L3).
 """
 
@@ -95,6 +99,8 @@ from fastapi import APIRouter, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.auth import PlayerDep
+from server.crew_broadcast import BroadcasterDep
+from server.crew_nudges import crew_changed
 from server.crews.seats import SEAT_NUMBERS, Seat
 from server.crews.service import (
     create_crew,
@@ -197,17 +203,25 @@ async def post_crew(player: PlayerDep, admin: AdminDep, response: Response) -> C
 
 @router.post("/crews/join")
 async def post_join(
-    request: JoinRequest, player: PlayerDep, admin: AdminDep, response: Response
+    request: JoinRequest,
+    player: PlayerDep,
+    admin: AdminDep,
+    response: Response,
+    broadcaster: BroadcasterDep,
 ) -> CrewResponse:
     response.headers["Cache-Control"] = "private, no-store"
     crew = await join_crew(admin, player.id, request.code)
+    await crew_changed(broadcaster, crew.id, crew.version)
     return crew_response(crew, player.id)
 
 
 @router.post("/crews/me/start")
-async def post_start(player: PlayerDep, admin: AdminDep, response: Response) -> CrewResponse:
+async def post_start(
+    player: PlayerDep, admin: AdminDep, response: Response, broadcaster: BroadcasterDep
+) -> CrewResponse:
     response.headers["Cache-Control"] = "private, no-store"
     crew = await start_crew(admin, player.id)
+    await crew_changed(broadcaster, crew.id, crew.version)
     return crew_response(crew, player.id)
 
 

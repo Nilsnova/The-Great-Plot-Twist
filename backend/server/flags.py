@@ -24,6 +24,7 @@ FLAG_NAMES = (
     "companion_llm",
     "case",
     "sign_in",
+    "bulletin",
 )
 
 

@@ -189,3 +189,33 @@ def test_actual_api_golden_path_and_disposable_cleanup(monkeypatch):
                 )
     assert database.uri is None and database.directory is None
     assert not directory.exists()
+
+
+def test_l2_build_retry_isolation_and_delete_with_the_expanded_chain():
+    pytest.importorskip("pgserver")
+    pytest.importorskip("psycopg")
+    app = create_local_app({"LOCAL_TEST_SERVER": "1", "APP_ENV": "local"})
+    with TestClient(app) as client:
+        headers = {"Authorization": f"Bearer {PLAYERS[0].token}"}
+        friend = {"Authorization": f"Bearer {PLAYERS[1].token}"}
+        assert client.get("/api/bulletin").status_code == 404
+        request_ok(client, "POST", "/api/intro/complete", headers=headers, json={"actions": INTRO})
+        before = request_ok(client, "GET", "/api/islet", headers=headers)
+        plot = next(spot for spot in before["spots"] if spot["canBuild"])
+        payload = {"plot": plot["plot"], "type": plot["type"], "actionUid": "build0001"}
+        built = request_ok(client, "POST", "/api/islet/build", headers=headers, json=payload)
+        assert built["coins"] == before["coins"] - built["coinsPaid"]
+        assert built["timber"] == before["timber"] - built["timberPaid"]
+        assert client.post("/api/islet/build", headers=headers, json=payload).status_code == 409
+        other = request_ok(client, "GET", "/api/islet", headers=friend)
+        assert other["timber"] == before["timber"]
+        assert all(spot["level"] is None for spot in other["spots"])
+        request_ok(client, "DELETE", "/api/me", headers=headers, json={"confirm": True})
+        with app.state.local_database.connect() as connection:
+            for table in ("islets", "islet_buildings"):
+                assert (
+                    connection.execute(
+                        f"select count(*) from {table} where player_id = %s", (PLAYERS[0].id,)
+                    ).fetchone()[0]
+                    == 0
+                )

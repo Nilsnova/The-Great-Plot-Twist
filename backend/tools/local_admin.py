@@ -21,13 +21,14 @@ from server.supabase_admin import (
 
 TABLES = frozenset(
     "profiles wallets saves entry_profiles captain_name_rerolls crews crew_seats "
+    "islets islet_buildings "
     "market_bases market_positions market_trades wallet_transactions wallet_reasons "
     "case_state case_finds case_deductions case_accusations case_solvers case_actions".split()
 )
 FUNCTIONS = frozenset(
     "assign_captain_name reroll_captain_name save_progress delete_player grant_entry_kit "
     "crew_create crew_find_by_code crew_take_seat crew_start market_set_base market_trade "
-    "case_open case_start_route case_accuse case_clock_forward".split()
+    "case_open case_start_route case_accuse case_clock_forward islet_build".split()
 )
 # (parent, embedded table): (parent key, embedded key, many)
 RELATIONS = {

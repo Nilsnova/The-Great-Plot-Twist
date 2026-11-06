@@ -168,6 +168,8 @@ class World:
         market: MarketService | None = None,
         recorded_folder: Path = CONTENT_FOLDER,
     ) -> None:
+        # These tests exercise the enabled service; deployment defaults stay off.
+        settings = replace(settings, flags={**settings.flags, "bulletin": True})
         self.clock = FakeClock()
         self.clock.now = now
         self.stage = stage if isinstance(stage, FixedStage) else FixedStage(stage)

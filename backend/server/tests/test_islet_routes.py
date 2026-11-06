@@ -38,7 +38,7 @@ from server.tests.helpers import (
 from server.wallet import MAX_DELTA
 
 PLAYER_ID = "11111111-2222-4333-8444-555555555555"
-TOKEN = "token-of-the-test-player"
+TOKEN = "test.islet-player.signature"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 STATION_ROW = {
