@@ -7,5 +7,6 @@ export function emptyExtensions(){
     log:{intro:null,cards:[],deductions:[],partnerReports:[],nights:[],reveal:[]},
     hints:{items:[],actions:[]},
     continuation:null,
+    bulletin:{status:'off',day:null,lines:[],weather:null,exchange:null,chapterTwoHook:null},
   };
 }

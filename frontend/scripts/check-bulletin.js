@@ -1,0 +1,45 @@
+// Browser smoke check for the G8 harbor bulletin and tonight chip.
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+import {stubIntro} from './intro-browser-fixture.js';
+import {startFromTitle} from './shell-browser-tools.js';
+import {openWorldBrowser,settle} from './world-browser-tools.js';
+
+const env=await openWorldBrowser(),{page}=env;
+const report={checked:new Date().toISOString(),checks:[],screenshots:[]};
+const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
+try{
+  await stubIntro(page);await page.goto(`${env.url}/?case=local`);await startFromTitle(page);
+  await page.evaluate(async()=>{const g=window.__island;await g.world.goTo('saltreach_harbor',{fast:true});await g.caseUi.open('crew');});
+  await page.locator('.case-modal[open]').waitFor();
+  await page.evaluate(()=>window.__island.caseUi.adapter.dev.setBulletin('off'));
+  check(await page.locator('.tonight-chip').isHidden(),'Default off bulletin hides the tonight chip');
+  await page.keyboard.press('Escape');await page.locator('.case-modal[open]').waitFor({state:'hidden'});
+  await page.evaluate(()=>{const g=window.__island;g.player.position.set(6,1.03,8.5);});await settle(page);
+  check(await page.locator('.interact').getAttribute('data-zone')!=='bulletin_board','Off bulletin has no harbor hotspot or prompt');
+  await page.evaluate(()=>window.__island.caseUi.adapter.dev.setBulletin('calm'));
+  check(await page.locator('.tonight-chip').isVisible()&&await page.locator('.tonight-chip').textContent().then(text=>text.includes('Tonight · calm')),'Tonight chip shows the supplied period state');
+  await page.evaluate(()=>window.__island.caseUi.adapter.dev.setBulletin('almanac'));
+  check(await page.locator('.tonight-chip').textContent().then(text=>text.includes("by the harbor's almanac")),'Tonight chip labels an almanac fog night');
+  await page.evaluate(()=>window.__island.caseUi.adapter.dev.setBulletin('calm'));
+  await page.waitForFunction(()=>window.__island.world.current.zones.some(zone=>zone.id==='bulletin_board'));
+  await page.evaluate(()=>{const g=window.__island,z=g.world.current.zones.find(item=>item.id==='bulletin_board');g.player.position.set(z.x,z.y,z.z);});
+  await page.waitForFunction(()=>document.querySelector('.interact').dataset.zone==='bulletin_board');
+  await page.keyboard.press('KeyE');await page.locator('.case-modal[open] .bulletin-screen').waitFor();
+  check(await page.locator('.case-modal[open] .bulletin-screen').isVisible(),'Harbor bulletin opens from its registered hotspot');
+  check(await page.locator('.bulletin-lines li').count()===2,'Calm bulletin shows canonical weather and Exchange lines in order');
+  check(await page.locator('.bulletin-weather-credit a').first().getAttribute('href')==='https://open-meteo.com/','Bulletin shows the Open-Meteo credit link');
+  await page.screenshot({path:'captures/20261106_G8-Bulletin-Desktop.png'});report.screenshots.push('captures/20261106_G8-Bulletin-Desktop.png');
+  await page.setViewportSize({width:375,height:812});await settle(page);
+  const bounds=await page.locator('.case-modal[open] .bulletin-screen').evaluate(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};});
+  check(bounds.left>=0&&bounds.right<=375&&bounds.scrollWidth<=bounds.clientWidth+1,'Bulletin fits a 375 px phone without horizontal overflow');
+  await page.screenshot({path:'captures/20261106_G8-Bulletin-Phone.png'});report.screenshots.push('captures/20261106_G8-Bulletin-Phone.png');
+  await page.evaluate(()=>window.__island.caseUi.adapter.dev.setBulletin('unavailable'));
+  check((await page.locator('.bulletin-status').textContent()).includes('unavailable'),'Unavailable bulletin displays its plain fallback');
+  await page.keyboard.press('Escape');await page.locator('.case-modal[open]').waitFor({state:'hidden'});
+  check(await page.evaluate(()=>document.activeElement===document.querySelector('canvas[tabindex="0"]')),'Escape closes the bulletin and restores game focus');
+  await page.evaluate(()=>{const g=window.__island;g.caseUi.adapter.dev.setBulletin('storm');});await settle(page);
+  check(await page.evaluate(()=>window.__island.world.current.group.getObjectByName('storm-warning-flag')?.visible===true),'Storm scenario raises the harbor mast flag');
+  check(env.errors.length===0,'Browser has no console or page errors');check(env.external.length===0,'Browser makes no external requests');
+  report.errors=env.errors;report.external=env.external;console.log(JSON.stringify(report,null,2));
+}finally{await writeFile('captures/20261106_G8-Bulletin-Checks.json',JSON.stringify(report,null,2));await env.close();}

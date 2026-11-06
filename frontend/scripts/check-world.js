@@ -35,7 +35,10 @@ try {
   await page.evaluate(() => { window.__island.settings.hour = 12; });
   for (const id of placeIds.filter(id => id !== 'gulls_rest')) {
     await go(id);
-    for (const zone of places[id].zones) {
+    // The optional bulletin has its own enabled-state browser check.
+    const availableZones=places[id].zones.filter(zone=>zone.id!=='bulletin_board');
+    check(await page.evaluate(zones=>JSON.stringify(window.__island.world.current.zones)===JSON.stringify(zones),availableZones), `${id}: only enabled hotspots are offered`);
+    for (const zone of availableZones) {
       await page.evaluate(z => { window.__island.player.position.set(z.x, z.y, z.z); }, zone);
       await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, zone.id);
       const before = await page.evaluate(() => window.__worldEvents.filter(e => e.type === 'interact').length);

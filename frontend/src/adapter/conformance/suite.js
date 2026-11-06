@@ -1,12 +1,14 @@
 // Reusable Vitest contract checks for memory, fixture-backed and production adapters.
 import {describe,it,expect} from 'vitest';
 import {caseMethods,caseReasons,caseViewKeys} from '../contract.js';
+import {validateBulletin} from './bulletin.js';
 
 const stableView=view=>{const copy=structuredClone(view);delete copy.revision;delete copy.notice;return copy;};
 const hasKeys=(value,keys)=>expect(Object.keys(value)).toEqual(expect.arrayContaining(keys));
 const stringOrNull=value=>expect(value===null||typeof value==='string').toBe(true);
 const allowed=(value,values)=>expect(values).toContain(value);
 function validateExtensions(view){
+  validateBulletin(view.bulletin);
   const p=view.presence,a=view.account,r=view.rewards,l=view.log,h=view.hints;
   hasKeys(p,['localEmote','canEmote','cooldown','emotes']);expect(typeof p.canEmote).toBe('boolean');expect(Number.isFinite(p.cooldown)&&p.cooldown>=0).toBe(true);expect(Array.isArray(p.emotes)).toBe(true);
   if(p.localEmote!==null){hasKeys(p.localEmote,['id','until']);allowed(p.localEmote.id,['wave','cheer','point','lantern','shrug']);expect(Number.isFinite(p.localEmote.until)).toBe(true);}
@@ -59,7 +61,7 @@ export function defineAdapterConformance(name,factory,driver={}){
         expect(before.schema).toBe(1);
         validateExtensions(before);
         copy.captain.name='mutated by caller';copy.rewards.ledger.push({id:'caller'});
-        copy.presence.others.push({id:'caller'});
+        copy.presence.others.push({id:'caller'});copy.bulletin.lines.push({kind:'caller',text:'caller'});
         expect(adapter.read()).toEqual(before);
       }finally{adapter.dispose();}
     });

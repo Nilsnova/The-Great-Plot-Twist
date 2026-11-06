@@ -18,9 +18,11 @@ import {initialRewardState,settleRewards} from './rewards.js';
 import {setSimulatedSeats,asSimulatedSeat} from './simulate.js';
 import {recordPartnerEvent,previewTakeover,confirmTakeover} from './partner-life.js';
 import {caseView} from './view.js';
+import {initialBulletinState,setBulletinScenario} from './bulletin.js';
 
 export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCount=30,localActions=null}={}) {
-  function initial(){const next=initialCaseState();next.account=initialAccountState();next.rewardState=initialRewardState();next.presence=initialPresenceState({count:presenceCount});if(Array.isArray(localActions))next.account.deviceSave={state:'saved',label:'Intro saved on this device',updatedAt:null,kind:'intro',actions:[...localActions],place:'lighthouse_isle'};return next;}
+  let isletBuilt=['plot_1'];
+  function initial(){const next=initialCaseState();next.stations=isletBuilt.includes('islet_signal_station');next.bulletin=initialBulletinState();next.account=initialAccountState();next.rewardState=initialRewardState();next.presence=initialPresenceState({count:presenceCount});if(Array.isArray(localActions))next.account.deviceSave={state:'saved',label:'Intro saved on this device',updatedAt:null,kind:'intro',actions:[...localActions],place:'lighthouse_isle'};return next;}
   let state=initial(),disposed=false,lastSecond=-1,notice=null,presenceTime=0,nextFault=null;
   state.allowBrowse=allowBrowse;
   const listeners=new Set();
@@ -73,6 +75,8 @@ export function createFakeCaseAdapter({timeScale=1,allowBrowse=false,presenceCou
     if(changed||presenceDue||Math.floor(state.now)!==lastSecond){lastSecond=Math.floor(state.now);publish();}
   }
   const dev={
+    setBulletin(scenario){if(disposed||!setBulletinScenario(state,scenario))return false;state.revision++;publish();return true;},
+    setIsletBuilt(built){if(disposed||!Array.isArray(built))return;isletBuilt=[...built];state.stations=isletBuilt.includes('islet_signal_station');state.revision++;publish();},
     setBeam(id,degrees){if(disposed||!state.night||!Number.isFinite(degrees))return;state.night.bearings[id]=degrees;publish();},
     previewTakeover(kitId){return disposed?null:previewTakeover(state,kitId);},
     confirmTakeover(preview){if(disposed)return refuse('disposed','The rehearsal has ended.');const result=confirmTakeover(state,preview);state.revision++;publish();return result;},

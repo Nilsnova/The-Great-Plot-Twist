@@ -32,7 +32,9 @@
     "test:chaos": "node scripts/check-chaos.js",
     "test:g7": "node scripts/check-g7-regression.js",
     "test:csp": "npm run build && node scripts/check-csp.js",
-    "art:fingerprints": "node scripts/generate-reveal-fingerprints.js"
+    "art:fingerprints": "node scripts/generate-reveal-fingerprints.js",
+    "test:islet:world": "node scripts/check-islet-world.js",
+    "test:bulletin": "node scripts/check-bulletin.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

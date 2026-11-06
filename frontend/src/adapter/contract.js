@@ -11,7 +11,7 @@ export const copyView=value=>structuredClone(value);
 export const caseViewKeys = [
   'schema','mode','revision','now','captain','arrival','crew','permissions','board','search',
   'partners','finale','accusation','reveal','world','notice','effects',
-  'presence','account','rewards','log','hints','continuation',
+  'presence','account','rewards','log','hints','continuation','bulletin',
 ];
 export const caseReasons = [
   'accusation_cooldown',

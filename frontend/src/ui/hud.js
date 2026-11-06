@@ -3,6 +3,8 @@ import { node } from './kit/dom.js';
 import { places } from '../world/places/registry.js';
 import { settings } from '../config.js';
 import { getWeather, presets, setWeather } from '../world/weather.js';
+import { tonightLabel } from '../screens/bulletin/logic.js';
+import '../screens/bulletin/bulletin.css';
 
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 export function createHud(container, actions) {
@@ -34,6 +36,7 @@ export function createHud(container, actions) {
     </section>`;
   const captain=node('div','captain-status'),captainName=node('strong','','Captain pending'),save=node('span','','Local intro only');save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
   const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');for(const [name,label] of [['crew','Crew'],['board','Board'],['log','Log'],['hints','What next?']]){const button=node('button','',label);button.type='button';button.onclick=()=>actions.caseScreen?.(name);caseToolbar.append(button);}overlay.append(caseToolbar);
+  const tonightChip=node('aside','tonight-chip');tonightChip.hidden=true;const tonightState=node('strong'),tonightFog=node('span'),tonightStart=node('span');tonightChip.append(tonightState,tonightFog,tonightStart);overlay.append(tonightChip);
   container.append(overlay);
   const timers = [];
   const select = selector => overlay.querySelector(selector);
@@ -62,8 +65,21 @@ export function createHud(container, actions) {
   overlay.querySelectorAll('[data-preset]').forEach(button => { button.onclick = () => {
     setWeather(presets[button.dataset.preset]); actions.focus();
   }; });
-  let toastUntil = 0, syncAt = 0;
-  return {setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},togglePanel,start(){select('#explore').click();},
+  let toastUntil = 0, syncAt = 0, tonightSyncAt=0, bulletinModel=null;
+  function refreshTonight(){
+    const now=Date.now();if(now<tonightSyncAt)return;tonightSyncAt=now+1000;
+    const bulletin=bulletinModel?.bulletin??bulletinModel;
+    if(bulletin?.status!=='ready'){tonightChip.hidden=true;return;}
+    const model=tonightLabel(bulletin.weather?.tonight,now);
+    if(!model){tonightChip.hidden=true;return;}
+    tonightChip.hidden=false;
+    const stateText=`Tonight · ${model.state}`,startText=model.startsAt;
+    if(tonightState.textContent!==stateText)tonightState.textContent=stateText;
+    const fogText=model.fog??'';if(tonightFog.textContent!==fogText)tonightFog.textContent=fogText;tonightFog.hidden=!model.fog;
+    if(tonightStart.textContent!==startText)tonightStart.textContent=startText;
+    const label=[stateText,model.fog,startText].filter(Boolean).join('. ');if(tonightChip.getAttribute('aria-label')!==label)tonightChip.setAttribute('aria-label',label);
+  }
+  return {setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},setBulletin(view){bulletinModel=view;tonightSyncAt=0;refreshTonight();},togglePanel,start(){select('#explore').click();},
     setWeatherCredit(data) {
       const source=node('a','',data.text),licence=node('a','',data.licenceText);
       source.href=data.href;licence.href=data.licenceHref;
@@ -90,6 +106,7 @@ export function createHud(container, actions) {
       select('.toast').hidden = now > toastUntil;
       if (now < syncAt) return;
       syncAt = now + 150; // Clock and diagnostics need not rewrite the DOM every frame.
+      refreshTonight();
       const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60);
       const clock = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       select('time').textContent = clock; select('.hour-value').textContent = clock;
