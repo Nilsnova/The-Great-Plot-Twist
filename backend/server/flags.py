@@ -23,6 +23,7 @@ FLAG_NAMES = (
     "live_presence",
     "companion_llm",
     "case",
+    "sign_in",
 )
 
 
