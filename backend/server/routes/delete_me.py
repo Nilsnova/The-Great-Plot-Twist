@@ -3,7 +3,7 @@
 This is the "delete my data" button. It deletes the login and every row of the player: the
 profile, the save, the wallet, ALL ledger rows, seats, Island Exchange positions and trades, the
 name re-roll and the entry profile. The ledger keeps nothing about the player: the coins are play
-money, and "delete my data" must really delete (decision D018). A crew that the player started and
+money, and "delete my data" must really delete (decision D022). A crew that the player started and
 that other players sit in is handed to the player in the lowest seat first, so friends keep their
 game. A crew nobody else sits in is deleted with the player. The handover happens only here:
 deleting a user in the Supabase dashboard (Authentication > Users) skips it.
@@ -11,7 +11,7 @@ deleting a user in the Supabase dashboard (Authentication > Users) skips it.
 Not deleted: Supabase Auth's audit log (auth.audit_log_entries, which can hold the login e-mail
 address and an IP address) and Supabase's platform logs, which expire on Supabase's own schedule.
 Whether to purge the audit log, or to stop Auth writing it to the database, is part of the pending
-decision N4 (D018).
+decision N4 (D022).
 
 Who may call it: signed-in players only. The player is the owner of the token in
     Authorization: Bearer <token>
@@ -73,7 +73,7 @@ class DeleteResponse(BaseModel):
     deleted: bool  # camelCase is not needed here: it is one plain word
 
 
-# PENDING Nils' decision (N4 in specs/M1-backbone.md, D018): deletes every row, ledger included,
+# PENDING Nils' decision (N4 in specs/M1-backbone.md, D022): deletes every row, ledger included,
 # and hands shared crews to the lowest other seat.
 @router.delete("/me")
 async def delete_me(

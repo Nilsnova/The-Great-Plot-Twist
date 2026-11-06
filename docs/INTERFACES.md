@@ -169,7 +169,7 @@ Two requests at the same moment cannot give a player two names or two re-rolls: 
 
 ### GET and PUT /api/save
 
-The player's progress in the cloud, so they can go on at a second device (package A2, decision D018). The save is the browser's own progress (the local Act 1 state, settings). The server never trusts it for coins, kits, names or crews. For signed-in players only; the home of both routes is the comment at the top of `backend/server/routes/save.py`.
+The player's progress in the cloud, so they can go on at a second device (package A2, decision D022). The save is the browser's own progress (the local Act 1 state, settings). The server never trusts it for coins, kits, names or crews. For signed-in players only; the home of both routes is the comment at the top of `backend/server/routes/save.py`.
 
 ```text
 GET /api/save
@@ -200,7 +200,7 @@ Authorization: Bearer <token>
 
 ### DELETE /api/me
 
-"Delete my data" (package A2, decision D018, pending Nils' OK because it touches personal data). For signed-in players only; the home is `backend/server/routes/delete_me.py`.
+"Delete my data" (package A2, decision D022, pending Nils' OK because it touches personal data). For signed-in players only; the home is `backend/server/routes/delete_me.py`.
 
 ```text
 DELETE /api/me
@@ -214,7 +214,7 @@ Cache-Control: private, no-store
 
 It deletes the login and every row of the player: the profile, save, wallet, **all ledger rows**, seats, Island Exchange positions and trades, the name re-roll, and the tables later packages add (every table that holds a player id references `profiles(id) on delete cascade`). The ledger keeps nothing about the player: the coins are play money and nothing real is owed. A crew the player started that other players sit in is handed to the player in the lowest seat first, so friends keep their game, and the deleted player's seat is open again. A crew nobody else sits in is deleted with them. One database function does all of it in one step (`delete_player()`). The handover happens only there: deleting a user in the Supabase dashboard skips it and deletes the crews they started.
 
-**Not deleted:** Supabase Auth's audit log (`auth.audit_log_entries`, which can hold the login e-mail address and an IP address, and has no foreign key to `auth.users`) and Supabase's platform logs, which expire on Supabase's own schedule. Whether to purge those audit rows, or to stop Auth writing its audit log to the database, is part of the decision that is pending Nils (N4, D018).
+**Not deleted:** Supabase Auth's audit log (`auth.audit_log_entries`, which can hold the login e-mail address and an IP address, and has no foreign key to `auth.users`) and Supabase's platform logs, which expire on Supabase's own schedule. Whether to purge those audit rows, or to stop Auth writing its audit log to the database, is part of the decision that is pending Nils (N4, D022).
 
 | Case | Answer |
 |---|---|
@@ -757,7 +757,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
 | S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story package S0 (skeleton under review) |
 | S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story package S0 (skeleton under review) |
-| A2 Sign-in, captain names and cloud progress | **Built** (on its branch; the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D018. | built; the sign-in part is pending |
+| A2 Sign-in, captain names and cloud progress | **Built** (on its branch; the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D022. | built; the sign-in part is pending |
 | A3 Referee and entry kits | **Built** (on its branch): `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** the coins and texts of the kits (N5, with the S0 approval) and that the first ending counts (N6). | built, in review |
 | A6 Crews and seats | `POST /api/crews` (returns a crew code); `POST /api/crews/join {code}`; `GET /api/crews/me`; crew codes in a new column or table | draft |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |

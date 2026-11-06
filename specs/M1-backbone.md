@@ -88,11 +88,11 @@ Each one applies on foundation plus exchange alone. None references another's ob
 | ID | Title | Written by | Where in `docs/DECISIONS.md` |
 |---|---|---|---|
 | D006 | Identity: generated captain names, no free text | A2 (W1) | directly above `## Next entry` |
-| D018 | Account data: cloud save versions, delete my data, hosts | A2 (W1) | after D006 |
-| D019 | Referee and entry kits | A3 (W1) | after D018 |
+| D022 | Account data: cloud save versions, delete my data, hosts | A2 (W1) | after D006 |
+| D019 | Referee and entry kits | A3 (W1) | after D022 |
 | D020 | Crews: codes, guessing limit, partners at the muster | A6 (W2) | directly after the D012 entry (before `## D005 · Look`) |
 
-D006 is the number ROADMAP.md reserves for A2. D018 to D020 are "the next free numbers after D017". If another branch takes them first, Claude renumbers at merge.
+D006 is the number ROADMAP.md reserves for A2. D018 to D020 are "the next free numbers after D017". If another branch takes them first, Claude renumbers at merge. The story round took D018, so the account entry became D022 at merge; D019 and D020 kept their numbers.
 
 ### 2.3 Shared ids and the entry_profiles contract
 
@@ -146,7 +146,7 @@ Times returned by the database (`updatedAt`, `startedAt`) are converted to UTC a
   - `frontend/src/online/api.js` and `session.js` with Vitest tests.
   - The migration (complete from the start: a migration is never edited after merging).
   - D006.
-- **Full (cheap, same worktree):** one re-roll, `DELETE /api/me`, D018.
+- **Full (cheap, same worktree):** one re-roll, `DELETE /api/me`, D022.
 - **Not built:** the sign-in button, any sign-in UI, the "Saved" indicator, a delete button (all UI), and the Supabase JS library.
 
 `GET /api/save` is added beyond the reserved names, because "resume on a second device" needs a way to read the save without the Supabase JS library.
@@ -291,7 +291,7 @@ The server never trusts the save for coins, kits, names or crews. It is the brow
 
 The verifier cache may accept the old token on that server instance for up to 60 seconds. During that time reads answer `404 player_not_set_up`. This is documented and accepted.
 
-**What `DELETE /api/me` deletes, and what the ledger keeps (decision N4, D018):**
+**What `DELETE /api/me` deletes, and what the ledger keeps (decision N4, D022):**
 - **It deletes:**
   - The login (`auth.users`, with Supabase's own identities and sessions).
   - By `on delete cascade`: the profile, the save, the wallet, **all of the player's ledger rows**, their seats, Exchange positions and trades, the name re-roll, the entry profile (A3), the crew-code failures (A6), and every crew the player started that nobody else sits in.
@@ -302,7 +302,7 @@ The verifier cache may accept the old token on that server instance for up to 60
   - "Delete my data" must really delete. A pseudonymous ledger kept on would still be linked to an account id.
   - The foundation already chose cascade ("rows disappear only when their player is deleted", D004 and D012). Keeping rows would need a tombstone profile and break that model.
   - Shared world state (`market_bases`) holds no player data.
-- **Rule for every later package** (written into D018): a table that holds a player id references `profiles(id) on delete cascade`. If a row must outlive the player, it uses `set null` on a nullable column, so `DELETE /api/me` stays complete without changes.
+- **Rule for every later package** (written into D022): a table that holds a player id references `profiles(id) on delete cascade`. If a row must outlive the player, it uses `set null` on a nullable column, so `DELETE /api/me` stays complete without changes.
 
 ### 3.5 SQL: `supabase/migrations/20261106020000_accounts.sql`
 
@@ -552,7 +552,7 @@ A2 moves no coins. `DELETE /api/me` removes the wallet and the ledger rows by ca
   - Section 3: a new subsection `### Talking to the API: api.js and session.js (package A2)` after `### Reserved events`.
   - Section 4: the "Saves" bullet gets the new version meaning, plus a paragraph and table row for the A2 migration after the Exchange paragraph ("`market_trade()` is the only way a trade happens ...").
   - Section 9: the A2 row is marked built, with the sign-in pending.
-- **DECISIONS.md:** D006 and D018 (section 2.2). D006 covers the names, one re-roll, no free text, preset emotes later, and the sign-in approach pending. D018 covers save versions and limits, the delete rules and their reasons, the cascade rule for later tables, and hosts.
+- **DECISIONS.md:** D006 and D022 (section 2.2). D006 covers the names, one re-roll, no free text, preset emotes later, and the sign-in approach pending. D022 covers save versions and limits, the delete rules and their reasons, the cascade rule for later tables, and hosts.
 - **supabase/README.md** (anchors in section 6):
   - A file row.
   - A section "## The accounts migration (package A2)".
@@ -1210,7 +1210,7 @@ A6 moves no coins.
 | `backend/server/__init__.py` | insert `hosts.py`, `account/` and `game/` after the `wallet.py` line | insert `crews/` after the `adapters/` line | clean (2 lines apart) |
 | `backend/server/routes/__init__.py` | insert rows after the `me.py` row | insert a row after the `keepalive.py` row | clean |
 | `docs/INTERFACES.md` | sections 1, 2 (after `GET /api/me`), 3, 4 and 9 (A2 and A3 rows only) | section 2 (before `### GET /api/docs`) and section 6 only | clean |
-| `docs/DECISIONS.md` | D006, D018, D019 above `## Next entry` | D020 after the D012 block | clean |
+| `docs/DECISIONS.md` | D006, D022, D019 above `## Next entry` | D020 after the D012 block | clean |
 | `supabase/README.md` | top file table, new `##` sections after the Exchange section, Option A steps 6 and 7, matrix rows at the table end, function rows at the end, a footnote, N and K checks after the Exchange checks | the `### Crews and seats` subsection, matrix rows after `crew_seats` delete, function rows after `is_crew_member()`, foundation steps 3 and 12, C checks after step 17 | clean |
 | `backend/server/tests/helpers.py`, `supabase_admin.py`, `auth.py`, `wallet.py` | never | never | |
 | New helper modules | `account_helpers.py`, `story_states.py` | `crew_helpers.py` | distinct names, no conflict |

@@ -6,7 +6,7 @@ removes the rest by cascade: the profile, save, wallet, ALL ledger rows, seats, 
 positions and trades, the name re-roll and every table that a later package ties to the player.
 Before that, it hands a crew that the player started and that other players sit in to the player in
 the lowest seat, so friends keep their game. The ledger keeps nothing about the player (decision
-D018). That handover happens only in this function: deleting a user in the Supabase dashboard
+D022). That handover happens only in this function: deleting a user in the Supabase dashboard
 (Authentication > Users) skips it and deletes every crew the user started, with everyone's seats.
 
 Not deleted: Supabase Auth's own audit log (the table auth.audit_log_entries, which can hold the
@@ -49,7 +49,7 @@ def outcome_unknown() -> ApiError:
     )
 
 
-# PENDING Nils' decision (N4 in specs/M1-backbone.md, D018): deletes every row, ledger included,
+# PENDING Nils' decision (N4 in specs/M1-backbone.md, D022): deletes every row, ledger included,
 # and hands shared crews to the lowest other seat.
 async def delete_player(admin: SupabaseAdmin, player_id: str) -> str:
     """Delete the player. Answers "deleted", or "not_found" if they were gone already.
