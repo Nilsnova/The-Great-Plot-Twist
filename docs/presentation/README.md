@@ -34,7 +34,7 @@ reproduction command are in the rehearsal guide.
 ## Sources and scope
 
 [Outline and speaker notes](outline.md) records C1's narrative.
-[Sources](sources.md) records the completed case proof and deployed live-extras release `d5ad219`: 69 kit mixes, actual solo/four-player API-to-SQL journeys, original sound, and the festival/host/sports integration gates. G9 remains paused, sports lacks its provider key, and the optional ChatGPT helper awaits an approved official website client. Production activation and local candidate evidence are labelled separately.
+[Sources](sources.md) records the completed case proof and deployed live-extras release `d5ad219`: 69 kit mixes, actual solo/four-player API-to-SQL journeys, original sound, and the festival/host/sports integration gates. G9 is being built in the cloud and sports lacks its provider key. Production activation and local candidate evidence are labelled separately.
 
 All artwork is original local SVG. The page's restrictive CSP uses external
 `deck.js` and `deck.css`, permits local images, and blocks network connections and

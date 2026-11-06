@@ -59,7 +59,7 @@ Outside data-feed requests run on the server:
 - **Manifold** supplies public prediction questions/results. Requests do not include your stakes or identity.
 - **Football-Data.org** and **BALLDONTLIE** are the football/basketball feed implementations. Sports remains closed while its provider access is unavailable; recorded fixtures are explicitly labelled for local rehearsal.
 
-Providers also receive server network metadata. Recorded fallbacks can replace live feeds. Player IDs and login tokens are not added to outside-data query parameters. The optional ChatGPT hint assistant is not active: official website-client approval is still needed, and no working ChatGPT login is offered here.
+Providers also receive server network metadata. Recorded fallbacks can replace live feeds. Player IDs and login tokens are not added to outside-data query parameters.
 
 ## Play money only
 

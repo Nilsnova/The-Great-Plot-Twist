@@ -1,5 +1,7 @@
 # Group 3 release proof · 6 Nov 2026
 
+> Later scope update, 6 Nov: Nils cancelled the AI companion. AI-related remaining work and flag snapshots below are historical; its code and flag are removed. See [the cancellation record](ai-earned-context.md).
+
 Used by: Nils and the integrating agent. Branch: integrate/group3, based on main 60f7fd0.
 
 ## Changed

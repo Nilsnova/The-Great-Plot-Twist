@@ -20,6 +20,6 @@ The release owner records the exact commit, observed checks and any operational 
 
 Verified identity comes from Supabase and server dependencies, with host allowlisting on host APIs. RPCs enforce durable repeats and atomic play-money changes. Case data and action receipts stay server-only; live crew presence has private channel policies. Default API responses and errors are no-store; case/festival/host and personal sports responses also receive private cache policies. Tracked HTML headers include CSP and framing protections. See the threat model for precise source references and the complete route inventory.
 
-Festival and sports remain release-gated. Live sports needs the provider credential and a verified current-provider proof before enabling; recorded examples cannot accept stakes. The proposed ChatGPT helper remains blocked on official website-client approval, as described in [AI-helper.md](../specs/AI-helper.md). No Codex client identifier or user ChatGPT session may be borrowed for website login.
+Festival and sports remain release-gated. Live sports needs the provider credential and a verified current-provider proof before enabling; recorded examples cannot accept stakes. The AI companion proposal and its unused context code/flag were removed at Nils' request.
 
 The original G27 checkpoints remain historical evidence. The integration handoff records the refreshed source and dependency scope; old findings already fixed by later packages are identified there rather than presented as current defects.

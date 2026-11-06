@@ -662,7 +662,6 @@ Sources: [settings](../frontend/src/settings/logic.js), [intro journal](../front
 | Finnhub | Integrated stock-price source; receives public stock symbols from the server, never a player ID, token, position or game stake. |
 | Manifold | Integrated public question/result source; requests use public market IDs, not player stakes or identity. |
 | Football-Data.org / BALLDONTLIE | Implemented server-only football/basketball fixture/result feeds. Sports stays off without configured provider access. Public competition/fixture parameters, not player stakes or tokens, are sent. Recorded OpenFootball data is explicitly labelled and cannot authorise live settlement. |
-| ChatGPT | Optional spoiler-safe helper is not active. Official website-client approval is missing; no current game conversation or login transfer is implemented. |
 
 Server-only data feeds do not mean server-only sign-in: browsers visit GitHub and Supabase to authenticate. No player IDs or tokens should be added to outside-data queries.
 

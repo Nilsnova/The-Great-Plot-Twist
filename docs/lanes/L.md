@@ -14,7 +14,7 @@ Used by the live-systems presenter and [L drills](../drills/L.md). This is the i
 | Host console | Verified-host read/clock controls and dedicated UI. Browser-supplied roles never authorize a host. |
 | Sports | Fixture/source/stake/settlement boundaries and pavilion screen are implemented and checked. The live provider key is missing and the feature stays off. |
 
-G9 remains paused: these systems do not imply that the normal authenticated browser mystery and multiplayer flow is connected. The optional ChatGPT helper remains off without an approved official website client.
+G9 remains paused: these systems do not imply that the normal authenticated browser mystery and multiplayer flow is connected.
 
 ## Trace the implementation
 

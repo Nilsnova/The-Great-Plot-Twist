@@ -1,5 +1,7 @@
 # G21 checkpoint 4 — current backend integration
 
+> Later scope update, 6 Nov: the AI companion is cancelled. The flag registry now has ten names and the settings subset check covers 1,024 combinations; the measurements below describe the earlier release.
+
 Owner: Nils. Branch: `integrate/backend-regression-v2`, based on `94a48ad`.
 Used by: the reliability integration and release reviewers.
 
