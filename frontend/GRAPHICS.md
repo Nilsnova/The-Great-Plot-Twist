@@ -769,3 +769,27 @@ Items 1–3 landed at `cae6dad`, `bb7599e` and `f413006`; item 4 contains the CS
 Cold title: **20,617 bytes / 9,803 gzip**, below the unchanged 21,080-byte cap. Eight captains with night storm: **59 FPS / 112 calls / one place root**. The full API-independent demo completes in **170.1 seconds**; policy rehearsal also walks all nine highlights with every API returning 503. Accessibility: **23 contexts / 69 viewport samples**, minimum sampled text contrast **4.694:1**, zero reported accessibility failures. The 375 px failure capture keeps request copy at 18 px and action controls at 16 px / 44 px.
 
 Requests for Claude: return bounded numeric `retryAfterSeconds`, publish expired account state on 401, and keep request reconciliation/idempotency inside the real adapter for explicit retries after lost responses. Enable/rehearse the proposed HTTP policy after integration and confirm only the exact approved Supabase HTTPS/WSS origins are required. Real services, deployed headers, Safari/Firefox and physical device/VoiceOver checks remain unverified. No backend, auth transport, weather client, case rules, infrastructure or new dependency is changed. Continue the full G9 brief on this same branch.
+
+
+## G9 playtest identity and reports (stream 0)
+
+The original SHA fallback order is unchanged. Local builds append `-dirty` when Git sees uncommitted
+files; valid `VERCEL_GIT_COMMIT_SHA` wins on Vercel. `environment` is only `preview`, `production` or
+null, from `VERCEL_ENV`. The public stamp remains `build-stamp.json` and `__BUILD_STAMP__`. Build HTML
+contains the title label. A build-only virtual stylesheet places the same label inside the title header
+without shipping JavaScript for that label; the generated CSS is extracted into a normal hashed local
+stylesheet. Settings, Credits, the presenter-hidden world badge and performance clipboard copies agree.
+
+Issue titles use `[playtest <sha>] <place or screen>: `. Added context is restricted to screen/mode/account
+state enums, browser family and major version, and numeric performance summaries only when `perf=1` runs.
+The last-ten list accepts fixed UI actions and `caseMethods` → `accepted|caseReasons`, never arguments.
+`noteAdapterView`, `noteIntentOutcome` and `notePerformanceSummary` retain only these allowed fields in
+memory. Unknown values are dropped, old actions are trimmed for the URL budget, and no length exception
+is thrown. Both description sections remain blank, with a visible public-GitHub/account explanation.
+`createServerCallState` accepts a `reportLink` hook; stream 5 fills it for every error state.
+
+Stream 0 gate: unit/build/loading, title stamp/performance copy, problem report, CSP and accessibility
+checks pass. Its independent title graph is 20,971 bytes; stream 1 adds further headroom before the real
+adapter. The unchanged refusal vocabulary lives in `adapter/reasons.js` and is re-exported by `contract.js`
+so diagnostics can load it separately. No schema, method, reason or browser event is added. Requests and
+ongoing checkpoint state are in [HANDOFF-G9.md](HANDOFF-G9.md).

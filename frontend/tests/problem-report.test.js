@@ -1,28 +1,87 @@
-// Issue drafts must contain only safe diagnostics, never app/player objects.
-import {describe,it,expect} from 'vitest';
-import {createProblemUrl,sanitizeProblemReport} from '../src/diagnostics/report-url.js';
+// Issue drafts contain only bounded diagnostic values and leave player descriptions empty.
+import {describe, it, expect} from 'vitest';
+import {createProblemUrl, sanitizeProblemReport} from '../src/diagnostics/report-url.js';
 import {createUiTrace} from '../src/diagnostics/trace.js';
-const sample={build:{sha:'abcdef0',builtAt:'2026-11-06T16:00:00.000Z'},placeId:'lighthouse_isle',viewport:{width:1280,height:800},inputType:'mouse',actions:['settings_open','credits_open']};
-describe('problem reports',()=>{
-  it('keeps only allowlisted fields and values',()=>{
-    const report=sanitizeProblemReport({...sample,playerName:'DO_NOT_SEND_NAME',playerId:'DO_NOT_SEND_ID',token:'DO_NOT_SEND_TOKEN',save:{text:'DO_NOT_SEND_SAVE'},caseState:{secret:'DO_NOT_SEND_CASE'},build:{...sample.build,token:'DO_NOT_SEND_NESTED'},viewport:{...sample.viewport,extra:'DO_NOT_SEND_DIMENSION'},actions:['settings_open','DO_NOT_SEND_ACTION','credits_open']});
+const sample = {
+  build: {sha: 'abcdef0-dirty', builtAt: '2026-11-06T16:00:00.000Z', environment: 'preview'},
+  placeId: 'lighthouse_isle', screen: 'pause', mode: 'online', accountState: 'signed_in',
+  browser: {family: 'Chrome', major: 131}, viewport: {width: 1280, height: 800}, inputType: 'mouse',
+  performance: null, actions: ['settings_open', 'pin → accepted', 'pair → wrong_pair'],
+};
+
+describe('problem reports', () => {
+  it('drops planted private fields at every diagnostic boundary', () => {
+    const report = sanitizeProblemReport({
+      ...sample, playerName: 'PRIVATE_NAME', playerId: 'PRIVATE_ID', token: 'PRIVATE_TOKEN',
+      code: 'PRIVATE_CODE', save: {text: 'PRIVATE_SAVE'}, caseState: {secret: 'PRIVATE_CASE'},
+      error: 'PRIVATE_ERROR', query: 'PRIVATE_QUERY', deviceId: 'PRIVATE_DEVICE',
+      build: {...sample.build, token: 'PRIVATE_NESTED'},
+      browser: {...sample.browser, userAgent: 'PRIVATE_UA'},
+      viewport: {...sample.viewport, extra: 'PRIVATE_DIMENSION'},
+      actions: [...sample.actions, 'pin → PRIVATE', 'PRIVATE_ACTION'],
+    });
     expect(report).toEqual(sample);
-    expect(JSON.stringify(report)).not.toContain('DO_NOT_SEND');
+    expect(JSON.stringify(report)).not.toContain('PRIVATE');
   });
-  it('rejects unrecognised places, inputs, dimensions and build values',()=>{
-    expect(sanitizeProblemReport({build:{sha:'player name',builtAt:'secret'},placeId:'Captain private',inputType:'device identifier',viewport:{width:Infinity,height:'token'},actions:['not_allowed']})).toEqual({build:{sha:'dev',builtAt:null},placeId:null,viewport:null,inputType:null,actions:[]});
+
+  it('drops token-shaped text, crew codes and captain names placed in context', () => {
+    const token = [btoa('{"alg":"none"}'), btoa('{"sub":"placeholder"}'), 'not-a-signature'].join('.');
+    const input = {
+      ...sample, token, crewCode: 'PRIVATE-CREW', captainName: 'Private Captain',
+      screen: token, mode: 'PRIVATE-CREW', browser: {family: 'Private Captain', major: token},
+      actions: [token, 'PRIVATE-CREW', 'Private Captain'], performance: {fps: token},
+    };
+    const report = decodeURIComponent(createProblemUrl(input));
+    for (const privateText of [token, 'PRIVATE-CREW', 'Private Captain']) {
+      expect(report).not.toContain(privateText);
+    }
   });
-  it('encodes a fixed issue destination, leaves the description empty, and stays bounded',()=>{
-    const url=new URL(createProblemUrl({...sample,title:'DO_NOT_SEND_TITLE',body:'DO_NOT_SEND_BODY',actions:Array(10000).fill('DO_NOT_SEND_ACTION')}));
-    expect(url.origin+url.pathname).toBe('https://github.com/Nilsnova/The-Great-Plot-Twist/issues/new');
-    expect(url.searchParams.get('title')).toContain('abcdef0');
-    expect(url.searchParams.get('body')).toContain('1280 × 800');
-    expect(url.searchParams.get('body').endsWith('## What happened?\n\n')).toBe(true);
-    expect(url.href).not.toContain('DO_NOT_SEND');expect(url.href.length).toBeLessThan(7000);
+
+  it('rejects unrecognised context, dimensions, build and environment values', () => {
+    const report = sanitizeProblemReport({
+      build: {sha: 'private name', builtAt: 'secret', environment: 'PRIVATE'},
+      placeId: 'PRIVATE', screen: 'PRIVATE', mode: 'PRIVATE', accountState: 'PRIVATE',
+      browser: {family: 'PRIVATE', major: '131'}, inputType: 'PRIVATE',
+      viewport: {width: Infinity, height: 'PRIVATE'}, actions: ['PRIVATE'],
+    });
+    expect(report).toEqual({
+      build: {sha: 'dev', builtAt: null, environment: null}, placeId: null, screen: null,
+      mode: null, accountState: null, browser: null, viewport: null, inputType: null,
+      performance: null, actions: [],
+    });
+    expect(sanitizeProblemReport({build: {sha: 'dev-dirty'}}).build.sha).toBe('dev-dirty');
+    expect(sanitizeProblemReport({build: {sha: 'abcdef0-private'}}).build.sha).toBe('dev');
+    expect(sanitizeProblemReport({build: {environment: 'production'}}).build.environment).toBe('production');
   });
-  it('retains only the last ten allowed UI action names and returns copies',()=>{
-    const trace=createUiTrace();for(let i=0;i<15;i++)trace.record(i%2?'settings_open':'resume');
-    trace.record('private arbitrary text');const actions=trace.read();expect(actions).toHaveLength(10);actions.push('mutation');expect(trace.read()).toHaveLength(10);
-    trace.clear();expect(trace.read()).toEqual([]);
+
+  it('creates a bounded draft with public notice, safe title and two empty sections', () => {
+    const input = {...sample, title: 'PRIVATE_TITLE', body: 'PRIVATE_BODY'};
+    for (let count = 0; count <= 300; count++) {
+      const url = new URL(createProblemUrl({...input, actions: Array(count).fill('pin → accepted')}));
+      expect(url.origin + url.pathname).toBe('https://github.com/Nilsnova/The-Great-Plot-Twist/issues/new');
+      expect(url.searchParams.get('title')).toBe('[playtest abcdef0-dirty] lighthouse_isle: ');
+      expect(url.searchParams.get('body')).toContain('Screen: pause');
+      expect(url.searchParams.get('body')).toContain('Browser: Chrome 131');
+      expect(url.searchParams.get('body')).toContain('Check this public report before submitting');
+      expect(url.searchParams.get('body')).toContain('## What happened?\n\n## What you expected\n\n');
+      expect(url.href).not.toContain('PRIVATE');
+      expect(url.href.length).toBeLessThan(7000);
+    }
+    const url = new URL(createProblemUrl({screen: 'settings'}));
+    expect(url.searchParams.get('title')).toBe('[playtest dev] settings: ');
+  });
+
+  it('retains only the last ten validated actions and returns copies', () => {
+    const trace = createUiTrace();
+    for (let index = 0; index < 15; index++) trace.record(index % 2 ? 'pin → accepted' : 'resume');
+    trace.record('private arbitrary text');
+    trace.record('pair → PRIVATE');
+    const actions = trace.read();
+    expect(actions).toHaveLength(10);
+    expect(actions.at(-1)).toBe('resume');
+    actions.push('mutation');
+    expect(trace.read()).toHaveLength(10);
+    trace.clear();
+    expect(trace.read()).toEqual([]);
   });
 });

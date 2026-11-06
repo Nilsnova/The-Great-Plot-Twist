@@ -1,0 +1,194 @@
+{
+  "checked": "2026-11-06T17:09:53.870Z",
+  "checks": [
+    "Cold title JavaScript stays within the G7 baseline of 21,080 bytes",
+    "src/game.js is a separate dynamic entry",
+    "src/world/cinematics/controller.js is a separate dynamic entry",
+    "src/world/places/settlement.js is a separate dynamic entry",
+    "src/world/places/home.js is a separate dynamic entry",
+    "src/ui/kit-gallery.js is a separate dynamic entry",
+    "src/ui/cinematic-demo.js is a separate dynamic entry",
+    "src/screens/board.js is a separate dynamic entry",
+    "src/screens/finale.js is a separate dynamic entry",
+    "src/screens/reveal.js is a separate dynamic entry",
+    "src/world/places/gulls-rest.js is a separate dynamic entry",
+    "src/world/festival.js is a separate dynamic entry",
+    "Cold title requests no finale, destination, demo or gallery chunk",
+    "Cold production title allocates no WebGL renderer",
+    "Primary pixel buttons exceed WCAG AA normal-text contrast",
+    "Phone title emblem uses an integer pixel scale",
+    "The loaded production world exposes no dev inspection object",
+    "Production title and world have no browser errors or external asset requests"
+  ],
+  "initialChunks": [
+    "assets/game-Dl7EiaXf.js",
+    "assets/modulepreload-polyfill-P2Xu9kJm.js",
+    "assets/unavailable-DmhYSTca.js",
+    "assets/extensions-CdpB2987.js",
+    "assets/contract-CZypeDED.js",
+    "assets/modal-DDM-2i_3.js",
+    "assets/dom-BE8XS1OM.js",
+    "assets/button-BTb4MpEB.js",
+    "assets/screens-D18ve9zg.js",
+    "assets/preload-helper-DclECHGd.js",
+    "assets/intro-journal-DJj67nNK.js",
+    "assets/events-C31BJoij.js"
+  ],
+  "initialJavaScript": 20971,
+  "initialGzip": 10056,
+  "lazyEntries": [
+    {
+      "key": "src/adapter/intent.js",
+      "file": "assets/intent-BfPMrf5q.js"
+    },
+    {
+      "key": "src/adapter/local-start.js",
+      "file": "assets/local-start-BoF0wnfj.js"
+    },
+    {
+      "key": "src/audio/captions-view.js",
+      "file": "assets/captions-view-B5zgay94.js"
+    },
+    {
+      "key": "src/audio/controller.js",
+      "file": "assets/controller-CNHftZbi.js"
+    },
+    {
+      "key": "src/controls/gamepad.js",
+      "file": "assets/gamepad-D7JKdrdq.js"
+    },
+    {
+      "key": "src/demo/intro-story.json",
+      "file": "assets/intro-story-D07Wp8Mk.js"
+    },
+    {
+      "key": "src/game.js",
+      "file": "assets/game-8B-IxMXc.js"
+    },
+    {
+      "key": "src/screens/account/index.js",
+      "file": "assets/account-BoDXGeX4.js"
+    },
+    {
+      "key": "src/screens/accusation.js",
+      "file": "assets/accusation-B_YXnkBN.js"
+    },
+    {
+      "key": "src/screens/board.js",
+      "file": "assets/board-D68jurOH.js"
+    },
+    {
+      "key": "src/screens/bulletin/index.js",
+      "file": "assets/bulletin-BovpyfNw.js"
+    },
+    {
+      "key": "src/screens/controller.js",
+      "file": "assets/controller-BZDDch3W.js"
+    },
+    {
+      "key": "src/screens/finale.js",
+      "file": "assets/finale-Dx0vi2zR.js"
+    },
+    {
+      "key": "src/screens/log/index.js",
+      "file": "assets/log-BS-KJtIQ.js"
+    },
+    {
+      "key": "src/screens/partners/index.js",
+      "file": "assets/partners-BmB7h10I.js"
+    },
+    {
+      "key": "src/screens/presence/index.js",
+      "file": "assets/presence-C0LUxj4L.js"
+    },
+    {
+      "key": "src/screens/relighting.js",
+      "file": "assets/relighting-D9rdH2My.js"
+    },
+    {
+      "key": "src/screens/reveal.js",
+      "file": "assets/reveal-V8JdwYmd.js"
+    },
+    {
+      "key": "src/screens/rewards/counter.js",
+      "file": "assets/counter-ZQ7aiccc.js"
+    },
+    {
+      "key": "src/screens/rewards/index.js",
+      "file": "assets/rewards-Btc05cjI.js"
+    },
+    {
+      "key": "src/screens/search.js",
+      "file": "assets/search-qDvi4rJN.js"
+    },
+    {
+      "key": "src/settings/preferences.js",
+      "file": "assets/preferences--dZT-qzz.js"
+    },
+    {
+      "key": "src/settings/view.js",
+      "file": "assets/view-DgIiNInO.js"
+    },
+    {
+      "key": "src/shell/account-host.js",
+      "file": "assets/account-host-BGygmm3H.js"
+    },
+    {
+      "key": "src/shell/credits.js",
+      "file": "assets/credits-DZ4B50ii.js"
+    },
+    {
+      "key": "src/shell/hints/index.js",
+      "file": "assets/hints-CP_WvUrv.js"
+    },
+    {
+      "key": "src/shell/hints/shortcuts.js",
+      "file": "assets/shortcuts-CkBoTgYa.js"
+    },
+    {
+      "key": "src/shell/pause.js",
+      "file": "assets/pause-dtB5UP1I.js"
+    },
+    {
+      "key": "src/shell/subpages.js",
+      "file": "assets/subpages-CzhosDCt.js"
+    },
+    {
+      "key": "src/ui/cinematic-demo.js",
+      "file": "assets/cinematic-demo-QMvuitgJ.js"
+    },
+    {
+      "key": "src/ui/kit-gallery.js",
+      "file": "assets/kit-gallery-B3SSXCyX.js"
+    },
+    {
+      "key": "src/world/cinematics/controller.js",
+      "file": "assets/controller-DwFWd94A.js"
+    },
+    {
+      "key": "src/world/festival.js",
+      "file": "assets/festival-DicRWhZb.js"
+    },
+    {
+      "key": "src/world/others/index.js",
+      "file": "assets/others-CvZAPYfd.js"
+    },
+    {
+      "key": "src/world/partners/index.js",
+      "file": "assets/partners-Ch58FoM9.js"
+    },
+    {
+      "key": "src/world/places/gulls-rest.js",
+      "file": "assets/gulls-rest-C6nhBGqB.js"
+    },
+    {
+      "key": "src/world/places/home.js",
+      "file": "assets/home-DOINm4E5.js"
+    },
+    {
+      "key": "src/world/places/settlement.js",
+      "file": "assets/settlement-BVLwcVJO.js"
+    }
+  ],
+  "contrast": 6.479354609526834
+}

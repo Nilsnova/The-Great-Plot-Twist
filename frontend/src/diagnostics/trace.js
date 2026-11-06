@@ -1,7 +1,17 @@
-// A bounded memory-only list of semantic UI actions, used by the issue-draft link.
-import {allowedUiActions} from './ui-actions.js';
-export function createUiTrace(){
-  let actions=[];
-  return {record(action){if(allowedUiActions.has(action))actions=[...actions,action].slice(-10);},
-    read(){return [...actions];},clear(){actions=[];}};
+// A bounded memory-only trace stores validated UI names and contract intent outcomes.
+import {isDiagnosticAction} from './context.js';
+
+export function createUiTrace() {
+  let actions = [];
+  return {
+    record(action) {
+      if (isDiagnosticAction(action)) actions = [...actions, action].slice(-10);
+    },
+    read() {
+      return [...actions];
+    },
+    clear() {
+      actions = [];
+    },
+  };
 }

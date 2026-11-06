@@ -1,5 +1,6 @@
 // Fast title entry. One adapter is shared by title, account and the lazily loaded world.
 import './ui/styles.css';
+import 'virtual:build-identity.css';
 import './ui/kit/kit.css';
 import './ui/shell.css';
 import {createShell} from './shell/controller.js';
@@ -56,7 +57,7 @@ function onEscape(){
 }
 shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>adapter.read().account,accountSummary:summary.element,
   resetInput(){},focus,openAccount:()=>accountHost.open(),onEscape,
-  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();return (await import('./settings/view.js')).createSettingsView();},
+  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();return (await import('./settings/view.js')).createSettingsView(adapter.read());},
   hasOverlay:()=>loading||accountHost.active||!!runtime?.hasOverlay(),
   onState(mode){if(mode==='title')playRequest++;audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
   onPlay:play,async onDemo(){const game=await loadGame();game?.startDemo();},

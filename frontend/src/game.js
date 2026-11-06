@@ -42,10 +42,10 @@ import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
 import {createBuildBadge} from './build/badge.js';
-import {startDiagnostics,noteUiAction,disposeDiagnostics} from './diagnostics/runtime.js';
+import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 
 export async function startGame({container,shell,audio,captions,caseAdapter,isAppBlocked}) {
-  startDiagnostics();
+  startDiagnostics();noteAdapterView(caseAdapter?.read());
   const shortcuts=createShortcutsHost(container);
   const scene = new THREE.Scene();
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
@@ -77,7 +77,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     isBlocked:()=>shell.blocked||!!isAppBlocked?.()||intro.active||caseUi.active||cinematics.active||chart.open||sailing.active});
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>caseAdapter?.dev?.setIsletBuilt?.(built));
   const applyCaseView=view=>{bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
-  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
+  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{noteAdapterView(view);if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
   const stopListening = on('interact', event => {hud.notify(event.id);if(!intro.active)caseUi.interact(event);});
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));

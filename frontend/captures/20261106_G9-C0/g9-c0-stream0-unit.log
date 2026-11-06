@@ -1,0 +1,42 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 .
+
+ ❯ tests/diagnostic-context.test.js (9 tests | 1 failed) 152ms
+   ❯ diagnostic runtime (4)
+     × retains only coarse account/mode fields and contract outcomes 102ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/diagnostic-context.test.js > diagnostic runtime > retains only coarse account/mode fields and contract outcomes
+AssertionError: expected [ 'pin → accepted', 'pin → not_ready' ] to deeply equal [ 'pin → not_ready' ]
+
+- Expected
++ Received
+
+  [
++   "pin → accepted",
+    "pin → not_ready",
+  ]
+
+ ❯ tests/diagnostic-context.test.js:90:28
+     88|     expect(result.mode).toBe('online');
+     89|     expect(result.accountState).toBe('signed_in');
+     90|     expect(result.actions).toEqual(['pin → not_ready']);
+       |                            ^
+     91|     expect(result.browser).toEqual({family: 'Chrome', major: 131});
+     92|     expect(JSON.stringify(result)).not.toContain('PRIVATE');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 65 passed (66)
+      Tests  1 failed | 492 passed (493)
+   Start at  17:57:29
+   Duration  19.98s (import 36%, tests 34%, transform 25%, worker 5%)
+
+    Isolate  66 workers spawned · ~1.19s startup each (spawn + environment, per file)
+             at least ~10.03s faster with isolate: false — reuses workers across files instead of one per file

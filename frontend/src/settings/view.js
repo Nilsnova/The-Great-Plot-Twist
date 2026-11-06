@@ -1,9 +1,11 @@
 // Readable native settings controls. Used by both the title and pause menu.
 import {node,uniqueId} from '../ui/kit/dom.js';
 import {getPreferences,setPreferences} from './preferences.js';
+import {noteAdapterView} from '../diagnostics/runtime.js';
 import {createBuildInfo} from '../build/info.js';
-import {createProblemLink} from '../diagnostics/report-link.js';
-export function createSettingsView() {
+import {createProblemLink,createProblemDescription} from '../diagnostics/report-link.js';
+export function createSettingsView(view) {
+  noteAdapterView(view);
   const form=node('div','preferences'),status=node('p','preferences-status');status.setAttribute('role','status');
   const values=getPreferences();
   function field(title,input,key,read) {
@@ -30,5 +32,5 @@ export function createSettingsView() {
   const colour=node('input');colour.type='checkbox';colour.checked=values.colourblind;colour.dataset.preference='colourblind';field('Colour-blind-safe highlights',colour,'colourblind',element=>element.checked);
   const controls=node('section','controls-overview');controls.append(node('h3','','Controls'),node('p','','Keyboard: WASD or arrows to walk, Shift to run, E to interact, M for the chart, wheel to zoom, Escape to close a view or pause. Dialogue: 1–9 for choices, arrows to browse, Enter to confirm.'));
   controls.append(node('p','','Touch: drag the stick to walk; tap Interact, Chart or Menu. Gamepad (optional): left stick or D-pad, A to interact, Y for chart, Menu to pause. Menus also support D-pad and A.'));
-  form.append(controls,createProblemLink('settings_open'),createBuildInfo(),status);return form;
+  const report=createProblemLink('settings_open');form.append(controls,report,createProblemDescription(report),createBuildInfo(),status);return form;
 }
