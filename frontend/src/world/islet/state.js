@@ -10,21 +10,28 @@ export const isletPlots = Object.freeze({
 const known = new Set(Object.keys(isletPlots));
 const cabinOnly = Object.freeze(['plot_1']);
 
+// Accept only complete, internally consistent events before replacing the visible build state.
 export function builtFromIsletChanged(event) {
-  if (!event || event.type !== 'islet_changed' || !Array.isArray(event.built) ||
-      typeof event.signalStationBuilt !== 'boolean') return null;
+  if (!event
+      || event.type !== 'islet_changed'
+      || !Array.isArray(event.built)
+      || typeof event.signalStationBuilt !== 'boolean') return null;
   const built = new Set(event.built);
-  if (built.size !== event.built.length || [...built].some(id => !known.has(id))) return null;
-  if (!built.has('plot_1') || event.signalStationBuilt !== built.has('islet_signal_station')) return null;
+  const containsUnknownPlot = [...built].some(id => !known.has(id));
+  if (built.size !== event.built.length || containsUnknownPlot) return null;
+  if (!built.has('plot_1')) return null;
+  if (event.signalStationBuilt !== built.has('islet_signal_station')) return null;
   return Object.freeze([...event.built]);
 }
 
 // `on` is the app event subscription function; no screen or transport is imported here.
+// Keep event-backed state separate from presenter preview state so previews never become writes.
 export function createIsletState({ on }) {
   let latest = cabinOnly;
   let preview = null;
   let disposed = false;
-  const listeners = new Set(), actualListeners = new Set();
+  const listeners = new Set();
+  const actualListeners = new Set();
   const read = () => preview ?? latest;
   const publish = () => {
     const previewing = preview !== null;
@@ -43,7 +50,8 @@ export function createIsletState({ on }) {
     getLatestBuilt: () => [...latest],
     subscribe(listener) {
       if (disposed) return () => {};
-      listeners.add(listener); listener([...read()], { preview: preview !== null });
+      listeners.add(listener);
+      listener([...read()], { preview: preview !== null });
       return () => listeners.delete(listener);
     },
     subscribeActual(listener) {
@@ -53,10 +61,17 @@ export function createIsletState({ on }) {
     },
     previewBuilt(ids) {
       if (disposed) return false;
-      if (!Array.isArray(ids) || ids.some(id => !known.has(id)) || !ids.includes('plot_1')) return false;
-      preview = Object.freeze([...new Set(ids)]); publish(); return true;
+      const containsUnknownPlot = !Array.isArray(ids) || ids.some(id => !known.has(id));
+      if (containsUnknownPlot || !ids.includes('plot_1')) return false;
+      preview = Object.freeze([...new Set(ids)]);
+      publish();
+      return true;
     },
-    clearPreview() { if (!disposed && preview) { preview = null; publish(); } },
+    clearPreview() {
+      if (disposed || !preview) return;
+      preview = null;
+      publish();
+    },
     dispose() { if (disposed) return; disposed = true; unsubscribe?.(); listeners.clear(); actualListeners.clear(); },
   };
 }
