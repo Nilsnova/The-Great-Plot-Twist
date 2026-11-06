@@ -43,10 +43,10 @@ The roadmap also records existing sound and the optional ChatGPT hint helper, pe
 
 ## Final release checkpoint
 
-Reconciled G10 remote checkpoint6041a63 without overwriting its work; preserved all token/lifetime fixes.
-Final full backend9693 passed3 optional skips; frontend1603 passed; opt-in SQL3 passed. World66,
-production7 and lifecycle9 browser assertions passed. Gitleaks2.73MB diff: no leaks. Mainc12a707 is live;
-flag redeploydpl_eTT4FDsNYCG6QAqJK7xdbjU2pw3S is READY. Production/api/config confirms market,
+Reconciled G10 remote checkpoint 6041a63 without overwriting its work; preserved all token/lifetime fixes.
+Final full backend 9693 passed, 3 optional skips; frontend 1603 passed; opt-in SQL 3 passed. World 66,
+production 7 and lifecycle 9 browser assertions passed. Gitleaks 2.73 MB diff: no leaks. Main c12a707 is live;
+flag redeploy dpl_eTT4FDsNYCG6QAqJK7xdbjU2pw3S is READY. Production/api/config confirms market,
 predictions,arena,live_presence true. Direct live-market/stock verification remains pending: the connector
 adds a shared-access query marker rejected by the intentional cache guard; the browser connection is
 unavailable and the cloud network does not allow the production hostname. No guard was changed.

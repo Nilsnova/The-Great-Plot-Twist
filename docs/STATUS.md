@@ -444,7 +444,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
-- **6 Nov, Codex:** group 3 deployed, four approved flags verified live; case Phase 1 reviewed and migration060000 applied/MD5-proven with expected advisors. Source and SQL gates passed; preparing Phase 1 push. G9 moves to a separate cloud session. See [case proof](handoff/case-phase1-release.md).
+- **6 Nov, Codex:** group 3 deployed, four approved flags verified live; case Phase 1 reviewed and migration 060000 applied/MD5-proven with expected advisors. Source and SQL gates passed; preparing Phase 1 push. G9 moves to a separate cloud session. See [case proof](handoff/case-phase1-release.md).
 
 - **6 Nov, Codex:** group 3 integrated and independently reviewed; applied 090000/100000/110000 one file at a time, exact MD5 proofs and version restoration passed; all final database counts and known-only advisors match. Core local gates green; cloud browser regression and live deployment checks continue. See [release proof](handoff/group3-release.md).
 
