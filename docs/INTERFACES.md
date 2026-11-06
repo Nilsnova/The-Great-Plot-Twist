@@ -69,6 +69,8 @@
 
 ## 2. Routes that exist now
 
+Case Phase 1 routes on `feat/case-backend` are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the required migrations are applied.
+
 Seven routes exist, plus the six of the account and the entry kit (packages A2 and A3), the four of crews (A6) and the three of the Island Exchange (all below): 20 in all, and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
@@ -627,6 +629,21 @@ Details that other packages rely on:
 - **Realtime** is not switched on for any table yet.
 - **A new table** follows [ENGINEERING.md, recipe 4.2](ENGINEERING.md#42-add-a-database-table): row-level security, read-only policies for players, and explicit grants, because our project gives no rights to a new table by itself.
 
+### Case Phase 1 tables and functions
+
+The additive migration `20261106060000_case_rules.sql` adds six server-only tables. All have RLS, no player policies or grants, and no service-role DELETE grant.
+
+| Table | Stores | Server rights |
+|---|---|---|
+| `case_state` | One crew's clock, revision, waits and solve state | select, insert, update |
+| `case_finds` | A seat's accepted find and landing time | select, insert |
+| `case_deductions` | A crew's formed deductions | select, insert |
+| `case_accusations` | The immutable accusation history | select, insert |
+| `case_solvers` | Per-crew reveal eligibility and once-per-player payout result | select, insert |
+| `case_actions` | The player's uid, intent and exact stored outcome | select, insert |
+
+Only the server may execute `case_window_open`, `case_begin`, `case_finish`, `case_open`, `case_start_route`, `case_after_solve`, `case_accuse` and `case_clock_forward`. All use an empty search path and caller rights. The Python store calls only the four intent functions, never private helpers. Case writes lock the crew before wallets and the later world row; revision and crew-version checks prevent paying from an old snapshot. No wallet reason is added.
+
 ## 5. The wallet
 
 Play money only. Coins cannot be bought, cashed out or exchanged for real prizes. One wallet per player and one ledger serve every money feature.
@@ -734,6 +751,10 @@ Our rules:
 3. **The server sends with Supabase's Broadcast REST API** and never subscribes to a channel itself: a subscribed server counts as one more receiver and holds a connection.
 4. **Poll when a few seconds of delay are fine.** The team roadmap plans polling for the case board (L3) and the duels (A7), so no core package needs Realtime yet.
 
+### Case refresh budget
+
+Once A4 is on main, case writes use its broadcaster for `case_changed`, `board_changed` and `partner_changed`, carrying only `{"version": writeRevision}`. Reads, repeats, unchanged refusals and timed landings send no nudge. Cut off each nudge after one second; enforce 20 crew events per 10 seconds. Until that integration, refetch on countdown boundaries and use a five-second fallback poll; with live nudges, use a visible-tab 30-second fallback poll. No nudge carries cards, narration or player ids.
+
 ## 8. Feature flags
 
 A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The server reads it once at start-up, and a name that does not exist stops the server with a clear message. The browser learns which flags are on from `GET /api/config` and never decides for itself. To add a flag, follow [ENGINEERING.md, recipe 4.5](ENGINEERING.md#45-add-a-feature-flag).
@@ -747,6 +768,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `raid` | the phone class raid | A5, later |
 | `live_presence` | seeing other captains in the harbor | A4, later |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
+| `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
 
@@ -763,7 +785,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | G4 Finale visuals | `world.cinematic('three_lights' \| 'fog_lift' \| 'unmask')`, which listens for the `finale` event | draft; defined by the story round (S0, D018) |
 | S1 Import Plot Twist | `backend/content/story.json`, with the content format in `backend/content/README.md`; `GET /api/content/intro-story`; the story engines `backend/plot_twist/engine.py` and `frontend/src/story/engine.js`; the parity test `backend/plot_twist/tests/test_web_parity.py` with its Node.js runner `parity_runner.mjs` | draft |
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
-| S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story round (S0, D018) |
+| S3 The shared case | `GET /api/case`, `POST /api/case/search`, `POST /api/case/accuse`, `POST /api/host/case/clock`; private case data never served | Phase 1 built on `feat/case-backend`; section 10 is the contract |
 | S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story round (S0, D018) |
 | A2 Sign-in, captain names and cloud progress | **Built** (the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D022. | built; the sign-in part is pending |
 | A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** the coins and texts of the kits (N5, with the S0 approval) and that the first ending counts (N6). | built, in review |
@@ -772,7 +794,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
 | L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
 | L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
-| L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story round (S0, D018) |
+| L3 Captain's Table board and Night of Three Lights | The shared read is `GET /api/case`; later writes are `/api/board/pin`, `/api/board/pair`, `/api/finale/nightfall`, `/api/finale/post` and `/api/finale/signal`; later `GET /api/world` | Phase 2 and Phase 3 reserved by D027; the old `GET /api/board` reservation is replaced |
 | L4 Island Exchange (the market) | **Built** (on `main`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/trade {companyId, side, units, actionUid}`; the tables `market_bases`, `market_positions` and `market_trades`; the reasons `market_buy`, `market_sell` and `market_fee`; `backend/content/market/companies.json` and `replay.json`; the setting `MARKET_MULTIPLIER`; the flag `market`. See section 2 and D017. | built, in review |
 | L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions` | draft |
 | L6 Sports predictions | `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the tables `fixtures` and `sports_stakes`; the reasons `sports_stake` and `sports_payout`; the flag `sports` | draft |
@@ -817,7 +839,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 ## 10. The shared mystery
 
-Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); the route shapes stay drafts until the packages that build them write their specs.
+Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); Phase 1's published contract below supersedes its older reservations; later phase routes remain reserved.
 
 What already holds, from the foundation: a reward is paid with `clue_reward` or `mystery_reward` and a `ref` that makes each payout happen once per player, buying a clue uses `clue_purchase`, and a crew's seats can hold NPC partners ([section 6](#6-crews-and-seats)).
 

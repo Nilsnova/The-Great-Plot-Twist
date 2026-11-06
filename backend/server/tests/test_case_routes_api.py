@@ -189,6 +189,7 @@ def test_the_host_clock_moves_only_the_hosts_own_crew():
     )
     response = client.post("/api/host/case/clock", headers=HEADER, json=body)
     assert response.status_code == 200 and response.json()["now"] == 600
+    assert response.json()["message"] == "The case clock moved 10 minutes forward."
     assert store.calls == ["clock"]
     assert client.post("/api/host/case/clock", headers=HEADER, json=body).json()["repeat"]
 

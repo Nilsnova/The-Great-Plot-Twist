@@ -11,6 +11,7 @@ so this file is the full list of what can be configured:
                               /api/keepalive once a day sends it. Optional on your laptop.
                               NEVER in the repo.
     DEMO_MODE                 true or false (default: false)
+    RELIGHT_OPEN              irreversible world switch, false by default, production only
     FEATURE_FLAGS             comma-separated feature names to switch on (see flags.py)
     WEATHER_PLACE_NAME        name of the place whose real weather the game shows (default:
                               Torshavn, Faroe Islands). Shown on screen. Not secret.

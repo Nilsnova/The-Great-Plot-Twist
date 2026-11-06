@@ -580,3 +580,7 @@ A file that breaks a rule stops the code with a message that names the file and 
 - **A changed kit changes what new players get.** A player who has an entry profile keeps it, because the first ending counts (decision D019). The profile stores the kit id, the start place and the coins as they were.
 - **A new ending or a new decision needs a kit.** If the story can end in a way that no kit covers, `kit_for` raises an error and the player gets a 500. `test_referee.py` searches the real story for every end state and fails first.
 - **A new kit id needs a new migration**, because the table `entry_profiles` lists the allowed ids. Never edit the migration that exists.
+
+## How the server reads the case
+
+`server/game/case_data.py` loads the private case file into frozen records and runs load-time checks L1 to L8, L14, L15, L18 and L19. `case_lint.py` adds exhaustive free-route, citation and seat-fill checks in tests. The active Phase 1 route kinds are `kit`, `open` and `timed`; other routes keep their ids in the loaded data but are not offered. A route's optional `label` falls back to the card title. The case view exposes only earned cards, formed deductions and a reveal earned by a solver in that same crew. The private file is never added to public content. Phase 1 changes no secret content.

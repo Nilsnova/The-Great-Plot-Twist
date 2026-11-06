@@ -263,7 +263,7 @@ class CaseService:
         return {
             "accepted": True,
             "reason": None,
-            "message": UI_MESSAGES["moved"].format(minutes=seconds / 60),
+            "message": UI_MESSAGES["moved"].format(minutes=f"{seconds / 60:g}"),
             "now": reply["now"],
             "case": self.view(fresh, player_id),
         }

@@ -71,6 +71,8 @@
 
 ---
 
+**Binding handoff update, 6 Nov 2026:** Nils confirmed C4, C6, C9, C16 and C18 as built; see `docs/handoff/nils-decisions-6nov.md`. Case contracts use decision D027. The corrected migration reservations below supersede the original revision. Codex owns the named server work under Claude's review; Claude alone applies live migrations. `docs/STATUS.md` remains untouched.
+
 ## 0. Rules for the builders
 
 - **Git and safety:** the same as M1-backbone section 0.
@@ -132,21 +134,21 @@ Builders build the default. Items marked "pending" get a `# PENDING (...)` comme
 | C1 | How a game refusal answers | `200` with `accepted: false`, a `reason`, a `message`, extra numbers and the fresh view. HTTP errors are only for bad, unauthorised, failed or impossible requests. | NPC-PARTNERS section 6 says this for partner orders. One rule for every case intent, and refusals can carry numbers. | Team, Mon 9 (INTERFACES questions 2 and 3) |
 | C2 | Repeated `actionUid` | **`200`, rebuilt from the stored outcome, with `repeat: true`.** It is checked before any rule (3.3). | NPC-PARTNERS N8: "the first answer again". The wallet, the Exchange, A2, A6 and L2 answer `409 already_applied` instead, which is safe there because they log only accepted actions. The case also logs a wrong pair, a wrong accusation and a missed lock (C15), so a 409 read as "done" would turn a retried refusal into a success. | Team, Mon 9, with that consequence on the table |
 | C3 | Route names | `GET /api/case` (one read for the whole crew view) **replaces the reserved `GET /api/board`**. `POST /api/case/search` replaces the reserved `POST /api/act`. These stay: `POST /api/case/accuse`, `POST /api/board/pin`, `POST /api/finale/signal`, `GET /api/world`, `POST /api/crews/me/orders`. New: `POST /api/board/pair`, `POST /api/finale/nightfall`, `POST /api/finale/post`, `POST /api/host/case/clock`. | One poll instead of two. The case has no free-form actions: a route id is the whole intent. If the team keeps the old name, mount the same handler at `/api/board` too (one line). | Team, Mon 9 (D009) |
-| C4 | The case clock | Case time is whole seconds since `crews.started_at`, and the database clock decides every change. No pause in v1. The host clock route moves only the host's own crew forward. | Nothing in the case punishes a break: timers finish, windows repeat, and a night can be called again. | Nils (pending) |
+| C4 | The case clock | Case time is whole seconds since `crews.started_at`, and the database clock decides every change. No pause in v1. The host clock route moves only the host's own crew forward. | Nothing in the case punishes a break: timers finish, windows repeat, and a night can be called again. | Nils, decided 6 Nov 2026 |
 | C5 | Settlement | Every timed result (a find, a partner pin, a post) is stored at acceptance with the second it takes effect. "Settled" means "that second has passed". No background job and no settle write. | Gives the behaviour of NPC-PARTNERS N4 and N5 with no `settled` column | S4 owner |
-| C6 | When a partner pin's 50 coins are paid | When the order is accepted | The outcome is fixed then (N5), and nothing is written on `GET` | Nils (pending, touches money) |
+| C6 | When a partner pin's 50 coins are paid | When the order is accepted | The outcome is fixed then (N5), and nothing is written on `GET` | Nils, decided 6 Nov 2026 |
 | C7 | A player running several routes at once | Allowed: there is no player `busy` rule. One find per seat and card. | CASE-FILE 5.3 and the timing program. The G6 fake's player `busy` is not a server rule. | S3 owner |
 | C8 | The false light's glow | During its own night a crew receives `glow`: the schooner position rounded to whole chart units. The exact position comes only after the fog parts. **The fact for Nils:** the glow is at most 0.27 degrees from the true bearing for 200 sampled crews (about 0.35 anywhere in the disc), and the tolerance is 5 degrees. So the glow is the answer. Copying another crew's bearing gains nothing, because every crew sees its own glow. A copied bearing still hits on all three lights 44% of the time, so the per-crew seed changes the picture, not the difficulty. | G6 must draw the glow players aim at (CASE-FILE 10.4). The finale tests coordination (three seats, three lights, inside 90 s), not secret coordinates. | Nils or S3 owner (pending) |
-| C9 | Solves while the relight lock is on | They never reach the world: no stage change, no Wall names and no extra light, also after the lock opens. Rewards and the reveal happen as normal. | Team test solves must neither relight the coast nor fill the Wall | Nils (pending) |
+| C9 | Solves while the relight lock is on | They never reach the world: no stage change, no Wall names and no extra light, also after the lock opens. Rewards and the reveal happen as normal. | Team test solves must neither relight the coast nor fill the Wall | Nils, decided 6 Nov 2026 |
 | C10 | Browser access to case tables | None. RLS is on with no policy and no grant for `anon` or `authenticated`. Only the API reads them. | No early peek at results that are decided at acceptance | Team |
 | C11 | Feature flag | New flag `case`, off by default. It gates **every** case route, `GET /api/world` included. | Phases can merge before the game opens, and a flagged route can never read a table whose migration is not applied yet (with the rule in section 0). Before the game opens the world is dark anyway. | Team |
 | C12 | Light posts after dawn | Stay open, for players as well as partners | N15, applied to players | L3 owner |
 | C13 | Who may lock a light | The player who holds it, or any player of the crew when a partner holds it | CASE-FILE 10.4 | L3 owner |
 | C14 | Route button labels | Optional `label` per route in `case.json`. The server falls back to the card title. | Data, not code | S3 owner |
 | C15 | Which refusals are remembered | Every request that changed state is logged, including a wrong pair, a wrong accusation and an off-target lock, because each one starts a wait | Keeps the `actionUid` a safe retry, together with C2 | none |
-| C16 | Whose names go on the Wall of Lights | **Contributors only** (the players with a share) | CASE-FILE 14.1 says "the first crew's captain names", and 14.2 "each later crew adds its captain names". The data does not settle whether a seated player with no pin, no lock and no accusation counts. | S3 owner or Nils (pending) |
+| C16 | Whose names go on the Wall of Lights | **Contributors only** (the players with a share) | CASE-FILE 14.1 says "the first crew's captain names", and 14.2 "each later crew adds its captain names". The data does not settle whether a seated player with no pin, no lock and no accusation counts. | Nils, decided 6 Nov 2026 |
 | C17 | When a partner pin counts for credit | From the moment its order is accepted: for "contributor" and for "part of a deduction". Pairing still needs the pin to have landed. | `case.json` `rewards.part_of_a_deduction`: "or ordered a partner's pin of it, before the deduction formed". Matches C6. Credit then depends on rows only, so the payouts can be checked exactly under the lock. | S3 owner |
-| C18 | Position and boarding | The server checks neither. Any signed-in player of the crew may search, take a post or accuse once the case rules allow it. Boarding the schooner is presentation only. | D003 and the A4 spec: positions are for showing only. If Nils wants boarding to be a real rule, add a free intent `POST /api/case/board`. | Nils (optional) |
+| C18 | Position and boarding | The server checks neither. Any signed-in player of the crew may search, take a post or accuse once the case rules allow it. Boarding the schooner is presentation only. | D003 and the A4 spec: positions are for showing only. If Nils wants boarding to be a real rule, add a free intent `POST /api/case/board`. | Nils, decided 6 Nov 2026 |
 | C19 | The home station | **One level 1 station, built by any player of the crew, readies the home light for the whole crew.** Any player of the crew may man it, and partners never. | `case.json` ("a crew counts one station, whoever built it. Any player of the crew may man it."), CASE-FILE 10.2 and L2 section 6. Owner-only would be a story change. | Settled by the data; a change needs Nils |
 | C20 | `RELIGHT_OPEN` | Accepted as `true` only when `APP_ENV` is `production`. Elsewhere the server refuses to start. | Preview and laptops with the real keys write to the same live database, and a relight cannot be undone | Team |
 
@@ -526,16 +528,19 @@ The numbers check out:
 | `20261106060000` | `case_rules` | S3, Phase 1 | this spec |
 | `20261106070000` | `home_islet` | L2 | l2 worktree, uncommitted |
 | `20261106080000` | `case_board_and_night` | L3, Phase 2 | this spec |
-| `20261106090000` | `relighting` | Phase 3 | this spec |
-| `20261106100000` | `npc_partners` | S4, Phase 4 | this spec |
-| `20261106110000` and later | free | (L4 rework, L5, A7, ...) | reserve on the list first |
+| `20261106090000` | `exchange_leverage` | L4 v2 | reviewed group 3 file |
+| `20261106100000` | prediction desk | L5 | reviewed group 3 file |
+| `20261106110000` | Lantern Duels | A7 | reviewed group 3 file |
+| `20261106120000` | `relighting` | Phase 3 | this spec |
+| `20261106130000` | `npc_partners` | S4, Phase 4 | this spec |
+| `20261106140000` | `followups` | G10 stream C | `chore/server-followups` |
 
 | Phase file | Adds |
 |---|---|
 | `20261106060000_case_rules.sql` | `case_state` (with `world_outcome`), `case_finds`, `case_deductions`, `case_accusations`, `case_solvers`, `case_actions`; functions `case_window_open`, `case_begin`, `case_finish`, `case_open`, `case_start_route`, `case_after_solve` (the empty hook, created only when missing), `case_accuse`, `case_clock_forward` |
 | `20261106080000_case_board_and_night.sql` | Night columns on `case_state`; `board_pins` (with `ordered_second`), `finale_posts` (append-only, with `ended_second`), `finale_signals`; functions `finale_post_holds`, `finale_leave_post`, `board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post`, `finale_signal` |
-| `20261106090000_relighting.sql` | `world_state` (one seeded row), `world_solves`, `wall_of_lights`; `case_after_solve` replaced |
-| `20261106100000_npc_partners.sql` | `case_state.orders_count`; `npc_orders`; functions `npc_begin`, `npc_next_order_no`, `npc_fetch_pin`, `npc_man_light` |
+| `20261106120000_relighting.sql` | `world_state` (one seeded row), `world_solves`, `wall_of_lights`; `case_after_solve` replaced |
+| `20261106130000_npc_partners.sql` | `case_state.orders_count`; `npc_orders`; functions `npc_begin`, `npc_next_order_no`, `npc_fetch_pin`, `npc_man_light` |
 
 - **House style.** Each file uses the foundation style:
   - a header block: WHAT IT DOES, WHO USES IT, WHAT IT NEEDS, SAFE TO RUN TWICE, HOW THE FILE IS ORGANISED;
@@ -1002,7 +1007,7 @@ begin
       set search_path = ''
       as $body$
       begin
-        -- Phase 3 (20261106090000_relighting.sql) replaces this function. Until then a solve
+        -- Phase 3 (20261106120000_relighting.sql) replaces this function. Until then a solve
         -- changes nothing outside the crew.
         return jsonb_build_object('world', 'unchanged');
       end;
@@ -1010,7 +1015,7 @@ begin
     $create$;
     execute $comment$
       comment on function public.case_after_solve(uuid, boolean, uuid[]) is
-        'The world hook of a solve. This first version changes nothing and answers {world: unchanged}. 20261106090000_relighting.sql replaces it, and this file never puts it back.'
+        'The world hook of a solve. This first version changes nothing and answers {world: unchanged}. 20261106120000_relighting.sql replaces it, and this file never puts it back.'
     $comment$;
   end if;
 end;
@@ -1988,7 +1993,7 @@ The 12 extra lamps are drawn by G later. The counter costs one line, and CASE-FI
 
 - `game/world_state.py` (reads and the view)
 - `routes/world.py`
-- `supabase/migrations/20261106090000_relighting.sql`
+- `supabase/migrations/20261106120000_relighting.sql`
 
 **Change:** `case_service.py` (the accuse answer carries `world`, and the reveal carries `world`), INTERFACES, supabase/README.
 
@@ -2196,7 +2201,7 @@ Any new order ends a partner's duty: its post gets `ended_second`, and its lock 
 | `game/npc_orders.py` | Constants, route choice, decisions, line groups |
 | `game/npc_view.py` | The `partners` view part |
 | `routes/crew_orders.py` | `POST /api/crews/me/orders` |
-| `supabase/migrations/20261106100000_npc_partners.sql` | 7.5 |
+| `supabase/migrations/20261106130000_npc_partners.sql` | 7.5 |
 
 The kit rule is not re-implemented: import `crews.seats.partner_seats` and `NPC_KIT_ORDER`.
 
@@ -2806,7 +2811,7 @@ Never cut the three lights, the 12 routes, the accusation, the reveal, the rewar
 - **supabase/README:** the matrix rows, the function rows, and checks C1 to C14, N1 to N15, W1 to W9 and P1 to P10 as manual steps. Also how to run `case_sql/`.
 - **docs/SETUP.md:** the relight step (3.10).
 - **One decision entry**, "Case backend contracts", recording C1 to C20 and marking the pending ones.
-  - Its number comes from the shared reservation list. D018 is claimed four times: by A2, A4, the story round (`dd2f1f2`) and the open-world worktree. A3 has D019, A6 D020, and L2 proposes D021. This spec proposes **D022**.
+  - Its number comes from the shared reservation list. D018 is claimed four times: by A2, A4, the story round (`dd2f1f2`) and the open-world worktree. A3 has D019, A6 D020, and L2 proposes D021. This spec uses **D027**, reserved by the binding G10 handoff on 6 Nov 2026.
 - **The reservation lists:** Claude keeps the decision numbers and the migration timestamps (3.11) side by side, for example as a table under "Next entry" in `docs/DECISIONS.md`. Builders read them before they pick a number.
 - **`backend/content/README.md`:**
   - a paragraph "How the server reads the case": the loader, the active route kinds, the load-time checks and the optional route `label`;
