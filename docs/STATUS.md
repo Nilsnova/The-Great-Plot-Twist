@@ -14,6 +14,18 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**Latest release, 6 Nov 2026, Codex:** group 3 is on main (`c12a707`) and production is ready.
+`GET /api/config` confirms live_presence, market, predictions and arena enabled; sports and the AI
+helper remain off, and case is not enabled. The market's direct live-price check is pending a cloud
+network allowlist update; no query/cache guard was relaxed. G9 implementation is moving to Nils'
+separate cloud session; normal-play multiplayer is still pending its integration.
+
+Case Phase 1 is integrated on `integrate/case-phase1`: 10035 backend tests passed (30 optional skips),
+25 opt-in SQL checks passed, Ruff/build/spoiler guard and independent reviews passed. Migration
+060000 is applied with exact MD5 and normalized version; live totals are now 24 tables, one view,
+32 project functions and 17 wallet reasons. Phase 1 code is next to push. The case stays off until
+its full chain and end-to-end proofs pass. RELIGHT_OPEN remains unset.
+
 **Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
 migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
 re-recorded under their repository versions. Final live counts: 18 tables, one view, 17 reasons.
@@ -431,6 +443,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov, Codex:** group 3 deployed, four approved flags verified live; case Phase 1 reviewed and migration060000 applied/MD5-proven with expected advisors. Source and SQL gates passed; preparing Phase 1 push. G9 moves to a separate cloud session. See [case proof](handoff/case-phase1-release.md).
 
 - **6 Nov, Codex:** group 3 integrated and independently reviewed; applied 090000/100000/110000 one file at a time, exact MD5 proofs and version restoration passed; all final database counts and known-only advisors match. Core local gates green; cloud browser regression and live deployment checks continue. See [release proof](handoff/group3-release.md).
 
