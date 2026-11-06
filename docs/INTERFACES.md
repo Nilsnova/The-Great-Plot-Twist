@@ -821,6 +821,50 @@ Everything about the shared mystery is **defined by the story round (S0, approve
 
 What already holds, from the foundation: a reward is paid with `clue_reward` or `mystery_reward` and a `ref` that makes each payout happen once per player, buying a clue uses `clue_purchase`, and a crew's seats can hold NPC partners ([section 6](#6-crews-and-seats)).
 
+### Case Phase 1 contract for G9
+
+Published on `feat/case-backend` for G9. The executable view fixture is `backend/server/tests/case_fixtures.py`; view, reveal and spoiler tests use the same fixture. Player and crew ids are replaceable fixture values. Suspect ids and all story text come from server content at runtime; clients must not depend on those values.
+
+Every route needs the server flag `case` (off by default) and a verified player. Every answer, including a refusal or validation error, is `Cache-Control: private, no-store`. The server selects the player's own open crew, or their latest finished crew for reads. Request bodies never accept player, crew, kit, wallet or progress facts.
+
+| Method and path | Body | Success |
+|---|---|---|
+| `GET /api/case` | None | `{"case": null}` without an active case, or `{"case": <view>}` |
+| `POST /api/case/search` | `{"routeId":"C1.notice_board","actionUid":"search0001","paidConfirmed":false,"expectedPrice":null}` | Intent answer with `readyIn` seconds and `coinsSpent` |
+| `POST /api/case/accuse` | `{"suspect":"<suspect-id>","actionUid":"accuse0001"}` | Intent answer; an accepted solve adds `solved:true`, `world` and `coinsPaid` |
+| `POST /api/host/case/clock` | `{"seconds":600,"actionUid":"clock0001"}` | Host only; intent answer with the new `now` for that host's own crew |
+
+An intent returns `200` for accepted actions and game-rule refusals:
+
+```json
+{"accepted":true,"reason":null,"message":"<interface or earned story line>","case":{}}
+{"accepted":false,"reason":"locked_window","message":"<countdown>","minutes":4,"case":{}}
+{"accepted":false,"reason":"accusation_refused","message":"<refusal>","repeat":true,"case":{}}
+```
+
+Make `actionUid` once per click, using 8 to 64 ASCII letters, digits, underscores or hyphens. Retry the same uid after an uncertain `503`: a stored result answers first, before current rules or finished-crew checks. The repeat keeps its original accepted/refused outcome, adds `repeat:true`, rebuilds the message and returns a fresh view. Unstored extra numbers are omitted. Reusing a uid with another target still returns the original action. A wrong accusation repeated with its uid remains a refusal, not a successful action.
+
+Phase 1 search refusal reasons are `lead_locked`, `already_have`, `wrong_kit` and `locked_window`, checked in that order after checking the route exists. Only `kit`, `open` and `timed` routes are active. Starting a timer does not expose the card text before it lands. Accusation reasons are `already_solved` (defensive), `schooner_required`, `evidence_required`, `accusation_cooldown` and `accusation_refused`, in that order. A wrong accusation starts a 60-second wait and is remembered. No accusation checks player position or boarding.
+
+| HTTP status | Code | Meaning |
+|---|---|---|
+| 401 | `unauthorized` | Missing or invalid login |
+| 403 | `forbidden` | Clock caller is not a host |
+| 404 | `feature_off`, `no_crew`, `no_such_route`, `no_such_suspect` | Disabled feature, no crew for a write, or unavailable id |
+| 409 | `crew_not_started`, `crew_finished`, `crew_busy` | Crew state does not permit a write, or a snapshot changed twice |
+| 422 | `validation_error` | Bad uid or field shape, an extra field, or clock seconds outside 1 to 3,600 |
+| 429 | `too_many_requests` | More than 10 writes or 30 reads per 10 seconds per player; see `Retry-After` |
+| 502 | `database_error` | Unreadable reply or a database guard failure; never a case repeat |
+| 503 | `case_unavailable`, `database_not_configured`, `database_unavailable` | Broken content, missing database or uncertain operation |
+
+The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 1 leaves `finale:{}` and `partners:[]` for later phases.
+
+`board` contains earned `cards`, open unheld `leads`, `logLead`, `deductions`, identical-shape `suspects`, `canPair` and `pairWait`. An incomplete deduction has exactly `id`, `name` and `complete:false`; it exposes no card pair or clearing information. `search.spots` groups eligible routes by hotspot, and `search.jobs` contains running finds and finds landed in the last 10 minutes. `accusation` carries `schoonerFound`, `allowed`, `cooldown`, `status`, the public suspect list, earned evidence and `lastWrong`.
+
+Before a solve, `reveal` is only `{"available":false}`. A solver in this crew sees `available`, `solvedSecond`, `world`, ordered `lines` (`id`, `kind`, `text`, `cites`) and payout `credits`. Solving in another crew grants no reveal here. Phase 1's world result is `unchanged`; later hooks add `locked`, `relit`, `added` and `already_recorded`. The client must render returned lines rather than carrying its own reveal copy.
+
+Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 nudges are added only after A4 reaches `main`; until then G9 uses these boundary refreshes.
+
 ## 11. Open questions for Mon 9
 
 1. **JSON names.** Confirm camelCase in JSON (`demoMode`, `actionUid`) and snake_case in Python and SQL. Also confirm the exception for content files, which keep their own spelling (`story.json` uses snake_case keys such as `hide_when_blocked`).
