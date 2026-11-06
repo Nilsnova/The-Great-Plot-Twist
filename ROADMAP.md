@@ -42,7 +42,7 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
 | Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
 | Reliability, tests, help/privacy, security/notices, devtools | Deployed; combined gates and public read-only verification pass | Authenticated browser/device journey follows G9 |
 | Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
-| Spoiler-safe ChatGPT helper | Scope and consent/security contract recorded; feature off | Official registered website client approval, then implementation after G9 and a consented live proof |
+| Spoiler-safe ChatGPT helper | Earned-evidence context filter built/tested; login/inference still off | Official hosted-client/plan-usage approval; consent, help/output/UI integration after G9 and live proof |
 
 No routine merge permission is needed. G9 is active in the cloud; the immediate external dependencies are the sports key in Vercel
 and official ChatGPT website-client registration. Teammate credit names,
