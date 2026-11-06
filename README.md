@@ -33,8 +33,17 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 The team is turning the text mystery Plot Twist into a browser game: a top-down pixel-art island world with GitHub sign-in, a shared mystery and a play-money economy.
 
 - **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
-- **On main:** the foundation, accounts, story/referee, crews, live presence, home islet, Exchange v2, predictions, Lantern Duels, and the case board/night backend. Production flags and the latest deployment proofs are recorded in [Status](docs/STATUS.md).
-- **In progress:** the remaining case phases and server follow-ups are being integrated. G9, which connects normal browser play to these services, is paused until Nils' laptop returns. The [roadmap](ROADMAP.md#execution-update--6-nov-2026) gives the remaining order.
+- **Built:** the playable intro, sea chart and harbor, original music/ambience/effects, weather,
+  account/save and crew services, live presence, Exchange v2, predictions and Lantern Duels.
+  The case backend includes earned clues, the shared board, three-light finale, Relighting and
+  free NPC orders, with solo and four-player API playthroughs over real scratch PostgreSQL.
+- **Online play is still being connected:** the G9 browser adapter is paused until Nils' laptop
+  returns. Backend multiplayer proofs do not mean the complete mystery is already playable in
+  normal browser play. [Status](docs/STATUS.md) records exact releases and flag checks.
+- **Next:** festival, host console and sports, then reliability, accessibility and submission checks.
+  The optional [spoiler-safe AI helper](specs/AI-helper.md) requires official ChatGPT website-client
+  approval before its login can be activated. The [roadmap](ROADMAP.md#execution-update--6-nov-2026)
+  gives the remaining order.
 - **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.
 
 ### What the final README must contain

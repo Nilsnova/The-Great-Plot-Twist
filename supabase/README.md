@@ -2916,14 +2916,14 @@ It follows Phase 1 and the home-islet migration. The exact reviewed file MD5 is
 | Table | anon / authenticated | service_role |
 |---|---|---|
 | board_pins | no access | select, insert |
-| finale_posts | no access | select, insert, update |
-| finale_signals | no access | select, insert, update |
+| finale_posts | no access | select, insert; update ended_second only |
+| finale_signals | no access | select, insert; update ended_second and parted only |
 
 All three tables have RLS without policies; their advisor INFO notices are intentional. Both identity
 sequences have no browser or service grants. Every function uses invoker rights and an empty search
 path; execution is revoked from PUBLIC, anon and authenticated and granted to service_role only.
 The store exposes five new intents (`board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post`,
-`finale_signal`), never the two new private helpers (`finale_post_holds`, `finale_three_locks`).
+`finale_signal`), never the two new private helpers (`finale_post_holds`, `finale_leave_post`).
 
 The crew lock serializes pin claims, deduction rewards and post/lock changes. Wallet payouts use
 player UUID order. Eligibility is rechecked under that lock; three locks require different current
@@ -2955,3 +2955,23 @@ later lights, deletion and replay. Independent review also exercised actual migr
 a non-superuser owner with broad default grants. Expected cumulative totals: **30 public tables,
 1 view, 16 public policies, 5 realtime policies, 17 reasons, 39 project functions, 8 sequences,
 6 public triggers**. Three additional server-only RLS/no-policy INFO notices are intentional.
+
+## Case Phase 4 NPC migration
+
+`migrations/20261106130000_npc_partners.sql` follows 080000 and 120000; reviewed MD5
+`39f269d1fd2e8e43e2b3d0055c97ecb2`. It adds `case_state.orders_count`, plus server-only
+`npc_orders` with RLS and no policies or browser grants. service_role has select/insert only.
+Each receipt stores the action uid with unique `(ordered_by, action_uid)` for exact replay.
+
+Four server-only invoker functions have empty search paths: `npc_begin`, `npc_next_order_no`,
+`npc_fetch_pin`, `npc_man_light`. The Python store exposes only the last two intent functions.
+The crew lock protects gap-free order numbers, seat identity, busy boundaries and accepted route
+timelines. Paid errands are refused in SQL as well as Python. NPCs never charge a wallet; a pin's
+existing clue reward pays the ordering player once. New orders end old posts and locks.
+
+P1 to P10 and receipt/race tests cover effective seconds, arrival windows, Witness pin-only jobs,
+ordering-player credit, takeover, busy boundaries, gap-free numbering and authenticated denial.
+Independent concurrent tests prove one accepted order per busy partner and one stored result for
+the same receipt. Reapplication preserves history and ledger. Expected totals: **31 public tables,
+1 view, 16 public policies, 5 realtime policies, 17 reasons, 43 project functions, 8 sequences,
+6 public triggers**. The new NPC table's RLS/no-policy INFO notice is intentional.

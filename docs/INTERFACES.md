@@ -953,7 +953,7 @@ Only the server may execute `case_window_open`, `case_begin`, `case_finish`, `ca
 Phase 2 adds server-only `board_pins`, `finale_posts` and `finale_signals` through
 `20261106080000_case_board_and_night.sql`. They have RLS and no player policies or grants.
 Only the server executes `board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post` and
-`finale_signal`; `finale_post_holds` and `finale_three_locks` are private database helpers.
+`finale_signal`; `finale_post_holds` and `finale_leave_post` are private database helpers.
 
 Phase 3 adds server-only `world_state`, `world_solves` and `wall_of_lights` through
 `20261106120000_relighting.sql`. All have RLS without browser policies. The replacement
@@ -1372,6 +1372,32 @@ applies its existing relit listing and fee rules. Injected test services/readers
 The solving crew receives `reveal.world` immediately, before public cache expiry. RELIGHT_OPEN
 remains server-only and unset until the controlled opening. Festival/lantern claims, the Star,
 title and full epilogue are outside this minimum Phase 3 contract.
+
+### Case Phase 4 partner orders
+
+`POST /api/crews/me/orders` takes `{seat, order, target, actionUid, allowPaid:false}`.
+`seat` is a strict integer from 1 to 4, and `order` is `fetch` or `man_light`. It uses the same
+verified own-crew, strict-body, private no-store and safe-repeat contracts as the case routes.
+New `allowPaid:true` requests return 422 `paid_errands_off`; the minimum never buys clues.
+
+Fetch fixes arrival at +240 seconds, finding at +600 and pinning at +900. A card already held
+by that partner needs only the +300-second pin. The pin and its once-only 50-coin reward belong
+to the ordering player. A new order ends old light duty; partners can man only public partner
+lights during night, taking 600 seconds. Reservation is immediate; the lock counts after arrival.
+Game refusals map to `busy`, `wrong_kit`, `locked_window` or `not_ready`.
+
+Accepted answers include server-picked `line`/`message`, fresh `case`, and `order` with `number`,
+`seat`, `order`, `target`, `orderedAt`, `arriveAt`, `foundAt`, `pinAt`, `readyAt`, `price`. Exact
+player/uid/crew receipts preserve the original order and deterministic dialogue on any retry,
+including a retry through another case endpoint. Repeats omit unstored payout extras. A partner
+or kit changed during reopen yields 409 `crew_busy` before another RPC. Writes send one bounded
+version-only `partner_changed`; pure refusals, reads and repeats send none.
+
+`partners` now contains current NPC seats with kit/name, status, free order choices, open lead
+targets, earned satchel and latest timed job. Views use stored seconds and validated dialogue;
+reads never settle errands or pay rewards. Card prose remains hidden until its find lands.
+Bounded recent history plus each seat's latest order preserve busy/duty state after other seats'
+activity. A player taking the seat hides the old partner; already accepted finds/pins still land.
 
 ## 11. Open questions for Mon 9
 

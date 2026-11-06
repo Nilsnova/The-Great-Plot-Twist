@@ -4,7 +4,12 @@
 >
 > **Who uses it:** all four teammates and every coding agent. The story is in [docs/STORY.md](docs/STORY.md). What is happening right now, and ready-to-paste agent briefs, are in [docs/STATUS.md](docs/STATUS.md).
 
-**Status: v0.3, Thu 5 Nov 2026, late evening.** The story skeleton and the detailed story round (S0) are approved (three review changes to the approval sheet still wait for Nils' OK: [docs/story/README.md](docs/story/README.md#changes-to-the-approval-sheet-after-the-review)), and the look is decided: original top-down pixel art (D005). `main` is live: the game and the Python API run at https://the-great-plot-twist.vercel.app/. Foundation waves 1 and 2 are on `main`. Everyone clones and branches from `main`; see [Merge order](#merge-order-today) for what lands next. The team picks the owners of lanes S, A and L today. Open decisions are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions). Next review of this file: the M1 check on Fri 13 Nov.
+**Current execution: 6 Nov 2026.** The game and API are live at
+https://the-great-plot-twist.vercel.app/. The original v0.3 package descriptions below are retained
+as the detailed plan; use the execution update and [current status](docs/STATUS.md) for completion
+and release evidence. Group 3 is live. The case backend's four minimum phases, server followups
+and economy-abuse integration are at the release gate. G9 is paused until Nils' laptop returns.
+Festival, host console and sports are the next integration wave.
 
 ## Execution update · 6 Nov 2026
 
