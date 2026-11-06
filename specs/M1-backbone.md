@@ -1,6 +1,6 @@
 # Implementation spec: A2, A3 and A6 (M1 backbone)
 
-**For:** the Sonnet builders (A2, then A3, in worktree W1 `/Users/nilslenke/Developer/The-Great-Plot-Twist-a2a3`; A6 in parallel in W2 `/Users/nilslenke/Developer/The-Great-Plot-Twist-a6`, both from `main` 8d0a718), and Claude, who merges.
+**For:** the Sonnet builders (A2, then A3, in worktree W1 (branch `feat/a2-a3-signin-referee`); A6 in parallel in W2 (branch `feat/a6-crews`), both from `main` 8d0a718), and Claude, who merges.
 **M1 target (Fri 13):** Act 1 plays to an ending, the referee grants a kit, and a crew forms with an NPC partner in an empty seat.
 **Written from:** ROADMAP.md (A1, A2, A3, A6, S3, S4, L3, milestones, decision log), AGENTS.md, CONTRIBUTING.md, docs/ENGINEERING.md, INTERFACES.md, ARCHITECTURE.md, DECISIONS.md, STORY.md, supabase/README.md, both migrations, backend/server (app, auth, supabase_admin, wallet, errors, flags, settings, routes/me.py and its tests, routes/market.py, market/store.py), backend/plot_twist/engine.py, backend/content/story.json, and the story drafts (CASE-FILE.md section 3, STORY-V2-CHANGES.md, NPC-PARTNERS.md sections 4 and 7, content/case/case.json).
 
