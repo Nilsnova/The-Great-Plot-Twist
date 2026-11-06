@@ -28,7 +28,6 @@ def scratch_server(tmp_path_factory):
         pytest.skip("opt-in database tests")
     pgserver = pytest.importorskip("pgserver")
     psycopg = pytest.importorskip("psycopg")
-    pglast = pytest.importorskip("pglast")
 
     # get_server creates only the new directory supplied by pytest, outside the checkout.
     directory = tmp_path_factory.mktemp("case-pg") / "data"
@@ -40,7 +39,9 @@ def scratch_server(tmp_path_factory):
             for _ in range(2):
                 for migration in sorted(MIGRATIONS.glob("*.sql")):
                     sql = migration.read_text()
-                    pglast.parse_sql(sql)
+                    # PostgreSQL parses and executes every migration. The separate pglast
+                    # gate remains useful, but the documented SQL runner needs only these
+                    # two test-only packages and must not silently skip without a third.
                     database.execute(sql)
         yield server
     assert not directory.exists(), "The disposable PostgreSQL directory was not removed."

@@ -300,26 +300,31 @@ def test_c14_clock_forward_moves_only_its_crew_and_logs_one_revision(database):
 
 
 def test_case_window_open_equals_python_window_open_for_all_case_windows(database, case_data):
-    windows = [
-        route["window"]
-        for card in case_data["cards"]
-        for route in card["routes"]
-        if route.get("window")
-    ]
+    windows = tuple(case_data["case_clock"]["windows"].values())
+    assert len(windows) == 4, "The parity check must exercise all four recurring case windows."
     as_server(database)
     for window in windows:
         for minute in range(120):
             expected = (
                 window["from_minute"]
-                <= minute % window["every"]
+                <= minute % window["every_minutes"]
                 < window["from_minute"] + window["open_minutes"]
             )
             actual = rpc(
                 database,
                 "case_window_open",
                 minute,
-                window["every"],
+                window["every_minutes"],
                 window["from_minute"],
                 window["open_minutes"],
             )
             assert actual is expected
+
+
+@pytest.mark.parametrize(
+    "minute,every,starts,opens",
+    [(0, 0, 0, 1), (-1, 20, 0, 1), (0, 20, -1, 1), (0, 20, 0, 0)],
+)
+def test_invalid_windows_are_closed_without_division_errors(database, minute, every, starts, opens):
+    as_server(database)
+    assert rpc(database, "case_window_open", minute, every, starts, opens) is False
