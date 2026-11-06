@@ -28,9 +28,9 @@ the starter's historical server/configuration proposals.
 | R13: reveal fingerprints | Build verifies hash-only fingerprints against protected content and scans the production bundle | `frontend/scripts/check-spoilers.js`, `generate-reveal-fingerprints.js`. Private-content changes need the same reviewed fingerprint/build gate |
 | R14: G9 preview stamp | Pending G9's own pushed checkpoint and reachable preview | Main's verified `build-info.json` is a different contract from G9's `build-stamp.json`; it cannot substitute for that preview proof |
 
-Config now has eleven registered flags and `capabilities.hostCaseClock`. Host clock UI also
+Config now has ten registered flags and `capabilities.hostCaseClock`. Host clock UI also
 requires the verified caller's `me.isHost`. The current production flags remain presence,
-market, predictions, arena, case, bulletin and festival on; sign-in, sports, AI helper and
+market, predictions, arena, case, bulletin and festival on; sign-in, sports and
 raid off. This note changes no configuration.
 
 ## Integration issues to reconcile
@@ -79,7 +79,7 @@ RELIGHT_OPEN stays unset. Physical-device and consented live OAuth/Realtime proo
 separate from disposable SQL or recorded-answer tests.
 
 No new input is needed from Nils for G9 development at this stage. Sports still needs its
-provider key directly in Vercel; hosted ChatGPT login/plan usage still needs an officially
-registered client and approval. Direct production checks from this cloud host remain blocked
+provider key directly in Vercel. The AI companion idea is cancelled and no longer blocks any work.
+Direct production checks from this cloud host remain blocked
 by its hostname network policy; the Vercel fetch helper's share query/401 masking limits still
 apply. Do not relax application guards to make the helper pass.

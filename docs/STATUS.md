@@ -17,7 +17,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 **Verified application release, 6 Nov 2026, Codex:** main `cb42da3` and production
 `dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51` are READY with live extras and stabilization deployed.
 Health/config and the host page return 200. Presence, market, predictions, arena, case, bulletin
-and festival are enabled. Sports, sign-in, raid and ChatGPT helper are off. Festival waits for
+and festival are enabled. Sports, sign-in and raid are off. Festival waits for
 Relighting; live SQL still shows dark/null, zero solves/lights/Wall, festival actions and sports
 stakes. RELIGHT_OPEN remains unset. See [live-extras proof](handoff/live-extras-release.md).
 
@@ -41,13 +41,10 @@ records resolved requests and merge checks without changing the in-flight G9 sou
 Normal browser mystery/multiplayer still await **G9, now active in a cloud session**; backend
 journey proofs do not establish a connected browser session.
 
-The optional AI helper now has a [pure earned-context foundation](handoff/ai-earned-context.md),
-independently reviewed with 82 checks. It includes earned cards/completed deductions only,
-excludes reveals and identity/money metadata, and performs no I/O or game write. Login, consent,
-inference and output safety still need their own implementation/proofs; `companion_llm` stays off.
+Nils cancelled the AI companion on 6 Nov. Its backend context code, tests, feature flag and
+active specification are removed; the ten remaining flags keep their existing behavior.
 
-External needs: sports provider key directly in Vercel, official approved ChatGPT website client,
-and the production-host network allowlist for direct cloud stock/cache checks. Later hand-in needs
+External needs: sports provider key directly in Vercel and the production-host network allowlist for direct cloud stock/cache checks. Later hand-in needs
 three teammate names, private submission details and physical laptop/projector/spoken rehearsal.
 Original music, ambience/effects and festival media are already built. Older paragraphs below are
 historical checkpoints; use the current roadmap and proof links for release state.
@@ -62,8 +59,7 @@ Normal-play multiplayer and the full case still await G9 and the case chain; dem
 
 Sound is built (original music, weather ambience and effects, with separate volume controls).
 The [roadmap execution update](../ROADMAP.md#execution-update--6-nov-2026) records the release order,
-Nils' approval to enable completed festival/sports, and the optional spoiler-safe ChatGPT helper.
-OpenAI website-client registration is an external prerequisite for that helper.
+Nils' approval to enable completed festival/sports. The later AI companion proposal is cancelled.
 
 *Last updated: Fri 6 Nov 2026, evening, by Claude (coordinating for Nils). Group 1 (the story round, A2/A3 and A6) is on `main`, and its four database changes are applied. Group 2 (Codex's G8 with all of G7, A4 live presence, L2 home islet and the open-world must items) is merged on `integrate/fri6`; it reaches `main` after its gates, an independent agent check and the apply of its two database changes (`050000`, `070000`). Group 3 (Exchange v2, the prediction desk, Lantern Duels) follows tonight. Since 6 Nov the aim is a feature-complete game by Sun 8 Nov: agent-built work merges without a human review per merge (D015, extended), nothing waits for teammates, and Codex takes the browser side. The review queue under Open decisions is from 5 Nov; its finished items are marked done.*
 
@@ -475,6 +471,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** Nils cancelled the AI companion. Removed its backend context module/tests, flag and active specification, deleted future-provider configuration and application prerequisites, and updated the ten-flag API/smoke contracts. Historical entries below record earlier work only; no AI feature remains planned.
 
 - **6 Nov 2026, Codex for Nils:** prepared and independently reviewed AI earned-context foundation 1aafd7e: 82 boundary/view checks, strict UTF-8 limits, no reveals/identity/money or state initialization. No route, provider, migration, dependency, G9 or flag change; official hosted ChatGPT approval and remaining integration stay pending.
 

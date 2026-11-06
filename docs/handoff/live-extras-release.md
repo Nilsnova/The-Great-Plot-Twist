@@ -1,5 +1,7 @@
 # Festival, host console and sports release · 6 Nov 2026
 
+> Later scope update, 6 Nov: Nils cancelled the AI companion. AI-related remaining work and flag snapshots below are historical; its code and flag are removed. See [the cancellation record](ai-earned-context.md).
+
 Responsible: Codex for Nils. Branch: `integrate/festival-host-sports`, following live main
 `fa0e49b` and production `dpl_2AAkC2Ta6Xegr5JNRk9yByvt2a85`.
 

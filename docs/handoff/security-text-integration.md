@@ -1,5 +1,7 @@
 # Security and interface-text integration
 
+> Later scope update, 6 Nov: Nils cancelled the AI companion. AI-related remaining work and flag snapshots below are historical; its code and flag are removed. See [the cancellation record](ai-earned-context.md).
+
 For Nils and the release reviewer, 6 November 2026. Branch `integrate/security-text`, worktree `/workspace/security-text2`, source baseline `94a48ad`. G27 (`9981188`, `29bf572`) and G24 (`b2049eb`, `72650b1`, `62997b6`) were cherry-picked with their authors preserved, then reconciled with the current feature wave.
 
 ## Delivered

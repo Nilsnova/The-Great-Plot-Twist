@@ -80,7 +80,7 @@ The server reads the first seven names, and only those. The last row is read by 
 
 All off by default. A flag is on only when `FEATURE_FLAGS` names it. Each flag switches on one later feature, and that feature's own spec says exactly what it does.
 
-`market`, `predictions`, `sports`, `arena`, `raid`, `live_presence`, `companion_llm`
+`market`, `predictions`, `sports`, `arena`, `raid`, `live_presence`, `case`, `sign_in`, `bulletin`, `festival`
 
 ### Wallet
 

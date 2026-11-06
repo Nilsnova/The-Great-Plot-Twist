@@ -107,6 +107,6 @@ These are precise residual source/configuration limits, not claims of a demonstr
 
 ## Gated capabilities and proof limits
 
-The full normal-browser online mystery remains dependent on the paused G9 adapter. Festival and sports flags stay off until Nils authorises their release checks; sports additionally needs the configured provider key and a current-provider proof. The helper using ChatGPT login requires official website-client approval: [AI specification](../specs/AI-helper.md). It must not borrow a Codex client ID, scrape a session or expose an API key in the browser.
+The full normal-browser online mystery still depends on the G9 adapter being built in the cloud. Festival is enabled and waits for the first Relighting; sports needs the configured provider key and a current-provider proof before activation. The AI companion proposal and its unused context code/flag were removed at Nils' request.
 
 Dependency advisory scans covered every current locked third-party package and returned zero known advisories at the recorded collection time. Registry/schema responses, source graph coverage and route/link checks are reproducible from the audit directory. Earlier [G27 checkpoint 1](handoff/g27-checkpoint-1.md) and [checkpoint 2](handoff/g27-checkpoint-2.md) describe their original baseline only; see the integration handoff for current checks. No production penetration test, provider credential proof or deployment-setting audit is implied.

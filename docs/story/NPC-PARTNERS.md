@@ -356,7 +356,7 @@ A crew of four players has no partners, so if two of them stop coming, the two w
 | Accuses | Same: no order, and the accusation request needs a signed-in player. |
 | Calls nightfall or aims a beam | Same. A player aims and locks the beam of a light a partner holds, from their own screen. |
 | Gives a free hint | It only says lines from the bank. A line may repeat what its own card shows. It never names another card, a deduction, a suspect or the culprit, and it never advises (section 9). |
-| Speaks with an AI voice | Lines come from a file. No code path may ask a language model for partner text, and the `companion_llm` flag stays unused here. |
+| Speaks with an AI voice | Lines come from a file. No code path may ask a language model for partner text. |
 | Carries the log card | Partners never play Act 1, so they have no log to read. |
 | Acts without an order | Nothing gives a partner an order except a player. |
 | Moves coins on its own | It has no wallet. A shortcut is charged to the player who gave the order, and only when the order says `allowPaid`. |

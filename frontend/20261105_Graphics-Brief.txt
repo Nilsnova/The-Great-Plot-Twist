@@ -9,7 +9,7 @@ You work for Nils Lenke, the responsible teammate, on a four-person student grou
 - Commit locally. Do not push; Nils reviews and pushes.
 
 ## Context
-The game expands Nils' text mystery "The Keeper's Last Log": keeper Elena Vos has vanished and the lighthouse has been dark for three nights. Players start on this intro island, solve its mystery, then sail out into a larger shared world of islands. Other teammates will add logins, multiplayer, the story engine, a real-weather feed and an optional AI companion later. Your job is the visual foundation all of that plugs into. It must create a real wow moment in a class demo without overloading ordinary laptops.
+The game expands Nils' text mystery "The Keeper's Last Log": keeper Elena Vos has vanished and the lighthouse has been dark for three nights. Players start on this intro island, solve its mystery, then sail out into a larger shared world of islands. Other teammates will add logins, multiplayer, the story engine, and a real-weather feed. The later AI companion idea was cancelled on 6 Nov. Your job is the visual foundation all of that plugs into. It must create a real wow moment in a class demo without overloading ordinary laptops.
 
 Style: light 3D, low-poly, flat-shaded, warm and atmospheric, like a small island diorama. Our own design: do not copy characters, maps or art from any existing game. Palette idea: warm sand, mossy greens, grey cliff rock, teal to deep-blue water, a dusky purple evening sky, the lighthouse lamp a warm gold.
 

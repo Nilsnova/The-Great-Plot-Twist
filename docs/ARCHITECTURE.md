@@ -69,7 +69,7 @@ Two values are not secret: the Supabase project URL and the publishable key. The
 | `CRON_SECRET` | The keep-alive route | Vercel environment variables, and the GitHub repository secret `CRON_SECRET` for the daily keep-alive workflow (the same value). Optional in your `.env`: use a made-up value there. |
 | The database password | The database itself | The Supabase dashboard and a password manager |
 | The GitHub sign-in client secret | Our GitHub sign-in app | The Supabase dashboard (and GitHub's page for the app) |
-| Later keys: `MARKET_DATA_API_KEY`, `SPORTS_API_KEY`, `LLM_API_KEY` | Outside services | Vercel environment variables, once their feature is built |
+| Later keys: `MARKET_DATA_API_KEY`, `SPORTS_API_KEY` | Outside services | Vercel environment variables, once their feature is built |
 
 A secret never goes into Git, a `VITE_` variable, browser code, a log, a screenshot, a chat or a coding agent prompt. The full list of checks is the safety checklist in [ENGINEERING.md, section 6](ENGINEERING.md#6-safety-checklist).
 

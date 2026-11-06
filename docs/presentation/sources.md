@@ -5,8 +5,8 @@ candidate recorded in [the stabilization proof](../handoff/stabilization-release
 
 The verified production baseline is main `d5ad219`, deployment
 `dpl_2yKCaKZKv1ZFE7z6jiTtCYmTmpFK` READY. Health/config and the host page returned 200.
-Presence, market, predictions, arena, case, bulletin and festival are enabled. Sports, sign-in,
-ChatGPT helper and raid remain off. The world is dark with zero solves; RELIGHT_OPEN is unset.
+Presence, market, predictions, arena, case, bulletin and festival are enabled. Sports, sign-in
+and raid remain off. The world is dark with zero solves; RELIGHT_OPEN is unset.
 Festival's 48-hour clock has not started. Exact per-file database and rollout evidence is in
 [live-extras release](../handoff/live-extras-release.md). These are recorded checks; a local
 presentation test does not repeat production verification.
@@ -23,7 +23,7 @@ presentation test does not repeat production verification.
 | 7 | Solo+NPC and four-player HTTP → production services/views → disposable SQL journeys | [Complete API proof](../../backend/server/tests/test_case_complete_api.py), [release record](../handoff/case-complete-release.md). They include rewards, repeat actions and crew isolation. They do not use production credentials, prove OAuth on the presentation laptop or connect G9. |
 | 7 | Root frontend release gate: 1,672 tests and a production build checking 130 text files / 12 protected lines | [Frontend scripts](../../frontend/package.json), existing test suites and root's integrated release results. Counts include parameterized cases. The documentation task does not rerun the full application gates. |
 | 8 | Isolated authored work, independent review, authorized integration and per-file database verification | [Contribution policy](../../CONTRIBUTING.md), [agent guidance](../../AGENTS.md), current Nils standing authorization and the [case release proofs](../handoff/case-complete-release.md). Codex is the current integrating agent; older Claude handoffs are historical. |
-| 10 | Festival and host console are deployed; sports code is deployed with its flag off | [Festival backend](../handoff/g13-backend-live.md), [festival UI](../../frontend/src/screens/festival/README.md), [host console](../../frontend/src/host/), [sports UI](../../frontend/src/screens/sports/). Sports lacks its live provider key and remains off. The optional ChatGPT helper lacks an approved official website client and remains off. |
+| 10 | Festival and host console are deployed; sports code is deployed with its flag off | [Festival backend](../handoff/g13-backend-live.md), [festival UI](../../frontend/src/screens/festival/README.md), [host console](../../frontend/src/host/), [sports UI](../../frontend/src/screens/sports/). Sports lacks its live provider key and remains off. |
 
 ## Recorded application gates
 

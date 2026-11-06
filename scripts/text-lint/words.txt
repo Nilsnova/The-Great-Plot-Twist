@@ -280,7 +280,6 @@ charge
 charged
 chart
 charts
-chatgpt
 check
 checked
 checking
