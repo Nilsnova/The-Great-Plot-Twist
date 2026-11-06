@@ -5,7 +5,9 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 def is_case_path(path: str) -> bool:
-    return path == "/api/case" or path.startswith(("/api/case/", "/api/host/case/"))
+    return path == "/api/case" or path.startswith(
+        ("/api/case/", "/api/host/case/", "/api/board/", "/api/finale/")
+    )
 
 
 class CaseCacheControl:

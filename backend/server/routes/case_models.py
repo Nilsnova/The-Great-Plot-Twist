@@ -1,6 +1,8 @@
 """Strict request models for case intents; unknown fields never become trusted game facts."""
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator
 
 
 class CaseIntent(BaseModel):
@@ -20,3 +22,26 @@ class AccuseIntent(CaseIntent):
 
 class ClockIntent(CaseIntent):
     seconds: StrictInt = Field(ge=1, le=3600)
+
+
+class PinIntent(CaseIntent):
+    cardId: str = Field(pattern=r"^C[1-8]$", strict=True)
+
+
+class PairIntent(CaseIntent):
+    cards: tuple[str, str]
+
+    @field_validator("cards")
+    @classmethod
+    def valid_pair(cls, cards):
+        if cards[0] == cards[1] or any(not re.fullmatch(r"C[1-8]", card) for card in cards):
+            raise ValueError("Choose two distinct cards from C1 to C8.")
+        return cards
+
+
+class PostIntent(CaseIntent):
+    light: str = Field(pattern=r"^[a-z0-9_]{2,40}$", strict=True)
+
+
+class SignalIntent(PostIntent):
+    bearing: float = Field(strict=True, ge=0, lt=360, allow_inf_nan=False)
