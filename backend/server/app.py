@@ -23,7 +23,6 @@ from server.daily.content import load_daily_content
 from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
-
 from server.game.case_cache import CaseCacheControl
 from server.game.case_service import CaseService, case_or_none
 from server.market.exchange import MarketService, market_or_none
@@ -95,7 +94,6 @@ def create_app(
     clock: Clock | None = None,
     prediction_desk: PredictionDesk | None = None,
     duel_service: DuelService | None = None,
-
     case_service: CaseService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
