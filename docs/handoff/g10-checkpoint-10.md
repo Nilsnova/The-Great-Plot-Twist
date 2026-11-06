@@ -1,0 +1,35 @@
+# G10 checkpoint 10: B4 and the completed server minimum
+
+- Branch: `feat/case-backend`; complete source: `efdafccad2ce4a9ddd9b2bfc9b598e133ac9524b`.
+- Fresh main `c12a707` merged before Phase 4 as `7ef2cb8`; Claude's group 3 release is included.
+- Landed all four minimum case phases: case rules, board/night, Relighting and NPC partners.
+- Phase 4 adds checked bank-only lines, fixed fetch/pin/light orders, scoped receipts and earned views.
+- Only players pair, call nightfall, aim and accuse; partners never pay or act without an order.
+- Rewards pay once per player/card/deduction; partner pin credit starts at order acceptance.
+- Internal NPC receipts use unique order numbers: exact replay survives same-target orders and capped history.
+- That repair changes only new 130000 and its documented contract; no earlier migration changed.
+- All 69 kit mixes solve through production decisions; explicit solo/negative/history proofs pass.
+- A separate real HTTP solo run uses three A6 partners, actual SQL clocks, station, locks and accusation.
+- It verifies exact rewards, no purchases/NPC wallets, locked world, receipt retry and deletion/DB cleanup.
+- Stream C is integrated: account version fix, token/URL/cache guards, flags/metadata, hints and R1 server.
+- R1 runs all 15 actual migrations twice; its strict adapter includes bounded UUID station batches.
+- Full backend/story: `10907 passed, 104 skipped in 141.56s` (`--tb=no`).
+- Explicit SQL/API/filter suite: `124 passed in 41.63s`, including all 104 opt-in checks plus 20 filter cases.
+- This includes C/N/W/P, RLS, actual concurrent solves, group 3, follow-ups and full HTTP solo.
+- SQL parse: `SQL parses: 15 file(s)`; simulator exits 0 with every timing check passing.
+- Ruff: `All checks passed!`; changed Python formatting: `156 files already formatted`.
+- Frontend: `1603 passed`, 100 files; build/spoiler guard: 111 text files, 12 protected lines, no elimination.
+- Independent rules/SQL/service/view/port/adapter/proof reviews found no remaining blockers.
+- Migration: `supabase/migrations/20261106130000_npc_partners.sql`.
+- MD5 130000: `ab67149e114caf11116b2a108debf07f`.
+- MD5 140000 follow-ups: `3c687ef351147e3d86b99523941233fd`.
+- Earlier case MD5s: 060000 `278a16fcf87bbf2f46d81ec803f1e94b`; 080000 `a60d6799d9198d395a89710937eaf6c4`.
+- MD5 120000: `1cee0eac60292c56de48741e5534d6dd` (earlier checkpoints 2, 8 and 9).
+- Only approved secret edit is home light Y 192.87; R13 fingerprints regenerated unchanged and builds pass.
+- STATUS, Vercel configuration, dependency files and all ten main migration bytes match main exactly.
+- D025/D026/D027 are unique; decided Nils items are dated; C8 keeps its built default pending story review.
+- Keep `case` off and `RELIGHT_OPEN` unset; no live database, external flag change, main push or Actions trigger.
+- Claude: review/apply 060000, 080000, 120000, 130000 and 140000 before deploying their readers.
+- Live PostgREST embeds/arrays, deployed hints and preview edge HIT remain Claude's checks.
+- R4 retirement waits for live in-game sign-in; R5 external provider setup remains with Claude/Nils; R9 is optional.
+- Required credential scan, nonempty diff and diff checks pass. G9 browser work remains on its own branch.
