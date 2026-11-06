@@ -103,6 +103,10 @@ def test_every_public_name_serves_a_plain_json_file_in_the_content_folder(name, 
 
 SECRET_FOLDER = CONTENT_DIR / "secret"
 PUBLIC_FILES = set(PUBLIC_CONTENT.values())
+# Files that a route of their own shows on purpose (GET /api/weather and GET /api/bulletin): a
+# content address such as '../bulletin' is normalised to /api/bulletin before it reaches the API.
+# The open-world tests at the end of this file prove that the content route never serves them.
+SHOWN_BY_THEIR_OWN_ROUTE = {"weather_states.json", "bulletin.json", "chapter_two_hook.json"}
 
 
 def secret_files() -> list[Path]:
@@ -110,11 +114,12 @@ def secret_files() -> list[Path]:
 
 
 def json_files_that_are_not_public() -> list[Path]:
-    """Every JSON file under backend/content/ that is not on the public list."""
+    """Every JSON file under backend/content/ that is not on the public list and has no route."""
     return [
         path
         for path in sorted(CONTENT_DIR.rglob("*.json"))
         if path.relative_to(CONTENT_DIR).as_posix() not in PUBLIC_FILES
+        and path.relative_to(CONTENT_DIR).as_posix() not in SHOWN_BY_THEIR_OWN_ROUTE
     ]
 
 
