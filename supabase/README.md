@@ -1005,7 +1005,7 @@ set local role service_role;
 select public.crew_take_seat((select id from public.crews where code = 'K7QF2M'), 'USER_C_ID', 3, 'stranger', 3) as result;
 ```
 
-Expected: `status` `joined`, `seatNo` 3 and `replacedPartner` `bosun`. The Crew check shows one row: `K7QF2M`, version 4, seats `1 A witness, 2 B stranger, 3 C stranger, 4 cook true_keeper`. The seat carries C's **own** kit (`stranger`), not the Bosun's (a decision that still waits for Nils). The crew `CCCCCC` is gone: the draft was deleted in the same step, with its seat.
+Expected: `status` `joined`, `seatNo` 3 and `replacedPartner` `bosun`. The Crew check shows one row: `K7QF2M`, version 4, seats `1 A witness, 2 B stranger, 3 C stranger, 4 cook true_keeper`. The seat carries C's **own** kit (`stranger`), not the Bosun's (as Nils decided in the story round, D018, decision 10). The crew `CCCCCC` is gone: the draft was deleted in the same step, with its seat.
 
 **C8. A player cannot run the functions, the database guards crews and seats, and the read of the routes works.** Player A tries to run a crew function:
 
