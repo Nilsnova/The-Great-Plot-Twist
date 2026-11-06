@@ -123,15 +123,17 @@ Add short entries; keep the original rationale when superseding a decision.
 
 ## D015 · Coordination merges by Claude under the owner's authorization · 2026-11-05
 
-**Status:** Decided by Nils (repository owner) on 5 Nov 2026.
+**Status:** Decided by Nils (repository owner) on 5 Nov 2026; extended by Nils on 6 Nov 2026 (below).
 
 **Decision:** Claude may push branches and merge its own verified coordination work into `main` without a teammate's approval (merge commits; tests, build and a secret scan first), and records each such merge in [docs/STATUS.md](STATUS.md). The first one was the bootstrap merge `a0e501a`. Teammates' changes keep the peer-review rule of D001.
 
+**Extended on 6 Nov 2026:** the rule now covers every package that Claude and Codex build, not only coordination work. Such work merges after Claude's gates: all tests, the style check, the build, a secret scan and an independent agent review. A database change also gets an Opus review and a check against the live database, and Claude reports each one. No human review is needed per merge: Nils reviews at the end, or ad hoc when he chooses ("no review until it's done, in the end or ad hoc we do review"). The team does not wait for teammates and holds no check-ins; teammates join when they start and add their own ideas ("we do not wait for them ... we just let them expand with their own ideas"). Teammates' own pull requests keep the peer review of D001.
+
 **Why:** Nils wanted the team to start from a working `main` the same day, before the teammates had joined, and authorized Claude to push and merge without asking, keeping questions for important decisions.
 
-**Alternatives and trade-offs:** Wait for a teammate's review of every early change (slower start). Trade-off: early `main` history was not peer-reviewed, so the team reviews it afterwards, commit by commit, at kickoff.
+**Alternatives and trade-offs:** Wait for a teammate's review of every early change (slower start). Trade-off: agent-built work reaches `main` without a human review at merge time, so Nils reviews it at the end or ad hoc (extension of 6 Nov; the review at a kickoff is dropped).
 
-**Agreed by, PR and impact:** Nils, 5 Nov 2026. Affects how `main` gets coordination and integration work; it never replaces review for teammates' own packages.
+**Agreed by, PR and impact:** Nils, 5 Nov 2026, extended 6 Nov 2026. Affects how `main` gets coordination and integration work and every package that Claude and Codex build; it never replaces review for teammates' own packages.
 
 ## D007 · Plot Twist imported as an unchanged copy · 2026-11-05
 
