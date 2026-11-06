@@ -1,4 +1,4 @@
-"""Helpers for the case data tests: a fresh copy of the raw case file, and ways to break it on purpose.
+"""Case data helpers: fresh raw content and deliberate mutations for the rule tests.
 
 The linter tests (test_case_lint.py) change one thing in a copy of the real file and check that the
 rule for that thing notices. This file holds the small tools they share. Nothing here prints or

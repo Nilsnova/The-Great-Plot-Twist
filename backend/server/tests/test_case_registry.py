@@ -1,4 +1,4 @@
-"""The case data and the place registry of the browser use the same ids and the same light positions.
+"""Case data and the browser place registry agree on ids and light positions.
 
 The browser owns where things are (frontend/src/world/places/registry.js): the places, their
 hotspots (the registry calls them zones), their lights and the chart position of every place. The

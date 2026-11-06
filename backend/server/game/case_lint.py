@@ -34,7 +34,7 @@ def free_route(route: Route, kit: str) -> bool:
     """A route every profile of the kit can use without spending or a later unlock."""
     if route.kind not in ("kit", "open", "timed") or route.coins != 0:
         return False
-    if route.needs_share or route.needs_profile or route.needs_world:
+    if route.needs_share or route.needs_profile or route.needs_world or route.needs_flag:
         return False
     return route.kind != "kit" or route.kit == kit
 

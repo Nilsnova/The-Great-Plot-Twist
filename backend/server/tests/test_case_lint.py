@@ -331,7 +331,9 @@ LOAD_TIME_MUTATIONS = [
     Mutation("L3", "a hotspot of another place", move_a_route_to_a_hotspot_of_another_place),
     Mutation("L3", "a gate on an unknown deduction", gate_a_card_on_an_unknown_deduction),
     Mutation("L3", "an unknown window", open_a_route_in_an_unknown_window),
-    Mutation("L3", "a company the Exchange does not list", name_a_company_the_exchange_does_not_list),
+    Mutation(
+        "L3", "a company the Exchange does not list", name_a_company_the_exchange_does_not_list
+    ),
     Mutation("L3", "an unknown suspect cleared", let_a_deduction_clear_an_unknown_suspect),
     Mutation("L4", "two cards at one hotspot", put_two_cards_at_one_hotspot),
     Mutation("L4", "a route at a decoy hotspot", put_a_route_at_a_decoy_hotspot),
@@ -343,7 +345,11 @@ LOAD_TIME_MUTATIONS = [
     Mutation("L6", "a kit that does not point back", point_a_kit_at_the_wrong_card),
     Mutation("L6", "an open card with a kit route", give_an_open_card_a_kit_route),
     Mutation("L6", "five open cards", make_a_fifth_card_open),
-    Mutation("L7", "a kit route slower than the timed route", make_a_kit_route_slower_than_the_timed_route),
+    Mutation(
+        "L7",
+        "a kit route slower than the timed route",
+        make_a_kit_route_slower_than_the_timed_route,
+    ),
     Mutation("L7", "a kit route that costs coins", make_a_kit_route_cost_coins),
     Mutation("L7", "a kit route that is not always open", close_a_kit_route_outside_a_window),
     Mutation("L7", "a paid route only 2 minutes slower", make_a_paid_route_only_two_minutes_slower),
@@ -360,20 +366,36 @@ LOAD_TIME_MUTATIONS = [
     Mutation("L14", "C5 gated by its own D3", gate_a_card_on_its_own_deduction),
     Mutation("L14", "D1 gated by a later deduction", gate_the_first_deduction_on_a_later_one),
     Mutation("L14", "a night that opens after nothing", open_the_night_after_nothing),
-    Mutation("L14", "a night that opens after a missing deduction", open_the_night_after_an_unknown_deduction),
+    Mutation(
+        "L14",
+        "a night that opens after a missing deduction",
+        open_the_night_after_an_unknown_deduction,
+    ),
     Mutation("L15", "the culprit id in a lead", put_the_culprit_in_a_lead),
     Mutation("L15", "the culprit id in a found line", put_the_culprit_in_a_found_line),
     Mutation("L15", "a suspect nobody clears", leave_a_suspect_uncleared),
     Mutation("L15", "a refusal that does not start with Refused", start_a_refusal_the_wrong_way),
     Mutation("L15", "the culprit cleared by a deduction", clear_the_culprit_by_a_deduction),
-    Mutation("L15", "a clearing deduction the accusation skips", stop_the_accusation_needing_a_clearing_deduction),
+    Mutation(
+        "L15",
+        "a clearing deduction the accusation skips",
+        stop_the_accusation_needing_a_clearing_deduction,
+    ),
     Mutation("L15", "a refused line for the culprit", give_the_culprit_a_refused_line),
     Mutation("L18", "a ref of 121 characters", make_a_ref_121_characters_long),
-    Mutation("L18", "a reason that is not a wallet reason", use_a_reason_that_is_not_a_wallet_reason),
-    Mutation("L18", "a partner ref that outgrows 120 characters", let_the_partner_ref_outgrow_the_limit),
+    Mutation(
+        "L18", "a reason that is not a wallet reason", use_a_reason_that_is_not_a_wallet_reason
+    ),
+    Mutation(
+        "L18", "a partner ref that outgrows 120 characters", let_the_partner_ref_outgrow_the_limit
+    ),
     Mutation("L18", "a placeholder nobody fills", use_a_placeholder_nobody_fills),
     Mutation("L18", "a solve share cap below its base", cap_the_solve_share_below_its_base),
-    Mutation("L18", "a solve share cap above its parts", cap_the_solve_share_above_everything_it_adds_up_to),
+    Mutation(
+        "L18",
+        "a solve share cap above its parts",
+        cap_the_solve_share_above_everything_it_adds_up_to,
+    ),
     Mutation("L19", "an em dash", put_an_em_dash_in_a_lead),
     Mutation("L19", "an en dash", put_an_en_dash_in_a_premise),
     Mutation("L19", "a double hyphen", put_a_double_hyphen_in_a_found_line),
@@ -436,12 +458,20 @@ LINT_MUTATIONS = [
     Mutation("L10", "a card whose only route costs coins", make_the_only_route_of_c1_cost_coins),
     Mutation("L10", "only seven entry profiles", drop_one_entry_profile),
     Mutation("L11", "a reveal line with no cites", leave_a_reveal_line_without_cites),
-    Mutation("L11", "a cited card not every profile reaches", cite_a_card_that_not_every_profile_reaches),
+    Mutation(
+        "L11", "a cited card not every profile reaches", cite_a_card_that_not_every_profile_reaches
+    ),
     Mutation("L11", "a cited card that does not exist", cite_a_card_that_does_not_exist),
     Mutation("L11", "a kit with no closing line", leave_a_kit_without_a_closing_line),
     Mutation("L12", "a seat fill that cannot form D3", keep_partners_off_the_timed_routes_to_d3),
-    Mutation("L12", "a third light no kit can afford", make_the_third_light_cost_more_than_any_kit_starts_with),
-    Mutation("L12", "a crew with one player cannot man three lights", keep_partners_off_the_harbor_light),
+    Mutation(
+        "L12",
+        "a third light no kit can afford",
+        make_the_third_light_cost_more_than_any_kit_starts_with,
+    ),
+    Mutation(
+        "L12", "a crew with one player cannot man three lights", keep_partners_off_the_harbor_light
+    ),
 ]
 
 

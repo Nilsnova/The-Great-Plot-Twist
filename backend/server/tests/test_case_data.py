@@ -82,7 +82,12 @@ def test_the_loader_reads_the_values_the_case_rules_need(data):
     assert "{minutes}" in low_tide.closed_line
 
     cave = data.route("C4.low_tide_cave")
-    assert (cave.card_id, cave.kind, cave.open_when, cave.timer_minutes) == ("C4", "timed", "low_tide", 5)
+    assert (cave.card_id, cave.kind, cave.open_when, cave.timer_minutes) == (
+        "C4",
+        "timed",
+        "low_tide",
+        5,
+    )
     assert data.route("C2.radio_words").starts_in_journal is True
     assert data.route("C6.shareholder_register").needs_share == "greyfathom-salvage"
     assert data.card("C5").opens_after == ("D2",)
