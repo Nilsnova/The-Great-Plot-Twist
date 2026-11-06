@@ -3,24 +3,34 @@
 Pure refusals do not write. Wrong pairs and missed aims commit their cooldowns in SQL.
 """
 
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
+
 from server.errors import ApiError
 from server.game.board_rules import decide_pair, decide_pin
 from server.game.case_answers import http_refusal, refusal_answer
+from server.game.case_decisions import IntentDecision
 from server.game.case_nudges import nudge
-from server.game.case_store import solve_payments
+from server.game.case_snapshot import CaseSnapshot
+from server.game.case_store import CaseStore, solve_payments
 from server.game.finale_geometry import normalize_bearing, schooner_position
 from server.game.finale_rules import decide_nightfall, decide_post, decide_signal
-from server.supabase_admin import SupabaseRejected
+from server.supabase_admin import SupabaseAdmin, SupabaseRejected
+
+if TYPE_CHECKING:
+    from server.game.case_service import CaseService
 
 
-def decision_answer(decision) -> dict:
+def decision_answer(decision: IntentDecision) -> dict:
     answer = {"accepted": decision.accepted, "reason": decision.reason, "message": decision.message}
     if decision.seconds:
         answer["seconds"] = decision.seconds
     return answer
 
 
-async def prepare(case, admin, player_id, action_uid):
+async def prepare(
+    case: "CaseService", admin: SupabaseAdmin, player_id: str, action_uid: str
+) -> tuple[CaseStore, CaseSnapshot | None, dict | None]:
     case.limiter.check(player_id, write=True)
     store = case.store_for(admin)
     action = await store.action_lookup(player_id, action_uid)
@@ -32,7 +42,17 @@ async def prepare(case, admin, player_id, action_uid):
     return store, snapshot, None
 
 
-async def commit(case, admin, store, snapshot, player_id, kind, target, operation, accepted):
+async def commit(
+    case: "CaseService",
+    admin: SupabaseAdmin,
+    store: CaseStore,
+    snapshot: CaseSnapshot,
+    player_id: str,
+    kind: str,
+    target: str | None,
+    operation: Callable[[CaseSnapshot], Awaitable[dict]],
+    accepted: Callable[[dict], dict],
+) -> dict:
     reply, _ = await case.write_with_open_retry(store, snapshot, player_id, operation)
     if reply["status"] == "repeat":
         return await case.remembered(store, player_id, reply, admin=admin)
@@ -46,7 +66,9 @@ async def commit(case, admin, store, snapshot, player_id, kind, target, operatio
     return {**answer, "case": view}
 
 
-async def pin(case, admin, player_id, card_id, action_uid):
+async def pin(
+    case: "CaseService", admin: SupabaseAdmin, player_id: str, card_id: str, action_uid: str
+) -> dict:
     store, state, remembered = await prepare(case, admin, player_id, action_uid)
     if remembered is not None:
         return remembered
@@ -56,7 +78,7 @@ async def pin(case, admin, player_id, card_id, action_uid):
     if not decision.accepted:
         return {**decision_answer(decision), "case": case.view(state, player_id)}
 
-    def accepted(reply):
+    def accepted(reply: dict) -> dict:
         if reply["status"] != "done":
             raise SupabaseRejected("The pin result could not be read.")
         return {**decision_answer(decision), "coinsPaid": reply["coinsPaid"]}
@@ -74,7 +96,9 @@ async def pin(case, admin, player_id, card_id, action_uid):
     )
 
 
-async def pair(case, admin, player_id, a, b, action_uid):
+async def pair(
+    case: "CaseService", admin: SupabaseAdmin, player_id: str, a: str, b: str, action_uid: str
+) -> dict:
     store, state, remembered = await prepare(case, admin, player_id, action_uid)
     if remembered is not None:
         return remembered
@@ -84,7 +108,7 @@ async def pair(case, admin, player_id, a, b, action_uid):
     if not decision.accepted and decision.reason != "wrong_pair":
         return {**decision_answer(decision), "case": case.view(state, player_id)}
 
-    def accepted(reply):
+    def accepted(reply: dict) -> dict:
         if reply["status"] == "wrong_pair":
             return refusal_answer(
                 case.data, "pair", None, {"reason": "wrong_pair", "seconds": reply["seconds"]}
@@ -123,7 +147,9 @@ async def pair(case, admin, player_id, a, b, action_uid):
     )
 
 
-async def nightfall(case, admin, player_id, action_uid):
+async def nightfall(
+    case: "CaseService", admin: SupabaseAdmin, player_id: str, action_uid: str
+) -> dict:
     store, state, remembered = await prepare(case, admin, player_id, action_uid)
     if remembered is not None:
         return remembered
@@ -131,7 +157,7 @@ async def nightfall(case, admin, player_id, action_uid):
     if not decision.accepted:
         return {**decision_answer(decision), "case": case.view(state, player_id)}
 
-    def accepted(reply):
+    def accepted(reply: dict) -> dict:
         if reply["status"] != "done":
             raise SupabaseRejected("The nightfall result could not be read.")
         return {**decision_answer(decision), "endsIn": case.data.night.night_minutes * 60}
@@ -149,7 +175,9 @@ async def nightfall(case, admin, player_id, action_uid):
     )
 
 
-async def take_post(case, admin, player_id, light_id, action_uid):
+async def take_post(
+    case: "CaseService", admin: SupabaseAdmin, player_id: str, light_id: str, action_uid: str
+) -> dict:
     store, state, remembered = await prepare(case, admin, player_id, action_uid)
     if remembered is not None:
         return remembered
@@ -168,7 +196,7 @@ async def take_post(case, admin, player_id, light_id, action_uid):
             answer = refusal_answer(case.data, "post", light_id, {"reason": "light_not_ready"})
         return {**answer, "case": case.view(state, player_id)}
 
-    def accepted(reply):
+    def accepted(reply: dict) -> dict:
         if reply["status"] != "done":
             raise SupabaseRejected("The light post result could not be read.")
         return {**decision_answer(decision), "onPostIn": case.data.night.climb_minutes * 60}
@@ -186,7 +214,14 @@ async def take_post(case, admin, player_id, light_id, action_uid):
     )
 
 
-async def signal(case, admin, player_id, light_id, bearing, action_uid):
+async def signal(
+    case: "CaseService",
+    admin: SupabaseAdmin,
+    player_id: str,
+    light_id: str,
+    bearing: float,
+    action_uid: str,
+) -> dict:
     store, state, remembered = await prepare(case, admin, player_id, action_uid)
     if remembered is not None:
         return remembered
@@ -197,7 +232,7 @@ async def signal(case, admin, player_id, light_id, bearing, action_uid):
     if not decision.accepted and decision.reason != "off_target":
         return {**decision_answer(decision), "case": case.view(state, player_id)}
 
-    def accepted(reply):
+    def accepted(reply: dict) -> dict:
         if reply["status"] == "off_target":
             return refusal_answer(
                 case.data, "signal", light_id, {"reason": "off_target", "seconds": reply["seconds"]}

@@ -62,7 +62,9 @@ class CaseService:
             else build_case_view(self.data, snapshot, player_id, self.now(snapshot))
         )
 
-    async def enrich(self, snapshot, player_id, admin=None):
+    async def enrich(
+        self, snapshot: CaseSnapshot | None, player_id: str, admin: SupabaseAdmin | None = None
+    ) -> CaseSnapshot | None:
         if snapshot is None or self.stations is None:
             return snapshot
         players = [seat.player_id for seat in snapshot.seats if seat.player_id is not None]
@@ -70,7 +72,9 @@ class CaseService:
         timber = await self.stations.timber(admin, player_id)
         return replace(snapshot, station_ready=bool(owners), timber=timber)
 
-    async def fresh_view(self, store, player_id, crew_id, *, admin=None):
+    async def fresh_view(
+        self, store: CaseStore, player_id: str, crew_id: str, *, admin: SupabaseAdmin | None = None
+    ) -> dict | None:
         snapshot = await store.snapshot(player_id, crew_id)
         return self.view(await self.enrich(snapshot, player_id, admin), player_id)
 
@@ -294,19 +298,27 @@ class CaseService:
             "case": view,
         }
 
-    async def pin(self, admin, player_id, card_id, action_uid):
+    async def pin(
+        self, admin: SupabaseAdmin, player_id: str, card_id: str, action_uid: str
+    ) -> dict:
         return await board_service.pin(self, admin, player_id, card_id, action_uid)
 
-    async def pair(self, admin, player_id, a, b, action_uid):
+    async def pair(
+        self, admin: SupabaseAdmin, player_id: str, a: str, b: str, action_uid: str
+    ) -> dict:
         return await board_service.pair(self, admin, player_id, a, b, action_uid)
 
-    async def nightfall(self, admin, player_id, action_uid):
+    async def nightfall(self, admin: SupabaseAdmin, player_id: str, action_uid: str) -> dict:
         return await board_service.nightfall(self, admin, player_id, action_uid)
 
-    async def take_post(self, admin, player_id, light_id, action_uid):
+    async def take_post(
+        self, admin: SupabaseAdmin, player_id: str, light_id: str, action_uid: str
+    ) -> dict:
         return await board_service.take_post(self, admin, player_id, light_id, action_uid)
 
-    async def signal(self, admin, player_id, light_id, bearing, action_uid):
+    async def signal(
+        self, admin: SupabaseAdmin, player_id: str, light_id: str, bearing: float, action_uid: str
+    ) -> dict:
         return await board_service.signal(self, admin, player_id, light_id, bearing, action_uid)
 
 

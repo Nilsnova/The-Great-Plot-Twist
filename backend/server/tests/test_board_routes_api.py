@@ -423,3 +423,49 @@ def test_phase2_remembered_messages_omit_unstored_extras():
         assert set(answer) == {"accepted", "reason", "repeat", "message"}
         assert answer["repeat"] and bool(answer["message"]) and "{" not in answer["message"]
         assert answer["accepted"] is (outcome not in ("wrong_pair", "off_target"))
+
+
+def test_parted_signal_uses_committed_lights_and_repeat_omits_extras():
+    from server.game.case_snapshot import Signal
+
+    client, store, service, _, recorder = phase2_client()
+    light, bearing = signal_ready(store, service)
+    original = store.signal
+
+    async def signal_and_part(current, data, player, uid, light_id, sent_bearing, on_target):
+        reply = await original(current, data, player, uid, light_id, sent_bearing, on_target)
+        store.current = replace(
+            store.current,
+            schooner_found_second=store.now(),
+            signals=tuple(
+                Signal(
+                    index,
+                    1,
+                    item.id,
+                    index,
+                    1,
+                    0,
+                    True,
+                    store.now(),
+                    store.now() + 90,
+                    parted=True,
+                    aimed_by=PLAYER,
+                )
+                for index, item in enumerate(data.active_lights, 1)
+            ),
+        )
+        store.remember(player, uid, "signal", light_id, "parted")
+        return {**reply, "parted": True}
+
+    store.signal = signal_and_part
+    body = {"light": light.id, "bearing": bearing, "actionUid": "parted001"}
+    first = client.post("/api/finale/signal", headers=HEADER, json=body).json()
+    assert first["accepted"] and first["parted"]
+    assert first["lights"] == first["case"]["finale"]["parted"]["lights"]
+    assert first["lights"] == [item.id for item in service.data.active_lights]
+    x, y = schooner_position(store.current.crew_id, service.data.night.chart)
+    assert first["target"] == {"x": x, "y": y}
+    repeat = client.post("/api/finale/signal", headers=HEADER, json=body).json()
+    assert repeat["repeat"] and repeat["accepted"]
+    assert not {"lights", "target", "parted", "holdsFor"}.intersection(repeat)
+    assert len(recorder.events) == 1
