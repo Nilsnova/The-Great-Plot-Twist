@@ -293,8 +293,11 @@ def test_the_exchange_migration_adds_market_buy_market_sell_and_market_fee_in_th
     assert pairs == [("market_buy", "spend"), ("market_sell", "earn"), ("market_fee", "spend")]
 
 
-def test_python_ends_its_list_of_reasons_with_the_three_market_reasons():
-    assert WALLET_REASONS[-3:] == (
+def test_python_has_the_three_market_reasons_right_after_the_first_eight():
+    # This test used to pin the market reasons to the END of the list. The requirement changed:
+    # recipe 4.7 appends every new reason at the end, so Lantern Duels (arena_stake and
+    # arena_payout) comes after them. The order of the existing reasons still must not change.
+    assert WALLET_REASONS[8:11] == (
         ("market_buy", "spend"),
         ("market_sell", "earn"),
         ("market_fee", "spend"),

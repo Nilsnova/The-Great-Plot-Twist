@@ -17,9 +17,20 @@ from fastapi import FastAPI
 from server import __version__
 from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
+from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.market.exchange import MarketService, market_or_none
-from server.routes import auth_exchange, config, content, health, keepalive, market, me, weather
+from server.routes import (
+    auth_exchange,
+    config,
+    content,
+    duels,
+    health,
+    keepalive,
+    market,
+    me,
+    weather,
+)
 from server.settings import Settings, settings_from_environment
 from server.sign_in_code import CodeExchanger
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
@@ -58,12 +69,13 @@ def create_app(
     weather_source: CachedSource | None = None,
     exchanger: CodeExchanger | None = None,
     market_service: MarketService | None = None,
+    duel_service: DuelService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
     Tests pass their own settings, a verifier, an admin client, a weather source and an
-    exchanger that use fake transports, and an Island Exchange service whose price feed and
-    clock are fakes.
+    exchanger that use fake transports, an Island Exchange service whose price feed and
+    clock are fakes, and a Lantern Duels service whose clock is a fake.
     """
     if settings is None:
         settings = settings_from_environment()
@@ -77,6 +89,8 @@ def create_app(
         exchanger = CodeExchanger(settings)
     if market_service is None:
         market_service = market_or_none(settings)  # None if its data files are broken
+    if duel_service is None:
+        duel_service = DuelService()  # it has no data files, so it always starts
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
@@ -86,13 +100,14 @@ def create_app(
     app = new_fastapi_app(settings)
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
-    # routes/weather.py, sign_in_code.py and market/exchange.py.
+    # routes/weather.py, sign_in_code.py, market/exchange.py and duels/service.py.
     app.state.settings = settings
     app.state.verifier = verifier
     app.state.admin = admin
     app.state.weather_source = weather_source
     app.state.exchanger = exchanger
     app.state.market = market_service
+    app.state.duels = duel_service
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -103,4 +118,5 @@ def create_app(
     app.include_router(me.router, prefix="/api")
     app.include_router(auth_exchange.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
+    app.include_router(duels.router, prefix="/api")
     return app

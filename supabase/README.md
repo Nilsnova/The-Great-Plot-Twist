@@ -10,6 +10,7 @@ The browser only reads from this database. Every write comes from our Python ser
 |---|---|
 | [migrations/20261106000000_foundation.sql](migrations/20261106000000_foundation.sql) | The first migration: seven tables, the security rules, the rights of each database role and four functions. Every table, column and policy is explained inside the file. |
 | [migrations/20261106010000_island_exchange.sql](migrations/20261106010000_island_exchange.sql) | The second migration, for the Island Exchange (package L4): three wallet reasons, three tables and two functions. Run it after the first. See [The Island Exchange migration](#the-island-exchange-migration). |
+| [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 
 ## Project settings this migration relies on
 
@@ -58,8 +59,10 @@ The ledger accepts only the reasons in `wallet_reasons`, in this order. The Pyth
 | `market_buy` | spend | Coins paid for shares bought on the Island Exchange. *Added by the second migration.* |
 | `market_sell` | earn | Coins received for shares sold on the Island Exchange. *Added by the second migration.* |
 | `market_fee` | spend | Fee paid on a trade on the Island Exchange. *Added by the second migration.* |
+| `arena_stake` | spend | Coins held as the stake of a Lantern Duel. *Added by the third migration.* |
+| `arena_payout` | earn | Coins paid out of a Lantern Duel: the winnings, or a stake that comes back. *Added by the third migration.* |
 
-The first eight come from the foundation migration, the last three from the Island Exchange migration. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
+The first eight come from the foundation migration, the next three from the Island Exchange migration and the last two from the Lantern Duels migration. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
 
 The test `backend/server/tests/test_wallet_matches_migration.py` reads the migration and fails if its reasons, directions or starting balance differ from the Python code.
 
@@ -107,6 +110,22 @@ It refuses a company that has no row in `market_bases` with `unknown_company` (t
 
 After applying it, the three quick checks below show **ten** tables and **ten** policies, and there are **eleven** wallet reasons. Run the Exchange checks at the end of the manual test plan.
 
+## The Lantern Duels migration
+
+`migrations/20261106110000_lantern_duels.sql` is the database part of Lantern Duels (package A7): two captains each seal a sequence of lantern signals, the server opens both envelopes at once, and the duel is friendly or played for equal play-coin stakes (see [INTERFACES.md, section 2](../docs/INTERFACES.md#lantern-duels-package-a7), decision [D018](../docs/DECISIONS.md) and the spec [A7-lantern-duels.md](../specs/A7-lantern-duels.md)). Run it **after** the Island Exchange migration (it uses the wallet and the profiles from the first). It is safe to run twice. Everything is explained in the file itself. It adds two wallet reasons, `arena_stake` and `arena_payout` (see the table above), and:
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `duels` | One row per challenge: who, the number of rounds, the stake, the status (`open`, then once `finished`, `withdrawn`, `declined` or `expired`) and, once decided, the result of every round. It never holds a signal. `create_uid` (the `actionUid` of the click) is unique per challenger, so a repeated click cannot send two challenges. | Only the server, through `duel_create()`, `duel_answer()` and `duel_void()`. |
+| `duel_moves` | The sealed envelopes: one row per captain and round, holding a signal. The only table with a signal, so it is locked tighter than any other: players have no right on it at all (not even for their own rows), the server may only read and insert, and no role may update or delete a row. | Only `duel_create()` and `duel_answer()`. |
+| `duel_create()` | Sends a challenge. In one step: check the arguments, lock the challenger's wallet, refuse a repeated `create_uid` (code `23505`, message `already_applied`), find a named captain (any letter case) and refuse a name nobody has, a name several captains share and the challenger's own name, refuse a fourth waiting challenge, insert the duel and the challenger's envelope, and hold the stake (`arena_stake`). | Run by the server only. |
+| `duel_answer()` | Answers a challenge. The answer IS the acceptance. In one step: lock the duel row, refuse a caller who sealed in this duel already (`23505`), check the state (`duel_taken`, `duel_closed`, `duel_expired` by the database clock), check the numbers, lock both wallets in player-id order, refuse the pair limit (`daily_pair_limit`), take the answerer's stake, store their envelope, finish the duel and pay out (`arena_payout`). **The round results and the outcome are an input from Python** (`rules.resolve`), like the price of a trade: the database never reads the challenger's envelope, but it checks that the results fit the rounds and that the outcome fits the counted points. | Run by the server only. |
+| `duel_void()` | Withdraws (the challenger), declines (the named captain) or expires (anyone, but only after `expires_at` by the database clock) a challenge, and gives the challenger's stake back (`arena_payout`). The same captain closing it the same way twice raises `23505`. | Run by the server only. |
+
+Like `market_trade()`, each function either does its work (`{"status": "done", ...}`) or *returns* a refusal (`{"status": "refused", "reason": "duel_taken"}`) before it writes anything, and *raises* an error for a real failure: `insufficient_funds` (from the wallet), a repeat (code `23505`, message `already_applied`), or `bad_duel` / `wallet_not_found` when the server sent numbers that do not fit (a bug on the server side). Every ledger row of a duel carries the ref `duel:` and the duel id, so a stake or a payout cannot be booked twice. The cut (5 % of the pot, rounded in the winner's disfavour) has no ledger row: it is simply not paid out. The arena rows of one duel add up to 0 for a friendly duel, a draw, a withdrawal, a decline or an expiry, and to minus the cut for a decided staked duel (-1, -3, -5 or -10 for stakes of 10, 25, 50 or 100). The locks are always taken in the same order, the duel row first and then the wallets by player id, so two requests never wait for each other forever.
+
+After applying it, the three quick checks below show **twelve** tables and **eleven** policies, **eleven** rows for `authenticated` (none for `duel_moves`), and there are **thirteen** wallet reasons. Run the Lantern Duels checks (steps D1 to D12) at the end of the manual test plan.
+
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
@@ -129,6 +148,7 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 3. Paste the whole content of `migrations/20261106000000_foundation.sql`.
 4. Click **Run**. Expected: a success message and no error.
 5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The order matters: the files start with a time stamp, so apply them oldest first.
+6. Do the same with `migrations/20261106110000_lantern_duels.sql` (Lantern Duels), in a new query.
 
 ### Option B: Supabase CLI
 
@@ -158,7 +178,7 @@ where relnamespace = 'public'::regnamespace and relkind = 'r'
 order by relname;
 ```
 
-Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. After the Island Exchange migration there are ten: also `market_bases`, `market_positions` and `market_trades`.
+Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. After the Island Exchange migration there are ten: also `market_bases`, `market_positions` and `market_trades`. After the Lantern Duels migration there are twelve: also `duels` and `duel_moves`.
 
 ```sql
 select tablename, policyname, cmd
@@ -167,7 +187,7 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
-Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. After the Island Exchange migration there are 10 (one more on each new table).
+Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. After the Island Exchange migration there are 10 (one more on each new table). After the Lantern Duels migration there are 11: one more, on `duels`. `duel_moves` has no policy on purpose: with row-level security on and no policy, even a wrong grant would show a player nothing.
 
 ```sql
 select grantee, table_name, string_agg(privilege_type, ', ' order by privilege_type) as rights
@@ -177,7 +197,7 @@ group by grantee, table_name
 order by grantee, table_name;
 ```
 
-Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. After the Island Exchange migration: 10 rows.
+Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. After the Island Exchange migration: 10 rows. After the Lantern Duels migration: 11 rows, because `duels` is added with `SELECT`. There is no row for `duel_moves`: a player has no right on it.
 
 ### If someone signed in before you ran the migration
 
@@ -238,10 +258,20 @@ The three actors, and the database role behind each:
 | `market_trades` | insert | no access | no access | yes \*\* (through `market_trade()`) |
 | `market_trades` | update | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
 | `market_trades` | delete | no access | no access | no access (same) |
+| `duels` | read | no access | the duels they take part in (as challenger or opponent) | yes |
+| `duels` | insert | no access | no access | yes \*\*\* (through `duel_create()`) |
+| `duels` | update | no access | no access | yes \*\*\* (through `duel_answer()` and `duel_void()`) |
+| `duels` | delete | no access | no access | no access (a duel goes only by cascade, when a challenger is deleted) |
+| `duel_moves` | read | no access | **no access, not even their own** | yes |
+| `duel_moves` | insert | no access | no access | yes \*\*\* (through `duel_create()` and `duel_answer()`) |
+| `duel_moves` | update | no access | no access | **no access**: sealed means sealed |
+| `duel_moves` | delete | no access | no access | **no access**: rows go only by cascade, with their duel or their captain |
 
 \* The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
 \*\* The database lets the server write `market_positions` and add `market_trades` rows directly, and add and change `market_bases` rows directly, because the two functions run with the rights of the server. "Through `market_trade()`" and "through `market_set_base()`" in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of `market_trade()`: the arithmetic, the daily cap, the holding time and the wallet. Only the server holds that right, and the code never writes these tables directly.
+
+\*\*\* The database lets the server add and change `duels` rows and add `duel_moves` rows directly, because the three functions run with the rights of the server. "Through `duel_create()`" and so on in the table are our rule, not something the database enforces (the same pattern as the footnotes above). A direct write would skip the checks of the functions: the caps, the state of the duel and the wallet. The part that IS enforced by the database is the sealing: the server has no `update` and no `delete` on `duel_moves`, and a player has no right on it at all. Only the server holds the right to write, and the code never writes these tables directly.
 
 Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
@@ -255,6 +285,9 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `market_trade()` | no access | no access | yes |
 | `market_set_base()` | no access | no access | yes |
 | `market_trades_id_seq` (the trade history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
+| `duel_create()` | no access | no access | yes |
+| `duel_answer()` | no access | no access | yes |
+| `duel_void()` | no access | no access | yes |
 
 "No access" means the database refuses with `permission denied`, or (for a row that belongs to someone else) shows or changes nothing.
 
@@ -262,9 +295,10 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in all ten tables and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It skips row-level security. It can read every player's rows in all twelve tables and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see the second footnote of the matrix.
+- On the Lantern Duels tables it can read `duels` and `duel_moves`, add and change `duels` rows, and add `duel_moves` rows. It cannot delete a duel, and it cannot update or delete a sealed envelope: sealed means sealed. The three functions `duel_create()`, `duel_answer()` and `duel_void()` are the way a duel changes, and nobody but the server runs them.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
 - The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table, and the browser has no right to write to any of them.
@@ -273,7 +307,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
-The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The checks of the Island Exchange, including its three new reasons, are the steps E1 to E13 at the end of this plan.
+The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16, and **13** if the Lantern Duels migration is applied as well. Step 15 still tests the first eight reasons. The checks of the Island Exchange, including its three new reasons, are the steps E1 to E13, and the checks of Lantern Duels, including its two new reasons, are the steps D1 to D12, at the end of this plan.
 
 **Set up**
 
@@ -934,9 +968,369 @@ set local role service_role;
 select public.apply_wallet_transaction('USER_A_ID', 10, 'market_buy', 'manual-wrong-1');
 ```
 
-Expected: `wrong_direction`. Finally paste the whole Island Exchange migration into the SQL editor again and run it. Expected: no error, the Exchange check for player A still shows what it showed after E12 (`balance` 2141, no units, 3 trades), and `select count(*) from public.wallet_reasons;` still shows 11.
+Expected: `wrong_direction`. Finally paste the whole Island Exchange migration into the SQL editor again and run it. Expected: no error, the Exchange check for player A still shows what it showed after E12 (`balance` 2141, no units, 3 trades), and `select count(*) from public.wallet_reasons;` still shows 11 (13 once the Lantern Duels migration is applied too).
 
 Delete the two test users when you are done (**Authentication > Users**). Their positions and trades go with them.
+
+### Lantern Duels checks (steps D1 to D12)
+
+These steps test the third migration. Run them after the foundation, the Island Exchange and the Lantern Duels migrations are all applied. Use **three new test users**, A, B and C (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID`, `USER_B_ID` and `USER_C_ID` with their ids. Run each block in its own run, with the role left on the default (`postgres`). The server works out the round results of a duel in Python; here you write them by hand (the arrays below are right for their signals). The blocks pass "one day ago" as the start of the day for the pair limit, so every duel of this test counts, and they pass the answer window (24 hours) and the most waiting challenges (3) as the server does. The race (step D3) needs `psql`, because the SQL editor runs each block as its own transaction.
+
+**D0. Names and coins.** The names make the challenges easy to address (a challenger names the opponent by display name, in any letter case). Run the three updates, then give each player 1000 coins (a new run):
+
+```sql
+update public.profiles set display_name = 'Duel Alice' where id = 'USER_A_ID';
+update public.profiles set display_name = 'Duel Bob'   where id = 'USER_B_ID';
+update public.profiles set display_name = 'Duel Carol' where id = 'USER_C_ID';
+```
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 1000, 'kit_grant', 'duel-kit') as a_balance,
+       public.apply_wallet_transaction('USER_B_ID', 1000, 'kit_grant', 'duel-kit') as b_balance,
+       public.apply_wallet_transaction('USER_C_ID', 1000, 'kit_grant', 'duel-kit') as c_balance;
+```
+
+Expected: 1000 each. We call the next block the **Duel check** and use it again below (default role). It shows each test player's coins and their arena ledger rows:
+
+```sql
+select p.display_name,
+       w.balance,
+       (select string_agg(t.reason || ' ' || t.delta, ', ' order by t.id)
+          from public.wallet_transactions t
+         where t.player_id = w.player_id and t.reason like 'arena%') as arena_rows
+from public.wallets w
+join public.profiles p on p.id = w.player_id
+where w.player_id in ('USER_A_ID', 'USER_B_ID', 'USER_C_ID')
+order by p.display_name;
+```
+
+Expected: three rows (Duel Alice, Duel Bob, Duel Carol), 1000 coins each, and no arena rows yet.
+
+**D1. The worked example, staked 100.** Alice challenges Bob: 5 rounds, 100 coins each. She seals Flash, Shade, Shade, Mirror, Shade (3 of 5 oil). The name is in lower case on purpose:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'duel bob', 5, 100, 5,
+         array['flash','shade','shade','mirror','shade'], 'duel-test-001', 24, 3) as result;
+```
+
+Expected: `status` `done`, `opponentName` `Duel Bob` (the name of the profile, not what you typed) and `balance` 900. Now Bob answers with Mirror, Flash, Shade, Shade, Mirror (4 of 5 oil). Round 1: Bob's Mirror throws Alice's Flash back. Round 2: Bob's Flash outshines Alice's Shade. Round 3: Shade against Shade scores for nobody. Round 4: Bob's Shade leaves Alice's Mirror nothing to throw. Round 5: Alice's Shade leaves Bob's Mirror nothing to throw. The results are `opponent, opponent, even, opponent, challenger` and the outcome is `opponent`, 3 to 1.
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-001'), 'USER_B_ID',
+         array['mirror','flash','shade','shade','mirror'], 'duel-answer-001',
+         array['opponent','opponent','even','opponent','challenger'], 'opponent',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: `status` `done`, `balance` 1090 and `winnerTakes` 190. The Duel check: Duel Alice 900 with `arena_stake -100`, Duel Bob 1090 with `arena_stake -100, arena_payout 190`, Duel Carol 1000. The pot was 200, the winner took 190, and the 10 coins of the cut were simply not paid out. One more look at the duel itself:
+
+```sql
+select d.status, d.outcome, d.round_results,
+       (select sum(t.delta) from public.wallet_transactions t where t.ref = 'duel:' || d.id::text) as arena_sum,
+       (select count(*) from public.duel_moves m where m.duel_id = d.id) as envelope_rows
+from public.duels d
+where d.create_uid = 'duel-test-001';
+```
+
+Expected: `finished`, `opponent`, `{opponent,opponent,even,opponent,challenger}`, `arena_sum` -10 and `envelope_rows` 10 (5 for each captain).
+
+**D2. The same challenge twice changes nothing.** Run the first block of D1 again, with the same `duel-test-001`.
+
+Expected: an error with the message `already_applied` (error code `23505`, the same code as a repeated wallet ref). The Duel check is unchanged (Duel Alice 900), and this shows one duel:
+
+```sql
+select count(*) as duels from public.duels where create_uid = 'duel-test-001';
+```
+
+**D3. Two captains answer the same open challenge at the same moment (needs psql).** First Alice sends an open challenge (no name), staked 50, 3 rounds:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', null, 3, 50, 5,
+         array['flash','shade','shade'], 'duel-test-003', 24, 3) as result;
+```
+
+Expected: `done`, `balance` 850. Now open two terminals with `psql` (copy the connection string from **Connect** in the Supabase dashboard; type the database password into the terminal only, never into a file). In terminal 1, Bob answers, but do **not** commit yet:
+
+```text
+begin;
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-003'), 'USER_B_ID',
+         array['mirror','flash','shade'], 'duel-answer-003',
+         array['opponent','opponent','even'], 'opponent', now() - interval '1 day', 3) as result;
+```
+
+In terminal 2, Carol answers the same duel with the same kind of block (`'USER_C_ID'`, the action id `'duel-answer-003c'`, the same signals and results). It **waits**, because the first answer holds the lock on the duel row. Back in terminal 1 type `commit;`. Terminal 2 now answers: `status` `refused`, `reason` `duel_taken`. Type `commit;` there too.
+
+Expected: Bob's answer was `done`, with `winnerTakes` 95 (a pot of 100 minus a cut of 5) and `balance` 1135 (1090 - 50 + 95). The Duel check: Duel Alice 850, Duel Bob 1135, Duel Carol 1000, and Carol sealed nothing:
+
+```sql
+select count(*) as carol_envelope_rows from public.duel_moves where player_id = 'USER_C_ID';
+```
+
+Expected: 0.
+
+**D4. A draw returns both stakes.** Alice challenges Carol, 3 rounds, 50 coins each, with Flash, Shade, Shade. Carol answers with Shade, Flash, Shade. Round 1: Alice's Flash outshines Carol's Shade. Round 2: Carol's Flash outshines Alice's Shade. Round 3: Shade against Shade scores for nobody. It is 1 to 1, a draw.
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'DUEL CAROL', 3, 50, 5,
+         array['flash','shade','shade'], 'duel-test-004', 24, 3) as result;
+```
+
+Expected: `done`, `balance` 800. Then:
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-004'), 'USER_C_ID',
+         array['shade','flash','shade'], 'duel-answer-004',
+         array['challenger','opponent','even'], 'draw',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: `done`, `winnerTakes` 0 and `balance` 1000. The Duel check: both players are back where they were before this step (Duel Alice 850, Duel Carol 1000), and the arena rows of this duel add up to 0:
+
+```sql
+select sum(t.delta) as arena_sum, count(*) as rows
+from public.wallet_transactions t
+where t.ref = 'duel:' || (select id::text from public.duels where create_uid = 'duel-test-004');
+```
+
+Expected: `arena_sum` 0 and `rows` 4 (two stakes and two returned stakes).
+
+**D5. Withdraw and decline give the stake back once.** Alice sends two named challenges to Bob, 100 coins each (a new run each):
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Bob', 5, 100, 5, array['shade','shade','shade','shade','shade'], 'duel-test-005', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Bob', 5, 100, 5, array['shade','shade','shade','shade','shade'], 'duel-test-006', 24, 3) as result;
+```
+
+Expected: both `done` (the second `balance` is 650). Alice withdraws the first:
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-005'), 'USER_A_ID', 'withdrawn') as result;
+```
+
+Expected: `status` `done`, `refunded` 100, `challengerBalance` 750. Run it again: an error `already_applied` (error code `23505`). Bob tries to decline the withdrawn duel (change the last two values):
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-005'), 'USER_B_ID', 'declined') as result;
+```
+
+Expected: `status` `refused`, `reason` `duel_closed`. Alice cannot decline her own challenge (the second duel), and Carol cannot withdraw it; both are refused with `not_your_duel`:
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-006'), 'USER_A_ID', 'declined') as alice_declines,
+       public.duel_void((select id from public.duels where create_uid = 'duel-test-006'), 'USER_C_ID', 'withdrawn') as carol_withdraws;
+```
+
+Now Bob declines it; the stake goes back to Alice. A second decline is an error `already_applied`:
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-006'), 'USER_B_ID', 'declined') as result;
+```
+
+Expected: `done`, `refunded` 100, `challengerBalance` 850. The Duel check: Duel Alice 850.
+
+**D6. A challenge that nobody answers expires, and is refunded once.** Alice sends an open challenge, 100 coins, then anybody asks for it to expire:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', null, 5, 100, 5, array['flash','mirror','shade','shade','shade'], 'duel-test-007', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-007'), 'USER_C_ID', 'expired') as result;
+```
+
+Expected: `status` `refused`, `reason` `not_expired` (the database clock says the 24 hours are not over). Pretend they are. Move the creation and the deadline back by two days together, as the default role (the deadline must stay after the creation):
+
+```sql
+update public.duels
+   set created_at = created_at - interval '2 days',
+       expires_at = expires_at - interval '2 days'
+ where create_uid = 'duel-test-007';
+```
+
+A late answer by Carol is refused and changes nothing:
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-007'), 'USER_C_ID',
+         array['shade','shade','shade','shade','shade'], 'duel-answer-007',
+         array['challenger','challenger','even','even','even'], 'challenger',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: `status` `refused`, `reason` `duel_expired`. Now Carol asks for the expiry. The run of the second block above (with `'expired'`) now does the refund; run it again. Expected: `done`, `refunded` 100, `challengerBalance` 850. Run it once more: `refused`, `duel_closed`, and Duel Alice stays at 850.
+
+**D7. A captain who cannot pay the stake changes nothing.** Take all but 50 coins away from Carol, then Alice challenges her for 100:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_C_ID', -((select balance from public.wallets where player_id = 'USER_C_ID') - 50), 'admin_adjust', 'duel-drain') as carol_balance;
+```
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Carol', 5, 100, 5, array['shade','shade','shade','shade','shade'], 'duel-test-008', 24, 3) as result;
+```
+
+Expected: `done`, `balance` 750. Carol answers:
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID',
+         array['shade','shade','shade','shade','shade'], 'duel-answer-008',
+         array['even','even','even','even','even'], 'draw',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: an error `insufficient_funds`. Nothing changed: the Duel check shows Duel Carol with 50 coins and Duel Alice with 750 (her stake is still held), and
+
+```sql
+select d.status,
+       (select count(*) from public.duel_moves m where m.duel_id = d.id and m.player_id = 'USER_C_ID') as carol_envelope_rows
+from public.duels d
+where d.create_uid = 'duel-test-008';
+```
+
+shows `open` and 0.
+
+**D8. The two caps.** First the pair limit: Alice and Bob have decided 2 staked duels today (D1 and D3). Alice sends Bob another, staked 10, and Bob answers with a limit of 2 (the server passes 3):
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Bob', 3, 10, 5, array['flash','shade','shade'], 'duel-test-012', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-012'), 'USER_B_ID',
+         array['shade','flash','shade'], 'duel-answer-012',
+         array['challenger','opponent','even'], 'draw',
+         now() - interval '1 day', 2) as result;
+```
+
+Expected: `status` `refused`, `reason` `daily_pair_limit`, and Bob sealed nothing. Run the answer again with the limit `3` (the last number): it is `done` (a draw, `winnerTakes` 0). Now Alice and Bob have decided 3 staked duels today. Bob challenges Alice, and Alice answers with the limit 3: she is refused too, because the limit counts either way round, so it counts the duels in both directions:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_B_ID', 'Duel Alice', 3, 10, 5, array['flash','shade','shade'], 'duel-test-013', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-013'), 'USER_A_ID',
+         array['shade','flash','shade'], 'duel-answer-013',
+         array['challenger','opponent','even'], 'draw',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: the create is `done`, the answer `refused` with `daily_pair_limit`. A friendly duel (stake 0) is never blocked by the limit. Second, the waiting cap. Alice has one waiting challenge (`duel-test-008`). She sends two friendly open challenges (change `duel-test-009` to `duel-test-010` for the second run), and then a third:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', null, 3, 0, 5, array['shade','shade','shade'], 'duel-test-009', 24, 3) as result;
+```
+
+Expected: both `done` (the friendly ones hold no coins). Run it once more with `duel-test-011`: `status` `refused`, `reason` `too_many_waiting`. Nothing was created for `duel-test-011`.
+
+**D9. Players see only their own duels, and nothing of the envelopes.** As Bob (the second line gives the claims the Supabase login would give):
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_B_ID", "role": "authenticated"}', true);
+select count(*) as duels_seen,
+       count(*) filter (where challenger_id = 'USER_B_ID' or opponent_id = 'USER_B_ID') as duels_of_bob
+from public.duels;
+```
+
+Expected: two equal numbers (every duel Bob sees is one he takes part in), and fewer than the total number of duels (run `select count(*) from public.duels;` as the default role: it also counts the duels of Alice and Carol). Now replace the last statement:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_B_ID", "role": "authenticated"}', true);
+select * from public.duel_moves;
+```
+
+Expected: `permission denied for table duel_moves`. Not even his own sealed signals. Change the first line to `set local role anon;` (and drop the `set_config` line) and run `select * from public.duels;`, then `select * from public.duel_moves;`. Expected: `permission denied for table ...` both times.
+
+**D10. Only the server runs the functions, and sealed means sealed.** Each statement fails, as the role in the left column, and changes nothing:
+
+| Role | Statement | Expected error mentions |
+|---|---|---|
+| `authenticated` (player B) | `select public.duel_create('USER_B_ID', null, 3, 0, 5, array['shade','shade','shade'], 'duel-test-014', 24, 3);` | `permission denied for function duel_create` |
+| `authenticated` (player B) | `select public.duel_void((select id from public.duels where create_uid = 'duel-test-008'), 'USER_B_ID', 'expired');` | `permission denied for function duel_void` |
+| `authenticated` (player B) | `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_B_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-099', array['even','even','even','even','even'], 'draw', now(), 3);` | `permission denied for function duel_answer` |
+| `authenticated` (player B) | `update public.duels set stake = 0;` | `permission denied for table duels` |
+| `service_role` | `update public.duel_moves set signal = 'flash';` | `permission denied for table duel_moves` |
+| `service_role` | `delete from public.duel_moves;` | `permission denied for table duel_moves` |
+| `service_role` | `delete from public.duels;` | `permission denied for table duels` |
+
+Put `set local role authenticated;` (with the `set_config` line from D9) or `set local role service_role;` in front of each, run it, and look at the error. Even the server cannot change a sealed signal or delete a duel.
+
+**D11. The database checks what the server sends.** Each statement is refused as the server (`set local role service_role;` in front of it) with the error in the right column, and changes nothing:
+
+| Statement | Why it is wrong | Expected error |
+|---|---|---|
+| `select public.duel_create('USER_A_ID', null, 4, 0, 5, array['shade','shade','shade','shade'], 'duel-test-015', 24, 3);` | 4 rounds: a duel has 3 or 5 | `bad_duel` |
+| `select public.duel_create('USER_A_ID', null, 3, 101, 5, array['shade','shade','shade'], 'duel-test-016', 24, 3);` | a stake of 101: the most is 100 | `bad_duel` |
+| `select public.duel_create('USER_A_ID', null, 5, 0, 5, array['shade','shade','shade'], 'duel-test-017', 24, 3);` | 3 signals for 5 rounds | `bad_duel` |
+| `select public.duel_create('USER_C_ID', null, 3, 0, 5, array['flash','sparkle','shade'], 'duel-test-018', 24, 3);` | a signal that is not a signal (Carol has no waiting challenge, so the cap does not answer first) | `duel_moves_signal_allowed` |
+| `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-098', array['challenger','challenger','challenger','challenger','challenger'], 'draw', now() - interval '1 day', 3);` | five points for the challenger, and the outcome says draw | `bad_duel` |
+| `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-097', array['even','even','even'], 'draw', now() - interval '1 day', 3);` | 3 results for 5 rounds | `bad_duel` |
+| `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-096', array['even','even','even','even','even'], 'draw', now() + interval '1 day', 3);` | the day starts tomorrow, so the pair limit would count nothing | `bad_duel` |
+
+A direct insert as the default role shows the table guarding itself too. Each fails with the constraint named in the error:
+
+```sql
+insert into public.duels (challenger_id, is_open, rounds, stake, cut_percent, create_uid, expires_at)
+values ('USER_A_ID', true, 3, 101, 5, 'duel-test-019', now() + interval '1 day');
+```
+
+Expected: `duels_stake_range`. Change `3, 101` to `4, 0` for `duels_rounds_allowed`, and `now() + interval '1 day'` to `now() - interval '1 day'` for `duels_expires_after_creation`.
+
+**D12. The reasons, the sums, and running the migration again.** The two new reasons are in the list, in the right direction (default role):
+
+```sql
+select reason, direction from public.wallet_reasons where reason like 'arena\_%' order by reason;
+```
+
+Expected: 2 rows: `arena_payout` earn, `arena_stake` spend. The wallet refuses a wrong direction, for example a stake that adds coins:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 10, 'arena_stake', 'manual-wrong-2');
+```
+
+Expected: `wrong_direction`. No duel created a coin. Every arena row of every test duel, added up per duel:
+
+```sql
+select d.create_uid, d.status, d.stake, coalesce(sum(t.delta), 0) as arena_sum
+from public.duels d
+left join public.wallet_transactions t on t.ref = 'duel:' || d.id::text
+where d.create_uid like 'duel-test-%'
+group by d.id, d.create_uid, d.status, d.stake
+order by d.create_uid;
+```
+
+Expected: a duel that ended without a winner (a draw, withdrawn, declined, expired, and every friendly one) adds up to 0; `duel-test-001` (finished, 100) adds up to -10 and `duel-test-003` (finished, 50) to -5, the cut of each; and the duels that are still open (`duel-test-008`, staked 100, and `duel-test-013`, staked 10) add up to minus their held stake, -100 and -10. Finally paste the whole Lantern Duels migration into the SQL editor again and run it. Expected: no error, the Duel check shows what it showed before, and `select count(*) from public.wallet_reasons;` still shows 13.
+
+Delete the three test users when you are done (**Authentication > Users**). Their duels, envelopes and ledger rows go with them.
 
 ## Changing the database later
 

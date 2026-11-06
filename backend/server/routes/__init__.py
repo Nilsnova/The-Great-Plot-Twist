@@ -8,7 +8,9 @@
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the
 GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).
-market.py is the Island Exchange (its rules are in server/market/).
+market.py is the Island Exchange (its rules are in server/market/). duels.py is Lantern Duels
+(its rules are in server/duels/): GET and POST /api/duels, GET /api/duels/{id} and the routes
+/move and /cancel under it.
 Each file creates a `router` with its URLs. app.py plugs every router in under /api.
 To add a feature: create a new file here, then add one line in app.py.
 """

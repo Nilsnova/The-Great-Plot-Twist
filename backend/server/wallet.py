@@ -22,7 +22,7 @@ add the same (reason, direction) pair at the END of WALLET_REASONS. Never rename
 change its direction.
 
 Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings,
-the Island Exchange).
+the Island Exchange, Lantern Duels).
 
 Example inside a route (a negative number takes coins away, a positive number adds them):
 
@@ -71,6 +71,9 @@ WALLET_REASONS = (
     ("market_buy", SPEND),
     ("market_sell", EARN),
     ("market_fee", SPEND),
+    # Added by supabase/migrations/20261106110000_lantern_duels.sql (Lantern Duels).
+    ("arena_stake", SPEND),
+    ("arena_payout", EARN),
 )
 
 

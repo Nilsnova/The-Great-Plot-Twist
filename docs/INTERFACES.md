@@ -57,11 +57,11 @@
 |---|---|---|---|
 | 200 | | It worked. | Show the result. |
 | 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
-| 403 | `forbidden` | Signed in, but not allowed. Planned for presenter-only routes (`require_host`, package A2). No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. | Show the message. |
+| 403 | `forbidden`, `not_your_duel` | Signed in, but not allowed. `forbidden` is planned for presenter-only routes (`require_host`, package A2). `not_your_duel` is the first code that a route really uses: Lantern Duels answers it to a captain who tries to withdraw or decline a challenge that is not theirs to close. | Say "not allowed". Do not retry. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. Lantern Duels adds `no_such_duel` (unknown, or a duel this captain may not see) and `no_such_captain` (no captain has that name). | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
-| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). | Show the message. After `already_applied`, treat the action as done. |
-| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). | Show the message. Do not resend it unchanged. |
+| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). Lantern Duels adds `already_sealed` (you sealed in this duel already), `duel_taken` (another captain answered an open challenge first), `duel_closed`, `duel_expired`, `daily_pair_limit`, `too_many_waiting` and `name_not_unique`. | Show the message. After `already_applied`, treat the action as done. |
+| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). Lantern Duels adds `bad_rounds`, `bad_stake`, `wrong_signal_count`, `not_enough_oil` and `cannot_duel_yourself`. | Show the message. Do not resend it unchanged. |
 | 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player); the `Retry-After` header says how many seconds to wait. | Wait, then try again. |
 | 500 | `server_error` | A bug on our side. The details go to the server log only. | Say "something went wrong". |
 | 502 | `database_error` | The database refused the call or answered strangely. | Say "something went wrong". |
@@ -69,7 +69,7 @@
 
 ## 2. Routes that exist now
 
-Seven routes exist, plus the three routes of the Island Exchange (below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
+Seven routes exist, plus the three routes of the Island Exchange and the five routes of Lantern Duels (both below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
 
@@ -289,6 +289,50 @@ The rules in one list (numbers in `backend/server/market/rules.py` and `trade_ru
 
 The board needs the Exchange migration (it reads `market_bases`). Without a configured database the board still works from memory, which is good enough for a demo on a laptop but not shared between server instances.
 
+### Lantern Duels (package A7)
+
+Two captains each seal a sequence of lantern signals: Flash, Shade or Mirror. The server opens both envelopes at once and decides every round. A duel is friendly or played for equal play-coin stakes. The whole feature sits behind the flag `arena`, which stays off. The home of each route is the comment at the top of `backend/server/routes/duels.py`; the rules are in `backend/server/duels/` and are explained in [D018](DECISIONS.md#d018--lantern-duels-rules--2026-11-06) (proposed). The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md). Play money only: coins cannot be bought, cashed out or exchanged for real prizes, and the screen says "Simulation, play money".
+
+| Route | Who | What it does |
+|---|---|---|
+| `GET /api/duels` | signed in, flag `arena` on | The rules (so the screen never guesses a number), the caller's coins and held coins, and four short lists: `incoming` (named challenges to me), `openChallenges` (open challenges of other captains), `yours` (my waiting challenges) and `recent` (my ended duels). A summary never carries a signal. Expired challenges of mine are closed and refunded while it is read. **New route**, to be agreed at the Mon 9 freeze. |
+| `POST /api/duels` | signed in, flag `arena` on | Send a challenge: `{opponentName, rounds, stake, signals, actionUid}`. A name makes a named challenge; `null` or no name makes an open one. The challenger's signals are sealed and the stake is held. |
+| `GET /api/duels/{id}` | signed in, flag `arena` on | One duel in full: `yourSignals` (my own) and, once the duel is finished, `reveal`, one entry per round from my side. Who may look: the two captains, and anyone while an open challenge is still open. |
+| `POST /api/duels/{id}/move` | signed in, flag `arena` on | Answer a challenge: `{signals, actionUid}`. Answering is accepting: in one database step the server takes my stake, opens both envelopes, decides every round and pays out. |
+| `POST /api/duels/{id}/cancel` | signed in, flag `arena` on | No body. The challenger withdraws, or the named captain declines. Either way the challenger's stake comes back. **New route**, to be agreed at the Mon 9 freeze. |
+
+```text
+POST /api/duels
+Authorization: Bearer <token>
+{"opponentName": "Captain-3fa85f", "rounds": 5, "stake": 100,
+ "signals": ["flash", "shade", "shade", "mirror", "shade"], "actionUid": "q7x2k9m4ab"}
+
+200 OK
+Cache-Control: private, no-store
+{"duel": {"id": "6f1c0c2e-9a52-4b8e-8d3a-0a7c3f1d2b44", "status": "open", "isOpen": false, "you": "challenger",
+          "challengerName": "Brave Puffin 17", "opponentName": "Captain-3fa85f", "rounds": 5, "oil": 5,
+          "stake": 100, "cutPercent": 5, "winnerTakes": 190,
+          "createdAt": "2026-11-06T10:00:00Z", "expiresAt": "2026-11-07T10:00:00Z", "closedAt": null,
+          "score": null, "yourResult": null, "coinsChange": null, "heldStake": 100,
+          "canAnswer": false, "canWithdraw": true, "canDecline": false,
+          "yourSignals": ["flash", "shade", "shade", "mirror", "shade"], "reveal": null},
+ "coins": 900, "serverTime": "2026-11-06T10:00:00Z"}
+```
+
+The rules in one list (numbers in `backend/server/duels/rules.py`, and `GET /api/duels` sends them in `rules`):
+
+- **Signals and oil.** Flash outshines Shade, Shade leaves Mirror nothing to throw back, and Mirror throws Flash back. The same signal on both sides scores for nobody. Each captain has as much lantern oil as the duel has rounds (3 or 5): Flash burns 2, Mirror 1 and Shade 0. A sequence that burns more is refused (`422 not_enough_oil`). More rounds won wins the duel; equal is a draw.
+- **Sealed means sealed.** Each captain seals all rounds at once: the challenger with the challenge, the other captain with the answer. A signal reaches the other captain only after both envelopes are in, and only as part of the stored reveal. No answer carries it before: not the list, not the detail and not an error. The table `duel_moves` has no right for players at all, and no role may change a sealed signal.
+- **Challenges.** By captain name (the exact display name, in any letter case) or open to any captain except the challenger, where the first answer wins. A named challenge can be answered only by that captain. A duel has 3 or 5 rounds. A captain may have 3 challenges waiting (`409 too_many_waiting`).
+- **Stakes and the cut.** The stake is 0 (friendly), 10, 25, 50 or 100 coins from each captain. The challenger's stake is held when the challenge is sent, the answerer's when they answer. The winner takes the pot minus a cut of 5 %, rounded down to whole coins: 19, 47, 95 or 190. A draw, a withdrawal, a decline and an expiry give every stake back. The cut has no ledger row; it is simply not paid out, and duels never create coins. Two captains may decide 3 staked duels per day with each other, either way round (the day starts at 00:00 Lisbon time; `409 daily_pair_limit`).
+- **Safe repeats.** The ledger ref of every coin movement is `duel:<duel id>` (the reasons `arena_stake` and `arena_payout`; a player has at most one row of each reason per duel, so the ledger itself stops a double stake or a double payout). The `actionUid` (8 to 64 letters, digits, hyphens or underscores, made once per click and sent again on a retry) is the duel's `create_uid` or the answer's `action_uid`; it is never part of a ref. The same challenge sent twice answers `409 already_applied` and creates nothing. The same answer sent twice answers `409 already_applied`; a second answer with another `actionUid` answers `409 already_sealed`, which is also what the challenger hears when answering their own challenge.
+- **Timeouts are lazy.** A challenge can be answered for 24 hours. Nothing runs on a timer (Vercel Cron cannot be used with Services): the next request that touches the duel (the list or the detail of either captain, a cancel, or an answer attempt) closes it as `expired` and gives the challenger's stake back. The database clock decides. A sealed duel has no forfeits: nobody can lose by being offline.
+- **Order of the checks.** Every route resolves the sign-in first (`401`), then the flag (`404 feature_off`, with no database call), then the body (`422`). The player id comes only from the sign-in. Request bodies refuse extra fields.
+- **Polling.** The screen asks `GET /api/duels` every 5 seconds for 2 minutes after an action, then every 30 seconds, and stops after 10 quiet minutes. It never asks while the tab is hidden. One quiet panel makes about 40 calls in 10 minutes. No Realtime, no WebSockets and no timer on the server.
+- **Errors.** `404 feature_off`, `404 no_such_duel`, `404 no_such_captain`, `403 not_your_duel`, `409 already_applied`, `409 already_sealed`, `409 duel_taken`, `409 duel_closed`, `409 duel_expired`, `409 daily_pair_limit`, `409 too_many_waiting`, `409 name_not_unique`, `409 insufficient_funds`, `422 validation_error`, `422 bad_rounds`, `422 bad_stake`, `422 wrong_signal_count`, `422 not_enough_oil`, `422 cannot_duel_yourself`, `502 database_error`, `503 database_not_configured`, `503 database_unavailable` (the OUTCOME IS UNKNOWN: read the list before you try again; never send the same intent again with a new `actionUid`).
+
+The duels need the Lantern Duels migration (`supabase/migrations/20261106110000_lantern_duels.sql`), which is not applied yet. While the flag `arena` is off, every duel route answers `404 feature_off` and touches no database.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -386,6 +430,15 @@ The Island Exchange migration, `supabase/migrations/20261106010000_island_exchan
 
 `market_trade()` is the only way a trade happens (it checks that the coins and the fee follow from the units and the price, moves the coins through `apply_wallet_transaction()`, changes the position and writes the trade in one step). `market_set_base()` saves a company's base when two server instances look at the same moment. Both are for the server only.
 
+The Lantern Duels migration, `supabase/migrations/20261106110000_lantern_duels.sql` (package A7, run after the Island Exchange one), adds two tables and three functions. A visitor gets nothing, and a signed-in player may read their own duels and nothing else.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `duels` | challenge: who, rounds, stake, status and, once decided, the result of every round. It holds no signal. | read the duels they take part in | read, add, change (through `duel_create()`, `duel_answer()` and `duel_void()`); never delete | A7 |
+| `duel_moves` | captain and round: the sealed envelopes, the only place that holds a signal | nothing at all, not even their own rows | read, add (through `duel_create()` and `duel_answer()`); no role may change or delete a row | A7 |
+
+`duel_create()` sends a challenge (the duel, the challenger's envelope and the stake in one step). `duel_answer()` answers it: the answerer's stake and envelope, the reveal, the result and the payout or the refunds in one step; the round results and the outcome are an input from Python, and the database checks only what follows from them. `duel_void()` withdraws, declines or expires a challenge and gives the challenger's stake back. Each is the only way its money change can happen, locks a duel row first and the wallets after it (in player-id order), and is for the server only.
+
 Four database functions come with the first migration: `apply_wallet_transaction()` (the only way coins move, for the server only), `is_crew_member()` (used by the read rules of crews and seats, for signed-in players only), `handle_new_user()` (runs at sign-up and creates a profile, a wallet with 0 coins and an empty save) and `touch_updated_at()` (stamps `updated_at`).
 
 Details that other packages rely on:
@@ -436,6 +489,8 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `market_buy` | spend | Shares bought on the Island Exchange (migration `20261106010000`) |
 | `market_sell` | earn | Shares sold on the Island Exchange (same migration) |
 | `market_fee` | spend | The fee of an Island Exchange trade (same migration) |
+| `arena_stake` | spend | The stake of a Lantern Duel, held when a captain challenges or answers (migration `20261106110000`) |
+| `arena_payout` | earn | A Lantern Duel payout: the winnings, or a stake that comes back after a draw, a withdrawal, a decline or an expiry (same migration) |
 
 A new reason is one new migration plus the same pair added at the end of `WALLET_REASONS`, in one pull request ([ENGINEERING.md, recipe 4.7](ENGINEERING.md#47-add-a-wallet-reason)). Never rename a reason or change its direction. The reason names later packages have reserved are in [section 9](#9-reserved-interfaces).
 
@@ -519,7 +574,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | A2 Sign-in, captain names and cloud progress | `GET /api/me` already exists since the sign-in check (section 2, returning `{id, displayName, coins, crews}`): A2 adds `kit` and `place` to it and writes real captain names into `displayName`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json`; sign-in with the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2) | draft |
 | A3 Referee and entry kits | `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit}`; the table `entry_profiles`; the kit coins through `kit_grant` with the fixed `ref` `kit` | draft |
 | A6 Crews and seats | `POST /api/crews` (returns a crew code); `POST /api/crews/join {code}`; `GET /api/crews/me`; crew codes in a new column or table | draft |
-| A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
+| A7 Lantern Duels (the PvP arena) | **Server built** (flag `arena` off; its migration is not applied yet): `GET /api/duels` (new), `POST /api/duels {opponentName, rounds, stake, signals, actionUid}`, `GET /api/duels/{id}`, `POST /api/duels/{id}/move {signals, actionUid}` and `POST /api/duels/{id}/cancel` (new); the tables `duels` and `duel_moves`; the functions `duel_create()`, `duel_answer()` and `duel_void()`; the reasons `arena_stake` and `arena_payout`; the flag `arena`. See section 2 and D018. The two new routes are agreed at the Mon 9 freeze. | built, in review |
 | A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
 | L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
 | L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
@@ -562,8 +617,8 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 **The PvP arena (A7).**
 
-- Turn-based duels between two players. The server decides every round with Python rules, and the browser only sends moves. The browser polls for the other player's move, so Realtime is not needed.
-- Optional stakes in play coins: taken once and paid once, with the duel id in the `ref`. A duel that times out refunds both players. Preset emotes only, no free text.
+- **As built (D018, proposed): sealed signals.** Each captain seals all rounds at once, the server opens both envelopes in the same database step that stores the answer, and it decides every round with Python rules (the browser only sends signals, never a result or an amount). Nobody can lose by being offline, so there are no forfeits; live round-by-round duels with timers and forfeits are planned for after 23 Nov. The browser polls `GET /api/duels` (5 seconds for 2 minutes after an action, then 30 seconds, stopping after 10 quiet minutes, never while the tab is hidden), so Realtime is not needed.
+- Optional stakes in play coins: taken once and paid once, with the duel id in the `ref` (`duel:<id>`). A challenge that times out returns every stake that was taken (only the challenger has staked before the answer). Preset emotes only, no free text (none exist yet).
 - Do not build it on WebSockets in Vercel Functions: they are a Beta feature, and on Hobby a connection closes after 300 seconds.
 
 ## 10. The shared mystery
