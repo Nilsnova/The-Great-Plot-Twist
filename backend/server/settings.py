@@ -95,6 +95,8 @@ class Settings:
     # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
     # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
     host_player_ids: frozenset[str] = field(default_factory=frozenset)
+    # Public deployment metadata; ordinary local runs leave it empty.
+    build_commit: str = ""
     # The stock-price provider of the Island Exchange, and its key. Empty provider: stocks are off.
     stock_api_provider: str = ""
     # SecretStr prints as ********** in logs and error messages. Only market/exchange.py calls
@@ -248,6 +250,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
             env, "WEATHER_LONGITUDE", MAX_LONGITUDE, DEFAULT_WEATHER_LONGITUDE
         ),
         host_player_ids=read_host_player_ids(env),
+        build_commit=read_text(env, "VERCEL_GIT_COMMIT_SHA"),
         stock_api_provider=read_stock_api_provider(env),
         stock_api_key=SecretStr(read_text(env, "STOCK_API_KEY")),
     )

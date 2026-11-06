@@ -10,7 +10,9 @@ from fastapi.testclient import TestClient
 
 from server.app import create_app
 from server.auth import PlayerVerifier
+from server.host_console import build_stamp
 from server.hosts import HostDep
+from server.settings import load_settings
 from server.tests.helpers import CONFIGURED_SETTINGS, make_admin
 from server.tests.test_hosts import HOST_HEADER, HOST_ID, PLAYER_HEADER, login_works
 from server.weather.source import make_weather_source
@@ -146,3 +148,10 @@ def test_clock_capability_needs_both_installed_route_and_case_flag(installed, en
     assert config["capabilities"]["hostCaseClock"] is (installed and enabled)
     response = client.get("/api/host/overview", headers=HOST_HEADER)
     assert response.json()["caseClockAvailable"] is (installed and enabled)
+
+
+@pytest.mark.parametrize("commit", ["a" * 40, "", "not-a-build-sha"])
+def test_build_metadata_reads_only_public_settings_and_validates_the_sha(commit):
+    settings = load_settings({"VERCEL_GIT_COMMIT_SHA": commit})
+    expected = commit if commit == "a" * 40 else "unknown"
+    assert build_stamp(settings.build_commit)["commit"] == expected

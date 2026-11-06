@@ -2838,6 +2838,31 @@ The test-only packages stay in uv's cache. Claude reviews and applies the three 
 
 ## Changing the database later
 
+### G14 host console
+
+New migration: [`20261106170000_host_console.sql`](migrations/20261106170000_host_console.sql), applied after the existing foundation, market, accounts, entry and crew migrations. It introduces no case data and changes no existing migration. The deployment owner applies it separately after review; the G14 development checks never connect to a live project.
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `host_console_actions` | No access; RLS on, no browser policies | Select, insert. One row per successful test-crew close. Host FK cascades on account deletion; crew audit survives crew deletion. |
+| `host_console_health` | No access; RLS on, no browser policies | Select, insert, update. Latest keep-alive success, monotonically increasing. |
+| `host_console_overview()` | No execute | Execute: independent aggregates, UTC wallet day and schema-object probes. |
+| `host_console_crews(uuid)` | No execute | Execute: newest 50 crews, count and safe captain-name fields. |
+| `host_close_test_crew(uuid, uuid, uuid)` | No execute | Execute: verified host, crew and retry UUID. Own forming crew only; no other human; locked, idempotent, logged. |
+| `host_record_keepalive()` | No execute | Execute after the existing three successful keep-alive reads. |
+
+All four functions use invoker rights and `search_path = ''`; the API must verify `HostDep` before passing a host ID. They never grant the browser write access. The host console does not read or expose auth users, keys, e-mails, tokens, kits or the case solution.
+
+Scratch validation from `backend/`:
+
+```bash
+uv run --frozen --with pgserver --with 'psycopg[binary]' python tools/check_host_console_postgres.py
+```
+
+This creates a disposable local PostgreSQL cluster, bootstraps only test auth roles, applies all migrations and reapplies G14, and checks grants/RLS, aggregates, concurrent retry safety, ownership/status guards and bounded safe reads. Neither package is added to the project dependencies. The human deployment review should additionally confirm ordinary players cannot call the host API and that the reviewed migration's grants are present. See [the operator guide](../docs/HOST-CONSOLE.md).
+
+### Rules for later migrations
+
 - Never edit a migration that has been applied anywhere. Add a new file named `supabase/migrations/<YYYYMMDDHHMMSS>_<topic>.sql` with a later time stamp.
 - A new table needs, in the same file: row-level security switched on, policies, **explicit grants** (our project gives no rights to a new table, so nothing works until you grant them, and you grant only what is really needed), and a comment on the table, every column and every policy. Take every right away first (`revoke all` from `public`, `anon`, `authenticated` and `service_role`), then grant. The browser only reads, so `authenticated` gets `select` at most. If the table has an identity column (`generated always as identity`), also revoke all rights on its counter, as the foundation file does for `wallet_transactions_id_seq`. Copy the style of the foundation file.
 - A new function needs `revoke ... from public, anon, authenticated` and then `grant execute` only to the role that must run it. Start it with `set search_path = ''`.

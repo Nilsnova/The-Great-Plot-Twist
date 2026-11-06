@@ -1,6 +1,5 @@
 """Safe host-console response models and readiness labels. Used by host routes; no case data."""
 
-import os
 import re
 from datetime import datetime
 from typing import Literal
@@ -80,9 +79,8 @@ def expected_migrations(objects: dict[str, bool], flags: dict[str, bool]) -> lis
     ]
 
 
-def build_stamp() -> dict[str, str]:
-    """Only the documented nonsecret deployment SHA; never arbitrary environment contents."""
-    commit = os.environ.get("VERCEL_GIT_COMMIT_SHA", "")
+def build_stamp(commit: str) -> dict[str, str]:
+    """Only the documented nonsecret deployment SHA from Settings, never arbitrary contents."""
     if not re.fullmatch(r"[0-9a-fA-F]{40}", commit):
         commit = "unknown"
     return {"version": __version__, "commit": commit}
