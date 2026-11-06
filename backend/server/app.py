@@ -23,11 +23,13 @@ from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
 from server.duels.service import DuelService
 from server.errors import register_error_handlers
+from server.festival.cache import FestivalCacheControl
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl
 from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
 from server.game.world_state import DatabaseWorldStage, relit_check
+from server.host_console_cache import HostConsoleHeaders
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
 from server.routes import (
@@ -42,9 +44,11 @@ from server.routes import (
     crews,
     delete_me,
     duels,
+    festival,
     finale,
     health,
     host_case,
+    host_console,
     intro,
     islet,
     keepalive,
@@ -149,6 +153,8 @@ def create_app(
 
     app = new_fastapi_app(settings)
     app.add_middleware(CaseCacheControl)
+    app.add_middleware(FestivalCacheControl)
+    app.add_middleware(HostConsoleHeaders)
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
     # routes/weather.py, sign_in_code.py, market/exchange.py, crew_broadcast.py,
@@ -193,10 +199,12 @@ def create_app(
     app.include_router(islet.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")
+    app.include_router(festival.router, prefix="/api")
 
     app.include_router(case.router, prefix="/api")
     app.include_router(board.router, prefix="/api")
     app.include_router(finale.router, prefix="/api")
     app.include_router(world.router, prefix="/api")
     app.include_router(host_case.router, prefix="/api")
+    app.include_router(host_console.router, prefix="/api")
     return app

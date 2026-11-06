@@ -22,6 +22,8 @@
     finale.py         /api/finale...           nightfall, light posts and signal locks
     world.py          GET /api/world           public coast stage and contributor Wall
     crew_orders.py    POST /api/crews/me/orders free NPC fetch-and-pin and public-light duty
+    festival.py       /api/festival...         timed lamp claims and the friendly Keepers' Ring
+    host_console.py   /api/host...             private host overview and own test-crew cleanup
     host_case.py      /api/host/case/clock      move the host's own crew's case clock
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the

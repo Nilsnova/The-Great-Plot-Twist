@@ -26,7 +26,8 @@ TABLES = frozenset(
     "prediction_pools prediction_stakes duels duel_moves "
     "case_state case_finds case_deductions case_accusations case_solvers case_actions "
     "board_pins finale_posts finale_signals npc_orders "
-    "world_state world_solves wall_of_lights".split()
+    "world_state world_solves wall_of_lights "
+    "festival_claims festival_queue festival_actions".split()
 )
 FUNCTIONS = frozenset(
     "assign_captain_name reroll_captain_name save_progress delete_player grant_entry_kit "
@@ -35,7 +36,9 @@ FUNCTIONS = frozenset(
     "prediction_place_stake prediction_settle_pool duel_create duel_answer duel_void "
     "case_open case_start_route case_accuse case_clock_forward islet_build "
     "board_pin board_pair finale_nightfall finale_take_post finale_signal "
-    "npc_fetch_pin npc_man_light".split()
+    "npc_fetch_pin npc_man_light "
+    "festival_claim festival_ring_join festival_ring_leave festival_ring_candidate "
+    "host_console_overview host_console_crews host_close_test_crew host_record_keepalive".split()
 )
 # (parent, embedded table): (parent key, embedded key, many)
 RELATIONS = {
@@ -174,8 +177,16 @@ class LocalAdmin(SupabaseAdmin):
         if len(signatures) != 1:
             raise SupabaseRejected()
         names, types_text = signatures[0]
-        types = dict(zip(names, types_text.split(", "), strict=True))
-        if not params or not params.keys() <= types.keys():
+        names = names or []
+        kinds = types_text.split(", ") if types_text else []
+        if len(names) != len(kinds):
+            raise SupabaseRejected()
+        types = dict(zip(names, kinds, strict=True))
+        if (
+            not isinstance(params, dict)
+            or (not params and names)
+            or not params.keys() <= types.keys()
+        ):
             raise SupabaseRejected()
         arguments, values = [], []
         for key, value in params.items():

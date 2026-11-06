@@ -5,9 +5,7 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-from server.festival.cache import FestivalCacheControl
 from server.festival.content import LAMP_IDS
-from server.routes import festival
 from tools.local_players import PLAYERS
 from tools.local_server import create_local_app
 
@@ -22,41 +20,15 @@ def okay(client, method, path, **kwargs):
     return response.json()
 
 
-def test_real_api_claims_pairing_replay_expiry_and_sealed_duel_access(monkeypatch):
+def test_real_api_claims_pairing_replay_expiry_and_sealed_duel_access():
     pytest.importorskip("pgserver")
     pytest.importorskip("psycopg")
     from dataclasses import replace
 
-    from tools import local_admin
-
-    # Only the development tool needs new allowlist entries; production uses SupabaseAdmin.
-    monkeypatch.setattr(
-        local_admin,
-        "TABLES",
-        local_admin.TABLES
-        | {
-            "festival_claims",
-            "festival_queue",
-            "festival_actions",
-        },
-    )
-    monkeypatch.setattr(
-        local_admin,
-        "FUNCTIONS",
-        local_admin.FUNCTIONS
-        | {
-            "festival_claim",
-            "festival_ring_join",
-            "festival_ring_leave",
-            "festival_ring_candidate",
-        },
-    )
     app = create_local_app({"LOCAL_TEST_SERVER": "1", "APP_ENV": "local"})
     app.state.settings = replace(
         app.state.settings, flags={**app.state.settings.flags, "festival": True, "arena": True}
     )
-    app.include_router(festival.router, prefix="/api")
-    app.add_middleware(FestivalCacheControl)
     headers = [{"Authorization": f"Bearer {player.token}"} for player in PLAYERS]
     with TestClient(app) as client:
         database = app.state.local_database

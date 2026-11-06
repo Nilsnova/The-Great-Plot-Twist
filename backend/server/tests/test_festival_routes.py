@@ -9,9 +9,7 @@ from fastapi.testclient import TestClient
 from server.app import create_app
 from server.auth import Player
 from server.duels import rules
-from server.festival.cache import FestivalCacheControl
 from server.festival.content import LAMP_IDS, FestivalContentError, load_content
-from server.routes import festival
 from server.settings import Settings
 
 PLAYER = "11111111-1111-4111-8111-111111111111"
@@ -104,8 +102,6 @@ def setup(*, enabled=True, arena=True):
         admin=database,
         clock=lambda: now[0],
     )
-    app.include_router(festival.router, prefix="/api")
-    app.add_middleware(FestivalCacheControl)
     return TestClient(app), database, verifier, now
 
 

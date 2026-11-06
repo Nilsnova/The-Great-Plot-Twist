@@ -11,8 +11,6 @@ from fastapi.testclient import TestClient
 from server.app import create_app
 from server.auth import PlayerVerifier
 from server.host_console import build_stamp, expected_migrations
-from server.host_console_cache import HostConsoleHeaders
-from server.routes import host_console
 from server.settings import load_settings
 from server.tests.helpers import CONFIGURED_SETTINGS, make_admin
 from server.tests.test_hosts import HOST_HEADER, HOST_ID, PLAYER_HEADER, login_works
@@ -57,11 +55,6 @@ def client_for(reply=None):
     app = create_app(
         settings, admin=admin, verifier=verifier, weather_source=make_weather_source(settings)
     )
-    # Root owns final app wiring; this fixture mounts the reviewed package in isolation.
-    if "/api/host/overview" not in app.openapi()["paths"]:
-        app.include_router(host_console.router, prefix="/api")
-        app.add_middleware(HostConsoleHeaders)
-        app.openapi_schema = None
     return TestClient(app), seen
 
 
