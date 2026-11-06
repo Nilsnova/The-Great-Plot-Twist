@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- G14 host console. Only the server can authorize its panels and actions. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="/src/ui/kit/kit.css" />
+    <link rel="stylesheet" href="/src/host/styles.css" />
+    <title>Host console · The Great Plot Twist</title>
+  </head>
+  <body>
+    <main id="host-console">
+      <header>
+        <p class="eyebrow">The Great Plot Twist · class demo</p>
+        <h1>Harbormaster’s desk</h1>
+        <p id="host-status" role="status" aria-live="polite">Checking host access…</p>
+        <nav id="host-actions" aria-label="Console actions"></nav>
+      </header>
+      <div id="host-panels" hidden></div>
+      <noscript>This console needs JavaScript. No host data is included in this page.</noscript>
+    </main>
+    <script type="module" src="/src/host/main.js"></script>
+  </body>
+</html>

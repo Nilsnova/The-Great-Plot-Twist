@@ -86,3 +86,9 @@ def build_stamp() -> dict[str, str]:
     if not re.fullmatch(r"[0-9a-fA-F]{40}", commit):
         commit = "unknown"
     return {"version": __version__, "commit": commit}
+
+
+def case_clock_available(schema: dict, flags: dict[str, bool]) -> bool:
+    """G10 must be installed and switched on; a reserved path/flag alone is not enough."""
+    path = schema.get("paths", {}).get("/api/host/case/clock", {})
+    return bool(flags.get("case", False) and "post" in path)

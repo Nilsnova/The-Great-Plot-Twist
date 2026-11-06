@@ -19,6 +19,7 @@ from server.host_console import (
     CrewList,
     OverviewRows,
     build_stamp,
+    case_clock_available,
     expected_migrations,
 )
 from server.hosts import HostDep
@@ -43,7 +44,8 @@ async def overview(
                    "fetchedAt": format_utc_time(reading.fetched_at)}
     except ApiError:
         weather = {"source": "unavailable", "origin": "unknown", "fetchedAt": None}
-    clock_available = "post" in request.app.openapi()["paths"].get("/api/host/case/clock", {})
+    schema = request.app.openapi()
+    clock_available = case_clock_available(schema, settings.flags)
     last = rows.lastKeepaliveAt
     return {
         **rows.model_dump(exclude={"lastKeepaliveAt"}),

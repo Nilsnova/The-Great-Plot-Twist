@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from server.app import create_app
 from server.auth import PlayerVerifier
+from server.hosts import HostDep
 from server.tests.helpers import CONFIGURED_SETTINGS, make_admin
 from server.tests.test_hosts import HOST_HEADER, HOST_ID, PLAYER_HEADER, login_works
 from server.weather.source import make_weather_source
@@ -130,3 +131,18 @@ def test_database_failure_does_not_expose_details():
     response = client.get("/api/host/overview", headers=HOST_HEADER)
     assert response.status_code == 503
     assert "private detail" not in response.text
+
+
+@pytest.mark.parametrize("installed,enabled", [(False, True), (True, False), (True, True)])
+def test_clock_capability_needs_both_installed_route_and_case_flag(installed, enabled):
+    client, _ = client_for()
+    settings = client.app.state.settings
+    client.app.state.settings = replace(settings, flags={**settings.flags, "case": enabled})
+    if installed:
+        @client.app.post("/api/host/case/clock")
+        async def fake_clock(host: HostDep):
+            return {"accepted": True}
+    config = client.get("/api/config").json()
+    assert config["capabilities"]["hostCaseClock"] is (installed and enabled)
+    response = client.get("/api/host/overview", headers=HOST_HEADER)
+    assert response.json()["caseClockAvailable"] is (installed and enabled)

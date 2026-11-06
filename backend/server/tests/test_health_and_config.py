@@ -50,6 +50,7 @@ def test_config_defaults_have_every_flag_switched_off():
         "demoMode": False,
         "flags": {name: False for name in FLAG_NAMES},
         "auth": {"provider": "github", "supabaseUrl": ""},
+        "capabilities": {"hostCaseClock": False},
     }
 
 
