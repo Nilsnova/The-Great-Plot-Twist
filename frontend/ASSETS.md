@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **185 sprites and 10 backgrounds/charts, 195 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **194 sprites and 10 backgrounds/charts, 204 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
@@ -216,3 +216,16 @@ The kit now contains 185 sprite PNGs plus ten existing backgrounds, 195 PNGs tot
 Five original speech bubbles, authored in `scripts/pixel_art/emotes.py`, registered by id in `pixel/story-catalog.js`: `emote-wave`, `emote-cheer`, `emote-point`, `emote-lantern`, `emote-shrug`. Each is 24 × 24 native pixels with transparent surroundings. No external source, font, logo or character name. Generate with `python3 scripts/pixel_art/generate.py`. Catalogue total: 190 sprites plus 10 backgrounds, 200 PNGs. The existing 195 images are unchanged.
 
 G7 Gull’s Rest reuses `lighthouse-lens`, `keepers-star`, `lantern`, `lens-hall-open` and `festival-lantern-string` in its open state. `world/places/gulls-rest-life.js` authors six small shore-wave quads and three V-shaped gull marks directly in geometry (two draw calls), plus lantern-string flicker. These are original code shapes, snapped to the same 16-pixel grid, with no new image, font or recording. Reduced motion keeps them still; the place lifetime owns every allocation.
+
+## G8 islet scenery
+
+Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixel/catalog.js` and loaded only on Home islet. `python3 scripts/pixel_art/generate.py` regenerates them with the existing kit; the previous 200 images remain unchanged.
+
+| Sprite id | Native pixels | Purpose |
+| --- | --- | --- |
+| `islet-empty-plot` | 56 × 64 | Timber parcel marker, without miniature text |
+| `islet-locked-sign` | 64 × 72 | Closed padlock sign for plots coming later |
+| `islet-signal-station` | 80 × 128 | Small stone station and cedar signal mast, unlit |
+| `islet-signal-station-lit` | 80 × 128 | Matching station with a steady gold lens at night |
+
+The existing cabin, workshop, windmill and greenhouse retain their approved original art. Visibility comes from the latest accepted building event. Build dust is five pooled code-authored pixel points per plot; the storm mast is original flat pixel geometry. These shapes add no external image or font. All materials, textures, geometry and subscriptions belong to their place lifetime. The signal station keeps the same id and artwork through world and finale presentation.

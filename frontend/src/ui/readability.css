@@ -33,3 +33,6 @@
 .hud:has(.interact:not([hidden]))~.other-captain-label{visibility:hidden}
 /* Keep long place names on one readable line at the native chart scale. */
 .chart-map button,.chart-map button span{max-width:200px}
+
+/* A distinct station glyph avoids adding another overlapping chart label. */
+.chart-station-marker{position:absolute;left:67.4%;top:71%;color:#ffe4a1;font:20px/1 Courier New,monospace;text-shadow:2px 2px #21382b;pointer-events:none}.chart-station-marker[hidden]{display:none}
