@@ -25,9 +25,11 @@ server/tests/test_content.py.
 """
 
 import json
-from typing import Any
+from functools import lru_cache
+from pathlib import Path
 
 from fastapi import APIRouter, Response
+from fastapi.responses import JSONResponse
 
 from plot_twist.engine import CONTENT_DIR
 from server.errors import ApiError
@@ -44,17 +46,25 @@ PUBLIC_CONTENT: dict[str, str] = {
 CACHE_CONTROL = "public, max-age=300"
 
 
-def read_json_file(filename: str) -> Any:
-    with open(CONTENT_DIR / filename, encoding="utf-8") as f:
-        return json.load(f)
+@lru_cache(maxsize=8)
+def encoded_content(path: Path, modified_ns: int, size: int) -> bytes:
+    """Cache only allow-listed public bytes, never a response or any player's data.
+
+    Revision arguments invalidate the bounded cache when local content is replaced.
+    """
+    return JSONResponse(json.loads(path.read_text(encoding="utf-8"))).body
 
 
 # A plain "def", not "async def": it reads a file, and FastAPI runs a plain "def" in a worker
 # thread, so the file read never holds up other requests.
 @router.get("/content/{name}")
-def get_content(name: str, response: Response) -> Any:
+def get_content(name: str) -> Response:
     filename = PUBLIC_CONTENT.get(name)
     if filename is None:
         raise ApiError(404, "content_not_found", "There is no public content with that name.")
-    response.headers["Cache-Control"] = CACHE_CONTROL
-    return read_json_file(filename)
+    path = CONTENT_DIR / filename
+    revision = path.stat()
+    payload = encoded_content(path, revision.st_mtime_ns, revision.st_size)
+    return Response(
+        payload, media_type="application/json", headers={"Cache-Control": CACHE_CONTROL}
+    )

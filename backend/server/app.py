@@ -19,6 +19,7 @@ from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
 from server.errors import register_error_handlers
 from server.market.exchange import MarketService, market_or_none
+from server.request_policy import RequestPolicy
 from server.routes import (
     auth_exchange,
     captain_name,
@@ -96,6 +97,9 @@ def create_app(
     # database reads put the player id in that address (see routes/me.py), so keep those lines
     # out of the log, even if someone switches INFO logging on to debug something else.
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
+    # Uvicorn's access logger includes raw paths and query strings. Use safe templates instead.
+    logging.getLogger("uvicorn.access").disabled = True
 
     app = new_fastapi_app(settings)
 
@@ -109,6 +113,7 @@ def create_app(
     app.state.market = market_service
 
     register_error_handlers(app)
+    app.add_middleware(RequestPolicy)
     app.include_router(health.router, prefix="/api")
     app.include_router(content.router, prefix="/api")
     app.include_router(config.router, prefix="/api")

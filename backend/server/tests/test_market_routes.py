@@ -307,7 +307,7 @@ def test_a_failed_board_is_not_cached():
     response = world.board()
 
     assert response.status_code == 503
-    assert "cache-control" not in response.headers
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 def test_the_board_carries_the_rules_the_screen_shows():
@@ -709,7 +709,7 @@ def test_when_binance_has_never_answered_the_live_board_is_a_503_and_never_plays
     response = client.get("/api/market")
 
     assert_error(response, 503, "source_unavailable")
-    assert "cache-control" not in response.headers
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 def test_when_binance_fails_after_a_good_answer_the_board_shows_the_old_prices_as_stale():

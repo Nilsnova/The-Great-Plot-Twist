@@ -67,7 +67,9 @@ def error_response(
 ) -> JSONResponse:
     """Build the JSON response in the one standard shape."""
     body = {"error": {"code": code, "message": message}}
-    return JSONResponse(status_code=status_code, content=body, headers=headers)
+    response = JSONResponse(status_code=status_code, content=body, headers=headers)
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
 
 
 def describe_validation_problems(error: RequestValidationError) -> str:
@@ -100,8 +102,8 @@ async def handle_validation_error(request: Request, error: RequestValidationErro
 
 
 async def handle_unexpected_error(request: Request, error: Exception) -> JSONResponse:
-    """A bug. The details go to the server log only, never into the response."""
-    logger.error("Unexpected error on %s %s", request.method, request.url.path, exc_info=error)
+    """A bug. Log its class only: paths and exception details can contain private data."""
+    logger.error("Unexpected server error: %s", type(error).__name__)
     return error_response(500, "server_error", "Something went wrong on our side. Try again.")
 
 
