@@ -20,6 +20,7 @@
     case.py           /api/case...             earned view, card searches and accusation
     board.py          /api/board...            own-seat pins and shared deductions
     finale.py         /api/finale...           nightfall, light posts and signal locks
+    world.py          GET /api/world           public coast stage and contributor Wall
     host_case.py      /api/host/case/clock      move the host's own crew's case clock
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the

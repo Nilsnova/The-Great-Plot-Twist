@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 
 from server.app import create_app
 from server.game.case_data import load_case
-from server.routes.world import router
 from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin
 from server.tests.helpers import assert_error
@@ -46,7 +45,6 @@ def client_for(*, enabled=True, stage="relit", failure=False, configured=True):
         transport=httpx.MockTransport(reply),
     )
     app = create_app(settings=Settings(flags={"case": enabled}), admin=admin)
-    app.include_router(router, prefix="/api")
     return TestClient(app)
 
 
