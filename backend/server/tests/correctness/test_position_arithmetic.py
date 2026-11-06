@@ -1,7 +1,6 @@
-"""Current spot-position valuation on seeded walks; no database, leverage or economy simulation.
+"""Seeded current portfolio valuations retain stored positions and server-owned 10x math.
 
-The replacement 10x/zero-close position contract is pending on the Exchange implementation.
-These tests exercise only the pure arithmetic exposed by today's position view.
+The independent exact-fraction oracle is shared only among these new correctness tests.
 """
 
 import math
@@ -12,65 +11,106 @@ from fractions import Fraction
 
 import pytest
 
+from server.market.board import Snapshot
+from server.market.calendars import ALWAYS_OPEN
 from server.market.companies import Company
-from server.market.exchange import CompanyQuote, MarketService
-from server.market.rules import Base, Evaluation
+from server.market.portfolio import view_position
+from server.market.positions import fee_for, profit_percent, zero_price
+from server.market.readings import Reading
+from server.market.states import CompanyState
 from server.market.store import PositionRow
+from server.routes.market import position_out
+from server.tests.correctness.test_market_arithmetic import oracle_close
 
 NOW = datetime(2026, 11, 6, 12, tzinfo=UTC)
-COMPANY = Company("g21-test", "Test Company", "TEST", "Test", "TESTUSDT", Decimal(10), "Test")
+COMPANY = Company(
+    "g21-test",
+    "Test Company",
+    "TEST",
+    "island",
+    "Test instrument",
+    "TESTUSDT",
+    "always",
+    "USDT",
+    8,
+    "A test company.",
+)
 
 
-def quote_at(price: Decimal) -> CompanyQuote:
-    base = Base(Decimal(10), Decimal(100), NOW, "live")
-    evaluation = Evaluation(price, Decimal(0), None, base, False)
-    return CompanyQuote(COMPANY, evaluation)
+def snapshot_at(price: Decimal, relit: bool) -> Snapshot:
+    state = CompanyState(
+        COMPANY, Reading(price, NOW, NOW, "live"), ALWAYS_OPEN, "open", None, False, True
+    )
+    return Snapshot((state,), NOW, relit, True, False)
 
 
-def expected_profit(price: Decimal, average: Decimal) -> Decimal:
-    """Signed half-up percent rounding using exact fractions instead of Decimal.quantize."""
-    percent = (Fraction(price) / Fraction(average) - 1) * 100
+def expected_profit(value: int, stake: int) -> Decimal:
+    percent = Fraction(value - stake, stake) * 100
     sign = -1 if percent < 0 else 1
     return Decimal(sign * math.floor(abs(percent) * 100 + Fraction(1, 2))) / 100
 
 
+def row_for(side: str, stake: int, entry: Decimal, rate: int) -> PositionRow:
+    return PositionRow(
+        "00000000-0000-4000-8000-000000000021",
+        COMPANY.id,
+        side,
+        "live",
+        stake,
+        entry,
+        zero_price(side, entry),
+        fee_for(stake, rate),
+        NOW,
+        "open",
+        None,
+        None,
+        None,
+        None,
+    )
+
+
 @pytest.mark.parametrize("seed", [21, 2102, 0xC01A])
-def test_seeded_position_marks_preserve_units_cost_and_exact_value(seed: int) -> None:
+@pytest.mark.parametrize("side", ["rising", "falling"])
+@pytest.mark.parametrize("relit", [False, True], ids=("dark", "relit"))
+def test_seeded_portfolio_marks_preserve_position_and_exact_leveraged_value(seed, side, relit):
     rng = random.Random(seed)
+    rate = 100 if relit else 200
     for _ in range(10):
-        average = Decimal(rng.randint(400, 12_500)) / 100
-        units = rng.choice([1, rng.randint(1, 100_000)])
-        row = PositionRow(COMPANY.id, units, average, NOW, NOW)
-        ticks = rng.randint(400, 12_500)
-        previous_value = None
-        previous_price = None
+        entry = Decimal(rng.randint(400, 12_500)) / 100
+        stake = rng.randint(10, 500)
+        row = row_for(side, stake, entry, rate)
+        ticks = int(entry * 100)
         for _ in range(100):
             ticks = max(1, ticks + rng.randint(-500, 500))
             price = Decimal(ticks) / 100
-            quote = quote_at(price)
-            view = MarketService.view_position(quote, row, NOW)
-            assert view.value == math.floor(units * Fraction(price))
-            assert view.profit_percent == expected_profit(price, average)
-            assert view.row == row
-            assert view.quote == quote
-            assert row.units == units
-            assert row.avg_price == average
-            if price == average:
-                assert view.profit_percent == 0
-            if previous_price is not None:
-                if price >= previous_price:
-                    assert view.value >= previous_value
-                else:
-                    assert view.value <= previous_value
-            previous_value, previous_price = view.value, price
+            view = view_position(row, snapshot_at(price, relit), "live")
+            value, fee, received, used_up = oracle_close(side, stake, entry, price, rate)
+            assert view.row is row and view.price == price and view.can_close
+            assert (
+                view.closing.value,
+                view.closing.fee,
+                view.closing.coins_change,
+                view.closing.used_up,
+            ) == (value, fee, received, used_up)
+            assert view.result == received - stake - row.open_fee
+            assert profit_percent(value, stake) == expected_profit(value, stake)
+            public = position_out(view)
+            assert public.value == value and public.closeFee == fee
+            assert public.wouldReceive == received and public.result == view.result
+            assert public.profitPercent == float(expected_profit(value, stake))
+            assert row.stake == stake and row.entry_price == entry and row.status == "open"
 
 
 @pytest.mark.parametrize(
-    "price,percentage",
-    [("199.97", "-0.02"), ("199.99", "-0.01"), ("200", "0"),
-     ("200.01", "0.01"), ("200.03", "0.02")],
+    "value,stake,percentage",
+    [
+        (0, 100, "-100.00"),
+        (1, 20000, "-100.00"),
+        (3, 20000, "-99.99"),
+        (100, 100, "0.00"),
+        (20001, 20000, "0.01"),
+        (20003, 20000, "0.02"),
+    ],
 )
-def test_profit_half_ties_round_away_from_zero(price: str, percentage: str) -> None:
-    row = PositionRow(COMPANY.id, 1, Decimal(200), NOW, NOW)
-    view = MarketService.view_position(quote_at(Decimal(price)), row, NOW)
-    assert view.profit_percent == Decimal(percentage)
+def test_profit_half_ties_round_away_from_zero(value, stake, percentage):
+    assert profit_percent(value, stake) == Decimal(percentage) == expected_profit(value, stake)

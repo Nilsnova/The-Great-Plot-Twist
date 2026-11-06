@@ -11,19 +11,36 @@ from pydantic import SecretStr
 from server import settings as module
 from server.flags import UnknownFlagError
 
-FLAGS = ("market", "predictions", "sports", "arena", "raid", "live_presence", "companion_llm")
+FLAGS = (
+    "market",
+    "predictions",
+    "sports",
+    "arena",
+    "raid",
+    "live_presence",
+    "companion_llm",
+    "case",
+    "sign_in",
+    "bulletin",
+    "festival",
+)
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
-    "SUPABASE_URL": " https://g21.invalid/// ",
+    "SUPABASE_URL": " https://g21-fixture.supabase.co/// ",
     "SUPABASE_PUBLISHABLE_KEY": " g21-public-placeholder ",
-    "SUPABASE_SECRET_KEY": " g21-server-placeholder ",
-    "CRON_SECRET": " g21-cron-placeholder ",
+    "SUPABASE_SECRET_KEY": " fake-a ",
+    "CRON_SECRET": " fake-b ",
     "DEMO_MODE": " TrUe ",
     "FEATURE_FLAGS": " raid, market,raid, ",
     "WEATHER_PLACE_NAME": " Tórshavn, Føroyar ",
     "WEATHER_LATITUDE": " -12.345 ",
     "WEATHER_LONGITUDE": " 123.456 ",
-    "MARKET_MULTIPLIER": " 030 ",
+    "RELIGHT_OPEN": " FaLsE ",
+    "STOCK_API_PROVIDER": " FiNnHuB ",
+    "STOCK_API_KEY": " fake-c ",
+    "SPORTS_API_PROVIDER": " football-data.org ",
+    "SPORTS_API_KEY": " fake-d ",
+    "VERCEL_GIT_COMMIT_SHA": " g21-synthetic-commit ",
     "HOST_PLAYER_IDS": " 00000000-0000-4000-8000-000000000021, ",
 }
 
@@ -36,8 +53,10 @@ def test_every_documented_variable_is_in_the_complete_fixture():
         for line in template.read_text().splitlines()
         if line and not line.startswith("#") and "=" in line
     }
-    # The two VITE_ names belong only to the browser, not to the server settings parser.
-    assert names - {"VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"} == set(VARIABLES)
+    # VITE_ belongs to the browser; VERCEL_GIT_COMMIT_SHA is injected by the host, not the template.
+    assert names - {"VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"} == set(VARIABLES) - {
+        "VERCEL_GIT_COMMIT_SHA"
+    }
 
 
 def test_all_variables_are_parsed_together_and_the_input_is_not_mutated():
@@ -45,18 +64,25 @@ def test_all_variables_are_parsed_together_and_the_input_is_not_mutated():
     settings = module.load_settings(environment)
 
     assert settings.app_env == "preview"
-    assert settings.supabase_url == "https://g21.invalid"
+    assert settings.supabase_url == "https://g21-fixture.supabase.co"
     assert settings.supabase_publishable_key == "g21-public-placeholder"
     assert isinstance(settings.supabase_secret_key, SecretStr)
-    assert settings.supabase_secret_key.get_secret_value() == "g21-server-placeholder"
+    assert settings.supabase_secret_key.get_secret_value() == "fake-a"
     assert isinstance(settings.cron_secret, SecretStr)
-    assert settings.cron_secret.get_secret_value() == "g21-cron-placeholder"
+    assert settings.cron_secret.get_secret_value() == "fake-b"
     assert settings.demo_mode is True
     assert settings.flags == {name: name in {"raid", "market"} for name in FLAGS}
     assert settings.weather_place_name == "Tórshavn, Føroyar"
     assert settings.weather_latitude == -12.345
     assert settings.weather_longitude == 123.456
-    assert settings.market_multiplier == 30
+    assert settings.relight_open is False
+    assert settings.stock_api_provider == "finnhub"
+    assert settings.sports_api_provider == "football-data.org"
+    assert isinstance(settings.stock_api_key, SecretStr)
+    assert isinstance(settings.sports_api_key, SecretStr)
+    assert settings.stock_api_key.get_secret_value() == "fake-c"
+    assert settings.sports_api_key.get_secret_value() == "fake-d"
+    assert settings.build_commit == "g21-synthetic-commit"
     assert settings.host_player_ids == frozenset({"00000000-0000-4000-8000-000000000021"})
     assert environment == VARIABLES
 

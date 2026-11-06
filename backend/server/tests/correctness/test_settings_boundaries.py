@@ -8,21 +8,66 @@ import pytest
 from server.settings import SettingsError, load_settings
 
 
-@pytest.mark.parametrize("value", range(20, 101))
-def test_every_supported_market_multiplier_is_accepted(value):
-    assert load_settings({"MARKET_MULTIPLIER": f" {value:03d} "}).market_multiplier == value
+@pytest.mark.parametrize("value", ["", "finnhub", "FINNHUB", " FiNnHuB "])
+def test_stock_provider_normalizes_supported_spelling_without_loading_a_key(value):
+    assert load_settings({"STOCK_API_PROVIDER": value}).stock_api_provider == value.strip().lower()
 
 
-@pytest.mark.parametrize("value", [-1, 0, 1, 19, 101, 1000, 2**63])
-def test_out_of_range_multipliers_name_the_setting(value):
-    with pytest.raises(SettingsError, match="MARKET_MULTIPLIER"):
-        load_settings({"MARKET_MULTIPLIER": str(value)})
+@pytest.mark.parametrize("name", ["STOCK_API_PROVIDER", "SPORTS_API_PROVIDER"])
+@pytest.mark.parametrize("value", ["unknown", "1", "http://example.org", "finnhub,balldontlie"])
+def test_unrecognized_provider_is_refused(name, value):
+    with pytest.raises(SettingsError, match=name):
+        load_settings({name: value})
 
 
-@pytest.mark.parametrize("value", ["+30", "30.0", "3e1", "0x20", "３０", "3_0", "30\x00"])
-def test_ambiguous_integer_spellings_are_rejected(value):
-    with pytest.raises(SettingsError, match="MARKET_MULTIPLIER"):
-        load_settings({"MARKET_MULTIPLIER": value})
+@pytest.mark.parametrize("provider", ["", "football-data.org", "balldontlie"])
+def test_sports_provider_allows_only_the_fixed_adapters(provider):
+    assert load_settings({"SPORTS_API_PROVIDER": provider}).sports_api_provider == provider
+
+
+@pytest.mark.parametrize("environment", ["local", "preview", "production"])
+@pytest.mark.parametrize("value", ["true", " TrUe ", "false", " FaLsE ", ""])
+def test_relight_switch_is_fail_closed_and_production_only(environment, value):
+    variables = {
+        "APP_ENV": environment,
+        "SUPABASE_URL": "https://g21-fixture.supabase.co",
+        "RELIGHT_OPEN": value,
+    }
+    if value.strip().lower() == "true" and environment != "production":
+        with pytest.raises(SettingsError, match="RELIGHT_OPEN"):
+            load_settings(variables)
+    else:
+        assert load_settings(variables).relight_open is (value.strip().lower() == "true")
+
+
+@pytest.mark.parametrize("value", ["yes", "1", "0", "true,false", "on"])
+def test_ambiguous_relight_switch_values_cannot_open_the_world(value):
+    with pytest.raises(SettingsError, match="RELIGHT_OPEN"):
+        load_settings(
+            {
+                "APP_ENV": "production",
+                "SUPABASE_URL": "https://g21-fixture.supabase.co",
+                "RELIGHT_OPEN": value,
+            }
+        )
+
+
+@pytest.mark.parametrize("environment", ["preview", "production"])
+@pytest.mark.parametrize(
+    "address",
+    [
+        "",
+        "http://g21-fixture.supabase.co",
+        "https://example.org",
+        "https://g21-fixture.supabase.co:444",
+        "https://g21-fixture.supabase.co/path",
+        "https://g21-fixture.supabase.co?query=value",
+        "https://g21-fixture.supabase.co#fragment",
+    ],
+)
+def test_deployed_supabase_address_rejects_ambiguous_or_unapproved_origins(environment, address):
+    with pytest.raises(SettingsError, match="SUPABASE_URL"):
+        load_settings({"APP_ENV": environment, "SUPABASE_URL": address})
 
 
 @pytest.mark.parametrize("name,limit", [("WEATHER_LATITUDE", 90), ("WEATHER_LONGITUDE", 180)])
@@ -65,7 +110,13 @@ def test_unrecognized_enum_text_cannot_silently_select_a_default(name, value):
 @pytest.mark.parametrize("environment", ["local", "preview", "production"])
 @pytest.mark.parametrize("demo", ["true", "false"])
 def test_enum_parsing_normalizes_mixed_case_and_whitespace_independently(environment, demo):
-    settings = load_settings({"APP_ENV": f" {environment.upper()} ", "DEMO_MODE": demo.title()})
+    settings = load_settings(
+        {
+            "APP_ENV": f" {environment.upper()} ",
+            "DEMO_MODE": demo.title(),
+            "SUPABASE_URL": "https://g21-fixture.supabase.co",
+        }
+    )
     assert settings.app_env == environment
     assert settings.demo_mode is (demo == "true")
 
