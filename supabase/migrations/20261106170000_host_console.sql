@@ -89,6 +89,14 @@ begin
              where crew_id = p_crew_id and player_id <> p_host_id) then
     return jsonb_build_object('status', 'refused', 'reason', 'not_test_crew');
   end if;
+  -- A normal join locks this profile before its draft crew. Do not wait here
+  -- with the crew locked: the audit foreign key would otherwise reverse that order.
+  -- The account-deletion function keeps its existing crew-before-profile order.
+  begin
+    perform 1 from public.profiles where id = p_host_id for key share nowait;
+  exception when lock_not_available then
+    return jsonb_build_object('status', 'refused', 'reason', 'crew_busy');
+  end;
   update public.crews set status = 'finished', version = version + 1 where id = p_crew_id;
   insert into public.host_console_actions (host_id, action_uid, crew_id)
     values (p_host_id, p_action_uid, p_crew_id);

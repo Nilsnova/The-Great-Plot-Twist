@@ -35,6 +35,8 @@ The server then checks, atomically, that the crew was created by the **requestin
 
 Closing sets the crew to `finished` and increments its version. It does not delete seats/history, move coins, change a case, or affect another crew. The action is recorded with the verified host, crew and action UUID. Successful audit records survive crew deletion; they follow the account-deletion contract and disappear if that host deletes their account.
 
+A concurrent join or profile action may return `409 crew_busy`. That refusal changes no crew or audit row. Wait briefly and retry the same action. Cleanup never waits on the host's profile while holding the crew; account deletion retains its existing lock order.
+
 If the result is unknown, retry the **same crew** in the same page: the same action UUID is sent. A successful repeat returns the stored success without changing state again. A UUID cannot close a different crew. A fresh action on an already-finished crew is refused. Refreshing or closing the tab discards the browser's retry identity; inspect the refreshed crew status before trying anything else.
 
 ### Case clock (G10)
@@ -82,3 +84,5 @@ A successful G10 repeat omits extra numbers under the case API contract. The con
 Verified locally: host/auth/config/keepalive tests; full scratch migration chain and reapply; open versus closed Exchange v2 counts; browser roles and invoker grants; safe repeated/concurrent cleanup; frontend tests; production build and spoiler guard; mocked desktop and 390px browser checks. No live cleanup, clock, world or settings action was performed. Screenshots and report from the integration gate are under `/tmp/g14-integration-captures` in the review workspace. Original checkpoint counts/screenshots remain historical evidence.
 
 Before release, root must mount `host_console.router` and `HostConsoleHeaders` in the shared app, merge the interface documentation, and run the combined 160000/170000 chain and application checks. Migration 170000 remains unapplied and requires independent review against the live state before application. No new dependency or feature flag is enabled by G14.
+
+Independent review reproduced a lock inversion with an ordinary join. The unapplied migration now takes a nonblocking key-share lock on the host profile before updating the crew or inserting its audit. Permanent scratch regressions prove the busy refusal leaves status/version/audit unchanged, the actual `crew_take_seat` can then finish, and the unchanged `delete_player` can win a crew-lock race safely.

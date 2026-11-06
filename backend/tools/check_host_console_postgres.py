@@ -6,6 +6,7 @@ Test-only packages; not project dependencies. A new disposable local cluster is 
 """
 
 import tempfile
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -47,11 +48,11 @@ def crew(connection, *, owner=HOST, status="forming", other_seat=False):
     return crew_id
 
 
-def close(connection, crew_id, action=None):
+def close(connection, crew_id, action=None, *, host=HOST):
     return scalar(
         connection,
         "select public.host_close_test_crew(%s,%s,%s)",
-        (HOST, crew_id, action or uuid4()),
+        (host, crew_id, action or uuid4()),
     )
 
 
@@ -226,6 +227,96 @@ def check_concurrency(connection, uri):
     assert scalar(connection, "select version from public.crews where id=%s", (target,)) == 2
 
 
+def race_crew(connection):
+    host, other = uuid4(), uuid4()
+    for player in (host, other):
+        connection.execute("insert into auth.users(id) values(%s)", (player,))
+    return host, crew(connection, owner=host), crew(connection, owner=other)
+
+
+def close_from_other_connection(uri, host, target, action):
+    with psycopg.connect(uri, autocommit=True) as closing:
+        closing.execute("set role service_role")
+        closing.execute("set statement_timeout = '5s'")
+        closing.execute("set lock_timeout = '3s'")
+        return close(closing, target, action, host=host)
+
+
+def check_join_and_delete_races(connection, uri):
+    # Real join order: profile first, then its own draft. Close must not wait on the profile.
+    host, draft, target = race_crew(connection)
+    action = uuid4()
+    pool = ThreadPoolExecutor(max_workers=1)
+    with psycopg.connect(uri) as joining:
+        try:
+            joining.execute("set local role service_role")
+            joining.execute("set local statement_timeout = '8s'")
+            joining.execute("select 1 from public.profiles where id=%s for update", (host,))
+            future = pool.submit(close_from_other_connection, uri, host, draft, action)
+            assert future.result(timeout=2) == {"status": "refused", "reason": "crew_busy"}
+            assert connection.execute(
+                "select status,version from public.crews where id=%s", (draft,)
+            ).fetchone() == ("forming", 1)
+            assert (
+                scalar(
+                    connection,
+                    "select count(*) from public.host_console_actions "
+                    "where host_id=%s and action_uid=%s",
+                    (host, action),
+                )
+                == 0
+            )
+            joined = scalar(
+                joining, "select public.crew_take_seat(%s,%s,2,'witness',1)", (target, host)
+            )
+            assert joined["status"] == "joined"
+            joining.commit()
+        finally:
+            joining.rollback()
+            pool.shutdown(wait=True)
+
+    # Existing delete_player order stays crew -> auth/profile; deletion may safely win.
+    host, draft, _ = race_crew(connection)
+    action = uuid4()
+    pool = ThreadPoolExecutor(max_workers=1)
+    with psycopg.connect(uri) as deleting:
+        try:
+            deleting.execute("set local role service_role")
+            deleting.execute("set local statement_timeout = '8s'")
+            deleting.execute("select 1 from public.crews where id=%s for update", (draft,))
+            future = pool.submit(close_from_other_connection, uri, host, draft, action)
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline:
+                waiting = scalar(
+                    connection,
+                    "select count(*) from pg_stat_activity "
+                    "where wait_event_type='Lock' and query like "
+                    "'select public.host_close_test_crew%%'",
+                )
+                if waiting:
+                    break
+                time.sleep(0.01)
+            else:
+                raise AssertionError("Close did not reach the crew held by deletion")
+            assert (
+                scalar(deleting, "select public.delete_player(%s)", (host,))["status"] == "deleted"
+            )
+            deleting.commit()
+            assert future.result(timeout=2) == {"status": "refused", "reason": "not_test_crew"}
+            assert (
+                scalar(
+                    connection,
+                    "select count(*) from public.host_console_actions "
+                    "where host_id=%s and action_uid=%s",
+                    (host, action),
+                )
+                == 0
+            )
+        finally:
+            deleting.rollback()
+            pool.shutdown(wait=True)
+
+
 def main():
     server = pgserver.get_server(tempfile.mkdtemp(prefix="g14-pg-"), cleanup_mode="delete")
     try:
@@ -250,6 +341,7 @@ def main():
             assert "player_id" not in str(recent) and "kit" not in str(recent)
             connection.execute("reset role")
             check_positions(connection)
+            check_join_and_delete_races(connection, uri)
             # Missing optional market schema is explicit, not a made-up zero.
             connection.execute("drop table public.exchange_positions cascade")
             result = scalar(connection, "select public.host_console_overview()")
@@ -258,7 +350,7 @@ def main():
         print(
             "PASS: scratch PostgreSQL: all migrations, reapply, invoker grants/RLS, "
             "UTC aggregates, durable keepalive, safe closes, concurrent retries, "
-            "bounded sanitized crews, missing schema"
+            "bounded sanitized crews, join/deletion lock races, missing schema"
         )
     finally:
         server.cleanup()
