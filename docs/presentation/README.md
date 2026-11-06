@@ -25,14 +25,20 @@ the filesystem without a server, installation or internet connection.
 Use the operating system's projector/extended-display controls as appropriate.
 No live-demo walkthrough is included: G11 owns that script.
 
+The [rehearsal table](rehearsal.md) allocates all ten slides and explains the
+handoff. [Download/open the audience PDF](The-Great-Plot-Twist.pdf) for a static
+fallback. Print / PDF exports every slide, regardless of the currently active
+slide; speaker notes and controls are excluded. Export settings and the automated
+reproduction command are in the rehearsal guide.
+
 ## Sources and scope
 
 [Outline and speaker notes](outline.md) records C1's narrative.
-[Sources](sources.md) pins architecture and test claims to main `c26f303`.
-Realtime, connected screen work and sitewide security headers are explicitly
-qualified rather than presented as finished. The requested
-`frontend/HOW-IT-WORKS.md` is absent on that baseline; graphics docs and code were
-used instead.
+[Sources](sources.md) pins architecture and test claims to main `60f7fd0`.
+Realtime is built with its flag off and game hookup pending; account UI is built
+but real transport integration remains. Sitewide security headers are configured,
+with deployed behavior still to verify. The requested `frontend/HOW-IT-WORKS.md`
+was added by the C3 main merge and read before the final content refresh.
 
 All artwork is original local SVG. The page's restrictive CSP uses external
 `deck.js` and `deck.css`, permits local images, and blocks network connections and

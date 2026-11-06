@@ -116,7 +116,7 @@ progress { width:8rem; height:.3rem; accent-color:var(--sea); border:0; }
   h3,.notes-view .slide h3 { font-size:18pt; }
   p,li,.notes-view .slide p,.notes-view .slide li { font-size:16pt; }
   .eyebrow,.notes-view .slide .eyebrow { font-size:9pt; margin-bottom:4mm; }
-  .small { font-size:11pt; }
+  .small,.notes-view .slide .small { font-size:11pt; }
   .source,.notes-view .slide .source { font-size:8pt; margin-top:3mm; }
   .diagram img,.notes-view .diagram img { height:84mm; max-height:84mm; }
   .diagram figcaption { font-size:11pt; }
@@ -126,7 +126,7 @@ progress { width:8rem; height:.3rem; accent-color:var(--sea); border:0; }
   .card { padding:4mm 0; }
   .card p,.notes-view .card p { font-size:13pt; }
   .number { margin-bottom:4mm; }
-  .status-line { font-size:11pt; margin-top:4mm; padding:3mm; }
+  .status-line,.notes-view .slide .status-line { font-size:11pt; margin-top:4mm; padding:3mm; }
   .flow span,.notes-view .flow span { font-size:15pt; }
   .flow { padding:4mm 0; }
   .stat strong,.notes-view .stat strong { font-size:68pt; }
