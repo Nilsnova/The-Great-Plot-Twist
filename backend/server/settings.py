@@ -27,6 +27,8 @@ so this file is the full list of what can be configured:
                               that the prices may be shown (docs/DECISIONS.md, D017).
     STOCK_API_KEY             the key of that provider. SERVER ONLY, like the Supabase secret key:
                               never in the browser, a log or the repo. Empty keeps the stocks off.
+    SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty disables live sports.
+    SPORTS_API_KEY            server-only provider key; empty keeps live sports unavailable.
 
 Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and
 crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence),
@@ -102,6 +104,8 @@ class Settings:
     # SecretStr prints as ********** in logs and error messages. Only market/exchange.py calls
     # .get_secret_value(), once, to build the stock source.
     stock_api_key: SecretStr = SecretStr("")
+    sports_api_provider: str = ""
+    sports_api_key: SecretStr = SecretStr("")
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -229,6 +233,13 @@ def read_host_player_ids(env: Mapping[str, str]) -> frozenset[str]:
     return frozenset(ids)
 
 
+def read_sports_provider(env: Mapping[str, str]) -> str:
+    value = read_text(env, "SPORTS_API_PROVIDER")
+    if value not in ("", "football-data.org", "balldontlie"):
+        raise SettingsError("SPORTS_API_PROVIDER must be empty, football-data.org or balldontlie.")
+    return value
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     app_env = read_app_env(env)
@@ -253,6 +264,8 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         build_commit=read_text(env, "VERCEL_GIT_COMMIT_SHA"),
         stock_api_provider=read_stock_api_provider(env),
         stock_api_key=SecretStr(read_text(env, "STOCK_API_KEY")),
+        sports_api_provider=read_sports_provider(env),
+        sports_api_key=SecretStr(read_text(env, "SPORTS_API_KEY")),
     )
 
 
