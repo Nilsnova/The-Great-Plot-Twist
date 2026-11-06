@@ -1,5 +1,5 @@
 // Fast title entry. One adapter is shared by title, account and the lazily loaded world.
-import './ui/styles.css';
+import './ui/base.css';
 import './ui/kit/kit.css';
 import './ui/shell.css';
 import {createShell} from './shell/controller.js';

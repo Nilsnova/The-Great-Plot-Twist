@@ -1,0 +1,2 @@
+/* Shared page and focus rules. Loaded by the title and deferred world. */
+:root{font-family:'Courier New',monospace;color:#e7d6a6;background:#3d7371;font-synthesis:none}*{box-sizing:border-box}body{margin:0;overflow:hidden}button,select,input{font:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #efcf80;outline-offset:4px}[hidden]{display:none!important}canvas{display:block;touch-action:none;outline:none;image-rendering:pixelated}
