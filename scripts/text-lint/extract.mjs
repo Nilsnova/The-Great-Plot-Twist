@@ -2,12 +2,12 @@
 import {readdir, readFile} from 'node:fs/promises';
 import {join, relative} from 'node:path';
 
-export async function filesUnder(root) {
+export async function filesUnder(root, {excludeSecret=false}={}) {
   const files = [];
   for (const entry of (await readdir(root, {withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))) {
-    if (entry.name === 'secret' || entry.name === 'node_modules') continue;
+    if (excludeSecret && entry.name === 'secret' || entry.name === 'node_modules') continue;
     const path = join(root, entry.name);
-    if (entry.isDirectory()) files.push(...await filesUnder(path));
+    if (entry.isDirectory()) files.push(...await filesUnder(path,{excludeSecret}));
     else if (entry.isFile()) files.push(path);
   }
   return files;
@@ -23,7 +23,7 @@ function decodeEscape(source, index) {
 // This lexer handles comments, escaped literals, regex literals and nested template expressions.
 // It extracts chunks, not JavaScript values: an interpolation is a dynamic boundary, never prose.
 export function javascriptStrings(source) {
-  const records = []; let index = 0, previous = '';
+  const records = []; let index = 0, previous = ''; const parentheses = [];
   function quoted(quote) {
     const start = index++, parts = []; let text = '';
     while (index < source.length) {
@@ -47,7 +47,7 @@ export function javascriptStrings(source) {
       if (/\s/.test(char)) { index++; continue; }
       if (char === '/' && next === '/') { index = source.indexOf('\n',index); if (index < 0) index = source.length; continue; }
       if (char === '/' && next === '*') { const end = source.indexOf('*/',index+2); index = end < 0 ? source.length : end+2; continue; }
-      if (char === '/' && (!previous || /[=(:,!&|?\[;{}]/.test(previous) || previous === 'return' || previous === '=>')) {
+      if (char === '/' && (!previous || /^[=(:,!&|?\[;{}]$/.test(previous) || ['return','=>','control-close'].includes(previous))) {
         index++; let bracket = false;
         while (index < source.length) {
           const value = source[index++];
@@ -60,6 +60,9 @@ export function javascriptStrings(source) {
         previous = 'regex'; continue;
       }
       if (char === '"' || char === "'" || char === '`') { quoted(char); continue; }
+      if (char === '(') parentheses.push(['if','while','for','with','switch','catch'].includes(previous));
+      if (char === ')') { previous = parentheses.pop() ? 'control-close' : ')'; index++; continue; }
+      if (char === '=' && next === '>') { previous = '=>'; index+=2; continue; }
       if (char === '{') braces++;
       if (char === '}' && nested && braces-- === 0) { index++; return; }
       const identifier = source.slice(index).match(/^[\w$]+/);
@@ -72,17 +75,20 @@ export function javascriptStrings(source) {
 
 export function isDisplayCandidate(record) {
   const text = record.text.trim(), context = record.context || '';
-  if (!text || /^(?:https?:|\.?\.?\/|--[a-z]|\.[\w-]+$)/i.test(text)) return false;
+  const displayContext = /(?:label|title|text|name|speaker|body|caption|message|hint|alt)\s*:\s*$|\.(?:textContent|innerText)\s*=\s*$/.test(context) ||
+    /\bnode\s*\(\s*['"][^'"]*['"]\s*,\s*['"][^'"]*['"]\s*,\s*$|\b(?:menuButton|select|field|showcase|createTextNode)\s*\(\s*$/.test(context) ||
+    /setAttribute\(\s*['"](?:aria-label|title|alt)['"]\s*,\s*$/.test(context);
+  if (!text || /^(?:https?:|\.?\.?\/|[.#][\w-]+$)/i.test(text)) return false;
+  if (!displayContext && /^--[a-z][\w-]*$/i.test(text)) return false;
   if (/^(?:Key[A-Z]|Arrow(?:Up|Down|Left|Right)|Shift(?:Left|Right))$/.test(text)) return false;
   if (/(?:console\.(?:warn|error|log)|\.(?:closest|querySelector|querySelectorAll))\s*\(\s*$|\.(?:rel|font)\s*=\s*$/.test(context)) return false;
   if (/\b(?:uniform|varying|gl_Position|gl_FragColor)\b|void\s+main\s*\(/.test(text)) return false;
-  if (/throw new (?:Error|TypeError|RangeError)\s*\(\s*$/.test(context)) return false;
+  if (/\bnew (?:Error|TypeError|RangeError|DOMException)\s*\(\s*$/.test(context)) return false;
   if (/^[\w./:#-]+\.(?:js|css|png|json|html|svg)\b/i.test(text)) return false;
-  if (/[—–]/u.test(text) || text === '--' || /<name>|\{[a-z]+\}/i.test(text)) return true;
+  if (/[—–]|--/u.test(text) || /<name>|\{[a-z]+\}/i.test(text)) return true;
   const words = text.match(/[a-z]+/gi) || [];
   if (words.length > 1 && /\s/.test(text) && !/[<>]=?|=>|\b(?:const|return)\b/.test(text)) return true;
-  return /^[A-Z][A-Za-z'-]*$/.test(text) ||
-    /(?:label|title|text|name|speaker|body|caption|message|hint|alt)\s*:\s*$|\.textContent\s*=\s*$/.test(context);
+  return /^[A-Z][A-Za-z'-]*$/.test(text) || displayContext;
 }
 
 const displayKeys = new Set(['title','text','name','label','message','blocked_message','description',
@@ -109,6 +115,15 @@ export function htmlStrings(source) {
   return records;
 }
 
+export function displayJavascriptStrings(source) {
+  return javascriptStrings(source).flatMap(record=>{
+    if (/<[a-z][^>]*>/i.test(record.text) && record.text.trim() !== '<name>') {
+      return htmlStrings(record.text).map(copy=>({...record,...copy,line:record.line+copy.line-1}));
+    }
+    return isDisplayCandidate(record) ? [record] : [];
+  });
+}
+
 export function reportOnly(file) {
   return /frontend\/src\/(?:online|adapter|screens|fake)\//.test(file) ||
     file === 'backend/content/story.json' || file === 'frontend/src/demo/intro-story.json' ||
@@ -117,13 +132,13 @@ export function reportOnly(file) {
 
 export async function collect(root) {
   const paths = [...await filesUnder(join(root,'frontend/src')), ...await filesUnder(join(root,'frontend/public')),
-    ...await filesUnder(join(root,'backend/content')),
+    ...await filesUnder(join(root,'backend/content'),{excludeSecret:true}),
     ...(await readdir(join(root,'frontend'))).filter(name=>name.endsWith('.html')).map(name=>join(root,'frontend',name))];
   const records = [], sources = [];
   for (const path of paths.filter(path=>/\.(?:js|json|html)$/.test(path)).sort()) {
     const file = relative(root,path).replaceAll('\\','/'), source = await readFile(path,'utf8');
     sources.push({file,source});
-    const extracted = path.endsWith('.js') ? javascriptStrings(source).filter(isDisplayCandidate) :
+    const extracted = path.endsWith('.js') ? displayJavascriptStrings(source) :
       path.endsWith('.json') ? jsonStrings(JSON.parse(source),source) : htmlStrings(source);
     records.push(...extracted.map(record=>({...record,file,reportOnly:reportOnly(file)})));
   }
