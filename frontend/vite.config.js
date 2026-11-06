@@ -1,11 +1,13 @@
 // Local manifests support QA; production exposes only game and approved galleries.
 import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
+import {buildInfoPlugin} from './scripts/build-info.js';
 export const previewSecurityHeaders={
  'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
  'X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin',
 };
 export default defineConfig({
+ plugins:[buildInfoPlugin()],
  base:'./',server:{proxy:{'/api':'http://127.0.0.1:8000'}},
  preview:{proxy:{'/api':'http://127.0.0.1:8000'},headers:previewSecurityHeaders},
  build:{manifest:!process.env.VERCEL,rolldownOptions:{input:{
