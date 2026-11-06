@@ -1,0 +1,266 @@
+{
+  "density": 4,
+  "logicalPixelsPerUnit": 16,
+  "source": "scripts/hires_art/generate.py",
+  "assets": {
+    "cottage": {
+      "file": "hd/cottage.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 17190,
+      "sha256": "4d1da297601c650902d8c9aea7dab125297b4b7734a6e1659570b96b6ac29ba7"
+    },
+    "cottage-interior": {
+      "file": "hd/cottage-interior.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 10681,
+      "sha256": "2c3686314c70c487a5bfb6b1006e4766265d2a06e0c877920460be4d5fe19c7a"
+    },
+    "cottage-glow": {
+      "file": "hd/cottage-glow.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 1217,
+      "sha256": "52aac4e683f0d86b61fc96a292fd2d1c7cc23a4db48ff2f32b00af3815cf6acf"
+    },
+    "boathouse": {
+      "file": "hd/boathouse.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 13424,
+      "sha256": "661109b3b7df222bf004c434625e7ed9656d22be45ad197ab0a0a0d940a506a3"
+    },
+    "lighthouse": {
+      "file": "hd/lighthouse.png",
+      "width": 384,
+      "height": 832,
+      "bytes": 14490,
+      "sha256": "b24b199773f3b7bb8c3e69fd57220cfcab8da917643e4a4436d7e8bb0c264b75"
+    },
+    "birch": {
+      "file": "hd/birch.png",
+      "width": 320,
+      "height": 416,
+      "bytes": 40577,
+      "sha256": "e509ca856f63e3b27b3eac040c8829a0b3568ab65bff020586e26e32c077ac26"
+    },
+    "oak": {
+      "file": "hd/oak.png",
+      "width": 320,
+      "height": 416,
+      "bytes": 42259,
+      "sha256": "9bbfecf3b62e5bbc123098c5393575110752e04a91d4b42c65c8ebfb924d268d"
+    },
+    "birch-tall": {
+      "file": "hd/birch-tall.png",
+      "width": 320,
+      "height": 416,
+      "bytes": 41960,
+      "sha256": "5094462ac2995ac0b855f9047abf10414564879e3e17b1e7cf81fafc26165e7b"
+    },
+    "pine": {
+      "file": "hd/pine.png",
+      "width": 320,
+      "height": 448,
+      "bytes": 22986,
+      "sha256": "ad5ecbf97b109a3fe47cbe6f1da5e90939f48529d5157fd2ba618daa4c982209"
+    },
+    "rock": {
+      "file": "hd/rock.png",
+      "width": 192,
+      "height": 144,
+      "bytes": 4230,
+      "sha256": "bac80a1f5829dbe4e1f6c40dc503decc1fc75505e5ff3375adc39d5262f812ca"
+    },
+    "shrub": {
+      "file": "hd/shrub.png",
+      "width": 160,
+      "height": 128,
+      "bytes": 3856,
+      "sha256": "67e85f0ca4d21b3077c9f12f70e20924ea4bac3f285f7a044cf542769a87441e"
+    },
+    "flowers": {
+      "file": "hd/flowers.png",
+      "width": 96,
+      "height": 96,
+      "bytes": 861,
+      "sha256": "afdbdc9f71faf7a15278d33af0b27e94834b66f6480f6fa62cf691e57afe9c96"
+    },
+    "grass-tuft": {
+      "file": "hd/grass-tuft.png",
+      "width": 128,
+      "height": 128,
+      "bytes": 2176,
+      "sha256": "0a85f567574d4c4464af8952be0cf40507e1e27e40eb0bc1c89c0d1cf94a2cbe"
+    },
+    "fern": {
+      "file": "hd/fern.png",
+      "width": 128,
+      "height": 128,
+      "bytes": 3304,
+      "sha256": "74584b6f8d140bf252c9dc62a5bf0b45a41e63d62ac1fe0e93e69fbe58b3352e"
+    },
+    "reeds": {
+      "file": "hd/reeds.png",
+      "width": 128,
+      "height": 160,
+      "bytes": 1805,
+      "sha256": "946a9db9f5f9f3416a8c72d6748d94b474a69a86495bec2862943ac2fb2be133"
+    },
+    "mushrooms": {
+      "file": "hd/mushrooms.png",
+      "width": 128,
+      "height": 128,
+      "bytes": 1385,
+      "sha256": "5db7c38fa959e2bf63443d5020cbfaa230cbdd1ab460712e614d5d7e6b57fb4d"
+    },
+    "explorer": {
+      "file": "hd/explorer.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2462,
+      "sha256": "2e408fac5b2f54a84b4c09680cceab0189fc31745029ded909a177fdb91e8f24"
+    },
+    "explorer-walk-1": {
+      "file": "hd/explorer-walk-1.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2627,
+      "sha256": "18e6454c5a48f21233a2279dc9d6b282128b0bf47165828978fec871ad90d56b"
+    },
+    "explorer-walk-2": {
+      "file": "hd/explorer-walk-2.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2602,
+      "sha256": "225d169fd99e203d8be98f015644fe645b119604319f01744eb9da315bd0c8d1"
+    },
+    "explorer-back": {
+      "file": "hd/explorer-back.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2315,
+      "sha256": "ed96f8eb0a7ef0f086e9497659faccb19f881bc6aca440349961ba9dd382a27e"
+    },
+    "explorer-back-walk-1": {
+      "file": "hd/explorer-back-walk-1.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2405,
+      "sha256": "0a78f28f3dc2acaafb88512d2f9eb78ed74075bd7c85fb35282d9f1d36934eb5"
+    },
+    "explorer-back-walk-2": {
+      "file": "hd/explorer-back-walk-2.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2407,
+      "sha256": "f2981a2089cfbb654e07ce164b927d5c7e9ced142b34fb3bcf9078149ee0c293"
+    },
+    "explorer-side": {
+      "file": "hd/explorer-side.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2021,
+      "sha256": "9fe7918f3f6a6296dcfc938572ada8526e4b76fd5b4ff45bbefc5ba149358edd"
+    },
+    "explorer-side-walk-1": {
+      "file": "hd/explorer-side-walk-1.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2095,
+      "sha256": "9088c3b246def9ad7676590aac6ab79de595704cd8a6efbdad645943773f0122"
+    },
+    "explorer-side-walk-2": {
+      "file": "hd/explorer-side-walk-2.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 2093,
+      "sha256": "29e182ff6c058fb2589905c4775a8c354b41ad586e4adeae9c0caf3984d075bc"
+    },
+    "jetty": {
+      "file": "hd/jetty.png",
+      "width": 192,
+      "height": 448,
+      "bytes": 7066,
+      "sha256": "14d2634412b4df7c7db1cd6ef613e3bed835216097f8c90ec869deb410c8f53d"
+    },
+    "boat": {
+      "file": "hd/boat.png",
+      "width": 256,
+      "height": 160,
+      "bytes": 2795,
+      "sha256": "a242134d2544d2d869cc61fb347104a57526cb0592c7d77c3c20270ee62d2397"
+    },
+    "crate": {
+      "file": "hd/crate.png",
+      "width": 96,
+      "height": 96,
+      "bytes": 1835,
+      "sha256": "b387af2cc0a84144266eaf433c8159dc38df6e0d50d06520c51db98f80c47cc5"
+    },
+    "barrel": {
+      "file": "hd/barrel.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 1703,
+      "sha256": "a8f3afb4af2d0e8aa11a5cf4a61c6dfed3509abab478c0d4eb845cb67209c234"
+    },
+    "rope-coil": {
+      "file": "hd/rope-coil.png",
+      "width": 128,
+      "height": 80,
+      "bytes": 1649,
+      "sha256": "bac49989239ade82b6c1741f30b69047987791d7767ee5fc68688cb0285ca27c"
+    },
+    "lantern": {
+      "file": "hd/lantern.png",
+      "width": 64,
+      "height": 96,
+      "bytes": 799,
+      "sha256": "edf2e7e1fb60a4f1533e516ab220a9c6cd083b3b1d1d9a1f72fddf7c96598ef9"
+    },
+    "bench": {
+      "file": "hd/bench.png",
+      "width": 192,
+      "height": 128,
+      "bytes": 1417,
+      "sha256": "b7b9c65260757646ff36fda4110265136aec4fc448aca2d51c5c17655eecd5a0"
+    },
+    "buoy": {
+      "file": "hd/buoy.png",
+      "width": 96,
+      "height": 128,
+      "bytes": 1113,
+      "sha256": "ab92cb86add4afd7ef6f1f0576c53c6db5fbed1b09880829eba75279b75f0a8c"
+    },
+    "driftwood": {
+      "file": "hd/driftwood.png",
+      "width": 160,
+      "height": 96,
+      "bytes": 963,
+      "sha256": "52a72651a7dbf7ee19b2365b1711869c932792564fac211ffcf69d90aab7215c"
+    },
+    "gull": {
+      "file": "hd/gull.png",
+      "width": 96,
+      "height": 96,
+      "bytes": 1045,
+      "sha256": "4b38d02f6f10c1c0d5574f5640fbd1919f70c7695b8d07b3dc1fcac1c2c907df"
+    },
+    "sign": {
+      "file": "hd/sign.png",
+      "width": 128,
+      "height": 160,
+      "bytes": 883,
+      "sha256": "22b884ac0137f93cbe250d8c65860905573cbf81173c9419625210415829adbd"
+    }
+  },
+  "ground": {
+    "file": "pixel/hd/ground.png",
+    "width": 4096,
+    "height": 3072,
+    "bytes": 226633,
+    "sha256": "70b245bf2cde9ea1b575047fbb2313b7203617f11195661d9743907f7b3fe863"
+  }
+}

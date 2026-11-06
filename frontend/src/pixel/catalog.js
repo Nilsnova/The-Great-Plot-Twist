@@ -1,7 +1,8 @@
-// The active original pixel kit. One world unit is 16 native art pixels.
+// Logical sprite geometry remains 16 pixels/world unit; detailed sources add texels.
 import { storyDimensions } from './story-catalog.js';
 import { festivalDimensions } from './festival-catalog.js';
 export const PIXELS_PER_UNIT = 16;
+export const DETAIL_DENSITY = 4;
 const dimensions = {
   cottage: [128, 128, 14], 'cottage-interior': [128, 128, 14], 'cottage-glow': [128, 128, 14],
   lighthouse: [96, 208, 16], boathouse: [96, 96, 8], birch: [80, 104, 8], pine: [80, 112, 8],
@@ -16,6 +17,7 @@ for (const view of ['explorer', 'explorer-back', 'explorer-side']) {
   dimensions[view] = [24, 32, 3];
   for (const step of [1, 2]) dimensions[`${view}-walk-${step}`] = [24, 32, 3];
 }
+const detailedIds = new Set(Object.keys(dimensions));
 const staged = {
   'harbour-office': [128, 160, 14], 'harbour-beacon': [64, 128, 14],
   'signal-station': [112, 112, 12], 'ferry-pier': [96, 128, 8], sailboat: [96, 112, 10],
@@ -39,11 +41,12 @@ Object.assign(staged, festivalDimensions);
 Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({
   id, file: `${id}.png`, width, height, visibility: id.startsWith('character-masked-captain') ? 'finale' : 'public', usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
+  ...(detailedIds.has(id) ? { detail: { file: `hd/${id}.png`, width: width * DETAIL_DENSITY, height: height * DETAIL_DENSITY } } : {}),
 }));
 export const pixelById = Object.fromEntries(pixelArt.map(item => [item.id, item]));
 export const pixelArtIds = pixelArt.filter(item => item.usage === 'island').map(item => item.id);
 export const pixelSizes = Object.fromEntries(pixelArt.map(item => [item.id, item.size]));
 export const snapPixel = value => Math.round(value * PIXELS_PER_UNIT) / PIXELS_PER_UNIT;
 
-// Native static title composition, intentionally outside the world sprite preload.
-export const titleBackdrop={file:'places/title.png',width:480,height:300,source:'title.py'};
+// Original illustrated title, intentionally outside the world sprite preload.
+export const titleBackdrop={file:'places/title.webp',width:1672,height:941,source:'scripts/hires_art/PROVENANCE.md'};

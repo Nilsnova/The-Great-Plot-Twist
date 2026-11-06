@@ -1,5 +1,15 @@
 # Original pixel-art register
 
+## November 6 visual redesign
+
+The active Lighthouse kit now selects **36 newly drawn four-density sprites** from `public/pixel/hd/`. Each source is four times wider and taller (16 times the texels), with individually drawn roof shingles, stonework, glass, leaf groups, bark, cloth seams, boots and coastal equipment. These are fresh drawings from `scripts/hires_art/`, not enlarged copies of the old PNGs. The new 4096 × 3072 ground samples the same canonical island at 64 pixels per world unit and adds fine grass, shoreline and path materials.
+
+Logical sizes, anchors, placement, asset IDs and collision geometry remain unchanged. `pixelArt[].detail` supplies physical texture dimensions separately; `loadArt(ids, {detail:false})` can select the preserved legacy sources. Other selectively loaded story/library art keeps its existing files. Maximum source dimensions are 4096 × 3072. All 36 detailed sprites and the ground decode to **59,453,440 RGBA bytes (56.70 MiB)** with no mipmaps; this is a conservative full-kit total, while the current place loads a subset. Compressed transfer is bounded at 550 KB by `tests/hires-art.test.js`.
+
+The new title is an original **1672 × 941** illustrated coastal scene, `places/title.webp`, created with OpenAI's image-generation tool and compressed to **274,026 bytes**. It uses cover sizing and normal image sampling, without baked text or logos. `places/title.png` remains available as the old fallback. The explicit title transfer budget is now 350 KB; JavaScript and CSS budgets are unchanged. The title image stays outside the world sprite preload.
+
+See [detailed provenance and reproduction](scripts/hires_art/PROVENANCE.md). Rebuild the code-authored sprites and ground from `frontend/` with `python3 scripts/hires_art/generate.py` (Pillow, NumPy and Node are authoring tools only). `tests/hires-art.test.js` verifies the physical PNGs, hashes, transfer/memory limits, source selection, disposal, and unchanged world dimensions/foot anchors. Earlier sections below record the original kits and their historical counts.
+
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
 The shipped library contains **194 sprites and 10 backgrounds/charts, 204 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
@@ -62,11 +72,11 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 
 From `frontend/`, run `python3 scripts/pixel_art/generate.py`. Pillow is an offline authoring dependency; playing, building and JS testing require no Python. Sources live in `scripts/pixel_art/`: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py, settlements.py, case_places.py, place_ground.py, chart.py and generate.py. The Node helpers export canonical land masks from terrain.js and places/surfaces.js; visual shorelines and walkability use the same functions.
 
-The runtime uses nearest sampling, no mipmaps, a 16-pixel world grid, snapped feet and integer display scaling. The largest textures are 1024 × 768. PNG alpha supplies transparent edges and contact shadows. The chart and sailing scene also use nearest/integer scaling. UI text is separate HTML with readable font sizes, as Nils requested.
+The world textures use nearest sampling without mipmaps. The catalogue preserves a logical 16-pixel world grid while detailed sources use 64 pixels per world unit. PNG alpha supplies transparent edges and contact shadows. The chart and sailing scene retain their original art. UI text is separate HTML with readable font sizes, as Nils requested.
 
 Open `/asset-library.html` for the searchable workshop, family/use filters, integer previews and source PNG links. `npm test` checks binary PNG dimensions and registration. `npm run test:art` and `npm run test:art:production` decode all PNGs in real Chrome and check the workshop and selective preload. `npm run test:world` checks the seven places, events, keyboard travel, locks, reduced motion, office glow and ten round trips. Evidence lives in `captures/20261105_World-*` and Pixel-prefixed check files.
 
-The favicon is an original SVG lighthouse mark. Water, rain, beams and sky washes are original code graphics. No image-generation service, texture pack, downloaded game art, real company/team logos or external font is used. Retired paper studies remain in archive/paper, excluded from the active build. Three.js, Vite and Vitest use MIT licences, Playwright Core Apache-2.0, and Pillow HPND; package notices accompany their installations.
+The favicon is an original SVG lighthouse mark. Water, rain, beams and sky washes are original code graphics. The illustrated November 6 title uses OpenAI image generation as documented above; the sprite kits are code-authored. No texture pack, downloaded game art, real company/team logos or external font is used. Retired paper studies remain in archive/paper, excluded from the active build. Three.js, Vite and Vitest use MIT licences, Playwright Core Apache-2.0, and Pillow HPND; package notices accompany their installations.
 
 ## G4 crew, cast and story/UI additions
 
