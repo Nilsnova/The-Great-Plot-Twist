@@ -6,9 +6,9 @@ import {gzipSync} from 'node:zlib';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
-const env=await openWorldBrowser({preview:true}),{page}=env,report={checked:new Date().toISOString(),checks:[]};
 const captureDir=process.env.CAPTURE_DIR||'captures',prefix=process.env.CAPTURE_PREFIX||'20261105_G5';
 await mkdir(captureDir,{recursive:true});
+const env=await openWorldBrowser({preview:true}),{page}=env,report={checked:new Date().toISOString(),checks:[]};
 const capture=name=>join(captureDir,`${prefix}-${name}`);
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try {
@@ -33,4 +33,4 @@ try {
   await startFromTitle(page);check(await page.evaluate(()=>typeof window.__island)==='undefined','The loaded production world exposes no dev inspection object');
   await page.getByRole('button',{name:'Open visual settings'}).click();await page.locator('[data-preference=quality]').selectOption('low');await page.screenshot({path:capture('Settings.png')});
   check(env.errors.length===0&&env.external.length===0,'Production title and world have no browser errors or external asset requests');console.log(JSON.stringify(report,null,2));
-} finally {await writeFile(capture('Loading-Checks.json'),JSON.stringify(report,null,2));await env.close();}
+} finally {try {await writeFile(capture('Loading-Checks.json'),JSON.stringify(report,null,2));} finally {await env.close();}}
