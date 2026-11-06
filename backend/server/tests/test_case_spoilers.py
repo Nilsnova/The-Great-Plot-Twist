@@ -120,3 +120,21 @@ def test_search_eligibility_does_not_reveal_discovery_lines_before_a_find(data):
         not any(route.found_line in statuses for route in data.active_routes),
         "Search eligibility exposed an unearned discovery line.",
     )
+
+
+def test_night_controls_never_expose_an_unearned_solution_or_exact_target(data):
+    snapshot = replace(example_snapshot(), night_no=1, night_started_second=2000)
+    view = build_case_view(data, snapshot, VIEWER, EXAMPLE_NOW)
+    encoded = json.dumps(view)
+
+    assert view["finale"]["glow"] is not None
+    assert view["finale"]["parted"] is None
+    assert "target" not in view["finale"]
+    require(
+        not any(text and text in encoded for text in protected_texts(data)),
+        "Night controls leaked protected text.",
+    )
+    require(
+        all(card.text not in encoded for card in data.cards if card.id not in {"C1", "C2", "C3"}),
+        "Night controls leaked an unheld card.",
+    )

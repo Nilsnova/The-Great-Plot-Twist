@@ -1,6 +1,6 @@
-"""The Phase 1 card proof uses real pure rules for all 35 four-player kit mixes.
+"""The Phase 2 proof uses real pure rules for all 35 four-player kit mixes.
 
-Later phases extend the same playthrough with partners, lights and the accepted solve.
+Phase 4 extends the same playthrough with partners to prove all 69 crew mixes.
 """
 
 from dataclasses import replace
@@ -9,11 +9,14 @@ from itertools import combinations_with_replacement
 import pytest
 
 from server.crews.seats import KITS
+from server.game.building import level_one_cost
+from server.game.building_catalogue import load_buildings
 from server.game.case_board import two_seats_pinned
 from server.game.case_data import load_case
 from server.game.case_routes import RouteDecision
+from server.game.case_snapshot import Post
 from server.tests import case_playthrough
-from server.tests.case_playthrough import PlannerFailure, find_cards_for_crew
+from server.tests.case_playthrough import PlannerFailure, find_cards_for_crew, solve_for_crew
 
 MIXES = tuple(combinations_with_replacement(KITS, 4))
 
@@ -82,3 +85,75 @@ def test_a_missing_free_route_makes_the_proof_fail(data):
 
     with pytest.raises(PlannerFailure, match="free minimum route"):
         find_cards_for_crew(broken, ("stranger",) * 4)
+
+
+@pytest.mark.parametrize("kits", MIXES, ids=[f"mix-{number:02}" for number in range(1, 36)])
+def test_every_four_player_mix_parts_the_fog_and_solves(data, kits):
+    proof = solve_for_crew(data, kits)
+    snapshot = proof.snapshot
+    catalogue = load_buildings()
+    cost = level_one_cost(catalogue)
+    owner = snapshot.seats[0]
+
+    assert snapshot.status == "finished" and snapshot.solved_second == proof.finished_second
+    assert snapshot.accusations[-1].correct
+    assert {find.card_id for find in snapshot.finds} == {card.id for card in data.cards}
+    assert all(
+        data.route(find.route_id).kind in ("kit", "open", "timed") for find in snapshot.finds
+    )
+    assert all(find.coins_paid == 0 for find in snapshot.finds)
+    assert proof.coins_spent == cost.coins <= data.kit(owner.kit).start_coins
+    assert proof.station_timber == cost.timber <= catalogue.starter_timber
+    assert len({signal.post_seat_no for signal in snapshot.signals if signal.parted}) == 3
+    assert len({signal.light_id for signal in snapshot.signals if signal.parted}) == 3
+    assert [
+        signal.case_second - snapshot.signals[0].case_second for signal in snapshot.signals
+    ] == [0, 10, 20]
+    assert snapshot.schooner_found_second == snapshot.signals[-1].case_second
+    assert snapshot.world_outcome is None
+    assert all(left != right for _, left, right in proof.pair_seats)
+    assert all(
+        two_seats_pinned(snapshot.pins, *data.deduction(row.deduction_id).cards, row.formed_second)
+        for row in snapshot.formed
+    )
+
+
+@pytest.mark.parametrize(
+    "rule",
+    [
+        "decide_pin",
+        "decide_pair",
+        "decide_nightfall",
+        "decide_post",
+        "decide_signal",
+        "decide_accusation",
+    ],
+)
+def test_the_full_proof_requires_every_production_decision(data, monkeypatch, rule):
+    monkeypatch.setattr(case_playthrough, rule, lambda *_args: RouteDecision(False, "blocked"))
+
+    with pytest.raises(PlannerFailure, match="production"):
+        solve_for_crew(data, ("stranger",) * 4)
+
+
+def test_a_test_apply_post_preserves_ended_post_history(data):
+    proof = find_cards_for_crew(data, ("stranger",) * 4)
+    now = proof.finished_second
+    snapshot = case_playthrough.apply_nightfall(data, proof.snapshot, now)
+    seat = snapshot.seats[0]
+    old = Post(
+        "keepers_lamp",
+        seat.seat_no,
+        now,
+        now,
+        player_id=seat.player_id,
+        ended_second=now + 30,
+        id=1,
+    )
+    current = replace(old, taken_second=now + 40, on_post_second=now + 100, ended_second=None, id=2)
+    snapshot = replace(snapshot, posts=(old, current))
+
+    moved = case_playthrough.apply_post(data, snapshot, seat, "harbor_light", now + 120)
+
+    assert moved.posts[0] == old
+    assert moved.posts[1].ended_second == now + 120
