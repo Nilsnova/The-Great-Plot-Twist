@@ -119,7 +119,7 @@ def create_app(
     if clock is None:
         clock = utc_now
     if case_service is None:
-        case_service = case_or_none(settings, broadcaster=broadcaster)
+        case_service = case_or_none(settings, broadcaster=broadcaster, clock=clock)
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines

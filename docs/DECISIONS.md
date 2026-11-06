@@ -416,7 +416,7 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 
 ## D027 · Case backend contracts · 2026-11-06
 
-**Status:** Phase 1 built on `feat/case-backend` for Claude's review. Later phases remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
+**Status:** Phases 1 and 2 built on `feat/case-backend` for Claude's review. Phases 3 and 4 remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
 
 | Decision | Contract |
 |---|---|
@@ -452,3 +452,5 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 - **Decision and reason:**
 - **Alternatives and trade-offs:**
 - **Agreed by / issue or PR / impact:**
+
+**D027 implementation note, 6 Nov:** Phase 2 imports A4/L2 from main before building the board and night. Nils explicitly approved the coordinate-only home light alignment to the public registry (Y 192.87); fingerprints were regenerated unchanged and the frontend build passed. C8 retains the specification default pending story-owner confirmation; no story wording was changed.

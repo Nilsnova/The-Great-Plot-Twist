@@ -1133,13 +1133,33 @@ Phase 1 search refusal reasons are `lead_locked`, `already_have`, `wrong_kit` an
 | 502 | `database_error` | Unreadable reply or a database guard failure; never a case repeat |
 | 503 | `case_unavailable`, `database_not_configured`, `database_unavailable` | Broken content, missing database or uncertain operation |
 
-The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 1 leaves `finale:{}` and `partners:[]` for later phases.
+The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 2 fills `finale` and `me.timber`; `partners:[]` remains reserved for Phase 4.
 
 `board` contains earned `cards`, open unheld `leads`, `logLead`, `deductions`, identical-shape `suspects`, `canPair` and `pairWait`. An incomplete deduction has exactly `id`, `name` and `complete:false`; it exposes no card pair or clearing information. `search.spots` groups eligible routes by hotspot, and `search.jobs` contains running finds and finds landed in the last 10 minutes. `accusation` carries `schoonerFound`, `allowed`, `cooldown`, `status`, the public suspect list, earned evidence and `lastWrong`.
 
 Before a solve, `reveal` is only `{"available":false}`. A solver in this crew sees `available`, `solvedSecond`, `world`, ordered `lines` (`id`, `kind`, `text`, `cites`) and payout `credits`. Solving in another crew grants no reveal here. Phase 1's world result is `unchanged`; later hooks add `locked`, `relit`, `added` and `already_recorded`. The client must render returned lines rather than carrying its own reveal copy.
 
-Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 nudges are added only after A4 reaches `main`; until then G9 uses these boundary refreshes.
+Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 is now on main. State-changing writes send version-only hints through its shared sender; clients still use boundary refreshes for timed landings.
+
+### Case Phase 2 board and night contract for G9
+
+All five writes use the same signed-in player, `case` flag, strict `actionUid`, private/no-store response and repeat rules above. Unknown fields are rejected. The server computes rewards, light readiness, normalized bearings and the hidden target.
+
+| Route | Body beyond actionUid | Successful answer extras | Game refusals |
+|---|---|---|---|
+| `POST /api/board/pin` | `cardId` (`C1` to `C8`) | `coinsPaid` | `card_not_held`, `already_pinned` |
+| `POST /api/board/pair` | `cards` (two distinct card ids) | earned `deduction`, caller's `coinsPaid` | `pair_cooldown`, `not_pinned`, `different_seats_required`, `wrong_pair`, `already_deduced` |
+| `POST /api/finale/nightfall` | none | `endsIn` | `schooner_found`, `deduction_required`, `night_in_progress`, `dawn_wait` |
+| `POST /api/finale/post` | `light` | `onPostIn` | `night_required`, `light_not_ready`, `post_taken`, `already_on_post` |
+| `POST /api/finale/signal` | `light`, finite numeric `bearing` in `[0,360)` | `holdsFor`, `parted`; successful parting adds `lights`, exact `target` | `schooner_found`, `night_required`, `post_not_ready`, `post_not_owned`, `aim_cooldown`, `off_target` |
+
+Wait refusals carry `seconds`. A wrong pair or missed signal changes state and is remembered; its repeat remains `accepted:false`. Refusals that change nothing are not recorded. An unavailable light is 404 `no_such_light`; malformed card pairs or bearings are 422. The board exposes deduction details only after formation.
+
+`finale` contains `phase`, `nightNo`, `canCall`, countdowns, `status`, rounded `glow`, `parted` and the required-tier lights. A light exposes public chart coordinates, readiness, its valid open post, current lock, last bearing and action availability. Exact target coordinates appear only after a successful three-light parting. Posts and locks from replaced partner seats do not count. Posts remain after dawn; locks expire strictly at their hold boundary.
+
+One station built by any crew player readies the home light for every crew player. Partners never hold it. `me.timber` is the viewer's islet timber, using catalogue starter timber before their first islet row. Credits count historical locks separately from the successful-parting role used for solve payouts.
+
+Search, accusation and host-clock writes send `case_changed`; board/night writes send `board_changed`, including wrong-pair and missed-signal writes. Payloads contain only `{"version":writeRevision}`. The shared A4 sender owns its budgets; an unavailable or slow hint is quiet and bounded to one second. Reads, repeats and unchanged refusals send nothing. Time-based landings use client countdown refreshes.
 
 ## 11. Open questions for Mon 9
 

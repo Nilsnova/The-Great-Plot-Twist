@@ -1,5 +1,7 @@
 """New case intents preserve flag/auth/privacy boundaries and pass only verified inputs."""
 
+from datetime import timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -7,7 +9,8 @@ from server.app import create_app
 from server.flags import parse_flags
 from server.settings import Settings
 from server.tests.case_api_helpers import HEADER, TestVerifier
-from server.tests.case_rule_helpers import PLAYER
+from server.tests.case_rule_helpers import PLAYER, START, snapshot
+from server.tests.helpers import FakeClock
 
 INTENTS = [
     ("/api/board/pin", {"cardId": "C1"}, "pin", ("C1",)),
@@ -72,3 +75,10 @@ def test_validation_errors_are_private(path):
     response = client(port).post(path, headers=HEADER, json={"actionUid": "intent001"})
     assert response.status_code == 422 and not port.calls
     assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_default_case_view_uses_the_app_clock_for_its_countdowns():
+    clock = FakeClock()
+    clock.now = START + timedelta(seconds=123)
+    app = create_app(Settings(demo_mode=True), clock=clock)
+    assert app.state.case.view(snapshot(), PLAYER)["now"] == 123

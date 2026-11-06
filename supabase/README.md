@@ -2052,3 +2052,20 @@ The fixture asserts a local Unix socket, applies every migration twice, runs che
 12. Refuse authenticated reads of every case table and execution of every case function.
 13. A stale case revision or crew version changes no accusation, action, solver or wallet row.
 14. A host clock move changes only its own crew, logs the action and increments revision; forming crews refuse.
+
+
+## Case Phase 2 migration
+
+`migrations/20261106080000_case_board_and_night.sql` follows case Phase 1 and L2. Claude reviews and applies it before deployment reads these tables; keep `case` off until every required phase migration is applied. Historical migrations and wallet reason order are unchanged.
+
+| Table | anon / authenticated | service_role |
+|---|---|---|
+| board_pins | no access | select, insert |
+| finale_posts | no access | select, insert; update `ended_second` only |
+| finale_signals | no access | select, insert; update `ended_second`, `parted` only |
+
+All three tables have RLS with no player policy, no DELETE grant, and no sequence grants. Pins are append-only. Posts and signals retain history; partial unique indexes permit only one open post per seat and light. `case_state` adds the night number, start second and caller.
+
+The seven caller-rights, empty-search-path functions are `finale_post_holds(uuid,text,smallint)`, `finale_leave_post(uuid,smallint,integer,integer)`, `board_pin(uuid,uuid,text,text,integer,text)`, `board_pair(uuid,uuid,text,text,text,text,integer,integer,text)`, `finale_nightfall(uuid,uuid,text,text,integer,integer)`, `finale_take_post(uuid,uuid,text,text,boolean,integer,integer)` and `finale_signal(uuid,uuid,text,text,numeric,boolean,integer,integer,integer,integer)`. Only `service_role` may execute them. The API calls the last five intent functions, which enter the Phase 1 crew lock and finish each state-changing write exactly once.
+
+The existing disposable `case_sql` command also runs N1 to N15 in `test_phase2.py`: one-time pin/deduction rewards across crews; replayed accepted and state-changing refusals; pair/climb/night/dawn/cooldown boundaries; distinct-seat overlap; moved/replaced posts; append-only history; role and column grants. The complete sorted migration chain runs twice before tests, and the fixture deletes its Unix-socket database afterwards.
