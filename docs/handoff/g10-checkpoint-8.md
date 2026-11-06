@@ -1,0 +1,30 @@
+# G10 checkpoint 8: B2, board and Night of Three Lights
+
+- Branch: `feat/case-backend`; Phase 2 source: `4264760efb853a2c0c83daff475003fb172e0bd0`.
+- Main/group 2 `60f7fd0` was merged before this phase as `e3a9ed1`; A4 and L2 are present.
+- Landed: pure pin/pair/night/post/signal rules, deterministic geometry and earned finale views.
+- Landed: strict scoped board/night store, five authenticated intents and fresh outcome-safe repeats.
+- Wrong pairs and missed signals are remembered refusals; they remain refused when retried.
+- Landed: station readiness for any crew player's station, actual viewer timber and shared app clock.
+- Landed: one-second version-only A4 hints after state changes; reads/repeats/landings stay quiet.
+- All 35 four-player kit mixes solve through production rules, including the station and three lights.
+- NPC mixes and the explicit solo proof belong to Phase 4; no 69-mix production proof claimed yet.
+- Backend: `6974 passed, 52 skipped in 73.51s` (case tracebacks suppressed).
+- Actual PostgreSQL: `52 passed in 4.25s`; C1-C14 plus N1-N15 and extra boundary/role checks.
+- The complete nine-file sorted migration chain applied twice on disposable Unix-socket PostgreSQL.
+- SQL parse: `SQL parses: 9 file(s)`.
+- Ruff: `All checks passed!`; changed Python formatting: `82 files already formatted`.
+- Independent pure, view, port and SQL reviews found no remaining blockers.
+- Nils approved the sole case-data change: home light chart Y `193.18` to `192.87` (`03ea754`).
+- R13: regenerated all 12 protected-line fingerprints unchanged; frontend production build passed.
+- Spoiler guard: 99 text files, 12 protected lines, no suspect elimination data.
+- Migration: `supabase/migrations/20261106080000_case_board_and_night.sql`.
+- MD5: `a60d6799d9198d395a89710937eaf6c4`.
+- Phase 1 migration MD5 remains `278a16fcf87bbf2f46d81ec803f1e94b`.
+- Claude: review/apply 060000 and 080000 before deploying code that reads their tables.
+- Keep `case` off and `RELIGHT_OPEN` unset until Claude completes the deployment gates.
+- C8 uses the specification's rounded-glow default pending Nils/story-owner confirmation.
+- Story wording, STATUS, Vercel configuration, dependencies and historical migrations are untouched.
+- Live PostgREST embeds, deployed nudges and preview cache hits remain Claude's checks.
+- Required secret scan and nonempty diff checks pass; no live database, main push or Actions trigger.
+- Next: fresh-main sync, import the tested group 3 branch, then Phase 3 relighting and Phase 4 partners.
