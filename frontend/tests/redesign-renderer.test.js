@@ -24,3 +24,24 @@ it('fills desktop and phone viewports with bounded quality-independent framing',
     }
   });
 });
+
+it('calibrates actual backing pixels while keeping CSS and world framing fixed',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.setViewportSize({width:1280,height:720});
+    const result=await page.evaluate(async()=>{
+      const {createRenderer}=await window.g20Import('/src/core/renderer.js');
+      const {createCamera}=await window.g20Import('/src/player/camera.js');
+      const graphics=createRenderer(document.body),camera=createCamera({pointer:{wheel:0}}).camera;
+      graphics.resize(camera);const canvas=graphics.renderer.domElement;
+      const before={width:canvas.width,height:canvas.height,css:canvas.style.cssText,bounds:[camera.left,camera.right,camera.top,camera.bottom]};
+      for(let now=0;now<6000;now+=66.7)graphics.sampleFrame(now);
+      const after={width:canvas.width,height:canvas.height,css:canvas.style.cssText,bounds:[camera.left,camera.right,camera.top,camera.bottom]};
+      graphics.sampleFrame(7000,{active:false});graphics.sampleFrame(10000);
+      const paused={width:canvas.width,height:canvas.height};
+      graphics.renderer.dispose();graphics.renderer.forceContextLoss();canvas.remove();return {before,after,paused};
+    });
+    expect(result.after.width).toBeLessThan(result.before.width);expect(result.after.width).toBeGreaterThanOrEqual(result.before.width*.5);
+    expect(result.after.bounds).toEqual(result.before.bounds);expect(result.after.css).toBe(result.before.css);
+    expect(result.paused).toEqual({width:result.after.width,height:result.after.height});
+  });
+});
