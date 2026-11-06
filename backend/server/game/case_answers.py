@@ -7,6 +7,7 @@ from server.errors import ApiError
 from server.game.case_clock import minutes_until_open
 from server.game.case_data import CaseData
 from server.game.case_messages import UI_MESSAGES
+from server.game.finale_geometry import schooner_position
 from server.supabase_admin import SupabaseRejected
 
 ACCEPTED_OUTCOMES = frozenset(
@@ -29,6 +30,13 @@ REFUSAL_OUTCOMES = {
     "wrong_suspect": "accusation_refused",
     "off_target": "off_target",
 }
+PHASE2_WRITE_STATUSES = {
+    "pin": ("done",),
+    "pair": ("wrong_pair", "formed"),
+    "nightfall": ("done",),
+    "post": ("done",),
+    "signal": ("off_target", "locked"),
+}
 
 
 def http_refusal(reply: dict) -> None:
@@ -48,8 +56,29 @@ def http_refusal(reply: dict) -> None:
 def refusal_answer(data: CaseData, kind: str, target: str | None, reply: dict) -> dict:
     reason = reply["reason"]
     answer = {"accepted": False, "reason": reason}
+    timed = ("pair_cooldown", "wrong_pair", "dawn_wait", "aim_cooldown", "off_target")
+    if reason in timed or "seconds" in reply:
+        seconds = reply.get("seconds")
+        if type(seconds) is not int or seconds < 0:
+            raise SupabaseRejected("The case wait could not be read.")
+        answer["seconds"] = seconds
     if reason in UI_MESSAGES:
-        answer["message"] = UI_MESSAGES[reason]
+        message = UI_MESSAGES[reason]
+        if reason in ("dawn_wait", "aim_cooldown"):
+            message = message.format(seconds=reply["seconds"])
+        if reason == "light_not_ready" and target is not None:
+            if data.light(target).ready.get("building") == "signal_station":
+                message = UI_MESSAGES["station_not_ready"]
+        answer["message"] = message
+    elif reason in ("pair_cooldown", "not_pinned", "different_seats_required", "wrong_pair"):
+        answer["message"] = board_refusal_message(data, reason, reply.get("seconds", 0))
+    elif reason in ("deduction_required", "post_not_ready", "off_target"):
+        key = {
+            "deduction_required": "not_yet",
+            "post_not_ready": "not_manned",
+            "off_target": "off_target",
+        }[reason]
+        answer["message"] = data.night.lines[key]
     elif reason in ("schooner_required", "evidence_required", "accusation_cooldown"):
         key = {
             "schooner_required": "needs_schooner",
@@ -73,6 +102,77 @@ def refusal_answer(data: CaseData, kind: str, target: str | None, reply: dict) -
             answer["message"] = window.closed_line.format(minutes=answer["minutes"])
     else:
         raise SupabaseRejected("The case refusal is not recognised.")
+    return answer
+
+
+def board_refusal_message(data: CaseData, reason: str, seconds: int) -> str:
+    lines = data.board.lines
+    if reason == "pair_cooldown":
+        return lines["wait"].format(seconds=seconds)
+    if reason == "wrong_pair":
+        return f"{lines['wrong_pair']} {lines['wait'].format(seconds=seconds)}"
+    return lines["same_seat" if reason == "different_seats_required" else "not_pinned"]
+
+
+def phase2_answer(data, kind, targets, reply, player_id, snapshot):
+    """Build only the current writer's extras; repeats use the smaller remembered shape."""
+    status = reply["status"]
+    if status in ("wrong_pair", "off_target"):
+        return refusal_answer(
+            data,
+            kind,
+            targets[0] if targets else None,
+            {"reason": status, "seconds": reply["seconds"]},
+        )
+    answer = {"accepted": True, "reason": None}
+    if kind == "pin" and status == "done":
+        answer.update(message=UI_MESSAGES["pinned"], coinsPaid=reply["coinsPaid"])
+    elif kind == "pair" and status == "formed":
+        from server.game.case_board import deduction_for_pair
+        from server.game.case_store import solve_payments
+
+        deduction = deduction_for_pair(data, *targets)
+        if deduction is None:
+            raise SupabaseRejected("The formed deduction could not be read.")
+        answer.update(
+            message=deduction.finding,
+            deduction={
+                "id": deduction.id,
+                "name": deduction.name,
+                "finding": deduction.finding,
+                "clearLine": deduction.clear_line,
+                "opens": list(deduction.opens),
+                "opensLine": deduction.opens_line,
+            },
+            coinsPaid=next(
+                (row["paid"] for row in solve_payments(reply) if row["playerId"] == player_id), 0
+            ),
+        )
+    elif kind == "nightfall" and status == "done":
+        answer.update(message=data.night.lines["nightfall"], endsIn=data.night.night_minutes * 60)
+    elif kind == "post" and status == "done":
+        answer.update(
+            message=data.night.lines["on_post"].format(light=data.light(targets[0]).name),
+            onPostIn=data.night.climb_minutes * 60,
+        )
+    elif kind == "signal" and status == "locked":
+        parted = reply["parted"]
+        answer.update(
+            message=data.night.lines["parted" if parted else "locked"],
+            holdsFor=data.night.lock_seconds,
+            parted=parted,
+        )
+        if parted:
+            if snapshot is None:
+                raise SupabaseRejected("The parted case could not be read.")
+            held = {signal.light_id for signal in snapshot.signals if signal.parted}
+            x, y = schooner_position(snapshot.crew_id, data.night.chart)
+            answer.update(
+                lights=[light.id for light in data.night.lights if light.id in held],
+                target={"x": x, "y": y},
+            )
+    else:
+        raise SupabaseRejected("The case intent result could not be read.")
     return answer
 
 
@@ -104,6 +204,20 @@ def repeat_answer(data: CaseData, action: dict) -> dict:
             answer["message"] = "The case clock moved forward."
         elif outcome == "solved":
             answer["message"] = UI_MESSAGES["solved"]
+        elif action["kind"] == "pin" and outcome == "pinned":
+            answer["message"] = UI_MESSAGES["pinned"]
+        elif action["kind"] == "pair" and outcome == "formed":
+            answer["message"] = data.deduction(target).finding
+        elif action["kind"] == "pair" and outcome == "wrong_pair":
+            answer["message"] = board_refusal_message(
+                data, "wrong_pair", data.board.wrong_pair_wait_seconds
+            )
+        elif action["kind"] == "nightfall" and outcome == "night":
+            answer["message"] = data.night.lines["nightfall"]
+        elif action["kind"] == "post" and outcome == "climbing":
+            answer["message"] = data.night.lines["on_post"].format(light=data.light(target).name)
+        elif action["kind"] == "signal" and outcome in ("locked", "parted", "off_target"):
+            answer["message"] = data.night.lines[outcome]
         else:
             raise SupabaseRejected("That remembered intent is not available in this case phase.")
     except StopIteration:
