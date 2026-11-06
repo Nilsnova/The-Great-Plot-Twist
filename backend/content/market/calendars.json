@@ -1,0 +1,56 @@
+{
+  "about": "Opening hours of the stock markets behind the Island Exchange, with their holidays from 6 Nov to 31 Dec 2026. Local exchange times; utcOffset holds for the whole window, because no clock change falls inside it. Euronext lists its half-day closing times for 24 and 31 Dec 2026 as to be announced: 14:05 Paris (the time of earlier years) is assumed until it publishes them. Deutsche Boerse may announce other hours for Wed 30 Dec 2026 by circular. Island companies are not listed here: they follow Binance and trade around the clock.",
+  "validFrom": "2026-11-06",
+  "validTo": "2026-12-31",
+  "checkedOn": "2026-11-05",
+  "markets": [
+    {
+      "id": "us",
+      "name": "New York (NYSE and Nasdaq)",
+      "timeZone": "America/New_York",
+      "utcOffset": "-05:00",
+      "opens": "09:30",
+      "closes": "16:00",
+      "closedDays": [
+        {"date": "2026-11-26", "name": "Thanksgiving Day"},
+        {"date": "2026-12-25", "name": "Christmas Day"}
+      ],
+      "shortDays": [
+        {"date": "2026-11-27", "closes": "13:00", "name": "Day after Thanksgiving"},
+        {"date": "2026-12-24", "closes": "13:00", "name": "Christmas Eve"}
+      ],
+      "source": "https://www.nyse.com/markets/hours-calendars"
+    },
+    {
+      "id": "euronext",
+      "name": "Euronext (Amsterdam, Brussels, Lisbon, Paris)",
+      "timeZone": "Europe/Paris",
+      "utcOffset": "+01:00",
+      "opens": "09:00",
+      "closes": "17:30",
+      "closedDays": [
+        {"date": "2026-12-25", "name": "Christmas Day"}
+      ],
+      "shortDays": [
+        {"date": "2026-12-24", "closes": "14:05", "name": "Christmas Eve"},
+        {"date": "2026-12-31", "closes": "14:05", "name": "New Year's Eve"}
+      ],
+      "source": "https://live.euronext.com/resources/trading-hours-holidays"
+    },
+    {
+      "id": "xetra",
+      "name": "Xetra (Frankfurt)",
+      "timeZone": "Europe/Berlin",
+      "utcOffset": "+01:00",
+      "opens": "09:00",
+      "closes": "17:30",
+      "closedDays": [
+        {"date": "2026-12-24", "name": "Christmas Eve"},
+        {"date": "2026-12-25", "name": "Christmas Day"},
+        {"date": "2026-12-31", "name": "New Year's Eve"}
+      ],
+      "shortDays": [],
+      "source": "https://cashmarket.deutsche-boerse.com/cash-en/trading/trading-calendar-and-trading-hours"
+    }
+  ]
+}

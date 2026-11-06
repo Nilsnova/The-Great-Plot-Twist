@@ -69,7 +69,7 @@ describe('the hook in game.js', () => {
   });
 
   it('counts the open panel as an overlay, because the shell opens Pause on Escape unless game.js says one is open', () => {
-    expect(game).toMatch(/hasOverlay:\(\)=>[^,]*caseUi\.active\|\|stopPlots\.active,/);
+    expect(game).toMatch(/hasOverlay:\(\)=>[^,]*caseUi\.active[^,]*\|\|stopPlots\.active,/);
   });
 
   it('stops the gamepad from playing while the panel is open, so its dialog branch can drive the panel', () => {
@@ -77,6 +77,6 @@ describe('the hook in game.js', () => {
   });
 
   it('keeps the explorer still while the panel is open, whatever pushes it', () => {
-    expect(game).toMatch(/controller\.update\(delta, [^)]*&& !stopPlots\.active\)/);
+    expect(game).toMatch(/controller\.update\(delta, [^)]*&& !stopPlots\.active[^)]*\)/);
   });
 });

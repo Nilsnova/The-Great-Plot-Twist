@@ -1,0 +1,17 @@
+{
+  "editedFrom": "6Ll9sZtyun",
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/6Ll9sZtyun",
+  "answer": {
+    "id": "6Ll9sZtyun",
+    "slug": "will-the-official-high-at-san-reach",
+    "question": "Will the official high at SAN reach 85.0°F or higher on any day during Labor Day Weekend? (San Diego)",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "CASH",
+    "closeTime": 1788825540000,
+    "isResolved": true,
+    "resolution": "YES",
+    "resolutionTime": 1788826249594
+  }
+}

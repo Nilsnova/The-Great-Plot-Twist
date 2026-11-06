@@ -1,6 +1,6 @@
 # The case timing check
 
-> **What this folder is:** one program, `simulate_case.py`, that plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
+> **What this folder is:** two programs, `simulate_case.py`, that plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
 >
 > **Who uses it:** the owners of the case package (S3) and the NPC partner package (S4), everyone who changes a minute, a window or a price in `backend/content/secret/case.json`, and their coding agents. The result of the run, with a reading, is in [docs/story/TIMING.md](../../docs/story/TIMING.md).
 
@@ -149,3 +149,7 @@ The file is longer than the usual 200 lines because it does one job in ten steps
 **After the second check, 5 November 2026 (night),** two kinds of ids changed in `case.json`. The place ids now follow the registry on `main` (the G6 merge `9f5bf97` added the zones `keepers_lamp`, `keepers_post_room`, `yard_gate` and `home_driftline`). The share route got the Exchange's company id, `greyfathom-salvage`. Nothing else changed. The output of every command quoted in TIMING.md is identical before and after (compared line by line), and the full program still exits with 0, also with `--all`. `test_case_timing.py` has one more test, which checks that the share route names a company on the Exchange (20 tests in all).
 
 The full run is still a command, not a test. If the team later wants it in CI, call `main([])` from a test marked slow.
+
+## Content linter
+
+`lint_content.py` checks the game content, including the market companies and calendars. Run `uv run python tools/lint_content.py` from `backend/`. Its tests run with the backend suite.
