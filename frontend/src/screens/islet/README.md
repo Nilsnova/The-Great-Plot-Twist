@@ -10,7 +10,7 @@ The panel lets a player build on their own home islet. The server owns the rules
 
 | File | Its one job |
 |---|---|
-| `host.js` | `attachIsletPanel(...)`, called once from `game.js`. Picks the transport, opens the panel on `plot_clicked`, closes it on `travel`, refreshes on `arrived` at `home_islet` (in live mode only when `canAsk()` says the player is signed in), emits `islet_changed`, and returns `stop()`. |
+| `host.js` | `attachIsletPanel(...)`, called once from `game.js`. Picks the transport, opens the panel on `plot_clicked` (at the four plots: the signal station's hotspot opens the finale screen, which has its own build step), closes it on `travel`, refreshes on `arrived` at `home_islet` (in live mode only when `canAsk()` says the player is signed in), emits `islet_changed`, and returns `stop()`. |
 | `adapter.js` | The view and the two intents. It maps them to the two routes through an injected transport and keeps one click id per build. |
 | `view.js` | Pure functions: the first view, the server answer read into view data, and the notices. |
 | `labels.js` | Pure functions: the texts of a card (badge, price, what is missing, button) and the coins line. |

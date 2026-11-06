@@ -673,7 +673,7 @@ Starting it in the game is a separate step, because `frontend/` belongs to the g
 | `{type: 'travel', to}` and `{type: 'arrived', place}` | G2 | draft |
 | `{type: 'intro_ended', ending}` | S2 | draft |
 | `{type: 'weather_updated', source, fetchedAt}` | L1 | draft; `startLiveWeather` does not emit it itself, whoever wires it in emits it from the `onUpdate` hook |
-| `{type: 'plot_clicked', plot}` | G2, L2 | built (G2), opens the islet panel (L2) |
+| `{type: 'plot_clicked', plot}` | G2, L2 | built (G2), opens the islet panel at `plot_1` to `plot_4` (L2). Since G8 the world also sends it for `islet_signal_station`; the panel leaves that hotspot to the finale screen (`world/places/case-spots.js`). |
 | `{type: 'islet_changed', built: [plot ids], signalStationBuilt}` | L2, G8 | built; the islet panel emits it after every good answer, and `built` lists every plot whose state is `built`, the cabin included. The world draws a building only when this event says it stands (`frontend/src/world/islet/state.js`, G8). Its home is `frontend/GRAPHICS.md`. |
 | `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story round (S0, D018) |
 | `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted`, `live_crew_updated` | A4 | built, flag `live_presence` off; payloads in [section 7](#events-for-the-screens) |

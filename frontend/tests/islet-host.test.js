@@ -80,6 +80,14 @@ describe('opening the panel', () => {
     expect(panel.opened).toEqual(['plot_3']);
   });
 
+  it('leaves the signal station hotspot to the finale screen and opens nothing there', async () => {
+    const {bus, loadPanel, panel} = attach({transport: createFakeIsletTransport()});
+    click(bus, 'islet_signal_station');
+    await settle();
+    expect(loadPanel).not.toHaveBeenCalled();
+    expect(panel.opened).toEqual([]);
+  });
+
   it('closes the panel when the player travels', async () => {
     const {bus, panel} = attach({transport: createFakeIsletTransport()});
     click(bus, 'plot_2');
