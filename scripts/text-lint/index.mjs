@@ -2,7 +2,7 @@
 import {readFile} from 'node:fs/promises';
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {collect} from './extract.mjs';
+import {collect,javascriptStrings,jsonStrings,htmlStrings} from './extract.mjs';
 import {checkText,checkPartnerTemplates,fillTemplate,wordsIn} from './rules.mjs';
 import {containsFingerprint} from '../../frontend/scripts/spoiler-guard.js';
 
@@ -31,14 +31,25 @@ export async function lintRepository(root=repositoryRoot) {
     diagnostics.push({file:'backend/content/names.json',line:1,reportOnly:false,rule:'length',detail:'Generated captain name exceeds 24 characters.'});
   const {fingerprints} = JSON.parse(await readFile(join(root,'frontend/tests/fixtures/reveal-fingerprints.json'),'utf8'));
   for (const {file,source} of sources) {
-    if (fingerprints.some(fingerprint=>containsFingerprint(source,fingerprint)) || revealsIdentity(source))
+    const decoded = file.endsWith('.js') ? javascriptStrings(source) :
+      file.endsWith('.json') ? jsonStrings(JSON.parse(source),source,[],true) : htmlStrings(source);
+    const variants = [source,...decoded.flatMap(record=>[record.text,...htmlStrings(record.text).map(copy=>copy.text)])];
+    if (variants.some(text=>fingerprints.some(fingerprint=>containsFingerprint(text,fingerprint)) || revealsIdentity(text)))
       diagnostics.push({file,line:1,reportOnly:false,rule:'spoiler',detail:'Possible protected case identity/reveal association. Review privately; do not copy prose into the report.'});
   }
-  return {records:records.length,files:sources.length,diagnostics};
+  const protectedFiles = new Set(diagnostics.filter(issue=>issue.rule === 'spoiler').map(issue=>issue.file));
+  const safeDiagnostics = diagnostics.filter(issue=>!protectedFiles.has(issue.file) || issue.rule === 'spoiler')
+    .map(({text,context,offset,dynamic,...issue})=>issue);
+  return {records:records.length,files:sources.length,diagnostics:safeDiagnostics};
 }
 
 export function revealsIdentity(text) {
-  return /\b(?:culprit|masked captain)\s+(?:is|was|=|:)\s+(?:the\s+)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?/.test(text);
+  for (const match of text.matchAll(/\b(?:culprit|masked captain)\s+(?:is|was|=|:)\s+([^.!?\n]+)/gi)) {
+    const target = match[1].trim();
+    if (/^(?:the\s+)?(?:unknown|hidden|anonymous|not|unrevealed)\b/i.test(target)) continue;
+    if (/^the\s+[a-z]+/i.test(target) || /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?/.test(target)) return true;
+  }
+  return false;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

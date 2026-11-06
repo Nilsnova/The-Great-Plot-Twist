@@ -1,6 +1,6 @@
 {
   "dialect": "American English",
-  "spellings": {"colour":"color","colours":"colors","colourblind":"colorblind","licences":"licenses","harbour":"harbor","grey":"gray","towards":"toward"},
+  "spellings": {"colour":"color","colours":"colors","colourblind":"colorblind","licences":"licenses","harbour":"harbor","grey":"gray","towards":"toward","travelling":"traveling","cancelled":"canceled"},
   "names": ["The Great Plot Twist","Lighthouse Isle","Saltreach Harbor","Home islet","Smugglers' Cove","Wreck Point","The Teeth","Gull's Rest","Saltreach Isles","Elena Vos","Island Exchange","Wall of Lights","Captain's Table","Harbor Office","Harbor Light","True Keeper","Saltreach Harbor Trust","Tidewright Works","Swiftwater Ferries","Pier Post Courier","Market Hall Guild","Two Shores Change Bureau","Greyfathom Salvage"],
   "templateSamples": {"minutes":"9999","price":"1000000","light":"the Islet signal station"}
 }
