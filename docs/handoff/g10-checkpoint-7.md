@@ -16,18 +16,18 @@
 - Updated old L2 test token to the shared three-part synthetic-token contract.
 - Verified focused R6/R8/service tests: 216 passed; all L2 route tests: 83 passed.
 - Verified opt-in actual SQL/RLS plus case and L2 API paths: 27 passed.
-- Full backend/story: 6829 passed, 38 skipped, 1 failed; the sole failure is existing
-  `test_case_ids_and_light_positions_match_the_place_registry` coordinate parity.
-- Canonical coordinate override is frozen pending Nils' explicit decision; neither
-  secret data, the public registry nor the parity test was changed to hide that gate.
+- Approved coordinate correction `2093652` aligns the home light with the public registry.
+- Full backend/story gate is green: 6830 passed, 38 skipped in 49.54 s
+  (`/workspace/.cloud-setup/validation/c-approved-backend.log`).
 - Frontend: 886 tests passed in 72 files; build/spoiler guard passed (99 files, 12 lines).
+- R13: reveal fingerprints regenerated unchanged after the approved secret-data edit;
+  fresh build passed (`/workspace/.cloud-setup/validation/c-approved-build.log`).
 - Installed exact main npm lock with `npm ci`; no authored manifest/lock changes.
 - Ruff clean; 14 authored Python files formatted; nine migrations + bootstrap parse.
 - MD5 A4 050000: `53edec89fcbce7c961f1d08e92759d60`.
 - MD5 L2 070000: `bee55d86080b52256c765993232659e9`.
 - MD5 case 060000: `278a16fcf87bbf2f46d81ec803f1e94b`.
 - MD5 follow-ups 140000: `3c687ef351147e3d86b99523941233fd`.
-- No authored migration, secret-content, credentials, external settings or main changes.
-- Remaining: approved coordinate+R13 patch, full green backend gate and parent review.
-- R4 waits for live sign-in; R5 is Claude-owned external setup; R9 remains optional.
-- No external feature flags enabled. No push before the pending patch and parent review.
+- Protected migrations and dependency manifests are unchanged; no credentials or protected prose added.
+- Remaining: parent review; R4 waits for live sign-in; R5 is Claude-owned external setup.
+- R9 remains optional. External flags stay off; no deployment or main push.
