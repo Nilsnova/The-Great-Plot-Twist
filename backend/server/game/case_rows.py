@@ -13,12 +13,14 @@ from server.game.case_snapshot import (
     CaseSnapshot,
     Find,
     Formed,
+    Order,
     Pin,
     Post,
     SeatState,
     Signal,
     Solver,
 )
+from server.game.npc_rows import OrderRow
 from server.supabase_admin import SupabaseRejected
 
 
@@ -34,6 +36,7 @@ class StateRow(BaseModel):
     night_no: int = Field(default=0, strict=True, ge=0)
     night_started_second: int | None = Field(default=None, strict=True, ge=0)
     night_called_by: StrictStr | None = None
+    orders_count: int = Field(default=0, strict=True, ge=0)
 
 
 class FindRow(BaseModel):
@@ -172,6 +175,8 @@ def snapshot_from_row(raw: dict, *, read_log: bool, coins: int, viewer: str) -> 
         pins=records(raw, "board_pins", PinRow, Pin),
         posts=records(raw, "finale_posts", PostRow, Post),
         signals=signals,
+        orders=records(raw, "npc_orders", OrderRow, Order),
+        orders_count=0 if state is None else state.orders_count,
         formed=records(raw, "case_deductions", FormedRow, Formed),
         accusations=records(raw, "case_accusations", AccusationRow, Accusation),
         solvers=records(raw, "case_solvers", SolverRow, Solver),

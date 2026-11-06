@@ -5,7 +5,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 def is_case_path(path: str) -> bool:
-    return path == "/api/case" or path.startswith(
+    return path in ("/api/case", "/api/crews/me/orders") or path.startswith(
         ("/api/case/", "/api/host/case/", "/api/board/", "/api/finale/")
     )
 

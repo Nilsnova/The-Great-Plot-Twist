@@ -1,6 +1,7 @@
 """Strict request models for case intents; unknown fields never become trusted game facts."""
 
 import re
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator
 
@@ -45,3 +46,10 @@ class PostIntent(CaseIntent):
 
 class SignalIntent(PostIntent):
     bearing: float = Field(strict=True, ge=0, lt=360, allow_inf_nan=False)
+
+
+class OrderIntent(CaseIntent):
+    seat: StrictInt = Field(ge=1, le=4)
+    order: Literal["fetch", "man_light"]
+    target: str = Field(pattern=r"^[A-Za-z0-9_]{2,40}$", strict=True)
+    allowPaid: StrictBool = False

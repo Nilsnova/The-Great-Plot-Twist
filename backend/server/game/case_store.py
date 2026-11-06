@@ -15,9 +15,11 @@ from server.game.case_board_arguments import (
     signal_arguments,
 )
 from server.game.case_data import CaseData
+from server.game.case_npc_arguments import order_arguments
 from server.game.case_rewards import reward_ref, solve_shares
 from server.game.case_rows import snapshot_from_row
-from server.game.case_snapshot import CaseSnapshot
+from server.game.case_snapshot import CaseSnapshot, Order
+from server.game.npc_rows import order_from_row
 from server.game.station_lookup import NoStations, StationLookup
 from server.supabase_admin import AlreadyApplied, SupabaseAdmin, SupabaseRejected
 
@@ -25,6 +27,7 @@ SNAPSHOT_COLUMNS = (
     CREW_COLUMNS
     + ",case_state(*),case_finds(*),case_deductions(*),case_accusations(*),case_solvers(*)"
     + ",board_pins(*),finale_posts(*),finale_signals(*)"
+    + ",npc_orders(*)"
 )
 INTENT_FUNCTIONS = (
     "case_open",
@@ -36,6 +39,8 @@ INTENT_FUNCTIONS = (
     "finale_nightfall",
     "finale_take_post",
     "finale_signal",
+    "npc_fetch_pin",
+    "npc_man_light",
 )
 REPLY_STATUSES = (
     "opened",
@@ -116,6 +121,8 @@ def check_board_reply(name: str, reply: dict) -> None:
         "finale_nightfall": ("done",),
         "finale_take_post": ("done",),
         "finale_signal": ("locked", "off_target"),
+        "npc_fetch_pin": ("done",),
+        "npc_man_light": ("done",),
     }
     if name in statuses and reply["status"] not in (*statuses[name], "repeat", "refused"):
         raise SupabaseRejected("The board write status could not be read.")
@@ -123,11 +130,23 @@ def check_board_reply(name: str, reply: dict) -> None:
         "board_pin": ("coinsPaid",),
         "finale_nightfall": ("nightNo", "endsSecond"),
         "finale_take_post": ("onPostSecond",),
+        "npc_fetch_pin": ("orderNo", "pinSecond", "coinsPaid"),
+        "npc_man_light": ("orderNo", "onPostSecond"),
     }
     if reply["status"] == "done":
         for field in fields.get(name, ()):
             if type(reply.get(field)) is not int or reply[field] < 0:
                 raise SupabaseRejected("The board write answer could not be read.")
+        if name.startswith("npc_") and reply["orderNo"] < 1:
+            raise SupabaseRejected("The order number could not be read.")
+        if name == "npc_fetch_pin":
+            found = reply.get("foundSecond")
+            if (
+                "foundSecond" not in reply
+                or found is not None
+                and (type(found) is not int or not 0 <= found <= reply["pinSecond"])
+            ):
+                raise SupabaseRejected("The order finding time could not be read.")
     if reply["status"] in ("wrong_pair", "off_target"):
         if type(reply.get("seconds")) is not int or reply["seconds"] < 0:
             raise SupabaseRejected("The board wait could not be read.")
@@ -207,6 +226,8 @@ class CaseStore:
                 "finale_posts.ended_second": "is.null",
                 "finale_signals.order": "id.desc",
                 "finale_signals.limit": "40",
+                "npc_orders.order": "order_no.desc",
+                "npc_orders.limit": "40",
             },
         )
         rows = checked_rows(rows)
@@ -275,6 +296,31 @@ class CaseStore:
     async def signal(self, snapshot, data, player_id, action_uid, light_id, bearing) -> dict:
         params = signal_arguments(snapshot, data, player_id, action_uid, light_id, bearing)
         return await run_function(self.admin, "finale_signal", params)
+
+    async def order(self, snapshot, data, player_id, action_uid, seat_no, kind, target, decision):
+        name, params = order_arguments(
+            snapshot, data, player_id, action_uid, seat_no, kind, target, decision
+        )
+        return await run_function(self.admin, name, params)
+
+    async def order_lookup(self, player_id: str, crew_id: str, order_no: int) -> Order | None:
+        if type(order_no) is not int or order_no < 1:
+            raise SupabaseRejected("The order number could not be read.")
+        rows = checked_rows(
+            await self.admin.select_rows(
+                "npc_orders",
+                {
+                    "select": "*",
+                    "crew_id": f"eq.{crew_id}",
+                    "ordered_by": f"eq.{player_id}",
+                    "order_no": f"eq.{order_no}",
+                    "limit": "1",
+                },
+            )
+        )
+        if len(rows) > 1:
+            raise SupabaseRejected("The order receipt is not unique.")
+        return None if not rows else order_from_row(rows[0], crew_id, player_id, order_no)
 
 
 def open_arguments(crew_id: str, data: CaseData) -> dict:
