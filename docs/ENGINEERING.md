@@ -338,7 +338,7 @@ The first real source is the live weather. It lives in the small package `backen
 
 A feature flag is a named switch that is **off by default**. It lets unfinished work sit in `main` without anyone seeing it. The server decides which flags are on, from the `FEATURE_FLAGS` setting. The browser asks the server (`GET /api/config`) and never decides for itself. A misspelled name in `FEATURE_FLAGS` stops the server at start-up with a clear message, so a typo cannot hide.
 
-1. **Agree the name** in the issue: lowercase, with underscores, one word or a short phrase. The current names are in `FLAG_NAMES` in `backend/server/flags.py`: `market`, `predictions`, `sports`, `arena`, `raid`, `live_presence` and `companion_llm`.
+1. **Agree the name** in the issue: lowercase, with underscores, one word or a short phrase. The current names are in `FLAG_NAMES` in `backend/server/flags.py`: `market`, `predictions`, `sports`, `arena`, `raid`, `live_presence`, `case`, `sign_in`, `bulletin` and `festival`.
 2. **Write the test first** in `backend/server/tests/`. It shows that the flag is off by default, on when named in `FEATURE_FLAGS`, and that a misspelled name is refused.
 3. **Add the name** to `FLAG_NAMES` in `backend/server/flags.py`. That is the only place the list lives, and `/api/config` reports it from there.
 4. **Update the comment** for `FEATURE_FLAGS` in `.env.example`, so the list of names stays true.

@@ -1,5 +1,7 @@
 # Help, privacy and teammate starter integration
 
+> Later scope update, 6 Nov: Nils cancelled the AI companion. AI-related remaining work and flag snapshots below are historical; its code and flag are removed. See [the cancellation record](ai-earned-context.md).
+
 Codex for Nils, 6 November 2026. Branch `integrate/help-privacy`, based on `94a48ad`.
 
 ## Changed

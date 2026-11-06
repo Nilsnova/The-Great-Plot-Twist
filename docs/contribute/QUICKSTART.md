@@ -6,7 +6,7 @@ Any teammate may start now, choose any lane or bring an idea. Nobody needs to wa
 
 ## Current starting point · 6 November 2026
 
-The repository now includes the case backend, Exchange v2, predictions, Lantern Duels, festival, host console and sports packages. That is source readiness, not a claim that every feature is open in production. The G9 connection for the complete online browser mystery is paused until Nils has his laptop. The festival waits for the first Relighting; sports remains off without its provider key, and the optional ChatGPT helper remains off pending official website-client approval. Read the latest [status](../STATUS.md) and your screen's own availability message before claiming a live flow works.
+The repository now includes the case backend, Exchange v2, predictions, Lantern Duels, festival, host console and sports packages. That is source readiness, not a claim that every feature is open in production. The G9 connection for the complete online browser mystery is being built in a cloud session. The festival waits for the first Relighting; sports remains off without its provider key. Read the latest [status](../STATUS.md) and your screen's own availability message before claiming a live flow works.
 
 Start with the workshop below or the [disposable local API](../LOCAL-TEST-SERVER.md). Neither needs production credentials. Player instructions live in [How to play](../HOW-TO-PLAY.md); data handling is in [Privacy](../PRIVACY.md). Keep your first change independent of those pending connections.
 

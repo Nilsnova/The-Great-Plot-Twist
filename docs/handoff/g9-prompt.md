@@ -217,7 +217,7 @@ Put these into `frontend/HANDOFF-G9.md` in checkpoint 0. Do not file them twice;
 - Every path starts with `/api`. JSON is camelCase. Errors look like `{"error": {"code", "message"}}`.
 - "Bearer" means `Authorization: Bearer <access token>`. The player id comes only from the verified token. Answers that hold player data carry `Cache-Control: private, no-store`.
 - `actionUid` is 8 to 64 characters of letters, digits, `_` and `-`. Make one per click, and reuse it on a retry after an unknown outcome.
-- Flags come from `GET /api/config` (`flags: {market, predictions, sports, arena, raid, live_presence, companion_llm}`, plus `case` when the case backend lands, and `sign_in` and the open-world flag if Claude adds them). The config never holds a key. Re-read it every 5 minutes and on page focus, so a flag switch shows up without a reload. Poll only routes whose flag is on.
+- Flags come from `GET /api/config` (`flags: {market, predictions, sports, arena, raid, live_presence, case, sign_in, bulletin, festival}`). The config never holds a key. Re-read it every 5 minutes and on page focus, so a flag switch shows up without a reload. Poll only routes whose flag is on.
 
 | Route | Auth | Streams | Lands |
 |---|---|---|---|
