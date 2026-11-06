@@ -50,3 +50,9 @@ approved OAuth and plan-usage clients, cancellation/output limits, citation vali
 provider errors and live proof. A context filter cannot stop a model from guessing or drawing on
 its own training; the eventual reply policy and evaluation must independently check spoiler safety.
 No fallback to project-paid inference or borrowed Codex credentials is provided.
+
+Independent review approved exact source `1aafd7e7360ba47483134c866ec8515adc3d7b92`: **82**
+helper/current case/finale/NPC/spoiler/reveal checks passed, plus scoped Ruff/format/whitespace.
+A separately constructed complete earned canonical snapshot fits at 3,392 UTF-8 bytes: eight
+cards, four deductions and twelve derived citations. Values were not printed. No actionable
+blocker was found; the current-snapshot/verified-identity caller requirement remains mandatory.

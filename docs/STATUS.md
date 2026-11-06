@@ -41,6 +41,11 @@ records resolved requests and merge checks without changing the in-flight G9 sou
 Normal browser mystery/multiplayer still await **G9, now active in a cloud session**; backend
 journey proofs do not establish a connected browser session.
 
+The optional AI helper now has a [pure earned-context foundation](handoff/ai-earned-context.md),
+independently reviewed with 82 checks. It includes earned cards/completed deductions only,
+excludes reveals and identity/money metadata, and performs no I/O or game write. Login, consent,
+inference and output safety still need their own implementation/proofs; `companion_llm` stays off.
+
 External needs: sports provider key directly in Vercel, official approved ChatGPT website client,
 and the production-host network allowlist for direct cloud stock/cache checks. Later hand-in needs
 three teammate names, private submission details and physical laptop/projector/spoken rehearsal.
@@ -470,6 +475,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** prepared and independently reviewed AI earned-context foundation 1aafd7e: 82 boundary/view checks, strict UTF-8 limits, no reveals/identity/money or state initialization. No route, provider, migration, dependency, G9 or flag change; official hosted ChatGPT approval and remaining integration stay pending.
 
 - **6 Nov 2026, Codex for Nils:** Nils confirmed G9 is now working in the cloud. Published [current G9 readiness](handoff/g9-cloud-readiness.md): ten older server requests are ready, temporary-auth retirement stays coupled to successful in-game sign-in, and current CSP/Vite/title-budget merge issues are identified. No sign-in/Relighting activation or G9 source change.
 
