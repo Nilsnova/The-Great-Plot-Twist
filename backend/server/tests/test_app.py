@@ -219,7 +219,15 @@ def test_version_in_the_code_matches_pyproject():
 # --- the services of create_app that only tests replace ---
 
 
-SERVICES = ("weather_source", "exchanger", "market_service", "world_stage", "clock")
+SERVICES = (
+    "weather_source",
+    "exchanger",
+    "market_service",
+    "broadcaster",
+    "islet_catalogue",
+    "world_stage",
+    "clock",
+)
 
 
 @pytest.mark.parametrize("name", SERVICES)
