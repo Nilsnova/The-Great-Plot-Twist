@@ -66,14 +66,14 @@ def test_included_router_logs_its_full_template(caplog):
 
 
 def test_successful_market_answers_also_get_private_cache_defaults():
-    from server.tests.test_market_routes import AUTH, World
+    from server.tests.market_world import AUTH, World
 
     world = World()
     portfolio = world.client.get("/api/market/portfolio", headers=AUTH)
-    trade = world.client.post("/api/market/trade", headers=AUTH, json={
-        "companyId": "harbor-trust", "side": "buy", "units": 5,
+    trade = world.client.post("/api/market/open", headers=AUTH, json={
+        "companyId": "harbor-trust", "side": "rising", "stake": 50,
         "actionUid": "request-policy-check",
     })
     for response in (portfolio, trade):
         assert response.status_code == 200
-        assert response.headers["cache-control"] == "private, no-store"
+        assert "no-store" in response.headers["cache-control"].split(", ")

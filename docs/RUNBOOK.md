@@ -30,10 +30,10 @@ The checks cover home HTTP 200, security response headers, API health, Boolean f
 flags, signed-out `/api/me` HTTP 401 with `Cache-Control: no-store`, a valid build stamp,
 and the production spoiler fingerprints in the downloaded home and every stamped JS/CSS
 asset. No sign-in, cookies, authorization headers or credential files are used. Redirects
-are refused. Each request has an eight-second timeout; the bundle is bounded to 100 assets,
+are refused. Each request has an eight-second timeout; the bundle is bounded to 256 assets,
 4 MiB per asset and 16 MiB total. Only the same origin is contacted. The script requires
 `build-info.json`; a missing stamp or header is a failed deployment check, not a reason
-to disable that check. See the G16 checkpoint note for header configuration proposed to Claude.
+to disable that check. The current deployment headers remain authoritative; G16 does not change `vercel.json`.
 
 Validate the checker without touching production:
 
@@ -56,7 +56,7 @@ paraphrase. A passing signed-out smoke is not a complete security or game accept
    deployment; Vercel keeps serving a successful deployment when a new build fails.
 3. Inspect route/status/duration aggregates and error counts, not request bodies, tokens,
    user IDs or query strings. Health is process-only: an `ok` answer does not establish
-   database readiness. Use the authorized human's dashboard to distinguish database faults.
+   database readiness. Use the authorized operator's dashboard to distinguish database faults.
 4. If the regression began with a deploy, roll back to the last known good compatible
    production build below. Preserve a brief incident note with times, commit and safe counts.
    Do not mask failures by adding polling loops or blindly retrying money-changing requests.
@@ -64,9 +64,10 @@ paraphrase. A passing signed-out smoke is not a complete security or game accept
 ## Supabase paused or unavailable
 
 An authorized project owner checks the Supabase dashboard and resumes the project if it
-is paused; allow a few minutes. Agents must not connect to the live database or obtain its
-password or secret key. Check the existing **Keep Supabase awake** GitHub Actions workflow:
-it runs once daily at 06:17 UTC and can be run manually by an authorized human. A 401 points
+is paused; allow a few minutes. Follow the current user authorization for live reads, reviewed migrations and recovery.
+Never print or decrypt credentials. The existing **Keep Supabase awake** GitHub Actions
+workflow runs once daily at 06:17 UTC. Do not trigger GitHub Actions manually: the release
+uses only that scheduled keep-alive. A 401 points
 to a keep-alive authorization mismatch; a 503 can mean missing configuration or a failed
 database read. Resolve bindings only in the relevant dashboards, never in chat or Git.
 
@@ -88,7 +89,7 @@ Git push or a green static homepage alone.
 
 ## Realtime connections or message budget full
 
-An authorized human checks Supabase Realtime metrics and provider errors. The documented
+An authorized operator checks Supabase Realtime metrics and provider errors. The documented
 free-tier budget is 200 connections, 100 messages/second and 2 million delivered messages
 per month; verify current plan limits in the dashboard before changing capacity. Close
 abandoned demo tabs, avoid extra devices/tabs during rehearsal, and inspect local subscription
@@ -105,14 +106,18 @@ probe the feed from production. Demo mode uses a public recording and must not b
 for current market data. Keep the bounded adapter timeout/cache/fallback; do not fetch
 directly from the browser or lower polling intervals during an outage.
 
-A 503 on a money-changing request has an unknown outcome. Do not retry, refund or repeat
-a trade blindly: the authorized operator checks the existing transaction reference through
-the application's approved workflow before deciding how to recover. Never put that
-reference or player details into general request logs or the incident note.
+A 503 on a money-changing request has an unknown outcome. Retry with the **same**
+`actionUid` or `stakeId`, and refresh the signed-in account state. Do not create a new
+identifier or issue a separate refund: durable receipts make the exact repeat safe. Never
+put that reference or player details into general request logs or the incident note.
 
 ## Roll back a Vercel deployment
 
-1. An authorized human opens the correct Vercel project and **Deployments**, identifies the
+A broken production release is rolled back immediately to the previous compatible
+deployment, then fixed forward. Current standing release authorization does not need to
+be requested again. This runbook does not grant access beyond the user's authorization.
+
+1. An authorized operator opens the correct Vercel project and **Deployments**, identifies the
    last known good **production** deployment by commit/time and confirms that it remains
    compatible with the database schema and current environment-variable names.
 2. Use that deployment's menu **Rollback** / **Instant Rollback** and confirm the production
@@ -120,11 +125,22 @@ reference or player details into general request logs or the incident note.
    supported promotion flow for that existing successful deployment. This changes the
    production deployment target; it does not revert database data, migrations or Git.
 3. Run one signed-out smoke with the old deployment's exact commit expectation. An
-   authorized human verifies any affected authenticated flow without changing money.
+   authorized operator verifies any affected authenticated flow without changing money.
 4. Record the old/new production commits, incident time and check outcomes. Fix forward
    on a task branch; do not reset or force-push `main`, and never reverse migrations as
    part of a frontend/API deployment rollback.
 
-Header or build-stamp checks may fail until their proposed deployment configuration has
-been published. Keep those failures visible and coordinate the configuration with Claude;
-do not describe that deployment as fully verified before the checks pass.
+A new build stamp exists only after deploying a build that includes G16. Keep missing
+stamps or headers visible as failed checks; do not describe an older deployment as
+verified by a checker it cannot yet satisfy. Preserve the existing strict CSP, production
+entry-point restrictions, and `STOCK_API_PROVIDER=finnhub`. Never add `vercel.json` crons.
+
+## Sports provider unavailable
+
+Live sports fails closed without its configured provider key. Historical 2023 fixtures are
+read-only in explicit demo mode and never authorize a live payout. Nils enters provider
+credentials directly in Vercel; no agent signs up, bills, prints or extracts a key. Confirm
+the configured provider with a credentialed read-only smoke check before enabling sports.
+Environment changes reach only new deployments: redeploy, then verify `/api/config` and
+the relevant public board. Missing credentials and unrun live checks remain open evidence,
+not passing tests.

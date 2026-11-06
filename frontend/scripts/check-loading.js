@@ -16,7 +16,7 @@ try {
   function walk(key){if(seen.has(key))return;seen.add(key);for(const dependency of manifest[key].imports??[])walk(dependency);}
   walk('index.html');report.initialChunks=[];report.initialJavaScript=0;report.initialGzip=0;
   for(const key of seen){const file=manifest[key].file;if(!file.endsWith('.js'))continue;const data=await readFile('dist/'+file);report.initialChunks.push(file);report.initialJavaScript+=data.length;report.initialGzip+=gzipSync(data).length;}
-  check(report.initialJavaScript<35000,'Cold title JavaScript is below 35 kB before gzip');
+  check(report.initialJavaScript<=21080,'Cold title JavaScript stays within the current 21,080-byte budget');
   const cssFiles=new Set([...seen].flatMap(key=>manifest[key].css??[]));report.initialCss=0;
   for(const file of cssFiles)report.initialCss+=(await readFile('dist/'+file)).length;
   check(report.initialCss<12000,'Cold title CSS is below 12 kB; world styles stay deferred');

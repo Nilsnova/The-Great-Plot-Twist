@@ -19,8 +19,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from server.game.case_cache import is_case_path
-
 logger = logging.getLogger(__name__)
 
 # Short codes for the HTTP statuses that FastAPI itself raises (404, 405, ...).

@@ -33,12 +33,12 @@ for(const path of await files('')) {
 const sum=records=>records.reduce((total,item)=>total+item.bytes,0);
 const coldJs=chunks.filter(c=>c.initial&&c.file.endsWith('.js'));
 const coldCss=chunks.filter(c=>c.initial&&c.file.endsWith('.css'));
-const limits={titleJavaScript:35000,titleCss:12000,titleImage:40000};
+const limits={titleJavaScript:21080,titleCss:12000,titleImage:40000};
 const titleImage=images.find(file=>file.file==='places/title.png')?.bytes??null;
 const report={limits,initial:{javaScript:sum(coldJs),javaScriptGzip:coldJs.reduce((s,c)=>s+c.gzipBytes,0),
   css:sum(coldCss),cssGzip:coldCss.reduce((s,c)=>s+c.gzipBytes,0),titleImage},
   totals:{javaScript:sum(chunks.filter(c=>c.file.endsWith('.js'))),images:sum(images),audio:sum(audio)},
   chunks,images,audio};
 console.log(JSON.stringify(report,null,2));
-if(process.argv.includes('--check')&&(report.initial.javaScript>=limits.titleJavaScript||
+if(process.argv.includes('--check')&&(report.initial.javaScript>limits.titleJavaScript||
   report.initial.css>=limits.titleCss||titleImage===null||titleImage>=limits.titleImage))process.exitCode=1;

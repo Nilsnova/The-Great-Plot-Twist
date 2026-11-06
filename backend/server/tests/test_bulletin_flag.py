@@ -33,4 +33,4 @@ def test_disabled_bulletin_refuses_before_data_reads_or_content_errors():
     response = TestClient(app).get("/api/bulletin")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "feature_disabled"
-    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["cache-control"] == "private, no-store"

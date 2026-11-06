@@ -4,9 +4,10 @@ import {fileURLToPath} from 'node:url';
 import {containsFingerprint} from '../frontend/scripts/spoiler-guard.js';
 
 const DEFAULT_URL = 'https://the-great-plot-twist.vercel.app';
-const FLAG_NAMES = ['market', 'predictions', 'sports', 'arena', 'raid', 'live_presence', 'companion_llm'];
+export const FLAG_NAMES = ['market', 'predictions', 'sports', 'arena', 'raid', 'live_presence',
+  'companion_llm', 'case', 'sign_in', 'bulletin', 'festival'];
 const SHA = /^[a-f0-9]{40}$/;
-const MAX_ASSETS = 100;
+const MAX_ASSETS = 256;
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 16 * 1024 * 1024;
 

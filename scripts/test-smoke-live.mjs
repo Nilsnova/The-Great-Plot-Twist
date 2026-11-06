@@ -1,14 +1,15 @@
 // Local-only deployment fixtures exercise real requests and the smoke script's exit status.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {spawn} from 'node:child_process';
 import {test} from 'node:test';
 import {fileURLToPath} from 'node:url';
-import {runSmoke} from './smoke-live.mjs';
+import {FLAG_NAMES, runSmoke} from './smoke-live.mjs';
 
 const COMMIT = 'a'.repeat(40);
-const FLAGS = {market: false, predictions: false, sports: false, arena: false, raid: false, live_presence: false, companion_llm: false};
+const FLAGS = Object.fromEntries(FLAG_NAMES.map(name => [name, false]));
 const EXAMPLE = "A private 'example' line.";
 const FINGERPRINTS = [{prefix: EXAMPLE.slice(0, 14), length: EXAMPLE.length, sha256: createHash('sha256').update(EXAMPLE).digest('hex')}];
 
@@ -161,5 +162,29 @@ test('shell wrapper preserves failure count as process exit status', async () =>
     assert.equal(exitCode, 2);
     assert.match(stdout, /RESULT 2 failure\(s\)/);
     assert.equal(stderr, '');
+  });
+});
+
+
+test('deployment flag schema follows every current backend flag', async () => {
+  const source = await readFile(new URL('../backend/server/flags.py', import.meta.url), 'utf8');
+  const names = [...source.match(/FLAG_NAMES = \(([\s\S]*?)\)/)[1].matchAll(/"([a-z_]+)"/g)].map(match => match[1]);
+  assert.deepEqual(FLAG_NAMES, names);
+  await fixture({}, async ({run}) => {
+    assert.equal(await run({flags: {case: false, sign_in: false, bulletin: false, festival: false}}), 0);
+  });
+});
+
+
+test('current larger bundles remain bounded instead of failing the old 100-asset cap', async () => {
+  const assets = Array.from({length:121}, (_,i) => `assets/current-${i}.js`);
+  const routes = Object.fromEntries(assets.map(path => ['/'+path, {headers:{'Content-Type':'application/javascript'},body:'/* public */'}]));
+  routes['/build-info.json'] = {body:JSON.stringify({commit:COMMIT,builtAt:'2026-11-06T12:00:00.000Z',assets})};
+  routes['/'] = {body:`<html><script src="/${assets[0]}"></script></html>`,headers:{'Content-Security-Policy':"default-src 'self'",'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}};
+  await fixture(routes, async ({run}) => assert.equal(await run(),0));
+  routes['/build-info.json'] = {body:JSON.stringify({commit:COMMIT,builtAt:'2026-11-06T12:00:00.000Z',assets:Array.from({length:257},(_,i)=>`assets/too-many-${i}.js`)})};
+  await fixture(routes, async ({run,requests}) => {
+    assert.equal(await run(),4);
+    assert.ok(requests.every(request => !request.path.startsWith('/assets/')));
   });
 });

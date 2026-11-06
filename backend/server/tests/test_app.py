@@ -147,7 +147,7 @@ def test_api_answers_without_an_explicit_cache_policy_default_to_no_store(method
     response = make_client(raise_server_exceptions=False).request(method, path)
 
     assert response.status_code == status
-    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 def test_public_content_keeps_its_explicit_cache_policy():
