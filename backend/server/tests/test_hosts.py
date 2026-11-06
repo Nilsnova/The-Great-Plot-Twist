@@ -72,17 +72,17 @@ def test_a_player_who_is_not_a_host_gets_403_forbidden():
     assert response.json()["error"]["message"] == "Only a host can do this."
 
 
-def test_without_a_token_it_is_401_not_403():
-    # The login is checked first. A visitor must be told to sign in, not that they are not a host.
+def test_without_a_token_it_is_403():
+    # G14 requires the same refusal for every non-host, including visitors.
     response = make_client().get(URL)
 
-    assert_error(response, 401, "unauthorized")
+    assert_error(response, 403, "forbidden")
 
 
-def test_a_token_that_supabase_refuses_is_401_not_403():
+def test_a_token_that_supabase_refuses_is_403():
     response = make_client().get(URL, headers={"Authorization": "Bearer nobody-issued-this"})
 
-    assert_error(response, 401, "unauthorized")
+    assert_error(response, 403, "forbidden")
 
 
 def test_with_no_hosts_configured_everybody_gets_403():

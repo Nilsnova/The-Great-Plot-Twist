@@ -7,23 +7,23 @@ Nils puts his own id there in the Vercel settings. A presenter route asks for a 
     @router.post("/something-only-a-host-may-do")
     async def do_it(host: HostDep) -> ...: ...
 
-    no token, or a token that Supabase refuses   ->  401 unauthorized  (the login is checked first)
+    no token, or a token that Supabase refuses   ->  403 forbidden
     signed in, but not in HOST_PLAYER_IDS        ->  403 forbidden
     HOST_PLAYER_IDS is empty                     ->  403 forbidden for everybody
 
 The id always comes from the verified login (auth.py), never from the address, a header or the
 body, so nobody can name themselves a host. A host is an ordinary player in every other way.
 
-No route uses this yet. The presenter routes of package L3 (the case board and the finale) will.
+Used by G14's host console and future presenter routes.
 
 Used by: the presenter routes, and the tests in server/tests/test_hosts.py.
 """
 
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 
-from server.auth import Player, PlayerDep
+from server.auth import Player, VerifierDep, read_bearer_token
 from server.errors import ApiError
 from server.settings import Settings, SettingsDep
 
@@ -35,8 +35,16 @@ def require_host(player: Player, settings: Settings) -> Player:
     return player
 
 
-async def get_current_host(player: PlayerDep, settings: SettingsDep) -> Player:
-    """FastAPI dependency: the signed-in host, or a 401 (not signed in) or 403 (not a host)."""
+async def get_current_host(
+    request: Request, verifier: VerifierDep, settings: SettingsDep
+) -> Player:
+    """Host pages reveal nothing to visitors or refused logins: both answer 403."""
+    try:
+        player = await verifier.verify(read_bearer_token(request.headers.get("Authorization")))
+    except ApiError as error:
+        if error.status_code != 401:
+            raise
+        raise ApiError(403, "forbidden", "Only a host can do this.") from error
     return require_host(player, settings)
 
 

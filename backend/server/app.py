@@ -27,6 +27,7 @@ from server.routes import (
     crews,
     delete_me,
     health,
+    host_console,
     intro,
     keepalive,
     market,
@@ -109,6 +110,17 @@ def create_app(
     app.state.market = market_service
 
     register_error_handlers(app)
+
+    @app.middleware("http")
+    async def private_host_responses(request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith("/api/host/"):
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["Referrer-Policy"] = "no-referrer"
+        return response
+
+    app.include_router(host_console.router, prefix="/api")
     app.include_router(health.router, prefix="/api")
     app.include_router(content.router, prefix="/api")
     app.include_router(config.router, prefix="/api")

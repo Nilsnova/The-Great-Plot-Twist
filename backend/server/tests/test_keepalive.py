@@ -152,11 +152,12 @@ def test_it_reads_profiles_wallet_reasons_and_crews_with_get():
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    assert [request.method for request in seen] == ["GET", "GET", "GET"]
+    assert [request.method for request in seen] == ["GET", "GET", "GET", "POST"]
     assert [request.url.path for request in seen] == [
         "/rest/v1/profiles",
         "/rest/v1/wallet_reasons",
         "/rest/v1/crews",
+        "/rest/v1/rpc/host_record_keepalive",
     ]
 
 
@@ -165,7 +166,7 @@ def test_each_read_asks_for_one_column_of_one_row():
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    assert [dict(request.url.params) for request in seen] == [
+    assert [dict(request.url.params) for request in seen[:3]] == [
         {"select": "id", "limit": "1"},
         {"select": "reason", "limit": "1"},
         {"select": "id", "limit": "1"},
@@ -177,7 +178,19 @@ def test_the_reads_use_the_supabase_secret_key():
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    assert [request.headers["apikey"] for request in seen] == [FAKE_SECRET_KEY] * 3
+    assert [request.headers["apikey"] for request in seen] == [FAKE_SECRET_KEY] * 4
+
+
+def test_console_stamp_failure_does_not_break_existing_daily_job(caplog):
+    def reply(request):
+        if request.method == "POST":
+            return httpx.Response(404, json={"code": "PGRST202"})
+        return database_works(request)
+
+    client, _ = make_client(reply)
+    response = client.get(URL, headers=RIGHT_HEADER)
+    assert response.status_code == 200
+    assert "console stamp could not be recorded" in caplog.text
 
 
 def test_tables_without_rows_are_fine():
