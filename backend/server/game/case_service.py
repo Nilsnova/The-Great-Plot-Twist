@@ -1,4 +1,4 @@
-"""Coordinate the case rules, scoped store and safe retries for the Phase 1 intents.
+"""Coordinate the case rules, scoped store and safe retries for the case and board intents.
 
 The database clock and locked crew state make the final decision. No background job is needed.
 """
@@ -10,16 +10,27 @@ from fastapi import Depends, Request
 
 from server.clock import Clock, utc_now
 from server.errors import ApiError
+from server.game.board_rules import decide_pair, decide_pin
 from server.game.case_accusation import decide_accusation
-from server.game.case_answers import http_refusal, refusal_answer, repeat_answer
+from server.game.case_answers import (
+    PHASE2_WRITE_STATUSES,
+    http_refusal,
+    phase2_answer,
+    refusal_answer,
+    repeat_answer,
+)
 from server.game.case_clock import case_second
 from server.game.case_data import CaseData, load_case
 from server.game.case_limits import ActionLimiter
 from server.game.case_messages import UI_MESSAGES
+from server.game.case_nudges import nudge
 from server.game.case_routes import decide_route
 from server.game.case_snapshot import CaseSnapshot
 from server.game.case_store import CaseStore, solve_payments
 from server.game.case_view import build_case_view
+from server.game.finale_rules import decide_nightfall, decide_post, decide_signal
+from server.game.npc_lines import load_lines
+from server.game.station_lookup import IsletStations, NoStations
 from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
@@ -43,11 +54,11 @@ class CaseService:
         self.relight_open = relight_open
         self.limiter = limiter or ActionLimiter(clock=clock)
         self.broadcaster = broadcaster
-        self.stations = stations
+        self.stations = stations if stations is not None else NoStations()
         self.lines = lines
 
     def store_for(self, admin: SupabaseAdmin) -> CaseStore:
-        return CaseStore(admin)
+        return CaseStore(admin, stations=self.stations)
 
     def now(self, snapshot: CaseSnapshot) -> int:
         return case_second(snapshot.state_started_at or snapshot.started_at, self.clock())
@@ -56,7 +67,9 @@ class CaseService:
         return (
             None
             if snapshot is None
-            else build_case_view(self.data, snapshot, player_id, self.now(snapshot))
+            else build_case_view(
+                self.data, snapshot, player_id, self.now(snapshot), lines=self.lines
+            )
         )
 
     async def opened_snapshot(self, store, player_id, *, write=False, crew_id=None):
@@ -92,8 +105,17 @@ class CaseService:
         return {"case": self.view(snapshot, player_id)}
 
     async def remembered(self, store, player_id: str, action: dict) -> dict:
+        if action["kind"] == "order":
+            from server.game.npc_service import remembered_order
+
+            return await remembered_order(self, store, player_id, action)
         snapshot = await store.snapshot(player_id, action["crewId"])
         return {**repeat_answer(self.data, action), "case": self.view(snapshot, player_id)}
+
+    async def order(self, admin, player_id, seat_no, kind, target, allow_paid, action_uid):
+        from server.game.npc_service import order
+
+        return await order(self, admin, player_id, seat_no, kind, target, allow_paid, action_uid)
 
     async def search(
         self, admin, player_id, route_id, action_uid, paid_confirmed=False, expected_price=None
@@ -140,6 +162,88 @@ class CaseService:
             }
         else:
             raise SupabaseRejected("The search result could not be read.")
+        if reply["status"] == "done":
+            await nudge(self.broadcaster, snapshot.crew_id, "search", reply["revision"])
+        fresh = await store.snapshot(player_id, snapshot.crew_id)
+        return {**answer, "case": self.view(fresh, player_id)}
+
+    async def pin(self, admin, player_id, card_id, action_uid):
+        return await self.phase2_intent(admin, player_id, action_uid, "pin", (card_id,))
+
+    async def pair(self, admin, player_id, card_a, card_b, action_uid):
+        return await self.phase2_intent(admin, player_id, action_uid, "pair", (card_a, card_b))
+
+    async def nightfall(self, admin, player_id, action_uid):
+        return await self.phase2_intent(admin, player_id, action_uid, "nightfall", ())
+
+    async def post(self, admin, player_id, light_id, action_uid):
+        return await self.phase2_intent(admin, player_id, action_uid, "post", (light_id,))
+
+    async def signal(self, admin, player_id, light_id, bearing, action_uid):
+        return await self.phase2_intent(admin, player_id, action_uid, "signal", (light_id, bearing))
+
+    def phase2_decision(self, kind, snapshot, player_id, targets):
+        now = self.now(snapshot)
+        seat = snapshot.seat_for_player(player_id)
+        if seat is None:
+            http_refusal({"reason": "not_in_crew"})
+        if kind in ("pin", "pair"):
+            if any(card not in {item.id for item in self.data.cards} for card in targets):
+                raise ApiError(404, "no_such_card", "That card is not in the case.")
+        if kind == "pin":
+            return decide_pin(self.data, snapshot, seat, targets[0], now)
+        if kind == "pair":
+            if targets[0] == targets[1]:
+                raise ApiError(422, "validation_error", "Choose two different cards.")
+            return decide_pair(self.data, snapshot, *targets, now)
+        if kind == "nightfall":
+            return decide_nightfall(self.data, snapshot, now)
+        if kind == "post":
+            return decide_post(self.data, snapshot, seat, targets[0], now)
+        decision = decide_signal(self.data, snapshot, seat, *targets, now)
+        if decision.reason == "post_not_ready" and targets[0] not in {
+            light.id for light in self.data.night.lights
+        }:
+            raise ApiError(404, "no_such_light", "That light is not in the case.")
+        return decision
+
+    async def phase2_intent(self, admin, player_id, action_uid, kind, targets):
+        self.limiter.check(player_id, write=True)
+        store = self.store_for(admin)
+        action = await store.action_lookup(player_id, action_uid)
+        if action is not None:
+            return await self.remembered(store, player_id, action)
+        snapshot = await self.opened_snapshot(store, player_id, write=True)
+        decision = self.phase2_decision(kind, snapshot, player_id, targets)
+        if not decision.accepted and decision.reason not in ("wrong_pair", "off_target"):
+            answer = {"accepted": False, "reason": decision.reason, "message": decision.message}
+            if decision.seconds:
+                answer["seconds"] = decision.seconds
+            return {**answer, "case": self.view(snapshot, player_id)}
+
+        async def write(fresh):
+            arguments = targets
+            if kind == "signal":
+                arguments = (targets[0], decision.bearing)
+            return await getattr(store, kind)(fresh, self.data, player_id, action_uid, *arguments)
+
+        reply, _ = await self.write_with_open_retry(store, snapshot, player_id, write)
+        if reply["status"] == "repeat":
+            return await self.remembered(store, player_id, reply)
+        if reply["status"] == "refused":
+            http_refusal(reply)
+            answer = refusal_answer(self.data, kind, targets[0] if targets else None, reply)
+        else:
+            if (
+                reply["status"] not in PHASE2_WRITE_STATUSES[kind]
+                or type(reply.get("revision")) is not int
+                or reply["revision"] < 1
+            ):
+                raise SupabaseRejected("The case intent result could not be read.")
+            await nudge(self.broadcaster, snapshot.crew_id, kind, reply["revision"])
+            fresh = await store.snapshot(player_id, snapshot.crew_id)
+            answer = phase2_answer(self.data, kind, targets, reply, player_id, fresh)
+            return {**answer, "case": self.view(fresh, player_id)}
         fresh = await store.snapshot(player_id, snapshot.crew_id)
         return {**answer, "case": self.view(fresh, player_id)}
 
@@ -236,6 +340,8 @@ class CaseService:
             }
         else:
             raise SupabaseRejected("The accusation result could not be read.")
+        if reply["status"] in ("wrong", "solved"):
+            await nudge(self.broadcaster, snapshot.crew_id, "accuse", reply["revision"])
         fresh = await store.snapshot(player_id, snapshot.crew_id)
         return {**answer, "case": self.view(fresh, player_id)}
 
@@ -259,6 +365,7 @@ class CaseService:
             raise SupabaseRejected("The clock move was refused.")
         if reply["status"] != "done" or type(reply.get("now")) is not int:
             raise SupabaseRejected("The clock move could not be read.")
+        await nudge(self.broadcaster, snapshot.crew_id, "clock", reply["revision"])
         fresh = await store.snapshot(player_id, snapshot.crew_id)
         return {
             "accepted": True,
@@ -269,9 +376,18 @@ class CaseService:
         }
 
 
-def case_or_none(settings: Settings, *, broadcaster=None) -> CaseService | None:
+def case_or_none(
+    settings: Settings, *, broadcaster=None, clock: Clock = utc_now
+) -> CaseService | None:
     try:
-        return CaseService(load_case(), relight_open=settings.relight_open, broadcaster=broadcaster)
+        return CaseService(
+            load_case(),
+            clock=clock,
+            relight_open=settings.relight_open,
+            broadcaster=broadcaster,
+            stations=IsletStations(),
+            lines=load_lines(),
+        )
     except (OSError, ValueError, TypeError, KeyError):
         logger.warning("The case content is unavailable; case routes are disabled.")
         return None

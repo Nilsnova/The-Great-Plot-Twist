@@ -5,12 +5,13 @@ Used by: CaseService for reads and intent replies. All timestamps are integer ca
 
 from datetime import UTC
 
-from server.game.case_board import deduction_parts
 from server.game.case_data import Card, CaseData, Route
 from server.game.case_reveal import reveal_lines
-from server.game.case_rewards import solve_shares
 from server.game.case_routes import card_is_open, decide_route
 from server.game.case_snapshot import CaseSnapshot, Find, SeatState
+from server.game.finale_view import credits_view, finale_view
+from server.game.npc_lines import LineBank
+from server.game.npc_view import npc_view
 
 CLOCK_KEYS = frozenset(
     {
@@ -255,30 +256,6 @@ def _accusation(data: CaseData, snapshot: CaseSnapshot, now: int) -> dict:
     }
 
 
-def _credits(data: CaseData, snapshot: CaseSnapshot, viewer: str) -> list[dict]:
-    solvers = {row.player_id: row for row in snapshot.solvers}
-    result = []
-    for payout in solve_shares(data, snapshot):
-        solver = solvers.get(payout.player_id)
-        result.append(
-            {
-                "seat": payout.seat_no,
-                "name": _seat_label(snapshot, payout.seat_no),
-                "isMe": payout.player_id == viewer,
-                "pins": payout.pins,
-                "deductionParts": len(deduction_parts(data, snapshot, payout.player_id)),
-                "locks": int(payout.player_id in snapshot.parted_players),
-                "accused": any(
-                    row.correct and row.player_id == payout.player_id
-                    for row in snapshot.accusations
-                ),
-                "share": solver.share if solver else None,
-                "paid": solver.share_paid if solver else None,
-            }
-        )
-    return result
-
-
 def _reveal(data: CaseData, snapshot: CaseSnapshot, me: SeatState) -> dict:
     solver = next((row for row in snapshot.solvers if row.player_id == me.player_id), None)
     if solver is None:
@@ -300,7 +277,9 @@ def _reveal(data: CaseData, snapshot: CaseSnapshot, me: SeatState) -> dict:
     }
 
 
-def build_case_view(data: CaseData, snapshot: CaseSnapshot, viewer: str, now: int) -> dict | None:
+def build_case_view(
+    data: CaseData, snapshot: CaseSnapshot, viewer: str, now: int, *, lines: LineBank | None = None
+) -> dict | None:
     """Return only this crew's earned content, or no case for an unstarted visitor."""
     me = next((seat for seat in snapshot.seats if seat.player_id == viewer), None)
     if snapshot.status == "forming" or me is None:
@@ -336,7 +315,7 @@ def build_case_view(data: CaseData, snapshot: CaseSnapshot, viewer: str, now: in
         },
         "accusation": _accusation(data, snapshot, now),
         "reveal": _reveal(data, snapshot, me),
-        "credits": _credits(data, snapshot, viewer),
-        "finale": {},
-        "partners": [],
+        "credits": credits_view(data, snapshot, viewer),
+        "finale": finale_view(data, snapshot, me, now),
+        "partners": [] if lines is None else npc_view(data, snapshot, viewer, now, lines),
     }

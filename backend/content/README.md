@@ -585,9 +585,6 @@ A file that breaks a rule stops the code with a message that names the file and 
 - **A new ending or a new decision needs a kit.** If the story can end in a way that no kit covers, `kit_for` raises an error and the player gets a 500. `test_referee.py` searches the real story for every end state and fails first.
 - **A new kit id needs a new migration**, because the table `entry_profiles` lists the allowed ids. Never edit the migration that exists.
 
-## How the server reads the case
-
-`server/game/case_data.py` loads the private case file into frozen records and runs load-time checks L1 to L8, L14, L15, L18 and L19. `case_lint.py` adds exhaustive free-route, citation and seat-fill checks in tests. The active Phase 1 route kinds are `kit`, `open` and `timed`; other routes keep their ids in the loaded data but are not offered. A route's optional `label` falls back to the card title. The case view exposes only earned cards, formed deductions and a reveal earned by a solver in that same crew. The private file is never added to public content. Phase 1 changes no secret content.
 ## buildings.json: the buildings of a home islet
 
 `buildings.json` holds what the home islet (package L2) is made of: its five spots, which building each spot holds, what a level 1 building costs and how much timber every player starts with. It is **server only**. It is not on the list `PUBLIC_CONTENT`, so the browser never downloads it (decision D016). The browser gets everything it needs through `GET /api/islet`, which shows each spot with its price and whether the player can build it ([INTERFACES.md](../../docs/INTERFACES.md#your-home-islet-package-l2)). Keys are camelCase, like `market/companies.json`. Coins are play money only.
@@ -706,3 +703,7 @@ A text is never empty and at most 600 characters. A template may contain only it
 | `beam.chart` | Where the beam is on the sea chart: `x` from 0 to 447 and `y` from 0 to 255 (the chart is 448 by 256). Beyond Gull's Rest at (407, 34). Never shown in a text. |
 | `beam.pattern` | The flashes, 1 to 12 of `short` and `long`, in the order they flash. A proposal for the package that draws the beam. It must not be the harbor alarm, `long, short, long`. |
 | `beam.flash` | The timings in seconds, each above 0 and at most 10: `shortSeconds`, `longSeconds`, `gapSeconds` (between two flashes) and `pauseSeconds` (between two rounds). |
+
+## How the server reads the case
+
+`server/game/case_data.py` loads the private case file into frozen records and runs load-time checks L1 to L8, L14, L15, L18 and L19. `case_lint.py` adds exhaustive free-route, citation and seat-fill checks in tests. The active Phase 1 route kinds are `kit`, `open` and `timed`; other routes keep their ids in the loaded data but are not offered. A route's optional `label` falls back to the card title. The case view exposes only earned cards, formed deductions and a reveal earned by a solver in that same crew. The private file is never added to public content. Phase 1 changes no secret content.

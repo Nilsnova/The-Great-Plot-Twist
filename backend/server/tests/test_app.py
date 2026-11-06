@@ -31,6 +31,7 @@ SETTING_NAMES = (
     "CRON_SECRET",
     "DEMO_MODE",
     "FEATURE_FLAGS",
+    "HOST_PLAYER_IDS",
 )
 
 
@@ -248,6 +249,8 @@ SERVICES = (
     "weather_source",
     "exchanger",
     "market_service",
+    "prediction_desk",
+    "duel_service",
     "broadcaster",
     "islet_catalogue",
     "world_stage",

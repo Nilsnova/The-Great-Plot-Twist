@@ -1,86 +1,93 @@
-"""Island Exchange database access: company bases, positions, wallet balance and the trade function.
+"""Island Exchange database reads: positions, events, the daily stakes and the wallet balance.
 
-Everything here talks to Supabase through SupabaseAdmin (the server's secret key), so it runs on the
-server only. Reads use select_rows. The two writes are database functions, run with call_function:
-  * market_set_base   saves the base of one company, safely when two server instances race
-  * market_trade      the one atomic trade: coins, position and trade row in a single step
-(supabase/migrations/20261106010000_island_exchange.sql explains both.)
+Everything here talks to Supabase through SupabaseAdmin (the server's secret key), so it runs on
+the server only. These are READS (select_rows). The three database functions that change things
+are in store_calls.py. The tables are explained in
+supabase/migrations/20261106090000_exchange_leverage.sql.
 
-Two kinds of base store, with the same two methods (read_all and save):
-  * DatabaseBaseStore   keeps the bases in the table market_bases. Every server instance shares it.
-  * MemoryBaseStore     keeps them in this instance only. Used when the database is not set up
-                        (a demo or a laptop without Supabase), so the price board still works.
-Both use the version number the same way: a save only works if the base still has the version the
-caller read. A save that does not work returns False, and the caller reads again.
+Numbers: the database sends numeric columns as JSON numbers, which Python reads as floats. They
+are turned into exact Decimals through their text form (str), the shortest text that gives the
+float. A price has at most 8 decimals and a few digits before them, so no digit is lost.
 
-Numbers: the database sends numeric columns as JSON numbers, which Python reads as floats. They are
-turned into exact Decimals through their text form (str), the shortest text that gives the float.
+A row that does not look as expected (a missing column, a word we do not know, a number that is
+not a number) is refused with 502 database_error instead of being half understood.
 
-Used by: exchange.py.
+Used by: store_calls.py (the number readers), exchange.py, portfolio.py and the tests. The
+Greyfathom rule of card C6 (S3) calls has_open_rising_position().
 """
 
 import logging
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Protocol
+from typing import Any
 
-from server.market.rules import Base
-from server.market.trade_rules import (
-    BUY,
-    DAILY_BUY_CAP_COINS,
-    FEE_BASIS_POINTS,
-    MAX_TRADE_COINS,
-    MIN_HOLD_SECONDS,
-    TradeAmounts,
-)
+from server.market.positions import MAX_OPEN_POSITIONS, RISING, SIDES
 from server.supabase_admin import SupabaseAdmin, SupabaseNotConfigured, SupabaseRejected
 
 logger = logging.getLogger(__name__)
 
-BASE_COLUMNS = (
-    "company_id,base_game_price,base_real_price,base_at,base_source,"
-    "halted_until,frozen_price,version"
+POSITION_COLUMNS = (
+    "id,company_id,side,price_mode,stake,entry_price,zero_price,open_fee,opened_at,status,"
+    "closed_at,close_price,close_value,close_fee"
 )
-POSITION_COLUMNS = "company_id,units,avg_price,opened_at,last_buy_at"
+EVENT_COLUMNS = (
+    "id,position_id,kind,company_id,side,price,stake,value,fee,coins_change,ref,created_at"
+)
 
-# A player holds at most one position per company, and there are few companies.
-MAX_POSITIONS = 50
-# The most trades read to add up what a player has bought today.
-MAX_TRADES_READ = 1000
+STATUSES = ("open", "closed", "zeroed")
+PRICE_MODES = ("live", "replay")
+EVENT_KINDS = ("open", "close", "zero")
 
-
-class BaseStore(Protocol):
-    """Where company bases are kept. DatabaseBaseStore and MemoryBaseStore both do this."""
-
-    async def read_all(self) -> dict[str, Base]: ...
-
-    async def save(self, company_id: str, base: Base) -> bool: ...
+RECENTLY_CLOSED_LIMIT = 10  # the newest closed positions the portfolio shows
+# A player stakes at most 2000 coins a game day and at least 10 per position, so a day holds at
+# most 200 positions. This is more than that, only a bound on the answer.
+MAX_STAKES_READ = 500
 
 
 @dataclass(frozen=True)
 class PositionRow:
-    """What a player holds of one company."""
+    """One row of exchange_positions: one position of one player."""
 
+    id: str
     company_id: str
-    units: int
-    avg_price: Decimal
+    side: str  # "rising" or "falling"
+    price_mode: str  # "live" or "replay"
+    stake: int
+    entry_price: Decimal
+    zero_price: Decimal
+    open_fee: int
     opened_at: datetime
-    last_buy_at: datetime  # the minimum holding time counts from here
+    status: str  # "open", "closed" (by the player) or "zeroed" (the stake was used up)
+    closed_at: datetime | None
+    close_price: Decimal | None
+    close_value: int | None
+    close_fee: int | None
+
+    @property
+    def is_open(self) -> bool:
+        return self.status == "open"
 
 
 @dataclass(frozen=True)
-class TradeOutcome:
-    """The answer of the database function market_trade. Either done, or refused with a reason."""
+class EventRow:
+    """One row of exchange_events: the history of positions, never edited."""
 
-    done: bool
-    balance: int = 0  # done: the wallet balance after the trade
-    units_after: int = 0  # done: units held after the trade
-    avg_price: Decimal | None = None  # done: average price of the units held (None if none left)
-    reason: str = ""  # refused: halted, daily_cap, not_enough_units or holding_time
-    coins_left: int = 0  # refused (daily_cap): what the player may still buy today
-    units_held: int = 0  # refused (not_enough_units): what the player holds
-    wait_seconds: int = 0  # refused (holding_time): how long until the units can be sold
+    id: int
+    position_id: str
+    kind: str  # "open", "close" or "zero"
+    company_id: str
+    side: str
+    price: Decimal
+    stake: int
+    value: int
+    fee: int
+    coins_change: int
+    ref: str
+    created_at: datetime
+
+
+# --- reading what the database sends ---
 
 
 def unreadable() -> SupabaseRejected:
@@ -119,80 +126,75 @@ def to_time(value: object) -> datetime:
     return moment
 
 
+def to_word(value: object, allowed: tuple[str, ...]) -> str:
+    """Text that must be one of the allowed words."""
+    if not isinstance(value, str) or value not in allowed:
+        raise unreadable()
+    return value
+
+
+def to_text(value: object) -> str:
+    """Text that is not empty."""
+    if not isinstance(value, str) or not value:
+        raise unreadable()
+    return value
+
+
 def plain(value: Decimal) -> str:
     """A Decimal as plain text without an exponent, for the database: 1E+3 becomes 1000."""
     return format(value, "f")
 
 
-def row_to_base(row: dict[str, Any]) -> Base:
-    """One row of market_bases as a Base. Raises SupabaseRejected if the row is odd."""
+def or_none(value: object, convert: Any) -> Any:
+    """The converted value, or None if the database sent null."""
+    return None if value is None else convert(value)
+
+
+def row_to_position(row: dict[str, Any]) -> PositionRow:
+    """One row of exchange_positions as a PositionRow. Raises SupabaseRejected if it is odd."""
     try:
-        halted_until = row["halted_until"]
-        frozen_price = row["frozen_price"]
-        return Base(
-            game_price=to_decimal(row["base_game_price"]),
-            real_price=to_decimal(row["base_real_price"]),
-            set_at=to_time(row["base_at"]),
-            source=str(row["base_source"]),
-            halted_until=None if halted_until is None else to_time(halted_until),
-            frozen_price=None if frozen_price is None else to_decimal(frozen_price),
-            version=to_whole_number(row["version"]),
+        return PositionRow(
+            id=to_text(row["id"]),
+            company_id=to_text(row["company_id"]),
+            side=to_word(row["side"], SIDES),
+            price_mode=to_word(row["price_mode"], PRICE_MODES),
+            stake=to_whole_number(row["stake"]),
+            entry_price=to_decimal(row["entry_price"]),
+            zero_price=to_decimal(row["zero_price"]),
+            open_fee=to_whole_number(row["open_fee"]),
+            opened_at=to_time(row["opened_at"]),
+            status=to_word(row["status"], STATUSES),
+            closed_at=or_none(row["closed_at"], to_time),
+            close_price=or_none(row["close_price"], to_decimal),
+            close_value=or_none(row["close_value"], to_whole_number),
+            close_fee=or_none(row["close_fee"], to_whole_number),
         )
     except KeyError as error:
         raise unreadable() from error
 
 
-def save_arguments(company_id: str, base: Base) -> dict[str, Any]:
-    """The arguments of market_set_base. The names are the parameter names in the SQL."""
-    halted_until = None if base.halted_until is None else base.halted_until.isoformat()
-    frozen_price = None if base.frozen_price is None else plain(base.frozen_price)
-    return {
-        "p_company_id": company_id,
-        "p_base_game_price": plain(base.game_price),
-        "p_base_real_price": plain(base.real_price),
-        "p_base_at": base.set_at.isoformat(),
-        "p_base_source": base.source,
-        "p_halted_until": halted_until,
-        "p_frozen_price": frozen_price,
-        "p_expected_version": base.version,
-    }
+def row_to_event(row: dict[str, Any]) -> EventRow:
+    """One row of exchange_events as an EventRow. Raises SupabaseRejected if it is odd."""
+    try:
+        return EventRow(
+            id=to_whole_number(row["id"]),
+            position_id=to_text(row["position_id"]),
+            kind=to_word(row["kind"], EVENT_KINDS),
+            company_id=to_text(row["company_id"]),
+            side=to_word(row["side"], SIDES),
+            price=to_decimal(row["price"]),
+            stake=to_whole_number(row["stake"]),
+            value=to_whole_number(row["value"]),
+            fee=to_whole_number(row["fee"]),
+            coins_change=to_whole_number(row["coins_change"]),
+            ref=to_text(row["ref"]),
+            created_at=to_time(row["created_at"]),
+        )
+    except KeyError as error:
+        raise unreadable() from error
 
 
-class DatabaseBaseStore:
-    """The bases in the table market_bases, shared by every server instance."""
-
-    def __init__(self, admin: SupabaseAdmin) -> None:
-        self.admin = admin
-
-    async def read_all(self) -> dict[str, Base]:
-        rows = await self.admin.select_rows("market_bases", {"select": BASE_COLUMNS})
-        try:
-            return {str(row["company_id"]): row_to_base(row) for row in rows}
-        except KeyError as error:
-            raise unreadable() from error
-
-    async def save(self, company_id: str, base: Base) -> bool:
-        """True if saved. False if somebody else saved first (the database answers null)."""
-        reply = await self.admin.call_function("market_set_base", save_arguments(company_id, base))
-        return reply is not None
-
-
-class MemoryBaseStore:
-    """The bases in this server instance only. Same rules as the database, no database needed."""
-
-    def __init__(self) -> None:
-        self.bases: dict[str, Base] = {}
-
-    async def read_all(self) -> dict[str, Base]:
-        return dict(self.bases)
-
-    async def save(self, company_id: str, base: Base) -> bool:
-        current = self.bases.get(company_id)
-        current_version = 0 if current is None else current.version
-        if current_version != base.version:
-            return False
-        self.bases[company_id] = replace(base, version=base.version + 1)
-        return True
+# --- reading from the tables ---
 
 
 def database_is_configured(admin: SupabaseAdmin) -> bool:
@@ -214,124 +216,95 @@ async def read_balance(admin: SupabaseAdmin, player_id: str) -> int:
     return to_whole_number(rows[0]["balance"])
 
 
-async def read_positions(admin: SupabaseAdmin, player_id: str) -> list[PositionRow]:
-    """What the player holds, one row per company."""
+async def read_open_positions(admin: SupabaseAdmin, player_id: str) -> list[PositionRow]:
+    """The open positions of the player, newest first. A player has at most 20."""
     rows = await admin.select_rows(
-        "market_positions",
+        "exchange_positions",
         {
             "select": POSITION_COLUMNS,
             "player_id": f"eq.{player_id}",
-            "order": "company_id.asc",
-            "limit": str(MAX_POSITIONS),
+            "status": "eq.open",
+            "order": "opened_at.desc",
+            "limit": str(MAX_OPEN_POSITIONS),
         },
     )
-    try:
-        return [
-            PositionRow(
-                company_id=str(row["company_id"]),
-                units=to_whole_number(row["units"]),
-                avg_price=to_decimal(row["avg_price"]),
-                opened_at=to_time(row["opened_at"]),
-                last_buy_at=to_time(row["last_buy_at"]),
-            )
-            for row in rows
-        ]
-    except KeyError as error:
-        raise unreadable() from error
+    return [row_to_position(row) for row in rows]
 
 
-async def trade_exists(admin: SupabaseAdmin, player_id: str, ref: str) -> bool:
-    """True if this player has already made a trade with this ref (the same click, sent again).
+async def read_recently_closed(admin: SupabaseAdmin, player_id: str) -> list[PositionRow]:
+    """The newest closed or zeroed positions of the player."""
+    rows = await admin.select_rows(
+        "exchange_positions",
+        {
+            "select": POSITION_COLUMNS,
+            "player_id": f"eq.{player_id}",
+            "status": "in.(closed,zeroed)",
+            "order": "closed_at.desc",
+            "limit": str(RECENTLY_CLOSED_LIMIT),
+        },
+    )
+    return [row_to_position(row) for row in rows]
 
-    market_trade() refuses a repeated ref too, and that is the lock that cannot be passed. This
-    read comes first, so that a repeat is always answered "already applied", whatever else has
-    changed since (a pause, a new price).
+
+async def read_position(
+    admin: SupabaseAdmin, player_id: str, position_id: str
+) -> PositionRow | None:
+    """One position by its id AND its player (a player cannot see another player's position)."""
+    rows = await admin.select_rows(
+        "exchange_positions",
+        {
+            "select": POSITION_COLUMNS,
+            "id": f"eq.{position_id}",
+            "player_id": f"eq.{player_id}",
+            "limit": "1",
+        },
+    )
+    return row_to_position(rows[0]) if rows else None
+
+
+async def read_staked_since(admin: SupabaseAdmin, player_id: str, day_start: datetime) -> int:
+    """The coins (stakes only, no fees) the player put into positions since `day_start`."""
+    rows = await admin.select_rows(
+        "exchange_positions",
+        {
+            "select": "stake",
+            "player_id": f"eq.{player_id}",
+            "opened_at": f"gte.{day_start.isoformat()}",
+            "limit": str(MAX_STAKES_READ),
+        },
+    )
+    return sum(to_whole_number(row["stake"]) for row in rows)
+
+
+async def event_exists(admin: SupabaseAdmin, player_id: str, ref: str) -> bool:
+    """True if this player has already acted with this ref (the same click, sent again).
+
+    The database refuses a repeated ref too, and that is the lock that cannot be passed. This read
+    comes first, so that a repeat is always answered "already applied", whatever else has changed
+    since (the market has closed, the price is old).
     """
     rows = await admin.select_rows(
-        "market_trades",
+        "exchange_events",
         {"select": "id", "player_id": f"eq.{player_id}", "ref": f"eq.{ref}", "limit": "1"},
     )
     return len(rows) > 0
 
 
-async def read_bought_today(admin: SupabaseAdmin, player_id: str, day_start: datetime) -> int:
-    """The coins (shares only, no fees) the player has spent on buying since `day_start`."""
+async def has_open_rising_position(admin: SupabaseAdmin, player_id: str, company_id: str) -> bool:
+    """True if the player has an open rising position in the company.
+
+    This is the "Greyfathom share" of card C6 (the shareholder register): S3 calls it with
+    "greyfathom-salvage" (rule R22).
+    """
     rows = await admin.select_rows(
-        "market_trades",
+        "exchange_positions",
         {
-            "select": "gross",
+            "select": "id",
             "player_id": f"eq.{player_id}",
-            "side": f"eq.{BUY}",
-            "created_at": f"gte.{day_start.isoformat()}",
-            "limit": str(MAX_TRADES_READ),
+            "company_id": f"eq.{company_id}",
+            "side": f"eq.{RISING}",
+            "status": "eq.open",
+            "limit": "1",
         },
     )
-    return sum(to_whole_number(row["gross"]) for row in rows)
-
-
-def trade_arguments(
-    player_id: str,
-    company_id: str,
-    side: str,
-    units: int,
-    price: Decimal,
-    amounts: TradeAmounts,
-    ref: str,
-    day_start: datetime,
-) -> dict[str, Any]:
-    """The arguments of market_trade. The names are the parameter names in the SQL.
-
-    The limits that depend on earlier trades (holding time, daily cap) and the numbers that the
-    database checks the arithmetic against (the fee rate, the size of a purchase) are passed from
-    trade_rules.py, so the numbers live in one place and the database only compares against them.
-    """
-    return {
-        "p_player_id": player_id,
-        "p_company_id": company_id,
-        "p_side": side,
-        "p_units": units,
-        "p_price": plain(price),
-        "p_gross": amounts.gross,
-        "p_fee": amounts.fee,
-        "p_ref": ref,
-        "p_min_hold_seconds": MIN_HOLD_SECONDS,
-        "p_daily_buy_cap": DAILY_BUY_CAP_COINS,
-        "p_day_start": day_start.isoformat(),
-        "p_fee_basis_points": FEE_BASIS_POINTS,
-        "p_max_buy_coins": MAX_TRADE_COINS,
-    }
-
-
-def read_trade_reply(reply: object) -> TradeOutcome:
-    """Understand the JSON that market_trade returns."""
-    if not isinstance(reply, dict):
-        raise unreadable()
-    if reply.get("status") == "done":
-        avg_price = reply.get("avgPrice")
-        return TradeOutcome(
-            done=True,
-            balance=to_whole_number(reply.get("balance")),
-            units_after=to_whole_number(reply.get("unitsAfter")),
-            avg_price=None if avg_price is None else to_decimal(avg_price),
-        )
-    if reply.get("status") == "refused" and isinstance(reply.get("reason"), str):
-        return TradeOutcome(
-            done=False,
-            reason=reply["reason"],
-            coins_left=to_whole_number(reply.get("coinsLeft", 0)),
-            units_held=to_whole_number(reply.get("unitsHeld", 0)),
-            wait_seconds=to_whole_number(reply.get("waitSeconds", 0)),
-        )
-    raise unreadable()
-
-
-async def run_trade(admin: SupabaseAdmin, arguments: dict[str, Any]) -> TradeOutcome:
-    """Run the atomic database function market_trade.
-
-    Errors it can raise (all are ApiErrors, see supabase_admin.py):
-      InsufficientFunds (409)    not enough coins
-      AlreadyApplied (409)       this ref was used before; nothing changed
-      SupabaseUnavailable (503)  the OUTCOME IS UNKNOWN; look the ref up before you retry
-    """
-    reply = await admin.call_function("market_trade", arguments)
-    return read_trade_reply(reply)
+    return len(rows) > 0

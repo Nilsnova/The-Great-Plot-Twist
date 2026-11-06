@@ -22,7 +22,7 @@ add the same (reason, direction) pair at the END of WALLET_REASONS. Never rename
 change its direction.
 
 Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings,
-the Island Exchange).
+the Island Exchange, Lantern Duels).
 
 Example inside a route (a negative number takes coins away, a positive number adds them):
 
@@ -67,10 +67,21 @@ WALLET_REASONS = (
     ("clue_purchase", SPEND),
     ("building_purchase", SPEND),
     ("admin_adjust", EITHER),
-    # Added by supabase/migrations/20261106010000_island_exchange.sql (the Island Exchange).
+    # Added by supabase/migrations/20261106010000_island_exchange.sql (the first Island Exchange).
+    # market_buy and market_sell were never used: that version was replaced before it went live.
+    # A reason is never removed, so they stay. market_fee is used by both versions.
     ("market_buy", SPEND),
     ("market_sell", EARN),
     ("market_fee", SPEND),
+    # Added by supabase/migrations/20261106090000_exchange_leverage.sql (the Island Exchange v2).
+    ("market_stake", SPEND),
+    ("market_payout", EARN),
+    # Added by supabase/migrations/20261106100000_prediction_desk.sql (the prediction desk).
+    ("prediction_stake", SPEND),
+    ("prediction_payout", EARN),
+    # Added by supabase/migrations/20261106110000_lantern_duels.sql (Lantern Duels).
+    ("arena_stake", SPEND),
+    ("arena_payout", EARN),
 )
 
 

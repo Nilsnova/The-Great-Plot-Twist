@@ -8,7 +8,19 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, Field, StrictBool, StrictInt, StrictStr, ValidationError
 
 from server.crews.store import CrewRow, read_row, seat_from_row
-from server.game.case_snapshot import Accusation, CaseSnapshot, Find, Formed, SeatState, Solver
+from server.game.case_snapshot import (
+    Accusation,
+    CaseSnapshot,
+    Find,
+    Formed,
+    Order,
+    Pin,
+    Post,
+    SeatState,
+    Signal,
+    Solver,
+)
+from server.game.npc_rows import OrderRow
 from server.supabase_admin import SupabaseRejected
 
 
@@ -21,6 +33,10 @@ class StateRow(BaseModel):
     solved_second: StrictInt | None
     solved_by: StrictStr | None
     world_outcome: StrictStr | None
+    night_no: int = Field(default=0, strict=True, ge=0)
+    night_started_second: int | None = Field(default=None, strict=True, ge=0)
+    night_called_by: StrictStr | None = None
+    orders_count: int = Field(default=0, strict=True, ge=0)
 
 
 class FindRow(BaseModel):
@@ -40,6 +56,42 @@ class FormedRow(BaseModel):
     formed_second: int = Field(strict=True, ge=0)
     formed_by: StrictStr | None = None
     formed_seat: int = Field(strict=True, ge=1, le=4)
+
+
+class PinRow(BaseModel):
+    card_id: StrictStr
+    seat_no: int = Field(strict=True, ge=1, le=4)
+    ordered_second: int = Field(strict=True, ge=0)
+    pinned_second: int = Field(strict=True, ge=0)
+    pinned_by: StrictStr | None = None
+    by_partner: StrictBool = False
+
+
+class PostRow(BaseModel):
+    id: int = Field(strict=True, ge=1)
+    light_id: StrictStr
+    seat_no: int = Field(strict=True, ge=1, le=4)
+    player_id: StrictStr | None
+    npc_id: StrictStr | None
+    taken_second: int = Field(strict=True, ge=0)
+    on_post_second: int = Field(strict=True, ge=0)
+    ended_second: int | None = Field(default=None, strict=True, ge=0)
+    order_no: StrictInt | None = None
+
+
+class SignalRow(BaseModel):
+    id: int = Field(strict=True, ge=1)
+    night_no: int = Field(strict=True, ge=1)
+    light_id: StrictStr
+    post_seat_no: int = Field(strict=True, ge=1, le=4)
+    aimed_by: StrictStr | None
+    aimed_seat_no: int = Field(strict=True, ge=1, le=4)
+    bearing: float = Field(strict=True, ge=0, lt=360, allow_inf_nan=False)
+    on_target: StrictBool
+    case_second: int = Field(strict=True, ge=0)
+    holds_until_second: int | None = Field(strict=True, ge=0)
+    ended_second: int | None = Field(default=None, strict=True, ge=0)
+    parted: StrictBool
 
 
 class AccusationRow(BaseModel):
@@ -109,6 +161,7 @@ def snapshot_from_row(raw: dict, *, read_log: bool, coins: int, viewer: str) -> 
     if state_raw is not None and state_raw.get("crew_id", raw["id"]) != raw["id"]:
         raise SupabaseRejected("The case state belongs to another crew.")
     state = None if state_raw is None else read_row(StateRow, state_raw)
+    signals = records(raw, "finale_signals", SignalRow, Signal)
     return CaseSnapshot(
         crew.id,
         crew.status,
@@ -119,6 +172,11 @@ def snapshot_from_row(raw: dict, *, read_log: bool, coins: int, viewer: str) -> 
         write_revision=0 if state is None else state.revision,
         crew_version=crew.version,
         finds=records(raw, "case_finds", FindRow, Find),
+        pins=records(raw, "board_pins", PinRow, Pin),
+        posts=records(raw, "finale_posts", PostRow, Post),
+        signals=signals,
+        orders=records(raw, "npc_orders", OrderRow, Order),
+        orders_count=0 if state is None else state.orders_count,
         formed=records(raw, "case_deductions", FormedRow, Formed),
         accusations=records(raw, "case_accusations", AccusationRow, Accusation),
         solvers=records(raw, "case_solvers", SolverRow, Solver),
@@ -128,5 +186,11 @@ def snapshot_from_row(raw: dict, *, read_log: bool, coins: int, viewer: str) -> 
         solved_second=None if state is None else state.solved_second,
         solved_by=None if state is None else state.solved_by,
         world_outcome=None if state is None else state.world_outcome,
+        night_no=0 if state is None else state.night_no,
+        night_started_second=None if state is None else state.night_started_second,
+        night_called_by=None if state is None else state.night_called_by,
+        parted_players=frozenset(
+            signal.aimed_by for signal in signals if signal.parted and signal.aimed_by
+        ),
         coins=coins,
     )

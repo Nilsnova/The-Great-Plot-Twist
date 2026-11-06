@@ -9,10 +9,10 @@ This file holds only the small shape of that answer and a way to ask for it:
 
     WorldStage        the stage (`dark` or `relit`) and, once relit, the moment of the first solve
     WorldStageReader  anything with `async read()` that returns a WorldStage
-    AlwaysDark        the reader we use until package L3 builds the real one
+    AlwaysDark        an injectable reader for a deliberately dark world
 
-Package L3 builds the table `world_state` and a reader that reads it. It passes that reader to
-create_app(world_stage=...). Its table must keep `relit_at timestamptz`, set in the same conditional
+Package L3 provides `game.world_state.WorldReader` for the `world_state` table. The app passes it to
+create_app(world_stage=...). The table keeps `relit_at timestamptz`, set in the same conditional
 update that turns `dark` into `relit`.
 
 Used by: app.py (stores the reader), routes/bulletin.py (the fog line, the relit line and the
@@ -62,7 +62,7 @@ class WorldStageReader(Protocol):
 
 
 class AlwaysDark:
-    """The reader until package L3 builds world_state: the coast is dark."""
+    """A reader for an explicitly dark world, useful for isolated consumers and tests."""
 
     async def read(self) -> WorldStage:
         return WorldStage(DARK, None)

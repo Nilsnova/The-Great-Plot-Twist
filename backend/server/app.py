@@ -21,11 +21,14 @@ from server.cache import DefaultCacheControl
 from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
+from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl
 from server.game.case_service import CaseService, case_or_none
+from server.game.world_state import WorldReader
 from server.market.exchange import MarketService, market_or_none
+from server.predictions.desk import PredictionDesk, desk_or_none
 from server.routes import (
     auth_exchange,
     bulletin,
@@ -33,8 +36,10 @@ from server.routes import (
     case,
     config,
     content,
+    crew_orders,
     crews,
     delete_me,
+    duels,
     health,
     host_case,
     intro,
@@ -42,15 +47,17 @@ from server.routes import (
     keepalive,
     market,
     me,
+    predictions,
     save,
     weather,
+    world,
 )
 from server.settings import Settings, settings_from_environment
 from server.sign_in_code import CodeExchanger
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
 from server.weather.source import make_weather_source
 from server.weather.state_rules import load_state_rules
-from server.world_stage import AlwaysDark, WorldStageReader
+from server.world_stage import WorldStageReader
 
 
 def new_fastapi_app(settings: Settings) -> FastAPI:
@@ -87,11 +94,13 @@ def create_app(
     weather_source: CachedSource | None = None,
     exchanger: CodeExchanger | None = None,
     market_service: MarketService | None = None,
-    case_service: CaseService | None = None,
     broadcaster: CrewBroadcaster | None = None,
+    case_service: CaseService | None = None,
     islet_catalogue: BuildingCatalogue | None = None,
     world_stage: WorldStageReader | None = None,
     clock: Clock | None = None,
+    prediction_desk: PredictionDesk | None = None,
+    duel_service: DuelService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -111,18 +120,23 @@ def create_app(
         weather_source = make_weather_source(settings)
     if exchanger is None:
         exchanger = CodeExchanger(settings)
-    if market_service is None:
-        market_service = market_or_none(settings)  # None if its data files are broken
-    if case_service is None:
-        case_service = case_or_none(settings)
     if broadcaster is None:
         broadcaster = broadcaster_from_settings(settings)
     if islet_catalogue is None:
         islet_catalogue = catalogue_or_none()  # None if buildings.json is broken
-    if world_stage is None:
-        world_stage = AlwaysDark()  # until package L3 builds world_state, the coast is dark
     if clock is None:
         clock = utc_now
+    world_reader = WorldReader(admin, enabled=settings.flags.get("case", False), clock=clock)
+    if world_stage is None:
+        world_stage = world_reader
+    if market_service is None:
+        market_service = market_or_none(settings, relit_check=world_reader.relit_check)
+    if case_service is None:
+        case_service = case_or_none(settings, broadcaster=broadcaster, clock=clock)
+    if prediction_desk is None:
+        prediction_desk = desk_or_none(settings)  # None if its questions file is broken
+    if duel_service is None:
+        duel_service = DuelService()  # it has no data files, so it always starts
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
@@ -134,7 +148,7 @@ def create_app(
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
     # routes/weather.py, sign_in_code.py, market/exchange.py, crew_broadcast.py,
-    # game/islet_service.py, world_stage.py and clock.py.
+    # game/islet_service.py, world_stage.py, clock.py, predictions/desk.py and duels/service.py.
     app.state.settings = settings
     app.state.verifier = verifier
     app.state.admin = admin
@@ -145,6 +159,7 @@ def create_app(
     app.state.broadcaster = broadcaster
     app.state.islet_catalogue = islet_catalogue
     app.state.world_stage = world_stage
+    app.state.world_reader = world_reader
     app.state.clock = clock
     # The weather state rules (weather_states.json). None if the file cannot be read: the weather
     # route then leaves out `state` and `tonight`, and the bulletin answers 503.
@@ -152,6 +167,8 @@ def create_app(
     # The words of the harbor bulletin and the Chapter 2 hook (bulletin.json and
     # chapter_two_hook.json). None if a file cannot be read: the bulletin then answers 503.
     app.state.daily_content = load_daily_content()
+    app.state.predictions = prediction_desk
+    app.state.duels = duel_service
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -168,7 +185,11 @@ def create_app(
     app.include_router(auth_exchange.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
     app.include_router(crews.router, prefix="/api")
+    app.include_router(crew_orders.router, prefix="/api")
     app.include_router(case.router, prefix="/api")
+    app.include_router(world.router, prefix="/api")
     app.include_router(host_case.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
+    app.include_router(predictions.router, prefix="/api")
+    app.include_router(duels.router, prefix="/api")
     return app

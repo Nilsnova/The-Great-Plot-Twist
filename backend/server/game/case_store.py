@@ -3,21 +3,58 @@
 Every query is scoped by the verified player or their crew. Helpers are never called as RPCs.
 """
 
+from dataclasses import replace
 from typing import Any
 
 from server.crews.store import CREW_COLUMNS
+from server.game.case_board_arguments import (
+    nightfall_arguments,
+    pair_arguments,
+    pin_arguments,
+    post_arguments,
+    signal_arguments,
+)
 from server.game.case_data import CaseData
+from server.game.case_npc_arguments import order_arguments
 from server.game.case_rewards import reward_ref, solve_shares
 from server.game.case_rows import snapshot_from_row
-from server.game.case_snapshot import CaseSnapshot
+from server.game.case_snapshot import CaseSnapshot, Order
+from server.game.npc_rows import order_from_row
+from server.game.station_lookup import NoStations, StationLookup
 from server.supabase_admin import AlreadyApplied, SupabaseAdmin, SupabaseRejected
 
 SNAPSHOT_COLUMNS = (
     CREW_COLUMNS
     + ",case_state(*),case_finds(*),case_deductions(*),case_accusations(*),case_solvers(*)"
+    + ",board_pins(*),finale_posts(*),finale_signals(*)"
+    + ",npc_orders(*)"
 )
-INTENT_FUNCTIONS = ("case_open", "case_start_route", "case_accuse", "case_clock_forward")
-REPLY_STATUSES = ("opened", "started", "wrong", "solved", "done", "repeat", "refused")
+INTENT_FUNCTIONS = (
+    "case_open",
+    "case_start_route",
+    "case_accuse",
+    "case_clock_forward",
+    "board_pin",
+    "board_pair",
+    "finale_nightfall",
+    "finale_take_post",
+    "finale_signal",
+    "npc_fetch_pin",
+    "npc_man_light",
+)
+REPLY_STATUSES = (
+    "opened",
+    "started",
+    "wrong",
+    "solved",
+    "done",
+    "repeat",
+    "refused",
+    "wrong_pair",
+    "formed",
+    "off_target",
+    "locked",
+)
 
 
 def checked_rows(rows) -> list[dict]:
@@ -54,14 +91,69 @@ async def run_function(admin: SupabaseAdmin, name: str, params: dict[str, Any]) 
         raise SupabaseRejected("The case refusal could not be read.")
     if reply["status"] == "repeat":
         action_from_row(reply, camel_case=True)
-    if reply["status"] in ("done", "wrong", "solved"):
+    if reply["status"] in (
+        "done",
+        "wrong",
+        "solved",
+        "wrong_pair",
+        "formed",
+        "off_target",
+        "locked",
+    ):
         if type(reply.get("revision")) is not int or reply["revision"] < 1:
             raise SupabaseRejected("The case write revision could not be read.")
-    if reply["status"] == "done" and (type(reply.get("now")) is not int or reply["now"] < 0):
+    if (
+        reply["status"] == "done"
+        and name in ("case_start_route", "case_clock_forward")
+        and (type(reply.get("now")) is not int or reply["now"] < 0)
+    ):
         raise SupabaseRejected("The case write clock could not be read.")
     if reply["status"] == "solved":
         solve_payments(reply)
+    check_board_reply(name, reply)
     return reply
+
+
+def check_board_reply(name: str, reply: dict) -> None:
+    statuses = {
+        "board_pin": ("done",),
+        "board_pair": ("formed", "wrong_pair"),
+        "finale_nightfall": ("done",),
+        "finale_take_post": ("done",),
+        "finale_signal": ("locked", "off_target"),
+        "npc_fetch_pin": ("done",),
+        "npc_man_light": ("done",),
+    }
+    if name in statuses and reply["status"] not in (*statuses[name], "repeat", "refused"):
+        raise SupabaseRejected("The board write status could not be read.")
+    fields = {
+        "board_pin": ("coinsPaid",),
+        "finale_nightfall": ("nightNo", "endsSecond"),
+        "finale_take_post": ("onPostSecond",),
+        "npc_fetch_pin": ("orderNo", "pinSecond", "coinsPaid"),
+        "npc_man_light": ("orderNo", "onPostSecond"),
+    }
+    if reply["status"] == "done":
+        for field in fields.get(name, ()):
+            if type(reply.get(field)) is not int or reply[field] < 0:
+                raise SupabaseRejected("The board write answer could not be read.")
+        if name.startswith("npc_") and reply["orderNo"] < 1:
+            raise SupabaseRejected("The order number could not be read.")
+        if name == "npc_fetch_pin":
+            found = reply.get("foundSecond")
+            if (
+                "foundSecond" not in reply
+                or found is not None
+                and (type(found) is not int or not 0 <= found <= reply["pinSecond"])
+            ):
+                raise SupabaseRejected("The order finding time could not be read.")
+    if reply["status"] in ("wrong_pair", "off_target"):
+        if type(reply.get("seconds")) is not int or reply["seconds"] < 0:
+            raise SupabaseRejected("The board wait could not be read.")
+    if reply["status"] == "formed":
+        solve_payments(reply)
+    if reply["status"] == "locked" and not isinstance(reply.get("parted"), bool):
+        raise SupabaseRejected("The light lock answer could not be read.")
 
 
 def action_from_row(row: dict, *, camel_case: bool = False) -> dict:
@@ -83,8 +175,9 @@ def action_from_row(row: dict, *, camel_case: bool = False) -> dict:
 
 
 class CaseStore:
-    def __init__(self, admin: SupabaseAdmin) -> None:
+    def __init__(self, admin: SupabaseAdmin, *, stations: StationLookup | None = None) -> None:
         self.admin = admin
+        self.stations = stations or NoStations()
 
     async def action_lookup(self, player_id: str, action_uid: str) -> dict | None:
         rows = await self.admin.select_rows(
@@ -130,6 +223,11 @@ class CaseStore:
                 "select": SNAPSHOT_COLUMNS,
                 "id": f"eq.{selected}",
                 "limit": "1",
+                "finale_posts.ended_second": "is.null",
+                "finale_signals.order": "id.desc",
+                "finale_signals.limit": "40",
+                "npc_orders.order": "order_no.desc",
+                "npc_orders.limit": "40",
             },
         )
         rows = checked_rows(rows)
@@ -157,7 +255,12 @@ class CaseStore:
         if not isinstance(read_log, bool) or type(coins) is not int or coins < 0:
             raise SupabaseRejected("The player's case profile could not be read.")
         snapshot = snapshot_from_row(rows[0], read_log=read_log, coins=coins, viewer=player_id)
-        return snapshot if snapshot.seat_for_player(player_id) is not None else None
+        if snapshot.seat_for_player(player_id) is None:
+            return None
+        players = tuple(seat.player_id for seat in snapshot.seats if seat.player_id is not None)
+        stations = await self.stations.players_with_signal_station(self.admin, players)
+        timber = await self.stations.timber(self.admin, player_id)
+        return replace(snapshot, station_players=stations, timber=timber)
 
     async def open(self, snapshot: CaseSnapshot, data: CaseData) -> dict:
         return await run_function(self.admin, "case_open", open_arguments(snapshot.crew_id, data))
@@ -173,6 +276,51 @@ class CaseStore:
     async def clock_forward(self, snapshot, player_id, action_uid, seconds) -> dict:
         params = clock_arguments(snapshot.crew_id, player_id, action_uid, seconds)
         return await run_function(self.admin, "case_clock_forward", params)
+
+    async def pin(self, snapshot, data, player_id, action_uid, card_id) -> dict:
+        params = pin_arguments(snapshot, data, player_id, action_uid, card_id)
+        return await run_function(self.admin, "board_pin", params)
+
+    async def pair(self, snapshot, data, player_id, action_uid, card_a, card_b) -> dict:
+        params = pair_arguments(snapshot, data, player_id, action_uid, card_a, card_b)
+        return await run_function(self.admin, "board_pair", params)
+
+    async def nightfall(self, snapshot, data, player_id, action_uid) -> dict:
+        params = nightfall_arguments(snapshot, data, player_id, action_uid)
+        return await run_function(self.admin, "finale_nightfall", params)
+
+    async def post(self, snapshot, data, player_id, action_uid, light_id) -> dict:
+        params = post_arguments(snapshot, data, player_id, action_uid, light_id)
+        return await run_function(self.admin, "finale_take_post", params)
+
+    async def signal(self, snapshot, data, player_id, action_uid, light_id, bearing) -> dict:
+        params = signal_arguments(snapshot, data, player_id, action_uid, light_id, bearing)
+        return await run_function(self.admin, "finale_signal", params)
+
+    async def order(self, snapshot, data, player_id, action_uid, seat_no, kind, target, decision):
+        name, params = order_arguments(
+            snapshot, data, player_id, action_uid, seat_no, kind, target, decision
+        )
+        return await run_function(self.admin, name, params)
+
+    async def order_lookup(self, player_id: str, crew_id: str, order_no: int) -> Order | None:
+        if type(order_no) is not int or order_no < 1:
+            raise SupabaseRejected("The order number could not be read.")
+        rows = checked_rows(
+            await self.admin.select_rows(
+                "npc_orders",
+                {
+                    "select": "*",
+                    "crew_id": f"eq.{crew_id}",
+                    "ordered_by": f"eq.{player_id}",
+                    "order_no": f"eq.{order_no}",
+                    "limit": "1",
+                },
+            )
+        )
+        if len(rows) > 1:
+            raise SupabaseRejected("The order receipt is not unique.")
+        return None if not rows else order_from_row(rows[0], crew_id, player_id, order_no)
 
 
 def open_arguments(crew_id: str, data: CaseData) -> dict:

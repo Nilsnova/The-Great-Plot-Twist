@@ -60,21 +60,21 @@
 |---|---|---|---|
 | 200 | | It worked. | Show the result. |
 | 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
-| 403 | `forbidden` | Signed in, but not allowed. A presenter-only route answers it to a player who is not a host: `require_host` (`HostDep`, in `backend/server/hosts.py`; the hosts are the player ids in the setting `HOST_PLAYER_IDS`, package A2). A visitor who is not signed in gets 401 first. No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row (so do the home islet routes). `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. The crew routes answer `wrong_code` (no crew has that code; it counts as a wrong guess) and `no_crew` (the player sits in no crew). The home islet adds `no_such_plot` (not one of the five spots) and `no_such_building` (not a building in `buildings.json`). | Show the message. |
+| 403 | `forbidden`, `not_your_duel` | Signed in but not allowed. `POST /api/predictions/settle` requires `HostDep`; a visitor gets 401 first. A player may read or act only in their own duel. | Show the message. Do not retry unchanged. |
+| 404 | `not_found`, `feature_off`, or a feature-specific missing-item code | Unknown route, player, company, position, question, duel, plot or building. Crew routes add `wrong_code` and `no_crew`. Exact feature codes are listed with the routes below. | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
-| 409 | `insufficient_funds`, `already_applied`, `stale_save`, `no_rerolls_left`, `no_name_yet` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. `stale_save` is a save written from an old version (another device saved first; nothing changed). `no_rerolls_left` is a second captain name re-roll, and `no_name_yet` a re-roll before the first name. The crew routes add `kit_needed` (Act 1 is not finished, so there is no kit yet), `already_in_crew`, `already_seated` (treat as done), `crew_full`, `crew_finished`, `already_started` (treat as done) and `crew_busy` (the crew changed three times while the request ran: try again). The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). The home islet adds `plot_occupied` (something stands on that plot already), `not_buildable_yet` (the windmill and the greenhouse, until timber has a second source) and `not_enough_timber`. | Show the message. After `already_applied`, treat the action as done. |
-| 422 | `validation_error`, `invalid_transaction`, `save_too_big`, `save_not_json`, `move_refused`, `no_ending` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. `save_too_big` is a save over 100 KB, and `save_not_json` a save that holds a value JSON cannot store, such as NaN. `move_refused` is an Act 1 move log with a move the story does not allow (the message names the first bad move), and `no_ending` a move log that stops before an ending (package A3). The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). The home islet adds `wrong_plot` (that building belongs on another plot). | Show the message. Do not resend it unchanged. |
-| 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player), and `POST /api/crews/join` after 10 wrong crew codes in 10 minutes (until the wait is over, even a right code is refused). The `Retry-After` header says how many seconds to wait. | Wait, then try again. |
+| 409 | `insufficient_funds`, `already_applied`, `stale_save`, or a feature refusal | Saved state changed or an action cannot run now. Account and crew repeats remain safe. Exchange v2 adds `market_closed`, `prices_stale`, `company_unavailable`, `company_delisted`, `daily_stake_cap`, `too_many_positions`, `position_closed` and `wrong_price_mode`; prediction and duel refusals are listed below. | Show the message; refresh when state changed. |
+| 422 | `validation_error`, `invalid_transaction`, or a feature validation code | Bad shape, extra fields, invalid move or stake. `stake_too_small` and `stake_too_big` are shared: Exchange stakes are 10 to 500 coins, prediction stakes 1 to 50. Account and islet validation codes are listed below. | Fix the input before resending. |
+| 429 | `too_many_requests`, `too_many_attempts` | The feature rate limit was reached. Crew wrong-code waits, Exchange calls and the prediction and duel limits keep their own budgets. `Retry-After` gives the wait in seconds. | Wait, then retry. |
 | 500 | `server_error` | A bug on our side. The details go to the server log only. | Say "something went wrong". |
 | 502 | `database_error` | The database refused the call or answered strangely. | Say "something went wrong". |
-| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable`, `intro_unavailable`, `crew_codes_busy`, `islet_unavailable`, `bulletin_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`crew_codes_busy`: five new crew codes in a row were taken, so no crew was started; try again. `market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `islet_unavailable`: the same for `backend/content/buildings.json` and the home islet. `bulletin_unavailable`: `bulletin.json`, `chapter_two_hook.json` or `weather_states.json` could not be read when the server started; only `GET /api/bulletin` answers this 503, and when it is `weather_states.json`, `GET /api/weather` also sends `state` and `tonight` as `null`. `intro_unavailable`: the story or the entry kits file could not be read when `POST /api/intro/complete` was called; nothing was stored. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
+| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, or a feature unavailable code | A required setting, database, source or content file is unavailable. Exchange v2 exposes missing per-company prices in its board rather than relying on the old v1 Binance-only error. A write timeout leaves its outcome unknown. | Retry safely using the same action identifier or ref. |
 
 ## 2. Routes that exist now
 
-Case Phase 1 routes on `feat/case-backend` are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the required migrations are applied.
+All four case phases are specified in [section 10](#case-phase-1-contract-for-g9); keep the flag off until the required migrations are applied.
 
-The public, account, entry kit, crew, Island Exchange, home islet and case routes are documented below.
+There are 44 API operations, including eleven case operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
 ### GET /api/health
 
@@ -458,50 +458,76 @@ Authorization: Bearer <CRON_SECRET>
 
 ### The Island Exchange (package L4)
 
-Fictional island companies whose play-money prices follow real markets, amplified. The home of each route is the comment at the top of `backend/server/routes/market.py`; the rules are in `backend/server/market/` and are explained in [D017](DECISIONS.md#d016--island-exchange-rules--2026-11-05). Play money only: every answer of the board carries a line that says "simulation, play money".
+Real companies at their real prices, one to one. Every investment is a **position**: a stake of 10 to 500 coins at 10x, rising or falling. A 1 % move of the price changes the position by 10 % of the stake. If the price moves 10 % against the position, the stake is used up and the position closes by itself at zero. The home of each route is the comment at the top of `backend/server/routes/market.py` (and its Pydantic models); the rules are in `backend/server/market/` and are explained in [D017](DECISIONS.md#d017--island-exchange-rules--2026-11-05) and in the spec [specs/L4-exchange-v2.md](../specs/L4-exchange-v2.md). Play money only: every board carries a line that says "simulation with play money". JSON is camelCase, times are UTC with whole seconds, prices are JSON numbers and coins are whole numbers. All numbers are worked out by the server: the screen does no arithmetic.
 
 | Route | Who | What it does |
 |---|---|---|
-| `GET /api/market` | anyone, and it works while the flag `market` is off | The price board: every company with its game price, how far the price is from its base (`movePercent`), whether it is paused (`status`, `haltedUntil`), where the real prices come from (`source`: `live`, `cache`, `stale` or `replay`) and when (`fetchedAt`), the numbers of the rules, the credit line (`attribution`) and, while the replay plays, the link to its licence (`licenceUrl`). `stale` means Binance is not answering: the prices are old and nobody can trade. `replay` only happens in demo mode. Cached for 30 seconds (`Cache-Control: public, max-age=30, s-maxage=30`), so it takes no query parameters (`422`). While the flag is off it only looks and saves nothing. |
-| `GET /api/market/portfolio` | signed in, flag `market` on | The player's coins, positions (units, average price paid, price now, value, `sellableFrom`, `canSellNow`), the coins spent on buying today, and the daily cap. |
-| `POST /api/market/trade` | signed in, flag `market` on | `{companyId, side: "buy" or "sell", units, actionUid}`. The server takes the price from the shared board, from real prices at most 5 seconds old, and works out every coin. It answers with the price, the coins of the trade (`gross`, `fee`, `coinsChange`), the new balance and the units held. The price can differ from the price on the player's screen, which may be a minute old. |
+| `GET /api/market` | anyone, and it works while the flag `market` is off | The board: seven invented island companies that follow Binance (BTC, ETH, SOL, XRP, BNB, EUR/USD as EURUSDT and gold as PAXG), then, once the stock source is on, five real US stock companies. Each company has its real price (`price`), when it was quoted (`priceAt`), where it came from (`source`: `live`, `cache`, `stale`, `replay` or `none`), a `status` (`open`, `closed`, `stale` or `unavailable`) with a `reason`, its opening times, `canOpen` and `canClose`, and, for open companies, an estimate of the zero points (`zeroPrices`). The board also carries the rules (`rules`, with the stake choices and their fees), the credit lines (`credits`), the demo label (`demo`, `demoNote`), `relit` and a simulation note. Cached for 30 seconds (`Cache-Control: public, max-age=30, s-maxage=30`), so it takes no query parameters (`422`). While the flag is off it only looks and runs no automatic close. A price problem is the status of one company, never a 503. |
+| `GET /api/market/portfolio` | signed in, flag `market` on | The player's coins, their open positions (at most 20, newest first) with value, profit, the fee a close would cost and what they would receive, the 10 newest closed positions, the stakes of today and the limits. The automatic close for this player runs first. Never cached. |
+| `POST /api/market/open` | signed in, flag `market` on | `{companyId, side: "rising" or "falling", stake, actionUid}`. The browser never sends a price: the server takes the shared price of that moment, at most 5 seconds old, and works out every coin. It answers with the new position (`positionId`, `entryPrice`, `zeroPrice`), the fee, `coinsChange` (minus stake and fee), the new balance and `feePercent`. |
+| `POST /api/market/close` | signed in, flag `market` on | `{positionId, actionUid}`. The server closes the position at the price of that moment and answers with `closedAs` (`closed`, or `zeroed` if the stake was used up), `closePrice`, `value`, `fee`, `coinsChange` and the new balance. |
 
 ```text
 GET /api/market
 
 200 OK
-{"companies": [{"id": "harbor-trust", "name": "Saltreach Harbor Trust", "ticker": "SHT", "follows": "BTC",
-                "tagline": "...", "price": 67.2, "basePrice": 60.0, "movePercent": 12.0,
-                "status": "open", "haltedUntil": null}, ...],
- "source": "live", "fetchedAt": "2026-11-05T12:05:00Z", "tradingEnabled": true,
- "rules": {"multiplier": 100, "feePercent": 2.0, "breakerPercent": 30, "haltMinutes": 15,
-           "floorPercent": 25, "ceilingPercent": 400,
-           "minHoldMinutes": 10, "maxTradeCoins": 500, "dailyBuyCapCoins": 2000,
-           "marketDayStarts": "08:00 Europe/Lisbon", "pauseNote": "..."},
- "attribution": "Real price moves from Binance market data, amplified in the game. Simulation, play money.",
- "licenceUrl": null}
+{"generatedAt": "2026-11-06T12:05:03Z", "demo": false, "demoNote": null, "tradingEnabled": true, "relit": false,
+ "companies": [
+   {"id": "harbor-trust", "name": "Saltreach Harbor Trust", "ticker": "SHT", "kind": "island", "follows": "Bitcoin",
+    "market": "always", "marketName": "Around the clock", "currency": "USDT", "priceDecimals": 2,
+    "tagline": "The old harbor bank. When it moves, the whole market feels it.",
+    "price": 76159.21, "priceAt": "2026-11-06T12:05:00Z", "source": "cache",
+    "status": "open", "reason": null, "holiday": null, "opensAt": null, "closesAt": null,
+    "delisted": false, "canOpen": true, "canClose": true,
+    "zeroPrices": {"rising": 68543.289, "falling": 83775.131}},
+   {"id": "apple", "name": "Apple", "ticker": "AAPL", "kind": "stock", "follows": "Apple Inc. shares (Nasdaq)",
+    "market": "us", "marketName": "New York (NYSE and Nasdaq)", "currency": "USD", "priceDecimals": 2,
+    "tagline": "Phones, laptops and the shop in every pocket.",
+    "price": 271.2, "priceAt": "2026-11-05T20:59:59Z", "source": "cache",
+    "status": "closed", "reason": "outside_hours", "holiday": null,
+    "opensAt": "2026-11-06T14:30:00Z", "closesAt": null,
+    "delisted": false, "canOpen": false, "canClose": false, "zeroPrices": null}],
+ "rules": {"leverage": 10, "zeroPointMovePercent": 10, "feePercent": 2.0, "minStake": 10, "maxStake": 500,
+           "dailyStakeCap": 2000, "maxOpenPositions": 20,
+           "stakeChoices": [{"stake": 10, "fee": 1, "total": 11}, {"stake": 100, "fee": 2, "total": 102}, "..."],
+           "tradePriceMaxAgeSeconds": 5, "tradesPer30Seconds": 10, "gameDayStarts": "08:00 Europe/Lisbon"},
+ "credits": [{"text": "Real prices from Binance market data.", "href": null, "licenceText": null, "licenceHref": null}],
+ "simulationNote": "Simulation with play money. Real names and real prices, no real money and no prizes."}
 
-POST /api/market/trade
+POST /api/market/open
 Authorization: Bearer <token>
-{"companyId": "harbor-trust", "side": "buy", "units": 5, "actionUid": "q7x2k9m4"}
+{"companyId": "harbor-trust", "side": "rising", "stake": 100, "actionUid": "5d2c9f7e-3b1a-4c8e-9f20-6a7b8c9d0e1f"}
 
 200 OK
-{"companyId": "harbor-trust", "side": "buy", "units": 5, "price": 60.0, "gross": 300, "fee": 6,
- "coinsChange": -306, "coins": 694, "unitsHeld": 5, "avgPrice": 60.0}
+{"positionId": "2f0c...", "companyId": "harbor-trust", "side": "rising", "stake": 100, "fee": 2,
+ "coinsChange": -102, "coins": 838, "entryPrice": 76159.21, "zeroPrice": 68543.289,
+ "feePercent": 2.0, "openedAt": "2026-11-06T12:05:04Z"}
+
+POST /api/market/close
+Authorization: Bearer <token>
+{"positionId": "7b3e...", "actionUid": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"}
+
+200 OK
+{"positionId": "7b3e...", "closedAs": "closed", "closePrice": 76159.21, "value": 115, "fee": 2,
+ "coinsChange": 113, "coins": 951, "closedAt": "2026-11-06T12:06:10Z"}
 ```
 
-The rules in one list (numbers in `backend/server/market/rules.py` and `trade_rules.py`, and the setting `MARKET_MULTIPLIER`):
+`GET /api/market/portfolio` answers `{coins, demo, feePercent, stakedToday, dailyStakeCap, openCount, maxOpenPositions, positions, recentlyClosed, generatedAt}`. A position has `{id, companyId, name, ticker, follows, currency, priceDecimals, side, mode, stake, openFee, entryPrice, zeroPrice, openedAt, price, priceAt, companyStatus, companyReason, opensAt, value, profit, profitPercent, closeFee, wouldReceive, result, canClose}`; a closed position has `{id, companyId, name, currency, priceDecimals, side, mode, stake, openFee, entryPrice, zeroPrice, openedAt, closedAs, closePrice, closedAt, value, closeFee, coinsChange, result}`. `currency` and `priceDecimals` say how to show the prices of the position, as on the board, so a position needs no board to be shown. A position that has no price (the company has no price yet, left the file, or was opened on the other kind of prices, `companyReason` `wrong_price_mode`) has `price`, `value`, `profit`, `profitPercent`, `closeFee`, `wouldReceive` and `result` set to null, and `canClose` false. A position whose company left `companies.json` also has `ticker`, `follows`, `currency` and `priceDecimals` set to null, and its `name` is the company id. A position with `companyReason` `wrong_price_mode` was opened on the other kind of prices than the server plays now (`mode` says which): a live one on a demo server or a recorded one on a live server. It is listed and cannot be closed until the server plays that kind of prices again.
 
-- **Price.** Game price = base game price x (1 + multiplier x real change since the base), in whole cents. The multiplier is a whole number from 20 to 100 (default 100; D017 recommends 20 to 30 for the class). With 100, a real move of +0.12 % is +12 % in the game. **Floor and ceiling:** the price never falls below 25 % of the company's start price (`startPrice` in `companies.json`) and never rises above 400 % of it. Both are measured from the start price, not from the base, which moves with every pause (a floor of 5 % of the base never acted, and prices sank to one cent within days).
-- **Circuit breaker.** When the game price is 30 % away from its base, up or down, the company is paused for 15 minutes. It is frozen at the 30 % limit, and nobody can trade it. **Shares are not sold when a company is paused.** After the pause the company restarts from the frozen price and measures real moves from the real price of that moment (a new base).
-- **Daily re-base.** The first look after 08:00 Lisbon time gives every company a new base. The game price stays, so nobody's shares change value.
-- **Trades.** Whole units. Coins are whole and always rounded against the player: a buy is rounded up, a sell is rounded down, the 2 % fee is rounded up. A buy costs shares + fee, a sell pays shares - fee. A trade is worth at least 1 coin, and a **purchase** at most 500 coins (shares only); a **sale** has no upper limit, so a player can always sell what they hold. A player can buy at most 2000 coins of shares per market day (starting 08:00 Lisbon time). Shares can be sold 10 minutes after the player's latest purchase of that company. A player may make at most 10 trades in 30 seconds (`429`).
-- **Safe repeats.** The ledger ref of a trade is `market:<actionUid>` (the `actionUid` is 8 to 64 letters, digits, hyphens or underscores). A repeat answers `409 already_applied` and changes nothing: it is the first thing the server checks, before the prices, a pause or the size of the trade, so it is the answer to a repeat whatever has changed since. A trade writes two ledger rows with that ref: `market_buy` and `market_fee`, or `market_sell` and `market_fee`.
-- **One shared price.** One request to Binance returns all seven instruments, and every player gets the same board. The board accepts real prices up to 60 seconds old, so one server instance asks Binance at most once per minute while nobody trades. **A trade accepts only real prices that are at most 5 seconds old** and asks Binance again if the cache is older (a rush of trades at the same moment is one request; at most 12 requests a minute per instance). The database stores each company's base, so every Vercel instance agrees on the base and on a pause; each instance still prices from its own copy of the real prices, so two instances can differ by the age of that copy (up to 60 seconds for the board, 5 seconds for a trade).
-- **When Binance is away.** The board shows the last prices marked `stale`, for as long as it lasts, and **nobody can trade** (`409 prices_stale`): a player who watches Binance would know that these prices are out of date. If Binance has not answered once since the server instance started, the board answers `503 source_unavailable`. After a failed request an instance asks Binance again only 10 seconds later. The recorded replay is never played as a stand-in in live mode. In demo mode (`DEMO_MODE=true`) the server never calls Binance and plays the replay, and trading on it is allowed: those prices are a public recording that anybody can read in advance, so coins won on them must never count for anything real (a leaderboard, a prize).
-- **Errors.** `404 feature_off` (flag off), `404 no_such_company`, `409 already_applied`, `409 prices_stale`, `409 market_halted`, `409 holding_time`, `409 not_enough_units`, `409 daily_buy_cap`, `409 insufficient_funds`, `422 trade_too_small` or `trade_too_big`, `422 validation_error`, `429 too_many_requests`, `503 market_unavailable`, `503 source_unavailable` (the board, when Binance has not answered yet).
+The rules in one list (numbers in `backend/server/market/positions.py`):
 
-The board needs the Exchange migration (it reads `market_bases`). Without a configured database the board still works from memory, which is good enough for a demo on a laptop but not shared between server instances.
+- **Positions.** Value = stake x (1 + 10 x change) for a rising position and stake x (1 - 10 x change) for a falling one, where change = price / entry price - 1. It is counted in whole coins, rounded down, and never below 0. A rising position has no upper limit; a falling one is worth at most 11 times its stake. The **zero point** is 90 % of the entry price (rising) or 110 % (falling). At or beyond it the position is used up and closes at zero; a jump past the point closes it at zero too. Nobody loses more than the stake plus the opening fee, and nobody owes coins.
+- **Fees and limits.** The fee is 2 % of the stake, rounded up, when a position opens and again when it closes (taken from the value, never more than it); 1 % after the Relighting. A stake is 10 to 500 coins. A player stakes at most 2000 coins per game day (from 08:00 Lisbon time) and has at most 20 open positions. Positions stay open across days; there is no minimum holding time. A player may make at most 10 trades in 30 seconds (`429`).
+- **Safe repeats.** The ledger ref of an opening is `market:open:<actionUid>` and of a closing `market:close:<actionUid>` (the `actionUid` is 8 to 64 letters, digits, hyphens or underscores). A repeat answers `409 already_applied` and changes nothing: it is the first thing the server checks after the speed limit, before the stake, the company and the prices, so it is the answer to a repeat whatever has changed since. An opening writes two ledger rows with its ref (`market_stake` and `market_fee`); a closing writes `market_payout` (if the value is above 0) and `market_fee` (if the fee is above 0). A close at zero moves no coins and has no ledger row, only a history row.
+- **Market hours.** An island company trades around the clock. A stock company trades only while its market is open (New York, Euronext or Xetra, from `backend/content/market/calendars.json`, valid from 6 Nov to 31 Dec 2026). While its market is closed, or a price source is away, a company shows its last price with a label and cannot be traded, and no position of it is closed or used up (`409 market_closed` or `409 prices_stale`).
+- **The automatic close.** There is no timer, so the server closes used-up positions whenever it has prices in hand: on every board look, every opening, every closing and every portfolio look, with one call of the database function `exchange_close_used_up()`. It uses only prices of companies that are open, and a price closes only positions that were opened before it was quoted. A failed sweep is logged and never fails the answer. A dip past the zero point that comes and goes between two looks is missed (in the player's favour).
+- **One shared price, fresh for trades.** The board accepts prices up to 60 seconds old, so one server instance asks a source at most once a minute. **A trade accepts only prices at most 5 seconds old** and asks again if the cache is older (a rush at the same moment is one request). After a failed request Binance is asked again after 10 seconds, the stock provider after 30. The stock provider is also held to 25 calls a minute per server instance. There is no price protection: a trade goes through at the server price of that moment.
+- **Demo mode** (`DEMO_MODE=true`): the island companies play a public recording of 4 Nov 2026 (Binance Vision, CC BY-NC-SA 4.0), clearly labelled; the server never calls Binance or the stock provider and the stocks are hidden. Trading on it is allowed and changes real coins, so coins won on it must never count for anything real. A position opened on the recording (`mode` `replay`) can only be closed in demo mode and a live one only on live prices (`409 wrong_price_mode`).
+- **The Relighting.** After it the fee is 1 % and Greyfathom Salvage takes no new positions (`409 company_delisted`); its open positions can still be closed. `MarketService` takes `relit_check`, an async function of the admin client; the default `never_relit` says no without asking anybody. L3 replaces it with a read of its `world_state`. A check that fails counts as "not relit".
+- **The Greyfathom share (card C6).** `store.has_open_rising_position(admin, player_id, "greyfathom-salvage")` (`backend/server/market/store.py`) is what S3 calls for "holds a Greyfathom share": an open **rising** position in Greyfathom Salvage.
+- **Errors.** `404 feature_off` (flag off), `404 no_such_company`, `404 no_such_position`, `409 already_applied`, `409 market_closed`, `409 prices_stale`, `409 company_unavailable`, `409 company_delisted`, `409 daily_stake_cap`, `409 too_many_positions`, `409 insufficient_funds`, `409 position_closed`, `409 wrong_price_mode`, `422 stake_too_small` or `stake_too_big`, `422 validation_error`, `429 too_many_requests`, `502 database_error`, `503 database_unavailable` (the outcome is unknown: the database did not answer in time, or answered an opening or closing with something that is not a refusal and cannot be read, so the coins may have moved; check the portfolio before trying again), `503 database_not_configured`, `503 market_unavailable`. The order of the checks of an opening is in the comment of `backend/server/routes/market.py`.
+
+The Exchange needs the third migration (`supabase/migrations/20261106090000_exchange_leverage.sql`) for the portfolio, opening and closing. The board works without a database: it only skips the automatic close.
 
 ### Crews and seats (package A6)
 
@@ -611,6 +637,118 @@ The checks of a build come in a fixed order, and the first one that fails is the
 **The finale (packages S3 and L3).** The crew's third light is a home signal station. Server code asks `players_with_signal_station(admin, crew_player_ids)` in `backend/server/game/islet_store.py` (one read, at most four ids). In SQL the same fact is `exists (select 1 from public.islet_buildings where player_id = <player> and building_type = 'signal_station')`. A signal station is never removed, so the answer can only change from "no" to "yes", and a check made before the finale's own transaction stays true. The case never charges for the station itself: the finale screen's "Build signal" button maps to `POST /api/islet/build`. `signalStationBuilt` in `GET /api/islet` is for the islet panel only.
 
 The routes need the home islet migration (`20261106070000_home_islet.sql`). Until it is applied, `GET /api/islet` answers `502 database_error`, so do not pass the live transport (`transport: api` in `frontend/src/game.js`) before the migration is applied. Until then the panel runs in unavailable mode and sends no request.
+
+### The prediction desk (package L5)
+
+Hand-picked real questions from Manifold Markets (a play-money forecasting site), and play-coin pools that the winners share. The home of each route is the comment at the top of `backend/server/routes/predictions.py`; the rules are in `backend/server/predictions/` and are explained in decision D025 (provisional number, see [DECISIONS.md](DECISIONS.md)). Everything is behind the flag `predictions`, which stays off: while it is off, every route answers `404 feature_off` ("The prediction desk is closed for now."). Play money only: every answer of the list carries the line "Forecasting with play coins. Play money: no cash value. It cannot be bought or cashed out.", Manifold is credited in text, nothing links to a betting site, and Manifold's own probability is never shown.
+
+| Route | Who | What it does |
+|---|---|---|
+| `GET /api/predictions` | anyone | The questions that a person has read, with their pools (coins and captains on each side, and `payoutPerCoin`, about how many coins one staked coin brings back if that side wins, rounded down to 2 decimals), the status (`open`, `closed`, `settled`), `canStake` (false, for example, while the only reading of Manifold is a `stale` one older than 15 minutes), what Manifold says (`manifold.state`: `open`, `closed`, `decided`, `unknown`), where that reading comes from (`source`: `live`, `cache`, `stale`, `fallback`) and when (`fetchedAt`), the numbers of the rules, the credit line (`attribution`) and the play-money line (`playMoney`). Cached for 10 seconds (`Cache-Control: public, max-age=10, s-maxage=10`), so it takes no query parameters (`422`). |
+| `GET /api/predictions/mine` | signed in | The player's coins, what they staked today and how much they may still stake, their newest 50 stakes with the result (`won`, `lost`, `refunded`) and `host` (true or false). Sent with `Cache-Control: private, no-store`. |
+| `POST /api/predictions/stake` | signed in | `{questionId, side: "yes" or "no", amount, stakeId}`, with any extra field refused. `amount` is a whole number from 1 to 50. `stakeId` is made once per confirmed click (8 to 64 letters, digits, hyphens or underscores) and sent again on a retry. The ledger reference is `stake:<stakeId>`. |
+| `POST /api/predictions/settle` | host only (`HOST_PLAYER_IDS`) | `{questionId, outcome: "yes", "no" or "void"}`. The question id is the repeat key, because a pool settles once. A repeat answers `409 already_applied`. A retry after a `503` is always safe. |
+
+```text
+GET /api/predictions
+
+200 OK
+{"questions": [{"id": "avengers-opening-record", "text": "...", "topic": "culture",
+       "decidedBy": "...", "closesAt": "2026-12-17T12:00:00Z",
+       "status": "open", "canStake": true,
+       "outcome": null, "settlement": null, "settledAt": null,
+       "manifold": {"state": "open", "decidedAs": null, "decidedAt": null},
+       "sides": [{"side": "yes", "label": "Yes", "coins": 120, "players": 4, "payoutPerCoin": 1.63},
+                 {"side": "no",  "label": "No",  "coins": 80,  "players": 3, "payoutPerCoin": 2.42}],
+       "totalCoins": 200, "source": "cache", "fetchedAt": "2026-11-20T10:02:11Z"}],
+ "rules": {"minStake": 1, "maxStake": 50, "dailyCap": 200, "cutPercent": 5, "cutOf": "losing side",
+           "dayStarts": "00:00 Europe/Lisbon"},
+ "attribution": "Questions and results: Manifold Markets (manifold.markets), a play-money forecasting site.",
+ "playMoney": "Forecasting with play coins. Play money: no cash value. It cannot be bought or cashed out."}
+
+GET /api/predictions/mine
+Authorization: Bearer <token>
+
+200 OK
+{"coins": 940, "stakedToday": 70, "leftToday": 130, "dailyCap": 200, "host": false,
+ "stakes": [{"questionId": "avengers-opening-record", "text": "...", "side": "yes", "amount": 20,
+             "placedAt": "2026-11-20T10:01:00Z", "status": "settled", "result": "won", "payout": 34,
+             "settlement": "winners", "outcome": "yes", "settledAt": "2026-12-18T09:00:00Z"}]}
+
+POST /api/predictions/stake
+Authorization: Bearer <token>
+{"questionId": "avengers-opening-record", "side": "yes", "amount": 20, "stakeId": "q7x2k9m4ab"}
+
+200 OK
+{"questionId": "avengers-opening-record", "side": "yes", "amount": 20, "coins": 920, "stakedToday": 90,
+ "leftToday": 110, "sides": [{"side": "yes", "label": "Yes", "coins": 140, "players": 5, "payoutPerCoin": 1.54},
+                              {"side": "no", "label": "No", "coins": 80, "players": 3, "payoutPerCoin": 2.66}],
+ "totalCoins": 220}
+
+POST /api/predictions/settle
+Authorization: Bearer <token of a host>
+{"questionId": "avengers-opening-record", "outcome": "yes"}
+
+200 OK
+{"questionId": "avengers-opening-record", "outcome": "yes", "settlement": "winners",
+ "settledAt": "2026-12-18T09:00:00Z", "paidPlayers": 5, "paidCoins": 216, "cutCoins": 4}
+```
+
+The rules in one list (numbers in `backend/server/predictions/stake_rules.py`; the pool rules in `pools.py`, shared later with L6):
+
+- **A stake.** One stake per player and question, 1 to 50 whole coins, at most 200 coins per Lisbon day (the day starts at 00:00 Europe/Lisbon). A stake cannot be changed or taken back.
+- **Closing.** Each question has its own closing time in the list, at least 60 minutes before the moment that decides it. A question closes earlier if Manifold closes it or decides it. The database keeps the closing time it was given at the first stake and never changes it; at every stake the earlier of that stored time and the closing time the server knows at that moment counts. So a stored closing time never moves later. (Two server instances with different readings of Manifold can disagree for a short while.)
+- **How a pool pays out.** The winners share the pool in proportion to their stakes. A cut of **5 % of the losing side**, rounded down, leaves the game (a right forecast never gets back less than it staked). Rounding is against nobody: the payouts plus the cut add up to exactly the coins staked, each payout is less than one coin away from its exact share, and the leftover coins go to the largest remainders, then to the earliest stake. **Everybody gets a full refund** when the question is void (Manifold says CANCEL, MKT or anything else that is not YES or NO, or the host voids it), when nobody picked the winning side, and when everybody picked the same side.
+- **Settling (the minimum).** A host presses Settle YES, Settle NO or Void. YES or NO works only after the pool has closed, and if Manifold has decided, the choice must match (`409 outcome_conflict`); with only the recording, the host's word stands. Void works at any time. One SQL function pays everyone in one transaction, and a pool settles only once (a trigger also makes a settled pool final in the table itself). Automatic settlement (Manifold decided, then a 60-minute wait) comes after the minimum.
+- **Safe repeats.** The ledger ref of a stake is `stake:<stakeId>`, and the ref of every payout (a win and a refund) is `pool:<questionId>`. A repeated stake answers `409 already_applied` and changes nothing: it is the first thing the server checks after the speed limit, before the question, Manifold or the closing time, so it is the answer to a repeat whatever has changed since. A pool settles once.
+- **Manifold.** The server reads `https://api.manifold.markets/v0/market/{marketId}` (no key, 500 requests a minute per address) once per question per 2 minutes per server instance, with a 3 second timeout. If Manifold fails, the last good answer shows as `stale`, and a recorded real answer (`backend/content/predictions/recorded/`) as `fallback`. **A stake needs a real reading** (`live`, `cache` or `stale`): with only the recording the answer is `503 source_unavailable` and `canStake` is false. **A `stale` reading must not be older than 15 minutes** (`STALE_LIMIT_FOR_STAKE`): an older one is still shown (`source: "stale"`, with its `fetchedAt`) and still limits what a host may settle, but a stake on it answers `503 source_unavailable` and `canStake` is false, because the market may have been decided since and news could reach some captains first. In demo mode (`DEMO_MODE=true`) the server never calls Manifold, the recording counts as the reading, and staking works.
+- **Errors.** `401 unauthorized`, `403 forbidden` (settling when you are not a host), `404 feature_off`, `404 no_such_question`, `409 already_applied`, `409 pool_closed`, `409 already_staked`, `409 daily_stake_cap`, `409 insufficient_funds`, `409 pool_open`, `409 outcome_conflict`, `409 stakes_changed`, `422 validation_error`, `422 stake_too_small`, `422 stake_too_big`, `429 too_many_requests` (more than 10 stakes in 30 seconds), `503 predictions_unavailable`, `503 source_unavailable`, `503 database_unavailable` (the outcome is unknown; sending the same `stakeId` again is safe).
+
+The desk needs the prediction desk migration (it reads `prediction_pools`, `prediction_stakes` and `prediction_pool_sides`). Without a configured database the routes answer `503 database_not_configured`. The list of questions is `backend/content/predictions/questions.json`; every question stays `pending` (hidden, not stakeable) until a person has read the Manifold question and written their name and the date into `reviewedBy` and `reviewedOn`.
+
+### Lantern Duels (package A7)
+
+Two captains each seal a sequence of lantern signals: Flash, Shade or Mirror. The server opens both envelopes at once and decides every round. A duel is friendly or played for equal play-coin stakes. The whole feature sits behind the flag `arena`, which stays off. The home of each route is the comment at the top of `backend/server/routes/duels.py`; the rules are in `backend/server/duels/` and are explained in [D026](DECISIONS.md#d026--lantern-duels-rules--2026-11-06) (proposed). The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md). Play money only: coins cannot be bought, cashed out or exchanged for real prizes, and the screen says "Simulation, play money".
+
+| Route | Who | What it does |
+|---|---|---|
+| `GET /api/duels` | signed in, flag `arena` on | The rules (so the screen never guesses a number), the caller's coins and held coins, and four short lists: `incoming` (named challenges to me), `openChallenges` (open challenges of other captains), `yours` (my waiting challenges) and `recent` (my ended duels). A summary never carries a signal. Expired challenges of mine are closed and refunded while it is read. **New route**, to be agreed at the Mon 9 freeze. |
+| `POST /api/duels` | signed in, flag `arena` on | Send a challenge: `{opponentName, rounds, stake, signals, actionUid}`. A name makes a named challenge; `null` or no name makes an open one. The challenger's signals are sealed and the stake is held. |
+| `GET /api/duels/{id}` | signed in, flag `arena` on | One duel in full: `yourSignals` (my own) and, once the duel is finished, `reveal`, one entry per round from my side. Who may look: the two captains, and anyone while an open challenge is still open. |
+| `POST /api/duels/{id}/move` | signed in, flag `arena` on | Answer a challenge: `{signals, actionUid}`. Answering is accepting: in one database step the server takes my stake, opens both envelopes, decides every round and pays out. |
+| `POST /api/duels/{id}/cancel` | signed in, flag `arena` on | No body. The challenger withdraws, or the named captain declines. Either way the challenger's stake comes back. **New route**, to be agreed at the Mon 9 freeze. |
+
+```text
+POST /api/duels
+Authorization: Bearer <token>
+{"opponentName": "Captain-3fa85f", "rounds": 5, "stake": 100,
+ "signals": ["flash", "shade", "shade", "mirror", "shade"], "actionUid": "q7x2k9m4ab"}
+
+200 OK
+Cache-Control: private, no-store
+{"duel": {"id": "6f1c0c2e-9a52-4b8e-8d3a-0a7c3f1d2b44", "status": "open", "isOpen": false, "you": "challenger",
+          "challengerName": "Brave Puffin 17", "opponentName": "Captain-3fa85f", "rounds": 5, "oil": 5,
+          "stake": 100, "cutPercent": 5, "winnerTakes": 190,
+          "createdAt": "2026-11-06T10:00:00Z", "expiresAt": "2026-11-07T10:00:00Z", "closedAt": null,
+          "score": null, "yourResult": null, "coinsChange": null, "heldStake": 100,
+          "canAnswer": false, "canWithdraw": true, "canDecline": false,
+          "yourSignals": ["flash", "shade", "shade", "mirror", "shade"], "reveal": null},
+ "coins": 900, "serverTime": "2026-11-06T10:00:00Z"}
+```
+
+The rules in one list (numbers in `backend/server/duels/rules.py`, and `GET /api/duels` sends them in `rules`):
+
+- **Signals and oil.** Flash outshines Shade, Shade leaves Mirror nothing to throw back, and Mirror throws Flash back. The same signal on both sides scores for nobody. Each captain has as much lantern oil as the duel has rounds (3 or 5): Flash burns 2, Mirror 1 and Shade 0. A sequence that burns more is refused (`422 not_enough_oil`). More rounds won wins the duel; equal is a draw.
+- **Sealed means sealed.** Each captain seals all rounds at once: the challenger with the challenge, the other captain with the answer. A signal reaches the other captain only after both envelopes are in, and only as part of the stored reveal. No answer carries it before: not the list, not the detail and not an error. The table `duel_moves` has no right for players at all, and no role may change a sealed signal.
+- **Challenges.** By captain name (the exact display name, in any letter case) or open to any captain except the challenger, where the first answer wins. A named challenge can be answered only by that captain. A duel has 3 or 5 rounds. A captain may have 3 challenges waiting (`409 too_many_waiting`).
+- **Stakes and the cut.** The stake is 0 (friendly), 10, 25, 50 or 100 coins from each captain. The challenger's stake is held when the challenge is sent, the answerer's when they answer. The winner takes the pot minus a cut of 5 %, rounded down to whole coins: 19, 47, 95 or 190. A draw, a withdrawal, a decline and an expiry give every stake back. The cut has no ledger row; it is simply not paid out, and duels never create coins. Two captains may decide 3 staked duels per day with each other, either way round (the day starts at 00:00 Lisbon time; `409 daily_pair_limit`).
+- **Safe repeats.** The ledger ref of every coin movement is `duel:<duel id>` (the reasons `arena_stake` and `arena_payout`; a player has at most one row of each reason per duel, so the ledger itself stops a double stake or a double payout). The `actionUid` (8 to 64 letters, digits, hyphens or underscores, made once per click and sent again on a retry) is the duel's `create_uid` or the answer's `action_uid`; it is never part of a ref. The same challenge sent twice answers `409 already_applied` and creates nothing. The same answer sent twice answers `409 already_applied`; a second answer with another `actionUid` answers `409 already_sealed`, which is also what the challenger hears when answering their own challenge.
+- **Timeouts are lazy.** A challenge can be answered for 24 hours. Nothing runs on a timer (Vercel Cron cannot be used with Services): the next request that touches the duel (the list or the detail of either captain, a cancel, or an answer attempt) closes it as `expired` and gives the challenger's stake back. The database clock decides. A sealed duel has no forfeits: nobody can lose by being offline.
+- **Order of the checks.** Every route resolves the sign-in first (`401`), then the flag (`404 feature_off`, with no database call), then the body (`422`). The player id comes only from the sign-in. Request bodies refuse extra fields.
+- **Polling.** The screen asks `GET /api/duels` every 5 seconds for 2 minutes after an action, then every 30 seconds, and stops after 10 quiet minutes. It never asks while the tab is hidden. One quiet panel makes about 40 calls in 10 minutes. No Realtime, no WebSockets and no timer on the server.
+- **Errors.** `404 feature_off`, `404 no_such_duel`, `404 no_such_captain`, `403 not_your_duel`, `409 already_applied`, `409 already_sealed`, `409 duel_taken`, `409 duel_closed`, `409 duel_expired`, `409 daily_pair_limit`, `409 too_many_waiting`, `409 name_not_unique`, `409 insufficient_funds`, `422 validation_error`, `422 bad_rounds`, `422 bad_stake`, `422 wrong_signal_count`, `422 not_enough_oil`, `422 cannot_duel_yourself`, `502 database_error`, `503 database_not_configured`, `503 database_unavailable` (the OUTCOME IS UNKNOWN: read the list before you try again; never send the same intent again with a new `actionUid`).
+
+The duels need the Lantern Duels migration (`supabase/migrations/20261106110000_lantern_duels.sql`), which is not applied yet. While the flag `arena` is off, every duel route answers `404 feature_off` and touches no database.
 
 ### GET /api/docs
 
@@ -729,9 +867,6 @@ The Island Exchange migration, `supabase/migrations/20261106010000_island_exchan
 
 | Table | One row per | A signed-in player may | The server may | Owner |
 |---|---|---|---|---|
-| `market_bases` | company: the base its price is measured from (a game price and a real price), and whether it is paused | read every row | read, add, change (through `market_set_base()`) | L4 |
-| `market_positions` | player and company the player holds units of; deleted when the player sells everything | read their own rows | read, add, change, delete (through `market_trade()`) | L4 |
-| `market_trades` | buy or sell: the trade history, never edited | read their own rows | read, add (through `market_trade()`) | L4 |
 
 `market_trade()` is the only way a trade happens (it checks that the coins and the fee follow from the units and the price, moves the coins through `apply_wallet_transaction()`, changes the position and writes the trade in one step). `market_set_base()` saves a company's base when two server instances look at the same moment. Both are for the server only.
 
@@ -776,6 +911,22 @@ Details that other packages rely on:
 - **Saves:** `data` (a JSON object, at most 200,000 bytes as database text; the server accepts at most 100,000 bytes of compact JSON), `version` (starts at 1 and counts the writes: `PUT /api/save` sends the version it last read, and `save_progress()` writes only if that is still the current version and then adds 1) and `updated_at` (set by the database). Only the server writes a save. The migration `20261106020000` changed the meaning of `version`: it was a format version before, and nothing used it.
 - **Realtime.** Postgres Changes is not used; live presence rights are policies on `realtime.messages` (migration `20261106050000_live_presence.sql`, [section 7](#7-realtime-budget)).
 - **A new table** follows [ENGINEERING.md, recipe 4.2](ENGINEERING.md#42-add-a-database-table): row-level security, read-only policies for players, and explicit grants, because our project gives no rights to a new table by itself.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `exchange_positions` | position: a stake in one company, rising or falling, at 10x, with its zero point; open, closed by the player or zeroed | read their own rows | read, add, change (through `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`) | L4 |
+
+| `exchange_events` | opening, closing or close at zero: the history, never edited | read their own rows | read, add (through the three functions) | L4 |
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `prediction_pools` | question: when staking closes, and how the pool ended | read every row | read, add, and change seven columns (the settlement), through `prediction_settle_pool()`; never delete | L5 |
+| `prediction_stakes` | stake: who staked how many coins on which side of which question | read their own rows | read, add (through `prediction_place_stake()`), and change the column `payout`; never delete | L5 |
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `duels` | challenge: who, rounds, stake, status and, once decided, the result of every round. It holds no signal. | read the duels they take part in | read, add, change (through `duel_create()`, `duel_answer()` and `duel_void()`); never delete | A7 |
+| `duel_moves` | captain and round: the sealed envelopes, the only place that holds a signal | nothing at all, not even their own rows | read, add (through `duel_create()` and `duel_answer()`); no role may change or delete a row | A7 |
 
 ### Browser account and crew metadata (G9 R7, R10, R12)
 
@@ -836,11 +987,17 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `event_reward` | earn | A special event in the world |
 | `cargo_sale` | earn | Selling cargo |
 | `clue_purchase` | spend | Buying a clue |
-| `building_purchase` | spend | Building on a home islet. The refs are `islet:<actionUid>` (the migration `20261106070000`, no new reason) |
+| `building_purchase` | spend | Building on a home islet |
 | `admin_adjust` | either | A manual correction by an admin |
 | `market_buy` | spend | Shares bought on the Island Exchange (migration `20261106010000`) |
 | `market_sell` | earn | Shares sold on the Island Exchange (same migration) |
 | `market_fee` | spend | The fee of an Island Exchange trade (same migration) |
+| `market_stake` | spend | The stake put into an Island Exchange position (migration `20261106090000`) |
+| `market_payout` | earn | The value paid out when an Island Exchange position is closed (same migration) |
+| `prediction_stake` | spend | Coins staked at the prediction desk (migration `20261106100000`); ref `stake:<stakeId>` |
+| `prediction_payout` | earn | Coins paid back from a prediction desk pool, for a win or a refund (same migration); ref `pool:<questionId>` |
+| `arena_stake` | spend | The stake of a Lantern Duel, held when a captain challenges or answers (migration `20261106110000`) |
+| `arena_payout` | earn | A Lantern Duel payout: the winnings, or a stake that comes back after a draw, a withdrawal, a decline or an expiry (same migration) |
 
 A new reason is one new migration plus the same pair added at the end of `WALLET_REASONS`, in one pull request ([ENGINEERING.md, recipe 4.7](ENGINEERING.md#47-add-a-wallet-reason)). Never rename a reason or change its direction. The reason names later packages have reserved are in [section 9](#9-reserved-interfaces).
 
@@ -1069,14 +1226,14 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | A2 Sign-in, captain names and cloud progress | **Built** (the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D022. | built; the sign-in part is pending |
 | A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** that the first ending counts (N6). The coins and texts of the kits (N5) were settled by the story round (D018). | built, in review |
 | A6 Crews and seats | **Built**: `POST /api/crews` (returns a crew code), `POST /api/crews/join {code}`, `POST /api/crews/me/start` (the muster) and `GET /api/crews/me` (section 2); the columns `crews.code`, `version` and `started_at`, the table `crew_join_failures` and the four crew functions (migration `20261106040000_crew_codes.sql`); `read_open_crew_seat()` in `backend/server/crews/store.py` for S3 and L3. Decision D020. | built, in review |
-| A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
+| A7 Lantern Duels (the PvP arena) | **Server built** (flag `arena` off; its migration is not applied yet): `GET /api/duels` (new), `POST /api/duels {opponentName, rounds, stake, signals, actionUid}`, `GET /api/duels/{id}`, `POST /api/duels/{id}/move {signals, actionUid}` and `POST /api/duels/{id}/cancel` (new); the tables `duels` and `duel_moves`; the functions `duel_create()`, `duel_answer()` and `duel_void()`; the reasons `arena_stake` and `arena_payout`; the flag `arena`. See section 2 and D026. The routes are built behind the arena flag; production enablement follows the post-merge checks. | built, in review |
 | A4 Live presence | **Built** (flag `live_presence` off; its migration goes live with group 2; G9 connects it to the presence screens, see section 7): the private Realtime rooms `live:world`, `live:place:<place>:<room>` and `live:crew:<crew id>`; the browser module `frontend/src/online/realtime.js` with its parts in `frontend/src/net/` (`live-rules.js`, `live-rooms.js`, `live-places.js`, `live-sender.js`, `live-view.js`); the events `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted` and `live_crew_updated`; the server helper `backend/server/crew_broadcast.py` (`create_app(..., broadcaster=...)`); the migration `20261106050000_live_presence.sql`; the flag `live_presence`. No table, no route. See section 7 and D023. | built, flag off |
 | L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}`, which also sends `state` and `tonight` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
 | Open-world must (W1, D1, H1) | `GET /api/weather` with `state` and `tonight` (the weather states and the fog-night rule); `GET /api/bulletin` returning `{day, lines, weather, exchange, chapterTwoHook}` (the Lisbon day, the daily bulletin and the Chapter 2 hook); the content files `weather_states.json`, `bulletin.json` and `chapter_two_hook.json` (server only, never on the public list); `create_app(..., world_stage=..., clock=...)`; the error `503 bulletin_unavailable` | built (spec `specs/open-world-must.md`); decision D024, proposed |
 | L2 Your home islet | **Built** (the backend, its migration, which goes live with group 2, and the build panel): `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the tables `islets` and `islet_buildings`; the function `islet_build()`; the events `plot_clicked` (opens the islet panel) and `islet_changed` (the panel emits it, G8's world draws what stands); `backend/content/buildings.json` (server only); coins through `building_purchase` with the ref `islet:<actionUid>`. See section 2 and D021. The panel is in `frontend/src/screens/islet/`. | built, in review |
-| L3 Captain's Table board and Night of Three Lights | The shared read is `GET /api/case`; later writes are `/api/board/pin`, `/api/board/pair`, `/api/finale/nightfall`, `/api/finale/post` and `/api/finale/signal`; later `GET /api/world` | Phase 2 and Phase 3 reserved by D027; the old `GET /api/board` reservation is replaced |
-| L4 Island Exchange (the market) | **Built** (on `main`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/trade {companyId, side, units, actionUid}`; the tables `market_bases`, `market_positions` and `market_trades`; the reasons `market_buy`, `market_sell` and `market_fee`; `backend/content/market/companies.json` and `replay.json`; the setting `MARKET_MULTIPLIER`; the flag `market`. See section 2 and D017. | built, in review |
-| L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions`; weather questions settle on real fog only: after the night has ended, from its observed hours (the night's state is fog, `backend/server/weather/nights.py`), never from the forecast-based `tonight` of `GET /api/weather` | draft |
+| L3 Captain's Table board and Night of Three Lights | The shared read is `GET /api/case`; board/night writes are `/api/board/pin`, `/api/board/pair`, `/api/finale/nightfall`, `/api/finale/post` and `/api/finale/signal`; later `GET /api/world` | Phase 2 built, Phase 3 reserved by D027; the old `GET /api/board` reservation is replaced |
+| L4 Island Exchange (the market) | **Built, version 2** (on `feat/l4-exchange-v2`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/open {companyId, side, stake, actionUid}`, `POST /api/market/close {positionId, actionUid}`; the tables `exchange_positions` and `exchange_events` and the functions `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`; the reasons `market_stake` and `market_payout` (`market_fee` is used again); `backend/content/market/companies.json`, `calendars.json` and `replay.json`; the settings `STOCK_API_PROVIDER` and `STOCK_API_KEY` (`MARKET_MULTIPLIER` is gone); the flag `market`; the seam `has_open_rising_position()` for card C6 and the seam `relit_check` for L3. See section 2 and D017. | built, in review |
+| L5 Prediction desk | **Built** (flag `predictions` off; its migration is not applied yet): `GET /api/predictions`, `GET /api/predictions/mine`, `POST /api/predictions/stake {questionId, side, amount, stakeId}`, `POST /api/predictions/settle {questionId, outcome}` (host only); the tables `prediction_pools` and `prediction_stakes` and the view `prediction_pool_sides`; the functions `prediction_place_stake()` and `prediction_settle_pool()` and the trigger `prediction_pools_keep_settled()`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/predictions/questions.json` (with `recorded/` and `samples/`); `backend/server/predictions/` (`pools.py` is shared with L6); the check `require_host` and the setting `HOST_PLAYER_IDS`. The paths changed from the roadmap: one folder per feature, as `market/` and `weather/`. See section 2 and decision D025. | built, in review |
 | L6 Sports predictions | `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the tables `fixtures` and `sports_stakes`; the reasons `sports_stake` and `sports_payout`; the flag `sports` | draft |
 
 Every reserved table follows recipe 4.2, and every reserved reason recipe 4.7: neither exists until its package adds the migration.
@@ -1119,7 +1276,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 ## 10. The shared mystery
 
-Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); Phase 1's published contract below supersedes its older reservations; later phase routes remain reserved.
+Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); Phase 1's contract below supersedes its older reservations; later phases remain reserved.
 
 What already holds, from the foundation: a reward is paid with `clue_reward` or `mystery_reward` and a `ref` that makes each payout happen once per player, buying a clue uses `clue_purchase`, and a crew's seats can hold NPC partners ([section 6](#6-crews-and-seats)).
 
@@ -1159,13 +1316,55 @@ Phase 1 search refusal reasons are `lead_locked`, `already_have`, `wrong_kit` an
 | 502 | `database_error` | Unreadable reply or a database guard failure; never a case repeat |
 | 503 | `case_unavailable`, `database_not_configured`, `database_unavailable` | Broken content, missing database or uncertain operation |
 
-The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 1 leaves `finale:{}` and `partners:[]` for later phases.
+The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 2 fills `finale` and `me.timber`; Phase 4 fills the partner view from its canonical dialogue bank.
 
 `board` contains earned `cards`, open unheld `leads`, `logLead`, `deductions`, identical-shape `suspects`, `canPair` and `pairWait`. An incomplete deduction has exactly `id`, `name` and `complete:false`; it exposes no card pair or clearing information. `search.spots` groups eligible routes by hotspot, and `search.jobs` contains running finds and finds landed in the last 10 minutes. `accusation` carries `schoonerFound`, `allowed`, `cooldown`, `status`, the public suspect list, earned evidence and `lastWrong`.
 
 Before a solve, `reveal` is only `{"available":false}`. A solver in this crew sees `available`, `solvedSecond`, `world`, ordered `lines` (`id`, `kind`, `text`, `cites`) and payout `credits`. Solving in another crew grants no reveal here. Phase 1's world result is `unchanged`; later hooks add `locked`, `relit`, `added` and `already_recorded`. The client must render returned lines rather than carrying its own reveal copy.
 
-Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 nudges are added only after A4 reaches `main`; until then G9 uses these boundary refreshes.
+Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 is now on main. State-changing writes send version-only hints through its shared sender; clients still use boundary refreshes for timed landings.
+
+### Case Phase 2 board and night contract for G9
+
+All five writes use the same signed-in player, `case` flag, strict `actionUid`, private/no-store response and repeat rules above. Unknown fields are rejected. The server computes rewards, light readiness, normalized bearings and the hidden target.
+
+| Route | Body beyond actionUid | Successful answer extras | Game refusals |
+|---|---|---|---|
+| `POST /api/board/pin` | `cardId` (`C1` to `C8`) | `coinsPaid` | `card_not_held`, `already_pinned` |
+| `POST /api/board/pair` | `cards` (two distinct card ids) | earned `deduction`, caller's `coinsPaid` | `pair_cooldown`, `not_pinned`, `different_seats_required`, `wrong_pair`, `already_deduced` |
+| `POST /api/finale/nightfall` | none | `endsIn` | `schooner_found`, `deduction_required`, `night_in_progress`, `dawn_wait` |
+| `POST /api/finale/post` | `light` | `onPostIn` | `night_required`, `light_not_ready`, `post_taken`, `already_on_post` |
+| `POST /api/finale/signal` | `light`, finite numeric `bearing` in `[0,360)` | `holdsFor`, `parted`; successful parting adds `lights`, exact `target` | `schooner_found`, `night_required`, `post_not_ready`, `post_not_owned`, `aim_cooldown`, `off_target` |
+
+Wait refusals carry `seconds`. A wrong pair or missed signal changes state and is remembered; its repeat remains `accepted:false`. Refusals that change nothing are not recorded. An unavailable light is 404 `no_such_light`; malformed card pairs or bearings are 422. The board exposes deduction details only after formation.
+
+`finale` contains `phase`, `nightNo`, `canCall`, countdowns, `status`, rounded `glow`, `parted` and the required-tier lights. A light exposes public chart coordinates, readiness, its valid open post, current lock, last bearing and action availability. Exact target coordinates appear only after a successful three-light parting. Posts and locks from replaced partner seats do not count. Posts remain after dawn; locks expire strictly at their hold boundary.
+
+One station built by any crew player readies the home light for every crew player. Partners never hold it. `me.timber` is the viewer's islet timber, using catalogue starter timber before their first islet row. Credits count historical locks separately from the successful-parting role used for solve payouts.
+
+Search, accusation and host-clock writes send `case_changed`; board/night writes send `board_changed`, including wrong-pair and missed-signal writes. Payloads contain only `{"version":writeRevision}`. The shared A4 sender owns its budgets; an unavailable or slow hint is quiet and bounded to one second. Reads, repeats and unchanged refusals send nothing. Time-based landings use client countdown refreshes.
+
+### Case Phase 3 public world contract
+
+`GET /api/world` needs no sign-in and ignores authorization. The `case` flag is checked before any database or content read. Query parameters give private 422 responses. Successful responses carry `Cache-Control: public, max-age=30, s-maxage=30`; the browser should call without an authorization header so the edge can cache them.
+
+The response is `{stage, lightsOn, fogBankGone, gullsRestOpen, extraLights, solves, relitAt, wall, line}`. Before relighting, `stage` is `dark`, the three booleans are false, `relitAt` and `line` are null, and the Wall is empty. The Wall contains at most 200 `{name, order}` entries; it exposes no player or crew identifiers, case evidence or solution. Missing database configuration returns the dark world; a failed or malformed database response gives a generic private 503 `database_unavailable`.
+
+A shared checked reader supplies both the public response and open-world's `WorldStageReader`, including the first `relit_at`. Its state cache lasts 30 seconds. Exchange v2 receives that reader's `relit_check`: after relighting the fee is 1 percent and Greyfathom accepts no new positions. The `case` flag also gates these default consumers before database reads. Explicitly injected test ports remain intact.
+
+The first eligible solve while `RELIGHT_OPEN` is true atomically relights the coast with its payout and crew outcome. Later crews add one light up to 12. Only contributors reach the Wall, once per player. Solves completed while the setting is closed remain private forever. No world-specific crew hint is sent; the normal accusation hint reaches the solving crew and public clients poll the cached world route. Keep `RELIGHT_OPEN` unset until Claude deliberately opens production.
+
+### Case Phase 4 partner order contract
+
+`POST /api/crews/me/orders` uses the case flag, verified crew player, shared rate limits and private/no-store headers. Its strict body is `{seat, order, target, allowPaid:false, actionUid}`: seat is an integer from 1 to 4, order is `fetch` or `man_light`, and target is a card or light id. Extra fields are rejected; `allowPaid:true` gives 422 `paid_errands_off`. A player or missing partner seat gives 409 `not_a_partner`; a seat changed during the request gives 409 `crew_busy`.
+
+Accepted answers add `line`, `order:{number,seat,order,target,orderedAt,arriveAt,foundAt,pinAt,readyAt,price}`, and `coinsPaid` for a fetch. `message` equals `line`; all partner text comes from the validated bank. A fetch arrives at 4 minutes, finds at 10 and pins at 15; a held journal card needs only a 5-minute pin. A man-light order reserves a public light immediately and arrives in 10 minutes. Time results are fixed at acceptance and become visible without settlement writes. Any new order ends the partner's previous post and lock.
+
+Only four game refusal reasons leave this minimum API: `busy`, `wrong_kit`, `locked_window` and `not_ready`. Busy and window waits carry `minutes`. Other internal refusals map to `not_ready` with the appropriate bank line. A refusal writes no order and pays nothing. Partners never choose routes requiring a player, share, world state, log-reader profile or paid shortcut, and never pair, call nightfall, aim or accuse.
+
+A first-card reward goes to the ordering player at order acceptance, once per player/card across crews. Its pending pin counts for contribution credit immediately; pairing still waits for the stored pin time. Repeated actions preserve the original bank line and accepted outcome before any new-target or current-seat checks, omit unstored numeric extras, and never pay or nudge again. Internal receipts use their unique order number; historical lookup remains scoped to the verified player and crew.
+
+`partners[]` contains `seat,name,partnerId,kit,kitName,status,canOrder,orders,targets,satchel,job`. Status is `idle`, `busy` or `on_duty`; only busy disables the buttons. Fetch targets are open leads without a pin row for that seat; public-light targets expose names without readiness hints. Satchel entries are `{id,title,pinned}` only after the card lands. A job carries stored deadlines, countdowns, arrival/done flags and the latest canonical bank line. Valid holder matching prevents replaced partner seats from retaining a post. One `partner_changed` version-only hint is attempted at acceptance; arrivals/finds/pins use countdown refreshes.
 
 ## 11. Open questions for Mon 9
 

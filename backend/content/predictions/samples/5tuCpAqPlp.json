@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/5tuCpAqPlp",
+  "answer": {
+    "id": "5tuCpAqPlp",
+    "slug": "will-parismontsouris-record-at-leas-spU0QO6008",
+    "question": "Will Paris-Montsouris record at least 1 mm of rain on Saturday, October 31, 2026?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1793422800000,
+    "isResolved": true,
+    "resolution": "NO",
+    "resolutionTime": 1793633203898
+  }
+}
