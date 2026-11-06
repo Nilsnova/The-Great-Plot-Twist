@@ -1,0 +1,50 @@
+/* Standalone field-guide layout around the existing pixel UI kit. No remote assets or motion. */
+:root { color-scheme: dark; font: 16px/1.65 'Courier New', monospace; color: #ece0b8; background: #182f26; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #f3d58c; text-underline-offset: .2em; }
+a:hover { color: #fff0c5; }
+a:focus-visible, input:focus-visible, main:focus-visible { outline: 3px solid #f3d58c; outline-offset: 4px; }
+[hidden] { display: none !important; }
+.help-layout { width: min(100% - 40px, 920px); margin: auto; padding: 40px 0; }
+.help-header { padding: 16px 0 32px; border-bottom: 2px solid #657954; }
+h1 { font-size: clamp(2rem, 8vw, 3.5rem); line-height: 1.1; margin: 12px 0 18px; color: #f1dfaa; }
+h3 { font-size: 1.05rem; line-height: 1.45; margin: 24px 0 8px; color: #f1dfaa; }
+p { margin: 0 0 16px; }
+p:last-child { margin-bottom: 0; }
+.eyebrow { font-size: .78rem; letter-spacing: .09em; color: #c4d1ae; }
+.lede { max-width: 46ch; }
+.kit-button { display: inline-block; text-decoration: none; }
+.return-link { margin-top: 8px; }
+.build-note { margin: 28px 0; }
+.contents { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 24px 0; }
+.contents a { padding: 9px 0; min-height: 44px; }
+.help-search { padding: 20px 0; margin-bottom: 12px; border-top: 1px solid #657954; }
+.help-search label { display: block; margin-bottom: 8px; font-weight: bold; }
+.search-row { display: flex; gap: 12px; }
+input { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 2px solid #a18f62; border-radius: 0; background: #20382c; color: #fff0c5; font: inherit; }
+input::placeholder { color: #b8c5a5; opacity: 1; }
+#search-status { margin-top: 10px; color: #c4d1ae; font-size: .88rem; min-height: 1.5em; }
+.help-topic { margin: 0 0 24px; scroll-margin-top: 20px; overflow-wrap: anywhere; }
+.help-topic .kit-badge { margin: 0 0 18px; }
+.help-topic ol { padding-left: 24px; margin: 0 0 18px; }
+.help-topic li { margin-bottom: 14px; }
+.control-list { display: grid; grid-template-columns: 180px 1fr; gap: 12px 20px; margin: 16px 0 24px; }
+.control-list dt { font-weight: bold; color: #f1dfaa; }
+.control-list dd { margin: 0; }
+.help-footer { padding: 16px 0; color: #c4d1ae; font-size: .9rem; }
+.help-footer a { display: inline-block; padding: 12px 0; }
+.skip-link { position: absolute; left: 16px; top: -120px; z-index: 2; }
+.skip-link:focus { top: 12px; }
+@media (max-width: 600px) {
+  .help-layout { width: calc(100% - 24px); padding: 24px 0; }
+  .help-header { padding-top: 0; }
+  .control-list { grid-template-columns: 1fr; gap: 4px; }
+  .control-list dd { margin-bottom: 12px; }
+  .search-row { gap: 8px; }
+  .search-row .kit-button { padding-left: 10px; padding-right: 10px; }
+  .report-link { width: 100%; text-align: center; }
+}
+@media (forced-colors: active) {
+  .kit-panel, input, .kit-button { border-color: CanvasText; }
+}
