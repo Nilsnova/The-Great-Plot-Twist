@@ -33,15 +33,15 @@ from server.routes import (
     content,
     crews,
     delete_me,
+    duels,
     health,
     intro,
     islet,
     keepalive,
     market,
     me,
-    save,
     predictions,
-    duels,
+    save,
     weather,
 )
 from server.settings import Settings, settings_from_environment

@@ -367,10 +367,13 @@ def test_a_paused_company_is_named_in_the_line_and_in_the_exchange_object():
     body = world.body()
 
     assert body["exchange"] == {
-        "feed": "live",
+        "feed": "stale",
         "pausedCompanies": [{"id": "harbor-trust", "name": "Saltreach Harbor Trust"}],
     }
-    assert world.texts()["exchange"] == "Island Exchange: live. Paused: Saltreach Harbor Trust."
+    assert (
+        world.texts()["exchange"]
+        == "Island Exchange: old prices (trading paused). Paused: Saltreach Harbor Trust."
+    )
 
 
 def test_two_paused_companies_are_listed_in_the_order_of_the_board():

@@ -8,6 +8,7 @@ import './ui/cinematics.css';
 import './ui/intro.css';
 import './ui/shell.css';
 import './ui/devices.css';
+import {session} from './online/session.js';
 import {createTouchControls} from './controls/touch.js';
 import {createGamepad} from './controls/gamepad.js';
 import {getPreferences,setPreferences,onPreferences,reducedMotion,watchSystemMotion} from './settings/preferences.js';
@@ -60,7 +61,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   let arenaScreen = null;
   const arenaOpen = () => arenaScreen?.isArenaOpen() === true;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>!!(shortcuts.active || shell?.blocked || isAppBlocked?.() || cinematics?.active || intro?.active || caseUi?.active || marketUi?.active || desk?.active || arenaOpen()), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();desk?.dispose();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>!!(shortcuts.active || shell?.blocked || isAppBlocked?.() || cinematics?.active || intro?.active || caseUi?.active || marketUi?.active || desk?.active || arenaOpen()), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();desk?.dispose();arenaScreen?.disposeArena();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !demo?.active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -86,14 +87,15 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   // The load is kept as one promise, so two quick presses of E (or A, or a tap) still make one panel.
   function loadMarket() {
     marketLoad ??= import('./screens/market/index.js').then(module => {
-      marketUi = module.createMarketEntry({ container, resetInput: input.reset, focusGame: () => graphics.renderer.domElement.focus(),
+      if(disposed)return null;
+      marketUi = module.createMarketEntry({ container, getToken:session.getToken, resetInput: input.reset, focusGame: () => graphics.renderer.domElement.focus(),
         openShareholderRegister: () => caseUi.open('search', { spot: 'market_hall' }) });
       return marketUi;
     }).catch(error => { marketLoad = null; throw error; });
     return marketLoad;
   }
   async function openMarket() {
-    try { const market = await loadMarket(); if (!disposed) await market.open(); }
+    try { const market = await loadMarket(); if (!disposed && market) await market.open(); }
     catch (error) { console.error(error); hud.message('The Island Exchange could not open. Try again.'); }
   }
   const stopListening = on('interact', event => {
@@ -107,7 +109,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const stopArena = on('interact', event => {
     if (event.id !== 'arena_gate' || intro.active) return;
     import('./screens/duels/index.js')
-      .then(module => { arenaScreen = module; return module.openArena({ container, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus() }); })
+      .then(module => { if(disposed)return; arenaScreen = module; return module.openArena({ container, getToken:session.getToken, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus() }); })
       .catch(() => hud.message('The ring could not open. Try again.'));
   });
   const stopPlots = attachIsletPanel({container, on, emit, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus()});
@@ -122,7 +124,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     skipCinematic:()=>cinematics.skip(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
     captureCase:()=>({view:caseUi.adapter?.read()??null,world:caseWorld,relit:world.relit}),presentCase:applyCaseView,restoreCase(snapshot){if(caseUi.adapter)applyCaseView(caseUi.adapter.read());else if(snapshot?.view)applyCaseView(snapshot.view);else{caseWorld=snapshot?.world??null;world.setRelightingComplete(!!snapshot?.relit);hud.setCaptain({captain:{name:'Captain pending',coins:null,save:{state:'local',label:'Local intro only'}}});}},
     begin(){caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
-  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!caseUi.active&&!marketUi?.active&&!desk?.active&&!arenaOpen()&&!chart.open&&!marketUi?.active&&!desk?.active&&!arenaOpen()&&!stopPlots.active};
+  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!caseUi.active&&!marketUi?.active&&!desk?.active&&!arenaOpen()&&!chart.open&&!stopPlots.active};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){
     if(demo.active)return;
@@ -161,7 +163,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   }, () => { graphics.renderer.render(scene, view.camera); });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, marketUi=null, marketLoad=null, experience,isletState,hookWorld };
+    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, get marketUi(){return marketUi;}, get marketLoad(){return marketLoad;}, experience,isletState,hookWorld };
   function dispose() {
     if(disposed)return;disposed=true;
     touch.dispose();gamepad.dispose();marketUi?.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();

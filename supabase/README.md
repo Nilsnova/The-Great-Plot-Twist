@@ -17,7 +17,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
 | [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The Island Exchange version 2 migration (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
-| [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
+| [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The Lantern Duels migration (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 
 ## Project settings this migration relies on
 
@@ -571,7 +571,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in all fifteen tables (with every file up to `20261106070000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It skips row-level security. It can read every player's rows in all eighteen tables (with the complete group 3 chain applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It can send into any Realtime room through the Broadcast REST API, because that skips the rules on `realtime.messages`. The server uses this only to tell a crew that something changed (`backend/server/crew_broadcast.py`).
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see note [2] of the matrix.
@@ -1249,7 +1249,6 @@ Finally paste the whole crew migration into the SQL editor again and run it. Exp
 
 Delete the three test users when you are done (**Authentication > Users**). Their crews, seats and wrong codes go with them.
 
-### Island Exchange checks (steps E1 to E13)
 ### Island Exchange checks (steps X1 to X15)
 
 These steps test the third migration (the Island Exchange version 2). Run them after all three migrations are applied. Use **two new test users**, A and B (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID` and `USER_B_ID` with their ids. Give player A 1000 coins and player B 150 coins first (default role):
@@ -2825,3 +2824,5 @@ Delete the three test users when you are done (**Authentication > Users**). Thei
   drop policy if exists "Live: crew members can hear their crew room" on realtime.messages;
   ```
 - If something here is unclear, open an issue before changing the rules for money.
+
+After the full group 3 chain, all per-package wallet-reason totals in the manual examples are historical baselines: the combined total is **17**. Final catalog counts are 18 public tables, 1 view, 16 public policies, 5 realtime policies, 24 project functions (excluding Supabase’s `rls_auto_enable`), 4 sequences and 5 public triggers.

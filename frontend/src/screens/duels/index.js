@@ -12,6 +12,7 @@ import { createHttpAdapter } from './http-adapter.js';
 import { createPanel } from './panel.js';
 
 let arena = null; // the one panel
+let generation = 0;
 let building = null; // set while the adapter is being chosen, so two quick presses build one panel
 
 async function chooseAdapter(ctx) {
@@ -23,20 +24,33 @@ async function chooseAdapter(ctx) {
 async function ensureArena(ctx) {
   if (arena?.isGone()) arena = null;
   if (arena) return arena;
-  building ??= chooseAdapter(ctx)
-    .then(adapter => {
-      arena = createPanel(ctx, adapter, () => { arena = null; });
-      return arena;
-    })
-    .finally(() => { building = null; });
+  if (!building) {
+    const epoch = generation;
+    const pending = chooseAdapter(ctx)
+      .then(adapter => {
+        if (epoch !== generation) { adapter.dispose(); return null; }
+        arena = createPanel(ctx, adapter, () => { arena = null; });
+        return arena;
+      })
+      .finally(() => { if (building === pending) building = null; });
+    building = pending;
+  }
   return building;
 }
 
 export async function openArena(ctx) {
   const panel = await ensureArena(ctx);
-  panel.open();
+  panel?.open();
 }
 
 // True while the panel's dialog is open. False before the first opening, after it closed, and
 // after the game shut it down.
 export const isArenaOpen = () => Boolean(arena && !arena.isGone() && arena.element.open);
+
+// Release the panel when its owning game is disposed.
+export function disposeArena() {
+  generation++;
+  building = null;
+  arena?.dispose();
+  arena = null;
+}
