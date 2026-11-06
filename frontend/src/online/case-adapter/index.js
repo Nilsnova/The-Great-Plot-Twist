@@ -1,6 +1,7 @@
 // The real schema-1 adapter owns network state. Its factory returns before background reads finish.
 import {createApi} from '../api.js';
 import {session as defaultSession} from '../session.js';
+import {createLazyAuth} from '../lazy-auth.js';
 import {bindCaseMethods} from '../../adapter/contract.js';
 import {createAdapterStore} from './store.js';
 import {createAdapterTransport} from './transport.js';
@@ -35,6 +36,12 @@ export function createRealCaseAdapter(deps = {}) {
     accept: (message = '') => ({accepted: true, reason: null, message}),
     refuse: reason => ({accepted: false, reason, message: messages[reason] ?? messages.invalid_request}),
   };
+  ctx.auth = deps.auth ?? createLazyAuth({session, redirect: deps.redirect,
+    supabaseUrl: deps.supabaseUrl, publishableKey: deps.publishableKey, fetchImpl: deps.authFetch});
+  const initialAuth = ctx.auth.read?.() ?? null;
+  const initialState = ['signing_in', 'error', 'expired'].includes(initialAuth?.state)
+    ? initialAuth.state : store.state.accountState;
+  store.commit({auth: initialAuth, accountState: initialState, signInAllowed: import.meta.env.DEV});
   ctx.transport = createAdapterTransport(ctx);
   let privateTask = null;
   let signingOut = false;
@@ -55,11 +62,12 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.signOut = async () => {
     signingOut = true;
     store.invalidate();
+    const authTask = ctx.auth.signOut?.();
     session.clearToken();
     ctx.transport.clearPending();
     store.commit({accountState: 'signed_out', me: null, profile: null, crew: null,
       nameReply: null, cloudSave: null, rewardsRows: [], continuation: null});
-    try { await deps.auth?.signOut?.(); } finally { signingOut = false; }
+    try { await authTask; } finally { signingOut = false; }
     return ctx.accept('You are signed out. Your local intro is kept.');
   };
   const stopSession = session.onChange(({signedIn}) => {
@@ -70,9 +78,26 @@ export function createRealCaseAdapter(deps = {}) {
       store.commit({accountState:'signed_in',me:null,profile:null,crew:null,nameReply:null,
         cloudSave:null,rewardsRows:[],continuation:null});
       void hydrate();
-    } else store.commit({accountState:'expired'});
+    } else {
+      ctx.transport.clearPending();
+      store.commit({accountState:'expired',me:null,profile:null,crew:null,nameReply:null,
+        cloudSave:null,rewardsRows:[],continuation:null,joinPreview:null});
+    }
   });
-  ctx.onConfigReady = () => !ctx.state.me ? hydrate() : undefined;
+  const stopAuth = ctx.auth.subscribe?.(next => {
+    if (store.isClosed() || signingOut) return;
+    const patch = {auth: next};
+    if (['signing_in', 'error', 'expired'].includes(next.state)) patch.accountState = next.state;
+    store.commit(patch);
+  });
+  let restoreTask = null;
+  ctx.onConfigReady = async () => {
+    const enabled = import.meta.env.DEV || ctx.state.config?.flags?.sign_in === true;
+    store.commit({signInAllowed: enabled});
+    if (enabled && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
+    if (restoreTask) await restoreTask;
+    if (!ctx.state.me) await hydrate();
+  };
   const polling = createAdapterPolling(ctx);
   const boot = Promise.resolve().then(async () => {
     if (store.isClosed()) return;
@@ -82,10 +107,13 @@ export function createRealCaseAdapter(deps = {}) {
   handlers.signIn = async () => {
     if (session.isSignedIn()) return ctx.accept('You are already signed in.');
     if (!import.meta.env.DEV && ctx.state.config?.flags?.sign_in !== true) return ctx.refuse('feature_off');
-    if (!deps.auth?.signIn) return ctx.refuse('not_connected');
+    if (!ctx.auth.signIn) return ctx.refuse('not_connected');
     store.commit({accountState: 'signing_in'});
-    const result = await deps.auth.signIn();
-    if (!result?.ok) { store.commit({accountState: 'error'}); return ctx.refuse('not_connected'); }
+    const result = await ctx.auth.signIn();
+    if (!result?.ok) {
+      store.commit({accountState: 'error', auth: ctx.auth.read?.() ?? null});
+      return {...ctx.refuse('not_connected'), message: result?.message || messages.not_connected};
+    }
     await hydrate();
     return ctx.accept('Sign-in is ready.');
   };
@@ -118,7 +146,8 @@ export function createRealCaseAdapter(deps = {}) {
       polling.dispose();
       stopSession();
       ctx.transport.clearPending();
-      deps.auth?.dispose?.();
+      stopAuth?.();
+      ctx.auth.dispose?.();
     },
   }, dispatch);
 }

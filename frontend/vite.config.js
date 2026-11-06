@@ -26,9 +26,9 @@ export default defineConfig({
  plugins:[createBuildIdentityPlugin(buildStamp),thirdPartyNoticesPlugin(),buildInfoPlugin()],
  base:'./',server:{proxy:{'/api':'http://127.0.0.1:8000'}},
  preview:{proxy:{'/api':'http://127.0.0.1:8000'},headers:previewSecurityHeaders},
- build:{license:{fileName:noticesFile},manifest:!process.env.VERCEL,rolldownOptions:{input:{
+ build:{modulePreload:{polyfill:false},license:{fileName:noticesFile},manifest:!process.env.VERCEL,rolldownOptions:{input:{
   game:resolve(import.meta.dirname,'index.html'),workshop:resolve(import.meta.dirname,'asset-library.html'),uiKit:resolve(import.meta.dirname,'ui-kit.html'),
   host:resolve(import.meta.dirname,'host.html'),
   ...(process.env.CASE_LAB==='1'?{caseLab:resolve(import.meta.dirname,'case-lab.html')}:{}),
- }}},test:{include:['tests/**/*.test.js']},
+ }}},test:{include:['tests/**/*.test.js'],fileParallelism:false},
 });

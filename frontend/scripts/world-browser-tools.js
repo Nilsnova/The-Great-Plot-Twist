@@ -4,7 +4,7 @@ import {stubOfflineApi} from './api-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import {createServer,preview as createPreview} from 'vite';
 import { access, mkdir } from 'node:fs/promises';
-export async function openWorldBrowser({ preview = false, hmr = true } = {}) {
+export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers } = {}) {
   const candidates = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
@@ -14,7 +14,8 @@ export async function openWorldBrowser({ preview = false, hmr = true } = {}) {
     // An owned, ephemeral server cannot accidentally serve a previous check's dev/preview mode.
     if(!url){
       const network={host:'127.0.0.1',port:0,strictPort:true};
-      server=preview?await createPreview({logLevel:'error',preview:network}):await createServer({logLevel:'error',server:{...network,hmr}});
+      server=preview?await createPreview({logLevel:'error',...(outDir?{build:{outDir}}:{}),
+        preview:{...network,...(headers?{headers}:{})}}):await createServer({logLevel:'error',server:{...network,hmr}});
       if(!preview){await server.listen();await server.warmupRequest('/src/game.js');}
       url=server.resolvedUrls.local[0].replace(/\/$/,'');
     }

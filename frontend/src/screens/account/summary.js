@@ -19,7 +19,8 @@ export function createAccountSummary({send,openAccount,onContinue}){
     const save=account.save??{};saveStatus.textContent=`${saveStates[save.state]??'Save status'} · ${save.label??'No saved progress'}`;
     buttons.forEach(item=>item.dispose());buttons=[];actions.replaceChildren();
     button('Account and saves',()=>openAccount?.(),'account');
-    if(state==='signed_out'||state==='expired'||state==='error')button(state==='expired'?'Sign in again with GitHub':'Sign in with GitHub',()=>send?.('signIn'),'sign-in');
+    if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))button(state==='expired'?'Sign in again with GitHub':'Sign in with GitHub',()=>send?.('signIn'),'sign-in');
+    if(account.signInMessage)actions.append(node('span','account-summary-note',account.signInMessage));
     if(account.canContinue){
       if(onContinue)button(account.save?.source==='cloud'?'Continue from cloud':'Continue',async()=>{const result=await send?.('continueGame');if(result?.accepted)onContinue(result);},'continue');
     }else if(account.save?.state!=='conflict')actions.append(node('span','account-summary-note','No saved game'));

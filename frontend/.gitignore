@@ -1,0 +1,2 @@
+# Browser fixtures build isolated production output without adding generated bundles to Git.
+.test-cache/

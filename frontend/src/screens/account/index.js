@@ -33,6 +33,7 @@ export function createAccountScreen({send,navigate}){
       const banner=node('p','account-banner','The account service could not complete the last request. Your saved progress is unchanged.');banner.setAttribute('role','alert');banner.dataset.state=state;element.append(banner);
     }else if(state==='signing_in')element.append(node('p','account-banner','Sign-in is in progress. This device’s saved progress remains available.'));
 
+    if(account.signInMessage)element.append(node('p','account-banner',account.signInMessage));
     const saves=node('dl','account-save-list');
     for(const [key,title] of [['device','This device'],['cloud','Cloud']]){
       const source=saveOf(account,key),card=node('div','account-save');
@@ -50,7 +51,7 @@ export function createAccountScreen({send,navigate}){
     }
 
     const actions=node('div','account-actions');
-    if(state==='signed_out'||state==='expired'||state==='error')action(actions,state==='expired'?'Sign in again with GitHub':'Sign in with GitHub','signIn',[],'account-sign-in',busy);
+    if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))action(actions,state==='expired'?'Sign in again with GitHub':'Sign in with GitHub','signIn',[],'account-sign-in',busy);
     if(state==='signing_in')action(actions,'Signing in…','signIn',[],'account-sign-in',true);
     if(state==='signed_in'){
       action(actions,'Sign out','signOut',[],'account-sign-out',busy);

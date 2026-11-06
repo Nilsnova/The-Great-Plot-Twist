@@ -897,3 +897,28 @@ Safari, physical phones and live server/storage integration remain unverified.
 The earlier checkpoint's deferred frontend work is now implemented in `src/screens/festival/`. The live feature remains controlled by the server's `festival` flag; the new title/pause and HUD launchers do not depend on the paused ordinary case adapter. The server owns timer/claim/ring state and friendly-duel outcomes. The explicitly labelled `?demo=1&festival=1` rehearsal has a separate memory-only transport and creates no real claims, matches or coins. See the screen's README for the frozen request shapes, retry/privacy behavior and browser gates.
 
 The original loop and cues now use the existing trusted-gesture audio owner and music/effects buses. Play starts festival music; shared volume controls and visible captions remain available. All 56 festival drawings remain outside the world's default preload. The additional recorded-audio module is lazy, and the account summary retains its title slot while loading its presentation after first paint.
+
+
+## Sign-in (G9, stream 3)
+
+`online/auth.js` lazily loads the pinned Supabase SDK for GitHub PKCE/S256 only. The selector consumes
+and removes callback fields before starting auth. Ordinary title startup waits for no auth request;
+restoration starts after the title/config, and production sign-in controls require `flags.sign_in`.
+Without the public build values, Account explains that sign-in is not set up and Act 1 remains local.
+
+The SDK owns opaque session strings through `auth-storage.js`; its default is `sessionStorage` for
+this tab, with memory fallback. PKCE verifiers always need tab storage. A unique SDK broadcast namespace
+maps to stable owned storage keys, so another tab cannot adopt this tab's auth broadcasts. A2's
+`session.js` still contains only the access token in memory. A2 retries a 401 once after deduplicated
+renewal, checking identity again before replay; cached public routes never carry authorization.
+
+Logout clears owned persistence immediately, detaches the old SDK into opaque private memory for
+its normal logout, and closes it after completion or a ten-second limit. Epochs prevent old exchanges,
+refreshes, responses or lazy imports from restoring a signed-out identity. Normal app disposal keeps
+tab persistence for reload and blocks late SDK writes. No refresh token is read by application code.
+
+Recorded production checks use a generated placeholder key and tokens, an intercepted Supabase origin
+and main's exact header set with only that origin substituted. They verify PKCE, address cleaning,
+tab-only persistence, reload, logout, public requests and absence of production inspection hooks.
+Full notices are retained in Settings → Credits. Actual OAuth/deployed and physical-device proofs
+remain separate. See [the stream-3 gate](captures/20261106_G9-C1/stream3-verification.json).

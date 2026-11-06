@@ -4,7 +4,12 @@ import {adapterChoice,hasSignInReturn} from './selection.js';
 import {createLazyOnlineAdapter} from './lazy-online.js';
 
 async function prepareSignInReturn() {
-  // Stream 3 handles PKCE here before starting an ordinary online session.
+  const {takeAuthReturn} = await import('../online/auth-return.js');
+  const returned = takeAuthReturn();
+  const {createAuth} = await import('../online/auth.js');
+  const auth = createAuth();
+  void auth.handleReturn(returned);
+  return auth;
 }
 
 export async function createClientAdapter() {
@@ -15,6 +20,6 @@ export async function createClientAdapter() {
     return createLocalAdapter();
   }
   if (choice === 'unavailable') return createUnavailableCaseAdapter();
-  if (hasSignInReturn(search)) await prepareSignInReturn();
-  return createLazyOnlineAdapter();
+  const auth = hasSignInReturn(search) ? await prepareSignInReturn() : null;
+  return createLazyOnlineAdapter(auth ? {deps: {auth}} : undefined);
 }

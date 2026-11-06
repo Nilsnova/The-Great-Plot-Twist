@@ -5,6 +5,23 @@ import {createUnavailableCaseAdapter} from '../src/adapter/unavailable.js';
 
 afterEach(()=>vi.unstubAllGlobals());
 describe('lazy online composition',()=>{
+  it('releases callback auth when disposed before its first scheduled load',()=>{
+    vi.stubGlobal('requestAnimationFrame',vi.fn(()=>1));
+    vi.stubGlobal('cancelAnimationFrame',vi.fn());
+    const auth={dispose:vi.fn()};
+    const load=vi.fn();
+    const adapter=createLazyOnlineAdapter({deps:{auth},load});
+    adapter.dispose();adapter.dispose();
+    expect(load).not.toHaveBeenCalled();
+    expect(auth.dispose).toHaveBeenCalledOnce();
+  });
+  it('releases callback auth when the real chunk fails and the fallback owns no auth',async()=>{
+    const auth={dispose:vi.fn()};
+    const adapter=createLazyOnlineAdapter({deps:{auth},load:()=>Promise.reject(new Error('chunk unavailable'))});
+    await adapter.continueGame();
+    adapter.dispose();
+    expect(auth.dispose).toHaveBeenCalledOnce();
+  });
   it('waits two frames and publishes an online snapshot after loading',async()=>{
     const frames=[];vi.stubGlobal('requestAnimationFrame',callback=>{frames.push(callback);return frames.length;});
     vi.stubGlobal('cancelAnimationFrame',vi.fn());

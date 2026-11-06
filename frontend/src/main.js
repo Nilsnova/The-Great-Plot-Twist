@@ -23,7 +23,9 @@ async function ensureMotion(){if(!stopMotion)stopMotion=(await import('./setting
 let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='';
 const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
 let festivalEntry=null;
-const festivalReady=import('./screens/festival/entry.js').then(module=>disposed?null:(festivalEntry=module.createFestivalEntry({container,audio,caption:captions.show,focus,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open()}))).catch(()=>null);
+const loadWorld=()=>import('./shell/world-loader.js');
+const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+const festivalReady=afterPaint.then(loadWorld).then(module=>module.loadFestivalModule()).then(module=>disposed?null:(festivalEntry=module.createFestivalEntry({container,audio,caption:captions.show,focus,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open()}))).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
@@ -36,7 +38,7 @@ summary.update(adapter.read());
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
   await ensureMotion();loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
-  pending=import('./game.js').then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
+  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
     runtime.setFestivalAvailable?.(festivalEntry?.available===true);runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
@@ -72,16 +74,15 @@ function updateAccount(view){
   if(attention&&noticedAccount!==key){noticedAccount=key;void accountHost.open();}
 }
 const stopAccount=adapter.subscribe(event=>updateAccount(event.view));updateAccount(adapter.read());
-let titlePad=null,padLoading=false,titleFrame,previous=performance.now();
-function preparePad(){if(titlePad||padLoading)return;let connected=false;try{connected=[...(navigator.getGamepads?.()??[])].some(pad=>pad?.connected);}catch{}if(!connected)return;padLoading=true;import('./controls/gamepad.js').then(({createGamepad})=>{if(!disposed)titlePad=createGamepad({setVirtual(){},press(){}},{isPlaying:()=>false});}).finally(()=>{padLoading=false;});}
-function pollTitlePad(now){
-  if(disposed||runtime)return;
-  if(!loading){preparePad();titlePad?.update();adapter.tick?.(Math.min(.1,(now-previous)/1000));}
-  previous=now;titleFrame=requestAnimationFrame(pollTitlePad);
-}
-titleFrame=requestAnimationFrame(pollTitlePad);
+let titleInput=null;
+requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(disposed)return;
+  import('./shell/title-input.js').then(({startTitleInput})=>{
+    if(!disposed)titleInput=startTitleInput({adapter,isLoading:()=>loading,hasRuntime:()=>!!runtime});
+  });
+}));
 function dispose(){
-  if(disposed)return;disposed=true;emit({type:'app_disposed'});cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();summary.dispose();
+  if(disposed)return;disposed=true;emit({type:'app_disposed'});titleInput?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();summary.dispose();
   shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
   if(import.meta.env.DEV)delete window.__plotTwist;
 }

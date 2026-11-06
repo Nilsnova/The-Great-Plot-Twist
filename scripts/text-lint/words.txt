@@ -112,6 +112,7 @@ assistive
 at
 atmosphere
 attempt
+attempts
 attribution
 audio
 audit
@@ -294,6 +295,7 @@ choose
 choosing
 chosen
 christmas
+chrome
 cinematic
 circled
 cited
@@ -553,6 +555,7 @@ emblem
 emote
 emotes
 empty
+enable
 enabled
 end
 ended
@@ -660,6 +663,7 @@ finished
 finishes
 finishing
 finnhub
+firefox
 first
 fish
 fisherman
@@ -1116,6 +1120,7 @@ mirror
 missing
 mist
 misty
+mit
 mixed
 modal
 mode
@@ -1322,6 +1327,7 @@ pending
 people
 per
 percentile
+perf
 performance
 periodically
 permanently
@@ -1610,6 +1616,7 @@ runs
 rustles
 s
 sa
+safari
 safe
 safely
 sail
@@ -1861,6 +1868,7 @@ student
 sturdy
 styles
 submit
+submitting
 subscribed
 subscriber
 success

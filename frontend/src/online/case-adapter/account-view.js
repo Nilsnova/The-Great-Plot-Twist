@@ -39,6 +39,8 @@ export function mapAccount(state={}){
   const accountState=accountStates.has(state.accountState)?state.accountState:'signed_out';
   const canResumeWorld=accountState==='signed_in'&&!!kitDisplay(state.me?.kit);
   return {state:accountState,captainName:text(state.me?.captainName)??text(state.nameReply?.captainName),
+    canSignIn:state.signInAllowed!==false&&state.auth?.configured!==false,
+    signInMessage:text(state.auth?.message)??'',
     canReroll:accountState==='signed_in'&&state.nameReply?.rerollsLeft>0,
     hasKit:!!(state.me?.kit||state.profile?.kit),
     canContinue:save.state!=='conflict'&&(!!save.source||canResumeWorld),save};

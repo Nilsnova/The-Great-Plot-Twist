@@ -5,9 +5,16 @@ import {bindCaseMethods} from './contract.js';
 export function createLazyOnlineAdapter({load = () => import('../online/case-adapter/index.js'), deps} = {}) {
   const empty = createUnavailableCaseAdapter();
   const view = {...empty.read(), mode: 'online', notice: null};
+  view.account = {...view.account, canSignIn: false};
   empty.dispose();
   const listeners = new Set();
   let adapter, pending, stop, closed = false, frame;
+  let authAdopted = false, authReleased = false;
+  function releaseAuth() {
+    if (authAdopted || authReleased) return;
+    authReleased = true;
+    deps?.auth?.dispose?.();
+  }
   function publish(event) {
     for (const listener of listeners) {
       try { listener({...event, view: structuredClone(event.view)}); } catch { /* Isolate observers. */ }
@@ -19,12 +26,14 @@ export function createLazyOnlineAdapter({load = () => import('../online/case-ada
     if (pending) return pending;
     pending = load().then(({createRealCaseAdapter}) => {
       const loaded = createRealCaseAdapter(deps);
+      authAdopted = true;
       if (closed) { loaded.dispose(); return null; }
       adapter = loaded;
       stop = adapter.subscribe(publish);
       publish({type: 'case_updated', view: adapter.read()});
       return adapter;
     }).catch(() => {
+      releaseAuth();
       if (closed) return null;
       adapter = createUnavailableCaseAdapter({message:
         'The account service could not load. You can still play Act 1.'});
@@ -45,6 +54,7 @@ export function createLazyOnlineAdapter({load = () => import('../online/case-ada
       closed = true;
       if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frame);
       stop?.(); adapter?.dispose(); listeners.clear();
+      releaseAuth();
     },
   }, async (name, args) => {
     const ready = await start();

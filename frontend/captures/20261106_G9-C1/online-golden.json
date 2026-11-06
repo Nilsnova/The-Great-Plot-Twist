@@ -22,12 +22,22 @@
       "authorized": false
     },
     {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
       "path": "/api/weather",
       "method": "GET",
       "authorized": false
     },
     {
       "path": "/api/content/intro-story",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
       "method": "GET",
       "authorized": false
     },

@@ -23,7 +23,29 @@
 
 export function createSession() {
   let token = null;
+  let scope = 0;
+  let renewal = null;
+  let pendingRenewal = null;
   const subscriptions = new Set();
+
+  function renewToken() {
+    if (token === null || !renewal) return Promise.resolve(false);
+    if (pendingRenewal?.registration === renewal && pendingRenewal.scope === scope) {
+      return pendingRenewal.promise;
+    }
+    const task = {registration: renewal, scope, promise: null};
+    task.promise = Promise.resolve().then(() => {
+      if (task.registration !== renewal || task.scope !== scope || token === null) return false;
+      return task.registration.handler();
+    }).then(result =>
+      (result === true || result?.ok === true) && token !== null
+      && task.registration === renewal && task.scope === scope,
+    ).catch(() => false).finally(() => {
+      if (pendingRenewal === task) pendingRenewal = null;
+    });
+    pendingRenewal = task;
+    return task.promise;
+  }
 
   function tellEveryone() {
     for (const subscription of [...subscriptions]) {
@@ -38,6 +60,21 @@ export function createSession() {
   return {
     getToken: () => token,
     isSignedIn: () => token !== null,
+    getScope: () => scope,
+    renewToken,
+
+    // Auth owns renewal; API callers share it without receiving the SDK session.
+    setRenewal(handler) {
+      if (typeof handler !== 'function') throw new TypeError('session.setRenewal needs a function.');
+      const registration = {handler};
+      renewal = registration;
+      pendingRenewal = null;
+      return () => {
+        if (renewal !== registration) return;
+        renewal = null;
+        pendingRenewal = null;
+      };
+    },
 
     setToken(newToken) {
       if (typeof newToken !== 'string' || newToken.trim() === '') {
@@ -45,12 +82,17 @@ export function createSession() {
       }
       const wasSignedIn = token !== null;
       token = newToken;
-      if (!wasSignedIn) tellEveryone();
+      if (!wasSignedIn) {
+        scope += 1;
+        tellEveryone();
+      }
     },
 
     clearToken() {
       if (token === null) return; // already signed out: nothing changed, so nobody is told
       token = null;
+      scope += 1;
+      pendingRenewal = null;
       tellEveryone();
     },
 
