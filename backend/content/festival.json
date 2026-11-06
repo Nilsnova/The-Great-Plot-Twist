@@ -1,0 +1,11 @@
+{
+  "durationSeconds": 172800,
+  "phases": ["waiting", "active", "ended"],
+  "lampIds": [
+    "festival_lamp_01", "festival_lamp_02", "festival_lamp_03",
+    "festival_lamp_04", "festival_lamp_05", "festival_lamp_06",
+    "festival_lamp_07", "festival_lamp_08", "festival_lamp_09",
+    "festival_lamp_10", "festival_lamp_11", "festival_lamp_12"
+  ],
+  "ringName": "Keepers' Ring"
+}
