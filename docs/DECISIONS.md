@@ -373,7 +373,7 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 
 **Agreed by, PR and impact:** Pending Nils. Affects the islet panel (`frontend/src/screens/islet/`), the world drawing of the home islet (a building is drawn only when it stands), the case finale (packages S3 and L3 read the signal station), the roadmap line "3 plots", the policy matrix in [supabase/README.md](../supabase/README.md#who-may-do-what) and [INTERFACES.md](INTERFACES.md#your-home-islet-package-l2).
 
-## D018 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06
+## D024 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06
 
 **Status:** Proposed in the open-world must pull request (`feat/open-world-must`, spec `specs/open-world-must.md`); accepted when a different teammate has reviewed it and it is merged. The choices marked "chosen here" are not in the approved design (`OPEN-WORLD.md` 3.1 to 3.4, 5.4, 10.2, 10.3) and need Nils' OK.
 

@@ -507,9 +507,9 @@ The field is `null` while the coast is dark and until the hook fires. After that
 
 ## 6. Decision entry draft (next free number after D017; renumbered at merge if it is taken)
 
-The final text is entry D018 in `docs/DECISIONS.md`. This is the draft it was written from.
+The final text is entry D024 in `docs/DECISIONS.md` (written as D018, the next free number after D017; the story round took D018 first, so it was renumbered at merge). This is the draft it was written from.
 
-**D018 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06**
+**D024 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06**
 
 **Status:** proposed in `feat/open-world-must`. It is accepted when a different teammate has reviewed it and it is merged. Points marked "chosen here" need Nils' OK.
 
