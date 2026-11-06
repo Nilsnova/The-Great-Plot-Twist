@@ -32,6 +32,7 @@ from server.market.stocks import StockSourceError
 from server.tests.helpers import CONFIGURED_SETTINGS, FAKE_SECRET_KEY, assert_error
 from server.tests.market_helpers import CLASS_TIME, KEY, FakeBinance, good_binance_answer
 from server.tests.market_world import (
+    AUTH,
     BASE_PRICES,
     CLOSED_POSITION_ID,
     ISLAND_IDS,
@@ -994,7 +995,7 @@ def test_a_portfolio_look_is_never_cached_and_takes_no_query_parameters():
     world = World()
 
     assert world.portfolio().headers["cache-control"] == "no-store"
-    response = world.client.get("/api/market/portfolio?x=1", headers={"Authorization": "Bearer t"})
+    response = world.client.get("/api/market/portfolio?x=1", headers=AUTH)
     assert_error(response, 422, "validation_error")
 
 
@@ -1027,9 +1028,7 @@ def test_the_four_exchange_urls_are_listed_under_api_and_the_old_trade_url_is_go
 
 
 def test_the_old_trade_url_answers_not_found():
-    response = World().client.post(
-        "/api/market/trade", json={}, headers={"Authorization": "Bearer t"}
-    )
+    response = World().client.post("/api/market/trade", json={}, headers=AUTH)
 
     assert response.status_code in (404, 405)
 

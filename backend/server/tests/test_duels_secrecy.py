@@ -228,7 +228,9 @@ def test_signals_never_reach_the_log(caplog):
     world.cancel("alice", duel_id)  # a 409
     world.database.timeouts.add("duel_void")
     world.cancel("alice", world.database.duel(1)["id"])  # a 503, which is logged
-    world.client.get("/api/duels", headers={"Authorization": "Bearer token-mallory"})  # a 401
+    world.client.get(
+        "/api/duels", headers={"Authorization": "Bearer test.mallory.signature"}
+    )  # a 401
 
     assert found_in(caplog.text) == []
     assert caplog.records  # the log was really being recorded

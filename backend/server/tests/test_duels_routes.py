@@ -159,7 +159,9 @@ def test_the_sign_in_is_checked_before_the_body():
 def test_a_token_that_is_not_ours_is_a_401():
     world = World()
 
-    response = world.client.get("/api/duels", headers={"Authorization": "Bearer token-mallory"})
+    response = world.client.get(
+        "/api/duels", headers={"Authorization": "Bearer test.mallory.signature"}
+    )
 
     assert_error(response, 401, "unauthorized")
 

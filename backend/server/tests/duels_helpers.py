@@ -7,8 +7,8 @@ supabase/migrations/20261106110000_lantern_duels.sql step by step, including its
 errors and its all-or-nothing rollback, so a route test can play a whole duel without a network.
 
 It also builds a "world": the app, a client and three captains (Alice, Bob and Carol) who sign in
-with the tokens "token-alice", "token-bob" and "token-carol". The clock only moves when a test
-says so.
+with the tokens "test.alice.signature", "test.bob.signature" and "test.carol.signature".
+The clock only moves when a test says so.
 
 The name has no test_ at the start on purpose: pytest only collects test_*.py files.
 
@@ -45,6 +45,7 @@ PLAYERS = {
 ALICE = PLAYERS["alice"][0]
 BOB = PLAYERS["bob"][0]
 CAROL = PLAYERS["carol"][0]
+TOKENS = {f"test.{who}.signature": player_id for who, (player_id, _) in PLAYERS.items()}
 
 # The worked example of the spec: Alice challenges Bob, 5 rounds, 100 coins each. Bob wins 3 to 1.
 ALICE_SIGNALS = ["flash", "shade", "shade", "mirror", "shade"]
@@ -486,12 +487,11 @@ class FakeDuelDatabase:
 
 
 def fake_login(request: httpx.Request) -> httpx.Response:
-    """The pretend Supabase sign-in check: "token-alice" is Alice, and so on."""
+    """The pretend Supabase sign-in check: "test.alice.signature" is Alice, and so on."""
     token = request.headers["authorization"].removeprefix("Bearer ")
-    who = token.removeprefix("token-")
-    if who not in PLAYERS:
+    if token not in TOKENS:
         return httpx.Response(401, json={"message": "bad token"})
-    return httpx.Response(200, json={"id": PLAYERS[who][0]})
+    return httpx.Response(200, json={"id": TOKENS[token]})
 
 
 class World:
@@ -513,7 +513,7 @@ class World:
 
     @staticmethod
     def headers(who: str) -> dict[str, str]:
-        return {"Authorization": f"Bearer token-{who}"}
+        return {"Authorization": f"Bearer test.{who}.signature"}
 
     def coins(self, who: str) -> int:
         return self.database.wallets[PLAYERS[who][0]]

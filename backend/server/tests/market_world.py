@@ -51,7 +51,7 @@ D = Decimal
 
 PLAYER_ID = "11111111-2222-4333-8444-555555555555"
 OTHER_PLAYER_ID = "99999999-2222-4333-8444-555555555555"
-TOKEN = "token-of-the-test-player"
+TOKEN = "test.player.signature"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 MARKET_ON = replace(CONFIGURED_SETTINGS, flags={**default_flags(), "market": True})
