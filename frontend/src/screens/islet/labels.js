@@ -1,6 +1,10 @@
 // The texts of the islet panel, worked out from the view. Display only: the server decides what can be built.
 import {formatCoins} from '../../ui/kit/logic.js';
-import {coinsText} from './view.js';
+
+// The same words as coinsText in view.js, copied on purpose: if this file imported view.js, the
+// bundler would put view.js in a chunk shared with the game, and the cold title would list one more
+// file (scripts/check-loading.js keeps the title within 21,080 bytes).
+const coinsText = amount => `${formatCoins(amount)} ${amount === 1 ? 'coin' : 'coins'}`;
 
 const BADGES = {built: 'Standing', empty: 'Empty plot', locked: 'Coming later'};
 const BUSY_LABEL = 'Building...';

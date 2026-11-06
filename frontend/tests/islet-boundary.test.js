@@ -33,6 +33,10 @@ describe('the islet folder', () => {
     expect(importsOf(read(name)).join('\n')).not.toMatch(/adapter|fake|transport|host/);
   });
 
+  it('keeps labels.js off view.js, so the panel shares no module with the game and the title stays in budget', () => {
+    expect(importsOf(read('labels.js')).join('\n')).not.toMatch(/\.\/view\.js/);
+  });
+
   it('loads the fake only through a dev-only loader, so the production build leaves it out', () => {
     const host = read('host.js');
     expect(host).toMatch(/import\.meta\.env\.DEV \? \(\) => import\('\.\/fake-transport\.js'\) : null/);
