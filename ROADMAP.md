@@ -9,8 +9,8 @@ https://the-great-plot-twist.vercel.app/. Group 3, the complete minimum case bac
 server followups and G12 are deployed. Reviewed festival, host and sports code is deployed after
 its migration proofs; festival is enabled but waits for the first Relighting, while sports stays
 off pending its provider key. The stabilization/submission wave is deployed and its final gates pass.
-G9 is paused until Nils' laptop returns; normal browser multiplayer/the complete mystery still
-await that adapter. The detailed historical package plan remains below.
+G9 is now actively being built in a cloud session; normal browser multiplayer/the complete mystery
+still await its reviewed adapter and end-to-end proofs. The detailed historical package plan remains below.
 
 ## Execution update · 6 Nov 2026
 
@@ -37,15 +37,15 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
 |---|---|---|
 | Intro, islands, story presentation and sound | Built and deployed; local demo/rehearsal available | Physical laptop/phone/gamepad and listening rehearsal |
 | Weather, Exchange v2, predictions, duels and presence services | Deployed and enabled | Direct stock/cache smoke needs this cloud's production-host allowlist; normal crew subscription needs G9 |
-| Case, shared board/night, Relighting and NPCs | Backend deployed; all 69 kit mixes and actual solo/four-human HTTP/SQL journeys pass | Resume G9 and prove authenticated browser journeys; RELIGHT_OPEN remains unset |
+| Case, shared board/night, Relighting and NPCs | Backend deployed; all 69 kit mixes and actual solo/four-human HTTP/SQL journeys pass | Complete cloud G9 and prove authenticated browser journeys; RELIGHT_OPEN remains unset |
 | Festival and host tools | Deployed; festival enabled in waiting state; host actions require configured identity | Actual authenticated host/browser rehearsal; festival starts only after the first real Relighting |
 | Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
 | Reliability, tests, help/privacy, security/notices, devtools | Deployed; combined gates and public read-only verification pass | Authenticated browser/device journey follows G9 |
 | Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
 | Spoiler-safe ChatGPT helper | Scope and consent/security contract recorded; feature off | Official registered website client approval, then implementation after G9 and a consented live proof |
 
-No routine merge permission is needed. The immediate external dependencies are the laptop for G9,
-the sports key in Vercel and official ChatGPT website-client registration. Teammate credit names,
+No routine merge permission is needed. G9 is active in the cloud; the immediate external dependencies are the sports key in Vercel
+and official ChatGPT website-client registration. Teammate credit names,
 submission details and the physical rehearsal are needed before hand-in. Secrets and student
 numbers must stay out of chat and Git. Stabilization adds no database migration or paid service.
 
