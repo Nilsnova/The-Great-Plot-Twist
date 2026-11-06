@@ -11,7 +11,7 @@ const {chromium} = createRequire(path.join(repo, 'frontend/package.json'))('play
 const artifacts = process.env.G25_ARTIFACTS || `/tmp/g25-checks-${Date.now()}`;
 const fileMode = process.env.G25_FILE_MODE === '1';
 const base = 'http://127.0.0.1:43125/'; // Intercepted from disk; no server is started.
-const report = {baseline:'c26f303', transport:fileMode ? 'file:' : 'offline disk interception', checks:[]};
+const report = {baseline:'60f7fd0', transport:fileMode ? 'file:' : 'offline disk interception', checks:[]};
 const passed = label => report.checks.push(label);
 const mime = {'.html':'text/html', '.css':'text/css', '.js':'text/javascript', '.svg':'image/svg+xml'};
 
@@ -108,8 +108,12 @@ const mime = {'.html':'text/html', '.css':'text/css', '.js':'text/javascript', '
     await standalone.goto((fileMode ? pathToFileURL(path.join(root,'index.html')).href : base) + '?view=notes#slide-7');
     assert.match(await standalone.locator('#pair-status').textContent(), /^Standalone/);
     assert.equal(await standalone.locator('#notes-copy p').count(), 1);
+    await standalone.emulateMedia({media:'print'});
+    assert.equal(await standalone.locator('.slide:visible').count(), 10);
+    assert.equal(await standalone.locator('#notes-panel:visible').count(), 0);
+    assert.deepEqual(await standalone.locator('.slide').evaluateAll(slides => slides.filter(slide => slide.scrollHeight > slide.clientHeight + 2).map(slide => slide.id)), []);
     await standalone.close();
-    passed('Standalone notes view opens on a bookmarked slide');
+    passed('Standalone notes view opens on a bookmarked slide and prints audience slides only');
     await page.setViewportSize({width:390,height:844});
     await page.keyboard.press('Home');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -123,7 +127,7 @@ const mime = {'.html':'text/html', '.css':'text/css', '.js':'text/javascript', '
     const clipped = await page.locator('.slide').evaluateAll(slides => slides.filter(slide => slide.scrollHeight > slide.clientHeight + 2 || slide.scrollWidth > slide.clientWidth + 2).map(slide => slide.id));
     assert.deepEqual(clipped, [], 'Print content overflows a slide');
     const pdf = process.env.G25_PDF || path.join(artifacts,'presentation.pdf');
-    await page.pdf({path:pdf, preferCSSPageSize:true, printBackground:true, displayHeaderFooter:false});
+    await page.pdf({path:pdf, preferCSSPageSize:true, printBackground:true, displayHeaderFooter:false, tagged:true, outline:true});
     passed('Print displays all ten slides, hides controls/notes, fits pages and exports PDF');
     assert.deepEqual(violations, [], 'Content Security Policy violations');
     assert.deepEqual(errors, [], 'Browser errors');
