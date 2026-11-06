@@ -37,3 +37,37 @@ Checkpoint 1 deliberately adds no routes or coin movement. The generic L5 pool a
 stake caps must be reused when its prediction desk is merged into `origin/main`. Subsequent work
 must cache provider requests, distinguish recorded/stale/live data, enforce caps in atomic SQL,
 and put data attribution only under Settings > Credits, as required by G15.
+
+## Live pools (checkpoint 2)
+
+Live sports now requires `SPORTS_API_PROVIDER` and its server-only `SPORTS_API_KEY`.
+Missing configuration answers `503 sports_unavailable`; it does not silently substitute the
+recording. Only explicit `DEMO_MODE=true` displays the unchanged 2023 historical results, with
+`source: recorded`, original dates and staking disabled. No real provider account was used to
+validate this package; provider-shaped HTTP fixtures are synthetic and labelled in the tests.
+
+The default football board discovers up to 20 Premier League fixtures within the next seven days
+from football-data.org's fixed `/v4/competitions/PL/matches` endpoint. The alternative NBA board
+uses one bounded page from balldontlie's `/nba/v1/games`. Discovery and individual readings are
+cached for 60 seconds; settlement always requests a fresh result and never falls back on stale
+or recorded scores. Requests are limited per server instance to 10/minute for football-data.org
+and 5/minute for balldontlie. Unknown statuses, incomplete scores, wrong identities, cup football
+and ambiguous NBA timestamps fail closed. The provider credit is supplied as `attribution` for
+Settings > Credits; match names remain plain text without team crests.
+
+A player stakes 1–50 play coins once per fixture, with a separate 200-coin sports cap per Lisbon
+day. The earliest known cutoff is binding, one hour before kickoff; a reschedule cannot reopen
+it. The prediction desk's shared integer pool rules distribute the pool, deducting 5% of the
+losing side rounded down. Void, winnerless and one-sided pools refund in full. The two existing
+wallet reasons are reused with distinct `sports:stake:<stakeId>` and `sports:pool:<fixtureId>`
+references, so sports receipts cannot collide with prediction desk receipts.
+
+Opening My Stakes or sending `{fixtureId}` to the settlement route verifies the result and
+settles atomically. Clients never submit an outcome or score. The database independently checks
+provider/fixture identity, terminal status, final scores, exact stake membership, all payout
+amounts and conservation before it touches wallets. Settled results cannot be reopened. A
+provider outage leaves stakes pending; the same stake id safely retries an unknown outcome.
+
+Configure live credentials directly in Vercel, never in chat, GitHub or a browser-prefixed
+variable. Leave `STOCK_API_PROVIDER=finnhub` and all existing settings intact. Redeploy and run
+credentialed provider smoke checks before adding `sports` to `FEATURE_FLAGS`. No cron is needed.

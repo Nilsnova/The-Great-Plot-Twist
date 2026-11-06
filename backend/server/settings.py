@@ -27,8 +27,8 @@ so this file is the full list of what can be configured:
                               that the prices may be shown (docs/DECISIONS.md, D017).
     STOCK_API_KEY             the key of that provider. SERVER ONLY, like the Supabase secret key:
                               never in the browser, a log or the repo. Empty keeps the stocks off.
-    SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty means recorded only.
-    SPORTS_API_KEY            server-only provider key; empty also means recorded only.
+    SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty disables live sports.
+    SPORTS_API_KEY            server-only provider key; empty keeps live sports unavailable.
 
 Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and
 crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence),
