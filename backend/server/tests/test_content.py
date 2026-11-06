@@ -65,7 +65,7 @@ def test_unknown_content_name_is_404_in_the_standard_error_shape():
 def test_an_error_answer_is_never_marked_as_cacheable():
     response = make_client().get("/api/content/no-such-content")
 
-    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 @pytest.mark.parametrize(
@@ -159,14 +159,7 @@ def assert_not_served(client: TestClient, path: Path) -> None:
         for address in (f"/api/content/{name}", f"/api/content/{quote(name, safe='')}"):
             response = client.get(address)
             assert response.status_code == 404, address
-            route = response.request.url.path
-            if route in ("/api/case", "/api/festival") or route.startswith(
-                ("/api/case/", "/api/festival/", "/api/sports/")
-            ):
-                # Literal parent probes can normalize to an existing private feature route.
-                assert response.headers["cache-control"] == "private, no-store", address
-            else:
-                assert response.headers["cache-control"] == "no-store", address
+            assert response.headers["cache-control"] == "private, no-store", address
             assert not [text for text in secrets if text in response.text], address
 
 

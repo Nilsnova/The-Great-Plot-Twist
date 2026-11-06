@@ -239,7 +239,7 @@ def test_a_failed_list_is_not_cached():
     response = world.listing()
 
     assert_error(response, 503, "database_unavailable")
-    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 def test_a_question_that_a_person_has_not_read_is_hidden():
