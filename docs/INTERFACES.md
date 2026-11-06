@@ -57,19 +57,19 @@
 |---|---|---|---|
 | 200 | | It worked. | Show the result. |
 | 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
-| 403 | `forbidden` | Signed in, but not allowed. Planned for presenter-only routes (`require_host`, package A2). No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. | Show the message. |
+| 403 | `forbidden` | Signed in, but not allowed. A presenter-only route answers it to a player who is not a host: `require_host` (`HostDep`, in `backend/server/hosts.py`; the hosts are the player ids in the setting `HOST_PLAYER_IDS`, package A2). A visitor who is not signed in gets 401 first. No route uses it yet. | Say "not allowed". Do not retry. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. The crew routes answer `wrong_code` (no crew has that code; it counts as a wrong guess) and `no_crew` (the player sits in no crew). | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
-| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). | Show the message. After `already_applied`, treat the action as done. |
-| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). | Show the message. Do not resend it unchanged. |
-| 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player); the `Retry-After` header says how many seconds to wait. | Wait, then try again. |
+| 409 | `insufficient_funds`, `already_applied`, `stale_save`, `no_rerolls_left`, `no_name_yet` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. `stale_save` is a save written from an old version (another device saved first; nothing changed). `no_rerolls_left` is a second captain name re-roll, and `no_name_yet` a re-roll before the first name. The crew routes add `kit_needed` (Act 1 is not finished, so there is no kit yet), `already_in_crew`, `already_seated` (treat as done), `crew_full`, `crew_finished`, `already_started` (treat as done) and `crew_busy` (the crew changed three times while the request ran: try again). The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). | Show the message. After `already_applied`, treat the action as done. |
+| 422 | `validation_error`, `invalid_transaction`, `save_too_big`, `save_not_json`, `move_refused`, `no_ending` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. `save_too_big` is a save over 100 KB, and `save_not_json` a save that holds a value JSON cannot store, such as NaN. `move_refused` is an Act 1 move log with a move the story does not allow (the message names the first bad move), and `no_ending` a move log that stops before an ending (package A3). The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). | Show the message. Do not resend it unchanged. |
+| 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player), and `POST /api/crews/join` after 10 wrong crew codes in 10 minutes (until the wait is over, even a right code is refused). The `Retry-After` header says how many seconds to wait. | Wait, then try again. |
 | 500 | `server_error` | A bug on our side. The details go to the server log only. | Say "something went wrong". |
 | 502 | `database_error` | The database refused the call or answered strangely. | Say "something went wrong". |
-| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
+| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable`, `intro_unavailable`, `crew_codes_busy` | The server, or a service it needs, is not set up or not reachable right now. (`crew_codes_busy`: five new crew codes in a row were taken, so no crew was started; try again. `market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `intro_unavailable`: the story or the entry kits file could not be read when `POST /api/intro/complete` was called; nothing was stored. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
 
 ## 2. Routes that exist now
 
-Seven routes exist, plus the three routes of the Island Exchange (below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
+Seven routes exist, plus the six of the account and the entry kit (packages A2 and A3), the four of crews (A6) and the three of the Island Exchange (all below): 20 in all, and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
 
@@ -99,7 +99,7 @@ GET /api/config
 
 ### GET /api/me
 
-Who am I in the game? For signed-in players only. It answers with the caller's own display name, coins and crews. The server reads them with its secret key and a filter on the verified player id (never an id from the request), so the answer can never hold another player's data. Its first user is the sign-in check page, `/auth-check.html` (a plain file in `frontend/public/`: a team check page, not the game, that signs in with GitHub and prints one line from this route).
+Who am I in the game? For signed-in players only. It answers with the caller's own display name, captain name, coins, crews, entry kit and start place. The server reads them with its secret key and a filter on the verified player id (never an id from the request), so the answer can never hold another player's data. Its first user is the sign-in check page, `/auth-check.html` (a plain file in `frontend/public/`: a team check page, not the game, that signs in with GitHub and prints one line from this route).
 
 ```text
 GET /api/me
@@ -107,7 +107,8 @@ Authorization: Bearer <token>
 
 200 OK
 Cache-Control: private, no-store
-{"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "displayName": "Captain-3fa85f", "coins": 0, "crews": []}
+{"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "displayName": "Captain-3fa85f", "coins": 0, "crews": [],
+ "captainName": null, "kit": null, "place": null}
 ```
 
 | Field | Meaning |
@@ -116,6 +117,9 @@ Cache-Control: private, no-store
 | `displayName` | `profiles.display_name`. Never the GitHub login name or e-mail address. |
 | `coins` | `wallets.balance`. A new wallet holds 0, which is a normal answer. |
 | `crews` | The crews the player sits in, newest seat first, at most 20. Each one is `{"id", "mode", "status", "seatNo"}`: the crew id, `solo` or `crew`, `forming`, `active` or `finished`, and the player's own seat number (1 to 4). Empty for a player in no crew. |
+| `captainName` | The generated captain name, for example `Brave Puffin 17`, once the player has one. `null` while `displayName` is still the sign-up placeholder. `POST /api/me/name` gives the name. This route never does: a GET changes nothing. |
+| `kit` | The id of the player's entry kit (`true_keeper`, `witness`, `informant` or `stranger`) once they have finished Act 1, otherwise `null`. It comes from the table `entry_profiles`, which `POST /api/intro/complete` fills in (package A3). |
+| `place` | The id of the player's start place, which comes with the kit (`lighthouse_isle` or `saltreach_harbor`), otherwise `null`. It comes from the same row of `entry_profiles` as `kit`. |
 
 | Case | Answer |
 |---|---|
@@ -127,7 +131,155 @@ Cache-Control: private, no-store
 | The database cannot be reached | `503 database_unavailable` |
 | The database refuses a read, or answers with something we cannot read | `502 database_error` |
 
-The answer is never cached. The player id stays out of the server's logs. Package A2 extends this route ([section 9](#9-reserved-interfaces)).
+The answer is never cached. The player id stays out of the server's logs. Package A2 added `captainName`, `kit` and `place`, and package A3 fills `kit` and `place` from the entry profile ([section 9](#9-reserved-interfaces)); the four older fields did not change. The route makes four reads, and the entry profile is the last: a server that is deployed before the entry profiles migration is applied answers `502 database_error` to every player. This route is live today, and a push to `main` deploys to production at once, so apply the migration **before the branch is merged into `main`** (previews share the same database, so the same goes for testing a preview). See [supabase/README.md](../supabase/README.md#apply-before-you-merge).
+
+### POST /api/me/name and /reroll
+
+The generated captain name (package A2, decision D006). At sign-up every player has a neutral placeholder (`Captain-3fa85f`). Names appear on a projector, so a real name is never taken from the login and never typed in: the server picks one from the word lists in `backend/content/names.json` (an adjective, a noun and a number from 10 to 99, for example `Brave Puffin 17`). A player gets one name and may re-roll it once. For signed-in players only; the home of both routes is the comment at the top of `backend/server/routes/captain_name.py`.
+
+```text
+POST /api/me/name
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"captainName": "Brave Puffin 17", "rerollsLeft": 1}
+
+POST /api/me/name/reroll
+Authorization: Bearer <token>
+{"actionUid": "r8x2k9m4"}
+
+200 OK
+{"captainName": "Calm Gannet 42", "rerollsLeft": 0}
+```
+
+| Case | Answer |
+|---|---|
+| `POST /api/me/name` for a player who has the placeholder | `200` with the new name and `rerollsLeft: 1` |
+| `POST /api/me/name` again | `200` with the same name. The name is written only while the placeholder is there, so a repeat changes nothing. |
+| `POST /api/me/name/reroll` with the first re-roll | `200` with a name that differs from the current one and `rerollsLeft: 0` |
+| The same `actionUid` again | `409 already_applied`. Treat it as done. |
+| Any other re-roll after the first | `409 no_rerolls_left` |
+| A re-roll before the first name | `409 no_name_yet`: call `POST /api/me/name` first |
+| `actionUid` missing, not 8 to 64 characters of A-Z a-z 0-9 _ -, or any extra field (a player id, a name) | `422 validation_error`. Nothing was called. |
+| The player has no profile row | `404 player_not_set_up` |
+| No token, login or database trouble | As for `GET /api/me` (`401`, `502`, `503`) |
+
+Two requests at the same moment cannot give a player two names or two re-rolls: both are one step inside the database (`assign_captain_name()` and `reroll_captain_name()`). A name from the login (the GitHub login, the e-mail address) never appears.
+
+### GET and PUT /api/save
+
+The player's progress in the cloud, so they can go on at a second device (package A2, decision D022). The save is the browser's own progress (the local Act 1 state, settings). The server never trusts it for coins, kits, names or crews. For signed-in players only; the home of both routes is the comment at the top of `backend/server/routes/save.py`.
+
+```text
+GET /api/save
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"version": 3, "data": {"intro": {"scene": "shore"}}, "updatedAt": "2026-11-06T10:15:02Z"}
+
+PUT /api/save
+Authorization: Bearer <token>
+{"version": 3, "data": {"intro": {"scene": "tower"}, "settings": {"sound": true}}}
+
+200 OK
+{"version": 4, "updatedAt": "2026-11-06T10:15:30Z"}
+```
+
+`version` is the version the browser last read. The save is written only if it still has that version, and then the version goes up by one. So an old copy on a second device can never overwrite newer progress.
+
+| Case | Answer |
+|---|---|
+| `PUT` with the current version | `200` with the next version |
+| `PUT` with an old version (another device saved first), or the same `PUT` again | `409 stale_save`. Nothing was changed. Read the newest save with `GET /api/save`, then save again. |
+| More than 100,000 bytes of compact JSON (counted in UTF-8 bytes) | `422 save_too_big`, before the database is called. The database checks 200,000 bytes of its own JSON text as well, and answers the same. |
+| `NaN` or `Infinity` in the data | `422 save_not_json` |
+| `version` not a whole number from 1 to 2147483647 (the largest number the database column holds), `data` not a JSON object (a list, text, `null`), or an extra field | `422 validation_error` |
+| The player has no save row | `404 player_not_set_up` |
+
+### DELETE /api/me
+
+"Delete my data" (package A2, decision D022, pending Nils' OK because it touches personal data). For signed-in players only; the home is `backend/server/routes/delete_me.py`.
+
+```text
+DELETE /api/me
+Authorization: Bearer <token>
+{"confirm": true}
+
+200 OK
+Cache-Control: private, no-store
+{"deleted": true}
+```
+
+It deletes the login and every row of the player: the profile, save, wallet, **all ledger rows**, seats, Island Exchange positions and trades, the name re-roll, and the tables later packages add (every table that holds a player id references `profiles(id) on delete cascade`). The ledger keeps nothing about the player: the coins are play money and nothing real is owed. A crew the player started that other players sit in is handed to the player in the lowest seat first, so friends keep their game, and the deleted player's seat is open again. A crew nobody else sits in is deleted with them. One database function does all of it in one step (`delete_player()`). The handover happens only there: deleting a user in the Supabase dashboard skips it and deletes the crews they started.
+
+**Not deleted:** Supabase Auth's audit log (`auth.audit_log_entries`, which can hold the login e-mail address and an IP address, and has no foreign key to `auth.users`) and Supabase's platform logs, which expire on Supabase's own schedule. Whether to purge those audit rows, or to stop Auth writing its audit log to the database, is part of the decision that is pending Nils (N4, D022).
+
+| Case | Answer |
+|---|---|
+| `confirm` is `true` | `200 {"deleted": true}`, also if the player was gone already. Deleting twice is safe. |
+| `confirm` missing, `false`, `1`, `"yes"`, or any extra field | `422 validation_error`. Nothing was deleted. |
+| The database does not answer | `503 database_unavailable`, and the outcome is unknown: the player may be deleted already. The message says deleting twice is safe. |
+| No token, login trouble | `401`, `503` as for `GET /api/me` |
+
+The server remembers a good login token for 60 seconds, so on the same server instance the old token can pass the login check for a moment after the deletion. A read in that time answers `404 player_not_set_up`. That is accepted.
+
+### POST /api/intro/complete
+
+The referee (package A3, decision D019). At the end of Act 1 the browser sends the moves it made, in order. The server plays the same moves again with the original story engine on its own copy of the story, works out how the story ended, and gives the player one of four entry kits: True Keeper, Witness, Informant or Stranger. A kit sets the start place, the coins, a clue card and a small item. The browser never sends an ending, a decision or a kit: any field but `actions` is refused. For signed-in players only; the home of this route is the comment at the top of `backend/server/routes/intro.py`.
+
+```text
+POST /api/intro/complete
+Authorization: Bearer <token>
+{"actions": ["to_desk", "take_key", "desk_back", "to_shore", "take_lantern", "warn_harbor",
+             "shore_back", "to_tower", "unlock_door", "climb", "untie"]}
+
+200 OK
+Cache-Control: private, no-store
+{"ending": "ending_trapped", "decision": "warned", "readLog": false,
+ "kit": {"id": "witness", "name": "Witness", "startPlace": "saltreach_harbor", "coins": 1000,
+         "item": {"id": "radio_words", "name": "Words through the door", "text": "..."},
+         "cheapCard": "C2"},
+ "coinsPaid": 1000, "alreadyGranted": false}
+```
+
+| Field | Meaning |
+|---|---|
+| `actions` (request) | 1 to 300 action ids of the story, in the order the player picked them. An id is 1 to 40 characters of a-z, 0-9 and underscore. |
+| `ending` | The id of the Act 1 ending scene the replay reached: `ending_rescue` or `ending_trapped`. |
+| `decision` | `warned` (the player sent the note to the harbor master), `trusted` (they told the fisherman) or `none` (they took no side). |
+| `readLog` | `true` if the player read the keeper's last logbook entry. It gives the log card on the case board and does not change the kit. |
+| `kit` | The kit: `id`, `name`, `startPlace`, `coins`, the small `item` and the `cheapCard` the player holds from the start. |
+| `coinsPaid` | The coins this call paid: the kit coins the first time, otherwise `0`. |
+| `alreadyGranted` | `true` if the player had an entry profile already. |
+
+The 8 end states of today's story map to 4 kits (the full table and the file format are in [backend/content/README.md](../backend/content/README.md#the-format-of-entry_kitsjson)):
+
+| Ending | Decision | Kit | Start place | Coins |
+|---|---|---|---|---|
+| `ending_rescue` | `warned` | True Keeper | `lighthouse_isle` | 1000 |
+| `ending_trapped` | `warned` | Witness | `saltreach_harbor` | 1000 |
+| `ending_trapped` | `trusted` | Informant | `saltreach_harbor` | 1000 |
+| `ending_trapped` | `none` | Stranger | `saltreach_harbor` | 1600 |
+
+| Case | Answer |
+|---|---|
+| A good log, the first time | `200`, `coinsPaid` is the kit coins, `alreadyGranted` is `false` |
+| A good log, and the player has an entry profile already | `200` with the **stored** ending, decision, `readLog`, kit, start place and coins, `coinsPaid: 0` and `alreadyGranted: true`. The new log changes nothing. |
+| `actions` missing, empty or longer than 300, an odd id, or any extra field (a kit, an ending, a player id) | `422 validation_error`. Nothing was stored. |
+| A move the story does not allow at that point (an unknown id, a move of another scene, a blocked move such as the tower door without the key, any move after the ending) | `422 move_refused`. The message names the first bad move, for example "Move 2", and tells the player to reload and play Act 1 again. Nothing was stored. |
+| The moves stop before an ending | `422 no_ending`. Nothing was stored. |
+| The player has no profile row | `404 player_not_set_up` |
+| The story or the kits file cannot be read on this server | `503 intro_unavailable`. Nothing was stored. |
+| The database does not answer | `503 database_unavailable`, and the outcome is unknown: the kit may have been granted before the call timed out. Send the same request again (it is safe) or look at `GET /api/me`, which shows `kit` once it is granted. |
+| No token, login or database trouble | `401`, `502`, `503` as for `GET /api/me` |
+
+- **A forged log stores nothing.** The log is replayed and refused before the database is called.
+- **The first ending counts** (pending Nils' decision N6). A second playthrough never changes the kit and pays nothing. The answer is built from the stored profile, so a double click, a retry after a timeout and a second playthrough all answer the same. This is why the route has no `actionUid`.
+- **The coins move exactly once**, inside the database function `grant_entry_kit()`: it stores the profile and calls the wallet function in one step, with the reason `kit_grant` and the fixed `ref` `kit`. The ledger accepts that pair once per player, so even a bug could not pay twice. The route checks the amount with the wallet rules first and never calls the wallet itself.
+- **No story version in the request.** The server replays on the story it has and stores the SHA-256 of that file with the profile, for audits. Story v2 only adds actions, so an old log still replays to the same end state. A log that only a newer story allows (for example `keep_quiet` before Story v2 is deployed) is refused as `move_refused`.
+- **The coins and texts of the kits** come from the S0 story drafts and wait for Nils' approval of S0 (N5).
 
 ### POST /api/auth/exchange
 
@@ -289,6 +441,38 @@ The rules in one list (numbers in `backend/server/market/rules.py` and `trade_ru
 
 The board needs the Exchange migration (it reads `market_bases`). Without a configured database the board still works from memory, which is good enough for a demo on a laptop but not shared between server instances.
 
+### Crews and seats (package A6)
+
+A crew has four seats. A seat holds a player or an NPC partner (a crew mate that the game runs) and carries one of the four entry kits. A player starts a crew and gets a crew code, a friend types the code to join, and when the crew sails (the "muster") NPC partners take every empty seat, so a crew of one still has four seats. The home of each route is the comment at the top of `backend/server/routes/crews.py`; the rules are in `backend/server/crews/` and in decision [D020](DECISIONS.md#d020--crews-codes-the-guessing-limit-and-partners-at-the-muster--2026-11-05). All four routes need sign-in, answer with `Cache-Control: private, no-store`, and never show a player id.
+
+| Route | Body | What it does |
+|---|---|---|
+| `POST /api/crews` | none | Starts a crew with the player in seat 1 and answers with its crew code. A player who already started a crew and sits in it alone gets that same crew back. Needs the kit of the player's Act 1 ending: before it, `409 kit_needed`. |
+| `POST /api/crews/join` | `{"code": "k7q-f2m"}` | Joins the crew that has the code. Capitals, spaces and hyphens do not matter. The friend takes the lowest open seat; if none is open, the NPC partner who carries the friend's own kit; otherwise the partner whose kit comes last in the partner order. The seat then carries the friend's own kit. A player who started a crew and sits in it alone gives that draft up by joining another crew. |
+| `POST /api/crews/me/start` | none | The muster: the crew becomes `active`, and an NPC partner takes every empty seat, carrying the first kit that nobody in the crew has yet. |
+| `GET /api/crews/me` | | The crew the player sits in (`forming` or `active`), or `{"crew": null}`. |
+
+```text
+POST /api/crews/me/start
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"crew": {"id": "6fcdad72-8fec-4111-9929-9bad39fd435b", "code": "K7QF2M", "status": "active",
+          "mode": "crew", "mySeat": 1, "startedAt": "2026-11-13T10:02:00Z",
+          "seats": [
+            {"seatNo": 1, "holder": "player",  "name": "Brave Puffin 17", "kit": "witness",     "partnerId": null,    "isMe": true},
+            {"seatNo": 2, "holder": "player",  "name": "Calm Gannet 42",  "kit": "stranger",    "partnerId": null,    "isMe": false},
+            {"seatNo": 3, "holder": "partner", "name": "the Bosun",       "kit": "informant",   "partnerId": "bosun", "isMe": false},
+            {"seatNo": 4, "holder": "partner", "name": "the Cook",        "kit": "true_keeper", "partnerId": "cook",  "isMe": false}]}}
+```
+
+- **The view.** `seats` always has four entries in seat order. A seat nobody holds is `{"holder": "open", "name": null, "kit": null, "partnerId": null}`. A player is shown by `profiles.display_name`, a partner by its title (the Lookout, the Deckhand, the Bosun, the Cook), and no answer holds a player id. `mode` is `solo` until a second player joins and `crew` after that; it does not go back to `solo` if a player is deleted later (D020, known limits). `status` is `forming`, `active` or `finished`. `code` is empty only for a crew made before crew codes existed. `startedAt` is a UTC time, empty while the crew is forming.
+- **Crew codes.** Six symbols from `A-Z` without `I`, `L` and `O`, and `2-9` (31 symbols). A player may type at most **10 wrong codes in 10 minutes**; the count lives in the database, because every server instance has its own memory. After that even the right code is refused (`429`), so a guesser cannot confirm a hit. A typing mistake (not six symbols) is a `422` and does not count as a guess.
+- **Errors** (standard shape): `404 wrong_code`, `404 no_crew`, `404 player_not_set_up`; `409 kit_needed`, `already_in_crew`, `crew_full` (four players), `crew_finished`, `already_seated`, `already_started`, `crew_busy` (the crew changed three times while the request ran: try again); `422 validation_error`; `429 too_many_requests` with `Retry-After`; `503 crew_codes_busy` (five codes in a row were taken: try again). A `503` from a change means the outcome is unknown: ask `GET /api/crews/me` before trying again.
+- **Safe repeats.** `POST /api/crews` gives the same draft back. `POST /api/crews/join` answers `409 already_seated`, and `POST /api/crews/me/start` answers `409 already_started`: treat both as done. A repeat never makes a second seat or a second crew.
+- **Needs** the crew migration and package A3's table `entry_profiles` (one row per player, with the kit). Before A3's migration is applied the kit read fails with `502 database_error`.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -360,7 +544,31 @@ Starting it in the game is a separate step, because `frontend/` belongs to the g
 | `{type: 'intro_ended', ending}` | S2 | draft |
 | `{type: 'weather_updated', source, fetchedAt}` | L1 | draft; `startLiveWeather` does not emit it itself, whoever wires it in emits it from the `onUpdate` hook |
 | `{type: 'plot_clicked', plot}` | L2 | draft |
-| `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story package S0 (skeleton under review) |
+| `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story round (S0, D018) |
+
+### Talking to the API: api.js and session.js (package A2)
+
+`frontend/src/online/session.js` holds the login token **in memory only**, and `frontend/src/online/api.js` is the one way the browser calls our own server. The sign-in screen (a later package, pending Nils' decision on the sign-in approach) fills the session with the token after the GitHub sign-in. There is no sign-in button yet. The home of both files is their header comment.
+
+```js
+import { api } from './online/api.js';
+import { session } from './online/session.js';
+
+session.setToken(token);                          // after the sign-in
+session.onChange(({ signedIn }) => { /* show or hide the sign-in */ });
+
+const result = await api.get('/api/me');          // also api.post, api.put and api.del
+if (result.ok) show(result.data); else showError(result.message);
+```
+
+- **Results.** A call never throws for a problem with the call itself. It answers `{ ok: true, status, data }` (`data` is `null` for an empty answer), or `{ ok: false, status, code, message, retryAfterSeconds? }`. `code` is the server's own word (section 1), or a word for the status, or `network_error` or `timeout` (status 0). `message` is ready to show.
+- **401.** The message is "Please sign in again." and the session forgets the token, so listeners learn that the player is signed out.
+- **409.** The server's own message (it explains, for example "This was already done."), and the `code` is kept, so a screen can treat `already_applied`, `already_seated` and `already_started` as done.
+- **429.** "Too many tries. Wait N seconds, then try again." with `retryAfterSeconds` from the `Retry-After` header.
+- **Safety.** The path must start with `/api/` and must not contain `//` (which also refuses `://`), or the call throws a `TypeError` and fetch is never called, so the token can never go to another site. The token goes only into the `Authorization` header, never into the address. A call gives up after 10 seconds.
+- **Memory only.** A reload means signing in again. Whether to remember the sign-in across reloads is the decision of the sign-in package. The files never use `localStorage`, `sessionStorage`, `IndexedDB`, a cookie or the console, and a test reads the source to check it.
+
+The tests are `frontend/tests/online-session.test.js` and `frontend/tests/online-api.test.js`.
 
 ## 4. Database tables
 
@@ -368,8 +576,8 @@ The first migration, `supabase/migrations/20261106000000_foundation.sql`, create
 
 | Table | One row per | A signed-in player may | The server may | Owner |
 |---|---|---|---|---|
-| `profiles` | player: the display name | read every row | read, add, change, delete | A1. A2 writes real captain names. |
-| `saves` | player: progress as a JSON object of at most about 200 KB | read their own row | read, add, change, delete | A1. A2 adds the route that saves. |
+| `profiles` | player: the display name | read every row | read, add, change, delete | A1. A2 writes real captain names (`assign_captain_name()`, `reroll_captain_name()`). |
+| `saves` | player: progress as a JSON object of at most about 200 KB | read their own row | read, add, change, delete | A1. A2 saves it (`save_progress()`, `GET` and `PUT /api/save`). |
 | `wallets` | player: the coin balance, never below 0 | read their own row | read, change (only through the wallet function) | A1 |
 | `wallet_reasons` | reason a balance may change, with its direction | read every row | read | A1. New reasons arrive by migration. |
 | `wallet_transactions` | coin change: the ledger, never edited | read their own rows | read, add (only through the wallet function) | A1 |
@@ -386,12 +594,36 @@ The Island Exchange migration, `supabase/migrations/20261106010000_island_exchan
 
 `market_trade()` is the only way a trade happens (it checks that the coins and the fee follow from the units and the price, moves the coins through `apply_wallet_transaction()`, changes the position and writes the trade in one step). `market_set_base()` saves a company's base when two server instances look at the same moment. Both are for the server only.
 
+The accounts migration, `supabase/migrations/20261106020000_accounts.sql` (package A2, run after the first one), adds one table and four functions. The rights follow the same plan: a visitor gets nothing, a signed-in player only reads, the server writes.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `captain_name_rerolls` | player who used their one captain name re-roll; the player id is the primary key, so a second re-roll is impossible | read their own row | read, add (through `reroll_captain_name()`) | A2 |
+
+`assign_captain_name()` gives a player their generated name once, `reroll_captain_name()` changes it once, `save_progress()` writes a save only if it still has the version the caller read (and adds 1 to it), and `delete_player()` deletes the login and, by cascade, everything about the player. All four are for the server only. `delete_player()` is the one `SECURITY DEFINER` function among them, because deleting from `auth.users` needs the rights of the function owner.
+
+The entry profiles migration, `supabase/migrations/20261106030000_entry_profiles.sql` (package A3, run after the first one), adds one table and one function. The rights follow the same plan: a visitor gets nothing, a signed-in player only reads, the server writes.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `entry_profiles` | player who finished Act 1: the ending, the decision, whether they read the log, the kit with its start place and coins, the move count and the SHA-256 of the story the replay used; the player id is the primary key, so the first ending counts | read their own row | read, add (through `grant_entry_kit()`) | A3 |
+
+`grant_entry_kit()` stores the profile and pays the kit coins in one step (`apply_wallet_transaction()` with the reason `kit_grant` and the fixed ref `kit`), and answers a repeat with the stored profile and no payment. It is for the server only and is not `SECURITY DEFINER`. Nobody gets an update or a delete right on the table: the row goes only with its player, by cascade.
+
+The crew codes migration, `supabase/migrations/20261106040000_crew_codes.sql` (package A6, run after the first one), changes no row that exists. It adds the columns `code`, `version` and `started_at` to `crews`, the kit rule and two unique indexes to `crew_seats` ([section 6](#6-crews-and-seats)), one table and four functions. Players get no right on the new table.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `crew_join_failures` | wrong crew code a player typed, kept for the guessing limit (10 in 10 minutes) | nothing (no policy, no grant) | read, add, delete (through `crew_find_by_code()`) | A6 |
+
+`crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()` are the only way the server starts, finds, joins and sails a crew (a team rule, as with the wallet). Each checks the crew's `version`, so a request never acts on an old picture of the crew. All four are for the server only and are not `SECURITY DEFINER`.
+
 Four database functions come with the first migration: `apply_wallet_transaction()` (the only way coins move, for the server only), `is_crew_member()` (used by the read rules of crews and seats, for signed-in players only), `handle_new_user()` (runs at sign-up and creates a profile, a wallet with 0 coins and an empty save) and `touch_updated_at()` (stamps `updated_at`).
 
 Details that other packages rely on:
 
 - **Display names** (`profiles.display_name`): 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at either end. Not unique. At sign-up every player gets a neutral placeholder: `Captain-` and the first 6 characters of their id. A name never comes from the GitHub login or any other login detail, because names appear on a projector.
-- **Saves:** `data` (a JSON object), `version` (starts at 1; the server raises it when the shape of `data` changes) and `updated_at` (set by the database). Only the server writes a save.
+- **Saves:** `data` (a JSON object, at most 200,000 bytes as database text; the server accepts at most 100,000 bytes of compact JSON), `version` (starts at 1 and counts the writes: `PUT /api/save` sends the version it last read, and `save_progress()` writes only if that is still the current version and then adds 1) and `updated_at` (set by the database). Only the server writes a save. The migration `20261106020000` changed the meaning of `version`: it was a format version before, and nothing used it.
 - **Realtime** is not switched on for any table yet.
 - **A new table** follows [ENGINEERING.md, recipe 4.2](ENGINEERING.md#42-add-a-database-table): row-level security, read-only policies for players, and explicit grants, because our project gives no rights to a new table by itself.
 
@@ -445,18 +677,35 @@ A new reason is one new migration plus the same pair added at the end of `WALLET
 - **Solo play is a crew of one player.** The player sits in seat 1 and NPC partners fill the other seats (mode `solo`). With friends the mode is `crew`, and NPC partners fill any seats left empty. A friend can take over an NPC partner's seat.
 - A crew's status goes from `forming` to `active` to `finished`.
 - A player can read a crew and its seats only while they sit in it. Only the server creates crews and seats players and NPC partners.
-- The server, not the database, makes sure that a player has at most one active crew, never holds two seats in one crew, and that one NPC partner does not sit twice in one crew.
-- Deleting a player removes their seat. Deleting the player who started a crew removes the whole crew.
+- The database guards one seat per player and one seat per NPC partner in a crew (two unique indexes), the kit ids and the crew code (migration `20261106040000`, package A6). The four crew functions (`crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`) make sure that a player sits in at most one open crew (`forming` or `active`), under a lock on the player's profile. By team rule the server writes crews and seats only through them.
+- Deleting a player removes their seat. `DELETE /api/me` (`delete_player()`, package A2) first hands a crew that the player started and other players sit in to the player in the lowest other seat, so only a crew nobody else sits in goes with the player. A deletion in the Supabase dashboard skips the handover and removes every crew the player started.
 
 | Column | Meaning |
 |---|---|
 | `crews.id`, `created_by` | A random id, and the player who started the crew |
 | `crews.mode`, `status` | `solo` or `crew`; `forming`, `active` or `finished` |
+| `crews.code` | The crew code a friend types to join: 6 symbols from `A-Z` without `I`, `L` and `O`, and `2-9`. Unique. Empty only for a crew made before crew codes existed. |
+| `crews.version`, `started_at` | `version` counts the changes made through the crew functions (starts at 1), so a request never acts on an old picture of the crew. `started_at` is the time of the muster, empty while the crew is forming. |
 | `crew_seats.crew_id`, `seat_no` | The crew and the seat number (1 to 4). Each seat number appears once per crew. |
 | `crew_seats.player_id`, `npc_id` | Who sits there: exactly one of the two. An `npc_id` is 2 to 40 characters from a-z, 0-9 and underscore. |
-| `crew_seats.kit`, `joined_at` | The entry kit this seat carries (no format rule yet), and when the seat was taken |
+| `crew_seats.kit`, `joined_at` | The entry kit this seat carries: `true_keeper`, `witness`, `informant` or `stranger` (checked for every new or changed row), and when the seat was taken |
 
-What NPC partners do in the mystery (their orders, errands and lines) is defined by the story package S0 (skeleton under review). Package A6 adds the crew routes and crew codes, and S4 the orders for NPC partners ([section 9](#9-reserved-interfaces)).
+What NPC partners do in the mystery (their orders, errands and lines) is defined by the story round (S0, D018) in [docs/story/NPC-PARTNERS.md](story/NPC-PARTNERS.md). Package A6 built the crew routes and crew codes (below), and S4 adds the orders for NPC partners ([section 9](#9-reserved-interfaces)).
+
+### Crew codes, the muster and partners (package A6)
+
+How a crew forms, in four steps. The home is `backend/server/routes/crews.py`; the pure rules are in `backend/server/crews/seats.py`.
+
+1. **Start.** A player with an entry kit starts a crew (`POST /api/crews`) and sits in seat 1. The crew is `forming` and has a code.
+2. **Join.** A friend types the code. The friend takes the lowest open seat. A crew that has sailed usually has no open seat, so the friend takes over the NPC partner who carries the friend's own kit, or else the partner whose kit comes last in the partner order, so the partners who stay keep the kits that are still missing. The seat carries the friend's **own** kit.
+3. **Muster.** Any player of the crew calls `POST /api/crews/me/start`. The crew becomes `active`, and NPC partners take every empty seat, lowest number first. Each partner carries the first kit of the order **informant, stranger, true_keeper, witness** that nobody in the crew carries yet. The partner follows the seat number: the Lookout (`lookout`) in seat 1, the Deckhand (`deckhand`) in 2, the Bosun (`bosun`) in 3 and the Cook (`cook`) in 4.
+4. **Play.** Nobody leaves and nobody is kicked in this version. A friend can still join a crew that has sailed, by taking over a partner.
+
+- **The order of the partner kits** is the one of `NPC-PARTNERS.md` (section 4.2). Nils decided it in the story round (D018, decision 12; a team call, confirmed at kickoff), and `CASE-FILE.md` uses the same order since then. The order is one constant (`NPC_KIT_ORDER`) in `seats.py`.
+- **The kit of a seat after a friend takes over a partner:** the friend keeps their own kit, as Nils decided in the story round (D018, decision 10) and as built. It is one switch (`FRIEND_KEEPS_OWN_KIT`) in `seats.py`.
+- **A draft.** A crew that a player started and sits in alone. Joining another crew deletes the draft in the same step, so a player who pressed "start a crew" by mistake is never stuck. A crew with a friend in it is not a draft: its players cannot join another crew.
+- **Guessing.** The database counts the wrong codes of each player (`crew_join_failures`) and refuses a player who typed 10 wrong codes in 10 minutes before it looks at the code. The numbers are in `backend/server/crews/codes.py`.
+- **For later packages.** The case board and the finale find the crew and the seat of a player with `read_open_crew_seat()` in `backend/server/crews/store.py`, and stamp the seat number on their own rows. Partner orders and errands are package S4. Note for S4: a Witness partner starts with card C2 in its satchel.
 
 ## 7. Realtime budget
 
@@ -511,19 +760,19 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 |---|---|---|
 | G2 Places and sea chart | `createPlace(ctx)` returning `{group, zones, anchors, colliders, update(dt), dispose()}`; `world.goTo(placeId)`; the events `travel` and `arrived`; the place registry `frontend/src/world/places/registry.js` (place ids, hotspot ids and positions), which replaced the proposed `content/places.json` | draft |
 | G3 Saltreach Harbor | A place module `harbor` whose hotspots emit `interact` with ids from the place registry `frontend/src/world/places/registry.js` | draft |
-| G4 Finale visuals | `world.cinematic('three_lights' \| 'fog_lift' \| 'unmask')`, which listens for the `finale` event | draft; defined by the story package S0 (skeleton under review) |
+| G4 Finale visuals | `world.cinematic('three_lights' \| 'fog_lift' \| 'unmask')`, which listens for the `finale` event | draft; defined by the story round (S0, D018) |
 | S1 Import Plot Twist | `backend/content/story.json`, with the content format in `backend/content/README.md`; `GET /api/content/intro-story`; the story engines `backend/plot_twist/engine.py` and `frontend/src/story/engine.js`; the parity test `backend/plot_twist/tests/test_web_parity.py` with its Node.js runner `parity_runner.mjs` | draft |
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
-| S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story package S0 (skeleton under review) |
-| S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story package S0 (skeleton under review) |
-| A2 Sign-in, captain names and cloud progress | `GET /api/me` already exists since the sign-in check (section 2, returning `{id, displayName, coins, crews}`): A2 adds `kit` and `place` to it and writes real captain names into `displayName`; `PUT /api/save {version, data}`, with 409 for a stale version; `DELETE /api/me`; the check `require_host` (403 for players); `backend/content/names.json`; sign-in with the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2) | draft |
-| A3 Referee and entry kits | `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit}`; the table `entry_profiles`; the kit coins through `kit_grant` with the fixed `ref` `kit` | draft |
-| A6 Crews and seats | `POST /api/crews` (returns a crew code); `POST /api/crews/join {code}`; `GET /api/crews/me`; crew codes in a new column or table | draft |
+| S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served | draft; defined by the story round (S0, D018) |
+| S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story round (S0, D018) |
+| A2 Sign-in, captain names and cloud progress | **Built** (the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D022. | built; the sign-in part is pending |
+| A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** the coins and texts of the kits (N5, with the S0 approval) and that the first ending counts (N6). | built, in review |
+| A6 Crews and seats | **Built**: `POST /api/crews` (returns a crew code), `POST /api/crews/join {code}`, `POST /api/crews/me/start` (the muster) and `GET /api/crews/me` (section 2); the columns `crews.code`, `version` and `started_at`, the table `crew_join_failures` and the four crew functions (migration `20261106040000_crew_codes.sql`); `read_open_crew_seat()` in `backend/server/crews/store.py` for S3 and L3. Decision D020. | built, in review |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
 | A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
 | L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
 | L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
-| L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story package S0 (skeleton under review) |
+| L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story round (S0, D018) |
 | L4 Island Exchange (the market) | **Built** (on `main`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/trade {companyId, side, units, actionUid}`; the tables `market_bases`, `market_positions` and `market_trades`; the reasons `market_buy`, `market_sell` and `market_fee`; `backend/content/market/companies.json` and `replay.json`; the setting `MARKET_MULTIPLIER`; the flag `market`. See section 2 and D017. | built, in review |
 | L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions` | draft |
 | L6 Sports predictions | `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the tables `fixtures` and `sports_stakes`; the reasons `sports_stake` and `sports_payout`; the flag `sports` | draft |
@@ -568,7 +817,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 ## 10. The shared mystery
 
-Everything about the shared mystery is **defined by the story package S0 (skeleton under review)**: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). Until S0 is approved, treat those shapes as placeholders.
+Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); the route shapes stay drafts until the packages that build them write their specs.
 
 What already holds, from the foundation: a reward is paid with `clue_reward` or `mystery_reward` and a `ref` that makes each payout happen once per player, buying a clue uses `clue_purchase`, and a crew's seats can hold NPC partners ([section 6](#6-crews-and-seats)).
 

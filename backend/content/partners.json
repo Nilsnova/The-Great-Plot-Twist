@@ -1,0 +1,209 @@
+{
+  "about": "What NPC partners say. NPC partners are the crew mates that the game runs when a seat has no player. This file is the only source of their words: the server never writes partner text itself. It picks one line from here and fills in the {placeholders}. The rules for these lines are in docs/story/NPC-PARTNERS.md, section 9.",
+  "format_version": 1,
+  "voice": "A cheerful salvage crew. Short, warm, a little nautical. Titles only, no personal names. Players are captains in this game, so a partner says 'Captain' to whoever gave the order, but not in every line. A line may repeat what its own card shows. It never names another card, a deduction or a suspect, and it never gives advice.",
+  "max_characters": 80,
+  "pick_rule": "Take lines[variant][salt mod the number of lines in that list]. Each event names its salt in salt_is. There are no random numbers, so the same crew and the same orders always give the same words.",
+  "placeholders": {
+    "minutes": "A whole number of case minutes. In order_accepted it is the length of the errand (10 for a trip, 5 for a pin). In cannot_do_it it is the wait until the partner is free (busy) or until an order would arrive inside the window of a timed route (locked_window).",
+    "light": "The name of a light, with its article, for example: the Harbor Light.",
+    "price": "A whole number of coins."
+  },
+  "speakers": {
+    "1": {"npc_id": "lookout", "title": "the Lookout"},
+    "2": {"npc_id": "deckhand", "title": "the Deckhand"},
+    "3": {"npc_id": "bosun", "title": "the Bosun"},
+    "4": {"npc_id": "cook", "title": "the Cook"}
+  },
+  "events": {
+    "order_accepted": {
+      "used_when": "A partner takes an order. Said at the minute the order was given. The variant is the order kind, and search and fetch both use go.",
+      "salt_is": "the order number (the crew's count of accepted orders, starting at 1)",
+      "variant_is": "line group",
+      "variant_map": {
+        "search": "go",
+        "fetch": "go"
+      },
+      "placeholders_used": ["minutes", "light"],
+      "lines": {
+        "go": [
+          "On it, Captain! Back in about {minutes} minutes.",
+          "Aye aye! Off I go. Back in about {minutes} minutes."
+        ],
+        "pin": [
+          "Off to the board with this one. About {minutes} minutes."
+        ],
+        "man_light": [
+          "I'll take {light}. Keeping her lit till you say."
+        ],
+        "wait": [
+          "Standing by. Shout when you need me."
+        ]
+      }
+    },
+    "arrived": {
+      "used_when": "A partner on a search or a fetch reaches the place. Said at arrive_at, 4 minutes after the order.",
+      "salt_is": "the order number",
+      "variant_is": "none, use any",
+      "placeholders_used": [],
+      "lines": {
+        "any": [
+          "Made landfall. Having a good look around."
+        ]
+      }
+    },
+    "found_card": {
+      "used_when": "A search or a fetch ends and the partner has the card in its satchel. Said at ready_at. The variant is the card id.",
+      "salt_is": "the order number",
+      "variant_is": "card id",
+      "placeholders_used": [],
+      "lines": {
+        "C1": [
+          "Got the reward notice. It's about a light where none stands."
+        ],
+        "C2": [
+          "Wrecks only on fog nights. I've got it written down."
+        ],
+        "C3": [
+          "The key tag has a stamp: an anchor with an open eye."
+        ],
+        "C4": [
+          "Found the crates. Every lid is stamped with a seal."
+        ],
+        "C5": [
+          "Got the yard manifest. Twelve lenses on it."
+        ],
+        "C6": [
+          "Got the owner's post. A payment slip for every wreck."
+        ],
+        "C7": [
+          "Got hold of the coastguard's night log."
+        ],
+        "C8": [
+          "A torn page, found in the ruin. Damp, but readable."
+        ]
+      }
+    },
+    "found_nothing": {
+      "used_when": "A search ends at a place that holds no card, or whose card is not a lead yet. Said at ready_at.",
+      "salt_is": "the order number",
+      "variant_is": "none, use any",
+      "placeholders_used": [],
+      "lines": {
+        "any": [
+          "Nothing here but gulls and rope, Captain."
+        ]
+      }
+    },
+    "pinned_card": {
+      "used_when": "A pin order ends and the card is on the board. Said at ready_at. The variant is the card id.",
+      "salt_is": "the order number",
+      "variant_is": "card id",
+      "placeholders_used": [],
+      "lines": {
+        "C1": [
+          "Reward notice is up on the board."
+        ],
+        "C2": [
+          "Fog nights only. It's on the board now."
+        ],
+        "C3": [
+          "The key tag seal is pinned, anchor and open eye."
+        ],
+        "C4": [
+          "Same seal on the crates. Pinning it."
+        ],
+        "C5": [
+          "Manifest pinned. Twelve lenses on the list."
+        ],
+        "C6": [
+          "Owner's post is pinned. Smells of ink."
+        ],
+        "C7": [
+          "Night log pinned. Nice handwriting."
+        ],
+        "C8": [
+          "Torn page pinned. Handle with care."
+        ]
+      }
+    },
+    "cannot_do_it": {
+      "used_when": "An order is refused. No order is created, so no minutes pass and no coins are taken. The variant is the line group of the reason.",
+      "salt_is": "the crew's count of accepted orders so far",
+      "variant_is": "line group",
+      "variant_map": {
+        "light_not_for_partners": "wrong_kit",
+        "no_lead": "not_ready",
+        "not_carrying": "not_ready",
+        "not_nightfall": "not_ready",
+        "light_taken": "not_ready"
+      },
+      "placeholders_used": ["minutes", "price"],
+      "lines": {
+        "wrong_kit": [
+          "That one's not for me, Captain. I don't carry what it needs."
+        ],
+        "no_coins": [
+          "That costs {price} coins, and the purse is short."
+        ],
+        "locked_window": [
+          "Shut when I'd get there, Captain. Ask me again in about {minutes} minutes."
+        ],
+        "busy": [
+          "Still on my last job. Free again in about {minutes} minutes."
+        ],
+        "already_have": [
+          "I already have that one, Captain."
+        ],
+        "not_ready": [
+          "Can't do that one yet, Captain. Not the right moment."
+        ]
+      }
+    },
+    "manning_light": {
+      "used_when": "A partner reaches its light and goes on duty. Said at ready_at of the man_light order.",
+      "salt_is": "the order number",
+      "variant_is": "none, use any",
+      "placeholders_used": ["light"],
+      "lines": {
+        "any": [
+          "At {light}. She's lit and holding steady."
+        ]
+      }
+    },
+    "beam_locked": {
+      "used_when": "A player locks the beam of the light this partner holds. Said by that partner at the minute the lock is accepted.",
+      "salt_is": "the seat number",
+      "variant_is": "none, use any",
+      "placeholders_used": [],
+      "lines": {
+        "any": [
+          "Beam's locked on the blinking light. Hold steady!"
+        ]
+      }
+    },
+    "case_solved": {
+      "used_when": "The crew solves the case. Said by every partner. The line is chosen by seat number.",
+      "salt_is": "the seat number",
+      "variant_is": "none, use any",
+      "placeholders_used": [],
+      "lines": {
+        "any": [
+          "The coast is lit again! Best crew on the Isles, Captain.",
+          "Lamps up and fog down. What a night, Captain!"
+        ]
+      }
+    },
+    "takeover": {
+      "used_when": "A friend takes the seat. Said once by the partner who leaves.",
+      "salt_is": "the seat number",
+      "variant_is": "none, use any",
+      "placeholders_used": [],
+      "lines": {
+        "any": [
+          "The seat's yours now. Mind the satchel, Captain."
+        ]
+      }
+    }
+  }
+}

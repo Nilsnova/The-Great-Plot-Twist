@@ -4,14 +4,25 @@
 >
 > **Who uses it:** all four teammates and every coding agent. The story is in [docs/STORY.md](docs/STORY.md). What is happening right now, and ready-to-paste agent briefs, are in [docs/STATUS.md](docs/STATUS.md).
 
-**Status: v0.2, Thu 5 Nov 2026, evening.** The story skeleton is approved and the look is decided: original top-down pixel art (D005). `main` is live: the game and the Python API run at https://the-great-plot-twist.vercel.app/. Foundation wave 1 is done and on `main`; wave 2 is in progress. Everyone clones and branches from `main`; see [Merge order](#merge-order-today) for what lands next. The team picks the owners of lanes S, A and L today. Open decisions are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions). Next review of this file: the M1 check on Fri 13 Nov.
+**Status: v0.3, Thu 5 Nov 2026, late evening.** The story skeleton and the detailed story round (S0) are approved (three review changes to the approval sheet still wait for Nils' OK: [docs/story/README.md](docs/story/README.md#changes-to-the-approval-sheet-after-the-review)), and the look is decided: original top-down pixel art (D005). `main` is live: the game and the Python API run at https://the-great-plot-twist.vercel.app/. Foundation waves 1 and 2 are on `main`. Everyone clones and branches from `main`; see [Merge order](#merge-order-today) for what lands next. The team picks the owners of lanes S, A and L today. Open decisions are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions). Next review of this file: the M1 check on Fri 13 Nov.
+
+## Changes since v0.2 (Thu 5 Nov, late evening)
+
+- **The story round is approved (S0 is done).** Nils approved the 19 recommendations of the story approval sheet as written. [D018](docs/DECISIONS.md) records them. Three review changes to the text of the sheet still wait for his OK. The minimum versions of S1, S3, S4 and L3 now say what the story round needs, the S0 "Provides" line points at the real files in [docs/story/](docs/story/README.md), and the L4 and L2 texts follow D017 and G2 (a 2% fee, four plots and a signal station).
+- **No demo world for now** (Nils: "maybe we add later, for now we just build the game"). Rehearsals and the demo use the existing `?demo=1` highlights tour, which runs on the browser-side stand-in and never touches the live world. One server setting, the relight lock, keeps the relight switch locked until the game opens, so the team's own test solves cannot relight the coast. This replaces the seeded demo world and L3's presenter seed.
+- **Live multiplayer is core** (Nils: "the game needs to be a multiplayer game, so we need to see everyone live; push that up"). A4 live presence moves from Later into core and is built on Supabase Realtime. Its target is the Fri 13 slice.
+- **The case files moved to the D016 paths:** `backend/content/secret/case.json`, `backend/content/partners.json` and the timing program in `backend/tools/`.
+- **Status lines match `main`.** Foundation wave 2 (`393f551`), G2 and G3 (`60bd60e`), the S1 import (`589baea`) with Story v2 (`3d59b6a`), and the S2 intro (`c52613b`) are merged, so the lines for G, S and A no longer say "in progress". The per-lane count includes A4.
+- **The keep-alive is decided** (Nils, 5 Nov): a daily GitHub Actions workflow, `.github/workflows/keepalive.yml`, calls `/api/keepalive`.
+- **No package is reserved for a teammate** (Nils, 5 Nov, late evening): Claude and Codex build every package as far as they can, and teammates join any package or bring new ideas. S4 is no longer proposed for the L-lane owner.
+- **The Island Exchange text waits for Nils' answers** (5 Nov, late evening). He answered the D017 questions: no circuit breaker, no price floor or ceiling, and real prices with 10x leveraged positions instead of a multiplier. D017 and L4 change on the Exchange branch, so the multiplier, floor and circuit-breaker lines in L4 below are marked as superseded and are not rewritten here.
 
 ## Changes since v0.1
 
 - **Look decided (D005): original top-down pixel art.** On 5 Nov Nils chose a top-down 2D look, not low-poly 3D, and then approved the pixel-art gameplay presentation. The sprites are original and drawn by code: 36 sprites plus one baked terrain backdrop (a ready-made picture of the ground), at 16 native pixels per world unit, enlarged with nearest-neighbour scaling so the pixels stay sharp. The earlier painted-paper and nautical-journal studies are superseded iteration material. The game lives in `frontend/`. Codex is still finishing on `feat/graphics-foundation`, which already merged `main` (`cc7174d`) and keeps the `frontend/` layout. G1 finish merges that branch when Codex reports done and Nils agrees.
 - **Layout and hosting.** One Vercel project with two Services: `frontend/` (Vite) and `backend/` (FastAPI). Every `/api` request goes to the backend. Functions should run in Dublin, next to the Supabase project in Ireland (Nils confirms the region in the Vercel settings). (v0.1 said `api/index.py` and Frankfurt.)
 - **`main` is live (new).** On 5 Nov, Claude merged `feat/live-skeleton` into `main` (merge commit `a0e501a`). The game and the Python API now run at https://the-great-plot-twist.vercel.app/: the page answers with the game, `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}` and `/api/config` answers with all flags off. That passes deploy check 2 and shows that Vercel Services with the Python backend works on the Hobby plan. The merge skipped peer review once, on Nils' standing authorization. D015 records the rule: owner-authorized merges by Claude cover coordination work, and teammates' changes keep peer review.
-- **Foundation.** Wave 1 is done and on `main`. Wave 2 is in progress on `chore/foundation`: starting balance 0, a table of wallet reasons, neutral captain names, explicit grants, crews and seats (D012), a keep-alive route, and the decision entries D002, D003, D004, D012 and D015.
+- **Foundation.** Wave 1 is done and on `main`. Wave 2 was in progress on `chore/foundation` (merged since as `393f551`): starting balance 0, a table of wallet reasons, neutral captain names, explicit grants, crews and seats (D012), a keep-alive route, and the decision entries D002, D003, D004, D012 and D015.
 - **Story.** "The Light That Shouldn't Be" replaces "The Fog Ledger", and S3 takes its name. New packages: S0 Story detail round, S4 NPC partners, A6 Crews and seats. L3 becomes the Captain's Table board and the Night of Three Lights.
 - **Live features.** L4 Island Exchange follows Nils' rules and uses a checked data feed. L5 Prediction desk and L6 Sports predictions come back as "should", with checked sources. A7 Lantern Duels is new.
 - **Honest tiers.** Every package is core, should or later. The story skeleton's core list is about twice our capacity, so this roadmap cuts it. Minimum versions ship first.
@@ -20,14 +31,14 @@
 
 ## Start today
 
-Nothing here waits for anyone. `main` is live, so clone it and create your branches from `main`. Open decisions (who builds S4, how the S lane gets the solo game, and others) are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions).
+Nothing here waits for anyone. `main` is live, so clone it and create your branches from `main`. Open decisions (for example the D008 grow order and who creates the data-API accounts) are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions).
 
 | Lane | Start now | Read first | Next, when it unblocks |
 |---|---|---|---|
 | Everyone | Accept the GitHub invite, set your commit email, clone `main` and run the checks. Open the live site. Settle the open decisions at the team kickoff. | [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), this file, [docs/STATUS.md](docs/STATUS.md) | The first package of your lane |
-| G World and Graphics (Nils, with Codex) | G1 done: the pixel pass is on `main` (`45d2d46`; D005: original top-down pixel art). Codex now builds G2 + G3 on `feat/g2-world-places`. | [frontend/GRAPHICS.md](frontend/GRAPHICS.md) | G4 finale visuals, once the L3 finale contract exists. |
-| S Story and Mystery | S0 Story detail round (Claude for Nils on `docs/story-detail`, for Nils' approval). S1 is built by Claude for Nils on `feat/s1-import-plot-twist`. | [docs/STORY.md](docs/STORY.md) | S2 Act 1 in the browser, once S1 is on `main`. |
-| A Accounts and Multiplayer | A1-next preparation: get Developer access in the Supabase organization (to read), read the database rules, and read the backend code on `main`. | [docs/SETUP.md](docs/SETUP.md), [supabase/README.md](supabase/README.md), [specs/F0-foundation.md](specs/F0-foundation.md) | When wave 2 is on `main`, Claude applies the migration and runs the security advisor. Then run the other four deploy checks (check 2 has passed), then A2 |
+| G World and Graphics (Nils, with Codex) | G1, G2 and G3 are on `main` (`45d2d46`, `60bd60e`; D005: original top-down pixel art). | [frontend/GRAPHICS.md](frontend/GRAPHICS.md) | G4 finale visuals, once the L3 finale contract exists. |
+| S Story and Mystery | S0 Story detail round: approved by Nils on 5 Nov (branch `docs/s0-story-round`, from `main`), except three review changes that wait for his OK. S1's import (`589baea`) and Story v2 (`3d59b6a`) are on `main`; its content linter is still to do. S2's playable intro is on `main` (`c52613b`). | [docs/STORY.md](docs/STORY.md) | S3 The Light That Shouldn't Be, once A3 and A6 are on `main`. Its spec is the case file in [docs/story/](docs/story/README.md). |
+| A Accounts and Multiplayer | A1-next preparation: get Developer access in the Supabase organization (to read), read the database rules, and read the backend code on `main`. A4 live presence is core now: read its Realtime budget in [docs/INTERFACES.md](docs/INTERFACES.md#7-realtime-budget). | [docs/SETUP.md](docs/SETUP.md), [supabase/README.md](supabase/README.md), [specs/F0-foundation.md](specs/F0-foundation.md) | The foundation migration is applied. The deploy checks and the two-user test plan are tracked in [docs/STATUS.md](docs/STATUS.md#right-now). Then A2 |
 | L Live Systems | L1 Live weather: the spec, saved Open-Meteo answers and the mapping tests. No network in tests. | `backend/server/adapters/base.py` and `example.py`, [docs/ENGINEERING.md](docs/ENGINEERING.md) recipe 4.4, `setWeather` in [frontend/GRAPHICS.md](frontend/GRAPHICS.md) | L1 code on `feat/l1-live-weather` (from `main`), and the L3 spec for Mon 9 |
 
 ## How to read this
@@ -46,7 +57,7 @@ One roadmap day is about 4 focused hours by one teammate with a coding agent.
 - **The story skeleton's core list is too large.** Built in full it comes to about 50 package days: the 16 core packages below (37 days), plus the Exchange, free sailing and salvage, a phone page for the class and a presenter panel. That is nearly twice what we have. This roadmap cuts it in three steps.
   1. Only the 16 packages that the world, the mystery, the logins, your own islet and the live weather need are **core**. Everything else is **should** or **later**.
   2. Even the core is too big at full size: about 37 days. At minimum versions it is about 23 days, which fits with about 3 days to spare. So **every core package ships its minimum version first**, as its own small pull request.
-  3. **Cut rule at M1 (Fri 13).** A package counts as merged when its minimum version is on `main`. If less than 70% of the M0 and M1 packages are merged (7 of 10), every remaining core package stays at its minimum version and no should package starts. If 70% or more are merged, lanes grow core packages to full size in the grow order, then start should packages.
+  3. **Cut rule at M1 (Fri 13).** A package counts as merged when its minimum version is on `main`. If less than 70% of the M0 and M1 packages are merged (8 of 11, with A4), every remaining core package stays at its minimum version and no should package starts. If 70% or more are merged, lanes grow core packages to full size in the grow order, then start should packages.
 - **Grow order** (proposed for D008, open for the team kickoff): first S3, L3 and S4 to full size, because the mystery is the heart of the game. Then L4 Island Exchange. Then G2 and G3 at full size. Then L2 at full size. Then A7, L5 and L6, in that order.
 
 | ID | Package | Tier | Size | Full days | Minimum days | Milestone |
@@ -59,7 +70,7 @@ One roadmap day is about 4 focused hours by one teammate with a coding agent.
 | S1 | Import Plot Twist and Story v2 | core | M | 2.5 | 1.5 | M0 |
 | S2 | Act 1 in the browser | core | M | 2.5 | 1.5 | M1 |
 | S3 | The Light That Shouldn't Be | core | L | 4 | 3 | M2 |
-| S4 | NPC partners (built by the L lane) | core | M | 2.5 | 1.5 | M2 |
+| S4 | NPC partners | core | M | 2.5 | 1.5 | M2 |
 | A1 | Foundation: what is left | core | L, about S left | 1 | 1 | M0 |
 | A2 | Sign-in, captain names and cloud progress | core | M | 2.5 | 1.5 | M1 |
 | A3 | Referee and entry kits | core | M | 2.5 | 1.5 | M1 |
@@ -69,14 +80,17 @@ One roadmap day is about 4 focused hours by one teammate with a coding agent.
 | L3 | Captain's Table and Night of Three Lights | core | L | 4 | 2.5 | M2 |
 | | **Core total** | | | **37** | **23** | |
 | L4 | Island Exchange | core (Nils, 5 Nov; minimum version first) | L | 4 | 2 | M2 |
+| A4 | Live presence | core (Nils, 5 Nov, late evening; minimum version first). Size and days are a proposal until the A4 spec | M (proposal) | 2.5 | 1.5 | M1 |
 | A7 | Lantern Duels | should, 2nd | M | 2.5 | 1.5 | after M1 |
 | L5 | Prediction desk | should, 3rd | M | 2.5 | 1.5 | after M1 |
 | L6 | Sports predictions | should, 4th | M | 2.5 | 1.5 | after M1 |
 | | **Should total** | | | **11.5** | **6.5** | |
 
-At minimum versions each person carries about 5 to 6.5 days: G about 5 (with Nils' half of S0), S about 6.5, A about 5.5, L about 6 (with S4). Everyone has about 6.5. The S lane is the fullest, so the L-lane owner builds S4 by default (a proposal, open for the team kickoff).
+At minimum versions each lane carries about 5 to 7 days: G about 5 (with Nils' half of S0), S about 6.5, A about 7 with A4 (proposed), L about 6 (with S4). Everyone has about 6.5, so the A lane is the fullest until the recount at the Fri 13 check. These numbers show the load, not an assignment: no package is reserved for a teammate (Nils, 5 Nov, late evening). Claude and Codex build every package as far as they can, and teammates join any package or bring new ideas.
 
 **Decided by Nils (5 Nov):** Island Exchange (L4) is core. To fit about 26 package days, it ships its minimum version first, and L2 (home islet) and G3 (Saltreach Harbor) ship their minimum versions. The minimum core is then about 25 days, with about 1 day spare. L2 and G3 grow back to full if the M1 check passes.
+
+**Decided by Nils (5 Nov, late evening):** live multiplayer is core, so A4 (live presence) joins L4 below the line. At its proposed 1.5 days of minimum size it takes the minimum core to about 26.5 days. G1, G2, G3 and L4 are already on `main`, so the days still to spend are fewer than that sum. The roadmap owner recounts them at the M1 check on Fri 13 Nov, counting G2, G3 and L4 as done.
 
 ### Tiers
 
@@ -91,9 +105,9 @@ One lane per teammate, so everyone owns visible game code in both Python and Jav
 - **G World and Graphics:** Nils, with Codex.
 - **S Story and Mystery:** owner picked by the team today. Nils co-owns S0.
 - **A Accounts and Multiplayer:** owner picked by the team today. Nils does the account steps with them (A1).
-- **L Live Systems:** owner picked by the team today. Builds S4 by default (a proposal, open for the team kickoff).
+- **L Live Systems:** owner picked by the team today.
 
-The letter says where a package belongs, not who must build it. The lane owner coordinates it, and any teammate may build it ([CONTRIBUTING.md](CONTRIBUTING.md): any teammate may own a task).
+The letter says where a package belongs, not who must build it. The lane owner coordinates it, and any teammate may build it ([CONTRIBUTING.md](CONTRIBUTING.md): any teammate may own a task). No package is reserved for a teammate (Nils, 5 Nov, late evening): Claude and Codex build every package as far as they can, and teammates join any package or bring new ideas.
 
 ### From package to code
 
@@ -109,7 +123,7 @@ The letter says where a package belongs, not who must build it. The lane owner c
 The bootstrap is done. `feat/live-skeleton` was merged into `main` on 5 Nov (merge commit `a0e501a`: the team workflow docs, foundation wave 1 and the graphics snapshot, moved into `frontend/`). It skipped peer review once, on Nils' standing authorization (D015). Nobody needs `feat/live-skeleton` any more. What lands next, in this order:
 
 1. **These docs go to `main` first:** this roadmap, the story, the status page and the README changes, so the whole team plans from the same pages.
-2. **Foundation wave 2 (`chore/foundation`) goes to `main`**, with `docs/ARCHITECTURE.md`, `docs/INTERFACES.md` and the decision entries D002, D003, D004, D012 and D015. It comes before the database work because wave 2 still edits the first migration, and a migration is never edited after it is applied ([docs/ENGINEERING.md](docs/ENGINEERING.md), recipe 4.2). Then Claude applies the migration to the Supabase project and runs the Supabase security advisor (its built-in safety check).
+2. **Done: foundation wave 2 (`chore/foundation`) is on `main`** (`393f551`), with `docs/ARCHITECTURE.md`, `docs/INTERFACES.md` and the decision entries D002, D003, D004, D012 and D015. It came before the database work because wave 2 still edited the first migration, and a migration is never edited after it is applied ([docs/ENGINEERING.md](docs/ENGINEERING.md), recipe 4.2). The migration is applied to the Supabase project.
 3. **Done: Codex's final pixel pass is on `main`** (`45d2d46`, merged on 5 Nov evening after the tests and the build passed).
 4. **Every package uses its own `feat/` branch from `main`.** Packages that draw places or screens (G2, S2) wait for step 3, and packages that use the database (A2 and later) wait for step 2.
 
@@ -128,6 +142,7 @@ Then:
   solo game access + S0 -> S1 Import Plot Twist and Story v2 -> S2 Act 1 in the browser
   A1 -> A2 Sign-in and captain names -> A3 Referee and kits (also needs S1)
   A2 -> A6 Crews and seats
+  A2 + A6 -> A4 Live presence (Supabase Realtime, target the Fri 13 slice)
   S0 + S1 + A3 + A6 -> S3 The Light That Shouldn't Be
   S0 + A6 + S3 cards -> S4 NPC partners
   A6 + S3 rules -> L3 Captain's Table and Night of Three Lights -> G4
@@ -143,8 +158,8 @@ Should (only if the M1 cut rule passes, always behind a feature flag):
 |---|---|---|
 | M0 Foundations | Thu 5 to Sun 8 | `main` is live (done on 5 Nov: the bootstrap is merged and production answers). Foundation wave 2 is on `main`. Codex's final pixel pass is merged and D005 is written. `npm test` and `uv run pytest` are green on `main`. Lane owners are picked. The S0 case file is drafted. The migration is applied and the two-user test plan passes. |
 | Contracts | Mon 9 | All four have reviewed `docs/INTERFACES.md` (D009). Nils has approved S0. The A6 and L3 specs are written. Every core package has an issue. |
-| Backbone go/no-go | Tue 10 | The five deploy checks in [docs/SETUP.md](docs/SETUP.md) pass or have a recorded fallback (D010): a teammate's push builds a Ready preview, `/api/health` answers on the preview, a call to the daily keep-alive route ends with 200 on production (check 3 waits for Nils to decide what makes that call), two test users each see only their own rows, and a GitHub sign-in round trip works. Check 2 already passed on 5 Nov: `/api/health` answers on production. |
-| M1 Vertical slice | Fri 13 | Act 1 is playable in the browser to an ending. The referee grants a kit. A crew forms, with an NPC partner in an empty seat. You can travel from Lighthouse Isle to the harbor. Live weather shows. First fps check on the presenter laptop. Cut rule applied (D008). |
+| Backbone go/no-go | Tue 10 | The five deploy checks in [docs/SETUP.md](docs/SETUP.md) pass or have a recorded fallback (D010): a teammate's push builds a Ready preview, `/api/health` answers on the preview, a call to the daily keep-alive route ends with 200 on production (check 3: a daily GitHub Actions workflow makes the call, `.github/workflows/keepalive.yml`, Nils, 5 Nov), two test users each see only their own rows, and a GitHub sign-in round trip works. Check 2 already passed on 5 Nov: `/api/health` answers on production. |
+| M1 Vertical slice | Fri 13 | Act 1 is playable in the browser to an ending. The referee grants a kit. A crew forms, with an NPC partner in an empty seat. Two players see each other live (A4). You can travel from Lighthouse Isle to the harbor. Live weather shows. First fps check on the presenter laptop. Cut rule applied (D008). |
 | M2 Feature complete | Wed 18, freeze 18:00 | The case works end to end: a crew of four and a solo player with NPC partners both finish (8 cards, 4 deductions, finale, accusation, twist). The Relighting and the rewards happen once. Each islet is saved per account. Solvability proofs are green. The timed playtest is logged. |
 | M3 Ship | Thu 19 to Sun 22 | Deployed checks pass. The README has the deployed URL, every member's name and student number, the commands and demo mode. Each lane has a how-it-works page. `frontend/ASSETS.md` is complete. The highlights demo is rehearsed on Fri 20, explain-back drills run on Thu 19 and Sat 21, final rehearsal on Sun 22. |
 | Submit | Mon 23 | Fresh-clone check and signed-out browser check. Tag `v1.0`. One member submits on Moodle by 18:00 (the deadline is 23:59), with a backup member named. |
@@ -160,16 +175,21 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D003 | Rules live in Python on the server; the browser never writes game data | Foundation pull request (A1) | coming with the foundation update |
 | D004 | Play-money wallet: one ledger, starting balance 0, coins arrive with the entry kit, a reasons table with directions, one row per player, reason and ref | Foundation pull request (A1) | coming with the foundation update |
 | D005 | Look: top-down original pixel art, decided by Nils on 5 Nov (sprites drawn by code, 16 native pixels per world unit, nearest-neighbour scaling, on Vite, Three.js and plain JavaScript). It supersedes the earlier look studies. | G1 finish, with Codex's final pixel pass | decided; the entry is written with G1 finish |
-| D006 | Identity: GitHub sign-in only, generated captain names, preset emotes, no free text | A2 | reserved |
+| D006 | Identity: GitHub sign-in only, generated captain names, preset emotes, no free text | A2 | proposed in the A2 pull request (`feat/a2-a3-signin-referee`); the sign-in approach and the word lists wait for Nils |
 | D007 | Plot Twist imported as an unchanged copy with a provenance note; the solo repository untouched | S1 | written in the S1 pull request (`feat/s1-import-plot-twist`); proposed until reviewed |
 | D008 | Scope tiers (core, should, later), minimum versions first, the M1 cut rule and the grow order | Kickoff | reserved; the grow order is open for the kickoff |
 | D009 | Contracts v1 frozen in `docs/INTERFACES.md` | Mon 9 | reserved |
 | D010 | Backbone go/no-go result | Tue 10 (A1-next) | reserved |
 | D012 | Crews and seats: up to 4 seats per crew, each holding a player or an NPC partner; solo = one player plus NPC partners | Foundation pull request (A1) | coming with the foundation update |
-| D013 | Story decisions 1 to 5 (5 Nov): own copy per crew and the first solve relights the coast for everyone; Story v2 is small `story.json` edits; NPC partners v1 are scripted errand runners; **the class demo is very short and shows highlights only (changed)**; the culprit is the harbor master, titles only | S0 | decided; to be written |
+| D013 | Story decisions 1 to 5 (5 Nov): own copy per crew and the first solve relights the coast for everyone; Story v2 is small `story.json` edits; NPC partners v1 are scripted errand runners; **the class demo is very short and shows highlights only (changed)**; the culprit is chosen (a spoiler, named only in D013 of the [decision log](docs/DECISIONS.md) and the labelled story files), titles only | S0 | decided; to be written |
 | D014 | Live data sources and their free keys: who creates each account and where each key lives (Vercel settings only) | L1 or L4, whichever merges first | reserved (new in v0.2); who creates the accounts is open for the kickoff |
 | D015 | Owner-authorized merges by Claude for coordination work; teammates' changes keep peer review. First use: the bootstrap merge `a0e501a` on 5 Nov | Foundation pull request (A1) | reserved; written in `docs/DECISIONS.md` with the foundation update (new on 5 Nov, evening) |
 | D016 | Server content lives in `backend/content/`; the browser gets public content through `GET /api/content/{name}`; secret content in `backend/content/secret/` is never served; browser-only data stays in `frontend/`. It moves the content paths of S3, S4, A2, A3, L2, L4 and L5. | S1 | proposed in the S1 pull request; stays proposed until Nils accepts it (new on 5 Nov) |
+| D017 | Island Exchange rules | L4 | written in `docs/DECISIONS.md`; the chosen numbers are proposals for Nils and the team. His answers of 5 Nov, late evening, change several of them, so D017 is reworked on the Exchange branch |
+| D018 | Story round (5 Nov 2026): the 19 decisions of the approval sheet, decision 19 changed (no demo world for now, a relight lock instead) and live multiplayer as core (A4) | S0 | decided by Nils; written with the S0 pull request (`docs/s0-story-round`) |
+| D019 | Referee and entry kits | A3 | proposed in the A3 pull request (`feat/a2-a3-signin-referee`); the kit coins (N5) and "the first ending counts" (N6) wait for Nils |
+| D020 | Crews: codes, the guessing limit and partners at the muster | A6 | proposed in the A6 pull request (`feat/a6-crews`) |
+| D022 | Account data: cloud save versions, delete my data, hosts (D018 on its branch; renumbered at merge) | A2 | proposed in the A2 pull request (`feat/a2-a3-signin-referee`); "delete my data" waits for Nils |
 
 D011 (class join go/no-go after a load test) is released. The phone class join moved to later, and the demo is highlights only.
 
@@ -178,10 +198,10 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 **Very short, highlights only. It is not the live first solve** (D013, decision 4; Nils changed this on 5 Nov).
 
 - It shows a few highlights, picked from the beats in [docs/STORY.md](docs/STORY.md) section 8, for example: the Act 1 ending card, a crew with an NPC partner in one seat, a deduction lighting up, the Night of Three Lights and the schooner, and the Relighting. Whether it also shows the twist is open for the team kickoff, because that spoils the case for classmates who play later.
-- Proposal: it runs on a seeded demo world that is reset afterwards (L3's presenter seed and reset script), so the live world's real first solve stays open for players. A short recording of the same highlights is the fallback. Live on a seeded demo world or recorded is open for the team kickoff.
+- **No separate demo world for now** (Nils, 5 Nov, late evening: "maybe we add later, for now we just build the game"). The demo runs the existing `?demo=1` highlights tour (S2 and G5), which runs on the browser-side stand-in and never touches the live world, so the live world's real first solve stays open for players. A short recording of the same highlights is the fallback. Rehearsals use the same tour. One server setting, the relight lock, keeps the relight switch locked until the game opens, so the team's own test solves cannot relight the coast (decision 19). A separate demo world with a seed and a reset script can still come later if the team wants it.
 - Not needed any more: the 7:30 live script and the phone class join (A5).
 - Still open: the date (Tue 24 Nov or Fri 4 Dec), the slot length and the format. The course has not published them yet.
-- Free Supabase projects pause after 7 days of low activity. What calls the keep-alive route once a day is an open decision for Nils ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Until then we rely on team activity, and someone opens the Supabase dashboard the day before the demo.
+- Free Supabase projects pause after 7 days of low activity. A daily GitHub Actions workflow calls the keep-alive route (`.github/workflows/keepalive.yml`, Nils, 5 Nov; [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)). Someone still opens the Supabase dashboard the day before the demo.
 
 ## Lane G: World and Graphics (Nils, with Codex)
 
@@ -206,7 +226,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Minimum version:** merge the final pixel pass as it is; tune later.
 
 ### G2 Places and sea chart
-- **Status:** in progress (Codex, for Nils, on `feat/g2-world-places`, together with G3).
+- **Status:** done (Codex, for Nils; merged with G3 as `60bd60e`).
 
 - **Milestone:** M1 · **Size:** M · **Tier:** core · **Can start now:** after Codex's final pixel pass is merged, so G2 builds on the final frontend code.
 - **Ships:** a place manager that loads one place at a time (Lighthouse Isle, Saltreach Harbor, your home islet), a sea chart for travel, chart stops for Smugglers' Cove, Wreck Point and the Teeth, and the fog bank that hides Gull's Rest.
@@ -223,6 +243,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Minimum version:** the chart plus a fade. Chart stops open a pixel-art scene panel instead of a walkable map.
 
 ### G3 Saltreach Harbor
+- **Status:** done (Codex, for Nils; merged with G2 as `60bd60e`).
 
 - **Milestone:** M2 · **Size:** M · **Tier:** core · **Can start now:** after G2.
 - **Ships:** the shared hub from the story: Harbor Office, Harbor Light, ferry pier, jail, market hall, prediction kiosk, sports pavilion and signal station.
@@ -246,6 +267,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 ## Lane S: Story and Mystery (owner picked today)
 
 ### S0 Story detail round
+- **Status:** done. Nils approved the story round on 5 Nov 2026 (D018). Everything is in [docs/story/](docs/story/README.md). Three review changes to the text of the approval sheet wait for his OK before the pull request ([docs/story/README.md](docs/story/README.md#changes-to-the-approval-sheet-after-the-review)).
 
 - **Owner:** Nils and the S-lane owner.
 - **Milestone:** M0, done by Mon 9 (contracts day) · **Size:** M · **Tier:** core · **Can start now:** yes. Writing only, no code.
@@ -260,7 +282,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 
   Items that other packages own go there: the crew and seat model (A6), the Night of Three Lights (L3), the map and art list (G2), the open-world numbers (L2, L4) and the demo script (M3).
 - **Depends on:** nothing.
-- **Provides:** the detail sections in docs/STORY.md, and the specs `specs/S3-the-light.md` and `specs/S4-npc-partners.md`.
+- **Provides:** the detail sections in docs/STORY.md and the story round in [docs/story/](docs/story/README.md): the case file ([CASE-FILE.md](docs/story/CASE-FILE.md)), the NPC partner rules ([NPC-PARTNERS.md](docs/story/NPC-PARTNERS.md)), the Story v2 change list ([STORY-V2-CHANGES.md](docs/story/STORY-V2-CHANGES.md)), the open-world numbers ([OPEN-WORLD.md](docs/story/OPEN-WORLD.md)), the timing check ([TIMING.md](docs/story/TIMING.md)), and the case data in `backend/content/secret/case.json` and `backend/content/partners.json`. They stand in for `specs/S3-the-light.md` and `specs/S4-npc-partners.md`, which are not written: S3 and S4 start from these pages.
 - **Acceptance:**
   - every item in "Next detail round" is answered, or handed to a named package;
   - the case file lists 8 cards and 4 deductions, with a cheap route for one kit and a slower route for the others;
@@ -269,7 +291,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Minimum version:** the Story v2 change list and the case file. The rest goes into the S3 and S4 specs.
 
 ### S1 Import Plot Twist and Story v2
-- **Status:** in progress (Claude, for Nils, on `feat/s1-import-plot-twist`).
+- **Status:** the import is on `main` (`589baea`), and so is the second pull request, Story v2 (`3d59b6a`) (Claude, for Nils). The content linter `backend/tools/lint_content.py` is not built yet.
 
 - **Milestone:** M0 · **Size:** M, two pull requests · **Tier:** core · **Can start now:** yes; in progress (Claude, for Nils).
 - **Ships:** the original game, *The Keeper's Last Log* (engines, story and its 11 tests), inside the team repository. Then the Story v2 edits.
@@ -286,9 +308,9 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - the parity test (the Python and JavaScript engines agree) still passes;
   - the provenance note (solo repository `main` at `e235ee4`, copied, the solo repository untouched) and D007 are written, and D016 (the content location) is proposed;
   - `GET /api/content/intro-story` answers 200 with the story file and `Cache-Control: public, max-age=300`, and a name that is not on the public list answers 404 in the standard error shape;
-  - Story v2 (second pull request): one ending line per decision, reading the log sets a used flag, "no decision" is a real third path, and the planted hints show for everyone. Each change has a test;
+  - Story v2 (second pull request): all 14 edits of [STORY-V2-CHANGES.md](docs/story/STORY-V2-CHANGES.md): one ending line per decision, the log lead, a visible third path for saying nothing (it is not final: decision 2), Elena's drawing for Chapter 2, the lantern fix and the planted hints for everyone. Each change has a test (19 new tests), and the one existing engine-rule test that pins the shore notes by position is updated;
   - the linter rejects unknown items or flags, and flags that are set but never used.
-- **Minimum version:** the import plus the ending lines only.
+- **Minimum version:** the import, then all 14 Story v2 edits and their 19 tests in one small pull request.
 - **Watch out:** D016 puts the server's content under `backend/` from the start, because it is not proven that the backend on Vercel can read files outside `backend/`. What is still not checked is that the deployed API finds `backend/content/story.json`. A3 checks this on a preview.
 
 ### S2 Act 1 in the browser
@@ -310,7 +332,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Ships:** the case for one crew (each crew plays its own copy, D013): 8 cards, 4 deductions, the Night of Three Lights finale (with L3), the accusation aboard the schooner and the twist, with a closing line per kit.
 - **Depends on:** S0, S1, A3, A6. L3 builds the board and the finale on the same rules.
 - **Provides:**
-  - `backend/content/secret/case.json`. Server only and never served, because it names the culprit;
+  - `backend/content/secret/case.json`. Server only and never served, because it names the culprit. The data is already in place from the story round, with its format in `backend/content/README.md`; S3 builds the server code that reads it;
   - `backend/server/game/case.py`: find a card at a place, check a deduction, check an accusation. Coin costs are checked first, and a refusal changes nothing;
   - `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`, and `POST /api/case/accuse {suspect, actionUid}`;
   - `reveal_lines(profile, flags)`.
@@ -321,29 +343,30 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - pytest proves that one seat can never solve alone;
   - a wrong accusation is refused, changes nothing and shows the clearing deduction;
   - a repeated `actionUid` acts once, and a refused action costs nothing;
-  - no file under `frontend/` reads `backend/content/secret/case.json`, and the built site contains no reveal line (checked by a test).
-- **Minimum version:** all 8 cards and 4 deductions, with one route per card (no slower routes), and the finale with two lights (L3 minimum).
+  - no file under `frontend/` reads `backend/content/secret/case.json`, and the built site contains no reveal line (checked by a test);
+  - the timing program (`python3 -I backend/tools/simulate_case.py`) exits with 0 after any change to a minute, a window or a price.
+- **Minimum version:** 8 cards with 12 routes (4 kit, 4 timed, 4 open), 4 deductions, the accusation, the reveal and closing lines, and the finale with three lights. Paid, share, world and log-reader routes come later.
 
 ### S4 NPC partners
 
-- **Built by:** the L-lane owner by default (a proposal, open for the team kickoff), because the S lane is the fullest and partners act on L3's board and finale. The S-lane owner reviews the lines.
+- **Built by:** not reserved for anyone (Nils, 5 Nov, late evening). Claude and Codex build S4 as far as they can, and a teammate may join. Partners act on L3's board and finale, so whoever builds S4 agrees pinning and manning lights with whoever builds L3. The S-lane owner reviews the lines.
 - **Milestone:** M2 · **Size:** M · **Tier:** core · **Can start now:** after A6 and the S0 partner spec.
 - **Ships:** scripted errand runners (D013, decision 3). An empty seat holds an NPC partner with a kit the crew lacks. You order it to search a place, pin its card or man a light. An errand takes about 10 minutes on the case clock and ends with a scripted line. Partners count as crew, but they never pick card pairs or accuse. A friend can take over a partner's seat with the crew code (A6).
 - **Depends on:** S0, A6, S3 (the card list), and L3 (pinning and manning lights).
-- **Provides:** `backend/server/game/partners.py`; `backend/content/partners.json` (orders, errand times, about 30 lines); `POST /api/crews/me/orders {seat, order, target, actionUid}`.
+- **Provides:** `backend/server/game/partners.py`; `backend/content/partners.json` (the 34 scripted lines are already there from the story round; orders and errand times are constants in code); `POST /api/crews/me/orders {seat, order, target, actionUid}`.
 - **Acceptance:**
   - pytest: a partner never pairs cards or accuses; an impossible order is refused with a line and changes nothing; an errand finishes once, even if the request is repeated;
   - partners fill exactly the kits the crew lacks;
   - a solo run with three partners reaches the finale (with S3);
   - lines come only from the bank: no free text and no AI voice.
-- **Minimum version:** two orders, "search a place" and "man a light".
+- **Minimum version:** one order that fetches a card and pins it (15 case minutes), `man_light`, the kit rule and the refusals busy, wrong kit, locked window and not ready, in about 25 tests. `allowPaid` stays off.
 
 ## Lane A: Accounts and Multiplayer (owner picked today)
 
 ### A1 Foundation (F0)
 
-- **Status:** wave 1 is done and on `main` (it came in with the bootstrap merge `a0e501a`). Production is live and deploy check 2 passed: `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}` and `/api/config` answers with all flags off, so Vercel Services with the Python backend works on the Hobby plan. Wave 2 is in progress on `chore/foundation`, not on `main` yet: the database aligned with D003 and D004 (starting balance 0, a `wallet_reasons` table, neutral captain names, explicit grants, `crews` and `crew_seats`), the keep-alive route `GET /api/keepalive`, and the ARCHITECTURE and INTERFACES docs. The Supabase project `great-plot-twist` (West EU, Ireland) exists, GitHub sign-in is on, and Claude's Supabase connection can reach it. **Next:** wave 2 goes to `main`; then Claude applies the migration and runs the security advisor (no invite or SQL pasting by teammates is needed); then the two-user test plan in [supabase/README.md](supabase/README.md) and the other four deploy checks in [docs/SETUP.md](docs/SETUP.md) (step 5). The A-lane teammates still get Developer access in the Supabase organization, to read. Then the A-lane owner takes over.
-- **Milestone:** M0, go/no-go on Tue 10 · **Size:** L (the code exists; about S is left) · **Tier:** core · **Can start now:** yes. Apply the migration only once wave 2 lands.
+- **Status:** waves 1 and 2 are on `main`: wave 1 came in with the bootstrap merge `a0e501a`, wave 2 as `393f551`. Production is live and deploy check 2 passed: `/api/health` answers `{"status":"ok","version":"0.1.0","env":"production"}` and `/api/config` answers with all flags off, so Vercel Services with the Python backend works on the Hobby plan. Wave 2 brought the database aligned with D003 and D004 (starting balance 0, a `wallet_reasons` table, neutral captain names, explicit grants, `crews` and `crew_seats`), the keep-alive route `GET /api/keepalive`, and the ARCHITECTURE and INTERFACES docs. The Supabase project `great-plot-twist` (West EU, Ireland) exists, GitHub sign-in is on, and the foundation migration is applied. **Next:** the two-user test plan in [supabase/README.md](supabase/README.md) and the other deploy checks in [docs/SETUP.md](docs/SETUP.md) (step 5), as [docs/STATUS.md](docs/STATUS.md#right-now) tracks them. The A-lane teammates still get Developer access in the Supabase organization, to read. Then the A-lane owner takes over.
+- **Milestone:** M0, go/no-go on Tue 10 · **Size:** L (the code exists; about S is left) · **Tier:** core · **Can start now:** yes.
 - **Ships:** a deployed skeleton: `/api/health` and `/api/config` live (done on 5 Nov), GitHub sign-in proven, the wallet and the migration applied and tested.
 - **Depends on:** Nils for the account steps. He has set up Vercel and its environment variables; he still confirms that Email sign-in is off in Supabase and that the function region is Dublin. The Supabase secret key goes from the dashboard straight into Vercel, never through chat or the repository.
 - **Provides:**
@@ -351,7 +374,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - `CachedSource` (cache, timeout and fallbacks) for every outside data source;
   - the wallet: `apply_transaction` in `backend/server/wallet.py` and the one database function behind it;
   - the tables `profiles`, `saves`, `wallets`, `wallet_reasons`, `wallet_transactions`, `crews` and `crew_seats`;
-  - `GET /api/keepalive`, for one daily caller so the free Supabase project does not pause (Nils still has to decide what calls it, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive));
+  - `GET /api/keepalive`, for one daily caller so the free Supabase project does not pause (a daily GitHub Actions workflow calls it, `.github/workflows/keepalive.yml`, Nils, 5 Nov; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive));
   - `vercel.json` with two Services.
 - **Acceptance:**
   - `cd backend && uv run pytest` and `uv run ruff check .` are green (today on `main`: 232 passed, "All checks passed!"), and the SQL parse check passes;
@@ -395,6 +418,16 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - it works on a preview deployment, which proves the backend can read the story content there.
 - **Minimum version:** kits set the start place, the coins and one card route only.
 
+### A4 Live presence
+
+- **Status:** core since the late evening of 5 Nov 2026 (Nils: "the game needs to be a multiplayer game, so we need to see everyone live; push that up"). It moved up from the Later list. Its size and days are a proposal until the A4 spec.
+- **Milestone:** M1, target the Fri 13 slice: two players see each other live · **Size:** M (proposal) · **Tier:** core · **Can start now:** the spec now; code after A2 and A6.
+- **Ships:** you see the other captains who are in your crew or at your place, live: a small figure with a captain name and preset emotes, moving as they move. It runs free on Supabase Realtime, which the free Supabase plan includes, in small rooms: one private room for each crew and one room for each place. Positions are sent only while a player moves, at most 2 a second. Presence says who is here. The server pushes rule changes (a pin, a deduction, a lock) into the crew room. **The server stays the referee:** nothing in a room decides money, progress or a deduction.
+- **Depends on:** A2 (sign-in, so a room knows who joins) and A6 (crews, so a crew room exists). Behind the flag `live_presence`.
+- **Provides:** `frontend/src/online/presence.js`; the room names and message shapes, written in the A4 spec and in [docs/INTERFACES.md](docs/INTERFACES.md#7-realtime-budget) (another branch updates its realtime section).
+- **Acceptance:** two browsers signed in as different players in one crew see each other move; a player in another crew or at another place does not appear; a moving player sends at most 2 position updates a second and a player who stands still sends none; a message in a room never changes a coin balance or a deduction; with the flag off the game runs with no Realtime connection. A place room holds at most N players. The A4 spec sets N with the arithmetic of [docs/INTERFACES.md](docs/INTERFACES.md#7-realtime-budget), including the limit of 20 presence messages a second.
+- **Minimum version:** two players at one place see each other's position and captain name. Emotes and the pushes of rule changes into the crew room follow, the pushes together with L3.
+
 ### A6 Crews and seats
 
 - **Milestone:** M1 · **Size:** M · **Tier:** core · **Can start now:** the spec now (the tables come with foundation wave 2); code after A2.
@@ -413,7 +446,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Milestone:** after M1, only if the cut rule passes · **Size:** M · **Tier:** should, 2nd · **Can start now:** no.
 - **Ships:** turn-based duels between two players, five rounds, and the server decides every round. Optional equal play-coin stakes, paid to the winner. Preset emotes only.
 - **Depends on:** A2, and the flag `arena`.
-- **Provides:** `backend/server/game/duel.py`; the tables `duels` and `duel_moves` (new migration); `POST /api/duels`, `POST /api/duels/{id}/move` and `GET /api/duels/{id}`, polled, so Realtime is not needed; the wallet reasons `arena_stake` and `arena_payout`, added by migration.
+- **Provides:** `backend/server/game/duel.py`; the tables `duels` and `duel_moves` (new migration); `POST /api/duels`, `POST /api/duels/{id}/move` and `GET /api/duels/{id}`, polled, so a duel does not need Realtime (A4 uses it for presence, not for duels); the wallet reasons `arena_stake` and `arena_payout`, added by migration.
 - **Acceptance:** a move out of turn is refused with no change; the server stores the result of every round; stakes are taken once and paid once (the ref is the duel id); a timed-out duel refunds both players; no free text.
 - **Minimum version:** three rounds, no stakes.
 
@@ -440,7 +473,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 ### L2 Your home islet
 
 - **Milestone:** M2 · **Size:** M · **Tier:** core · **Can start now:** after G2 and A2.
-- **Ships:** your own islet, saved per account (decision 4 in the roadmap inputs: each player's own island and progress are saved). It has 3 plots and the buildings from the story: cabin, workshop, windmill (it presses lamp oil), greenhouse, and the signal station, which can serve as a finale light.
+- **Ships:** your own islet, saved per account (decision 4 in the roadmap inputs: each player's own island and progress are saved). It has 4 plots, as G2 draws them (`plot_1` cabin, `plot_2` workshop, `plot_3` windmill that presses lamp oil, `plot_4` greenhouse), and a signal station of its own, which serves as a finale light. Every crew builds one for the finale (300 coins and 10 timber).
 - **Depends on:** G2, A2.
 - **Provides:** a `createPlace` module `islet`; `backend/content/buildings.json`; `backend/server/game/building.py`; `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the event `{type:'plot_clicked', plot}`; the table `islets` (new migration); coins through the reason `building_purchase`.
 - **Acceptance:**
@@ -454,30 +487,31 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Milestone:** M2 · **Size:** L · **Tier:** core · **Can start now:** the spec and contract by Mon 9; code after A6 and the S3 card rules.
 - **Ships:**
   - the Captain's Table: the crew's shared case board. Seats pin cards. A deduction lights up for the whole crew when its two cards are pinned by two different seats;
-  - the case clock, and the crew's call for nightfall after D1, so nobody waits for real fog;
+  - the case clock, and a player's call for nightfall after D1, so nobody waits for real fog (night never falls by itself);
   - the Night of Three Lights: three seats man three lights and drag gold beams onto the blinking light within a time window. Then the schooner appears and the accusation opens (S3);
-  - the Relighting: the first solve in the world changes the shared chart for everyone. Later crews add their names and one more light;
+  - the Relighting: the first solve in the world changes the shared chart for everyone. Later crews add their names and one more light. One server setting, the relight lock, keeps this switch locked until the game opens (decision 19);
   - rewards, once per player: coins, the title Relighter and a name on the Wall of Lights. Anything that names the culprit shows only to crews that solved it;
-  - a presenter seed and reset script for the demo world.
+  - not in this package: a demo world with a presenter seed and reset script. There is no demo world for now; rehearsals use the `?demo=1` tour.
 - **Depends on:** A6, and S3 (the card and deduction rules). G4 draws the finale.
-- **Provides:** the tables `board_pins`, `finale_signals` and `world_state` (new migration); `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; rewards with the reasons `clue_reward` and `mystery_reward` and once-per-player refs; `backend/tools/seed_demo.py` and presenter routes behind `require_host`; the event `{type:'finale', stage}`. The board polls every few seconds, so Realtime is not needed.
+- **Provides:** the tables `board_pins`, `finale_signals` and `world_state` (new migration); `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; rewards with the reasons `clue_reward` and `mystery_reward` and once-per-player refs; the relight lock (a server setting; the proposed name is `RELIGHT_OPEN`, off by default, added to `.env.example`); the event `{type:'finale', stage}`. The board is read with `GET /api/board`. With A4 the server also pushes rule changes into the crew room, and polling every few seconds stays as the fallback.
 - **Acceptance:**
   - pinning twice changes nothing, and a deduction unlocks exactly when its two cards are pinned by two different seats;
   - one seat alone can never unlock a deduction or finish the finale;
   - a wrong bearing is refused with no change;
   - the Relighting happens once, and each reward is paid once per player;
   - a crew that has not solved the case never receives the culprit's reveal lines;
-  - presenter routes return 403 for players.
-- **Minimum version:** a list board, a finale with two lights, and rewards of coins plus the Wall of Lights.
+  - while the relight lock is on, an accepted accusation pays its rewards and plays the reveal, but the world stays dark.
+- **Minimum version:** a list board, a finale with three lights, and rewards of coins plus the Wall of Lights. A finale with two lights needs Nils' OK, because it changes the answer to "why nobody solves it alone"; cut the cinematics first.
 
 ### L4 Island Exchange
 
 - **Milestone:** M2 · **Size:** L · **Tier:** core (Nils, 5 Nov), minimum version first · **Can start now:** the data terms, the price rules and their tests, yes; the routes after A1.
+- **Superseded in part (Nils, 5 Nov, late evening):** he answered the D017 questions. The multiplier, the price floor and the circuit breaker below, and the acceptance lines about them, are replaced by real prices with 10x leveraged positions, and by no floor, no ceiling and no pauses. D017 and this entry are reworked on the Exchange branch. Until then the lines below describe the code as built.
 - **Ships:** fictional island companies whose prices follow real price moves, amplified, as Nils asked:
   - every real % move is multiplied by a setting from 20 to 100;
   - a price floor, and a circuit breaker that pauses trading after a 30% move;
   - a daily reset at the 08:00 open (the exchange closes at 22:00, as in docs/STORY.md); what the reset re-bases is open for the team kickoff;
-  - play money only, labelled as a simulation, with a 3% fee;
+  - play money only, labelled as a simulation, with a 2% fee on every buy and sell, and 1% after the Relighting (D017 and decision 17; the 1% needs L4 to read the world stage);
   - a Greyfathom share gives card C6 a slower route (docs/STORY.md).
 - **Data feed (checked on 5 Nov):**
   - Seven instruments sit behind the companies: BTC, ETH, SOL, XRP, BNB, EURC (a euro stablecoin, our stand-in for EUR/USD) and PAXG (a gold token, our stand-in for gold). They trade around the clock, so they move during an 11:00 class. No free source gives European share prices that we may show in a public app.
@@ -490,7 +524,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 - **Depends on:** A1 (the wallet), A2.
 - **Provides:** `backend/server/adapters/prices.py` (the three sources, in order); `backend/server/game/market.py`; `backend/content/companies.json`; `GET /api/market` (prices with `source` and `fetchedAt`); `POST /api/market/trade {company, side, quantity, orderId}`; the table `holdings` (new migration); the reasons `market_buy` and `market_sell`, added by migration; the flag `market`.
 - **Acceptance:**
-  - with 100 coins, buying 5 at 12.00 with a 3% fee leaves 38.20;
+  - with 100 coins, buying 5 at 12.00 with a 2% fee leaves 38, because a wallet holds whole coins (D017);
   - the same replay gives the same prices, and tests use no network;
   - coins and holdings never go negative, and a repeated `orderId` trades once;
   - a move beyond 30% pauses trading, and no price falls below the floor;
@@ -507,6 +541,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Do not use Kalshi (its terms forbid caching and sharing the data) or Metaculus (it needs an account and hides the numbers).
   - A hand-picked allow-list of 20 to 40 questions lives in `backend/content/questions.json`. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths, shootings or elections. Weather questions such as "Fog tonight?" can settle from our own L1 data.
   - Settlement: once a question is resolved and a grace period of about 1 hour has passed, the YES or NO winners share the pool pro rata. CANCEL or any other result refunds everyone, and so does a pool with no winners.
+- **Switch:** behind the flag `predictions`, which stays off until Nils is sure that play-money bets on real matches are fine for class (decision 18).
 - **Depends on:** A1 (the wallet), A2. Shares `backend/server/game/pools.py` with L6; whoever builds first writes it.
 - **Provides:** `backend/server/adapters/predictions.py`; `backend/server/game/pools.py`; `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes` (new migration); the reasons `prediction_stake` and `prediction_payout`, added by migration; the flag `predictions`.
 - **Acceptance:** a question not on the allow-list is refused; a stake is taken once; a payout is paid once (the ref includes the question id); CANCEL refunds; tests use saved answers, with no network.
@@ -522,6 +557,7 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
   - Basketball (NBA): balldontlie, with a free key and 5 calls a minute. A teammate creates the key (who is open for the team kickoff), and it lives only in the Vercel settings. Its games have a clear `final` status. The NBA plays almost every night, so it is the safest "last night's game" for a morning class.
   - Settle only on the final result (`FINISHED` or `final`). Refund when a game is postponed, cancelled or suspended. Stay with league games or 90-minute results, to avoid extra-time rules. The winners share the pool pro rata, and a pool with no winners refunds. A presenter can settle by hand with the same rules.
   - Vercel Cron cannot be used with our setup (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)), so no timer settles games for us: settle when someone opens their stakes after the game. For an 11:00 class, take stakes the evening before.
+- **Switch:** behind the flag `sports`, which stays off until Nils is sure that play-money bets on real matches are fine for class (decision 18).
 - **Depends on:** A1, A2, and `pools.py` from L5 (or written here).
 - **Provides:** `backend/server/adapters/fixtures.py`; the tables `fixtures` and `sports_stakes` (new migration); `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the reasons `sports_stake` and `sports_payout`, added by migration; the flag `sports`.
 - **Acceptance:** settles only on a final result; refunds when a game is postponed or cancelled; splits the pool pro rata; pays once; shows the credit line; tests use no network.
@@ -533,7 +569,6 @@ D011 (class join go/no-go after a load test) is released. The phone class join m
 
 Not before submission, or only if everything above is green:
 
-- A4 Harbor presence: see other captains in the harbor, with name labels and preset emotes (flag `live_presence`).
 - A5 Phone deckhands and class raid: not needed, because the demo is highlights only (D013).
 - Free sailing and salvage: "sail the real wind; salvage where it blows".
 - Storm raids, boarding rounds, the Light Network, harbor orders and Elena's radio bulletin.

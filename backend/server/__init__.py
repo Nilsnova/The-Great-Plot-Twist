@@ -12,6 +12,10 @@ Where things are (one job per file):
     sign_in_code.py    swaps the one-time code from the GitHub sign-in for a login token (PKCE)
     supabase_admin.py  server-only calls to the database with the secret key
     wallet.py          the rules for changing a player's coins
+    hosts.py           the check for presenter-only routes: is this player a host?
+    account/           captain names, the cloud save and "delete my data" (package A2)
+    game/              the referee and the entry kits: replays Act 1 and gives a kit (package A3)
+    crews/             crews and seats: crew codes, seat rules and flows (the URLs: routes/crews.py)
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
 """
