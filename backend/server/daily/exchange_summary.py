@@ -1,9 +1,10 @@
 """What the bulletin says about the Island Exchange: which feed the prices come from, who is paused.
 
 The bulletin only LOOKS at the Exchange. It asks for the price board without saving anything
-(`market.snapshot(admin, trading_enabled=False)`), so reading the bulletin never moves the market.
-This also holds while the feature flag is off. A feed or database error leaves out the
-Exchange line and the route sends `exchange: null`.
+(`market.snapshot(admin, trading_enabled=False)`), so the bulletin never moves the market,
+also while the feature flag is still off. Any ApiError from the board (the feed has never
+answered, or the database is down) means there is no Exchange line today. The route then sends
+`exchange: null`.
 
     live     real prices, just fetched
     cache    real prices, fetched less than a minute ago
@@ -19,7 +20,7 @@ from dataclasses import dataclass
 from server.errors import ApiError
 from server.market.board import Snapshot
 from server.market.exchange import MarketService
-from server.market.states import STATUS_STALE
+from server.market.readings import SOURCE_CACHE, SOURCE_LIVE, SOURCE_REPLAY, SOURCE_STALE
 from server.supabase_admin import SupabaseAdmin
 
 logger = logging.getLogger(__name__)
@@ -40,20 +41,22 @@ class ExchangeSummary:
 
 
 def summarize_board(board: Snapshot) -> ExchangeSummary | None:
-    """The summary of one price board."""
-    companies = board.listed
-    sources = {state.reading.source for state in companies}
-    priority = ("stale", "live", "cache", "replay")
-    feed = next((source for source in priority if source in sources), None)
-    if feed is None:
+    """Name the island feed without reviving v1 circuit breakers or writing any rows."""
+    sources = {
+        state.reading.source
+        for state in board.states
+        if not state.company.is_stock and state.reading.has_price
+    }
+    if not sources:
         return None
-    paused = tuple(
-        PausedCompany(state.company.id, state.company.name)
-        for state in companies
-        if state.status == STATUS_STALE
+    feed = (
+        SOURCE_REPLAY
+        if board.demo_mode
+        else next(
+            source for source in (SOURCE_STALE, SOURCE_LIVE, SOURCE_CACHE) if source in sources
+        )
     )
-    return ExchangeSummary(feed=feed, paused=paused)
-
+    return ExchangeSummary(feed=feed, paused=())
 
 
 async def read_exchange(

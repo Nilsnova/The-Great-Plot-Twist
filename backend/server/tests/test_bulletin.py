@@ -366,25 +366,11 @@ def test_the_exchange_line_needs_the_market_flag():
 def test_the_exchange_v2_has_no_pause_so_no_company_is_ever_paused():
     world = exchange_world()
     body = world.body()
-
-    assert body["exchange"] == {
-        "feed": "stale",
-        "pausedCompanies": [{"id": "harbor-trust", "name": "Saltreach Harbor Trust"}],
-    }
+    assert body["exchange"] == {"feed": "live", "pausedCompanies": []}
     assert (
-        world.texts()["exchange"]
-        == "Island Exchange: old prices (trading paused). Paused: Saltreach Harbor Trust."
+        next(line["text"] for line in body["lines"] if line["kind"] == "exchange")
+        == "Island Exchange: live. No company is paused."
     )
-
-
-def test_two_paused_companies_are_listed_in_the_order_of_the_board():
-    world = exchange_world()
-    pause_company(world.app.state.market, "harbor-trust", world.clock)
-    pause_company(world.app.state.market, "tidewright-works", world.clock)
-
-    names = [company["name"] for company in world.body()["exchange"]["pausedCompanies"]]
-
-    assert names == ["Saltreach Harbor Trust", "Tidewright Works"]
 
 
 @pytest.mark.parametrize(
@@ -399,11 +385,12 @@ def test_two_paused_companies_are_listed_in_the_order_of_the_board():
 def test_the_feed_is_named_in_words(feed, words):
     world = exchange_world({"source": feed})
 
-    assert world.body()["exchange"]["feed"] == feed
-    if feed == "stale":
-        assert len(world.body()["exchange"]["pausedCompanies"]) == 7
-    else:
-        assert world.texts()["exchange"] == f"Island Exchange: {words}. No company is paused."
+    body = world.body()
+    assert body["exchange"]["feed"] == feed
+    assert (
+        next(line["text"] for line in body["lines"] if line["kind"] == "exchange")
+        == f"Island Exchange: {words}. No company is paused."
+    )
 
 
 def test_a_failing_exchange_leaves_out_the_exchange_line():
@@ -422,7 +409,7 @@ def test_the_bulletin_only_looks_at_the_exchange_it_saves_nothing():
 
     world.body()
 
-    assert world.app.state.market.feed.asked == 1
+    assert seen == []
 
 
 def test_a_missing_exchange_service_leaves_out_the_exchange_line():

@@ -12,7 +12,6 @@ Used by: test_bulletin.py, test_chapter_two_hook.py, test_daily_frame.py and tes
 import asyncio
 from dataclasses import replace
 from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -23,10 +22,8 @@ from pydantic import SecretStr
 from server.app import create_app
 from server.errors import ApiError
 from server.flags import default_flags
-from server.market.calendars import load_calendars
 from server.market.companies import load_companies
-from server.market.exchange import MarketService
-from server.market.readings import Reading
+from server.market.exchange import MarketService, market_from_settings
 from server.settings import Settings
 from server.tests.helpers import FakeClock, FakeReply
 from server.tests.market_helpers import FakeBinance, good_binance_answer
@@ -102,40 +99,18 @@ def relit_at(moment: datetime = RELIT_AT) -> WorldStage:
     return WorldStage(RELIT, moment)
 
 
-class FakeFeed:
-    """A pretend Island Exchange price feed. `source` is what it reports: live, cache, stale..."""
-
-    def __init__(self, clock: FakeClock, source: str = "live", failing: bool = False) -> None:
-        self.clock = clock
-        self.source = source
-        self.live = source != "replay"
-        self.failing = failing
-        self.asked = 0
-
-    def source_is_on(self, company) -> bool:
-        return not company.is_stock
-
-    async def read(self, max_age_seconds: float | None = None) -> dict[str, Reading]:
-        self.asked += 1
-        if self.failing:
-            raise ApiError(502, "prices_unavailable", "No prices.")
-        return {
-            company.id: Reading(D("100"), self.clock.now, self.clock.now,
-                                "stale" if company.id in self.paused else self.source)
-            for company in load_companies() if not company.is_stock
-        }
-
-
-def make_market(clock: FakeClock, **feed_options: Any) -> MarketService:
-    """An Exchange v2 on a fake price feed; bulletin reads never sweep positions."""
-    feed = FakeFeed(clock, **feed_options)
-    feed.paused = set()
-    return MarketService(load_companies(), load_calendars(), feed, clock=clock)
-
-
-def pause_company(market: MarketService, company_id: str, clock: FakeClock) -> None:
-    """Make a company's price stale instead of the removed v1 circuit-breaker state."""
-    market.feed.paused.add(company_id)
+def make_market(clock: FakeClock, *, source: str = "live", failing: bool = False) -> MarketService:
+    """A real v2 service with a fake Binance, never an outside price or database call."""
+    prices = {company.symbol: "100" for company in load_companies() if company.symbol}
+    good = good_binance_answer(prices)
+    failure = httpx.ConnectError("pretend price outage")
+    fake = FakeBinance(failure if failing else good, failure if source == "stale" else good)
+    settings = replace(MARKET_ON, demo_mode=source == "replay")
+    market = market_from_settings(settings, transport=httpx.MockTransport(fake), clock=clock)
+    if source in ("cache", "stale"):
+        asyncio.run(market.feed.read(60))
+        clock.advance(30 if source == "cache" else 600)
+    return market
 
 
 class World:

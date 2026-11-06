@@ -15,9 +15,9 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106040000_crew_codes.sql](migrations/20261106040000_crew_codes.sql) | Crew codes, the muster and partners (package A6): three new columns of `crews`, new rules for `crew_seats`, one table and four functions. Run it after the foundation. See [Crew codes, the muster and partners](#crew-codes-the-muster-and-partners-migration-20261106040000-package-a6). |
 | [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | Live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation. It goes live with group 2; the flag `live_presence` stays off until the checks L1 to L7 have passed. See [The live presence migration](#the-live-presence-migration). |
 | [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
-| [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The Island Exchange version 2 migration (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
+| [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The third migration, for the Island Exchange version 2 (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
-| [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The Lantern Duels migration (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
+| [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 
 ## Project settings this migration relies on
 
@@ -64,17 +64,11 @@ The ledger accepts only the reasons in `wallet_reasons`, in this order. The Pyth
 | `clue_purchase` | spend | Coins paid to buy a clue. |
 | `building_purchase` | spend | Coins paid to build on a home islet. |
 | `admin_adjust` | either | A manual correction by an admin. |
-| `market_buy` | spend | Coins paid for shares bought on the Island Exchange. *Added by the second migration. Version 1, never used, kept because a reason is never removed.* |
-| `market_sell` | earn | Coins received for shares sold on the Island Exchange. *Added by the second migration. Version 1, never used, kept because a reason is never removed.* |
-| `market_fee` | spend | Fee paid on the Island Exchange: the opening fee and the closing fee of a position. *Added by the second migration, used again by the third.* |
-| `market_stake` | spend | Coins put into an Island Exchange position (the stake). *Added by the third migration.* |
-| `market_payout` | earn | Coins paid out when an Island Exchange position is closed. *Added by the third migration.* |
-| `prediction_stake` | spend | Coins staked on a question at the prediction desk. Ref `stake:<stakeId>`. *Added by the prediction desk migration.* |
-| `prediction_payout` | earn | Coins paid back from a prediction desk pool, for a win or a refund. Ref `pool:<questionId>`. *Added by the prediction desk migration.* |
-| `arena_stake` | spend | Coins held as the stake of a Lantern Duel. *Added by the third migration.* |
-| `arena_payout` | earn | Coins paid out of a Lantern Duel: the winnings, or a stake that comes back. *Added by the third migration.* |
+| `market_buy` | spend | Coins paid for shares bought on the Island Exchange. *Added by the second migration.* |
+| `market_sell` | earn | Coins received for shares sold on the Island Exchange. *Added by the second migration.* |
+| `market_fee` | spend | Fee paid on a trade on the Island Exchange. *Added by the second migration.* |
 
-The first eight come from the foundation migration, the next three from the second migration and the last two from the third. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
+The first eight come from the foundation migration, the last three from the Island Exchange migration. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
 
 The test `backend/server/tests/test_wallet_matches_migration.py` reads the migration and fails if its reasons, directions or starting balance differ from the Python code.
 
@@ -144,7 +138,7 @@ The price rules (where the prices come from, when a stock market is open, what a
 
 **Price modes.** A position opened on live prices is stored with `price_mode = 'live'`, one opened on the recorded demo day with `'replay'`. `exchange_close_position()` and `exchange_close_used_up()` only use prices of the position's own mode, so mixing the two on one database can never pay out at a recorded price.
 
-It adds three tables, three policies, three rows for `authenticated` and three wallet reasons: see the totals under [Three quick checks after applying](#three-quick-checks-after-applying). Run the Exchange checks (steps E1 to E13) of the manual test plan.
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
 
 ## The accounts migration (package A2)
 
@@ -250,45 +244,6 @@ The kill switch, if a flood ever happens, is in [Changing the database later](#c
 
 After applying it, the three quick checks below show two more tables, two more policies and two more `authenticated` grant rows than before this migration. Run the home islet checks (steps H1 to H15) at the end of the manual test plan.
 
-## The prediction desk migration
-
-`migrations/20261106100000_prediction_desk.sql` is the database part of the prediction desk (hand-picked real questions from Manifold Markets, and play-coin pools that the winners share; see [INTERFACES.md, section 2](../docs/INTERFACES.md#the-prediction-desk-package-l5) and decision D018 in [DECISIONS.md](../docs/DECISIONS.md), whose number is provisional). Run it **after** the foundation migration, because it uses the wallet and the profiles from there. It does not need the Island Exchange migration, but it sorts after it, so the usual order (oldest first) is right. It is safe to run twice. Everything is explained in the file itself. **It is not applied to the Supabase project yet**, and the feature flag `predictions` stays off.
-
-| Name | What it is | Who changes it |
-|---|---|---|
-| `prediction_pools` | One row per question: when staking closes (`closes_at`), and how the pool ended once it was settled (`status`, `outcome`, `settlement`, `settled_by`, `settled_at`, `cut_coins`, `paid_coins`). Created by the first stake or by the settlement, never deleted. It holds no running totals: they come from the stakes. | Only the server, through `prediction_place_stake()` (creates the row) and `prediction_settle_pool()` (settles it). |
-| `prediction_stakes` | One row per stake: the player, the side (`yes` or `no`), the coins, the `stake_id` the browser made for the click and the ledger `ref` (`stake:` plus that id). A player has one stake per question, and can use a `stake_id` once. `payout` is written when the pool is settled. | Only `prediction_place_stake()` adds a row; only `prediction_settle_pool()` writes `payout`. |
-| `prediction_pool_sides` | A view: the coins and the players on each side of each pool, added up from the stakes. It uses the rights of whoever reads it (`security_invoker`). | Nobody writes it. Only the server reads it. |
-| `prediction_pools_keep_settled()` | A trigger function, run by the trigger of the same name before every update of a `prediction_pools` row. If the row is already `settled` it raises `pool_settled`, so **a settled pool is final**: nothing can change it any more, not even the server, which holds the update right on seven of its columns. Without it, a server bug that wrote the table directly could set a settled pool back to `open` and settle it again with the other outcome (`pool:<questionId>` only stops a second payout to the same player, not one to the other player). The settlement itself is not in the way: it changes an open pool, once. | Nobody calls it. The trigger runs it. |
-| `prediction_place_stake()` | The only way a stake happens. In one step: check the arguments, make sure the pool row exists and **lock it**, lock the player's wallet, refuse a repeated stake id (code `23505`, message `already_applied`), refuse a settled pool or one past its closing time (the earlier of the stored and the given closing time counts), refuse a second stake on the question, refuse a stake over the daily cap, take the coins with `apply_wallet_transaction()` (`prediction_stake`) and write the stake. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 30}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated stake id, or `bad_stake` / `wallet_not_found` (a bug on the server side). | Run by the server only. |
-| `prediction_settle_pool()` | The only way a pool is settled. In one step: check the arguments, make sure the pool row exists and **lock it**, refuse a pool that is settled already (`23505`, `already_applied`), refuse yes or no before the pool has closed (void works at any time), read the pool from its stakes, decide how it ends (`refund_void`, `refund_no_winners`, `refund_one_sided` or `winners`), check the payouts, pay everybody with `apply_wallet_transaction()` (`prediction_payout`, ref `pool:<questionId>`) in player-id order, write the payout of every stake and mark the pool settled. It *returns* a refusal (`pool_open` or `stakes_changed`) with nothing changed, and *raises* `bad_settlement` when the arguments or the payouts do not add up. | Run by the server only. |
-
-**The server works out the payouts, and the database checks them.** The rule is written once in full, in Python (`backend/server/predictions/pools.py`): the winners share the pool in proportion to their stakes, 5 % of the losing side (rounded down) leaves the game, the leftover coins go to the largest remainders and then to the earliest stake, and everybody gets a full refund when the question is void, when nobody picked the winning side or when everybody picked the same side. `prediction_settle_pool()` does not repeat the split. It checks what it is given: the payouts must name **exactly** the stakes that get paid (a refund: every stake; a win: every winning stake), they must add up to the coins staked minus the cut, each must be at least 1 coin, a refund must be the stake, and a win must be within one coin of the exact share (`abs(coins x W - stake x D) < W`, with W the winning coins and D the shared coins). If the server ever had a bug, the database refuses the settlement with `bad_settlement` instead of paying wrong coins, so **no coin is ever created or lost**. If the pool changed between the server's read and the call (a stake disappeared because its player was deleted, or a new stake arrived, which can happen to a void while staking is still open), the answer is `stakes_changed`, and the server reads again.
-
-**The lock order** is the same everywhere: the pool row first, then the wallets, by player id. A stake and a settlement of the same pool therefore happen one at a time, a pool settles once, and two settlements (or a settlement and a stake) can never wait for each other in a circle. The limits (the biggest stake, the daily cap, the cut) are passed in as arguments from `backend/server/predictions/stake_rules.py`, so the numbers live in one place.
-
-**The update rights are per column.** The server may update seven columns of `prediction_pools` (the settlement) and the column `payout` of `prediction_stakes`, and nothing else: it cannot change who staked what or how much, it cannot move a closing time, and it cannot delete a stake or a pool. (`select ... for update` needs the update right on at least one column, and the column grants give exactly that.) And once a pool is settled, even those seven columns are closed: the trigger `prediction_pools_keep_settled()` refuses every update of a settled pool with `pool_settled`.
-
-**A known limit:** if a player is deleted while a pool is open, their stake row goes with them (cascade), and those coins simply leave the game. No coin is ever created.
-
-After applying it, the three quick checks below show **twelve** tables and **twelve** policies (with the Island Exchange migration applied too), and there are **thirteen** wallet reasons. Run the checks P1 to P16 at the end of the manual test plan.
-
-## The Lantern Duels migration
-
-`migrations/20261106110000_lantern_duels.sql` is the database part of Lantern Duels (package A7): two captains each seal a sequence of lantern signals, the server opens both envelopes at once, and the duel is friendly or played for equal play-coin stakes (see [INTERFACES.md, section 2](../docs/INTERFACES.md#lantern-duels-package-a7), decision [D018](../docs/DECISIONS.md) and the spec [A7-lantern-duels.md](../specs/A7-lantern-duels.md)). Run it **after** the Island Exchange migration (it uses the wallet and the profiles from the first). It is safe to run twice. Everything is explained in the file itself. It adds two wallet reasons, `arena_stake` and `arena_payout` (see the table above), and:
-
-| Name | What it is | Who changes it |
-|---|---|---|
-| `duels` | One row per challenge: who, the number of rounds, the stake, the status (`open`, then once `finished`, `withdrawn`, `declined` or `expired`) and, once decided, the result of every round. It never holds a signal. `create_uid` (the `actionUid` of the click) is unique per challenger, so a repeated click cannot send two challenges. | Only the server, through `duel_create()`, `duel_answer()` and `duel_void()`. |
-| `duel_moves` | The sealed envelopes: one row per captain and round, holding a signal. The only table with a signal, so it is locked tighter than any other: players have no right on it at all (not even for their own rows), the server may only read and insert, and no role may update or delete a row. | Only `duel_create()` and `duel_answer()`. |
-| `duel_create()` | Sends a challenge. In one step: check the arguments, lock the challenger's wallet, refuse a repeated `create_uid` (code `23505`, message `already_applied`), find a named captain (any letter case) and refuse a name nobody has, a name several captains share and the challenger's own name, refuse a fourth waiting challenge, insert the duel and the challenger's envelope, and hold the stake (`arena_stake`). | Run by the server only. |
-| `duel_answer()` | Answers a challenge. The answer IS the acceptance. In one step: lock the duel row, refuse a caller who sealed in this duel already (`23505`), check the state (`duel_taken`, `duel_closed`, `duel_expired` by the database clock), check the numbers, lock both wallets in player-id order, refuse the pair limit (`daily_pair_limit`), take the answerer's stake, store their envelope, finish the duel and pay out (`arena_payout`). **The round results and the outcome are an input from Python** (`rules.resolve`), like the price of a trade: the database never reads the challenger's envelope, but it checks that the results fit the rounds and that the outcome fits the counted points. | Run by the server only. |
-| `duel_void()` | Withdraws (the challenger), declines (the named captain) or expires (anyone, but only after `expires_at` by the database clock) a challenge, and gives the challenger's stake back (`arena_payout`). The same captain closing it the same way twice raises `23505`. | Run by the server only. |
-
-Like `market_trade()`, each function either does its work (`{"status": "done", ...}`) or *returns* a refusal (`{"status": "refused", "reason": "duel_taken"}`) before it writes anything, and *raises* an error for a real failure: `insufficient_funds` (from the wallet), a repeat (code `23505`, message `already_applied`), or `bad_duel` / `wallet_not_found` when the server sent numbers that do not fit (a bug on the server side). Every ledger row of a duel carries the ref `duel:` and the duel id, so a stake or a payout cannot be booked twice. The cut (5 % of the pot, rounded in the winner's disfavour) has no ledger row: it is simply not paid out. The arena rows of one duel add up to 0 for a friendly duel, a draw, a withdrawal, a decline or an expiry, and to minus the cut for a decided staked duel (-1, -3, -5 or -10 for stakes of 10, 25, 50 or 100). The locks are always taken in the same order, the duel row first and then the wallets by player id, so two requests never wait for each other forever.
-
-After applying it, the three quick checks below show **twelve** tables and **eleven** policies, **eleven** rows for `authenticated` (none for `duel_moves`), and there are **thirteen** wallet reasons. Run the Lantern Duels checks (steps D1 to D12) at the end of the manual test plan.
-
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
@@ -358,7 +313,7 @@ where relnamespace = 'public'::regnamespace and relkind = 'r'
 order by relname;
 ```
 
-Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. Each later file adds its own tables, also with `rls_on` = true: `market_bases`, `market_positions` and `market_trades` (Island Exchange), `captain_name_rerolls` (accounts), `entry_profiles` (entry kits), `crew_join_failures` (crew codes), and `islets` and `islet_buildings` (home islet). The table after the three checks has the number after each file.
+Expected after group 3: 18 table rows, all with `rls_on = true`. The view `prediction_pool_sides` is not a table row.
 
 ```sql
 select tablename, policyname, cmd
@@ -367,7 +322,7 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
-Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. Every later table has one `SELECT` policy too, except `crew_join_failures`, which has none: players see nothing of it. The home islet's two are `Players can read their own islet` and `Players can read their own islet buildings`.
+Expected after group 3: 16 public policies, all SELECT. `crew_join_failures` and `duel_moves` have no player policy. The five Realtime policies are checked separately below.
 
 ```sql
 select grantee, table_name, string_agg(privilege_type, ', ' order by privilege_type) as rights
@@ -377,7 +332,7 @@ group by grantee, table_name
 order by grantee, table_name;
 ```
 
-Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. Every later table adds one such row, except `crew_join_failures`, on which players have no right at all.
+Expected after group 3: no anon row; 16 authenticated rows, all SELECT. The view, `crew_join_failures` and `duel_moves` add no player grant row.
 
 The totals after each file in timestamp order. Exchange v2 removes the three v1 tables and adds two replacements, so its net table change is minus one. The last column is `select count(*) from public.wallet_reasons;`.
 
@@ -456,18 +411,6 @@ The three actors, and the database role behind each:
 | `crew_join_failures` | insert | no access | no access | yes (through `crew_find_by_code()`) |
 | `crew_join_failures` | update | no access | no access | no access |
 | `crew_join_failures` | delete | no access | no access | yes (through `crew_find_by_code()`, rows older than the window) |
-| `market_bases` | read | no access | all rows | yes |
-| `market_bases` | insert | no access | no access | yes [2] (through `market_set_base()`) |
-| `market_bases` | update | no access | no access | yes [2] (through `market_set_base()`) |
-| `market_bases` | delete | no access | no access | no access (a company's base is never deleted) |
-| `market_positions` | read | no access | own rows | yes |
-| `market_positions` | insert | no access | no access | yes [2] (through `market_trade()`) |
-| `market_positions` | update | no access | no access | yes [2] (through `market_trade()`) |
-| `market_positions` | delete | no access | no access | yes [2] (through `market_trade()`, when a player sells everything) |
-| `market_trades` | read | no access | own rows | yes |
-| `market_trades` | insert | no access | no access | yes [2] (through `market_trade()`) |
-| `market_trades` | update | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
-| `market_trades` | delete | no access | no access | no access (same) |
 | `captain_name_rerolls` | read | no access | own row | yes |
 | `captain_name_rerolls` | insert | no access | no access | yes [3] (through `reroll_captain_name()`) |
 | `captain_name_rerolls` | update | no access | no access | no access (a re-roll is final) |
@@ -484,34 +427,43 @@ The three actors, and the database role behind each:
 | `islet_buildings` | insert | no access | no access | yes [6] (through `islet_build()`) |
 | `islet_buildings` | update | no access | no access | no access (a building is never changed in this version) |
 | `islet_buildings` | delete | no access | no access | no access (deleted with its player, by cascade) |
+
+| `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
+| `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |
 | `exchange_positions` | read | no access | own rows | yes |
-| `exchange_positions` | insert | no access | no access | yes \*\* (through `exchange_open_position()`) |
-| `exchange_positions` | update | no access | no access | yes \*\* (through `exchange_close_position()` and `exchange_close_used_up()`) |
+| `exchange_positions` | insert | no access | no access | yes [2] (through `exchange_open_position()`) |
+| `exchange_positions` | update | no access | no access | yes [2] (through `exchange_close_position()` and `exchange_close_used_up()`) |
 | `exchange_positions` | delete | no access | no access | no access (rows go only with their player, by cascade) |
 | `exchange_events` | read | no access | own rows | yes |
-| `exchange_events` | insert | no access | no access | yes \*\* (through the three functions) |
+| `exchange_events` | insert | no access | no access | yes [2] (through the three functions) |
 | `exchange_events` | update, delete | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
+| `prediction_pools` | One row per question: when staking closes (`closes_at`), and how the pool ended once it was settled (`status`, `outcome`, `settlement`, `settled_by`, `settled_at`, `cut_coins`, `paid_coins`). Created by the first stake or by the settlement, never deleted. It holds no running totals: they come from the stakes. | Only the server, through `prediction_place_stake()` (creates the row) and `prediction_settle_pool()` (settles it). |
+| `prediction_stakes` | One row per stake: the player, the side (`yes` or `no`), the coins, the `stake_id` the browser made for the click and the ledger `ref` (`stake:` plus that id). A player has one stake per question, and can use a `stake_id` once. `payout` is written when the pool is settled. | Only `prediction_place_stake()` adds a row; only `prediction_settle_pool()` writes `payout`. |
+| `prediction_pool_sides` | A view: the coins and the players on each side of each pool, added up from the stakes. It uses the rights of whoever reads it (`security_invoker`). | Nobody writes it. Only the server reads it. |
 | `prediction_pools` | read | no access | all rows | yes |
-| `prediction_pools` | insert | no access | no access | yes \*\*\* (through `prediction_place_stake()` and `prediction_settle_pool()`) |
-| `prediction_pools` | update | no access | no access | yes \*\*\* (seven columns only, through `prediction_settle_pool()`; not `closes_at`, not `question_id`; and never a settled pool: a trigger refuses it with `pool_settled`) |
+| `prediction_pools` | insert | no access | no access | yes [7] (through `prediction_place_stake()` and `prediction_settle_pool()`) |
+| `prediction_pools` | update | no access | no access | yes [7] (seven columns only, through `prediction_settle_pool()`; not `closes_at`, not `question_id`; and never a settled pool: a trigger refuses it with `pool_settled`) |
 | `prediction_pools` | delete | no access | no access | no access (a pool is never deleted) |
 | `prediction_stakes` | read | no access | own rows | yes |
-| `prediction_stakes` | insert | no access | no access | yes \*\*\* (through `prediction_place_stake()`) |
-| `prediction_stakes` | update | no access | no access | yes \*\*\* (the column `payout` only, through `prediction_settle_pool()`; not the player, the side or the amount) |
+| `prediction_stakes` | insert | no access | no access | yes [7] (through `prediction_place_stake()`) |
+| `prediction_stakes` | update | no access | no access | yes [7] (the column `payout` only, through `prediction_settle_pool()`; not the player, the side or the amount) |
 | `prediction_stakes` | delete | no access | no access | no access (rows disappear only when their player is deleted, by cascade) |
-| `prediction_pool_sides` (a view) | read | no access | no access | yes |
+
+| `duels` | One row per challenge: who, the number of rounds, the stake, the status (`open`, then once `finished`, `withdrawn`, `declined` or `expired`) and, once decided, the result of every round. It never holds a signal. `create_uid` (the `actionUid` of the click) is unique per challenger, so a repeated click cannot send two challenges. | Only the server, through `duel_create()`, `duel_answer()` and `duel_void()`. |
+| `duel_moves` | The sealed envelopes: one row per captain and round, holding a signal. The only table with a signal, so it is locked tighter than any other: players have no right on it at all (not even for their own rows), the server may only read and insert, and no role may update or delete a row. | Only `duel_create()` and `duel_answer()`. |
 | `duels` | read | no access | the duels they take part in (as challenger or opponent) | yes |
-| `duels` | insert | no access | no access | yes \*\*\* (through `duel_create()`) |
-| `duels` | update | no access | no access | yes \*\*\* (through `duel_answer()` and `duel_void()`) |
+| `duels` | insert | no access | no access | yes [8] (through `duel_create()`) |
+| `duels` | update | no access | no access | yes [8] (through `duel_answer()` and `duel_void()`) |
 | `duels` | delete | no access | no access | no access (a duel goes only by cascade, when a challenger is deleted) |
 | `duel_moves` | read | no access | **no access, not even their own** | yes |
-| `duel_moves` | insert | no access | no access | yes \*\*\* (through `duel_create()` and `duel_answer()`) |
+| `duel_moves` | insert | no access | no access | yes [8] (through `duel_create()` and `duel_answer()`) |
 | `duel_moves` | update | no access | no access | **no access**: sealed means sealed |
 | `duel_moves` | delete | no access | no access | **no access**: rows go only by cascade, with their duel or their captain |
 
+
 [1] The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
-[2] The database lets the server write `market_positions` and add `market_trades` rows directly, and add and change `market_bases` rows directly, because the two functions run with the rights of the server. "Through `market_trade()`" and "through `market_set_base()`" in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of `market_trade()`: the arithmetic, the daily cap, the holding time and the wallet. Only the server holds that right, and the code never writes these tables directly.
+[2] Exchange functions run with server rights. Only those functions may update positions or append events; the Python code never writes these rows directly.
 
 [3] The same holds for the two insert rows of the account and entry kit tables: the database lets the server add a row to `captain_name_rerolls` and to `entry_profiles` directly, because `reroll_captain_name()` and `grant_entry_kit()` run with the rights of their caller. "Through `reroll_captain_name()`" and "through `grant_entry_kit()`" are our rule, not something the database enforces. A direct insert into `captain_name_rerolls` would use up a player's one re-roll without changing their name. A direct insert into `entry_profiles` would store a profile without paying the kit coins, and without the lock that makes two requests of one player run one after the other. The code never writes these tables directly.
 
@@ -520,11 +472,6 @@ The three actors, and the database role behind each:
 [5] `crews` and `crew_seats`: the server writes them through the four crew functions (`crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`), a team rule as with the wallet. The database lets the server write the two tables directly, because the functions run with the rights of the server. A direct write would skip the locks, the version check and the rule that a player sits in at most one open crew. The code never writes these tables directly.
 
 [6] The database lets the server add `islets` and `islet_buildings` rows and change `islets` rows directly, because `islet_build()` runs with the rights of the server. "Through `islet_build()`" in the table is our rule, not something the database enforces (the same pattern as `wallets` and the Exchange tables above). A direct write would skip the checks of `islet_build()`: the wallet, the timber, the one building per plot and the repeat check. Only the server holds that right, and the code never writes these tables directly. The server cannot edit or delete a building at all, and that is a lock: a signal station, once built, stays, and the finale counts on it.
-\*\* The database lets the server insert and update `exchange_positions` rows and add `exchange_events` rows directly, because the three functions run with the rights of the server. "Through `exchange_open_position()`" and the other function names in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of the functions: the arithmetic, the limits, the repeat check and the wallet. Only the server holds that right, and the code never writes these tables directly.
-
-\*\*\* The database lets the server add `prediction_pools` and `prediction_stakes` rows directly, and update the listed columns directly, because the two functions run with the rights of the server. "Through `prediction_place_stake()`" and "through `prediction_settle_pool()`" in the table are our rule, not something the database enforces (the same pattern as the footnotes above). A direct write would skip the checks of the functions: the limits, the lock and the wallet. Only the server holds that right, and the code never writes these tables directly. What the database does enforce is the per-column update right: even the server cannot change a closing time, a side or an amount, and nobody can delete a stake or a pool. It also enforces the trigger: a settled pool cannot be changed again, so a direct write cannot reopen it.
-
-\*\*\* The database lets the server add and change `duels` rows and add `duel_moves` rows directly, because the three functions run with the rights of the server. "Through `duel_create()`" and so on in the table are our rule, not something the database enforces (the same pattern as the footnotes above). A direct write would skip the checks of the functions: the caps, the state of the duel and the wallet. The part that IS enforced by the database is the sealing: the server has no `update` and no `delete` on `duel_moves`, and a player has no right on it at all. Only the server holds the right to write, and the code never writes these tables directly.
 
 Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
@@ -541,26 +488,12 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `handle_new_user()` | no access | no access | no access, only the sign-up trigger runs it |
 | `touch_updated_at()` | no access | no access | no access, only the triggers run it |
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
-| `market_trade()` | no access | no access | yes |
-| `market_set_base()` | no access | no access | yes |
 | `islet_build()` | no access | no access | yes |
-| `market_trades_id_seq` (the trade history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 | `assign_captain_name()` | no access | no access | yes |
 | `reroll_captain_name()` | no access | no access | yes |
 | `save_progress()` | no access | no access | yes |
 | `delete_player()` [4] | no access | no access | yes |
 | `grant_entry_kit()` | no access | no access | yes |
-| `exchange_open_position()` | no access | no access | yes |
-| `exchange_close_position()` | no access | no access | yes |
-| `exchange_close_used_up()` | no access | no access | yes |
-| `exchange_events_id_seq` (the event history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
-| `prediction_place_stake()` | no access | no access | yes |
-| `prediction_settle_pool()` | no access | no access | yes |
-| `prediction_pools_keep_settled()` | no access | no access | no access, only its trigger runs it |
-| `prediction_stakes_id_seq` (the stakes' id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
-| `duel_create()` | no access | no access | yes |
-| `duel_answer()` | no access | no access | yes |
-| `duel_void()` | no access | no access | yes |
 
 "No access" means the database refuses with `permission denied`, or (for a row that belongs to someone else) shows or changes nothing.
 
@@ -606,7 +539,7 @@ After the full group 3 chain through `20261106110000`, the database has **18 tab
 
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in all eighteen tables (with the complete group 3 chain applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It skips row-level security. It can read every player's rows in all eighteen tables (with every file up to `20261106070000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It can send into any Realtime room through the Broadcast REST API, because that skips the rules on `realtime.messages`. The server uses this only to tell a crew that something changed (`backend/server/crew_broadcast.py`).
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see note [2] of the matrix.
@@ -614,8 +547,6 @@ After the full group 3 chain through `20261106110000`, the database has **18 tab
 - On the crew tables it writes `crews` and `crew_seats` only through the four crew functions, by team rule (note [5] of the matrix), and it may read, add and delete `crew_join_failures` rows (through `crew_find_by_code()`, which also deletes the rows older than the guessing window). It is the only role that may run `crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`.
 - On the entry kit table it may read and add `entry_profiles` rows (only through `grant_entry_kit()`; a profile is written once and the first ending counts, so no update and no delete), and it is the only role that may run `grant_entry_kit()`. That function is also the only place where the entry kit coins are paid.
 - On the home islet tables it can read both, add and change `islets` rows (the timber), and only add `islet_buildings` rows. It cannot edit or delete a building, and it cannot delete an islet. It is the only role that may run `islet_build()`. Like the wallet, this is a rule of the team more than a lock: see note [6] of the matrix.
-- On the prediction desk tables it can read both and the view, add rows to both, and update only the seven settlement columns of `prediction_pools` (and not at all once a pool is settled: a trigger refuses it) and the column `payout` of `prediction_stakes`. It cannot change a closing time, a side or an amount, and it cannot delete a stake or a pool. Like the wallet, the rule "only through the two functions" is a rule of the team more than a lock: see the third footnote of the matrix.
-- On the Lantern Duels tables it can read `duels` and `duel_moves`, add and change `duels` rows, and add `duel_moves` rows. It cannot delete a duel, and it cannot update or delete a sealed envelope: sealed means sealed. The three functions `duel_create()`, `duel_answer()` and `duel_void()` are the way a duel changes, and nobody but the server runs them.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
 - The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table, and the browser has no right to write to any of them.
@@ -624,7 +555,7 @@ After the full group 3 chain through `20261106110000`, the database has **18 tab
 
 You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
-The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`), the entry kit checks K1 to K5 (`20261106030000`) the live presence checks L1 to L7 (`20261106050000`) and the home islet checks H1 to H15 (`20261106070000`). Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players). None of the accounts, entry kit, crew, live presence or home islet files adds a reason.
+The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **17** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`), the entry kit checks K1 to K5 (`20261106030000`) the live presence checks L1 to L7 (`20261106050000`) and the home islet checks H1 to H15 (`20261106070000`). Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players). None of the accounts, entry kit, crew, live presence or home islet files adds a reason.
 
 **Set up**
 
@@ -1518,7 +1449,7 @@ set local role service_role;
 select public.apply_wallet_transaction('USER_A_ID', 10, 'market_stake', 'manual-wrong-1');
 ```
 
-Expected: `wrong_direction`. Finally paste the whole third migration (`20261106090000_exchange_leverage.sql`) into the SQL editor again and run it. Expected: no error, the Exchange check for player A shows what it showed after X12, and `select count(*) from public.wallet_reasons;` still shows 13. (The file starts with a guard that only looks at the old first-version table `market_trades`, which no longer exists, so it does nothing the second time.)
+Expected: `wrong_direction`. Finally paste the whole third migration (`20261106090000_exchange_leverage.sql`) into the SQL editor again and run it. Expected: no error, the Exchange check for player A shows what it showed after X12, and `select count(*) from public.wallet_reasons;` still shows 17 after the full group 3 chain. (The file starts with a guard that only looks at the old first-version table `market_trades`, which no longer exists, so it does nothing the second time.)
 
 Delete the two test users when you are done (**Authentication > Users**). Their positions and events go with them.
 
@@ -2142,6 +2073,27 @@ Expected: the second tab waits until the first commits, and then answers `refuse
 
 Delete the test users when you are done (**Authentication > Users**). Their islets and buildings go with them.
 
+## The prediction desk migration
+
+`migrations/20261106100000_prediction_desk.sql` is the database part of the prediction desk (hand-picked real questions from Manifold Markets, and play-coin pools that the winners share; see [INTERFACES.md, section 2](../docs/INTERFACES.md#the-prediction-desk-package-l5) and decision D025 in [DECISIONS.md](../docs/DECISIONS.md), whose number is provisional). Run it **after** the foundation migration, because it uses the wallet and the profiles from there. It does not need the Island Exchange migration, but it sorts after it, so the usual order (oldest first) is right. It is safe to run twice. Everything is explained in the file itself. **It is not applied to the Supabase project yet**, and the feature flag `predictions` stays off.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `prediction_pools` | One row per question: when staking closes (`closes_at`), and how the pool ended once it was settled (`status`, `outcome`, `settlement`, `settled_by`, `settled_at`, `cut_coins`, `paid_coins`). Created by the first stake or by the settlement, never deleted. It holds no running totals: they come from the stakes. | Only the server, through `prediction_place_stake()` (creates the row) and `prediction_settle_pool()` (settles it). |
+| `prediction_stakes` | One row per stake: the player, the side (`yes` or `no`), the coins, the `stake_id` the browser made for the click and the ledger `ref` (`stake:` plus that id). A player has one stake per question, and can use a `stake_id` once. `payout` is written when the pool is settled. | Only `prediction_place_stake()` adds a row; only `prediction_settle_pool()` writes `payout`. |
+| `prediction_pool_sides` | A view: the coins and the players on each side of each pool, added up from the stakes. It uses the rights of whoever reads it (`security_invoker`). | Nobody writes it. Only the server reads it. |
+| `prediction_pools_keep_settled()` | A trigger function, run by the trigger of the same name before every update of a `prediction_pools` row. If the row is already `settled` it raises `pool_settled`, so **a settled pool is final**: nothing can change it any more, not even the server, which holds the update right on seven of its columns. Without it, a server bug that wrote the table directly could set a settled pool back to `open` and settle it again with the other outcome (`pool:<questionId>` only stops a second payout to the same player, not one to the other player). The settlement itself is not in the way: it changes an open pool, once. | Nobody calls it. The trigger runs it. |
+
+**The server works out the payouts, and the database checks them.** The rule is written once in full, in Python (`backend/server/predictions/pools.py`): the winners share the pool in proportion to their stakes, 5 % of the losing side (rounded down) leaves the game, the leftover coins go to the largest remainders and then to the earliest stake, and everybody gets a full refund when the question is void, when nobody picked the winning side or when everybody picked the same side. `prediction_settle_pool()` does not repeat the split. It checks what it is given: the payouts must name **exactly** the stakes that get paid (a refund: every stake; a win: every winning stake), they must add up to the coins staked minus the cut, each must be at least 1 coin, a refund must be the stake, and a win must be within one coin of the exact share (`abs(coins x W - stake x D) < W`, with W the winning coins and D the shared coins). If the server ever had a bug, the database refuses the settlement with `bad_settlement` instead of paying wrong coins, so **no coin is ever created or lost**. If the pool changed between the server's read and the call (a stake disappeared because its player was deleted, or a new stake arrived, which can happen to a void while staking is still open), the answer is `stakes_changed`, and the server reads again.
+
+**The lock order** is the same everywhere: the pool row first, then the wallets, by player id. A stake and a settlement of the same pool therefore happen one at a time, a pool settles once, and two settlements (or a settlement and a stake) can never wait for each other in a circle. The limits (the biggest stake, the daily cap, the cut) are passed in as arguments from `backend/server/predictions/stake_rules.py`, so the numbers live in one place.
+
+**The update rights are per column.** The server may update seven columns of `prediction_pools` (the settlement) and the column `payout` of `prediction_stakes`, and nothing else: it cannot change who staked what or how much, it cannot move a closing time, and it cannot delete a stake or a pool. (`select ... for update` needs the update right on at least one column, and the column grants give exactly that.) And once a pool is settled, even those seven columns are closed: the trigger `prediction_pools_keep_settled()` refuses every update of a settled pool with `pool_settled`.
+
+**A known limit:** if a player is deleted while a pool is open, their stake row goes with them (cascade), and those coins simply leave the game. No coin is ever created.
+
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
+
 ### Prediction desk checks (steps P1 to P16, then R1 to R4)
 
 These steps test the prediction desk migration. Run them after the foundation migration and the prediction desk migration are both applied (the Island Exchange migration is not needed). Use **five new test users**, A, B, C, D and E (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID` to `USER_E_ID` with their ids. The functions take their limits as arguments, so the blocks below pass them in: the closing time of the question (`now() + interval '1 day'`, or a time in the past), the biggest stake (50 coins), the daily cap (1000, so that the earlier steps cannot get in the way; step P5 uses 80) and the start of the day (here "one hour ago"). The pools have made-up question ids that start with `desk-`. The server's own questions have other ids, so these steps do not touch them.
@@ -2169,14 +2121,14 @@ from public.wallets w
 where w.player_id = 'USER_A_ID';
 ```
 
-**P1. The reasons.** Both are on the list, and there are 13 reasons in all (8 + 3 from the Exchange + 2 from the desk; 10 if the Exchange migration is not applied):
+**P1. The reasons.** Both are on the list, and there are 17 reasons after the full chain (8 foundation, 3 Exchange v1, 2 Exchange v2, 2 prediction and 2 arena):
 
 ```sql
 select reason, direction from public.wallet_reasons where reason like 'prediction\_%' order by reason;
 select count(*) as reasons from public.wallet_reasons;
 ```
 
-Expected: `prediction_payout` earn and `prediction_stake` spend; `reasons` is 13.
+Expected: `prediction_payout` earn and `prediction_stake` spend; `reasons` is 17.
 
 **P2. A stake.** Player A stakes 30 coins on YES in the pool `desk-one`:
 
@@ -2452,7 +2404,7 @@ select (select count(*) from public.prediction_stakes where player_id in ('USER_
        (select count(*) from public.prediction_pools where question_id like 'desk-%') as pools;
 ```
 
-Expected: `stakes` 0 (the stakes go with their players, and those coins leave the game), and `pools` is still 10 or more: a pool is never deleted. Finally paste the whole prediction desk migration into the SQL editor again and run it. Expected: no error, `select count(*) from public.wallet_reasons;` still shows 13 (10 without the Exchange migration), and the pools are unchanged.
+Expected: `stakes` 0 (the stakes go with their players, and those coins leave the game), and `pools` is still 10 or more: a pool is never deleted. Finally paste the whole prediction desk migration into the SQL editor again and run it. Expected: no error, `select count(*) from public.wallet_reasons;` still shows 17 after the full group 3 chain (10 without the Exchange migration), and the pools are unchanged.
 
 **P16. A settled pool is final.** The function refuses a second settlement (P10), and the table refuses it too: once a pool is settled, nothing can change its row any more, not even the server, which holds the update right on seven of its columns. Without this, a server bug that wrote the table directly could set the pool `desk-pay` (settled in P9) back to open and settle it again with the other outcome, and the players on the other side would be paid from the same coins. Try it as the server:
 
@@ -2481,6 +2433,19 @@ Expected: `pool_settled` again. Run the **Pool check** of P9 once more: it still
 - **R4. The same stake id twice at the same moment: one stake.** Tab 1: A stakes 10 on `desk-r4` with the stake id `desk-a-r4-0001`, followed by `select pg_sleep(10);`. Tab 2: the same call. Expected: tab 2 waits and then fails with `already_applied`. A has one stake on `desk-r4` and was charged 10 coins once (the Desk check for A shows one ledger row `prediction_stake -10 stake:desk-a-r4-0001`).
 
 Delete the test users when you are done (**Authentication > Users**). Their stakes go with them.
+
+## The Lantern Duels migration
+
+`migrations/20261106110000_lantern_duels.sql` is the database part of Lantern Duels (package A7): two captains each seal a sequence of lantern signals, the server opens both envelopes at once, and the duel is friendly or played for equal play-coin stakes (see [INTERFACES.md, section 2](../docs/INTERFACES.md#lantern-duels-package-a7), decision [D026](../docs/DECISIONS.md) and the spec [A7-lantern-duels.md](../specs/A7-lantern-duels.md)). Run it **after** the Island Exchange migration (it uses the wallet and the profiles from the first). It is safe to run twice. Everything is explained in the file itself. It adds two wallet reasons, `arena_stake` and `arena_payout` (see the table above), and:
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `duels` | One row per challenge: who, the number of rounds, the stake, the status (`open`, then once `finished`, `withdrawn`, `declined` or `expired`) and, once decided, the result of every round. It never holds a signal. `create_uid` (the `actionUid` of the click) is unique per challenger, so a repeated click cannot send two challenges. | Only the server, through `duel_create()`, `duel_answer()` and `duel_void()`. |
+| `duel_moves` | The sealed envelopes: one row per captain and round, holding a signal. The only table with a signal, so it is locked tighter than any other: players have no right on it at all (not even for their own rows), the server may only read and insert, and no role may update or delete a row. | Only `duel_create()` and `duel_answer()`. |
+
+Like `market_trade()`, each function either does its work (`{"status": "done", ...}`) or *returns* a refusal (`{"status": "refused", "reason": "duel_taken"}`) before it writes anything, and *raises* an error for a real failure: `insufficient_funds` (from the wallet), a repeat (code `23505`, message `already_applied`), or `bad_duel` / `wallet_not_found` when the server sent numbers that do not fit (a bug on the server side). Every ledger row of a duel carries the ref `duel:` and the duel id, so a stake or a payout cannot be booked twice. The cut (5 % of the pot, rounded in the winner's disfavour) has no ledger row: it is simply not paid out. The arena rows of one duel add up to 0 for a friendly duel, a draw, a withdrawal, a decline or an expiry, and to minus the cut for a decided staked duel (-1, -3, -5 or -10 for stakes of 10, 25, 50 or 100). The locks are always taken in the same order, the duel row first and then the wallets by player id, so two requests never wait for each other forever.
+
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
 
 ### Lantern Duels checks (steps D1 to D12)
 
@@ -2838,9 +2803,19 @@ group by d.id, d.create_uid, d.status, d.stake
 order by d.create_uid;
 ```
 
-Expected: a duel that ended without a winner (a draw, withdrawn, declined, expired, and every friendly one) adds up to 0; `duel-test-001` (finished, 100) adds up to -10 and `duel-test-003` (finished, 50) to -5, the cut of each; and the duels that are still open (`duel-test-008`, staked 100, and `duel-test-013`, staked 10) add up to minus their held stake, -100 and -10. Finally paste the whole Lantern Duels migration into the SQL editor again and run it. Expected: no error, the Duel check shows what it showed before, and `select count(*) from public.wallet_reasons;` still shows 13.
+Expected: a duel that ended without a winner (a draw, withdrawn, declined, expired, and every friendly one) adds up to 0; `duel-test-001` (finished, 100) adds up to -10 and `duel-test-003` (finished, 50) to -5, the cut of each; and the duels that are still open (`duel-test-008`, staked 100, and `duel-test-013`, staked 10) add up to minus their held stake, -100 and -10. Finally paste the whole Lantern Duels migration into the SQL editor again and run it. Expected: no error, the Duel check shows what it showed before, and `select count(*) from public.wallet_reasons;` still shows 17 after the full group 3 chain.
 
 Delete the three test users when you are done (**Authentication > Users**). Their duels, envelopes and ledger rows go with them.
+
+## Group 3 automated migration checks
+
+The complete ten-file chain applies twice on a new local PostgreSQL over a Unix socket. The checks verify the cumulative object counts, wallet directions and server-only intent grants. They never read a configured database URL. From `backend/`:
+
+```bash
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/group3_sql
+```
+
+The test-only packages stay in uv's cache. Claude reviews and applies the three protected migration files before their code reaches main; this check does not apply anything to Supabase.
 
 ## Changing the database later
 
@@ -2860,4 +2835,4 @@ Delete the three test users when you are done (**Authentication > Users**). Thei
   ```
 - If something here is unclear, open an issue before changing the rules for money.
 
-After the full group 3 chain, all per-package wallet-reason totals in the manual examples are historical baselines: the combined total is **17**. Final catalog counts are 18 public tables, 1 view, 16 public policies, 5 realtime policies, 24 project functions (excluding Supabase’s `rls_auto_enable`), 4 sequences and 5 public triggers.
+**Live checkpoint, 6 Nov 2026:** group 3 files 090000, 100000 and 110000 are applied and MD5-verified under their repository versions. Final counts: 18 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 24 project functions excluding rls_auto_enable, 4 sequences and 5 public triggers. See [release proofs](../docs/handoff/group3-release.md).
