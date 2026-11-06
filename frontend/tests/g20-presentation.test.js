@@ -40,7 +40,7 @@ describe('G20 UI kit boundaries', () => {
     expect(choiceKey(key, current, 0)).toBeNull();
   });
   it('rejects unsafe balances and non-finite progress and handles descending charts', () => {
-    for (const value of [Number.MAX_SAFE_INTEGER + 1, '100', NaN, undefined]) expect(formatCoins(value)).toBe('—');
+    for (const value of [Number.MAX_SAFE_INTEGER + 1, '100', NaN, undefined]) expect(formatCoins(value)).toBe('?');
     expect(chartPoints([30, 20, 10], 100, 40, 4)).toEqual([[4, 4], [50, 20], [96, 36]]);
     for (const pair of [[NaN, 10], [1, Infinity], [2, -1]]) expect(progressRatio(...pair)).toBe(0);
   });

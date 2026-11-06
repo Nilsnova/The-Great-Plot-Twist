@@ -68,7 +68,7 @@ git switch -c feat/yourname-first-change origin/main
 git status --short
 ```
 
-Open `frontend/src/shell/team.js`. Its `teamMembers` array contains four display-name strings: Nils's entry and three `<name>` placeholders. Replace **one unused placeholder with your own name**, preserving the other entries and their order. Inspect the latest main before opening your PR so you do not overwrite a slot another teammate has just filled. Do not fill anybody else's entry or add student numbers; the file explicitly excludes them.
+Open `frontend/src/shell/team.js`. Its `teamMembers` array contains four display-name strings: Nils's entry and three `Teammate name pending` placeholders. Replace **one unused placeholder with your own name**, preserving the other entries and their order. Inspect the latest main before opening your PR so you do not overwrite a slot another teammate has just filled. Do not fill anybody else's entry or add student numbers; the file explicitly excludes them.
 
 From the title menu, open **Settings → Credits** and verify your name and the unchanged neighbouring entries. This is your first small change; leave the credits renderer and all other rows alone.
 

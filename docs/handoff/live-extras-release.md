@@ -66,3 +66,18 @@ direct requests to the production hostname. Do not describe those masked respons
 authenticated playthrough. G9 remains paused until Nils' laptop returns, so normal browser
 multiplayer/the complete mystery still await its adapter. The optional ChatGPT helper needs an
 approved official website client; no borrowed client or paid fallback is active.
+
+## Production proof
+
+Main `d5ad219cd33335f695e8c76b19cbba2f6a09c837` was pushed after all three SQL
+proofs. Production `dpl_3U4FMXZvWNygnMTpL6XABBkQNtFg` reached READY; health/config
+and `/host.html` returned 200. Existing six enabled flags were verified first. FEATURE_FLAGS
+was then changed to `live_presence,market,predictions,arena,case,bulletin,festival`, and the
+same main commit was redeployed as `dpl_2yKCaKZKv1ZFE7z6jiTtCYmTmpFK` (READY).
+Health and config returned 200/no-store, with exactly those seven flags enabled; sports,
+sign_in, companion_llm and raid remain false. No secret value was read or decrypted.
+
+Read-only SQL after activation: world dark, relit_at null, extra_lights zero; world_solves,
+Wall of Lights, festival_actions and sports_stakes each zero. Festival has not started, and
+its later 48-hour window still requires the first real Relighting. No live gameplay write
+was used as a verification step.

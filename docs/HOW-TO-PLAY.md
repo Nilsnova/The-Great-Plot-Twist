@@ -69,14 +69,14 @@ The harbor bulletin and tonight information have their own availability labels. 
 | Sea chart | M or Sea chart button | Chart | Y |
 | Close a view / pause | Escape | Close button / Menu | B in a menu; Menu closes or pauses |
 | Zoom | Mouse wheel over the world | No separate zoom button | No separate zoom button |
-| Dialogue choices | 1–9; arrows to browse, Enter to confirm | Tap a choice | Use keyboard or touch for the intro |
+| Dialogue choices | 1 to 9; arrows to browse, Enter to confirm | Tap a choice | Use keyboard or touch for the intro |
 | Other menus | Tab / Shift+Tab; Enter or Space on buttons | Tap the labelled control | D-pad to focus, A to activate; left/right adjusts supported selects and sliders |
 
 Click or tap the game after closing another view if movement has lost focus. Keyboard and touch remain available if your browser does not expose a standard-mapped gamepad. The help page itself uses ordinary links and form controls; the gamepad mappings apply to the game.
 
 ## Settings and accessibility
 
-Open **Settings** from the title or pause menu, or use the settings button in the game. Try **Low** quality if weather effects make movement slow. Adjust master, music and effects volumes separately. Use **Reduced motion: On** for still transitions, or follow your device preference. Set text speed to Relaxed, Steady, Quick or **Instant**, and use **Show full text** during dialogue. Enable **Colour-blind-safe highlights** if helpful.
+Open **Settings** from the title or pause menu, or use the settings button in the game. Try **Low** quality if weather effects make movement slow. Adjust master, music and effects volumes separately. Use **Reduced motion: On** for still transitions, or follow your device preference. Set text speed to Relaxed, Steady, Quick or **Instant**, and use **Show full text** during dialogue. Enable **Color-blind-safe highlights** if helpful.
 
 Settings are stored in this browser. If storage is blocked, they apply for the current visit only. Buttons have text labels and keyboard focus; the board's card selectors and the lights' slider provide alternatives to dragging. These options do not amount to a promise that the entire WebGL world is usable with every assistive technology. Include the affected control in an accessibility report so it can be checked.
 

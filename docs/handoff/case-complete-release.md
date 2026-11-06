@@ -48,3 +48,12 @@ case/bulletin and redeploy before checking config. RELIGHT_OPEN remains unset, s
 stays dark. No production solve/reward or Relighting was used as a test. G9 is paused until the
 laptop returns; normal browser multiplayer still needs that adapter. Festival/host/sports are the
 next wave. Full case extras and the approved-client ChatGPT helper remain later work.
+
+Production completion: main `fa0e49b8a6e88463693fb672b16839a097117cc2` reached READY,
+then case and bulletin were enabled and the same commit redeployed as
+`dpl_2AAkC2Ta6Xegr5JNRk9yByvt2a85`. Health/config returned 200/no-store with the six
+expected flags. Bulletin returned a public 300-second response with live Open-Meteo/Exchange
+source status. The world stayed dark with zero solves/extra lights/Wall entries. Anonymous
+NPC GET returned 405/private,no-store. The connector masks application 401s and injects a
+share query into strict no-query boards; no authenticated production case playthrough is
+claimed. This release is now followed by [live extras](live-extras-release.md).
