@@ -58,6 +58,17 @@ class SaveReply:
     updated_at: datetime | None = None  # saved: when the save was written
 
 
+def contains_nul(value: Any) -> bool:
+    """PostgreSQL jsonb cannot store U+0000, in a key or a nested string."""
+    if isinstance(value, str):
+        return "\x00" in value
+    if isinstance(value, dict):
+        return any(contains_nul(key) or contains_nul(item) for key, item in value.items())
+    if isinstance(value, list | tuple):
+        return any(contains_nul(item) for item in value)
+    return False
+
+
 def save_size(data: dict[str, Any]) -> int:
     """The size of a save in bytes: compact JSON, written as UTF-8 text.
 
@@ -66,11 +77,13 @@ def save_size(data: dict[str, Any]) -> int:
     """
     try:
         text = json.dumps(data, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+        if contains_nul(data):
+            raise ValueError("PostgreSQL jsonb cannot store U+0000.")
+        return len(text.encode("utf-8"))
     except (TypeError, ValueError, RecursionError) as error:
         raise ApiError(
             422, "save_not_json", "The save holds a value that JSON cannot store, such as NaN."
         ) from error
-    return len(text.encode("utf-8"))
 
 
 def check_save_size(data: dict[str, Any]) -> None:

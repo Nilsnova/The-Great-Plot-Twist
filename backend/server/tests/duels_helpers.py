@@ -488,7 +488,7 @@ class FakeDuelDatabase:
 def fake_login(request: httpx.Request) -> httpx.Response:
     """The pretend Supabase sign-in check: "token-alice" is Alice, and so on."""
     token = request.headers["authorization"].removeprefix("Bearer ")
-    who = token.removeprefix("token-")
+    who = token.removeprefix("test.").removesuffix(".signature")
     if who not in PLAYERS:
         return httpx.Response(401, json={"message": "bad token"})
     return httpx.Response(200, json={"id": PLAYERS[who][0]})
@@ -513,7 +513,7 @@ class World:
 
     @staticmethod
     def headers(who: str) -> dict[str, str]:
-        return {"Authorization": f"Bearer token-{who}"}
+        return {"Authorization": f"Bearer test.{who}.signature"}
 
     def coins(self, who: str) -> int:
         return self.database.wallets[PLAYERS[who][0]]

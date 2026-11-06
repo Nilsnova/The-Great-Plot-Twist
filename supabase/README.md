@@ -19,6 +19,25 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
 | [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 
+## G10 follow-up migration (140000)
+
+`migrations/20261106140000_followups.sql` replaces `delete_player(uuid)` without adding tables, policies, wallet reasons or public functions. It advances each affected crew's version once when account deletion hands over ownership or frees a seat, preserves the lowest-seat successor, and records D018's own-kit rule in the column comment. Prior migration files remain unchanged. Only `service_role` may execute the function, as before.
+
+Nils authorized Codex to apply this reviewed file before its code release. Its current MD5 is
+`a59dccb2d3447614454f94a37cc3bb40`. The integration fixes the distinct-member deletion race found
+by independent review: it locks all affected crews in UUID order before locking the auth user,
+then performs handover in a separate statement with a fresh snapshot after any wait. This keeps
+same-player retries and concurrent different-member deletions safe. The authored group-1 checks
+and permanent four-scenario concurrency regressions run on disposable PostgreSQL; independent
+review additionally exercises the full case/NPC chain and later-table deletion cascades.
+From `backend/`:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/followups_sql
+```
+
+The extra packages are test-only and do not change project dependencies. Normal pytest runs skip these optional database checks unless `CASE_PG_SCRATCH=1` is set. The follow-up changes no object counts, grants no browser execution and adds no wallet reason. Independent full-chain apply/reapply, restricted-owner ACL checks and 100 concurrent deletion trials passed. Live application and hash/version proof are recorded by the release coordinator.
+
 ## Project settings this migration relies on
 
 Our Supabase project is in West EU (Ireland). These settings were agreed on 5 November 2026:
@@ -2812,7 +2831,7 @@ Delete the three test users when you are done (**Authentication > Users**). Thei
 The complete ten-file chain applies twice on a new local PostgreSQL over a Unix socket. The checks verify the cumulative object counts, wallet directions and server-only intent grants. They never read a configured database URL. From `backend/`:
 
 ```bash
-CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/group3_sql
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/group3_sql
 ```
 
 The test-only packages stay in uv's cache. Claude reviews and applies the three protected migration files before their code reaches main; this check does not apply anything to Supabase.
@@ -2897,14 +2916,14 @@ It follows Phase 1 and the home-islet migration. The exact reviewed file MD5 is
 | Table | anon / authenticated | service_role |
 |---|---|---|
 | board_pins | no access | select, insert |
-| finale_posts | no access | select, insert, update |
-| finale_signals | no access | select, insert, update |
+| finale_posts | no access | select, insert; update ended_second only |
+| finale_signals | no access | select, insert; update ended_second and parted only |
 
 All three tables have RLS without policies; their advisor INFO notices are intentional. Both identity
 sequences have no browser or service grants. Every function uses invoker rights and an empty search
 path; execution is revoked from PUBLIC, anon and authenticated and granted to service_role only.
 The store exposes five new intents (`board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post`,
-`finale_signal`), never the two new private helpers (`finale_post_holds`, `finale_three_locks`).
+`finale_signal`), never the two new private helpers (`finale_post_holds`, `finale_leave_post`).
 
 The crew lock serializes pin claims, deduction rewards and post/lock changes. Wallet payouts use
 player UUID order. Eligibility is rechecked under that lock; three locks require different current
@@ -2936,3 +2955,23 @@ later lights, deletion and replay. Independent review also exercised actual migr
 a non-superuser owner with broad default grants. Expected cumulative totals: **30 public tables,
 1 view, 16 public policies, 5 realtime policies, 17 reasons, 39 project functions, 8 sequences,
 6 public triggers**. Three additional server-only RLS/no-policy INFO notices are intentional.
+
+## Case Phase 4 NPC migration
+
+`migrations/20261106130000_npc_partners.sql` follows 080000 and 120000; reviewed MD5
+`39f269d1fd2e8e43e2b3d0055c97ecb2`. It adds `case_state.orders_count`, plus server-only
+`npc_orders` with RLS and no policies or browser grants. service_role has select/insert only.
+Each receipt stores the action uid with unique `(ordered_by, action_uid)` for exact replay.
+
+Four server-only invoker functions have empty search paths: `npc_begin`, `npc_next_order_no`,
+`npc_fetch_pin`, `npc_man_light`. The Python store exposes only the last two intent functions.
+The crew lock protects gap-free order numbers, seat identity, busy boundaries and accepted route
+timelines. Paid errands are refused in SQL as well as Python. NPCs never charge a wallet; a pin's
+existing clue reward pays the ordering player once. New orders end old posts and locks.
+
+P1 to P10 and receipt/race tests cover effective seconds, arrival windows, Witness pin-only jobs,
+ordering-player credit, takeover, busy boundaries, gap-free numbering and authenticated denial.
+Independent concurrent tests prove one accepted order per busy partner and one stored result for
+the same receipt. Reapplication preserves history and ledger. Expected totals: **31 public tables,
+1 view, 16 public policies, 5 realtime policies, 17 reasons, 43 project functions, 8 sequences,
+6 public triggers**. The new NPC table's RLS/no-policy INFO notice is intentional.

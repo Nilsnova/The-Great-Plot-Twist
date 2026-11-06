@@ -14,31 +14,29 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Latest release, 6 Nov 2026, Codex:** Phase 2 is on main (`c365985`) and production is ready.
-`GET /api/config` confirms live_presence, market, predictions and arena enabled; sports and the AI
-helper remain off, and case is not enabled. The market's direct live-price check is pending a cloud
-network allowlist update; no query/cache guard was relaxed. G9 is paused until Nils' laptop returns;
-normal-play multiplayer is still pending its integration.
+**Current release, 6 Nov 2026, Codex:** the minimum case backend, server followups and G12 are
+integrated on `integrate/case-npc`. The final combined backend/story gate passes **10,859 tests**,
+including real solo+NPC and four-player API/SQL playthroughs. All **69 kit mixes** solve using
+starting resources and production rules. Code and per-file SQL reviews pass. Reviewed migrations
+130000 and 140000 are applied verbatim, MD5-proven and restored to their repository versions.
+Live counts are **31 tables +1 view /43 project functions /17 wallet reasons**, with expected-only
+security advisors. See the [complete release proof](handoff/case-complete-release.md).
 
-Case Phase 1 is on main (`63e1e8c`) and production, with its private disabled route verified.
-Phase 2 board/night code on `feat/case-board-night` passed 10,269 backend tests including scratch SQL,
-1,603 frontend tests, the production build/spoiler guard, Ruff and independent code/SQL reviews.
-Migration 080000 is applied with exact MD5 and normalized version. Live totals are now 27 tables,
-one view, 39 project functions and 17 wallet reasons; the security advisor has only expected items.
-See [Phase 2 proof](handoff/case-phase2-release.md). The case stays off until its full chain and
-end-to-end proofs pass. RELIGHT_OPEN remains unset.
+Phase 3 production baseline is main `40ba1d5`, deployment `dpl_9yCGpVwrFygtV57MXrov3fiSJLAJ` READY.
+Health/config are 200 and the four group 3 flags are enabled. The release activates case/bulletin
+only after verifying its new deployment, then redeploys and verifies config. RELIGHT_OPEN remains
+unset; the live coast stays dark. G9 is **paused until Nils' laptop returns**, so the complete mystery
+and normal browser multiplayer still await its adapter despite the passing backend proofs.
 
-Phase 3 Relighting is integrated on `integrate/case-relighting`: **10,309 backend tests pass**,
-including scratch SQL. Independent code/SQL reviews passed. Migration 120000 is applied with exact
-stored MD5 and normalized version; live counts are **30 tables, one view, 39 project functions,
-17 reasons**, with expected-only advisors. The singleton is dark, with no solves or Wall entries.
-See [Phase 3 proof](handoff/case-phase3-release.md).
+Next: festival backend/UI and reserved `160000`, host-console integration `170000` and sports `180000` are
+being built against the current contracts. G12 required no `150000` migration. Sports-provider keys
+are not configured in Vercel; live sports will stay off until its credential and proofs are ready.
+The ChatGPT helper requires an approved official website client. Direct live stock/cache-HIT checks
+still need the production hostname allowed by this cloud environment's network policy.
 
-Next: Phase 4 NPC implementation is integrating; its migration is independently approved and the
-69-mix case proof is in progress. Economy-abuse checks have been adapted to Exchange v2 and await
-integration after followups. Server followups are being reconciled with the current contracts.
-Festival, host console and sports follow these dependencies; the older branches are checkpoints
-rather than completed live features. G9 remains untouched while paused.
+Phase1 main63e1e8c, Phase2 mainc365985 and Phase3 main `40ba1d5` are already released; their proofs are
+retained under docs/handoff. Original music, ambience and effects are built with separate controls.
+The older status paragraphs below are historical checkpoints.
 
 **Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
 migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
@@ -265,6 +263,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
+**Next server step:** release the verified case/followups/G12 integration, then complete festival, host console and sports in migration order. G9 browser wiring remains paused.
+
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
 **Next 1: A1-next, apply and prove the foundation.** Starts once foundation wave 2 is on `main`. Production is already live, and deploy check 2 has passed.
@@ -458,6 +458,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **6 Nov, Codex:** minimum case/NPC, server followups and Exchange-v2 economy checks integrated; 10,859 backend tests pass, all 69 mixes and two actual API/SQL solves proven. Applied 130000/140000 sequentially with exact hashes, versions, counts and known-only advisors. See [complete proof](handoff/case-complete-release.md).
+
 - **6 Nov, Codex:** Phase 2 production verified healthy with approved flags and private POST-only routes. Phase 3 shared world/Exchange integration passes 10,309 backend tests; reviewed 120000 applied and hash/version/counts/advisors proven, singleton remains dark. See [Phase 3 proof](handoff/case-phase3-release.md).
 
 - **6 Nov, Codex:** Phase 2 board/night integrated with earned private views, immutable station reads and bounded live hints; 10,269 backend / 1,603 frontend tests pass. Reviewed 080000 applied verbatim, MD5/version/counts and known-only advisors proven. See [release proof](handoff/case-phase2-release.md).
@@ -467,6 +469,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 - **6 Nov, Codex:** group 3 integrated and independently reviewed; applied 090000/100000/110000 one file at a time, exact MD5 proofs and version restoration passed; all final database counts and known-only advisors match. Core local gates green; cloud browser regression and live deployment checks continue. See [release proof](handoff/group3-release.md).
 
 Newest first. One line per finished task: date, who, what, where.
+
+- **2026-11-06, server follow-ups reconciled.** Codex for Nils preserved the four authored commits on `integrate/server-followups-v2`, adapted the local SQL port to current case/world services, retained the early token-length bound and fixed concurrent member deletion after independent review. Final focused suite: 60 passed; 993 other affected route checks passed, Ruff/diff clean. Migration 140000 MD5 `a59dccb2d3447614454f94a37cc3bb40` is independently approved; coordinator applies before release. No live writes from this task.
 
 - **2026-11-06, evening.** Claude, for Nils: group 2 is merged on `integrate/fri6`: Codex's G8 (with all of G7), A4 live presence (D023, renumbered from A4's D018), L2 home islet (D021) and the open-world must items (D024, renumbered from its D018), and the follow-ups of the group 1 check ("Apply before you merge" brought up to date, the kit coins N5 settled by the story round, one test that keeps the three copies of the kits equal, D020 in its place in time, two spec notes). Fixes the merge needed: the content-route sweep skips the open-world files that `GET /api/bulletin` shows on purpose; the islet panel leaves the signal station's hotspot to the finale screen (since G8 that hotspot is also a plot, so E there opened both); the world check closes the islet panel before the next hotspot; the panel's labels no longer share a chunk with the game, so the cold title stays within G8's 21,080 bytes; and A4's realtime tests use a stand-in key that the secret scan does not mistake for a real one. 23 routes; `uv run pytest` 6407 passed, `npm test` 886 passed, the build and its spoiler guard pass, and the G7 and G8 browser checks pass. Its database changes `050000` and `070000` are applied before the push; the flag `live_presence` stays off. [INTERFACES.md](INTERFACES.md#what-the-browser-adapter-g9-maps) lists the presence names that G9 maps between G8 and A4.
 - **2026-11-06, afternoon.** Claude, for Nils: group 1 is on `main`: the story round (D018), A2/A3 (D022, renumbered from A2's D018) and A6 (D020), merged on `integrate/fri6` and checked by an independent agent (fixes: the secret-scan false alarm, the D020 note, a scratch path in a spec). Its four database changes are applied (`010000` to `040000`, each checked by md5 against its file, versions recorded, object counts as reviewed). The API runs in Dublin (`8ff24cc`). Nils decided: no review per merge (D015, extended), no kickoff or check-ins, feature complete by Sun 8 Nov, and Codex takes the browser side.

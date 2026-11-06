@@ -9,9 +9,21 @@ from server.crews.store import CREW_COLUMNS
 from server.game.case_board import deduction_for_pair
 from server.game.case_data import CaseData
 from server.game.case_rewards import reward_ref, solve_shares
-from server.game.case_rows import SIGNAL_SUMMARIES, snapshot_from_row
-from server.game.case_snapshot import CaseSnapshot
+from server.game.case_rows import (
+    NPC_ORDER_SUMMARIES,
+    SIGNAL_SUMMARIES,
+    npc_order_from_row,
+    snapshot_from_row,
+)
+from server.game.case_snapshot import CaseSnapshot, SeatState
 from server.game.finale_geometry import normalize_bearing
+from server.game.npc_orders import (
+    ARRIVE_AFTER_MINUTES,
+    ERRAND_MINUTES,
+    PIN_MINUTES,
+    NpcOrder,
+    OrderDecision,
+)
 from server.supabase_admin import AlreadyApplied, SupabaseAdmin, SupabaseRejected
 
 SNAPSHOT_COLUMNS = (
@@ -19,6 +31,8 @@ SNAPSHOT_COLUMNS = (
     + ",case_state(*),case_finds(*),case_deductions(*),case_accusations(*),case_solvers(*)"
     + ",board_pins(*),finale_posts(*),finale_signals(*)"
     + "".join(f",{alias}:finale_signals(*)" for alias, _, _ in SIGNAL_SUMMARIES)
+    + ",npc_orders(*)"
+    + "".join(f",{alias}:npc_orders(*)" for alias, _, _ in NPC_ORDER_SUMMARIES)
 )
 FUNCTION_STATUSES = {
     "case_open": ("opened",),
@@ -30,6 +44,8 @@ FUNCTION_STATUSES = {
     "finale_nightfall": ("done",),
     "finale_take_post": ("done",),
     "finale_signal": ("off_target", "locked"),
+    "npc_fetch_pin": ("done",),
+    "npc_man_light": ("done",),
 }
 INTENT_FUNCTIONS = tuple(FUNCTION_STATUSES)
 
@@ -48,9 +64,11 @@ def snapshot_query(crew_id: str) -> dict[str, str]:
         "finale_posts.ended_second": "is.null",
         "finale_signals.order": "id.desc",
         "finale_signals.limit": "40",
+        "npc_orders.order": "order_no.desc",
+        "npc_orders.limit": "40",
     }
-    for alias, filters, limit in SIGNAL_SUMMARIES:
-        query[f"{alias}.order"] = "id.desc"
+    for alias, filters, limit in (*SIGNAL_SUMMARIES, *NPC_ORDER_SUMMARIES):
+        query[f"{alias}.order"] = "order_no.desc" if alias.startswith("npc_") else "id.desc"
         query[f"{alias}.limit"] = str(limit)
         query.update({f"{alias}.{key}": value for key, value in filters.items()})
     return query
@@ -103,6 +121,18 @@ def validate_reply(name: str, reply: dict) -> None:
         reply_number(reply, "endsSecond")
     if name == "finale_take_post":
         reply_number(reply, "onPostSecond")
+    if name in ("npc_fetch_pin", "npc_man_light"):
+        reply_number(reply, "orderNo", 1)
+        if name == "npc_fetch_pin":
+            pin = reply_number(reply, "pinSecond")
+            if reply.get("foundSecond") is not None:
+                if reply_number(reply, "foundSecond") > pin:
+                    raise SupabaseRejected("The partner deadlines could not be read.")
+            elif "foundSecond" not in reply:
+                raise SupabaseRejected("The partner deadline could not be read.")
+            reply_number(reply, "coinsPaid")
+        else:
+            reply_number(reply, "onPostSecond")
     if status == "locked" and type(reply.get("parted")) is not bool:
         raise SupabaseRejected("The fog-parting answer could not be read.")
 
@@ -125,8 +155,12 @@ async def run_function(admin: SupabaseAdmin, name: str, params: dict[str, Any]) 
             raise SupabaseRejected("The case refusal could not be read.")
         if "seconds" in reply:
             reply_number(reply, "seconds")
+        if "minute" in reply:
+            reply_number(reply, "minute")
     if reply["status"] == "repeat":
         action_from_row(reply, camel_case=True)
+        if reply["kind"] == "order":
+            reply = {**reply, "actionUid": params["p_action_uid"]}
     validate_reply(name, reply)
     return reply
 
@@ -164,7 +198,10 @@ class CaseStore:
             },
         )
         rows = checked_rows(rows)
-        return None if not rows else action_from_row(rows[0])
+        if not rows:
+            return None
+        action = action_from_row(rows[0])
+        return {**action, "actionUid": action_uid} if action["kind"] == "order" else action
 
     async def crew_for_player(self, player_id: str) -> str | None:
         rows = await self.admin.select_rows(
@@ -218,6 +255,97 @@ class CaseStore:
             raise SupabaseRejected("The player's case profile could not be read.")
         snapshot = snapshot_from_row(rows[0], read_log=read_log, coins=coins, viewer=player_id)
         return snapshot if snapshot.seat_for_player(player_id) is not None else None
+
+    async def npc_order_for_action(
+        self, player_id: str, action_uid: str, crew_id: str
+    ) -> NpcOrder | None:
+        rows = checked_rows(
+            await self.admin.select_rows(
+                "npc_orders",
+                {
+                    "select": "*",
+                    "crew_id": f"eq.{crew_id}",
+                    "ordered_by": f"eq.{player_id}",
+                    "action_uid": f"eq.{action_uid}",
+                    "limit": "1",
+                },
+            )
+        )
+        if not rows:
+            return None
+        row = rows[0]
+        if len(rows) != 1 or (row.get("crew_id"), row.get("ordered_by"), row.get("action_uid")) != (
+            crew_id,
+            player_id,
+            action_uid,
+        ):
+            raise SupabaseRejected("The partner order receipt could not be read.")
+        return npc_order_from_row(row)
+
+    async def npc_fetch(
+        self,
+        snapshot: CaseSnapshot,
+        data: CaseData,
+        player_id: str,
+        action_uid: str,
+        seat_no: int,
+        card_id: str,
+        decision: OrderDecision,
+    ) -> dict:
+        seat = npc_seat(snapshot, seat_no)
+        card = data.card(card_id)
+        route = decision.route
+        if not decision.accepted or (route is not None and route.card_id != card_id):
+            raise ValueError("An accepted matching fetch decision is required.")
+        window = (
+            None if route is None or route.open_when == "always" else data.window(route.open_when)
+        )
+        params = intent_arguments(snapshot, player_id, action_uid)
+        params.update(
+            p_seat_no=seat_no,
+            p_npc_id=seat.npc_id,
+            p_card_id=card_id,
+            p_route_id=None if route is None else route.id,
+            p_needs_deductions=list(card.opens_after),
+            p_window=None
+            if window is None
+            else {
+                "every": window.every_minutes,
+                "from": window.from_minute,
+                "open": window.open_minutes,
+            },
+            p_errand_seconds=ERRAND_MINUTES * 60,
+            p_arrive_seconds=ARRIVE_AFTER_MINUTES * 60,
+            p_pin_seconds=PIN_MINUTES * 60,
+            p_price=0,
+            p_purchase_ref=None,
+            p_reward_coins=data.rewards.coin("first_card").amount,
+            p_reward_ref=reward_ref(data, "first_card", card_id=card_id),
+        )
+        return await run_function(self.admin, "npc_fetch_pin", params)
+
+    async def npc_man_light(
+        self,
+        snapshot: CaseSnapshot,
+        data: CaseData,
+        player_id: str,
+        action_uid: str,
+        seat_no: int,
+        light_id: str,
+    ) -> dict:
+        seat = npc_seat(snapshot, seat_no)
+        light = next((light for light in data.active_lights if light.id == light_id), None)
+        if light is None or not light.partners_may_man:
+            raise ValueError("A public light is required for a partner order.")
+        params = intent_arguments(snapshot, player_id, action_uid)
+        params.update(
+            p_seat_no=seat_no,
+            p_npc_id=seat.npc_id,
+            p_light_id=light_id,
+            p_travel_seconds=ERRAND_MINUTES * 60,
+            p_night_seconds=data.night.night_minutes * 60,
+        )
+        return await run_function(self.admin, "npc_man_light", params)
 
     async def open(self, snapshot: CaseSnapshot, data: CaseData) -> dict:
         return await run_function(self.admin, "case_open", open_arguments(snapshot.crew_id, data))
@@ -320,6 +448,13 @@ class CaseStore:
             p_lights_needed=data.night.lights_needed,
         )
         return await run_function(self.admin, "finale_signal", params)
+
+
+def npc_seat(snapshot: CaseSnapshot, seat_no: int) -> SeatState:
+    seat = next((seat for seat in snapshot.seats if seat.seat_no == seat_no), None)
+    if seat is None or seat.npc_id is None or seat.player_id is not None:
+        raise ValueError("The partner store requires a partner seat.")
+    return seat
 
 
 def intent_arguments(snapshot: CaseSnapshot, player_id: str, action_uid: str) -> dict:

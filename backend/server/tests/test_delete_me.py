@@ -158,7 +158,9 @@ def test_without_a_token_it_is_401_and_deletes_nothing():
 def test_a_token_that_supabase_refuses_gets_401_and_deletes_nothing():
     client, seen = make_client(two_players())
 
-    response = delete(client, headers={"Authorization": "Bearer nobody-issued-this"}, json=CONFIRM)
+    response = delete(
+        client, headers={"Authorization": "Bearer test.nobody-issued-this.signature"}, json=CONFIRM
+    )
 
     assert_error(response, 401, "unauthorized")
     assert seen == []

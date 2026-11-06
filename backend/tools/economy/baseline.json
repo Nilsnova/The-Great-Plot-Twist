@@ -1,0 +1,835 @@
+{
+  "players": 1000,
+  "days": 14,
+  "seed": 12,
+  "replay_sha256": "c0ff74db53e13250436d3d3bfbd491594be0c56ee02dcf93b45f2eef6ad1fa0d",
+  "market_data": "90 recorded minutes, ping-pong repeated; Binance Vision CC BY-NC-SA 4.0",
+  "assumptions": [
+    "Equal style counts; kits sampled uniformly; every player receives one kit initially.",
+    "Casual: half of days, one visit; case-focused: no trades; trader: four visits/day.",
+    "Visits choose a company and rising/falling side without foresight, then hold 60min.",
+    "Four daily slots are six hours apart: at most one position is open per player.",
+    "Every tick checks for zero; fees/stakes use production pre-Relighting rules.",
+    "All positions close before day end; distributions show wallet cash, not open equity.",
+    "Recorded island prices only; no stocks, external requests or recurring income.",
+    "Arithmetic/workload evidence only; HTTP and SQL protection have separate tests."
+  ],
+  "implemented_exchange_v2": {
+    "days": [
+      {
+        "day": 1,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 1000.0,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 1,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 1,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 941,
+          "p90": 1539
+        }
+      },
+      {
+        "day": 2,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 1000.0,
+          "p90": 1586
+        }
+      },
+      {
+        "day": 2,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 2,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 870,
+          "p90": 1456
+        }
+      },
+      {
+        "day": 3,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 988.5,
+          "p90": 1581
+        }
+      },
+      {
+        "day": 3,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 3,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 795,
+          "p90": 1370
+        }
+      },
+      {
+        "day": 4,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 983.0,
+          "p90": 1562
+        }
+      },
+      {
+        "day": 4,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 4,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 718,
+          "p90": 1289
+        }
+      },
+      {
+        "day": 5,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 976.0,
+          "p90": 1554
+        }
+      },
+      {
+        "day": 5,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 5,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 640,
+          "p90": 1209
+        }
+      },
+      {
+        "day": 6,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 965.5,
+          "p90": 1540
+        }
+      },
+      {
+        "day": 6,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 6,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 558,
+          "p90": 1141
+        }
+      },
+      {
+        "day": 7,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 956.5,
+          "p90": 1537
+        }
+      },
+      {
+        "day": 7,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 7,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 474,
+          "p90": 1059
+        }
+      },
+      {
+        "day": 8,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 949.5,
+          "p90": 1528
+        }
+      },
+      {
+        "day": 8,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 8,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 409,
+          "p90": 988
+        }
+      },
+      {
+        "day": 9,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 942.0,
+          "p90": 1515
+        }
+      },
+      {
+        "day": 9,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 9,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 350,
+          "p90": 920
+        }
+      },
+      {
+        "day": 10,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 932.5,
+          "p90": 1515
+        }
+      },
+      {
+        "day": 10,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 10,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 298,
+          "p90": 817
+        }
+      },
+      {
+        "day": 11,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 927.0,
+          "p90": 1507
+        }
+      },
+      {
+        "day": 11,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 11,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 245,
+          "p90": 733
+        }
+      },
+      {
+        "day": 12,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 916.5,
+          "p90": 1489
+        }
+      },
+      {
+        "day": 12,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 12,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 205,
+          "p90": 662
+        }
+      },
+      {
+        "day": 13,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 905.5,
+          "p90": 1483
+        }
+      },
+      {
+        "day": 13,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 13,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 165,
+          "p90": 580
+        }
+      },
+      {
+        "day": 14,
+        "style": "casual",
+        "players": 334,
+        "wallet": {
+          "median": 888.0,
+          "p90": 1474
+        }
+      },
+      {
+        "day": 14,
+        "style": "case-focused",
+        "players": 333,
+        "wallet": {
+          "median": 1000,
+          "p90": 1600
+        }
+      },
+      {
+        "day": 14,
+        "style": "trader",
+        "players": 333,
+        "wallet": {
+          "median": 136,
+          "p90": 512
+        }
+      }
+    ],
+    "initial_wallet_total": 1153000,
+    "final_wallet_total": 788659,
+    "fees": 351472,
+    "stakes": 8595599,
+    "payouts": 8582730,
+    "trades": 41922,
+    "liquidations": 0,
+    "wallets_below_minimum_open_cost": 0
+  },
+  "case_numeric_caps_only": {
+    "cards": 400,
+    "deductions": 800,
+    "solve": 800,
+    "shortcuts": [
+      150,
+      200,
+      200,
+      250
+    ],
+    "finale_build": 300
+  },
+  "exchange_v2_risk": {
+    "status": "Production arithmetic on recorded ten-minute windows; not a forecast.",
+    "stake": 500,
+    "leverage": 10,
+    "opening_fee": 10,
+    "recorded_gross_value_min_max": [
+      453,
+      546
+    ],
+    "recorded_close_receipt_min_max": [
+      443,
+      536
+    ],
+    "largest_recorded_price_range_percent": 1.7295427521349043,
+    "adverse_10_percent_gross_value": 0,
+    "favorable_10_percent_gross_value": 1000
+  },
+  "flat_exchange_v2_loop_probe": {
+    "valid_pairs": 5892,
+    "largest_coin_change": -2
+  },
+  "public_replay_foresight_probe": {
+    "initial_wallet": 1000,
+    "wallet_by_day": [
+      1108,
+      1216,
+      1324,
+      1432,
+      1540,
+      1648,
+      1756,
+      1864,
+      1972,
+      2080,
+      2188,
+      2296,
+      2404,
+      2512
+    ],
+    "final_wallet": 2512,
+    "note": "Public demo prices are knowable; this is not evidence about live prices."
+  },
+  "counterfactual_wider_economy": {
+    "status": "COUNTERFACTUAL WORKLOAD: assumed income, resources ignored; no balance claim",
+    "assumptions": [
+      "Uniform random kits; casual earns on alternate days; others active daily.",
+      "Active days grant full salvage/order caps; weekly co-op on active seventh days.",
+      "Case caps paid days 3/5/7; shortcuts day 6 and solo light day 7.",
+      "Non-traders buy one affordable building level/day, across four lines; timber ignored.",
+      "Trader: four sequential <=500 stakes/day, <=2000/day, 10-minute random long/short.",
+      "Market fees use the production 2% of stake on opening and closing, capped by value.",
+      "Prediction settlement uses the production 5% cut of losing stakes and remainders.",
+      "Everyone may enter four fair pools and three paid duels/day if affordable.",
+      "No skill advantage/draws/timeouts; refunds are probed separately, not assumed income."
+    ],
+    "days": [
+      {
+        "day": 1,
+        "style": "casual",
+        "wallet": {
+          "median": 1074.0,
+          "p90": 1580
+        }
+      },
+      {
+        "day": 1,
+        "style": "case-focused",
+        "wallet": {
+          "median": 1073,
+          "p90": 1580
+        }
+      },
+      {
+        "day": 1,
+        "style": "trader",
+        "wallet": {
+          "median": 1291,
+          "p90": 1811
+        }
+      },
+      {
+        "day": 2,
+        "style": "casual",
+        "wallet": {
+          "median": 1053.5,
+          "p90": 1653
+        }
+      },
+      {
+        "day": 2,
+        "style": "case-focused",
+        "wallet": {
+          "median": 460,
+          "p90": 1051
+        }
+      },
+      {
+        "day": 2,
+        "style": "trader",
+        "wallet": {
+          "median": 1528,
+          "p90": 2082
+        }
+      },
+      {
+        "day": 3,
+        "style": "casual",
+        "wallet": {
+          "median": 529.5,
+          "p90": 1125
+        }
+      },
+      {
+        "day": 3,
+        "style": "case-focused",
+        "wallet": {
+          "median": 1128,
+          "p90": 1705
+        }
+      },
+      {
+        "day": 3,
+        "style": "trader",
+        "wallet": {
+          "median": 1753,
+          "p90": 2353
+        }
+      },
+      {
+        "day": 4,
+        "style": "casual",
+        "wallet": {
+          "median": 532.0,
+          "p90": 1104
+        }
+      },
+      {
+        "day": 4,
+        "style": "case-focused",
+        "wallet": {
+          "median": 1315,
+          "p90": 1790
+        }
+      },
+      {
+        "day": 4,
+        "style": "trader",
+        "wallet": {
+          "median": 1987,
+          "p90": 2528
+        }
+      },
+      {
+        "day": 5,
+        "style": "casual",
+        "wallet": {
+          "median": 701.0,
+          "p90": 1392
+        }
+      },
+      {
+        "day": 5,
+        "style": "case-focused",
+        "wallet": {
+          "median": 619,
+          "p90": 1432
+        }
+      },
+      {
+        "day": 5,
+        "style": "trader",
+        "wallet": {
+          "median": 2170,
+          "p90": 2772
+        }
+      },
+      {
+        "day": 6,
+        "style": "casual",
+        "wallet": {
+          "median": 698.0,
+          "p90": 1467
+        }
+      },
+      {
+        "day": 6,
+        "style": "case-focused",
+        "wallet": {
+          "median": 75,
+          "p90": 746
+        }
+      },
+      {
+        "day": 6,
+        "style": "trader",
+        "wallet": {
+          "median": 2401,
+          "p90": 3048
+        }
+      },
+      {
+        "day": 7,
+        "style": "casual",
+        "wallet": {
+          "median": 1145.5,
+          "p90": 1751
+        }
+      },
+      {
+        "day": 7,
+        "style": "case-focused",
+        "wallet": {
+          "median": 834,
+          "p90": 1240
+        }
+      },
+      {
+        "day": 7,
+        "style": "trader",
+        "wallet": {
+          "median": 2875,
+          "p90": 3590
+        }
+      },
+      {
+        "day": 8,
+        "style": "casual",
+        "wallet": {
+          "median": 1138.5,
+          "p90": 1788
+        }
+      },
+      {
+        "day": 8,
+        "style": "case-focused",
+        "wallet": {
+          "median": 448,
+          "p90": 1052
+        }
+      },
+      {
+        "day": 8,
+        "style": "trader",
+        "wallet": {
+          "median": 3098,
+          "p90": 3881
+        }
+      },
+      {
+        "day": 9,
+        "style": "casual",
+        "wallet": {
+          "median": 1130.5,
+          "p90": 1824
+        }
+      },
+      {
+        "day": 9,
+        "style": "case-focused",
+        "wallet": {
+          "median": 644,
+          "p90": 1239
+        }
+      },
+      {
+        "day": 9,
+        "style": "trader",
+        "wallet": {
+          "median": 3255,
+          "p90": 4144
+        }
+      },
+      {
+        "day": 10,
+        "style": "casual",
+        "wallet": {
+          "median": 1122.0,
+          "p90": 1881
+        }
+      },
+      {
+        "day": 10,
+        "style": "case-focused",
+        "wallet": {
+          "median": 928,
+          "p90": 1436
+        }
+      },
+      {
+        "day": 10,
+        "style": "trader",
+        "wallet": {
+          "median": 3436,
+          "p90": 4316
+        }
+      },
+      {
+        "day": 11,
+        "style": "casual",
+        "wallet": {
+          "median": 833.0,
+          "p90": 1772
+        }
+      },
+      {
+        "day": 11,
+        "style": "case-focused",
+        "wallet": {
+          "median": 1125,
+          "p90": 1711
+        }
+      },
+      {
+        "day": 11,
+        "style": "trader",
+        "wallet": {
+          "median": 3685,
+          "p90": 4575
+        }
+      },
+      {
+        "day": 12,
+        "style": "casual",
+        "wallet": {
+          "median": 806.0,
+          "p90": 1849
+        }
+      },
+      {
+        "day": 12,
+        "style": "case-focused",
+        "wallet": {
+          "median": 1280,
+          "p90": 1891
+        }
+      },
+      {
+        "day": 12,
+        "style": "trader",
+        "wallet": {
+          "median": 3876,
+          "p90": 4748
+        }
+      },
+      {
+        "day": 13,
+        "style": "casual",
+        "wallet": {
+          "median": 607.5,
+          "p90": 1761
+        }
+      },
+      {
+        "day": 13,
+        "style": "case-focused",
+        "wallet": {
+          "median": 1198,
+          "p90": 1852
+        }
+      },
+      {
+        "day": 13,
+        "style": "trader",
+        "wallet": {
+          "median": 4063,
+          "p90": 5050
+        }
+      },
+      {
+        "day": 14,
+        "style": "casual",
+        "wallet": {
+          "median": 616.0,
+          "p90": 1715
+        }
+      },
+      {
+        "day": 14,
+        "style": "case-focused",
+        "wallet": {
+          "median": 576,
+          "p90": 1743
+        }
+      },
+      {
+        "day": 14,
+        "style": "trader",
+        "wallet": {
+          "median": 4588,
+          "p90": 5616
+        }
+      }
+    ],
+    "coin_flows": {
+      "broke_topup": 48526,
+      "building_levels": -2888200,
+      "case_cards": 133200,
+      "case_deductions": 266400,
+      "case_shortcuts": -217300,
+      "case_solve": 266400,
+      "duel_payouts": 3428550,
+      "duel_stakes": -3609000,
+      "finale_build": -99900,
+      "kit_grant": 1153000,
+      "market_fee": -372960,
+      "market_payout": 9316003,
+      "market_stake": -9324000,
+      "orders_three": 1749300,
+      "prediction_payouts": 2632430,
+      "prediction_stakes": -2699650,
+      "salvage": 1749300,
+      "weekly_coop": 499800
+    },
+    "final_wallet_total": 2031899,
+    "building_levels_bought": 3435
+  }
+}

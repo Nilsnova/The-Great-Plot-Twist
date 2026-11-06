@@ -7,6 +7,8 @@ from server.errors import ApiError
 from server.game.case_clock import minutes_until_open
 from server.game.case_data import CaseData
 from server.game.case_messages import UI_MESSAGES
+from server.game.npc_lines import LineBank, pick_line
+from server.game.npc_orders import ERRAND_MINUTES, PIN_MINUTES, NpcOrder
 from server.supabase_admin import SupabaseRejected
 
 ACCEPTED_OUTCOMES = frozenset(
@@ -111,7 +113,21 @@ def refusal_answer(data: CaseData, kind: str, target: str | None, reply: dict) -
     return answer
 
 
-def repeat_answer(data: CaseData, action: dict) -> dict:
+def partner_order_line(data: CaseData, lines: LineBank, order: NpcOrder) -> str:
+    if order.kind == "fetch":
+        variant = "pin" if order.route_id is None else "go"
+        values = {"minutes": PIN_MINUTES if variant == "pin" else ERRAND_MINUTES}
+    elif order.kind == "man_light":
+        variant = "man_light"
+        values = {"minutes": ERRAND_MINUTES, "light": data.light(order.target).name}
+    else:
+        raise SupabaseRejected("The remembered partner order kind could not be read.")
+    return pick_line(lines, "order_accepted", variant, order.order_no, values)
+
+
+def repeat_answer(
+    data: CaseData, action: dict, *, lines: LineBank | None = None, order: NpcOrder | None = None
+) -> dict:
     outcome = action["outcome"]
     if outcome not in ACCEPTED_OUTCOMES and outcome not in REFUSAL_OUTCOMES:
         raise SupabaseRejected("The remembered case outcome is not recognised.")
@@ -129,6 +145,10 @@ def repeat_answer(data: CaseData, action: dict) -> dict:
                 if route.timer_minutes == 0
                 else UI_MESSAGES["started"].format(minutes=route.timer_minutes)
             )
+        elif action["kind"] == "order" and outcome in ("fetch", "man_light"):
+            if lines is None or order is None or order.kind != outcome or order.target != target:
+                raise SupabaseRejected("The remembered partner receipt could not be read.")
+            answer["message"] = answer["line"] = partner_order_line(data, lines, order)
         elif outcome == "pinned":
             answer["message"] = UI_MESSAGES["pinned"]
         elif outcome == "formed":

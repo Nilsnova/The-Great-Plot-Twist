@@ -12,7 +12,8 @@ from the address, the headers or the body, so a player can only ask about themse
     GET /api/me
       200  {"id": "<player id>", "displayName": "Brave Puffin 17", "coins": 0,
             "crews": [{"id": "<crew id>", "mode": "solo", "status": "forming", "seatNo": 1}],
-            "captainName": "Brave Puffin 17", "kit": "witness", "place": "saltreach_harbor"}
+            "captainName": "Brave Puffin 17", "kit": "witness", "place": "saltreach_harbor",
+            "rerollsLeft": 1, "isHost": false}
       401  unauthorized          no token, a malformed one, or one that Supabase refuses
       404  player_not_set_up     the login is fine, but the player has no profile or wallet row
                                  (the sign-up trigger never ran for an account that was made
@@ -31,15 +32,17 @@ What the fields mean:
   * kit and place are the entry kit id and the start place of a player who finished Act 1, and
     null before that. They come from the table entry_profiles, which the referee fills in
     (POST /api/intro/complete, package A3). A player has at most one row there.
+  * rerollsLeft is 1 until the player has consumed their single name reroll, then 0.
+    isHost is derived from this verified player id and the server's host list. Neither field
+    causes a write or reveals another player's records.
   * coins is wallets.balance. A new wallet holds 0, which is a normal answer.
   * crews are the crews the player sits in, newest seat first, at most MAX_CREWS. seatNo is the
     player's own seat number (1 to 4) in that crew. The list is empty for a player in no crew.
 
-How it reads: four reads with the server's secret key (SUPABASE_SECRET_KEY), which skips
-row-level security: the profile, the wallet, the seats and, last, the entry profile. So the filter
-on the verified player id in each read is the ONLY thing that keeps another player's rows out of
-the answer. The tests check every filter. The entry profile comes last on purpose: a refused read
-earlier in the list stops the route before it is asked for.
+How it reads: five reads with the server's secret key (SUPABASE_SECRET_KEY), which skips
+row-level security: the profile, wallet, seats, entry profile and reroll record. The filter on
+the verified player id in each read is the ONLY thing that keeps another player's rows out of
+the answer. The tests check every filter. A refused read stops before later tables are asked for.
 
 The fourth read needs the table entry_profiles (migration 20261106030000). A server that is
 deployed before that migration is applied answers 502 database_error here, to every player. This
@@ -66,6 +69,7 @@ from server.account.names import is_placeholder
 from server.auth import PlayerDep
 from server.errors import ApiError
 from server.game.entry_profile_store import read_kit_and_place
+from server.settings import SettingsDep
 from server.supabase_admin import AdminDep, SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
@@ -95,6 +99,8 @@ class MeResponse(BaseModel):
     captainName: str | None
     kit: str | None
     place: str | None
+    rerollsLeft: int
+    isHost: bool
 
 
 # The rows we read from the database, as small models. The database sends plain JSON, and a
@@ -106,6 +112,10 @@ class ProfileRow(BaseModel):
 
 class WalletRow(BaseModel):
     balance: StrictInt
+
+
+class RerollRow(BaseModel):
+    player_id: StrictStr
 
 
 class CrewRow(BaseModel):
@@ -177,14 +187,34 @@ async def read_crews(admin: SupabaseAdmin, player_id: str) -> list[CrewSummary]:
     return crews
 
 
+async def read_rerolls_left(admin: SupabaseAdmin, player_id: str) -> int:
+    """The unique reroll row is the record of the player's single consumed reroll."""
+    rows = await admin.select_rows(
+        "captain_name_rerolls",
+        {
+            "select": "player_id",
+            "player_id": f"eq.{player_id}",
+            "limit": "1",
+        },
+    )
+    if not rows:
+        return 1
+    if read_row(RerollRow, rows[0]).player_id != player_id:
+        raise SupabaseRejected("The reroll record belongs to another player.")
+    return 0
+
+
 @router.get("/me")
-async def get_me(player: PlayerDep, admin: AdminDep, response: Response) -> MeResponse:
+async def get_me(
+    player: PlayerDep, admin: AdminDep, settings: SettingsDep, response: Response
+) -> MeResponse:
     # Personal data: tell the hosting network and proxies not to keep a copy of the answer.
     response.headers["Cache-Control"] = "private, no-store"
     display_name = await read_display_name(admin, player.id)
     coins = await read_coins(admin, player.id)
     crews = await read_crews(admin, player.id)
     entry = await read_kit_and_place(admin, player.id)  # None until the player finished Act 1
+    rerolls_left = await read_rerolls_left(admin, player.id)
     captain_name = None if is_placeholder(display_name, player.id) else display_name
     return MeResponse(
         id=player.id,
@@ -194,4 +224,6 @@ async def get_me(player: PlayerDep, admin: AdminDep, response: Response) -> MeRe
         captainName=captain_name,
         kit=entry.kit if entry else None,
         place=entry.place if entry else None,
+        rerollsLeft=rerolls_left,
+        isHost=player.id in settings.host_player_ids,
     )

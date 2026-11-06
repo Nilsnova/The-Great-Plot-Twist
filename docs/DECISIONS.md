@@ -116,6 +116,8 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Nils, 5 Nov 2026. Proposed in the S1 pull request (`feat/s1-import-plot-twist`). Affects S2 (the story in the browser) and A3 (the referee replays the move log with the Python engine).
 
+**Amendment, 6 Nov 2026 (Nils, G10):** Story v2 changed `backend/content/story.json`. The byte-for-byte claim and hash above describe the original import, not the current story file. The engine rules and provenance remain separate from those content edits.
+
 ## D016 · Server content lives in backend/content/; the browser gets public content through the API · 2026-11-05
 
 **Status:** Proposed in the S1 pull request. It stays proposed until Nils accepts it and a different teammate has reviewed it, because it moves the content paths of S3, S4, A2, A3, L2, L4 and L5.
@@ -494,6 +496,32 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See [the specification](../specs/case-backend.md) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
 
+
+## D008 · Grow order is moot · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** The earlier proposed grow order is moot. Work is already split into the browser task G9, server task G10 and Claude's integration checkpoints. Follow the dependencies of those tasks rather than waiting for a kickoff to choose the old order.
+
+**Impact:** The old grow-order question in the roadmap is historical. Group 3 still waits for Claude's group 2 confirmation; this decision does not waive that checkpoint.
+
+## D009 · Interfaces v1 as built · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Accept the v1 contracts in [INTERFACES.md](INTERFACES.md) as built. Later server and browser work updates those contracts together rather than inventing a second interface.
+
+## D010 · Backbone go; deployment check 1 remains open · 2026-11-06
+
+**Status:** Go, decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Continue building on the backbone. Deployment check 1 in [SETUP.md](SETUP.md) remains open; it does not block the work. This entry records the decision and does not claim a new live deployment check.
+
+## D014 · Finnhub ownership and key location · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
 ## Next entry
 
