@@ -8,7 +8,7 @@
 https://the-great-plot-twist.vercel.app/. Group 3, the complete minimum case backend, NPCs,
 server followups and G12 are deployed. Reviewed festival, host and sports code is deployed after
 its migration proofs; festival is enabled but waits for the first Relighting, while sports stays
-off pending its provider key. The stabilization/submission wave is integrated for its final gates.
+off pending its provider key. The stabilization/submission wave is deployed and its final gates pass.
 G9 is paused until Nils' laptop returns; normal browser multiplayer/the complete mystery still
 await that adapter. The detailed historical package plan remains below.
 
@@ -40,7 +40,7 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
 | Case, shared board/night, Relighting and NPCs | Backend deployed; all 69 kit mixes and actual solo/four-human HTTP/SQL journeys pass | Resume G9 and prove authenticated browser journeys; RELIGHT_OPEN remains unset |
 | Festival and host tools | Deployed; festival enabled in waiting state; host actions require configured identity | Actual authenticated host/browser rehearsal; festival starts only after the first real Relighting |
 | Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
-| Reliability, tests, help/privacy, security/notices, devtools | Integrated for combined release checks | Final main rollout and public read-only verification |
+| Reliability, tests, help/privacy, security/notices, devtools | Deployed; combined gates and public read-only verification pass | Authenticated browser/device journey follows G9 |
 | Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
 | Spoiler-safe ChatGPT helper | Scope and consent/security contract recorded; feature off | Official registered website client approval, then implementation after G9 and a consented live proof |
 

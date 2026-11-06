@@ -78,3 +78,20 @@ website client; no borrowed client or paid fallback is active. Direct production
 limited by this cloud network's hostname allowlist and the connector's share-query/401 masking.
 Teammate names, private course submission details, first-party licence choice and an actual spoken
 laptop/projector rehearsal must come from their owners. These do not hold the authorized code push.
+
+## Production proof
+
+Pushed integration `a2736a1`, then main merge `cb42da3f1d32f75bb3674f2325267ebf5029289b`.
+Production `dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51` reached READY. Read-only checks returned:
+
+- `/api/health` and `/api/config`: 200, **private, no-store**. Exactly presence, market,
+  predictions, arena, case, bulletin and festival are enabled. Sports, sign_in, companion_llm
+  and raid remain false. No environment variable changed in this wave.
+- `/build-info.json`: 200, exact main merge SHA above, all 122 JS/CSS asset names valid.
+- `/help.html`, `/privacy.html` and `/host.html`: 200 with their expected page titles.
+- `/third-party-notices.md`: 200, retaining exact Three.js and Vite helper notices.
+
+Existing production headers and zero live gameplay writes are preserved. This public read-only
+verification does not bypass the documented no-query/401 connector limits or establish an
+authenticated multiplayer playthrough. G9 remains paused. Later documentation-only commits
+record this verified application release without changing its runtime or activation state.

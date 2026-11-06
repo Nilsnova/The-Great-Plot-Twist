@@ -45,7 +45,7 @@ The team is turning the text mystery Plot Twist into a browser game: a top-down 
   normal browser play. [Status](docs/STATUS.md) records exact releases and flag checks.
 - **Current release:** festival and host tools deployed; sports code/database deployed with its flag
   off until its provider key and live-source proof are ready. Reliability, regression coverage,
-  help/privacy, security/notices and submission materials are integrated for their final rollout.
+  help/privacy, security/notices and submission materials are deployed with passing release gates.
   The optional [spoiler-safe AI helper](specs/AI-helper.md) requires official ChatGPT website-client
   approval before its login can be activated. The [roadmap](ROADMAP.md#execution-update--6-nov-2026)
   gives the remaining order.
