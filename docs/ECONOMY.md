@@ -167,7 +167,7 @@ measured time-to-ruin probabilities. A 2% fee each side costs **20** if charged 
 ## What we tested
 
 HTTP tests use the real FastAPI app and explicit fake transports. They test
-signed-out and forged/wrong-part tokens on every implemented personal intent,
+signed-out and forged/wrong-part tokens on every implemented G12-targeted intent,
 oversized token early refusal, wrong types, huge/negative units, client-supplied
 player/price/fee/coin fields, save bounds, kit log forgery, rate reset, and
 retries after cache expiry. Baseline tests additionally exercise own-player
