@@ -117,6 +117,19 @@ it('retains clock retry identity after an unreadable successful response', async
   expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
   expect(view.say).toHaveBeenLastCalledWith('Clock moved: Moved. Case second 60. (repeat)');
 });
+it('resolves an actual G10 repeat without extra numbers and permits the next clock move', async () => {
+  const {api,view,controller}=setup();enableClock(api);
+  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({
+    accepted:true,reason:null,repeat:true,message:'The case clock moved forward.',
+    case:{now:60,solution:'private-test-case-view'},
+  })).mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:360}));
+  await controller.refresh();await controller.setClock(60);await controller.setClock(60);
+  expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
+  expect(view.say).toHaveBeenLastCalledWith('Clock moved: The case clock moved forward. (repeat)');
+  await controller.setClock(300);
+  expect(api.post.mock.calls[2][1].seconds).toBe(300);
+  expect(JSON.stringify(view.say.mock.calls)).not.toContain('private-test-case-view');
+});
 it('does not lose an uncertain clock UUID when the retry is rate-limited', async () => {
   const {api,controller}=setup();enableClock(api);
   const original=api.post;

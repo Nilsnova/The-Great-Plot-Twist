@@ -45,6 +45,9 @@ class ConfigResponse(BaseModel):
 async def get_config(settings: SettingsDep, request: Request) -> ConfigResponse:
     auth = AuthConfig(provider=AUTH_PROVIDER, supabaseUrl=settings.supabase_url)
     return ConfigResponse(
-        env=settings.app_env, demoMode=settings.demo_mode, flags=settings.flags, auth=auth,
+        env=settings.app_env,
+        demoMode=settings.demo_mode,
+        flags=settings.flags,
+        auth=auth,
         capabilities={"hostCaseClock": case_clock_available(request.app.openapi(), settings.flags)},
     )

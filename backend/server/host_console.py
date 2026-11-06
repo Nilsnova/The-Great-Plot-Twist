@@ -12,10 +12,22 @@ from server import __version__
 # Each probe checks an object required by that migration, not its entire applied history.
 MIGRATIONS = (
     ("20261106000000_foundation.sql", "core", "profiles"),
-    ("20261106010000_island_exchange.sql", "market", "market_positions"),
+    # Exchange v2 intentionally drops the original spot tables; probe its replacement.
+    ("20261106010000_island_exchange.sql", "market", "exchange_positions"),
     ("20261106020000_accounts.sql", "core", "captain_name_rerolls"),
     ("20261106030000_entry_profiles.sql", "core", "entry_profiles"),
     ("20261106040000_crew_codes.sql", "core", "crew_join_failures"),
+    ("20261106050000_live_presence.sql", "live_presence", "live_crew_id"),
+    ("20261106060000_case_rules.sql", "case", "case_state"),
+    ("20261106070000_home_islet.sql", "core", "islets"),
+    ("20261106080000_case_board_and_night.sql", "case", "board_pins"),
+    ("20261106090000_exchange_leverage.sql", "market", "exchange_positions"),
+    ("20261106100000_prediction_desk.sql", "predictions", "prediction_pools"),
+    ("20261106110000_lantern_duels.sql", "arena", "duels"),
+    ("20261106120000_relighting.sql", "case", "world_state"),
+    ("20261106130000_npc_partners.sql", "case", "npc_orders"),
+    ("20261106140000_followups.sql", "core", "delete_player"),
+    ("20261106160000_festival.sql", "festival", "festival_actions"),
     ("20261106170000_host_console.sql", "core", "host_console_actions"),
 )
 
@@ -72,9 +84,12 @@ class CloseReply(BaseModel):
 
 def expected_migrations(objects: dict[str, bool], flags: dict[str, bool]) -> list[dict]:
     return [
-        {"name": name, "feature": feature,
-         "enabled": feature == "core" or flags.get(feature, False),
-         "objectPresent": objects.get(table, False)}
+        {
+            "name": name,
+            "feature": feature,
+            "enabled": feature == "core" or flags.get(feature, False),
+            "objectPresent": objects.get(table, False),
+        }
         for name, feature, table in MIGRATIONS
     ]
 

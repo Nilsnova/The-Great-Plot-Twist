@@ -10,13 +10,13 @@ Nils' verified player ID must be in the existing `HOST_PLAYER_IDS` server settin
 
 Open `/host.html` and choose **Sign in with GitHub**. The console follows the same PKCE exchange as the team sign-in check, with a separate tab-local verifier. It removes the one-time code from the address immediately. The access token stays in memory only: refreshing or choosing **Forget me** requires signing in again. Neither a captain name nor a query parameter grants host access; the server checks the verified player against `HOST_PLAYER_IDS` on every host request.
 
-The static page is public, but contains no host data. Visitors and non-hosts see **Not a host**; its panels stay empty. G14's `HostDep` returns 403 for missing/refused logins as well as non-hosts. An authentication outage is an unavailable service, not proof that somebody is a host. The console never bypasses this check in demo mode.
+The static page is public, but contains no host data. Visitors and non-hosts see **Not a host**; its panels stay empty. G14's console-specific host dependency returns 403 for missing/refused logins as well as non-hosts. An authentication outage is an unavailable service, not proof that somebody is a host. The console never bypasses this check in demo mode.
 
 ## What the panels mean
 
 | Panel | Meaning and limits |
 |---|---|
-| Game overview | Registered profiles, crews grouped as forming/active/finished, and rows of open market holdings. These are database counts, not online-player counts. A position is one player's holding in one company, not the number of units. |
+| Game overview | Registered profiles, crews grouped as forming/active/finished, and open Exchange v2 positions (`exchange_positions` with status `open`). Closed and zeroed positions are excluded. These are database counts, not online-player counts. |
 | Realtime connections | **Unknown** until the server has an authoritative count. Zero is not guessed. |
 | Wallet movements | Number of ledger entries, earned coins, spent coins and signed net change, grouped by reason for today's **UTC** day. Counts are aggregated across the whole database; they are not limited to the newest crews. No player-level transactions or solution data are shown. |
 | Expected migrations | The server's required migration names and feature associations. “Present” means a representative required object exists, **not** that the exact migration version or all its grants were verified. “MISSING” needs the deployment owner's investigation before class. Enabled flags are listed in the checklist. |
@@ -51,7 +51,7 @@ A game-rule refusal (`accepted: false`) is displayed as “Clock not moved”. A
 2. Refresh the console. Check the build, mode, flags and expected migration objects. Turn on only features approved for that demo.
 3. Check **Keep-alive confirmed today (UTC)**. The existing daily keep-alive route records success only after its three database reads succeed. The stamp is durable across server restarts. If no stamp is available, the console stays unconfirmed; it never infers a successful job. The recording is best effort so a missing G14 migration cannot break the existing daily job. Have the repository owner check/run the existing approved keep-alive workflow; this page never asks for its credential.
 4. Check the weather source and the intended demo mode. Recorded data is suitable for rehearsal and is labelled. Missing Realtime evidence is not a connection count.
-5. Confirm the private API headers check passes: `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: no-referrer`. The page itself uses a strict same-origin CSP with external scripts/styles and no inline code.
+5. Confirm the private API headers check passes: `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: no-referrer`. The page itself uses a strict same-origin CSP with external scripts/styles and no inline code.
 6. Open the performance link (`/?perf=1`) and rehearse the intro, crew flow and projector/phone layout. The current game's rendering statistics are development-only; G14 supplies the requested link and does not add a production performance overlay.
 7. Close only Nils' isolated forming test crew after rehearsal. Leave student and active crews alone. The case clock stays absent until G10 is installed and enabled.
 
@@ -64,10 +64,21 @@ From the repository root, using `set -o pipefail`:
 ```bash
 (cd backend && uv run pytest -q && uv run ruff check .)
 (cd frontend && npm test && npm run build)
-(cd backend && uv run --frozen --with pgserver --with 'psycopg[binary]' python tools/check_host_console_postgres.py)
+(cd backend && uv run --frozen --with pgserver --with 'psycopg[binary]' python -m tools.check_host_console_postgres)
 (cd frontend && CHROME_PATH=/usr/bin/chromium npm run test:host)
 ```
 
 The scratch command creates and deletes its own local PostgreSQL cluster, applies all migrations and reapplies G14, and tests invoker grants/RLS, counts and UTC-day filtering, safe cleanup, concurrent/repeated actions and bounded reads. `pgserver` and `psycopg` are test-only; they are not project dependencies. The browser check uses an existing `dist/` from `npm run build`, starts its own preview on port 4179, and writes fake-data screenshots/report under `frontend/captures/` (override `G14_CAPTURE_DIR` to keep them outside the checkout).
 
 See the [checkpoint notes](handoff/g14-checkpoint-1.md), [page checkpoint](handoff/g14-checkpoint-2.md) and [final checkpoint](handoff/g14-checkpoint-3.md). Applying the migration, real OAuth and the future live G10 integration remain deployment-owner checks; this work does not perform them.
+
+
+## Integration validation (6 November 2026)
+
+The authored G14 commits were preserved while reconciling current Exchange v2, NPC, world and host-clock contracts. Shared host APIs retain their existing 401 login contract; only the console maps refused logins to 403. Readiness probes use surviving Exchange v2 objects and cover current case/world/NPC/duel/prediction objects plus the planned festival migration. A missing disabled feature is labelled "Not enabled" rather than a required-object failure.
+
+A successful G10 repeat omits extra numbers under the case API contract. The console now accepts its stored confirmation without requiring a new `now`, clears the retry intent, and still ignores the returned case view. The browser gate exercises that exact retry followed by a different clock move.
+
+Verified locally: host/auth/config/keepalive tests; full scratch migration chain and reapply; open versus closed Exchange v2 counts; browser roles and invoker grants; safe repeated/concurrent cleanup; frontend tests; production build and spoiler guard; mocked desktop and 390px browser checks. No live cleanup, clock, world or settings action was performed. Screenshots and report from the integration gate are under `/tmp/g14-integration-captures` in the review workspace. Original checkpoint counts/screenshots remain historical evidence.
+
+Before release, root must mount `host_console.router` and `HostConsoleHeaders` in the shared app, merge the interface documentation, and run the combined 160000/170000 chain and application checks. Migration 170000 remains unapplied and requires independent review against the live state before application. No new dependency or feature flag is enabled by G14.

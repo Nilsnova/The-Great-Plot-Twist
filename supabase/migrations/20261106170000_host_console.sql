@@ -107,13 +107,19 @@ declare
   v_positions bigint := null;
   v_objects jsonb;
 begin
-  if to_regclass('public.market_positions') is not null then
-    select count(*) into v_positions from public.market_positions;
+  if to_regclass('public.exchange_positions') is not null then
+    select count(*) into v_positions from public.exchange_positions where status = 'open';
   end if;
   select jsonb_object_agg(name, to_regclass('public.' || name) is not null)
     into v_objects from unnest(array['profiles', 'saves', 'wallet_transactions', 'crews',
-      'market_positions', 'captain_name_rerolls', 'entry_profiles', 'crew_join_failures',
+      'exchange_positions', 'captain_name_rerolls', 'entry_profiles', 'crew_join_failures',
+      'case_state', 'islets', 'board_pins', 'prediction_pools', 'duels', 'world_state', 'npc_orders',
+      'festival_actions',
       'host_console_actions', 'host_console_health']) as names(name);
+  v_objects := v_objects || jsonb_build_object(
+    'live_crew_id', to_regprocedure('public.live_crew_id(text)') is not null,
+    'delete_player', to_regprocedure('public.delete_player(uuid)') is not null
+  );
   return jsonb_build_object(
     'players', (select count(*) from public.profiles),
     'crews', (select jsonb_object_agg(status, n) from

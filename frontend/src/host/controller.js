@@ -55,8 +55,10 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
       if(answer.ok) {
         // Deliberately ignore the full case view: the console must never render a solution.
         const outcome=answer.data;
+        const replay=outcome?.repeat===true;
         if(typeof outcome?.accepted!=='boolean'||typeof outcome.message!=='string'||
-          (outcome.accepted&&(!Number.isInteger(outcome.now)||outcome.now<0))) {
+          (outcome.repeat!==undefined&&typeof outcome.repeat!=='boolean')||
+          (outcome.accepted&&!replay&&(!Number.isInteger(outcome.now)||outcome.now<0))) {
           clockUncertain=true;
           view.say('Clock outcome unknown. Retry the same seconds; the action ID is retained.');return;
         }

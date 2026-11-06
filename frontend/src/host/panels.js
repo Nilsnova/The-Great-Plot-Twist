@@ -29,7 +29,7 @@ export function overviewPanels(data) {
   ],data.walletToday,'Today means midnight to midnight UTC. No movements means no rows. Counts include all crews.'));
   result.push(tablePanel('Expected migrations',[
     {key:'name',label:'Migration'},{key:'feature',label:'Feature'},{key:'state',label:'Required object'},
-  ],data.expectedMigrations.map(m=>({...m,state:m.objectPresent?'Present':'MISSING'})),
+  ],data.expectedMigrations.map(m=>({...m,state:m.objectPresent?'Present':m.enabled?'MISSING':'Not enabled'})),
   'Object presence is a readiness probe, not proof of the exact applied migration version.'));
   return result;
 }

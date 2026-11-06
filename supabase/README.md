@@ -2851,12 +2851,12 @@ New migration: [`20261106170000_host_console.sql`](migrations/20261106170000_hos
 | `host_close_test_crew(uuid, uuid, uuid)` | No execute | Execute: verified host, crew and retry UUID. Own forming crew only; no other human; locked, idempotent, logged. |
 | `host_record_keepalive()` | No execute | Execute after the existing three successful keep-alive reads. |
 
-All four functions use invoker rights and `search_path = ''`; the API must verify `HostDep` before passing a host ID. They never grant the browser write access. The host console does not read or expose auth users, keys, e-mails, tokens, kits or the case solution.
+All four functions use invoker rights and `search_path = ''`; the API must verify the console host dependency against `HOST_PLAYER_IDS` before passing a host ID. They never grant the browser write access. The host console does not read or expose auth users, keys, e-mails, tokens, kits or the case solution.
 
 Scratch validation from `backend/`:
 
 ```bash
-uv run --frozen --with pgserver --with 'psycopg[binary]' python tools/check_host_console_postgres.py
+uv run --frozen --with pgserver --with 'psycopg[binary]' python -m tools.check_host_console_postgres
 ```
 
 This creates a disposable local PostgreSQL cluster, bootstraps only test auth roles, applies all migrations and reapplies G14, and checks grants/RLS, aggregates, concurrent retry safety, ownership/status guards and bounded safe reads. Neither package is added to the project dependencies. The human deployment review should additionally confirm ordinary players cannot call the host API and that the reviewed migration's grants are present. See [the operator guide](../docs/HOST-CONSOLE.md).

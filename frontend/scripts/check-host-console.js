@@ -54,7 +54,8 @@ try {
     if(url.pathname==='/api/host/case/clock'){
       clockCalls.push(request.postDataJSON());
       if(clockUnknown){clockUnknown=false;await route.abort();return;}
-      await send(200,{accepted:true,reason:null,message:'The case clock moved forward.',now:2725,
+      await send(200,{accepted:true,reason:null,message:'The case clock moved forward.',
+        ...(clockCalls.length===2?{repeat:true}:{now:2725}),
         case:{privateTestSentinel:'DO-NOT-RENDER-THE-CASE-VIEW'}});return;
     }
     throw new Error(`Unexpected API request: ${url.pathname}`);
@@ -94,12 +95,16 @@ try {
   await page.getByRole('status').filter({hasText:'Retry the unconfirmed clock move'}).waitFor();
   assert.equal(await page.getByRole('button',{name:'+1 min',exact:true}).isEnabled(),true);
   await page.getByRole('button',{name:'+1 min',exact:true}).click();
-  await page.getByRole('status').filter({hasText:'Case second 2725'}).waitFor();
+  await page.getByRole('status').filter({hasText:'(repeat)'}).waitFor();
   assert.equal(clockCalls[0].seconds,60);assert.deepEqual(clockCalls[0],clockCalls[1]);
   assert.deepEqual(Object.keys(clockCalls[0]).sort(),['actionUid','seconds']);
+  await page.getByRole('button',{name:'+5 min',exact:true}).click();
+  await page.getByRole('status').filter({hasText:'Case second 2725'}).waitFor();
+  assert.equal(clockCalls[2].seconds,300);
+  assert.notEqual(clockCalls[1].actionUid,clockCalls[2].actionUid);
   await page.getByLabel('Seconds to move forward').fill('3601');
   await page.getByRole('button',{name:'Move clock forward',exact:true}).click();
-  assert.equal(clockCalls.length,2);
+  assert.equal(clockCalls.length,3);
   assert.equal((await page.locator('body').innerText()).includes('DO-NOT-RENDER-THE-CASE-VIEW'),false);
   assert.equal((await page.locator('body').innerText()).includes(token),false);
   assert.equal(await page.evaluate(()=>Object.values(localStorage).includes('browser-test-memory-only')||
@@ -114,6 +119,7 @@ try {
     'Safe overview, crews and checklist','Clock hidden before G10','390px layout has no page overflow',
     'Cleanup requires confirmation and retries with the same UUID','Token stays off screen/storage',
     'G10 capability enables strict seconds controls; response case view never rendered',
+    'Stored clock repeat without extra numbers resolves before a new move',
     'Forget me removes host data','No external requests; only mocked same-origin API',
   ]};
   await writeFile(`${directory}/G14-Host-Checks.json`,`${JSON.stringify(report,null,2)}\n`);
