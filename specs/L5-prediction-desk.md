@@ -781,12 +781,12 @@ Keep the edits small and in clearly separate places, so the merge with A2 and A6
 - **Section 9:** the L5 row becomes "built (flag off, migration not applied)", with the real paths and names.
 - **"Rules for the live data features", the L5 paragraph:** describe what was built. The paths changed, Polymarket is not built yet, the credit is text only, Manifold's price is never shown, and closing and refunds work as in this spec.
 
-### 10.2 `docs/DECISIONS.md`: one new entry, provisionally D018
+### 10.2 `docs/DECISIONS.md`: one new entry, D025 (D018 on the branch)
 
-The next free number after D017 is D018, but the story round may take D018; the controller renumbers at merge.
+The branch drafted D018. The story round keeps D018, so this entry became D025 at the group 3 merge.
 
 ```markdown
-## D018 · Prediction desk rules · 2026-11-06
+## D025 · Prediction desk rules · 2026-11-06
 
 **Status:** Proposed in the L5 pull request (`feat/l5-prediction-desk`); accepted when reviewed by another
 teammate and merged. The number is provisional. Base: the roadmap (L5) and OPEN-WORLD section 8. Points marked

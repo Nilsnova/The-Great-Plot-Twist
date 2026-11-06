@@ -4,7 +4,7 @@ Pure functions: a Question, a reading from Manifold, the pool row and the time g
 state comes out. The rules (spec sections 4.4 and 7.1): a reading is real when it is live, cached
 or stale (and in demo mode also the recording). Staking needs an open pool, an open Manifold
 market and a closing time that has not passed. The earliest of all closing times we know counts.
-A stale reading older than 15 minutes is still shown but is too old to stake on (decision D018).
+A stale reading older than 15 minutes is still shown but is too old to stake on (decision D025).
 """
 
 from datetime import UTC, datetime, timedelta

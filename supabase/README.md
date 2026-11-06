@@ -129,9 +129,6 @@ It adds one table (`crew_join_failures`, with row-level security and no policy a
 |---|---|---|
 | `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
 | `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |
-| `exchange_open_position()` | Opens a position. In one step: check that the arguments add up (see below), lock the player's wallet, refuse a repeated ref, refuse more than 20 open positions or more than 2000 coins of new stakes per game day, move the coins with `apply_wallet_transaction()` (`market_stake` and `market_fee`), write the position with its zero point, write the history row. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 380}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `wallet_not_found`, or `bad_trade` when the server sent numbers that do not add up (a bug on the server side, not something a player can cause). | Run by the server only. |
-| `exchange_close_position()` | Closes one position of a player. In one step: check the arguments, lock the wallet, refuse a repeated ref, lock the position by its id **and** its player, refuse a position that is not open or was opened on another price mode, work out the value and the closing fee itself, compare them with the numbers the server sent (`bad_trade` if they differ), pay the value (`market_payout`, only if above 0) and then take the fee (`market_fee`, only if above 0), mark the position closed (or zeroed, if the stake was used up) and write the history row. | Run by the server only. |
-| `exchange_close_used_up()` | The automatic close. Takes a JSON array of prices (`company_id`, `price` as text, `quoted_at`, `mode`) and closes, in **one statement**, every open position of that company and price mode whose zero point a price has reached, if the position was opened **before** the price was quoted. At zero: no coins move, so it uses no wallet, and it writes one `zero` history row per position. Positions that another call is closing right now are skipped (`skip locked`), so two calls never wait for each other, never deadlock and never close one position twice. | Run by the server only. |
 
 An opening writes two ledger rows with the same ref (`market:open:` plus the id the browser made for the click): `market_stake` and `market_fee`. A closing by the player writes `market_payout` (if the value is above 0) and `market_fee` (if the closing fee is above 0), with the ref `market:close:` plus the id of that click. A close at zero moves **0 coins** and the wallet refuses an amount of 0, so it writes no ledger row at all, only an event with the ref `market:zero:` plus the position id. The ledger accepts each player, reason and ref once, so the same ref is fine for two different reasons.
 
@@ -226,6 +223,22 @@ The kill switch, if a flood ever happens, is in [Changing the database later](#c
 | `islets` | One row per player who has built something: the timber the player holds, never below 0. The first build makes the row, and it starts with the **starter pack** of timber (20 today, from `backend/content/buildings.json`). The primary key is the player, so the pack arrives once. Timber is not coins, so it has no ledger. | Only the server, through `islet_build()`. |
 | `islet_buildings` | One row per building that stands on a player's islet. The primary key is the player and the plot, so a plot holds one building. A check rule keeps each plot and its kind of building together (`plot_2` workshop, `plot_3` windmill, `plot_4` greenhouse, `islet_signal_station` signal_station). The cabin on `plot_1` stands from the start and has no row. The ref (`islet:` plus the id the browser made for the click) can be used once per player. `coins_paid` and `timber_paid` record what was paid: timber has no ledger, so that row is its only record. | Only the server, through `islet_build()`. |
 | `islet_build()` | The only way a building goes up. In one step: check the arguments, lock the player's wallet, refuse a repeated ref, make the islet row with the starter pack if there is none and lock it, refuse a plot that holds a building, refuse a build when the player holds too little timber, take the coins with `apply_wallet_transaction()` (reason `building_purchase`), take the timber and write the building (level 1). It *returns* a refusal such as `{"status": "refused", "reason": "plot_occupied", "standing": "signal_station"}` with nothing charged, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `bad_build` when the server sent an argument that makes no sense, or a check error when a plot and its building do not belong together. | Run by the server only. |
+| `exchange_open_position()` | Opens a position. In one step: check that the arguments add up (see below), lock the player's wallet, refuse a repeated ref, refuse more than 20 open positions or more than 2000 coins of new stakes per game day, move the coins with `apply_wallet_transaction()` (`market_stake` and `market_fee`), write the position with its zero point, write the history row. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 380}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `wallet_not_found`, or `bad_trade` when the server sent numbers that do not add up (a bug on the server side, not something a player can cause). | Run by the server only. |
+| `exchange_close_position()` | Closes one position of a player. In one step: check the arguments, lock the wallet, refuse a repeated ref, lock the position by its id **and** its player, refuse a position that is not open or was opened on another price mode, work out the value and the closing fee itself, compare them with the numbers the server sent (`bad_trade` if they differ), pay the value (`market_payout`, only if above 0) and then take the fee (`market_fee`, only if above 0), mark the position closed (or zeroed, if the stake was used up) and write the history row. | Run by the server only. |
+| `exchange_close_used_up()` | The automatic close. Takes a JSON array of prices (`company_id`, `price` as text, `quoted_at`, `mode`) and closes, in **one statement**, every open position of that company and price mode whose zero point a price has reached, if the position was opened **before** the price was quoted. At zero: no coins move, so it uses no wallet, and it writes one `zero` history row per position. Positions that another call is closing right now are skipped (`skip locked`), so two calls never wait for each other, never deadlock and never close one position twice. | Run by the server only. |
+| `exchange_open_position()` | no access | no access | yes |
+| `exchange_close_position()` | no access | no access | yes |
+| `exchange_close_used_up()` | no access | no access | yes |
+| `prediction_place_stake()` | The only way a stake happens. In one step: check the arguments, make sure the pool row exists and **lock it**, lock the player's wallet, refuse a repeated stake id (code `23505`, message `already_applied`), refuse a settled pool or one past its closing time (the earlier of the stored and the given closing time counts), refuse a second stake on the question, refuse a stake over the daily cap, take the coins with `apply_wallet_transaction()` (`prediction_stake`) and write the stake. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 30}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated stake id, or `bad_stake` / `wallet_not_found` (a bug on the server side). | Run by the server only. |
+| `prediction_settle_pool()` | The only way a pool is settled. In one step: check the arguments, make sure the pool row exists and **lock it**, refuse a pool that is settled already (`23505`, `already_applied`), refuse yes or no before the pool has closed (void works at any time), read the pool from its stakes, decide how it ends (`refund_void`, `refund_no_winners`, `refund_one_sided` or `winners`), check the payouts, pay everybody with `apply_wallet_transaction()` (`prediction_payout`, ref `pool:<questionId>`) in player-id order, write the payout of every stake and mark the pool settled. It *returns* a refusal (`pool_open` or `stakes_changed`) with nothing changed, and *raises* `bad_settlement` when the arguments or the payouts do not add up. | Run by the server only. |
+| `prediction_place_stake()` | no access | no access | yes |
+| `prediction_settle_pool()` | no access | no access | yes |
+| `duel_create()` | Sends a challenge. In one step: check the arguments, lock the challenger's wallet, refuse a repeated `create_uid` (code `23505`, message `already_applied`), find a named captain (any letter case) and refuse a name nobody has, a name several captains share and the challenger's own name, refuse a fourth waiting challenge, insert the duel and the challenger's envelope, and hold the stake (`arena_stake`). | Run by the server only. |
+| `duel_answer()` | Answers a challenge. The answer IS the acceptance. In one step: lock the duel row, refuse a caller who sealed in this duel already (`23505`), check the state (`duel_taken`, `duel_closed`, `duel_expired` by the database clock), check the numbers, lock both wallets in player-id order, refuse the pair limit (`daily_pair_limit`), take the answerer's stake, store their envelope, finish the duel and pay out (`arena_payout`). **The round results and the outcome are an input from Python** (`rules.resolve`), like the price of a trade: the database never reads the challenger's envelope, but it checks that the results fit the rounds and that the outcome fits the counted points. | Run by the server only. |
+| `duel_void()` | Withdraws (the challenger), declines (the named captain) or expires (anyone, but only after `expires_at` by the database clock) a challenge, and gives the challenger's stake back (`arena_payout`). The same captain closing it the same way twice raises `23505`. | Run by the server only. |
+| `duel_create()` | no access | no access | yes |
+| `duel_answer()` | no access | no access | yes |
+| `duel_void()` | no access | no access | yes |
 
 **The starter-pack rule.** The server shows a player who has not built yet 20 timber, and `islet_build()` makes the islet row with the same number (the server passes it in, from `buildings.json`). So what the player saw is what the player gets, and the pack cannot arrive twice. 20 timber buys exactly the signal station and the workshop, in either order, so nobody can spend the starter timber in a way that blocks the finale.
 
@@ -366,7 +379,7 @@ order by grantee, table_name;
 
 Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. Every later table adds one such row, except `crew_join_failures`, on which players have no right at all.
 
-The totals after each file, when the files are applied oldest first. A file adds the same whatever else is applied, so for another set of files add up the rows you applied. The last column is `select count(*) from public.wallet_reasons;`.
+The totals after each file in timestamp order. Exchange v2 removes the three v1 tables and adds two replacements, so its net table change is minus one. The last column is `select count(*) from public.wallet_reasons;`.
 
 | After applying | Tables (check 1) | Policies (check 2) | Rows for `authenticated` (check 3) | Policies on `realtime.messages` (check 4) | Wallet reasons |
 |---|---|---|---|---|---|
@@ -377,6 +390,9 @@ The totals after each file, when the files are applied oldest first. A file adds
 | `20261106040000_crew_codes.sql` | 13 | 12 | 12 | 0 | 11 |
 | `20261106050000_live_presence.sql` | 13 | 12 | 12 | 5 | 11 |
 | `20261106070000_home_islet.sql` | 15 | 14 | 14 | 5 | 11 |
+| `20261106090000_exchange_leverage.sql` | 14 | 13 | 13 | 5 | 13 |
+| `20261106100000_prediction_desk.sql` | 16 | 15 | 15 | 5 | 15 |
+| `20261106110000_lantern_duels.sql` | 18 | 16 | 16 | 5 | 17 |
 
 With every file up to `20261106070000` applied, the database also holds 17 functions of ours (Supabase's own `rls_auto_enable()` not counted), 3 sequences and 4 triggers on our tables, as the migration review counted them on a scratch copy of the chain.
 
@@ -568,6 +584,25 @@ The live presence migration adds no table. Its rules are policies on the Realtim
 [7] The server's secret key skips row-level security, so the policies do not limit it. Our rule is that the server only sends crew events (`backend/server/crew_broadcast.py`) and never joins a room. The rights on the table `realtime.messages` itself (the grants) are set by Supabase and not by us; step L2 of the manual test plan reads them.
 
 Supabase's security advisor may warn that a signed-in player can run a `SECURITY DEFINER` function. That is `is_crew_member()`, and it is on purpose. It takes a crew id, compares it with the caller's own id (`auth.uid()`), and returns only true or false. It cannot tell anyone who sits in somebody else's crew.
+
+| `exchange_positions` | insert | no access | no access | yes \*\* (through `exchange_open_position()`) |
+
+| `exchange_positions` | update | no access | no access | yes \*\* (through `exchange_close_position()` and `exchange_close_used_up()`) |
+
+| `exchange_events` | insert | no access | no access | yes \*\* (through the three functions) |
+
+
+
+
+| `exchange_events_id_seq` (the event history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
+
+
+
+[7] Prediction writes use only their server RPCs; pool sides are a read-only view with no player grant.
+
+[8] Duel writes use only their server RPCs; sealed moves have no player read policy.
+
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
 
 ## What the server's secret key may do
 
@@ -1016,7 +1051,7 @@ from (values
 ) as v(reason, delta);
 ```
 
-Expected: 8 rows, one per reason, with `balance_after` going 71, 72, 73, 74, 75, 74, 73, 74. Step 14 already showed that a ninth name (`cheat`) and a wrong direction are refused. Run the balance check from step 2: `balance` is 74 and `ledger_rows` is 10. The two reasons of the prediction desk migration (`prediction_stake` and `prediction_payout`) are tested in step P1 and in P2 and P9, with their own users, so that the numbers of the steps 16 and 17 stay as they are.
+Expected: 8 rows, one per reason, with `balance_after` going 71, 72, 73, 74, 75, 74, 73, 74. Step 14 already showed that a ninth name (`cheat`) and a wrong direction are refused. Run the balance check from step 2: `balance` is 74 and `ledger_rows` is 10.
 
 ### 16. Running the migration again is harmless
 
@@ -1476,7 +1511,7 @@ select reason, direction from public.wallet_reasons where reason like 'market\_%
 select count(*) from public.wallet_reasons;
 ```
 
-Expected: 5 rows: `market_buy` spend, `market_fee` spend, `market_payout` earn, `market_sell` earn, `market_stake` spend. And 13 reasons in all. The wallet refuses a wrong direction, for example a stake that adds coins:
+Expected: 5 rows: `market_buy` spend, `market_fee` spend, `market_payout` earn, `market_sell` earn, `market_stake` spend. And 17 reasons in all after group 3. The wallet refuses a wrong direction, for example a stake that adds coins:
 
 ```sql
 set local role service_role;

@@ -57,4 +57,3 @@ export function settleConfirmText(outcome) {
 
 export const receiptText = ({ paidPlayers, paidCoins, cutCoins }) =>
   `Paid ${captainsText(paidPlayers)} ${coinsText(paidCoins)}. ${coinsText(cutCoins)} left the game.`;
-

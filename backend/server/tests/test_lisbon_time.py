@@ -158,9 +158,9 @@ def test_the_bulletin_hour_is_8():
     ],
 )
 def test_the_bulletin_day_is_the_exchange_market_day(moment):
-    # The Exchange starts its market day at 08:00 Lisbon time (market/rules.py). The bulletin
+    # The Exchange starts its market day at 08:00 Lisbon time (market/game_day.py). The bulletin
     # day must start at exactly the same moment, also on the two clock-change days.
-    assert at_lisbon_hour(bulletin_day(moment), BULLETIN_HOUR) == market_day_start(moment)
+    assert at_lisbon_hour(bulletin_day(moment), BULLETIN_HOUR) == game_day_start(moment)
 
 
 # --- the harbor week: from Monday 00:00 Lisbon time ---

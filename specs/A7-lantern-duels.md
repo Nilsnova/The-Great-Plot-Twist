@@ -1104,7 +1104,7 @@ The same steps, shortened to what the Supabase SQL editor can do, become steps D
   - the matrix rows of 6.2 and the function rows;
   - "What the server's secret key may do";
   - steps D1 to D12.
-- **`docs/DECISIONS.md`:** **D018 · Lantern Duels rules · 2026-11-06.** The controller renumbers it at merge; OPEN-WORLD on `s0final` also mentions a D018.
+- **`docs/DECISIONS.md`:** **D026 · Lantern Duels rules · 2026-11-06.** It was D018 on the branch and became D026 at merge; the story round keeps D018.
   - Decision: sections 2, 4 and 5, in short.
   - Why: fair and explainable, nobody loses by being offline, few calls, and one atomic function per money change.
   - Alternatives and trade-offs:
@@ -1199,7 +1199,7 @@ What the minimum plays:
 - [x] **Database:** the tables `duels` and `duel_moves`, one policy, three functions, and the matrix in `supabase/README.md`.
 - [x] **Shared lists:** the reasons `arena_stake` (spend) and `arena_payout` (earn), in the migration and in `WALLET_REASONS`. The flag `arena` already exists. No new setting.
 - [ ] **Content format:** none for the minimum (taunts come later).
-- [x] **Decisions:** D018, Lantern Duels rules (renumbered at merge).
+- [x] **Decisions:** D026, Lantern Duels rules (renumbered at merge).
 
 ## 18. Open questions for Nils
 

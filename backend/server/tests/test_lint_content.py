@@ -1731,7 +1731,7 @@ def test_a_missing_routes_file_is_a_warning_and_the_other_checks_still_run(tree)
     [
         FAKE_SB_KEY,
         FAKE_JWT,
-        "-----BEGIN PRIVATE KEY-----",
+        ("----" + "-BEGIN PRIVATE KEY-----"),
         FAKE_SETTING,
         "SUPABASE_SERVICE_ROLE_KEY",
     ],

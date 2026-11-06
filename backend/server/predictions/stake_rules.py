@@ -44,10 +44,10 @@ logger = logging.getLogger(__name__)
 MIN_STAKE = 1  # coins
 MAX_STAKE = 50  # coins on one question
 DAILY_STAKE_CAP = 200  # coins per Lisbon day, counted from prediction_stakes
-POOL_CUT_PERCENT = 5  # of the LOSING side of a pool (chosen here, see D018)
+POOL_CUT_PERCENT = 5  # of the LOSING side of a pool (chosen here, see D025)
 MIN_MINUTES_BEFORE_EVENT = 60  # a question closes at least this long before it is decided
 SETTLE_GRACE_MINUTES = 60  # automatic settlement only (after the minimum): wait this long
-STALE_LIMIT_FOR_STAKE = timedelta(minutes=15)  # oldest "stale" reading a stake may use (see D018)
+STALE_LIMIT_FOR_STAKE = timedelta(minutes=15)  # oldest "stale" reading a stake may use (see D025)
 DESK_TIMEZONE_NAME = "Europe/Lisbon"
 
 

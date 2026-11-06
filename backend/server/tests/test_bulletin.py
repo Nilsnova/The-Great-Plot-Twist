@@ -26,12 +26,11 @@ from server.tests.bulletin_helpers import (
     FixedStage,
     World,
     make_market,
-    pause_company,
     relit_at,
     spoilers_in,
     utc,
 )
-from server.tests.helpers import assert_error, fail_with
+from server.tests.helpers import assert_error, fail_with, make_admin
 from server.tests.weather_helpers import (
     CLEAR_HOUR,
     FOGGY_HOUR,
@@ -356,14 +355,16 @@ def test_the_exchange_line_needs_the_market_flag():
 
     assert "exchange" not in flag_off.kinds()
     assert flag_off.body()["exchange"] is None
-    assert flag_on.texts()["exchange"] == "Island Exchange: live. No company is paused."
-    assert flag_on.body()["exchange"] == {"feed": "live", "pausedCompanies": []}
+    body = flag_on.body()
+    assert (
+        next(line["text"] for line in body["lines"] if line["kind"] == "exchange")
+        == "Island Exchange: live. No company is paused."
+    )
+    assert body["exchange"] == {"feed": "live", "pausedCompanies": []}
 
 
-def test_a_paused_company_is_named_in_the_line_and_in_the_exchange_object():
+def test_the_exchange_v2_has_no_pause_so_no_company_is_ever_paused():
     world = exchange_world()
-    pause_company(world.app.state.market, "harbor-trust", world.clock)
-
     body = world.body()
 
     assert body["exchange"] == {
@@ -416,6 +417,8 @@ def test_a_failing_exchange_leaves_out_the_exchange_line():
 
 def test_the_bulletin_only_looks_at_the_exchange_it_saves_nothing():
     world = exchange_world()
+
+    world.app.state.admin, seen = make_admin(lambda request: httpx.Response(500))
 
     world.body()
 

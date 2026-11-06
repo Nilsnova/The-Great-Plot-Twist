@@ -147,7 +147,7 @@ def test_the_migration_adds_arena_stake_and_arena_payout_in_this_order():
     assert pairs == [("arena_stake", "spend"), ("arena_payout", "earn")]
 
 
-def test_python_has_the_two_arena_reasons_right_after_the_market_reasons():
+def test_python_has_the_arena_reasons_after_the_reasons_of_the_earlier_migrations():
     # The position is pinned, not "the end of the list": recipe 4.7 appends every new reason at
     # the end, so a test that pinned these two to the end would break for the next package that
     # adds one (the same trap as the market reasons). 8 reasons of the foundation + 3 of the market.

@@ -9,6 +9,7 @@ collects test_*.py files.
 Used by: test_bulletin.py, test_chapter_two_hook.py, test_daily_frame.py and test_content.py.
 """
 
+import asyncio
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -28,6 +29,7 @@ from server.market.exchange import MarketService
 from server.market.readings import Reading
 from server.settings import Settings
 from server.tests.helpers import FakeClock, FakeReply
+from server.tests.market_helpers import FakeBinance, good_binance_answer
 from server.tests.weather_helpers import (
     LISBON_SETTINGS,
     answer_with_hours,
@@ -68,8 +70,6 @@ SPOILER_WORDS = (
     "ledger",
     "twist",
 )
-
-D = Decimal
 
 
 def utc(*parts: int) -> datetime:
