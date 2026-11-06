@@ -51,6 +51,11 @@ def find_action(story: Story, scene_id: str, action_id: str) -> Action:
     return next(a for a in story["scenes"][scene_id]["actions"] if a["id"] == action_id)
 
 
+def find_note_text(story: Story, scene_id: str, when: dict) -> str:
+    """The text of the note in a scene that has exactly these conditions."""
+    return next(n["text"] for n in story["scenes"][scene_id]["notes"] if n["when"] == when)
+
+
 def visible_ids(game: Game) -> list[str]:
     return [action["id"] for action, _allowed in game.visible_actions()]
 
@@ -100,8 +105,12 @@ def test_a_note_is_shown_only_while_its_conditions_hold():
 
     play(game, "to_shore", "trust_fisherman")
 
-    trusted_note = story["scenes"]["shore"]["notes"][1]["text"]
-    assert game.scene_notes() == [trusted_note]
+    # The notes are found by their conditions, not by their place in the list, so adding a note
+    # to the scene (Story v2 did) does not break this test. The check stays an exact list: a player
+    # who trusted the fisherman sees these notes, in this order, and no other note.
+    fisherman_note = find_note_text(story, "shore", {"not_flags": ["warned_harbor"]})
+    trusted_note = find_note_text(story, "shore", {"flags": ["trusted_fisherman"]})
+    assert game.scene_notes() == [fisherman_note, trusted_note]
 
 
 def test_a_flag_is_stored_once_even_if_its_action_is_repeated():

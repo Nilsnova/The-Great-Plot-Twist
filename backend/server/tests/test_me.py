@@ -576,6 +576,15 @@ def test_vercel_json_has_no_cron_entry():
     assert "crons" not in config
 
 
+def test_vercel_functions_run_in_dublin_next_to_the_database():
+    # Added on 6 Nov 2026: the live API answered from Washington (x-vercel-id ...::iad1::...),
+    # the default for new projects, while the database is in Ireland (D002). The region now
+    # lives in vercel.json instead of only in the dashboard, so it cannot drift back unnoticed.
+    config = json.loads((REPO_ROOT / "vercel.json").read_text())
+
+    assert config["regions"] == ["dub1"]
+
+
 def test_the_keepalive_route_still_exists_for_whatever_calls_it():
     # Whatever ends up calling it daily (see the test above), the route must exist, or the free
     # Supabase project would pause after 7 days without anyone noticing.

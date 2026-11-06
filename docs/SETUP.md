@@ -60,7 +60,7 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 
 1. In the browser, sign out of every other GitHub account. Go to vercel.com/signup and choose **Continue with GitHub** as **Nilsnova** (Hobby plan, free, non-commercial use only). Only the owner of a personal repo can import it, and a Hobby account has exactly one GitHub login. If Nilsnova is already linked to another Vercel account, linking it to a new one removes it from the old one.
 2. **Add New > Project**, import `Nilsnova/The-Great-Plot-Twist`. The build settings come from `vercel.json` in the repo (Vercel Services: the game in `frontend/`, the Python API in `backend/`).
-3. **Settings > Functions > Function Region**: Dublin (`dub1`), next to the Supabase project in Ireland. New projects default to Washington.
+3. **Function region**: Dublin (`dub1`), next to the Supabase project in Ireland. `vercel.json` sets it (`regions`), so the dashboard setting (Settings > Functions) no longer decides it. New projects default to Washington.
 4. **Settings > Environment Variables**, for Production and Preview:
 
    | Name | Value | Visible in the browser? |

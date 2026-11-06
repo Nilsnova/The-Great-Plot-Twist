@@ -147,6 +147,6 @@ Imported on 5 November 2026 as an unchanged copy of `plot_twist/story.json` from
 
 The 11 original tests (9 acceptance and content tests, and 2 parity tests) were ported with the same assertions. The engines were ported with the same rules. A few tests were added on top (see `backend/plot_twist/tests/__init__.py`).
 
-This is Story v1. The team writes the next version of the story itself, and nobody needs the solo repository for that.
+This is Story v2. The file imported above is Story v1. On 5 November 2026 the second story pull request applied the 12 edits of the Story v2 change list (decision 2 in D013): one ending line for each decision, a third choice at the shore ("Tell no one what you know"), a lead for players who read the log, hints that every player sees, and two shore fixes. The edits change words and add one choice. No existing `requires`, `set`, `take` or `goto` changed, no scene, item or flag was added, and the engines are untouched. The SHA-256 of the file after the edits is `3eb9e736b86bee8297814e4f703fdef2621dc7b8bd704a1427d32f1824a6c6cb`, and `backend/plot_twist/tests/test_story_v2.py` pins each edit. The team writes the next version of the story itself, and nobody needs the solo repository for that.
 
 The solo game also had a terminal version (`cli.py`, started with `python -m plot_twist`). It is not part of the web game, so it was not imported.
