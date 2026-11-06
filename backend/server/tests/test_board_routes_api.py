@@ -8,7 +8,6 @@ import pytest
 from server.game.case_board import deduction_for_pair
 from server.game.case_snapshot import Find, Formed, Pin, Post
 from server.game.finale_geometry import bearing_to, schooner_position
-from server.routes import board, finale
 from server.tests.case_api_helpers import HEADER, client_and_store
 from server.tests.case_rule_helpers import FRIEND, PLAYER
 from server.tests.helpers import assert_error
@@ -25,8 +24,6 @@ class Recorder:
 
 def phase2_client(*, enabled=True):
     client, store, service, clock = client_and_store(enabled=enabled)
-    client.app.include_router(board.router, prefix="/api")
-    client.app.include_router(finale.router, prefix="/api")
     recorder = Recorder()
     service.broadcaster = recorder
 
@@ -123,27 +120,31 @@ def test_phase2_routes_require_flag_login_and_strict_bodies():
     ]
     for path, body in paths:
         client, store, *_ = phase2_client(enabled=False)
+        response = client.post(
+            "/api/" + path, headers=HEADER, json={**body, "actionUid": "action0001"}
+        )
+        assert response.headers["cache-control"] == "private, no-store"
         assert_error(
-            client.post("/api/" + path, headers=HEADER, json={**body, "actionUid": "action0001"}),
+            response,
             404,
             "feature_off",
         )
         assert store.calls == []
         client, store, *_ = phase2_client()
+        response = client.post("/api/" + path, json={**body, "actionUid": "action0001"})
+        assert response.headers["cache-control"] == "private, no-store"
         assert_error(
-            client.post("/api/" + path, json={**body, "actionUid": "action0001"}),
+            response,
             401,
             "unauthorized",
         )
-        assert_error(
-            client.post(
-                "/api/" + path,
-                headers=HEADER,
-                json={**body, "actionUid": "action0001", "playerId": FRIEND},
-            ),
-            422,
-            "validation_error",
+        response = client.post(
+            "/api/" + path,
+            headers=HEADER,
+            json={**body, "actionUid": "action0001", "playerId": FRIEND},
         )
+        assert response.headers["cache-control"] == "private, no-store"
+        assert_error(response, 422, "validation_error")
         assert store.calls == []
 
 

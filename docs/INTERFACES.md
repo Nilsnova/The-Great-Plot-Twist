@@ -70,7 +70,7 @@
 
 ## 2. Routes that exist now
 
-Case Phase 1 routes on `feat/case-backend` are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the required migrations are applied.
+Case routes are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the full case chain and proofs pass.
 
 There are 37 API operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
@@ -934,7 +934,12 @@ The additive migration `20261106060000_case_rules.sql` adds six server-only tabl
 | `case_solvers` | Per-crew reveal eligibility and once-per-player payout result | select, insert |
 | `case_actions` | The player's uid, intent and exact stored outcome | select, insert |
 
-Only the server may execute `case_window_open`, `case_begin`, `case_finish`, `case_open`, `case_start_route`, `case_after_solve`, `case_accuse` and `case_clock_forward`. All use an empty search path and caller rights. The Python store calls only the four intent functions, never private helpers. Case writes lock the crew before wallets and the later world row; revision and crew-version checks prevent paying from an old snapshot. No wallet reason is added.
+Only the server may execute `case_window_open`, `case_begin`, `case_finish`, `case_open`, `case_start_route`, `case_after_solve`, `case_accuse` and `case_clock_forward`. All use an empty search path and caller rights. The Python store calls only intent functions, never private helpers. Case writes lock the crew before wallets and the later world row; revision and crew-version checks prevent paying from an old snapshot. No wallet reason is added.
+
+Phase 2 adds server-only `board_pins`, `finale_posts` and `finale_signals` through
+`20261106080000_case_board_and_night.sql`. They have RLS and no player policies or grants.
+Only the server executes `board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post` and
+`finale_signal`; `finale_post_holds` and `finale_three_locks` are private database helpers.
 
 ## 5. The wallet
 
@@ -1290,13 +1295,37 @@ Phase 1 search refusal reasons are `lead_locked`, `already_have`, `wrong_kit` an
 | 502 | `database_error` | Unreadable reply or a database guard failure; never a case repeat |
 | 503 | `case_unavailable`, `database_not_configured`, `database_unavailable` | Broken content, missing database or uncertain operation |
 
-The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 1 leaves `finale:{}` and `partners:[]` for later phases.
+The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 2 fills `finale`; `partners:[]` remains reserved for Phase 4.
 
 `board` contains earned `cards`, open unheld `leads`, `logLead`, `deductions`, identical-shape `suspects`, `canPair` and `pairWait`. An incomplete deduction has exactly `id`, `name` and `complete:false`; it exposes no card pair or clearing information. `search.spots` groups eligible routes by hotspot, and `search.jobs` contains running finds and finds landed in the last 10 minutes. `accusation` carries `schoonerFound`, `allowed`, `cooldown`, `status`, the public suspect list, earned evidence and `lastWrong`.
 
 Before a solve, `reveal` is only `{"available":false}`. A solver in this crew sees `available`, `solvedSecond`, `world`, ordered `lines` (`id`, `kind`, `text`, `cites`) and payout `credits`. Solving in another crew grants no reveal here. Phase 1's world result is `unchanged`; later hooks add `locked`, `relit`, `added` and `already_recorded`. The client must render returned lines rather than carrying its own reveal copy.
 
-Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 nudges are added only after A4 reaches `main`; until then G9 uses these boundary refreshes.
+Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. State-changing case writes send version-only A4 nudges: `board_changed` for board/finale intents, and `case_changed` for searches, accusations and clock moves. Reads, pure refusals and repeats send nothing; a failed or slow broadcast cannot fail the write.
+
+### Case Phase 2 contract for G9
+
+These routes use the same flag, authentication, private caching, own-crew scope, uid/repeat and
+fresh-view contracts as Phase 1. Bodies reject extra fields.
+
+| Method and path | Body | Effect |
+|---|---|---|
+| `POST /api/board/pin` | `{cardId, actionUid}` | Pin this seat's landed card; pay its once-only 50-coin reward |
+| `POST /api/board/pair` | `{cards: [cardA, cardB], actionUid}` | Form an earned deduction or remember a 30-second wrong-pair wait |
+| `POST /api/finale/nightfall` | `{actionUid}` | Start a 1,200-second night after the required deduction; dawn lasts 180 seconds |
+| `POST /api/finale/post` | `{light, actionUid}` | Claim an available ready light; climbing takes 60 seconds |
+| `POST /api/finale/signal` | `{light, bearing, actionUid}` | Aim with a finite numeric bearing in `[0,360)`; misses wait five seconds |
+
+Three unexpired on-target locks from different current seats at different lights part the fog.
+Each lock lasts 90 seconds and expires exactly at that boundary. Posts survive failed nights. A player's
+home signal station readies the crew's station; partners cannot man it. `me.timber` uses the
+home-islet balance or the catalogue's starting timber before its first row; missing L2 returns null.
+
+`finale` contains phase/countdowns, ready lights, earned posts/locks and current bearings. During
+night it includes only a rounded glow; the precise target and successful light coordinates appear
+only in `parted` after success. Public light coordinates use chart space, never pixel hotspots.
+Solve credit uses every successful parted lock even when it falls outside the 40 most recent
+signals. Bounded supplementary reads retain quiet lights' current locks, bearings and miss waits.
 
 ## 11. Open questions for Mon 9
 

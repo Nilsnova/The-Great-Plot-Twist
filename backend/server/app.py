@@ -25,10 +25,12 @@ from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl
 from server.game.case_service import CaseService, case_or_none
+from server.game.station_lookup import IsletStations, NoStations
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
 from server.routes import (
     auth_exchange,
+    board,
     bulletin,
     captain_name,
     case,
@@ -37,6 +39,7 @@ from server.routes import (
     crews,
     delete_me,
     duels,
+    finale,
     health,
     host_case,
     intro,
@@ -130,7 +133,8 @@ def create_app(
         duel_service = DuelService()  # it has no data files, so it always starts
 
     if case_service is None:
-        case_service = case_or_none(settings)
+        stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()
+        case_service = case_or_none(settings, broadcaster=broadcaster, stations=stations)
 
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
@@ -184,5 +188,7 @@ def create_app(
     app.include_router(duels.router, prefix="/api")
 
     app.include_router(case.router, prefix="/api")
+    app.include_router(board.router, prefix="/api")
+    app.include_router(finale.router, prefix="/api")
     app.include_router(host_case.router, prefix="/api")
     return app

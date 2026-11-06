@@ -23,7 +23,15 @@ the start place through entry_profile_store.py. The database parts are in
 supabase/migrations/20261106030000_entry_profiles.sql and
 supabase/migrations/20261106070000_home_islet.sql.
 
-Later case phases add the board, lights, world switch and NPC partner rules here.
+The board and the Night of Three Lights:
+    board_rules.py         pure pin and pair decisions
+    finale_rules.py         pure night, post and signal decisions
+    finale_geometry.py      moving target and bearings in chart coordinates
+    board_service.py        repeats, scoped writes and fresh private intent answers
+    station_lookup.py       immutable home station and timber reads from the islet
+    case_nudges.py          bounded version-only crew hints after state-changing writes
+
+Later case phases add the world switch and NPC partner rules here.
 
 Used by: routes/intro.py, routes/me.py, routes/islet.py and, later, the case and the finale
 (packages S3 and L3).
