@@ -1,5 +1,5 @@
 {
-  "about": "The four entry kits of the case and how an Act 1 ending maps to one (package A3, decision D019). Server only, never served. The coins and the texts come from the S0 drafts (CASE-FILE.md section 3) and are PENDING Nils' approval of S0. This order is the case-file order, not the order in which NPC partners fill missing kits.",
+  "about": "The four entry kits of the case and how an Act 1 ending maps to one (package A3, decision D019). Server only, never served. The coins and the texts come from the S0 drafts (CASE-FILE.md section 3), which Nils approved with the story round (D018). This order is the case-file order, not the order in which NPC partners fill missing kits.",
   "decisionFlags": {"trusted": "trusted_fisherman", "warned": "warned_harbor"},
   "logFlag": "read_log",
   "kits": [

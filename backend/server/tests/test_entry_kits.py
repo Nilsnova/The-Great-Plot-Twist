@@ -6,8 +6,9 @@ kit, the endings and flags are the ones the real story has, and the start places
 browser knows. A second group feeds the loader broken files and checks that each one is refused
 with a message, so a typo in the content cannot reach a player.
 
-The coins are pinned on purpose (decision N5 in specs/M1-backbone.md, PENDING Nils' approval of the
-S0 story drafts): if somebody changes an amount, a test fails and the change gets noticed.
+The coins are pinned on purpose (decision N5 in specs/M1-backbone.md, which waited for Nils'
+approval of the S0 story drafts and was settled by the story round, D018): if somebody changes an
+amount, a test fails and the change gets noticed.
 
 Used by: pytest (cd backend && uv run pytest).
 """
@@ -78,7 +79,7 @@ def test_each_ending_and_decision_belongs_to_exactly_one_kit():
 
 
 def test_the_coins_are_1000_and_1600_for_the_stranger():
-    # PENDING Nils' decision (N5): the amounts come from the S0 drafts (CASE-FILE.md section 3).
+    # N5, settled by the story round (D018): the amounts come from the S0 drafts (CASE-FILE.md 3).
     coins = {kit.id: kit.coins for kit in real_kits().kits}
 
     assert coins == {"true_keeper": 1000, "witness": 1000, "informant": 1000, "stranger": 1600}

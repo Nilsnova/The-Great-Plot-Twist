@@ -187,7 +187,7 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D016 | Server content lives in `backend/content/`; the browser gets public content through `GET /api/content/{name}`; secret content in `backend/content/secret/` is never served; browser-only data stays in `frontend/`. It moves the content paths of S3, S4, A2, A3, L2, L4 and L5. | S1 | proposed in the S1 pull request; stays proposed until Nils accepts it (new on 5 Nov) |
 | D017 | Island Exchange rules | L4 | written in `docs/DECISIONS.md`; the chosen numbers are proposals for Nils and the team. His answers of 5 Nov, late evening, change several of them, so D017 is reworked on the Exchange branch |
 | D018 | Story round (5 Nov 2026): the 19 decisions of the approval sheet, decision 19 changed (no demo world for now, a relight lock instead) and live multiplayer as core (A4) | S0 | decided by Nils; written with the S0 pull request (`docs/s0-story-round`) |
-| D019 | Referee and entry kits | A3 | proposed in the A3 pull request (`feat/a2-a3-signin-referee`); the kit coins (N5) and "the first ending counts" (N6) wait for Nils |
+| D019 | Referee and entry kits | A3 | proposed in the A3 pull request (`feat/a2-a3-signin-referee`); the kit coins (N5) were settled by the story round (D018); "the first ending counts" (N6) waits for Nils |
 | D020 | Crews: codes, the guessing limit and partners at the muster | A6 | proposed in the A6 pull request (`feat/a6-crews`) |
 | D022 | Account data: cloud save versions, delete my data, hosts (D018 on its branch; renumbered at merge) | A2 | proposed in the A2 pull request (`feat/a2-a3-signin-referee`); "delete my data" waits for Nils |
 

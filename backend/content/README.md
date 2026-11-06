@@ -527,7 +527,7 @@ If a word is dropped, replace it with a neutral word that follows the rules abov
 
 The four entry kits of the case, and which Act 1 ending leads to which one (package A3, decision D019). The server reads the file with `backend/server/game/entry_kits.py`. It is **server only**: its name is not on `PUBLIC_CONTENT`, so `GET /api/content/...` never serves it. The browser gets the kit it needs in the answer of `POST /api/intro/complete`.
 
-**Pending Nils' decision (N5).** The coins and the texts come from the S0 story drafts (`CASE-FILE.md`, section 3) and wait for Nils' approval of S0. A test (`test_entry_kits.py`) pins the coins, so changing one is a visible act.
+**Settled by the story round (N5, D018).** The coins and the texts come from the S0 story drafts (`CASE-FILE.md`, section 3). They waited for Nils' approval of S0, which he gave with the story round on 5 Nov 2026, and the `kits` section of `secret/case.json` holds the same kits. A test (`test_entry_kits.py`) pins the coins, so changing one is a visible act.
 
 | Field | Type | Meaning |
 |---|---|---|

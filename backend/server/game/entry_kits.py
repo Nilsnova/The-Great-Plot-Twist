@@ -27,8 +27,8 @@ from pathlib import Path
 from plot_twist.engine import CONTENT_DIR
 from server.wallet import MAX_DELTA
 
-# PENDING Nils' decision (N5 in specs/M1-backbone.md): the coins and the texts in the file come
-# from the S0 story drafts (CASE-FILE.md section 3) and wait for Nils' approval of S0.
+# Settled by the story round (N5 in specs/M1-backbone.md, D018): the coins and the texts in the
+# file come from the S0 story drafts (CASE-FILE.md section 3), which Nils approved.
 ENTRY_KITS_PATH = CONTENT_DIR / "entry_kits.json"
 
 # What the player decided at the shore. The database repeats this list in the table rule
