@@ -61,6 +61,17 @@ describe('accessible server states',()=>{
     expect(signIn.hidden).toBe(false);expect(document.activeElement).toBe(focus);
     signIn.onclick();expect(onSignIn).toHaveBeenCalledOnce();
   });
+  it('honors a changed sign-in gate, blocks hidden activation and keeps a visible next step focused',()=>{
+    const onSignIn=vi.fn(),call=create({onSignIn});
+    call.fail({reason:'session_expired'});
+    const signIn=find(call.element,node=>node.dataset.focus==='sign-in-server-call');
+    const report=find(call.element,node=>node.dataset.focus==='report-server-call');
+    signIn.focus();call.setSignInAllowed(false);
+    expect(signIn.hidden).toBe(true);expect(document.activeElement).toBe(report);
+    signIn.onclick();expect(onSignIn).not.toHaveBeenCalled();
+    call.setSignInAllowed(true);expect(signIn.hidden).toBe(false);
+    signIn.onclick();expect(onSignIn).toHaveBeenCalledOnce();
+  });
   it('cancels pending timers on clear/disposal and stops a closed dialog countdown',async()=>{
     const call=create();call.loading({read:true});call.clear();expect(vi.getTimerCount()).toBe(0);
     call.fail({reason:'rate_limited',retryAfterSeconds:3});call.element.dialog={open:false};

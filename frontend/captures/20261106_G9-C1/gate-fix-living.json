@@ -1,0 +1,57 @@
+{
+  "checks": [
+    "Title sign-in uses the local adapter while APIs are down",
+    "Name can be changed once",
+    "The unchanged bundled intro opens without the intro API",
+    "Thirty nearby captains draw at most eight and keep an overflow count",
+    "Eight live captains and effects meet the draw-call budget",
+    "Eight captains with night storm effects keep the frame and draw-call budget",
+    "World requests position reports no faster than twice a second",
+    "A final stopped position is reported",
+    "The off preference removes other captains",
+    "Hiding other captains keeps this captain’s movement reports live",
+    "A speech-bubble emote appears and its cooldown comes from the adapter",
+    "Expired session explains that device progress remains",
+    "Signing in again preserves the local intro journal",
+    "Save conflict uses the explicitly selected cloud copy",
+    "Account panel wraps at 375 px",
+    "Phone captain names remain at least 16 px",
+    "Phone captain labels do not overlap one another",
+    "Only expected offline weather diagnostics occur",
+    "No external art, fonts or auth requests"
+  ],
+  "performance": {
+    "fps": 26,
+    "calls": 109,
+    "triangles": 216,
+    "geometries": 108,
+    "textures": 58,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "stormWarmup": {
+    "fps": 59,
+    "calls": 111,
+    "triangles": 218,
+    "geometries": 109,
+    "textures": 61,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "graphicsDevice": {
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "vendor": "Google Inc. (Google)"
+  },
+  "storm": {
+    "fps": 60,
+    "calls": 112,
+    "triangles": 220,
+    "geometries": 106,
+    "textures": 61,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}

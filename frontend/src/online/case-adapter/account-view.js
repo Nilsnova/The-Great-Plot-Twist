@@ -40,7 +40,8 @@ export function mapAccount(state={}){
   const canResumeWorld=accountState==='signed_in'&&!!kitDisplay(state.me?.kit);
   return {state:accountState,captainName:text(state.me?.captainName)??text(state.nameReply?.captainName),
     canSignIn:state.signInAllowed!==false&&state.auth?.configured!==false,
-    signInMessage:text(state.auth?.message)??'',
+    signInMessage:state.auth?.configured===false?(text(state.auth?.message)??''):
+      state.signInAllowed===false?'Sign-in opens later. Your progress on this device is kept.':text(state.auth?.message)??'',
     connection:state.connection?{...state.connection}:{state:'idle',message:'',reason:null},
     canReroll:accountState==='signed_in'&&state.nameReply?.rerollsLeft>0,
     namePending:accountState==='signed_in'&&!state.nameReply,

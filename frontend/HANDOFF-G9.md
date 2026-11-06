@@ -4,6 +4,22 @@ Checkpoint notes and server requests for Claude. All authored changes stay under
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## Checkpoint-1 review follow-up in progress
+
+Stream-5 foundation is committed at `74d9a82`; the complete driver is not yet accepted. Its first pass
+found a night-storm frame miss (49 FPS, 112 draw calls on SwiftShader) and review found one ungated
+previous-request sign-in control. The follow-up gates that control from the latest view, blocks hidden
+activation, avoids unchanged status DOM updates and keeps failed Continue on the title. A queued native
+close event no longer clears a reopened modal's active state. A new production journey covers a loaded
+account modal, live flag-off, expired Continue, reachable report action and return to title (7 assertions).
+Targeted tests pass 111/6 plus 8/2; the storm rerun passes at 60 FPS / 112 calls without changing its
+55-FPS gate, quality or art. Full checkpoint verification must run again on the committed follow-up.
+
+The 11 prepared stream-6/7 files are SHA-256 preserved in the coordinator's ignored node cache, with
+another temporary backup. They are intentionally absent from the committed checkpoint workspace.
+Restore/verify them after the checkpoint push. The driver now stamps the commit and source-dirty state;
+resume cannot reuse a different commit or changed source. No reset/rebase/force push or second worktree.
+
 ## G9 stream 5: core request-state foundation verified (cloud, November 2026)
 
 Checkpoint 1's full committed driver remains pending. Main is merged through `364d178` via `6b65028`;

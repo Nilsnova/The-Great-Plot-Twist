@@ -29,6 +29,7 @@ const festivalReady=afterPaint.then(()=>import('./shell/after-paint.js')).then(m
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
+  if(disposed)return result;
   updateAccount(result.view);
   if(!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
   return result;
@@ -48,7 +49,8 @@ async function loadGame(){
 async function play(resume,ready){
   const token=++playRequest;
   const result=resume?(ready??await sendCaseIntent(adapter,'continueGame')):null;
-  if(result&&!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>play(true));return;}
+  if(disposed||token!==playRequest)return;
+  if(result&&!result.accepted){accountHost.close();shell.show('title');await accountHost.open();accountHost.notice?.(result,()=>play(true));return;}
   const continuation=result?.view?.continuation;
   if(continuation?.source==='cloud'&&Array.isArray(continuation.actions))introJournal().write(JSON.stringify({version:1,actions:continuation.actions}));
   shell.play();const game=await loadGame();

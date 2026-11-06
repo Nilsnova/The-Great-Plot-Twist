@@ -16,7 +16,7 @@ export function createModal({ title = 'Details', body = '', onClose, onCancel } 
     const first=controls[0],last=controls.at(-1);
     if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){event.preventDefault();(event.shiftKey?last:first)?.focus();}
   };
-  const closed = () => { if (opener?.isConnected && opener.getClientRects().length && !document.querySelector('dialog[open]')) opener.focus({preventScroll:true}); onClose?.(reason); };
+  const closed = () => { if(element.open)return; if (opener?.isConnected && opener.getClientRects().length && !document.querySelector('dialog[open]')) opener.focus({preventScroll:true}); onClose?.(reason); };
   element.addEventListener('cancel',cancel); element.addEventListener('keydown',key); element.addEventListener('close',closed);
   return { element, body:bodyNode,
     open(parent = document.body, focusTarget) { if (element.open) return; opener = document.activeElement; if (!element.isConnected) parent.append(element); element.showModal(); (focusTarget ?? closeButton.element).focus(); },

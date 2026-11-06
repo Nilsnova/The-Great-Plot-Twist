@@ -18,7 +18,7 @@ export function createConnectionBanner({send, inline = false} = {}) {
   report.dataset.focus = 'connection-report';
   actions.append(retry, report);
   element.append(message, actions);
-  let disposed = false, pending = false, state = 'idle';
+  let disposed = false, pending = false, state = 'idle',lastMessage=null;
   const retryable = () => ['offline', 'error', 'online'].includes(state);
   retry.onclick = async () => {
     if (disposed || pending || !retryable()) return;
@@ -30,7 +30,9 @@ export function createConnectionBanner({send, inline = false} = {}) {
     element,
     update(view) {
       const connection = view?.account?.connection;
-      state = connection?.state ?? 'idle';
+      const nextState=connection?.state??'idle',nextMessage=connection?.message??'';
+      if(nextState===state&&nextMessage===lastMessage)return;
+      state=nextState;lastMessage=nextMessage;
       if((state==='idle'||!connection?.message)&&element.contains(document.activeElement)){
         const scope=element.closest('dialog')??element.parentElement;
         const target=[...(scope?.querySelectorAll('button,a[href],canvas[tabindex]')??[])].find(control=>

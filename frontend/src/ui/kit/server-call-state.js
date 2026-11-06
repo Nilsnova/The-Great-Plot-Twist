@@ -18,7 +18,7 @@ export function createServerCallState({messageElement,label='request',onRetry,on
   retry.type=signIn.type='button';retry.setAttribute('aria-label',`Retry ${label}`);
   retry.dataset.focus='retry-server-call';signIn.dataset.focus='sign-in-server-call';
   retry.onclick=()=>{if(model.read().canRetry)onRetry?.();};
-  signIn.onclick=()=>{if(model.read().canSignIn)onSignIn?.();};
+  signIn.onclick=()=>{if(signInAllowed&&model.read().canSignIn)onSignIn?.();};
   actions.append(retry,signIn);if(report)actions.append(report);
   element.append(message,announcement,actions);
   let timer=null,disposed=false,lastAnnouncement='',lastState=null,signInAllowed=true;
@@ -54,6 +54,11 @@ export function createServerCallState({messageElement,label='request',onRetry,on
     loading:options=>change('loading',options),succeed:options=>change('succeed',options),
     showMessage:text=>change('notice',text),fail:(result,options)=>change('fail',result,options),
     setOnline:online=>change('setOnline',online),clear:()=>change('clear'),
-    setSignInAllowed(value){signInAllowed=value!==false;paint();},
+    setSignInAllowed(value){
+      const next=value!==false;if(next===signInAllowed)return;
+      const focused=globalThis.document?.activeElement===signIn;
+      signInAllowed=next;paint();
+      if(focused&&signIn.hidden)(!retry.hidden&&!retry.disabled?retry:report&&!report.hidden?report:null)?.focus?.({preventScroll:true});
+    },
     dispose(){disposed=true;stop();element.remove();}};
 }

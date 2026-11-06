@@ -7,21 +7,25 @@ export function createAccountHost({container,adapter,focus,onContinue}){
   let modal=null,screen=null,request=0,disposed=false,active=false,lastKey='';
   let retryExternal=null;
   const external=createServerCallState({messageElement:node('p','account-result'),label:'previous request',onRetry:()=>retryExternal?.(),onSignIn:()=>screen?.signIn()});
+  const syncSignIn=view=>external.setSignInAllowed(view?.account?.canSignIn!==false);
   async function send(name,...args){
     external.clear();const result=await sendCaseIntent(adapter,name,...args);
-    if(!disposed)screen?.update(result.view);return result;
+    if(!disposed){syncSignIn(result.view);screen?.update(result.view);}return result;
   }
   function update(view){
+    if(disposed)return;syncSignIn(view);
     const key=JSON.stringify(view.account);
     if(key===lastKey)return;lastKey=key;screen?.update(view);
   }
   function close(){request++;active=false;screen?.close();external.clear();modal?.close();focus?.();}
   function notice(result,retry){
     if(!modal||disposed||!active)return;retryExternal=retry??null;
+    syncSignIn(adapter.read());
     if(typeof result==='string')external.showMessage(result);else external.fail(result,{retryable:!!retry});
     modal.body.append(external.element);
   }
   async function open(){
+    if(disposed)return;
     const token=++request;active=true;
     if(!modal)modal=createModal({title:'Your captain',body:node('p','','Opening account…'),onCancel:close,onClose:()=>{active=false;focus?.();}});
     modal.element.classList.add('account-modal');modal.open(container);
@@ -29,7 +33,7 @@ export function createAccountHost({container,adapter,focus,onContinue}){
       const {createAccountScreen}=await import('../screens/account/index.js');
       if(disposed||token!==request)return;
       if(!screen)screen=createAccountScreen({send,navigate(name,result){if(name==='continue'){close();onContinue?.(result);}}});
-      modal.setContent(screen.element);screen.update(adapter.read());
+      const view=adapter.read();syncSignIn(view);modal.setContent(screen.element);screen.update(view);
       screen.element.querySelector('button:not(:disabled)')?.focus();
     }catch{if(!disposed&&token===request)notice('The account panel could not load. Close it and try again.');}
   }
