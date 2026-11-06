@@ -83,7 +83,7 @@ export function startLiveWeather({ setWeather, fetchImpl = globalThis.fetch, int
   if (typeof fetchImpl !== 'function') throw new TypeError('startLiveWeather needs a fetch function.');
   const hasHook = onUpdate !== undefined && onUpdate !== null;
   if (hasHook && typeof onUpdate !== 'function') throw new TypeError('startLiveWeather: onUpdate must be a function.');
-  let stopped = false;
+  let stopped = false, startedRequest = 0, appliedRequest = 0;
 
   // The weather is already updated when this runs, so a broken hook must not look like a weather
   // failure. It gets its own warning.
@@ -97,14 +97,17 @@ export function startLiveWeather({ setWeather, fetchImpl = globalThis.fetch, int
   }
 
   async function refresh() {
+    const request = ++startedRequest;
     try {
       const response = await fetchImpl(WEATHER_URL, requestOptions());
       if (!response.ok) throw new Error(`the server answered ${response.status}`);
       const answer = await response.json();
       const values = pickWeatherValues(answer);
       if (!values) throw new Error('the answer was not weather');
-      if (stopped) return; // stop() was called while we waited for the server
+      // Only advance the last good reading; an older request may finish after a newer one.
+      if (stopped || request < appliedRequest) return;
       setWeather(values);
+      appliedRequest = request;
       callHook(answer);
     } catch (error) {
       // Change nothing: the game keeps the last good weather.

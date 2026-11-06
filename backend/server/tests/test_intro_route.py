@@ -653,13 +653,14 @@ def test_a_reply_the_server_cannot_read_is_502(reply):
 
 def test_a_stored_kit_the_kits_file_does_not_know_is_a_server_error_and_not_a_kit():
     # The table rule only allows the four ids, so this cannot happen unless the file lost a kit. It
-    # must never turn into a made-up kit. The test client hands the error to the test; a real
-    # browser would get the standard 500 answer (test_app.py checks that part).
+    # must never turn into a made-up kit. The privacy-safe request boundary returns the
+    # standard 500 and never lets a server print the database value in a traceback.
     unknown = stored_reply(kit="dragon")
     client, _ = make_client(scripted_database({"grant_entry_kit": lambda arguments: unknown}))
 
-    with pytest.raises(ValueError, match="No entry kit with the id 'dragon'"):
-        complete(client, WARNED_TRAPPED)
+    response = complete(client, WARNED_TRAPPED)
+    assert_error(response, 500, "server_error")
+    assert "dragon" not in response.text
 
 
 # --- personal data and secrets stay out of the logs ---

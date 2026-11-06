@@ -1,0 +1,1468 @@
+{
+  "limits": {
+    "titleJavaScript": 35000,
+    "titleCss": 12000,
+    "titleImage": 40000
+  },
+  "initial": {
+    "javaScript": 21639,
+    "javaScriptGzip": 9895,
+    "css": 10472,
+    "cssGzip": 3679,
+    "titleImage": 29530
+  },
+  "totals": {
+    "javaScript": 757237,
+    "images": 393381,
+    "audio": 0
+  },
+  "chunks": [
+    {
+      "file": "assets/accusation-C2TOQACr.js",
+      "bytes": 1698,
+      "gzipBytes": 907,
+      "initial": false
+    },
+    {
+      "file": "assets/art-Dz-_XGne.js",
+      "bytes": 1165,
+      "gzipBytes": 736,
+      "initial": false
+    },
+    {
+      "file": "assets/beam-math-O9vLvuET.js",
+      "bytes": 232,
+      "gzipBytes": 196,
+      "initial": false
+    },
+    {
+      "file": "assets/board-vCiDoeyV.js",
+      "bytes": 2939,
+      "gzipBytes": 1345,
+      "initial": false
+    },
+    {
+      "file": "assets/caseLab-omZXIiBM.js",
+      "bytes": 1371,
+      "gzipBytes": 811,
+      "initial": false
+    },
+    {
+      "file": "assets/catalog-D77s0kc8.js",
+      "bytes": 2807,
+      "gzipBytes": 1288,
+      "initial": false
+    },
+    {
+      "file": "assets/cinematic-demo-DVQde8mK.js",
+      "bytes": 15735,
+      "gzipBytes": 6275,
+      "initial": false
+    },
+    {
+      "file": "assets/contract-DXLgGtWW.js",
+      "bytes": 307,
+      "gzipBytes": 237,
+      "initial": false
+    },
+    {
+      "file": "assets/controller-BdyzNGOi.js",
+      "bytes": 8689,
+      "gzipBytes": 3552,
+      "initial": false
+    },
+    {
+      "file": "assets/controller-BtxRZsV_.css",
+      "bytes": 8496,
+      "gzipBytes": 2449,
+      "initial": false
+    },
+    {
+      "file": "assets/controller-C3WkrPcN.js",
+      "bytes": 6791,
+      "gzipBytes": 3025,
+      "initial": false
+    },
+    {
+      "file": "assets/dom-DPMFhvhq.js",
+      "bytes": 2001,
+      "gzipBytes": 995,
+      "initial": true
+    },
+    {
+      "file": "assets/fake-B2RHPTIT.js",
+      "bytes": 31004,
+      "gzipBytes": 10782,
+      "initial": false
+    },
+    {
+      "file": "assets/festival-Ez9KfNHc.js",
+      "bytes": 1531,
+      "gzipBytes": 846,
+      "initial": false
+    },
+    {
+      "file": "assets/finale-K61mOf-u.js",
+      "bytes": 4621,
+      "gzipBytes": 2163,
+      "initial": false
+    },
+    {
+      "file": "assets/game-C0SsSNvd.js",
+      "bytes": 14941,
+      "gzipBytes": 6645,
+      "initial": true
+    },
+    {
+      "file": "assets/game-DeVnSqm4.js",
+      "bytes": 399097,
+      "gzipBytes": 101635,
+      "initial": false
+    },
+    {
+      "file": "assets/game-FzwZ31yH.css",
+      "bytes": 17569,
+      "gzipBytes": 4640,
+      "initial": false
+    },
+    {
+      "file": "assets/game-YoH30BYt.css",
+      "bytes": 498,
+      "gzipBytes": 323,
+      "initial": true
+    },
+    {
+      "file": "assets/gulls-rest-DVnoLRSa.js",
+      "bytes": 245,
+      "gzipBytes": 203,
+      "initial": false
+    },
+    {
+      "file": "assets/home-knD8Z-ZL.js",
+      "bytes": 1005,
+      "gzipBytes": 599,
+      "initial": false
+    },
+    {
+      "file": "assets/kit-CCo0Q6dP.js",
+      "bytes": 8246,
+      "gzipBytes": 3307,
+      "initial": false
+    },
+    {
+      "file": "assets/kit-gallery-mvJAPum7.js",
+      "bytes": 3728,
+      "gzipBytes": 1828,
+      "initial": false
+    },
+    {
+      "file": "assets/kit-gallery-vgg6AGHm.css",
+      "bytes": 1381,
+      "gzipBytes": 609,
+      "initial": false
+    },
+    {
+      "file": "assets/layouts-c0rT9wjt.js",
+      "bytes": 2071,
+      "gzipBytes": 920,
+      "initial": false
+    },
+    {
+      "file": "assets/logic-DpC8Chk3.js",
+      "bytes": 1163,
+      "gzipBytes": 633,
+      "initial": false
+    },
+    {
+      "file": "assets/modal-CYzNvYhY.css",
+      "bytes": 5858,
+      "gzipBytes": 1987,
+      "initial": true
+    },
+    {
+      "file": "assets/modal-DTbPiWct.js",
+      "bytes": 2397,
+      "gzipBytes": 1038,
+      "initial": true
+    },
+    {
+      "file": "assets/modulepreload-polyfill-P2Xu9kJm.js",
+      "bytes": 670,
+      "gzipBytes": 389,
+      "initial": true
+    },
+    {
+      "file": "assets/partners-DO9aodRw.js",
+      "bytes": 2565,
+      "gzipBytes": 1229,
+      "initial": false
+    },
+    {
+      "file": "assets/preload-helper-DclECHGd.js",
+      "bytes": 1630,
+      "gzipBytes": 828,
+      "initial": true
+    },
+    {
+      "file": "assets/progress-BI38Q3Jl.js",
+      "bytes": 528,
+      "gzipBytes": 337,
+      "initial": false
+    },
+    {
+      "file": "assets/relighting-DHHkzmWf.js",
+      "bytes": 1413,
+      "gzipBytes": 779,
+      "initial": false
+    },
+    {
+      "file": "assets/reveal-B-qudcJz.js",
+      "bytes": 973,
+      "gzipBytes": 571,
+      "initial": false
+    },
+    {
+      "file": "assets/search-Cv5ZsZ5F.js",
+      "bytes": 2147,
+      "gzipBytes": 1010,
+      "initial": false
+    },
+    {
+      "file": "assets/settlement-BaSYnN_q.js",
+      "bytes": 2682,
+      "gzipBytes": 1403,
+      "initial": false
+    },
+    {
+      "file": "assets/shell-CtSc63zr.css",
+      "bytes": 4116,
+      "gzipBytes": 1369,
+      "initial": true
+    },
+    {
+      "file": "assets/texture-CH3Q5Pyu.js",
+      "bytes": 207500,
+      "gzipBytes": 55617,
+      "initial": false
+    },
+    {
+      "file": "assets/uiKit-vX6b4VZn.js",
+      "bytes": 455,
+      "gzipBytes": 315,
+      "initial": false
+    },
+    {
+      "file": "assets/weather-BgXcojkC.js",
+      "bytes": 8268,
+      "gzipBytes": 3865,
+      "initial": false
+    },
+    {
+      "file": "assets/workshop-BOCPj4y2.js",
+      "bytes": 2635,
+      "gzipBytes": 1340,
+      "initial": false
+    },
+    {
+      "file": "assets/workshop-BVMU97A2.css",
+      "bytes": 3039,
+      "gzipBytes": 1224,
+      "initial": false
+    },
+    {
+      "file": "auth-check-api.js",
+      "bytes": 2233,
+      "gzipBytes": 994,
+      "initial": false
+    },
+    {
+      "file": "auth-check-pkce.js",
+      "bytes": 2841,
+      "gzipBytes": 1341,
+      "initial": false
+    },
+    {
+      "file": "auth-check.js",
+      "bytes": 6913,
+      "gzipBytes": 2472,
+      "initial": false
+    }
+  ],
+  "images": [
+    {
+      "file": "favicon.svg",
+      "bytes": 390
+    },
+    {
+      "file": "pixel/anchor-eye-seal.png",
+      "bytes": 382,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/arena-gate.png",
+      "bytes": 1518,
+      "width": 112,
+      "height": 96
+    },
+    {
+      "file": "pixel/back-room.png",
+      "bytes": 788,
+      "width": 96,
+      "height": 96
+    },
+    {
+      "file": "pixel/barrel.png",
+      "bytes": 307,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/beacon-fire.png",
+      "bytes": 466,
+      "width": 32,
+      "height": 48
+    },
+    {
+      "file": "pixel/bench.png",
+      "bytes": 262,
+      "width": 48,
+      "height": 32
+    },
+    {
+      "file": "pixel/birch-tall.png",
+      "bytes": 2147,
+      "width": 80,
+      "height": 104
+    },
+    {
+      "file": "pixel/birch.png",
+      "bytes": 2136,
+      "width": 80,
+      "height": 104
+    },
+    {
+      "file": "pixel/boat.png",
+      "bytes": 724,
+      "width": 64,
+      "height": 40
+    },
+    {
+      "file": "pixel/boathouse.png",
+      "bytes": 788,
+      "width": 96,
+      "height": 96
+    },
+    {
+      "file": "pixel/brass-star.png",
+      "bytes": 428,
+      "width": 24,
+      "height": 24
+    },
+    {
+      "file": "pixel/build-plot.png",
+      "bytes": 1055,
+      "width": 144,
+      "height": 96
+    },
+    {
+      "file": "pixel/buoy.png",
+      "bytes": 264,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/cabin.png",
+      "bytes": 948,
+      "width": 96,
+      "height": 96
+    },
+    {
+      "file": "pixel/captains-board.png",
+      "bytes": 1299,
+      "width": 320,
+      "height": 192
+    },
+    {
+      "file": "pixel/captains-table.png",
+      "bytes": 518,
+      "width": 64,
+      "height": 48
+    },
+    {
+      "file": "pixel/character-coastguard-commander-back-walk-1.png",
+      "bytes": 443,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-back-walk-2.png",
+      "bytes": 459,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-back.png",
+      "bytes": 444,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-portrait.png",
+      "bytes": 638,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/character-coastguard-commander-side-walk-1.png",
+      "bytes": 464,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-side-walk-2.png",
+      "bytes": 466,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-side.png",
+      "bytes": 458,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-walk-1.png",
+      "bytes": 471,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander-walk-2.png",
+      "bytes": 476,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-coastguard-commander.png",
+      "bytes": 483,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-back-walk-1.png",
+      "bytes": 492,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-back-walk-2.png",
+      "bytes": 513,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-back.png",
+      "bytes": 502,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-portrait.png",
+      "bytes": 622,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/character-elena-vos-side-walk-1.png",
+      "bytes": 470,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-side-walk-2.png",
+      "bytes": 465,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-side.png",
+      "bytes": 465,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-walk-1.png",
+      "bytes": 466,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos-walk-2.png",
+      "bytes": 474,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-elena-vos.png",
+      "bytes": 473,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-back-walk-1.png",
+      "bytes": 468,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-back-walk-2.png",
+      "bytes": 483,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-back.png",
+      "bytes": 461,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-portrait.png",
+      "bytes": 654,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/character-fisherman-side-walk-1.png",
+      "bytes": 500,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-side-walk-2.png",
+      "bytes": 505,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-side.png",
+      "bytes": 506,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-walk-1.png",
+      "bytes": 499,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman-walk-2.png",
+      "bytes": 519,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-fisherman.png",
+      "bytes": 502,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-back-walk-1.png",
+      "bytes": 451,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-back-walk-2.png",
+      "bytes": 457,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-back.png",
+      "bytes": 441,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-portrait.png",
+      "bytes": 640,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/character-harbor-master-side-walk-1.png",
+      "bytes": 467,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-side-walk-2.png",
+      "bytes": 469,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-side.png",
+      "bytes": 463,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-walk-1.png",
+      "bytes": 471,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master-walk-2.png",
+      "bytes": 474,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-harbor-master.png",
+      "bytes": 472,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-back-walk-1.png",
+      "bytes": 421,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-back-walk-2.png",
+      "bytes": 430,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-back.png",
+      "bytes": 420,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-portrait.png",
+      "bytes": 610,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/character-masked-captain-side-walk-1.png",
+      "bytes": 465,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-side-walk-2.png",
+      "bytes": 467,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-side.png",
+      "bytes": 475,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-walk-1.png",
+      "bytes": 461,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain-walk-2.png",
+      "bytes": 475,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-masked-captain.png",
+      "bytes": 461,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-back-walk-1.png",
+      "bytes": 526,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-back-walk-2.png",
+      "bytes": 522,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-back.png",
+      "bytes": 516,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-portrait.png",
+      "bytes": 758,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/character-salvage-foreman-side-walk-1.png",
+      "bytes": 594,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-side-walk-2.png",
+      "bytes": 577,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-side.png",
+      "bytes": 583,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-walk-1.png",
+      "bytes": 603,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman-walk-2.png",
+      "bytes": 575,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/character-salvage-foreman.png",
+      "bytes": 583,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/clue-frame-new.png",
+      "bytes": 550,
+      "width": 144,
+      "height": 192
+    },
+    {
+      "file": "pixel/clue-frame-pinned.png",
+      "bytes": 612,
+      "width": 144,
+      "height": 192
+    },
+    {
+      "file": "pixel/clue-frame-used.png",
+      "bytes": 618,
+      "width": 144,
+      "height": 192
+    },
+    {
+      "file": "pixel/coin-icon.png",
+      "bytes": 215,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "file": "pixel/compass.png",
+      "bytes": 463,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/cottage-glow.png",
+      "bytes": 198,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "pixel/cottage-interior.png",
+      "bytes": 884,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "pixel/cottage.png",
+      "bytes": 1481,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "pixel/crate.png",
+      "bytes": 295,
+      "width": 24,
+      "height": 24
+    },
+    {
+      "file": "pixel/crew-cook-back-walk-1.png",
+      "bytes": 506,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-back-walk-2.png",
+      "bytes": 509,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-back.png",
+      "bytes": 491,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-portrait.png",
+      "bytes": 658,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/crew-cook-side-walk-1.png",
+      "bytes": 476,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-side-walk-2.png",
+      "bytes": 473,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-side.png",
+      "bytes": 483,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-walk-1.png",
+      "bytes": 495,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook-walk-2.png",
+      "bytes": 493,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-cook.png",
+      "bytes": 481,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-back-walk-1.png",
+      "bytes": 446,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-back-walk-2.png",
+      "bytes": 451,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-back.png",
+      "bytes": 437,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-portrait.png",
+      "bytes": 624,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/crew-deckhand-side-walk-1.png",
+      "bytes": 459,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-side-walk-2.png",
+      "bytes": 473,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-side.png",
+      "bytes": 461,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-walk-1.png",
+      "bytes": 470,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand-walk-2.png",
+      "bytes": 481,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-deckhand.png",
+      "bytes": 468,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-back-walk-1.png",
+      "bytes": 523,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-back-walk-2.png",
+      "bytes": 523,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-back.png",
+      "bytes": 516,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-portrait.png",
+      "bytes": 710,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/crew-navigator-side-walk-1.png",
+      "bytes": 535,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-side-walk-2.png",
+      "bytes": 540,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-side.png",
+      "bytes": 545,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-walk-1.png",
+      "bytes": 546,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator-walk-2.png",
+      "bytes": 555,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-navigator.png",
+      "bytes": 547,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-back-walk-1.png",
+      "bytes": 570,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-back-walk-2.png",
+      "bytes": 573,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-back.png",
+      "bytes": 564,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-portrait.png",
+      "bytes": 799,
+      "width": 64,
+      "height": 80
+    },
+    {
+      "file": "pixel/crew-salvager-side-walk-1.png",
+      "bytes": 595,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-side-walk-2.png",
+      "bytes": 585,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-side.png",
+      "bytes": 588,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-walk-1.png",
+      "bytes": 634,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager-walk-2.png",
+      "bytes": 632,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/crew-salvager.png",
+      "bytes": 616,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/dark-schooner.png",
+      "bytes": 1347,
+      "width": 128,
+      "height": 112
+    },
+    {
+      "file": "pixel/driftwood.png",
+      "bytes": 354,
+      "width": 40,
+      "height": 24
+    },
+    {
+      "file": "pixel/explorer-back-walk-1.png",
+      "bytes": 480,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-back-walk-2.png",
+      "bytes": 487,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-back.png",
+      "bytes": 464,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-side-walk-1.png",
+      "bytes": 443,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-side-walk-2.png",
+      "bytes": 444,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-side.png",
+      "bytes": 443,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-walk-1.png",
+      "bytes": 473,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer-walk-2.png",
+      "bytes": 476,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/explorer.png",
+      "bytes": 463,
+      "width": 24,
+      "height": 32
+    },
+    {
+      "file": "pixel/false-light.png",
+      "bytes": 582,
+      "width": 96,
+      "height": 96
+    },
+    {
+      "file": "pixel/fern.png",
+      "bytes": 652,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/ferry-pier.png",
+      "bytes": 707,
+      "width": 96,
+      "height": 128
+    },
+    {
+      "file": "pixel/festival-lantern-string.png",
+      "bytes": 526,
+      "width": 160,
+      "height": 48
+    },
+    {
+      "file": "pixel/flowers.png",
+      "bytes": 268,
+      "width": 24,
+      "height": 24
+    },
+    {
+      "file": "pixel/fog-bank.png",
+      "bytes": 461,
+      "width": 192,
+      "height": 96
+    },
+    {
+      "file": "pixel/ghost-schooner.png",
+      "bytes": 1379,
+      "width": 128,
+      "height": 112
+    },
+    {
+      "file": "pixel/grass-tuft.png",
+      "bytes": 391,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/greenhouse.png",
+      "bytes": 1124,
+      "width": 112,
+      "height": 96
+    },
+    {
+      "file": "pixel/ground.png",
+      "bytes": 35912,
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "file": "pixel/gull.png",
+      "bytes": 379,
+      "width": 24,
+      "height": 24
+    },
+    {
+      "file": "pixel/harbour-beacon.png",
+      "bytes": 724,
+      "width": 64,
+      "height": 128
+    },
+    {
+      "file": "pixel/harbour-office-glow.png",
+      "bytes": 212,
+      "width": 128,
+      "height": 160
+    },
+    {
+      "file": "pixel/harbour-office.png",
+      "bytes": 2037,
+      "width": 128,
+      "height": 160
+    },
+    {
+      "file": "pixel/jail.png",
+      "bytes": 1045,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "file": "pixel/jetty.png",
+      "bytes": 495,
+      "width": 48,
+      "height": 112
+    },
+    {
+      "file": "pixel/keepers-star.png",
+      "bytes": 450,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/lantern.png",
+      "bytes": 182,
+      "width": 16,
+      "height": 24
+    },
+    {
+      "file": "pixel/lens-hall-open.png",
+      "bytes": 1929,
+      "width": 144,
+      "height": 160
+    },
+    {
+      "file": "pixel/lighthouse-lens.png",
+      "bytes": 553,
+      "width": 48,
+      "height": 64
+    },
+    {
+      "file": "pixel/lighthouse.png",
+      "bytes": 1255,
+      "width": 96,
+      "height": 208
+    },
+    {
+      "file": "pixel/logbook.png",
+      "bytes": 494,
+      "width": 32,
+      "height": 40
+    },
+    {
+      "file": "pixel/low-tide-cave.png",
+      "bytes": 1434,
+      "width": 112,
+      "height": 96
+    },
+    {
+      "file": "pixel/market-hall.png",
+      "bytes": 1255,
+      "width": 144,
+      "height": 128
+    },
+    {
+      "file": "pixel/mushrooms.png",
+      "bytes": 383,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/notice-board.png",
+      "bytes": 405,
+      "width": 48,
+      "height": 64
+    },
+    {
+      "file": "pixel/oak.png",
+      "bytes": 2195,
+      "width": 80,
+      "height": 104
+    },
+    {
+      "file": "pixel/pine.png",
+      "bytes": 1632,
+      "width": 80,
+      "height": 112
+    },
+    {
+      "file": "pixel/prediction-kiosk.png",
+      "bytes": 916,
+      "width": 80,
+      "height": 96
+    },
+    {
+      "file": "pixel/raid-arch.png",
+      "bytes": 1559,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "file": "pixel/reeds.png",
+      "bytes": 452,
+      "width": 32,
+      "height": 40
+    },
+    {
+      "file": "pixel/reef.png",
+      "bytes": 715,
+      "width": 96,
+      "height": 64
+    },
+    {
+      "file": "pixel/rock.png",
+      "bytes": 566,
+      "width": 48,
+      "height": 36
+    },
+    {
+      "file": "pixel/rope-coil.png",
+      "bytes": 286,
+      "width": 32,
+      "height": 20
+    },
+    {
+      "file": "pixel/sailboat.png",
+      "bytes": 1158,
+      "width": 96,
+      "height": 112
+    },
+    {
+      "file": "pixel/salvage-yard.png",
+      "bytes": 1524,
+      "width": 144,
+      "height": 112
+    },
+    {
+      "file": "pixel/sealed-cargo.png",
+      "bytes": 784,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "pixel/sealed-letter.png",
+      "bytes": 385,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/shrub.png",
+      "bytes": 544,
+      "width": 40,
+      "height": 32
+    },
+    {
+      "file": "pixel/sign.png",
+      "bytes": 299,
+      "width": 32,
+      "height": 40
+    },
+    {
+      "file": "pixel/signal-station.png",
+      "bytes": 754,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "file": "pixel/sports-pavilion.png",
+      "bytes": 1581,
+      "width": 144,
+      "height": 128
+    },
+    {
+      "file": "pixel/torn-logbook-page.png",
+      "bytes": 367,
+      "width": 48,
+      "height": 64
+    },
+    {
+      "file": "pixel/torn-page.png",
+      "bytes": 349,
+      "width": 32,
+      "height": 32
+    },
+    {
+      "file": "pixel/wall-lights-plaque.png",
+      "bytes": 396,
+      "width": 128,
+      "height": 64
+    },
+    {
+      "file": "pixel/wall-of-lights-open.png",
+      "bytes": 548,
+      "width": 128,
+      "height": 96
+    },
+    {
+      "file": "pixel/wallet-icon.png",
+      "bytes": 179,
+      "width": 24,
+      "height": 24
+    },
+    {
+      "file": "pixel/watchtower-ruin.png",
+      "bytes": 1136,
+      "width": 80,
+      "height": 144
+    },
+    {
+      "file": "pixel/windmill.png",
+      "bytes": 1003,
+      "width": 112,
+      "height": 160
+    },
+    {
+      "file": "pixel/workshop.png",
+      "bytes": 1287,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "file": "places/chart-relit.png",
+      "bytes": 7889,
+      "width": 448,
+      "height": 256
+    },
+    {
+      "file": "places/chart.png",
+      "bytes": 7825,
+      "width": 448,
+      "height": 256
+    },
+    {
+      "file": "places/gulls_rest.png",
+      "bytes": 27393,
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "file": "places/home_islet.png",
+      "bytes": 29948,
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "file": "places/saltreach_harbor.png",
+      "bytes": 39043,
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "file": "places/smugglers_cove.png",
+      "bytes": 33482,
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "file": "places/the_teeth.png",
+      "bytes": 31396,
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "file": "places/title.png",
+      "bytes": 29530,
+      "width": 480,
+      "height": 300
+    },
+    {
+      "file": "places/wreck_point.png",
+      "bytes": 33717,
+      "width": 1024,
+      "height": 768
+    }
+  ],
+  "audio": []
+}

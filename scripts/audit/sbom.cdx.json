@@ -1,0 +1,4181 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "the-great-plot-twist",
+      "bom-ref": "the-great-plot-twist",
+      "version": "94a48ad1c445f4cfb70c539daba3fcb1fe7e7d99"
+    },
+    "properties": [
+      {
+        "name": "g27:reviewed-commit",
+        "value": "94a48ad1c445f4cfb70c539daba3fcb1fe7e7d99"
+      },
+      {
+        "name": "g27:sha256:frontend/package-lock.json",
+        "value": "83cfe237c9adb3628e12471cdce07aa975b6a4000766a7294c97e54f0511171d"
+      },
+      {
+        "name": "g27:sha256:backend/uv.lock",
+        "value": "3295d359e35fa54f74e1d99e3b01a830dca9c655cc74571ed7eb33a762f01dc3"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40jridgewell/resolve-uri@3.1.2",
+      "name": "@jridgewell/resolve-uri",
+      "version": "3.1.2",
+      "purl": "pkg:npm/%40jridgewell/resolve-uri@3.1.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40jridgewell%2Fresolve-uri/3.1.2"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6d12128022233f6d3fb5b5923d63048b9e1054f45913192e0fd9492fe508c542adc15240f305b54eb6f58ccb354455e8d42053359ff98690bd42f98a59da292b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40jridgewell/sourcemap-codec@1.6.0",
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "purl": "pkg:npm/%40jridgewell/sourcemap-codec@1.6.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40jridgewell%2Fsourcemap-codec/1.6.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4fb8dffb9ce0b191f0349e25bd0eff69ecdbca4d27357fb32555a998703b558b04c7b6bbaabe5183921bb4916a920cdee58dacaeeab545463c43cdfb39dee217"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40jridgewell/trace-mapping@0.3.31",
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.31",
+      "purl": "pkg:npm/%40jridgewell/trace-mapping@0.3.31",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40jridgewell%2Ftrace-mapping/0.3.31"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "cf3351f9275048327373c8e869e3fc410a0242bf0db98c76748232b65d507811191c9f6e5ba85e6ecad881bcfc849c1441aa374d608cb667d5f0dbb5b7038b03"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40oxc-project/types@0.156.0",
+      "name": "@oxc-project/types",
+      "version": "0.156.0",
+      "purl": "pkg:npm/%40oxc-project/types@0.156.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40oxc-project%2Ftypes/0.156.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d43bb2838f1374935dca1101f179f52f7e9b4fd3efe8652d94a8c7c4ecacf3191a17fad0ab75c913e6c0bab48afc0808cf998616c6fbedc9fd3dbdb4f9609273"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.16",
+      "name": "@rolldown/binding-android-arm-eabi",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-android-arm-eabi/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "89adc3c00b343ac3064bbf880a89e9b528b293da445e43b1fc06c9da7fe5006c47dd091642eb35b7c77b827013dfc142536b10bbc9546de47a022645bf827168"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-android-arm64@1.2.16",
+      "name": "@rolldown/binding-android-arm64",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-android-arm64@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-android-arm64/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "931e70062301e84ed312fa65d81f608cb534d38064bc49b60ebf78d41163c7f4a89ed3f04b336e41422854ac471e84a3a4521f1cc99c82ec8b3adca7d2139b46"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.16",
+      "name": "@rolldown/binding-darwin-arm64",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-darwin-arm64/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "aac959ad79ca254e1c5298e8026b40a3f29033d7b62113259a98a0e99a708fef0a5b15bcbfe9e401ff76d7a06c7a4f65382d63be0db20a3ca0085a367fcde6b1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.16",
+      "name": "@rolldown/binding-darwin-x64",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-darwin-x64/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "15d17ecb8f0d0f5dde0323369909fef3992f02a365bd15913b2dab860038eb75ffd06bf8bc6b5acd9b5f685d664412ec718bed3a58784272e3396885cd7ebd39"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.16",
+      "name": "@rolldown/binding-freebsd-x64",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-freebsd-x64/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "75d8ea14ce5ef790202db50fb4a212ed5d4a4d5940d11520095af99a7fbf20486c772de9afe56e8ff1d9ee794c376172c48c1492d387d4b10f2105ced6ff72d5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.16",
+      "name": "@rolldown/binding-linux-arm-gnueabihf",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-arm-gnueabihf/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b4774a59b16414123af3b8a29b72c8c88bf22fb8fae95bd06240cfb2ce52b67feac84dad5a4475603d1d5e65cf14a2aa4ffa39644255b1a46c592da6790c0638"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.16",
+      "name": "@rolldown/binding-linux-arm64-gnu",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-arm64-gnu/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "14988b1806e53c132504475b3aac3a916e907170d601ffe826eee062cf59259c2683e2beff38c52f13d3218f62cc9533c73736e051ef9ac7b203422f252975ef"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.16",
+      "name": "@rolldown/binding-linux-arm64-musl",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-arm64-musl/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "86b2696e532cad0e7c53dbde5a96d7ce4855e734adba776ce8758ba6baaad6a6aebe006bd44e8ffb6e242e3ea548b23dbe3467fd16298e9ae190740f2865a936"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.16",
+      "name": "@rolldown/binding-linux-ppc64-gnu",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-ppc64-gnu/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a8977f742ea3e82c0b1bdfecfd13f69dbd51674188823ec8a23ef1fd261add1ce356b973ae61f47e120ea5fbea403788b1d3f49688be90768c849cd8d4f04868"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.16",
+      "name": "@rolldown/binding-linux-s390x-gnu",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-s390x-gnu/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "571ed7839b9426e35cba326323bd0e202687d04623f3406d38b65348deee39883c40e2e5c8a9da1b4216ec59ff27422926c68ace60ca321390bf524133d9bdbe"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.16",
+      "name": "@rolldown/binding-linux-x64-gnu",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-x64-gnu/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4cd2a1804dee253b13cdab5449262dd0a828f8e6b6b929528f3e2bd5a10879aec75fa50b0729b87c09585211b58baa6335fda78df09401f2b0afa0b713d5e0d7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.16",
+      "name": "@rolldown/binding-linux-x64-musl",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-linux-x64-musl/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "edc8577698d767ca86d3e988c4408dddc4fd92f859dffa1984c5fa3e9f3be8fec20eb232f2726cc2f6ba32adf9ec947b7985dfbac93067131e5754b3a19747ac"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.16",
+      "name": "@rolldown/binding-openharmony-arm64",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-openharmony-arm64/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2b08edfbbb8d4c92b9fcc0e41961953b62903e78fcc8057be5d3297f0c8766b2525d61eb9e2381d1a5045a55587f71f584ea852c84ad2dd339417aba6e72a639"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.16",
+      "name": "@rolldown/binding-win32-arm64-msvc",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-win32-arm64-msvc/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fcb1fa59f8c34575c9cffa79c65e13994fa3a5c9f07316ca110056fc6644d091df3749462324edb14106690feafc68a4906276c8b29eea9c26ec09c458ef2977"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.16",
+      "name": "@rolldown/binding-win32-x64-msvc",
+      "version": "1.2.16",
+      "purl": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fbinding-win32-x64-msvc/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d65bf52af5f467cef5cdf93bbf0f9d9d730c9c73720f0333586f0abf71f10d730e873097e121dcec72b7d7d7c89cfd22fb4a7d0fc6eb91fccbee924e68697eb7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40rolldown/pluginutils@1.0.1",
+      "name": "@rolldown/pluginutils",
+      "version": "1.0.1",
+      "purl": "pkg:npm/%40rolldown/pluginutils@1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40rolldown%2Fpluginutils/1.0.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "da3f5b1ade4987c863faf3ed8333ed97bda3d324711c0cae9a8a3a4cd7c08ec2c1d3852da52bcf6cf703701331cfb9fef42601d1cd46c501716118368e29aa1b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/auth-js@2.118.0",
+      "name": "@supabase/auth-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/auth-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fauth-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c567cf5f2852d8a0d27c09de32d23aa7fb419db762cffe6f69129712a51fcdf0bd5829e22abd83b39a391bb4481a28346e89b8cfac1463dcda574ed60d54df9d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/functions-js@2.118.0",
+      "name": "@supabase/functions-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/functions-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Ffunctions-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e287e57ad3dafe7a0a014e8a1deaac777173b46cd13d410945ecb530a634a3e3c81da55e3ea44f4a1217b65dfb81c57221668533eccd83aafdce1d2e51214e48"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/phoenix@0.4.5",
+      "name": "@supabase/phoenix",
+      "version": "0.4.5",
+      "purl": "pkg:npm/%40supabase/phoenix@0.4.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fphoenix/0.4.5"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6809fd1fda2f572780a4acb5d4e58eaeb386abc0d5ebcc96787e2e77694df5fce7e1a3bc65be462cbf66d69520f672ea21c4fe6437c072c65ed04fe7a9dbf697"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/postgrest-js@2.118.0",
+      "name": "@supabase/postgrest-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/postgrest-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fpostgrest-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "257cbedfb28f0291ecca8b5a4000a8beffc9cbd136dab7e258b46e4fed948e810070021e943148aec17f158e3b0f2d7d98eee52344eafb30c25fca09d8ecdf8b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/realtime-js@2.118.0",
+      "name": "@supabase/realtime-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/realtime-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Frealtime-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a730881168ea0f9ff1a846507aba6dfaaf6bb2062472b92008981fd16d942ea0b87d851e07fa7d0856b7b7dbe7f88561e9d30df6be19084dbada566f502f817f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/storage-js@2.118.0",
+      "name": "@supabase/storage-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/storage-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fstorage-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e4c3642add8ca32ec9b9dfec3d7effdbc070743c593025471894f4d1bf28a772916bd2ca4a3380614e4871f19622cb5a6ac02a63c1a46c0ea82372110e007561"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/supabase-js@2.118.0",
+      "name": "@supabase/supabase-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/supabase-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fsupabase-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "17123c5173150b6506ec891e888f1fb9066aab6a08dc9792b8df0c3c80b644b55aa04031292d27a84ea48a2f44c29abc7fd80d3ccea08add58f1fd2f37f40b17"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40types/chai@5.2.3",
+      "name": "@types/chai",
+      "version": "5.2.3",
+      "purl": "pkg:npm/%40types/chai@5.2.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40types%2Fchai/5.2.3"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "330e79f28780f5f15bbfae7fcb8987b570ecf5b3e714c6402ff8f174f154a4e1c72175fdd667201076d2e4b6a1afea7064547c03b19095e456788e9c1850b650"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40types/deep-eql@4.0.2",
+      "name": "@types/deep-eql",
+      "version": "4.0.2",
+      "purl": "pkg:npm/%40types/deep-eql@4.0.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40types%2Fdeep-eql/4.0.2"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "73d87d75554c8a030f7386f04ef0b9771aada8967040f78fb168cf96948e9e88dba2bea91aa764e78d657c0ec0a8542be6907505176ad23b98f5d6fcd41c3217"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40types/estree@1.0.10",
+      "name": "@types/estree",
+      "version": "1.0.10",
+      "purl": "pkg:npm/%40types/estree@1.0.10",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40types%2Festree/1.0.10"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "953c8e32739c991073742bfaff8cd4642ac4855d31aea422519059b5571b98b1c15ca2e737cabcf6fff029117f4341dbc15b2a6c81b7a391c3a0597db1db8cfa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40vitest/mocker@5.1.0",
+      "name": "@vitest/mocker",
+      "version": "5.1.0",
+      "purl": "pkg:npm/%40vitest/mocker@5.1.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40vitest%2Fmocker/5.1.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e6e981f7f8e559ca954ba7ecac59afe46767a6eeb00148a8fe510ec009af07bbfe945a3f216d81f458400f4a75f460942d380cccb09d526b820c29c0cd6829a5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40vitest/spy@5.1.0",
+      "name": "@vitest/spy",
+      "version": "5.1.0",
+      "purl": "pkg:npm/%40vitest/spy@5.1.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40vitest%2Fspy/5.1.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d833cee4e30758aac19e00be7c299342a7a6345d2089d461a779716c1991856f8cd5726b7e03e9a8da9655ebd7b67d9fdae7c3e59691d41e81eb8d5a025717e4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/assertion-error@2.0.1",
+      "name": "assertion-error",
+      "version": "2.0.1",
+      "purl": "pkg:npm/assertion-error@2.0.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/assertion-error/2.0.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2338bc45071f7ea09e3558058a02a58b5b2c92521ba479c261ce809275c662807a82b26ac9e6f2ee3bf5d895108264c09c80e76dc935bb192c4f87733773d604"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/chai@6.3.0",
+      "name": "chai",
+      "version": "6.3.0",
+      "purl": "pkg:npm/chai@6.3.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/chai/6.3.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5d602dc09e8e1cefad8f410a0acd18d946a69f23b1b1e65696d538c76536c21f20e008a0763c2fb548ef2cfdadaa403f6afc4712dcf135aa86abf6063707242a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/detect-libc@2.1.2",
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "purl": "pkg:npm/detect-libc@2.1.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/detect-libc/2.1.2"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "06d8f604e38ef37a375b21f9f5ef0c817b3111055c6ab9143a9118aee6c1d2eaf09cdd74c90dfae2bb22072535d67665a966199b4e62fe87fb8a8e26ce2841b5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/es-module-lexer@2.3.2",
+      "name": "es-module-lexer",
+      "version": "2.3.2",
+      "purl": "pkg:npm/es-module-lexer@2.3.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/es-module-lexer/2.3.2"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a681c6a4e4400688c926e72757d29b39abc44d6f250559e98645bbec4479fc1439173ee85d2a0235e93b207def4799d18ddb04cfddba89b1585fc2ad2d099dcb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/estree-walker@3.0.3",
+      "name": "estree-walker",
+      "version": "3.0.3",
+      "purl": "pkg:npm/estree-walker@3.0.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/estree-walker/3.0.3"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ed150a7d781230c933b7a66e5e6a9aa4ebab2c63cf7e08fa97db9167b9511a896f934cb6ca871cdf92dd731282e4f419767d8332a8a8010d8da1672b4ca9a6ea"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/expect-type@1.4.0",
+      "name": "expect-type",
+      "version": "1.4.0",
+      "purl": "pkg:npm/expect-type@1.4.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/expect-type/1.4.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "29f61b9a9466d156cb8c4bd56bdc86c028bd188df8c6f8bb03f1d761640eeb90920f6bb731ccd4252bb05ca148c651ac801422cd5f6ae49f4d1e3e151b49fea4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/fdir@6.5.0",
+      "name": "fdir",
+      "version": "6.5.0",
+      "purl": "pkg:npm/fdir@6.5.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/fdir/6.5.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b486d8b596ee70eb340511aa3c992c84951874bf920c7edd54cf208f2f84469dd60148cb105244fb4da46a7c87b708d63a7c2b298062c0098cd29e242c90275e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/fsevents@2.3.3",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "purl": "pkg:npm/fsevents@2.3.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/fsevents/2.3.3"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e71a037d7f9f2fb7da0139da82658fa5b16dc21fd1efb5a630caaa1c64bae42defbc1d181eb805f81d58999df8e35b4c8f99fade4d36d765cda09c339617df43"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/iceberg-js@0.8.1",
+      "name": "iceberg-js",
+      "version": "0.8.1",
+      "purl": "pkg:npm/iceberg-js@0.8.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/iceberg-js/0.8.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d5d8554195e17078deefbf7c21533ec68a3fd597557f338c21cf3fae05528a344adfc103a8e2681ae95af4dffc648e510fc413c4d42d2bf1a8ce9afea94a9144"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss@1.33.0",
+      "name": "lightningcss",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5a4503ae88ee26cd3192019fdae756c5adf21814713edc54901efd8ba68264b46073b3ccf1f65ef53a2c7cf0dcbc4a5065bb850129c762644b04b51b98b38820"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-android-arm64@1.33.0",
+      "name": "lightningcss-android-arm64",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-android-arm64@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-android-arm64/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "804a514da94a768b29e016fca96b5cda23a013949e2079694b5ba9f5b16adb003262197551d4ce6d88877bdf3310cf5242f4a8a906752100f424da60dcc979a6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-darwin-arm64@1.33.0",
+      "name": "lightningcss-darwin-arm64",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-darwin-arm64@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-darwin-arm64/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "49c89acfc79e9cd4ca9fd6f7b7bfb1af48a94e9f58c4a418e27a704379ab46e2f404054704bc99c687e168a04056dce6b5167fcd3ca8d3fb68e01d6e586fc38e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-darwin-x64@1.33.0",
+      "name": "lightningcss-darwin-x64",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-darwin-x64@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-darwin-x64/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "67950f031ceb8e558d3721b2ea2eb9709cf3be02790f74fac0cbecfa05a963d77ba9184036bc6a029e8b871220661584c35f117c94c6711c63b8b201afe9bc5d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-freebsd-x64@1.33.0",
+      "name": "lightningcss-freebsd-x64",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-freebsd-x64@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-freebsd-x64/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "41033f4e2fe141a8c9c0263e4625ae099f6c76d23f5d093b9c32b9bc2f2491dc22c5ecce94382f0f1efe453f908cae857054f8329b2ea019c7228fcedd2b5146"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-linux-arm-gnueabihf@1.33.0",
+      "name": "lightningcss-linux-arm-gnueabihf",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-linux-arm-gnueabihf@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "37b15505eea24b6e0c94ce91ff84414f11a14217991aceed890f54df652d17be4dccfe50ef158f46a2c108ac65450464deb6358c220f2f3c7b5b33a1b942112d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-linux-arm64-gnu@1.33.0",
+      "name": "lightningcss-linux-arm64-gnu",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-linux-arm64-gnu@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "8f6bff8ad9b2e0794dc6573abe829762006a362d0d8362d2860e33ec6b9fa4482cd393fedacb815728bd23a607ab9ba8545c7d1138a7dde08484b5725c64272a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-linux-arm64-musl@1.33.0",
+      "name": "lightningcss-linux-arm64-musl",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-linux-arm64-musl@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ca23b944e32e6108176c2eb4ca3654e4261215918a5cbd071404d7b7d987267d7ecd6e79a02b4c23d35f7158582cc1432fb815ee804fa27fc498c3068363afb5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-linux-x64-gnu@1.33.0",
+      "name": "lightningcss-linux-x64-gnu",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-linux-x64-gnu@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6abf89bbb2e670dd09a381692f88691726f0346f7fdc0fc1af9296da7da3c8e0e0dcc1195da0d800375e9a8352f810cd7cc80abf29492e3e12e6dc9101cb6e02"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-linux-x64-musl@1.33.0",
+      "name": "lightningcss-linux-x64-musl",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-linux-x64-musl@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-linux-x64-musl/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4588986e4a24c34b6b7caaaacdf179e658229f010fac3dce2437d3b89cc5b3530aea21670de9dacf57ea2cbb57e084c6dce92d2505ce7936b0d5ac2b0409593f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-win32-arm64-msvc@1.33.0",
+      "name": "lightningcss-win32-arm64-msvc",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-win32-arm64-msvc@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d4af8c3df2d2155a69873a5d6df92195693ac01ad339b0734b64fa75bd743cd399811f46a15b005b3c0dcae8546186d3a76de3fb846b9dc7ee8d9e2e0335efc0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lightningcss-win32-x64-msvc@1.33.0",
+      "name": "lightningcss-win32-x64-msvc",
+      "version": "1.33.0",
+      "purl": "pkg:npm/lightningcss-win32-x64-msvc@1.33.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "true"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/1.33.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3a5108083c7f5e5d05a92a786ebcbccc59c2bc6a628371a5e200aabaf6301eea892840b5fa7f4d8039e216fa871a632fd5992a0c9ac3a8a292ca44c35fe7a1b8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/magic-string@1.4.5",
+      "name": "magic-string",
+      "version": "1.4.5",
+      "purl": "pkg:npm/magic-string@1.4.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/magic-string/1.4.5"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a0b2c2dbe62f4147c06bebf1a2e7c4ff273589c6fceccf625c846a02847fd84844ffc71bdd217ff868b4736072d41fb9573d9edaf42d52f1e2bb5fbadd99e1fb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/nanoid@3.3.20",
+      "name": "nanoid",
+      "version": "3.3.20",
+      "purl": "pkg:npm/nanoid@3.3.20",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/nanoid/3.3.20"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b8a760d86dc63422909fd6f260ea716c6aab4f67c63b9291b7927ff1bde9a24f2b4faab119617a871332262118b407fe155c98b83f6145a0ea5f9b8f15827865"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/obug@3.0.0",
+      "name": "obug",
+      "version": "3.0.0",
+      "purl": "pkg:npm/obug@3.0.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/obug/3.0.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e6fbc1e7e5bb78fbfea77baac62f91716d570332d6d3f871b77ff85f82dce2a1ee7733a1981881c0e63a0d1a1be169da9c0106bcd70b8c5f8a34eb9fad4a0443"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/picocolors@1.1.1",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "purl": "pkg:npm/picocolors@1.1.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/picocolors/1.1.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c5c787dac9e1b5be4cf658aa0ec984c39ea57b7efa993664117fe311bfd1c4d1727a036e97b78db250973fd1438ff2dcbb45fc284c8c71e3f69eda5a1eb0c454"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/picomatch@4.0.7",
+      "name": "picomatch",
+      "version": "4.0.7",
+      "purl": "pkg:npm/picomatch@4.0.7",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/picomatch/4.0.7"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a9c26ef3c436216a89b030f9dbd24a31dc069bf76f2275b81ef427470887f49b62849bf318eb1c0ed1c4df1d6904a794393cac43c91598b9c9da426eef285c18"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/playwright-core@1.64.1",
+      "name": "playwright-core",
+      "version": "1.64.1",
+      "purl": "pkg:npm/playwright-core@1.64.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/playwright-core/1.64.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "042e2cf32e9211503a435ad2c594eda3c848d4a508df15e51c6660bc6a8fe08a8f748fdae855fd1f6f480cdcfbbcaa3d976d5be8b7d8a2c49c3cbe8cdf1c720d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/postcss@8.5.32",
+      "name": "postcss",
+      "version": "8.5.32",
+      "purl": "pkg:npm/postcss@8.5.32",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/postcss/8.5.32"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2c994a08201414a3ae6718a951d630d4dcc821312c3dc832386f4b92f449bee2a3fdb4736ee458d00457bcbd29586a6c66f9fc8e4bbe2cc7a9d9e534b1e1e9f2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/rolldown@1.2.16",
+      "name": "rolldown",
+      "version": "1.2.16",
+      "purl": "pkg:npm/rolldown@1.2.16",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/rolldown/1.2.16"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6d6be532914a8937c329f9caec50b630f80f79609ffcaa70b2ae3d029756f8541a0596fa3ba759e0c00f6cf523a7b85842bc3f4686ea0b39fae0146b41e7061f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/source-map-js@1.2.2",
+      "name": "source-map-js",
+      "version": "1.2.2",
+      "purl": "pkg:npm/source-map-js@1.2.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/source-map-js/1.2.2"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2868fff18e37c77e5a6550edb7e27898ad61a0b18750b3187d290e0c93508cd0c2de85b53ea3e8c4cc28d292d4b1633f5041b338dfcdc5e1f2c047cd5cd3f757"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/std-env@4.3.0",
+      "name": "std-env",
+      "version": "4.3.0",
+      "purl": "pkg:npm/std-env@4.3.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/std-env/4.3.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3ad53f1204359089b92b0a90a410ba644317ad946e8b5d70f3381f4d6a7c71d3bd07c39a3ec6c0f1b4c73b63fe1cda3556551318c541c0f87276eea9a1e5e26a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/three@0.187.0",
+      "name": "three",
+      "version": "0.187.0",
+      "purl": "pkg:npm/three@0.187.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/three/0.187.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "422bbb47e0a687c0acb59b18d6e24e4969d595fa3b66d34b57b985f0996d9372c1dc0b43bbd71166572744a90093c638cfa28ac37e73ed8ed4addee3598f1eb4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/tinybench@6.2.3",
+      "name": "tinybench",
+      "version": "6.2.3",
+      "purl": "pkg:npm/tinybench@6.2.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/tinybench/6.2.3"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "025d350b62480673b60970803dba4097ab1488e647793846b4760d4dae75251c3d3f258e09dafef4e9e0d39478aa0fd2937f87eb8e44f28bf5876739f22b7237"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/tinyexec@1.3.1",
+      "name": "tinyexec",
+      "version": "1.3.1",
+      "purl": "pkg:npm/tinyexec@1.3.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/tinyexec/1.3.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "182bc1ddaa32b3de88b8314131c4c1e3a24e47a99d32d013a2ac225bc2655a1b288759a11e2ff19fdb2cfc383b379e791a227212ddaace81bf3470b033a87510"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/tinyglobby@0.2.17",
+      "name": "tinyglobby",
+      "version": "0.2.17",
+      "purl": "pkg:npm/tinyglobby@0.2.17",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/tinyglobby/0.2.17"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c1747f758a5ca8a99f5a911d66388a24ec023459dd0f40cc9eb5bf7188d51adb449017d581c2c51e836b963e3b9a339589cf72c8dbbae5a96c805e0d4324dada"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/tslib@2.8.1",
+      "name": "tslib",
+      "version": "2.8.1",
+      "purl": "pkg:npm/tslib@2.8.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "0BSD"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/tslib/2.8.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a0916ef781d06fe29576e49440bef09e99aa9df98bb0e03f9c087a6fa107d30084a0ad3f98f79753a737c0a0d5f373243ae1cf447b525ca294f7d2016b34bfdb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/vite@8.3.6",
+      "name": "vite",
+      "version": "8.3.6",
+      "purl": "pkg:npm/vite@8.3.6",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/vite/8.3.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "508edd2b6f4d9d2e78164fa69a8ee8fa323a53c169ee10e5f97e50d64e39587f9de1d4a56cb554113190fa17e4360bcb406ca81253e3f37ee7672bf830173454"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/vitest@5.1.0",
+      "name": "vitest",
+      "version": "5.1.0",
+      "purl": "pkg:npm/vitest@5.1.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/vitest/5.1.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "33398d167af06bcbfc945d5b2f1c37509e04444c153956fbe55a8966650346327a125b8aff1f6d87ba936da783938d56c44d46c56aa64d771db1fa1b7c7e6c38"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/why-is-node-running@3.2.1",
+      "name": "why-is-node-running",
+      "version": "3.2.1",
+      "purl": "pkg:npm/why-is-node-running@3.2.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/why-is-node-running/3.2.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4dbd85521078bd4b064257d2aae40b62402992e3c01505c6173c562871ee995cf674af97d51526fc79c80f8f937c819827591373039a0a4fdbb9808426be988d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/annotated-doc@0.0.5",
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "purl": "pkg:pypi/annotated-doc@0.0.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/annotated-doc/0.0.5/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/annotated-types@0.8.0",
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "purl": "pkg:pypi/annotated-types@0.8.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/annotated-types/0.8.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/anyio@4.16.0",
+      "name": "anyio",
+      "version": "4.16.0",
+      "purl": "pkg:pypi/anyio@4.16.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/anyio/4.16.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/certifi@2026.10.23",
+      "name": "certifi",
+      "version": "2026.10.23",
+      "purl": "pkg:pypi/certifi@2026.10.23",
+      "licenses": [
+        {
+          "license": {
+            "name": "MPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/certifi/2026.10.23/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/click@8.5.0",
+      "name": "click",
+      "version": "8.5.0",
+      "purl": "pkg:pypi/click@8.5.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/click/8.5.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/colorama@0.4.6",
+      "name": "colorama",
+      "version": "0.4.6",
+      "purl": "pkg:pypi/colorama@0.4.6",
+      "licenses": [
+        {
+          "license": {
+            "name": "OSI Approved :: BSD License"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/colorama/0.4.6/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/fastapi@0.162.0",
+      "name": "fastapi",
+      "version": "0.162.0",
+      "purl": "pkg:pypi/fastapi@0.162.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/fastapi/0.162.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/h11@0.16.0",
+      "name": "h11",
+      "version": "0.16.0",
+      "purl": "pkg:pypi/h11@0.16.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/h11/0.16.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/httpcore@1.0.9",
+      "name": "httpcore",
+      "version": "1.0.9",
+      "purl": "pkg:pypi/httpcore@1.0.9",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/httpcore/1.0.9/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/httpcore2@2.16.0",
+      "name": "httpcore2",
+      "version": "2.16.0",
+      "purl": "pkg:pypi/httpcore2@2.16.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/httpcore2/2.16.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/httpx@0.28.1",
+      "name": "httpx",
+      "version": "0.28.1",
+      "purl": "pkg:pypi/httpx@0.28.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/httpx/0.28.1/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/httpx2@2.16.0",
+      "name": "httpx2",
+      "version": "2.16.0",
+      "purl": "pkg:pypi/httpx2@2.16.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/httpx2/2.16.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/httpx2-jsfetch@1.0",
+      "name": "httpx2-jsfetch",
+      "version": "1.0",
+      "purl": "pkg:pypi/httpx2-jsfetch@1.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/httpx2-jsfetch/1.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/idna@3.20",
+      "name": "idna",
+      "version": "3.20",
+      "purl": "pkg:pypi/idna@3.20",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/idna/3.20/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/iniconfig@2.3.1",
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "purl": "pkg:pypi/iniconfig@2.3.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/iniconfig/2.3.1/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/opentelemetry-api@1.45.2",
+      "name": "opentelemetry-api",
+      "version": "1.45.2",
+      "purl": "pkg:pypi/opentelemetry-api@1.45.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/opentelemetry-api/1.45.2/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/packaging@26.3",
+      "name": "packaging",
+      "version": "26.3",
+      "purl": "pkg:pypi/packaging@26.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0 OR BSD-2-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/packaging/26.3/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/pluggy@1.7.0",
+      "name": "pluggy",
+      "version": "1.7.0",
+      "purl": "pkg:pypi/pluggy@1.7.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/pluggy/1.7.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/pydantic@2.14.3",
+      "name": "pydantic",
+      "version": "2.14.3",
+      "purl": "pkg:pypi/pydantic@2.14.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/pydantic/2.14.3/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/pydantic-core@2.50.4",
+      "name": "pydantic-core",
+      "version": "2.50.4",
+      "purl": "pkg:pypi/pydantic-core@2.50.4",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/pydantic-core/2.50.4/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/pygments@2.21.0",
+      "name": "pygments",
+      "version": "2.21.0",
+      "purl": "pkg:pypi/pygments@2.21.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-2-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/pygments/2.21.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/pytest@9.2.0",
+      "name": "pytest",
+      "version": "9.2.0",
+      "purl": "pkg:pypi/pytest@9.2.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/pytest/9.2.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/ruff@0.17.3",
+      "name": "ruff",
+      "version": "0.17.3",
+      "purl": "pkg:pypi/ruff@0.17.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/ruff/0.17.3/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/starlette@1.10.0",
+      "name": "starlette",
+      "version": "1.10.0",
+      "purl": "pkg:pypi/starlette@1.10.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/starlette/1.10.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/truststore@0.10.5",
+      "name": "truststore",
+      "version": "0.10.5",
+      "purl": "pkg:pypi/truststore@0.10.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/truststore/0.10.5/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/typing-extensions@4.16.0",
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "purl": "pkg:pypi/typing-extensions@4.16.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "PSF-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/typing-extensions/4.16.0/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/typing-inspection@0.4.5",
+      "name": "typing-inspection",
+      "version": "0.4.5",
+      "purl": "pkg:pypi/typing-inspection@0.4.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/typing-inspection/0.4.5/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/uvicorn@0.54.0",
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "purl": "pkg:pypi/uvicorn@0.54.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "pypi"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "false"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://pypi.org/pypi/uvicorn/0.54.0/json"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:npm/%40jridgewell/resolve-uri@3.1.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40jridgewell/sourcemap-codec@1.6.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40jridgewell/trace-mapping@0.3.31",
+      "dependsOn": [
+        "pkg:npm/%40jridgewell/resolve-uri@3.1.2",
+        "pkg:npm/%40jridgewell/sourcemap-codec@1.6.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40oxc-project/types@0.156.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-android-arm64@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.16",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40rolldown/pluginutils@1.0.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40supabase/auth-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/functions-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/phoenix@0.4.5",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40supabase/postgrest-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/realtime-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/%40supabase/phoenix@0.4.5",
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/storage-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/iceberg-js@0.8.1",
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/supabase-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/%40supabase/auth-js@2.118.0",
+        "pkg:npm/%40supabase/functions-js@2.118.0",
+        "pkg:npm/%40supabase/postgrest-js@2.118.0",
+        "pkg:npm/%40supabase/realtime-js@2.118.0",
+        "pkg:npm/%40supabase/storage-js@2.118.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40types/chai@5.2.3",
+      "dependsOn": [
+        "pkg:npm/%40types/deep-eql@4.0.2",
+        "pkg:npm/assertion-error@2.0.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40types/deep-eql@4.0.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40types/estree@1.0.10",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40vitest/mocker@5.1.0",
+      "dependsOn": [
+        "pkg:npm/%40jridgewell/trace-mapping@0.3.31",
+        "pkg:npm/%40vitest/spy@5.1.0",
+        "pkg:npm/estree-walker@3.0.3",
+        "pkg:npm/magic-string@1.4.5"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40vitest/spy@5.1.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/assertion-error@2.0.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/chai@6.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/detect-libc@2.1.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/es-module-lexer@2.3.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/estree-walker@3.0.3",
+      "dependsOn": [
+        "pkg:npm/%40types/estree@1.0.10"
+      ]
+    },
+    {
+      "ref": "pkg:npm/expect-type@1.4.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/fdir@6.5.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/fsevents@2.3.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/iceberg-js@0.8.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss@1.33.0",
+      "dependsOn": [
+        "pkg:npm/detect-libc@2.1.2",
+        "pkg:npm/lightningcss-android-arm64@1.33.0",
+        "pkg:npm/lightningcss-darwin-arm64@1.33.0",
+        "pkg:npm/lightningcss-darwin-x64@1.33.0",
+        "pkg:npm/lightningcss-freebsd-x64@1.33.0",
+        "pkg:npm/lightningcss-linux-arm-gnueabihf@1.33.0",
+        "pkg:npm/lightningcss-linux-arm64-gnu@1.33.0",
+        "pkg:npm/lightningcss-linux-arm64-musl@1.33.0",
+        "pkg:npm/lightningcss-linux-x64-gnu@1.33.0",
+        "pkg:npm/lightningcss-linux-x64-musl@1.33.0",
+        "pkg:npm/lightningcss-win32-arm64-msvc@1.33.0",
+        "pkg:npm/lightningcss-win32-x64-msvc@1.33.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/lightningcss-android-arm64@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-darwin-arm64@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-darwin-x64@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-freebsd-x64@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-linux-arm-gnueabihf@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-linux-arm64-gnu@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-linux-arm64-musl@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-linux-x64-gnu@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-linux-x64-musl@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-win32-arm64-msvc@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/lightningcss-win32-x64-msvc@1.33.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/magic-string@1.4.5",
+      "dependsOn": [
+        "pkg:npm/%40jridgewell/sourcemap-codec@1.6.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/nanoid@3.3.20",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/obug@3.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/picocolors@1.1.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/picomatch@4.0.7",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/playwright-core@1.64.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/postcss@8.5.32",
+      "dependsOn": [
+        "pkg:npm/nanoid@3.3.20",
+        "pkg:npm/picocolors@1.1.1",
+        "pkg:npm/source-map-js@1.2.2"
+      ]
+    },
+    {
+      "ref": "pkg:npm/rolldown@1.2.16",
+      "dependsOn": [
+        "pkg:npm/%40oxc-project/types@0.156.0",
+        "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.16",
+        "pkg:npm/%40rolldown/binding-android-arm64@1.2.16",
+        "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.16",
+        "pkg:npm/%40rolldown/binding-darwin-x64@1.2.16",
+        "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.16",
+        "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.16",
+        "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.16",
+        "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.16",
+        "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.16",
+        "pkg:npm/%40rolldown/pluginutils@1.0.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/source-map-js@1.2.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/std-env@4.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/three@0.187.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/tinybench@6.2.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/tinyexec@1.3.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/tinyglobby@0.2.17",
+      "dependsOn": [
+        "pkg:npm/fdir@6.5.0",
+        "pkg:npm/picomatch@4.0.7"
+      ]
+    },
+    {
+      "ref": "pkg:npm/tslib@2.8.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/vite@8.3.6",
+      "dependsOn": [
+        "pkg:npm/fsevents@2.3.3",
+        "pkg:npm/lightningcss@1.33.0",
+        "pkg:npm/picomatch@4.0.7",
+        "pkg:npm/postcss@8.5.32",
+        "pkg:npm/rolldown@1.2.16",
+        "pkg:npm/tinyglobby@0.2.17"
+      ]
+    },
+    {
+      "ref": "pkg:npm/vitest@5.1.0",
+      "dependsOn": [
+        "pkg:npm/%40types/chai@5.2.3",
+        "pkg:npm/%40vitest/mocker@5.1.0",
+        "pkg:npm/chai@6.3.0",
+        "pkg:npm/es-module-lexer@2.3.2",
+        "pkg:npm/expect-type@1.4.0",
+        "pkg:npm/magic-string@1.4.5",
+        "pkg:npm/obug@3.0.0",
+        "pkg:npm/picomatch@4.0.7",
+        "pkg:npm/std-env@4.3.0",
+        "pkg:npm/tinybench@6.2.3",
+        "pkg:npm/tinyexec@1.3.1",
+        "pkg:npm/tinyglobby@0.2.17",
+        "pkg:npm/why-is-node-running@3.2.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/why-is-node-running@3.2.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/annotated-doc@0.0.5",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/annotated-types@0.8.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/anyio@4.16.0",
+      "dependsOn": [
+        "pkg:pypi/idna@3.20",
+        "pkg:pypi/typing-extensions@4.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/certifi@2026.10.23",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/click@8.5.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/colorama@0.4.6",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/fastapi@0.162.0",
+      "dependsOn": [
+        "pkg:pypi/annotated-doc@0.0.5",
+        "pkg:pypi/opentelemetry-api@1.45.2",
+        "pkg:pypi/pydantic@2.14.3",
+        "pkg:pypi/starlette@1.10.0",
+        "pkg:pypi/typing-extensions@4.16.0",
+        "pkg:pypi/typing-inspection@0.4.5"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/h11@0.16.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/httpcore@1.0.9",
+      "dependsOn": [
+        "pkg:pypi/certifi@2026.10.23",
+        "pkg:pypi/h11@0.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/httpcore2@2.16.0",
+      "dependsOn": [
+        "pkg:pypi/h11@0.16.0",
+        "pkg:pypi/truststore@0.10.5"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/httpx@0.28.1",
+      "dependsOn": [
+        "pkg:pypi/anyio@4.16.0",
+        "pkg:pypi/certifi@2026.10.23",
+        "pkg:pypi/httpcore@1.0.9",
+        "pkg:pypi/idna@3.20"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/httpx2@2.16.0",
+      "dependsOn": [
+        "pkg:pypi/anyio@4.16.0",
+        "pkg:pypi/httpcore2@2.16.0",
+        "pkg:pypi/httpx2-jsfetch@1.0",
+        "pkg:pypi/idna@3.20",
+        "pkg:pypi/truststore@0.10.5",
+        "pkg:pypi/typing-extensions@4.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/httpx2-jsfetch@1.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/idna@3.20",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/iniconfig@2.3.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/opentelemetry-api@1.45.2",
+      "dependsOn": [
+        "pkg:pypi/typing-extensions@4.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/packaging@26.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/pluggy@1.7.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/pydantic@2.14.3",
+      "dependsOn": [
+        "pkg:pypi/annotated-types@0.8.0",
+        "pkg:pypi/pydantic-core@2.50.4",
+        "pkg:pypi/typing-extensions@4.16.0",
+        "pkg:pypi/typing-inspection@0.4.5"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/pydantic-core@2.50.4",
+      "dependsOn": [
+        "pkg:pypi/typing-extensions@4.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/pygments@2.21.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/pytest@9.2.0",
+      "dependsOn": [
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/iniconfig@2.3.1",
+        "pkg:pypi/packaging@26.3",
+        "pkg:pypi/pluggy@1.7.0",
+        "pkg:pypi/pygments@2.21.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/ruff@0.17.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/starlette@1.10.0",
+      "dependsOn": [
+        "pkg:pypi/anyio@4.16.0",
+        "pkg:pypi/typing-extensions@4.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/truststore@0.10.5",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/typing-extensions@4.16.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/typing-inspection@0.4.5",
+      "dependsOn": [
+        "pkg:pypi/typing-extensions@4.16.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/uvicorn@0.54.0",
+      "dependsOn": [
+        "pkg:pypi/click@8.5.0",
+        "pkg:pypi/h11@0.16.0"
+      ]
+    },
+    {
+      "ref": "the-great-plot-twist",
+      "dependsOn": [
+        "pkg:npm/%40supabase/supabase-js@2.118.0",
+        "pkg:npm/playwright-core@1.64.1",
+        "pkg:npm/three@0.187.0",
+        "pkg:npm/vite@8.3.6",
+        "pkg:npm/vitest@5.1.0",
+        "pkg:pypi/fastapi@0.162.0",
+        "pkg:pypi/httpx2@2.16.0",
+        "pkg:pypi/httpx@0.28.1",
+        "pkg:pypi/pydantic@2.14.3",
+        "pkg:pypi/pytest@9.2.0",
+        "pkg:pypi/ruff@0.17.3",
+        "pkg:pypi/uvicorn@0.54.0"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,272 @@
+{
+  "samples_per_route": 200,
+  "warmup_calls_per_route": 1,
+  "route_count": 20,
+  "timing_scope": "TestClient request roundtrip; fake resets excluded",
+  "p95_method": "Nearest rank (ceil(0.95*n)-1); sequential calls, no network",
+  "cold_import": {
+    "processes": 5,
+    "median_ms": 287.158,
+    "samples_ms": [
+      264.019,
+      307.032,
+      287.158,
+      304.01,
+      274.54
+    ],
+    "scope": "Fresh Python process imports server.app; excludes process startup; no app/env load"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "route": "/api/health",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 1.404,
+      "p95_ms": 1.663,
+      "fake_service_calls_per_request": {},
+      "notes": ""
+    },
+    {
+      "method": "GET",
+      "route": "/api/config",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 1.212,
+      "p95_ms": 1.635,
+      "fake_service_calls_per_request": {},
+      "notes": ""
+    },
+    {
+      "method": "GET",
+      "route": "/api/content/{name}",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 1.761,
+      "p95_ms": 2.29,
+      "fake_service_calls_per_request": {},
+      "notes": ""
+    },
+    {
+      "method": "GET",
+      "route": "/api/weather",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 1.507,
+      "p95_ms": 1.862,
+      "fake_service_calls_per_request": {},
+      "notes": "Warm source cache; MockTransport supplies first weather answer"
+    },
+    {
+      "method": "GET",
+      "route": "/api/keepalive",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.252,
+      "p95_ms": 2.606,
+      "fake_service_calls_per_request": {
+        "GET crews": 1.0,
+        "GET profiles": 1.0,
+        "GET wallet_reasons": 1.0
+      },
+      "notes": ""
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/exchange",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 1.898,
+      "p95_ms": 2.286,
+      "fake_service_calls_per_request": {
+        "POST fake-service": 1.0
+      },
+      "notes": "Mock exchange returns a scripted fake session each call"
+    },
+    {
+      "method": "GET",
+      "route": "/api/me",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.97,
+      "p95_ms": 4.652,
+      "fake_service_calls_per_request": {
+        "GET crew_seats": 1.0,
+        "GET entry_profiles": 1.0,
+        "GET profiles": 1.0,
+        "GET wallets": 1.0
+      },
+      "notes": ""
+    },
+    {
+      "method": "POST",
+      "route": "/api/me/name",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.117,
+      "p95_ms": 2.776,
+      "fake_service_calls_per_request": {
+        "POST rpc/assign_captain_name": 1.0
+      },
+      "notes": "Account rows reset outside timing; successful write, not conflict"
+    },
+    {
+      "method": "POST",
+      "route": "/api/me/name/reroll",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.491,
+      "p95_ms": 3.557,
+      "fake_service_calls_per_request": {
+        "GET profiles": 1.0,
+        "POST rpc/reroll_captain_name": 1.0
+      },
+      "notes": "Account rows reset outside timing; successful write, not conflict"
+    },
+    {
+      "method": "GET",
+      "route": "/api/save",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.031,
+      "p95_ms": 2.618,
+      "fake_service_calls_per_request": {
+        "GET saves": 1.0
+      },
+      "notes": "Account rows reset outside timing; successful write, not conflict"
+    },
+    {
+      "method": "PUT",
+      "route": "/api/save",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.044,
+      "p95_ms": 2.797,
+      "fake_service_calls_per_request": {
+        "POST rpc/save_progress": 1.0
+      },
+      "notes": "Account rows reset outside timing; successful write, not conflict"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/me",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.027,
+      "p95_ms": 2.532,
+      "fake_service_calls_per_request": {
+        "POST rpc/delete_player": 1.0
+      },
+      "notes": "Account rows reset outside timing; successful write, not conflict"
+    },
+    {
+      "method": "POST",
+      "route": "/api/intro/complete",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.311,
+      "p95_ms": 2.688,
+      "fake_service_calls_per_request": {
+        "POST rpc/grant_entry_kit": 1.0
+      },
+      "notes": "Fake entry grant reset each call; replays complete valid move log"
+    },
+    {
+      "method": "GET",
+      "route": "/api/market",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.245,
+      "p95_ms": 2.799,
+      "fake_service_calls_per_request": {
+        "GET market_bases": 1.0
+      },
+      "notes": "Scripted successful trade; fake limiter reset outside timing"
+    },
+    {
+      "method": "GET",
+      "route": "/api/market/portfolio",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 3.135,
+      "p95_ms": 4.534,
+      "fake_service_calls_per_request": {
+        "GET market_bases": 1.0,
+        "GET market_positions": 1.0,
+        "GET market_trades": 1.0,
+        "GET wallets": 1.0
+      },
+      "notes": "Scripted successful trade; fake limiter reset outside timing"
+    },
+    {
+      "method": "POST",
+      "route": "/api/market/trade",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.909,
+      "p95_ms": 4.041,
+      "fake_service_calls_per_request": {
+        "GET market_bases": 1.0,
+        "GET market_trades": 1.0,
+        "POST rpc/market_trade": 1.0
+      },
+      "notes": "Scripted successful trade; fake limiter reset outside timing"
+    },
+    {
+      "method": "POST",
+      "route": "/api/crews",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.549,
+      "p95_ms": 3.235,
+      "fake_service_calls_per_request": {
+        "GET crews": 1.0,
+        "GET entry_profiles": 1.0,
+        "POST rpc/crew_create": 1.0
+      },
+      "notes": "Crew RPC success scripted; crew row sequence reset outside timing"
+    },
+    {
+      "method": "POST",
+      "route": "/api/crews/join",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.918,
+      "p95_ms": 4.272,
+      "fake_service_calls_per_request": {
+        "GET crews": 1.0,
+        "GET entry_profiles": 1.0,
+        "POST rpc/crew_find_by_code": 1.0,
+        "POST rpc/crew_take_seat": 1.0
+      },
+      "notes": "Crew RPC success scripted; crew row sequence reset outside timing"
+    },
+    {
+      "method": "POST",
+      "route": "/api/crews/me/start",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.917,
+      "p95_ms": 3.654,
+      "fake_service_calls_per_request": {
+        "GET crew_seats": 1.0,
+        "GET crews": 2.0,
+        "POST rpc/crew_start": 1.0
+      },
+      "notes": "Crew RPC success scripted; crew row sequence reset outside timing"
+    },
+    {
+      "method": "GET",
+      "route": "/api/crews/me",
+      "status": 200,
+      "calls": 200,
+      "p50_ms": 2.472,
+      "p95_ms": 3.12,
+      "fake_service_calls_per_request": {
+        "GET crew_seats": 1.0,
+        "GET crews": 1.0
+      },
+      "notes": "Crew RPC success scripted; crew row sequence reset outside timing"
+    }
+  ]
+}

@@ -5,13 +5,12 @@
 > **Who uses it:** all four teammates and every coding agent. The story is in [docs/STORY.md](docs/STORY.md). What is happening right now, and ready-to-paste agent briefs, are in [docs/STATUS.md](docs/STATUS.md).
 
 **Current execution: 6 Nov 2026.** The game and API are live at
-https://the-great-plot-twist.vercel.app/. The original v0.3 package descriptions below are retained
-as the detailed plan; use the execution update and [current status](docs/STATUS.md) for completion
-and release evidence. Group 3 is live. The case backend's four minimum phases, server followups
-and economy-abuse integration are live. Festival, host console and sports are reviewed, their three
-migrations are applied, and their code is at the deployment gate. Reliability, regression coverage,
-developer tools, security/text, help/privacy and release materials follow. G9 is paused until Nils'
-laptop returns; sports activation needs a provider key and the ChatGPT helper needs official approval.
+https://the-great-plot-twist.vercel.app/. Group 3, the complete minimum case backend, NPCs,
+server followups and G12 are deployed. Reviewed festival, host and sports code is deployed after
+its migration proofs; festival is enabled but waits for the first Relighting, while sports stays
+off pending its provider key. The stabilization/submission wave is integrated for its final gates.
+G9 is paused until Nils' laptop returns; normal browser multiplayer/the complete mystery still
+await that adapter. The detailed historical package plan remains below.
 
 ## Execution update · 6 Nov 2026
 
@@ -31,6 +30,24 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
    Nils authorized enabling completed festival and sports on 6 Nov; each still needs its proofs.
    RELIGHT_OPEN stays unset until the separately controlled game-opening step.
 5. Add the optional AI helper described below, then rehearse the full deployed experience.
+
+### Current delivery map
+
+| Area | Current result | Remaining proof or input |
+|---|---|---|
+| Intro, islands, story presentation and sound | Built and deployed; local demo/rehearsal available | Physical laptop/phone/gamepad and listening rehearsal |
+| Weather, Exchange v2, predictions, duels and presence services | Deployed and enabled | Direct stock/cache smoke needs this cloud's production-host allowlist; normal crew subscription needs G9 |
+| Case, shared board/night, Relighting and NPCs | Backend deployed; all 69 kit mixes and actual solo/four-human HTTP/SQL journeys pass | Resume G9 and prove authenticated browser journeys; RELIGHT_OPEN remains unset |
+| Festival and host tools | Deployed; festival enabled in waiting state; host actions require configured identity | Actual authenticated host/browser rehearsal; festival starts only after the first real Relighting |
+| Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
+| Reliability, tests, help/privacy, security/notices, devtools | Integrated for combined release checks | Final main rollout and public read-only verification |
+| Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
+| Spoiler-safe ChatGPT helper | Scope and consent/security contract recorded; feature off | Official registered website client approval, then implementation after G9 and a consented live proof |
+
+No routine merge permission is needed. The immediate external dependencies are the laptop for G9,
+the sports key in Vercel and official ChatGPT website-client registration. Teammate credit names,
+submission details and the physical rehearsal are needed before hand-in. Secrets and student
+numbers must stay out of chat and Git. Stabilization adds no database migration or paid service.
 
 **Sound is already built**, in frontend/src/audio/: original procedural title/finale music, sea/wind/rain
 ambience, footsteps, foghorns, dialogue/UI sounds, building cues and station hum. It starts after a
