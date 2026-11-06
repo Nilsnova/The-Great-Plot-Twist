@@ -37,6 +37,7 @@ from server.routes import (
     case,
     config,
     content,
+    crew_orders,
     crews,
     delete_me,
     duels,
@@ -185,6 +186,7 @@ def create_app(
     app.include_router(auth_exchange.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
     app.include_router(crews.router, prefix="/api")
+    app.include_router(crew_orders.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")

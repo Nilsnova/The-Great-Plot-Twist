@@ -124,7 +124,7 @@ class CaseSnapshot:
     solved_by: str | None = None
     world_outcome: str | None = None
     coins: int = 0
-    timber: int = 0
+    timber: int | None = 0
     parted_players: frozenset[str] = frozenset()
     night_no: int = 0
     night_started_second: int | None = None

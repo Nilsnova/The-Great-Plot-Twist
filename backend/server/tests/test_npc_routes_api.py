@@ -7,7 +7,6 @@ import pytest
 from server.game.case_snapshot import CaseSnapshot
 from server.game.npc_lines import load_bank, pick_line
 from server.game.npc_orders import NpcOrder
-from server.routes import crew_orders
 from server.tests.case_api_helpers import FRIEND_HEADER, HEADER, client_and_store
 from server.tests.case_rule_helpers import PLAYER
 from server.tests.helpers import assert_error
@@ -25,7 +24,6 @@ class OrderedSnapshot(CaseSnapshot):
 
 def npc_client(*, enabled=True, real_view=False):
     client, store, service, clock = client_and_store(enabled=enabled)
-    client.app.include_router(crew_orders.router, prefix="/api")
     store.current = OrderedSnapshot(**vars(store.current))
     if not real_view:
         service.view = lambda state, viewer: (
@@ -102,10 +100,14 @@ def post(client, body=None, headers=HEADER):
 
 def test_order_route_requires_case_flag_and_verified_login():
     client, store, _, _ = npc_client(enabled=False)
-    assert_error(post(client), 404, "feature_off")
+    response = post(client)
+    assert_error(response, 404, "feature_off")
+    assert response.headers["cache-control"] == "private, no-store"
     assert store.calls == []
     client, store, _, _ = npc_client()
-    assert_error(post(client, headers={}), 401, "unauthorized")
+    response = post(client, headers={})
+    assert_error(response, 401, "unauthorized")
+    assert response.headers["cache-control"] == "private, no-store"
     assert store.calls == []
 
 
@@ -131,7 +133,9 @@ def test_order_route_requires_case_flag_and_verified_login():
 )
 def test_order_shape_is_strict_and_does_not_accept_fill_values(extra):
     client, store, _, _ = npc_client()
-    assert_error(post(client, {**ORDER, **extra}), 422, "validation_error")
+    response = post(client, {**ORDER, **extra})
+    assert_error(response, 422, "validation_error")
+    assert response.headers["cache-control"] == "private, no-store"
     assert store.calls == []
 
 

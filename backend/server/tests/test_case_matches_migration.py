@@ -164,6 +164,8 @@ def test_the_store_only_calls_intent_functions():
         "finale_nightfall",
         "finale_take_post",
         "finale_signal",
+        "npc_fetch_pin",
+        "npc_man_light",
     }
 
     class NoCalls:
