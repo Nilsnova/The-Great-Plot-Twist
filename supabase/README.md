@@ -2916,3 +2916,23 @@ payouts, stale snapshots, role isolation, invalid bearings and replay preservati
 concurrent tests cover pin deduplication across crews and competing claims to the same post.
 After this file the expected totals are **27 public tables, 1 view, 16 public policies, 5 realtime
 policies, 17 wallet reasons, 39 project functions, 8 sequences and 6 public triggers**.
+
+## Case Phase 3 migration
+
+`migrations/20261106120000_relighting.sql` follows 080000. Reviewed MD5:
+`255250670ba94f84619bfb75fd1f6439`. It adds three server-only RLS tables without browser policies,
+grants or DELETE: service_role may select/update `world_state`, and select/insert `world_solves`
+and `wall_of_lights`. It replaces the existing invoker `case_after_solve` with the same signature
+and empty search path; execution remains service_role only.
+
+The singleton starts dark. Applying/replaying this file never relights it. An open solve locks the
+world row after crew/state/wallet work and conditionally changes dark to relit once. Concurrent
+solves receive consecutive numbers; later solves add at most 12 lights. Locked solves are
+permanently excluded, including a later direct server retry. Only stored contributing solvers can
+reach the Wall; deleting their account cascades its entry. Replaying Phase 1 preserves this hook.
+
+Scratch W1 to W9 cover real concurrent accusations, lock permanence, payout independence, capped
+later lights, deletion and replay. Independent review also exercised actual migration order under
+a non-superuser owner with broad default grants. Expected cumulative totals: **30 public tables,
+1 view, 16 public policies, 5 realtime policies, 17 reasons, 39 project functions, 8 sequences,
+6 public triggers**. Three additional server-only RLS/no-policy INFO notices are intentional.
