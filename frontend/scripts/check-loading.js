@@ -12,7 +12,7 @@ try {
   function walk(key){if(seen.has(key))return;seen.add(key);for(const dependency of manifest[key].imports??[])walk(dependency);}
   walk('index.html');report.initialChunks=[];report.initialJavaScript=0;report.initialGzip=0;
   for(const key of seen){const file=manifest[key].file;if(!file.endsWith('.js'))continue;const data=await readFile('dist/'+file);report.initialChunks.push(file);report.initialJavaScript+=data.length;report.initialGzip+=gzipSync(data).length;}
-  check(report.initialJavaScript<=21477,'Cold title JavaScript stays within the G5 baseline of 21,477 bytes');
+  check(report.initialJavaScript<=21080,'Cold title JavaScript stays within the G7 baseline of 21,080 bytes');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
   for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
   await stubIntro(page);await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();

@@ -6,7 +6,7 @@ export function createChart(container, world, travel, focusGame) {
   dialog.innerHTML = `<header><div><small>COASTAL SURVEY · 01</small><h2 id="chart-title">The Saltreach Isles</h2></div>
     <button class="chart-close" aria-label="Close sea chart">×</button></header>
     <div class="chart-scroll"><div class="chart-map"><img alt="Pixel sea chart with marked routes and a northern fog bank" src="${import.meta.env.BASE_URL}places/chart.png">
-    ${placeIds.map(id => { const p = places[id]; return `<button data-place="${id}" style="left:${p.chart[0] / 448 * 100}%;top:${p.chart[1] / 256 * 100}%"><i aria-hidden="true"></i><span></span></button>`; }).join('')}</div></div>
+    ${placeIds.map(id => `<button data-place="${id}"><i aria-hidden="true"></i><span></span></button>`).join('')}</div></div>
     <footer><p class="chart-status" role="status">Choose a landing.</p><label><input type="checkbox" class="fast-travel"> Fast travel</label></footer>
     <p class="chart-help">Tab or arrow keys to choose · Enter to sail · Esc to close</p>`;
   container.append(dialog);
@@ -14,6 +14,11 @@ export function createChart(container, world, travel, focusGame) {
   const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('viewBox','0 0 448 256');lines.setAttribute('aria-label','Partner journeys');lines.setAttribute('role','img');lines.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';dialog.querySelector('.chart-map').append(lines);
   function drawPartners(){lines.replaceChildren();for(const partner of partners){const line=partner.life?.chartLine;if(!line?.active)continue;const path=document.createElementNS(lines.namespaceURI,'line');for(const [key,value] of Object.entries({x1:line.from.x,y1:line.from.y,x2:line.to.x,y2:line.to.y,stroke:'#f3d58c','stroke-width':2,'stroke-dasharray':'4 3'}))path.setAttribute(key,String(value));const title=document.createElementNS(lines.namespaceURI,'title');title.textContent=`${partner.name}: ${line.label}`;path.append(title);lines.append(path);}}
   const buttons = [...dialog.querySelectorAll('[data-place]')];
+  buttons.forEach(button => {
+    const place = places[button.dataset.place];
+    button.style.left = `${place.chart[0] / 448 * 100}%`;
+    button.style.top = `${place.chart[1] / 256 * 100}%`;
+  });
   function close() { if (dialog.open) dialog.close(); focusGame(); }
   function refresh() {drawPartners();
     dialog.querySelector('img').src = `${import.meta.env.BASE_URL}places/chart${world.relit ? '-relit' : ''}.png`;

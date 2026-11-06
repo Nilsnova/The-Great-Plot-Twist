@@ -116,10 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**G7 complete on `feat/g7-living-world`, ready for Claude to integrate.** Live-captain/account presentation, rewards/keepsakes, partner actors/orders/journeys, Captain’s Log/hints/shortcuts and open Gull’s Rest are reusable screens behind the one schema-1 adapter. Gameplay controls are at least 16 px, case body 18 px and story 19 px.
+**G8 checkpoint 0 complete on `feat/g8-islet-harbor-demo`.** The production spoiler guard now checks elimination data and all reveal/closing lines; the strict self-only CSP works across public pages. Ending notes sit inside the ending/arrival card. Larger text remains 16 px controls, 18 px case body and 19 px story.
 
-- **Verified:** 284 tests / 47 files; four-entry build and 91-file spoiler guard; all 24 final verification commands. Golden path has 83 milestones across solo/NPC and four-human crews; chaos has 202 assertions across 96 refusals. Cold title 21,080 JS bytes (below G5); eight captains with night storm 60 FPS / 111 calls. Evidence: `frontend/captures/20261106_G7-Final-Verification.json`; contract/usage: `frontend/GRAPHICS.md`.
-- **Next:** Claude integrates and injects the real adapter, mirrors the additive fields/reasons/events and runs conformance; teammates replace their own credit placeholders. Live account/cloud/realtime/case services, physical devices, actual screen-reader software and deployed G7 were not verified here. No backend, online, deployment or reserved teammate files changed; no main merge or manual deploy.
+- **Verified:** 292 tests / 48 files; normal, Vercel and workshop builds; five CSP routes and nine production demo beats; loading, production, full-case, golden and chaos checks. Cold title 21,026 JS bytes. Evidence and contract: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C0/`.
+- **Next:** merge current main at checkpoint 1, then build event-driven islet scenery and the opt-in harbor bulletin; continue with the hook, presenter kit, merged-game regression and accessibility. Claude must mirror formed-deduction-only clears in the real adapter and apply the documented security headers. No main merge or manual deploy.
 
 ### S Story and Mystery (owner picked today)
 
@@ -415,6 +415,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-06, G8 checkpoint 0.** Codex for Nils strengthened the production spoiler guard (including elimination data), reduced the public build surface, verified strict CSP on five pages and kept ending notes inside their cards on `feat/g8-islet-harbor-demo`. 292 tests, three build variants, production tour, loading, case, golden and chaos checks pass; cold title 21,026 bytes. Checkpoint 1 continues after merging main.
 
 - **2026-11-06, G7 checkpoint 3 complete.** Codex for Nils finished Gull’s Rest, full-case/chaos checks, larger text and lifecycle/paid-consent polish on `feat/g7-living-world`. 284 tests, build/91-file spoiler guard and all 24 verification commands pass; 83 golden-path milestones and 96 fault cases/202 assertions; cold title 21,080 bytes, eight captains with storm 60 FPS/111 calls. Ready for Claude’s real-adapter integration; no merge or deploy.
 

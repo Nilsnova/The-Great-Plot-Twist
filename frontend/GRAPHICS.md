@@ -369,6 +369,8 @@ The exact `?demo=1` presenter now follows nine beats in 161 scripted seconds: in
 
 ### Case view-model details for the real adapter
 
+Only formed deductions may expose `clears` or `clearedTitles`. Unformed deductions return empty arrays for both; otherwise the unused table lets a player infer the solution before earning the evidence. The fake’s suspect-clearing lists use inline `import.meta.env.DEV` gates, so they do not ship in production.
+
 The adapter supplies all optional display prose. Missing prose is omitted; player-facing views do not invent findings or reveal lines. Use stable ids and labels, and make every supplied price/availability decision authoritative at dispatch time. A changed quote should be refused and shown again before any paid intent is accepted.
 
 | Section | Fields consumed by screens |
@@ -552,3 +554,13 @@ All 24 commands in `captures/20261106_G7-Final-Verification.json` passed. Each e
 The optional crew/emote material cache stays app-owned across places; after first use it accounts for 42 additional maps (69 textures after the tour), rather than a place leak. World round trips keep one place root and stable place allocations. Actor geometries and material clones are bounded, and application teardown releases the shared cache. These are settled short-run measurements, not a cross-device or prolonged-soak guarantee.
 
 Not verified: live GitHub/Supabase sign-in, actual shared rooms/cloud saves/case/ledger services, Safari/Firefox, physical phone/gamepad hardware, actual screen-reader software or a deployed G7 build. Claude integrates the branch and implements/injects the real adapter at `adapter/select.js`, mirroring the schema-1 additions and passing the same conformance suite. The local rehearsal never supplies real rewards, backend writes or reveal identity/prose. No graphics work remains within G7; real-service integration and the reserved teammate packages remain with their owners.
+
+## Spoiler-proof bundle (G8 checkpoint 0)
+
+The fake keeps its full case rehearsal in development. Production strips every suspect-clearing list with an inline Vite DEV gate; its public tour uses only safe highlights. Board views expose clears only for formed deductions. `scripts/check-spoilers.js` rejects suspect-clearing data in production JavaScript and fingerprints all twelve reveal, kit-closing, log-reader and last-beat lines. It reads the server-only case file at check time when present; committed numeric hashes provide the Vercel fallback without storing those words. Regenerate the fixture with `npm run art:fingerprints` when the authorised server content changes. Never paste that content into this folder.
+
+`npm run build` also runs the spoiler guard. A deliberately ungated build failed the new elimination check; the gated build passes. Local builds retain the manifest for loading checks; `VERCEL=1` omits it. `case-lab.html` is built only with `CASE_LAB=1`, while the dev server still serves it normally.
+
+The preview server uses the proposed strict self-only CSP, including `base-uri 'none'`. Map positions use CSSOM rather than HTML style attributes, and auth-check styles live in an external sheet. `npm run test:csp` checks the title, production tour, art library, UI gallery and auth diagnostic for policy violations. No extra CSP directive is required by these screens. Trapped-ending decision and twist notes now appear inside the ending or arrival card, at 19 px, without changing story content.
+
+Checkpoint verification: `npm test` passed 292 tests in 48 files. Normal, `VERCEL=1`, and `CASE_LAB=1` builds passed; the normal build scans 89 text files against twelve protected lines. `node scripts/check-csp.js` passed five routes and all nine production-tour beats with APIs unavailable. `node scripts/check-loading.js` measured 21,026 cold-title JS bytes (9,812 gzip), below the G7 ceiling of 21,080. `node scripts/check-production.js`, `node scripts/check-case.js`, `node scripts/check-golden-path.js` and `node scripts/check-chaos.js` passed; the last two retain the complete development-only case rehearsal. Evidence is in `captures/20261106_G8-C0/` and `captures/20261106_G8-CSP-Checks.json`. Live services and actual screen readers have not been verified.

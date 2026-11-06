@@ -1,0 +1,48 @@
+/* Team sign-in check page styling. Loaded as a same-origin file under its CSP. */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #3d7371;
+  color: #e7d6a6;
+  font: 16px/1.6 'Courier New', monospace;
+}
+.panel {
+  width: 100%;
+  max-width: 34rem;
+  padding: 24px;
+  background: #263b30;
+  border: 3px solid #9a8657;
+  box-shadow: 6px 6px #14251c;
+}
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: 1px; color: #b4c48e; }
+h1 { margin: 12px 0; font-size: 28px; line-height: 1.2; }
+.note { margin: 0 0 12px; font-size: 14px; color: #c7c8a0; }
+.small { font-size: 13px; color: #a5b584; }
+.status {
+  min-height: 4em;
+  margin: 20px 0;
+  padding: 12px;
+  background: #1b2c23;
+  border: 2px solid #6d7854;
+  font-weight: bold;
+}
+.actions { margin: 0 0 12px; }
+.button {
+  display: inline-block;
+  margin: 0 8px 8px 0;
+  padding: 10px 14px;
+  border: 2px solid #d1b97d;
+  background: #59633a;
+  color: #fff0c7;
+  font: bold 14px 'Courier New', monospace;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 2px 2px #12291c;
+}
+.button:hover { background: #6c7545; }
+.button:focus-visible { outline: 2px solid #efcf80; outline-offset: 4px; }
+[hidden] { display: none !important; }

@@ -1,17 +1,89 @@
 {
-  "source": "CASE-FILE.md section 12, draft read-only on 2026-11-05",
+  "source": "Server reveal section: reveal, closing, log-reader and last-beat lines. Hashes only.",
   "fingerprints": [
     {
-      "label": "unmasking",
-      "prefix": "You pull back ",
+      "label": "reveal-1",
       "length": 155,
+      "headLength": 14,
+      "headHash": 359115071,
       "sha256": "c975f744c8046422196fa7f7ceda9f2c62c92caed26da0666d15f7894d1a9ffa"
     },
     {
-      "label": "twist",
-      "prefix": "Plot twist: th",
+      "label": "reveal-2",
       "length": 67,
+      "headLength": 14,
+      "headHash": 2168645474,
       "sha256": "ea417d0af935cf9578f167fc9ac5d67b683275417f11324cd3df8bb8fadfe0b0"
+    },
+    {
+      "label": "reveal-3",
+      "length": 54,
+      "headLength": 14,
+      "headHash": 3730633232,
+      "sha256": "710e53d57cf15d18a40589dda7f50a78a005206f2b9b19ce5ab6074fa3cd0587"
+    },
+    {
+      "label": "reveal-4",
+      "length": 76,
+      "headLength": 14,
+      "headHash": 794020441,
+      "sha256": "2ba878e46363e62b02a51fd48cdd1fd9eb73faf0371a403c4c55d46f82edc433"
+    },
+    {
+      "label": "reveal-5",
+      "length": 58,
+      "headLength": 14,
+      "headHash": 2105310444,
+      "sha256": "4e4c95f6209a96589b599e46f1fad5f19174d5b0c751f7702cbbb91f889a9580"
+    },
+    {
+      "label": "reveal-6",
+      "length": 71,
+      "headLength": 14,
+      "headHash": 3396000519,
+      "sha256": "79b33809bdfdb22f05306cc959af6bd80e82cadfa161d4b6af06080865be3f40"
+    },
+    {
+      "label": "closing-true_keeper",
+      "length": 266,
+      "headLength": 14,
+      "headHash": 3402079475,
+      "sha256": "4772bcd4c7272250c7f1e8d7a0db44ba089a1d4842d8397bd2ee901bbf526836"
+    },
+    {
+      "label": "closing-witness",
+      "length": 150,
+      "headLength": 14,
+      "headHash": 2999718611,
+      "sha256": "f859fb8c939da4057395a0e5badf238fde42f52765c66011e1dd4900ec52b462"
+    },
+    {
+      "label": "closing-informant",
+      "length": 146,
+      "headLength": 14,
+      "headHash": 571551096,
+      "sha256": "777d0d23106c61f5350e1b3c9f81abb35793d48e360c47477d700e00360d305e"
+    },
+    {
+      "label": "closing-stranger",
+      "length": 201,
+      "headLength": 14,
+      "headHash": 2801786997,
+      "sha256": "cf3975ceea5f1371cfbefb89f281b68e0fbde6afbc03f84b9bf2794bd9c351c5"
+    },
+    {
+      "label": "log_reader_line",
+      "length": 96,
+      "headLength": 14,
+      "headHash": 939006263,
+      "sha256": "1ad9265bc1859c6bc86af5b002014c5aa67ba87af5f628ae0c39833ab62dbf4e"
+    },
+    {
+      "label": "last_beat",
+      "length": 123,
+      "headLength": 14,
+      "headHash": 2294603712,
+      "sha256": "bc261bd799dcee6da3caed1f51126d3e960a195410a5972bc60ebf0ddedb3806"
     }
   ]
 }

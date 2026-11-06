@@ -30,7 +30,7 @@ export function pairCards(state,a,b) {
 }
 export function boardView(state) {
   const held=new Set([...Object.values(state.found).flat(),...state.pins.map(pin=>pin.cardId)]),viewer=playerSeat(state);
-  const deductions=deductionData.map(item=>({...item,complete:state.deductions.includes(item.id),finding:'Finding recorded.',clearedTitles:item.clears.map(id=>suspectTitles[id])}));
+  const deductions=deductionData.map(({clears,...item})=>{const complete=state.deductions.includes(item.id);return {...item,complete,finding:'Finding recorded.',clears:complete?clears:[],clearedTitles:complete?clears.map(id=>suspectTitles[id]):[]};});
   return {pinHighlights:state.pins.map(pin=>({id:pin.id??`${pin.cardId}-${pin.seat}`,cardId:pin.cardId,seat:pin.seat,at:pin.at??0})),cards:[...held].sort().map(id=>{
     const pins=state.pins.filter(pin=>pin.cardId===id),used=deductions.some(item=>item.complete&&item.cards.includes(id));
     return {id,title:cardTitles[id],body:null,state:used?'used':pins.length?'pinned':'new',
