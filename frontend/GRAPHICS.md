@@ -1,6 +1,6 @@
 # Saltreach Isles graphics
 
-The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. G6 puts the case screens behind one adapter; G7 adds account/presence, rewards, partner life, the log and complete local-case checks. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
+The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. G6 puts the case screens behind one adapter; G7 adds account/presence, rewards, partner life, the log and complete local-case checks. G8 draws accepted islet builds, the supplied harbor day and distant signal, and adds the class presenter kit, accessibility audit and code walkthrough. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
 ## Run, controls and readability
 
@@ -25,7 +25,7 @@ The close camera follows the player and keeps extra headroom near the Lighthouse
 
 ## Art, coordinates and ownership
 
-The library has **190 original sprites and 10 backgrounds/charts**. ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
+The library has **194 original sprites and 10 backgrounds/charts** (204 generated PNGs). ASSETS.md records every new sprite, its source and dimensions. Rebuild with `python3 scripts/pixel_art/generate.py` using Pillow for offline authoring only. No external image, font or model is used.
 
 One world unit equals **16 native pixels**. Nearest sampling, no mipmaps/antialiasing, integer CSS magnification, snapped art and discrete camera zoom preserve the grid. At 1440 × 900 the native framebuffer is 480 × 300 displayed at 3×; DPR does not enlarge it. The 448 × 256 chart uses integer magnification. Low quality reduces rain/waves and uses a short flat passage/fade fallback.
 
@@ -140,7 +140,7 @@ The preceding measurements are the G2 baseline. Current G4/S2 evidence is record
 
 main.js owns the small title bootstrap; game.js wires the loaded world and frame loop. world/places/registry.js owns identifiers; manager.js owns travel; factory.js, lighthouse.js, settlement.js and home.js compose places; layouts.js and surfaces.js hold plain placement/coast data; resources.js owns disposal. ui/chart.js, sailing.js and readability.css provide accessible travel and larger text. scripts/pixel_art contains all editable art; tests/place*.test.js and scripts/check-world.js verify the new contracts.
 
-Current branch is feat/g6-case-on-screen, created from origin/main 3ca7d38 after Claude merged G5. Root remains the sole writing agent; subagents review read-only. G4/S2 is already merged into main. G6 changes only frontend/ plus the authorised G-lane Next steps and one Log entry in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Incoming backend, API weather client, story engine, account, infrastructure and secret content remain unchanged.
+Current branch is `feat/g8-islet-harbor-demo`, created from finished G7 and merged with `origin/main` at `8ff24cc77ab077e5d24fee297d568558315f6ed5`. The coordinator owns contracts, composition, shared hooks, scripts and these graphics/asset docs; delegated streams own disjoint folders. G8 changes only frontend files plus the authorised G-lane Next steps and checkpoint Log entries in docs/STATUS.md. Claude integrates; this branch does not merge into main or deploy. Transport, the real adapter, story data/engine, backend and Claude-owned panels are outside this work. See [HOW-IT-WORKS.md](HOW-IT-WORKS.md) for the class walkthrough, ten-file reading path and twelve explain-back cards.
 
 The earlier G2 check covered 77 PNGs; the G4 and G5 sections below record their larger libraries and current verification separately. Checks in this file are scoped to graphics. Backend changes are owned and verified by their lanes.
 
@@ -624,7 +624,7 @@ Only `?demo=1` enables the local, read-only tour. It has nine beats totalling **
 | H | Beat list |
 | N | Speaker notes |
 
-The tour consumes these keys before intro choices and gameplay. Escape otherwise retains the shared top-panel → cinematic → pause rule. The black screen is a native top-layer dialog, so it covers an open board or intro. `demo/speaker-notes.js` holds two or three short editable talking points per beat. Presenter tools stay in the active dialog’s layer and remain reachable while its content scrolls.
+The tour consumes these keys before intro choices and gameplay. Escape otherwise retains the shared top-panel → cinematic → pause rule. The black screen is a native top-layer dialog, with a scoped blanking class that keeps later auto-opened dialogs and their backdrops hidden until restoration. Ending or disposing the tour removes the class. Tour steps and cinematic timelines use monotonic visible elapsed time, rather than the capped physics delta. P and hidden-tab time do not count; the cinematic completion watchdog pauses and resumes with them. Physics and the fake adapter retain their existing capped updates. `demo/speaker-notes.js` holds two or three short editable talking points per beat. Presenter tools stay in the active dialog’s layer and remain reachable while its content scrolls.
 
 `?demo=1&record=1` fixes the output frame and renderer at **1920 × 1080**, hides the cursor and trims optional HUD details. Use a 1920 × 1080 browser capture viewport to include native dialogs in the recording. `record=1` alone does nothing. The optional Exchange beat is omitted: the reviewed L4 README documents a development local fake, with no production-safe tour adapter yet.
 
@@ -639,3 +639,75 @@ At checkpoint start, fetched and merged main again; `origin/main` remained `8ff2
 Measured after settling: recording/presenter with eight local captains and board, **60 FPS**, **17.5 ms p95**, **107 calls**, **212 triangles**, **106 geometries**, **59 textures**, **17.2 MB reported heap**. Home life: 61 FPS / 44 calls; harbor life: 60 FPS / 52 calls. Three return trips kept the same geometry/texture counts and one active place root. Cold title: **21,060 JS bytes / 9,963 gzip**. A short-lived loading overrun was fixed with clearer disconnected-state copy; the budget was not raised. The browser pass also caught and fixed a component-versus-element caching error and a presenter panel placed below long modal content.
 
 Evidence: `captures/20261106_G8-C2/`, `captures/20261106_G8-Presenter-Checks.json`, `captures/20261106_G8-Hook-Checks.json`, `captures/20261106_G8-Harbor-Life-Checks.json`. Not yet verified at this checkpoint: the uninterrupted 170-second run, the final combined regression/accessibility pass, real server transports/panels and physical devices. Those frontend checks continue in checkpoint 3; actual VoiceOver and noninstalled browser engines require the documented manual rehearsal.
+
+
+## Accessibility (G8)
+
+`npm run test:a11y` runs `scripts/check-a11y.js` with installed Chrome, without new packages or browser downloads. Its pure colour, contrast, size, overflow, target and name helpers are tested in `tests/a11y-helpers.test.js`. The browser report distinguishes measured DOM properties from manual screen-reader and pixel/canvas inspection. Controls keep visible focus, natural DOM order and the shared Escape rule: close the top panel, return to the canvas, and open Pause only on a later Escape.
+
+### Fifteen-minute VoiceOver rehearsal
+
+This is a manual script for Nils, not a claim that a real screen reader has passed. Use the local rehearsal `/?case=local`, with recorded/fake data and no live account. In the issue notes, record device/OS/browser, screen and control, expected and heard words, and the key or gesture. Leave any destructive confirmation unconfirmed.
+
+| Minute | Safari on the Mac (first eight minutes) | Expected result |
+| --- | --- | --- |
+| 0–2 | Turn on VoiceOver with Cmd+F5. Read the title, rotor headings, New game, Continue, Settings and account/save controls. Tab forward and back. | App/title and each control have meaningful names. Continue's disabled state and the save status are spoken. Focus follows the visual order and is visible. |
+| 2–4 | Open Settings. Read and change quality, one volume, text speed, reduced motion and hints; close and reopen. | Each control announces its label, current value and choices. The changed preference remains. Back returns to the opener. |
+| 4–6 | Start the original intro. Read speaker, story, Show full text, numbered choices, inventory and move log. Finish an ending and inspect arrival. | Full text can be read without waiting for the typewriter. Choices have distinct names, inventory/actions are ordered, and ending notes are inside the card. |
+| 6–8 | Open Crew and Board. Move through headings, seats, card titles, pin controls and pair selectors. Tab past the last control, then press Escape. | Focus stays in the dialog, controls identify their card/seat, the top panel closes and focus returns to the game canvas. Pause appears only on a second Escape. |
+
+Continue for seven minutes in iPhone Safari with VoiceOver enabled in Accessibility settings. Use swipe-right/left and double-tap, plus the rotor's headings and form controls.
+
+| Minute | iPhone steps | Expected result |
+| --- | --- | --- |
+| 8–10 | Read title and account controls in portrait. Open Settings and the controls overview. | All controls remain readable, have at least 44 × 44 CSS-pixel targets, and can be reached without sideways scrolling. |
+| 10–12 | Open Account and saves. Read save choices, local-only/expired/offline feedback and deletion confirmation, without confirming deletion. Close it. | Names, states and errors are spoken in context; local progress is clearly distinguished. Focus returns to a useful place. |
+| 12–15 | Inspect Search, Partners, Finale, Log and Rewards. Open the enabled fake bulletin, read Lisbon times and weather credit, and opt into the hook's spoken short/short/long sequence. | Timers and outcomes are available as words. Charts and partner travel have labels/captions. The pattern only speaks after a tap and stops when closed. Reduced motion gives still markers. |
+
+### Other browsers and devices
+
+No extra browser engines are downloaded by checks. If Playwright WebKit or Firefox is already installed, run the same title → intro → crew/board → chart/travel → finale-skip → bulletin journey with it and record the engine/version. Otherwise Nils should rehearse that journey manually in Safari and Firefox, including keyboard focus, native dialogs, Escape, sound after the first gesture, reduced motion and 320 CSS-pixel layout. Physical gamepad, touch steering and actual VoiceOver speech remain separate manual checks. The automated Chrome report cannot certify them.
+
+
+## G8 verification
+
+Checkpoint 3 fetched main again; it remains `8ff24cc77ab077e5d24fee297d568558315f6ed5`. The G7 branch is the base, and main was merged at checkpoint 1 (`35f4d3e`). Claude's islet, Exchange, desk and arena panels and real transport/adapter are not present on this main snapshot. No team-owned panel, transport, backend, story data, engine, infrastructure or credit row was changed. The golden path explicitly records `panelVerified:false`: it constructs the station through the accepted `islet_changed` event, verifies it in the world and uses it as the third finale light. The panel itself still needs Claude's combined-game test after integration.
+
+The complete command record is [the 31-command verification report](captures/20261106_G8-C3-after-Verification.json). Run it with `npm run test:g8 -- --phase=after --keep-going`; `--resume` reruns failed commands and retains successful results. The report records the exact command, exit code, duration and log for every command. All **31 commands pass**, including **345 Vitest tests in 58 files**, the production build/strong spoiler guard, the 204-PNG generator, every existing browser check, and the islet, bulletin, hook, harbor-life, presenter and accessibility checks. The final build scans 97 text files against twelve protected lines and checks for elimination data. Final confirmation commands/logs are in [final-confirmation.json](captures/20261106_G8-C3-after/final-confirmation.json).
+
+The uninterrupted nine-beat tour lasts **170,593 ms** with every API returning 503; its limit remains 210,000 ms. It attempts only the existing weather GET, writes no journal/backend state, emits no intro completion, restores the departure state, skips each beat within 238 ms in that run, and settles repeated End during travel. Production presenter checks cover recording dimensions, notes, navigation, P holding an active cinematic, and B remaining black when another dialog opens. A queued native `close` event after rapid restore/reblank is ignored when the blank dialog has already reopened. Escape restores the later dialog. Cinematics still emit exactly one started and terminal event; the three-lights sample completes in 8,017 ms including loading.
+
+The extended golden path passes **91 checks** across solo/NPC and four-human crews, including New game from solved Gull's Rest. Chaos passes **210 checks with 96 injected intent failures**, plus bulletin off/unavailable/offline, missing tonight data and no islet event. A missing tonight remains a missing forecast, and a missing building event leaves the cabin-only world unchanged. Production CSP passes the title, tour, art library, UI gallery and auth-check page, with no violation.
+
+### Measured budgets
+
+Installed Chrome 157, Intel Iris Plus 655 through ANGLE Metal, sequential GPU checks. Values are samples on this Mac; they are not a frame-rate promise for every classroom laptop.
+
+| Sample | FPS | Calls | Triangles | Geometry / textures |
+| --- | ---: | ---: | ---: | --- |
+| Islet, day 1280 px | 60 | 44 | 82 | 45 / 16 |
+| Islet, night 1280 px | 60 | 43 | 82 | 46 / 17 |
+| Islet, night 375 px | 60 | 46 | 167 | 48 / 17 |
+| Eight captains | 60 | 109 | 216 | 106 / 56 |
+| Eight captains, night storm after warm-up | 60 | 112 | 220 | 107 / 62 |
+| Recording presenter with board | 60 | 105 | 208 | 104 / 61 |
+| Gull's Rest, desktop / phone | 60 / 59 | 34 | 74 | 33 / 23 |
+| Longer Lighthouse travel smoke, before / after | 57 / 47 | 97 | 192 | 96 / 27 |
+
+Presenter p95 is **19.0 ms**, reported heap **13.2 MB**. Three repeat islet/harbor trips retain one place root and identical owned resource counts: islet 43 geometries/16 textures, harbor 50/25, each at 60 FPS. The earlier raw baseline records lower FPS while the Mac was under load; the frame thresholds and 150-call ceiling were not lowered. Rain/storm transition measurements are recorded separately from steady samples. The performance panel continues to offer low quality after five seconds below 45 FPS, with an explicit tap required.
+
+Cold title JavaScript is **21,052 bytes / 9,944 gzip**, below the unchanged **21,080-byte** G7 ceiling. Caption placement loads only on the first cue. Captions use 18 px, sit above the measured world controls/prompt, and appear in flow below a modal heading so they do not cover its controls. World and modal caption placement have browser assertions and 375 px captures.
+
+### Accessibility and readability evidence
+
+`npm run test:a11y` passes **22 screen contexts**, **66 viewport samples** (1280, 375 and 320 CSS px), **200 actual Tab steps** and **1,522 text measurements**. Minimum computed CSS text contrast is **4.694:1**. It checks names and duplicate button names, font floors, DOM reading/Tab order, visible focus, modal traps/Escape, 44 px targets at 375 px, and overflow at 320 px. Intro, crew and account return focus to the canvas; Settings Escape returns to the title. Reduced motion has no running DOM animation and no fireworks. The report has zero browser errors, external requests or measured failures: [accessibility results](captures/20261106_G8-C3-after/20261106_G8-A11y-Checks.json).
+
+The pass corrected contextual names for pin/search/order/post/lock/tip controls, named partner route SVGs, undersized body/metadata text, 42 px targets, native disclosure focus trapping, phone board/settings overflow, quiet-button hover contrast, and caption overlap. It preserves visible labels and data-driven intents. Captures were inspected at laptop and phone sizes. Actual image/canvas contrast, visual flash analysis, VoiceOver, physical phones/gamepads, Safari and Firefox remain manual; this machine has only Playwright's Chromium shell installed. No engines or packages were downloaded. Use the rehearsal above.
+
+### Readability comparison and handoff
+
+[HOW-IT-WORKS.md](HOW-IT-WORKS.md) contains the map, hotspot flow, view/intent boundary, ownership/render budgets, spoiler guard, all check commands, ten-file reading path and twelve explain-back cards. The 15 function readability pass covers bridge `ensure/onView/open`, manager `goTo/interact`, `createSettlement`, islet validation/store, hook normalization/flash advancement, harbor life, audio creation/cues and tour `enter/stop`. Each has a short purpose comment and clearer statements. Main/game were not reformatted; game has only the small cinematic pause hook at this checkpoint. The baseline's 331 tests and 90/210 golden/chaos checks, followed by the final 345 tests and 91/210 checks, retain the same rules and outcomes. Reentrant islet listener reads and flash arithmetic grouping are preserved.
+
+Raw baseline and corrected-run logs remain under `captures/20261106_G8-C3-before/` and the final run's `iterations/`; failed attempts are retained. QA repairs include owned ephemeral dev/preview servers with awaited cleanup, standard Node HTTP readiness reads, waiting for the visible arrival hand-off, selecting either station lighting pose, recording the short landing fade as it happens, and waiting for the lazy first caption. A world run interrupted by a source update was rerun after the app was frozen. These fixes do not weaken outcome, frame, CSP or spoiler assertions.
+
+Claude must mirror schema-1 `bulletin` with its off default, nested `log.observations`, and earned-only deduction `clears/clearedTitles`; the documented `islet_changed` payload is unchanged. Screens still make no fetch/online imports or rule decisions. Remaining integration work is the live adapter/services and Claude-owned panels, including their Escape checks and local build flow. The optional Exchange tour beat remains omitted until its production-safe rehearsal exists. Do not merge or deploy this branch from this lane.

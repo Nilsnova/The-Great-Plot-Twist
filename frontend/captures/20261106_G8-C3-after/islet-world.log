@@ -1,0 +1,6 @@
+✓ Only the cabin is shown before a good islet_changed answer
+✓ Built plots appear, locked plots stay hidden, and only the unlit station sprite appears by day
+✓ Built station switches to its lit sprite at night
+✓ Empty and locked plot markers replace scenery after the event removes a build
+✓ Latest islet state remains available after leaving and returning
+✓ No browser errors or external requests

@@ -116,10 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**G8 checkpoint 2 complete on `feat/g8-islet-harbor-demo`.** The supplied Chapter 2 signal has a safe flash pattern, still reduced-motion marker, opt-in spoken sequence and generic log observation. Original harbor audio/life and a nine-beat 170-second presenter tour, notes, recording mode and performance panel are integrated. Text remains 16 px controls, 18 px case body and 19 px story.
+**G8 complete on `feat/g8-islet-harbor-demo`.** Accepted islet builds, the opt-in Lisbon-time bulletin/tonight chip, safe distant signal, original harbor sound/life and the nine-beat presenter kit are ready. Accessibility fixes keep controls at 16 px, case body at 18 px and story/captions at 19/18 px. The class walkthrough includes the architecture, ten-file reading path and twelve explain-back cards.
 
-- **Verified:** 330 tests / 55 files; build/spoiler guard; hook, ambient/audio, production presenter, tour skipping, loading and strict-CSP checks. Presenter/board: 60 FPS, 17.5 ms p95, 107 calls; three place trips retain stable resources. Cold title 21,060 bytes. Evidence and contract: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C2/`.
-- **Next:** fetch/merge main for checkpoint 3; run the combined game, extend golden/chaos coverage, complete accessibility and the class walkthrough/readability pass. Main remains `8ff24cc`; Claude panels/services were still absent. Real adapters must mirror `bulletin` plus `log.observations`, keep open-world features off until enabled and expose earned-only clears. No merge into main or manual deployment.
+- **Verified:** 345 tests / 58 files; build/spoiler guard; all 31 combined commands, including 91 golden-path checks, 210 chaos checks and 22 accessibility contexts. Tour 170.6 seconds with APIs down; cold title 21,052 bytes. Eight captains/night storm: 60 FPS / 112 calls. Evidence and limits: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C3-after/`.
+- **Next:** Claude integrates and mirrors schema-1 `bulletin`, `log.observations` and earned-only deduction clears. Main remains `8ff24cc`; real adapters/services and Claude-owned panels still need combined integration checks. Nils rehearses the documented VoiceOver/Safari/Firefox/physical-device script. The optional Exchange tour beat waits for a production-safe rehearsal.
 
 ### S Story and Mystery (owner picked today)
 
@@ -415,6 +415,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-06, G8 checkpoint 3.** Codex for Nils completed the combined regression, phone/keyboard/contrast fixes, visible-time presenter/cinematic lifecycle and class walkthrough on `feat/g8-islet-harbor-demo`, against main `8ff24cc`. All 31 commands pass: 345 tests, build/spoiler/CSP, 91 golden-path checks, 210 chaos checks and 22 accessibility contexts; the offline tour runs in 170.6 seconds and cold title is 21,052 bytes. Claude-owned panels/live services and physical screen-reader/device checks remain integration/manual work; contracts and evidence are in `frontend/GRAPHICS.md`.
 
 - **2026-11-06, G8 checkpoint 2.** Codex for Nils added the supplied safe Chapter 2 signal/notice/log view, original harbor audio/life and the 170-second presenter kit with keyboard controls, notes, recording and performance overlay on `feat/g8-islet-harbor-demo`; main remains `8ff24cc`. 330 tests, build and six targeted browser commands pass; presenter 60 FPS/17.5 ms p95/107 calls, cold title 21,060 bytes. Full combined regression, accessibility and class documentation continue in checkpoint 3.
 
