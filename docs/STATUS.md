@@ -35,7 +35,10 @@ Live health/config are 200/private,no-store; build identity matches the main mer
 122 JS/CSS assets. Help, privacy, host and software notices are 200. See the
 [stabilization proof](handoff/stabilization-release.md).
 
-Normal browser mystery/multiplayer still await **G9, paused until Nils' laptop returns**; backend
+G9 cloud work is active. Its [current server-readiness checklist](handoff/g9-cloud-readiness.md)
+records resolved requests and merge checks without changing the in-flight G9 source.
+
+Normal browser mystery/multiplayer still await **G9, now active in a cloud session**; backend
 journey proofs do not establish a connected browser session.
 
 External needs: sports provider key directly in Vercel, official approved ChatGPT website client,
@@ -162,7 +165,7 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**Current next:** resume G9 when the laptop is available and perform the physical-device and presentation rehearsal. The G8 notes below are historical.
+**Current next:** review the active cloud G9 checkpoint and prove its merged browser journey, then perform the physical-device and presentation rehearsal. The G8 notes below are historical.
 
 **G8 complete on `feat/g8-islet-harbor-demo`.** Accepted islet builds, the opt-in Lisbon-time bulletin/tonight chip, safe distant signal, original harbor sound/life and the nine-beat presenter kit are ready. Accessibility fixes keep controls at 16 px, case body at 18 px and story/captions at 19/18 px. Provider/licence blocks are removed from gameplay; credits are reached only through Settings. The class walkthrough includes the architecture, ten-file reading path and twelve explain-back cards.
 
@@ -271,7 +274,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
-**Next server step:** resume G9 when available and prove the normal browser journey; configure/verify sports when its key is supplied. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused; sports activation awaits its provider key and current-source proof.
+**Next server step:** support the active cloud G9 work and prove its merged normal browser journey; configure/verify sports when its key is supplied. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring is active in the cloud; sports activation awaits its provider key and current-source proof.
 
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
@@ -467,6 +470,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** Nils confirmed G9 is now working in the cloud. Published [current G9 readiness](handoff/g9-cloud-readiness.md): ten older server requests are ready, temporary-auth retirement stays coupled to successful in-game sign-in, and current CSP/Vite/title-budget merge issues are identified. No sign-in/Relighting activation or G9 source change.
 
 - **6 Nov 2026, Codex for Nils:** pushed stabilization branch a2736a1 and main cb42da3; production dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51 READY. Build stamp matches the merge; health/config/help/privacy/host/notices return 200. Seven flags unchanged; no new live migration or gameplay writes.
 
