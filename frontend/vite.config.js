@@ -2,7 +2,8 @@
 import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {proposedCsp} from './scripts/csp-policy.js';
+import {readFileSync} from 'node:fs';
+import {buildSecurityHeaders} from './scripts/security-headers.js';
 import {createBuildIdentityPlugin} from './scripts/build-identity.js';
 import {resolveBuildStamp} from './scripts/build-stamp.js';
 function gitText(args){
@@ -14,10 +15,10 @@ const buildStamp=resolveBuildStamp({
  readGitSha:()=>gitText(['rev-parse','--short','HEAD']),
  readDirty:()=>Boolean(gitText(['status','--porcelain']).trim()),
 });
-export const previewSecurityHeaders={
- 'Content-Security-Policy':proposedCsp,
- 'X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin',
-};
+const platformConfig=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
+export const previewSecurityHeaders=buildSecurityHeaders(
+ process.env.VITE_SUPABASE_URL||undefined,{platformConfig},
+);
 export default defineConfig({
  define:{__BUILD_STAMP__:JSON.stringify(buildStamp)},
  plugins:[createBuildIdentityPlugin(buildStamp)],

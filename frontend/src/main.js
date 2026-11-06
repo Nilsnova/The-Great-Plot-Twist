@@ -5,7 +5,7 @@ import './ui/kit/kit.css';
 import './ui/shell.css';
 import {createShell} from './shell/controller.js';
 import {createLazyAccountHost} from './shell/lazy-account.js';
-import {createAccountSummary} from './screens/account/summary.js';
+import {createLazyAccountSummary} from './shell/lazy-summary.js';
 import {createClientAdapter} from './adapter/select.js';
 async function sendCaseIntent(...args){return (await import('./adapter/intent.js')).sendCaseIntent(...args);}
 import {introJournal} from './story/intro-journal.js';
@@ -29,7 +29,7 @@ async function send(name,...args){
   if(!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
   return result;
 }
-const summary=createAccountSummary({send,openAccount:()=>accountHost.open()});
+const summary=createLazyAccountSummary({send,openAccount:()=>accountHost.open()});
 summary.update(adapter.read());
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
@@ -59,7 +59,7 @@ shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>
   resetInput(){},focus,openAccount:()=>accountHost.open(),onEscape,
   demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();return (await import('./settings/view.js')).createSettingsView(adapter.read());},
   hasOverlay:()=>loading||accountHost.active||!!runtime?.hasOverlay(),
-  onState(mode){if(mode==='title')playRequest++;audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
+  onState(mode){if(mode==='title'){playRequest++;summary.start();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
   onPlay:play,async onDemo(){const game=await loadGame();game?.startDemo();},
 });
 function updateAccount(view){

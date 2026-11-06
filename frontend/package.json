@@ -43,7 +43,9 @@
     "test:build-stamp": "npm run build && node scripts/check-build-stamp.js",
     "test:problem-report": "npm run build && node scripts/check-problem-report.js",
     "test:call-states": "node scripts/check-call-states.js",
-    "test:csp:inventory": "npm run build && node scripts/check-csp-inventory.js"
+    "test:csp:inventory": "npm run build && node scripts/check-csp-inventory.js",
+    "print:headers": "node scripts/security-headers.js",
+    "test:title-start": "node scripts/check-title-start.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

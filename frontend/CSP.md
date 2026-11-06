@@ -73,7 +73,7 @@ form-action 'self';
 frame-ancestors 'none'
 ```
 
-`frontend/scripts/csp-policy.js` exports that same policy for Vite preview and browser assertions. Preview also sends `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`. These are test headers, not evidence of the deployed configuration. `frame-ancestors` belongs in an HTTP header.
+`frontend/scripts/security-headers.js` owns the parameterized policy and header set; `csp-policy.js` keeps a no-address compatibility export. Preview also sends `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`. These are test headers, not evidence of the deployed configuration. `frame-ancestors` belongs in an HTTP header.
 
 Keep `public/auth-check.html` and its own meta policy unchanged. Both policies apply together; widening the HTTP header cannot relax that page's same-origin-only `connect-src` or its `form-action 'none'`. It does not need to fetch Supabase directly for its existing redirect flow. Do not add GitHub to `connect-src` just for report links or OAuth navigation.
 
@@ -86,3 +86,24 @@ Claude should enable the HTTP header after integration, then verify deployed res
 The static inventory is lexical. It cannot prove the absence of computed URLs or aliased dynamic-code calls; manual source inspection and the enforced-policy browser checks provide the additional evidence. An origin's appearance in the literal allowlist does not grant it a connection allowance: the actual CSP permits only self and the two exact Supabase connection origins.
 
 Final evidence is in `captures/20261106_G9-4/`: 360 unit tests, build/spoiler guard, four zero-inline HTML pages, enforced-preview page/tour checks with no policy violations or external requests, and the combined `Verification.json`. The first identity check's Chrome process stalled in `browser.newPage`; its log is retained and the clean restart passes. A retry assertion was corrected to allow a successful confirmation notice while requiring the failure action to clear.
+
+
+## Security headers (G9)
+
+`buildSecurityHeaders(supabaseUrl?, {platformConfig})` has a self-only connection list without an address.
+A bare validated `https://<single-label>.supabase.co` origin adds only that HTTPS origin and its WSS pair.
+Paths, ports, credentials, fragments, queries, non-HTTPS and lookalike hosts are refused. No public build
+value other than the Supabase origin affects headers. The builder never reads a key.
+
+Vite preview and the CSP check use this same set. When `vercel.json` has a supported catch-all header
+entry, its exact enforcing/report-only mode and values are checked and preserved; incompatible shapes
+or policy drift fail visibly. At main `c26f303`, that entry is absent, so the strict proposal applies.
+`npm run print:headers -- https://uqcjihigqjgyuafrfbnp.supabase.co` prints the proposed Vercel block.
+Claude owns adding it: report-only first, enforced before `flags.sign_in` becomes true.
+
+Checkpoint 0 validates the base proposal and the exact address pair, selection table, HTML/CSS title
+stamp, report privacy and the built pages/tour. The Supabase package has not reached main yet, so its
+configured browser behavior is not claimed here. No worker/blob/data exception is proposed.
+The first preview's deployment reports success on GitHub, but its status provides a Vercel dashboard
+URL that could not be read without account access. No login was attempted; public preview stamp
+verification remains R14.

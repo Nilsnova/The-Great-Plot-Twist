@@ -4,47 +4,47 @@ Checkpoint notes and server requests for Claude. All authored changes stay under
 The setup update keeps G9 on the laptop; G10–G16 run in Codex cloud. G10 publishes the case contract on
 `feat/case-backend`; do not use an older draft as the final route contract.
 
-## G9 checkpoint 0: in progress, stream 0 gate passed (6 Nov 2026, Lisbon)
+## G9 checkpoint 0: playtest identity and online slot ready (6 Nov 2026, Lisbon; verified build ee72758-dirty)
 
-Merged from main: `c26f303`, via merge commit `996daef`.
-Changed: stream 0 extends build identity, public issue drafts and safe runtime context; stream 1 defers
-account-summary paint, reserves the real adapter slot and adds the validated header builder.
-Verified: candidate `npm test` passes 500 tests in 67 files; `npm run build` passes the spoiler guard.
-Browser pass: baseline title ready 158.3 ms / first contentful paint 192 ms; stream 0 unit/build/loading/stamp/report/CSP/a11y checks pass. Stream 1
-is prepared and needs its independent final gate. No checkpoint push until the browser self-check passes.
-Not verified: Vercel preview stamp, deployed headers, real sign-in/services, other engines and physical devices.
-Remaining: commit stream 0, restore the two shared-file stream 1 variants, run its final gates and commit, push; then stream 2 real adapter core.
-Requests for Claude: R1–R13 below, reviewed against `origin/main` at `c26f303`.
-Contract changes Claude must mirror: none yet; additive diagnostic fields contain fixed enums/numbers only.
-Decisions for Nils: none needed for checkpoint 0.
+Merged from main: `c26f303`, via `996daef`; the final sync found nothing newer on main.
+Changed: stream 0 (`ee72758`) completes title/perf stamps, dirty/environment labels, public issue drafts,
+validated context/outcomes and report-link hooks. Stream 1 defers the account summary, preserves the
+contract while splitting refusal vocabulary, reserves selection/PKCE entry points and adds the shared
+validated security-header builder. No real adapter or sign-in is claimed at this checkpoint.
+Verified: `npm test` — 500 passed, one canonical-bulletin parity check skipped until its input reaches
+main, 67 files; `npm run build` — built, 112-file/twelve-line spoiler guard green. Stream 1 browser commands
+and exit codes are in `captures/20261106_G9-C0/Verification.json` and `stream1-verification.json`.
+Browser pass: loading, title timing, build stamp, report privacy, CSP/tour, inventory and accessibility
+are green on the candidate build: `node scripts/check-loading.js`,
+`node scripts/check-title-start.js --phase=after`, `node scripts/check-build-stamp.js`,
+`node scripts/check-problem-report.js`, `node scripts/check-csp.js`,
+`node scripts/check-csp-inventory.js`, `node scripts/check-a11y.js`. Cold title 19,679 bytes, 1,401 bytes of room. 23 a11y contexts pass.
+Not verified: public Vercel preview stamp (R14), deployed headers, real OAuth/session/Realtime, physical
+phone/controller, Safari/Firefox and VoiceOver. Title timing observations are not a controlled speed comparison.
+Remaining: stream 2 real-adapter core, then 3–5 for checkpoint 1. Group 2/library and panels are not on
+main yet. The canonical bulletin test resumes automatically when its main input exists.
+Requests for Claude: R1–R13 retained; R14 asks for an accessible public preview URL/stamp check.
+Contract changes Claude must mirror: none to schema/methods/reasons/events. Reports add only fixed enums,
+coarse browser version, numeric perf fields and contract-vocabulary outcomes; no arguments or player data.
+Decisions for Nils: none required for checkpoint 0.
 
 ### Coordinator resume state
 
-- Branch: `feat/g9-real-adapter`. Starter checkpoints `cae6dad`, `bb7599e`, `f413006`, `0b6b809` are pushed.
-- Main is merged, without rebase. No new packages were added. Group 2 is not on main yet; Supabase library
-  and panels must be adopted from main when they arrive, never installed or rewritten ahead of that merge.
-- Two bounded subagents completed diagnostics and header-builder modules. They are idle. Root owns shared
-  hooks/configs/docs and all browser runs. Freeze source during browser runs to avoid hot reload invalidation.
-- Candidate pure tests: `npm test` → 500 passed / 67 files. See temporary candidate logs in `captures/`;
-  collect/redact them into `captures/20261106_G9-C0/` before any commit. Keep the checkpoint below 3 MB.
-- `scripts/check-title-start.js --phase=before` records the baseline. Run `--phase=after` on the candidate.
-- `scripts/security-headers.js`: `buildSecurityHeaders(url?, {platformConfig})`, `toVercelHeaders(headers)`;
-  no-address proposal is self-only. Exact Supabase origin adds its HTTPS/WSS pair. No platform headers exist
-  at this main revision. Vite preview/check-csp share the generated set; `print:headers` prints the proposal.
-- `src/online/case-adapter/index.js` is deliberately only the disconnected placeholder for checkpoint 0;
-  `REAL_ADAPTER_READY` in `adapter/select.js` stays false until stream 2 passes conformance. Do not report it
-  as the real adapter implementation.
-- New diagnostic APIs: `noteIntentOutcome(name,result)`, `noteAdapterView(view)`,
-  `notePerformanceSummary(summary)`, and `createProblemDescription(link)`. They keep only allowed enums
-  and numbers; outcome traces never include arguments. UI call-state accepts an optional `reportLink` hook;
-  stream 5 still needs to fill it for every error state.
-- Shared-file staging: main.js currently uses the original synchronous account summary for the isolated
-  stream 0 gate. Stream 1 restores createLazyAccountSummary plus summary.start() on title state, and
-  wires Vite preview to buildSecurityHeaders with the readonly platform config. The coordinator retained
-  both combined-file versions while running the independent stream gate.
-- Next candidate checks: loading (running), title-after, build-stamp, problem-report, CSP/inventory and a11y.
-  Run Chrome checks sequentially. Then rerun unit/build and commit per stream. Update this top note with
-  exact commands/results and the next unfinished stream before pushing.
+- Branch `feat/g9-real-adapter`; starter commits `cae6dad`, `bb7599e`, `f413006`, `0b6b809` are pushed.
+  Merge `996daef` and stream 0 `ee72758` are included in this checkpoint; stream 1 is committed with this note.
+- Root owns shared hooks/configs/docs and sequential browser checks. Bounded diagnostics/header
+  subagents are finished. Freeze source during dev-browser runs.
+- `REAL_ADAPTER_READY` stays false until stream 2 conformance passes. The reserved real factory currently
+  returns the disconnected adapter. Do not treat it as completed U1.
+- Diagnostic APIs: `noteIntentOutcome`, `noteAdapterView`, `notePerformanceSummary`, and
+  `createProblemDescription`. UI call-state's optional `reportLink` is filled throughout in stream 5.
+- `security-headers.js`: `buildSecurityHeaders(url?, {platformConfig})`, `toVercelHeaders(headers)`;
+  exact bare HTTPS Supabase origin only; source-of-truth drift fails. Current main has no headers.
+- Next: repeat the secret scan over `origin/main..HEAD`, push checkpoint 0; then stream 2.
+  Add real-adapter conformance, reasons/UID/scheduler and public/private clients before wiring auth.
+  Run `test:online` from stream 2 onward and the full sequential G9 driver from checkpoint 1.
+- New evidence stays below 3 MB; use relative paths. Extra unchanged captures remain in local test cache.
+  Existing historical absolute paths are stream 21 cleanup; newly committed checkpoint evidence is redacted.
 
 ## Requests for Claude
 
@@ -66,9 +66,10 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 | R11 · waiting for G10 | Published case contract and `case_fixtures` on `feat/case-backend` | Browser case mapping needs approved route/view shapes | G10 note names published ref and case section; placeholders replace all suspect/card/deduction/reveal texts/ids in browser fixtures | Checkpoint 4 | Work on other streams; no secret/case copy |
 | R12 · open | Weather section of `docs/INTERFACES.md` | Old wording still requires credits beside HUD, contradicting Nils' 6 Nov decision | Attribution/licences only under Settings → Credits | Nothing | Preserve clean HUD and existing weather-wiring check |
 | R13 · process/open | G10 changes to `backend/content/secret/` | New secret content can invalidate committed reveal fingerprints | Same server commit runs frontend build and commits regenerated hash-only fingerprint fixture | Subsequent build gates | Regenerate only the hash fixture after a merge if build requests it |
+| R14 · open | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |
 
 ## Browser pass
 
-Checkpoint 0 candidate checks are pending; exact final evidence will be linked above. Real OAuth, a live
+Checkpoint 0 local browser checks pass; exact evidence is linked above. Public preview verification is R14. Real OAuth, a live
 Supabase session/socket, deployed headers, Safari/Firefox, VoiceOver, a physical phone and controller are
 not verified by the recorded-answer Chrome checks.

@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { openWorldBrowser } from './world-browser-tools.js';
 
-import {proposedCsp as policy} from './csp-policy.js';
+import {previewSecurityHeaders} from '../vite.config.js';
+const policyName=Object.hasOwn(previewSecurityHeaders,'Content-Security-Policy')?'Content-Security-Policy':'Content-Security-Policy-Report-Only';
+const policy=previewSecurityHeaders[policyName];
 const env = await openWorldBrowser({ preview: true });
 const { page } = env;
 const report = { checked: new Date().toISOString(), browser: env.browser.version(), pages: [], tour: [], errors: [], external: [] };
@@ -22,7 +24,7 @@ async function verifyPage(path) {
   const response = await page.goto(`${env.url}${path}`, { waitUntil: 'domcontentloaded' });
   assert.equal(response?.status(), 200, `${path} returns HTTP 200`);
   const headers = response.headers();
-  assert.equal(headers['content-security-policy'], policy, `${path} sends the proposed preview CSP`);
+  assert.equal(headers[policyName.toLowerCase()], policy, `${path} sends the proposed preview CSP`);
   assert.equal(headers['x-frame-options'], 'DENY', `${path} denies framing`);
   assert.equal(headers['x-content-type-options'], 'nosniff', `${path} disables MIME sniffing`);
   assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin', `${path} sends the referrer policy`);
@@ -41,7 +43,7 @@ async function verifyPage(path) {
   assert.ok(style.sheetCount > 0, `${path} loads same-origin stylesheets`);
   const violations = await page.evaluate(() => window.__cspViolations ?? []);
   assert.deepEqual(violations, [], `${path} produces no CSP violations`);
-  report.pages.push({ path, status: response.status(), policy: headers['content-security-policy'], styles: style, violations });
+  report.pages.push({ path, status: response.status(), policy: headers[policyName.toLowerCase()], styles: style, violations });
 }
 
 async function waitForStep(title) {

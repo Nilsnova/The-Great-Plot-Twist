@@ -793,3 +793,27 @@ checks pass. Its independent title graph is 20,971 bytes; stream 1 adds further 
 adapter. The unchanged refusal vocabulary lives in `adapter/reasons.js` and is re-exported by `contract.js`
 so diagnostics can load it separately. No schema, method, reason or browser event is added. Requests and
 ongoing checkpoint state are in [HANDOFF-G9.md](HANDOFF-G9.md).
+
+
+## G9 adapter selection and title headroom (stream 1)
+
+`adapter/selection.js` pins the query table: local rehearsal needs development or `demo=1`; production
+`case=local` alone stays disconnected; a plain demo uses its own disconnected world; ordinary play has
+one lazy real-adapter entry. Checkpoint 0 deliberately keeps `REAL_ADAPTER_READY=false` until stream 2
+passes conformance. Its reserved factory is a placeholder, not an online implementation. A failed
+chunk has a plain disconnected notice. The sign-in return hook recognizes only the presence of code
+or error; stream 3 implements PKCE and address cleaning.
+
+The richer account summary loads after the title paints, with disposal/cancel guards and an Account
+button fallback for import failure. The refusal list loads independently while `contract.js` preserves
+its existing exports. Cold title JavaScript is **19,679 bytes**, leaving **1,401 bytes** under the
+unchanged 21,080 cap (starter baseline 20,617). One laptop observation measured title readiness / first
+contentful paint at 158.3 / 192 ms before, and 524.9 / 508 ms after; these uncontrolled samples on a busy
+laptop do not demonstrate a latency improvement. The network never gates this disconnected title.
+
+The header builder and source-of-truth rule are in [CSP.md](CSP.md), Security headers (G9).
+`npm run print:headers` prints the no-address proposal; pass the approved public Supabase origin to
+include its exact HTTPS/WSS pair. `npm run test:title-start` records title paint timing.
+The old bulletin test's other-worktree fallback is removed. Its canonical parity check runs only when
+`../backend/content/bulletin.json` is in this checkout; it is explicitly skipped until group 2 merges.
+No main/server file was authored or edited by this stream.

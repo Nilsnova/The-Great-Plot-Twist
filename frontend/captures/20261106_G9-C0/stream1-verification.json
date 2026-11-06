@@ -1,0 +1,47 @@
+[
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "seconds": 28.13
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "seconds": 2.62
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "exitCode": 0,
+    "seconds": 10.78
+  },
+  {
+    "command": "node scripts/check-title-start.js --phase=after",
+    "exitCode": 0,
+    "seconds": 6.75
+  },
+  {
+    "command": "node scripts/check-build-stamp.js",
+    "exitCode": 0,
+    "seconds": 14.69
+  },
+  {
+    "command": "node scripts/check-problem-report.js",
+    "exitCode": 0,
+    "seconds": 11.6
+  },
+  {
+    "command": "node scripts/check-csp.js",
+    "exitCode": 0,
+    "seconds": 12.43
+  },
+  {
+    "command": "node scripts/check-a11y.js",
+    "exitCode": 0,
+    "seconds": 27.38
+  },
+  {
+    "command": "node scripts/check-csp-inventory.js",
+    "exitCode": 0,
+    "seconds": 1.86
+  }
+]
