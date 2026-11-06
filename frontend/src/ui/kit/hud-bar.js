@@ -8,7 +8,7 @@ export function createHudBar(data = {}) {
   seats.setAttribute('aria-label','Crew seats'); element.append(coins,place,weather,time,seats);
   function update(next) {
     data = {...data,...next}; coins.textContent = `${formatCoins(data.coins)} coins`;
-    place.textContent = String(data.place ?? 'At sea'); time.textContent = String(data.time ?? '—');
+    place.textContent = String(data.place ?? 'At sea'); time.textContent = String(data.time ?? '?');
     weatherIcon.textContent = `${({clear:'☀',rain:'☂',fog:'≋',storm:'ϟ'})[data.weather] ?? '·'} `; weatherLabel.textContent = data.weather ?? 'Weather unknown';
     if (data.dateTime) time.dateTime = data.dateTime;
     seats.replaceChildren();

@@ -21,12 +21,21 @@ def test_flag_names_are_exactly_the_agreed_list():
         "raid",
         "live_presence",
         "companion_llm",
+        "case",
+        "sign_in",
+        "bulletin",
+        "festival",
     )
 
 
 def test_every_flag_is_off_by_default():
     assert default_flags() == {name: False for name in FLAG_NAMES}
     assert parse_flags("") == default_flags()
+
+
+def test_sign_in_stays_off_until_explicitly_enabled_after_preview_protection():
+    assert default_flags()["sign_in"] is False
+    assert parse_flags("sign_in")["sign_in"] is True
 
 
 def test_listed_flags_are_switched_on_and_the_rest_stay_off():

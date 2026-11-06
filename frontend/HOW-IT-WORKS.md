@@ -280,3 +280,21 @@ The tour runs a short class rehearsal with a fake adapter and temporary display 
 - `stop` closes views and restores the saved place, weather, time and case view.
 
 **Teacher asks:** Why does the tour use an islet preview? **Answer:** It can show a build without changing the player's actual islet state.
+
+
+## Host and demo console (G14)
+
+`host.html` is a separate Vite entry using the pixel UI kit. Its strict CSP permits only same-origin external scripts, styles and requests. `src/host/auth.js` completes PKCE through our API and places the access token in the existing memory-only session; the console never writes directly to Supabase.
+
+`src/host/controller.js` asks the server for host access before displaying anything. `view.js` and `panels.js` render explicit safe fields with text nodes. Refresh failures and sign-out remove the panels, and stale responses cannot restore them. Crew cleanup requires confirmation and reuses one action UUID after an unknown outcome.
+
+The clock is hidden unless `/api/config` confirms G10 is installed and `case` is on. Its input and quick buttons send `{seconds, actionUid}` with 1–3600 whole seconds. Only the outcome message/time is displayed; the returned case view is ignored. `?perf=1` is linked for the demo rehearsal; G14 does not change the game's production performance display.
+
+Run `npm test` and `npm run build`; after the build, `CHROME_PATH=/usr/bin/chromium npm run test:host` checks the page at desktop and phone widths against fake same-origin API responses only. Operator guidance and backend contracts are in [HOST-CONSOLE.md](../docs/HOST-CONSOLE.md).
+## G13: optional festival and sound
+
+`src/screens/festival/entry.js` adds the title/pause launcher after checking the live feature flag. The screen and its transports are lazy. `adapter.js` uses the existing verified session, preserves an uncertain write's action id for retry, and clears private state on sign-out. `panel.js` displays the server timer and lamp ownership, gathers three A7 signals, and opens the existing duel view after pairing. It does not decide money, winners or whether a live claim succeeds.
+
+`local.js` is the explicitly labelled `?demo=1&festival=1` rehearsal. It accepts no network transport or token. Its lifecycle controls, claims and pairing remain on this device. The query cannot turn on a server feature flag.
+
+`src/audio/festival.js` loads the four original recordings only after the existing audio owner has a running, gesture-unlocked context. It connects them to the existing music/effects buses. The festival loop requires Play and stops when its panel closes; shared volume sliders include exact mute. `shell/lazy-account-summary.js` retains a stable account slot while loading its presentation after the first title paint, keeping the title within the existing JavaScript budget.

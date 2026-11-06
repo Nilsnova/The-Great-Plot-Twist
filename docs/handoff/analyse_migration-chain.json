@@ -1,0 +1,395 @@
+{
+ "summary": "Verdict: you can apply the chain to the live state in version order. No SQL statement has to change. Three fixes outside the SQL must land in the merge first: two position-pinned Python tests (marked block), and two comment renumberings in A2's files (marked fix, but timed before the apply, because applied files are frozen).\n\nHow I checked: a scratch Postgres 16.2 that imitates the live project. It has Supabase-like auth (identities and sessions cascade), a partitioned realtime.messages with RLS on, realtime.topic(), the rls_auto_enable event trigger, the applied foundation and two synthetic players. On it, all nine files ran:\n- in order, inside one BEGIN...ROLLBACK (exit 0; the catalog snapshot was identical afterwards);\n- file by file for real, then a second time (no change);\n- a third time after filling every table (no error).\nA variant with Supabase's 'expose new tables' default privileges gave the identical privilege matrix. delete_player removed a player who had rows in every player-owned table, plus auth.identities. Nothing touched the live database or any remote service. No repository file changed.\n\nMust fix before applying:\n(1) feat/l4-exchange-v2 backend/server/tests/test_wallet_matches_migration.py lines 324-332 pin WALLET_REASONS[-5:] and len == 13.\n(2) feat/a7-lantern-duels backend/server/tests/test_duels_migration.py line 154 pins WALLET_REASONS[11:13].\nBoth fail once v2, L5 and A7 are merged (17 reasons). The standing permission needs all tests green.\n(3) Renumber A2's own D018 to D022 in the SQL comments at 20261106020000_accounts.sql:426 and 20261106030000_entry_profiles.sql:43. Do it before applying, because applied files are never edited.\n\nLive-environment prerequisites for the dry run (block if any is false):\n- realtime.messages and realtime.topic() exist, RLS is on, and no realtime policy exists yet.\n- The runner owns realtime.messages or is a member of its owner. Otherwise A4 fails with 'must be owner of table messages' (reproduced with a non-superuser runner).\n- The runner owns the 7 public tables (A6 alters crews and crew_seats).\n- The runner may DELETE auth.users. Otherwise the file applies, but every delete_player call fails with 'permission denied for table users' (reproduced).\n\nExchange v1 (010000) must really be applied first: v2 uses its market_fee reason, then drops its tables and functions.\n\nFinal state:\n- 18 tables plus 1 view, RLS on all tables.\n- 16 public policies (all SELECT, all for authenticated) plus 5 realtime policies.\n- 17 wallet reasons.\n- 24 functions of ours: 3 SECURITY DEFINER, every function has search_path ''.\n- 4 sequences, no role has a right on them; anon has 0 grants; authenticated can execute only is_crew_member and live_crew_id.\n- The 2 live players' rows are untouched.\n\nOrder rule: apply all migrations before pushing the merged main, because A2's GET /api/me reads entry_profiles and previews share the database.\n\nNot verified: real Supabase ownership and privileges, Postgres 17 specifics, and how the Supabase MCP tools handle BEGIN/ROLLBACK and stamp migration versions.\n\nScratch harness (my files only): <scratch> (run.sh, run_nonsuper.sh, rerun_with_data.sh, lockcheck.sh, functional.sql, final_check.sql). The branch copies of the migrations are one folder up.",
+ "apply_order": [
+  "0. Pre-flight, read-only (queries in dry_run_notes). The runner owns the 7 public tables and may DELETE auth.users. It owns, or is a member of the owner of, realtime.messages. realtime.messages and realtime.topic() exist, RLS is on, and there are 0 realtime policies. 0 display names are not placeholders. The history holds only 20261106000000 foundation.",
+  "1. 20261106010000_island_exchange.sql (origin/main, unedited): apply for real. 090000 needs its market_fee reason, and the merged WALLET_REASONS expects its three reasons at positions 8-10.",
+  "2. 20261106020000_accounts.sql (feat/a2-a3-signin-referee), after the comment edit D018 -> D022 at line 426.",
+  "3. 20261106030000_entry_profiles.sql (feat/a2-a3-signin-referee), after the comment edit D018 -> D022 at line 43.",
+  "4. 20261106040000_crew_codes.sql (feat/a6-crews).",
+  "5. 20261106050000_live_presence.sql (feat/a4-live-presence). The only file that writes to a Supabase-owned table (policies on realtime.messages).",
+  "6. 20261106070000_home_islet.sql (feat/l2-home-islet).",
+  "7. 20261106090000_exchange_leverage.sql (feat/l4-exchange-v2). Its guard stops it if market_trades has rows. It then drops both market_trade overloads, market_set_base and the three market_* tables, and keeps the reasons.",
+  "8. 20261106100000_prediction_desk.sql (feat/l5-prediction-desk).",
+  "9. 20261106110000_lantern_duels.sql (feat/a7-lantern-duels).",
+  "10. Run the post-apply checks. Record each file under its own version in supabase_migrations.schema_migrations. Only then push the merged main. Apply every file with the same role that applied the foundation, and do all of it in one sitting."
+ ],
+ "per_file": [
+  {
+   "file": "supabase/migrations/20261106000000_foundation.sql",
+   "branch": "origin/main (already applied)",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "No later file redefines its functions (apply_wallet_transaction, handle_new_user, is_crew_member, touch_updated_at), tables or policies. The only later changes to its objects are A6's new columns and constraints on crews and crew_seats, and A2's new comment on saves.version.",
+     "where": "lines 702-757, 796-829, 456-480; 040000 lines 84-137; 020000 line 72",
+     "fix": "None."
+    },
+    {
+     "severity": "note",
+     "what": "The 12:40 description says the live display names were 'derived from their GitHub profiles'. The applied file gives 'Captain-' || left(id::text, 6). Only the first draft (commit fcb8fb8) read raw_user_meta_data ->> 'user_name', and deploy check 5 printed 'Signed in as Captain-xxxxxx'. If a live name were not a placeholder, assign_captain_name() (020000 lines 183-187) would never replace it, and the login-derived name would stay on the projector.",
+     "where": "lines 806-807",
+     "fix": "Pre-flight, count only: select count(*) from public.profiles where display_name !~ '^Captain-[0-9a-f]{6}$'. Expect 0. If not 0, Nils decides on a one-off reset outside any migration file (a re-run would reset generated names)."
+    },
+    {
+     "severity": "note",
+     "what": "The first draft had a check wallet_transactions_reason_allowed with a fixed reason list. If it were on live, every new reason would fail at run time (not at apply time).",
+     "where": "draft fcb8fb8 only",
+     "fix": "Pre-flight: select count(*) from pg_constraint where conrelid = 'public.wallet_transactions'::regclass and conname = 'wallet_transactions_reason_allowed'. Expect 0."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106010000_island_exchange.sql",
+   "branch": "origin/main",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "Applies cleanly on the live state, where none of its objects exist. It adds 3 reasons (on conflict do nothing) and 3 tables with RLS and SELECT-only policies, revokes before it grants, and revokes the sequence. Its two functions are invoker functions with search_path '' and service_role-only execute. It also drops the 11-argument draft of market_trade. It ran twice cleanly in the chain.",
+     "where": "lines 88-92, 117-245, 287-355, 377-431, 499-699",
+     "fix": "Apply it as written. Do not edit it: v2's test asserts the file is unchanged and still creates market_trades."
+    },
+    {
+     "severity": "note",
+     "what": "090000 drops all of it except the reasons. market_buy and market_sell then stay unused forever (a reason is never removed). Between 010000 and 090000, main's deployed v1 code (GET /api/market, flag off) can write market_bases rows. That is harmless: no player data, and 090000 drops them.",
+     "where": "090000 lines 117-122",
+     "fix": "Apply 010000 through 110000 in one sitting."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106020000_accounts.sql",
+   "branch": "feat/a2-a3-signin-referee",
+   "verdict": "fix",
+   "issues": [
+    {
+     "severity": "fix",
+     "what": "The comment cites A2's own colliding decision D018 (Account data). The decided renumbering makes it D022. Applied files are frozen, so edit before applying.",
+     "where": "line 426",
+     "fix": "old: -- PENDING Nils' decision (N4, D018): delete everything, the ledger included, and   new: -- PENDING Nils' decision (N4, D022): delete everything, the ledger included, and"
+    },
+    {
+     "severity": "note",
+     "what": "delete_player is SECURITY DEFINER with search_path '' and service_role-only execute. Its rights come from its owner, the role that applies this file. That role needs DELETE on auth.users. Reproduced with a non-superuser runner: without that right the file applies, but every call fails with 'permission denied for table users' at line 486.",
+     "where": "lines 458-502",
+     "fix": "Pre-flight: has_table_privilege(current_user, 'auth.users', 'DELETE') must be true. Apply with the same role as the foundation."
+    },
+    {
+     "severity": "note",
+     "what": "The header and the stored COMMENT ON FUNCTION say the cascade removes 'Island Exchange positions and trades'. After 090000 those are exchange_positions and exchange_events, plus the new islet, stake and duel rows. The comment text is stored in the catalog.",
+     "where": "lines 418-419 and 502",
+     "fix": "Optional, before applying only. Line 502: 'seats, Island Exchange positions and trades and name re-roll' -> 'seats, Island Exchange positions and their history, islets, stakes, duels and name re-roll'. Otherwise leave it."
+    },
+    {
+     "severity": "note",
+     "what": "delete_player hands a crew over and the cascade frees the deleted player's seat, but crews.version (added later by 040000) is not raised. A crew_start computed from an older picture then raises bad_muster instead of returning 'changed'. Verified: after deletion the crew kept version 4 with seats 2, 3 and 4.",
+     "where": "lines 466-486",
+     "fix": "Later, not today: a migration after 040000 can redefine delete_player to add version = version + 1 for the crews the player sat in."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106030000_entry_profiles.sql",
+   "branch": "feat/a2-a3-signin-referee",
+   "verdict": "fix",
+   "issues": [
+    {
+     "severity": "fix",
+     "what": "The comment cites A2's own D018 (delete my data), which becomes D022. Line 33 (D019) does not collide.",
+     "where": "line 43",
+     "fix": "old: --      complete (decision D018).   new: --      complete (decision D022).   (before applying)"
+    },
+    {
+     "severity": "note",
+     "what": "Sequencing: GET /api/me on A2 reads entry_profiles, and it returns 502 until this file is applied. Previews share the database.",
+     "where": "lines 19-22",
+     "fix": "Apply the whole chain before pushing the merged main."
+    },
+    {
+     "severity": "note",
+     "what": "The lock-order note names market_trade(), which 090000 drops. The same wallet-first order holds in exchange_open_position() and exchange_close_position(). Only test comments mention it.",
+     "where": "lines 189-194",
+     "fix": "Optional wording edit before applying: 'while market_trade() locks the wallet first' -> 'while the Island Exchange functions lock the wallet first'."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106040000_crew_codes.sql",
+   "branch": "feat/a6-crews",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "ALTER TABLE on crews and crew_seats needs ownership of both and takes ACCESS EXCLUSIVE on both (measured). The new columns, checks and indexes are fine on the live state (0 crews, 0 seats). crews.version is NOT NULL DEFAULT 1, a fast default with no rewrite. crew_seats_kit_allowed is NOT VALID, so old rows are not checked again.",
+     "where": "lines 84-137",
+     "fix": "Pre-flight: every public table is owned by current_user."
+    },
+    {
+     "severity": "note",
+     "what": "crew_create, crew_find_by_code and crew_take_seat lock the player's profile FOR UPDATE. A2/A3 deliberately use FOR NO KEY UPDATE so that foreign-key checks pass. With FOR UPDATE, a concurrent coin move, trade, build or duel of the same player waits until the crew call ends. I found no deadlock cycle, because none of the three waits on a wallet. The text is pinned by test_crews_match_migration.py:364.",
+     "where": "lines 256, 371, 522",
+     "fix": "Leave as is today. Possible follow-up: FOR NO KEY UPDATE, together with its test."
+    },
+    {
+     "severity": "note",
+     "what": "The table comment says only the four crew functions write crews. A2's delete_player also does (the handover).",
+     "where": "line 104",
+     "fix": "Wording only. Optional."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106050000_live_presence.sql",
+   "branch": "feat/a4-live-presence",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "This file only works on a project whose environment allows it. Block if any of these is false: realtime.messages exists with RLS on, realtime.topic() exists, no other policy exists on realtime.messages (a permissive using(true) policy would be OR-ed in and open every crew room), and the runner owns or is a member of the owner of realtime.messages. On Supabase the Realtime service creates the table (partitioned) and the function. The dashboard docs create policies there as postgres. Reproduced: a non-superuser runner without membership fails at the first create policy (lines 148-153) with 'must be owner of table messages'.",
+     "where": "lines 147-204",
+     "fix": "Pre-flight queries in dry_run_notes. If ownership is missing, stop. The other files do not depend on this one."
+    },
+    {
+     "severity": "note",
+     "what": "The policies test realtime.topic() and the extension, but not the stored row's topic column. Players cannot run SQL on realtime.messages today: the realtime schema is not an exposed Data API schema and no function writes it, so this is safe. Verified: a crew member sees their crew room; another crew, a malformed topic and anon see nothing; a send into a crew room is refused.",
+     "where": "lines 151-152, 162-163, 176-177, 187-188, 200-201",
+     "fix": "Optional hardening, before applying only: append 'and realtime.messages.topic = (select realtime.topic())' to each of the five USING / WITH CHECK clauses. Keep realtime out of the exposed schemas."
+    },
+    {
+     "severity": "note",
+     "what": "The five policies are in schema realtime, so the README checks that filter schemaname = 'public' do not count them. The Realtime dashboard setting 'Allow public access' must be off, or public channels skip these rules. That is a settings change for Nils.",
+     "where": "header lines 43-46",
+     "fix": "Count them separately (expect 5). Nils switches public access off."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106070000_home_islet.sql",
+   "branch": "feat/l2-home-islet",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "Clean: both tables have RLS with own-row SELECT policies. The islet_buildings foreign key points at islets(player_id) and cascades. islet_build is an invoker function, service_role only, and locks the wallet first. The comments name market_trade() as the precedent, which 090000 drops (the exchange functions keep the same order).",
+     "where": "lines 88-170, 199-247, 261-263, 342-343",
+     "fix": "Optional wording edit before applying."
+    },
+    {
+     "severity": "note",
+     "what": "A refused first build (plot_occupied or not_enough_timber) returns normally, so the new islet row with the starter timber stays. This is documented.",
+     "where": "lines 301-306, 359-386",
+     "fix": "None."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106090000_exchange_leverage.sql",
+   "branch": "feat/l4-exchange-v2",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "Needs 010000 at run time: market_fee at lines 609 and 807. The guard works: with a v1 trade row present it raised v1_market_data_present and changed nothing. On the live state market_trades will be empty. Both market_trade overloads and market_set_base are dropped, so no overload is left. The new names (exchange_*) cannot collide with v1.",
+     "where": "lines 62-66, 98-106, 117-122",
+     "fix": "Apply only after 010000, in the same sitting."
+    },
+    {
+     "severity": "note",
+     "what": "Dropping market_positions and market_trades removes their foreign-key triggers on profiles, so this transaction takes ACCESS EXCLUSIVE on public.profiles (measured). Every request that reads profiles, including GET /api/me and sign-ups, waits until it commits.",
+     "where": "lines 120-122",
+     "fix": "Keep the transaction short. Use lock_timeout in the dry run, and apply at a quiet moment."
+    },
+    {
+     "severity": "note",
+     "what": "exchange_events.position_id has no index, so the cascade from exchange_positions scans exchange_events. The performance advisor may flag it. This is irrelevant at class scale.",
+     "where": "line 314",
+     "fix": "Later, optional: create index on exchange_events (position_id)."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106100000_prediction_desk.sql",
+   "branch": "feat/l5-prediction-desk",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "prediction_stakes.question_id has no ON DELETE action. Pools are never deleted (service_role has no delete right), so this is not on the player-delete path. The view is security_invoker and only service_role may read it. Column-level UPDATE grants are enough for the row locks (verified as service_role). The settled-pool trigger worked: void settlement, then deletion of a staker.",
+     "where": "lines 205-227, 275-283, 351-376, 396-419",
+     "fix": "None."
+    },
+    {
+     "severity": "note",
+     "what": "A refused stake on a new question (pool_closed, already_staked or daily_cap) returns normally, so the new open pool row stays. A deleted staker's coins leave the game while paid_coins keeps counting them. Both are documented limits.",
+     "where": "lines 522-582, 196-199",
+     "fix": "None."
+    }
+   ]
+  },
+  {
+   "file": "supabase/migrations/20261106110000_lantern_duels.sql",
+   "branch": "feat/a7-lantern-duels",
+   "verdict": "ok",
+   "issues": [
+    {
+     "severity": "note",
+     "what": "duels.opponent_id is ON DELETE SET NULL, and no check breaks on null. Verified: a named open duel sent to a player who is then deleted stays open with opponent_id null. Nobody can answer it, and the sender withdrew and got the 25-coin stake back. duel_moves has RLS on, no policy and no player grant, and service_role may only select and insert.",
+     "where": "lines 129-130, 155-174, 242-257, 291-326",
+     "fix": "None."
+    },
+    {
+     "severity": "note",
+     "what": "The header says it needs 010000, but it uses nothing from that file.",
+     "where": "lines 26-29",
+     "fix": "Wording only. Optional."
+    }
+   ]
+  },
+  {
+   "file": "backend/server/tests/test_wallet_matches_migration.py",
+   "branch": "feat/l4-exchange-v2",
+   "verdict": "block",
+   "issues": [
+    {
+     "severity": "block",
+     "what": "test_python_ends_its_list_of_reasons_with_the_v1_three_and_the_two_new_ones asserts WALLET_REASONS[-5:] == the five market reasons and len(WALLET_REASONS) == 13. After the L5 merge (15 reasons) and the A7 merge (17) both asserts fail: [-5:] is market_payout through arena_payout. The standing permission needs all tests green before applying.",
+     "where": "lines 324-332",
+     "fix": "Replace lines 324-332 with: def test_python_lists_the_market_reasons_of_both_exchange_files_after_the_first_eight(): assert WALLET_REASONS[8:13] == ((\"market_buy\", \"spend\"), (\"market_sell\", \"earn\"), (\"market_fee\", \"spend\"), (\"market_stake\", \"spend\"), (\"market_payout\", \"earn\")). Add no length assertion here; the exact 17-entry list lives in test_wallet.py. Checked against the merged tuple: passes."
+    }
+   ]
+  },
+  {
+   "file": "backend/server/tests/test_duels_migration.py",
+   "branch": "feat/a7-lantern-duels",
+   "verdict": "block",
+   "issues": [
+    {
+     "severity": "block",
+     "what": "test_python_has_the_two_arena_reasons_right_after_the_market_reasons pins WALLET_REASONS[11:13] to the arena pair. After v2 and L5 the merged list holds market_stake and market_payout at 11:13, and arena_stake and arena_payout at 15:17, so the test fails.",
+     "where": "lines 150-154",
+     "fix": "Replace line 154 with: names = [name for name, _ in WALLET_REASONS] / first = names.index(\"arena_stake\") / assert WALLET_REASONS[first : first + 2] == ((\"arena_stake\", \"spend\"), (\"arena_payout\", \"earn\")) / assert first > names.index(\"prediction_payout\") > names.index(\"market_fee\"). Rename the test to ..._after_the_reasons_of_the_earlier_migrations and update its comment. Checked against the merged tuple: passes."
+    }
+   ]
+  }
+ ],
+ "cross_file": [
+  {
+   "issue": "backend/server/wallet.py: v2 (lines 70-78), L5 (70-76) and A7 (70-76) each append after market_fee. Merge 9 (L5) and merge 10 (A7) conflict on the same hunk. The order must match the migrations in file order, or test_the_reasons_in_the_database_are_the_reasons_in_python_in_the_same_order fails.",
+   "severity": "fix",
+   "files": [
+    "backend/server/wallet.py (feat/l4-exchange-v2, feat/l5-prediction-desk, feat/a7-lantern-duels)"
+   ],
+   "fix": "After admin_adjust, keep: the v2 comment block from lines 70-72 with (\"market_buy\", SPEND), (\"market_sell\", EARN), (\"market_fee\", SPEND); then '# Added by supabase/migrations/20261106090000_exchange_leverage.sql' with (\"market_stake\", SPEND), (\"market_payout\", EARN); then '# Added by supabase/migrations/20261106100000_prediction_desk.sql' with (\"prediction_stake\", SPEND), (\"prediction_payout\", EARN); then '# Added by supabase/migrations/20261106110000_lantern_duels.sql' with (\"arena_stake\", SPEND), (\"arena_payout\", EARN). 17 entries. Keep A7's docstring line 'the Island Exchange, Lantern Duels'."
+  },
+  {
+   "issue": "backend/server/tests/test_wallet.py: test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order (line 67) and test_list_reason_names_gives_the_names_in_the_agreed_order (line 100) hold exact lists on all three branches, and they conflict.",
+   "severity": "fix",
+   "files": [
+    "backend/server/tests/test_wallet.py (feat/l4-exchange-v2, feat/l5-prediction-desk, feat/a7-lantern-duels)"
+   ],
+   "fix": "Both lists become the full 17 entries in the order above. L5's parametrized spend/earn lists merge as they are. Optionally add market_stake and arena_stake to the spend lists, and market_payout and arena_payout to the earn lists."
+  },
+  {
+   "issue": "backend/server/tests/test_wallet_matches_migration.py: v2 rewrote the whole Exchange section, while L5 (lines 296-303) and A7 (296-304) each edited the old v1 test into a WALLET_REASONS[8:11] check, so a textual conflict is certain. L5's test_predictions_match_migration.py and A7's test_duels_migration.py import MIGRATIONS, SEED_INSERT, SEED_ROW and the two helper functions from this module, and v2 keeps all of them.",
+   "severity": "fix",
+   "files": [
+    "backend/server/tests/test_wallet_matches_migration.py",
+    "backend/server/tests/test_predictions_match_migration.py",
+    "backend/server/tests/test_duels_migration.py"
+   ],
+   "fix": "Take v2's version, apply the [8:13] replacement from per_file, and drop L5's and A7's renamed [8:11] tests: [8:13] covers them."
+  },
+  {
+   "issue": "Decision renumbering in the files this review covers. In the SQL, only A2's two comments name a colliding entry; the other migration files name only D003 and D019. In supabase/README.md the branch's own D018 appears on A2 lines 114, 126, 128 and 1193, A4 line 114, L5 line 115 and A7 line 115.",
+   "severity": "fix",
+   "files": [
+    "supabase/migrations/20261106020000_accounts.sql",
+    "supabase/migrations/20261106030000_entry_profiles.sql",
+    "supabase/README.md"
+   ],
+   "fix": "SQL: 020000:426 and 030000:43 D018 -> D022, before applying. README, judged in context: A2's -> D022, A4's -> D023, L5's -> D025, A7's -> D026. The story round keeps D018."
+  },
+  {
+   "issue": "Sequencing of migrations and code. A2's GET /api/me reads entry_profiles (030000 lines 19-22), and the new crews, islet, market, prediction and duel routes call the new functions. Vercel deploys main on push, and previews share the live database. Applying the chain first is safe for the currently deployed main: no existing table changes shape for its code, and only GET /api/market keeps answering 502 database_error, as it does today, because 090000 drops the v1 objects.",
+   "severity": "fix",
+   "files": [
+    "all nine migrations",
+    "backend/server/routes/me.py (feat/a2-a3-signin-referee)"
+   ],
+   "fix": "Dry run, then apply all nine, then run the post-apply checks, and only then push the merged main."
+  },
+  {
+   "issue": "Lock footprint, measured per file. 040000 takes ACCESS EXCLUSIVE on crews and crew_seats. 050000 takes ACCESS EXCLUSIVE on realtime.messages. 090000 takes ACCESS EXCLUSIVE on profiles. 020000, 030000, 040000, 070000, 090000, 100000 and 110000 take SHARE ROW EXCLUSIVE on profiles (new foreign keys), which blocks sign-ups while held. Inside one dry-run transaction all of these are held until the ROLLBACK. wallets and wallet_transactions are never locked.",
+   "severity": "note",
+   "files": [
+    "20261106040000_crew_codes.sql",
+    "20261106050000_live_presence.sql",
+    "20261106090000_exchange_leverage.sql"
+   ],
+   "fix": "BEGIN; SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '120s'; ... ROLLBACK. Run at a quiet moment. The whole chain takes well under a second on an empty database."
+  },
+  {
+   "issue": "Comments that go stale once 090000 drops v1: 030000 lines 189-194 and 070000 lines 261-263 and 342-343 name market_trade(); 020000 lines 418-419 and 502 name 'Island Exchange positions and trades'; the v1 sections of supabase/README.md describe dropped objects.",
+   "severity": "note",
+   "files": [
+    "20261106020000_accounts.sql",
+    "20261106030000_entry_profiles.sql",
+    "20261106070000_home_islet.sql",
+    "supabase/README.md"
+   ],
+   "fix": "Optional wording edits, and only before applying. No test asserts this comment text."
+  },
+  {
+   "issue": "supabase/README.md quick checks after the merge: the expected numbers must become the final state.",
+   "severity": "fix",
+   "files": [
+    "supabase/README.md"
+   ],
+   "fix": "Check 1: 18 tables, all rls_on = true (the view prediction_pool_sides is relkind v and is not listed). Check 2: 16 policies in public, all SELECT; the 5 realtime policies are counted with schemaname = 'realtime'. Check 3: no anon row, 16 authenticated rows, all SELECT. Wallet reasons: 17."
+  },
+  {
+   "issue": "A2 delete_player vs A6 crews.version: the handover and the freed seat do not raise the version.",
+   "severity": "note",
+   "files": [
+    "20261106020000_accounts.sql",
+    "20261106040000_crew_codes.sql"
+   ],
+   "fix": "Follow-up migration later, not today."
+  }
+ ],
+ "exchange_v1_010000": "Yes. Apply 20261106010000 for real, first, exactly as written.\n\nWhy it must be applied:\n(1) 090000 uses its market_fee reason at run time: exchange_open_position line 609 and exchange_close_position line 807. 090000 says so itself (lines 62-66). Without 010000, every opening raises unknown_reason.\n(2) The merged WALLET_REASONS places market_buy, market_sell and market_fee at positions 8-10, read from 010000 by test_wallet_matches_migration.py. v2's own tests assert that 010000 is unchanged and still creates market_trades.\n(3) Skipping it, or marking it applied with a history repair, would leave the database without those reasons and out of step with the repository.\n\nWhy it is safe as written on the live state:\n- None of its objects exist on live.\n- It adds 3 reasons with on conflict do nothing (lines 88-92), and 3 tables with RLS on, SELECT-only policies for authenticated, revoke-then-grant, and the sequence revoked (lines 117-355).\n- Its 2 functions are invoker functions with search_path '' and service_role-only execute (lines 377-431, 501-699). It also drops the old 11-argument draft (line 499).\n- In the scratch chain it applied cleanly, twice.\n\nWhat 090000 then does: its guard (lines 98-106) passes because market_trades is empty. It drops both market_trade signatures, market_set_base and the three tables (lines 117-122). No overload and no v1 object is left. Only market_buy and market_sell remain, unused, as v2's wallet.py documents (lines 70-72).\n\nCaution: apply 010000 and 090000 in the same sitting. In between, main's deployed v1 code (GET /api/market, flag off) could write market_bases rows. That is harmless: they hold no player data and are dropped, while the guard protects trades. Never re-run 010000 on its own after 090000. If all files are ever re-run in order, the 090000 re-run drops the v1 objects again (verified).",
+ "delete_cascade": "Answer: yes. Deleting from auth.users, whether through delete_player or the dashboard, removes every player-owned row in every table the chain adds, and no foreign key blocks the delete.\n\nForeign keys after the chain (15 point at profiles: 14 CASCADE, 1 SET NULL):\n- profiles.id -> auth.users, CASCADE (foundation line 113).\n- saves, wallets, wallet_transactions, crews.created_by and crew_seats.player_id -> profiles, CASCADE; crew_seats.crew_id -> crews, CASCADE.\n- captain_name_rerolls (020000 line 92), entry_profiles (030000 line 77), crew_join_failures (040000 line 166) and islets (070000 line 89) -> profiles, CASCADE; islet_buildings -> islets, CASCADE (070000 line 137).\n- exchange_positions -> profiles, CASCADE (090000 line 172); exchange_events -> profiles and -> exchange_positions, both CASCADE (lines 313-314).\n- prediction_stakes.player_id -> profiles, CASCADE (100000 line 208).\n- duels.challenger_id -> profiles, CASCADE (110000 line 129); duels.opponent_id -> profiles, SET NULL (line 130).\n- duel_moves -> duels and -> profiles, both CASCADE (lines 243-244).\n- 010000's market_positions and market_trades also cascade until 090000 drops them.\n\nThe only foreign keys with NO ACTION point at tables that are never deleted: prediction_stakes.question_id -> prediction_pools (100000 line 207; there is no delete grant) and wallet_transactions.reason -> wallet_reasons. Neither is on the delete path. No check constraint breaks when opponent_id is set to null. Referential actions run as the table owner, so neither RLS nor missing service_role delete rights get in the way.\n\nVerified on the scratch chain. A player held rows in every player-owned table: 15 ledger rows, 3 positions, 5 events, 2 stakes in two pools (one of them settled), 8 duel envelopes, 2 duels sent, 1 named duel received, a crew with two other players, a wrong-code row, an islet, a building, an entry profile, a re-roll, a save and an auth identity. Results:\n- delete_player returned status deleted, and 0 rows were left in all 18 places, including auth.identities.\n- The crew went to the lowest other seat. Its seats were 2, 3 and 4 afterwards, its version unchanged.\n- The duel the player had received stayed open with opponent_id null, and its sender withdrew for a 25-coin refund.\n- A second call returned not_found.\n- Deleting another player directly in auth.users removed that player and the crew they had started alone.\n- Every remaining wallet equals the sum of its ledger rows.\n\nLive requirement: the owner of delete_player needs DELETE on auth.users. With a non-superuser owner that lacks it, every call fails with 'permission denied for table users' at run time, while the file itself applies.\n\nDocumented losses, by design: a deleted player's coins and stakes leave the game, and a settled pool's paid_coins still counts a deleted staker.",
+ "security_matrix": "After the chain, from the scratch catalog. All 18 public tables have RLS on (none forced). No table has an INSERT, UPDATE or DELETE policy. anon has no grant and no policy anywhere in public. Rights are written S/I/U/D.\n\nTABLES\n- profiles, saves, wallets, wallet_reasons, wallet_transactions: unchanged from the foundation. wallet_reasons gets 9 new rows; saves.version gets a new comment from A2.\n- crews and crew_seats: A6 adds columns code, version and started_at, the checks crews_code_format and crews_version_positive, the unique index crews_code_unique, crew_seats_kit_allowed (NOT VALID) and two partial unique indexes. Policies unchanged: SELECT for authenticated through is_crew_member. authenticated S; service_role S,I,U,D.\n- captain_name_rerolls: own-row SELECT; authenticated S; service_role S,I.\n- entry_profiles: own-row SELECT; authenticated S; service_role S,I.\n- crew_join_failures: no policy; authenticated nothing; service_role S,I,D; crew_join_failures_id_seq no rights for any role.\n- islets: own-row SELECT; authenticated S; service_role S,I,U.\n- islet_buildings: own-row SELECT; authenticated S; service_role S,I.\n- exchange_positions: own-row SELECT; authenticated S; service_role S,I,U.\n- exchange_events: own-row SELECT; authenticated S; service_role S,I; exchange_events_id_seq no rights.\n- prediction_pools: SELECT all rows; authenticated S; service_role S,I plus UPDATE on (status, outcome, settlement, settled_by, settled_at, cut_coins, paid_coins).\n- prediction_stakes: own-row SELECT; authenticated S; service_role S,I plus UPDATE(payout); prediction_stakes_id_seq no rights.\n- prediction_pool_sides (view, security_invoker): authenticated nothing; service_role S.\n- duels: SELECT where challenger_id or opponent_id = auth.uid(); authenticated S; service_role S,I,U.\n- duel_moves: no policy; authenticated nothing; service_role S,I.\n- market_bases, market_positions, market_trades (010000): same pattern, then dropped by 090000.\n- Sequences: 4 (wallet_transactions, crew_join_failures, exchange_events, prediction_stakes). No role has USAGE, SELECT or UPDATE on any of them.\n\nrealtime.messages (Supabase's table; grants unchanged by A4). Five policies, all for authenticated:\n- SELECT: topic live:world with extension presence.\n- INSERT: topic live:world with extension presence.\n- SELECT: a place room topic with extension broadcast.\n- INSERT: a place room topic with extension broadcast.\n- SELECT: a crew room with extension broadcast, only if is_crew_member(live_crew_id(topic)).\nNo policy for anon, and no INSERT policy for crew rooms.\n\nFUNCTIONS (every function has search_path ''; EXECUTE is revoked from PUBLIC everywhere)\n- SECURITY DEFINER: handle_new_user (nobody, run by the trigger), is_crew_member (authenticated, read-only, answers only for the caller), delete_player (service_role).\n- Invoker, service_role only: apply_wallet_transaction, assign_captain_name, reroll_captain_name, save_progress, grant_entry_kit, crew_create, crew_find_by_code, crew_take_seat, crew_start, islet_build, exchange_open_position, exchange_close_position, exchange_close_used_up, prediction_place_stake, prediction_settle_pool, duel_create, duel_answer, duel_void. Also 010000's market_trade and market_set_base until 090000 drops them.\n- Invoker, authenticated only: live_crew_id (immutable, reads no table).\n- Invoker, nobody (trigger helpers): touch_updated_at, prediction_pools_keep_settled.\n- rls_auto_enable() is Supabase's own and outside the chain (the existing advisor warning).\n\nFLAGS\n- anon can execute nothing.\n- authenticated can execute only is_crew_member and live_crew_id; neither writes.\n- Nothing anon or authenticated can call writes public data.\n- The only player writes are inserts into realtime.messages for live:world presence and place-room broadcasts, by design, through Realtime.\n- No definer function lacks a pinned search_path.\n- With Supabase's 'expose new tables' default privileges the matrix is identical.",
+ "dry_run_notes": "1. Nothing in the nine files has to run outside a transaction. There is no explicit BEGIN, COMMIT or ROLLBACK, no CONCURRENTLY, no enum ADD VALUE and no VACUUM. The whole chain ran inside BEGIN...ROLLBACK with exit 0, and the catalog was identical afterwards. The DO guard in 090000 is fine inside a transaction.\n\n2. Pre-flight, read-only. Run before the dry run, as the role that will apply. Every value must match its expectation, or stop:\n\nselect current_user as runner,\n (select count(*) from pg_tables where schemaname = 'public' and tableowner <> current_user) as tables_not_owned,   -- expect 0\n has_table_privilege(current_user, 'auth.users', 'DELETE') as can_delete_users,   -- expect true\n to_regclass('realtime.messages') is not null as messages_exists,   -- expect true\n to_regprocedure('realtime.topic()') is not null as topic_exists,   -- expect true\n (select c.relrowsecurity from pg_class c where c.oid = to_regclass('realtime.messages')) as messages_rls,   -- expect true\n (select pg_has_role(current_user, c.relowner, 'USAGE') from pg_class c where c.oid = to_regclass('realtime.messages')) as can_manage_realtime_policies,   -- expect true\n (select count(*) from pg_policies where schemaname = 'realtime') as realtime_policies,   -- expect 0\n (select has_table_privilege('authenticated', c.oid, 'SELECT') and has_table_privilege('authenticated', c.oid, 'INSERT') from pg_class c where c.oid = to_regclass('realtime.messages')) as authenticated_on_messages,   -- expect true\n (select count(*) from pg_constraint where conrelid = 'public.wallet_transactions'::regclass and conname = 'wallet_transactions_reason_allowed') as old_draft_check,   -- expect 0\n (select count(*) from public.profiles where display_name !~ '^Captain-[0-9a-f]{6}$') as names_not_placeholder,   -- expect 0, count only\n (select string_agg(version || ' ' || coalesce(name, ''), ', ' order by version) from supabase_migrations.schema_migrations) as history;   -- expect 20261106000000 foundation\n\n3. Wrapper for the dry run: BEGIN; SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '120s'; then paste the full text of 010000, 020000, 030000, 040000, 050000, 070000, 090000, 100000 and 110000 in that order (an API call cannot use psql's \\i). Then run the single chain_check SELECT, then ROLLBACK. The query is in <scratch> it excludes Supabase's rls_auto_enable.\nExpected inside the transaction: tables=18, views=1, tables_without_rls=0, public_policies=16, public_write_policies=0, realtime_policies=5, reasons=17, functions=24, definer_functions=delete_player,handle_new_user,is_crew_member, functions_without_empty_search_path=0, functions_anon_can_run=0, functions_authenticated_can_run=is_crew_member,live_crew_id, anon_table_grants=0, authenticated_tables=16, authenticated_non_select_grants=0, sequence_rights=0, sequences=4, public_triggers=5, fk_without_cascade_to_profiles=0, published_tables unchanged (0 at 12:40), player_rows=[2,2,2,0,0,0].\nAfterwards, run chain_check again outside the transaction. It must show the live values: tables=7, views=0, public_policies=7, realtime_policies=0, reasons=8, functions=4, definer_functions=handle_new_user,is_crew_member, functions_authenticated_can_run=is_crew_member, authenticated_tables=7, sequences=1, public_triggers=3, everything else 0, player_rows=[2,2,2,0,0,0]. That proves the rollback happened.\n\n4. Optional per-file values to check between files. Format: tables / public policies / realtime policies / reasons / our functions / sequences / public triggers.\n- live: 7/7/0/8/4/1/3\n- after 010000: 10/10/0/11/6/2/3\n- after 020000: 11/11/0/11/10/2/3\n- after 030000: 12/12/0/11/11/2/3\n- after 040000: 13/12/0/11/15/3/3\n- after 050000: 13/12/5/11/16/3/3\n- after 070000: 15/14/5/11/17/3/4\n- after 090000: 14/13/5/13/18/3/4\n- after 100000: 16 plus 1 view/15/5/15/21/4/5\n- after 110000: 18 plus 1 view/16/5/17/24/4/5\nA naive count of public functions that includes rls_auto_enable gives one more at each step: 5 on live, 25 at the end.\n\n5. Likely failure points, in order:\n- 050000 at its first CREATE POLICY: 'must be owner of table messages'. The runner lacks ownership or membership of the owner of realtime.messages.\n- 040000: 'must be owner of table crews'. A different role applied the foundation.\n- A lock timeout. A live request held a lock; retry at a quiet moment.\nNothing else failed in any variant.\n\n6. Optional rolled-back smoke test, inside the same transaction before ROLLBACK, if you accept a synthetic row in auth.users that is rolled back:\ninsert into auth.users (id) values ('00000000-0000-4000-8000-0000000000e1');\nset local role service_role;\nselect public.delete_player('00000000-0000-4000-8000-0000000000e1');   -- expect status deleted\nreset role;\nThis proves the definer rights against the real auth schema. Without it, rely on can_delete_users.\n\n7. Locks. While the transaction is open it holds ACCESS EXCLUSIVE on profiles (from 090000's drops), crews and crew_seats (040000) and realtime.messages (050000). GET /api/me, sign-ups and Realtime maintenance wait until the ROLLBACK, so keep it short.\n\n8. Tooling:\n- The Supabase MCP must not be in read-only mode.\n- apply_migration stamps a clock-time version. Re-record the file versions afterwards, as was done for the foundation on 5 Nov.\n- Apply everything with one role.\n\n9. Scratch evidence. Postgres 16.2, not 17, with imitated Supabase roles. Five runs: superuser closed, superuser exposed, non-superuser with three privilege setups, re-run with data, lock measurement. Scripts are in <scratch> (run.sh, run_nonsuper.sh, rerun_with_data.sh, lockcheck.sh); outputs are in out-*/.",
+ "post_apply_checks": "1. History:\nselect version, name from supabase_migrations.schema_migrations order by version;\nExpect 10 rows: 20261106000000 foundation, 20261106010000 island_exchange, 20261106020000 accounts, 20261106030000 entry_profiles, 20261106040000 crew_codes, 20261106050000 live_presence, 20261106070000 home_islet, 20261106090000 exchange_leverage, 20261106100000 prediction_desk, 20261106110000 lantern_duels. Repair any clock-time version the tool wrote.\n\n2. chain_check (final_check.sql) shows the expected values from dry_run_notes step 3.\n\n3. Wallet reasons:\nselect string_agg(reason || ':' || direction, ',' order by reason) from public.wallet_reasons;\nExpect exactly: admin_adjust:either,arena_payout:earn,arena_stake:spend,building_purchase:spend,cargo_sale:earn,clue_purchase:spend,clue_reward:earn,event_reward:earn,kit_grant:earn,market_buy:spend,market_fee:spend,market_payout:earn,market_sell:earn,market_stake:spend,mystery_reward:earn,prediction_payout:earn,prediction_stake:spend\n\n4. Realtime policies:\nselect policyname, cmd, roles from pg_policies where schemaname = 'realtime' order by 1;\nExpect exactly 5, all {authenticated}:\n- Live: crew members can hear their crew room (SELECT)\n- Live: players can move in a place room (INSERT)\n- Live: players can say where they are (INSERT)\n- Live: players can see who is online (SELECT)\n- Live: players can watch a place room (SELECT)\n\n5. Foreign keys to profiles:\nselect conrelid::regclass, conname, confdeltype from pg_constraint where contype = 'f' and confrelid = 'public.profiles'::regclass order by 1, 2;\nExpect 15 rows: confdeltype c for all, except duels_opponent_id_fkey with n.\n\n6. NOT VALID constraints:\nselect conrelid::regclass, conname from pg_constraint where connamespace = 'public'::regnamespace and not convalidated;\nExpect only crew_seats_kit_allowed.\n\n7. Existing rows untouched: profiles 2, saves 2, wallets 2, ledger 0, crews 0, seats 0. Every new table has 0 rows. Names-not-placeholder count still 0.\n\n8. Supabase security advisor, expected:\n- is_crew_member: SECURITY DEFINER callable by authenticated. Intended and documented.\n- rls_auto_enable: already known.\n- INFO 'RLS enabled, no policy' on crew_join_failures and duel_moves. Intended.\nAnything else is new and needs a look. The performance advisor may list the unindexed foreign key exchange_events_position_id_fkey (harmless).\n\n9. PostgREST: the schema cache reloads on DDL. If a new RPC answers PGRST202, run: notify pgrst, 'reload schema';\n\n10. After pushing the merged main:\n- GET /api/me answers 200 for a signed-in test account (it now reads entry_profiles).\n- Run the merged README test plans (A2 to A7) with test users only, then delete those users. That also exercises delete_player.\n- Nils switches Realtime 'Allow public access' off. That is a settings change and needs his approval.",
+ "wallet_reasons_combined": [
+  "kit_grant: earn. 20261106000000_foundation (on live)",
+  "clue_reward: earn. 20261106000000_foundation (on live)",
+  "mystery_reward: earn. 20261106000000_foundation (on live)",
+  "event_reward: earn. 20261106000000_foundation (on live)",
+  "cargo_sale: earn. 20261106000000_foundation (on live)",
+  "clue_purchase: spend. 20261106000000_foundation (on live)",
+  "building_purchase: spend. 20261106000000_foundation (on live; used by islet_build in 070000)",
+  "admin_adjust: either. 20261106000000_foundation (on live)",
+  "market_buy: spend. 20261106010000_island_exchange (never used after 090000, kept forever)",
+  "market_sell: earn. 20261106010000_island_exchange (never used after 090000, kept forever)",
+  "market_fee: spend. 20261106010000_island_exchange (used by 090000's opening and closing)",
+  "market_stake: spend. 20261106090000_exchange_leverage",
+  "market_payout: earn. 20261106090000_exchange_leverage",
+  "prediction_stake: spend. 20261106100000_prediction_desk",
+  "prediction_payout: earn. 20261106100000_prediction_desk",
+  "arena_stake: spend. 20261106110000_lantern_duels",
+  "arena_payout: earn. 20261106110000_lantern_duels",
+  "17 in all, no duplicate and no direction conflict. Every insert uses on conflict (reason) do nothing, no migration updates, deletes or truncates wallet_reasons, and no description has an apostrophe. I checked this with the test's own regexes on the merged set of migration files.",
+  "Python: after the merge, WALLET_REASONS must be exactly these 17 pairs in this order. Each branch is correct on its own, but v2, L5 and A7 all append after market_fee, so merges 9 and 10 conflict. Two position-pinned tests then fail: v2's test_wallet_matches_migration.py lines 324-332 and A7's test_duels_migration.py line 154. Fixes are in per_file. L5's tests (WALLET_REASONS[8:11] and the name-based prediction check) pass unchanged."
+ ],
+ "observations": [
+  "Worth a review-checklist entry: run a migration chain three ways — as superuser, with Supabase's exposed default privileges, and as a non-superuser runner (auth tables owned by supabase_auth_admin, realtime.messages owned by supabase_realtime_admin). Only the non-superuser run showed that A4 needs ownership of realtime.messages and that delete_player's owner needs DELETE on auth.users. The earlier per-branch scratch runs were superuser runs and could not show either.",
+  "Recurring trap across branches: tests that pin positions in WALLET_REASONS (main [-3:], v2 [-5:] plus len == 13, A7 [11:13]) break whenever parallel branches append reasons. L5's name-based check survives merges. A rule in recipe 4.7 / ENGINEERING.md would prevent this; log it for the review, do not edit now.",
+  "The controller's live-state brief said the display names were 'derived from their GitHub profiles'. That contradicts the applied foundation and deploy check 5. The review turned it into a count-only pre-flight check instead of trusting the brief or copying names.",
+  "Process: the scratchpad is shared with the parent session and already crowded. I first wrote ten files at its top level and moved them into chain-review/ afterwards. A subagent should create its own subfolder before the first write.",
+  "Dry runs on a live database are not free. This chain inside BEGIN...ROLLBACK holds ACCESS EXCLUSIVE on profiles, crews, crew_seats and realtime.messages until the rollback. A dry-run template should start with SET LOCAL lock_timeout.",
+  "No skill was loaded in this subagent run, so no observation-log lookup was needed. Nothing was written under the task-observer workspace."
+ ]
+}

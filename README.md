@@ -18,6 +18,9 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | Shared technical and product decisions | [Decision log](docs/DECISIONS.md) |
 | What we build, in which order, and the lanes | [ROADMAP.md](ROADMAP.md) |
 | What works right now, next steps per lane and the log | [Status](docs/STATUS.md) |
+| Player controls, crews and spoiler-free guidance | [How to play](docs/HOW-TO-PLAY.md) |
+| Player data, deletion and play money | [Privacy](docs/PRIVACY.md) |
+| Your own first contribution and explain-back | [Teammate starter kit](docs/contribute/QUICKSTART.md) |
 | The story and its approved decisions | [Story](docs/STORY.md) |
 | One-time setup of GitHub, Supabase and Vercel | [Setup guide](docs/SETUP.md) |
 | How the game, the API and the database fit together | [Architecture](docs/ARCHITECTURE.md) |
@@ -28,13 +31,25 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 ## Project status
 
-*Last updated: 5 Nov 2026, evening.*
+*Last updated: 6 Nov 2026, Codex server integration.*
 
 The team is turning the text mystery Plot Twist into a browser game: a top-down pixel-art island world with GitHub sign-in, a shared mystery and a play-money economy.
 
 - **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
-- **Foundation (package F0) is on `main`:** the API skeleton (health, config and keep-alive routes, the sign-in check, the wallet rules, the pattern for outside data), the first database migration in `supabase/`, `vercel.json` and the docs in `docs/`. No game feature uses it yet.
-- **In progress:** the story engine (S1), the story details (S0), the world, sea chart and harbor (G2 + G3). The [status page](docs/STATUS.md) always shows what works right now, what each lane does next and the dated log.
+- **Built:** the playable intro, sea chart and harbor, original music/ambience/effects, weather,
+  account/save and crew services, live presence, Exchange v2, predictions and Lantern Duels.
+  The case backend includes earned clues, the shared board, three-light finale, Relighting and
+  free NPC orders, with solo and four-player API playthroughs over real scratch PostgreSQL.
+- **Online play is still being connected:** the G9 browser adapter is paused until Nils' laptop
+  returns. Backend multiplayer proofs do not mean the complete mystery is already playable in
+  normal browser play. [Status](docs/STATUS.md) records exact releases and flag checks.
+- **Current release:** festival and host tools deployed; sports code/database deployed with its flag
+  off until its provider key and live-source proof are ready. Reliability, regression coverage,
+  help/privacy, security/notices and submission materials are deployed with passing release gates.
+  The optional [spoiler-safe AI helper](specs/AI-helper.md) requires official ChatGPT website-client
+  approval before its login can be activated. The [roadmap](ROADMAP.md#execution-update--6-nov-2026)
+  gives the remaining order.
+- **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.
 
 ### What the final README must contain
 

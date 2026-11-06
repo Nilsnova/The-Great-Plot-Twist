@@ -386,7 +386,7 @@ What the case needs from the muster step before the case clock starts: partners 
 | `relock_wait_seconds` | After an off-target lock, that light can lock again after 5 seconds. |
 | `climb_minutes` | A player at a light's place needs 1 minute to climb and light it. |
 | `bearing_rule` | How the server computes the true bearing. The chart's y grows to the south, so north is the light's y minus the schooner's y. |
-| `chart` | `size` `[448, 256]`, the native pixels of the sea chart, `axes` (x east, y south), `fog_bank` (`center` `[250, 40]`, `radius` 30), `schooner` (`max_offset_from_fog_center` 20, `seeded_by`: the crew id, so a copied bearing usually misses), `min_degrees_between_fixed_lights` (20). |
+| `chart` | `size` `[448, 256]`, the native pixels of the sea chart, `axes` (x east, y south), `fog_bank` (`center` `[250, 40]`, `radius` 30), `schooner` (`max_offset_from_fog_center` 20, `seeded_by`: the crew id, so each crew's schooner sits at its own spot), `min_degrees_between_fixed_lights` (20). |
 | `lights[]` | `id` (the registry's light ids: `keepers_lamp`, `harbor_light`, `islet_signal_station`, `ruin_light`), `name`, `tier` (`must` or `should`), `place`, `hotspot`, `chart_xy` (a pair on the 448 by 256 chart, copied from the registry: the place's chart position plus half the beam origin, vertical part flipped), `ready` (`from_start`, or a building, or for the ruin light `lens_from` with `craft_minutes`, `fit_after` and `fit_minutes`: a lens can be made at any time, and only fitting it waits for the deductions in `fit_after`, which is D3), `partners_may_man` (the field NPC-PARTNERS.md reads), `planning_price_coins` (the open-world building price), `note`. The `ruin_light` has tier `should`: no crew needs it. |
 | `lines` | Texts for nightfall, taking a post, a lock on a light nobody has reached (`not_manned`), an off-target lock, a lock, the fog parting and dawn. `{light}` is filled by the server. |
 
@@ -703,3 +703,7 @@ A text is never empty and at most 600 characters. A template may contain only it
 | `beam.chart` | Where the beam is on the sea chart: `x` from 0 to 447 and `y` from 0 to 255 (the chart is 448 by 256). Beyond Gull's Rest at (407, 34). Never shown in a text. |
 | `beam.pattern` | The flashes, 1 to 12 of `short` and `long`, in the order they flash. A proposal for the package that draws the beam. It must not be the harbor alarm, `long, short, long`. |
 | `beam.flash` | The timings in seconds, each above 0 and at most 10: `shortSeconds`, `longSeconds`, `gapSeconds` (between two flashes) and `pauseSeconds` (between two rounds). |
+
+## How the server reads the case
+
+`server/game/case_data.py` loads the private case file into frozen records and runs load-time checks L1 to L8, L14, L15, L18 and L19. `case_lint.py` adds exhaustive free-route, citation and seat-fill checks in tests. The active Phase 1 route kinds are `kit`, `open` and `timed`; other routes keep their ids in the loaded data but are not offered. A route's optional `label` falls back to the card title. The case view exposes only earned cards, formed deductions and a reveal earned by a solver in that same crew. The private file is never added to public content. Phase 1 changes no secret content.

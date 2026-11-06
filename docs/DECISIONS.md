@@ -116,6 +116,8 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Nils, 5 Nov 2026. Proposed in the S1 pull request (`feat/s1-import-plot-twist`). Affects S2 (the story in the browser) and A3 (the referee replays the move log with the Python engine).
 
+**Amendment, 6 Nov 2026 (Nils, G10):** Story v2 changed `backend/content/story.json`. The byte-for-byte claim and hash above describe the original import, not the current story file. The engine rules and provenance remain separate from those content edits.
+
 ## D016 · Server content lives in backend/content/; the browser gets public content through the API · 2026-11-05
 
 **Status:** Proposed in the S1 pull request. It stays proposed until Nils accepts it and a different teammate has reviewed it, because it moves the content paths of S3, S4, A2, A3, L2, L4 and L5.
@@ -130,74 +132,40 @@ Add short entries; keep the original rationale when superseding a decision.
 
 ## D017 · Island Exchange rules · 2026-11-05
 
-**Status:** Proposed in the L4 pull request (`feat/l4-island-exchange`); accepted when reviewed by another teammate and merged. The rules Nils gave on 5 Nov are the base. The choices that Nils did not specify are marked "chosen here" and need his OK. An independent review of the first version found three problems in the price and feed rules (players could trade on old prices, the recorded prices could be predicted, and prices sank toward one cent within days). The points marked "changed after the review" are the fixes, and they need his OK too.
+**Status:** Decided by Nils on 5 Nov 2026 (his answers to the Exchange questions, items 1 to 7; item 2c, 10x positions, replaces the x100 price amplification of items 1 and 2a). The points marked "chosen here" are defaults Claude took for the rework and told Nils; they stand unless he objects. This version replaces v1 (see "History"), which was merged but never went live: its migration was never applied.
 
-**Decision:** The Island Exchange is play money only, and the server decides everything (D003, D004). Seven fictional island companies follow seven real instruments (BTC, ETH, SOL, XRP, BNB, EUR/USD through the Binance pair EURUSDT, and gold through PAXG). Rules:
+**Decision:**
+1. **Real prices, 1:1.** Seven invented island companies follow seven real instruments at their real Binance prices (BTC, ETH, SOL, XRP, BNB, EUR/USD as EURUSDT, gold as PAXG; around the clock; no key). Real stock companies, shown with their real names, follow their real share prices through a stock-price API with a free key that Nils creates (agents never sign up), chosen by the settings `STOCK_API_PROVIDER` and `STOCK_API_KEY` and off until the key exists. Chosen here, from the research memo of 5 Nov: Finnhub for five US companies, switched on only once Finnhub has agreed in writing that the prices may be shown. No floor, no ceiling, no pauses.
+2. **Every investment is a 10x position,** rising or falling, with a stake of coins. Each 1 % the price moves for the position adds 10 % of the stake, each 1 % against takes 10 % away.
+3. **Closed at zero.** A position whose stake is used up (price at 90 % of the entry for a rising position, 110 % for a falling one) closes automatically at zero; a jump past that point also closes it at zero. A player never loses more than the stake and the opening fee and never owes coins.
+4. **Market hours.** A stock trades only while its market is open (New York, Euronext or Xetra, from a calendar file with the holidays from 6 Nov to 31 Dec 2026). While its market is closed or a price source is away, a company shows its last price with a label and cannot be traded, and its positions are neither closed nor used up until fresh prices arrive. Island companies never close.
+5. **Demo mode** plays the recorded Binance Vision day, clearly labelled, and trading on it is allowed; those trades change players' real coins, and the recording is public. Chosen here: stocks are not part of it.
+6. **No price protection.** A trade goes through at the server price of that moment.
+7. **Brakes.** A trade uses a price at most 5 seconds old (fetched fresh if older); a player makes at most 10 trades in 30 seconds.
+8. **Fee:** 2 % of the stake, rounded up, at opening and again at closing; 1 % after the Relighting. The closing fee comes out of the value and is never more than it.
+9. **Limits:** at most 500 coins per position and 2,000 coins of new stakes per game day (from 08:00 Lisbon time). At least 10 coins per position. Decided by Nils on 6 Nov 2026: at most 20 open positions per player, with no extra 300-coin reserve.
+10. **Positions stay open across days.** No minimum holding time.
+11. **Chosen here:** the automatic close runs whenever the server looks at prices (every board look, every trade, every portfolio look) and uses only prices it fetched; positions opened on live prices close only on live prices, recording positions only on the recording; after the Relighting Greyfathom Salvage takes no new positions; an open rising position in Greyfathom Salvage is the "Greyfathom share" of card C6.
+12. **Database:** migration `20261106090000_exchange_leverage.sql` removes the v1 Exchange tables and functions and adds `exchange_positions`, `exchange_events`, the reasons `market_stake` and `market_payout` (v1's `market_fee` is reused; `market_buy` and `market_sell` stay unused, because a reason is never removed) and three server-only functions that move the coins and change the positions in one step.
 
-1. **Amplified price.** Game price = base game price x (1 + multiplier x real change since the base), rounded to cents. The multiplier is the setting `MARKET_MULTIPLIER`, a whole number from 20 to 100, default 100 as Nils asked. With 100, a real move of 0.3 % is a game move of 30 %. **We recommend 20 to 30 for the class** (see "What the multiplier does in practice").
-2. **Floor and ceiling (changed after the review).** *Chosen here:* a price never falls below 25 % of the company's start price (`startPrice` in `companies.json`) and never rises above 400 % of it, so a 60.00 company stays between 15.00 and 240.00. Both are measured from the start price, which never changes. The first version used a floor of 5 % of the base, but the base moves with every pause and the 30 % breaker always fired first, so the floor never acted: every pause locked in a step of 30 %, and the prices of volatile companies sank to one cent within days, where no real move could change them any more. A start price must be from 4.00 to 125.00, so that one unit is always worth a whole coin at the floor and fits into one purchase at the ceiling. A price that sits on the floor or the ceiling stays there until the real price has moved back past the real price of the base, or until the next daily re-base.
-3. **Circuit breaker.** When the game price is 30 % from its base (up or down), the company is paused for 15 minutes. *Chosen here:* the price is frozen at the 30 % limit (a jump or a wrong tick cannot push it further), nobody can trade the company, and **shares are not sold** by a pause. After the 15 minutes the company restarts from the frozen price, and real moves are measured from the real price of that moment (the moves during the pause do not count).
-4. **Daily re-base at 08:00 Europe/Lisbon.** The first look after 08:00 gives every company a new base. *Chosen here:* the game price stays and only the real starting point moves, so nobody's shares change value.
-5. **Trades.** *Chosen here:* whole units; whole coins, always rounded against the player (a buy up, a sell down); a fee of 2 % rounded up on every buy and sell; a **purchase** worth 1 to 500 coins; a **sale** worth at least 1 coin and **no upper limit** (changed after the review: with a 500-coin limit on sales, a holder could not sell even one unit once a price had risen); at most 2000 coins of shares bought per player per market day (from 08:00 Lisbon); shares can be sold 10 minutes after the player's latest purchase of that company (every purchase restarts the clock); at most 10 trades per player in 30 seconds (new after the review, a brake against loops; it counts in memory, per server instance).
-6. **One shared price, fresh for trades (changed after the review).** Real prices come from Binance market data (`data-api.binance.vision`, no key), one request for all seven. Players never call any price service. The board accepts real prices up to 60 seconds old (one request a minute per server instance). **A trade accepts only prices at most 5 seconds old** and asks Binance again if the cache is older (a rush of trades at the same moment is one request, so at most 12 requests a minute per instance). **If Binance is away,** the board keeps showing the last prices marked `stale`, and nobody can trade (`409 prices_stale`). After a failed request an instance asks again only 10 seconds later (at most 6 requests a minute while it fails), so one dropped request does not close the Exchange for a minute. The recorded replay (90 minutes from Binance Vision, CC BY-NC-SA 4.0, credit "Binance Vision") **never plays in live mode**: it is a public file and the minute that plays comes from the clock, so a player could read the next prices and trade against them, and every switch between live and recorded prices moves every price (rule 7). The replay plays only in demo mode (`DEMO_MODE=true`), where the Exchange never calls Binance and trading on it is allowed, so a demo or a rehearsal works without internet. Demo-mode prices are public: coins won on them must never count for anything real (a leaderboard, a prize).
-7. **Source change.** If the real prices come from another source than when a base was set (an operator changes `DEMO_MODE` on a server that shares the database), the two real prices cannot be compared: the company goes back to its base game price and measures from the new source, which can step a price back by up to 30 %. All servers that share one database (the Vercel preview and production projects share one, D002) must therefore use the same `DEMO_MODE`.
-8. **Database.** Wallet reasons `market_buy` (spend), `market_sell` (earn) and `market_fee` (spend). Tables `market_bases` (shared by every server instance, saved with a version number), `market_positions` and `market_trades`, all with row-level security and explicit grants. The function `market_trade()` moves the coins, changes the position and writes the trade in one step, and refuses a repeated ref. It also checks the arithmetic itself (changed after the review): the coins must follow from the units and the price, the fee from the fee rate, a purchase must not be over 500 coins, the market day cannot start in the future and the company must have a base. The ref is `market:<actionUid>`.
-9. **API.** A repeat answers `409 already_applied`, and that is the first thing the server checks, so it is the answer to a repeat whatever has changed since (changed after the review: before, a repeat during a pause got `market_halted`). A switched-off feature answers `404 feature_off` on the player routes. The price board works anyway but then only looks and saves nothing, so the market does not start to move before the launch, and it takes no query parameters. Routes and errors are in [INTERFACES.md](INTERFACES.md#the-island-exchange-package-l4).
+**Why:** Nils wants real companies and real prices, and investments that can end at zero within a class: at 10x, a real move of 1 % is 10 % of the stake, and a real move of 10 % against a position ends it. Real prices need no amplification rule, so nothing can drift away from reality or sink toward one cent (the v1 problems). A stake can be lost but nothing more, so no balance goes below zero and nobody owes coins. One shared server price, fresh for trades, and no trading on closed or stale companies stop players from trading on prices they know are out of date.
 
-**Why:** Nils wants the Exchange to be a core feature, fun in a 90-minute class, and safe: prices that move visibly in minutes, with limits that stop runaway moves. Rounding against the player and the fee mean a round trip never makes coins from nothing (a test tries 195 combinations). Keeping the game price at a re-base avoids a free profit: if a re-base snapped every price back to its starting level, anyone could buy a company that is priced below its start and gain at the next re-base without any risk. Binance market data needs no key and no account, so the feed works without a teammate signing up for anything. The review showed that "no risk" must also hold against a player who watches Binance or reads the repository: prices that a trade uses must be current, and a recorded file must never be the live market.
+**Trade-offs:**
+- Real prices move slowly: in a 90-minute class crypto often moves under 1 %, so a position moves by a few percent to about 10 % of its stake; on a volatile day a position can end at zero.
+- The automatic close sees only prices the server fetched; a dip past the zero point between two looks is missed (in the player's favour). No timer is available (Vercel Cron breaks our deploys while we use Services, GitHub Actions is too slow and limited, a database timer would have to fetch prices and hold the key).
+- No price protection: a trade can get another price than the screen showed (the board may be 30 s old).
+- Prices up to 5 s old leave a fast player who watches the live market a small edge; the 2 % fee each way makes it rarely worth it.
+- Real prices are shown as they are, so display rights matter: Binance's terms do not say whether a class game may show its prices; Finnhub's free plan allows it only with written approval; no free source covers European shares.
+- At the 11:00 class the US stocks are closed; only the island companies trade.
+- Stocks can open far from their last close, which closes rising or falling positions at zero at the open.
+- Each server instance holds its own prices in memory, so a fresh instance during an outage shows "no price yet".
+- Demo-mode trades change real coins on a public recording (Nils accepted it).
 
-**What the multiplier does in practice (our simulation).** The rules were played through the recorded minutes of 4 Nov 2026 (`backend/server/tests/test_market_replay_breaker.py` freezes the first two rows):
+**Alternatives:** amplified prices with a floor, ceiling and pauses (v1); x100 that never reaches zero with daily rounds (item 2a, replaced by 2c); 10x on top of x100 (would end a position after a 0.1 % move); price protection with a tolerance (item 5, not chosen); a timer for the automatic close (not available); per-symbol candles to catch dips (one request per symbol); a shared table of last prices (later).
 
-| Multiplier | Pauses in the 90-minute class slot (BTC, ETH, SOL, XRP, BNB, EUR/USD, gold) | Pauses in the whole day, crypto companies | Gold, EUR/USD |
-|---|---|---|---|
-| 100 (default) | 1, 3, 2, 2, 1, 0, 1 (10 in all; ETH paused 45 of 90 minutes) | 31 to 43 (paused 32 to 45 % of the day) | 12, 1 |
-| 50 | 1, 1, 1, 1, 0, 0, 0 | 11 to 18 | 3, 0 |
-| 20 | none | 3 to 6 (paused 3 to 6 % of the day) | 1, 0 |
+**History: v1 (superseded).** v1 amplified real moves (game price = base x (1 + multiplier x real change), multiplier 20 to 100), held prices between 25 % and 400 % of a start price, paused a company for 15 minutes after a 30 % move, re-based every day at 08:00 Lisbon, traded whole units with a 10-minute holding time, and limited purchases to 500 coins and 2,000 a day. An independent review found trades on old prices, a predictable public replay and prices sinking toward one cent; the fixes that still apply carry over (prices at most 5 s old for trades, no replay in live mode, the daily cap, 10 trades in 30 s). Its simulations showed that at x100 prices spent most of a multi-day run near their floor. The full v1 text is in git history (`docs/DECISIONS.md` at `3d59b6a`).
 
-At 100 the crypto companies are open for only about 18 to 32 minutes between pauses, and a player must hold shares 10 minutes before selling, so many holdings are paused or cannot be sold.
-
-*Over several days* (our simulation: the board looked at once a minute, recorded 1-minute moves resampled with the trend taken out, 6 paths per company; `test_market_replay_breaker.py` freezes the main result for two companies). With the floor and ceiling of rule 2, no path ever reached one cent, but at 100 the prices spend most of the time near the floor, because every pause locks in a step of +30 % or -30 % and a series of such steps loses value on average:
-
-| Multiplier | After 1 day: median price against the start price (the five crypto companies) | After 5 days | After 10 days |
-|---|---|---|---|
-| 100 | x0.25 to x0.64 | x0.26 to x0.36; 3 of 6 paths per company end on the floor | x0.25 to x0.38; 2 to 4 of 6 end on the floor |
-| 30 | x0.54 to x0.94 | x0.33 to x0.99; 0 to 3 of 6 end on the floor | x0.35 to x0.91; 0 to 2 of 6 end on the floor |
-| 20 | x0.66 to x1.03 | x0.62 to x1.16; none end on the floor | x0.47 to x1.24; none end on the floor |
-
-EUR/USD and gold are calmer: at 100 their medians are x0.94 and x1.45 after 1 day, and x0.46 and x0.34 after 10 days.
-
-Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5 of 6 paths per crypto company at one cent after 5 days, and 2 to 6 of 6 after 10 days. **We recommend a multiplier of 20 to 30 for the class.** The default stays 100 because Nils asked for it: set `MARKET_MULTIPLIER=25` on Vercel to follow the recommendation, or change `DEFAULT_MULTIPLIER` in `rules.py`.
-
-*Players who watch Binance.* With a 60-second old price (first version) the amplified one-minute move was larger than the 4 % round-trip fee in 25 to 52 of the 89 recorded minutes for each crypto company at 100 (and in at most 1 minute at 20): anyone with a Binance chart could buy before a rise. With prices at most 5 seconds old, the moves a player can see before the game shows them are about a third as large (price moves grow with the square root of time; this is an estimate from the one-minute data, not a measurement). At 100 a large move of more than 4 % within 5 seconds is still possible in a few percent of the moments, so a very fast player keeps a small edge; at 25 it is out of reach.
-
-**Review findings and what was done.**
-
-| Finding of the independent review | What we did |
-|---|---|
-| Major: trades used prices up to 60 seconds old, or stale ones | Trades use prices at most 5 seconds old and are refused on stale prices (`409 prices_stale`); rule 6 |
-| Major: the replay is public and predictable, and the switch snapped prices | Live mode never plays the replay; demo mode is documented as public prices; rules 6 and 7 |
-| Major: prices sank to one cent within days | Floor and ceiling from the start price; rule 2 |
-| Minor: the database trusted every number | `market_trade()` checks the arithmetic, the purchase limit, the company and the day start; rule 8 |
-| Minor: a repeat could get another error | The repeat is checked first; rule 9 |
-| Minor: some docs and tests did not match the code | Fixed (instances agree on the base and the pause, not on the price; the cache header; ten tables; the tests of the source change now move the price first) |
-| Minor: the price board ignored the flag, any query string skipped the cache, no limit on trades | The board only looks while the flag is off, it takes no query parameters, and a player may make 10 trades in 30 seconds |
-| Minor: a holder could not sell above 500 coins | A sale has no upper limit; a start price is limited so that one unit is always tradable |
-| Minor: no link to the licence on the board | `licenceUrl` while the replay plays |
-| Minor: shares of a company that is removed from `companies.json` could never be sold | Not changed in code. Rule for the team: never remove a company from `companies.json` while players may hold shares (see its README) |
-| Minor: the breaker was measured on the rounded price | Not changed: with a floor of at least 3.00 coins, rounding to cents moves a price by at most 0.17 %, and the problem at one cent no longer exists |
-
-**Alternatives and trade-offs:**
-
-- *A fee of 3 %* (the roadmap) or 2 % (this brief): 2 % is built, one named number to change. The roadmap's example "buy 5 at 12.00 leaves 38.20" has fractions of a coin, which whole coins do not allow; with 2 % and whole coins it leaves 100 - 60 - 2 = 38.
-- *CoinGecko as the primary feed* (the roadmap): it needs a key that a teammate must create, and a call limit of 10,000 a month. Not built; it stays a backup (D014 is reserved for the accounts and keys).
-- *Snapping the game price back to its starting level at a re-base:* rejected, see above. *A gentle pull toward the start price at each re-base* (suggested by the review): not built. It is predictable (a player can buy shortly before 08:00 whenever a price is below its start and sell after the re-base), and at a multiplier of 100 a pull of a few percent a day cannot offset the loss of value from the pauses; at 20 to 30 it is not needed. *Settling (selling) all positions at the daily re-base:* would stop prices drifting far from their start, but it sells shares nobody asked to sell; not built.
-- *Playing the replay when Binance fails* (the first version): rejected after the review, see rule 6. The price is that the live Exchange shows no prices at all if Binance refuses our server (HTTP 451 from US regions) and has never answered, so test it from the deployed function before the class, and use demo mode if it does not work.
-- *A secret random shift of the replay in demo mode:* not built. Anybody can find the shift from the prices on the board by comparing them with the public file, so it would only hide the problem. Demo mode is for development and rehearsals.
-- *An expected price in the trade request* (a trade is refused if the price moved by more than a small tolerance since the player saw it): not built, it is a decision for Nils. Today a player trades at the shared price of that moment, which can differ from the price on their screen (the board is cached for 30 seconds and the screen may poll less often) by a few percent at a multiplier of 100. The field can be added later without breaking the contract (it would be optional).
-- *Daily price limits instead of pauses with re-basing* (the price may not leave 30 % around the day's opening, with no compounding): calmer, but a different rule from the one Nils gave; not built.
-- *Known limits:* at a multiplier of 100 the prices spend most of a multi-day run near the floor (see the table), and buying at the floor then has a small edge for the player, because the price cannot fall further but can still rise (the fee, the holding time and the daily cap limit it). Each server instance prices from its own copy of the real prices. The speed limit on trades is per instance. The Exchange has no opening hours: the roadmap mentions an 08:00 to 22:00 day, but the instruments trade all night and nothing in the brief asked to close the market. Between visits a price is not followed, because it is only worked out when somebody looks: after a long quiet time the first look finds a large gap and a company usually pauses at once.
-
-**Agreed by, PR and impact:** Nils' rules, 5 Nov 2026. The "chosen here" numbers (breaker freeze, floor 25 % and ceiling 400 % of the start price, 2 % fee, 500 and 2000 coin limits, no limit on sales, 10-minute hold counted from the latest purchase, price kept at a re-base, 5-second price age for trades, 10 trades in 30 seconds, no replay in live mode) are proposals for Nils and the team. Affects the Exchange screen (browser), the story card C6 (a Greyfathom share), the economy simulation, and every package that adds wallet reasons (the list of reasons now has 11 entries; keep the migration order and the Python order the same).
+**Agreed by, PR and impact:** Nils, 5 Nov 2026. Built on `feat/l4-exchange-v2`. Affects the Exchange panel, card C6 (the Greyfathom share), the Relighting (fees drop, Greyfathom delisted; L3 provides the switch), D014 (Nils owns the Finnhub key) and every package that adds wallet reasons (the list now has 13).
 
 ## D018 · Story round: 19 story decisions and two scope decisions · 2026-11-05
 
@@ -411,6 +379,149 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 - If the weather place moves to Lisbon (an open question for Mon 9; the default is Torshavn), real fog becomes rare and the almanac carries the teaser.
 
 **Agreed by, PR and impact:** Proposed in `feat/open-world-must`. Affects `GET /api/weather` (two new fields), `GET /api/bulletin` (new), three content files, package L3 (`world_state` keeps `relit_at` and provides the reader), package S3 (the next-lead line) and package L5 (weather questions settle on real fog only).
+
+## D025 · Prediction desk rules · 2026-11-06
+
+**Status:** Proposed in the L5 pull request (`feat/l5-prediction-desk`); accepted when reviewed by another
+teammate and merged. The number is provisional: the controller renumbers it at merge. Base: the roadmap (L5)
+and OPEN-WORLD section 8. Points marked "chosen here" need Nils' OK. The flag `predictions` stays off (Nils'
+decision 18).
+
+**Decision:**
+1. Play-coin pools only: the winners share the pool. No outside odds, no link to a betting site; Manifold's
+   own probability is never shown, only coins and captains per side and a rough payout per coin.
+2. Questions: a hand-picked allow-list in `backend/content/predictions/questions.json` (one folder per feature;
+   D016 and the roadmap said `backend/content/questions.json`), Manifold only, each read by a person
+   (`reviewedBy`); a `pending` question is hidden.
+3. Stakes (chosen here): one per player and question, 1 to 50 coins, at most 200 per Lisbon day. Staking closes
+   at the question's own time, at least 60 minutes before the deciding moment, earlier if Manifold closes or
+   decides. The database keeps the closing time it was given at the first stake and never changes it; at every
+   stake the earlier of that stored time and the time the server knows at that moment counts, so a stored
+   closing time never moves later (two server instances with different readings of Manifold can disagree for a
+   short while).
+4. Payout (chosen here; changed from OPEN-WORLD 8.1): the cut is 5 % of the LOSING side, rounded down, so a right
+   forecast never loses coins (with the old rule of 5 % of the whole pool, 99 coins on YES against 1 on NO would
+   pay the winners only 95). Largest-remainder rounding, ties to the earliest stake: payouts plus cut equal the
+   coins staked. Full refund when void (Manifold CANCEL, MKT or anything else, or the host), when nobody picked
+   the winner, and when everybody picked the same side.
+5. Settlement: a host button in the minimum (yes or no only after closing and only matching a decided Manifold;
+   void any time). Final, even if Manifold changes its mind later. Automatic settlement later: Manifold decided,
+   then a 60-minute grace, on the first request that touches the pool (no cron, D002).
+6. Database: reasons `prediction_stake` (spend, ref `stake:<stakeId>`) and `prediction_payout` (earn, ref
+   `pool:<questionId>`); tables `prediction_pools` and `prediction_stakes`, view `prediction_pool_sides`;
+   functions `prediction_place_stake()` and `prediction_settle_pool()`, each one transaction, pool lock first,
+   then wallets by player id. The server computes the payouts (`pools.py`); the database checks that they cover
+   exactly the paid stakes, add up and stay within one coin of the exact share. Update rights per column. A
+   trigger (`prediction_pools_keep_settled()`) makes a settled pool final in the table itself: it refuses every
+   update of a settled pool, so even a server bug cannot reopen a pool and pay it a second time (the ledger
+   ref `pool:<questionId>` alone would only stop a second payout to the same player).
+7. Data: Manifold, no key, cached 120 s per question per server instance, a recorded answer as the fallback;
+   demo mode never calls it. Polymarket later. Never Kalshi or Metaculus. A stake needs a real reading, and
+   (chosen here) a `stale` reading (the last good answer, kept because Manifold cannot be reached) must not be
+   older than 15 minutes: an older one is still shown and still limits a host's settlement, but nobody can
+   stake on it, because a market that was decided meanwhile would be news that only some captains know.
+8. API: `404 feature_off` while the flag is off; a repeat answers `409 already_applied` first; settle is host-only
+   (`HOST_PLAYER_IDS`, A2's contract).
+
+**Why:** forecasting fun with no money; numbers a student can explain line by line; no right forecast loses
+coins; no coin is ever created; a double click or a retry never pays twice.
+
+**Alternatives and trade-offs:** cut on the whole pool (rejected, see 4); rounding down with the leftovers in the
+cut (rejected: it rounds against the winners); several stakes or switching sides (not in the minimum); the split
+computed in SQL (rejected: the rule would be written twice in full); one stake table shared with L6 (left to L6);
+a link to Manifold (text credit only); no age limit for a stale reading (rejected: the information edge is real,
+see 7). Known limits: a player deleted while a pool is open takes their stake out of the pool; the cache is per
+instance; news can reach players before Manifold resolves, which is why pools close before the deciding moment
+(and why a stale reading is limited to 15 minutes).
+
+**Agreed by, PR and impact:** proposal for Nils, 6 Nov 2026. Affects L6 (`pools.py`), the list of wallet reasons
+(13), the kiosk screen and A2 (`hosts.py`).
+
+## D026 · Lantern Duels rules · 2026-11-06
+
+**Status:** Proposed in the A7 pull request (`feat/a7-lantern-duels`); accepted when reviewed by another teammate and merged. The number D018 is a placeholder: the controller renumbers it at merge if another entry took it first (OPEN-WORLD on `s0final` also mentions a D018). The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md).
+
+**Decision:** Lantern Duels, the PvP arena (package A7), is a duel of **sealed signals** between two captains, behind the flag `arena`, which stays off.
+
+- *The duel.* Each captain seals a sequence of lantern signals, one per round (3 or 5 rounds): Flash outshines Shade, Shade leaves Mirror nothing to throw back, Mirror throws Flash back, and the same signal twice scores for nobody. Each captain has as much lantern oil as the duel has rounds: Flash burns 2, Mirror 1, Shade 0. More rounds won wins; equal is a draw. The challenger seals with the challenge, the other captain with the answer, and answering *is* accepting: in one database transaction the server stores the answer, opens both envelopes, decides every round and settles the coins. The browser sends only signals, never a result or an amount (D003).
+- *Challenges.* By captain name (the exact display name, in any letter case) or open to any captain, where the first answer wins. Withdraw (the challenger) and decline (the named captain) are one extra route, `POST /api/duels/{id}/cancel`, and the list is `GET /api/duels`; both are new names for the Mon 9 contract review.
+- *Money.* Stakes of 0 (friendly), 10, 25, 50 or 100 coins from each captain. The challenger's stake is held when the challenge is sent, the answerer's when they answer. The winner takes the pot minus a **cut of 5 %**, rounded down (19, 47, 95 or 190); the cut has no ledger row and is simply not paid out. A draw, a withdrawal, a decline and an expiry give every stake back. Two new wallet reasons, `arena_stake` (spend) and `arena_payout` (earn), with the ref `duel:<duel id>`, so the ledger's unique index stops a double stake or a double payout. Each money change is one atomic database function (`duel_create()`, `duel_answer()`, `duel_void()`), like `market_trade()`. Caps are checked inside the functions while the locks are held: 3 waiting challenges per captain, and 3 staked duels per day between the same two captains (the day starts at 00:00 Lisbon time).
+- *Time.* A challenge can be answered for 24 hours. The deadline is checked lazily, on the next request that touches the duel (no cron, no timer), and the database clock decides. A sealed duel has no forfeits: nobody can lose by being offline.
+- *Sealed means sealed.* A captain's signals reach the other captain only after both envelopes are in, and only inside the stored reveal. The table `duel_moves` has no grant and no policy for players, and no role (not even the server) may update or delete a row. `views.py` is the one place that decides visibility and refuses to build a view that would show a sealed signal. A test runs two fake databases that differ only in the challenger's signals and demands byte-identical answers for the named captain and for a visitor.
+- *Where the numbers live.* Python constants in `backend/server/duels/rules.py` (as D017 did for the Exchange), checked against the migration by a test.
+
+**Why:** It is fair and explainable: both captains have the same signals, oil and rounds; swapping the two captains swaps the result (checked for all 17 x 17 pairs of 3-round sequences and all 147 x 147 pairs of 5-round ones); no allowed sequence is unbeatable, so there is no safe plan, only a guess about the other captain; and sealing first is no disadvantage because nothing about the first envelope is visible. Nobody loses by being offline, which suits a class where players are not all online together. It needs few calls (about 40 per 10 quiet minutes for one open panel, polling only), well inside the free tiers, and no Realtime. One atomic function per money change keeps the ledger honest even when two requests arrive at the same moment.
+
+**Alternatives and trade-offs:**
+
+- *Live round-by-round duels now* (both captains online, a 30-second timer per round, forfeits): more calls, round timers and forfeits, and nobody may be offline. Planned for after 23 Nov as a new duel style; the migration then adds a style, a current round and a round deadline.
+- *A separate accept step:* a half-accepted duel needs a deadline and a forfeit. Rejected: answering is accepting.
+- *Hash commitments for the sealed signals:* the server is already the trusted referee and holds both envelopes, so a commitment would add code and prove nothing. Rejected.
+- *No cut:* simpler, but then duels are no coin sink and coins pass between captains without any cost. Open for Nils.
+- *`duel.json` for the numbers* (OPEN-WORLD): D017 used constants and so do we. Open for Nils.
+- *Known limits:* the round results and the outcome are an input from Python (`rules.resolve`), like the price of a trade; the database checks only what follows from them (one result per round, results from the three allowed words, an outcome that fits the counted points) because it never reads the challenger's envelope. A challenge that nobody touches stays open past its deadline, with the stake held, until the next request touches it (the panel shows the coins as held). The rival in the screen's practice ring is a local stand-in for development only.
+
+**Open for Nils** (the spec's answer stands until he decides): (1) the cut, 5 % or none; (2) stakes up to 100 from the first switch-on, or friendly duels only at first (the floor is one constant away: `ROUND_CHOICES = (3,)` and `STAKE_CHOICES = (0,)`); (3) the answer window, 24 hours or shorter for class; (4) keep live duels in the plan or drop them; (5) agree the two routes beyond the reserved names at the Mon 9 freeze; (6) Python constants instead of `duel.json`.
+
+**Agreed by, PR and impact:** Pending Nils and a different human teammate. Proposed in the A7 pull request. Affects `docs/INTERFACES.md` (five routes, the status codes, two tables, three functions, two reasons), the wallet reasons (the list now has 13 entries; keep the migration order and the Python order the same), the arena screen (browser) with a few lines in `frontend/src/game.js` (the hook at the arena gate, and the lines that make the open panel an overlay, so Escape closes it instead of opening the pause menu; these go beyond the one hook the spec first agreed and need approval), and the Mon 9 contract review. The existing test that pinned the market reasons to the end of `WALLET_REASONS` now pins them right after the first eight, because recipe 4.7 appends new reasons (the requirement changed); the arena reasons are pinned by position too (`WALLET_REASONS[11:13]`), so the next package that appends a reason breaks no test. The migration is applied to Supabase only after review, and `arena` stays off until Nils decides.
+
+## D027 · Case backend contracts · 2026-11-06
+
+**Status:** Phase 1 built on `feat/case-backend` for Claude's review. Later phases remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
+
+| Decision | Contract |
+|---|---|
+| C1 | Game refusals are 200 with accepted=false, reason, message and a fresh view. |
+| C2 | A repeated actionUid rebuilds its stored outcome first and adds repeat=true. |
+| C3 | GET /api/case and POST /api/case/search replace the old board-read and free-form act reservations. |
+| C4 | Decided: whole case seconds since muster, no pause; a host moves only their own crew. |
+| C5 | Timed results take effect at their stored acceptance-time deadline, without a settle job. |
+| C6 | Decided: a partner pin's reward is paid when its order is accepted. |
+| C7 | Concurrent searches are allowed; each seat finds each card once. |
+| C8 | The crew sees rounded glow during its own night. The specification's default remains pending Nils or the story owner. |
+| C9 | Decided: a locked solve never later changes the world; its rewards and reveal still happen. |
+| C10 | Case tables are server-only, with RLS and no player grants or policies. |
+| C11 | The case flag defaults off and gates all case routes, including the later world route. |
+| C12 | Light posts remain occupied after dawn. |
+| C13 | A player locks their own light; any crew player may lock a partner-held light. |
+| C14 | Optional route labels are data; absent labels use the card title. |
+| C15 | Every state-changing refusal is logged, so retries preserve refusals. |
+| C16 | Decided: only contributors with a share appear on the Wall of Lights. |
+| C17 | Partner pin credit starts at order acceptance; pairing waits for the actual pin. |
+| C18 | Decided: position and boarding are presentation only, never server prerequisites. |
+| C19 | Any crew player's level-one station readies the crew's home light; only players man it. |
+| C20 | RELIGHT_OPEN=true is accepted only in explicit production; unset is closed. |
+
+**Migration reservations:** Phase 1 060000, Phase 2 080000, Phase 3 120000, Phase 4 130000; stream C 140000. Group 3 owns 090000, 100000 and 110000. All filenames start with 20261106. No historical or reviewed migration is edited.
+
+**Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See [the specification](../specs/case-backend.md) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
+
+
+## D008 · Grow order is moot · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** The earlier proposed grow order is moot. Work is already split into the browser task G9, server task G10 and Claude's integration checkpoints. Follow the dependencies of those tasks rather than waiting for a kickoff to choose the old order.
+
+**Impact:** The old grow-order question in the roadmap is historical. Group 3 still waits for Claude's group 2 confirmation; this decision does not waive that checkpoint.
+
+## D009 · Interfaces v1 as built · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Accept the v1 contracts in [INTERFACES.md](INTERFACES.md) as built. Later server and browser work updates those contracts together rather than inventing a second interface.
+
+## D010 · Backbone go; deployment check 1 remains open · 2026-11-06
+
+**Status:** Go, decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Continue building on the backbone. Deployment check 1 in [SETUP.md](SETUP.md) remains open; it does not block the work. This entry records the decision and does not claim a new live deployment check.
+
+## D014 · Finnhub ownership and key location · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
 ## Next entry
 

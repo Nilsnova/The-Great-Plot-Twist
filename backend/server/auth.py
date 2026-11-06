@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 CACHE_SECONDS = 60
 TIMEOUT_SECONDS = 3.0
+MAX_TOKEN_LENGTH = 4096
 
 # Supabase answers with one of these when the token itself is the problem.
 TOKEN_REJECTED_STATUSES = (400, 401, 403)
@@ -77,18 +78,28 @@ def auth_unavailable() -> ApiError:
 
 
 def read_bearer_token(header: str | None) -> str:
-    """Get the token out of a header like "Bearer abc123". Raises 401 if it is missing or odd."""
+    """Get a three-part login token from its header. Raises 401 if it is missing or odd."""
     if header is None or not header.strip():
         raise unauthorized("Sign in first: the Authorization header is missing.")
     parts = header.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise unauthorized("The Authorization header must look like: Bearer <token>")
     token = parts[1]
+    validate_token(token)
+    return token
+
+
+def validate_token(token: str) -> None:
+    """Refuse oversized or incomplete login tokens before caching or any outside request."""
     # A real token is plain ASCII. Refusing anything else also keeps odd bytes away from httpx,
     # which would otherwise fail with an error that looks like our fault instead of the caller's.
+    if len(token) > MAX_TOKEN_LENGTH:
+        raise unauthorized("The login token is too long.")
     if not token.isascii():
         raise unauthorized("The token contains characters that are not allowed.")
-    return token
+    parts = token.split(".")
+    if len(parts) != 3 or not all(parts):
+        raise unauthorized("The login token must have three nonempty parts.")
 
 
 def hash_token(token: str) -> str:
@@ -136,6 +147,7 @@ class PlayerVerifier:
 
     async def verify(self, token: str) -> Player:
         """Return the player who owns this token, or raise an ApiError."""
+        validate_token(token)
         self.check_configured()
         key = hash_token(token)
         player = self.find_in_cache(key)

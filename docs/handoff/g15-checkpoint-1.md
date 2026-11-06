@@ -1,0 +1,28 @@
+# G15 checkpoint 1 — recorded content, match rules and provider adapters
+
+- Owner: Nils; branch: `feat/g15-sports`, based on `origin/main` (`c26f303`).
+- Three genuine 2023/24 EPL results, six text-only teams; OpenFootball CC0 provenance/licence retained.
+- Historical records stay final/closed, with distinct recorded ids and explicit London kickoff conversion.
+- Pure home/draw/away rules, NBA home/away, one-hour kickoff cutoff, disruption/refund outcomes.
+- Fixed-host football-data.org v4 and balldontlie NBA v1 adapters; injected HTTP fakes only in tests.
+- Settings: `SPORTS_API_PROVIDER`, redacted `SPORTS_API_KEY`; either empty means no live adapter.
+- Sports flag off or demo mode also prevents provider requests; no routes or wallet writes added yet.
+- L5 `e90a620`, Exchange v2 `4d5aa5b`, A7 `8af962b` inspected through their remote refs, read-only.
+- Against L5's actual pure modules: 403 sports/pool cases passed; caps and Lisbon midnight checked.
+- Reuse L5: 1–50 coins, 200/day at Lisbon midnight, 5% of losing stakes; L4/A7 rules differ.
+- L5 pool Python supports three outcomes; its SQL only accepts YES/NO, so sports needs atomic SQL.
+- Gates: backend 3,172 passed; Ruff passed; frontend 288 passed; build/spoiler guard passed.
+- Secret gate: Gitleaks 8.24.3 on `git diff origin/main...HEAD`, zero findings (pipefail enabled).
+- No migration yet; reserved `20261106180000_sports_desk.sql` MD5: N/A (not created).
+- No wallet reasons added; the L5 reason/ref design must be reused where suitable in checkpoint 2.
+- Vercel now: leave `FEATURE_FLAGS` without `sports`; `SPORTS_API_PROVIDER=`; `SPORTS_API_KEY=`.
+- Recorded rehearsal later: `DEMO_MODE=true`; the same empty provider/key; enable `sports` only on Nils' instruction.
+- Optional live football later: `DEMO_MODE=false`, `SPORTS_API_PROVIDER=football-data.org`, server-only `SPORTS_API_KEY` entered securely in Vercel.
+- Optional NBA later: `SPORTS_API_PROVIDER=balldontlie`; its matching server-only key; never any `VITE_` key.
+- Preserve other flags; append `sports` only when Nils enables the completed feature. No Vercel config file changes.
+- Not verified: authenticated live APIs; NBA date-only answers fail closed; no account/key requested.
+- Next baseline: check `integrate/group3` when available, without merging any feature branch.
+- Merge only `origin/main` once it contains `supabase/migrations/20261106100000_prediction_desk.sql`; rerun gates then.
+- Main `60f7fd0` still lacks that migration; `integrate/group3` was not advertised at the latest check.
+- Remaining: atomic routes/settlement/migration, scratch-Postgres tests, tavern UI and presenter rehearsal.
+- No live Supabase, private .env or secrets accessed; protected status/decision/deployment files untouched.

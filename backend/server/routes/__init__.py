@@ -9,11 +9,23 @@
     intro.py          POST /api/intro/complete replays the Act 1 move log and gives the entry kit
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
+    predictions.py    /api/predictions...     questions, stakes and host settlement
+    duels.py          /api/duels...           sealed-signal challenges and moves
     crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
     islet.py          GET  /api/islet          your home islet: coins, timber, the five spots
                       POST /api/islet/build    build level 1 of a building on your islet
     weather.py        GET  /api/weather        the real weather, the weather state and tonight
     bulletin.py       GET  /api/bulletin       the harbor bulletin and the Chapter 2 hook
+
+    case.py           /api/case...             earned view, card searches and accusation
+    board.py          /api/board...            own-seat pins and shared deductions
+    finale.py         /api/finale...           nightfall, light posts and signal locks
+    world.py          GET /api/world           public coast stage and contributor Wall
+    crew_orders.py    POST /api/crews/me/orders free NPC fetch-and-pin and public-light duty
+    festival.py       /api/festival...         timed lamp claims and the friendly Keepers' Ring
+    host_console.py   /api/host...             private host overview and own test-crew cleanup
+    sports.py         /api/sports...           provider fixtures, own stakes and verified settlement
+    host_case.py      /api/host/case/clock      move the host's own crew's case clock
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the
 GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).

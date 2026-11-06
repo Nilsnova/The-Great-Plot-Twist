@@ -1,0 +1,14 @@
+Local real-build fixture: 42 emitted JS/CSS assets, metadata matches output exactly.
+PASS home returns HTML with HTTP 200
+PASS home Content-Security-Policy is present
+PASS home X-Content-Type-Options is nosniff
+PASS home Referrer-Policy is present
+PASS API health is ok (database readiness is not checked)
+PASS API feature flags are Boolean and match any expected flags
+PASS signed-out private response is HTTP 401 with Cache-Control no-store
+PASS deployed build stamp is valid and matches any expected commit
+BUILD 90d9c684c4aa3534e32b55c4ca5dc0ed0b585fd2 2026-11-06T17:09:22.591Z
+PASS home entry scripts are same-origin stamped assets
+PASS all stamped JavaScript and CSS downloads fit the byte budget
+PASS downloaded home and complete bundle pass the spoiler fingerprint scan
+RESULT 0 failure(s)

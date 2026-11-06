@@ -4,7 +4,64 @@
 >
 > **Who uses it:** all four teammates and every coding agent. The story is in [docs/STORY.md](docs/STORY.md). What is happening right now, and ready-to-paste agent briefs, are in [docs/STATUS.md](docs/STATUS.md).
 
-**Status: v0.3, Thu 5 Nov 2026, late evening.** The story skeleton and the detailed story round (S0) are approved (three review changes to the approval sheet still wait for Nils' OK: [docs/story/README.md](docs/story/README.md#changes-to-the-approval-sheet-after-the-review)), and the look is decided: original top-down pixel art (D005). `main` is live: the game and the Python API run at https://the-great-plot-twist.vercel.app/. Foundation waves 1 and 2 are on `main`. Everyone clones and branches from `main`; see [Merge order](#merge-order-today) for what lands next. The team picks the owners of lanes S, A and L today. Open decisions are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions). Next review of this file: the M1 check on Fri 13 Nov.
+**Current execution: 6 Nov 2026.** The game and API are live at
+https://the-great-plot-twist.vercel.app/. Group 3, the complete minimum case backend, NPCs,
+server followups and G12 are deployed. Reviewed festival, host and sports code is deployed after
+its migration proofs; festival is enabled but waits for the first Relighting, while sports stays
+off pending its provider key. The stabilization/submission wave is deployed and its final gates pass.
+G9 is paused until Nils' laptop returns; normal browser multiplayer/the complete mystery still
+await that adapter. The detailed historical package plan remains below.
+
+## Execution update · 6 Nov 2026
+
+Nils authorized Codex to coordinate all lanes, review and apply migrations, push integration branches
+and main, and manage Vercel. No Claude handover is required during this period. The current target is
+feature-complete minimum versions by Sunday 8 Nov, then stabilization and submission preparation for
+23 Nov. These are targets; live completion is recorded in docs/STATUS.md.
+
+1. Release group 3: Exchange v2, predictions and duels, after gates and the reviewed 090000,
+   100000 and 110000 migrations. Enable live_presence, market, predictions and arena and verify live.
+2. Complete the case backend in phases: searches and earned case data, board/night finale,
+   Relighting/rewards, NPC partners and hardening. Apply each reviewed migration before its code.
+3. Complete G9: real sign-in, account/save, crews, presence and the case adapter; prove solo and crew
+   play end to end with once-only rewards and protected reveals.
+4. Integrate economy-abuse coverage, festival, host console and sports in dependency order, then
+   reliability, security, accessibility, developer tools, help, privacy and submission materials.
+   Nils authorized enabling completed festival and sports on 6 Nov; each still needs its proofs.
+   RELIGHT_OPEN stays unset until the separately controlled game-opening step.
+5. Add the optional AI helper described below, then rehearse the full deployed experience.
+
+### Current delivery map
+
+| Area | Current result | Remaining proof or input |
+|---|---|---|
+| Intro, islands, story presentation and sound | Built and deployed; local demo/rehearsal available | Physical laptop/phone/gamepad and listening rehearsal |
+| Weather, Exchange v2, predictions, duels and presence services | Deployed and enabled | Direct stock/cache smoke needs this cloud's production-host allowlist; normal crew subscription needs G9 |
+| Case, shared board/night, Relighting and NPCs | Backend deployed; all 69 kit mixes and actual solo/four-human HTTP/SQL journeys pass | Resume G9 and prove authenticated browser journeys; RELIGHT_OPEN remains unset |
+| Festival and host tools | Deployed; festival enabled in waiting state; host actions require configured identity | Actual authenticated host/browser rehearsal; festival starts only after the first real Relighting |
+| Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
+| Reliability, tests, help/privacy, security/notices, devtools | Deployed; combined gates and public read-only verification pass | Authenticated browser/device journey follows G9 |
+| Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
+| Spoiler-safe ChatGPT helper | Scope and consent/security contract recorded; feature off | Official registered website client approval, then implementation after G9 and a consented live proof |
+
+No routine merge permission is needed. The immediate external dependencies are the laptop for G9,
+the sports key in Vercel and official ChatGPT website-client registration. Teammate credit names,
+submission details and the physical rehearsal are needed before hand-in. Secrets and student
+numbers must stay out of chat and Git. Stabilization adds no database migration or paid service.
+
+**Sound is already built**, in frontend/src/audio/: original procedural title/finale music, sea/wind/rain
+ambience, footsteps, foghorns, dialogue/UI sounds, building cues and station hum. It starts after a
+user gesture, has separate master/music/effects levels and visible captions for key cues. Keep audio
+regressions in release checks; listening balance on the presenter laptop remains a rehearsal task.
+
+**AI helper (new, Nils, 6 Nov):** spoiler-safe hints and game help powered by a player's eligible
+ChatGPT plan through official Sign in with ChatGPT. Add it as an optional feature after the earned-case
+adapter. The model may see only the requesting player's earned, authorized game view and public help;
+it receives no secret case content and cannot write game state or award coins. Keep ordinary gameplay
+available when disconnected, consent is declined or usage is exhausted. Website OAuth activation is
+blocked on OpenAI approval and a registered client/callback: the official website flow is a limited
+trial, not a general-purpose client registration. Never borrow a Codex client ID or store a player's
+ChatGPT credentials. See [the integration scope](specs/AI-helper.md).
 
 ## Changes since v0.2 (Thu 5 Nov, late evening)
 

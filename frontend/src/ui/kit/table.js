@@ -7,7 +7,7 @@ export function createTable({ caption = 'Records', columns = [], rows = [] } = {
   function update(data) {
     if (data.caption !== undefined) title.textContent = data.caption;
     if (data.rows) rows = data.rows; body.replaceChildren();
-    rows.forEach(row => { const tr = node('tr'); columns.forEach(column => tr.append(node('td','',row[column.key] ?? '—'))); body.append(tr); });
+    rows.forEach(row => { const tr = node('tr'); columns.forEach(column => tr.append(node('td','',row[column.key] ?? '?'))); body.append(tr); });
   }
   update({rows}); return { element, update, dispose() { element.remove(); } };
 }

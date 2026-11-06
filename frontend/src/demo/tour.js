@@ -49,7 +49,7 @@ export function createTour(ctx) {
       await ctx.world.goTo('home_islet', { fast: true });
       if (token !== generation) return;
       standAt('plot_2');
-      ctx.caption('The crew prepares the home islet · local rehearsal only.');
+      ctx.caption('The crew prepares the Home islet · local rehearsal only.');
       await wait(2, token);
       if (token !== generation) return;
       fakeBuild(BUILD);

@@ -15,6 +15,7 @@ function isUsableSave(story, data) {
       Array.isArray(data.inventory) &&
       data.inventory.every((id) => has(story.items, id)) &&
       Array.isArray(data.flags) &&
+      data.flags.every(flag => typeof flag === 'string') &&
       typeof data.ended === 'boolean',
   );
 }

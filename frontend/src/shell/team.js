@@ -2,7 +2,7 @@
 // Each teammate replaces their own placeholder in their first pull request. No student numbers.
 export const teamMembers = [
   'Nils Lenke',
-  '<name>',
-  '<name>',
-  '<name>',
+  'Teammate name pending',
+  'Teammate name pending',
+  'Teammate name pending',
 ];

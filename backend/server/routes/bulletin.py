@@ -1,6 +1,7 @@
 """Bulletin route: GET /api/bulletin is the harbor bulletin, the same for every player.
 
     GET /api/bulletin
+      404 feature_disabled while the bulletin flag is off (the default)
       200  {"day": {"id": "2026-11-16", "startedAt": "2026-11-16T00:00:00Z",
                      "nextDayAt": "2026-11-17T00:00:00Z", "bulletinDay": "2026-11-16",
                      "publishedAt": "2026-11-16T08:00:00Z",
@@ -17,7 +18,8 @@
       503  bulletin_unavailable   bulletin.json, chapter_two_hook.json or weather_states.json could
                                   not be read when the server started (see the logs)
 
-Anyone may call it: it needs no sign-in and holds no secret. It takes no input: a query string and
+While the bulletin flag is on, anyone may call it: it needs no sign-in and holds no secret.
+It takes no input: a query string and
 an Authorization header are ignored. Every player gets the same answer. The one line that differs
 by crew, the next lead, is served signed in by package S3 (a separate route), so this answer stays
 public and cacheable. It is worked out when somebody asks: there is no timer and no table.
@@ -182,6 +184,8 @@ async def get_bulletin(
     stage_reader: WorldStageDep,
     clock: ClockDep,
 ) -> BulletinResponse:
+    if not is_enabled("bulletin", settings.flags):
+        raise ApiError(404, "feature_disabled", "The harbor bulletin is not available.")
     if rules is None or content is None:
         raise ApiError(503, "bulletin_unavailable", "The harbor bulletin is not available now.")
     now = clock()

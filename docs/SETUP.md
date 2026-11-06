@@ -78,6 +78,14 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 5. Deployment protection: the production address is public, preview addresses ask for a Vercel login. In class, always use the production address.
 6. Free-plan limits worth knowing: 100 deployments per day and one build at a time (every pushed branch builds a preview); going over the free usage pauses the project for up to 30 days, so never leave a loop polling an API.
 
+## Local API without Supabase credentials
+
+For browser integration with disposable players and real local database rules, follow
+[LOCAL-TEST-SERVER.md](LOCAL-TEST-SERVER.md). From `backend/`, one command starts port 8000:
+`LOCAL_TEST_SERVER=1 APP_ENV=local uv run --with pgserver --with 'psycopg[binary]' python -m tools.local_server`.
+The tool refuses preview/production, ignores injected Supabase settings and removes all local
+data when stopped. The normal server's sign-in flow is unchanged.
+
 ## Step 5. Prove it works (15 minutes, once the foundation branch is pushed)
 
 Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 runs the daily keep-alive workflow on GitHub (see "Keep it awake until the demo" below). Do not try to pass it with a `crons` entry in `vercel.json`: that breaks our deploys.
@@ -98,6 +106,10 @@ Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` fir
 If the address is missing, Supabase sends the browser to the Site URL instead, with a one-time sign-in code in the address bar (never a token), and the check page never sees it. Close that tab (the code is useless without the secret that only the check page's own tab holds), fix the list and try again.
 
 **The check page.** Open `https://the-great-plot-twist.vercel.app/auth-check.html` (use the production address: preview addresses ask for a Vercel login first). It is a team check page, not the game. Press **Sign in with GitHub**. The first sign-in creates your player account, and the page then prints one line from `GET /api/me`: your placeholder name, your coins and how many crews you sit in. **Forget me** clears the login token from the page. The page signs in with Supabase's PKCE flow: it makes a secret and keeps it in its own tab, Supabase sends the browser back with a one-time code (the address never holds a login token, so none ends up in the browser history), and our server swaps the code for a login token (`POST /api/auth/exchange`). The refresh token and GitHub's own token never reach the browser. Do the whole sign-in in one tab: if the page says "This sign-in link does not work any more", the secret was gone (another tab, or the same link used twice), so press the button again. If the page says "Your player record is not set up yet", the account was made before the migration was applied: delete that user under **Authentication > Users** and sign in again ([supabase/README.md](../supabase/README.md#if-someone-signed-in-before-you-ran-the-migration)). The page needs the API on the same address, so it works on Vercel but not (yet) on your laptop, where the Vite dev server does not pass `/api` on to the API.
+
+## Opening the relight switch
+
+`case` stays off until every case migration read by the deployment is applied. `RELIGHT_OPEN` stays unset during team tests. Only explicit `true` with `APP_ENV=production` opens this irreversible switch; local and preview copies refuse to start with it. Claude opens it only after the last team test crew has finished, then redeploys production. Phase 1 has an empty world hook, so its solves change only their crew. Later phases implement the world change; locked solves never replay into the world after the switch opens (Nils, 6 Nov 2026).
 
 ## Keep it awake until the demo
 

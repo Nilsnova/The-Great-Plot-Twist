@@ -24,7 +24,7 @@ const table = kit.createTable({caption:'Fictional sample records',columns:[{key:
 let line = 0;
 const lines = ['The tide has left a line of shells beside the jetty. There is time to look around before the next ferry.','You turn the notebook to a clean page. The sea carries on with its own story.'];
 const dialogue = kit.createDialogue({speaker:'Field notes',text:lines[0],portrait:{src:`${import.meta.env.BASE_URL}pixel/explorer.png`,alt:'An explorer in a coastal coat'},choices:[{id:'look',label:'Look toward the jetty'},{id:'continue',label:'Turn the page'}],onChoice:()=>{line=1-line;dialogue.update({speaker:'Field notes',text:lines[line],portrait:{src:`${import.meta.env.BASE_URL}pixel/explorer.png`,alt:'An explorer'},choices:[{id:'look',label:'Look toward the jetty'},{id:'continue',label:'Turn the page'}]});dialogue.focus();}});
-showcase('06 / Dialogue · Enter skips, 1–9 choose',dialogue,true);
+showcase('06 / Dialogue · Enter skips, 1 to 9 choose',dialogue,true);
 const cards = node('div','kit-gallery-cards');
 for (const state of ['new','pinned','used']) {
   const card = kit.createClueCard({title:'A page from the coast',body:'Sample clue text supplied by the story team. The frame shows its state without deciding any deduction.',state,onPin:()=>toast.show('Pin intent received. The board owner supplies the next state.')}); cards.append(card.element); components.push(card);

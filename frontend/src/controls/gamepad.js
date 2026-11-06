@@ -23,7 +23,7 @@ export function createGamepad(input,{menu,chart,isPlaying}) {
       const target=document.activeElement,direction=edges[15]?1:edges[14]?-1:0;
       if(direction&&target instanceof HTMLSelectElement){target.selectedIndex=Math.max(0,Math.min(target.options.length-1,target.selectedIndex+direction));target.dispatchEvent(new Event('change',{bubbles:true}));}
       if(direction&&target instanceof HTMLInputElement&&target.type==='range'){target.value=String(Math.max(Number(target.min),Math.min(Number(target.max),Number(target.value)+direction*5)));target.dispatchEvent(new Event('input',{bubbles:true}));target.dispatchEvent(new Event('change',{bubbles:true}));}
-      if(edges[0]){const target=document.activeElement;if(target instanceof HTMLButtonElement||target instanceof HTMLAnchorElement)target.click();}
+      if(edges[0]){const target=document.activeElement;if(target instanceof HTMLButtonElement||target instanceof HTMLAnchorElement||(target instanceof HTMLInputElement&&(target.type==='radio'||target.type==='checkbox')))target.click();}
       if(edges[9]||edges[1]){const dialog=[...document.querySelectorAll('dialog[open]')].at(-1);dialog?.dispatchEvent(new Event('cancel',{cancelable:true}));}
     }
   },dispose(){input.setVirtual('gamepad',{x:0,y:0});previous=[];}};

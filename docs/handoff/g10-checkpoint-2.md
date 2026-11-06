@@ -1,0 +1,29 @@
+# G10 checkpoint 2: B1, case backend Phase 1
+
+- Branch: `feat/case-backend`; source commit `d228aa38393671855b7a2907b15035365feb7100`.
+- API slice: `8eeb546`; 35-mix card proof: `7af8483`; early G9 contract: `6507dc7`.
+- Landed: immutable checked data, pure searches/windows/accusations/rewards, earned views and reveals.
+- Landed: six-table migration, four intent RPCs, strict scoped store, API routes, host clock and retries.
+- A repeat preserves a wrong accusation's refusal; stale accusations retry once; one reopen per request.
+- Malformed database rows/replies are generic private 502s, including malformed payout lists.
+- `case` defaults off; `RELIGHT_OPEN` defaults false and refuses true outside explicit production.
+- Contract: `docs/INTERFACES.md`, section 10; fixtures: `backend/server/tests/case_fixtures.py`.
+- Backend: `3447 passed, 22 skipped in 33.27s` (tracebacks suppressed to protect case prose).
+- Opt-in database checks: `22 passed in 3.46s`, C1 to C14 and all four windows against Python.
+- The full sorted migration chain applied twice on disposable Unix-socket PostgreSQL.
+- Parser: `SQL parses: 6 file(s)`.
+- Ruff: `All checks passed!`; changed Python formatting: `62 files already formatted`.
+- Independent data/view/SQL/service reviews: no remaining blocking findings after fixes.
+- Nonempty diff and required secret scan: no matches.
+- Migration: `supabase/migrations/20261106060000_case_rules.sql`.
+- MD5: `278a16fcf87bbf2f46d81ec803f1e94b`.
+- Claude: review and apply this migration before code that reads it reaches main.
+- Keep `case` off until all migrations its deployment reads are applied; leave `RELIGHT_OPEN` unset.
+- No live database access, main push, Actions trigger or STATUS edit.
+- Historical migrations, dependency files, vercel.json and secret content are unchanged.
+- R13 was not triggered because no secret-content edit occurred.
+- The proof covers 35 four-player card mixes, not the later 69-mix finale/NPC proof.
+- Rechecked main: `c26f303`; `20261106070000_home_islet.sql` is absent.
+- Group 3 and Phase 2 wait; A4 nudges also wait for A4 on main.
+- Next immediately: stream C R1 local golden-path server and R3 default-off sign-in flag.
+- Open question retained from the spec: C8 glow default awaits Nils/story-owner confirmation for Phase 2.

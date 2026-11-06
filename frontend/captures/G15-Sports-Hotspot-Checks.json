@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Harbor sports pavilion opens one lazy real panel",
+    "Typing in the panel cannot walk the explorer",
+    "Sports overlay blocks world travel",
+    "Pavilion Escape returns focus to the game",
+    "Pavilion closes its overlay gate",
+    "Travel resumes after the pavilion closes",
+    "No external or provider requests",
+    "No browser errors"
+  ]
+}

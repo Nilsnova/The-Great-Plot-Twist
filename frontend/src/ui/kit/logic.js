@@ -18,7 +18,7 @@ export function choiceKey(key, index, count) {
   if (key === 'ArrowUp' || key === 'ArrowLeft') return { index:(index+count-1)%count, activate:false };
   return null;
 }
-export const formatCoins = value => Number.isSafeInteger(value) ? new Intl.NumberFormat('en-GB').format(value) : '—';
+export const formatCoins = value => Number.isSafeInteger(value) ? new Intl.NumberFormat('en-GB').format(value) : '?';
 export function chartPoints(values, width = 240, height = 72, padding = 4) {
   if (!Array.isArray(values) || !values.length || !values.every(Number.isFinite)) return [];
   let low = Infinity, high = -Infinity;

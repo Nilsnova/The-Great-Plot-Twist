@@ -2,21 +2,23 @@ import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Exercise every real place, accessible chart travel and ten round trips in Chrome.
 import { stubIntro,dismissIntro } from './intro-browser-fixture.js';
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { placeIds, places } from '../src/world/places/registry.js';
 import { openWorldBrowser, settle, measure, explorerVisible } from './world-browser-tools.js';
 const env = await openWorldBrowser(), { page } = env;
 const report = { checked: new Date().toISOString(), browser: env.browser.version(), viewport: '1440 × 900, DPR 1', checks: [], places: {}, roundTrips: [] };
 const check = (ok, label) => { assert.ok(ok, label); report.checks.push(label); };
-const capture = name => page.screenshot({ path: `captures/20261105_World-${name}.png` });
+const captureRoot = process.env.CAPTURE_DIR || 'captures';
+await mkdir(captureRoot, {recursive:true});
+const capture = name => page.screenshot({ path: `${captureRoot}/20261105_World-${name}.png` });
 const go = async id => { await page.evaluate(id => window.__island.world.goTo(id, { fast: true }), id); await settle(page); };
 // The four home plots open the islet panel (package L2) after a lazy import. Close it before
 // dismissIntro looks once, or the panel opens late and swallows the next hotspot's E. The signal
 // station's hotspot opens the finale screen instead, which dismissIntro closes.
-const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal' };
+const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', market_hall: '.market-modal', prediction_kiosk: '.desk-modal', sports_pavilion: '.sports-modal', arena_gate: '.duel-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
 try {
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await stubIntro(page);await page.goto(env.url + '?market=local&desk=local&arena=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));
@@ -97,4 +99,4 @@ try {
   report.errors = env.errors; report.externalRequests = env.external;
   check(env.errors.length === 0, 'No browser errors'); check(env.external.length === 0, 'No external requests');
   console.log(JSON.stringify(report, null, 2));
-} finally { await writeFile('captures/20261105_World-Checks.json', JSON.stringify(report, null, 2)); await env.close(); }
+} finally { await writeFile(`${captureRoot}/20261105_World-Checks.json`, JSON.stringify(report, null, 2)); await env.close(); }

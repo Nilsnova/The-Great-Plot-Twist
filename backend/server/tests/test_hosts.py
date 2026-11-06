@@ -21,9 +21,9 @@ from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock, assert_error
 URL = "/api/test/host-only"
 
 HOST_ID = "11111111-2222-3333-4444-555555555555"
-HOST_TOKEN = "token-of-the-host"
+HOST_TOKEN = "test.host.signature"
 PLAYER_ID = "99999999-8888-7777-6666-555555555555"
-PLAYER_TOKEN = "token-of-a-normal-player"
+PLAYER_TOKEN = "test.player.signature"
 
 HOST_HEADER = {"Authorization": f"Bearer {HOST_TOKEN}"}
 PLAYER_HEADER = {"Authorization": f"Bearer {PLAYER_TOKEN}"}
@@ -80,7 +80,9 @@ def test_without_a_token_it_is_401_not_403():
 
 
 def test_a_token_that_supabase_refuses_is_401_not_403():
-    response = make_client().get(URL, headers={"Authorization": "Bearer nobody-issued-this"})
+    response = make_client().get(
+        URL, headers={"Authorization": "Bearer test.nobody-issued-this.signature"}
+    )
 
     assert_error(response, 401, "unauthorized")
 

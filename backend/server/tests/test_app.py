@@ -31,6 +31,7 @@ SETTING_NAMES = (
     "CRON_SECRET",
     "DEMO_MODE",
     "FEATURE_FLAGS",
+    "HOST_PLAYER_IDS",
 )
 
 
@@ -131,6 +132,31 @@ def test_unexpected_error_hides_all_details():
     assert "Traceback" not in response.text
 
 
+@pytest.mark.parametrize(
+    ("method", "path", "status"),
+    [
+        ("GET", "/api/health", 200),
+        ("GET", "/api/me", 401),
+        ("GET", "/api/no-such-page", 404),
+        ("POST", "/api/health", 405),
+        ("GET", "/api/test/needs-number?n=bad", 422),
+        ("GET", "/api/test/crash", 500),
+    ],
+)
+def test_api_answers_without_an_explicit_cache_policy_default_to_no_store(method, path, status):
+    response = make_client(raise_server_exceptions=False).request(method, path)
+
+    assert response.status_code == status
+    assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_public_content_keeps_its_explicit_cache_policy():
+    response = make_client().get("/api/content/intro-story")
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "public, max-age=300"
+
+
 # --- every URL lives under /api ---
 
 
@@ -223,6 +249,8 @@ SERVICES = (
     "weather_source",
     "exchanger",
     "market_service",
+    "prediction_desk",
+    "duel_service",
     "broadcaster",
     "islet_catalogue",
     "world_stage",

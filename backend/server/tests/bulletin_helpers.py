@@ -9,9 +9,9 @@ collects test_*.py files.
 Used by: test_bulletin.py, test_chapter_two_hook.py, test_daily_frame.py and test_content.py.
 """
 
+import asyncio
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,16 +19,14 @@ import httpx
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from server.adapters.base import SourceUnavailable
 from server.app import create_app
 from server.errors import ApiError
 from server.flags import default_flags
 from server.market.companies import load_companies
-from server.market.exchange import MarketService
-from server.market.feed import PriceSnapshot
-from server.market.rules import LIVE, Base
+from server.market.exchange import MarketService, market_from_settings
 from server.settings import Settings
 from server.tests.helpers import FakeClock, FakeReply
+from server.tests.market_helpers import FakeBinance, good_binance_answer
 from server.tests.weather_helpers import (
     LISBON_SETTINGS,
     answer_with_hours,
@@ -70,8 +68,6 @@ SPOILER_WORDS = (
     "twist",
 )
 
-D = Decimal
-
 
 def utc(*parts: int) -> datetime:
     return datetime(*parts, tzinfo=UTC)
@@ -103,47 +99,18 @@ def relit_at(moment: datetime = RELIT_AT) -> WorldStage:
     return WorldStage(RELIT, moment)
 
 
-class FakeFeed:
-    """A pretend Island Exchange price feed. `source` is what it reports: live, cache, stale..."""
-
-    def __init__(self, clock: FakeClock, source: str = "live", failing: bool = False) -> None:
-        self.clock = clock
-        self.source = source
-        self.failing = failing
-        self.asked = 0
-
-    async def get(self, max_age_seconds: float | None = None) -> PriceSnapshot:
-        self.asked += 1
-        if self.failing:
-            raise SourceUnavailable("market prices")
-        prices = {company.symbol: D("100") for company in load_companies()}
-        return PriceSnapshot(prices, self.source, self.clock.now)
-
-    def attribution(self, source: str) -> str:
-        return "Real price moves, amplified in the game. Simulation, play money."
-
-    def licence_url(self, source: str) -> str | None:
-        return None
-
-
-def make_market(clock: FakeClock, **feed_options: Any) -> MarketService:
-    """An Island Exchange on a fake price feed and the same fake clock as the test."""
-    feed = FakeFeed(clock, **feed_options)
-    return MarketService(load_companies(), feed, 100, clock)
-
-
-def pause_company(market: MarketService, company_id: str, clock: FakeClock) -> None:
-    """Pause one company for the next 10 minutes (it sits in the memory store, no database)."""
-    base = Base(
-        game_price=D("60.00"),
-        real_price=D("100"),
-        set_at=clock.now - timedelta(minutes=5),
-        source=LIVE,
-        halted_until=clock.now + timedelta(minutes=10),
-        frozen_price=D("78.00"),
-        version=1,
-    )
-    market.memory_store.bases[company_id] = base
+def make_market(clock: FakeClock, *, source: str = "live", failing: bool = False) -> MarketService:
+    """A real v2 service with a fake Binance, never an outside price or database call."""
+    prices = {company.symbol: "100" for company in load_companies() if company.symbol}
+    good = good_binance_answer(prices)
+    failure = httpx.ConnectError("pretend price outage")
+    fake = FakeBinance(failure if failing else good, failure if source == "stale" else good)
+    settings = replace(MARKET_ON, demo_mode=source == "replay")
+    market = market_from_settings(settings, transport=httpx.MockTransport(fake), clock=clock)
+    if source in ("cache", "stale"):
+        asyncio.run(market.feed.read(60))
+        clock.advance(30 if source == "cache" else 600)
+    return market
 
 
 class World:
@@ -168,6 +135,8 @@ class World:
         market: MarketService | None = None,
         recorded_folder: Path = CONTENT_FOLDER,
     ) -> None:
+        # These tests exercise the enabled service; deployment defaults stay off.
+        settings = replace(settings, flags={**settings.flags, "bulletin": True})
         self.clock = FakeClock()
         self.clock.now = now
         self.stage = stage if isinstance(stage, FixedStage) else FixedStage(stage)

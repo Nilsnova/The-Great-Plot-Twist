@@ -1,0 +1,35 @@
+{
+  "base": "60f7fd0",
+  "branches": {
+    "l4": "4d5aa5b",
+    "l5": "e90a620",
+    "a7": "8af962b"
+  },
+  "backend": "9693 passed, 3 skipped in 101.54s",
+  "database": "3 passed; complete ten-migration chain applied twice on disposable Unix-socket PostgreSQL",
+  "frontend": "1601 passed, 99 files",
+  "style": "Ruff all checks passed; 99 changed Python files already formatted",
+  "build": "110 text files, 12 protected lines, no suspect elimination data",
+  "browserChecks": {
+    "production": 7,
+    "world": 66,
+    "lifecycle": 9,
+    "panels": 3
+  },
+  "databaseObjects": {
+    "tables": 18,
+    "views": 1,
+    "publicPolicies": 16,
+    "realtimePolicies": 5,
+    "walletReasons": 17,
+    "publicFunctions": 24
+  },
+  "openApiOperations": 33,
+  "protectedMigrationsUnchanged": true,
+  "statusUnchanged": true,
+  "vercelUnchanged": true,
+  "dependenciesUnchanged": true,
+  "limitations": [
+    "No live Supabase or production writes. Claude reviews and applies migrations before main deployment."
+  ]
+}

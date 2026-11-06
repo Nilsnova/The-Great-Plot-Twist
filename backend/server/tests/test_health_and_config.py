@@ -50,10 +50,11 @@ def test_config_defaults_have_every_flag_switched_off():
         "demoMode": False,
         "flags": {name: False for name in FLAG_NAMES},
         "auth": {"provider": "github", "supabaseUrl": ""},
+        "capabilities": {"hostCaseClock": False},
     }
 
 
-def test_config_lists_all_seven_flags_in_the_agreed_order():
+def test_config_lists_all_flags_in_the_agreed_order():
     flags = make_client(Settings()).get("/api/config").json()["flags"]
 
     assert list(flags) == [
@@ -64,6 +65,10 @@ def test_config_lists_all_seven_flags_in_the_agreed_order():
         "raid",
         "live_presence",
         "companion_llm",
+        "case",
+        "sign_in",
+        "bulletin",
+        "festival",
     ]
 
 

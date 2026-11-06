@@ -2,6 +2,7 @@
 import './library.css';
 import { node } from '../ui/kit/dom.js';
 import { pixelArt as allPixelArt } from './catalog.js';
+import { showFestivalSounds } from './festival-sounds.js';
 const pixelArt = allPixelArt.filter(item => item.visibility !== 'finale' || new URLSearchParams(location.search).get('demo') === '1');
 const select = query => document.querySelector(query), url = item => `${import.meta.env.BASE_URL}pixel/${item.file}`;
 const title = id => id.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join(' ');
@@ -32,3 +33,4 @@ select('#gallery').onclick = event => {
   select('#source').href = url(item); select('#detail').showModal();
 };
 select('#close').onclick = () => select('#detail').close(); render();
+showFestivalSounds(select('#festival-sounds'));

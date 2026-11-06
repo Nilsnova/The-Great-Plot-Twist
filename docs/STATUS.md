@@ -14,6 +14,49 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**Verified application release, 6 Nov 2026, Codex:** main `cb42da3` and production
+`dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51` are READY with live extras and stabilization deployed.
+Health/config and the host page return 200. Presence, market, predictions, arena, case, bulletin
+and festival are enabled. Sports, sign-in, raid and ChatGPT helper are off. Festival waits for
+Relighting; live SQL still shows dark/null, zero solves/lights/Wall, festival actions and sports
+stakes. RELIGHT_OPEN remains unset. See [live-extras proof](handoff/live-extras-release.md).
+
+All reviewed migrations through 180000 are applied separately, exact stored MD5 proven and
+restored to their repository versions; 150000 is unused. Live schema: **39 tables +1 view
+/57 project functions /17 wallet reasons /9 sequences /7 triggers**, expected-only advisors.
+The deployed live-extras gate passed **11,168 backend and 1,672 frontend tests**. Case services
+include all 69 kit mixes and real solo+NPC/four-human HTTP-to-SQL journeys.
+
+The stabilization/submission release includes reliability, frontend/backend regressions, isolated
+devtools, help/privacy, security/text, notices, presentation/PDF and starter guides. Original authored
+checkpoints are preserved and independent reviews pass. **13,584 backend tests plus nine benchmark
+tool tests, 1,799 frontend tests with zero skips**, build/budgets and merged browser checks pass.
+Live health/config are 200/private,no-store; build identity matches the main merge and stamps all
+122 JS/CSS assets. Help, privacy, host and software notices are 200. See the
+[stabilization proof](handoff/stabilization-release.md).
+
+Normal browser mystery/multiplayer still await **G9, paused until Nils' laptop returns**; backend
+journey proofs do not establish a connected browser session.
+
+External needs: sports provider key directly in Vercel, official approved ChatGPT website client,
+and the production-host network allowlist for direct cloud stock/cache checks. Later hand-in needs
+three teammate names, private submission details and physical laptop/projector/spoken rehearsal.
+Original music, ambience/effects and festival media are already built. Older paragraphs below are
+historical checkpoints; use the current roadmap and proof links for release state.
+
+**Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
+migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
+re-recorded under their repository versions. Final live counts: 18 tables, one view, 17 reasons.
+Backend 9692 passed; frontend 1601 passed plus two new lifecycle cases in targeted checks; build,
+spoiler guard and redacted Gitleaks pass. Independent code and per-file SQL reviews passed.
+Production code/flags are the next release step. The older status paragraphs below are historical.
+Normal-play multiplayer and the full case still await G9 and the case chain; demo captains are stand-ins.
+
+Sound is built (original music, weather ambience and effects, with separate volume controls).
+The [roadmap execution update](../ROADMAP.md#execution-update--6-nov-2026) records the release order,
+Nils' approval to enable completed festival/sports, and the optional spoiler-safe ChatGPT helper.
+OpenAI website-client registration is an external prerequisite for that helper.
+
 *Last updated: Fri 6 Nov 2026, evening, by Claude (coordinating for Nils). Group 1 (the story round, A2/A3 and A6) is on `main`, and its four database changes are applied. Group 2 (Codex's G8 with all of G7, A4 live presence, L2 home islet and the open-world must items) is merged on `integrate/fri6`; it reaches `main` after its gates, an independent agent check and the apply of its two database changes (`050000`, `070000`). Group 3 (Exchange v2, the prediction desk, Lantern Duels) follows tonight. Since 6 Nov the aim is a feature-complete game by Sun 8 Nov: agent-built work merges without a human review per merge (D015, extended), nothing waits for teammates, and Codex takes the browser side. The review queue under Open decisions is from 5 Nov; its finished items are marked done.*
 
 ### What works
@@ -118,6 +161,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 Each lane has its next two packages, each with a brief. Fill in the `<...>` parts and paste the brief to your coding agent. The briefs follow the template in [ENGINEERING.md](ENGINEERING.md), section 8, and end with the handover format from [AGENTS.md](../AGENTS.md). What each package ships, provides and must pass is in [ROADMAP.md](../ROADMAP.md).
 
 ### G World and Graphics (Nils, with Codex)
+
+**Current next:** resume G9 when the laptop is available and perform the physical-device and presentation rehearsal. The G8 notes below are historical.
 
 **G8 complete on `feat/g8-islet-harbor-demo`.** Accepted islet builds, the opt-in Lisbon-time bulletin/tonight chip, safe distant signal, original harbor sound/life and the nine-beat presenter kit are ready. Accessibility fixes keep controls at 16 px, case body at 18 px and story/captions at 19/18 px. Provider/licence blocks are removed from gameplay; credits are reached only through Settings. The class walkthrough includes the architecture, ten-file reading path and twelve explain-back cards.
 
@@ -226,6 +271,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
+**Next server step:** resume G9 when available and prove the normal browser journey; configure/verify sports when its key is supplied. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused; sports activation awaits its provider key and current-source proof.
+
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
 **Next 1: A1-next, apply and prove the foundation.** Starts once foundation wave 2 is on `main`. Production is already live, and deploy check 2 has passed.
@@ -320,6 +367,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 ```
 
 ### L Live Systems (owner picked today)
+
+**Current next:** sports provider setup/read-only verification; existing market/prediction/arena flags are already on. Festival is enabled and waiting for the first Relighting. The older lane briefs below are historical.
 
 **Status (5 Nov, late evening):** L1 live weather is done: merged (`3e80605`) and wired into the game by Codex (`c52613b`). The L4 Island Exchange minimum is on `main` with the flag `market` off (`d7857d9`, decision D017); its migration waits for Nils, and the trading screen comes after his Exchange decisions. Next for the lane: L3 (Next 2 below).
 
@@ -419,7 +468,27 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **6 Nov 2026, Codex for Nils:** pushed stabilization branch a2736a1 and main cb42da3; production dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51 READY. Build stamp matches the merge; health/config/help/privacy/host/notices return 200. Seven flags unchanged; no new live migration or gameplay writes.
+
+- **6 Nov 2026, Codex for Nils:** stabilization integration passes 13,584 backend tests plus nine benchmark-tool tests, 1,799 frontend tests with zero skips, production/spoiler/budget gates and merged browser/deck checks. Independent reviews passed; no new migration, dependency, workflow, cron, flag or G9 change. Full proof: [stabilization release](handoff/stabilization-release.md).
+
+- **6 Nov 2026, Codex for Nils:** pushed live extras as main d5ad219, verified READY and health/config/host 200, then enabled festival and redeployed the same commit. Seven flags verified, sports/sign-in/AI remain off, world still dark with zero gameplay writes. Integrated reviewed reliability/QA/devtools/help/privacy/security/text/ship/deck/starter work for its combined gate.
+
+- **6 Nov 2026, Codex for Nils:** reviewed festival/host/sports integration passed 11,168 backend and 1,672 frontend tests; applied and proved 160000, 170000 and 180000 separately. Live schema is 39 tables/57 project functions, expected-only security advisors. Push/deployment proof is tracked in [live-extras release](handoff/live-extras-release.md); sports remains off pending its provider key.
+
+- **6 Nov, Codex:** minimum case/NPC, server followups and Exchange-v2 economy checks integrated; 10,859 backend tests pass, all 69 mixes and two actual API/SQL solves proven. Applied 130000/140000 sequentially with exact hashes, versions, counts and known-only advisors. See [complete proof](handoff/case-complete-release.md).
+
+- **6 Nov, Codex:** Phase 2 production verified healthy with approved flags and private POST-only routes. Phase 3 shared world/Exchange integration passes 10,309 backend tests; reviewed 120000 applied and hash/version/counts/advisors proven, singleton remains dark. See [Phase 3 proof](handoff/case-phase3-release.md).
+
+- **6 Nov, Codex:** Phase 2 board/night integrated with earned private views, immutable station reads and bounded live hints; 10,269 backend / 1,603 frontend tests pass. Reviewed 080000 applied verbatim, MD5/version/counts and known-only advisors proven. See [release proof](handoff/case-phase2-release.md).
+
+- **6 Nov, Codex:** group 3 deployed, four approved flags verified live; case Phase 1 reviewed and migration 060000 applied/MD5-proven with expected advisors. Source and SQL gates passed; preparing Phase 1 push. G9 moves to a separate cloud session. See [case proof](handoff/case-phase1-release.md).
+
+- **6 Nov, Codex:** group 3 integrated and independently reviewed; applied 090000/100000/110000 one file at a time, exact MD5 proofs and version restoration passed; all final database counts and known-only advisors match. Core local gates green; cloud browser regression and live deployment checks continue. See [release proof](handoff/group3-release.md).
+
 Newest first. One line per finished task: date, who, what, where.
+
+- **2026-11-06, server follow-ups reconciled.** Codex for Nils preserved the four authored commits on `integrate/server-followups-v2`, adapted the local SQL port to current case/world services, retained the early token-length bound and fixed concurrent member deletion after independent review. Final focused suite: 60 passed; 993 other affected route checks passed, Ruff/diff clean. Migration 140000 MD5 `a59dccb2d3447614454f94a37cc3bb40` is independently approved; coordinator applies before release. No live writes from this task.
 
 - **2026-11-06, evening.** Claude, for Nils: group 2 is merged on `integrate/fri6`: Codex's G8 (with all of G7), A4 live presence (D023, renumbered from A4's D018), L2 home islet (D021) and the open-world must items (D024, renumbered from its D018), and the follow-ups of the group 1 check ("Apply before you merge" brought up to date, the kit coins N5 settled by the story round, one test that keeps the three copies of the kits equal, D020 in its place in time, two spec notes). Fixes the merge needed: the content-route sweep skips the open-world files that `GET /api/bulletin` shows on purpose; the islet panel leaves the signal station's hotspot to the finale screen (since G8 that hotspot is also a plot, so E there opened both); the world check closes the islet panel before the next hotspot; the panel's labels no longer share a chunk with the game, so the cold title stays within G8's 21,080 bytes; and A4's realtime tests use a stand-in key that the secret scan does not mistake for a real one. 23 routes; `uv run pytest` 6407 passed, `npm test` 886 passed, the build and its spoiler guard pass, and the G7 and G8 browser checks pass. Its database changes `050000` and `070000` are applied before the push; the flag `live_presence` stays off. [INTERFACES.md](INTERFACES.md#what-the-browser-adapter-g9-maps) lists the presence names that G9 maps between G8 and A4.
 - **2026-11-06, afternoon.** Claude, for Nils: group 1 is on `main`: the story round (D018), A2/A3 (D022, renumbered from A2's D018) and A6 (D020), merged on `integrate/fri6` and checked by an independent agent (fixes: the secret-scan false alarm, the D020 note, a scratch path in a spec). Its four database changes are applied (`010000` to `040000`, each checked by md5 against its file, versions recorded, object counts as reviewed). The API runs in Dublin (`8ff24cc`). Nils decided: no review per merge (D015, extended), no kickoff or check-ins, feature complete by Sun 8 Nov, and Codex takes the browser side.

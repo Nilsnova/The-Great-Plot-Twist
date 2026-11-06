@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/pRq8uqsEus",
+  "answer": {
+    "id": "pRq8uqsEus",
+    "slug": "will-the-groundhog-see-his-shadow-i-5RhtgclSy9",
+    "question": "Will the groundhog see his shadow in 2027?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1801612740000,
+    "isResolved": false
+  }
+}

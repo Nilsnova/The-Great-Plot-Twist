@@ -1,6 +1,12 @@
-# The case timing check
+# Developer tools
 
-> **What this folder is:** one program, `simulate_case.py`, that plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
+The [disposable local API](../../docs/LOCAL-TEST-SERVER.md) runs the real API and SQL rules
+with four fixed players and a database that is deleted on shutdown. The rest of this page
+describes the case timing design tool.
+
+## The case timing check
+
+> **The timing program:** `simulate_case.py` plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
 >
 > **Who uses it:** the owners of the case package (S3) and the NPC partner package (S4), everyone who changes a minute, a window or a price in `backend/content/secret/case.json`, and their coding agents. The result of the run, with a reading, is in [docs/story/TIMING.md](../../docs/story/TIMING.md).
 
@@ -104,6 +110,14 @@ These four numbers are not in `case.json`. They are named constants at the top o
 
 If a window or a timer changes, also run `--kit-orders`. The best NPC kit order depends on those numbers.
 
+## Disposable local API
+
+For browser integration, [LOCAL-TEST-SERVER.md](../../docs/LOCAL-TEST-SERVER.md) documents the
+guarded, loopback-only API with four fixed players and a disposable real PostgreSQL database.
+From `backend/`: `LOCAL_TEST_SERVER=1 APP_ENV=local uv run --with pgserver --with 'psycopg[binary]' python -m tools.local_server`.
+It runs the real migrations, referee and API rules; Ctrl-C removes its database. It refuses
+preview, production and any environment with a `VERCEL` variable.
+
 ## Limits
 
 - It uses planning numbers. No playtest has happened yet.
@@ -149,3 +163,7 @@ The file is longer than the usual 200 lines because it does one job in ten steps
 **After the second check, 5 November 2026 (night),** two kinds of ids changed in `case.json`. The place ids now follow the registry on `main` (the G6 merge `9f5bf97` added the zones `keepers_lamp`, `keepers_post_room`, `yard_gate` and `home_driftline`). The share route got the Exchange's company id, `greyfathom-salvage`. Nothing else changed. The output of every command quoted in TIMING.md is identical before and after (compared line by line), and the full program still exits with 0, also with `--all`. `test_case_timing.py` has one more test, which checks that the share route names a company on the Exchange (20 tests in all).
 
 The full run is still a command, not a test. If the team later wants it in CI, call `main([])` from a test marked slow.
+
+## Content linter
+
+`lint_content.py` checks the game content, including the market companies and calendars. Run `uv run python tools/lint_content.py` from `backend/`. Its tests run with the backend suite.

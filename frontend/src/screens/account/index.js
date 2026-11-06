@@ -1,5 +1,6 @@
 // Account and save presentation. All state and decisions arrive through supplied view data.
 import './account.css';
+import './screen.css';
 import {node} from '../helpers.js';
 import {createServerCallState} from '../../ui/kit/server-call-state.js';
 import {intentFailure} from '../../adapter/intent.js';
