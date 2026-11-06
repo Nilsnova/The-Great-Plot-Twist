@@ -50,7 +50,7 @@ const oracle = spawnSync(process.env.G20_PYTHON || 'python3', ['-B', '-c', pytho
 if (oracle.error || oracle.status !== 0) throw new Error(`Python parity oracle failed: ${oracle.error?.message ?? oracle.stderr}`);
 const actual = JSON.parse(oracle.stdout);
 
-it('G20 visits every story scene and compares a nonempty transition set', () => {
+it(`G20 visits all ${reached.size} scenes in ${seen.size} transition states (${cases.length} probes)`, () => {
   expect([...reached].sort()).toEqual(Object.keys(story.scenes).sort());
   expect(actual).toHaveLength(cases.length); expect(cases.length).toBeGreaterThan(Object.keys(story.scenes).length);
 });

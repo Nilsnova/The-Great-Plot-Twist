@@ -13,13 +13,14 @@ export function browserHarness() {
     browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true });
   }, 30000);
   afterAll(async () => { await browser?.close(); await server?.close(); });
-  return async (action, argument) => {
+  const evaluate = async (action, argument, modules = {}, usePage = false) => {
     const context = await browser.newContext();
     try {
       const page = await context.newPage();
       await page.route('**/*', route => {
         const url = new URL(route.request().url());
         if (url.origin !== base || url.pathname.startsWith('/api/')) return route.abort();
+        if (modules[url.pathname]) return route.fulfill({ contentType: 'text/javascript', body: modules[url.pathname] });
         if (url.pathname === '/g20-harness') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body></body></html>' });
         return route.continue();
       });
@@ -27,7 +28,9 @@ export function browserHarness() {
       // Define import inside Chromium: Vitest transforms imports in Node callbacks for SSR.
       await page.addScriptTag({ type: 'module', content: 'window.g20Import = path => import(path);' });
       await page.waitForFunction(() => typeof window.g20Import === 'function');
-      return await page.evaluate(action, argument);
+      return usePage ? await action(page, base) : await page.evaluate(action, argument);
     } finally { await context.close(); }
   };
+  evaluate.withPage = action => evaluate(action, undefined, {}, true);
+  return evaluate;
 }
