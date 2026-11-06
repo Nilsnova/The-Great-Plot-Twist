@@ -21,7 +21,7 @@ from server.lisbon_time import (
     load_lisbon_zone,
     to_lisbon,
 )
-from server.market.rules import market_day_start
+from server.market.game_day import game_day_start as market_day_start
 from server.tests.helpers import needs_lisbon_timezone
 
 

@@ -15,8 +15,9 @@ const go = async id => { await page.evaluate(id => window.__island.world.goTo(id
 // station's hotspot opens the finale screen instead, which dismissIntro closes.
 const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
+const closeMarket = async () => { const market = page.locator('.market-modal'); await market.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await market.waitFor({ state: 'hidden' }); };
 try {
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await stubIntro(page);await page.goto(env.url + '?market=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));
@@ -46,7 +47,7 @@ try {
       await page.evaluate(z => { window.__island.player.position.set(z.x, z.y, z.z); }, zone);
       await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, zone.id);
       const before = await page.evaluate(() => window.__worldEvents.filter(e => e.type === 'interact').length);
-      await page.keyboard.down('KeyE'); await page.waitForTimeout(100); await page.keyboard.up('KeyE'); if (panels[zone.id]) await closePanel(zone.id); await dismissIntro(page);
+      await page.keyboard.down('KeyE'); await page.waitForTimeout(100); await page.keyboard.up('KeyE'); if (zone.id === 'market_hall') await closeMarket(); if (panels[zone.id]) await closePanel(zone.id); await dismissIntro(page);
       check(await page.evaluate(({ before, id, place }) => {
         const events = window.__worldEvents.filter(e => e.type === 'interact');
         return events.length === before + 1 && JSON.stringify(events.at(-1)) === JSON.stringify({ type: 'interact', id, place });

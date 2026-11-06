@@ -10,7 +10,7 @@ Used by: test_bulletin.py, test_chapter_two_hook.py, test_daily_frame.py and tes
 """
 
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -19,14 +19,13 @@ import httpx
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from server.adapters.base import SourceUnavailable
 from server.app import create_app
 from server.errors import ApiError
 from server.flags import default_flags
+from server.market.calendars import load_calendars
 from server.market.companies import load_companies
 from server.market.exchange import MarketService
-from server.market.feed import PriceSnapshot
-from server.market.rules import LIVE, Base
+from server.market.readings import Reading
 from server.settings import Settings
 from server.tests.helpers import FakeClock, FakeReply
 from server.tests.weather_helpers import (
@@ -109,41 +108,34 @@ class FakeFeed:
     def __init__(self, clock: FakeClock, source: str = "live", failing: bool = False) -> None:
         self.clock = clock
         self.source = source
+        self.live = source != "replay"
         self.failing = failing
         self.asked = 0
 
-    async def get(self, max_age_seconds: float | None = None) -> PriceSnapshot:
+    def source_is_on(self, company) -> bool:
+        return not company.is_stock
+
+    async def read(self, max_age_seconds: float | None = None) -> dict[str, Reading]:
         self.asked += 1
         if self.failing:
-            raise SourceUnavailable("market prices")
-        prices = {company.symbol: D("100") for company in load_companies()}
-        return PriceSnapshot(prices, self.source, self.clock.now)
-
-    def attribution(self, source: str) -> str:
-        return "Real price moves, amplified in the game. Simulation, play money."
-
-    def licence_url(self, source: str) -> str | None:
-        return None
+            raise ApiError(502, "prices_unavailable", "No prices.")
+        return {
+            company.id: Reading(D("100"), self.clock.now, self.clock.now,
+                                "stale" if company.id in self.paused else self.source)
+            for company in load_companies() if not company.is_stock
+        }
 
 
 def make_market(clock: FakeClock, **feed_options: Any) -> MarketService:
-    """An Island Exchange on a fake price feed and the same fake clock as the test."""
+    """An Exchange v2 on a fake price feed; bulletin reads never sweep positions."""
     feed = FakeFeed(clock, **feed_options)
-    return MarketService(load_companies(), feed, 100, clock)
+    feed.paused = set()
+    return MarketService(load_companies(), load_calendars(), feed, clock=clock)
 
 
 def pause_company(market: MarketService, company_id: str, clock: FakeClock) -> None:
-    """Pause one company for the next 10 minutes (it sits in the memory store, no database)."""
-    base = Base(
-        game_price=D("60.00"),
-        real_price=D("100"),
-        set_at=clock.now - timedelta(minutes=5),
-        source=LIVE,
-        halted_until=clock.now + timedelta(minutes=10),
-        frozen_price=D("78.00"),
-        version=1,
-    )
-    market.memory_store.bases[company_id] = base
+    """Make a company's price stale instead of the removed v1 circuit-breaker state."""
+    market.feed.paused.add(company_id)
 
 
 class World:

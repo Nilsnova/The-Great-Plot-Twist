@@ -1,9 +1,9 @@
 """What the bulletin says about the Island Exchange: which feed the prices come from, who is paused.
 
 The bulletin only LOOKS at the Exchange. It asks for the price board without saving anything
-(`market.board(admin, save=False)`), so reading the bulletin never moves the market, also while
-the feature flag is still off. Any ApiError from the board (the feed has never answered, the
-database is down) means there is no Exchange line today and the route sends `exchange: null`.
+(`market.snapshot(admin, trading_enabled=False)`), so reading the bulletin never moves the market.
+This also holds while the feature flag is off. A feed or database error leaves out the
+Exchange line and the route sends `exchange: null`.
 
     live     real prices, just fetched
     cache    real prices, fetched less than a minute ago
@@ -17,7 +17,9 @@ import logging
 from dataclasses import dataclass
 
 from server.errors import ApiError
-from server.market.exchange import Board, MarketService
+from server.market.board import Snapshot
+from server.market.exchange import MarketService
+from server.market.states import STATUS_STALE
 from server.supabase_admin import SupabaseAdmin
 
 logger = logging.getLogger(__name__)
@@ -37,14 +39,21 @@ class ExchangeSummary:
     paused: tuple[PausedCompany, ...]  # in the order of the price board
 
 
-def summarize_board(board: Board) -> ExchangeSummary:
+def summarize_board(board: Snapshot) -> ExchangeSummary | None:
     """The summary of one price board."""
+    companies = board.listed
+    sources = {state.reading.source for state in companies}
+    priority = ("stale", "live", "cache", "replay")
+    feed = next((source for source in priority if source in sources), None)
+    if feed is None:
+        return None
     paused = tuple(
-        PausedCompany(quote.company.id, quote.company.name)
-        for quote in board.quotes
-        if quote.is_halted
+        PausedCompany(state.company.id, state.company.name)
+        for state in companies
+        if state.status == STATUS_STALE
     )
-    return ExchangeSummary(feed=board.snapshot.source, paused=paused)
+    return ExchangeSummary(feed=feed, paused=paused)
+
 
 
 async def read_exchange(
@@ -54,7 +63,7 @@ async def read_exchange(
     if market is None:
         return None
     try:
-        board = await market.board(admin, save=False)
+        board = await market.snapshot(admin, trading_enabled=False)
     except ApiError as error:
         logger.warning("The bulletin leaves out the Exchange line: %s", error.code)
         return None

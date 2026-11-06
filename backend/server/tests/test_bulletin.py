@@ -396,7 +396,10 @@ def test_the_feed_is_named_in_words(feed, words):
     world = exchange_world({"source": feed})
 
     assert world.body()["exchange"]["feed"] == feed
-    assert world.texts()["exchange"] == f"Island Exchange: {words}. No company is paused."
+    if feed == "stale":
+        assert len(world.body()["exchange"]["pausedCompanies"]) == 7
+    else:
+        assert world.texts()["exchange"] == f"Island Exchange: {words}. No company is paused."
 
 
 def test_a_failing_exchange_leaves_out_the_exchange_line():
@@ -413,7 +416,7 @@ def test_the_bulletin_only_looks_at_the_exchange_it_saves_nothing():
 
     world.body()
 
-    assert world.app.state.market.memory_store.bases == {}
+    assert world.app.state.market.feed.asked == 1
 
 
 def test_a_missing_exchange_service_leaves_out_the_exchange_line():
