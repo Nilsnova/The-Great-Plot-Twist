@@ -10,6 +10,8 @@
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
     crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
+    islet.py          GET  /api/islet          your home islet: coins, timber, the five spots
+                      POST /api/islet/build    build level 1 of a building on your islet
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the
 GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).

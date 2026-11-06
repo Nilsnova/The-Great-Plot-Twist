@@ -14,6 +14,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106030000_entry_profiles.sql](migrations/20261106030000_entry_profiles.sql) | The referee and the entry kits (package A3): one table and one function. Run it after the foundation, and **before** the code that reads it is merged into `main` (see [Apply before you merge](#apply-before-you-merge)). See [The entry kits migration](#the-entry-kits-migration-package-a3). |
 | [migrations/20261106040000_crew_codes.sql](migrations/20261106040000_crew_codes.sql) | Crew codes, the muster and partners (package A6): three new columns of `crews`, new rules for `crew_seats`, one table and four functions. Run it after the foundation. See [Crew codes, the muster and partners](#crew-codes-the-muster-and-partners-migration-20261106040000-package-a6). |
 | [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | Live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation, and only when the team wants to test live presence. See [The live presence migration](#the-live-presence-migration). |
+| [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
 
 ## Project settings this migration relies on
 
@@ -204,6 +205,26 @@ Three things to know:
 
 The kill switch, if a flood ever happens, is in [Changing the database later](#changing-the-database-later). The manual checks are the steps L1 to L7 at the end of the manual test plan; L7 (the server's helper) must pass once before any package polls less because of crew events.
 
+## The home islet migration
+
+`migrations/20261106070000_home_islet.sql` is the database part of the home islet: every player's own islet, with the timber they hold and the buildings that stand on it (see [INTERFACES.md, section 2](../docs/INTERFACES.md#your-home-islet-package-l2) and decision [D021](../docs/DECISIONS.md)). Run it **after** the foundation migration, because it uses the profiles, the wallets, `apply_wallet_transaction()` and `touch_updated_at()` from there. It needs nothing from the other migrations, but apply the files oldest time stamp first, as always. It is safe to run twice. It adds **no wallet reason**: a building is paid with `building_purchase`, which the foundation migration already has. Everything is explained in the file itself.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `islets` | One row per player who has built something: the timber the player holds, never below 0. The first build makes the row, and it starts with the **starter pack** of timber (20 today, from `backend/content/buildings.json`). The primary key is the player, so the pack arrives once. Timber is not coins, so it has no ledger. | Only the server, through `islet_build()`. |
+| `islet_buildings` | One row per building that stands on a player's islet. The primary key is the player and the plot, so a plot holds one building. A check rule keeps each plot and its kind of building together (`plot_2` workshop, `plot_3` windmill, `plot_4` greenhouse, `islet_signal_station` signal_station). The cabin on `plot_1` stands from the start and has no row. The ref (`islet:` plus the id the browser made for the click) can be used once per player. `coins_paid` and `timber_paid` record what was paid: timber has no ledger, so that row is its only record. | Only the server, through `islet_build()`. |
+| `islet_build()` | The only way a building goes up. In one step: check the arguments, lock the player's wallet, refuse a repeated ref, make the islet row with the starter pack if there is none and lock it, refuse a plot that holds a building, refuse a build when the player holds too little timber, take the coins with `apply_wallet_transaction()` (reason `building_purchase`), take the timber and write the building (level 1). It *returns* a refusal such as `{"status": "refused", "reason": "plot_occupied", "standing": "signal_station"}` with nothing charged, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `bad_build` when the server sent an argument that makes no sense, or a check error when a plot and its building do not belong together. | Run by the server only. |
+
+**The starter-pack rule.** The server shows a player who has not built yet 20 timber, and `islet_build()` makes the islet row with the same number (the server passes it in, from `buildings.json`). So what the player saw is what the player gets, and the pack cannot arrive twice. 20 timber buys exactly the signal station and the workshop, in either order, so nobody can spend the starter timber in a way that blocks the finale.
+
+**The prices are arguments.** `islet_build()` takes the coins, the timber and the starter pack as arguments, like the price of an Island Exchange trade, so every number lives in one place (`buildings.json`) and the database only compares against what it is given. Which building may be built on which plot, and whether a spot can be built yet, are Python rules (`backend/server/game/building.py`). The database checks what depends on earlier builds, because only it sees two requests at the same moment: is the plot taken, is there enough timber, is the ref new, and are there enough coins.
+
+**The lock order.** Every money function locks the player's wallet row first. `islet_build()` does so before it touches the islet, like `market_trade()`, so a trade and a build of the same player wait in a line and never in a circle. The races in the manual test plan (below) try it.
+
+**The finale reads it.** A signal station is never removed or downgraded: no role can update or delete a building. So "this player has a signal station" can only change from no to yes. In SQL it is `exists (select 1 from public.islet_buildings where player_id = <player> and building_type = 'signal_station')`. The table and column names are part of the contract in [INTERFACES.md](../docs/INTERFACES.md#your-home-islet-package-l2).
+
+After applying it, the three quick checks below show two more tables, two more policies and two more `authenticated` grant rows than before this migration. Run the home islet checks (steps H1 to H15) at the end of the manual test plan.
+
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
@@ -225,11 +246,12 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 2. Open **SQL Editor** and start a new query.
 3. Paste the whole content of `migrations/20261106000000_foundation.sql`.
 4. Click **Run**. Expected: a success message and no error.
-5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The files start with a time stamp, so apply them oldest first. Steps 5 to 9 each need only the foundation (step 3), not each other, so step 5 can wait until the Exchange goes live (see [Apply before you merge](#apply-before-you-merge) for what that means for the Supabase CLI).
+5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The files start with a time stamp, so apply them oldest first. Steps 5 to 10 each need only the foundation (step 3), not each other, so step 5 can wait until the Exchange goes live (see [Apply before you merge](#apply-before-you-merge) for what that means for the Supabase CLI).
 6. Do the same with `migrations/20261106020000_accounts.sql` (captain names, cloud progress, delete my data), in a new query.
 7. Do the same with `migrations/20261106030000_entry_profiles.sql` (the referee and the entry kits), in a new query. Do this **before** the branch that reads `GET /api/me` is merged into `main`, and before you test a preview of it.
 8. Do the same with `migrations/20261106040000_crew_codes.sql` (crew codes, the muster and partners), in a new query.
 9. Only when the team wants to test live presence: do the same with `migrations/20261106050000_live_presence.sql`, in a new query. Until it is applied, Realtime refuses every private room.
+10. Do the same with `migrations/20261106070000_home_islet.sql` (the home islet), in a new query. It needs only the foundation, but its time stamp is later than the other new files, so apply it after them if they are there.
 
 ### Option B: Supabase CLI
 
@@ -272,7 +294,7 @@ where relnamespace = 'public'::regnamespace and relkind = 'r'
 order by relname;
 ```
 
-Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. Each later file adds its own tables, also with `rls_on` = true: `market_bases`, `market_positions` and `market_trades` (Island Exchange), `captain_name_rerolls` (accounts), `entry_profiles` (entry kits) and `crew_join_failures` (crew codes). The table after the three checks has the number after each file.
+Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. Each later file adds its own tables, also with `rls_on` = true: `market_bases`, `market_positions` and `market_trades` (Island Exchange), `captain_name_rerolls` (accounts), `entry_profiles` (entry kits), `crew_join_failures` (crew codes), and `islets` and `islet_buildings` (home islet). The table after the three checks has the number after each file.
 
 ```sql
 select tablename, policyname, cmd
@@ -281,7 +303,7 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
-Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. Every later table has one `SELECT` policy too, except `crew_join_failures`, which has none: players see nothing of it.
+Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. Every later table has one `SELECT` policy too, except `crew_join_failures`, which has none: players see nothing of it. The home islet's two are `Players can read their own islet` and `Players can read their own islet buildings`.
 
 ```sql
 select grantee, table_name, string_agg(privilege_type, ', ' order by privilege_type) as rights
@@ -383,6 +405,14 @@ The three actors, and the database role behind each:
 | `entry_profiles` | insert | no access | no access | yes [3] (through `grant_entry_kit()`) |
 | `entry_profiles` | update | no access | no access | no access (the first ending counts) |
 | `entry_profiles` | delete | no access | no access | no access (goes with its player, by cascade) |
+| `islets` | read | no access | own row | yes |
+| `islets` | insert | no access | no access | yes [6] (through `islet_build()`) |
+| `islets` | update | no access | no access | yes [6] (through `islet_build()`) |
+| `islets` | delete | no access | no access | no access (an islet is deleted only with its player, by cascade) |
+| `islet_buildings` | read | no access | own rows | yes |
+| `islet_buildings` | insert | no access | no access | yes [6] (through `islet_build()`) |
+| `islet_buildings` | update | no access | no access | no access (a building is never changed in this version) |
+| `islet_buildings` | delete | no access | no access | no access (deleted with its player, by cascade) |
 
 [1] The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
@@ -393,6 +423,8 @@ The three actors, and the database role behind each:
 [4] `delete_player()` is `SECURITY DEFINER`, because it deletes the login in `auth.users`, and that needs the rights of the function owner. It is safe because only `service_role` may run it and the server passes the id of the verified player. It hands every crew the player started to the player in the lowest other seat before it deletes the login.
 
 [5] `crews` and `crew_seats`: the server writes them through the four crew functions (`crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`), a team rule as with the wallet. The database lets the server write the two tables directly, because the functions run with the rights of the server. A direct write would skip the locks, the version check and the rule that a player sits in at most one open crew. The code never writes these tables directly.
+
+[6] The database lets the server add `islets` and `islet_buildings` rows and change `islets` rows directly, because `islet_build()` runs with the rights of the server. "Through `islet_build()`" in the table is our rule, not something the database enforces (the same pattern as `wallets` and the Exchange tables above). A direct write would skip the checks of `islet_build()`: the wallet, the timber, the one building per plot and the repeat check. Only the server holds that right, and the code never writes these tables directly. The server cannot edit or delete a building at all, and that is a lock: a signal station, once built, stays, and the finale counts on it.
 
 Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
@@ -411,6 +443,7 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 | `market_trade()` | no access | no access | yes |
 | `market_set_base()` | no access | no access | yes |
+| `islet_build()` | no access | no access | yes |
 | `market_trades_id_seq` (the trade history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 | `assign_captain_name()` | no access | no access | yes |
 | `reroll_captain_name()` | no access | no access | yes |
@@ -426,30 +459,31 @@ The live presence migration adds no table. Its rules are policies on the Realtim
 
 | Room (topic) | Action | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
 |---|---|---|---|---|
-| `live:world` | look at presence | no access | yes | yes [6] |
+| `live:world` | look at presence | no access | yes | yes [7] |
 | `live:world` | track presence (say where you are) | no access | yes | not needed |
-| `live:world` | broadcast (listen or send) | no access | no access | yes [6] |
-| `live:place:<place id>:<room 1 to 99>` | listen to broadcasts | no access | yes | yes [6] |
-| `live:place:<place id>:<room 1 to 99>` | send broadcasts | no access | yes | yes [6] |
-| `live:place:<place id>:<room 1 to 99>` | presence | no access | no access | yes [6] |
-| `live:crew:<crew id>` | listen to broadcasts | no access | only if they hold a seat in that crew (`is_crew_member`) | yes [6] |
-| `live:crew:<crew id>` | send broadcasts | no access | no access | yes [6] (the only sender: REST, secret key) |
-| `live:crew:<crew id>` | presence | no access | no access | yes [6] |
-| any other topic | everything | no access | no access | yes [6] |
+| `live:world` | broadcast (listen or send) | no access | no access | yes [7] |
+| `live:place:<place id>:<room 1 to 99>` | listen to broadcasts | no access | yes | yes [7] |
+| `live:place:<place id>:<room 1 to 99>` | send broadcasts | no access | yes | yes [7] |
+| `live:place:<place id>:<room 1 to 99>` | presence | no access | no access | yes [7] |
+| `live:crew:<crew id>` | listen to broadcasts | no access | only if they hold a seat in that crew (`is_crew_member`) | yes [7] |
+| `live:crew:<crew id>` | send broadcasts | no access | no access | yes [7] (the only sender: REST, secret key) |
+| `live:crew:<crew id>` | presence | no access | no access | yes [7] |
+| any other topic | everything | no access | no access | yes [7] |
 
-[6] The server's secret key skips row-level security, so the policies do not limit it. Our rule is that the server only sends crew events (`backend/server/crew_broadcast.py`) and never joins a room. The rights on the table `realtime.messages` itself (the grants) are set by Supabase and not by us; step L2 of the manual test plan reads them.
+[7] The server's secret key skips row-level security, so the policies do not limit it. Our rule is that the server only sends crew events (`backend/server/crew_broadcast.py`) and never joins a room. The rights on the table `realtime.messages` itself (the grants) are set by Supabase and not by us; step L2 of the manual test plan reads them.
 
 Supabase's security advisor may warn that a signed-in player can run a `SECURITY DEFINER` function. That is `is_crew_member()`, and it is on purpose. It takes a crew id, compares it with the caller's own id (`auth.uid()`), and returns only true or false. It cannot tell anyone who sits in somebody else's crew.
 
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in all thirteen tables (with every file up to `20261106040000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It skips row-level security. It can read every player's rows in all fifteen tables (with every file up to `20261106070000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It can send into any Realtime room through the Broadcast REST API, because that skips the rules on `realtime.messages`. The server uses this only to tell a crew that something changed (`backend/server/crew_broadcast.py`).
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see note [2] of the matrix.
 - On the account functions it may read and add `captain_name_rerolls` rows (only through `reroll_captain_name()`; a re-roll is final, so no update and no delete), and it is the only role that may run `assign_captain_name()`, `reroll_captain_name()`, `save_progress()` and `delete_player()`. `delete_player()` is the most powerful call the server can make: it deletes a login and everything about a player. The Python code passes it only the id of the verified player, and only after the request said `"confirm": true`.
 - On the crew tables it writes `crews` and `crew_seats` only through the four crew functions, by team rule (note [5] of the matrix), and it may read, add and delete `crew_join_failures` rows (through `crew_find_by_code()`, which also deletes the rows older than the guessing window). It is the only role that may run `crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`.
 - On the entry kit table it may read and add `entry_profiles` rows (only through `grant_entry_kit()`; a profile is written once and the first ending counts, so no update and no delete), and it is the only role that may run `grant_entry_kit()`. That function is also the only place where the entry kit coins are paid.
+- On the home islet tables it can read both, add and change `islets` rows (the timber), and only add `islet_buildings` rows. It cannot edit or delete a building, and it cannot delete an islet. It is the only role that may run `islet_build()`. Like the wallet, this is a rule of the team more than a lock: see note [6] of the matrix.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
 - The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table, and the browser has no right to write to any of them.
@@ -458,7 +492,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
-The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`), the entry kit checks K1 to K5 (`20261106030000`) and the live presence checks L1 to L7 (`20261106050000`). Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players). None of the accounts, entry kit, crew or live presence files adds a reason.
+The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`), the entry kit checks K1 to K5 (`20261106030000`) the live presence checks L1 to L7 (`20261106050000`) and the home islet checks H1 to H15 (`20261106070000`). Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players). None of the accounts, entry kit, crew, live presence or home islet files adds a reason.
 
 **Set up**
 
@@ -1713,6 +1747,240 @@ cd backend && uv run --env-file ../.env python -c "import asyncio; from server.c
 ```
 
 Expected: it prints `True`, and that member's browser logs `live_crew_updated`. `False` comes with one short warning on the terminal (the flag is off, Supabase is not set up, or Supabase answered with an error status). Never type the key into the command: `--env-file` reads it from your private `.env`.
+
+### Home islet checks (steps H1 to H15)
+
+These steps test the home islet migration. Run them after the foundation migration and the home islet migration are both applied (the Island Exchange migration is not needed). Use **two new test users**, A and B (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID` and `USER_B_ID` with their ids. `islet_build()` takes the prices and the starter pack as arguments, so every block below passes them in: 300 coins and 10 timber for a building, and a starter pack of 20 timber, the numbers of `backend/content/buildings.json`. Every block uses a new ref (`islet:manual-1`, `islet:manual-2`, and so on), except where a step repeats one on purpose. Run each block in its own run, with the role left on the default (`postgres`).
+
+**H1. Set-up.** Give player A 1000 coins and player B 100 coins, with the entry kit reason and the fixed ref `kit`:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 1000, 'kit_grant', 'kit') as a_balance,
+       public.apply_wallet_transaction('USER_B_ID', 100, 'kit_grant', 'kit') as b_balance;
+```
+
+Expected: `a_balance` 1000 and `b_balance` 100. Neither player has an islet yet (default role):
+
+```sql
+select (select count(*) from public.islets where player_id in ('USER_A_ID', 'USER_B_ID')) as islet_rows,
+       (select count(*) from public.islet_buildings where player_id in ('USER_A_ID', 'USER_B_ID')) as buildings;
+```
+
+Expected: `islet_rows` 0 and `buildings` 0. The islet row appears with the first build.
+
+**H2. A builds the signal station.** The station costs 300 coins and 10 timber. The islet row is made with the starter pack of 20 timber:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'islet_signal_station', 'signal_station', 300, 10, 20, 'islet:manual-1') as result;
+```
+
+Expected: `result` has `status` `done`, `balance` 700, `timber` 10 and `level` 1.
+
+**H3. The islet check.** We call the next block the **islet check** and use it again below (default role):
+
+```sql
+select w.balance,
+       (select i.timber from public.islets i where i.player_id = w.player_id) as timber,
+       (select string_agg(b.plot || ' ' || b.building_type || ' L' || b.level, ', ' order by b.plot) from public.islet_buildings b where b.player_id = w.player_id) as buildings,
+       (select string_agg(t.reason || ' ' || t.delta, ', ' order by t.id) from public.wallet_transactions t where t.player_id = w.player_id and t.ref = 'islet:manual-1') as ledger
+from public.wallets w
+where w.player_id = 'USER_A_ID';
+```
+
+Expected after H2: `balance` 700, `timber` 10, `buildings` `islet_signal_station signal_station L1` and `ledger` `building_purchase -300` (one ledger row, with the same ref as the building).
+
+**H4. The same ref twice changes nothing.** Run the build of H2 again, with the same ref `islet:manual-1`:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'islet_signal_station', 'signal_station', 300, 10, 20, 'islet:manual-1') as result;
+```
+
+Expected: an error, message `already_applied` (error code `23505`, the same code as a repeated wallet ref). The islet check is unchanged: 700, 10, one building, one ledger row.
+
+**H5. One building per plot.** A new ref on the same plot is refused, and nothing is charged:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'islet_signal_station', 'signal_station', 300, 10, 20, 'islet:manual-2') as result;
+```
+
+Expected: `status` `refused`, `reason` `plot_occupied` and `standing` `signal_station`. The islet check is unchanged: 700 and 10.
+
+**H6. A second building uses the last timber.** The workshop on `plot_2`. The starter pack is not given a second time:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'plot_2', 'workshop', 300, 10, 20, 'islet:manual-3') as result;
+```
+
+Expected: `status` `done`, `balance` 400, `timber` 0 and `level` 1.
+
+**H7. Too little timber.** A has no timber left, so the greenhouse on `plot_4` is refused before any coin moves:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'plot_4', 'greenhouse', 300, 10, 20, 'islet:manual-4') as result;
+```
+
+Expected: `status` `refused`, `reason` `not_enough_timber` and `timberHeld` 0. The islet check shows 400 and 0.
+
+**H8. Too few coins.** Player B has 100 coins and tries the 300-coin station:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_B_ID', 'islet_signal_station', 'signal_station', 300, 10, 20, 'islet:manual-5') as result;
+```
+
+Expected: an error `insufficient_funds`. Nothing is left behind, not even the islet row that the build made first. We call the next block the **B check** (default role):
+
+```sql
+select (select balance from public.wallets where player_id = 'USER_B_ID') as balance,
+       (select count(*) from public.islets where player_id = 'USER_B_ID') as islet_rows,
+       (select count(*) from public.wallet_transactions where player_id = 'USER_B_ID' and reason = 'building_purchase') as purchases;
+```
+
+Expected: `balance` 100, `islet_rows` 0 and `purchases` 0.
+
+**H9. The database keeps a plot and its building together.** Player B sends the windmill for `plot_2`. The price here is 50 coins, so that B can pay it and the table rule is what says no:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_B_ID', 'plot_2', 'windmill', 50, 10, 20, 'islet:manual-6') as result;
+```
+
+Expected: an error that mentions the check rule `islet_buildings_plot_fits_building`. Everything is rolled back, the 50 coins included: the B check shows 100, 0 and 0.
+
+**H10. A player who does not exist.**
+
+```sql
+set local role service_role;
+select public.islet_build('00000000-0000-4000-8000-000000000000', 'plot_2', 'workshop', 300, 10, 20, 'islet:manual-7') as result;
+```
+
+Expected: `status` `refused` and `reason` `player_not_set_up`. Nothing was made.
+
+**H11. Arguments that make no sense.** A price of 0 coins:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'plot_3', 'windmill', 0, 10, 20, 'islet:manual-8') as result;
+```
+
+Expected: an error `bad_build`. Now a negative price in timber:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_A_ID', 'plot_3', 'windmill', 300, -1, 20, 'islet:manual-8') as result;
+```
+
+Expected: an error `bad_build`. The islet check still shows 400 and 0.
+
+**H12. Who may read, and who may not.** As player A (the block sets the role and the login for that run):
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select (select count(*) from public.islets) as islet_rows,
+       (select count(*) from public.islet_buildings) as buildings_seen,
+       (select count(*) from public.islet_buildings where player_id = 'USER_B_ID') as b_buildings_seen;
+```
+
+Expected: `islet_rows` 1, `buildings_seen` 2 and `b_buildings_seen` 0. Now as player B:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_B_ID", "role": "authenticated"}', true);
+select (select count(*) from public.islets) as islet_rows,
+       (select count(*) from public.islet_buildings) as buildings_seen,
+       (select count(*) from public.islet_buildings where player_id = 'USER_A_ID') as a_buildings_seen;
+```
+
+Expected: all three numbers are 0. B sees none of A's islet. Now player A tries to write. Each of the three blocks fails with `permission denied`:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+update public.islets set timber = 999 where player_id = 'USER_A_ID';
+```
+
+Expected: `permission denied for table islets`.
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+insert into public.islet_buildings (player_id, plot, building_type, level, coins_paid, timber_paid, ref) values ('USER_A_ID', 'plot_3', 'windmill', 1, 1, 0, 'x');
+```
+
+Expected: `permission denied for table islet_buildings`.
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select public.islet_build('USER_A_ID', 'plot_3', 'windmill', 1, 0, 20, 'x');
+```
+
+Expected: `permission denied for function islet_build`. A visitor who is not signed in gets nothing at all. Each of the two blocks fails with `permission denied for table ...`:
+
+```sql
+set local role anon;
+select * from public.islets;
+```
+
+```sql
+set local role anon;
+select * from public.islet_buildings;
+```
+
+**H13. Even the server cannot edit or delete a building.** A building is never changed in this version, and the finale counts on a signal station staying:
+
+```sql
+set local role service_role;
+update public.islet_buildings set level = 2 where player_id = 'USER_A_ID';
+```
+
+Expected: `permission denied for table islet_buildings`. And an islet cannot be deleted by hand either:
+
+```sql
+set local role service_role;
+delete from public.islets where player_id = 'USER_A_ID';
+```
+
+Expected: `permission denied for table islets`.
+
+**H14. Running the migration again is harmless.** Paste the whole home islet migration into the SQL editor again and run it. Expected: no error, and the islet check still shows 400, 0, the two buildings `islet_signal_station signal_station L1, plot_2 workshop L1` and the same ledger row as before. The quick checks still show the same tables and policies.
+
+**H15. Deleting a player removes their islet.** Delete both test users under **Authentication > Users**. Then run:
+
+```sql
+select (select count(*) from public.islets where player_id in ('USER_A_ID', 'USER_B_ID')) as islet_rows,
+       (select count(*) from public.islet_buildings where player_id in ('USER_A_ID', 'USER_B_ID')) as buildings,
+       (select count(*) from public.wallet_transactions where player_id in ('USER_A_ID', 'USER_B_ID')) as ledger_rows;
+```
+
+Expected: all three numbers are 0.
+
+**Optional: the race.** Two builds of the same player at the same moment must build once. Create a third test user C and give C 1000 coins as in H1 (ref `kit`). Open two SQL editor tabs. In the first tab run (it holds its transaction open for 10 seconds):
+
+```sql
+begin;
+select public.islet_build('USER_C_ID', 'islet_signal_station', 'signal_station', 300, 10, 20, 'islet:manual-9');
+select pg_sleep(10);
+commit;
+```
+
+Within those 10 seconds, run this in the second tab:
+
+```sql
+set local role service_role;
+select public.islet_build('USER_C_ID', 'islet_signal_station', 'signal_station', 300, 10, 20, 'islet:manual-10') as result;
+```
+
+Expected: the second tab waits until the first commits, and then answers `refused` with `plot_occupied`. C has 700 coins, 10 timber and one building: the wallet lock made the second build wait and then see the first. Delete user C when you are done.
+
+Delete the test users when you are done (**Authentication > Users**). Their islets and buildings go with them.
 
 ## Changing the database later
 

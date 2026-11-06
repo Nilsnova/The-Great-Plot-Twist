@@ -15,6 +15,7 @@
 | `weather/` | The recorded weather answer and saved sample answers. Its own `README.md` explains them. | Server code only. |
 | `names.json` | The word lists for generated captain names such as "Brave Puffin 17" (package A2, decision D006). | The server only. It is not on the list of public content and is never served. |
 | `entry_kits.json` | The four entry kits of the case and which Act 1 ending leads to which one (package A3, decision D019). | The server only. It is not on the list of public content and is never served. |
+| `buildings.json` | The buildings of a home islet (package L2): the five spots, the price of a level 1 building and the starter timber. Format: [buildings.json](#buildingsjson-the-buildings-of-a-home-islet). | The server only. It is not on the list of public content; the browser gets everything through `GET /api/islet`. |
 
 Content is data, not code. The story engine reads it and never contains story text. You can change `story.json` without touching any Python or JavaScript.
 
@@ -580,3 +581,69 @@ A file that breaks a rule stops the code with a message that names the file and 
 - **A changed kit changes what new players get.** A player who has an entry profile keeps it, because the first ending counts (decision D019). The profile stores the kit id, the start place and the coins as they were.
 - **A new ending or a new decision needs a kit.** If the story can end in a way that no kit covers, `kit_for` raises an error and the player gets a 500. `test_referee.py` searches the real story for every end state and fails first.
 - **A new kit id needs a new migration**, because the table `entry_profiles` lists the allowed ids. Never edit the migration that exists.
+
+## buildings.json: the buildings of a home islet
+
+`buildings.json` holds what the home islet (package L2) is made of: its five spots, which building each spot holds, what a level 1 building costs and how much timber every player starts with. It is **server only**. It is not on the list `PUBLIC_CONTENT`, so the browser never downloads it (decision D016). The browser gets everything it needs through `GET /api/islet`, which shows each spot with its price and whether the player can build it ([INTERFACES.md](../../docs/INTERFACES.md#your-home-islet-package-l2)). Keys are camelCase, like `market/companies.json`. Coins are play money only.
+
+The server reads and checks the file once, when it starts (`backend/server/game/building_catalogue.py`). A mistake stops the home islet: its routes answer `503 islet_unavailable`, the rest of the API keeps working, and the log names the entry and the field. The numbers are start values from the open-world design (`docs/story/OPEN-WORLD.md`, section 5.1) and change only by pull request.
+
+### Top-level fields
+
+| Field | Type | Meaning |
+|---|---|---|
+| `about` | text, not empty | Says what the file is. The code only checks that it is there. |
+| `playMoneyNote` | text, not empty | The line the islet panel shows to say that coins are play money. It comes with every answer of `GET /api/islet`. |
+| `starterTimber` | whole number, 0 to 100 | The timber every player gets once, when the first build makes their islet row. |
+| `priceList` | list with exactly one entry | The price of each level. Only level 1 exists until the upgrades are built. |
+| `spots` | list of 1 to 10 entries | The spots of the islet, in the order of the place registry (`frontend/src/world/places/registry.js`). |
+
+### An entry of `priceList`
+
+```json
+{ "level": 1, "coins": 300, "timber": 10 }
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `level` | the whole number 1 | The level this price is for. |
+| `coins` | whole number, 1 to 1,000,000 | Coins for the building. 1,000,000 is the biggest change the wallet allows (`MAX_DELTA` in `backend/server/wallet.py`). |
+| `timber` | whole number, 0 to 1,000 | Pieces of timber for the building. |
+
+### A spot
+
+```json
+{ "plot": "plot_2", "plotName": "Workshop plot", "type": "workshop", "name": "Workshop",
+  "about": "A bench and tools for making parts. What it can make comes in a later update.",
+  "buildable": true }
+```
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `plot` | id | yes | The hotspot of the islet in the place registry, for example `plot_2` or `islet_signal_station`. |
+| `plotName` | text, 2 to 40 characters | yes | The name of the spot that the player reads, for example "Workshop plot". |
+| `type` | id | yes | The one kind of building this spot holds, for example `workshop`. |
+| `name` | text, 2 to 40 characters | yes | The building as the player reads it, for example "Workshop". |
+| `about` | text, 1 to 160 characters | yes | One line about the building. It names no culprit: the file holds no case text. |
+| `standsFromStart` | true or false | no, default false | True only for the cabin: it is there on the first day, free, and has no levels and no row in the database. |
+| `buildable` | true or false | yes | False while the spot cannot be built yet (the windmill and the greenhouse). |
+| `lockedNote` | text, 1 to 160 characters | when needed | Why a spot is locked. Needed for a spot that is neither there from the start nor buildable. |
+
+An **id** (`plot` and `type`) is 2 to 40 characters: lowercase letters, digits and underscores.
+
+### What the loader checks
+
+- Every field above has the right type, length and range. A whole number is a whole number: not a fraction, not a text and not `true`.
+- No two spots share a `plot`, and no two share a `type`.
+- A spot that stands from the start cannot also be buildable.
+- A spot that is neither there from the start nor buildable has a `lockedNote`.
+- Exactly one spot has the `type` `signal_station`, and its `plot` is `islet_signal_station`. The finale counts it (the crew's third light).
+
+The tests are in `backend/server/tests/test_building_catalogue.py`. `test_islet_matches_migration.py` keeps the file and the SQL check rule `islet_buildings_plot_fits_building` equal.
+
+### Rules for changing the file
+
+- **Never rename a plot or a type after players have built.** Rows in `islet_buildings` point at them, and so does the finale.
+- **To open the windmill or the greenhouse** (once timber has a second source, the driftline): set `buildable` to `true`. No code change is needed, because the database already allows a building on those plots.
+- **To add a spot:** write a new migration that replaces the check rule `islet_buildings_plot_fits_building`, and add the spot here and to the place registry. The test fails until all three agree.
+- **A new price** counts for the next build. A building that stands keeps what it cost (`coins_paid` and `timber_paid` in `islet_buildings`).
