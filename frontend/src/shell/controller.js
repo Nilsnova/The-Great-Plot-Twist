@@ -29,7 +29,12 @@ export function createShell(ctx) {
       modal.setTitle(mode==='credits'?'Made together':'Settings');
       if(mode==='credits')import('./credits.js').then(module=>{if(!disposed&&token===request)body.append(module.credits());});
       else {const loading=node('p','','Opening settings…');loading.setAttribute('role','status');body.append(loading);Promise.resolve(ctx.settingsView?.()).then(element=>{if(!disposed&&token===request&&mode==='settings'&&element)loading.replaceWith(element);}).catch(()=>{if(token===request)loading.textContent='Settings could not load. Go back and try again.';});}
-      if(mode==='settings')body.append(menuButton('Credits',()=>show('credits'),true));
+      if(mode==='settings'){
+        body.append(menuButton('Credits',()=>show('credits'),true));
+        for(const [label,path] of [['How to play','help.html'],['Privacy','privacy.html']]){
+          const link=node('a','kit-button kit-quiet',label);link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';body.append(link);
+        }
+      }
       body.append(menuButton('Back',back,true));
     }
     modal.setContent(body);modal.open(ctx.container);body.querySelector('button,input,select,a')?.focus();

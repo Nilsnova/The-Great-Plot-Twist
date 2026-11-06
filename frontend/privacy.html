@@ -23,8 +23,8 @@
         <p class="lede">What we keep, why we keep it, and what you can ask us to remove.</p>
         <button id="print-notice" type="button" hidden>Print or save this notice</button>
       </div>
-<p>For players of The Great Plot Twist and the course team. <strong>student project, not legal advice</strong>.</p>
-<p>Last reviewed: 6 November 2026. This describes the current repository, not a check of the live providers&#x27; settings.</p>
+<p>For players of The Great Plot Twist and the course team. <strong>Student project, not legal advice.</strong></p>
+<p>Reviewed on 6 November 2026 against the current repository, including the case, Exchange, festival, host console and sports packages. This is not a check of live provider retention settings. The <a href="https://github.com/Nilsnova/The-Great-Plot-Twist/blob/main/docs/DATA-INVENTORY.md">data inventory</a> gives the technical record.</p>
 <nav class="contents" aria-label="Notice sections">
 <a href="#what-we-keep-and-why">What we keep and why</a>
 <a href="#who-can-see-it">Who can see it</a>
@@ -35,46 +35,49 @@
 <a href="#play-money-only">Play money only</a>
 </nav>
 <section id="what-we-keep-and-why"><h2>What we keep and why</h2>
-<p>You can explore the local game without signing in. When you use account features, GitHub sign-in through Supabase gives the game a player ID. The public game profile uses a generated captain name, not your GitHub name or email. Supabase&#x27;s own login records can still contain account details from sign-in.</p>
-<p>The game database can keep your profile and signup time, saved progress/settings, intro outcome and awarded kit, play-coin balance and coin history, fictional market holdings/trades, crew ownership/membership and name re-roll. It also records the player ID and time of failed crew-code lookups to slow guessing; it does not store the guessed code or an IP address in that counter. These records make progress, shared crews and game rules work. The intro result stores a move count; it has no dedicated column for the complete move log. A cloud save is a flexible JSON object: do not put private messages or secrets in it.</p>
+<p>You can explore and play the local intro without signing in. The ordinary browser game is still waiting for its complete online account/case connection. A local rehearsal does not create a live account, crew, cloud save or reward.</p>
+<p>Connected account features use GitHub sign-in through Supabase. The game identifies you by a player ID and a generated captain name, rather than displaying your GitHub name or email. Supabase&#x27;s own login records can contain account details.</p>
+<p>The database can keep your profile, save, kit, play-coin balance and ledger, Exchange positions/events, prediction and sports stakes, duel signals/results, islet buildings, crew membership, case actions and contributions, and festival reservations/queue history. Retry IDs prevent one request being applied twice. Failed crew-code lookups record player ID and time, not the guessed code or IP address. Host actions also have a private audit record. Do not put personal messages or secrets in a cloud save.</p>
 </section>
 <section id="who-can-see-it"><h2>Who can see it</h2>
-<p>Every signed-in player can read all public profile columns: captain name, player ID and signup time. Your save, wallet, coin history, market records, re-roll and intro result have database rules limiting player reads to your own rows. Crew members can read their crew and seat details, including player IDs, kits, joining code and times. The join API uses the code to assign a seat and then returns crew details; it does not provide a separate preview before joining. Share the code only with people you intend to invite.</p>
-<p>Visitors who are not signed in cannot read application tables directly. The game&#x27;s privileged server and authorised project/database operators can access stored data. Generated names and IDs still link activity to a player; they do not make it anonymous.</p>
+<p>Signed-in players can read public captain profiles, including player IDs and signup times. Their own saves, wallets, ledger, Exchange records, stakes and islet records have database read restrictions. Crew members can read their crew and seats, including the invitation code, kits, player IDs and times. Share crew codes privately.</p>
+<p>The server returns earned case information to the crew and public world information to visitors. Shared wall names identify contributing captains. Duel signals stay sealed until the rules allow a participant to see them. Festival visitors see reservation status; another player&#x27;s identity or queued signals are not published. The host console requires a server-approved host account and exposes operational summaries, not login tokens or secret case content.</p>
+<p>Visitors who are not signed in cannot read application tables directly. The privileged game server and authorised project/database operators can access stored data. Generated names and IDs still link activity to an account; they do not make it anonymous.</p>
 </section>
 <section id="how-long-it-stays"><h2>How long it stays</h2>
-<p>Most account-linked records remain until account deletion. Current progress is replaced when saved; a fictional market position disappears when fully sold. Failed-lookup counters older than the ten-minute counting window are removed on that player&#x27;s next lookup, so inactive counters can last longer. There is no automatic account expiry or agreed course-end deletion date in the code.</p>
-<p>Server memory also briefly remembers verified logins and recent trading requests. The login check is valid for up to 60 seconds; expired memory is removed lazily or when the process ends. Deletion does not explicitly clear these caches. Application errors can produce request paths and tracebacks in logs; do not assume logs are anonymous. Supabase/Vercel logs and backups follow provider settings, which were not checked for this notice. We cannot give an exact retention or backup-erasure time from this code.</p>
+<p>Most account-linked records remain until account deletion. Saves replace their previous version. Closed Exchange positions and their event history remain until deletion; closing a position does not erase it. Shared crew/case/world history can outlive one player&#x27;s account. Festival claims stop appearing after the 48-hour event, but event expiry does not purge its database history.</p>
+<p>Old failed-lookup counters are removed on that player&#x27;s next lookup, so the ten-minute counting window is not a retention guarantee. Server memory briefly caches verified logins and rate limits; cleanup is lazy or happens when the process ends. There is no automatic account expiry or agreed course-end deletion date in code.</p>
+<p>Application failures can log request paths and tracebacks. Supabase/Vercel logs and backups follow provider settings. We have not established a numeric retention or backup-erasure time in this notice.</p>
 </section>
 <section id="delete-my-data"><h2>Delete my data</h2>
-<p>Contact <strong>Nils through the course page</strong> to ask about your data or request deletion. The server implements an account-deletion operation that requires confirmation, but this notice does not promise that a player-facing button is already available. D022 still marks deletion/audit-policy choices as pending; this notice records what the implementation does.</p>
-<p>When the implemented deletion succeeds, it removes the Supabase login, profile, cloud save, wallet, <strong>all coin-history rows</strong>, fictional holdings/trades, intro result, name re-roll, failed-lookup counters and your crew seats. A shared crew you own is first passed to the other human player in the lowest seat. A crew with no other human member is removed. Other players&#x27; records remain. A timeout needs a follow-up check; it does not prove that deletion failed.</p>
-<p>Deletion <strong>does not</strong> clear Supabase&#x27;s own <code>auth.audit_log_entries</code> (which can contain login email, player ID and IP address), platform logs/backups, your GitHub account or provider records, local browser data, host configuration or existing process caches. Provider retention is separate. The project has not implemented an audit-log purge. Clearing browser data is a separate step; forgetting a login is not account deletion.</p>
+<p>When connected, open <strong>Account and saves</strong>, choose <strong>Delete my data</strong>, read the notice and choose <strong>Confirm deletion</strong>. While the ordinary game cannot confirm your account, contact <strong>Nils through the course page</strong> for access or deletion help. Clearing site data or signing out does not delete an account.</p>
+<p>Successful account deletion removes the Supabase login, profile, saves, wallet and <strong>all of your ledger history</strong>, together with your account-linked game rows. A shared crew you own is passed to the other human player in the lowest occupied seat. An owned crew with no other human member is removed. Other players and surviving shared case/world records remain; applicable historical actor links become empty. A timeout leaves the outcome unknown and needs a follow-up check.</p>
+<p>Deletion does not remove Supabase&#x27;s own security audit records, platform logs/backups, your GitHub account, local browser data, host configuration or existing process caches. Supabase security audit records can contain login email, player ID and IP address. The game has no audit-log purge; provider retention is separate. Verified login cache entries can remain valid on an existing server instance for up to 60 seconds after deletion.</p>
 </section>
 <section id="your-browser"><h2>Your browser</h2>
-<p>The game code sets no application cookies and has no advertising or analytics integration found in this review. Sign-in providers and hosting can use their own cookies/logs.</p>
+<p>The game code has no advertising or analytics integration and sets no application cookies. Sign-in providers and hosting can use their own cookies and logs.</p>
 <ul>
-<li>Local storage keeps graphics/audio/accessibility preferences and the intro action list so the game can resume after reload. There is no expiry. Starting a new intro resets its action list; clearing this site&#x27;s data removes local progress and preferences.</li>
-<li>An older story-storage helper can leave a local save key on a browser that used it; it is not wired to the current intro.</li>
-<li>The team sign-in check keeps a temporary PKCE secret in tab session storage until used, forgotten or the tab session ends.</li>
-<li>Login tokens stay in memory, not application cookies or local storage. Reloading or “Forget me” drops the page&#x27;s token; it does not remove cloud records.</li>
+<li>Local storage keeps graphics/audio/accessibility preferences and the intro action list. Starting a new intro replaces its actions; clearing this site&#x27;s data removes local progress and preferences. There is no automatic expiry.</li>
+<li>An older story helper can leave a legacy save key on a browser that used it.</li>
+<li>The team&#x27;s separate sign-in check temporarily keeps a PKCE secret in tab session storage until used, forgotten or the tab session ends.</li>
+<li>Login tokens stay in memory, not application cookies or persistent storage. Reloading, signing out or a rejected session drops the page&#x27;s token; it does not delete cloud records.</li>
 </ul>
-<p>This privacy page itself adds no cookies, storage or API calls.</p>
-<p>Browser storage keys: <code>plot_twist_preferences_v1</code> (preferences), <code>plot_twist_intro_moves_v1</code> (intro action list), <code>plot-twist-save-v1</code> (older/helper save) and <code>auth-check-verifier</code> (temporary tab-session sign-in secret).</p>
+<p>The standalone help and privacy pages make no game API calls, write no storage and send no telemetry. Their external links open only when followed. Use your own browser profile on a shared device.</p>
 </section>
 <section id="outside-services"><h2>Outside services</h2>
-<p>GitHub handles sign-in. Your browser visits GitHub and Supabase, so sign-in itself is not server-only. Supabase handles authentication and the database; the project setup chooses <strong>Ireland</strong>. Vercel serves pages and runs the backend, with functions configured in <strong>Dublin</strong>. That does not mean every provider log, backup or CDN request stays there.</p>
-<p>Outside <strong>data-feed calls are server-side only</strong>:</p>
+<p>GitHub and Supabase handle sign-in, which includes browser visits to those services. Supabase stores authentication and game data; the project setup selects <strong>Ireland</strong>. Vercel serves the pages and backend, with functions configured in <strong>Dublin</strong>. This does not guarantee that every provider log, backup or CDN request stays there.</p>
+<p>Outside data-feed requests run on the server:</p>
 <ul>
-<li><strong>Open-Meteo</strong> receives the configured game place&#x27;s coordinates and weather fields, not your device&#x27;s location or player ID/token.</li>
-<li><strong>Binance</strong> receives public instrument symbols for game prices, not your game holdings, trades or identity. It does not open a real trading account for you.</li>
-<li><strong>Finnhub</strong> is not integrated; it was a rejected source candidate. No current calls were found.</li>
-<li><strong>Manifold</strong> is reserved for future public question reads and is not implemented. No current calls were found. Any later feed must remain server-side and needs this notice reviewed.</li>
+<li><strong>Open-Meteo</strong> receives configured game-place coordinates and weather fields, not your device location or player token.</li>
+<li><strong>Binance</strong> receives public instrument symbols for prices, not your game holdings or identity.</li>
+<li><strong>Finnhub</strong> is the integrated stock-price provider and receives public stock symbols, not your player ID, positions or token.</li>
+<li><strong>Manifold</strong> supplies public prediction questions/results. Requests do not include your stakes or identity.</li>
+<li><strong>Football-Data.org</strong> and <strong>BALLDONTLIE</strong> are the football/basketball feed implementations. Sports remains closed while its provider access is unavailable; recorded fixtures are explicitly labelled for local rehearsal.</li>
 </ul>
-<p>Providers receiving server calls also see server network metadata. Demo/recorded fallbacks can replace live feeds. No player IDs or login tokens are part of the outside-data query parameters.</p>
+<p>Providers also receive server network metadata. Recorded fallbacks can replace live feeds. Player IDs and login tokens are not added to outside-data query parameters. The optional ChatGPT hint assistant is not active: official website-client approval is still needed, and no working ChatGPT login is offered here.</p>
 </section>
 <section id="play-money-only"><h2>Play money only</h2>
-<p>Coins, shares, fees, predictions and rewards are game mechanics. They have <strong>no real monetary value</strong>. There are <strong>no real-money purchases</strong>, deposits, cash-outs, exchanges for money or real prizes. A game “buy” or “fee” spends play coins only. Public market data does not make a game trade a real investment.</p>
+<p>Coins, positions, fees, predictions, sports stakes and rewards have <strong>no real monetary value</strong>. There are <strong>no real-money purchases</strong>, deposits, cash-outs or real prizes. A game fee spends play coins only. Public market data does not make a game position a real investment.</p>
 <p>Questions or corrections: <strong>Nils through the course page</strong>.</p>
 </section>
     </main>

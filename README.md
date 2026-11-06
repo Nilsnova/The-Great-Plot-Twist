@@ -18,6 +18,9 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | Shared technical and product decisions | [Decision log](docs/DECISIONS.md) |
 | What we build, in which order, and the lanes | [ROADMAP.md](ROADMAP.md) |
 | What works right now, next steps per lane and the log | [Status](docs/STATUS.md) |
+| Player controls, crews and spoiler-free guidance | [How to play](docs/HOW-TO-PLAY.md) |
+| Player data, deletion and play money | [Privacy](docs/PRIVACY.md) |
+| Your own first contribution and explain-back | [Teammate starter kit](docs/contribute/QUICKSTART.md) |
 | The story and its approved decisions | [Story](docs/STORY.md) |
 | One-time setup of GitHub, Supabase and Vercel | [Setup guide](docs/SETUP.md) |
 | How the game, the API and the database fit together | [Architecture](docs/ARCHITECTURE.md) |

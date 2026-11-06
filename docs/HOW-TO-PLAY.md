@@ -4,9 +4,9 @@ A spoiler-free field guide for players. It explains the controls and systems wit
 
 ## What you can play now
 
-This guide follows the current `main` build. You can explore the islands, play Act 1 and change your settings. **Continue** restores the intro saved in this browser. Integrated sign-in and the live case connection are not available in this version: **Captain pending**, **Local intro only** and **The case service is not connected yet** mean exactly that.
+You can explore the islands, play Act 1 and change your settings. **Continue** restores the intro saved in this browser. Account and case screens exist, but the complete online mystery is still being connected. **Captain pending**, **Local intro only** and **The case is offline** mean that online progress has not been confirmed.
 
-Crew and case screens can be rehearsed with a local fake. They show the intended workflow, not a live crew, cloud save or real reward. Features marked **Planned** below are not playable just because their building appears on the map.
+Crew and case screens can be rehearsed locally. They show the intended workflow, not a live crew, cloud save or real reward. The market, prediction and duel screens have their own availability messages. Read those messages before acting; a building on the map does not mean its service is open.
 
 ## Getting started: sign-in, Act 1 and your kit
 
@@ -15,7 +15,7 @@ Crew and case screens can be rehearsed with a local fake. They show the intended
 3. Play *The Keeper's Last Log*, the solo first act. Your choices matter. There is no required answer sequence in this guide. **Start a new intro** replaces your existing intro progress and starts it again.
 4. A connected case service must confirm your ending before it awards a kit. The arrival screen will show your kit, starting place, items and coins. The four kit names are True Keeper, Witness, Informant and Stranger. Different kits offer different ways into the case; none is a reason to restart for a supposed best ending.
 
-**Sign-in:** GitHub is the project's intended account provider, but this build has no integrated sign-in button. You can play the local intro without signing in. Do not assume that finishing it has created an account or saved a kit online. If a later version offers GitHub sign-in, use that version's sign-in flow and read its save status before changing devices.
+**Account and saves:** the title and pause menus offer an account screen with GitHub sign-in and save controls. The ordinary game is still waiting for its online account/case connection, so a visible button does not prove you are signed in. You can play the local intro without signing in. Read the confirmed account and save status before changing devices; completing the intro alone does not create a cloud save or award a confirmed kit.
 
 ## Crews and partners
 
@@ -37,23 +37,27 @@ Local-fake examples: [a forming crew with open seats](../frontend/public/help/cr
 
 ## Sailing and your islet
 
-Open **Sea chart**, choose an available destination and let the passage finish. **M** opens the chart on a keyboard. Your home islet is a place you can visit: look around the cabin, workshop, windmill and greenhouse plots. Building, production and saved upgrades are **Planned**; selecting a plot in this build does not buy or build anything. Do not mistake a location label for a completed purchase.
+Open **Sea chart**, choose an available destination and let the passage finish. **M** opens the chart on a keyboard. Visit your home islet and inspect the cabin, workshop, windmill and greenhouse plots. Building screens show the requirements and play-coin cost before you confirm. An offline or unconfirmed captain cannot make a saved purchase; wait for the success message and updated building state.
 
 ## The Island Exchange and its risks
 
-**Planned; no trading screen in this build.** The approved next design uses real prices with **10× leveraged positions** in either direction. A small price movement against a position can consume its play-coin value quickly. A position closes when its value reaches zero: do not count on waiting for it to recover. Ten times the exposure also means ten times the sensitivity to a move before any fees or other rules.
+Visit the market hall for **Prices** and **Your positions**. The Exchange uses **10× leveraged positions**, either **Long** (rising prices) or **Short** (falling prices). A small movement against you can consume your stake quickly. A position **closes at zero**; do not count on waiting for it to recover. Read its price source, freshness and market hours. **Closed**, stale or unavailable prices mean trading is paused for that company.
 
-**Play money only.** Coins have no cash value; this is not an investment service. Do not deposit real money or pay anyone for a game balance. When trading becomes available, read the current position value, direction, cost and confirmation before acting, and risk only play coins you are willing to lose. The old market service in this snapshot does not implement the new 10×/close-at-zero design, so it cannot be used to practise those rules. Visiting the market hall is not a trade.
+**Play money only.** Coins have no cash value; this is not an investment service. Do not deposit real money or pay anyone for a game balance. A connected account is required to trade. Review direction, stake, fees and confirmation before acting. If the answer is uncertain, use **Check again** or **Send again** for that same trade and inspect **Your positions**; do not assume another click starts a safe new trade.
 
 ## Prediction desk and duels
 
-**Planned.** The prediction kiosk and arena gate are visible places, not working betting or duel menus. The prediction desk is intended for play-coin predictions on posted questions; read the closing time, outcome source and stake before any future confirmation. Lantern Duels are intended as turn-based challenges between players. Do not assume a round count, stake or payout until a working screen states it. Neither feature currently moves your coins through the game UI.
+The prediction kiosk opens posted questions. Read the closing time, outcome source and play-coin stake before confirming a choice. A weather picture is not a settled result. A signed-in account is needed to place a stake. The sports desk is built but **not open yet**; it should say so rather than invent fixtures.
+
+The arena gate opens **Lantern Duels**. Choose the offered rounds, signals and either a friendly duel or a stated play-coin stake. Read **Rules** for the oil allowance, answer deadline, refunds and winner payout. Your signals stay sealed until both captains have answered.
+
+When available, open **Lantern festival** from the game menu. It waits for the first Relighting, then runs for 48 hours. Its menu offers free lamp reservations and a friendly three-round ring with no stake or coin reward. Reservations do not add a light to the coast. The optional spoiler-safe hint assistant is **not available yet**.
 
 ## Weather and the bulletin
 
 Cloud, rain, fog and wind shape the island atmosphere. The game requests weather at startup and periodically afterwards. If an update fails, the previous conditions can remain; the picture alone does not prove that data is live. A demo or unavailable source can use recorded conditions. Weather attribution appears in the interface, and wind also affects the sailing presentation.
 
-The radio/news **bulletin is Planned**; there is no bulletin screen in this build. Weather conditions are not a clue interpretation or a promise of a prediction result. For a case event, follow its own instructions and clock.
+The harbor bulletin and tonight information have their own availability labels. A **recorded**, old or unavailable source must not be mistaken for a fresh update. Weather is not a clue interpretation or a promise of a prediction result. For a case event, follow its own instructions and clock.
 
 ## Controls
 
@@ -86,6 +90,6 @@ Include the page name, device/browser, keyboard/touch/gamepad, what you expected
 
 The intro and preferences use local browser storage. Clearing site data or switching browsers can lose that local progress; private browsing may not retain it. **Local intro only** does not mean cloud backup. Use your own browser profile on a shared device.
 
-The current session module keeps a sign-in token in memory rather than persistent browser storage; integrated sign-in is still pending. Connected account features would send authenticated requests to the game's server and Supabase. A server-side account deletion route exists, but this build has no player-facing deletion button: contact the project team for account help. Deleting local site data is not account deletion, and deletion of game records does not promise removal of all provider logs.
+Connected account features use a temporary sign-in session. The account screen offers **Delete my data** followed by **Confirm deletion** when your account is connected. Deletion removes your own game data, including coins and ledger history; other crew members keep their progress and leadership passes to another player if needed. While this build cannot confirm your account, contact Nils through the course page for help. Clearing local site data is a separate action. Provider security logs and backups follow their own retention rules. Read the [privacy notice](PRIVACY.md).
 
 The standalone help page does not sign you in, contact the game API, save your search or submit telemetry. Its report link opens GitHub only when you follow it. Local-fake rehearsal screenshots contain no real player records or rewards.

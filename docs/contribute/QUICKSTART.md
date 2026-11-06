@@ -4,6 +4,12 @@ For each teammate starting their own work. This is a one-hour target for a tiny 
 
 Any teammate may start now, choose any lane or bring an idea. Nobody needs to wait for a lane assignment or for Nils to finish. Start with [CONTRIBUTING.md](../../CONTRIBUTING.md), [AGENTS.md](../../AGENTS.md) and decisions **D001** and **D015** in the [decision log](../DECISIONS.md). This guide does not change those rules.
 
+## Current starting point · 6 November 2026
+
+The repository now includes the case backend, Exchange v2, predictions, Lantern Duels, festival, host console and sports packages. That is source readiness, not a claim that every feature is open in production. The G9 connection for the complete online browser mystery is paused until Nils has his laptop. The festival waits for the first Relighting; sports remains off without its provider key, and the optional ChatGPT helper remains off pending official website-client approval. Read the latest [status](../STATUS.md) and your screen's own availability message before claiming a live flow works.
+
+Start with the workshop below or the [disposable local API](../LOCAL-TEST-SERVER.md). Neither needs production credentials. Player instructions live in [How to play](../HOW-TO-PLAY.md); data handling is in [Privacy](../PRIVACY.md). Keep your first change independent of those pending connections.
+
 ## Minutes 0–10: get your own checkout
 
 Accept the repository invitation and use your own GitHub account. Install Git and a Node version supported by [package.json](../../frontend/package.json); Node 24 is a suitable choice ([official download](https://nodejs.org/en/download)). For later Python work, install [uv](https://docs.astral.sh/uv/getting-started/installation/); the backend pins Python 3.12. Do not install a database for this first exercise.
@@ -89,7 +95,7 @@ git commit -m "docs: add my own credits entry"
 git push -u origin HEAD
 ```
 
-Run these on your own task branch, never on `main`. For Python changes later, also run `(cd backend && uv run --frozen pytest)` and `(cd backend && uv run --frozen ruff check .)`. A docs-only change needs link/content checks, not an invented passing app test.
+Run these on your own task branch, never on `main`. For Python changes later, run the affected tests and `(cd backend && uv run --frozen ruff check .)`, then the checks required for that package. Coordinate the complete backend gate with the integrator rather than repeatedly running thousands of unrelated tests for a tiny change. A docs-only change needs link/content checks, not an invented passing app test.
 
 ## Minutes 45–60: PR, human review, merge
 

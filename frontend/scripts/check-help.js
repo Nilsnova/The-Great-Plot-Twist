@@ -1,6 +1,6 @@
 // Checks the built guide in Chromium. --capture refreshes only the two local-fake crew images.
 import assert from 'node:assert/strict';
-import {mkdir, readFile, stat} from 'node:fs/promises';
+import {mkdir, readFile, stat, writeFile} from 'node:fs/promises';
 import {preview} from 'vite';
 import {chromium} from 'playwright-core';
 
@@ -87,6 +87,33 @@ try {
   check(await staticPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No-JavaScript phone layout fits at 320px');
   await noScript.close();
 
+  const notice = await context.newPage(), noticeErrors = [], noticeRequests = [];
+  notice.on('pageerror', error => noticeErrors.push(error.message));
+  notice.on('request', request => noticeRequests.push(request.url()));
+  await notice.goto(`${origin}/privacy.html`);
+  await notice.getByRole('button', {name: 'Print or save this notice'}).waitFor();
+  check(await notice.locator('main section').count() === 7, 'Privacy contains all seven notice topics');
+  check(await notice.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Privacy fits a phone viewport');
+  check((await notice.locator('#delete-my-data').textContent()).includes('all of your ledger history'), 'Privacy states that account deletion removes the full own ledger');
+  check(noticeRequests.every(url => url.startsWith(`${origin}/`)) && !noticeRequests.some(url => url.includes('/api/')), 'Privacy loads local assets without API or outside requests');
+  check(noticeErrors.length === 0, 'Privacy has no browser exceptions');
+
+  const game = await context.newPage();
+  await game.route('**/api/config', route => route.fulfill({json: {flags: {}}}));
+  await game.goto(origin);
+  await game.getByRole('button', {name: 'Settings', exact: true}).click();
+  for (const [label, path] of [['How to play', 'help.html'], ['Privacy', 'privacy.html']]) {
+    const link = game.getByRole('link', {name: label, exact: true});
+    check((await link.getAttribute('href')) === `./${path}` && await link.getAttribute('target') === '_blank' && (await link.getAttribute('rel')).includes('noopener'), `Settings opens ${label} in a separate safe tab`);
+  }
+  const output = process.env.CAPTURE_DIR ?? '/tmp/g23-current';
+  await mkdir(output, {recursive: true});
+  await notice.screenshot({path: `${output}/privacy-phone.png`});
+  await page.goto(`${origin}/help.html`);
+  await page.screenshot({path: `${output}/help-phone.png`});
+  await game.close();
+  await notice.close();
+
   if (process.argv.includes('--capture')) {
     const lab = await browser.newPage({viewport: {width: 960, height: 900}, reducedMotion: 'reduce'});
     const calls = []; lab.on('request', request => { if (request.url().includes('/api/')) calls.push(request.url()); });
@@ -110,7 +137,9 @@ try {
     const path = `public/help/${name}`, png = await readFile(path);
     check((await stat(path)).size < 150 * 1024 && png.readUInt32BE(16) <= 960, `${name} stays small and at most 960px wide`);
   }
-  console.log(JSON.stringify({browser: browser.version(), checks, expectedCspDenials: violations}, null, 2));
+  const browserReport = {browser: browser.version(), checks, expectedCspDenials: violations};
+  await writeFile(`${output}/checks.json`, JSON.stringify(browserReport, null, 2) + '\n');
+  console.log(JSON.stringify(browserReport, null, 2));
 } finally {
   await browser?.close();
   server.httpServer.closeAllConnections();

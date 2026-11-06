@@ -1,4 +1,4 @@
-"""Check table and column coverage in the inventory against every SQL migration.
+"""Check current table and column coverage after the ordered SQL migration chain.
 
 Used by: G26 documentation review; run unittest discovery from the repository root.
 This reads schema declarations only, not a live database or provider settings.
@@ -53,6 +53,12 @@ def migration_columns():
         raise AssertionError("No migrations found: coverage must not pass vacuously")
     for migration in migrations:
         sql = re.sub(r"--[^\n]*", "", migration.read_text(encoding="utf-8"))
+        for table in re.findall(
+            r"^drop\s+table\s+(?:if\s+exists\s+)?(\w+\.\w+)\s*;",
+            sql,
+            re.MULTILINE | re.IGNORECASE,
+        ):
+            schema.pop(table.lower(), None)
         tables = list(TABLE.finditer(sql))
         # Fail rather than silently ignore a future declaration with unsupported syntax.
         declarations = re.findall(r"^create\s+table\b", sql, re.MULTILINE | re.IGNORECASE)

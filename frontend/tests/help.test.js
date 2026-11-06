@@ -54,7 +54,10 @@ describe('standalone player help', () => {
     expect(html).toContain('zero');
     expect(html).toContain('Play money only');
     expect(html).toContain('not connected');
-    expect(html).toContain('Planned');
+    expect(html).toContain('Your positions');
+    expect(html).toContain('first Relighting');
+    expect(html).toContain('not available yet');
+    expect(html).not.toContain('older market service');
   });
 
   it('contains neither protected reveal fingerprint in help assets or the manual', async () => {
@@ -78,5 +81,14 @@ describe('standalone player help', () => {
       expect(image.readUInt32BE(16)).toBeLessThanOrEqual(960);
       expect(image.equals(await readFile(join('public/help', name)))).toBe(true);
     }
+  });
+
+  it('ships the current privacy notice without obsolete provider or deletion claims', async () => {
+    const privacy = await readFile(join(output, 'privacy.html'), 'utf8');
+    for (const words of ['all of your ledger history', 'lowest occupied seat', 'security audit',
+      'Finnhub', 'Manifold', 'BALLDONTLIE', 'not active']) expect(privacy).toContain(words);
+    expect(privacy).not.toMatch(/Finnhub[^<]*not integrated|Manifold[^<]*not implemented/);
+    expect(privacy).toContain("connect-src 'none'");
+    expect(privacy).not.toMatch(/<style\b|\sstyle\s*=|\son[a-z]+\s*=|javascript:/i);
   });
 });

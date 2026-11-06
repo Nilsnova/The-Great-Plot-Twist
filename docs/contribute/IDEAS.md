@@ -2,6 +2,8 @@
 
 For a teammate choosing a first **code** contribution with an agent. Each brief is a proposal for roughly 2–6 hours, including tests and explanation, not a reservation or an implementation to submit under your name. Pick something you care about, write your own acceptance examples, and agree the scope before coding. Any teammate can choose any lane.
 
+Check the current [status](../STATUS.md) before choosing: many packages below are implemented, while deployment or the full browser connection can still be pending. A completed package is existing work to preserve, not a blank assignment.
+
 ## Boundaries before you start
 
 These are small additions, separate from the packages below. Most are offline tools or creative exercises; idea 5 is an optional notice gallery, and idea 8 is a small read-only API addition. For an offline tool, use a new, clearly named folder such as `tools/contribute/your-slug/` for Python or `frontend/contribute/your-slug/` for a local browser exercise. Those folders are **proposals, not existing modules**. Use the standard library or existing browser APIs; adding dependencies requires team agreement. A browser exercise served by Vite is not automatically a production build entry.
