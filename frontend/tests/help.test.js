@@ -64,4 +64,19 @@ describe('standalone player help', () => {
       for (const fingerprint of fingerprints) expect(containsFingerprint(text, fingerprint)).toBe(false);
     }
   });
+
+  it('ships small, labelled local-fake images with descriptive alternatives', async () => {
+    expect(html).toContain('Local fake: a forming crew');
+    expect(html).toContain('Local fake: partners fill the open seats');
+    const images = [...html.matchAll(/<img\b[^>]+>/g)];
+    expect(images).toHaveLength(2);
+    for (const image of images) expect(image[0]).toMatch(/alt="Local fake crew [^"]+"/);
+    for (const name of ['crew-rehearsal.png', 'partners-rehearsal.png']) {
+      const image = await readFile(join(output, 'help', name));
+      expect(image.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+      expect(image.length).toBeLessThan(150 * 1024);
+      expect(image.readUInt32BE(16)).toBeLessThanOrEqual(960);
+      expect(image.equals(await readFile(join('public/help', name)))).toBe(true);
+    }
+  });
 });

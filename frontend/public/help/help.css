@@ -29,6 +29,12 @@ input::placeholder { color: #b8c5a5; opacity: 1; }
 .help-topic .kit-badge { margin: 0 0 18px; }
 .help-topic ol { padding-left: 24px; margin: 0 0 18px; }
 .help-topic li { margin-bottom: 14px; }
+.rehearsal-examples { margin-top: 20px; border-top: 1px solid #657954; padding-top: 8px; }
+summary { cursor: pointer; min-height: 44px; padding: 8px 0; color: #f3d58c; }
+summary:focus-visible { outline: 3px solid #f3d58c; outline-offset: 4px; }
+figure { margin: 16px 0 24px; }
+figure img { display: block; width: 100%; height: auto; border: 1px solid #a18f62; }
+figcaption { margin-top: 10px; font-size: .9rem; color: #d5dfbd; }
 .control-list { display: grid; grid-template-columns: 180px 1fr; gap: 12px 20px; margin: 16px 0 24px; }
 .control-list dt { font-weight: bold; color: #f1dfaa; }
 .control-list dd { margin: 0; }
