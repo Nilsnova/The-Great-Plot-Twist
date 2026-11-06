@@ -7,7 +7,7 @@
 **What I checked while writing (nothing in the repo was changed):**
 - The SQL in this spec parses with pglast, including the PL/pgSQL bodies.
 - In my scratchpad I ran a throwaway Postgres: 16.2 from the PyPI wheel `pgserver`, because this machine has no `psql` and no Postgres 17 of its own. On it I applied foundation, exchange and the three migrations of this spec twice, then ran 41 behaviour checks. All passed: names, re-roll, save versions, save size, kit paid once, crew create, code guessing limit, joining, the muster, the draft give-up, the delete with crew handover, and that players cannot run the functions. The server and its data folder were removed afterwards.
-- Every Act 1 route and claim below was replayed on the real `engine.py` and `story.json`. That covers 122 reachable states and 8 end states, the same with `keep_quiet` added; `keep_quiet` is refused on today's story; a 300-move log is accepted.
+- Every Act 1 route and claim below was replayed on the real `engine.py` and `story.json`. That covers 122 reachable states and 8 end states, the same with `keep_quiet` added; `keep_quiet` is refused on today's story (true before Story v2 reached main; see ed13b1d); a 300-move log is accepted.
 - The partner kit rule matches the NPC-PARTNERS.md 4.4 examples table and holds for all 69 kit mixes and all 256 takeover chains.
 
 ---
@@ -798,7 +798,7 @@ Python never calls `apply_transaction` for the kit. The profile and the payment 
 | `test_an_empty_log_is_no_ending` | |
 | `test_301_moves_are_refused_before_any_replay` | |
 | `test_exactly_300_moves_are_accepted` | `["to_desk", "desk_back"] * 145 + SILENT_TRAPPED` gives stranger |
-| `test_keep_quiet_is_refused_on_todays_story` | move 6 |
+| `test_keep_quiet_is_refused_on_todays_story` (true before Story v2 reached main; see ed13b1d) | move 6 |
 | `test_story_v2_keep_quiet_ends_as_a_stranger` | |
 | `test_story_v2_still_has_eight_end_states_with_the_same_kits` | |
 | `test_old_logs_replay_to_the_same_kit_on_story_v2` | all 8 routes |
