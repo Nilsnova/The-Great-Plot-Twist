@@ -11,6 +11,7 @@ export default defineConfig({
     workshop: resolve(import.meta.dirname, 'asset-library.html'),
     uiKit: resolve(import.meta.dirname, 'ui-kit.html'),
     caseLab: resolve(import.meta.dirname, 'case-lab.html'),
+    host: resolve(import.meta.dirname, 'host.html'),
   } } },
   test: { include: ['tests/**/*.test.js'] },
 });
