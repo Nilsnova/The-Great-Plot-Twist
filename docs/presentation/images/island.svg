@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 480" role="img" aria-labelledby="title desc">
+  <title id="title">An island, a path and a lighthouse</title>
+  <desc id="desc">Original abstract illustration of a coastal island. A gold route connects an explorer to a lighthouse, without showing any story clues.</desc>
+  <rect width="600" height="480" rx="8" fill="#e0eae2"/>
+  <g fill="none" stroke="#b4cfc3" stroke-width="2">
+    <path d="M20 100h70m15 0h55m290 0h125M35 390h90m320 0h110M5 270h90m400 0h90M55 45h120m215 0h95M10 440h190m240 0h140"/>
+    <path d="M40 210q260-250 520 0M70 320q230 170 460-15"/>
+  </g>
+  <path d="m90 260 55-95 110-52 102 14 85 73 70 101-81 77-159 24-133-50z" fill="#c1d2ae" stroke="#32665d" stroke-width="3"/>
+  <path d="m90 260 49 92 133 50 159-24 81-77-11 34-62 66-165 25-149-57z" fill="#799e88"/>
+  <path d="m204 325 12-45 49-14 36-48 47-34" fill="none" stroke="#fbf7ec" stroke-width="17" stroke-linejoin="round"/>
+  <path d="m204 325 12-45 49-14 36-48 47-34" fill="none" stroke="#b37b27" stroke-width="3" stroke-dasharray="5 7"/>
+  <g fill="#32665d"><path d="m156 205-22 41h44zm267 93-24 44h48zM170 158l-19 35h38z"/><rect x="153" y="242" width="6" height="13"/><rect x="420" y="336" width="6" height="13"/></g>
+  <g stroke="#17383d" stroke-width="3"><path d="m322 195 11-82h31l11 82z" fill="#fbf7ec"/><path d="M328 113V91h41v22z" fill="#e3b766"/><path d="m322 91 26-20 27 20z" fill="#32665d"/><path d="M317 198h63"/><path d="M344 195v-25h11v25" fill="#17383d"/></g>
+  <path d="m329 102-89 28V77z" fill="#f0d897" opacity=".7"/>
+  <circle cx="205" cy="312" r="8" fill="#17383d"/><path d="M195 334v-11q10-11 20 0v11" fill="#b37b27"/>
+  <text x="28" y="456" fill="#32665d" font-family="Arial,Helvetica,sans-serif" font-size="13" letter-spacing="3">AN ORIGINAL WORLD. CLEAR RULES.</text>
+</svg>
