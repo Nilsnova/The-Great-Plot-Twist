@@ -14,32 +14,31 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Current release, 6 Nov 2026, Codex:** festival, host console and sports are reviewed and
-integrated on `integrate/festival-host-sports`, following live main `fa0e49b`. The final combined
-backend gate passes **11,168 tests**; frontend **1,672 tests**, production build/spoiler guard and
-focused Chromium flows pass. Original authored commits are preserved. Reviewed migrations
-160000, 170000 and 180000 are applied one at a time, stored-MD5 proven and restored to their
-repository versions. Live counts: **39 tables +1 view /57 project functions /17 wallet reasons
-/9 sequences /7 triggers**; security advisors show known items only. See the
-[live-extras release proof](handoff/live-extras-release.md).
+**Current release, 6 Nov 2026, Codex:** main `d5ad219` and production
+`dpl_2yKCaKZKv1ZFE7z6jiTtCYmTmpFK` are READY with festival, host and sports code deployed.
+Health/config and the host page return 200. Presence, market, predictions, arena, case, bulletin
+and festival are enabled. Sports, sign-in, raid and ChatGPT helper are off. Festival waits for
+Relighting; live SQL still shows dark/null, zero solves/lights/Wall, festival actions and sports
+stakes. RELIGHT_OPEN remains unset. See [live-extras proof](handoff/live-extras-release.md).
 
-The case/followups/G12 release is live at main `fa0e49b`, deployment
-`dpl_2AAkC2Ta6Xegr5JNRk9yByvt2a85` READY, with health/config 200. Presence, market,
-predictions, arena, case and bulletin are enabled. The new release adds festival only after
-its deployment checks and a redeploy. **Sports stays off until its provider key and live source
-verification are ready.** RELIGHT_OPEN remains unset and the live coast stays dark; installing
-festival does not start its 48-hour clock. No production solve/reward or Relighting was tested.
+All reviewed migrations through 180000 are applied separately, exact stored MD5 proven and
+restored to their repository versions; 150000 is unused. Live schema: **39 tables +1 view
+/57 project functions /17 wallet reasons /9 sequences /7 triggers**, expected-only advisors.
+The deployed live-extras gate passed **11,168 backend and 1,672 frontend tests**. Case services
+include all 69 kit mixes and real solo+NPC/four-human HTTP-to-SQL journeys.
 
-G9 is **paused until Nils' laptop returns**: normal browser multiplayer and the complete mystery
-still await that adapter. The backend has real solo+NPC and four-player HTTP/SQL proofs and all
-69 kit mixes solve with starting resources. This does not imply normal browser play is complete.
+The next integration `integrate/stabilization-submission` includes reliability, frontend/backend
+regressions, isolated devtools, help/privacy, security/text, notices, presentation/PDF and starter
+guides. It preserves original authored checkpoints and passes independent review. Its **13,584-test
+backend gate**, **1,799 frontend tests with no skips**, build and merged browser checks pass. Rollout is recorded in [stabilization proof](handoff/stabilization-release.md).
+Normal browser mystery/multiplayer still await **G9, paused until Nils' laptop returns**; backend
+journey proofs do not establish a connected browser session.
 
-Next: integrate reliability, frontend/backend regression coverage, developer tools, security/text,
-help/privacy/starter guides and release/deck materials. G12 needed no 150000 migration. The optional
-ChatGPT helper needs an approved official website client; no login or paid fallback is active.
-Direct live stock/cache-HIT checks still need the production hostname allowed by this cloud
-network policy. Original music, ambience/effects and festival media are built with separate controls.
-Older paragraphs below are historical checkpoints.
+External needs: sports provider key directly in Vercel, official approved ChatGPT website client,
+and the production-host network allowlist for direct cloud stock/cache checks. Later hand-in needs
+three teammate names, private submission details and physical laptop/projector/spoken rehearsal.
+Original music, ambience/effects and festival media are already built. Older paragraphs below are
+historical checkpoints; use the current roadmap and proof links for release state.
 
 **Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
 migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
@@ -159,6 +158,8 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
+**Current next:** release the reviewed reliability/help/security wave, then resume G9 when the laptop is available and perform the physical-device and presentation rehearsal. The G8 notes below are historical.
+
 **G8 complete on `feat/g8-islet-harbor-demo`.** Accepted islet builds, the opt-in Lisbon-time bulletin/tonight chip, safe distant signal, original harbor sound/life and the nine-beat presenter kit are ready. Accessibility fixes keep controls at 16 px, case body at 18 px and story/captions at 19/18 px. Provider/licence blocks are removed from gameplay; credits are reached only through Settings. The class walkthrough includes the architecture, ten-file reading path and twelve explain-back cards.
 
 - **Verified:** 345 tests / 58 files; build/spoiler guard; all 31 combined commands, including 91 golden-path checks, 210 chaos checks and 23 accessibility contexts after the UI correction. Tour 170.6 seconds with APIs down; cold title 21,080 bytes. Eight captains/night storm: 60 FPS / 112 calls. Evidence and limits: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C3-after/`.
@@ -266,7 +267,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
-**Next server step:** verify the festival/host/sports deployment, then integrate reliability and backend regression coverage. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused.
+**Next server step:** complete the stabilization rollout and public read-only verification. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused; sports activation awaits its provider key and current-source proof.
 
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
@@ -362,6 +363,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 ```
 
 ### L Live Systems (owner picked today)
+
+**Current next:** sports provider setup/read-only verification; existing market/prediction/arena flags are already on. Festival is enabled and waiting for the first Relighting. The older lane briefs below are historical.
 
 **Status (5 Nov, late evening):** L1 live weather is done: merged (`3e80605`) and wired into the game by Codex (`c52613b`). The L4 Island Exchange minimum is on `main` with the flag `market` off (`d7857d9`, decision D017); its migration waits for Nils, and the trading screen comes after his Exchange decisions. Next for the lane: L3 (Next 2 below).
 
@@ -460,6 +463,10 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** stabilization integration passes 13,584 backend tests plus nine benchmark-tool tests, 1,799 frontend tests with zero skips, production/spoiler/budget gates and merged browser/deck checks. Independent reviews passed; no new migration, dependency, workflow, cron, flag or G9 change. Full proof: [stabilization release](handoff/stabilization-release.md).
+
+- **6 Nov 2026, Codex for Nils:** pushed live extras as main d5ad219, verified READY and health/config/host 200, then enabled festival and redeployed the same commit. Seven flags verified, sports/sign-in/AI remain off, world still dark with zero gameplay writes. Integrated reviewed reliability/QA/devtools/help/privacy/security/text/ship/deck/starter work for its combined gate.
 
 - **6 Nov 2026, Codex for Nils:** reviewed festival/host/sports integration passed 11,168 backend and 1,672 frontend tests; applied and proved 160000, 170000 and 180000 separately. Live schema is 39 tables/57 project functions, expected-only security advisors. Push/deployment proof is tracked in [live-extras release](handoff/live-extras-release.md); sports remains off pending its provider key.
 

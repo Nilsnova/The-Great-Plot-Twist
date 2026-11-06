@@ -4,7 +4,7 @@ Used by Nils and the presenter. Two timed scripts use the live site and stop at 
 
 ## Current scope, 6 November 2026
 
-The completed case release proves 69 player-kit mixes and actual solo+NPC/four-player API-to-SQL journeys. It does not connect the normal browser mystery: G9 is paused until the laptop returns. Original sound is implemented. Festival, host and sports candidates have focused UI/service checks; keep activation separate from those checks. Sports lacks its provider key and stays off. The optional ChatGPT helper lacks an approved official website client and stays off. See [presentation sources](presentation/sources.md) for pinned evidence and limits.
+The completed case release proves 69 player-kit mixes and actual solo+NPC/four-player API-to-SQL journeys. It does not connect the normal browser mystery: G9 is paused until the laptop returns. Original sound is implemented. Festival and host console are deployed; sports code is deployed with its flag off. Festival waits for the first shared Relighting. Sports lacks its provider key and stays off. The optional ChatGPT helper lacks an approved official website client and stays off. See [presentation sources](presentation/sources.md) for pinned evidence and limits.
 
 The live minimum case/bulletin release is verified, but `RELIGHT_OPEN` stays unset and no production solve is used for the demo. `?demo=1` is a local presentation stand-in. The optional `?demo=1&festival=1` practice is memory-only and creates no real claim, match or coins; it is outside these mystery scripts, which still stop at the schooner.
 

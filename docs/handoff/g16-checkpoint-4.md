@@ -11,7 +11,7 @@ The authored G16 commits `13e77b6`, `90d9c68`, `a253729` were preserved as `6c81
 `b7e27e6`, `9abf3ba`. Current runtime fixes are `f1d3eb4` and `b866212`:
 
 - Request privacy defaults are private/no-store, while explicit public caching remains
-  available for approved content. Request diagnostics record method, status and duration
+  available for approved content. Request diagnostics record the route template, status and duration
   without raw URLs, query strings or exception text; unexpected errors log their class only.
 - The public intro cache reuses bounded encoded responses and invalidates changed or removed
   files. Existing case, festival, host, sports and current Exchange contracts remain intact.

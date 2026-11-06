@@ -11,7 +11,7 @@ const {chromium} = createRequire(path.join(repo, 'frontend/package.json'))('play
 const artifacts = process.env.G25_ARTIFACTS || `/tmp/g25-checks-${Date.now()}`;
 const fileMode = process.env.G25_FILE_MODE === '1';
 const base = 'http://127.0.0.1:43125/'; // Intercepted from disk; no server is started.
-const report = {baseline:'94a48ad', transport:fileMode ? 'file:' : 'offline disk interception', checks:[]};
+const report = {baseline:'d5ad219', transport:fileMode ? 'file:' : 'offline disk interception', checks:[]};
 const passed = label => report.checks.push(label);
 const mime = {'.html':'text/html', '.css':'text/css', '.js':'text/javascript', '.svg':'image/svg+xml'};
 

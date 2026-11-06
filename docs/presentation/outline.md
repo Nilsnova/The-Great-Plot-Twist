@@ -1,6 +1,6 @@
 # Class presentation: outline and speaker notes
 
-Ten slides, 645 seconds (10:45), excluding the separate coast-to-schooner demo and questions. Updated against release-candidate `94a48ad`, 6 November 2026. Evidence and the live/candidate distinction are in [sources.md](sources.md). This is a timing allocation, not a measured human rehearsal.
+Ten slides, 645 seconds (10:45), excluding the separate coast-to-schooner demo and questions. Updated against release-candidate `d5ad219`, 6 November 2026. Evidence and the live/candidate distinction are in [sources.md](sources.md). This is a timing allocation, not a measured human rehearsal.
 
 ## 1 · The Great Plot Twist · 0:45
 

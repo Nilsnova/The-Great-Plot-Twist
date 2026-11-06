@@ -1,8 +1,15 @@
 # Evidence behind the slides
 
-Content snapshot: integrated release candidate `94a48ad`, 6 November 2026. This deck does not claim that the candidate's new migrations or optional flags are already active in production. The release owner records the final deployed revision and proofs separately.
+Content snapshot: live-extras main `d5ad219`, 6 November 2026, plus the reviewed stabilization
+candidate recorded in [the stabilization proof](../handoff/stabilization-release.md).
 
-The confirmed production baseline is main `fa0e49b`, deployment `dpl_2AAkC2Ta6Xegr5JNRk9yByvt2a85`, reported READY with health/config checks passing. Case and bulletin plus the four group-3 flags were verified on. The world remains dark with zero solves; `RELIGHT_OPEN` remains unset. These are recorded release facts, not live checks performed by this documentation task.
+The verified production baseline is main `d5ad219`, deployment
+`dpl_2yKCaKZKv1ZFE7z6jiTtCYmTmpFK` READY. Health/config and the host page returned 200.
+Presence, market, predictions, arena, case, bulletin and festival are enabled. Sports, sign-in,
+ChatGPT helper and raid remain off. The world is dark with zero solves; RELIGHT_OPEN is unset.
+Festival's 48-hour clock has not started. Exact per-file database and rollout evidence is in
+[live-extras release](../handoff/live-extras-release.md). These are recorded checks; a local
+presentation test does not repeat production verification.
 
 | Slides | Claim | Source and practical limit |
 |---|---|---|
@@ -16,14 +23,15 @@ The confirmed production baseline is main `fa0e49b`, deployment `dpl_2AAkC2Ta6Xe
 | 7 | Solo+NPC and four-player HTTP → production services/views → disposable SQL journeys | [Complete API proof](../../backend/server/tests/test_case_complete_api.py), [release record](../handoff/case-complete-release.md). They include rewards, repeat actions and crew isolation. They do not use production credentials, prove OAuth on the presentation laptop or connect G9. |
 | 7 | Root frontend release gate: 1,672 tests and a production build checking 130 text files / 12 protected lines | [Frontend scripts](../../frontend/package.json), existing test suites and root's integrated release results. Counts include parameterized cases. The documentation task does not rerun the full application gates. |
 | 8 | Isolated authored work, independent review, authorized integration and per-file database verification | [Contribution policy](../../CONTRIBUTING.md), [agent guidance](../../AGENTS.md), current Nils standing authorization and the [case release proofs](../handoff/case-complete-release.md). Codex is the current integrating agent; older Claude handoffs are historical. |
-| 10 | Festival, host-console and sports are implemented/tested candidates; activation is a separate operation | [Festival backend](../handoff/g13-backend-live.md), [festival UI](../../frontend/src/screens/festival/README.md), [host console](../../frontend/src/host/), [sports UI](../../frontend/src/screens/sports/). Sports lacks its live provider key and remains off. The optional ChatGPT helper lacks an approved official website client and remains off. |
+| 10 | Festival and host console are deployed; sports code is deployed with its flag off | [Festival backend](../handoff/g13-backend-live.md), [festival UI](../../frontend/src/screens/festival/README.md), [host console](../../frontend/src/host/), [sports UI](../../frontend/src/screens/sports/). Sports lacks its live provider key and remains off. The optional ChatGPT helper lacks an approved official website client and remains off. |
 
 ## Recorded application gates
 
 - Completed case/backend release: **10,859 backend/story tests passed**, including scratch PostgreSQL and the actual solo/four-player API/SQL proofs. Ruff and diff checks passed. The exact scope is in [case-complete-release.md](../handoff/case-complete-release.md).
-- Integrated next-wave frontend: **1,672 tests passed**; production build and spoiler guard passed, checking **130 text files and 12 protected lines**.
-- Next-wave browser evidence: festival **35** runtime/input/lifecycle checks, **15** original-workshop checks, host **12** mock-browser checks, sports **23 + 8** browser checks, plus existing production/loading/CSP/lifecycle gates. These use local fixtures where stated.
-- The next-wave full backend gate and migration/deployment proofs are owned by the release coordinator. Do not replace the recorded case count with an expected total while that gate is still running. The planned record is `docs/handoff/live-extras-release.md`; add its completed evidence after release.
+- Deployed live-extras frontend: **1,672 tests passed**; production build and spoiler guard passed, checking **130 text files and 12 protected lines**.
+- Live-extras browser evidence: festival **35** runtime/input/lifecycle checks, **15** original-workshop checks, host **12** mock-browser checks, sports **23 + 8** browser checks, plus existing production/loading/CSP/lifecycle gates. These use local fixtures where stated.
+- Deployed live-extras backend: **11,168 tests passed**. Reviewed 160000/170000/180000 migrations were applied separately, exact stored MD5 proved, history versions normalized and known-only advisors verified before code push. Live totals: 39 tables/57 project functions. See [release proof](../handoff/live-extras-release.md).
+- Later stabilization: **13,584 backend tests plus nine benchmark-tool tests, 1,799 frontend tests with zero skips**, production/spoiler/budget and merged browser checks passed. Results are recorded separately in [stabilization-release.md](../handoff/stabilization-release.md); the historical case and live-extras counts above remain tied to their own release commits.
 
 The presentation uses the stable **69 mixes / two API-SQL journeys** facts as its large numbers. No combined test count is described as a count of player journeys. Provider availability, production browser multiplayer, Safari, physical phones/gamepads and a spoken human rehearsal remain separate checks.
 

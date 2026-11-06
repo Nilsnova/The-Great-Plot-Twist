@@ -1,6 +1,6 @@
 # Presentation validation · 6 November 2026
 
-The authored G25 checkpoints are preserved in history. Current content is reconciled against release candidate `94a48ad`; [sources.md](sources.md) separates the confirmed case production release from the new candidate wave. Updating this deck does not apply migrations, enable flags, deploy code or prove a live provider.
+The authored G25 checkpoints are preserved in history. Current content is reconciled against deployed live-extras main `d5ad219`; [sources.md](sources.md) separates its production evidence from the later stabilization candidate. Updating this deck does not apply migrations, enable flags, deploy code or prove a live provider.
 
 ## Checks for this revision
 
@@ -28,6 +28,12 @@ The run's report is `/tmp/ship-deck-check/report.json`; temporary screenshots ar
 
 ## Application evidence used by the talk
 
-The completed case record proves 10,859 backend tests, 69 kit mixes and actual solo+NPC/four-player API-to-SQL playthroughs. Root reports 1,672 next-wave frontend tests and a build checking 130 public text files / 12 protected lines. Exact sources and remaining deployment/provider/browser limits are listed in [sources.md](sources.md).
+The completed case record proves 10,859 backend tests; live extras later passed 11,168. Both preserve 69 kit mixes and actual solo+NPC/four-player API-to-SQL playthroughs. The deployed live-extras record reports 1,672 frontend tests and a build checking 130 public text files / 12 protected lines. Exact sources and remaining deployment/provider/browser limits are listed in [sources.md](sources.md).
 
 The 10:45 timing is a planned allocation. A human spoken rehearsal, actual laptop/projector setup and physical-device checks have not been performed by this task. Use [rehearsal.md](rehearsal.md) to record those separately.
+
+Root release reconciliation on 6 Nov: sources now record deployed live-extras main d5ad219 and
+its seven verified flags. The PDF was regenerated after the current rollout copy. Nine offline
+browser checks pass, ten tagged pages have no JavaScript/forms, thirteen updated presentation/
+PDF-text files pass twelve protected fingerprints, and 162 current roadmap/proof/deck links resolve.
+The broader stabilization gates are recorded in [the release proof](../handoff/stabilization-release.md).
