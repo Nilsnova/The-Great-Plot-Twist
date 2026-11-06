@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "All 56 new festival drawings have searchable workshop entries",
+    "festival-lamp-01-unlit opens at native integer magnification",
+    "festival-lamp-12-lit-night opens at native integer magnification",
+    "festival-duel-ring-night opens at native integer magnification",
+    "Workshop entries match the complete festival catalog",
+    "Keyboard Enter opens art detail",
+    "Four original sound auditions are available",
+    "All sound stays silent until an explicit audition",
+    "The original festival loop plays and repeats",
+    "Starting a cue pauses the loop",
+    "Claim, bell and timer-end recordings decode and finish",
+    "Phone workshop has no horizontal overflow",
+    "No browser errors: ",
+    "Workshop works with self-only script/style CSP, no inline exceptions",
+    "Workshop makes no server writes or external requests"
+  ],
+  "checked": "2026-11-06T16:55:46.292Z"
+}

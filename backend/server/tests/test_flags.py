@@ -21,12 +21,19 @@ def test_flag_names_are_exactly_the_agreed_list():
         "raid",
         "live_presence",
         "companion_llm",
+        "festival",
     )
 
 
 def test_every_flag_is_off_by_default():
     assert default_flags() == {name: False for name in FLAG_NAMES}
     assert parse_flags("") == default_flags()
+
+
+def test_festival_is_explicitly_opt_in_and_does_not_enable_arena():
+    assert not is_enabled("festival", default_flags())
+    assert is_enabled("festival", parse_flags("festival"))
+    assert not is_enabled("arena", parse_flags("festival"))
 
 
 def test_listed_flags_are_switched_on_and_the_rest_stay_off():

@@ -2,7 +2,7 @@
 
 Nils approved the top-down pixel presentation on 5 November 2026. G2/G3 preserves that style and expands it to the Saltreach Isles. Every sprite, background and chart is original, drawn by our editable project generator. The supplied game screenshot is local inspiration only, excluded from Git and runtime distribution. No artwork was extracted from it.
 
-The shipped library contains **185 sprites and 10 backgrounds/charts, 195 PNGs total**. The new story kit is selectively loaded and adds no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
+The shipped library contains **241 sprites and 10 backgrounds/charts, 251 PNGs total**. The new story and festival kits are selectively loaded and add no Lighthouse texture requests. The 36-sprite Lighthouse kit remains the default catalogue selection; the running app keeps nine explorer poses shared and loads only the current place's scenery. Sailing loads its boat image on demand. Other place and story-library sprites stay outside the Lighthouse preload.
 
 | Original G1 family | Sprites | Contents |
 | --- | ---: | --- |
@@ -13,6 +13,8 @@ The shipped library contains **185 sprites and 10 backgrounds/charts, 195 PNGs t
 | Selective place/story library | 12 | Harbour office, beacon, signal station, ferry pier, sailboat, dark schooner, sealed letter, torn page, logbook, compass, brass star, beacon fire |
 
 ## G2/G3 sprite additions
+
+See also the [G13 festival workshop additions](#g13-festival-workshop-additions).
 
 Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors are registered in `src/pixel/catalog.js` at 16 native pixels per world unit. The catalogue's `library` usage means selective loading, including active destination art, rather than default Lighthouse preload.
 
@@ -210,3 +212,41 @@ Three original, code-authored sprites in `scripts/pixel_art/relighting.py`, regi
 | `wall-of-lights-open` | 128 × 96 | 8 px | Harbor's public Wall of Lights; captain names are accessible adapter-supplied HTML |
 
 The kit now contains 185 sprite PNGs plus ten existing backgrounds, 195 PNGs total. Festival fireworks are deterministic WebGL points authored in `src/world/festival.js`, with no audio/image dependency; they are disabled for reduced motion and use fewer points on low quality. New art is display-only and contains no names, case prose or solution. Rebuild with `python3 scripts/pixel_art/generate.py`.
+
+## G13 festival workshop additions
+
+Original work by Codex for Nils, 6 November 2026, using the project's coastal
+palette and integer pixel grid. No downloaded art, fonts, recordings or samples.
+These 56 additions are `library` assets, searchable as "festival" in
+`asset-library.html`; none enter the game's 36-sprite default preload. Existing
+G6 lantern strings and festival presentation are preserved.
+
+| Sprite ids | Count | Native pixels | Editable source |
+| --- | ---: | --- | --- |
+| `festival-lamp-01` through `festival-lamp-12`, each `-unlit`, `-lit`, `-unlit-night`, `-lit-night` | 48 | 48 × 80 | `scripts/pixel_art/festival.py` |
+| `festival-claim-marker`, `festival-claim-marker-night` | 2 | 32 × 40 | same |
+| `festival-stall`, `festival-stall-night` | 2 | 112 × 96 | same |
+| `festival-bunting`, `festival-bunting-night` | 2 | 160 × 40 | same |
+| `festival-duel-ring`, `festival-duel-ring-night` | 2 | 160 × 112 | same |
+
+All anchors and dimensions live in `src/pixel/festival-catalog.js`. Rebuild with
+`python3 scripts/pixel_art/generate.py` from `frontend/` (Pillow for authoring only).
+The lamps use three roof silhouettes and four collar patterns to distinguish the
+twelve spots without printed labels or story information. Night palettes use cool
+wood and iron with warm light confined to lit glass.
+
+The four original mono, 16-bit, 22,050 Hz WAVs in `public/audio/` are synthesized
+from sine harmonics by `python3 scripts/festival_audio.py`, using only Python's
+standard library. Their melodies, envelopes and bell timbre are original.
+
+| File | Duration | Purpose |
+| --- | ---: | --- |
+| `festival-loop.wav` | 8 s, looping | Four phrases of a lantern dance, chimes over low tones |
+| `festival-claim.wav` | 0.9 s | Three rising chimes confirming a claim |
+| `festival-ring-bell.wav` | 1.6 s | One damped metal bell |
+| `festival-timer-end.wav` | 1.4 s | Four falling chimes, a quiet ending |
+
+The workshop provides labelled native controls and text equivalents; it never
+autoplays, downloads audio eagerly or mixes two auditions. There is no live-game
+playback yet. Future playback must use the existing gesture gate, music/effects
+preferences and captions, and require the server's `festival` flag.

@@ -92,7 +92,7 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "festival": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
 
 `auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
@@ -747,6 +747,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `raid` | the phone class raid | A5, later |
 | `live_presence` | seeing other captains in the harbor | A4, later |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
+| `festival` | Relighting festival extras | G13, off by default; pure rules and workshop assets only until G10/A7 land |
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
 

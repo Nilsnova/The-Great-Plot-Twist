@@ -428,3 +428,36 @@ Short four-frame round-trip samples are resource checks, not reliable FPS benchm
 Not verified: Safari/Firefox, physical phone/gamepad hardware, actual screen-reader software, a prolonged soak, live authenticated/shared-case/cloud/referee/ledger routes or a deployed G6 build. The production default is deliberately disconnected until Claude supplies the real adapter; it invents no kit, save, reward or solve. S0 draft approval remains Nils's decision. The feature branch is based on main `3ca7d38`; main later advanced independently to `8215825` (keep-alive work), which this branch does not merge or edit. Claude integrates G6. No main merge, force-push, manual deployment, sign-in UI or trading screen is part of this work.
 
 For a walkthrough, begin with `adapter/contract.js`, follow `game.js` into the lazy bridge and `screens/controller.js`, then compare one screen's intent with its fake handler and view projection. `fake/index.js` settles due jobs/night state before dispatch, applies the intent, settles immediate results and publishes a cloned view. To connect the real services, implement the same adapter surface and inject it into `startGame({caseAdapter})`; screens and art do not need transport changes.
+
+## G13 checkpoint 1: festival workshop and pure rules
+
+Nils' G13 is on `feat/g13-festival`. The 56 original pixel additions (twelve lamps
+in four states plus marker, stall, bunting and ring day/night variants) are in the
+searchable workshop, with four original sound auditions. Sources and credits are
+in `ASSETS.md`; new art remains outside the default game preload. No live
+festival screen, sound, claim write, queue or duel is connected. The new server
+flag `festival` is off by default. Existing G6 display-only effects are unchanged.
+
+`backend/server/festival/` contains I/O-free 48-hour lifecycle, exclusive claim
+and FIFO pairing decisions; see `specs/G13-festival.md` for the exact handoff.
+G10 Phase 3 and A7 are missing from the current main, so routes, the reserved
+migration, real screens and `?demo=1&festival=1` rehearsal remain deferred. G8's
+CSP code/regression commands and `HOW-IT-WORKS.md` are also absent; no replacement
+for those packages was invented.
+
+Verification for this checkpoint: 3149 pytest tests, Ruff clean, 294 Vitest tests,
+four-entry build and automatic spoiler guard; 12 existing pixel-browser checks
+covering all 251 PNGs and the unchanged default preload; seven existing production
+checks; 15 festival workshop checks under self-only script/style CSP, including
+phone/keyboard access and sound playback. All 255 PNG/WAV artifacts regenerate
+byte-for-byte with the full pixel generator and the new standard-library audio
+generator. Independent agents reviewed the backend and frontend read-only.
+
+Run from `frontend/`: `npm test`, `npm run build`,
+`CHROME_PATH=/usr/bin/chromium npm run test:art`,
+`CHROME_PATH=/usr/bin/chromium npm run test:production`, and
+`CHROME_PATH=/usr/bin/chromium npm run test:festival` after build.
+The festival smoke accepts `CAPTURE_DIR` for evidence outside the checkout.
+Review art and phone screenshots plus the strict-CSP report are in
+`captures/20261106_G13-Festival-*`. This is Chromium/software-rendering evidence;
+Safari, physical phones and live server/storage integration remain unverified.

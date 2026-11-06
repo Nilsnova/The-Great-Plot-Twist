@@ -12,6 +12,7 @@
 | `secret/case.json` | The case "The Light That Shouldn't Be": cards, routes, deductions, the finale, the reveal. It names the culprit. Format: [The case data](#the-case-data-secretcasejson-and-partnersjson). | Server code only. It is never served. |
 | `partners.json` | Every word an NPC partner says (34 lines). Format: [The case data](#the-case-data-secretcasejson-and-partnersjson). | Server code only. It is not on the public list. |
 | `market/` | The Island Exchange: the seven companies and the recorded replay. Its own `README.md` explains them. | Server code only. |
+| `festival.json` | G13: the 172800-second festival duration, lifecycle phase names, twelve proposed lamp IDs and the Keepers' Ring label. | Non-secret server configuration; not added to the public content route. |
 | `weather/` | The recorded weather answer and saved sample answers. Its own `README.md` explains them. | Server code only. |
 | `names.json` | The word lists for generated captain names such as "Brave Puffin 17" (package A2, decision D006). | The server only. It is not on the list of public content and is never served. |
 | `entry_kits.json` | The four entry kits of the case and which Act 1 ending leads to which one (package A3, decision D019). | The server only. It is not on the list of public content and is never served. |
