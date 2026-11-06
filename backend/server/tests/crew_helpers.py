@@ -242,10 +242,12 @@ def login_works(request: httpx.Request) -> httpx.Response:
     return httpx.Response(401, json={"msg": "invalid JWT"})
 
 
-def make_crew_client(database: Any) -> TestClient:
+def make_crew_client(database: Any, *, broadcaster=None) -> TestClient:
     """The app, wired to a fake login check and this fake database (any request handler)."""
     verifier = PlayerVerifier(
         CONFIGURED_SETTINGS, transport=httpx.MockTransport(login_works), clock=FakeClock()
     )
     admin, _ = make_admin(database)
-    return TestClient(create_app(CONFIGURED_SETTINGS, verifier=verifier, admin=admin))
+    return TestClient(
+        create_app(CONFIGURED_SETTINGS, verifier=verifier, admin=admin, broadcaster=broadcaster)
+    )

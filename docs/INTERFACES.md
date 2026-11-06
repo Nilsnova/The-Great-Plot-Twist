@@ -97,7 +97,7 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false, "bulletin": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
 
 `auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
@@ -385,6 +385,11 @@ Cache-Control: public, max-age=300
 Only a `200` carries `Cache-Control: public, max-age=300`, so a browser may reuse it for 5 minutes. The open question for Mon 9 about the default place is in [section 11](#11-open-questions-for-mon-9).
 
 ### GET /api/bulletin
+
+The `bulletin` flag is off by default. While off, this route returns
+`404 feature_disabled` with no-store caching before reading weather, world state or the
+Exchange. The browser uses the same flag for the bulletin, tonight chip and Chapter 2 hook.
+With the flag enabled, the public response below is unchanged.
 
 The harbor bulletin (open-world must items "the daily frame" and the Chapter 2 hook, see `specs/open-world-must.md`). Anyone may call it, and it holds no secret. It takes no input: a query string and an `Authorization` header are ignored. Every player gets the same answer. The one line that differs by crew, the cheapest next lead, is served signed in by package S3 (for example `GET /api/bulletin/lead`), so this answer stays public and cacheable. It is worked out when somebody asks, from the clock, the weather the server already fetches (the same cached source as `GET /api/weather`, so it causes no extra Open-Meteo request), the stage of the world and two content files that only the server reads: `backend/content/bulletin.json` and `backend/content/chapter_two_hook.json`. There is no timer and no table.
 
@@ -1171,7 +1176,12 @@ sent = await broadcaster.send(crew_id, "board_changed", {"version": 7})   # True
 | `finale_changed` | L3 | the Relighting |
 | `case_changed` | S3 | a card is found or an accusation is made |
 | `partner_changed` | S4 | an NPC errand finishes |
-| `crew_changed` | A6 | someone joins or leaves the crew |
+| `crew_changed` | A6 | a successful join or muster; version-only hint after the database change |
+
+Join and muster reuse the app's single A4 broadcaster and send only `{"version": n}`.
+Each hint has a one-second budget and a quiet fallback; a failed hint does not change the
+successful API answer. Reads, refusals and repeated intents send no hint. The existing
+`live_presence` flag and A4 per-crew/global event budgets still apply.
 
 Each caller sends after its database change has succeeded, with `data={"version": n}`, on state changes only and never on every input. A wrong argument (a crew id that is not a uuid, an unknown kind, data over 1 KB) is a bug in the caller and raises `ValueError`. Everything else that can go wrong (the flag is off, Supabase is not set up, more than 20 events for one crew in 10 seconds or more than 5 events in a second over all crews, a refusal, a timeout of 2 seconds for the whole call) returns `False` with one short warning that never holds the key, the crew id or the payload. The list of kinds is `CREW_EVENT_KINDS`, in Python and in `frontend/src/net/live-rules.js`; a test keeps the two equal.
 
@@ -1194,6 +1204,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
 | `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
 | `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
+| `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth

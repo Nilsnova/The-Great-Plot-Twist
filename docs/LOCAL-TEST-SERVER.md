@@ -46,10 +46,13 @@ CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest server/
 
 It checks all four logins, host restrictions, the story/coin grant and retry, crew creation,
 joining and muster, isolated player reads, case opening/search/action UID retry/host clock,
-account deletion and database directory removal. Ordinary startup-guard tests run without the
+account deletion and database directory removal. A second real API check covers L2 building,
+retry, player isolation and deletion after applying the expanded A4/L2 migration chain twice.
+Ordinary startup-guard tests run without the
 optional database packages. Use `--tb=no` on case tests to avoid printing protected prose.
 
-This is a Phase 1 harness. Group 2, the L2 migration and the later Phase 2 world flow remain
-integration gates; this command does not establish that they are ready. `DEMO_MODE` is true,
-the case flag is on, and `RELIGHT_OPEN` is false. External sign-in must stay off until R2
-callback protection has been implemented and checked.
+This harness checks the Phase 1 case and L2 building API. Group 2, including A4 and the L2
+migration, is available from `origin/main` at `60f7fd0`; the later Phase 2 world flow still
+needs its own integration checks. `DEMO_MODE` is true, the case flag is on, the `bulletin`
+and `sign_in` flags are off, and `RELIGHT_OPEN` is false. R2 security headers are now on main;
+external sign-in activation still requires the browser callback checks.

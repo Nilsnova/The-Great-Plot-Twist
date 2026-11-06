@@ -23,6 +23,7 @@ def test_flag_names_are_exactly_the_agreed_list():
         "companion_llm",
         "case",
         "sign_in",
+        "bulletin",
     )
 
 
