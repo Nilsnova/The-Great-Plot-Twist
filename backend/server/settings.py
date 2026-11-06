@@ -16,8 +16,13 @@ so this file is the full list of what can be configured:
                               Torshavn, Faroe Islands). Shown on screen. Not secret.
     WEATHER_LATITUDE          that place's latitude in degrees, -90 to 90 (default: 62.01)
     WEATHER_LONGITUDE         that place's longitude in degrees, -180 to 180 (default: -6.77)
-    MARKET_MULTIPLIER         how strongly the Island Exchange amplifies real price moves, a whole
-                              number from 20 to 100 (default: 100). Not a secret.
+    STOCK_API_PROVIDER        which stock-price provider the Island Exchange uses for its real
+                              stock companies: empty (off, the default) or a known name (today
+                              only "finnhub"). Not a secret. Set it only when the adapter is
+                              merged, a teammate has created the key and the provider has agreed
+                              that the prices may be shown (docs/DECISIONS.md, D017).
+    STOCK_API_KEY             the key of that provider. SERVER ONLY, like the Supabase secret key:
+                              never in the browser, a log or the repo. Empty keeps the stocks off.
     HOST_PLAYER_IDS           player ids (Supabase User UIDs, comma separated) of the hosts who
                               may use presenter routes (hosts.py). Empty means nobody is a host.
                               Not a password, but the browser never needs it.
@@ -40,9 +45,12 @@ from fastapi import Depends, Request
 from pydantic import SecretStr
 
 from server.flags import default_flags, parse_flags
-from server.market.rules import DEFAULT_MULTIPLIER, MAX_MULTIPLIER, MIN_MULTIPLIER
 
 APP_ENVS = ("local", "preview", "production")
+
+# The stock providers STOCK_API_PROVIDER may name. Keep it the same as PROVIDER_NAMES in
+# market/stocks.py (a test checks that): this file stays free of imports from the market package.
+STOCK_PROVIDER_NAMES = ("finnhub",)
 
 # The place whose real weather the game shows. The Faroe Islands are the team's proposal, because
 # their real fog and storms suit the story. The team may change it (Lisbon is the other option,
@@ -81,8 +89,11 @@ class Settings:
     weather_place_name: str = DEFAULT_WEATHER_PLACE_NAME
     weather_latitude: float = DEFAULT_WEATHER_LATITUDE
     weather_longitude: float = DEFAULT_WEATHER_LONGITUDE
-    # How many times a real price move is multiplied in the Island Exchange (market/rules.py).
-    market_multiplier: int = DEFAULT_MULTIPLIER
+    # The stock-price provider of the Island Exchange, and its key. Empty provider: stocks are off.
+    stock_api_provider: str = ""
+    # SecretStr prints as ********** in logs and error messages. Only market/exchange.py calls
+    # .get_secret_value(), once, to build the stock source.
+    stock_api_key: SecretStr = SecretStr("")
     # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
     # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
     host_player_ids: frozenset[str] = field(default_factory=frozenset)
@@ -144,19 +155,15 @@ def read_degrees(env: Mapping[str, str], name: str, limit: int, default: float) 
     return value
 
 
-def read_market_multiplier(env: Mapping[str, str]) -> int:
-    """MARKET_MULTIPLIER: a whole number from 20 to 100. Empty or missing means the default."""
-    value = read_text(env, "MARKET_MULTIPLIER")
-    if not value:
-        return DEFAULT_MULTIPLIER
-    if not value.isascii() or not value.isdecimal():
-        raise SettingsError(f"MARKET_MULTIPLIER must be a whole number (got '{value}').")
-    multiplier = int(value)
-    if not MIN_MULTIPLIER <= multiplier <= MAX_MULTIPLIER:
+def read_stock_api_provider(env: Mapping[str, str]) -> str:
+    """STOCK_API_PROVIDER: empty (stocks off) or the name of a known provider."""
+    value = read_text(env, "STOCK_API_PROVIDER").lower()
+    if value and value not in STOCK_PROVIDER_NAMES:
         raise SettingsError(
-            f"MARKET_MULTIPLIER must be from {MIN_MULTIPLIER} to {MAX_MULTIPLIER} (got {value})."
+            f"STOCK_API_PROVIDER must be empty or one of {', '.join(STOCK_PROVIDER_NAMES)} "
+            f"(got '{value}')."
         )
-    return multiplier
+    return value
 
 
 def read_player_id(piece: str, position: int) -> str:
@@ -199,7 +206,8 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         weather_longitude=read_degrees(
             env, "WEATHER_LONGITUDE", MAX_LONGITUDE, DEFAULT_WEATHER_LONGITUDE
         ),
-        market_multiplier=read_market_multiplier(env),
+        stock_api_provider=read_stock_api_provider(env),
+        stock_api_key=SecretStr(read_text(env, "STOCK_API_KEY")),
         host_player_ids=read_host_player_ids(env),
     )
 

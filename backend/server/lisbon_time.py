@@ -9,7 +9,7 @@ Three kinds of "day", all pure functions of one moment (no network, no clock of 
 
     game day       the Lisbon date, from 00:00 to 24:00. Daily caps reset when it changes.
     bulletin day   from 08:00 to 08:00. The harbor bulletin is published at 08:00, and the Island
-                   Exchange starts its market day then too (market/rules.py agrees, and a test
+                   Exchange starts its market day then too (market/game_day.py agrees, and a test
                    checks it).
     harbor week    from Monday 00:00. Weekly things reset when it changes.
 

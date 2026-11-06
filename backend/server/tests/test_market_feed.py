@@ -1,41 +1,62 @@
-"""Tests for market/feed.py: the real prices, the cache, the fallbacks and the replay.
+"""Tests for market/feed.py: the caches, the freshness and the sources behind the board.
 
-Nothing here uses the network: Binance is a fake transport (httpx.MockTransport) and the clock is
-a fake clock that only moves when the test says so.
+The feed gives one Reading per company: the price, when it was quoted, when this server instance
+fetched it, and where it came from (live, cache, stale, replay or none). Nothing here uses the
+network: Binance and the stock provider are fake transports, and the clock only moves when the
+test says so.
+
+The rules under test (specs/L4-exchange-v2.md, section 4.4):
+  island companies   one Binance request for all pairs; the board accepts prices up to 60 seconds
+                     old, a trade only 5 seconds; after a failure Binance is asked again after 10
+                     seconds; the quote time is the fetch time.
+  stock companies    one call per stock, sent together; the same ages; after a failure the source
+                     waits 30 seconds; no call while a market is closed and a final price is held.
 """
 
 import asyncio
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import httpx
 import pytest
 
-from server.adapters.base import SourceUnavailable
+from server.market.binance import BINANCE_URL
+from server.market.calendars import load_calendars
 from server.market.feed import (
-    ATTRIBUTION_LIVE,
-    BINANCE_URL,
-    FEED_TTL_SECONDS,
-    REPLAY_FILE,
-    TRADE_MAX_PRICE_AGE_SECONDS,
-    FeedError,
+    BOARD_MAX_AGE_SECONDS,
+    TRADE_MAX_AGE_SECONDS,
     PriceFeed,
-    PriceSnapshot,
-    Replay,
-    load_replay,
-    parse_prices,
-    ping_pong_index,
-    read_price,
-    replay_snapshot,
 )
-from server.market.rules import LIVE
+from server.market.readings import NO_READING
+from server.market.replay import Replay, ReplayError
+from server.market.stocks import CallBudget, StockSource
 from server.tests.helpers import FakeClock
+from server.tests.market_helpers import (
+    KEY,
+    NY_NIGHT,
+    NY_OPEN,
+    QUOTED_AT,
+    FakeBinance,
+    FakeProvider,
+    FakeStockServer,
+    good_binance_answer,
+    island_company,
+    stock_company,
+)
 
 D = Decimal
 
-SYMBOLS = ("BTCUSDT", "ETHUSDT", "EURUSDT")
+CALENDARS = load_calendars()
+BTC = island_company("BTCUSDT")
+ETH = island_company("ETHUSDT")
+EUR = island_company("EURUSDT")
+ISLANDS = (BTC, ETH, EUR)
+APPLE = stock_company("AAPL")
+NVIDIA = stock_company("NVDA")
+COCA = stock_company("KO")
+STOCKS = (APPLE, NVIDIA, COCA)
 
 # A small replay of 4 minutes, so the tests can follow it by eye.
 SMALL_REPLAY = Replay(
@@ -50,62 +71,67 @@ SMALL_REPLAY = Replay(
     licence="CC BY-NC-SA 4.0",
 )
 
-# What Binance answers (the order is not the order we asked for, and prices are text).
-BINANCE_ANSWER = [
-    {"symbol": "EURUSDT", "price": "1.12460000"},
-    {"symbol": "BTCUSDT", "price": "76159.21000000"},
-    {"symbol": "ETHUSDT", "price": "2255.69000000"},
-]
 
-
-class FakeBinance:
-    """A pretend Binance. It counts requests and answers with prepared replies, in order."""
-
-    def __init__(self, *replies) -> None:
-        self.replies = list(replies)
-        self.requests: list[httpx.Request] = []
-
-    def __call__(self, request: httpx.Request) -> httpx.Response:
-        self.requests.append(request)
-        reply = self.replies.pop(0) if len(self.replies) > 1 else self.replies[0]
-        if isinstance(reply, Exception):
-            raise reply
-        return reply
-
-
-def good() -> httpx.Response:
-    return httpx.Response(200, json=BINANCE_ANSWER)
-
-
-def make_feed(binance: FakeBinance, clock: FakeClock, **options) -> PriceFeed:
+def make_feed(binance: FakeBinance, clock: FakeClock, companies=ISLANDS, **options) -> PriceFeed:
     return PriceFeed(
-        SYMBOLS, SMALL_REPLAY, transport=httpx.MockTransport(binance), clock=clock, **options
+        companies,
+        CALENDARS,
+        SMALL_REPLAY,
+        transport=httpx.MockTransport(binance),
+        clock=clock,
+        **options,
     )
 
 
-def get(feed: PriceFeed, max_age_seconds: float | None = None):
-    return asyncio.run(feed.get(max_age_seconds))
+def make_stock_feed(server: FakeStockServer, clock: FakeClock, **source_options):
+    """A feed with the three island companies, three stocks and a fake stock provider."""
+    binance = FakeBinance(good_binance_answer())
+    source = StockSource(
+        FakeProvider(),
+        KEY,
+        transport=httpx.MockTransport(server),
+        clock=clock,
+        **source_options,
+    )
+    return make_feed(binance, clock, ISLANDS + STOCKS, stocks=source), binance
 
 
-# --- the live request ---
+def read(feed: PriceFeed, max_age: float = BOARD_MAX_AGE_SECONDS, only=None) -> dict:
+    return asyncio.run(feed.read(max_age, only=only))
 
 
-def test_one_request_asks_binance_for_all_symbols_at_the_documented_address():
-    binance = FakeBinance(good())
+def at(clock: FakeClock, moment: datetime) -> FakeClock:
+    clock.now = moment
+    return clock
 
-    get(make_feed(binance, FakeClock()))
+
+# --- the agreed ages ---
+
+
+def test_the_agreed_ages_are_60_seconds_for_the_board_and_5_seconds_for_a_trade():
+    assert BOARD_MAX_AGE_SECONDS == 60
+    assert TRADE_MAX_AGE_SECONDS == 5
+
+
+# --- the Binance request ---
+
+
+def test_one_request_asks_binance_for_all_pairs_at_the_documented_address():
+    binance = FakeBinance(good_binance_answer())
+
+    read(make_feed(binance, FakeClock()))
 
     assert len(binance.requests) == 1
     request = binance.requests[0]
     assert request.method == "GET"
     assert str(request.url).startswith(f"{BINANCE_URL}/api/v3/ticker/price?")
-    assert json.loads(request.url.params["symbols"]) == list(SYMBOLS)
+    assert json.loads(request.url.params["symbols"]) == ["BTCUSDT", "ETHUSDT", "EURUSDT"]
 
 
 def test_the_request_is_keyless_and_sends_no_secret_header():
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
 
-    get(make_feed(binance, FakeClock()))
+    read(make_feed(binance, FakeClock()))
 
     headers = {name.lower() for name in binance.requests[0].headers}
     assert "authorization" not in headers
@@ -113,24 +139,24 @@ def test_the_request_is_keyless_and_sends_no_secret_header():
     assert "apikey" not in headers
 
 
-def test_the_market_data_host_is_the_keyless_binance_vision_host():
-    assert BINANCE_URL == "https://data-api.binance.vision"
-
-
-def test_live_prices_are_exact_numbers_in_the_order_of_the_symbols():
+def test_live_prices_are_exact_and_the_quote_time_is_the_fetch_time():
     clock = FakeClock()
 
-    snapshot = get(make_feed(FakeBinance(good()), clock))
+    readings = read(make_feed(FakeBinance(good_binance_answer()), clock))
 
-    assert snapshot.source == "live"
-    assert snapshot.as_of == clock.now
-    assert list(snapshot.prices) == list(SYMBOLS)
-    assert snapshot.prices["BTCUSDT"] == D("76159.21")
-    assert snapshot.prices["EURUSDT"] == D("1.1246")
+    btc = readings[BTC.id]
+    assert btc.source == "live"
+    assert btc.price == D("76159.21")
+    assert btc.fetched_at == clock.now
+    assert btc.quoted_at == clock.now
+    assert readings[EUR.id].price == D("1.1246")
 
 
-def test_a_live_snapshot_is_of_the_live_kind():
-    assert get(make_feed(FakeBinance(good()), FakeClock())).kind == LIVE
+def test_there_is_one_reading_for_every_company_and_a_live_reading_is_of_the_live_price_mode():
+    readings = read(make_feed(FakeBinance(good_binance_answer()), FakeClock()))
+
+    assert list(readings) == [BTC.id, ETH.id, EUR.id]
+    assert {reading.price_mode for reading in readings.values()} == {"live"}
 
 
 # --- the cache: one request per minute ---
@@ -138,139 +164,145 @@ def test_a_live_snapshot_is_of_the_live_kind():
 
 def test_a_second_look_inside_a_minute_uses_the_cache_and_asks_binance_nothing():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
-    first = get(feed)
+    first = read(feed)
 
     clock.advance(59)
-    second = get(feed)
+    second = read(feed)
 
-    assert second.source == "cache"
-    assert second.prices == first.prices
-    assert second.as_of == first.as_of
+    assert second[BTC.id].source == "cache"
+    assert second[BTC.id].price == first[BTC.id].price
+    assert second[BTC.id].fetched_at == first[BTC.id].fetched_at
     assert len(binance.requests) == 1
 
 
 def test_after_a_minute_the_next_look_asks_binance_again():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
-    get(feed)
+    read(feed)
 
     clock.advance(60)
-    second = get(feed)
+    second = read(feed)
 
-    assert second.source == "live"
+    assert second[BTC.id].source == "live"
     assert len(binance.requests) == 2
 
 
 def test_a_rush_of_players_at_the_same_moment_causes_one_request():
     async def hundred_players() -> list:
         feed = make_feed(binance, FakeClock())
-        return await asyncio.gather(*[feed.get() for _ in range(100)])
+        return await asyncio.gather(*[feed.read(BOARD_MAX_AGE_SECONDS) for _ in range(100)])
 
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
 
-    snapshots = asyncio.run(hundred_players())
+    answers = asyncio.run(hundred_players())
 
     assert len(binance.requests) == 1
-    assert {snapshot.source for snapshot in snapshots} <= {"live", "cache"}
+    assert {readings[BTC.id].source for readings in answers} <= {"live", "cache"}
+    assert len({readings[BTC.id].price for readings in answers}) == 1
 
 
 # --- a trade needs younger prices than the board ---
 
 
-def test_the_agreed_ages_are_60_seconds_for_the_board_and_5_seconds_for_a_trade():
-    assert FEED_TTL_SECONDS == 60
-    assert TRADE_MAX_PRICE_AGE_SECONDS == 5
-
-
-def test_prices_that_are_older_than_the_limit_of_a_trade_are_fetched_again():
+def test_prices_older_than_the_limit_of_a_trade_are_fetched_again():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
-    get(feed)  # the board looks: one request
+    read(feed)  # the board looks: one request
 
     clock.advance(6)
-    snapshot = get(feed, TRADE_MAX_PRICE_AGE_SECONDS)
+    readings = read(feed, TRADE_MAX_AGE_SECONDS)
 
-    assert snapshot.source == "live"
+    assert readings[BTC.id].source == "live"
     assert len(binance.requests) == 2
 
 
 def test_prices_younger_than_the_limit_of_a_trade_come_from_the_cache():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
-    get(feed)
+    read(feed)
 
     clock.advance(4.9)
-    snapshot = get(feed, TRADE_MAX_PRICE_AGE_SECONDS)
+    readings = read(feed, TRADE_MAX_AGE_SECONDS)
 
-    assert snapshot.source == "cache"
+    assert readings[BTC.id].source == "cache"
     assert len(binance.requests) == 1
 
 
-def test_prices_exactly_as_old_as_the_limit_are_fetched_again():
+def test_prices_exactly_as_old_as_the_limit_of_a_trade_are_fetched_again():
     clock = FakeClock()
-    binance = FakeBinance(good())
-    feed = make_feed(binance, clock)
-    get(feed)
+    feed = make_feed(FakeBinance(good_binance_answer()), clock)
+    read(feed)
 
-    clock.advance(TRADE_MAX_PRICE_AGE_SECONDS)
+    clock.advance(TRADE_MAX_AGE_SECONDS)
 
-    assert get(feed, TRADE_MAX_PRICE_AGE_SECONDS).source == "live"
+    assert read(feed, TRADE_MAX_AGE_SECONDS)[BTC.id].source == "live"
 
 
-def test_the_board_still_accepts_prices_that_are_a_trade_would_refuse():
+def test_the_board_still_accepts_prices_that_a_trade_would_refuse():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
-    get(feed)
+    read(feed)
 
     clock.advance(30)
 
-    assert get(feed).source == "cache"  # the board's own limit is 60 seconds
+    assert read(feed)[BTC.id].source == "cache"  # the board's own limit is 60 seconds
     assert len(binance.requests) == 1
 
 
 def test_a_fetch_for_a_trade_also_refreshes_the_cache_of_the_board():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
-    get(feed)
+    read(feed)
     clock.advance(30)
-    get(feed, TRADE_MAX_PRICE_AGE_SECONDS)  # a trade fetches again
+    read(feed, TRADE_MAX_AGE_SECONDS)  # a trade fetches again
 
     clock.advance(30)  # the board looks 30 seconds later: the new prices are 30 seconds old
 
-    assert get(feed).source == "cache"
+    assert read(feed)[BTC.id].source == "cache"
     assert len(binance.requests) == 2
+
+
+def test_a_trade_on_one_island_company_still_reads_that_company_only():
+    feed = make_feed(FakeBinance(good_binance_answer()), FakeClock())
+
+    readings = read(feed, TRADE_MAX_AGE_SECONDS, only=ETH)
+
+    assert list(readings) == [ETH.id]
+    assert readings[ETH.id].price == D("2255.69")
 
 
 def test_a_rush_of_trades_at_the_same_moment_causes_one_request():
     async def hundred_traders() -> list:
         clock = FakeClock()
         feed = make_feed(binance, clock)
-        await feed.get()
+        await feed.read(BOARD_MAX_AGE_SECONDS)
         clock.advance(10)
-        return await asyncio.gather(*[feed.get(TRADE_MAX_PRICE_AGE_SECONDS) for _ in range(100)])
+        return await asyncio.gather(
+            *[feed.read(TRADE_MAX_AGE_SECONDS, only=BTC) for _ in range(100)]
+        )
 
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
 
-    snapshots = asyncio.run(hundred_traders())
+    answers = asyncio.run(hundred_traders())
 
     assert len(binance.requests) == 2  # the first look, and one for the whole rush
-    assert {snapshot.source for snapshot in snapshots} <= {"live", "cache"}
+    assert {readings[BTC.id].source for readings in answers} <= {"live", "cache"}
 
 
 def test_trading_all_the_time_asks_binance_at_most_every_5_seconds():
     clock = FakeClock()
-    binance = FakeBinance(good())
+    binance = FakeBinance(good_binance_answer())
     feed = make_feed(binance, clock)
 
     for _ in range(60):  # one trade every second for a minute
-        get(feed, TRADE_MAX_PRICE_AGE_SECONDS)
+        read(feed, TRADE_MAX_AGE_SECONDS, only=BTC)
         clock.advance(1)
 
     assert len(binance.requests) == 12
@@ -287,112 +319,110 @@ def test_trading_all_the_time_asks_binance_at_most_every_5_seconds():
         httpx.Response(500, text="oops"),
         httpx.Response(200, text="this is not json"),
         httpx.Response(200, json={"symbol": "BTCUSDT"}),  # an object instead of a list
-        httpx.Response(200, json=BINANCE_ANSWER[1:]),  # EURUSDT is missing
-        httpx.Response(200, json=[{"symbol": "BTCUSDT", "price": "abc"}] + BINANCE_ANSWER[1:]),
-        httpx.Response(200, json=[{"symbol": "BTCUSDT", "price": "0"}] + BINANCE_ANSWER[1:]),
-        httpx.Response(200, json=[{"symbol": "BTCUSDT", "price": "-5"}] + BINANCE_ANSWER[1:]),
-        httpx.Response(200, json=[{"symbol": "BTCUSDT", "price": 5}] + BINANCE_ANSWER[1:]),
+        httpx.Response(200, json=[]),  # a list with none of our pairs
     ],
 )
-def test_a_bad_answer_from_binance_before_any_good_one_means_there_are_no_prices(reply):
-    # The live Exchange never plays the replay as a stand-in (see the top of feed.py).
-    with pytest.raises(SourceUnavailable):
-        get(make_feed(FakeBinance(reply), FakeClock()))
+def test_a_bad_answer_from_binance_before_any_good_one_means_no_price_for_anybody(reply):
+    readings = read(make_feed(FakeBinance(reply), FakeClock()))
+
+    assert {reading.source for reading in readings.values()} == {"none"}
+    assert {reading.price for reading in readings.values()} == {None}
 
 
 @pytest.mark.parametrize("error", [httpx.ConnectTimeout, httpx.ReadTimeout, httpx.ConnectError])
-def test_a_network_failure_before_any_good_answer_means_there_are_no_prices(error):
+def test_a_network_failure_before_any_good_answer_means_no_price(error):
     binance = FakeBinance(error("pretend network failure"))
 
-    with pytest.raises(SourceUnavailable):
-        get(make_feed(binance, FakeClock()))
+    readings = read(make_feed(binance, FakeClock()))
+
+    assert readings[BTC.id] == NO_READING
 
 
-def test_without_prices_the_error_is_the_standard_503_source_unavailable():
-    with pytest.raises(SourceUnavailable) as unavailable:
-        get(make_feed(FakeBinance(httpx.Response(500)), FakeClock()))
+def test_a_failure_never_raises_an_error_the_board_just_has_no_price():
+    feed = make_feed(FakeBinance(httpx.Response(500)), FakeClock())
 
-    assert unavailable.value.status_code == 503
-    assert unavailable.value.code == "source_unavailable"
+    assert read(feed)[BTC.id].has_price is False
 
 
-def test_after_a_good_answer_a_failure_gives_the_old_prices_marked_stale():
+def test_after_a_good_answer_a_failure_gives_the_old_prices_marked_stale_with_their_time():
     clock = FakeClock()
-    feed = make_feed(FakeBinance(good(), httpx.Response(500)), clock)
-    first = get(feed)
+    feed = make_feed(FakeBinance(good_binance_answer(), httpx.Response(500)), clock)
+    first = read(feed)
 
     clock.advance(61)
-    second = get(feed)
+    second = read(feed)
 
-    assert second.source == "stale"
-    assert second.prices == first.prices
-    assert second.as_of == first.as_of  # the time of the prices, not the time of the look
+    assert second[BTC.id].source == "stale"
+    assert second[BTC.id].price == first[BTC.id].price
+    assert second[BTC.id].fetched_at == first[BTC.id].fetched_at  # the time of the prices
+    assert second[BTC.id].quoted_at == first[BTC.id].quoted_at
 
 
-def test_a_failure_during_a_trade_gives_stale_prices_and_they_are_not_tradable():
+def test_a_failure_during_a_trade_gives_stale_prices():
     clock = FakeClock()
-    feed = make_feed(FakeBinance(good(), httpx.Response(500)), clock)
-    get(feed)
+    feed = make_feed(FakeBinance(good_binance_answer(), httpx.Response(500)), clock)
+    read(feed)
 
     clock.advance(6)
-    snapshot = get(feed, TRADE_MAX_PRICE_AGE_SECONDS)
+    readings = read(feed, TRADE_MAX_AGE_SECONDS, only=BTC)
 
-    assert snapshot.source == "stale"
-    assert snapshot.is_tradable is False
+    assert readings[BTC.id].source == "stale"
 
 
 def test_old_prices_stay_stale_for_as_long_as_binance_is_away_and_the_replay_never_plays():
     clock = FakeClock()
-    feed = make_feed(FakeBinance(good(), httpx.Response(500)), clock)
-    first = get(feed)
+    feed = make_feed(FakeBinance(good_binance_answer(), httpx.Response(500)), clock)
+    first = read(feed)
 
     for seconds in (599, 2, 3600, 24 * 3600):
         clock.advance(seconds)
-        snapshot = get(feed)
+        reading = read(feed)[BTC.id]
 
-        assert snapshot.source == "stale"
-        assert snapshot.kind == "live"
-        assert snapshot.prices == first.prices
+        assert reading.source == "stale"
+        assert reading.price_mode == "live"
+        assert reading.price == first[BTC.id].price
 
 
 def test_live_prices_come_back_when_binance_does():
     clock = FakeClock()
-    feed = make_feed(FakeBinance(good(), httpx.Response(500), good()), clock)
-    get(feed)
+    feed = make_feed(
+        FakeBinance(good_binance_answer(), httpx.Response(500), good_binance_answer()), clock
+    )
+    read(feed)
     clock.advance(61)
-    assert get(feed).source == "stale"
+    assert read(feed)[BTC.id].source == "stale"
 
     clock.advance(61)
 
-    assert get(feed).source == "live"
+    assert read(feed)[BTC.id].source == "live"
 
 
 def test_after_a_failure_binance_is_asked_again_only_10_seconds_later():
     clock = FakeClock()
-    binance = FakeBinance(good(), httpx.Response(500), good())
+    binance = FakeBinance(good_binance_answer(), httpx.Response(500), good_binance_answer())
     feed = make_feed(binance, clock)
-    get(feed)  # at 0 seconds: good prices
+    read(feed)  # at 0 seconds: good prices
 
     clock.advance(6)
-    assert get(feed, TRADE_MAX_PRICE_AGE_SECONDS).source == "stale"  # a trade asks, and it fails
+    assert read(feed, TRADE_MAX_AGE_SECONDS)[BTC.id].source == "stale"  # a trade asks, it fails
     clock.advance(9)
-    assert get(feed, TRADE_MAX_PRICE_AGE_SECONDS).source == "stale"  # 9 seconds later: too early
+    assert read(feed, TRADE_MAX_AGE_SECONDS)[BTC.id].source == "stale"  # 9 seconds later: too early
     assert len(binance.requests) == 2
     clock.advance(1)
 
-    assert get(feed, TRADE_MAX_PRICE_AGE_SECONDS).source == "live"  # 10 seconds later: asked again
+    assert read(feed, TRADE_MAX_AGE_SECONDS)[BTC.id].source == "live"  # 10 seconds later: asked
     assert len(binance.requests) == 3
 
 
 def test_while_binance_is_down_a_look_or_a_trade_every_5_seconds_asks_it_every_10_seconds():
     clock = FakeClock()
-    binance = FakeBinance(good(), httpx.Response(500))
+    binance = FakeBinance(good_binance_answer(), httpx.Response(500))
     feed = make_feed(binance, clock)
-    get(feed)
+    read(feed)
     clock.advance(61)
 
     for _ in range(13):  # a look or a trade every 5 seconds, for a minute and a little more
-        get(feed, TRADE_MAX_PRICE_AGE_SECONDS)
+        read(feed, TRADE_MAX_AGE_SECONDS, only=BTC)
         clock.advance(5)
 
     # The first good request, then a failing one at 61, 71, 81, 91, 101, 111 and 121 seconds.
@@ -400,301 +430,591 @@ def test_while_binance_is_down_a_look_or_a_trade_every_5_seconds_asks_it_every_1
 
 
 def test_a_failing_binance_does_not_log_anything_about_a_replay(caplog):
-    feed = make_feed(FakeBinance(good(), httpx.Response(500)), FakeClock())
+    feed = make_feed(FakeBinance(good_binance_answer(), httpx.Response(500)), FakeClock())
 
-    with caplog.at_level(logging.WARNING):
-        get(feed)
+    with caplog.at_level(logging.WARNING, logger="server"):
+        read(feed)
 
     assert "replay" not in caplog.text
 
 
-# --- which prices a trade may use ---
+def test_a_failure_is_logged_by_its_kind_only(caplog):
+    binance = FakeBinance(httpx.ReadTimeout("pretend slow answer for https://secret.example/x"))
+
+    with caplog.at_level(logging.WARNING, logger="server"):
+        read(make_feed(binance, FakeClock()))
+
+    assert "ReadTimeout" in caplog.text
+    assert "secret.example" not in caplog.text
 
 
-def snapshot_from(source: str) -> PriceSnapshot:
-    return PriceSnapshot({"BTCUSDT": D("1")}, source, datetime(2026, 11, 5, 12, 0, tzinfo=UTC))
+# --- a pair that is missing from a good answer ---
 
 
-@pytest.mark.parametrize("source", ["live", "cache", "replay"])
-def test_live_cache_and_replay_prices_can_be_traded_on(source):
-    assert snapshot_from(source).is_tradable is True
+def test_a_pair_missing_from_a_good_answer_leaves_only_that_company_without_a_price():
+    binance = FakeBinance(good_binance_answer({"BTCUSDT": "77000.00", "ETHUSDT": "2300.00"}))
+
+    readings = read(make_feed(binance, FakeClock()))
+
+    assert readings[BTC.id].source == "live"
+    assert readings[ETH.id].source == "live"
+    assert readings[EUR.id] == NO_READING
 
 
-def test_stale_prices_cannot_be_traded_on():
-    assert snapshot_from("stale").is_tradable is False
+def test_a_pair_that_disappears_keeps_its_old_price_marked_stale_while_the_others_are_fresh():
+    clock = FakeClock()
+    second = good_binance_answer({"BTCUSDT": "77000.00", "ETHUSDT": "2300.00"})
+    feed = make_feed(FakeBinance(good_binance_answer(), second), clock)
+    first = read(feed)
+
+    clock.advance(61)
+    readings = read(feed)
+
+    assert readings[BTC.id].source == "live"
+    assert readings[BTC.id].price == D("77000.00")
+    assert readings[EUR.id].source == "stale"
+    assert readings[EUR.id].price == first[EUR.id].price
+    assert readings[EUR.id].fetched_at == first[EUR.id].fetched_at
+
+
+def test_a_missing_pair_does_not_make_binance_get_asked_on_every_look():
+    clock = FakeClock()
+    binance = FakeBinance(good_binance_answer({"BTCUSDT": "77000.00", "ETHUSDT": "2300.00"}))
+    feed = make_feed(binance, clock)
+
+    for _ in range(5):
+        read(feed)
+        clock.advance(10)
+
+    assert len(binance.requests) == 1
+
+
+def test_a_pair_with_a_bad_price_is_left_out_and_the_others_stay():
+    answer = [{"symbol": "BTCUSDT", "price": "abc"}] + [
+        {"symbol": "ETHUSDT", "price": "2300"},
+        {"symbol": "EURUSDT", "price": "1.1"},
+    ]
+    binance = FakeBinance(httpx.Response(200, json=answer))
+
+    readings = read(make_feed(binance, FakeClock()))
+
+    assert readings[BTC.id] == NO_READING
+    assert readings[ETH.id].price == D("2300")
 
 
 # --- demo mode: no real outside services ---
 
 
 def test_a_feed_that_is_not_live_never_asks_binance_and_plays_the_replay():
-    binance = FakeBinance(good())
-    feed = PriceFeed(
-        SYMBOLS, SMALL_REPLAY, transport=httpx.MockTransport(binance), clock=FakeClock(), live=False
-    )
+    binance = FakeBinance(good_binance_answer())
 
-    snapshot = get(feed)
+    readings = read(make_feed(binance, FakeClock(), live=False))
 
-    assert snapshot.source == "replay"
+    assert readings[BTC.id].source == "replay"
+    assert readings[BTC.id].price_mode == "replay"
     assert binance.requests == []
 
 
-def test_a_feed_that_is_not_live_does_not_log_a_warning_about_binance(caplog):
-    feed = PriceFeed(SYMBOLS, SMALL_REPLAY, clock=FakeClock(), live=False)
+def test_a_replay_reading_says_the_minute_that_plays_and_is_fetched_now():
+    clock = FakeClock()
+    clock.now = datetime.fromtimestamp(8 * 60 + 17, UTC)  # 17 seconds into minute 8
 
-    with caplog.at_level(logging.WARNING):
-        get(feed)
+    reading = read(make_feed(FakeBinance(good_binance_answer()), clock, live=False))[BTC.id]
+
+    assert reading.price == D("102")  # 8 % 6 = 2, so recorded minute 2 plays
+    assert reading.quoted_at == clock.now.replace(second=0)
+    assert reading.fetched_at == clock.now
+
+
+def test_a_feed_that_is_not_live_does_not_log_a_warning(caplog):
+    feed = make_feed(FakeBinance(good_binance_answer()), FakeClock(), live=False)
+
+    with caplog.at_level(logging.WARNING, logger="server"):
+        read(feed)
 
     assert caplog.text == ""
 
 
-# --- parsing ---
-
-
-def test_parse_prices_wants_every_symbol():
-    with pytest.raises(FeedError, match="EURUSDT"):
-        parse_prices(BINANCE_ANSWER[1:], SYMBOLS)
-
-
-def test_parse_prices_ignores_symbols_nobody_asked_for():
-    extra = BINANCE_ANSWER + [{"symbol": "DOGEUSDT", "price": "0.1"}]
-
-    assert list(parse_prices(extra, SYMBOLS)) == list(SYMBOLS)
-
-
-@pytest.mark.parametrize("value", [None, 5, 1.5, ["1"], "abc", "", "NaN", "Infinity", "0", "-1"])
-def test_read_price_refuses_anything_but_text_that_is_a_number_above_zero(value):
-    with pytest.raises(FeedError):
-        read_price(value)
-
-
-def test_read_price_keeps_all_decimals():
-    assert read_price("0.00001234") == D("0.00001234")
-
-
-# --- the replay ---
-
-
-def test_the_replay_plays_forward_then_backward_forever():
-    steps = [ping_pong_index(step, 4) for step in range(10)]
-
-    assert steps == [0, 1, 2, 3, 2, 1, 0, 1, 2, 3]
-
-
-def test_a_replay_of_two_minutes_goes_back_and_forth():
-    assert [ping_pong_index(step, 2) for step in range(5)] == [0, 1, 0, 1, 0]
-
-
-def at_minute(minute: int) -> datetime:
-    """A time that is exactly `minute` whole minutes after the start of the Unix epoch."""
-    return datetime.fromtimestamp(minute * 60 + 17, UTC)  # 17 seconds into the minute
-
-
-def test_the_replay_plays_the_recorded_minute_that_belongs_to_the_clock():
-    # 4 recorded minutes make a turn of 6 steps, and 8 % 6 = 2, so recorded minute 2 plays.
-    snapshot = replay_snapshot(SMALL_REPLAY, SYMBOLS, at_minute(8))
-
-    assert snapshot.prices["BTCUSDT"] == D("102")
-    assert snapshot.prices["EURUSDT"] == D("1.3")
-
-
-def test_the_same_time_always_gives_the_same_replay_prices():
-    first = replay_snapshot(SMALL_REPLAY, SYMBOLS, at_minute(1234))
-    second = replay_snapshot(SMALL_REPLAY, SYMBOLS, at_minute(1234))
-
-    assert first == second
-
-
-def test_the_replay_time_is_shifted_to_now_it_says_the_start_of_the_current_minute():
-    now = at_minute(1234)
-
-    snapshot = replay_snapshot(SMALL_REPLAY, SYMBOLS, now)
-
-    assert snapshot.as_of == now.replace(second=0)
-    assert snapshot.source == "replay"
-
-
 def test_two_servers_at_the_same_moment_play_the_same_minute():
     clock = FakeClock()
-    feed_one = make_feed(FakeBinance(good()), clock, live=False)
-    feed_two = make_feed(FakeBinance(good()), clock, live=False)
+    feed_one = make_feed(FakeBinance(good_binance_answer()), clock, live=False)
+    feed_two = make_feed(FakeBinance(good_binance_answer()), clock, live=False)
 
-    assert get(feed_one) == get(feed_two)
+    assert read(feed_one) == read(feed_two)
 
 
 def test_the_replay_moves_on_by_one_recorded_minute_per_real_minute():
     clock = FakeClock()
-    feed = make_feed(FakeBinance(good()), clock, live=False)
-    first = get(feed)
+    feed = make_feed(FakeBinance(good_binance_answer()), clock, live=False)
+    first = read(feed)
 
     clock.advance(60)
-    second = get(feed)
+    second = read(feed)
 
-    assert first.prices != second.prices
-
-
-def test_a_feed_refuses_to_start_if_the_replay_lacks_a_symbol_it_needs():
-    with pytest.raises(FeedError, match="SOLUSDT"):
-        PriceFeed(("BTCUSDT", "SOLUSDT"), SMALL_REPLAY)
+    assert first[BTC.id].price != second[BTC.id].price
 
 
-# --- the replay file in the repository ---
-
-REAL_SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "EURUSDT", "PAXGUSDT")
-
-
-def test_the_real_replay_has_90_minutes_for_all_seven_symbols():
-    replay = load_replay()
-
-    assert replay.candles == 90
-    assert replay.candle_seconds == 60
-    assert tuple(replay.closes) == REAL_SYMBOLS
-    assert all(len(prices) == 90 for prices in replay.closes.values())
-
-
-def test_the_real_replay_credits_binance_vision_and_names_its_licence():
-    replay = load_replay()
-    text = REPLAY_FILE.read_text()
-
-    assert replay.credit == "Binance Vision"
-    assert replay.licence == "CC BY-NC-SA 4.0"
-    assert replay.licence_url == "https://creativecommons.org/licenses/by-nc-sa/4.0/"
-    assert "https://creativecommons.org/licenses/by-nc-sa/4.0/" in text
-    assert "Binance_Vision-Terms_of_Use.pdf" in text
-    assert "changes" in json.loads(text)  # CC BY says: say what you changed
-
-
-def test_the_real_replay_has_only_prices_above_zero():
-    replay = load_replay()
-
-    assert all(price > 0 for prices in replay.closes.values() for price in prices)
-
-
-def test_the_real_replay_has_no_jump_of_more_than_half_a_percent_between_two_minutes():
-    replay = load_replay()
-    biggest = {}
-    for symbol, prices in replay.closes.items():
-        steps = [abs(prices[i + 1] / prices[i] - 1) for i in range(len(prices) - 1)]
-        biggest[symbol] = max(steps)
-
-    assert all(step < D("0.005") for step in biggest.values()), biggest
-
-
-def test_the_real_replay_prices_are_in_the_range_of_the_instruments():
-    closes = load_replay().closes
-
-    assert D("50000") < closes["BTCUSDT"][0] < D("150000")
-    assert D("1.0") < closes["EURUSDT"][0] < D("1.3")
-    assert D("3000") < closes["PAXGUSDT"][0] < D("6000")
-
-
-def test_the_real_replay_works_with_the_real_companies():
-    from server.market.companies import load_companies
-
-    symbols = [company.symbol for company in load_companies()]
-
-    PriceFeed(symbols, load_replay())  # raises FeedError if a symbol were missing
-
-
-# --- a damaged replay file is refused with a clear message ---
-
-
-def write_replay(tmp_path, **changes):
-    data = {
-        "credit": "Binance Vision",
-        "licence": "CC BY-NC-SA 4.0",
-        "candleSeconds": 60,
-        "candles": 3,
-        "closes": {"BTCUSDT": [1.5, 2, 3.25]},
-    }
-    data.update(changes)
-    path = tmp_path / "replay.json"
-    path.write_text(json.dumps(data))
-    return path
-
-
-def test_a_small_good_replay_loads_with_exact_numbers(tmp_path):
-    replay = load_replay(write_replay(tmp_path))
-
-    assert replay.closes["BTCUSDT"] == (D("1.5"), D("2"), D("3.25"))
-
-
-def test_a_replay_without_a_licence_link_loads_and_has_none(tmp_path):
-    assert load_replay(write_replay(tmp_path)).licence_url is None
-
-
-def test_a_replay_with_a_licence_link_keeps_it(tmp_path):
-    replay = load_replay(write_replay(tmp_path, licenceUrl="https://example.org/licence"))
-
-    assert replay.licence_url == "https://example.org/licence"
-
-
-@pytest.mark.parametrize(
-    ("changes", "message"),
-    [
-        ({"credit": ""}, "credit"),
-        ({"credit": None}, "credit"),
-        ({"licence": ""}, "licence"),
-        ({"candles": 1, "closes": {"BTCUSDT": [1]}}, "candles"),
-        ({"candles": "3"}, "candles"),
-        ({"candleSeconds": 0}, "candleSeconds"),
-        ({"closes": {}}, "no prices"),
-        ({"closes": {"BTCUSDT": [1, 2]}}, "does not have 3 prices"),
-        ({"closes": {"BTCUSDT": [1, 2, 0]}}, "not above 0"),
-        ({"closes": {"BTCUSDT": [1, 2, -3]}}, "not above 0"),
-        ({"closes": {"BTCUSDT": [1, 2, "3"]}}, "not above 0"),
-        ({"closes": {"BTCUSDT": [1, 2, True]}}, "not above 0"),
-        ({"licenceUrl": "javascript:alert(1)"}, "licenceUrl"),
-        ({"licenceUrl": "http://example.org/licence"}, "licenceUrl"),
-        ({"licenceUrl": 5}, "licenceUrl"),
-    ],
-)
-def test_a_damaged_replay_is_refused(tmp_path, changes, message):
-    with pytest.raises(FeedError, match=message):
-        load_replay(write_replay(tmp_path, **changes))
-
-
-def test_a_replay_that_is_not_json_is_refused(tmp_path):
-    path = tmp_path / "replay.json"
-    path.write_text("nope")
-
-    with pytest.raises(FeedError, match="Cannot read"):
-        load_replay(path)
-
-
-# --- the credit line ---
-
-
-def test_the_licence_link_is_given_only_while_the_replay_plays():
-    replay = Replay(
-        closes=SMALL_REPLAY.closes,
-        candles=4,
-        candle_seconds=60,
-        credit="Binance Vision",
-        licence="CC BY-NC-SA 4.0",
-        licence_url="https://example.org/licence",
+def test_in_demo_mode_the_stock_companies_have_no_reading_and_their_provider_is_never_asked():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    source = StockSource(FakeProvider(), KEY, transport=httpx.MockTransport(server), clock=clock)
+    feed = make_feed(
+        FakeBinance(good_binance_answer()), clock, ISLANDS + STOCKS, stocks=source, live=False
     )
-    feed = PriceFeed(SYMBOLS, replay, clock=FakeClock())
 
-    assert feed.licence_url("replay") == "https://example.org/licence"
-    for source in ("live", "cache", "stale"):
-        assert feed.licence_url(source) is None
+    readings = read(feed)
 
-
-def test_the_credit_line_of_live_prices_names_binance_and_says_simulation():
-    feed = make_feed(FakeBinance(good()), FakeClock())
-
-    for source in ("live", "cache", "stale"):
-        assert feed.attribution(source) == ATTRIBUTION_LIVE
-    assert "Binance" in ATTRIBUTION_LIVE
-    assert "play money" in ATTRIBUTION_LIVE
+    assert readings[APPLE.id] == NO_READING
+    assert readings[BTC.id].source == "replay"
+    assert server.requests == []
 
 
-def test_the_credit_line_of_the_replay_names_the_data_and_its_licence():
-    feed = make_feed(FakeBinance(good()), FakeClock())
+def test_a_feed_refuses_to_start_if_the_replay_lacks_a_pair_an_island_company_needs():
+    with pytest.raises(ReplayError, match="SOLUSDT"):
+        make_feed(FakeBinance(), FakeClock(), (island_company("SOLUSDT"),))
 
-    text = feed.attribution("replay")
 
-    assert "Binance Vision" in text
-    assert "CC BY-NC-SA 4.0" in text
-    assert "play money" in text
+def test_stock_companies_do_not_need_prices_in_the_replay():
+    make_feed(FakeBinance(good_binance_answer()), FakeClock(), ISLANDS + STOCKS)  # raises nothing
+
+
+# --- stock companies: a refresh asks for every stock together ---
+
+
+def test_a_board_look_while_the_market_is_open_asks_for_every_stock_together():
+    server = FakeStockServer()
+    feed, _binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    readings = read(feed)
+
+    assert sorted(server.asked_symbols()) == ["AAPL", "KO", "NVDA"]
+    assert readings[APPLE.id].price == D("271.20")
+    assert readings[NVIDIA.id].price == D("190.10")
+    assert readings[COCA.id].price == D("70.55")
+
+
+def test_the_quote_time_of_a_stock_is_the_time_of_the_provider_not_our_fetch_time():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+
+    reading = read(feed)[APPLE.id]
+
+    assert reading.quoted_at == QUOTED_AT
+    assert reading.fetched_at == clock.now
+    assert reading.source == "live"
+    assert reading.price_mode == "live"
+
+
+def test_the_island_companies_and_the_stocks_are_read_in_one_look():
+    server = FakeStockServer()
+    feed, binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    readings = read(feed)
+
+    assert len(binance.requests) == 1
+    assert readings[BTC.id].price == D("76159.21")
+    assert readings[APPLE.id].price == D("271.20")
+
+
+def test_a_second_board_look_inside_a_minute_asks_the_provider_nothing():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    clock.advance(59)
+    readings = read(feed)
+
+    assert readings[APPLE.id].source == "cache"
+    assert len(server.requests) == 3
+
+
+def test_after_a_minute_the_next_board_look_asks_the_provider_again():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    clock.advance(60)
+    readings = read(feed)
+
+    assert readings[APPLE.id].source == "live"
+    assert len(server.requests) == 6
+
+
+def test_a_rush_of_players_at_the_same_moment_causes_one_refresh_of_the_stocks():
+    async def hundred_players() -> None:
+        await asyncio.gather(*[feed.read(BOARD_MAX_AGE_SECONDS) for _ in range(100)])
+
+    server = FakeStockServer()
+    feed, _binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    asyncio.run(hundred_players())
+
+    assert len(server.requests) == 3
+
+
+def test_a_stock_trade_refreshes_only_its_own_symbol():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)  # the board looks: three calls
+
+    clock.advance(10)
+    readings = read(feed, TRADE_MAX_AGE_SECONDS, only=APPLE)
+
+    assert list(readings) == [APPLE.id]
+    assert readings[APPLE.id].source == "live"
+    assert server.asked_symbols()[3:] == ["AAPL"]
+
+
+def test_a_stock_trade_inside_five_seconds_uses_the_cache():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    clock.advance(4)
+    readings = read(feed, TRADE_MAX_AGE_SECONDS, only=APPLE)
+
+    assert readings[APPLE.id].source == "cache"
+    assert len(server.requests) == 3
+
+
+def test_a_trade_on_an_island_company_does_not_call_the_stock_provider():
+    server = FakeStockServer()
+    feed, binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    read(feed, TRADE_MAX_AGE_SECONDS, only=BTC)
+
+    assert server.requests == []
+    assert len(binance.requests) == 1
+
+
+def test_a_stock_trade_does_not_call_binance():
+    server = FakeStockServer()
+    feed, binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    read(feed, TRADE_MAX_AGE_SECONDS, only=APPLE)
+
+    assert binance.requests == []
+    assert server.asked_symbols() == ["AAPL"]
+
+
+def test_a_provider_with_a_batch_call_is_asked_with_one_request_for_all_stocks():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    source = StockSource(
+        FakeProvider(batch=True), KEY, transport=httpx.MockTransport(server), clock=clock
+    )
+    feed = make_feed(FakeBinance(good_binance_answer()), clock, ISLANDS + STOCKS, stocks=source)
+
+    read(feed)
+
+    assert len(server.requests) == 1
+    assert sorted(server.asked_symbols()) == ["AAPL", "KO", "NVDA"]
+
+
+def test_a_stock_with_no_quote_is_left_without_a_price_and_not_asked_on_every_look():
+    server = FakeStockServer({"AAPL": "271.20", "NVDA": "190.10"})  # KO is unknown to it
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+
+    first = read(feed)
+    for _ in range(4):
+        clock.advance(10)
+        read(feed)
+
+    assert first[COCA.id] == NO_READING
+    assert first[APPLE.id].price == D("271.20")
+    assert len(server.requests) == 3
+
+
+# --- stock companies: when the call budget is used up ---
+
+
+def test_a_refresh_that_would_go_over_the_budget_is_not_sent_and_the_stock_keeps_its_last_price():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock, budget=CallBudget(3, 60, clock))
+    first = read(feed)  # three calls: the budget is used up
+
+    clock.advance(61)  # the budget is free again after 60 seconds, so this look is fine
+    assert read(feed)[APPLE.id].source == "live"
+    clock.advance(10)
+    readings = read(feed, TRADE_MAX_AGE_SECONDS, only=APPLE)  # one call more would go over
+
+    assert readings[APPLE.id].source == "stale"
+    assert readings[APPLE.id].price == first[APPLE.id].price
+    assert len(server.requests) == 6
+
+
+def test_a_trade_that_needs_a_fresh_stock_price_gets_a_stale_reading_when_the_budget_is_gone():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock, budget=CallBudget(3, 60, clock))
+    read(feed)
+
+    clock.advance(10)
+    reading = read(feed, TRADE_MAX_AGE_SECONDS, only=NVIDIA)[NVIDIA.id]
+
+    assert reading.source == "stale"
+    assert len(server.requests) == 3
+
+
+def test_a_refresh_stopped_by_the_budget_does_not_start_the_30_second_wait():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock, budget=CallBudget(3, 20, clock))
+    read(feed)  # three calls: the budget is used up
+    clock.advance(10)
+    assert read(feed, TRADE_MAX_AGE_SECONDS, only=APPLE)[APPLE.id].source == "stale"  # not sent
+
+    clock.advance(11)  # the three calls have left the window of 20 seconds
+
+    # A failure would have made the source wait until 30 seconds. The budget stop does not.
+    assert read(feed, TRADE_MAX_AGE_SECONDS, only=APPLE)[APPLE.id].source == "live"
+
+
+# --- stock companies: when the provider fails ---
+
+
+def test_a_stock_with_no_price_yet_stays_without_a_price_when_the_provider_fails():
+    server = FakeStockServer()
+    server.status = 429
+    feed, _binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    readings = read(feed)
+
+    assert readings[APPLE.id] == NO_READING
+    assert readings[BTC.id].source == "live"  # Binance is not affected
+
+
+@pytest.mark.parametrize("status", [429, 500, 503])
+def test_after_a_failure_or_a_429_the_stock_source_waits_30_seconds(status):
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    server.status = status
+    read(feed)  # three calls, all fail
+
+    clock.advance(29)
+    read(feed)
+    assert len(server.requests) == 3  # 29 seconds later: too early
+
+    clock.advance(1)
+    server.status = 200
+
+    assert read(feed)[APPLE.id].source == "live"  # 30 seconds later: asked again
+    assert len(server.requests) == 6
+
+
+def test_after_a_good_price_a_failing_provider_leaves_the_old_price_marked_stale():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    first = read(feed)
+
+    server.status = 500
+    clock.advance(61)
+    reading = read(feed)[APPLE.id]
+
+    assert reading.source == "stale"
+    assert reading.price == first[APPLE.id].price
+    assert reading.fetched_at == first[APPLE.id].fetched_at
+
+
+def test_one_failing_stock_call_does_not_lose_the_prices_of_the_others():
+    server = FakeStockServer()
+    server.fail_for = {"NVDA"}
+    feed, _binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+
+    readings = read(feed)
+
+    assert readings[APPLE.id].source == "live"
+    assert readings[NVIDIA.id] == NO_READING
+    assert readings[COCA.id].source == "live"
+
+
+def test_a_failing_binance_does_not_stop_the_stocks():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    source = StockSource(FakeProvider(), KEY, transport=httpx.MockTransport(server), clock=clock)
+    feed = make_feed(FakeBinance(httpx.Response(500)), clock, ISLANDS + STOCKS, stocks=source)
+
+    readings = read(feed)
+
+    assert readings[BTC.id] == NO_READING
+    assert readings[APPLE.id].source == "live"
+
+
+# --- stock companies: while the market is closed ---
+
+
+def test_a_fresh_instance_while_the_market_is_closed_asks_once_to_learn_the_last_price():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_NIGHT)
+    feed, _binance = make_stock_feed(server, clock)
+
+    first = read(feed)
+    clock.advance(3600)
+    second = read(feed)
+    clock.advance(12 * 3600)
+    third = read(feed)
+
+    assert len(server.requests) == 3  # one refresh of three symbols, never again
+    assert first[APPLE.id].source == "live"
+    assert second[APPLE.id].source == "cache"
+    assert third[APPLE.id].source == "cache"
+    assert third[APPLE.id].price == D("271.20")
+
+
+def test_a_price_fetched_after_the_close_is_a_final_price_and_never_stale_however_old_it_gets():
+    server = FakeStockServer()
+    clock = at(FakeClock(), datetime(2026, 11, 6, 22, 0, tzinfo=UTC))  # Friday evening, closed
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    clock.advance(30 * 3600)  # Sunday 04:00 UTC: the market is still closed
+
+    assert read(feed)[APPLE.id].source == "cache"
+    assert len(server.requests) == 3
+
+
+def test_a_price_fetched_less_than_10_minutes_after_the_close_is_asked_for_again():
+    server = FakeStockServer()
+    clock = at(FakeClock(), datetime(2026, 11, 9, 21, 5, tzinfo=UTC))  # 5 minutes after the close
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    clock.advance(30)
+    assert read(feed)[APPLE.id].source == "cache"  # the board asks at most once a minute
+    clock.advance(31)  # 21:06:01: the first price is more than a minute old, but not final yet
+    assert read(feed)[APPLE.id].source == "live"
+    clock.advance(5 * 60)  # 21:11:01: ten minutes have passed since the close
+    assert read(feed)[APPLE.id].source == "live"  # this price is final
+    calls_so_far = len(server.requests)
+    clock.advance(3600)
+
+    assert read(feed)[APPLE.id].source == "cache"
+    assert len(server.requests) == calls_so_far
+
+
+def test_a_price_from_the_open_session_is_asked_for_once_more_after_the_close():
+    server = FakeStockServer()
+    clock = at(FakeClock(), datetime(2026, 11, 9, 20, 59, tzinfo=UTC))  # one minute before closing
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+    assert len(server.requests) == 3
+
+    clock.advance(11 * 60)  # 21:10: closed for ten minutes
+    readings = read(feed)
+
+    assert readings[APPLE.id].source == "live"
+    assert len(server.requests) == 6
+
+
+def test_when_the_provider_fails_after_the_close_the_last_price_is_marked_stale():
+    server = FakeStockServer()
+    clock = at(FakeClock(), datetime(2026, 11, 9, 20, 59, tzinfo=UTC))
+    feed, _binance = make_stock_feed(server, clock)
+    first = read(feed)
+    server.status = 500
+
+    clock.advance(11 * 60)
+    reading = read(feed)[APPLE.id]
+
+    assert reading.source == "stale"  # it was fetched before the close: it may not be final
+    assert reading.price == first[APPLE.id].price
+
+
+def test_on_a_weekend_nothing_is_asked_once_a_final_price_is_held():
+    server = FakeStockServer()
+    clock = at(FakeClock(), datetime(2026, 11, 7, 12, 0, tzinfo=UTC))  # Saturday
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    clock.advance(24 * 3600)
+    read(feed)
+
+    assert len(server.requests) == 3
+
+
+def test_when_the_market_opens_again_the_stocks_are_asked_for_new_prices():
+    server = FakeStockServer()
+    clock = at(FakeClock(), datetime(2026, 11, 7, 12, 0, tzinfo=UTC))  # Saturday
+    feed, _binance = make_stock_feed(server, clock)
+    read(feed)
+
+    at(clock, datetime(2026, 11, 9, 14, 31, tzinfo=UTC))  # Monday, one minute after the opening
+    readings = read(feed)
+
+    assert readings[APPLE.id].source == "live"
+    assert len(server.requests) == 6
+
+
+def test_before_the_calendar_starts_a_stock_is_still_asked_once():
+    server = FakeStockServer()
+    clock = FakeClock()  # 5 Nov 2026: before the calendar (6 Nov), so the market has no hours
+    feed, _binance = make_stock_feed(server, clock)
+
+    read(feed)
+    clock.advance(600)
+    read(feed)
+
+    assert len(server.requests) == 3
+
+
+# --- the stock source is off ---
+
+
+def test_without_a_stock_source_the_stock_companies_have_no_reading_and_no_call_is_made():
+    binance = FakeBinance(good_binance_answer())
+    feed = make_feed(binance, at(FakeClock(), NY_OPEN), ISLANDS + STOCKS)
+
+    readings = read(feed)
+
+    assert readings[APPLE.id] == NO_READING
+    assert readings[BTC.id].source == "live"
+
+
+def test_the_feed_says_which_companies_have_a_price_source():
+    server = FakeStockServer()
+    feed, _binance = make_stock_feed(server, at(FakeClock(), NY_OPEN))
+    without_stocks = make_feed(FakeBinance(), FakeClock(), ISLANDS + STOCKS)
+
+    assert feed.source_is_on(BTC) is True
+    assert feed.source_is_on(APPLE) is True
+    assert feed.source_is_on(stock_company("SAP", "xetra")) is False  # the provider covers "us"
+    assert without_stocks.source_is_on(BTC) is True
+    assert without_stocks.source_is_on(APPLE) is False
+
+
+def test_a_stock_company_whose_market_the_provider_does_not_cover_is_never_asked_for():
+    server = FakeStockServer()
+    clock = at(FakeClock(), NY_OPEN)
+    feed, _binance = make_stock_feed(server, clock)
+    german = stock_company("SAP", "xetra")
+    feed.companies = (*feed.companies, german)
+
+    readings = read(feed)
+
+    assert readings[german.id] == NO_READING
+    assert "SAP" not in server.asked_symbols()
+
+
+# --- how old a reading is, in the words of the clock ---
+
+
+def test_the_reading_of_a_fetch_that_happened_earlier_keeps_its_own_time():
+    clock = FakeClock()
+    feed = make_feed(FakeBinance(good_binance_answer()), clock)
+    started = clock.now
+    read(feed)
+
+    clock.advance(timedelta(minutes=2).total_seconds())
+    reading = read(feed, 1000)[BTC.id]
+
+    assert reading.fetched_at == started
+    assert reading.source == "cache"

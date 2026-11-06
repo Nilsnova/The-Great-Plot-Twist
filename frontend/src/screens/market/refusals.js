@@ -1,0 +1,35 @@
+// Canned refusals for the local fake: the plain words of the server for each code (spec section 8.5),
+// plus the two codes the browser makes itself. Used by: fixtures.js and fake.js. Memory only.
+
+export const REFUSALS = {
+  unauthorized: { status: 401, message: 'Not authenticated.' },
+  feature_off: { status: 404, message: 'The Island Exchange is not open yet.' },
+  no_such_company: { status: 404, message: 'There is no company with that id.' },
+  no_such_position: { status: 404, message: 'You have no position with that id.' },
+  already_applied: { status: 409, message: 'This was already done.' },
+  market_closed: {
+    status: 409,
+    message: 'Apple trades in New York, which is closed now (outside its hours). It opens again on Friday 6 November at 14:30 Lisbon time.',
+  },
+  prices_stale: { status: 409, message: 'The price of Apple is not up to date right now, so trading is paused. Try again in a moment.' },
+  company_unavailable: { status: 409, message: 'Apple cannot be traded right now: its prices are not connected.' },
+  company_delisted: { status: 409, message: 'Greyfathom Salvage was delisted after the Relighting. You can still close your positions in it.' },
+  daily_stake_cap: {
+    status: 409,
+    message: 'You can put at most 2,000 coins into new positions per game day (from 08:00 Lisbon time). You can still use 380 coins today.',
+  },
+  too_many_positions: { status: 409, message: 'You can have at most 20 open positions. Close one first.' },
+  insufficient_funds: { status: 409, message: 'Not enough coins for this trade.' },
+  position_closed: { status: 409, message: 'This position is already closed: you closed it at 12:06 Lisbon time.' },
+  wrong_price_mode: { status: 409, message: 'This position was opened on the live market, so it can only be closed there.' },
+  validation_error: { status: 422, message: 'The request does not fit. Please check it.' },
+  stake_too_small: { status: 422, message: 'A position needs a stake of at least 10 coins.' },
+  stake_too_big: { status: 422, message: 'A position can have a stake of at most 500 coins.' },
+  invalid_transaction: { status: 422, message: 'The wallet refused this coin change. Nothing changed.' },
+  too_many_requests: { status: 429, message: 'You are trading very fast. Wait a few seconds, then try again.', retryAfterSeconds: 7 },
+  database_error: { status: 502, message: 'Something went wrong. Please try again.' },
+  database_not_configured: { status: 503, message: 'The database is not set up on this server.' },
+  market_unavailable: { status: 503, message: 'The Island Exchange is not available right now.' },
+  outcome_unknown: { status: 0, message: 'We could not confirm this. Check your positions before you try again.' },
+  network_error: { status: 0, message: 'Could not reach the Island Exchange. Check your connection and try again.' },
+};

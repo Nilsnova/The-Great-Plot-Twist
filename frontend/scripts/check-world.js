@@ -13,10 +13,10 @@ const go = async id => { await page.evaluate(id => window.__island.world.goTo(id
 // The four home plots open the islet panel (package L2) after a lazy import. Close it before
 // dismissIntro looks once, or the panel opens late and swallows the next hotspot's E. The signal
 // station's hotspot opens the finale screen instead, which dismissIntro closes.
-const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal' };
+const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', market_hall: '.market-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
 try {
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await stubIntro(page);await page.goto(env.url + '?market=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));

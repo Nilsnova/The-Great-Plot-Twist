@@ -15,6 +15,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106040000_crew_codes.sql](migrations/20261106040000_crew_codes.sql) | Crew codes, the muster and partners (package A6): three new columns of `crews`, new rules for `crew_seats`, one table and four functions. Run it after the foundation. See [Crew codes, the muster and partners](#crew-codes-the-muster-and-partners-migration-20261106040000-package-a6). |
 | [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | Live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation. It goes live with group 2; the flag `live_presence` stays off until the checks L1 to L7 have passed. See [The live presence migration](#the-live-presence-migration). |
 | [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
+| [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The third migration, for the Island Exchange version 2 (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
 
 ## Project settings this migration relies on
 
@@ -112,30 +113,33 @@ It adds one table (`crew_join_failures`, with row-level security and no policy a
 
 ## The Island Exchange migration
 
-`migrations/20261106010000_island_exchange.sql` is the database part of the Island Exchange (fictional island companies whose play-money prices follow real markets, amplified; see [INTERFACES.md, section 2](../docs/INTERFACES.md#the-island-exchange-package-l4) and decision [D017](../docs/DECISIONS.md)). Run it **after** the foundation migration, because it uses the wallet and the profiles from there. It is safe to run twice. Everything is explained in the file itself.
+`migrations/20261106090000_exchange_leverage.sql` is the database part of the Island Exchange, version 2: real company prices and 10x positions (see [INTERFACES.md, section 2](../docs/INTERFACES.md#the-island-exchange-package-l4), the spec [specs/L4-exchange-v2.md](../specs/L4-exchange-v2.md) and decision [D017](../docs/DECISIONS.md)). Every investment is a **position**: a stake of coins at 10x, rising or falling. If the price moves 10 % against a position, the stake is used up and the position closes by itself at zero. Run it **after** the first two migrations, because it uses the wallet and the profiles from the first and the fee reason `market_fee` from the second. It is safe to run twice. Everything is explained in the file itself.
+
+**It removes the first version of the Exchange.** That version (`market_bases`, `market_positions`, `market_trades`, `market_trade()` and `market_set_base()`) was merged but its file was never applied, so its tables hold no real data. The third migration starts with a **guard**: if the old table `market_trades` holds any row, the file stops with `v1_market_data_present` before it changes anything, and a person decides. Otherwise it drops the old functions and tables. The new tables have new names (`exchange_...`), so dropping an old name can never touch new data, even when the file runs twice. The wallet reasons `market_buy` and `market_sell` stay in the list, unused.
 
 | Name | What it is | Who changes it |
 |---|---|---|
-| `market_bases` | One row per company: the base its game price is measured from (a game price and a real price), and whether trading is paused (`halted_until`, `frozen_price`). A `version` number counts the saves. Every server instance reads the same row, so all agree on the base and on a pause (each instance still works out the price from its own copy of the real prices, so two instances can differ by the age of that copy). | Only the server, through `market_set_base()`. |
-| `market_positions` | One row per player and company the player holds units of. `last_buy_at` is what the 10-minute holding time counts from. The row is deleted when the player sells everything. | Only `market_trade()`. |
-| `market_trades` | The trade history: one row per buy or sell, never edited. The ref (`market:` plus the id the browser made for the click) can be used once per player. | Only `market_trade()`. |
-| `market_trade()` | The only way a trade happens. In one step: check that the numbers add up (see below), lock the player's wallet, refuse a repeated ref, refuse a paused company, check the daily buy cap (a buy) or the units held and the holding time (a sell), move the coins with `apply_wallet_transaction()` (`market_buy` or `market_sell`, plus `market_fee`), change the position, write the trade. It *returns* a refusal such as `{"status": "refused", "reason": "holding_time"}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), or `bad_trade` / `unknown_company` when the server sent numbers that do not add up (a bug on the server side, not something a player can cause). | Run by the server only. |
-| `market_set_base()` | Saves one company's base. The caller says which version it read; the row changes only if it still has that version (0 creates it). Returns the new version, or null if somebody else saved first. | Run by the server only. |
+| `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
+| `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |
+| `exchange_open_position()` | Opens a position. In one step: check that the arguments add up (see below), lock the player's wallet, refuse a repeated ref, refuse more than 20 open positions or more than 2000 coins of new stakes per game day, move the coins with `apply_wallet_transaction()` (`market_stake` and `market_fee`), write the position with its zero point, write the history row. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 380}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `wallet_not_found`, or `bad_trade` when the server sent numbers that do not add up (a bug on the server side, not something a player can cause). | Run by the server only. |
+| `exchange_close_position()` | Closes one position of a player. In one step: check the arguments, lock the wallet, refuse a repeated ref, lock the position by its id **and** its player, refuse a position that is not open or was opened on another price mode, work out the value and the closing fee itself, compare them with the numbers the server sent (`bad_trade` if they differ), pay the value (`market_payout`, only if above 0) and then take the fee (`market_fee`, only if above 0), mark the position closed (or zeroed, if the stake was used up) and write the history row. | Run by the server only. |
+| `exchange_close_used_up()` | The automatic close. Takes a JSON array of prices (`company_id`, `price` as text, `quoted_at`, `mode`) and closes, in **one statement**, every open position of that company and price mode whose zero point a price has reached, if the position was opened **before** the price was quoted. At zero: no coins move, so it uses no wallet, and it writes one `zero` history row per position. Positions that another call is closing right now are skipped (`skip locked`), so two calls never wait for each other, never deadlock and never close one position twice. | Run by the server only. |
 
-A trade writes two ledger rows with the same ref: `market_buy` and `market_fee` for a buy, `market_sell` and `market_fee` for a sell. The ledger accepts each player, reason and ref once, so the same ref is fine for two different reasons.
+An opening writes two ledger rows with the same ref (`market:open:` plus the id the browser made for the click): `market_stake` and `market_fee`. A closing by the player writes `market_payout` (if the value is above 0) and `market_fee` (if the closing fee is above 0), with the ref `market:close:` plus the id of that click. A close at zero moves **0 coins** and the wallet refuses an amount of 0, so it writes no ledger row at all, only an event with the ref `market:zero:` plus the position id. The ledger accepts each player, reason and ref once, so the same ref is fine for two different reasons.
 
-The price rules (the multiplier, the floor and ceiling, the 30 % breaker, the daily re-base) are **Python** (`backend/server/market/rules.py`). The database stores their state and enforces what depends on a player's earlier trades, because only the database can see two requests at the same moment: the daily buy cap, the units held and the holding time are passed to `market_trade()` as arguments, so the numbers live in one place (`backend/server/market/trade_rules.py`).
+**Nobody can be left below zero.** The stake and the opening fee leave the wallet in the same transaction that creates the position, through `apply_wallet_transaction()`, which refuses a balance below 0. From then on a position can only *pay* coins into a wallet, never take them out: the value is never negative, and the closing fee is never more than the value. So the most a player can lose on one position is the stake plus the opening fee, however late the automatic close runs, and a gap past the zero point is still worth 0.
 
-**The database also checks the arithmetic of a trade, so it stays right even if the Python has a bug.** The price itself is an input from the server, like the amount of a wallet change: the database does not repeat the price rules. But everything that follows from the price, it recomputes. `market_trade()` refuses the trade with `bad_trade` (and changes nothing) when:
+The price rules (where the prices come from, when a stock market is open, what a company shows) are **Python** (`backend/server/market/`). The database stores the positions and enforces what depends on a player's earlier actions, because only the database can see two requests at the same moment: the stake range, the daily cap and the open-position limit are passed to `exchange_open_position()` as arguments, so the numbers live in one place (`backend/server/market/positions.py`).
 
-- the coins for the shares are not the units times the price, rounded **up** for a buy and **down** for a sell,
-- the fee is not the fee rate (`p_fee_basis_points`, 200 = 2 %) of those coins, rounded up (so a fee of 0 is refused),
-- a **purchase** is worth more than `p_max_buy_coins` (500). A sale has no upper limit, so a player can always sell what they hold,
-- the start of the market day is more than a minute in the future (the daily cap would then count no trades at all).
+**The database also checks the arithmetic, so it stays right even if the Python has a bug.** The price itself is an input from the server, like the amount of a wallet change. But everything that follows from the price, the database recomputes:
 
-It refuses a company that has no row in `market_bases` with `unknown_company` (the server saves a base for every company before it trades).
+- `exchange_open_position()` refuses (`bad_trade`, nothing changed) a missing argument, an unknown side or price mode, a price that is not above 0 or has more than 8 decimals, a leverage other than 10, a stake outside `p_min_stake` to `p_max_stake`, a fee rate other than 100 or 200 basis points, a fee that is not the fee rate of the stake rounded **up**, and a start of the game day more than a minute in the future (the daily cap would then count no stakes at all).
+- `exchange_close_position()` works out the value itself: stake x (entry + 10 x move) / entry for a rising position and stake x (entry - 10 x move) / entry for a falling one, with move = price - entry. It multiplies first and takes the whole-number part once, at the very end (`div()`), so it always agrees with Python's `Decimal //`. The value never passes 1,000,000. If the top part is 0 or less, the stake is used up and the value is 0. The closing fee is the fee rate of the stake, rounded up, but never more than the value. If the value or the fee the server sent differ, it refuses with `bad_trade`.
+- `exchange_close_used_up()` refuses (`bad_sweep`) a list that is not an array, an element with other keys than the four known ones, a price that is not above 0 with at most 8 decimals, a quote time that is not a real moment, a mode other than `live` or `replay`, or the same company and mode twice.
 
-It adds three tables, three policies, three rows for `authenticated` and three wallet reasons: see the totals under [Three quick checks after applying](#three-quick-checks-after-applying). Run the Exchange checks (steps E1 to E13) of the manual test plan.
+**Price modes.** A position opened on live prices is stored with `price_mode = 'live'`, one opened on the recorded demo day with `'replay'`. `exchange_close_position()` and `exchange_close_used_up()` only use prices of the position's own mode, so mixing the two on one database can never pay out at a recorded price.
+
+After applying all three migrations, the three quick checks below show **nine** tables (the seven of the first migration and the two new ones) and **nine** policies, and there are **thirteen** wallet reasons. Run the Exchange checks at the end of the manual test plan.
 
 ## The accounts migration (package A2)
 
@@ -389,18 +393,6 @@ The three actors, and the database role behind each:
 | `crew_join_failures` | insert | no access | no access | yes (through `crew_find_by_code()`) |
 | `crew_join_failures` | update | no access | no access | no access |
 | `crew_join_failures` | delete | no access | no access | yes (through `crew_find_by_code()`, rows older than the window) |
-| `market_bases` | read | no access | all rows | yes |
-| `market_bases` | insert | no access | no access | yes [2] (through `market_set_base()`) |
-| `market_bases` | update | no access | no access | yes [2] (through `market_set_base()`) |
-| `market_bases` | delete | no access | no access | no access (a company's base is never deleted) |
-| `market_positions` | read | no access | own rows | yes |
-| `market_positions` | insert | no access | no access | yes [2] (through `market_trade()`) |
-| `market_positions` | update | no access | no access | yes [2] (through `market_trade()`) |
-| `market_positions` | delete | no access | no access | yes [2] (through `market_trade()`, when a player sells everything) |
-| `market_trades` | read | no access | own rows | yes |
-| `market_trades` | insert | no access | no access | yes [2] (through `market_trade()`) |
-| `market_trades` | update | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
-| `market_trades` | delete | no access | no access | no access (same) |
 | `captain_name_rerolls` | read | no access | own row | yes |
 | `captain_name_rerolls` | insert | no access | no access | yes [3] (through `reroll_captain_name()`) |
 | `captain_name_rerolls` | update | no access | no access | no access (a re-roll is final) |
@@ -418,9 +410,19 @@ The three actors, and the database role behind each:
 | `islet_buildings` | update | no access | no access | no access (a building is never changed in this version) |
 | `islet_buildings` | delete | no access | no access | no access (deleted with its player, by cascade) |
 
+| `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
+| `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |
+| `exchange_positions` | read | no access | own rows | yes |
+| `exchange_positions` | insert | no access | no access | yes [2] (through `exchange_open_position()`) |
+| `exchange_positions` | update | no access | no access | yes [2] (through `exchange_close_position()` and `exchange_close_used_up()`) |
+| `exchange_positions` | delete | no access | no access | no access (rows go only with their player, by cascade) |
+| `exchange_events` | read | no access | own rows | yes |
+| `exchange_events` | insert | no access | no access | yes [2] (through the three functions) |
+| `exchange_events` | update, delete | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
+
 [1] The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
-[2] The database lets the server write `market_positions` and add `market_trades` rows directly, and add and change `market_bases` rows directly, because the two functions run with the rights of the server. "Through `market_trade()`" and "through `market_set_base()`" in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of `market_trade()`: the arithmetic, the daily cap, the holding time and the wallet. Only the server holds that right, and the code never writes these tables directly.
+[2] Exchange functions run with server rights. Only those functions may update positions or append events; the Python code never writes these rows directly.
 
 [3] The same holds for the two insert rows of the account and entry kit tables: the database lets the server add a row to `captain_name_rerolls` and to `entry_profiles` directly, because `reroll_captain_name()` and `grant_entry_kit()` run with the rights of their caller. "Through `reroll_captain_name()`" and "through `grant_entry_kit()`" are our rule, not something the database enforces. A direct insert into `captain_name_rerolls` would use up a player's one re-roll without changing their name. A direct insert into `entry_profiles` would store a profile without paying the kit coins, and without the lock that makes two requests of one player run one after the other. The code never writes these tables directly.
 
@@ -445,10 +447,7 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `handle_new_user()` | no access | no access | no access, only the sign-up trigger runs it |
 | `touch_updated_at()` | no access | no access | no access, only the triggers run it |
 | `wallet_transactions_id_seq` (the ledger's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
-| `market_trade()` | no access | no access | yes |
-| `market_set_base()` | no access | no access | yes |
 | `islet_build()` | no access | no access | yes |
-| `market_trades_id_seq` (the trade history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 | `assign_captain_name()` | no access | no access | yes |
 | `reroll_captain_name()` | no access | no access | yes |
 | `save_progress()` | no access | no access | yes |
@@ -477,6 +476,20 @@ The live presence migration adds no table. Its rules are policies on the Realtim
 [7] The server's secret key skips row-level security, so the policies do not limit it. Our rule is that the server only sends crew events (`backend/server/crew_broadcast.py`) and never joins a room. The rights on the table `realtime.messages` itself (the grants) are set by Supabase and not by us; step L2 of the manual test plan reads them.
 
 Supabase's security advisor may warn that a signed-in player can run a `SECURITY DEFINER` function. That is `is_crew_member()`, and it is on purpose. It takes a crew id, compares it with the caller's own id (`auth.uid()`), and returns only true or false. It cannot tell anyone who sits in somebody else's crew.
+
+| `exchange_positions` | insert | no access | no access | yes \*\* (through `exchange_open_position()`) |
+
+| `exchange_positions` | update | no access | no access | yes \*\* (through `exchange_close_position()` and `exchange_close_used_up()`) |
+
+| `exchange_events` | insert | no access | no access | yes \*\* (through the three functions) |
+
+| `exchange_open_position()` | no access | no access | yes |
+
+| `exchange_close_position()` | no access | no access | yes |
+
+| `exchange_close_used_up()` | no access | no access | yes |
+
+| `exchange_events_id_seq` (the event history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 
 ## What the server's secret key may do
 
@@ -1156,215 +1169,243 @@ Finally paste the whole crew migration into the SQL editor again and run it. Exp
 
 Delete the three test users when you are done (**Authentication > Users**). Their crews, seats and wrong codes go with them.
 
-### Island Exchange checks (steps E1 to E13)
+### Island Exchange checks (steps X1 to X15)
 
-These steps test the second migration. Run them after the foundation migration and the Island Exchange migration are both applied. Use **two new test users**, A and B (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID` and `USER_B_ID` with their ids. The trade function takes its limits as arguments, so the blocks below pass them in: a holding time of 600 seconds, a daily cap, the start of the market day (here "one hour ago"), the fee rate in basis points (200 = 2 %) and the most one purchase may be worth (500 coins). The database also checks that the coins and the fee follow from the units and the price, so every number in the blocks below is the right one for its trade.
-
-**E1. A buy.** Give both players 1000 coins and save the base of the company, as the server does before the first trade (`market_trade()` refuses a company that has no base). Then player A buys 5 units at 12.34. The shares cost 5 x 12.34 = 61.70, rounded **up** to 62 coins, and the fee is 2 % of 62 = 1.24, rounded up to 2.
+These steps test the third migration (the Island Exchange version 2). Run them after all three migrations are applied. Use **two new test users**, A and B (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID` and `USER_B_ID` with their ids. Give player A 1000 coins and player B 150 coins first (default role):
 
 ```sql
-set local role service_role;
 select public.apply_wallet_transaction('USER_A_ID', 1000, 'kit_grant', 'exchange-kit') as a_balance,
-       public.apply_wallet_transaction('USER_B_ID', 1000, 'kit_grant', 'exchange-kit') as b_balance,
-       public.market_set_base('harbor-trust', 60.00, 76159.21, now(), 'live', null, null, 0) as harbor_trust_base;
+       public.apply_wallet_transaction('USER_B_ID', 150, 'kit_grant', 'exchange-kit') as b_balance;
 ```
 
-Expected: `a_balance` and `b_balance` are 1000, and `harbor_trust_base` is 1 (the first version of the row). Now the buy (a new run):
+The functions take their limits as arguments, so the blocks below pass them in. `exchange_open_position(player, company, side, price mode, entry price, leverage, stake, fee, fee rate in basis points, ref, least stake, most stake, daily cap, start of the game day, most open positions)` always gets leverage 10, a fee rate of 200 (2 %), a least stake of 10, a most stake of 500, a daily cap of 2000, "one hour ago" as the start of the game day and a limit of 20 open positions, unless a step says otherwise. `exchange_close_position(player, position id, price mode, closing price, value, fee, fee rate, ref)` gets the value and the fee the server would work out: the database recomputes them and refuses other numbers. A company is just text here (the server checks it against `companies.json`). All blocks run as the server:
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 5, 12.34, 62, 2, 'market:manual-1', 600, 2000, now() - interval '1 hour', 200, 500) as result;
 ```
 
-Expected: `result` has `status` `done`, `balance` 936, `unitsAfter` 5, `avgPrice` 12.34 and a `tradeId`. We call the next block the **Exchange check** and use it again below (default role):
+We call this block the **Exchange check** and use it again below (default role, replace the player):
 
 ```sql
 select w.balance,
-       (select units from public.market_positions p where p.player_id = w.player_id and p.company_id = 'harbor-trust') as units,
-       (select count(*) from public.market_trades t where t.player_id = w.player_id) as trades,
-       (select string_agg(t.reason || ' ' || t.delta, ', ' order by t.id) from public.wallet_transactions t where t.player_id = w.player_id and t.ref = 'market:manual-1') as ledger
-from public.wallets w
-where w.player_id = 'USER_A_ID';
+       (select count(*) from public.exchange_positions p where p.player_id = w.player_id and p.status = 'open') as open_positions,
+       (select count(*) from public.exchange_events e where e.player_id = w.player_id) as events,
+       (select string_agg(t.reason || ' ' || t.delta, ', ' order by t.id) from public.wallet_transactions t where t.player_id = w.player_id and t.ref like 'market:%') as ledger
+  from public.wallets w
+ where w.player_id = 'USER_A_ID';
 ```
 
-Expected: `balance` 936, `units` 5, `trades` 1 and `ledger` `market_buy -62, market_fee -2` (two ledger rows with the same ref).
-
-**E2. Selling too early is refused.** The holding time counts from the latest purchase.
+**X1. Open a rising position.** Player A puts 100 coins into Saltreach Harbor Trust at 76,000.00. The fee is 2 % of 100 = 2. The zero point of a rising position is 90 % of the entry price: 68,400.00.
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'sell', 2, 15.00, 30, 1, 'market:manual-2', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 76000.00, 10, 100, 2, 200, 'market:open:manual-1', 10, 500, 2000, now() - interval '1 hour', 20) as result;
 ```
 
-Expected: `status` `refused`, `reason` `holding_time`, and `waitSeconds` about 600 (a little less, the longer you waited after the buy). Nothing changed: the Exchange check still shows 936, 5, 1.
+Expected: `status` `done`, `zeroPrice` 68400 and `balance` 898. The Exchange check shows `balance` 898, `open_positions` 1, `events` 1 and `ledger` `market_stake -100, market_fee -2` (two ledger rows with the same ref).
 
-**E3. A sale after 10 minutes.** Pretend the 10 minutes have passed (default role), then sell 2 units at 15.00. The shares bring 2 x 15 = 30 coins, and the fee is 2 % of 30 = 0.6, rounded up to 1.
+**X2. The same ref twice changes nothing.** Run the block of X1 again with the same ref `market:open:manual-1`. Expected: an error, message `already_applied` (error code `23505`, the same code as a repeated wallet ref). The Exchange check still shows 898, 1, 1.
 
-```sql
-update public.market_positions set last_buy_at = now() - interval '11 minutes' where player_id = 'USER_A_ID';
-```
+**X3. Open a falling position.** Player A puts 50 coins into Pier Post Courier at 200.00. The fee is 2 % of 50 = 1. The zero point of a falling position is 110 % of the entry price:
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'sell', 2, 15.00, 30, 1, 'market:manual-3', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_open_position('USER_A_ID', 'pier-post-courier', 'falling', 'live', 200.00, 10, 50, 1, 200, 'market:open:manual-3', 10, 500, 2000, now() - interval '1 hour', 20) as result;
 ```
 
-Expected: `status` `done`, `balance` 965 (936 + 30 - 1), `unitsAfter` 3, `avgPrice` 12.34 (a sale does not change the average price). The Exchange check: 965, 3, 2 trades.
+Expected: `done`, `zeroPrice` 220 and `balance` 847.
 
-**E4. Selling more than you hold is refused.**
+**X4. Close the first position at a profit.** The price rose 2 % to 77,520.00, so the position gained 20 % of its stake: it is worth 120 coins. The closing fee is 2 % of the stake, 2. The player receives 118.
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'sell', 4, 15.00, 60, 2, 'market:manual-4', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_close_position('USER_A_ID', (select id from public.exchange_positions where open_ref = 'market:open:manual-1'), 'live', 77520.00, 120, 2, 200, 'market:close:manual-4') as result;
 ```
 
-Expected: `status` `refused`, `reason` `not_enough_units`, `unitsHeld` 3.
+Expected: `done`, `closedAs` `closed`, `value` 120, `fee` 2, `coinsChange` 118 and `balance` 965. The Exchange check shows 965, 1 open position, 3 events and a ledger that ends with `market_payout 120, market_fee -2`.
 
-**E5. The same ref twice changes nothing.** Run the buy of E1 again, with the same ref `market:manual-1`:
+**X5. Closing again is refused.** Run X4 again with a new ref (`market:close:manual-5`). Expected: no error, but `status` `refused`, `reason` `position_closed`, `closedAs` `closed` and a `closedAt` time. Nothing changed: the Exchange check still shows 965.
+
+**X6. The automatic close at zero.** A price of 221.00 for Pier Post Courier is beyond the zero point (220.00) of the falling position of X3. The prices list has one price: the company, the price as text, when it was quoted and the price mode. The automatic close only closes positions that were opened *before* the price was quoted.
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 5, 12.34, 62, 2, 'market:manual-1', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_close_used_up(
+  jsonb_build_array(jsonb_build_object('company_id', 'pier-post-courier', 'price', '221.00', 'quoted_at', now(), 'mode', 'live')),
+  null) as result;
 ```
 
-Expected: an error, message `already_applied` (error code `23505`, the same code as a repeated wallet ref). The Exchange check is still 965, 3, 2.
+Expected: `closed` 1 and `positionIds` with the id of the position of X3. That position is now `zeroed` with `close_value` 0 and `close_fee` 0 (look at it with `select status, close_value, close_fee, close_ref from public.exchange_positions where open_ref = 'market:open:manual-3';`, the `close_ref` is `market:zero:` plus its id). The player lost the stake and the opening fee, nothing more, and **no ledger row** was written: the Exchange check still shows `balance` 965 and the same ledger, with one more event (4 in all, a `zero` event).
 
-**E6. Not enough coins.** Player B has 1000 coins and tries to buy shares worth 1234. The block raises the daily cap and the limit of one purchase to 5000, so that the wallet is what says no:
+**X7. A gap past the zero point.** A rising position at 50.00 has its zero point at 45.00. The price jumps from 50.00 to 30.00, far past it. The position is worth 0, never below.
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_B_ID', 'harbor-trust', 'buy', 100, 12.34, 1234, 25, 'market:manual-5', 600, 5000, now() - interval '1 hour', 200, 5000) as result;
+select public.exchange_open_position('USER_A_ID', 'swiftwater-ferries', 'rising', 'live', 50.00, 10, 100, 2, 200, 'market:open:manual-7', 10, 500, 2000, now() - interval '1 hour', 20) as result;
 ```
 
-Expected: an error `insufficient_funds`. B still has 1000 coins and no position (run the Exchange check with `USER_B_ID`: `balance` 1000, `units` empty, `trades` 0).
-
-**E7. The daily buy cap.** Player A has bought 62 coins of shares today. With a cap of 80, one more buy of 30 would make 92:
+Expected: `done`, `balance` 863. Then (a new run):
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 3, 10.00, 30, 1, 'market:manual-6', 600, 80, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_close_used_up(
+  jsonb_build_array(jsonb_build_object('company_id', 'swiftwater-ferries', 'price', '30.00', 'quoted_at', now(), 'mode', 'live')),
+  null) as result;
 ```
 
-Expected: `status` `refused`, `reason` `daily_cap`, `coinsLeft` 18.
+Expected: `closed` 1. The position is `zeroed`, and the Exchange check shows `balance` 863 (unchanged by the sweep).
 
-**E8. A paused company.** The server saves a pause with `market_set_base()` (the first number after the name is the game price, then the real price, the time, the source, the end of the pause and the frozen price; the last 0 means "no row yet"):
+**X8. A player closes a position that is used up.** Player A opens another rising position at 50.00 (company `tidewright-works`):
 
 ```sql
 set local role service_role;
-select public.market_set_base('swiftwater-ferries', 24.00, 100.50, now(), 'live', now() + interval '15 minutes', 31.20, 0) as version;
+select public.exchange_open_position('USER_A_ID', 'tidewright-works', 'rising', 'live', 50.00, 10, 100, 2, 200, 'market:open:manual-8', 10, 500, 2000, now() - interval '1 hour', 20) as result;
 ```
 
-Expected: `version` 1. Now player B tries to buy that company:
+Expected: `done`, `balance` 761. Now the price is 40.00, past the zero point (45.00), so the value is 0 and the fee is 0 (a new run):
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_B_ID', 'swiftwater-ferries', 'buy', 1, 31.20, 32, 1, 'market:manual-7', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_close_position('USER_A_ID', (select id from public.exchange_positions where open_ref = 'market:open:manual-8'), 'live', 40.00, 0, 0, 200, 'market:close:manual-8') as result;
 ```
 
-Expected: `status` `refused`, `reason` `halted`. End the pause (default role) and try again with a new ref:
+Expected: `done`, `closedAs` `zeroed`, `value` 0, `fee` 0, `coinsChange` 0 and `balance` 761. No ledger row for this ref, only an event.
 
-```sql
-update public.market_bases set halted_until = now() - interval '1 second' where company_id = 'swiftwater-ferries';
-```
+**X9. The daily cap.** Player B (150 coins) opens 100 coins with a daily cap of 150, which fits (the cost is 102 with the fee). Then B tries 100 coins again with the same cap:
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_B_ID', 'swiftwater-ferries', 'buy', 1, 31.20, 32, 1, 'market:manual-8', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_open_position('USER_B_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 100, 2, 200, 'market:open:manual-9a', 10, 500, 150, now() - interval '1 hour', 20) as first_open;
 ```
 
-Expected: `status` `done`, `balance` 967 (1000 - 32 - 1).
-
-**E9. Two servers saving the same base.** The caller passes the version it read. Only the right version wins:
+Expected: `done`, `balance` 48. Then (a new run):
 
 ```sql
 set local role service_role;
-select public.market_set_base('swiftwater-ferries', 24.00, 100.50, now(), 'live', null, null, 0) as create_again,
-       public.market_set_base('swiftwater-ferries', 24.00, 101.00, now(), 'live', null, null, 1) as right_version,
-       public.market_set_base('swiftwater-ferries', 24.00, 102.00, now(), 'live', null, null, 1) as old_version;
+select public.exchange_open_position('USER_B_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 100, 2, 200, 'market:open:manual-9b', 10, 500, 150, now() - interval '1 hour', 20) as second_open;
 ```
 
-Expected: `create_again` is empty (null: the row exists), `right_version` is 2, `old_version` is empty (the version is 2 now).
+Expected: `status` `refused`, `reason` `daily_cap` and `coinsLeft` 50. Nothing changed (run the Exchange check with `USER_B_ID`: 48 coins, 1 open position, 1 event).
 
-**E10. Players see only their own trades and positions.**
-
-```sql
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-select (select count(*) from public.market_positions) as positions_seen,
-       (select count(*) from public.market_trades) as trades_seen,
-       (select count(*) from public.market_trades where player_id = 'USER_B_ID') as b_trades_seen,
-       (select count(*) from public.market_bases) as bases_seen;
-```
-
-Expected: `positions_seen` 1, `trades_seen` 2, `b_trades_seen` 0 and `bases_seen` 2 (every signed-in player may read the company bases; there are two rows so far, harbor-trust from E1 and swiftwater-ferries from E8, and there are 7 once the server has shown the price board).
-
-**E11. Players cannot write, and a visitor gets nothing.** Each statement fails with `permission denied`:
-
-```sql
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
-update public.market_positions set units = 1000000 where player_id = 'USER_A_ID';
-```
-
-Expected: `permission denied for table market_positions`. Now replace the last line and run again. Each one fails the same way:
-
-| Statement as player A | Expected error mentions |
-|---|---|
-| `insert into public.market_trades (player_id, company_id, side, units, price, gross, fee, ref) values ('USER_A_ID', 'harbor-trust', 'sell', 1, 1, 1, 0, 'x');` | `permission denied for table market_trades` |
-| `update public.market_bases set base_game_price = 1000;` | `permission denied for table market_bases` |
-| `delete from public.market_trades where player_id = 'USER_A_ID';` | `permission denied for table market_trades` |
-| `select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 1, 1, 1, 0, 'x', 0, 100, now(), 200, 500);` | `permission denied for function market_trade` |
-| `select public.market_set_base('harbor-trust', 1, 1, now(), 'live', null, null, 0);` | `permission denied for function market_set_base` |
-
-Change the first line to `set local role anon;` (and drop the `set_config` line) and run `select * from public.market_positions;`, then the same for `market_trades` and `market_bases`. Expected: `permission denied for table ...` each time. Even the server cannot edit the history:
+**X10. The open-position limit.** Player B tries again with a limit of 1 open position (the last argument), and a daily cap that is high enough:
 
 ```sql
 set local role service_role;
-update public.market_trades set gross = 1 where player_id = 'USER_A_ID';
+select public.exchange_open_position('USER_B_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 10, 1, 200, 'market:open:manual-10', 10, 500, 2000, now() - interval '1 hour', 1) as result;
 ```
 
-Expected: `permission denied for table market_trades`.
+Expected: `status` `refused`, `reason` `too_many_positions` and `openCount` 1.
 
-**E12. The database checks the arithmetic.** The server works out the coins of a trade. The database recomputes them, so it stays right even if the server has a bug. Each statement below is refused, as the server (role `service_role`) with the error in the right column, and changes nothing. Put `set local role service_role;` in front of each, run it, and then run the Exchange check: it still shows 965, 3 and 2.
+**X11. Not enough coins.** Player B has 48 coins and a position costs 102:
 
-| Statement | Why it is wrong | Expected error |
+```sql
+set local role service_role;
+select public.exchange_open_position('USER_B_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 100, 2, 200, 'market:open:manual-11', 10, 500, 2000, now() - interval '1 hour', 20) as result;
+```
+
+Expected: an error `insufficient_funds`. Nothing changed: B still has 48 coins, 1 open position and 1 event.
+
+**X12. The database checks the arithmetic.** The server works out the fee, the value and the closing fee. The database recomputes them, so it stays right even if the server has a bug. Each statement is refused with the error `bad_trade` and changes nothing. Put `set local role service_role;` in front of each, run it, and then run the Exchange check for player A: it shows what it showed after X8.
+
+| Statement | What is wrong | Expected |
 |---|---|---|
-| `select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 5, 12.34, 61, 2, 'market:manual-9', 600, 2000, now() - interval '1 hour', 200, 500);` | 5 x 12.34 = 61.70 must be rounded **up** to 62 for a buy | `bad_trade` |
-| `select public.market_trade('USER_A_ID', 'harbor-trust', 'sell', 1, 0.01, 400, 8, 'market:manual-9', 600, 2000, now() - interval '1 hour', 200, 500);` | the coins have nothing to do with the price | `bad_trade` |
-| `select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 5, 12.34, 62, 0, 'market:manual-9', 600, 2000, now() - interval '1 hour', 200, 500);` | a fee of 0: it must be 2 % of 62, rounded up, which is 2 | `bad_trade` |
-| `select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 501, 1.00, 501, 11, 'market:manual-9', 600, 5000, now() - interval '1 hour', 200, 500);` | a purchase worth 501 coins, over the limit of 500 | `bad_trade` |
-| `select public.market_trade('USER_A_ID', 'harbor-trust', 'buy', 1, 1.00, 1, 1, 'market:manual-9', 600, 2000, now() + interval '1 day', 200, 500);` | the market day starts tomorrow, so the daily cap would count nothing | `bad_trade` |
-| `select public.market_trade('USER_A_ID', 'no-such-company', 'buy', 1, 1.00, 1, 1, 'market:manual-9', 600, 2000, now() - interval '1 hour', 200, 500);` | the company has no base | `unknown_company` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 100, 1, 200, 'market:open:manual-12', 10, 500, 2000, now() - interval '1 hour', 20);` | the fee of 100 coins at 2 % is 2, not 1 | `bad_trade` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 100, 3, 300, 'market:open:manual-12', 10, 500, 2000, now() - interval '1 hour', 20);` | a fee rate of 300 basis points does not exist (only 200 and 100) | `bad_trade` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 501, 11, 200, 'market:open:manual-12', 10, 500, 2000, now() - interval '1 hour', 20);` | a stake of 501 with a most stake of 500 | `bad_trade` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 1.123456789, 10, 100, 2, 200, 'market:open:manual-12', 10, 500, 2000, now() - interval '1 hour', 20);` | a price with 9 decimals | `bad_trade` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 100.00, 10, 100, 2, 200, 'market:open:manual-12', 10, 500, 2000, now() + interval '1 day', 20);` | the game day starts tomorrow, so the daily cap would count nothing | `bad_trade` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 100.00, 3, 100, 2, 200, 'market:open:manual-12', 10, 500, 2000, now() - interval '1 hour', 20);` | a leverage of 3 (it is always 10) | `bad_trade` |
 
-A sale has no upper limit, because a price can rise until a few units are worth more than a purchase may be. Run this with player A's remaining 3 units, after the holding time (default role first):
-
-```sql
-update public.market_positions set last_buy_at = now() - interval '11 minutes' where player_id = 'USER_A_ID';
-```
+The same for a closing. First open a position (company `market-hall-guild`, entry price 100.00, 100 coins):
 
 ```sql
 set local role service_role;
-select public.market_trade('USER_A_ID', 'harbor-trust', 'sell', 3, 400.00, 1200, 24, 'market:manual-10', 600, 2000, now() - interval '1 hour', 200, 500) as result;
+select public.exchange_open_position('USER_A_ID', 'market-hall-guild', 'rising', 'live', 100.00, 10, 100, 2, 200, 'market:open:manual-12a', 10, 500, 2000, now() - interval '1 hour', 20) as result;
 ```
 
-Expected: `status` `done`, `balance` 2141 (965 + 1200 - 24) and `unitsAfter` 0: a sale worth 1200 coins is fine, although a purchase over 500 is refused. The Exchange check now shows 2141, no units and 3 trades.
+Expected: `done`. At a price of 110.00 (+10 %) the position is worth 200 coins and the closing fee is 2. Each of these statements is refused with `bad_trade`:
 
-**E13. The reasons, and running the migration again.** The three new reasons are in the list (default role):
+| Statement | What is wrong | Expected |
+|---|---|---|
+| `select public.exchange_close_position('USER_A_ID', (select id from public.exchange_positions where open_ref = 'market:open:manual-12a'), 'live', 110.00, 999, 2, 200, 'market:close:manual-12');` | the value is 200, not 999 | `bad_trade` |
+| `select public.exchange_close_position('USER_A_ID', (select id from public.exchange_positions where open_ref = 'market:open:manual-12a'), 'live', 110.00, 200, 3, 200, 'market:close:manual-12');` | the closing fee is 2, not 3 | `bad_trade` |
+| `select public.exchange_close_position('USER_A_ID', (select id from public.exchange_positions where open_ref = 'market:open:manual-12a'), 'live', 110.123456789, 200, 2, 200, 'market:close:manual-12');` | a price with 9 decimals | `bad_trade` |
+
+**X13. Rights.** A signed-in player reads only their own positions and events and cannot write. A visitor gets nothing. Players cannot run the functions. Even the server cannot edit or delete the history. Run this as player A (replace `USER_A_ID` twice):
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select (select count(*) from public.exchange_positions) as positions_seen,
+       (select count(*) from public.exchange_events) as events_seen,
+       (select count(*) from public.exchange_positions where player_id = 'USER_B_ID') as b_positions_seen;
+update public.exchange_positions set stake = 1000000 where player_id = 'USER_A_ID';
+```
+
+Expected: `positions_seen` 5 and `events_seen` 9 (the positions of X1, X3, X7, X8 and X12 with their events, if you ran every step), `b_positions_seen` 0 (B has one position, but A may not see it). The last line fails with `permission denied for table exchange_positions`. Now replace the last line and run again. Each one fails the same way:
+
+| Statement (as player A, then as `anon`) | Expected |
+|---|---|
+| `insert into public.exchange_positions (player_id, company_id, side, price_mode, leverage, stake, entry_price, zero_price, open_fee, open_ref) values ('USER_A_ID', 'harbor-trust', 'rising', 'live', 10, 1, 1, 0.9, 1, 'x');` | `permission denied for table exchange_positions` |
+| `delete from public.exchange_positions where player_id = 'USER_A_ID';` | `permission denied for table exchange_positions` |
+| `update public.exchange_events set price = 1;` | `permission denied for table exchange_events` |
+| `delete from public.exchange_events where player_id = 'USER_A_ID';` | `permission denied for table exchange_events` |
+| `select public.exchange_open_position('USER_A_ID', 'harbor-trust', 'rising', 'live', 1.00, 10, 100, 2, 200, 'x', 10, 500, 2000, now(), 20);` | `permission denied for function exchange_open_position` |
+| `select public.exchange_close_position('USER_A_ID', '00000000-0000-0000-0000-000000000000', 'live', 1.00, 0, 0, 200, 'x');` | `permission denied for function exchange_close_position` |
+| `select public.exchange_close_used_up('[]'::jsonb, null);` | `permission denied for function exchange_close_used_up` |
+| `select nextval('public.exchange_events_id_seq');` | `permission denied for sequence exchange_events_id_seq` |
+
+Change the first line to `set local role anon;` (and drop the `set_config` line) and run `select * from public.exchange_positions;`, then the same for `exchange_events`. Expected: `permission denied for table ...` each time. Even the server cannot edit or delete the history, or delete a position:
+
+```sql
+set local role service_role;
+update public.exchange_events set price = 1 where player_id = 'USER_A_ID';
+```
+
+Expected: `permission denied for table exchange_events`. The same for `delete from public.exchange_events ...` and `delete from public.exchange_positions ...`.
+
+**X14. Price modes.** A position opened on live prices can only be closed with live prices. Open a live position for player B (10 coins, entry price 100.00, fee 1; B has 48 coins):
+
+```sql
+set local role service_role;
+select public.exchange_open_position('USER_B_ID', 'tesla', 'rising', 'live', 100.00, 10, 10, 1, 200, 'market:open:manual-14', 10, 500, 2000, now() - interval '1 hour', 20) as result;
+```
+
+Expected: `done`. Now try to close it with prices of the recorded day (mode `replay`):
+
+```sql
+set local role service_role;
+select public.exchange_close_position('USER_B_ID', (select id from public.exchange_positions where open_ref = 'market:open:manual-14'), 'replay', 110.00, 20, 1, 200, 'market:close:manual-14') as result;
+```
+
+Expected: `status` `refused`, `reason` `wrong_price_mode`. A sweep with prices of the recorded day (mode `replay`) skips the live position even at a price far past its zero point:
+
+```sql
+set local role service_role;
+select public.exchange_close_used_up(
+  jsonb_build_array(jsonb_build_object('company_id', 'tesla', 'price', '50.00', 'quoted_at', now(), 'mode', 'replay')),
+  null) as result;
+```
+
+Expected: `closed` 0 and an empty `positionIds`. The position is still open.
+
+**X15. The reasons, and running the migration again.** The two new reasons are in the list (default role):
 
 ```sql
 select reason, direction from public.wallet_reasons where reason like 'market\_%' order by reason;
+select count(*) from public.wallet_reasons;
 ```
 
-Expected: 3 rows: `market_buy` spend, `market_fee` spend, `market_sell` earn. The wallet refuses a wrong direction, for example a purchase that adds coins:
+Expected: 5 rows: `market_buy` spend, `market_fee` spend, `market_payout` earn, `market_sell` earn, `market_stake` spend. And 13 reasons in all. The wallet refuses a wrong direction, for example a stake that adds coins:
 
 ```sql
 set local role service_role;
-select public.apply_wallet_transaction('USER_A_ID', 10, 'market_buy', 'manual-wrong-1');
+select public.apply_wallet_transaction('USER_A_ID', 10, 'market_stake', 'manual-wrong-1');
 ```
 
-Expected: `wrong_direction`. Finally paste the whole Island Exchange migration into the SQL editor again and run it. Expected: no error, the Exchange check for player A still shows what it showed after E12 (`balance` 2141, no units, 3 trades), and `select count(*) from public.wallet_reasons;` still shows 11.
+Expected: `wrong_direction`. Finally paste the whole third migration (`20261106090000_exchange_leverage.sql`) into the SQL editor again and run it. Expected: no error, the Exchange check for player A shows what it showed after X12, and `select count(*) from public.wallet_reasons;` still shows 13. (The file starts with a guard that only looks at the old first-version table `market_trades`, which no longer exists, so it does nothing the second time.)
 
-Delete the two test users when you are done (**Authentication > Users**). Their positions and trades go with them.
+Delete the two test users when you are done (**Authentication > Users**). Their positions and events go with them.
 
 ### Account checks (steps N1 to N6)
 
