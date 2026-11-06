@@ -1,8 +1,8 @@
 """Offline economy rehearsal. Run from backend: python -m tools.economy.simulate.
 
 Uses real spot rules and the public Binance Vision replay (CC BY-NC-SA 4.0).
-No network, .env, credentials or story text is loaded or printed. Future rules
-are explicitly separated from executable-main results.
+No network, .env or credentials are used. Only numeric case economics are
+returned or printed. Future rules are separate from executable-main results.
 """
 
 import argparse
