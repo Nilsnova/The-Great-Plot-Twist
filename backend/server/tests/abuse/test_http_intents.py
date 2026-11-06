@@ -67,8 +67,20 @@ def test_every_personal_intent_rejects_signed_out_and_forged_tokens(method, path
     assert seen == []
 
 
-@pytest.mark.parametrize("token", ["a", "a.b", "a.b.c.d", "a" * 4096])
-def test_malformed_tokens_are_verified_and_never_accepted_locally(token):
+@pytest.mark.parametrize(
+    "token,upstream_calls",
+    [
+        pytest.param("a", 0, id="one-part"),
+        pytest.param("a.b", 0, id="two-parts"),
+        pytest.param("a.b.c.d", 0, id="four-parts"),
+        pytest.param("a" * 4096, 0, id="bounded-malformed"),
+        pytest.param("a.b.c", 1, id="forged-three-parts"),
+        pytest.param("a" * 4092 + ".b.c", 1, id="forged-at-length-boundary"),
+    ],
+)
+def test_bad_shapes_stop_locally_and_forged_tokens_need_upstream_verification(
+    token, upstream_calls
+):
     seen = []
 
     def reject(request):
@@ -79,7 +91,7 @@ def test_malformed_tokens_are_verified_and_never_accepted_locally(token):
     client = TestClient(create_app(CONFIGURED_SETTINGS, verifier=verifier))
     response = client.get("/api/save", headers={"Authorization": f"Bearer {token}"})
     assert_error(response, 401, "unauthorized")
-    assert len(seen) == 1  # actual verification, never local JWT-decoding as authentication
+    assert len(seen) == upstream_calls  # Valid shape still needs real authentication.
 
 
 @pytest.mark.parametrize(
