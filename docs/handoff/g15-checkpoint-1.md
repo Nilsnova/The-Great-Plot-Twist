@@ -7,7 +7,10 @@
 - Fixed-host football-data.org v4 and balldontlie NBA v1 adapters; injected HTTP fakes only in tests.
 - Settings: `SPORTS_API_PROVIDER`, redacted `SPORTS_API_KEY`; either empty means no live adapter.
 - Sports flag off or demo mode also prevents provider requests; no routes or wallet writes added yet.
-- L5 inspected read-only at `e90a620`; reuse its generic pools/caps once group 3 lands on main.
+- L5 `e90a620`, Exchange v2 `4d5aa5b`, A7 `8af962b` inspected through their remote refs, read-only.
+- Against L5's actual pure modules: 403 sports/pool cases passed; caps and Lisbon midnight checked.
+- Reuse L5: 1–50 coins, 200/day at Lisbon midnight, 5% of losing stakes; L4/A7 rules differ.
+- L5 pool Python supports three outcomes; its SQL only accepts YES/NO, so sports needs atomic SQL.
 - Gates: backend 3,172 passed; Ruff passed; frontend 288 passed; build/spoiler guard passed.
 - Secret gate: Gitleaks 8.24.3 on `git diff origin/main...HEAD`, zero findings (pipefail enabled).
 - No migration yet; reserved `20261106180000_sports_desk.sql` MD5: N/A (not created).
@@ -18,6 +21,8 @@
 - Optional NBA later: `SPORTS_API_PROVIDER=balldontlie`; its matching server-only key; never any `VITE_` key.
 - Preserve other flags; append `sports` only when Nils enables the completed feature. No Vercel config file changes.
 - Not verified: authenticated live APIs; NBA date-only answers fail closed; no account/key requested.
-- Blocker: latest fetched main has no `backend/server/predictions/` or L5 screen; checkpoints 2–3 await its merge.
+- Next baseline: check `integrate/group3` when available, without merging any feature branch.
+- Merge only `origin/main` once it contains `supabase/migrations/20261106100000_prediction_desk.sql`; rerun gates then.
+- Main `60f7fd0` still lacks that migration; `integrate/group3` was not advertised at the latest check.
 - Remaining: atomic routes/settlement/migration, scratch-Postgres tests, tavern UI and presenter rehearsal.
 - No live Supabase, private .env or secrets accessed; protected status/decision/deployment files untouched.
