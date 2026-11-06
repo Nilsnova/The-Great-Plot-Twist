@@ -19,6 +19,25 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
 | [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 
+## G10 follow-up migration (140000)
+
+`migrations/20261106140000_followups.sql` replaces `delete_player(uuid)` without adding tables, policies, wallet reasons or public functions. It advances each affected crew's version once when account deletion hands over ownership or frees a seat, preserves the lowest-seat successor, and records D018's own-kit rule in the column comment. Prior migration files remain unchanged. Only `service_role` may execute the function, as before.
+
+Nils authorized Codex to apply this reviewed file before its code release. Its current MD5 is
+`a59dccb2d3447614454f94a37cc3bb40`. The integration fixes the distinct-member deletion race found
+by independent review: it locks all affected crews in UUID order before locking the auth user,
+then performs handover in a separate statement with a fresh snapshot after any wait. This keeps
+same-player retries and concurrent different-member deletions safe. The authored group-1 checks
+and permanent four-scenario concurrency regressions run on disposable PostgreSQL; independent
+review additionally exercises the full case/NPC chain and later-table deletion cascades.
+From `backend/`:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/followups_sql
+```
+
+The extra packages are test-only and do not change project dependencies. Normal pytest runs skip these optional database checks unless `CASE_PG_SCRATCH=1` is set. The follow-up changes no object counts, grants no browser execution and adds no wallet reason. Independent full-chain apply/reapply, restricted-owner ACL checks and 100 concurrent deletion trials passed. Live application and hash/version proof are recorded by the release coordinator.
+
 ## Project settings this migration relies on
 
 Our Supabase project is in West EU (Ireland). These settings were agreed on 5 November 2026:
@@ -2812,7 +2831,7 @@ Delete the three test users when you are done (**Authentication > Users**). Thei
 The complete ten-file chain applies twice on a new local PostgreSQL over a Unix socket. The checks verify the cumulative object counts, wallet directions and server-only intent grants. They never read a configured database URL. From `backend/`:
 
 ```bash
-CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/group3_sql
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/group3_sql
 ```
 
 The test-only packages stay in uv's cache. Claude reviews and applies the three protected migration files before their code reaches main; this check does not apply anything to Supabase.

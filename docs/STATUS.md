@@ -14,7 +14,17 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Latest release, 6 Nov 2026, Codex:** Phase 2 is on main (`c365985`) and production is ready.
+**Server follow-ups integration, 6 Nov 2026, Codex:** `integrate/server-followups-v2` preserves the
+four authored follow-up commits and current Exchange/case/world services. It adds strict 4096-character
+three-part login tokens, secure deployed Supabase URL checks, default no-store responses, account
+`isHost`/`rerollsLeft`, optional `sign_in`/`bulletin` flags, bounded crew hints and the guarded local API.
+Migration 140000 now locks affected crews before auth users and recomputes handover after a wait;
+independent review proved 100 concurrent deletion scenarios and 15 permanent SQL tests. Final
+focused integration: 60 passed, including the local real-API checks, world regressions and corrected
+cache/token fixtures; 993 other affected route checks passed. Ruff and diff checks pass. The coordinator
+still applies/hash-proves 140000 before pushing consuming code. G9 remains paused.
+
+**Latest release, 6 Nov 2026, Codex:** Phase 3 is on main (`40ba1d5`) and production is ready.
 `GET /api/config` confirms live_presence, market, predictions and arena enabled; sports and the AI
 helper remain off, and case is not enabled. The market's direct live-price check is pending a cloud
 network allowlist update; no query/cache guard was relaxed. G9 is paused until Nils' laptop returns;
@@ -265,6 +275,8 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
+**Next server step:** apply and verify reviewed 140000, merge the follow-up branch with the G12 auth/save fixes, then rerun the integrated release gates. Account metadata and the current local API are ready; G9 browser wiring remains paused.
+
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
 **Next 1: A1-next, apply and prove the foundation.** Starts once foundation wave 2 is on `main`. Production is already live, and deploy check 2 has passed.
@@ -467,6 +479,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 - **6 Nov, Codex:** group 3 integrated and independently reviewed; applied 090000/100000/110000 one file at a time, exact MD5 proofs and version restoration passed; all final database counts and known-only advisors match. Core local gates green; cloud browser regression and live deployment checks continue. See [release proof](handoff/group3-release.md).
 
 Newest first. One line per finished task: date, who, what, where.
+
+- **2026-11-06, server follow-ups reconciled.** Codex for Nils preserved the four authored commits on `integrate/server-followups-v2`, adapted the local SQL port to current case/world services, retained the early token-length bound and fixed concurrent member deletion after independent review. Final focused suite: 60 passed; 993 other affected route checks passed, Ruff/diff clean. Migration 140000 MD5 `a59dccb2d3447614454f94a37cc3bb40` is independently approved; coordinator applies before release. No live writes from this task.
 
 - **2026-11-06, evening.** Claude, for Nils: group 2 is merged on `integrate/fri6`: Codex's G8 (with all of G7), A4 live presence (D023, renumbered from A4's D018), L2 home islet (D021) and the open-world must items (D024, renumbered from its D018), and the follow-ups of the group 1 check ("Apply before you merge" brought up to date, the kit coins N5 settled by the story round, one test that keeps the three copies of the kits equal, D020 in its place in time, two spec notes). Fixes the merge needed: the content-route sweep skips the open-world files that `GET /api/bulletin` shows on purpose; the islet panel leaves the signal station's hotspot to the finale screen (since G8 that hotspot is also a plot, so E there opened both); the world check closes the islet panel before the next hotspot; the panel's labels no longer share a chunk with the game, so the cold title stays within G8's 21,080 bytes; and A4's realtime tests use a stand-in key that the secret scan does not mistake for a real one. 23 routes; `uv run pytest` 6407 passed, `npm test` 886 passed, the build and its spoiler guard pass, and the G7 and G8 browser checks pass. Its database changes `050000` and `070000` are applied before the push; the flag `live_presence` stays off. [INTERFACES.md](INTERFACES.md#what-the-browser-adapter-g9-maps) lists the presence names that G9 maps between G8 and A4.
 - **2026-11-06, afternoon.** Claude, for Nils: group 1 is on `main`: the story round (D018), A2/A3 (D022, renumbered from A2's D018) and A6 (D020), merged on `integrate/fri6` and checked by an independent agent (fixes: the secret-scan false alarm, the D020 note, a scratch path in a spec). Its four database changes are applied (`010000` to `040000`, each checked by md5 against its file, versions recorded, object counts as reviewed). The API runs in Dublin (`8ff24cc`). Nils decided: no review per merge (D015, extended), no kickoff or check-ins, feature complete by Sun 8 Nov, and Codex takes the browser side.

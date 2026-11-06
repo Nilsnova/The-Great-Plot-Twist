@@ -41,6 +41,7 @@ import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Annotated
+from urllib.parse import urlsplit
 
 from fastapi import Depends, Request
 from pydantic import SecretStr
@@ -132,6 +133,30 @@ def read_relight_open(env: Mapping[str, str], app_env: str) -> bool:
     if app_env != "production":
         raise SettingsError("RELIGHT_OPEN may be true only when APP_ENV is production.")
     return True
+def read_supabase_url(env: Mapping[str, str], app_env: str) -> str:
+    """Deployed copies use a secure Supabase host. Local work may use a local service."""
+    value = read_text(env, "SUPABASE_URL").rstrip("/")
+    if app_env == "local":
+        return value
+    message = "SUPABASE_URL must be an HTTPS Supabase project URL in preview and production."
+    try:
+        url = urlsplit(value)
+        host = url.hostname or ""
+        valid = (
+            url.scheme == "https"
+            and host.endswith(".supabase.co")
+            and all(host.split("."))
+            and not any(character.isspace() for character in value)
+            and url.username is None
+            and url.password is None
+            and url.port in (None, 443)
+            and not (url.path or url.query or url.fragment)
+        )
+    except ValueError:
+        raise SettingsError(message) from None
+    if not valid:
+        raise SettingsError(message)
+    return value
 
 
 def read_weather_place_name(env: Mapping[str, str]) -> str:
@@ -208,7 +233,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
     return Settings(
         app_env=app_env,
         # No slash at the end, so we can write f"{supabase_url}/auth/v1/user" later.
-        supabase_url=read_text(env, "SUPABASE_URL").rstrip("/"),
+        supabase_url=read_supabase_url(env, app_env),
         supabase_publishable_key=read_text(env, "SUPABASE_PUBLISHABLE_KEY"),
         supabase_secret_key=SecretStr(read_text(env, "SUPABASE_SECRET_KEY")),
         cron_secret=SecretStr(read_text(env, "CRON_SECRET")),

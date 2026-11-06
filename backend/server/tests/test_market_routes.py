@@ -250,7 +250,7 @@ def test_a_board_that_cannot_be_built_is_not_cached(monkeypatch):
     response = client.get("/api/market")
 
     assert_error(response, 503, "market_unavailable")
-    assert "cache-control" not in response.headers
+    assert response.headers["cache-control"] == "no-store"
 
 
 def test_the_board_takes_no_query_parameters_so_nobody_can_skip_the_cache():
@@ -994,7 +994,10 @@ def test_a_portfolio_look_is_never_cached_and_takes_no_query_parameters():
     world = World()
 
     assert world.portfolio().headers["cache-control"] == "no-store"
-    response = world.client.get("/api/market/portfolio?x=1", headers={"Authorization": "Bearer t"})
+    response = world.client.get(
+        "/api/market/portfolio?x=1",
+        headers={"Authorization": "Bearer test.market-player.signature"},
+    )
     assert_error(response, 422, "validation_error")
 
 

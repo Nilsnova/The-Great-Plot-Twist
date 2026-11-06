@@ -78,6 +78,14 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 5. Deployment protection: the production address is public, preview addresses ask for a Vercel login. In class, always use the production address.
 6. Free-plan limits worth knowing: 100 deployments per day and one build at a time (every pushed branch builds a preview); going over the free usage pauses the project for up to 30 days, so never leave a loop polling an API.
 
+## Local API without Supabase credentials
+
+For browser integration with disposable players and real local database rules, follow
+[LOCAL-TEST-SERVER.md](LOCAL-TEST-SERVER.md). From `backend/`, one command starts port 8000:
+`LOCAL_TEST_SERVER=1 APP_ENV=local uv run --with pgserver --with 'psycopg[binary]' python -m tools.local_server`.
+The tool refuses preview/production, ignores injected Supabase settings and removes all local
+data when stopped. The normal server's sign-in flow is unchanged.
+
 ## Step 5. Prove it works (15 minutes, once the foundation branch is pushed)
 
 Run checks 1, 2, 4 and 5 on a branch that contains `frontend/` (merge `main` first). Check 3 runs the daily keep-alive workflow on GitHub (see "Keep it awake until the demo" below). Do not try to pass it with a `crons` entry in `vercel.json`: that breaks our deploys.

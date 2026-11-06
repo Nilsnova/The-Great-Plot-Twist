@@ -142,15 +142,15 @@ HOST_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
 
 # The fake sign-in check knows these tokens.
 TOKENS = {
-    "token-of-player-1": PLAYER_1,
-    "token-of-player-2": PLAYER_2,
-    "token-of-player-3": PLAYER_3,
-    "token-of-the-host": HOST_ID,
+    "test.player-1.signature": PLAYER_1,
+    "test.player-2.signature": PLAYER_2,
+    "test.player-3.signature": PLAYER_3,
+    "test.host.signature": HOST_ID,
 }
-AUTH_1 = {"Authorization": "Bearer token-of-player-1"}
-AUTH_2 = {"Authorization": "Bearer token-of-player-2"}
-AUTH_3 = {"Authorization": "Bearer token-of-player-3"}
-AUTH_HOST = {"Authorization": "Bearer token-of-the-host"}
+AUTH_1 = {"Authorization": "Bearer test.player-1.signature"}
+AUTH_2 = {"Authorization": "Bearer test.player-2.signature"}
+AUTH_3 = {"Authorization": "Bearer test.player-3.signature"}
+AUTH_HOST = {"Authorization": "Bearer test.host.signature"}
 
 
 def database_error(status: int, code: str, message: str) -> httpx.Response:

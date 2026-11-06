@@ -28,13 +28,14 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 ## Project status
 
-*Last updated: 5 Nov 2026, evening.*
+*Last updated: 6 Nov 2026, Codex server integration.*
 
 The team is turning the text mystery Plot Twist into a browser game: a top-down pixel-art island world with GitHub sign-in, a shared mystery and a play-money economy.
 
 - **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
-- **Foundation (package F0) is on `main`:** the API skeleton (health, config and keep-alive routes, the sign-in check, the wallet rules, the pattern for outside data), the first database migration in `supabase/`, `vercel.json` and the docs in `docs/`. No game feature uses it yet.
-- **In progress:** the story engine (S1), the story details (S0), the world, sea chart and harbor (G2 + G3). The [status page](docs/STATUS.md) always shows what works right now, what each lane does next and the dated log.
+- **On main:** the foundation, accounts, story/referee, crews, live presence, home islet, Exchange v2, predictions, Lantern Duels, and the case board/night backend. Production flags and the latest deployment proofs are recorded in [Status](docs/STATUS.md).
+- **In progress:** the remaining case phases and server follow-ups are being integrated. G9, which connects normal browser play to these services, is paused until Nils' laptop returns. The [roadmap](ROADMAP.md#execution-update--6-nov-2026) gives the remaining order.
+- **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.
 
 ### What the final README must contain
 

@@ -40,7 +40,9 @@
 
 - **One address.** Every route starts with `/api`. On Vercel the game and the API share one address: `vercel.json` sends every `/api/...` request to the backend unchanged, so each route carries the `/api` prefix itself. On your laptop the API runs at `http://127.0.0.1:8000`.
 - **JSON in, JSON out.** Field names in JSON are camelCase, as `demoMode` in `/api/config` already is. Python names and database columns stay snake_case. Names that are data, such as the flag names inside `flags`, keep their own spelling. Content files are data too: `GET /api/content/{name}` sends a file as it is, so `story.json` keeps its snake_case keys such as `hide_when_blocked` and `not_flags`.
-- **Sign-in.** A route for signed-in players reads the header `Authorization: Bearer <token>`. The token is the one Supabase gives the browser after the GitHub sign-in. The server asks Supabase whose token it is and remembers a good answer for 60 seconds. In code, a route asks for the player by writing `player: PlayerDep` (`backend/server/auth.py`). The player id always comes from this check, never from the request body.
+- **Sign-in.** A route for signed-in players reads the header `Authorization: Bearer <token>`. The token is the one Supabase gives the browser after the GitHub sign-in. Tokens longer than 4,096 characters or without three nonempty dot-separated parts are refused with `401 unauthorized` before any outside request. Supabase still verifies the token; its shape alone never proves a login. The server remembers a good answer for 60 seconds. In code, a route asks for the player by writing `player: PlayerDep` (`backend/server/auth.py`). The player id always comes from this check, never from the request body. The keep-alive secret is separate and is not a login token.
+- **Caching.** API answers default to `Cache-Control: no-store`, including error answers. Explicit route policies remain in force: private player answers keep `private, no-store`, and public content or public data keeps its documented public cache policy.
+- **Deployed Supabase address.** Preview and production require an HTTPS project host ending in `.supabase.co`. Local development may leave the address empty or use a local service. Invalid deployed addresses stop startup without repeating the supplied value in the error.
 - **One error shape.** Every failure answers with the same JSON. The `message` never holds a stack trace, a key or the database's own error text.
 
   ```json
@@ -72,7 +74,7 @@
 
 Case routes are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the full case chain and proofs pass.
 
-There are 37 API operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
+The API includes the foundation and account routes, crews, the home islet and bulletin, Exchange v2, predictions, Lantern Duels, and the phased case board/night/world routes. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
 ### GET /api/health
 
@@ -95,7 +97,7 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false, "bulletin": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
 
 `auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
@@ -364,7 +366,7 @@ Cache-Control: public, max-age=300
 | `place` | The name of the place the weather belongs to. |
 | `source` | `live`, `cache`, `stale` or `fallback` ([section 1](#1-api-conventions)). |
 | `fetchedAt` | When the numbers were fetched, in UTC. For `fallback` it is the time the answer was recorded. |
-| `attribution` | The credit Open-Meteo asks for, with the note that the numbers were changed: `Weather data by Open-Meteo.com, adapted for the game`. Open-Meteo's CC BY 4.0 licence has three conditions, and the game must meet all of them next to the weather: (1) give the credit, as a link to `https://open-meteo.com/`; (2) link to the licence, with the name `CC BY 4.0` as a link to `https://creativecommons.org/licenses/by/4.0/`; (3) say that the data was changed, which the words "adapted for the game" do. The credit link alone is not enough. `weatherAttribution()` ([section 3](#weather)) gives the words and both addresses. |
+| `attribution` | The credit Open-Meteo asks for, with the note that the numbers were changed: `Weather data by Open-Meteo.com, adapted for the game`. Open-Meteo's CC BY 4.0 licence has three conditions, and the game meets them in Settings, then Credits (Nils, 6 Nov 2026): (1) give the credit, as a link to `https://open-meteo.com/`; (2) link to the licence, with the name `CC BY 4.0` as a link to `https://creativecommons.org/licenses/by/4.0/`; (3) say that the data was changed, which the words "adapted for the game" do. The credit link alone is not enough. `weatherAttribution()` ([section 3](#weather)) gives the words and both addresses. |
 | `state` | The weather state now: `storm`, `fog`, `rain` or `calm`, the first that applies in that order. A storm starts at a wind of 0.8 (48 km/h), fog at a fog of 0.5 and rain at a rain of 0.4 (the numbers are start values of the design, in `backend/content/weather_states.json`). Cloud cover never changes it. `null` only if that file could not be read when the server started. |
 | `tonight` | The night in progress, or the next one: `date` (the Lisbon date it starts on), `startsAt` and `endsAt` (18:00 to 06:00 Lisbon time, in UTC) and `isNow` (true while it is going on). `state` is the state of the whole night, `null` when the answer has no hours for it (the recorded fallback and demo mode have none). `isFogNight` and `fogNightKind` (`real`, `almanac` or `null`) come from the fog-night rule below. The whole object is `null` only if the rules file could not be read. |
 
@@ -383,6 +385,11 @@ Cache-Control: public, max-age=300
 Only a `200` carries `Cache-Control: public, max-age=300`, so a browser may reuse it for 5 minutes. The open question for Mon 9 about the default place is in [section 11](#11-open-questions-for-mon-9).
 
 ### GET /api/bulletin
+
+The `bulletin` flag is off by default. While off, this route returns
+`404 feature_disabled` with no-store caching before reading weather, world state or the
+Exchange. The browser uses the same flag for the bulletin, tonight chip and Chapter 2 hook.
+With the flag enabled, the public response below is unchanged.
 
 The harbor bulletin (open-world must items "the daily frame" and the Chapter 2 hook, see `specs/open-world-must.md`). Anyone may call it, and it holds no secret. It takes no input: a query string and an `Authorization` header are ignored. Every player gets the same answer. The one line that differs by crew, the cheapest next lead, is served signed in by package S3 (for example `GET /api/bulletin/lead`), so this answer stays public and cacheable. It is worked out when somebody asks, from the clock, the weather the server already fetches (the same cached source as `GET /api/weather`, so it causes no extra Open-Meteo request), the stage of the world and two content files that only the server reads: `backend/content/bulletin.json` and `backend/content/chapter_two_hook.json`. There is no timer and no table.
 
@@ -791,7 +798,7 @@ const weatherNow = getWeather(); // a copy: { cloudCover, rain, fog, wind }
 
 Each field is a number from 0 to 1. A value outside that range is clamped. A field that is missing, unknown or not a finite number keeps its previous value.
 
-The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. The answer also carries `state` and `tonight` ([section 2](#get-apiweather)); the false-light teaser can read `answer.tonight.isFogNight` and must stay off once the world is relit. `startLiveWeather` still passes only the four values to `setWeather`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. All of it must be on screen next to the weather ([section 2](#get-apiweather) says why).
+The live weather package (L1) calls `setWeather` with the values from `GET /api/weather` ([section 2](#get-apiweather)). `startLiveWeather({ setWeather, fetchImpl, intervalMs, onUpdate })` in `frontend/src/net/weather.js` asks at once and then every 10 minutes, passes exactly the four values to `setWeather`, keeps the last good weather when a call fails or takes longer than 10 seconds (it changes nothing and logs a warning), and returns a function that stops it. The optional `onUpdate(answer)` gets the whole answer after each good update, so the caller can show the place, the summary and the credit, or emit the event `weather_updated`. The answer also carries `state` and `tonight` ([section 2](#get-apiweather)); the false-light teaser can read `answer.tonight.isFogNight` and must stay off once the world is relit. `startLiveWeather` still passes only the four values to `setWeather`. `weatherAttribution(answer)` in the same file returns the credit as `{ text, href, licenceText, licenceHref }`: show `text` as a link to `href`, followed by `licenceText` as a link to `licenceHref`. Show all of it under Settings, then Credits, as decided by Nils on 6 Nov 2026 ([section 2](#get-apiweather) says why).
 
 Starting it in the game is a separate step, because `frontend/` belongs to the graphics package. Whoever owns the client does it in these steps:
 
@@ -920,6 +927,13 @@ Details that other packages rely on:
 |---|---|---|---|---|
 | `duels` | challenge: who, rounds, stake, status and, once decided, the result of every round. It holds no signal. | read the duels they take part in | read, add, change (through `duel_create()`, `duel_answer()` and `duel_void()`); never delete | A7 |
 | `duel_moves` | captain and round: the sealed envelopes, the only place that holds a signal | nothing at all, not even their own rows | read, add (through `duel_create()` and `duel_answer()`); no role may change or delete a row | A7 |
+### Browser account and crew metadata (G9 R7, R10, R12)
+
+`GET /api/me` also returns `rerollsLeft` (1 before the single name reroll is used, otherwise 0) and `isHost` (this verified player's membership in the server's host allowlist). Reading them never generates a name or writes data. The fifth scoped database read is the player's `captain_name_rerolls` row; older profile, wallet, seat and entry reads keep their order.
+
+For A4 crewmate flags, authenticated players may read `crew_seats.player_id` for seats in their own crew through the existing column grant and row-level-security policy. They cannot read an outside crew or change any seat. The R7 scratch checks exercise actual authenticated reads and refused writes; no opaque-id endpoint or schema change is needed.
+
+Weather credits live under Settings, then Credits, with the source link, licence link and adaptation notice together. This is documentation of the agreed presentation, not a change to the weather answer.
 
 ### Case Phase 1 tables and functions
 
@@ -1168,7 +1182,12 @@ sent = await broadcaster.send(crew_id, "board_changed", {"version": 7})   # True
 | `finale_changed` | L3 | the Relighting |
 | `case_changed` | S3 | a card is found or an accusation is made |
 | `partner_changed` | S4 | an NPC errand finishes |
-| `crew_changed` | A6 | someone joins or leaves the crew |
+| `crew_changed` | A6 | a successful join or muster; version-only hint after the database change |
+
+Join and muster reuse the app's single A4 broadcaster and send only `{"version": n}`.
+Each hint has a one-second budget and a quiet fallback; a failed hint does not change the
+successful API answer. Reads, refusals and repeated intents send no hint. The existing
+`live_presence` flag and A4 per-crew/global event budgets still apply.
 
 Each caller sends after its database change has succeeded, with `data={"version": n}`, on state changes only and never on every input. A wrong argument (a crew id that is not a uuid, an unknown kind, data over 1 KB) is a bug in the caller and raises `ValueError`. Everything else that can go wrong (the flag is off, Supabase is not set up, more than 20 events for one crew in 10 seconds or more than 5 events in a second over all crews, a refusal, a timeout of 2 seconds for the whole call) returns `False` with one short warning that never holds the key, the crew id or the payload. The list of kinds is `CREW_EVENT_KINDS`, in Python and in `frontend/src/net/live-rules.js`; a test keeps the two equal.
 
@@ -1190,6 +1209,12 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
 | `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
+| `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
+| `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
+
+The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
+sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
+flow. No preview or production settings are enabled by adding this flag.
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
 
