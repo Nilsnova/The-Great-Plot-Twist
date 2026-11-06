@@ -427,7 +427,7 @@ Use this list when you write code and when you review a pull request.
 - [ ] Sign-in uses Supabase's PKCE flow, never the older implicit flow. The implicit flow puts the refresh token (it never expires on the free plan) and the GitHub token in the address, and the browser writes the address to its history before a page can remove it. PKCE puts only a one-time code in the address. Whoever reviews a sign-in page names the flow and checks the browser history ([INTERFACES.md](INTERFACES.md#post-apiauthexchange)).
 - [ ] No wide-open cross-origin setting (`*`). The site and the API share one address on Vercel, so they need none.
 - [ ] Minimum personal data. Use the sign-in user id as the key. Do not copy emails or real names into our tables. Never log tokens or personal data.
-- [ ] The browser never writes game data. A signed-in player may only read from the database. Every write (names, coins, progress, crews) goes through the server with the secret key, so no table has an insert, update or delete policy or grant for `authenticated`.
+- [ ] The browser never writes game data. A signed-in player may only read from the database. Every write (names, coins, progress, crews) goes through the server with the secret key, so no table has an insert, update or delete policy or grant for `authenticated`. The one exception is live presence: two insert policies for `authenticated` on the Realtime table `realtime.messages` (presence in `live:world`, broadcast in the place rooms). Realtime stores nothing there, and nothing sent there changes game state ([supabase/README.md](../supabase/README.md#the-live-presence-migration)).
 - [ ] The name other players see is `profiles.display_name`, read from the database. The sign-up trigger gives every player a neutral placeholder (`Captain-` plus six characters of their id) and never copies the GitHub login or any other login detail, because names appear on a projector and a player can edit their own login details. Real captain names are generated on the server. A name from the login token is never shown.
 
 **Money**
@@ -452,7 +452,7 @@ Use this list when you write code and when you review a pull request.
 |---|---|---|
 | Browser client (frame rate, triangles, draw calls) | Set by package G1. Do not copy numbers here. | `frontend/GRAPHICS.md`, added by package G1 |
 | API answers served from cache | Under 300 ms | Check in the browser's network tab on the preview site, not only on your laptop |
-| Realtime updates | At most 2 per second per player | Slow the sender down in the client, and enforce it on the server |
+| Realtime updates | At most 2 per second per player | The client slows itself down (`frontend/src/net/live-rules.js` and `live-sender.js`); our server never sees these messages, see [INTERFACES.md, section 7](INTERFACES.md#7-realtime-budget) |
 
 Rules of thumb:
 

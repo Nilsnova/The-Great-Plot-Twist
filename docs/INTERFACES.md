@@ -18,6 +18,7 @@
 | Setting names | `backend/server/settings.py` and [.env.example](../.env.example) |
 | Game content files (the story) | The format in [backend/content/README.md](../backend/content/README.md), and the list of public names in `backend/server/routes/content.py` |
 | Browser events and hooks | `frontend/GRAPHICS.md`, written by the graphics package (G1) |
+| Live presence: the rooms, the messages, the `live_*` events | The header comment of `frontend/src/online/realtime.js` (it joins the parts in `frontend/src/net/`: `live-rules.js` holds the rules, `live-rooms.js`, `live-places.js`, `live-sender.js` and `live-view.js` do the work), the access rules in `supabase/migrations/20261106050000_live_presence.sql`, and [section 7](#7-realtime-budget) here. The server side is `backend/server/crew_broadcast.py`. |
 
 **Changing a contract.** Until the freeze, change this page in your pull request. After the freeze, agree the change in an issue first, then change the home and this page in the same pull request, and record the outcome in the [decision log](DECISIONS.md). If the team has not agreed, keep the current contract ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
@@ -545,6 +546,7 @@ Starting it in the game is a separate step, because `frontend/` belongs to the g
 | `{type: 'weather_updated', source, fetchedAt}` | L1 | draft; `startLiveWeather` does not emit it itself, whoever wires it in emits it from the `onUpdate` hook |
 | `{type: 'plot_clicked', plot}` | L2 | draft |
 | `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story round (S0, D018) |
+| `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted`, `live_crew_updated` | A4 | built, flag `live_presence` off; payloads in [section 7](#events-for-the-screens) |
 
 ### Talking to the API: api.js and session.js (package A2)
 
@@ -624,7 +626,7 @@ Details that other packages rely on:
 
 - **Display names** (`profiles.display_name`): 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at either end. Not unique. At sign-up every player gets a neutral placeholder: `Captain-` and the first 6 characters of their id. A name never comes from the GitHub login or any other login detail, because names appear on a projector.
 - **Saves:** `data` (a JSON object, at most 200,000 bytes as database text; the server accepts at most 100,000 bytes of compact JSON), `version` (starts at 1 and counts the writes: `PUT /api/save` sends the version it last read, and `save_progress()` writes only if that is still the current version and then adds 1) and `updated_at` (set by the database). Only the server writes a save. The migration `20261106020000` changed the meaning of `version`: it was a format version before, and nothing used it.
-- **Realtime** is not switched on for any table yet.
+- **Realtime.** Postgres Changes is not used; live presence rights are policies on `realtime.messages` (migration `20261106050000_live_presence.sql`, [section 7](#7-realtime-budget)).
 - **A new table** follows [ENGINEERING.md, recipe 4.2](ENGINEERING.md#42-add-a-database-table): row-level security, read-only policies for players, and explicit grants, because our project gives no rights to a new table by itself.
 
 ## 5. The wallet
@@ -709,6 +711,8 @@ How a crew forms, in four steps. The home is `backend/server/routes/crews.py`; t
 
 ## 7. Realtime budget
 
+Live presence (package A4) runs on Supabase Realtime: players see each other's captains move in the same place, can send preset emotes, and the server can tell a crew the moment something changed. It is built and switched off by the flag `live_presence`, and its migration is not applied yet. The design, the numbers and the reasons are in [specs/A4-live-presence.md](../specs/A4-live-presence.md) and decision D018. Everything sent in these rooms is only for showing: a position, a place or an emote decides nothing in the game (D003).
+
 Supabase Realtime on the free plan is one budget for the whole project:
 
 | Limit | Free plan |
@@ -718,21 +722,115 @@ Supabase Realtime on the free plan is one budget for the whole project:
 | Messages per month | 2 million |
 | Presence messages per second | 20 |
 | Channel joins per second | 100 |
+| Channels per connection | 100 |
 | Size of one broadcast | 256 KB |
 
-**Every delivered copy counts.** A message counts once when it is sent, and once more for every client that receives it. Above the per-second limit, Supabase disconnects clients, and they reconnect only when the load drops. Test traffic counts too.
+**Every delivered copy counts.** A message counts once when it is sent, and once more for every client that receives it. Presence counts too. Above a per-second limit, Supabase first sends a `system` message ("Too many messages per second", "Too many presence messages per second" or "Client presence rate limit exceeded") and then closes the room, and clients reconnect only when the load drops. Above the monthly quota the free plan sends a notice, then a grace period, then restrictions, with no bill. Test traffic counts too.
 
-Two worked examples (our arithmetic):
+**Every room a player joins counts as one connection.** We assume the worst, because Supabase's "concurrent connections" count subscribed channels. A player is in at most 3 rooms (the world, one place room and the crew room), so about 66 players fit in the 200.
 
-- One crew of 4 players in one room, each sending 2 updates a second. One update costs 1 + 3 = 4 messages, so the room costs 4 x 2 x 4 = 32 messages a second, a third of the project's limit. An hour of that is 115,200 messages, so the 2 million a month last about 17 hours of such play.
-- One room of 30 players, each sending 1 update a second: 30 x (1 + 29) = 900 messages a second, 9 times the limit.
+### The rooms
 
-Our rules:
+All rooms are private (`config: { private: true }`): the policies on `realtime.messages` decide who may join and send ([supabase/README.md](../supabase/README.md#the-live-presence-migration)).
 
-1. **Small rooms:** one crew (at most 4 seats) or one duel per channel.
-2. **At most 2 updates per second per player** ([ENGINEERING.md, section 7](ENGINEERING.md#7-performance-budgets)). The client slows itself down, and the server enforces it.
-3. **The server sends with Supabase's Broadcast REST API** and never subscribes to a channel itself: a subscribed server counts as one more receiver and holds a connection.
-4. **Poll when a few seconds of delay are fine.** The team roadmap plans polling for the case board (L3) and the duels (A7), so no core package needs Realtime yet.
+| Room | Topic | Kind | Who may join | Who may send | Used for |
+|---|---|---|---|---|---|
+| World | `live:world` | presence only | any signed-in player | any signed-in player (track) | who is online, in which place and room, with which kit |
+| Place room | `live:place:<placeId>:<room>`, for example `live:place:saltreach_harbor:1` | broadcast only | any signed-in player | any signed-in player | moves and emotes of the captains in that room |
+| Crew room | `live:crew:<crewId>` | broadcast only | only players seated in the crew (`is_crew_member`) | only the server (REST, secret key) | crew events: "something changed, fetch it" |
+
+- **Topics.** Place ids are the ids of `frontend/src/world/places/registry.js` and match `^[a-z][a-z0-9_]{1,39}$`. Room numbers run from 1 to 99. `home_islet` gets no room, because every player has their own islet.
+- **A numbered room holds at most `clamp(floor(120 / online), 4, 9)` captains**: 9 (you plus 8 others) while 13 or fewer are online, 6 with 20 online, 4 with 30 or more.
+- **Room choice on arrival** (`chooseRoom` in `frontend/src/net/live-rules.js`): the lowest-numbered room of the place where a crewmate already is, even if it is full; otherwise the lowest-numbered room with space. If two crewmates arrive at the same moment and land in different rooms, the one in the higher room moves down when the world presence shows the other. A new room waits for its turn: a room of one kind (world, place, crew) starts to join at most once a second.
+- **Why a world room.** The budget formula needs the number of captains online, "a count of the rest" needs to know where everybody is, and a newcomer needs to know who is in its room before anyone moves. One presence update per trip solves all three.
+- **Why numbered rooms.** Every message reaches everyone in its room, so a room's cost grows with the square of its size. One room of 30 would cost 30 messages per move, which at a safe rate is one update every 15 seconds.
+
+### The messages
+
+Payloads are small camelCase JSON with `v: 1`. They never contain free text, a name, a login or an e-mail address. A receiver drops anything that does not match.
+
+| Room | Event | Payload | Sent when |
+|---|---|---|---|
+| World | presence track | `{v, place, room, kit}`. `place` and `room` are null at sea, and `room` is null on the home islet. `kit` matches `^[a-z][a-z_]{1,23}$` or is null. | Once the place room is joined, and on every change of place, room or kit. At most one track every 1.5 s; changes within that window go out together. |
+| Place room | `position` | `{v, id, place, x, z, facing, moving, seq, everyMs}` | While moving, at the allowed rate. Also once on stopping, once right after we announced our place and room, and once 0.2 to 0.8 s after a newcomer appears in the room. Nothing is sent before the announcement: the others ignore a captain they do not know. |
+| Place room | `emote` | `{v, id, emote, seq}` | When the player picks an emote. At most one every 3 s. |
+| Crew room | `crew_event` | `{v, kind, data}` | Only from the server, after it has saved a change. |
+
+- `id` is the sender's player id (Supabase does not tell receivers who sent a broadcast). The presence key is the player id too.
+- `x` and `z` are the player's position in the place (`controller.player.position`), rounded to 2 decimals, between -200 and 200. `facing` is `up`, `down`, `left` or `right`, the same choice as `createCharacter().face(dx, dz)` (exported as `facingFrom`).
+- `seq` starts at the sender's `Date.now()` and grows by 1 per message, so it keeps growing after a page reload. Receivers keep only messages newer than the last `seq` they accepted from that id. `everyMs` is the sender's current gap between updates (500 to 20000).
+- `emote` is one of `wave`, `cheer`, `nod`, `shrug`, `follow_me`, `help` (the list `EMOTES`; decision D006 may rename them).
+- `kind` is `board_changed` (L3), `finale_changed` (L3), `case_changed` (S3), `partner_changed` (S4) or `crew_changed` (A6). `data` is a JSON object of at most 1 KB, usually `{"version": 7}`. It never holds spoilers or another crew's data.
+- **Names are never sent.** The receiver reads `display_name` from `profiles`, one read for up to 50 ids at a time, and keeps the answer for the whole session (a captain that the server renames keeps the old name until the page is loaded again). The text would otherwise come from the sender's browser, and D003 forbids showing names a browser chose.
+
+### Our rules
+
+1. **Small rooms.** See the room sizes above. A crew room only ever receives.
+2. **One allowance per captain, shared by moves, emotes and replies.** The gap between two messages is `max(500 ms, 1000 / rate)`, rounded up to the next 100 ms, with `rate = min(2, 60 / (online x room))` updates a second. `online` is the number of valid keys in the world presence and `room` the captains in our room, counting us. Slow mode (see the guard) halves the rate. Alone in the room, nothing is sent. When the allowance frees up the order is: a queued emote, the stop update, a reply, then the regular update while moving. A message goes out only while the room is joined and the socket is open: otherwise supabase-js posts it over HTTPS (with a console warning), which is a different path with other limits, and we never want that. It also waits until the world presence holds our current place and room, because the others ignore a captain they do not know (the first announcement can wait up to 10 s, see the burst below, and our position follows right after it).
+3. **The browser slows itself down, and our server never sees these messages.** They go from one browser to Supabase and on to the others, so nothing on our side can count or stop them. What protects the budget is the formula above, the guard below, receivers that drop floods, the policies, and the kill switch in [supabase/README.md](../supabase/README.md#changing-the-database-later). The old plan "the server enforces it" was not possible.
+4. **The server sends with Supabase's Broadcast REST API** (`backend/server/crew_broadcast.py`) and never subscribes to a room: a subscribed server counts as one more receiver and holds a connection. Per server instance it sends at most 20 events per crew in any 10 seconds, and at most 5 events in any second over all crews together (a loop that walks over every crew is bounded too: one event costs one message to send and up to 4 to deliver). The whole call takes at most 2 seconds.
+5. **Joins are spread out.** A room of one kind (world, place, crew) starts to join at most once a second, so a place or a crew that changes in every frame cannot flood the project (the free plan allows 100 channel joins a second for everybody). A crew room that the rules refused is joined again only when the game calls `setCrew` again.
+6. **Poll when a few seconds of delay are fine.** L3 (the board) and A7 (the duels) keep polling as their fallback. A crew event lets them poll slowly (for example every 30 seconds) and refresh at once when an event arrives, but only after step L7 of the [manual test plan](../supabase/README.md#live-presence-checks-steps-l1-to-l7) has passed once on the real project: it is the only check that the server's secret key can really send into a crew room.
+
+### The budget in numbers
+
+Our arithmetic. `rate = min(2, 60 / (online x room))` keeps the moves of the whole project at or under 60 of the 100 messages a second, even if every player is walking.
+
+| Case | Online | Room | One update every | Worst case, everyone moving |
+|---|---|---|---|---|
+| A crew of 4, nobody else online | 4 | 4 | 0.5 s | 4 x 2 x 4 = 32 messages a second; 115,200 an hour (57,600 if half are moving) |
+| A place with 8, the only players online | 8 | 8 | 1.1 s | 8 x 0.91 x 8 = 58 a second |
+| A class of 30 | 30 | 4 (rooms shrink) | 2 s | 30 x 0.5 x 4 = 60 a second |
+
+In the class of 30, presence adds about 10 messages a second (two updates per trip, one trip per player every 3 minutes), arrival replies about 3 and crew events about 2. The worst case is about 75 a second and a realistic one about 45, both under 100. A 90-minute class costs at most 324,000 messages for moves. **The start and the reconnect are a burst of their own:** every announcement of a captain is delivered to everyone online, so N captains who announce themselves within W seconds cost about N x N / W deliveries a second near the end of that window. That is why the first announcement waits a random 0 to 5 seconds (the start) plus a random 0 to 10 seconds (after every join of the world room): a class of 30 spreads its first announcements over 15 seconds, about 30 x 30 / 15 = 60 deliveries a second at the busiest moment, plus the joins themselves. A Realtime blip that drops everybody is spread the same way, because the first announcement after each rejoin waits again. Without the wait, 30 captains in 5 seconds would cost about 180 a second. This is our arithmetic and not a measurement, and Supabase's way of averaging its per-second counter is not verified: after the first class, read Realtime > Reports (Presence Events and messages per second), and widen `TRACK_JITTER_MS` in `frontend/src/net/live-rules.js` if the peak comes near 100. **The month is the limit that really binds:** 2 million messages cover about 8 class sessions, or about 35 hours of a crew of 4 playing with half of them moving at any moment.
+
+### The guard
+
+Once a second the browser estimates `(updates a second heard in our room plus those we sent, averaged over the last 10 seconds) x online`: the cost of the whole game if every room were as busy as ours. Above 80, the rate is halved for 5 minutes and the status becomes `slow`. If Supabase says "Too many messages per second", the browser turns on slow mode and waits at least 10 seconds before it joins that room again. After a presence rate-limit message it waits at least 30 seconds. After any other failure it waits `1 s + random x min(30 s, 2 s x 2^tries)`, and the count of tries starts again after 60 seconds of being joined. A room whose error says "Unauthorized" is given up (the world room then reports `offline`). The first join waits a random 0 to 5 seconds, and the first announcement after every join of the world room waits a further random 0 to 10 seconds, so a class that opens the game together stays far under 20 presence tracks and 100 joins a second, and its announcements are spread as the budget above says.
+
+### Events for the screens
+
+The browser module `startRealtime` in `frontend/src/online/realtime.js` emits these on the event bus. The payloads are plain data. A listener that throws does not break the module. A name that is null is shown as "Captain".
+
+| Event | When | Payload |
+|---|---|---|
+| `live_status_changed` | the connection changes state | `{state}`: `connecting`, `live`, `slow`, `offline` or `off` |
+| `live_presence_changed` | the shown set, a count or a name changes | `{place, room, shown: [{id, name, kit, crewmate}], hiddenCount, crew: [{id, name, place}]}`. At most 8 other captains are shown, crewmates first, then by id. `hiddenCount` counts the other captains of our place in all its rooms that are not shown (0 on the home islet). `crew` lists the crew members who are online. |
+| `live_peer_moved` | a shown captain sends a valid position | `{id, x, z, facing, moving, everyMs}` |
+| `live_peer_emoted` | a shown captain sends a valid emote | `{id, emote}` |
+| `live_crew_updated` | the server sends a crew event | `{kind, data}` |
+
+Receivers check everything and drop what fails: the sender must be in our place and room by the world presence, `v` must be 1, the shape and the ranges must match, `place` must be ours, `seq` must be newer, a position must come at least 400 ms after the last accepted one from that captain and an emote at least 2 s after.
+
+On the receiving side the adapter that draws a captain glides it in a straight line from where it is drawn to the new spot over `everyMs` (`glide` in `frontend/src/net/live-rules.js`). It snaps instead when the jump is longer than a captain could sprint in 1.5 x `everyMs` at 6 units a second (`shouldSnap`). The walk animation plays while `moving` is true.
+
+### Wiring it into the game
+
+The package builds the module and its rules. The integrator (after A2 and the screens adapter exist) wires it in with these steps, in the way section 3 describes for the weather:
+
+1. Start it once after sign-in when `/api/config` says `flags.live_presence` is on: `const live = startRealtime({ enabled, playerId, getAccessToken, kit, crew })`. `playerId` comes from `GET /api/me` and `getAccessToken` from A2's session module. The library calls it on every connect, every room join and every 25 seconds, so it should answer from the session in memory and renew the token before it ends (if the token is not renewed, the rooms close about an hour after the last one and every rejoin is refused until a fresh token arrives). `enabled` must be the boolean `true`; anything else keeps the module switched off. `crew` is `{ id, memberIds }` from A6, or null. Import `realtime.js` only from the lazily loaded game code (`src/game.js`) or with `await import()`, never from the title entry: with its helpers it adds about 16.5 kB (6.8 kB gzipped) to the file that imports it, while the library `@supabase/supabase-js` stays a separate chunk of about 214 kB (55 kB gzipped) that loads only when the module starts, and the cold title has a budget of 35 kB, of which about 21.5 kB are used.
+2. Call `live.setPlace(null)` on the `travel` event and `live.setPlace(e.place)` on `arrived`, and call it once right after the start. The module says nothing about where we are until it has been told a place once, so that the first announcement already holds the place and its room. Pass null during the intro, the cinematics and the `?demo=1` tour.
+3. In the game loop, call `live.update({x, z, facing, moving: speed > 0.05})` every frame. The module slows itself down. `live.emote(id)` returns whether the emote will be sent: it is `false` for an emote that is not on the list, inside the 3 second cooldown, and while nobody could see it (alone in the room, the socket closing, or our place not announced yet).
+4. The adapter draws other captains with `createCharacter(art, ...)` and moves them with `glide()`.
+5. Call `live.stop()` in `dispose()` and when the player signs out.
+
+### Crew events from the server
+
+`backend/server/crew_broadcast.py` sends one HTTP request per event to `POST {SUPABASE_URL}/realtime/v1/api/broadcast` with the secret key. It is wired into `create_app(..., broadcaster=...)`, and a route asks for it with `BroadcasterDep`. There is no new setting: it uses `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and the flag `live_presence` (while the flag is off it sends nothing).
+
+```python
+sent = await broadcaster.send(crew_id, "board_changed", {"version": 7})   # True if Supabase took it
+```
+
+| Kind | Sent by | After |
+|---|---|---|
+| `board_changed` | L3 | a pin, a deduction, nightfall, a change of post, a beam lock change |
+| `finale_changed` | L3 | the Relighting |
+| `case_changed` | S3 | a card is found or an accusation is made |
+| `partner_changed` | S4 | an NPC errand finishes |
+| `crew_changed` | A6 | someone joins or leaves the crew |
+
+Each caller sends after its database change has succeeded, with `data={"version": n}`, on state changes only and never on every input. A wrong argument (a crew id that is not a uuid, an unknown kind, data over 1 KB) is a bug in the caller and raises `ValueError`. Everything else that can go wrong (the flag is off, Supabase is not set up, more than 20 events for one crew in 10 seconds or more than 5 events in a second over all crews, a refusal, a timeout of 2 seconds for the whole call) returns `False` with one short warning that never holds the key, the crew id or the payload. The list of kinds is `CREW_EVENT_KINDS`, in Python and in `frontend/src/net/live-rules.js`; a test keeps the two equal.
 
 ## 8. Feature flags
 
@@ -745,7 +843,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `sports` | sports predictions | L6 |
 | `arena` | Lantern Duels, the turn-based arena | A7 |
 | `raid` | the phone class raid | A5, later |
-| `live_presence` | seeing other captains in the harbor | A4, later |
+| `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
@@ -769,7 +867,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** the coins and texts of the kits (N5, with the S0 approval) and that the first ending counts (N6). | built, in review |
 | A6 Crews and seats | **Built**: `POST /api/crews` (returns a crew code), `POST /api/crews/join {code}`, `POST /api/crews/me/start` (the muster) and `GET /api/crews/me` (section 2); the columns `crews.code`, `version` and `started_at`, the table `crew_join_failures` and the four crew functions (migration `20261106040000_crew_codes.sql`); `read_open_crew_seat()` in `backend/server/crews/store.py` for S3 and L3. Decision D020. | built, in review |
 | A7 Lantern Duels (the PvP arena) | `POST /api/duels`; `POST /api/duels/{id}/move`; `GET /api/duels/{id}`; the tables `duels` and `duel_moves`; the reasons `arena_stake` and `arena_payout`; the flag `arena` | draft |
-| A4 Harbor presence (later) | The table `presence`; `POST /api/presence`, at most once every 2 seconds; `GET /api/harbor/peers`; the flag `live_presence` | draft |
+| A4 Live presence | **Built** (flag `live_presence` off; its migration is not applied yet): the private Realtime rooms `live:world`, `live:place:<place>:<room>` and `live:crew:<crew id>`; the browser module `frontend/src/online/realtime.js` with its parts in `frontend/src/net/` (`live-rules.js`, `live-rooms.js`, `live-places.js`, `live-sender.js`, `live-view.js`); the events `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted` and `live_crew_updated`; the server helper `backend/server/crew_broadcast.py` (`create_app(..., broadcaster=...)`); the migration `20261106050000_live_presence.sql`; the flag `live_presence`. No table, no route. See section 7 and D018. | built, flag off, migration not applied |
 | L1 Live weather | `GET /api/weather` returning `{cloudCover, rain, fog, wind, isDay, summary, place, source, fetchedAt, attribution}` ([section 2](#get-apiweather)); the settings `WEATHER_PLACE_NAME`, `WEATHER_LATITUDE` and `WEATHER_LONGITUDE`; `startLiveWeather` in `frontend/src/net/weather.js`; the event `weather_updated` | built; the `?place=` option was dropped (one place, chosen by the settings). How the client starts it is in [section 3](#weather). The event stays a draft. |
 | L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
 | L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story round (S0, D018) |

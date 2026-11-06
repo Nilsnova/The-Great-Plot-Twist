@@ -11,6 +11,7 @@ Where things are (one job per file):
     auth.py            checks a login token with Supabase and says who the player is
     sign_in_code.py    swaps the one-time code from the GitHub sign-in for a login token (PKCE)
     supabase_admin.py  server-only calls to the database with the secret key
+    crew_broadcast.py  tells a crew's browsers that something changed (Supabase Realtime)
     wallet.py          the rules for changing a player's coins
     hosts.py           the check for presenter-only routes: is this player a host?
     account/           captain names, the cloud save and "delete my data" (package A2)
