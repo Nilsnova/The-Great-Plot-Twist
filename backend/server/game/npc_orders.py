@@ -37,6 +37,7 @@ class NpcOrder:
     arrive_second: int | None = None
     found_second: int | None = None
     pin_second: int | None = None
+    action_uid: str | None = None
 
 
 @dataclass(frozen=True, repr=False)
