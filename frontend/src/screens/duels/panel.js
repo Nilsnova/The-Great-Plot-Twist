@@ -17,7 +17,7 @@ const TAB_IDS = ['challenges', 'new', 'yours', 'rules'];
 
 export function createPanel(ctx, adapter, onGone) {
   const played = new Set(); // reveals the player has watched, so their reminder disappears
-  let tabId = TAB_IDS[0], tabIndex = 0, view = adapter.read(), busy = false, disposed = false, seenNotice = 0, stopWatching = null;
+  let tabId = TAB_IDS[0], tabIndex = 0, view = adapter.read(), busy = false, disposed = false, seenNotice = 0, stopWatching = null, openGeneration = 0;
 
   // One click at a time: a second click while an intent is in flight is ignored.
   async function guard(task) {
@@ -28,6 +28,7 @@ export function createPanel(ctx, adapter, onGone) {
   }
 
   function play(duel) {
+    if(disposed||!modal.element.open)return;
     played.add(duel.id);
     tabs.element.hidden = true;
     reveal.play(duel);
@@ -35,9 +36,11 @@ export function createPanel(ctx, adapter, onGone) {
     status.update(view, played, reveal.active);
   }
 
-  async function watch(id) {
+  async function watch(id,generation=openGeneration) {
+    if(disposed||!modal.element.open||generation!==openGeneration)return;
     if (view.selected?.id === id) return play(view.selected);
     const result = await guard(() => adapter.select(id));
+    if(disposed||!modal.element.open||generation!==openGeneration)return;
     if (result?.ok) play(result.view.selected);
   }
 
@@ -109,6 +112,7 @@ export function createPanel(ctx, adapter, onGone) {
   }
 
   function onClose() {
+    openGeneration++;
     adapter.setVisible(false);
     ctx.resetInput?.();
     ctx.focus?.();
@@ -121,7 +125,7 @@ export function createPanel(ctx, adapter, onGone) {
 
   function dispose() {
     if (disposed) return;
-    disposed = true;
+    disposed = true;openGeneration++;
     stopWatching?.();
     document.removeEventListener('visibilitychange', onVisibility);
     stopListening();
@@ -133,14 +137,16 @@ export function createPanel(ctx, adapter, onGone) {
   return {
     element: modal.element,
     isGone: () => disposed,
-    open() {
+    open(duelId) {
+      const generation=++openGeneration;
       if (modal.element.open) return heading.focus();
       ctx.resetInput?.();
       modal.open(ctx.container, heading);
       stopWatching ??= whenRemoved(ctx.container, modal.element, dispose); // the game shut down: stop all work
       adapter.setVisible(!document.hidden);
+      if(duelId)return adapter.refresh().then(()=>{if(!disposed&&modal.element.open&&generation===openGeneration)return watch(duelId,generation);});
     },
-    close: () => modal.close(),
+    close: () => {openGeneration++;modal.close();},
     dispose,
   };
 }

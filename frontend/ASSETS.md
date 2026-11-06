@@ -284,6 +284,8 @@ standard library. Their melodies, envelopes and bell timbre are original.
 | `festival-timer-end.wav` | 1.4 s | Four falling chimes, a quiet ending |
 
 The workshop provides labelled native controls and text equivalents; it never
-autoplays, downloads audio eagerly or mixes two auditions. There is no live-game
-playback yet. Future playback must use the existing gesture gate, music/effects
-preferences and captions, and require the server's `festival` flag.
+autoplays, downloads audio eagerly or mixes two auditions. The opt-in festival
+screen now plays these recordings through the existing trusted-gesture audio
+owner, shared music/effects preferences and captions. Its loop starts only after
+Play and stops when the panel closes. Live interaction requires the server's
+`festival` flag; explicit local rehearsal creates no server writes.

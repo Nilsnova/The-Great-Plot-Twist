@@ -755,3 +755,9 @@ The festival smoke accepts `CAPTURE_DIR` for evidence outside the checkout.
 Review art and phone screenshots plus the strict-CSP report are in
 `captures/20261106_G13-Festival-*`. This is Chromium/software-rendering evidence;
 Safari, physical phones and live server/storage integration remain unverified.
+
+## G13 live frontend integration
+
+The earlier checkpoint's deferred frontend work is now implemented in `src/screens/festival/`. The live feature remains controlled by the server's `festival` flag; the new title/pause and HUD launchers do not depend on the paused ordinary case adapter. The server owns timer/claim/ring state and friendly-duel outcomes. The explicitly labelled `?demo=1&festival=1` rehearsal has a separate memory-only transport and creates no real claims, matches or coins. See the screen's README for the frozen request shapes, retry/privacy behavior and browser gates.
+
+The original loop and cues now use the existing trusted-gesture audio owner and music/effects buses. Play starts festival music; shared volume controls and visible captions remain available. All 56 festival drawings remain outside the world's default preload. The additional recorded-audio module is lazy, and the account summary retains its title slot while loading its presentation after first paint.

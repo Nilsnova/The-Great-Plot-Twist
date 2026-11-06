@@ -40,7 +40,8 @@
     "test:presenter": "npm run build && node scripts/check-presenter.js",
     "test:a11y": "node scripts/check-a11y.js",
     "test:g8": "node scripts/check-g8-regression.js",
-    "test:festival": "node scripts/check-festival.js"
+    "test:festival": "node scripts/check-festival.js",
+    "test:festival:ui": "node scripts/check-festival-ui.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

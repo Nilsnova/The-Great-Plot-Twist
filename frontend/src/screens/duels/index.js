@@ -40,7 +40,7 @@ async function ensureArena(ctx) {
 
 export async function openArena(ctx) {
   const panel = await ensureArena(ctx);
-  panel?.open();
+  return panel?.open(ctx.duelId);
 }
 
 // True while the panel's dialog is open. False before the first opening, after it closed, and

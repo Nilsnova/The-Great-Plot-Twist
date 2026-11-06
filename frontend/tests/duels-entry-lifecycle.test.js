@@ -29,3 +29,12 @@ describe('arena owner lifetime',()=>{
     disposeArena();expect(panel.dispose).toHaveBeenCalledOnce();
   });
 });
+
+describe('festival duel handoff',()=>{
+  it('forwards the server-provided duel id and awaits the existing detail panel',async()=>{
+    const adapter={dispose:vi.fn()},panel={open:vi.fn(async id=>id),dispose:vi.fn(),isGone:()=>false};
+    fakes.choose.mockReturnValueOnce(adapter);fakes.panel.mockReturnValueOnce(panel);
+    await expect(openArena({duelId:'fixture-duel'})).resolves.toBe('fixture-duel');
+    expect(panel.open).toHaveBeenCalledWith('fixture-duel');disposeArena();
+  });
+});
