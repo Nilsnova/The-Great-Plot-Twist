@@ -1,8 +1,10 @@
 """The shared coast is public, flag-gated, spoiler-safe and cached only on success."""
 
+import asyncio
 import json
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from server.app import create_app
@@ -79,3 +81,14 @@ def test_world_laptop_fallback_and_database_failure():
     error = client_for(failure=True).get("/api/world")
     assert_error(error, 503, "database_unavailable")
     assert "public" not in error.headers.get("cache-control", "")
+
+
+@pytest.mark.parametrize("stage", ["dark", "relit"])
+def test_public_coast_bulletin_and_exchange_use_the_same_world_state(stage):
+    client = client_for(stage=stage)
+    app = client.app
+    public = client.get("/api/world").json()
+    bulletin_stage = asyncio.run(app.state.world_stage.read())
+    exchange_relit = asyncio.run(app.state.market.relit_check(app.state.admin))
+    assert public["stage"] == bulletin_stage.stage == stage
+    assert public["lightsOn"] == exchange_relit == (stage == "relit")
