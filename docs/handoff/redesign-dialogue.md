@@ -4,7 +4,7 @@ Presentation and verification handoff for Nils' visual simplification request. U
 
 ## Changed
 
-- A fixed story box replaces the overflowing scene, notice, inventory and move-log stack. It is 460px tall on desktop and bounded by the viewport; phones use the available height up to 550px.
+- A fixed story box replaces the overflowing scene, notice, inventory and move-log stack. It is 330px tall on desktop and bounded by the viewport; phones use the available height up to 420px. The duplicate goal line is hidden, the title is quieter, and empty ending choices reserve no space.
 - One short passage appears at a time. Continue replaces it, Show full text reveals it immediately, and the existing instant-text and reduced-motion preferences still work.
 - Two original actions appear per batch. More actions cycles through every remaining action without recording a game move or replaying the typewriter. Keyboard numbers and arrows operate the currently visible choices.
 - Early scene summaries and action labels are shorter. The public story file, action IDs, conditions, engine, endings and accepted move journal are unchanged. Original scene prose, conditional notes, pockets and the accepted move trail remain in the optional Journal.
@@ -22,10 +22,10 @@ npm run build
 ```
 
 - 14 tests pass across three focused files. They cover lossless bounded pages, faithful display summaries, preserved IDs/conditions, new-note delivery, original ending prose, exact accepted-action replay, and the existing ending/arrival DOM contract.
-- Chromium component proof passes 71 checks. It uses the actual intro controller, original story JSON, engine, adapter and browser journal. Viewports: 1280×720, 375×667, 320×568 and 844×390. It checks replaced passages, stable dimensions, controls and text fitting, opt-in original prose, Journal Escape, keyboard/reveal/repeat handling, reduced motion, scene callbacks, both actual endings, disabled actions, reload restoration, restart, and a 503/retry read.
+- Chromium component proof passes 77 checks. It uses the actual intro controller, original story JSON, engine, adapter and browser journal. Viewports: 1280×720, 375×667, 320×568 and 844×390. It checks replaced passages, stable compact dimensions, controls and text fitting, opt-in original prose, Journal Escape, keyboard/reveal/repeat handling, reduced motion, scene callbacks, both actual endings, internal scrolling for long arrival content, disabled actions, reload restoration, restart, and a 503/retry read.
 - Production build and spoiler guard pass: 140 text files, 12 protected lines, no suspect elimination data.
 - `git diff --check` passes.
-- Screenshots inspected at desktop and phone sizes. Evidence is local and untracked in `/tmp/intro-pages-checks/`: opening-1280.png, opening-375.png, opening-320.png, opening-844.png, ending_rescue.png, ending_trapped.png and report.json.
+- Screenshots inspected at desktop and phone sizes. Evidence is local and untracked in `/tmp/intro-compact-checks/`: opening-1280.png, opening-375.png, opening-320.png, opening-844.png, ending_rescue.png, ending_trapped.png, ending_rescue-arrival.png, ending_trapped-arrival.png and report.json. The compact follow-up reruns only the targeted browser proof; the earlier 14 tests and build were already green and its JavaScript behavior is unchanged.
 
 ## Integration notes and remaining checks
 
