@@ -30,8 +30,8 @@ describe('G20 local save validation', () => {
     first.inventory.push('brass_key'); first.flags.push('read_log');
     expect(parseSavedState(text, story)).toEqual(save());
   });
-  // G20-S1: flags are required to be an array but its members are not validated.
-  it.skip('G20-S1: rejects non-string flag members in a corrupt local save', () => {
+  // G20-S1 regression: a saved flag array must contain only strings.
+  it('G20-S1: rejects non-string flag members in a corrupt local save', () => {
     expect(parseSavedState(JSON.stringify({ ...save(), flags: [null, {}, 12] }), story)).toBeNull();
   });
 });

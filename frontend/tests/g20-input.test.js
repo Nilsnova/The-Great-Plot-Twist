@@ -59,8 +59,8 @@ it('touch buttons, keyboard stick and overlay cancellation map to existing contr
   expect(result).toEqual({ moving: { x: 0, y: 1 }, released: { x: 0, y: 0 }, presses: ['KeyE'], actions: ['chart', 'menu'], hidden: true, removed: true });
 });
 
-// G20-T1: a different finger's release currently clears the captured stick.
-it.skip('G20-T1: ignores pointer-up from an unrelated touch', async () => {
+// G20-T1 regression: only the captured finger may release the active stick.
+it('G20-T1: ignores pointer-up from an unrelated touch', async () => {
   const result = await evaluate(async () => {
     const { createTouchControls } = await window.g20Import('/src/controls/touch.js');
     const values = [], controls = createTouchControls(document.body, { setVirtual: (_s, v) => values.push(v), press() {} }, {});

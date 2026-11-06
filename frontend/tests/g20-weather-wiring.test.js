@@ -34,9 +34,8 @@ it('stopping while JSON is pending suppresses state updates, hooks and future re
   expect(fetchImpl).toHaveBeenCalledOnce();
 });
 
-// G20-W1: supported short refresh intervals let a late older reply replace a newer one.
-// Reproduced with the assertions below; source fix is outside this test-only task.
-it.skip('G20-W1: preserves newer weather when an earlier refresh resolves last', async () => {
+// G20-W1 regression: a late older answer must not replace a newer accepted sample.
+it('G20-W1: preserves newer weather when an earlier refresh resolves last', async () => {
   const older = deferred(), newer = deferred();
   const fetchImpl = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
   const stop = startLiveWeather({ setWeather, fetchImpl, intervalMs: 1000 });
