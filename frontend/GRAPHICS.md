@@ -722,3 +722,10 @@ Nils rejected the large provider/licence block in gameplay. It is removed from b
 After this correction, `npm test` passes 345 tests in 58 files and `npm run build` passes the 97-file/twelve-line spoiler guard. Nine focused browser checks pass: `node scripts/check-weather-wiring.js`, `node scripts/check-credits.js`, `node scripts/check-bulletin.js`, `node scripts/check-experience.js`, `node scripts/check-a11y.js`, `node scripts/check-readability.js`, `node scripts/check-loading.js`, `node scripts/check-production.js`, `node scripts/check-csp.js`. The exact results are in [the credit-placement report](captures/20261106_G8-Credit-Placement/Verification.json), in addition to the earlier complete 31-command G8 run.
 
 The expanded accessibility pass includes Credits: **23 contexts / 69 viewport samples / 202 Tab steps / 1,537 text measurements**, minimum computed contrast **4.694:1**, zero failures/browser errors/external requests. Current cold title JavaScript is **21,080 bytes / 9,956 gzip**, matching the unchanged G7 ceiling. The original pre-feedback checkpoint measurements above remain historical evidence. Future integration must keep data/legal attribution in Settings → Credits and out of gameplay overlays.
+
+
+## Build identity (G9 starter)
+
+Vite injects `__BUILD_STAMP__ = {sha,builtAt}` at compile time and emits the same public fields in `build-stamp.json`. SHA resolution is validated `VERCEL_GIT_COMMIT_SHA`, then local `git rev-parse --short HEAD`, then `dev`; only a seven-character hex commit and ISO timestamp reach the browser. No environment object, credential or runtime Git/API call is exposed. `scripts/build-stamp.js` has injected dependencies so its fallback order is unit-tested.
+
+Settings and Credits show the identity and build time explicitly in Europe/Lisbon. The world has a 16 px corner badge above its conditions strip. Presenter URLs (`?demo=1`, including recording) omit that badge, and app teardown/failed world loading dispose it. Captions treat its area as occupied. Run `npm run test:build-stamp` to verify compiled files, Settings/Credits, the phone badge and presenter exclusion.

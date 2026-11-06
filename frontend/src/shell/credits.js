@@ -1,6 +1,7 @@
 // Credits load only when opened. Data lives in the team's editable list.
 import {teamMembers} from './team.js';
 import {node} from '../ui/kit/dom.js';
+import {createBuildInfo} from '../build/info.js';
 export function credits() {
   const section=node('section','shell-credits');
   section.append(node('p','','A four-person student project. Original islands, pixel art and sound, made with code.'));
@@ -10,5 +11,5 @@ export function credits() {
   section.append(node('p','','Island Exchange live market data: Binance public market data. Recorded replay: Binance Vision, CC BY-NC-SA 4.0. Adapted to one-minute closing prices for a 90-minute replay.'));
   const marketLinks=node('p');for(const [label,href] of [['Binance market data','https://data.binance.vision/'],['Replay licence · CC BY-NC-SA 4.0','https://creativecommons.org/licenses/by-nc-sa/4.0/']]){const link=node('a','',label);link.href=href;link.target='_blank';link.rel='noopener noreferrer';marketLinks.append(link,document.createTextNode(' '));}section.append(marketLinks);
   section.append(node('h3','','Tools and licences'),node('p','','Three.js, Vite and Vitest: MIT. Playwright Core: Apache-2.0. Pillow (art generation): HPND. Original project graphics and procedural audio use no external assets, fonts or recordings. Package notices accompany the installed tools.'));
-  return section;
+  section.append(node('h3','','Build'),createBuildInfo());return section;
 }

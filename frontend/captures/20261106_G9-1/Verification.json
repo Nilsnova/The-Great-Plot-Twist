@@ -1,0 +1,22 @@
+[
+  {
+    "command": "node scripts/check-build-stamp.js",
+    "code": 0,
+    "ms": 10444
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 7606
+  },
+  {
+    "command": "node scripts/check-lifecycle.js",
+    "code": 0,
+    "ms": 10048
+  },
+  {
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 6994
+  }
+]

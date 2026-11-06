@@ -4,7 +4,7 @@ import {node} from '../ui/kit/dom.js';
 import {hasLocalIntro,shellTransition} from './logic.js';
 import {menuButton,pixelLogo} from './screens.js';
 // Keep the same explanation on initial render and subsequent account updates.
-const introNote=account=>account?.hasKit?'New game restarts only this device’s intro. Your captain and kit stay.':'Continue uses cloud when signed in, otherwise this browser’s intro.';
+const introNote=account=>account?.hasKit?'New game restarts the local intro. Captain and kit stay.':'Continue uses cloud when signed in, or the local intro.';
 export function createShell(ctx) {
   let mode='title',returnTo='title',disposed=false,request=0,resumeControl=null,freshNote=null;
   const modal=createModal({title:'The Great Plot Twist',onClose(){if(mode==='playing'&&!ctx.hasOverlay())ctx.focus();},onCancel(){if(mode==='pause')play();else if(mode!=='title')back();}});

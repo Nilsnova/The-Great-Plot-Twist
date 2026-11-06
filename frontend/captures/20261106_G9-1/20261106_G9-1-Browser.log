@@ -1,0 +1,15 @@
+{
+  "stamp": {
+    "sha": "ea89e35",
+    "builtAt": "2026-11-06T15:49:32.364Z"
+  },
+  "checks": [
+    "Built JavaScript contains the injected stamp",
+    "Settings displays the injected commit and build time",
+    "Credits uses the same build identity",
+    "Normal gameplay has a small version badge",
+    "Phone badge remains readable and above the weather controls",
+    "Presenter mode contains no corner build label",
+    "Build stamp has no browser error or external dependency"
+  ]
+}

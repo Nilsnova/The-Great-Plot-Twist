@@ -1,11 +1,17 @@
 // Local manifests support QA; production exposes only game and approved galleries.
 import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {resolveBuildStamp} from './scripts/build-stamp.js';
+const buildStamp=resolveBuildStamp({envSha:process.env.VERCEL_GIT_COMMIT_SHA,
+ readGitSha:()=>execFileSync('git',['rev-parse','--short','HEAD'],{encoding:'utf8',timeout:1000,stdio:['ignore','pipe','ignore']})});
 export const previewSecurityHeaders={
  'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
  'X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin',
 };
 export default defineConfig({
+ define:{__BUILD_STAMP__:JSON.stringify(buildStamp)},
+ plugins:[{name:'public-build-stamp',generateBundle(){this.emitFile({type:'asset',fileName:'build-stamp.json',source:JSON.stringify(buildStamp)+'\n'});}}],
  base:'./',server:{proxy:{'/api':'http://127.0.0.1:8000'}},
  preview:{proxy:{'/api':'http://127.0.0.1:8000'},headers:previewSecurityHeaders},
  build:{manifest:!process.env.VERCEL,rolldownOptions:{input:{

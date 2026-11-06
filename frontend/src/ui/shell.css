@@ -19,3 +19,9 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 /* Accessibility: keep readable text and full-size native targets. */
 .preference input[type=range]{min-height:44px}.preference input[type=checkbox]{width:44px;height:44px}
 .preferences,.preference{min-width:0}.preference select{width:100%;min-width:0}.shell-credits a{display:inline-flex;align-items:center;min-height:44px}.kit-quiet:hover{color:#fff0c5}
+
+/* Build metadata stays readable without competing with gameplay controls. */
+.build-info{font-size:16px;line-height:1.5;overflow-wrap:anywhere}.build-info p{margin:6px 0 0}
+.build-badge{position:fixed;right:24px;bottom:88px;font:16px/1.4 'Courier New',monospace;padding:3px 7px;color:#fff0c8;background:#20382fe6;pointer-events:none}
+body.presenter-blanking .build-badge{display:none}
+@media(max-width:600px){.build-badge{right:12px;bottom:84px}}
