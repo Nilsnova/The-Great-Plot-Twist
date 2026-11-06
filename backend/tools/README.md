@@ -1,6 +1,12 @@
-# The case timing check
+# Developer tools
 
-> **What this folder is:** one program, `simulate_case.py`, that plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
+The [disposable local API](../../docs/LOCAL-TEST-SERVER.md) runs the real API and SQL rules
+with four fixed players and a database that is deleted on shutdown. The rest of this page
+describes the case timing design tool.
+
+## The case timing check
+
+> **The timing program:** `simulate_case.py` plays "The Light That Shouldn't Be" on paper for every crew and checks the promised minutes: about 120 for a crew of four, about 150 for one player with three NPC partners.
 >
 > **Who uses it:** the owners of the case package (S3) and the NPC partner package (S4), everyone who changes a minute, a window or a price in `backend/content/secret/case.json`, and their coding agents. The result of the run, with a reading, is in [docs/story/TIMING.md](../../docs/story/TIMING.md).
 
@@ -103,6 +109,14 @@ These four numbers are not in `case.json`. They are named constants at the top o
 4. If the change is good, make it in the real file in a pull request, run the case linter and this check, and paste the new output into TIMING.md.
 
 If a window or a timer changes, also run `--kit-orders`. The best NPC kit order depends on those numbers.
+
+## Disposable local API
+
+For browser integration, [LOCAL-TEST-SERVER.md](../../docs/LOCAL-TEST-SERVER.md) documents the
+guarded, loopback-only API with four fixed players and a disposable real PostgreSQL database.
+From `backend/`: `LOCAL_TEST_SERVER=1 APP_ENV=local uv run --with pgserver --with 'psycopg[binary]' python -m tools.local_server`.
+It runs the real migrations, referee and API rules; Ctrl-C removes its database. It refuses
+preview, production and any environment with a `VERCEL` variable.
 
 ## Limits
 

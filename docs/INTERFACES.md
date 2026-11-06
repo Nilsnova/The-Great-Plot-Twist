@@ -96,7 +96,7 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
 ```
 
 `auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
@@ -771,6 +771,11 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `live_presence` | seeing other captains in the harbor | A4, later |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
 | `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
+| `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
+
+The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
+sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
+flow. No preview or production settings are enabled by adding this flag.
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
 

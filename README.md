@@ -35,7 +35,7 @@ The team is turning the text mystery Plot Twist into a browser game: a top-down 
 - **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
 - **Foundation (package F0) is on `main`:** the API skeleton (health, config and keep-alive routes, the sign-in check, the wallet rules, the pattern for outside data), the first database migration in `supabase/`, `vercel.json` and the docs in `docs/`. Group 1 adds account, referee and crew features on that foundation.
 - **On main:** group 1 includes the story round, account/referee work and crews. G5/G6 browser screens are also present.
-- **In progress:** G9 connects the browser; G10 handles server integration, the case backend and follow-ups. Group 3 waits for Claude to confirm group 2; case Phase 1 in the cloud needs the private spec and tests from Nils' Mac. See the [status page](docs/STATUS.md) for the current checkpoint.
+- **In progress:** G9 connects the browser. Case backend Phase 1 is ready on `feat/case-backend`; its labelled spec is [specs/case-backend.md](specs/case-backend.md) and the cloud inputs and checkpoints are in [docs/handoff/](docs/handoff/). Group 3 and case Phase 2 wait for group 2 and the L2 migration on `origin/main`. The [disposable local API](docs/LOCAL-TEST-SERVER.md) starts from `backend/` with `LOCAL_TEST_SERVER=1 APP_ENV=local uv run --with pgserver --with 'psycopg[binary]' python -m tools.local_server`.
 
 ### What the final README must contain
 
