@@ -29,7 +29,7 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
    reliability, security, accessibility, developer tools, help, privacy and submission materials.
    Nils authorized enabling completed festival and sports on 6 Nov; each still needs its proofs.
    RELIGHT_OPEN stays unset until the separately controlled game-opening step.
-5. Add the optional AI helper described below, then rehearse the full deployed experience.
+5. Simplify the visual game flow, complete the browser connection and rehearse the deployed experience.
 
 ### Current delivery map
 
@@ -42,10 +42,9 @@ feature-complete minimum versions by Sunday 8 Nov, then stabilization and submis
 | Sports | Reviewed code and database deployed, feature off | Add provider key directly to Vercel; verify current provider read-only before activation |
 | Reliability, tests, help/privacy, security/notices, devtools | Deployed; combined gates and public read-only verification pass | Authenticated browser/device journey follows G9 |
 | Presentation, drills and submission materials | Offline deck/PDF, presenter script and contributor guides built | Teammate names, private course requirements and spoken laptop/projector rehearsal |
-| Spoiler-safe ChatGPT helper | Earned-evidence context filter built/tested; login/inference still off | Official hosted-client/plan-usage approval; consent, help/output/UI integration after G9 and live proof |
 
-No routine merge permission is needed. G9 is active in the cloud; the immediate external dependencies are the sports key in Vercel
-and official ChatGPT website-client registration. Teammate credit names,
+No routine merge permission is needed. G9 is active in the cloud; live sports needs its provider key
+in Vercel. Teammate credit names,
 submission details and the physical rehearsal are needed before hand-in. Secrets and student
 numbers must stay out of chat and Git. Stabilization adds no database migration or paid service.
 
@@ -54,14 +53,8 @@ ambience, footsteps, foghorns, dialogue/UI sounds, building cues and station hum
 user gesture, has separate master/music/effects levels and visible captions for key cues. Keep audio
 regressions in release checks; listening balance on the presenter laptop remains a rehearsal task.
 
-**AI helper (new, Nils, 6 Nov):** spoiler-safe hints and game help powered by a player's eligible
-ChatGPT plan through official Sign in with ChatGPT. Add it as an optional feature after the earned-case
-adapter. The model may see only the requesting player's earned, authorized game view and public help;
-it receives no secret case content and cannot write game state or award coins. Keep ordinary gameplay
-available when disconnected, consent is declined or usage is exhausted. Website OAuth activation is
-blocked on OpenAI approval and a registered client/callback: the official website flow is a limited
-trial, not a general-purpose client registration. Never borrow a Codex client ID or store a player's
-ChatGPT credentials. See [the integration scope](specs/AI-helper.md).
+**Scope update, Nils, 6 Nov:** the AI companion idea is cancelled. Its context code, feature flag
+and active integration plan are removed. No AI approval or provider key is a game prerequisite.
 
 ## Changes since v0.2 (Thu 5 Nov, late evening)
 

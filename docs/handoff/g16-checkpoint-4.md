@@ -1,5 +1,7 @@
 # G16 checkpoint 4 — current reliability integration
 
+> Later scope update, 6 Nov: the AI companion is cancelled. The flag registry now has ten names and the settings subset check covers 1,024 combinations; the measurements below describe the earlier release.
+
 This note supersedes the budgets, flag registry, asset bound and CSP proposals in historical
 G16 checkpoints 1–3. Those notes and their dated measurements remain unchanged for provenance.
 The current limits are **21,080 bytes of title JavaScript**, **12,000 bytes of title CSS**,

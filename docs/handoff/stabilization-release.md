@@ -1,5 +1,7 @@
 # Stabilization, help and submission release · 6 Nov 2026
 
+> Later scope update, 6 Nov: Nils cancelled the AI companion. AI-related remaining work and flag snapshots below are historical; its code and flag are removed. See [the cancellation record](ai-earned-context.md).
+
 Responsible: Codex for Nils. Branch: `integrate/stabilization-submission`, following deployed
 main `d5ad219` and READY production `dpl_2yKCaKZKv1ZFE7z6jiTtCYmTmpFK`.
 

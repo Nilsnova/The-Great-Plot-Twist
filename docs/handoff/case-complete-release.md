@@ -1,5 +1,7 @@
 # Case minimum, server followups and economy release · 6 Nov 2026
 
+> Later scope update, 6 Nov: Nils cancelled the AI companion. AI-related remaining work and flag snapshots below are historical; its code and flag are removed. See [the cancellation record](ai-earned-context.md).
+
 Used by: Nils and integrating agents; source branch integrate/case-npc, following live main `40ba1d5`.
 
 - Completed the four minimum case-backend phases: earned clues, shared board, three-light night,

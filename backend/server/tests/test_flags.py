@@ -20,7 +20,6 @@ def test_flag_names_are_exactly_the_agreed_list():
         "arena",
         "raid",
         "live_presence",
-        "companion_llm",
         "case",
         "sign_in",
         "bulletin",
@@ -52,12 +51,13 @@ def test_spaces_empty_pieces_and_repeats_are_fine():
     assert [name for name in FLAG_NAMES if flags[name]] == ["market", "arena"]
 
 
-def test_unknown_flag_is_rejected_and_the_message_helps():
+@pytest.mark.parametrize("name", ["markt", "companion_llm"])
+def test_unknown_or_removed_flag_is_rejected_and_the_message_helps(name):
     with pytest.raises(UnknownFlagError) as problem:
-        parse_flags("markt")
+        parse_flags(name)
 
     message = str(problem.value)
-    assert "markt" in message
+    assert name in message
     assert known_flags_text() in message  # the message lists every valid name
 
 

@@ -97,10 +97,10 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false, "bulletin": false, "festival": false}, "auth": {"provider": "github", "supabaseUrl": ""}, "capabilities": {"hostCaseClock": false}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "case": false, "sign_in": false, "bulletin": false, "festival": false}, "auth": {"provider": "github", "supabaseUrl": ""}, "capabilities": {"hostCaseClock": false}}
 ```
 
-`flags` contains all eleven registered names, including `festival`. `capabilities.hostCaseClock` is
+`flags` contains all ten registered names, including `festival`. `capabilities.hostCaseClock` is
 true only while the installed host-clock route and enabled case flag make it available; host UI
 also requires the verified account's `isHost`. Current G9 integration answers are in the
 [cloud readiness note](handoff/g9-cloud-readiness.md).
@@ -1212,10 +1212,10 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `arena` | Lantern Duels, the turn-based arena | A7 |
 | `raid` | the phone class raid | A5, later |
 | `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
-| `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
 | `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
 | `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
+| `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
