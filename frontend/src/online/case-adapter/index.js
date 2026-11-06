@@ -2,11 +2,15 @@
 import {createApi} from '../api.js';
 import {session as defaultSession} from '../session.js';
 import {createLazyAuth} from '../lazy-auth.js';
+import {on as busOn} from '../../core/events.js';
 import {bindCaseMethods} from '../../adapter/contract.js';
 import {createAdapterStore} from './store.js';
 import {createAdapterTransport} from './transport.js';
 import {createAdapterPolling} from './polling.js';
-import {createProfileHandlers} from './profile.js';
+import {createProfileHandlers, initializeAccountName} from './profile.js';
+import {createAccountSaves} from './saves.js';
+import {createAccountLifecycle} from './account-lifecycle.js';
+import {refreshAccountRewards} from './rewards.js';
 import {createCrewHandlers} from './crew.js';
 import {validateIntent} from './validate.js';
 import {introJournal} from '../../story/intro-journal.js';
@@ -23,13 +27,14 @@ const messages = {
 
 export function createRealCaseAdapter(deps = {}) {
   const session = deps.session ?? defaultSession;
-  const store = createAdapterStore({session, readLocalSave: deps.readLocalSave ?? introJournal().read});
+  const readLocalSave = deps.readLocalSave ?? introJournal().read;
+  const store = createAdapterStore({session, readLocalSave});
   const api = deps.api ?? createApi({session, fetchImpl: deps.fetchImpl});
   const publicApi = deps.publicApi ?? createApi({
     session: {getToken: () => null, clearToken() {}}, fetchImpl: deps.fetchImpl,
   });
   const ctx = {
-    store, state: store.state, api, publicApi, session,
+    store, state: store.state, api, publicApi, session, readLocalSave, on: deps.on ?? busOn,
     now: typeof deps.clock === 'function' ? deps.clock : deps.clock?.now?.bind(deps.clock) ?? Date.now,
     random: deps.random ?? Math.random,
     document: deps.document ?? globalThis.document, window: deps.window ?? globalThis.window,
@@ -43,8 +48,20 @@ export function createRealCaseAdapter(deps = {}) {
     ? initialAuth.state : store.state.accountState;
   store.commit({auth: initialAuth, accountState: initialState, signInAllowed: import.meta.env.DEV});
   ctx.transport = createAdapterTransport(ctx);
+  ctx.saves = createAccountSaves(ctx);
+  const accountLifecycle = createAccountLifecycle(ctx);
+  ctx.writeDeviceReplay = data => {
+    try {
+      (deps.writeLocalSave ?? introJournal().write)(JSON.stringify({version: 1, actions: data.actions}));
+    } catch { /* The validated cloud copy still remains available when device storage is blocked. */ }
+  };
+  ctx.onDeleted = () => {
+    ctx.saves.clearDevice();
+    try { (deps.clearLocalSave ?? (() => introJournal().write('')))(); } catch { /* Best-effort device cleanup. */ }
+  };
   let privateTask = null;
   let signingOut = false;
+  let authIntentGeneration = 0;
   async function hydrate() {
     if (!session.isSignedIn() || store.isClosed() || ctx.document?.hidden) return;
     const epoch = store.scope();
@@ -52,14 +69,20 @@ export function createRealCaseAdapter(deps = {}) {
     const task = {epoch, promise: null};
     task.promise = (async () => {
       const result = await ctx.transport.read('me');
-      if (result.mapped.accepted && !store.isClosed()) {
+      if (result.mapped.accepted && store.isCurrent(epoch)) {
+        await initializeAccountName(ctx);
+        if (!store.isCurrent(epoch)) return;
         await Promise.all([ctx.transport.read('save'), ctx.transport.read('crew')]);
+        if (!store.isCurrent(epoch)) return;
+        accountLifecycle.reconcile();
+        await refreshAccountRewards(ctx);
       }
     })();
     privateTask = task;
     try { await task.promise; } finally { if (privateTask === task) privateTask = null; }
   }
   ctx.signOut = async () => {
+    authIntentGeneration += 1;
     signingOut = true;
     store.invalidate();
     const authTask = ctx.auth.signOut?.();
@@ -79,6 +102,7 @@ export function createRealCaseAdapter(deps = {}) {
         cloudSave:null,rewardsRows:[],continuation:null});
       void hydrate();
     } else {
+      authIntentGeneration += 1;
       ctx.transport.clearPending();
       store.commit({accountState:'expired',me:null,profile:null,crew:null,nameReply:null,
         cloudSave:null,rewardsRows:[],continuation:null,joinPreview:null});
@@ -108,13 +132,17 @@ export function createRealCaseAdapter(deps = {}) {
     if (session.isSignedIn()) return ctx.accept('You are already signed in.');
     if (!import.meta.env.DEV && ctx.state.config?.flags?.sign_in !== true) return ctx.refuse('feature_off');
     if (!ctx.auth.signIn) return ctx.refuse('not_connected');
+    const intent = ++authIntentGeneration;
+    const current = () => !store.isClosed() && intent === authIntentGeneration;
     store.commit({accountState: 'signing_in'});
     const result = await ctx.auth.signIn();
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
     if (!result?.ok) {
       store.commit({accountState: 'error', auth: ctx.auth.read?.() ?? null});
       return {...ctx.refuse('not_connected'), message: result?.message || messages.not_connected};
     }
     await hydrate();
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
     return ctx.accept('Sign-in is ready.');
   };
   async function dispatch(name, args) {
@@ -126,6 +154,8 @@ export function createRealCaseAdapter(deps = {}) {
       catch { return store.answer(ctx.refuse('invalid_request')); }
     }
     if (name === 'completeIntro' && !session.isSignedIn()) {
+      const result = await ctx.saves.stageReplay({kind:'intro',actions:[...args[0].actions],place:'lighthouse_isle'});
+      if (result.accepted && !session.isSignedIn()) store.commit({saveState:'saved'});
       return store.answer(ctx.refuse('sign_in_required'));
     }
     await boot;
@@ -142,8 +172,11 @@ export function createRealCaseAdapter(deps = {}) {
     read: store.read, subscribe: store.subscribe, tick() {},
     dispose() {
       if (store.isClosed()) return;
+      authIntentGeneration += 1;
       store.dispose();
       polling.dispose();
+      accountLifecycle.dispose();
+      ctx.saves.dispose();
       stopSession();
       ctx.transport.clearPending();
       stopAuth?.();

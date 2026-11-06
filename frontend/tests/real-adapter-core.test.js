@@ -13,6 +13,7 @@ function serverApi({signedIn=false}={}){
   const replies=new Map([
     ['GET /api/config',{ok:true,status:200,data:{flags:{sign_in:true},auth:{provider:'github'}}}],
     ['GET /api/me',{ok:true,status:200,data:me}],
+    ['POST /api/me/name',{ok:true,status:200,data:{captainName:me.captainName,rerollsLeft:1}}],
     ['GET /api/save',{ok:true,status:200,data:{version:1,data:{},updatedAt:null}}],
     ['GET /api/crews/me',{ok:true,status:200,data:{crew:null}}],
   ]);

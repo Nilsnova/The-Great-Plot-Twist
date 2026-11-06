@@ -10,7 +10,7 @@ const accountStates={signed_out:'Signed out',signing_in:'Signing in',signed_in:'
 const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline copy',conflict:'Conflict'};
 const accountOf=view=>view?.account??view??{};
 const saveOf=(account,key)=>account.save?.[key]??{state:'idle',label:key==='device'?'No intro progress saved on this device':'No cloud save',updatedAt:null};
-function timestamp(value){if(!value)return null;const parsed=new Date(value);return Number.isNaN(parsed.valueOf())?String(value):parsed.toLocaleString();}
+function timestamp(value){if(!value)return null;const parsed=new Date(value);return Number.isNaN(parsed.valueOf())?null:new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Lisbon'}).format(parsed);}
 function stateLabel(value,labels){return labels[value]??(String(value??'').replaceAll('_',' ')||'Unknown');}
 
 export function createAccountScreen({send,navigate}){
@@ -61,12 +61,12 @@ export function createAccountScreen({send,navigate}){
     action(actions,account.canContinue?(save.source==='cloud'?'Continue from cloud':'Continue from this device'):'No game to continue','continueGame',[],'account-continue',busy||!account.canContinue);
     element.append(actions);
     if(account.hasKit)element.append(node('p','account-muted','Your confirmed kit is available for the next crew. New Game does not remove it.'));
-    if((state==='signed_in'||state==='expired')&&(account.hasKit||account.save?.device?.state!=='idle'||account.save?.cloud?.state!=='idle')){
+    if(state==='signed_in'||state==='expired'){
       if(deleteArmed){
         const confirm=node('section','account-delete-confirm');confirm.setAttribute('aria-labelledby','account-delete-title');
         const heading=node('h4','','Delete all your player data?');heading.id='account-delete-title';
-        confirm.append(heading,node('p','','This removes your account data, captain name, kit, saves, crew membership, coins, rewards and ledger history. This cannot be undone. Other crew members and shared case progress remain. If your crew has other players, leadership passes to the next occupied player seat.'));
-        const controls=node('div','account-actions');action(controls,'Confirm deletion','deleteMyData',[{confirm:true}],'account-delete-confirm',busy);
+        const description=node('p','','This removes your account data, captain name, kit, saves, crew membership, coins, rewards and ledger history. This cannot be undone. Other crew members and shared case progress remain. If your crew has other players, leadership passes to the next occupied player seat.');description.id='account-delete-description';confirm.append(heading,description);
+        const controls=node('div','account-actions');const confirmButton=action(controls,'Confirm deletion','deleteMyData',[{confirm:true}],'account-delete-confirm',busy);confirmButton.setAttribute('aria-describedby',description.id);
         const cancel=createButton({label:'Keep my data',variant:'quiet',onClick:()=>{deleteArmed=false;feedback='';render();}});buttons.push(cancel);controls.append(cancel.element);confirm.append(controls);element.append(confirm);
       }else action(actions,'Delete my data','armDelete',[],'account-delete',busy);
     }
@@ -74,7 +74,17 @@ export function createAccountScreen({send,navigate}){
     element.append(call.element);restoreRequestedFocus();
   }
   let focusKey=null;
-  function restoreRequestedFocus(){if(!focusKey)return;const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey);(target??element.querySelector('button:not(:disabled),input,select'))?.focus({preventScroll:true});focusKey=null;}
+  function restoreRequestedFocus(){
+    if(!focusKey)return;
+    if(element.closest('dialog')?.open===false){focusKey=null;return;}
+    const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey);
+    if(target?.disabled&&busy)return;
+    if(!target&&busy)return;
+    const next=target&&!target.disabled?target:element.querySelector('button:not(:disabled),input,select');
+    next?.focus({preventScroll:true});
+    if(focusKey==='account-delete-confirm')element.querySelector('.account-delete-confirm')?.scrollIntoView?.({block:'start'});
+    focusKey=null;
+  }
   async function invoke(method,...args){
     if(method==='armDelete'){deleteArmed=true;feedback='Review the full deletion notice and press Confirm deletion to continue.';focusKey='account-delete-confirm';refresh();return;}
     if(busy||disposed)return;busy=true;const token=++request;feedback='';lastIntent=[method,...args];call.loading();refresh();
@@ -82,7 +92,10 @@ export function createAccountScreen({send,navigate}){
     catch(error){if(!disposed&&token===request)call.fail(intentFailure(error));}
     finally{busy=false;if(!disposed)refresh();}
   }
-  function refresh(){focusKey=element.contains(document.activeElement)?document.activeElement.dataset.focus:focusKey;render();if(focusKey){const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey);(target??element.querySelector('button:not(:disabled),input,select'))?.focus({preventScroll:true});focusKey=null;}}
+  function refresh(){
+    if(!focusKey&&element.contains(document.activeElement))focusKey=document.activeElement.dataset.focus??null;
+    render();
+  }
   function update(next){view=next??{};if(accountOf(view).state==='signed_out')deleteArmed=false;refresh();}
   refresh();
   return {element,update,signIn:()=>invoke('signIn'),tick(){},close(){request++;call.clear();},dispose(){disposed=true;call.dispose();clearButtons();element.remove();}};

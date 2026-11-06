@@ -23,13 +23,20 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
     const page=await browser.newPage({viewport:{width:1440,height:900}});
     await stubOfflineApi(page);
     await stubWeather(page);
-    const errors=[],external=[];
-    page.on('pageerror',error=>errors.push(error.message));
-    page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
+    const errors=[],external=[],pageErrors=[],consoleErrors=[];
+    page.on('pageerror',error=>{errors.push(error.message);pageErrors.push(error.name);});
+    page.on('console',message=>{
+      if(message.type()!=='error')return;
+      const text=message.text();errors.push(text);
+      let path=null;
+      try{path=new URL(message.location().url).pathname.replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi,':id');}catch{}
+      const status=text.match(/server responded with a status of (\d{3})/);
+      consoleErrors.push({path,status:status?Number(status[1]):null,resource:text.startsWith('Failed to load resource:')});
+    });
     page.on('request',request=>{if(!request.url().startsWith(url)&&!request.url().startsWith('data:'))external.push(request.url());});
     await mkdir('captures',{recursive:true});
     let closed=false;
-    return {page,browser,errors,external,url,close:async()=>{
+    return {page,browser,errors,external,pageErrors,consoleErrors,url,close:async()=>{
       if(closed)return;closed=true;
       try{await browser.close();}finally{await server?.close();}
     }};

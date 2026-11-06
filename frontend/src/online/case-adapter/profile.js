@@ -1,19 +1,39 @@
 // Account intents forward accepted action logs and authoritative replies, never local kit rules.
 import {validReplay} from './replay.js';
 import {validIntroReply, validNameReply} from './profile-shapes.js';
+import {replaySaveData} from './saves.js';
+import {refreshAccountRewards} from './rewards.js';
+
+export async function initializeAccountName(ctx) {
+  if(!ctx.session.isSignedIn())return ctx.refuse('sign_in_required');
+  const result=await ctx.transport.change({route:'/api/me/name',kind:'me'});
+  if(result.reply?.ok&&result.mapped.accepted){
+    if(!validNameReply(result.reply.data))return ctx.refuse('invalid_request');
+    const nameReply=result.reply.data;
+    ctx.store.commit({nameReply,me:ctx.state.me?{...ctx.state.me,captainName:nameReply.captainName}:null});
+  }
+  return result.mapped;
+}
+
 export function createProfileHandlers(ctx) {
   const {store, state, transport} = ctx;
   async function completeIntro(receipt) {
+    const scope=store.scope();
     const result = await transport.change({route: '/api/intro/complete',
       body: {actions: [...receipt.actions]}, kind: 'me'});
     if (result.reply?.ok && result.mapped.accepted) {
       if (!validIntroReply(result.reply.data)) return ctx.refuse('invalid_request');
       store.commit({profile: result.reply.data});
       await transport.read('me');
+      if(!store.isCurrent(scope))return ctx.refuse('session_expired');
+      await ctx.saves?.stageReplay({kind:'world',actions:[...receipt.actions],
+        place:result.reply.data.kit.startPlace},{immediate:true});
+      await refreshAccountRewards(ctx);
     }
     return result.mapped;
   }
   async function rerollName() {
+    const scope=store.scope();
     const result = await transport.change({route: '/api/me/name/reroll',
       body: {}, kind: 'me', actionUid: true});
     if (result.reply?.ok && result.mapped.accepted) {
@@ -21,7 +41,13 @@ export function createProfileHandlers(ctx) {
       if (!validNameReply(nameReply)) return ctx.refuse('invalid_request');
       store.commit({nameReply, me: state.me ? {...state.me, captainName:nameReply.captainName} : null});
     }
-    if (result.mapped.accepted) await transport.read('me');
+    if (result.mapped.accepted) {
+      await transport.read('me');
+      if(!store.isCurrent(scope))return ctx.refuse('session_expired');
+      if(result.reply?.ok!==true)await initializeAccountName(ctx);
+    } else if(result.mapped.reason==='name_reroll_used'&&state.nameReply){
+      store.commit({nameReply:{...state.nameReply,rerollsLeft:0}});
+    }
     return result.mapped;
   }
   async function continueGame() {
@@ -38,24 +64,27 @@ export function createProfileHandlers(ctx) {
     if (!saved.mapped.accepted && !(missing && state.me?.kit)) return saved.mapped;
     if (!store.isCurrent(scope)) return ctx.refuse('session_expired');
     if (missing) store.commit({cloudSave: null});
-    const data = state.cloudSave?.data;
+    const data = replaySaveData(state.cloudSave?.data);
     if (validReplay(data)) {
-      store.commit({continuation: {source: 'cloud', kind: data.kind,
-        actions: [...data.actions], place: data.kind === 'world' ? state.me?.place : 'lighthouse_isle'}});
+      const kind=data.kind==='world'&&state.me?.kit?'world':'intro';
+      store.commit({continuation: {source: 'cloud', kind,
+        actions: [...data.actions], place: kind === 'world' ? data.place : 'lighthouse_isle'}});
     } else if (state.me?.kit) {
       store.commit({continuation: {source: 'cloud', kind: 'world', actions: [], place: state.me.place}});
     } else store.commit({continuation: {source: 'local', kind: 'intro', actions: null, place: 'lighthouse_isle'}});
     return ctx.accept('Your saved progress is ready.');
   }
-  async function deleteMyData() {
+  async function deleteMyData(confirmation) {
+    if(confirmation?.confirm!==true)return ctx.refuse('confirmation_required');
     const result = await transport.change({route: '/api/me', method: 'del',
       body: {confirm: true}, kind: 'me'});
     if (result.reply?.ok && result.mapped.accepted) {
       if (result.reply.data?.deleted !== true) return ctx.refuse('invalid_request');
+      ctx.onDeleted?.();
       await ctx.signOut();
     }
     return result.mapped;
   }
   return {completeIntro, rerollName, continueGame, deleteMyData,
-    resolveSaveConflict: () => ctx.refuse('not_ready')};
+    resolveSaveConflict: choice => ctx.saves?.resolve(choice)??ctx.refuse('not_ready')};
 }

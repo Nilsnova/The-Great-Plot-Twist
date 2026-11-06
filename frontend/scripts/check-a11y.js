@@ -59,7 +59,20 @@ try{
  await page.screenshot({path:prefix+'-modal-caption-375.png'});
  await audit('main-crew','.case-modal[open]','case');await page.keyboard.press('Escape');report.caseEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));await audit('world','.hud');
  await page.evaluate(()=>window.__plotTwist.accountHost.open());
- await audit('account','.account-modal[open]');await page.keyboard.press('Escape');report.accountEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));
+ await audit('account','.account-modal[open]');
+ for(const state of ['signing_in','signed_in','expired','error']){
+  await page.evaluate(state=>window.__plotTwist.adapter.dev.setAccount({state,signInReadyAt:null,sessionExpiresAt:null,saveState:'idle'}),state);
+  await audit('account-'+state,'.account-modal[open]');
+ }
+ await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'signed_in',saveState:'conflict',
+  deviceSave:{state:'saved',label:'Device progress',kind:'intro',actions:['to_desk'],place:'lighthouse_isle'},
+  cloudSave:{state:'saved',label:'Cloud progress',kind:'intro',actions:['to_shore'],place:'lighthouse_isle'}}));
+ await audit('account-conflict','.account-modal[open]');
+ await page.getByRole('button',{name:'Delete my data',exact:true}).click();
+ await audit('account-delete','.account-modal[open]');
+ await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'signed_out',saveState:'idle',
+  deviceSave:{state:'idle',kind:null},cloudSave:{state:'idle',kind:null}}));
+ await page.keyboard.press('Escape');report.accountEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));
  await audit('presence','.presence-hud');
  for(const [name,place] of [['islet-world','home_islet'],['gulls-rest','gulls_rest']]){await page.evaluate(async place=>{const g=window.__island;g.world.setRelightingComplete(true);await g.world.goTo(place,{fast:true});},place);await audit(name,'.hud');}
  await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(async()=>{const {setPreferences}=await import('/src/settings/preferences.js');setPreferences({reducedMotion:false});window.__plotTwist.adapter.dev.rehearse('relighting');window.__island.settings.hour=23;});

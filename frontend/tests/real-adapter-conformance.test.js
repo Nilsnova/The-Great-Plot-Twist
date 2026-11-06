@@ -31,15 +31,22 @@ function createRecordedAdapter() {
   let me = structuredClone(initialMe);
   let crew = null;
   let mustered = false;
+  let save = {version: 1, data: {}, updatedAt: null};
   const api = {
     async get(route) {
       if (route === '/api/config') return success({flags: {sign_in: true}});
       if (route === '/api/me') return success(me);
-      if (route === '/api/save') return success({version: 1, data: {}, updatedAt: null});
+      if (route === '/api/save') return success(save);
       if (route === '/api/crews/me') return success({crew});
       return {ok: false, status: 404, code: 'feature_off'};
     },
+    async put(route, body) {
+      if (route !== '/api/save') return {ok: false, status: 404, code: 'feature_off'};
+      save = {version: body.version + 1, data: structuredClone(body.data), updatedAt: null};
+      return success({version: save.version, updatedAt: null});
+    },
     async post(route) {
+      if (route === '/api/me/name') return success({captainName: me.captainName, rerollsLeft: 1});
       if (route === '/api/intro/complete') {
         me = {...initialMe, kit: 'true_keeper', place: 'saltreach_harbor'};
         return success(profile);

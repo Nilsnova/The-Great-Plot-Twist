@@ -17,6 +17,7 @@
     "Sign-out removes only the owned auth persistence",
     "Auth fits 375",
     "Bundled auth has no browser errors",
+    "Auth opens no Realtime socket while presence is off",
     "Every external auth request stays on the intercepted placeholder origin",
     "The game never uses the temporary exchange route",
     "Public config never carries a bearer token"
@@ -56,6 +57,11 @@
       "authorized": false
     },
     {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
       "path": "/api/save",
       "method": "GET",
       "authorized": true
@@ -64,6 +70,10 @@
       "path": "/api/crews/me",
       "method": "GET",
       "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/api/config",
@@ -81,6 +91,11 @@
       "authorized": true
     },
     {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
       "path": "/api/save",
       "method": "GET",
       "authorized": true
@@ -89,6 +104,10 @@
       "path": "/api/crews/me",
       "method": "GET",
       "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/auth/v1/logout",
@@ -123,6 +142,16 @@
       "authorized": true
     },
     {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
       "path": "/api/save",
       "method": "GET",
       "authorized": true
@@ -133,9 +162,8 @@
       "authorized": true
     },
     {
-      "path": "/api/config",
-      "method": "GET",
-      "authorized": false
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/api/config",
@@ -153,6 +181,11 @@
       "authorized": true
     },
     {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
       "path": "/api/save",
       "method": "GET",
       "authorized": true
@@ -161,6 +194,10 @@
       "path": "/api/crews/me",
       "method": "GET",
       "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/auth/v1/logout",

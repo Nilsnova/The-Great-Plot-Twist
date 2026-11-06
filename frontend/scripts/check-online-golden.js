@@ -56,3 +56,4 @@ try{
   await writeFile(folder+'/online-golden.json',JSON.stringify(report,null,2)+'\n');await env.close();
 }
 await (await import('./check-online-auth.js')).checkOnlineAuth();
+await (await import('./check-online-account.js')).checkOnlineAccount();

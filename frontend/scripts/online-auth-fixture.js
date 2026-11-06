@@ -24,7 +24,6 @@ export async function openAuthFixture() {
       value => value.startsWith('https:') ? origin : origin.replace('https:', 'wss:'));
   }
   const env = await openWorldBrowser({preview: true, outDir, headers});
-  await stubIntro(env.page);
   const userId = randomUUID();
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const expires = Math.floor(Date.now() / 1000) + 3600;
@@ -33,6 +32,10 @@ export async function openAuthFixture() {
     randomBytes(32).toString('base64url')].join('.');
   const requests = [];
   const checks = {pkce: false, exchanged: false, refreshed: false, signedOut: false};
+  await env.page.routeWebSocket('wss://placeholder.supabase.co/**', socket => {
+    checks.socketOpened = true;
+    socket.close();
+  });
   const user = {id: userId, aud: 'authenticated', role: 'authenticated',
     app_metadata: {provider: 'github'}, user_metadata: {}, created_at: new Date().toISOString()};
   const cors = {'access-control-allow-origin': env.url, 'access-control-allow-headers':
@@ -71,6 +74,7 @@ export async function openAuthFixture() {
   await env.page.route('**/api/**', route => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    if (path === '/api/weather') return route.fallback();
     requests.push({path, method: request.method(), authorized: !!request.headers().authorization});
     let data;
     if (path === '/api/config') data = {flags: {sign_in: true, live_presence: false,
@@ -83,5 +87,6 @@ export async function openAuthFixture() {
     return route.fulfill({status: data ? 200 : 503, json: data
       ?? {error: {code: 'unavailable', message: 'Recorded offline service.'}}});
   });
-  return {...env, checks, requests};
+  await stubIntro(env.page);
+  return {...env, checks, requests, fixtureUserId: userId};
 }

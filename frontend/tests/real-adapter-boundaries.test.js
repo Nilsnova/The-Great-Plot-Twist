@@ -20,11 +20,16 @@ function setup(player = me) {
   ]);
   const api = {
     get: async route => structuredClone(replies.get(route)),
-    post: async (route, body) => { writes.push({route, body}); return okay(null); },
+    post: async (route, body) => { writes.push({route, body});
+      return okay(route === '/api/me/name' ? {captainName: player.captainName, rerollsLeft: 1} : null); },
     del: async () => okay(null),
   };
   const adapter = createRealCaseAdapter({session, api, publicApi: api, document: {}, window: {}});
-  const ready = () => vi.waitFor(() => expect(adapter.read().account.captainName).toBe(player.captainName));
+  const ready = async () => {
+    await vi.waitFor(() => expect(adapter.read().account.canReroll).toBe(true));
+    expect(writes).toEqual([{route: '/api/me/name', body: undefined}]);
+    writes.length = 0; // Probe the player action separately from the required sign-in initialization.
+  };
   return {adapter, session, writes, replies, api, ready};
 }
 

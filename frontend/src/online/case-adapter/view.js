@@ -23,7 +23,7 @@ function walletView(rows,balance,empty){
     return {id:`wallet-row-${index}`,amount:row.amount,reason,label:reason.replaceAll('_',' '),
       at:row.at??row.created_at??null};
   });
-  return {...empty,balance,ledger,recent:ledger.slice(-5).reverse()};
+  return {...empty,balance,ledger,recent:ledger.slice(0,5)};
 }
 
 function permissionsView(state,account,crew){

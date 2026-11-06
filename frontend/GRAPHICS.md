@@ -922,3 +922,26 @@ and main's exact header set with only that origin substituted. They verify PKCE,
 tab-only persistence, reload, logout, public requests and absence of production inspection hooks.
 Full notices are retained in Settings → Credits. Actual OAuth/deployed and physical-device proofs
 remain separate. See [the stream-3 gate](captures/20261106_G9-C1/stream3-verification.json).
+
+
+## Account, replay saves and deletion (G9, stream 4)
+
+Sign-in initializes the server-owned captain name before any presence starts. The server confirms the
+first Act 1 kit and coin grant; replaying Act 1 displays “Welcome back” and keeps that first grant.
+The account screen displays the supplied reroll allowance, save state and Lisbon-local timestamps.
+Rewards show only the own-row amount, plain reason and date, with no ledger references or player IDs.
+
+Cloud `data` is `{kind: 'intro' | 'world', actions: [accepted_action_id, ...], place: known_place_id}`.
+The replay has at most 300 validated action IDs and 100,000 encoded bytes; it contains no engine
+snapshot, case answer, reveal text or auth data. Intro replays use `lighthouse_isle`. Saving happens
+after confirmed Act 1, on later place changes and at most once a minute while dirty. Timers pause in
+hidden tabs and do no work in the frame loop. An unknown PUT outcome reads the current save before
+another write. Conflicts require a choice: keep this device rereads the version before replacing the
+cloud copy, while use cloud updates the device journal and continuation without a replacement PUT.
+
+Deletion requires two taps and explains the complete data removal, including coin ledger history.
+Only `{deleted: true}` clears the accepted-action journal and owned auth persistence; ordinary logout
+keeps the journal. Late responses cannot clear or overwrite a newer account. Browser fixtures cover
+the complete account journey at 1280 and 375 px; accessibility includes all account states at 320 px.
+These checks use generated placeholder credentials and intercepted endpoints. Live accounts,
+databases and deployed callbacks remain unverified.

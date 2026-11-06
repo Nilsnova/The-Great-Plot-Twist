@@ -1,0 +1,15 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 .
+
+
+ Test Files  157 passed (157)
+      Tests  2175 passed (2175)
+   Start at  22:12:43
+   Duration  77.07s (tests 77%, import 18%, transform 3%, worker 2%)
+
+    Isolate  157 workers spawned · ~164ms startup each (spawn + environment, per file)
+             at least ~25.56s faster with isolate: false — reuses workers across files instead of one per file

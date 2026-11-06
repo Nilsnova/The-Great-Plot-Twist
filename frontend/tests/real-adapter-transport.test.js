@@ -20,7 +20,8 @@ function setup(postReplies = []) {
   ]);
   const fetchImpl = async (route, options) => {
     calls.push({method: options.method, route, body: options.body ? JSON.parse(options.body) : null});
-    let reply = options.method === 'GET' ? reads.get(route) : postReplies.shift();
+    let reply = options.method === 'GET' ? reads.get(route)
+      : route === '/api/me/name' ? okay({captainName: me.captainName, rerollsLeft: 1}) : postReplies.shift();
     if (typeof reply === 'function') reply = await reply();
     if (reply instanceof Error) throw reply;
     reply ??= failure(404, 'feature_off');
@@ -29,7 +30,13 @@ function setup(postReplies = []) {
   const api = createApi({session, fetchImpl});
   const publicApi = createApi({session: {getToken: () => null, clearToken() {}}, fetchImpl});
   const adapter = createRealCaseAdapter({session, api, publicApi, document: {}, window: {}});
-  const ready = () => vi.waitFor(() => expect(adapter.read().account.captainName).toBe(me.captainName));
+  const ready = async () => {
+    await vi.waitFor(() => expect(adapter.read().account.canReroll).toBe(true));
+    expect(calls.filter(call => call.route === '/api/me/name')).toEqual([
+      {method: 'POST', route: '/api/me/name', body: null},
+    ]);
+    await flush();
+  };
   return {adapter, session, calls, reads, ready};
 }
 

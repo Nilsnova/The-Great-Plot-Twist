@@ -4,6 +4,31 @@ Checkpoint notes and server requests for Claude. All authored changes stay under
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## G9 stream 4: account and replay saves verified (6 Nov 2026, UTC)
+
+Checkpoint 1 remains incomplete. Main is merged through `f91f541` via `708b7eb`; stream 3 is `387e01b`.
+Changed: server-owned name initialization/reroll, confirmed first kit and replay arrival, own-row rewards,
+versioned accepted-action saves, minute/scene autosaving, both conflict choices and two-tap deletion.
+Cloud selection also updates the device journal, so a later timer cannot overwrite that choice. Anonymous
+Act 1 immediately updates its device-save view without a cloud write. Sign-in generation and account
+scopes reject late auth, save and deletion completions. Normal logout keeps the journal; deletion clears it.
+
+Verified: `npm test` **2,175 passed / 157 files**, build (162-file/twelve-line spoiler guard), loading,
+recorded online, CSP and accessibility. The full count includes prepared, uncommitted stream-5 kit/tests;
+the combined checkpoint gate remains required. Evidence: `captures/20261106_G9-C1/stream4-verification.json`.
+Account has 42 browser assertions at 1280/375; auth has 21. Accessibility passes 29 contexts / 87 viewport
+samples at 1280/375/320 with no findings/errors. The phone deletion warning/focus was reviewed and fixed.
+The final frozen gate passes after fixing cold test imports and fake-socket ownership/cleanup, preserving
+all assertions and timeouts. Independent review also found and fixed auth/logout and anonymous-save races.
+Cold title: **20,874 JS bytes / 11,771 CSS bytes**; caps unchanged at 21,080 / 12,000.
+
+Cloud `data`: `{kind: 'intro' | 'world', actions: [accepted_id, ...], place: known_place_id}`; max 300
+validated IDs / 100,000 bytes, no snapshots, auth or case answers. Details are in GRAPHICS.md.
+Not verified: live accounts/OAuth/database/socket, deployed callbacks/preview, other browsers or hardware.
+Remaining: stream 5 states/retries/chaos, checkpoint-1 full driver/push, then checkpoints 2–5 and overflow.
+Prepared stream-5 files stay separate. Requests remain in the table; no new intent/event/schema change.
+Decisions for Nils: none. Branch `feat/g9-real-adapter`; Claude integrates; no main merge or deployment.
+
 ## G9 stream 3: in-game PKCE wired and locally verified (6 Nov 2026, Berlin)
 
 Checkpoint 1 remains incomplete. Merged main `db4ddba` through `1da59ae`, then `f23e86e`.
@@ -121,18 +146,18 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 
 | Id / status | Route or setting | Missing behaviour / why it matters | Proposed shape | Blocks | Meanwhile |
 | --- | --- | --- | --- | --- | --- |
-| R1 · open | Local API startup and test sign-in | Online golden path part B needs two fixed players and a host without real GitHub or live DB access | One documented scratch/in-memory startup command; test sign-in enabled only by explicit opt-in + `APP_ENV=local` + no `VERCEL`; tests refuse preview/production | Stream 20 B | Recorded answers, part A |
-| R2 · on main / deployed proof pending | `vercel.json` headers | Main `60f7fd0` adds enforcing CSP and five other headers | Preview mirrors main’s exact compact policy, including inherited self-only restrictions; unsafe/wildcard drift still fails validation | Deployed proof / stream 17 | Local enforcing preview; no deployment change |
-| R3 · on main `db4ddba` / settings off | `GET /api/config`, `FLAG_NAMES` | Production must hide sign-in until headers/settings are ready | `flags.sign_in: boolean`, default false, enabled after R2 | Production sign-in | Hide unless strictly true |
+| R1 · ready on main `f23e86e` | Disposable API/test identities | Current readiness note documents four local identities and an opt-in scratch startup | `docs/handoff/g9-cloud-readiness.md` / local test-server guide | Stream 20 B proof remains | Recorded/intercepted part A; no live services |
+| R2 · on main / team deployment proof | `vercel.json` headers | Preserve main’s enforcing CSP, exact Supabase origins, audio and popup-compatible COOP | Source of truth remains current main; fixture substitutes only the placeholder origin | G9 deployed callback/preview proof | Exact local enforcing preview |
+| R3 · ready / production off | `flags.sign_in` | Registered and default false; enable externally after callback/settings proof | Existing boolean contract | Live sign-in rollout | Production controls strictly gated |
 | R4 · open | `/api/auth/exchange`, `/auth-check.html`, coupled backend tests/checklist | Temporary team check should retire together after in-game sign-in is live | Remove temporary route/page/tests together in a server/integration package | Nothing | G9 never calls the exchange route and leaves public auth-check files untouched |
-| R5 · partial | Vercel public build values and Supabase redirect allowlist | In-game auth needs configured client and return to the game; config currently gives provider/public URL only | Production `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`; allowed root return `https://the-great-plot-twist.vercel.app/`; Claude gives Nils values privately/settings only | Live sign-in | Plain not-set-up state; no env file or real login |
-| R6 · on main `db4ddba` / settings off | `GET /api/config`, bulletin flag | Bulletin/tonight/hook must remain off until Nils enables them | `flags.bulletin: boolean`, default false | Production open-world screens | `bulletin.status: off` |
-| R7 · open | Own crew's `crew_seats.player_id` RLS read | A4 needs member ids for crewmate flags; crew route deliberately exposes none | Confirm own-crew read through auth client under RLS, or add opaque member ids to crew answer | Crewmate flags | Crew room with empty member-id list |
-| R8 · open | Realtime crew pushes | Forming crew should update on join/muster without repeated reads | `live_crew_updated {kind: crew_changed, data}` on join and muster | Nothing | Poll own crew every 5 s while forming screen is open |
+| R5 · bindings ready / callback proof pending | Public build values and redirect | Main confirms Production/Preview binding names; G9’s actual callback round trip is not verified | Existing `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY`, root game return | Live sign-in proof | Generated placeholder build and intercepted PKCE |
+| R6 · ready / team reports enabled | Bulletin flag | Flag and fail-before-read behavior are on main | Existing `flags.bulletin` boolean | G9 bulletin integration/proof | Read only when strictly true |
+| R7 · ready on main | Own-crew member read | Existing authenticated SELECT/RLS permits own crew and rejects outsiders | Auth client reads bounded own-crew rows | G9 presence mapping/proof | Empty member list on refusal |
+| R8 · ready on main | Crew push hints | Successful join/muster emits one post-commit version hint | Existing A4 `live_crew_updated` contract | G9 crew/presence wiring | Five-second poll only while forming crew screen is open |
 | R9 · optional/open | `POST /api/crews/join` | Optional server preview before spending a wrong guess | `{code, preview:true}` returns preview only, never joins | Nothing | First tap normalizes/previews code shape locally, second confirms |
-| R10 · partial | `GET /api/me` | GET lacks reroll/host fields; POST name answers already include rerollsLeft | Add `rerollsLeft` and `isHost` | Nothing | Idempotent POST name after sign-in; host controls hidden |
-| R11 · phase 1 published / later phases pending | Case contract on `feat/case-backend` at `6507dc7`, latest `2a2fccd` | Phase 1 documents GET case, search and accuse; finale and partners are reserved, pin/pair routes are not in this section | Adopt G10’s published contract as phases reach main; all browser fixture text/ids stay placeholders | Later checkpoint 4 streams | Read only the authorized case contract/fixtures; no secret/case copy |
-| R12 · open | Weather section of `docs/INTERFACES.md` | Old wording still requires credits beside HUD, contradicting Nils' 6 Nov decision | Attribution/licences only under Settings → Credits | Nothing | Preserve clean HUD and existing weather-wiring check |
+| R10 · ready on main | Account metadata | GET me supplies verified `rerollsLeft` and `isHost` | Existing additive fields; still initialize the idempotent name after sign-in | G9 mapping/proof | Host controls remain hidden unless verified/capable |
+| R11 · all phases published; serialized nested DTO needed | Published case contract / `case_fixtures` at `3098c0a` and main | Current fixtures are CaseSnapshot inputs; exact nested card/lead/search/job/light/partner/credit DTO keys/types are not published there | Add redacted serialized GET-case fixtures for active/night/solved states, replacing every ID/prose value with placeholders while preserving exact keys/types | Verified streams 12–15 projections | Use approved frontend schema fixtures; never inspect secret data or view implementation |
+| R12 · resolved on main | Weather attribution | Readiness confirms credits only in Settings → Credits | Existing contract | Nothing | Preserve clean HUD and weather check |
 | R13 · process/open | G10 changes to `backend/content/secret/` | New secret content can invalidate committed reveal fingerprints | Same server commit runs frontend build and commits regenerated hash-only fingerprint fixture | Subsequent build gates | Regenerate only the hash fixture after a merge if build requests it |
 | R14 · open | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |
 

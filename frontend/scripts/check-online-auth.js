@@ -40,6 +40,7 @@ export async function checkOnlineAuth() {
       await page.keyboard.press('Escape');
     }
     check(env.errors.length === 0, 'Bundled auth has no browser errors');
+    check(!env.checks.socketOpened, 'Auth opens no Realtime socket while presence is off');
     check(env.external.every(value => new URL(value).origin === 'https://placeholder.supabase.co'),
       'Every external auth request stays on the intercepted placeholder origin');
     check(!env.requests.some(item => item.path === '/api/auth/exchange'), 'The game never uses the temporary exchange route');

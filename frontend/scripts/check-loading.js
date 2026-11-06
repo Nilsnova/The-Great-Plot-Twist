@@ -50,4 +50,7 @@ try {
   await startFromTitle(page);check(await page.evaluate(()=>typeof window.__island)==='undefined','The loaded production world exposes no dev inspection object');
   await page.getByRole('button',{name:'Open visual settings'}).click();await page.locator('[data-preference=quality]').selectOption('low');await page.screenshot({path:capture('Settings.png')});
   check(env.errors.length===0&&env.external.length===0,'Production title and world have no browser errors or external asset requests');console.log(JSON.stringify(report,null,2));
-} finally {try {await writeFile(capture('Loading-Checks.json'),JSON.stringify(report,null,2));} finally {await env.close();}}
+} finally {
+  report.browser={pageErrorTypes:env.pageErrors,consoleErrors:env.consoleErrors};
+  try {await writeFile(capture('Loading-Checks.json'),JSON.stringify(report,null,2));} finally {await env.close();}
+}
