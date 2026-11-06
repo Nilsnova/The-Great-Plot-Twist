@@ -9,8 +9,10 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 from pydantic import SecretStr
 
+from server import lisbon_time
 from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin
 
@@ -33,6 +35,13 @@ CONFIGURED_SETTINGS = Settings(
     supabase_publishable_key=FAKE_PUBLISHABLE_KEY,
     supabase_secret_key=SecretStr(FAKE_SECRET_KEY),
     cron_secret=SecretStr(FAKE_CRON_SECRET),
+)
+
+
+# Skips a test that needs the real Lisbon clock changes (the summer time of 2027). Without a
+# timezone database the server falls back to UTC, which is right for winter but not for summer.
+needs_lisbon_timezone = pytest.mark.skipif(
+    lisbon_time.LISBON is UTC, reason="this computer has no timezone database"
 )
 
 

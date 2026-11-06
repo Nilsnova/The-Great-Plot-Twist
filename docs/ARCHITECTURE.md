@@ -4,7 +4,7 @@
 >
 > **Who uses it:** every teammate and coding agent, before the first task and whenever you wonder where something belongs.
 
-The details live elsewhere. One-time account setup is in [SETUP.md](SETUP.md). How we write code, and every command, is in [ENGINEERING.md](ENGINEERING.md). The exact shapes of routes, events and tables are in [INTERFACES.md](INTERFACES.md). The choices behind this page are in the [decision log](DECISIONS.md): D002 (hosting), D003 (rules on the server), D004 (the wallet) and D012 (crews and seats).
+The details live elsewhere. One-time account setup is in [SETUP.md](SETUP.md). How we write code, and every command, is in [ENGINEERING.md](ENGINEERING.md). The exact shapes of routes, events and tables are in [INTERFACES.md](INTERFACES.md). The choices behind this page are in the [decision log](DECISIONS.md): D002 (hosting), D003 (rules on the server), D004 (the wallet), D012 (crews and seats) and D023 (live presence).
 
 ## 1. The parts
 
@@ -12,7 +12,8 @@ The details live elsewhere. One-time account setup is in [SETUP.md](SETUP.md). H
 |---|---|---|
 | The game | The browser client: a top-down 2D world drawn with Three.js and built with Vite, in plain JavaScript. It shows the world and sends what the player wants to do. Its art style is decision D005, written by the graphics package (G1). | `frontend/`, added by G1. It may be missing on your branch. |
 | The API | The Python server (FastAPI). Every game rule lives here, tested with pytest. | `backend/main.py` (the entry Vercel starts) and `backend/server/` |
-| The database | Supabase: Postgres with row-level security, sign-in with GitHub (Supabase Auth), and Realtime (not used yet). | `supabase/migrations/`. How to apply it: [supabase/README.md](../supabase/README.md) |
+| The database | Supabase: Postgres with row-level security, sign-in with GitHub (Supabase Auth), and Realtime (used for live presence only, see the next row). | `supabase/migrations/`. How to apply it: [supabase/README.md](../supabase/README.md) |
+| Live presence | Players see each other's captains move in the same place, send preset emotes, and the server tells a crew the moment something changed. It runs on Supabase Realtime in private rooms (one for who is online, numbered ones for each place, one per crew). The browser joins them with the player's login token. Our server only sends the crew events, with one HTTP request each. Built; the flag `live_presence` is off, and its migration goes live with group 2. | `frontend/src/online/realtime.js` and its parts `frontend/src/net/live-*.js` (browser), `backend/server/crew_broadcast.py` (server), `supabase/migrations/20261106050000_live_presence.sql` (access rules). Contract: [INTERFACES.md, section 7](INTERFACES.md#7-realtime-budget). Decision: D023. |
 | Outside data | Services we read but do not own, such as weather, prices and match results. Only the server calls them, through one adapter file each, with a cache, a timeout and a recorded fallback. | `backend/server/adapters/` (the pattern, with a worked example) and `backend/server/weather/` (the live weather from Open-Meteo, the first real source, wired into the game) |
 | Hosting | One Vercel project with two Vercel Services, `frontend/` and `backend/`. | `vercel.json` |
 
@@ -30,6 +31,7 @@ flowchart LR
   subgraph supabaseProject["Supabase project, Ireland"]
     authService["Auth<br/>GitHub sign-in"]
     database[("Postgres<br/>grants and row-level security")]
+    realtime["Realtime (private rooms)<br/>live presence"]
   end
 
   outside["Outside data<br/>weather, prices, results"]
@@ -39,20 +41,22 @@ flowchart LR
   browser -->|"/api/... with the sign-in token"| backendService
   browser -->|"sign in"| authService
   browser -->|"read only, publishable key"| database
+  browser -->|"moves, presence, emotes; login token"| realtime
   backendService -->|"whose token is this?"| authService
   backendService -->|"every write, secret key"| database
+  backendService -.->|"crew events, secret key, REST"| realtime
   backendService -.->|"cached, with a timeout"| outside
   keepAliveCaller -.->|"GET /api/keepalive"| backendService
 ```
 
-Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in and to read what row-level security allows. Dotted lines are not proven or not built: only some of the outside data is wired in so far (the live weather from Open-Meteo, `GET /api/weather`, and the Island Exchange prices from Binance, `GET /api/market`), and the daily keep-alive call, a scheduled GitHub Actions workflow chosen on 5 Nov 2026, is not proven until its first green run. The box sits outside the Vercel project on purpose, because Vercel Cron cannot be used with our setup (see "The 7-day pause and the keep-alive" below).
+Read it from the left. The browser loads the game from the frontend service and sends every action to the backend service. Both sit behind one web address: the rewrite in `vercel.json` sends every address that starts with `/api/` to the backend and everything else to the frontend. The browser talks to Supabase directly only to sign in, to read what row-level security allows and, once live presence is switched on, to join its private Realtime rooms. Dotted lines are not proven or not built: only some of the outside data is wired in so far (the live weather from Open-Meteo, `GET /api/weather`, and the Island Exchange prices from Binance, `GET /api/market`), and the daily keep-alive call, a scheduled GitHub Actions workflow chosen on 5 Nov 2026, is not proven until its first green run. The box sits outside the Vercel project on purpose, because Vercel Cron cannot be used with our setup (see "The 7-day pause and the keep-alive" below). The dotted line to Realtime is built and tested with fakes, but it has not been tried against the live project.
 
 ## 3. Who may do what
 
 Anyone can open the browser's developer tools, change the game's code and send their own requests. So the line we trust runs between the browser and our server.
 
-- **The browser (not trusted).** It shows the game, signs in with GitHub, reads the rows that row-level security allows (every profile and wallet reason, plus its own save, wallet, ledger rows and crews) and sends intents to `/api`. It never decides money or progress, never writes a table and never holds a secret.
-- **Our server (trusted).** It checks who is asking (the sign-in token), checks every input, applies the rules and does every write with the secret key. Coins move only through one database function. The player id always comes from the verified sign-in, never from the request.
+- **The browser (not trusted).** It shows the game, signs in with GitHub, reads the rows that row-level security allows (every profile and wallet reason, plus its own save, wallet, ledger rows and crews) and sends intents to `/api`. It never decides money or progress, never writes a table and never holds a secret. The one thing it sends to other players directly is its own position, place and emotes through Realtime, and those are only for showing: nothing in the game depends on them, and a modified browser can claim any position without changing any game state.
+- **Our server (trusted).** It checks who is asking (the sign-in token), checks every input, applies the rules and does every write with the secret key. Coins move only through one database function. The player id always comes from the verified sign-in, never from the request. It also sends the crew events of live presence ("something changed, fetch it") into the crew's private Realtime room, because no player can send there.
 - **The database (the last guard).** Every table has two locks: a grant (may this role use the table at all?) and row-level security (which rows?). Its own rules, such as "a balance is never below 0", hold even if the Python code has a bug. The full matrix is in [supabase/README.md](../supabase/README.md#who-may-do-what).
 
 ### Where each secret lives
@@ -71,15 +75,15 @@ A secret never goes into Git, a `VITE_` variable, browser code, a log, a screens
 
 ## 4. The path of one request
 
-Example: a player builds on their home islet, which costs coins. The route `POST /api/islet/build` is planned (package L2). Every other step exists today.
+Example: a player builds on their home islet, which costs coins and timber (package L2, `POST /api/islet/build`). Every step on the server exists; the game's build panel sends the request once the browser has a sign-in (package G9).
 
 1. **Browser.** The player clicks Build. The game makes an `actionUid` for this one click and sends `POST /api/islet/build` with a JSON body and the header `Authorization: Bearer <token>`. The token comes from the GitHub sign-in through Supabase.
 2. **Vercel.** The address starts with `/api/`, so the rewrite hands the request, unchanged, to the backend service.
 3. **Who is asking?** FastAPI finds the route. Its `PlayerDep` asks Supabase Auth whose token this is and remembers the answer for 60 seconds. No token, or a bad one: `401`, and nothing else happens.
 4. **Does the request fit?** A Pydantic model checks the body. A wrong shape: `422`.
 5. **The rules.** A plain Python function decides: is the plot free, is the building type known, what does it cost? A refusal changes nothing.
-6. **The coins.** `apply_transaction` in `backend/server/wallet.py` checks the amount and the reason, then calls the database function `apply_wallet_transaction` with the secret key. In one step the database checks the reason and its direction, takes the coins only if the balance stays at 0 or above, and writes the ledger row. The `actionUid` goes in as the `ref`, so a repeated click is refused (`409 already_applied`) and nobody pays twice. Too few coins: `409 insufficient_funds`.
-7. **The answer.** The server saves the building and answers with JSON, and the browser shows it. To show the new balance, the browser can read its own wallet straight from Supabase: row-level security shows it only its own row.
+6. **The coins.** The wallet rules in `backend/server/wallet.py` check the amount and the reason first. Then the server calls the database function `islet_build()` with the secret key. In one step it locks the wallet, refuses a repeated `ref`, checks the plot and the timber, charges the coins through `apply_wallet_transaction` (which checks the reason and its direction, takes the coins only if the balance stays at 0 or above, and writes the ledger row), takes the timber and records the building. The `actionUid` goes into the `ref` (`islet:<actionUid>`), so a repeated click is refused (`409 already_applied`) and nobody pays twice. Too few coins: `409 insufficient_funds`.
+7. **The answer.** The server answers with JSON (the building, what it cost and what is left), and the browser shows it. To show the new balance, the browser can read its own wallet straight from Supabase: row-level security shows it only its own row.
 
 If something on the server's side is down, the answer is `503`. For money that means "outcome unknown": look the `ref` up in the ledger before you try again ([ENGINEERING.md, recipe 4.1](ENGINEERING.md#41-add-an-api-endpoint)).
 
@@ -104,7 +108,7 @@ There is one Supabase project, and preview and production both use it ([SETUP.md
 Settled with Nils on 5 Nov 2026 (D002) and checked against the official docs the same day.
 
 - **Vercel Hobby** (free, for non-commercial use only): one project with two Vercel Services, a Beta feature available on every plan. Functions run in one region, Dublin (`dub1`). `vercel.json` sets it (`"regions": ["dub1"]`), which overrides the dashboard setting, because new projects start in Washington (`iad1`); until 6 Nov the live API still ran there.
-- **Supabase Free:** one project in West EU (Ireland), `eu-west-1`, next to the functions. Project settings: Data API on; "Automatically expose new tables" off, so every table and function needs explicit grants; "Enable automatic RLS" on; sign-in with GitHub only (email sign-in off); no Supabase GitHub integration.
+- **Supabase Free:** one project in West EU (Ireland), `eu-west-1`, next to the functions. Project settings: Data API on; "Automatically expose new tables" off, so every table and function needs explicit grants; "Enable automatic RLS" on; sign-in with GitHub only (email sign-in off); no Supabase GitHub integration; and Realtime > Settings > "Allow public access" **off**, so that every Realtime room is private and our policies on `realtime.messages` decide who may join (Nils switched it off on 6 Nov 2026).
 - **Portable on purpose.** The game is a static site and the API is a plain FastAPI app. If the course publishes deployment rules later, moving costs little.
 
 Free-tier limits that matter to us:
@@ -118,7 +122,7 @@ Free-tier limits that matter to us:
 | Vercel | Cron jobs (tasks that run on a timer) run at most once a day, accurate to the hour, on production only | We cannot use them together with Services: a `crons` entry in `vercel.json` broke our deploys (see the keep-alive below). Nothing runs on a timer inside Vercel, so live prices and scores are fetched when a player asks, through the cached adapters. |
 | Supabase | 2 active free projects per person who is Owner or Administrator | Teammates are invited as Developer. |
 | Supabase | A project pauses after 7 days of low activity | See the keep-alive below. |
-| Supabase | Realtime: 200 connections, 100 messages a second, 2 million a month, and every delivered copy counts | Small rooms and few updates. The budget is in [INTERFACES.md](INTERFACES.md#7-realtime-budget). |
+| Supabase | Realtime: 200 connections, 100 messages a second, 2 million a month, and every delivered copy counts. Each room a player joins counts as a connection. | Small rooms that shrink as the game fills, and fewer updates the more players are online: about 66 players fit in the 200 connections, and 2 million messages cover about 8 class sessions. The budget is in [INTERFACES.md](INTERFACES.md#7-realtime-budget). |
 | Supabase | Sign-in limits count per IP address (for example 30 sign-ins per 5 minutes). The built-in mailer sends 2 emails an hour, only to team members. | A class on one Wi-Fi shares one address. We use GitHub sign-in only. |
 
 ### The 7-day pause and the keep-alive

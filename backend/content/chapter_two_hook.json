@@ -1,0 +1,14 @@
+{
+  "id": "chapter_two_hook",
+  "firesByNight": 3,
+  "bulletinLine": "A light where no light was.",
+  "notice": {
+    "title": "A light where no light was",
+    "text": "Last night a light flashed far out beyond the old fog line, where no lighthouse has ever stood: a row of long and short flashes, then dark, again and again until dawn. It was not the old false light. Whose lamp is it, and who is it calling? If you saw it, leave word here."
+  },
+  "beam": {
+    "chart": {"x": 440, "y": 12},
+    "pattern": ["short", "short", "long"],
+    "flash": {"shortSeconds": 0.4, "longSeconds": 1.2, "gapSeconds": 0.5, "pauseSeconds": 4.0}
+  }
+}

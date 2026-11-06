@@ -19,6 +19,7 @@ import {createIsletState} from './world/islet/state.js';
 import {createHookWorld} from './world/hook/index.js';
 import {sendCaseIntent} from './adapter/intent.js';
 import {createCaseBridge} from './adapter/bridge.js';
+import {attachIsletPanel} from './screens/islet/host.js';
 import {createIntro} from './story/intro.js';
 import {createLazyCinematics} from './world/cinematics/lazy.js';
 import { createChart } from './ui/chart.js';
@@ -74,12 +75,12 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendCaseIntent(caseUi.adapter,name,...args),openCrew:()=>caseUi.open('crew'),isDemo:()=>!!demo?.active,isIntro:()=>intro.active||introPassage,
-    isBlocked:()=>shell.blocked||!!isAppBlocked?.()||intro.active||caseUi.active||cinematics.active||chart.open||sailing.active});
+    isBlocked:()=>shell.blocked||!!isAppBlocked?.()||intro.active||caseUi.active||cinematics.active||chart.open||sailing.active||stopPlots.active});
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>caseAdapter?.dev?.setIsletBuilt?.(built));
   const applyCaseView=view=>{bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
   caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{noteAdapterView(view);if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
   const stopListening = on('interact', event => {hud.notify(event.id);if(!intro.active)caseUi.interact(event);});
-  const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
+  const stopPlots = attachIsletPanel({container, on, emit, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus()});
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
@@ -91,7 +92,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     skipCinematic:()=>cinematics.skip(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
     captureCase:()=>({view:caseUi.adapter?.read()??null,world:caseWorld,relit:world.relit}),presentCase:applyCaseView,restoreCase(snapshot){if(caseUi.adapter)applyCaseView(caseUi.adapter.read());else if(snapshot?.view)applyCaseView(snapshot.view);else{caseWorld=snapshot?.world??null;world.setRelightingComplete(!!snapshot?.relit);hud.setCaptain({captain:{name:'Captain pending',coins:null,save:{state:'local',label:'Local intro only'}}});}},
     begin(){caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
-  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!caseUi.active&&!chart.open};
+  const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>!demo.active&&!shell.blocked&&!world.busy&&!caseUi.active&&!chart.open&&!stopPlots.active};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){
     if(demo.active)return;
@@ -110,7 +111,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     }
     settings.hour = (settings.hour + (shell.blocked ? 0 : delta) * (settings.fastTime ? 0.8 : 0.003)) % 24;
-    const speed=controller.update(delta, active && !demo?.active && !world.busy && !chart.open);
+    const speed=controller.update(delta, active && !demo?.active && !world.busy && !chart.open && !stopPlots.active);
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
     audio.update(delta,{weather:state,weatherAnswer,bulletin,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!world.busy&&!caseUi.active&&!chart.open,place:world.current?.id});
@@ -141,7 +142,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
-  }, { once: true });  return {dispose,hasOverlay:()=>shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active,
+  }, { once: true });  return {dispose,hasOverlay:()=>shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||stopPlots.active,
     setMode(mode){if(mode!=='playing'){beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
