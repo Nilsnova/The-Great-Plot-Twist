@@ -49,3 +49,36 @@ Official references checked on 6 Nov 2026:
 - [Website OAuth](https://developers.openai.com/siwc/website)
 - [Request a client ID](https://developers.openai.com/siwc/request-client-id)
 - [Interest form](https://openai.com/form/sign-in-with-chatgpt-interest/)
+
+## Prepared earned-context foundation · 6 Nov 2026
+
+`backend/server/companion_context.py` now prepares evidence without connecting a provider or
+changing game state. Its internal `earned_hint_context` function takes validated server case
+content, a current server-owned `CaseSnapshot`, the verified `Player` and server case seconds.
+It checks seated membership and an opened case before using the real pure case view. Never
+construct these arguments from a helper request body or use client-supplied case context.
+
+The result contains only earned cards (`id`, `title`, `text`), completed deductions (`id`,
+`name`, `finding`) and citation IDs derived from those included rows. Other fields, including
+reveal text even for a solved crew, names, identities, money, leads and future search options,
+are omitted. It refuses malformed or oversized required fields, ambiguous membership and
+future deduction records. Limits are 16 cards, eight deduction rows, 64-byte IDs, 256-byte
+titles/names, 2,048-byte evidence text and a 16,384-byte compact UTF-8 JSON context. It never
+truncates evidence silently. Public-help selection remains a later integration step.
+
+This function does not call `CaseService.read` or `opened_snapshot`, whose ordinary read can
+initialize a case and grant starting cards. A future endpoint must first get a fresh snapshot
+using its verified player, then pass that snapshot to this pure function. It must not accept
+snapshots from the browser or reuse another session's context. Context strings are data, not
+model instructions; this filter alone does not prove a future model's answers are spoiler-safe.
+OAuth, consent, prompt/output handling, rate limits and live inference remain unimplemented;
+`companion_llm` stays off. See [implementation evidence](../docs/handoff/ai-earned-context.md).
+
+Current official docs also distinguish local/open-source tool registration from a remotely hosted
+website. Local dynamic registration is not a substitute for this game's approved hosted client.
+Eligible plan usage is a separate authorization from identity login. The current preview requires
+streaming with `store:false` and array input; future code must verify the approved contract rather
+than assume parameters such as `max_output_tokens` are supported:
+
+- [Plan-usage overview](https://developers.openai.com/siwc/token-sharing-open-source)
+- [Preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
