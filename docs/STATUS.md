@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Latest release, 6 Nov 2026, Codex:** group 3 is on main (`c12a707`) and production is ready.
+**Latest release, 6 Nov 2026, Codex:** Phase 2 is on main (`c365985`) and production is ready.
 `GET /api/config` confirms live_presence, market, predictions and arena enabled; sports and the AI
 helper remain off, and case is not enabled. The market's direct live-price check is pending a cloud
 network allowlist update; no query/cache guard was relaxed. G9 is paused until Nils' laptop returns;
@@ -28,10 +28,17 @@ one view, 39 project functions and 17 wallet reasons; the security advisor has o
 See [Phase 2 proof](handoff/case-phase2-release.md). The case stays off until its full chain and
 end-to-end proofs pass. RELIGHT_OPEN remains unset.
 
-Next: Phase 3 Relighting is independently reviewed and integration is underway; Phase 4 NPC
-orders, stores and services are being built in parallel. Economy-abuse checks are being adapted
-to Exchange v2. Festival, host console and sports follow these dependencies; the old branches
-are checkpoints rather than completed live features. G9 remains untouched while paused.
+Phase 3 Relighting is integrated on `integrate/case-relighting`: **10,309 backend tests pass**,
+including scratch SQL. Independent code/SQL reviews passed. Migration 120000 is applied with exact
+stored MD5 and normalized version; live counts are **30 tables, one view, 39 project functions,
+17 reasons**, with expected-only advisors. The singleton is dark, with no solves or Wall entries.
+See [Phase 3 proof](handoff/case-phase3-release.md).
+
+Next: Phase 4 NPC implementation is integrating; its migration is independently approved and the
+69-mix case proof is in progress. Economy-abuse checks have been adapted to Exchange v2 and await
+integration after followups. Server followups are being reconciled with the current contracts.
+Festival, host console and sports follow these dependencies; the older branches are checkpoints
+rather than completed live features. G9 remains untouched while paused.
 
 **Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
 migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
@@ -450,6 +457,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov, Codex:** Phase 2 production verified healthy with approved flags and private POST-only routes. Phase 3 shared world/Exchange integration passes 10,309 backend tests; reviewed 120000 applied and hash/version/counts/advisors proven, singleton remains dark. See [Phase 3 proof](handoff/case-phase3-release.md).
 
 - **6 Nov, Codex:** Phase 2 board/night integrated with earned private views, immutable station reads and bounded live hints; 10,269 backend / 1,603 frontend tests pass. Reviewed 080000 applied verbatim, MD5/version/counts and known-only advisors proven. See [release proof](handoff/case-phase2-release.md).
 
