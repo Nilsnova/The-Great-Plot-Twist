@@ -4,10 +4,12 @@ import {mixVolumes,strideStep,harborAudioConditions,isStationHumActive,harborCue
 import {createSynth} from './synth.js';
 import {createAmbience} from './ambience.js';
 import {createMusic} from './music.js';
+import {createFestivalSound} from './festival.js';
 // Keep audio behind a real user gesture and centralize listeners for complete cleanup.
 export function createAudio({container,on,caption}) {
   let context, master, musicBus, effectsBus;
-  let synth, ambience, music, hum, humGain;
+  let synth, ambience, music, hum, humGain, festivalSound;
+  let festivalMusic=false;
   let humActive = false, disposed = false, screen = 'title', finale = false;
   let stride = 0, hornAt = 0, harborHornAt = 0, flagAt = 0, beamAt = 0, lastBlip = 0;
   function apply() {
@@ -27,7 +29,8 @@ export function createAudio({container,on,caption}) {
     }
   }
   function theme() {
-    const themeName = document.hidden ? null : finale ? 'finale' : screen === 'title' ? 'title' : null;
+    const themeName = document.hidden || festivalMusic ? null : finale ? 'finale' : screen === 'title' ? 'title' : null;
+    festivalSound?.setActive(festivalMusic&&!document.hidden);
     music?.set(themeName);
   }
   function unlock(event) {
@@ -47,6 +50,7 @@ export function createAudio({container,on,caption}) {
       synth = createSynth(context);
       ambience = createAmbience(context, effectsBus);
       music = createMusic(context, musicBus, synth);
+      festivalSound=createFestivalSound(context,musicBus,effectsBus,caption);
 
       // The station hum is a persistent oscillator whose gain changes with place state.
       hum = context.createOscillator();
@@ -67,6 +71,7 @@ export function createAudio({container,on,caption}) {
   function cue(name) {
     if (!context || context.state !== 'running' || disposed) return false;
 
+    if(name.startsWith('festival-')){void festivalSound.cue(name.slice(9));return true;}
     if (name === 'foghorn') {
       synth.tone(effectsBus, 98, 1.6, 0.16, 'sine');
       synth.tone(effectsBus, 147, 1.4, 0.07, 'sine');
@@ -130,6 +135,7 @@ export function createAudio({container,on,caption}) {
   let hookInitialized = false;
   let hookPresent = false;
   return {unlock,get state(){return context?.state??'locked';},cue,
+    setFestivalMusic(value){festivalMusic=!!value;theme();},
     setScreen(mode){screen=mode;theme();},
     update(dt, { weather, weatherAnswer, bulletin, isletBuilt = [], speed = 0, night = 0, active = false, place } = {}) {
       if (!context || disposed) return;
@@ -194,6 +200,7 @@ export function createAudio({container,on,caption}) {
       stopPreferences();
       stopCinematic();
       stopHarborCues.forEach(stop => stop());
+      festivalSound?.dispose();
       music?.dispose();
       ambience?.dispose();
       synth?.dispose();
