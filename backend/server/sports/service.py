@@ -211,7 +211,12 @@ class SportsService:
                     raise
                 checks_unavailable |= error.code == "sports_unavailable"
         stakes = await store.mine(player_id)
+        # A concurrent stake may add a fixture while result checks are running. Metadata
+        # must cover this final stake snapshot, including the empty-to-first-stake case.
+        ids = list(dict.fromkeys(stake.fixture_id for stake in stakes))
         fixtures = await store.fixtures(ids)
+        if any(stake.fixture_id not in fixtures for stake in stakes):
+            raise unreadable()
         today = await store.today(player_id, desk_day_start(self.clock()))
         return {
             "coins": await store.balance(player_id),
