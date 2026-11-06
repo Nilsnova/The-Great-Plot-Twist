@@ -21,6 +21,8 @@ so this file is the full list of what can be configured:
     HOST_PLAYER_IDS           player ids (Supabase User UIDs, comma separated) of the hosts who
                               may use presenter routes (hosts.py). Empty means nobody is a host.
                               Not a password, but the browser never needs it.
+    SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty means recorded only.
+    SPORTS_API_KEY            server-only provider key; empty also means recorded only.
 
 Used by: app.py (reads the environment once at start-up), auth.py and supabase_admin.py (the
 Supabase address and keys), the routes (env, demo mode, flags, the keep-alive secret),
@@ -84,6 +86,8 @@ class Settings:
     # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
     # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
     host_player_ids: frozenset[str] = field(default_factory=frozenset)
+    sports_api_provider: str = ""
+    sports_api_key: SecretStr = SecretStr("")
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -179,6 +183,13 @@ def read_host_player_ids(env: Mapping[str, str]) -> frozenset[str]:
     return frozenset(ids)
 
 
+def read_sports_provider(env: Mapping[str, str]) -> str:
+    value = read_text(env, "SPORTS_API_PROVIDER")
+    if value not in ("", "football-data.org", "balldontlie"):
+        raise SettingsError("SPORTS_API_PROVIDER must be empty, football-data.org or balldontlie.")
+    return value
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     return Settings(
@@ -199,6 +210,8 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         ),
         market_multiplier=read_market_multiplier(env),
         host_player_ids=read_host_player_ids(env),
+        sports_api_provider=read_sports_provider(env),
+        sports_api_key=SecretStr(read_text(env, "SPORTS_API_KEY")),
     )
 
 
