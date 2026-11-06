@@ -52,7 +52,7 @@ export function decorateHome(place, art, cleanups, ctx) {
   const baseY = new Map();
   for (const item of homeBuildings) for (const mesh of buildings.get(item.plot).meshes) baseY.set(mesh, mesh.position.y);
   const baseColliders = place.colliders.filter(collider => !collider.isletPlot);
-  function applyBuilt(next, allowRaise = false) {
+  function applyBuilt(next, allowRaise = false, meta = {}) {
     const coming = new Set(next);
     for (const item of homeBuildings) {
       const wasBuilt = active.has(item.plot), isBuilt = coming.has(item.plot);
@@ -60,11 +60,14 @@ export function decorateHome(place, art, cleanups, ctx) {
       group.meshes.forEach(mesh => { mesh.visible = isBuilt; });
       group.refresh(stationNight, isBuilt);
       markers.get(item.plot).visible = !isBuilt;
-      if (isBuilt && !wasBuilt && allowRaise && !isReduced(ctx.reducedMotion)) {
-        const cloud = dust.get(item.plot); cloud.visible = true; cloud.userData.age = 0;
-        cloud.material.opacity = .82; cloud.position.y = -item.z * .72 + 2;
-        for (const mesh of group.meshes) mesh.position.y = baseY.get(mesh) + 5;
-        animating = true;
+      if (isBuilt && !wasBuilt && allowRaise) {
+        if (!isReduced(ctx.reducedMotion)) {
+          const cloud = dust.get(item.plot); cloud.visible = true; cloud.userData.age = 0;
+          cloud.material.opacity = .82; cloud.position.y = -item.z * .72 + 2;
+          for (const mesh of group.meshes) mesh.position.y = baseY.get(mesh) + 5;
+          animating = true;
+        }
+        ctx.emit({ type: 'islet_build_raised', plot: item.plot, preview: meta.preview === true });
       }
     }
     active = coming;
@@ -75,7 +78,7 @@ export function decorateHome(place, art, cleanups, ctx) {
       })));
   }
   applyBuilt(active);
-  const stopState = state?.subscribe?.(next => applyBuilt(next, true));
+  const stopState = state?.subscribe?.((next, meta) => applyBuilt(next, true, meta));
   if (stopState) cleanups.push(stopState);
   if (state?.dispose) { /* The app owns the store and disposes it with the game. */ }
   const originalUpdate = place.update;
@@ -84,6 +87,16 @@ export function decorateHome(place, art, cleanups, ctx) {
     stationNight = frame?.night ?? stationNight;
     buildings.get('islet_signal_station')?.refresh(stationNight, active.has('islet_signal_station'));
     if (!animating) return;
+    if (isReduced(ctx.reducedMotion)) {
+      for (const item of homeBuildings) {
+        const cloud = dust.get(item.plot), group = buildings.get(item.plot);
+        if (cloud.userData.age === undefined) continue;
+        delete cloud.userData.age; cloud.visible = false; cloud.position.y = -item.z * .72 + 2; cloud.material.opacity = .82;
+        group.meshes.forEach(mesh => { mesh.position.y = baseY.get(mesh); });
+      }
+      animating = false;
+      return;
+    }
     let running = false;
     for (const item of homeBuildings) {
       const cloud = dust.get(item.plot), group = buildings.get(item.plot);

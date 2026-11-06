@@ -1,6 +1,7 @@
 // Composes one native-pixel place. Every allocation belongs to its returned root.
 import * as THREE from 'three';
 import { createFrameState } from './frame-state.js';
+import {createHarborLife} from '../ambient/harbor-life.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
 import { createBeam } from '../beam.js';
@@ -71,7 +72,9 @@ export async function createSettlement(ctx) {
         if(stormFlag)stormFlag.visible=stormFlagShouldShow(state);
       }, dispose,
     };
-    ctx.decorate?.(place, art, cleanups); return place;
+    ctx.decorate?.(place, art, cleanups);
+    if(id==='home_islet'||id==='saltreach_harbor'){const life=createHarborLife({place,art,ctx}),update=place.update;place.update=(dt,state)=>{update(dt,state);life.update(dt,state);};cleanups.push(()=>life.dispose());}
+    return place;
   } catch (error) { dispose(); throw error; }
 }
 
@@ -83,7 +86,8 @@ export function teaserShouldShow(state={}){
 }
 export function stormFlagShouldShow(state={}){
   const bulletin=state.bulletin??{};if(!bulletin.status||bulletin.status==='off')return false;
-  return state.weatherAnswer?.state==='storm'||bulletin.weather?.tonight?.state==='storm';
+  if(typeof state.weatherAnswer?.state==='string')return state.weatherAnswer.state==='storm';
+  const tonight=bulletin.weather?.tonight;return tonight?.isNow===true&&tonight.state==='storm';
 }
 function createStormFlag(group){
   const flag=new THREE.Group();flag.name='storm-warning-flag';

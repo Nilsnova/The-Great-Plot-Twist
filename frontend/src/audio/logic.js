@@ -11,3 +11,14 @@ export function strideStep(distance,speed,dt) {
   const next=distance+Math.max(0,Number.isFinite(speed)?speed:0)*Math.max(0,Math.min(0.1,dt||0));
   return {distance:next%1.25,step:next>=1.25};
 }
+export function harborAudioConditions({weatherAnswer,bulletin,place,active=false,night=0}={}) {
+  const harbor=active&&place==='saltreach_harbor';
+  const announced=bulletin?.status==='ready'?bulletin.weather?.tonight:null;
+  const isFogNight=announced?.isFogNight??weatherAnswer?.tonight?.isFogNight;
+  const state=weatherAnswer?.state??(announced?.isNow===true?announced.state:null);
+  return {fogHorn:harbor&&night>.6&&isFogNight===true,flagSnap:harbor&&state==='storm'};
+}
+export function isStationHumActive({place,active=false,night=0,isletBuilt=[]}={}) {
+  return active&&place==='home_islet'&&night>0.12&&Array.isArray(isletBuilt)&&isletBuilt.includes('islet_signal_station');
+}
+export const harborCueVolumes=Object.freeze({build:.035,paper:.016,flag:.021,hook:.018,stationHum:.009});

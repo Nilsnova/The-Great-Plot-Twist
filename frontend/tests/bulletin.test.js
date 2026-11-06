@@ -57,6 +57,8 @@ describe('Lisbon time display and world signals',()=>{
     expect(teaserShouldShow({night:.8,weather:{fog:.8},bulletin:{status:'off'}})).toBe(true);
     expect(teaserShouldShow({night:.8,weather:{fog:1},relit:true})).toBe(false);
     expect(stormFlagShouldShow({bulletin:{status:'off'},weatherAnswer:{state:'storm'}})).toBe(false);
-    expect(stormFlagShouldShow({bulletin:{status:'ready',weather:{tonight:{state:'storm'}}}})).toBe(true);
+    expect(stormFlagShouldShow({bulletin:{status:'ready',weather:{tonight:{state:'storm',isNow:false}}}})).toBe(false);
+    expect(stormFlagShouldShow({bulletin:{status:'ready',weather:{tonight:{state:'storm',isNow:true}}},weatherAnswer:{state:'calm'}})).toBe(false);
+    expect(stormFlagShouldShow({bulletin:{status:'ready',weather:{tonight:{state:'storm',isNow:true}}}})).toBe(true);
   });
 });
