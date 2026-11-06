@@ -1,3 +1,4 @@
+import {readHttp} from './http-read.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Play both original endings through the actual public API and reusable dialogue UI.
@@ -19,7 +20,7 @@ async function visit(id) {
   await page.waitForFunction(id=>window.__island.world.intro.active&&window.__island.world.intro.state&&(window.__island.world.intro.state.ended||window.__island.world.intro.state.scene===id),id);
 }
 try {
-  const response=await fetch(env.url+'/api/content/intro-story');check(response.ok,'Vite proxy reaches the actual public intro API');
+  const response=await readHttp(env.url+'/api/content/intro-story');check(response.ok,'Vite proxy reaches the actual public intro API');
   const story=await response.json();check(story.start==='cottage'&&story.scenes.lamp_room,'API returns the original story structure');
   page.on('request',request=>{if(request.url().includes('/api/')){assert.ok(['/api/content/intro-story','/api/weather'].includes(new URL(request.url()).pathname));assert.equal(request.method(),'GET');if(new URL(request.url()).pathname==='/api/content/intro-story')report.apiReads++;}});
   await page.goto(env.url);await startFromTitle(page);
@@ -28,7 +29,7 @@ try {
   await visit('desk');
   check(await page.evaluate(()=>JSON.stringify(window.__island.world.intro.actions)===JSON.stringify(['to_shore','shore_back','to_desk'])),'Physical shore-to-desk visit replays shore_back then to_desk');
   await choose('take_key');check((await page.locator('.intro-inventory').textContent()).includes('key'),'Accepted pickup appears in inventory');
-  check((await page.locator('.intro-notes').textContent()).length>0,'Engine notes are visible after a change');await choose('read_log');
+  check((await page.locator('.intro-notes:not(.intro-ending-notes)').textContent()).length>0,'Engine notes are visible after a change');await choose('read_log');
   const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text'});if(await skip.isVisible())await skip.click();
   await page.screenshot({path:'captures/20261105_G4-Act1-Desk.png'});
   await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await visit('shore');

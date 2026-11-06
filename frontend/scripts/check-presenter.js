@@ -33,6 +33,13 @@ try{
   await page.locator('.case-modal[open]').waitFor();await page.keyboard.press('B');
   check(await page.locator('.presenter-blank').evaluate(node=>node.open&&node.matches(':modal')),'B opens a top-layer blank above the board dialog');await page.keyboard.press('Escape');
   check(await page.locator('.case-modal[open]').isVisible()&&await page.locator('.presenter-blank').evaluate(node=>!node.open),'Escape restores the still-open board after blanking');
+  await page.keyboard.press('B');await page.keyboard.press('Digit1');
+  await page.waitForFunction(()=>document.querySelector('.intro-modal')?.open);
+  report.laterDialogBlank=await page.evaluate(()=>({blankOpen:document.querySelector('.presenter-blank').open,blankClass:document.body.classList.contains('presenter-blanking'),visibility:getComputedStyle(document.querySelector('.intro-modal')).visibility}));
+  check(await page.locator('.intro-modal').evaluate(node=>getComputedStyle(node).visibility==='hidden')&&await page.locator('.presenter-blank').evaluate(node=>node.open),'A later tour dialog remains hidden while the presentation is blanked');
+  await page.keyboard.press('Escape');
+  check(await page.locator('.intro-modal[open]').isVisible()&&await page.locator('.presenter-blank').evaluate(node=>!node.open),'Escape restores a later dialog without closing its content');
+  await page.keyboard.press('Digit6');await page.locator('.case-modal[open]').waitFor();
   const bounds=await page.evaluate(()=>['.presenter-panel','.presenter-toolbar button','.presenter-speaker-notes'].map(selector=>{const rect=document.querySelector(selector).getBoundingClientRect();return {selector,left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,width:rect.width,height:rect.height};}));
   check(bounds.every(rect=>rect.left>=0&&rect.top>=0&&rect.right<=1920&&rect.bottom<=1080&&rect.width>0&&rect.height>0),'Presenter controls and opened notes remain inside the recording viewport beside the board');
   await page.waitForTimeout(2500);
@@ -42,6 +49,13 @@ try{
   report.performance=await page.locator('.performance-panel').evaluate(panel=>Object.fromEntries([...panel.querySelectorAll('dt')].map(term=>[term.textContent,term.nextElementSibling.textContent])));
   const calls=Number(report.performance['Draw calls'].replaceAll(',',''));
   check(Number.isFinite(calls)&&calls<150,`Draw call count stays below 150 after settle (${calls})`);
+  await page.keyboard.press('Digit8');await page.locator('.cinematic-modal[open]').waitFor({timeout:12000});
+  await page.keyboard.press('P');await page.getByRole('button',{name:/Resume/}).waitFor();
+  // The timeline must retain its exact frame while P freezes the current shot.
+  await page.waitForTimeout(100);const pausedProgress=await page.getByRole('progressbar',{name:'Coastal passage',exact:true}).evaluate(node=>node.value);
+  await page.waitForTimeout(1500);
+  check(await page.getByRole('progressbar',{name:'Coastal passage',exact:true}).evaluate(node=>node.value)===pausedProgress,'P freezes an active cinematic as well as the tour clock');
+  await page.keyboard.press('P');await page.keyboard.press('Digit6');await page.locator('.case-modal[open]').waitFor();
   await page.screenshot({path:'captures/20261106_G8-Presenter-1920.png'});
   await page.getByRole('button',{name:/End rehearsal/}).click();await page.getByRole('button',{name:'Start highlights tour',exact:true}).waitFor();
   check(await page.locator('.presenter-blank').evaluate(node=>!node.open),'Ending the rehearsal cannot leave the screen blanked');

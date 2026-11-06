@@ -111,7 +111,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state);
     audio.update(delta,{weather:state,weatherAnswer,bulletin,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!world.busy&&!caseUi.active&&!chart.open,place:world.current?.id});
-    water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta);chart.update(delta);hookWorld.update(delta,{night,place:world.current?.id,active:active&&!world.busy&&!intro.active&&!shell.blocked});
+    water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta,{paused:demo.active&&demo.paused});chart.update(delta);hookWorld.update(delta,{night,place:world.current?.id,active:active&&!world.busy&&!intro.active&&!shell.blocked});
     festival?.update(reducedMotion()?0:time,{active:(caseWorld?.festivalRemaining??0)>0,night,reducedMotion:reducedMotion(),quality:settings.quality,player:controller.player.position,lanternColour:caseWorld?.lanternColour});
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,bulletin,weatherAnswer,relit:world.relit,festival:(caseWorld?.festivalRemaining??0)>0 });
     view.update(delta, controller.player.position);experience.update(delta,{speed});

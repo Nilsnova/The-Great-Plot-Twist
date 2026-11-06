@@ -46,7 +46,7 @@ try {
   check(await page.evaluate(before=>window.__island.player.position.x>before+0.2,before),'Standard gamepad stick moves the player');
   await page.evaluate(()=>window.__pad.buttons[9].pressed=true);await page.locator('.shell-screen[data-mode=pause]').waitFor();await page.evaluate(()=>window.__pad.buttons[9].pressed=false);await page.waitForTimeout(60);
   check(await page.locator('.shell-screen[data-mode=pause]').isVisible(),'Gamepad Menu opens pause once');await page.getByRole('button',{name:'Resume',exact:true}).click();
-  await page.evaluate(()=>window.__island.audio.cue('foghorn'));check(await page.locator('.sound-caption').isVisible()&&(await page.locator('.sound-caption').textContent()).includes('foghorn'),'Important sound cues have a visible live caption');
+  await page.evaluate(()=>window.__island.audio.cue('foghorn'));await page.locator('.sound-caption:not([hidden])').waitFor();check(await page.locator('.sound-caption').isVisible()&&(await page.locator('.sound-caption').textContent()).includes('foghorn'),'Important sound cues have a visible live caption');
   report.offlineAudio=await page.evaluate(async()=>{const {createSynth}=await import('/src/audio/synth.js');const context=new OfflineAudioContext(1,22050,44100),synth=createSynth(context);synth.tone(context.destination,440,0.2,0.1);const buffer=await context.startRendering(),data=buffer.getChannelData(0);synth.dispose();return {peak:Math.max(...data),finite:data.every(Number.isFinite)};});
   check(report.offlineAudio.finite&&report.offlineAudio.peak>0.01,'Original oscillator voice renders a finite non-silent waveform');report.desktop=await measure(page);
   await page.close();

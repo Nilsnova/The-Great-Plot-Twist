@@ -25,7 +25,10 @@ try{
   check(await page.evaluate(()=>window.__island.experience.stats.hidden===22),'Thirty nearby captains draw at most eight and keep an overflow count');
   report.performance=await measure(page);check(report.performance.calls<150,'Eight live captains and effects meet the draw-call budget');await capture('Presence');
   await page.evaluate(async()=>{window.__weatherBefore={...(await import('/src/world/weather.js')).getWeather()};window.__hourBefore=window.__island.settings.hour;window.__island.settings.hour=23;window.__island.setWeather((await import('/src/world/weather.js')).presets.storm);});
-  report.storm=await measure(page);check(report.storm.fps>=55&&report.storm.calls<150,'Eight captains with night storm effects keep the frame and draw-call budget');
+  // Record the transition separately, then measure the fully active effects.
+  report.stormWarmup=await measure(page,45);await page.waitForTimeout(1800);
+  report.graphicsDevice=await page.evaluate(()=>{const gl=window.__island.renderer.getContext(),debug=gl.getExtension('WEBGL_debug_renderer_info');return {renderer:gl.getParameter(debug?debug.UNMASKED_RENDERER_WEBGL:gl.RENDERER),vendor:gl.getParameter(debug?debug.UNMASKED_VENDOR_WEBGL:gl.VENDOR)};});
+  report.storm=await measure(page,180);check(report.storm.fps>=55&&report.storm.calls<150,'Eight captains with night storm effects keep the frame and draw-call budget');
   await page.evaluate(()=>{window.__island.setWeather(window.__weatherBefore);window.__island.settings.hour=window.__hourBefore;});
   await page.evaluate(()=>{const adapter=window.__plotTwist.adapter,original=adapter.reportPosition;window.__reports=[];adapter.reportPosition=sample=>{window.__reports.push({at:performance.now(),...sample});return original(sample);};});
   await page.keyboard.down('ArrowRight');await page.waitForTimeout(1700);await page.keyboard.up('ArrowRight');await page.waitForTimeout(600);

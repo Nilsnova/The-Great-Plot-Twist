@@ -1,28 +1,41 @@
 // Shared local Chrome setup and settled frame measurements for the world smoke check.
 import {stubWeather} from './weather-browser-fixture.js';
 import { chromium } from 'playwright-core';
-import { spawn } from 'node:child_process';
+import {createServer,preview as createPreview} from 'vite';
 import { access, mkdir } from 'node:fs/promises';
-export async function openWorldBrowser({ preview = false } = {}) {
+export async function openWorldBrowser({ preview = false, hmr = true } = {}) {
   const candidates = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
   if (!executablePath) throw new Error('Install Chrome or set CHROME_PATH.');
-  const url = process.env.TEST_URL || 'http://127.0.0.1:5175';
-  const server = process.env.TEST_URL ? null : spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(preview ? ['preview'] : []), '--host', '127.0.0.1', '--port', '5175', '--strictPort'], { stdio: 'pipe' });
+  let url=process.env.TEST_URL,server=null,browser=null;
   try {
-    for (let i = 0; i < 60; i++) { try { if ((await fetch(url)).ok) break; } catch { /* Wait for Vite. */ } await new Promise(resolve => setTimeout(resolve, 250)); }
-    const browser = await chromium.launch({ executablePath, headless: true });
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    // An owned, ephemeral server cannot accidentally serve a previous check's dev/preview mode.
+    if(!url){
+      const network={host:'127.0.0.1',port:0,strictPort:true};
+      server=preview?await createPreview({logLevel:'error',preview:network}):await createServer({logLevel:'error',server:{...network,hmr}});
+      if(!preview){await server.listen();await server.warmupRequest('/src/game.js');}
+      url=server.resolvedUrls.local[0].replace(/\/$/,'');
+    }
+    browser=await chromium.launch({executablePath,headless:true});
+    const page=await browser.newPage({viewport:{width:1440,height:900}});
     await stubWeather(page);
-    const errors = [], external = [];
-    page.on('pageerror', e => errors.push(e.message));
-    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
-    page.on('request', r => { if (!r.url().startsWith(url) && !r.url().startsWith('data:')) external.push(r.url()); });
-    await mkdir('captures', { recursive: true });
-    return { page, browser, errors, external, url, close: async () => { await browser.close(); server?.kill(); } };
-  } catch (error) { server?.kill(); throw error; }
+    const errors=[],external=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
+    page.on('request',request=>{if(!request.url().startsWith(url)&&!request.url().startsWith('data:'))external.push(request.url());});
+    await mkdir('captures',{recursive:true});
+    let closed=false;
+    return {page,browser,errors,external,url,close:async()=>{
+      if(closed)return;closed=true;
+      try{await browser.close();}finally{await server?.close();}
+    }};
+  }catch(error){
+    try{await browser?.close();}finally{await server?.close();}
+    throw error;
+  }
 }
+
 export async function settle(page) { await page.evaluate(async () => { for (let i = 0; i < 4; i++) await new Promise(requestAnimationFrame); }); }
 export async function measure(page, frames = 90) {
   return page.evaluate(async frames => {

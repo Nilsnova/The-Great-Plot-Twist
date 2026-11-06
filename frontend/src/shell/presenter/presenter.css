@@ -13,6 +13,8 @@
 .presenter-blank{position:fixed;inset:0;z-index:2147483000;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#000;color:#000;cursor:none}
 .presenter-blank::backdrop{background:#000}
 .presenter-blank[open]{display:block}
+body.presenter-blanking dialog:not(.presenter-blank){visibility:hidden!important;pointer-events:none!important}
+body.presenter-blanking dialog:not(.presenter-blank)::backdrop{background:transparent!important}
 .recording-frame{position:fixed!important;inset:0 auto auto 0!important;width:1920px!important;height:1080px!important;max-width:none!important;max-height:none!important;overflow:hidden!important;contain:layout paint!important;cursor:none!important}
 .recording-frame *{cursor:none!important}
 .recording-frame .hud{position:absolute!important;inset:0!important;width:1920px!important;height:1080px!important;overflow:hidden!important}

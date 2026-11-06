@@ -11,7 +11,6 @@ const check = (ok, label) => { assert.ok(ok, label); report.checks.push(label); 
 const capture = name => page.screenshot({ path: `captures/20261105_World-${name}.png` });
 const go = async id => { await page.evaluate(id => window.__island.world.goTo(id, { fast: true }), id); await settle(page); };
 try {
-  await stubIntro(page);
   await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
@@ -78,9 +77,14 @@ try {
   report.reducedMotionMs = Date.now() - reducedStart;
   check(report.reducedMotionMs < 1500 && await page.locator('.sailing').isHidden(), 'Reduced motion skips sailing');
   await page.emulateMedia({ reducedMotion: 'no-preference' }); await page.evaluate(() => window.__island.quality('low'));
-  await page.evaluate(() => { window.__lowTrip = window.__island.world.goTo('saltreach_harbor'); });
+  await page.evaluate(() => {
+    const fade=document.querySelector('.arrival-fade');window.__sawLowFade=false;
+    const observer=new MutationObserver(()=>{if(!fade.hidden){window.__sawLowFade=true;observer.disconnect();}});
+    observer.observe(fade,{attributes:true,attributeFilter:['hidden','style']});
+    window.__lowTrip=window.__island.world.goTo('saltreach_harbor');
+  });
   await page.waitForFunction(() => window.__island.world.current?.id === 'saltreach_harbor');
-  check(await page.locator('.sailing').isHidden() && await page.locator('.arrival-fade').isVisible(), 'Low quality reveals the landing through a flat fade');
+  check(await page.locator('.sailing').isHidden() && await page.evaluate(()=>window.__sawLowFade), 'Low quality reveals the landing through a flat fade');
   await page.locator('.arrival-fade').waitFor({state:'hidden'});
   await page.evaluate(() => { window.__island.quality('high'); window.__island.setWeather({ wind: 1 }); window.__trip = window.__island.world.goTo('wreck_point'); });
   const passageStart = Date.now(); await page.waitForFunction(() => window.__island.world.current?.id === 'wreck_point'); report.windOnePassageMs = Date.now() - passageStart;

@@ -1,3 +1,4 @@
+import {readHttp} from './http-read.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
@@ -23,7 +24,7 @@ const prefix = process.env.CAPTURE_PREFIX || 'Illustrated';
 const check = (condition, label) => { assert.ok(condition, label); report.checks.push(label); };
 try {
   for (let attempt = 0; attempt < 60; attempt++) {
-    try { if ((await fetch(url)).ok) break; } catch { /* Wait for Vite to start. */ }
+    try { if ((await readHttp(url)).ok) break; } catch { /* Wait for Vite to start. */ }
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   browser = await chromium.launch({ executablePath, headless: true }); report.browser = browser.version();

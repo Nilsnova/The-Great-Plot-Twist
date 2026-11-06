@@ -8,9 +8,37 @@ const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 const reasons=['offline','not_connected','session_expired','save_conflict','rate_limited','feature_off'];
 page.setDefaultTimeout(12000);page.setDefaultNavigationTimeout(15000);
 async function waitFor(test,arg){await page.waitForFunction(test,arg,{timeout:12000});}
+async function waitForRuntime(){await page.waitForFunction(()=>!!window.__island?.world,{timeout:30000});}
 async function read(){return page.evaluate(()=>window.__plotTwist.adapter.read());}
 async function openCase(name,params={}){await page.evaluate(({name,params})=>window.__island.caseUi.open(name,params),{name,params});await page.locator('.case-modal[open]').waitFor();}
 async function setFault(reason){await page.evaluate(reason=>window.__plotTwist.adapter.dev.failNext(reason),reason);}
+async function checkBulletinFailureStates(){
+  const before=core(await read());
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('off'));
+  check((await read()).bulletin.status==='off','Bulletin-off state is explicit');
+  await openCase('bulletin');
+  check(await page.locator('.bulletin-screen').evaluate(element=>element.hidden),'Off bulletin renders no empty prompt');
+  await page.keyboard.press('Escape');await page.locator('.case-modal').waitFor({state:'hidden'});
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('unavailable'));
+  await openCase('bulletin');
+  check((await page.locator('.bulletin-status').textContent()).toLowerCase().includes('unavailable'),'Unavailable bulletin has a clear status');
+  check(await page.locator('.bulletin-lines').evaluate(element=>element.hidden),'Unavailable bulletin does not retain stale forecast lines');
+  await page.keyboard.press('Escape');await page.locator('.case-modal').waitFor({state:'hidden'});
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('missing-tonight'));
+  await openCase('bulletin');
+  const line=(await page.locator('.bulletin-lines li').first().textContent()).trim();
+  check(line.startsWith('Tonight: no forecast.'),'Missing tonight data stays no forecast in the bulletin UI');
+  check(!(await read()).bulletin.weather.tonight,'Missing tonight data is not inferred from tomorrow or local weather');
+  check(JSON.stringify(before)===JSON.stringify(core(await read())),'Bulletin off, unavailable and missing-tonight states leave gameplay unchanged');
+  await page.keyboard.press('Escape');await page.locator('.case-modal').waitFor({state:'hidden'});
+}
+async function checkIsletEventNeverArrives(){
+  await page.evaluate(async()=>{const world=window.__island.world;if(world.current?.id!=='saltreach_harbor'&&world.current?.id!=='home_islet')await world.goTo('saltreach_harbor',{fast:true});if(world.current?.id!=='home_islet')await world.goTo('home_islet',{fast:true});});
+  await page.waitForTimeout(400);
+  const state=await page.evaluate(()=>{let station=null;window.__island.world.current?.group.traverse(object=>{if(object.userData?.asset==='islet-signal-station')station=object;});return {built:window.__island.isletState.getBuilt(),stationVisible:!!station?.visible};});
+  check(!state.built.includes('islet_signal_station')&&!state.stationVisible,'Without an islet_changed event, the cabin remains the last-good world state and no station appears');
+  await page.evaluate(()=>window.__island.world.goTo('saltreach_harbor',{fast:true}));
+}
 function core(view){return {profile:view.arrival.status,coins:view.captain.coins,ledger:view.rewards.ledger.map(row=>[row.id,row.amount]),crew:view.crew.seats.map(seat=>[seat.seat,seat.kind,seat.cards.map(card=>card.id)]),pins:view.board.pinHighlights.map(pin=>[pin.cardId,pin.seat]),deductions:view.board.deductions.filter(item=>item.complete).map(item=>item.id),jobs:view.search.jobs.map(job=>[job.id,job.done]),partnerJobs:view.partners.map(partner=>[partner.seat,partner.job?.id,partner.job?.done]),phase:view.finale.phase,aboard:view.accusation.aboard,solved:view.reveal.available,index:view.reveal.index,colour:view.world.lanternColour};}
 async function unchanged(before,label){check(JSON.stringify(core(before))===JSON.stringify(core(await read())),`${label}: core gameplay state is unchanged`);}
 async function recoverAccount(reason,keepOpen=false){
@@ -41,7 +69,7 @@ async function playIntro({failEnd=false}={}){
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb'])await chooseIntro(id);
   if(failEnd)await setFault('offline');await chooseIntro('untie');await page.locator('.intro-modal .intro-ending').waitFor();
-  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await playIntro();return;}
+  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();return;}
   await waitFor(()=>window.__plotTwist.adapter.read().arrival.status==='ready');
 }
 async function searchAndPinPreparation(){
@@ -54,11 +82,11 @@ async function searchAndPinPreparation(){
 async function partnerPreparation(){
   await openCase('partners');const row=page.locator('.partner-life-card[data-seat="2"]');
   await row.getByLabel('Order',{exact:true}).selectOption('fetch');await row.getByLabel('Target',{exact:true}).selectOption('C4');
-  const send=row.getByRole('button',{name:'Send order',exact:true});await faultMatrix('partners.orderPartner',()=>send.click());await send.click();
+  const send=row.getByRole('button',{name:/^Send order ·/});await faultMatrix('partners.orderPartner',()=>send.click());await send.click();
   await waitFor(()=>window.__plotTwist.adapter.read().partners.find(partner=>partner.seat===2)?.job?.order==='fetch');
   await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));await waitFor(()=>window.__plotTwist.adapter.read().crew.seats.find(seat=>seat.seat===2)?.cards.some(card=>card.id==='C4'));
   await openCase('partners');const pinRow=page.locator('.partner-life-card[data-seat="2"]');await pinRow.getByLabel('Order',{exact:true}).selectOption('pin');await pinRow.getByLabel('Target',{exact:true}).selectOption('C4');
-  const pinSend=pinRow.getByRole('button',{name:'Send order',exact:true});await faultMatrix('partners.orderPartner.pin',()=>pinSend.click());await pinSend.click();await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(300));
+  const pinSend=pinRow.getByRole('button',{name:/^Send order ·/});await faultMatrix('partners.orderPartner.pin',()=>pinSend.click());await pinSend.click();await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(300));
   await waitFor(()=>window.__plotTwist.adapter.read().board.cards.find(card=>card.id==='C4')?.pinnedBy.some(pin=>pin.seat===2));
   await page.evaluate(()=>{const d=window.__plotTwist.adapter.dev;d.give('C2',2);d.pinForSeat('C2',2);});
 }
@@ -93,10 +121,11 @@ try{
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline chaos rehearsal"}'}));await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   await page.evaluate(async()=>window.__plotTwist.adapter.signIn());await waitFor(()=>window.__plotTwist.adapter.read().account.state==='signed_in');await page.evaluate(()=>window.__plotTwist.accountHost.open());await page.locator('.account-modal[open]').waitFor();
   const reroll=page.getByRole('button',{name:'Change captain name once'});await faultMatrix('account.rerollName',()=>reroll.click(),{notice:'.account-modal[open] .account-feedback',keepAccount:true});await reroll.click();await waitFor(()=>window.__plotTwist.adapter.read().account.canReroll===false);await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await page.getByRole('button',{name:'New game',exact:true}).click();await playIntro({failEnd:true});
-  await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await playIntro();
+  await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro({failEnd:true});
+  await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();
   await openCase('crew');const create=page.getByRole('button',{name:'Start a crew',exact:true});await faultMatrix('crew.createCrew',()=>create.click());await create.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
   const muster=page.getByRole('button',{name:/Muster/});await faultMatrix('crew.muster',()=>muster.click());await muster.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='active');
+  await checkBulletinFailureStates();await checkIsletEventNeverArrives();
   await searchAndPinPreparation();await partnerPreparation();await pairPreparation();await nightPreparation();await solveRemainder();
   await page.setViewportSize({width:1280,height:800});await page.screenshot({path:'captures/20261106_G7-Chaos-Recovered-1280.png'});
   report.timings.desktop=await measure(page);check(report.timings.desktop.fps>0&&report.timings.desktop.calls<150,'1280 px chaos recovery remains responsive');

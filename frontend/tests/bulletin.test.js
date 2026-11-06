@@ -1,11 +1,13 @@
 import {describe,it,expect} from 'vitest';
 import {existsSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {bulletinView,canonicalBulletinCopy,initialBulletinState,setBulletinScenario,bulletinScenarioIds} from '../src/adapter/fake/bulletin.js';
+import {bulletinView,canonicalBulletinCopy,initialBulletinState,setBulletinScenario as chooseScenario,bulletinScenarioIds} from '../src/adapter/fake/bulletin.js';
 import {durationUntil,lisbonDateTime,tonightLabel} from '../src/screens/bulletin/logic.js';
 import {teaserShouldShow,stormFlagShouldShow} from '../src/world/places/settlement.js';
 
-const state=()=>({...initialBulletinState()});
+const FIXED_NOW=Date.parse('2026-11-06T12:00:00Z');
+const state=()=>({...initialBulletinState(FIXED_NOW)});
+const setBulletinScenario=(state,id,nowMs=FIXED_NOW)=>chooseScenario(state,id,nowMs);
 describe('bulletin fake view',()=>{
   it('starts off and accepts only known rehearsal scenarios',()=>{
     const s=state();expect(bulletinView(s)).toMatchObject({status:'off',lines:[],weather:null,exchange:null,chapterTwoHook:null});
@@ -15,6 +17,11 @@ describe('bulletin fake view',()=>{
     const s=state();setBulletinScenario(s,'real');expect(bulletinView(s).weather.tonight).toMatchObject({state:'fog',isFogNight:true,fogNightKind:'real'});
     setBulletinScenario(s,'almanac');expect(bulletinView(s).weather.tonight.fogNightKind).toBe('almanac');
     setBulletinScenario(s,'hook');const view=bulletinView(s);expect(view.chapterTwoHook.notice.text).toBe('[notice supplied by the server]');expect(view.lines.find(line=>line.kind==='hook').text).toBe('[bulletin line supplied by the server]');
+  });
+  it('keeps a ready bulletin without tonight data distinct from an inferred forecast',()=>{
+    const s=state();setBulletinScenario(s,'missing-tonight',Date.parse('2026-11-06T12:00:00Z'));
+    const view=bulletinView(s);expect(view.status).toBe('ready');expect(view.weather.tonight).toBeNull();
+    expect(view.lines[0].text).toBe('Tonight: no forecast. Tomorrow: calm and clear.');expect(view.chapterTwoHook).toBeNull();
   });
   it('shows lines in server order and maps exchange failure state as data',()=>{
     const s=state();setBulletinScenario(s,'stale',Date.parse('2026-11-06T12:00:00Z'));const view=bulletinView(s);

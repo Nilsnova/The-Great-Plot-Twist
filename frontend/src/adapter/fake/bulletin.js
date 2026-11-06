@@ -1,6 +1,6 @@
 // Deterministic bulletin rehearsal data; no server-only story text or hook wording.
 import {fakeHook} from './hook.js';
-export const bulletinScenarioIds=['calm','real','almanac','storm','relit','hook','stale','loading','unavailable','off'];
+export const bulletinScenarioIds=['calm','real','almanac','storm','relit','hook','stale','missing-tonight','loading','unavailable','off'];
 const scenarios=new Set(bulletinScenarioIds);
 export const canonicalBulletinCopy={
   stateWords:{storm:'storm',fog:'fog',rain:'rain',calm:'calm and clear'},noForecast:'no forecast',
@@ -51,9 +51,10 @@ export function bulletinView(state){
   if(scenario==='unavailable')return {status:'unavailable',day:null,lines:[],weather:null,exchange:null,chapterTwoHook:null};
   const baseMs=Number.isFinite(state.bulletinBaseMs)?state.bulletinBaseMs:Number.isFinite(state.bulletin?.baseMs)?state.bulletin.baseMs:Number.isFinite(state.baseMs)?state.baseMs:0;
   const fog=['real','almanac'].includes(scenario),isNow=['real','storm'].includes(scenario),weatherState=scenario==='storm'?'storm':scenario==='real'?'fog':'calm';
-  const tonight=weather(baseMs,weatherState,isNow,fog,scenario==='real'?'real':scenario==='almanac'?'almanac':null),today=day(baseMs);
-  const tomorrow=tonight.tomorrow.state,words=canonicalBulletinCopy.stateWords;
-  const lines=[{kind:'weather',text:canonicalBulletinCopy.weatherLine.replace('{tonight}',words[weatherState]).replace('{tomorrow}',words[tomorrow])}];
+  const forecast=weather(baseMs,weatherState,isNow,fog,scenario==='real'?'real':scenario==='almanac'?'almanac':null),today=day(baseMs);
+  const missingTonight=scenario==='missing-tonight',tonight=missingTonight?{...forecast,tonight:null}:forecast;
+  const tomorrow=forecast.tomorrow.state,words=canonicalBulletinCopy.stateWords;
+  const lines=[{kind:'weather',text:canonicalBulletinCopy.weatherLine.replace('{tonight}',missingTonight?canonicalBulletinCopy.noForecast:words[weatherState]).replace('{tomorrow}',words[tomorrow])}];
   if(fog)lines.push({kind:'fog',text:canonicalBulletinCopy.fogNightLines[scenario==='real'?'real':'almanac']});
   let exchange=null,chapterTwoHook=null;
   if(scenario==='calm'){exchange={feed:'live',pausedCompanies:[]};lines.push({kind:'exchange',text:canonicalBulletinCopy.exchange.allOpen.replace('{feed}',canonicalBulletinCopy.exchange.feedWords.live)});}

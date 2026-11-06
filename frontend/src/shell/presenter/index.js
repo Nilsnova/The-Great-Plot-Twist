@@ -22,14 +22,24 @@ export function createPresenter({steps,notes,onAction}) {
   let blankOpener=null;
   function setBlank(value){
     const next=!!value;if(next===blank)return;blank=next;
-    if(blank){blankOpener=document.activeElement;if(!blankScreen.open)blankScreen.showModal();blankScreen.focus({preventScroll:true});}
-    else {if(blankScreen.open)blankScreen.close();const opener=blankOpener;blankOpener=null;if(opener?.isConnected)opener.focus({preventScroll:true});}
+    if(blank){blankOpener=document.activeElement;document.body.classList.add('presenter-blanking');if(!blankScreen.open)blankScreen.showModal();blankScreen.focus({preventScroll:true});}
+    else {document.body.classList.remove('presenter-blanking');if(blankScreen.open)blankScreen.close();const opener=blankOpener;blankOpener=null;if(opener?.isConnected)opener.focus({preventScroll:true});}
     blankButton.update({label:blank?'Restore screen · B':'Blank · B'});
   }
   blankScreen.addEventListener('cancel',event=>{event.preventDefault();setBlank(false);});
-  blankScreen.addEventListener('close',()=>{if(blank){blank=false;blankButton.update({label:'Blank · B'});}const opener=blankOpener;blankOpener=null;if(opener?.isConnected)opener.focus({preventScroll:true});});
+  blankScreen.addEventListener('close',()=>{
+    // A previous close event can arrive after the screen has been blanked again.
+    if(blankScreen.open)return;
+    document.body.classList.remove('presenter-blanking');
+    if(blank){blank=false;blankButton.update({label:'Blank · B'});}
+    const opener=blankOpener;blankOpener=null;
+    if(opener?.isConnected)opener.focus({preventScroll:true});
+  });
   function jump(next){if(next===index)return;onAction('jump',next);}
   function onKey(event){
+    if(blank&&event.code==='Escape'){
+      event.preventDefault();event.stopImmediatePropagation();setBlank(false);return;
+    }
     if(!active||disposed||event.altKey||event.ctrlKey||event.metaKey||event.target?.closest?.('input,textarea,select,[contenteditable="true"]'))return;
     let action=null;
     if(event.code==='Space'||event.code==='ArrowRight')action='next';

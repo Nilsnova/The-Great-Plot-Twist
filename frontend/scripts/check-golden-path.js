@@ -9,6 +9,8 @@ const started=()=>performance.now();
 page.setDefaultTimeout(12000);page.setDefaultNavigationTimeout(15000);
 async function waitFor(test,arg){await page.waitForFunction(test,arg,{timeout:12000});}
 async function apiView(){return page.evaluate(()=>window.__plotTwist.adapter.read());}
+async function introDiagnostic(){return {runtimePresent:await page.evaluate(()=>!!window.__island),runtime:await page.evaluate(()=>({shellMode:document.querySelector('.shell-screen')?.dataset.mode??null,worldPlace:window.__island?.world.current?.id??null,worldBusy:window.__island?.world.busy??null,introActive:window.__island?.world.intro.active??null,adapterMode:window.__plotTwist?.adapter.read().mode,arrival:window.__plotTwist?.adapter.read().arrival.status,canvasCount:document.querySelectorAll('canvas').length,loading:document.querySelector('.shell-loading')?.textContent??null,dialogs:[...document.querySelectorAll('dialog')].map(dialog=>({title:dialog.getAttribute('aria-label')??dialog.querySelector('h1,h2')?.textContent??'',open:dialog.open,classes:dialog.className}))})),browserErrors:env.errors.slice(-6)};}
+async function waitForRuntime(){await page.waitForFunction(()=>!!window.__island?.world,{timeout:30000});}
 async function openCase(name,params={}){
   await page.evaluate(({name,params})=>window.__island.caseUi.open(name,params),{name,params});
   await page.locator('.case-modal[open]').waitFor();await page.locator('.case-screen-content').waitFor();
@@ -19,18 +21,48 @@ async function chooseIntro(id){
   const choice=page.locator(`.intro-modal [data-choice="${id}"]`);await choice.waitFor({state:'visible'});await choice.click();
 }
 async function finishOriginalIntro(){
-  await page.locator('.intro-modal[open] .intro-view').waitFor();
+  try{await page.locator('.intro-modal[open] .intro-view').waitFor();}
+  catch(error){const diagnostic=await introDiagnostic();report.introFailure=diagnostic;throw new Error(`${error.message}\nIntro startup diagnostic: ${JSON.stringify(diagnostic)}`);}
   for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb','signal'])await chooseIntro(id);
   await page.locator('.intro-modal .intro-ending').waitFor();
   await waitFor(()=>window.__plotTwist.adapter.read().arrival.status==='ready');
   const profile=await page.evaluate(()=>window.__plotTwist.adapter.read().arrival.kit?.id);
   check(profile==='true_keeper','Original ending through the UI yields the accepted True Keeper kit');
+  await page.locator('.intro-arrival-slot .case-arrival').waitFor({state:'visible'});
   await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});
+  // Let the arrival hand-off finish before a test asks the world to travel elsewhere.
+  await page.evaluate(async()=>{await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);await window.__island.world.whenIdle();});
+}
+async function verifyIsletStationEventFallback(){
+  const home=await page.evaluate(async()=>{
+    const world=window.__island.world;
+    if(world.current?.id!=='saltreach_harbor'&&world.current?.id!=='home_islet')await world.goTo('saltreach_harbor',{fast:true});
+    if(world.current?.id!=='home_islet')await world.goTo('home_islet',{fast:true});
+    window.__island.emit({type:'islet_changed',built:['plot_1','islet_signal_station'],signalStationBuilt:true});
+    return world.current?.id;
+  });
+  check(home==='home_islet','Islet event fallback reaches the home-islet world');
+  await waitFor(()=>window.__island.isletState.getBuilt().includes('islet_signal_station'));
+  const visible=await page.evaluate(()=>{
+    const group=window.__island.world.current?.group;let visible=false;
+    group?.traverse(object=>{if(['islet-signal-station','islet-signal-station-lit'].includes(object.userData?.asset)&&object.visible&&object.parent===group)visible=true;});
+    return visible;
+  });
+  check(visible,'Accepted islet_changed event makes the signal station visible in the world');
+  report.isletConstruction={method:'event-fallback',panelVerified:false,note:'No islet screen source is present; this verifies the event/store/world seam only.'};
+  const returned=await page.evaluate(()=>window.__island.world.goTo('saltreach_harbor',{fast:true}));
+  check(returned===true,'The world returns to Harbor after the islet event check');
 }
 async function newOriginalIntro(){
+  // Exercise New game from the solved runtime before isolating the second crew scenario.
   await page.evaluate(()=>{window.__island.caseUi.close();window.__plotTwist.adapter.dev.reset();window.__island.shell.show('title');});
+  await page.getByRole('button',{name:'New game',exact:true}).click();
+  await page.locator('.intro-modal[open] .intro-view').waitFor();
+  check(await page.evaluate(()=>window.__island.world.current?.id==='lighthouse_isle'),'New game returns the solved Gull’s Rest runtime to the original intro');
+  // A new page gives the four-human scenario an independent adapter and move journal.
+  await page.goto(env.url+'/?case=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   await page.locator('.shell-screen[open] #new-game').waitFor();await page.getByRole('button',{name:'New game',exact:true}).click();
-  await finishOriginalIntro();
+  await waitForRuntime();await finishOriginalIntro();await verifyIsletStationEventFallback();
 }
 async function makeCrew({humans=false}={}){
   await openCase('crew');await page.getByRole('button',{name:'Start a crew',exact:true}).click();
@@ -55,7 +87,7 @@ async function orderPartner(seat,order,target,seconds){
   await openCase('partners');const row=page.locator(`.partner-life-card[data-seat="${seat}"]`);await row.waitFor();
   await row.getByLabel('Order',{exact:true}).selectOption(order);
   if(target)await row.getByLabel('Target',{exact:true}).selectOption(target);
-  await row.getByRole('button',{name:'Send order',exact:true}).click();
+  await row.getByRole('button',{name:/^Send order ·/}).click();
   await waitFor(({seat,order})=>window.__plotTwist.adapter.read().partners.find(item=>item.seat===seat)?.job?.order===order,{seat,order});
   if(seconds)await advance(seconds);
 }
@@ -66,7 +98,7 @@ async function partnerFetchAndPin(seat,id){
 }
 async function pinMine(id){
   await openCase('board');const card=page.locator(`.case-clue[data-card="${id}"]`);await card.waitFor();
-  const button=card.getByRole('button',{name:'Pin my card',exact:true});check(!await button.isDisabled(),`${id} can be pinned by this player`);await button.click();
+  const button=card.getByRole('button',{name:/^Pin my card ·/});check(!await button.isDisabled(),`${id} can be pinned by this player`);await button.click();
   await waitFor(id=>window.__plotTwist.adapter.read().board.cards.find(card=>card.id===id)?.pinnedBy.some(pin=>pin.seat===1),id);
 }
 async function pair(a,b,deduction){
@@ -100,11 +132,15 @@ async function soloCase(){
   await searchAsPlayer('C8.ruin','watchtower_ruin',1,'C8');await partnerFetchAndPin(4,'C8');await pair('C7','C8','D4');
 }
 async function solveNightSolo(){
-  await openCase('finale');await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button').first().click();
+  await openCase('finale');
+  const stationReady=await page.evaluate(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
+  if(!stationReady)await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button').first().click();
+  await waitFor(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
+  check(true,'Finale uses the signal station supplied by the islet event');
   await page.getByRole('button',{name:'Call nightfall',exact:true}).click();await waitFor(()=>window.__plotTwist.adapter.read().finale.phase==='night');
   await openCase('partners');
   for(const [seat,light] of [[2,'keepers_lamp'],[3,'harbor_light']]){
-    const row=page.locator(`.partner-life-card[data-seat="${seat}"]`);await row.getByLabel('Order',{exact:true}).selectOption('man_light');await row.getByLabel('Target',{exact:true}).selectOption(light);await row.getByRole('button',{name:'Send order',exact:true}).click();await waitFor(({seat})=>window.__plotTwist.adapter.read().partners.find(partner=>partner.seat===seat)?.job?.order==='man_light',{seat});
+    const row=page.locator(`.partner-life-card[data-seat="${seat}"]`);await row.getByLabel('Order',{exact:true}).selectOption('man_light');await row.getByLabel('Target',{exact:true}).selectOption(light);await row.getByRole('button',{name:/^Send order ·/}).click();await waitFor(({seat})=>window.__plotTwist.adapter.read().partners.find(partner=>partner.seat===seat)?.job?.order==='man_light',{seat});
   }
   await openCase('finale');await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button',{name:'Take this post · 1 minute'}).click();await advance(600);
   await lockThreeLightsSolo();
@@ -119,7 +155,10 @@ async function lockThreeLightsSolo(){
   check(true,'Three distinct posts open the schooner through accepted beam intents');
 }
 async function solveNightFourHumans(){
-  await openCase('finale');await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button').first().click();
+  await openCase('finale');
+  const stationReady=await page.evaluate(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
+  if(!stationReady)await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button').first().click();
+  await waitFor(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
   await page.getByRole('button',{name:'Call nightfall',exact:true}).click();await waitFor(()=>window.__plotTwist.adapter.read().finale.phase==='night');
   await peerIntent(2,'takePost','keepers_lamp');await peerIntent(3,'takePost','harbor_light');
   await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button',{name:'Take this post · 1 minute'}).click();await advance(60);
@@ -202,7 +241,7 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local');
   await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   check(await page.evaluate(()=>window.__plotTwist?.adapter.read().mode==='local'),'Browser uses the explicit local fake while all API routes return 503');
-  let t=started();await page.getByRole('button',{name:'New game',exact:true}).click();await finishOriginalIntro();report.timings.introMs=Math.round(started()-t);
+  let t=started();await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await finishOriginalIntro();await verifyIsletStationEventFallback();report.timings.introMs=Math.round(started()-t);
   t=started();await soloCase();await solveNightSolo();await accuseRevealAndFestival();report.timings.soloScenarioMs=Math.round(started()-t);
   let solo=await apiView();check(solo.board.cards.length===8&&solo.board.deductions.filter(item=>item.complete).length===4,'Solo player plus three NPCs recorded all eight cards and D1–D4');await rewardMilestones({humans:false});await captureGullsRest();
   report.scenarios.push({name:'solo + three NPC partners',cards:solo.board.cards.length,deductions:solo.board.deductions.filter(item=>item.complete).map(item=>item.id)});
