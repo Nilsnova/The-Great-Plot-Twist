@@ -2836,3 +2836,54 @@ The test-only packages stay in uv's cache. Claude reviews and applies the three 
 - If something here is unclear, open an issue before changing the rules for money.
 
 **Live checkpoint, 6 Nov 2026:** group 3 files 090000, 100000 and 110000 are applied and MD5-verified under their repository versions. Final counts: 18 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 24 project functions excluding rls_auto_enable, 4 sequences and 5 public triggers. See [release proofs](../docs/handoff/group3-release.md).
+
+## Case Phase 1 migration
+
+`migrations/20261106060000_case_rules.sql` is additive and was independently reviewed and applied by Codex on 6 Nov 2026. Stored MD5 matches `278a16fcf87bbf2f46d81ec803f1e94b` and history version is `20261106060000`. The case flag remains off. No earlier migration or wallet-reason list changes. The full sorted local chain runs twice in the disposable database checks, preserving any later replacement of the empty world hook.
+
+| Table | anon | authenticated | service_role |
+|---|---|---|---|
+| case_state | no access | no access | select, insert, update |
+| case_finds | no access | no access | select, insert |
+| case_deductions | no access | no access | select, insert |
+| case_accusations | no access | no access | select, insert |
+| case_solvers | no access | no access | select, insert |
+| case_actions | no access | no access | select, insert |
+
+All six tables have RLS and no browser policies. The two identity sequences have no role grants. Service history is append-only. Player-owned records cascade on deletion; shared history keeps nullable player references.
+
+| Function | Who may execute | Purpose |
+|---|---|---|
+| case_window_open | service_role only | Match the Python recurring window rule |
+| case_begin | service_role only | Crew lock, repeat, status, seat and database clock |
+| case_finish | service_role only | Store the outcome and increment revision |
+| case_open | service_role only | Idempotently open the clock and starting cards |
+| case_start_route | service_role only | Recheck gates/windows and store a timed find |
+| case_after_solve | service_role only | Empty hook until Phase 3; never reset a later hook |
+| case_accuse | service_role only | Guard the snapshot, wait, solve and atomic payouts |
+| case_clock_forward | service_role only | Move a seated host's crew clock after the Python host check |
+
+All functions use caller rights and an empty search path. The API store calls only intent functions. Run from `backend/` with test-only tools, never a configured database URL:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/case_sql
+```
+
+The fixture asserts a local Unix socket, applies every migration twice, runs checks as `service_role` or refused `authenticated`, rolls back test data and deletes the server afterwards. Normal pytest skips this opt-in package. Manual checks C1 to C14 mirror the automated checks:
+
+1. Apply the full chain twice; a later replacement of the solve hook remains intact.
+2. Open twice: one state and one starting find per eligible player or partner seat.
+3. Refuse forming and finished crews with their actual status.
+4. A 300-second search stores that exact duration and one new revision.
+5. A repeated uid returns its original kind, target and outcome, even after finishing.
+6. A gated card refuses before its deduction and starts afterwards.
+7. Refuse a duplicate find for the same seat and card.
+8. Refuse the minute before a window opens and accept its first open minute; compare all four windows with Python.
+9. Refuse accusation without the schooner or required deductions.
+10. A wrong accusation waits 60 seconds; 59 refuses and 60 accepts.
+11. Accept once, finish the crew, store every player solver, pay once per player across crews and return unchanged world.
+12. Refuse authenticated reads of every case table and execution of every case function.
+13. A stale case revision or crew version changes no accusation, action, solver or wallet row.
+14. A host clock move changes only its own crew, logs the action and increments revision; forming crews refuse.
+
+After case Phase 1, cumulative totals are 24 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 32 project functions excluding rls_auto_enable, 6 sequences and 6 public triggers. The six new tables are server-only; RLS-without-policy advisor INFO notices are intended.

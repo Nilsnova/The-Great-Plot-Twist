@@ -70,7 +70,9 @@
 
 ## 2. Routes that exist now
 
-There are 33 API operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
+Case Phase 1 routes on `feat/case-backend` are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the required migrations are applied.
+
+There are 37 API operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
 ### GET /api/health
 
@@ -919,6 +921,21 @@ Details that other packages rely on:
 | `duels` | challenge: who, rounds, stake, status and, once decided, the result of every round. It holds no signal. | read the duels they take part in | read, add, change (through `duel_create()`, `duel_answer()` and `duel_void()`); never delete | A7 |
 | `duel_moves` | captain and round: the sealed envelopes, the only place that holds a signal | nothing at all, not even their own rows | read, add (through `duel_create()` and `duel_answer()`); no role may change or delete a row | A7 |
 
+### Case Phase 1 tables and functions
+
+The additive migration `20261106060000_case_rules.sql` adds six server-only tables. All have RLS, no player policies or grants, and no service-role DELETE grant.
+
+| Table | Stores | Server rights |
+|---|---|---|
+| `case_state` | One crew's clock, revision, waits and solve state | select, insert, update |
+| `case_finds` | A seat's accepted find and landing time | select, insert |
+| `case_deductions` | A crew's formed deductions | select, insert |
+| `case_accusations` | The immutable accusation history | select, insert |
+| `case_solvers` | Per-crew reveal eligibility and once-per-player payout result | select, insert |
+| `case_actions` | The player's uid, intent and exact stored outcome | select, insert |
+
+Only the server may execute `case_window_open`, `case_begin`, `case_finish`, `case_open`, `case_start_route`, `case_after_solve`, `case_accuse` and `case_clock_forward`. All use an empty search path and caller rights. The Python store calls only the four intent functions, never private helpers. Case writes lock the crew before wallets and the later world row; revision and crew-version checks prevent paying from an old snapshot. No wallet reason is added.
+
 ## 5. The wallet
 
 Play money only. Coins cannot be bought, cashed out or exchanged for real prizes. One wallet per player and one ledger serve every money feature.
@@ -1144,6 +1161,10 @@ sent = await broadcaster.send(crew_id, "board_changed", {"version": 7})   # True
 
 Each caller sends after its database change has succeeded, with `data={"version": n}`, on state changes only and never on every input. A wrong argument (a crew id that is not a uuid, an unknown kind, data over 1 KB) is a bug in the caller and raises `ValueError`. Everything else that can go wrong (the flag is off, Supabase is not set up, more than 20 events for one crew in 10 seconds or more than 5 events in a second over all crews, a refusal, a timeout of 2 seconds for the whole call) returns `False` with one short warning that never holds the key, the crew id or the payload. The list of kinds is `CREW_EVENT_KINDS`, in Python and in `frontend/src/net/live-rules.js`; a test keeps the two equal.
 
+### Case refresh budget
+
+Once A4 is on main, case writes use its broadcaster for `case_changed`, `board_changed` and `partner_changed`, carrying only `{"version": writeRevision}`. Reads, repeats, unchanged refusals and timed landings send no nudge. Cut off each nudge after one second; enforce 20 crew events per 10 seconds. Until that integration, refetch on countdown boundaries and use a five-second fallback poll; with live nudges, use a visible-tab 30-second fallback poll. No nudge carries cards, narration or player ids.
+
 ## 8. Feature flags
 
 A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The server reads it once at start-up, and a name that does not exist stops the server with a clear message. The browser learns which flags are on from `GET /api/config` and never decides for itself. To add a flag, follow [ENGINEERING.md, recipe 4.5](ENGINEERING.md#45-add-a-feature-flag).
@@ -1157,6 +1178,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `raid` | the phone class raid | A5, later |
 | `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
 | `companion_llm` | a language-model companion | later, only with a capped server key and Nils' OK |
+| `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
 
 The names of all settings are in [.env.example](../.env.example), and [ARCHITECTURE.md](ARCHITECTURE.md#where-each-secret-lives) says where each secret lives.
 
@@ -1173,7 +1195,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | G4 Finale visuals | `world.cinematic('three_lights' \| 'fog_lift' \| 'unmask')`, which listens for the `finale` event | draft; defined by the story round (S0, D018) |
 | S1 Import Plot Twist | `backend/content/story.json`, with the content format in `backend/content/README.md`; `GET /api/content/intro-story`; the story engines `backend/plot_twist/engine.py` and `frontend/src/story/engine.js`; the parity test `backend/plot_twist/tests/test_web_parity.py` with its Node.js runner `parity_runner.mjs` | draft |
 | S2 Act 1 in the browser | The move log `actions[]`; the event `intro_ended` | draft |
-| S3 The Light That Shouldn't Be (the case) | `POST /api/act {place, actionId, actionUid}` returning `{accepted, message, notes, actions}`; `POST /api/case/accuse {suspect, actionUid}`; `backend/content/secret/case.json`, read only by the server and never served; the crew's next-lead line of the bulletin, served signed in (for example `GET /api/bulletin/lead`), and any solvers-only hook line (secret content) | draft; defined by the story round (S0, D018) |
+| S3 The shared case | `GET /api/case`, `POST /api/case/search`, `POST /api/case/accuse`, `POST /api/host/case/clock`; private case data never served | Phase 1 built on `feat/case-backend`; section 10 is the contract |
 | S4 NPC partners | `POST /api/crews/me/orders {seat, order, target, actionUid}`; `backend/content/partners.json` (orders, errand times, scripted lines) | draft; defined by the story round (S0, D018) |
 | A2 Sign-in, captain names and cloud progress | **Built** (the sign-in itself is pending Nils' decision): `GET /api/me` returns `captainName`, `kit` and `place` besides `{id, displayName, coins, crews}` (`kit` and `place` are filled by A3, from the entry profile); `POST /api/me/name`; `POST /api/me/name/reroll {actionUid}`; `GET /api/save`; `PUT /api/save {version, data}` with `409 stale_save`; `DELETE /api/me {confirm}`; `require_host` / `HostDep` with the setting `HOST_PLAYER_IDS`; `backend/content/names.json`; the table `captain_name_rerolls`; `frontend/src/online/api.js` and `session.js`. **Not built:** the "Sign in with GitHub" button and any sign-in screen, the "Saved" indicator, a delete button, and the Supabase JS library. The game's sign-in must use the PKCE flow, like the check page (see `POST /api/auth/exchange`, section 2). Decisions D006 and D022. | built; the sign-in part is pending |
 | A3 Referee and entry kits | **Built**: `POST /api/intro/complete {actions[]}` returning `{ending, decision, readLog, kit, coinsPaid, alreadyGranted}` (section 2); the table `entry_profiles`, which `GET /api/me` reads for `kit` and `place`; `backend/content/entry_kits.json`; `backend/server/game/referee.py`; the kit coins through `kit_grant` with the fixed `ref` `kit`, paid inside `grant_entry_kit()`. Decision D019. **Pending Nils:** that the first ending counts (N6). The coins and texts of the kits (N5) were settled by the story round (D018). | built, in review |
@@ -1228,9 +1250,53 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 ## 10. The shared mystery
 
-Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); the route shapes stay drafts until the packages that build them write their specs.
+Everything about the shared mystery is **defined by the story round (S0, approved by Nils on 5 Nov 2026, D018)** in [docs/story/](story/README.md) and `backend/content/secret/case.json`: the cards and deductions, the case clock, the finale, the accusation, the orders and lines of NPC partners, the rewards and the rule that keeps spoilers away from crews that have not solved the case. This page only reserves the names other packages will build (S3, S4, L3 and G4 in [section 9](#9-reserved-interfaces)). The case data format is in [backend/content/README.md](../backend/content/README.md#the-case-data-secretcasejson-and-partnersjson); Phase 1's published contract below supersedes its older reservations; later phase routes remain reserved.
 
 What already holds, from the foundation: a reward is paid with `clue_reward` or `mystery_reward` and a `ref` that makes each payout happen once per player, buying a clue uses `clue_purchase`, and a crew's seats can hold NPC partners ([section 6](#6-crews-and-seats)).
+
+### Case Phase 1 contract for G9
+
+Published on `feat/case-backend` for G9. The executable view fixture is `backend/server/tests/case_fixtures.py`; view, reveal and spoiler tests use the same fixture. Player and crew ids are replaceable fixture values. Suspect ids and all story text come from server content at runtime; clients must not depend on those values.
+
+Every route needs the server flag `case` (off by default) and a verified player. Every answer, including a refusal or validation error, is `Cache-Control: private, no-store`. The server selects the player's own open crew, or their latest finished crew for reads. Request bodies never accept player, crew, kit, wallet or progress facts.
+
+| Method and path | Body | Success |
+|---|---|---|
+| `GET /api/case` | None | `{"case": null}` without an active case, or `{"case": <view>}` |
+| `POST /api/case/search` | `{"routeId":"C1.notice_board","actionUid":"search0001","paidConfirmed":false,"expectedPrice":null}` | Intent answer with `readyIn` seconds and `coinsSpent` |
+| `POST /api/case/accuse` | `{"suspect":"<suspect-id>","actionUid":"accuse0001"}` | Intent answer; an accepted solve adds `solved:true`, `world` and `coinsPaid` |
+| `POST /api/host/case/clock` | `{"seconds":600,"actionUid":"clock0001"}` | Host only; intent answer with the new `now` for that host's own crew |
+
+An intent returns `200` for accepted actions and game-rule refusals:
+
+```json
+{"accepted":true,"reason":null,"message":"<interface or earned story line>","case":{}}
+{"accepted":false,"reason":"locked_window","message":"<countdown>","minutes":4,"case":{}}
+{"accepted":false,"reason":"accusation_refused","message":"<refusal>","repeat":true,"case":{}}
+```
+
+Make `actionUid` once per click, using 8 to 64 ASCII letters, digits, underscores or hyphens. Retry the same uid after an uncertain `503`: a stored result answers first, before current rules or finished-crew checks. The repeat keeps its original accepted/refused outcome, adds `repeat:true`, rebuilds the message and returns a fresh view. Unstored extra numbers are omitted. Reusing a uid with another target still returns the original action. A wrong accusation repeated with its uid remains a refusal, not a successful action.
+
+Phase 1 search refusal reasons are `lead_locked`, `already_have`, `wrong_kit` and `locked_window`, checked in that order after checking the route exists. Only `kit`, `open` and `timed` routes are active. Starting a timer does not expose the card text before it lands. Accusation reasons are `already_solved` (defensive), `schooner_required`, `evidence_required`, `accusation_cooldown` and `accusation_refused`, in that order. A wrong accusation starts a 60-second wait and is remembered. No accusation checks player position or boarding.
+
+| HTTP status | Code | Meaning |
+|---|---|---|
+| 401 | `unauthorized` | Missing or invalid login |
+| 403 | `forbidden` | Clock caller is not a host |
+| 404 | `feature_off`, `no_crew`, `no_such_route`, `no_such_suspect` | Disabled feature, no crew for a write, or unavailable id |
+| 409 | `crew_not_started`, `crew_finished`, `crew_busy` | Crew state does not permit a write, or a snapshot changed twice |
+| 422 | `validation_error` | Bad uid or field shape, an extra field, or clock seconds outside 1 to 3,600 |
+| 429 | `too_many_requests` | More than 10 writes or 30 reads per 10 seconds per player; see `Retry-After` |
+| 502 | `database_error` | Unreadable reply or a database guard failure; never a case repeat |
+| 503 | `case_unavailable`, `database_not_configured`, `database_unavailable` | Broken content, missing database or uncertain operation |
+
+The inner view has `caseId`, `writeRevision`, `now`, `minute`, `crew`, `seats`, `me`, `premise`, `question`, `board`, `search`, `accusation`, `reveal`, `credits`, `finale` and `partners`. `writeRevision` counts state-changing writes, not countdown ticks. G9 owns its own structural adapter revision. Phase 1 leaves `finale:{}` and `partners:[]` for later phases.
+
+`board` contains earned `cards`, open unheld `leads`, `logLead`, `deductions`, identical-shape `suspects`, `canPair` and `pairWait`. An incomplete deduction has exactly `id`, `name` and `complete:false`; it exposes no card pair or clearing information. `search.spots` groups eligible routes by hotspot, and `search.jobs` contains running finds and finds landed in the last 10 minutes. `accusation` carries `schoonerFound`, `allowed`, `cooldown`, `status`, the public suspect list, earned evidence and `lastWrong`.
+
+Before a solve, `reveal` is only `{"available":false}`. A solver in this crew sees `available`, `solvedSecond`, `world`, ordered `lines` (`id`, `kind`, `text`, `cites`) and payout `credits`. Solving in another crew grants no reveal here. Phase 1's world result is `unchanged`; later hooks add `locked`, `relit`, `added` and `already_recorded`. The client must render returned lines rather than carrying its own reveal copy.
+
+Only `now`, `minute`, `remaining`, `dawnRemaining`, `cooldown`, `pairWait`, `waitMinutes` and `statusText` change with time alone between structural boundaries. Refetch at a find landing, route window change, wait expiry or job expiry. A4 nudges are added only after A4 reaches `main`; until then G9 uses these boundary refreshes.
 
 ## 11. Open questions for Mon 9
 

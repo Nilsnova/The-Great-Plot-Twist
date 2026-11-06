@@ -378,7 +378,7 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Proposed in `feat/open-world-must`. Affects `GET /api/weather` (two new fields), `GET /api/bulletin` (new), three content files, package L3 (`world_state` keeps `relit_at` and provides the reader), package S3 (the next-lead line) and package L5 (weather questions settle on real fog only).
 
-## D018 · Prediction desk rules · 2026-11-06
+## D025 · Prediction desk rules · 2026-11-06
 
 **Status:** Proposed in the L5 pull request (`feat/l5-prediction-desk`); accepted when reviewed by another
 teammate and merged. The number is provisional: the controller renumbers it at merge. Base: the roadmap (L5)
@@ -435,7 +435,7 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 **Agreed by, PR and impact:** proposal for Nils, 6 Nov 2026. Affects L6 (`pools.py`), the list of wallet reasons
 (13), the kiosk screen and A2 (`hosts.py`).
 
-## D018 · Lantern Duels rules · 2026-11-06
+## D026 · Lantern Duels rules · 2026-11-06
 
 **Status:** Proposed in the A7 pull request (`feat/a7-lantern-duels`); accepted when reviewed by another teammate and merged. The number D018 is a placeholder: the controller renumbers it at merge if another entry took it first (OPEN-WORLD on `s0final` also mentions a D018). The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md).
 
@@ -462,6 +462,38 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 **Open for Nils** (the spec's answer stands until he decides): (1) the cut, 5 % or none; (2) stakes up to 100 from the first switch-on, or friendly duels only at first (the floor is one constant away: `ROUND_CHOICES = (3,)` and `STAKE_CHOICES = (0,)`); (3) the answer window, 24 hours or shorter for class; (4) keep live duels in the plan or drop them; (5) agree the two routes beyond the reserved names at the Mon 9 freeze; (6) Python constants instead of `duel.json`.
 
 **Agreed by, PR and impact:** Pending Nils and a different human teammate. Proposed in the A7 pull request. Affects `docs/INTERFACES.md` (five routes, the status codes, two tables, three functions, two reasons), the wallet reasons (the list now has 13 entries; keep the migration order and the Python order the same), the arena screen (browser) with a few lines in `frontend/src/game.js` (the hook at the arena gate, and the lines that make the open panel an overlay, so Escape closes it instead of opening the pause menu; these go beyond the one hook the spec first agreed and need approval), and the Mon 9 contract review. The existing test that pinned the market reasons to the end of `WALLET_REASONS` now pins them right after the first eight, because recipe 4.7 appends new reasons (the requirement changed); the arena reasons are pinned by position too (`WALLET_REASONS[11:13]`), so the next package that appends a reason breaks no test. The migration is applied to Supabase only after review, and `arena` stays off until Nils decides.
+
+## D027 · Case backend contracts · 2026-11-06
+
+**Status:** Phase 1 built on `feat/case-backend` for Claude's review. Later phases remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
+
+| Decision | Contract |
+|---|---|
+| C1 | Game refusals are 200 with accepted=false, reason, message and a fresh view. |
+| C2 | A repeated actionUid rebuilds its stored outcome first and adds repeat=true. |
+| C3 | GET /api/case and POST /api/case/search replace the old board-read and free-form act reservations. |
+| C4 | Decided: whole case seconds since muster, no pause; a host moves only their own crew. |
+| C5 | Timed results take effect at their stored acceptance-time deadline, without a settle job. |
+| C6 | Decided: a partner pin's reward is paid when its order is accepted. |
+| C7 | Concurrent searches are allowed; each seat finds each card once. |
+| C8 | The crew sees rounded glow during its own night. The specification's default remains pending Nils or the story owner. |
+| C9 | Decided: a locked solve never later changes the world; its rewards and reveal still happen. |
+| C10 | Case tables are server-only, with RLS and no player grants or policies. |
+| C11 | The case flag defaults off and gates all case routes, including the later world route. |
+| C12 | Light posts remain occupied after dawn. |
+| C13 | A player locks their own light; any crew player may lock a partner-held light. |
+| C14 | Optional route labels are data; absent labels use the card title. |
+| C15 | Every state-changing refusal is logged, so retries preserve refusals. |
+| C16 | Decided: only contributors with a share appear on the Wall of Lights. |
+| C17 | Partner pin credit starts at order acceptance; pairing waits for the actual pin. |
+| C18 | Decided: position and boarding are presentation only, never server prerequisites. |
+| C19 | Any crew player's level-one station readies the crew's home light; only players man it. |
+| C20 | RELIGHT_OPEN=true is accepted only in explicit production; unset is closed. |
+
+**Migration reservations:** Phase 1 060000, Phase 2 080000, Phase 3 120000, Phase 4 130000; stream C 140000. Group 3 owns 090000, 100000 and 110000. All filenames start with 20261106. No historical or reviewed migration is edited.
+
+**Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See [the specification](../specs/case-backend.md) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
+
 
 ## Next entry
 
