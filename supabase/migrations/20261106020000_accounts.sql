@@ -423,7 +423,7 @@ comment on function public.save_progress(uuid, integer, jsonb) is
 -- play money, no other player's balance depends on those rows, and "delete my
 -- data" must really delete.
 --
--- PENDING Nils' decision (N4, D018): delete everything, the ledger included, and
+-- PENDING Nils' decision (N4, D022): delete everything, the ledger included, and
 -- hand a shared crew to the lowest other seat. It touches personal data, so the
 -- team agrees before anyone uses DELETE /api/me for real.
 --

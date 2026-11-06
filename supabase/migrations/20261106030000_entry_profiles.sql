@@ -40,7 +40,7 @@
 --      change, ids in the usual format, and the SHA-256 of the story file that the
 --      replay used.
 --   5. Deleting a player deletes the profile (cascade), so "delete my data" stays
---      complete (decision D018).
+--      complete (decision D022).
 --   6. Someone who is not signed in (role "anon") gets nothing at all.
 --
 -- WHAT IT NEEDS
