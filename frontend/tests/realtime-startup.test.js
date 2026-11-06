@@ -9,7 +9,7 @@ import { playerId } from './realtime-fakes.js';
 
 const ME = playerId(1);
 const URL = 'https://example.supabase.co';
-const KEY = 'sb_publishable_not_a_real_key';
+const KEY = 'test-publishable-key'; // a stand-in: the module never checks the key's form
 
 // The stand-in for '@supabase/supabase-js': `started` says that somebody asked for it, and it arrives
 // when the test calls finishLoading().

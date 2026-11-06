@@ -18,7 +18,7 @@ const FRIEND = playerId(2);
 const HARBOR = 'saltreach_harbor';
 const CREW_ID = '11111111-1111-4111-8111-111111111111';
 const URL = 'https://example.supabase.co';
-const KEY = 'sb_publishable_not_a_real_key';
+const KEY = 'test-publishable-key'; // a stand-in: the module never checks the key's form
 
 // The state of one pretend server, and the fake WebSocket that talks to it.
 let server;

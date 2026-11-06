@@ -8,7 +8,7 @@ import { createFakeClient, playerId, worldOf } from './realtime-fakes.js';
 
 const ME = playerId(1);
 const URL = 'https://example.supabase.co';
-const KEY = 'sb_publishable_not_a_real_key';
+const KEY = 'test-publishable-key'; // a stand-in: the module never checks the key's form
 const HARBOR = 'saltreach_harbor';
 const WRECK = 'wreck_point';
 const HARBOR_ROOM_1 = 'live:place:saltreach_harbor:1';
