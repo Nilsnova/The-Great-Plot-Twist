@@ -11,6 +11,8 @@ from server.game.case_reveal import reveal_lines
 from server.game.case_rewards import solve_shares
 from server.game.case_routes import card_is_open, decide_route
 from server.game.case_snapshot import CaseSnapshot, Find, SeatState
+from server.game.finale_rules import active_locks, night_phase
+from server.game.finale_view import build_finale_view
 
 CLOCK_KEYS = frozenset(
     {
@@ -255,8 +257,13 @@ def _accusation(data: CaseData, snapshot: CaseSnapshot, now: int) -> dict:
     }
 
 
-def _credits(data: CaseData, snapshot: CaseSnapshot, viewer: str) -> list[dict]:
+def _credits(data: CaseData, snapshot: CaseSnapshot, viewer: str, now: int) -> list[dict]:
     solvers = {row.player_id: row for row in snapshot.solvers}
+    locks = ()
+    if snapshot.schooner_found_second is not None:
+        locks = tuple(signal for signal in snapshot.signals if signal.parted)
+    elif night_phase(data, snapshot, now) == "night":
+        locks = active_locks(snapshot, now)
     result = []
     for payout in solve_shares(data, snapshot):
         solver = solvers.get(payout.player_id)
@@ -267,7 +274,7 @@ def _credits(data: CaseData, snapshot: CaseSnapshot, viewer: str) -> list[dict]:
                 "isMe": payout.player_id == viewer,
                 "pins": payout.pins,
                 "deductionParts": len(deduction_parts(data, snapshot, payout.player_id)),
-                "locks": int(payout.player_id in snapshot.parted_players),
+                "locks": sum(signal.aimed_by == payout.player_id for signal in locks),
                 "accused": any(
                     row.correct and row.player_id == payout.player_id
                     for row in snapshot.accusations
@@ -336,7 +343,7 @@ def build_case_view(data: CaseData, snapshot: CaseSnapshot, viewer: str, now: in
         },
         "accusation": _accusation(data, snapshot, now),
         "reveal": _reveal(data, snapshot, me),
-        "credits": _credits(data, snapshot, viewer),
-        "finale": {},
+        "credits": _credits(data, snapshot, viewer, now),
+        "finale": build_finale_view(data, snapshot, viewer, now),
         "partners": [],
     }
