@@ -10,7 +10,7 @@ import {sendCaseIntent} from './adapter/intent.js';
 import {introJournal} from './story/intro-journal.js';
 import {createLazyAudio} from './audio/lazy.js';
 import {createCaptions} from './audio/captions.js';
-import {on} from './core/events.js';
+import {on,emit} from './core/events.js';
 import {node} from './ui/kit/dom.js';
 
 const container=document.querySelector('#game'),backdrop=node('img','title-backdrop');
@@ -78,7 +78,7 @@ function pollTitlePad(now){
 }
 titleFrame=requestAnimationFrame(pollTitlePad);
 function dispose(){
-  if(disposed)return;disposed=true;cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();accountHost.dispose();summary.dispose();
+  if(disposed)return;disposed=true;emit({type:'app_disposed'});cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();accountHost.dispose();summary.dispose();
   shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
   if(import.meta.env.DEV)delete window.__plotTwist;
 }

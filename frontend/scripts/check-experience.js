@@ -13,7 +13,7 @@ try {
   await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
   check(await page.evaluate(()=>!window.__island&&window.__audioCreated===0),'Cold title allocates neither WebGL nor an AudioContext');
   check(await page.getByRole('button',{name:'Continue',exact:true}).isDisabled(),'Continue is disabled without a local intro');
-  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[window.__pad]});});await page.waitForTimeout(60);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForTimeout(80);
+  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};window.__padPolls=0;Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPolls++;return [window.__pad];}});});await page.waitForFunction(()=>window.__padPolls>=3);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForFunction(()=>document.activeElement?.textContent==='Settings');
   check(await page.evaluate(()=>document.activeElement.textContent==='Settings'&&window.__audioCreated===0),'Gamepad can navigate the cold title without allocating audio');await page.evaluate(()=>window.__pad.buttons[13].pressed=false);
   await page.locator('.shell-screen button').last().focus();await page.keyboard.press('Tab');
   check(await page.evaluate(()=>document.querySelector('.shell-screen[open]').contains(document.activeElement)),'Native title dialog contains keyboard focus');

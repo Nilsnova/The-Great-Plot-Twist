@@ -22,6 +22,7 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 
 /* Build metadata stays readable without competing with gameplay controls. */
 .build-info{font-size:16px;line-height:1.5;overflow-wrap:anywhere}.build-info p{margin:6px 0 0}
+.problem-report{min-height:44px;font-size:16px;text-align:center;text-decoration:none}
 .build-badge{position:fixed;right:24px;bottom:88px;font:16px/1.4 'Courier New',monospace;padding:3px 7px;color:#fff0c8;background:#20382fe6;pointer-events:none}
 body.presenter-blanking .build-badge{display:none}
 @media(max-width:600px){.build-badge{right:12px;bottom:84px}}

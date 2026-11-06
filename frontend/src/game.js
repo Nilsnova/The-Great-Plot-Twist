@@ -42,8 +42,10 @@ import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
 import {createBuildBadge} from './build/badge.js';
+import {startDiagnostics,noteUiAction,disposeDiagnostics} from './diagnostics/runtime.js';
 
 export async function startGame({container,shell,audio,captions,caseAdapter,isAppBlocked}) {
+  startDiagnostics();
   const shortcuts=createShortcutsHost(container);
   const scene = new THREE.Scene();
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
@@ -133,7 +135,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     if(disposed)return;disposed=true;
     touch.dispose();gamepad.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
-    buildBadge.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
+    disposeDiagnostics();buildBadge.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
@@ -154,6 +156,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
       return false;
     },
     async begin(resume=false,continuation){
+      noteUiAction(resume?'continue':'new_game');
       const token=++beginRequest;entryDestination=null;introPassage=true;
       caseUi.close();intro.close();chart.close();cinematics.skip();
       try{

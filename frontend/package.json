@@ -40,7 +40,8 @@
     "test:presenter": "npm run build && node scripts/check-presenter.js",
     "test:a11y": "node scripts/check-a11y.js",
     "test:g8": "node scripts/check-g8-regression.js",
-    "test:build-stamp": "npm run build && node scripts/check-build-stamp.js"
+    "test:build-stamp": "npm run build && node scripts/check-build-stamp.js",
+    "test:problem-report": "npm run build && node scripts/check-problem-report.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
