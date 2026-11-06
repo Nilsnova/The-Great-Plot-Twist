@@ -347,7 +347,7 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 
 ## D021 · Home islet rules · 2026-11-05
 
-**Status:** Proposed in the L2 pull request (`feat/l2-home-islet`); accepted when reviewed by another teammate and merged. The number is the next free one when this was written (A2/A3 hold D006, D018 and D019, A6 holds D020, and the A4 spec also claims D018); the controller renumbers it at merge. The design comes from the open-world design (`docs/story/OPEN-WORLD.md`, sections 1 to 6 and 13 to 15) and the case file (`docs/story/CASE-FILE.md`, sections 1, 3, 9, 10 and 17), which are not on `main` yet. The choices that the design did not settle are marked "chosen here" and need Nils' OK.
+**Status:** Proposed in the L2 pull request (`feat/l2-home-islet`); accepted when reviewed by another teammate and merged. The number is the next free one when this was written (A2/A3 hold D006, D018 and D019, A6 holds D020, and the A4 spec also claims D018); the controller renumbers it at merge. (At merge the two branch entries numbered D018 became D022 and D023, and D021 kept its number.) The design comes from the open-world design (`docs/story/OPEN-WORLD.md`, sections 1 to 6 and 13 to 15) and the case file (`docs/story/CASE-FILE.md`, sections 1, 3, 9, 10 and 17), which are not on `main` yet. The choices that the design did not settle are marked "chosen here" and need Nils' OK.
 
 **Decision:** Every player has a home islet, saved to their account. The server decides everything and the database guards it (D003, D004). Play money only. Rules:
 

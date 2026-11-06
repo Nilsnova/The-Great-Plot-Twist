@@ -13,7 +13,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106020000_accounts.sql](migrations/20261106020000_accounts.sql) | The accounts (package A2: captain names, cloud progress and "delete my data"): one table and four functions. Run it after the foundation. See [The accounts migration](#the-accounts-migration-package-a2). |
 | [migrations/20261106030000_entry_profiles.sql](migrations/20261106030000_entry_profiles.sql) | The referee and the entry kits (package A3): one table and one function. Run it after the foundation, and **before** the code that reads it is merged into `main` (see [Apply before you merge](#apply-before-you-merge)). See [The entry kits migration](#the-entry-kits-migration-package-a3). |
 | [migrations/20261106040000_crew_codes.sql](migrations/20261106040000_crew_codes.sql) | Crew codes, the muster and partners (package A6): three new columns of `crews`, new rules for `crew_seats`, one table and four functions. Run it after the foundation. See [Crew codes, the muster and partners](#crew-codes-the-muster-and-partners-migration-20261106040000-package-a6). |
-| [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | Live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation, and only when the team wants to test live presence. See [The live presence migration](#the-live-presence-migration). |
+| [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | Live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation. It goes live with group 2; the flag `live_presence` stays off until the checks L1 to L7 have passed. See [The live presence migration](#the-live-presence-migration). |
 | [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
 
 ## Project settings this migration relies on
@@ -27,7 +27,7 @@ Our Supabase project is in West EU (Ireland). These settings were agreed on 5 No
 | Enable automatic RLS | On | A table that someone creates without row-level security gets it switched on automatically. Our migration switches it on by hand for every table as well. |
 | Login | GitHub only. Email and anonymous sign-ins are off. | See [First: allow only GitHub sign-in](#first-allow-only-github-sign-in). |
 | Supabase GitHub integration | Not used | We apply migrations by hand (see below). |
-| Realtime > Settings > "Allow public access" | **Off** (a step for Nils, not done yet) | Every Realtime room must be private, so that the access rules of [the live presence migration](#the-live-presence-migration) decide who may join. While it is on, anyone who holds the public key can use public rooms that our rules never cover, and spend the shared Realtime budget. Like any change on that screen, switching it off disconnects every client; today no client uses Realtime, so nobody notices. |
+| Realtime > Settings > "Allow public access" | **Off** (Nils switched it off on 6 Nov 2026) | Every Realtime room must be private, so that the access rules of [the live presence migration](#the-live-presence-migration) decide who may join. While it is on, anyone who holds the public key can use public rooms that our rules never cover, and spend the shared Realtime budget. Like any change on that screen, switching it off disconnects every client; today no client uses Realtime, so nobody notices. |
 
 The migration does not depend on the second setting. It first takes every right away from `public`, `anon`, `authenticated` and `service_role`, and then grants back exactly what is needed. It gives the same result on a project where new tables are exposed automatically.
 
@@ -193,8 +193,8 @@ There is no insert policy for crew rooms (only the server sends there, and its s
 
 Three things to know:
 
-- **The dashboard switch comes first.** The policies decide only for private rooms. Until "Allow public access" is switched off (see the project settings above), anyone who holds the public key can use public rooms that no policy covers. That gap exists today, before any of this code.
-- **The flag is not the lock.** The flag `live_presence` switches on our browser module and the server helper. A modified browser ignores it, so the policies and the dashboard are the real lock. Until this file is applied, Realtime refuses every private room, so the code stays harmless: apply the file only when the team wants to test live presence.
+- **The dashboard switch comes first.** The policies decide only for private rooms. Until "Allow public access" is switched off (see the project settings above), anyone who holds the public key can use public rooms that no policy covers. That gap closed on 6 Nov 2026, when Nils switched it off, before this file was applied.
+- **The flag is not the lock.** The flag `live_presence` switches on our browser module and the server helper. A modified browser ignores it, so the policies and the dashboard are the real lock. Until this file is applied, Realtime refuses every private room, so the code stays harmless. The file goes live with group 2, and the flag stays off until the checks L1 to L7 have passed.
 - **Positions, presence and emotes are only for showing** (D003). Realtime keeps no client message in a table, and no rule of the game depends on what a browser claims. A forged or flooding client can:
 
 | It can | It cannot |
@@ -250,7 +250,7 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 6. Do the same with `migrations/20261106020000_accounts.sql` (captain names, cloud progress, delete my data), in a new query.
 7. Do the same with `migrations/20261106030000_entry_profiles.sql` (the referee and the entry kits), in a new query. Do this **before** the branch that reads `GET /api/me` is merged into `main`, and before you test a preview of it.
 8. Do the same with `migrations/20261106040000_crew_codes.sql` (crew codes, the muster and partners), in a new query.
-9. Only when the team wants to test live presence: do the same with `migrations/20261106050000_live_presence.sql`, in a new query. Until it is applied, Realtime refuses every private room.
+9. Do the same with `migrations/20261106050000_live_presence.sql` (live presence), in a new query. Until it is applied, Realtime refuses every private room.
 10. Do the same with `migrations/20261106070000_home_islet.sql` (the home islet), in a new query. It needs only the foundation, but its time stamp is later than the other new files, so apply it after them if they are there.
 
 ### Option B: Supabase CLI
@@ -268,7 +268,7 @@ supabase db push
 - `supabase link` asks for the database password you chose when you created the project. Type it into the terminal only. Never save it in a file of this repository.
 - `--dry-run` only lists the migrations that would run. The CLI remembers which files it has already applied.
 - If the CLI says it needs `supabase/config.toml`, run `supabase init` once. Keep secrets out of that file too.
-- `supabase db push` applies every migration that is not applied yet, in order, so it would apply the live presence file too. To hold that one back, use the SQL editor.
+- `supabase db push` applies every migration that is not applied yet, in order, the live presence file too.
 - Optional, needs Docker: `supabase start` runs a local copy and `supabase db reset` rebuilds it from the migration files.
 
 ### Apply before you merge
@@ -317,13 +317,17 @@ Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `r
 
 The totals after each file, when the files are applied oldest first. A file adds the same whatever else is applied, so for another set of files add up the rows you applied. The last column is `select count(*) from public.wallet_reasons;`.
 
-| After applying | Tables (check 1) | Policies (check 2) | Rows for `authenticated` (check 3) | Wallet reasons |
-|---|---|---|---|---|
-| `20261106000000_foundation.sql` | 7 | 7 | 7 | 8 |
-| `20261106010000_island_exchange.sql` | 10 | 10 | 10 | 11 |
-| `20261106020000_accounts.sql` | 11 | 11 | 11 | 11 |
-| `20261106030000_entry_profiles.sql` | 12 | 12 | 12 | 11 |
-| `20261106040000_crew_codes.sql` | 13 | 12 | 12 | 11 |
+| After applying | Tables (check 1) | Policies (check 2) | Rows for `authenticated` (check 3) | Policies on `realtime.messages` (check 4) | Wallet reasons |
+|---|---|---|---|---|---|
+| `20261106000000_foundation.sql` | 7 | 7 | 7 | 0 | 8 |
+| `20261106010000_island_exchange.sql` | 10 | 10 | 10 | 0 | 11 |
+| `20261106020000_accounts.sql` | 11 | 11 | 11 | 0 | 11 |
+| `20261106030000_entry_profiles.sql` | 12 | 12 | 12 | 0 | 11 |
+| `20261106040000_crew_codes.sql` | 13 | 12 | 12 | 0 | 11 |
+| `20261106050000_live_presence.sql` | 13 | 12 | 12 | 5 | 11 |
+| `20261106070000_home_islet.sql` | 15 | 14 | 14 | 5 | 11 |
+
+With every file up to `20261106070000` applied, the database also holds 17 functions of ours (Supabase's own `rls_auto_enable()` not counted), 3 sequences and 4 triggers on our tables, as the migration review counted them on a scratch copy of the chain.
 
 ```sql
 select policyname, cmd, roles

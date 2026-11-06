@@ -189,7 +189,10 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D018 | Story round (5 Nov 2026): the 19 decisions of the approval sheet, decision 19 changed (no demo world for now, a relight lock instead) and live multiplayer as core (A4) | S0 | decided by Nils; written with the S0 pull request (`docs/s0-story-round`) |
 | D019 | Referee and entry kits | A3 | proposed in the A3 pull request (`feat/a2-a3-signin-referee`); the kit coins (N5) were settled by the story round (D018); "the first ending counts" (N6) waits for Nils |
 | D020 | Crews: codes, the guessing limit and partners at the muster | A6 | proposed in the A6 pull request (`feat/a6-crews`) |
+| D021 | Home islet rules: five spots, one building each, 300 coins and 10 timber, 20 starter timber, one atomic build | L2 | proposed in the L2 pull request (`feat/l2-home-islet`); the choices marked "chosen here" need Nils' OK |
 | D022 | Account data: cloud save versions, delete my data, hosts (D018 on its branch; renumbered at merge) | A2 | proposed in the A2 pull request (`feat/a2-a3-signin-referee`); "delete my data" waits for Nils |
+| D023 | Live presence on Supabase Realtime: private rooms, presence, preset emotes, server pushes to a crew (D018 on its branch; renumbered at merge) | A4 | decided by Nils in its core (live multiplayer, free, the library `@supabase/supabase-js`); the details marked "chosen here" are proposals |
+| D024 | Open-world must: weather states and the fog-night rule, the Lisbon day, the harbor bulletin and the Chapter 2 hook (D018 on its branch; renumbered at merge) | open-world must | proposed in `feat/open-world-must`; the choices marked "chosen here" need Nils' OK |
 
 D011 (class join go/no-go after a load test) is released. The phone class join moved to later, and the demo is highlights only.
 

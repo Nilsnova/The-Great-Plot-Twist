@@ -7,7 +7,7 @@
 - **Status:** draft for the controller. Nothing here waits for a teammate: every item has an agent owner (section 10). Teammates review it and may extend it.
 - **Branch:** `feat/l2-home-islet`, from `main` at `9f5bf97`.
 - **Migration:** `supabase/migrations/20261106070000_home_islet.sql`.
-- **Decision number:** the next free number at merge time. Today A2/A3 hold D006, D018 and D019, A6 holds D020, and the A4 spec also claims D018. Proposed: **D021**. The controller renumbers at merge.
+- **Decision number:** the next free number at merge time. Today A2/A3 hold D006, D018 and D019, A6 holds D020, and the A4 spec also claims D018. Proposed: **D021**. The controller renumbers at merge. (It stayed D021; the two D018 entries of A2 and A4 became D022 and D023.)
 - **Approved design used (read only, branch `docs/s0-story-round`):** `docs/story/OPEN-WORLD.md` sections 1 to 6 and 13 to 15, and `docs/story/CASE-FILE.md` sections 1, 3, 9, 10 and 17. These files are not on `main` yet, so cite them by that branch.
 
 ## Answer first
