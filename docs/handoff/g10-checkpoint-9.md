@@ -1,0 +1,30 @@
+# G10 checkpoint 9: B3, Relighting and the shared world reader
+
+- Branch: `feat/case-backend`; Phase 3 source: `db0052bc2a7a896b2574a9dd96ec130e419878cf`.
+- Re-fetched main `60f7fd0`; confirmed L2 exists; main was already merged before this phase.
+- Imported the tested group 3 branch with merge `b982522` to wire Exchange v2's required port.
+- No main update, deployment or protected migration edit was made by this integration.
+- Landed: atomic world hook, singleton stage/first timestamp, crew solve order and contributor Wall.
+- Locked solves keep rewards and reveal but never later affect the world; extra lamps cap at 12.
+- Landed: public case-flag-gated `/api/world`, no login, no query parameters, public 30-second cache.
+- Wall responses contain names/order only; missing configuration is dark; bad DB data is private 503.
+- One checked 30-second reader supplies public state, open-world's stage/relit_at and v2's callback.
+- Exchange v2 receives the 1 percent fee and Greyfathom delisting; explicit injected ports remain intact.
+- Backend: `10312 passed, 67 skipped in 177.63s` (case tracebacks suppressed).
+- Actual PostgreSQL: `67 passed in 7.05s`: C/N/W checks plus the frozen group 3 schema/grant proof.
+- All 13 contemporary migrations applied twice in the case fixture; both scratch servers were deleted.
+- W6 ran actual concurrent accusations; W9 re-ran Phase 1 and preserved the new hook/comment.
+- SQL parse: `SQL parses: 13 file(s)`.
+- Ruff: `All checks passed!`; changed formatting: `187 files already formatted`.
+- Frontend: `1601 passed` in 99 files; production build and spoiler guard passed.
+- Spoiler guard: 110 text files, 12 protected lines, no suspect elimination data.
+- Independent SQL/read-port/app integration reviews found no remaining blockers; 84 focused checks passed.
+- Migration: `supabase/migrations/20261106120000_relighting.sql`.
+- MD5: `1cee0eac60292c56de48741e5534d6dd`.
+- Earlier case MD5s remain 060000 `278a16fcf87bbf2f46d81ec803f1e94b`, 080000 `a60d6799d9198d395a89710937eaf6c4`.
+- Claude: review/apply the case and group 3 migrations before merging code that reads their tables.
+- Keep `case` off and `RELIGHT_OPEN` unset; no external flags, credentials or settings were changed.
+- Live PostgREST embeds/arrays, deployed hints and a preview `x-vercel-cache: HIT` remain unverified.
+- STATUS, Vercel configuration, dependencies and all frozen migration bytes are preserved.
+- Required secret-pattern scan, nonempty diff and diff checks pass; no live database or Actions trigger.
+- Next: fresh-main sync, NPC SQL/service/views, the 69-mix/solo proof and the local-server extension.
