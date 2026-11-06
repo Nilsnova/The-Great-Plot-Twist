@@ -722,3 +722,36 @@ Nils rejected the large provider/licence block in gameplay. It is removed from b
 After this correction, `npm test` passes 345 tests in 58 files and `npm run build` passes the 97-file/twelve-line spoiler guard. Nine focused browser checks pass: `node scripts/check-weather-wiring.js`, `node scripts/check-credits.js`, `node scripts/check-bulletin.js`, `node scripts/check-experience.js`, `node scripts/check-a11y.js`, `node scripts/check-readability.js`, `node scripts/check-loading.js`, `node scripts/check-production.js`, `node scripts/check-csp.js`. The exact results are in [the credit-placement report](captures/20261106_G8-Credit-Placement/Verification.json), in addition to the earlier complete 31-command G8 run.
 
 The expanded accessibility pass includes Credits: **23 contexts / 69 viewport samples / 202 Tab steps / 1,537 text measurements**, minimum computed contrast **4.694:1**, zero failures/browser errors/external requests. Current cold title JavaScript is **21,080 bytes / 9,956 gzip**, matching the unchanged G7 ceiling. The original pre-feedback checkpoint measurements above remain historical evidence. Future integration must keep data/legal attribution in Settings → Credits and out of gameplay overlays.
+
+## G13 checkpoint 1: festival workshop and pure rules
+
+Nils' G13 is on `feat/g13-festival`. The 56 original pixel additions (twelve lamps
+in four states plus marker, stall, bunting and ring day/night variants) are in the
+searchable workshop, with four original sound auditions. Sources and credits are
+in `ASSETS.md`; new art remains outside the default game preload. No live
+festival screen, sound, claim write, queue or duel is connected. The new server
+flag `festival` is off by default. Existing G6 display-only effects are unchanged.
+
+`backend/server/festival/` contains I/O-free 48-hour lifecycle, exclusive claim
+and FIFO pairing decisions; see `specs/G13-festival.md` for the exact handoff.
+G10 Phase 3 and A7 are missing from the current main, so routes, the reserved
+migration, real screens and `?demo=1&festival=1` rehearsal remain deferred. G8's
+CSP code/regression commands and `HOW-IT-WORKS.md` are also absent; no replacement
+for those packages was invented.
+
+Verification for this checkpoint: 3149 pytest tests, Ruff clean, 294 Vitest tests,
+four-entry build and automatic spoiler guard; 12 existing pixel-browser checks
+covering all 251 PNGs and the unchanged default preload; seven existing production
+checks; 15 festival workshop checks under self-only script/style CSP, including
+phone/keyboard access and sound playback. All 255 PNG/WAV artifacts regenerate
+byte-for-byte with the full pixel generator and the new standard-library audio
+generator. Independent agents reviewed the backend and frontend read-only.
+
+Run from `frontend/`: `npm test`, `npm run build`,
+`CHROME_PATH=/usr/bin/chromium npm run test:art`,
+`CHROME_PATH=/usr/bin/chromium npm run test:production`, and
+`CHROME_PATH=/usr/bin/chromium npm run test:festival` after build.
+The festival smoke accepts `CAPTURE_DIR` for evidence outside the checkout.
+Review art and phone screenshots plus the strict-CSP report are in
+`captures/20261106_G13-Festival-*`. This is Chromium/software-rendering evidence;
+Safari, physical phones and live server/storage integration remain unverified.
