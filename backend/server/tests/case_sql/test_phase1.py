@@ -187,6 +187,11 @@ def test_c10_wrong_accusation_waits_for_sixty_seconds(database, case_data):
 
 
 def test_c11_solve_records_every_player_and_pays_a_player_once_across_crews(database, case_data):
+    # Phase 3 replaces the empty hook. This closed-setting solve must then stay locked.
+    has_world_hook = database.execute(
+        "select to_regclass('public.world_solves') is not null"
+    ).fetchone()[0]
+    world_outcome = "locked" if has_world_hook else "unchanged"
     for number in range(2):
         as_owner(database)
         crew = seed_crew(database)
@@ -198,7 +203,7 @@ def test_c11_solve_records_every_player_and_pays_a_player_once_across_crews(data
 
         assert reply["status"] == "solved"
         assert reply["payouts"][0]["paid"] == (700 if number == 0 else 0)
-        assert reply["world"] == {"world": "unchanged"}
+        assert reply["world"] == {"world": world_outcome}
         assert database.execute(
             "select status from public.crews where id = %s", (crew,)
         ).fetchone() == ("finished",)
@@ -210,7 +215,7 @@ def test_c11_solve_records_every_player_and_pays_a_player_once_across_crews(data
         ).fetchone() == (1,)
         assert database.execute(
             "select world_outcome from public.case_state where crew_id = %s", (crew,)
-        ).fetchone() == ("unchanged",)
+        ).fetchone() == (world_outcome,)
     assert database.execute(
         "select count(*), sum(delta) from public.wallet_transactions "
         "where player_id = %s and ref = 'false_light:solve'",
