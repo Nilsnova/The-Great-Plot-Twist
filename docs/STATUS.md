@@ -14,6 +14,19 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
+migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
+re-recorded under their repository versions. Final live counts: 18 tables, one view, 17 reasons.
+Backend 9692 passed; frontend 1601 passed plus two new lifecycle cases in targeted checks; build,
+spoiler guard and redacted Gitleaks pass. Independent code and per-file SQL reviews passed.
+Production code/flags are the next release step. The older status paragraphs below are historical.
+Normal-play multiplayer and the full case still await G9 and the case chain; demo captains are stand-ins.
+
+Sound is built (original music, weather ambience and effects, with separate volume controls).
+The [roadmap execution update](../ROADMAP.md#execution-update--6-nov-2026) records the release order,
+Nils' approval to enable completed festival/sports, and the optional spoiler-safe ChatGPT helper.
+OpenAI website-client registration is an external prerequisite for that helper.
+
 *Last updated: Fri 6 Nov 2026, evening, by Claude (coordinating for Nils). Group 1 (the story round, A2/A3 and A6) is on `main`, and its four database changes are applied. Group 2 (Codex's G8 with all of G7, A4 live presence, L2 home islet and the open-world must items) is merged on `integrate/fri6`; it reaches `main` after its gates, an independent agent check and the apply of its two database changes (`050000`, `070000`). Group 3 (Exchange v2, the prediction desk, Lantern Duels) follows tonight. Since 6 Nov the aim is a feature-complete game by Sun 8 Nov: agent-built work merges without a human review per merge (D015, extended), nothing waits for teammates, and Codex takes the browser side. The review queue under Open decisions is from 5 Nov; its finished items are marked done.*
 
 ### What works
@@ -418,6 +431,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov, Codex:** group 3 integrated and independently reviewed; applied 090000/100000/110000 one file at a time, exact MD5 proofs and version restoration passed; all final database counts and known-only advisors match. Core local gates green; cloud browser regression and live deployment checks continue. See [release proof](handoff/group3-release.md).
 
 Newest first. One line per finished task: date, who, what, where.
 

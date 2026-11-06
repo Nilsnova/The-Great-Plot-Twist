@@ -7,6 +7,8 @@ ChatGPT-plan usage. This is additional scope, not a replacement for the core rel
 
 ## Delivery
 
+Use the existing default-off `companion_llm` flag; activation follows the proofs below.
+
 - Add an optional helper panel with explicit connection, consent, loading, reply, cancellation,
   disconnected, quota and recovery states. Ordinary play never depends on AI availability.
 - Link ChatGPT to an existing verified game account; preserve the Supabase/GitHub account identity.
