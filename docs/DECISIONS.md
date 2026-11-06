@@ -467,7 +467,7 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 ## D027 · Case backend contracts · 2026-11-06
 
-**Status:** Phases 1 and 2 built on `feat/case-backend` for Claude's review. Phases 3 and 4 remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
+**Status:** Phases 1 to 3 built on `feat/case-backend` for Claude's review. Phase 4 remains gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
 
 | Decision | Contract |
 |---|---|

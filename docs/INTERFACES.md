@@ -72,7 +72,7 @@
 
 Case Phases 1 and 2 are specified in [section 10](#case-phase-1-contract-for-g9); keep the flag off until the required migrations are applied.
 
-There are 42 API operations, including nine case operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
+There are 43 API operations, including ten case operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
 ### GET /api/health
 
@@ -1317,6 +1317,16 @@ Wait refusals carry `seconds`. A wrong pair or missed signal changes state and i
 One station built by any crew player readies the home light for every crew player. Partners never hold it. `me.timber` is the viewer's islet timber, using catalogue starter timber before their first islet row. Credits count historical locks separately from the successful-parting role used for solve payouts.
 
 Search, accusation and host-clock writes send `case_changed`; board/night writes send `board_changed`, including wrong-pair and missed-signal writes. Payloads contain only `{"version":writeRevision}`. The shared A4 sender owns its budgets; an unavailable or slow hint is quiet and bounded to one second. Reads, repeats and unchanged refusals send nothing. Time-based landings use client countdown refreshes.
+
+### Case Phase 3 public world contract
+
+`GET /api/world` needs no sign-in and ignores authorization. The `case` flag is checked before any database or content read. Query parameters give private 422 responses. Successful responses carry `Cache-Control: public, max-age=30, s-maxage=30`; the browser should call without an authorization header so the edge can cache them.
+
+The response is `{stage, lightsOn, fogBankGone, gullsRestOpen, extraLights, solves, relitAt, wall, line}`. Before relighting, `stage` is `dark`, the three booleans are false, `relitAt` and `line` are null, and the Wall is empty. The Wall contains at most 200 `{name, order}` entries; it exposes no player or crew identifiers, case evidence or solution. Missing database configuration returns the dark world; a failed or malformed database response gives a generic private 503 `database_unavailable`.
+
+A shared checked reader supplies both the public response and open-world's `WorldStageReader`, including the first `relit_at`. Its state cache lasts 30 seconds. Exchange v2 receives that reader's `relit_check`: after relighting the fee is 1 percent and Greyfathom accepts no new positions. The `case` flag also gates these default consumers before database reads. Explicitly injected test ports remain intact.
+
+The first eligible solve while `RELIGHT_OPEN` is true atomically relights the coast with its payout and crew outcome. Later crews add one light up to 12. Only contributors reach the Wall, once per player. Solves completed while the setting is closed remain private forever. No world-specific crew hint is sent; the normal accusation hint reaches the solving crew and public clients poll the cached world route. Keep `RELIGHT_OPEN` unset until Claude deliberately opens production.
 
 ## 11. Open questions for Mon 9
 

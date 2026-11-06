@@ -2900,3 +2900,14 @@ All three tables have RLS with no player policy, no DELETE grant, and no sequenc
 The seven caller-rights, empty-search-path functions are `finale_post_holds(uuid,text,smallint)`, `finale_leave_post(uuid,smallint,integer,integer)`, `board_pin(uuid,uuid,text,text,integer,text)`, `board_pair(uuid,uuid,text,text,text,text,integer,integer,text)`, `finale_nightfall(uuid,uuid,text,text,integer,integer)`, `finale_take_post(uuid,uuid,text,text,boolean,integer,integer)` and `finale_signal(uuid,uuid,text,text,numeric,boolean,integer,integer,integer,integer)`. Only `service_role` may execute them. The API calls the last five intent functions, which enter the Phase 1 crew lock and finish each state-changing write exactly once.
 
 The existing disposable `case_sql` command also runs N1 to N15 in `test_phase2.py`: one-time pin/deduction rewards across crews; replayed accepted and state-changing refusals; pair/climb/night/dawn/cooldown boundaries; distinct-seat overlap; moved/replaced posts; append-only history; role and column grants. The complete sorted migration chain runs twice before tests, and the fixture deletes its Unix-socket database afterwards.
+
+
+## Case Phase 3 migration
+
+`migrations/20261106120000_relighting.sql` follows the case board/night migration and the three group 3 files. Claude reviews and applies it before the case deployment. It adds `world_state` (one row), `world_solves` (one row per crew), and `wall_of_lights` (one contributor row per player). All have RLS and no player policy or grant. `service_role` may select/update the singleton and select/insert solve and Wall rows; it receives no DELETE grant. Account deletion cascades the player's Wall entry.
+
+The migration replaces `case_after_solve(uuid,boolean,uuid[])` with caller rights and empty search path, executable only by `service_role`. The hook runs inside the locked accusation transaction. Closed relighting returns `locked` before any world write. The singleton lock serializes first solves; one conditional dark-to-relit update wins, later solves increment the counter and at most 12 extra lights, repeated crews are ignored, and contributor Wall names are deduplicated. Reapplying Phase 1 preserves this hook and its comment.
+
+W1 to W9 in `case_sql/test_phase3.py` cover twice-applied migrations, locked and open solves with atomic payouts, later/repeated crews, actual concurrent accusations, the lamp cap, player deletion and Phase 1 hook preservation. The contemporaneous combined group 3 and case chain now has 30 public tables, one view, 16 public policies, five Realtime policies, 17 wallet reasons and 39 public functions; case/world tables add no browser policies or wallet reasons.
+
+Keep `case` off until every migration read by the deployment is applied; leave `RELIGHT_OPEN` unset. Deployed PostgREST and preview edge-cache hits remain manual checks for Claude, never a reason to test against the live database here.

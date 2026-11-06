@@ -81,7 +81,7 @@ def test_a_stage_cannot_be_changed_after_it_was_made():
 def test_create_app_uses_a_dark_coast_when_no_reader_is_given():
     app = create_app(CONFIGURED_SETTINGS)
 
-    assert isinstance(app.state.world_stage, AlwaysDark)
+    assert asyncio.run(app.state.world_stage.read()) == WorldStage(DARK, None)
 
 
 def test_create_app_uses_the_reader_it_is_given():
