@@ -125,7 +125,7 @@ def test_close_rejects_invalid_actions_without_database_work(body):
     assert seen == []
 
 
-@pytest.mark.parametrize("reason", ["not_test_crew", "not_forming", "action_conflict"])
+@pytest.mark.parametrize("reason", ["not_test_crew", "not_forming", "action_conflict", "crew_busy"])
 def test_close_reports_safe_refusals(reason):
     client, _ = client_for(
         lambda _: httpx.Response(200, json={"status": "refused", "reason": reason})
@@ -135,6 +135,7 @@ def test_close_reports_safe_refusals(reason):
     )
     assert response.status_code == 409
     assert response.json()["error"]["code"] == reason
+    assert response.headers["cache-control"] == "private, no-store"
 
 
 @pytest.mark.parametrize("path", ["overview", "crews"])

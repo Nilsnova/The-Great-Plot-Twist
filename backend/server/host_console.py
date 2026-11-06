@@ -79,7 +79,7 @@ class CloseRequest(BaseModel):
 class CloseReply(BaseModel):
     status: Literal["closed", "refused"]
     crewId: UUID | None = None
-    reason: Literal["not_test_crew", "not_forming", "action_conflict"] | None = None
+    reason: Literal["not_test_crew", "not_forming", "action_conflict", "crew_busy"] | None = None
 
 
 def expected_migrations(objects: dict[str, bool], flags: dict[str, bool]) -> list[dict]:
