@@ -1,8 +1,7 @@
-"""Offline economy rehearsal. Run from backend: python -m tools.economy.simulate.
+"""Offline Exchange v2 rehearsal, using production math and the public recorded prices.
 
-Uses real spot rules and the public Binance Vision replay (CC BY-NC-SA 4.0).
-No network, .env or credentials are used. Only numeric case economics are
-returned or printed. Future rules are separate from executable-main results.
+Run from backend: python -m tools.economy.simulate. No network, credentials or live
+SQL are used. The wider economy scenario is explicitly a counterfactual workload.
 """
 
 import argparse
@@ -10,280 +9,257 @@ import hashlib
 import json
 import math
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from decimal import ROUND_FLOOR, Decimal
+from decimal import Decimal
 from pathlib import Path
 from statistics import median
 
+from server.game.case_data import load_case
 from server.market.companies import load_companies
-from server.market.feed import REPLAY_FILE, load_replay, replay_snapshot
-from server.market.rules import DEFAULT_MULTIPLIER, REPLAY, evaluate
-from server.market.trade_rules import (
-    DAILY_BUY_CAP_COINS,
-    MAX_TRADE_COINS,
-    MIN_HOLD_MINUTES,
-    buy_amounts,
-    can_sell_now,
-    sell_amounts,
+from server.market.positions import (
+    DAILY_STAKE_CAP_COINS,
+    FALLING,
+    FEE_BASIS_POINTS,
+    LEVERAGE,
+    MAX_STAKE_COINS,
+    MIN_STAKE_COINS,
+    RELIT_FEE_BASIS_POINTS,
+    RISING,
+    Closing,
+    closing_amounts,
+    fee_for,
+    is_used_up,
 )
+from server.market.replay import REPLAY_FILE, load_replay, replay_minute
 
 BACKEND = Path(__file__).resolve().parents[2]
-START = datetime(2026, 11, 6, 8, tzinfo=UTC)  # 08:00 Lisbon in November
+START = datetime(2026, 11, 6, 8, tzinfo=UTC)
 STYLES = ("casual", "case-focused", "trader")
+HOLD_MINUTES = 60  # workload assumption; the real Exchange has no minimum hold
+PROBE_MINUTES = 10
 
 
-def percentile90(values):
+def percentile90(values: list[int]) -> int:
     """Nearest-rank percentile, including small cohorts."""
     return sorted(values)[math.ceil(len(values) * 0.9) - 1]
 
 
-def describe(values):
+def describe(values: list[int]) -> dict:
     return {"median": median(values), "p90": percentile90(values)}
 
 
-def kit_amounts():
+def kit_amounts() -> list[int]:
     data = json.loads((BACKEND / "content/entry_kits.json").read_text())
     return [kit["coins"] for kit in data["kits"]]
 
 
-def case_numbers():
-    """Read only numeric economics; never return plot text, identifiers or answers."""
-    case = json.loads((BACKEND / "content/secret/case.json").read_text())
-    card, deduction, solve = case["rewards"]["coins"]
+def case_numbers() -> dict:
+    """Return numeric economics through the private loader, never plot text or answers."""
+    case = load_case()
+    card = case.rewards.coin("first_card")
+    deduction = case.rewards.coin("deduction")
+    solve = case.rewards.coin("solve_share")
     return {
-        "cards": min(len(case["cards"]) * card["amount"], card["max_per_player"]),
-        "deductions": min(
-            len(case["deductions"]) * deduction["amount"], deduction["max_per_player"]
-        ),
+        "cards": min(len(case.cards) * card.amount, card.max_per_player),
+        "deductions": min(len(case.deductions) * deduction.amount, deduction.max_per_player),
         "solve": min(
-            solve["base"]
-            + len(case["deductions"]) * solve["per_deduction_part"]
-            + solve["finale_role"],
-            solve["max"],
-            solve["max_per_player"],
+            solve.base + len(case.deductions) * solve.per_part + solve.finale_role,
+            solve.maximum,
+            solve.max_per_player,
         ),
-        "shortcuts": sorted(
-            route["coins"]
-            for card in case["cards"]
-            for route in card["routes"]
-            if route["coins"] > 0
-        ),
-        "finale_build": max(light["planning_price_coins"] for light in case["night"]["lights"]),
+        "shortcuts": sorted(route.coins for route in case.routes if route.coins > 0),
+        "finale_build": max(light.planning_price_coins for light in case.night.lights),
     }
 
 
-def price_grid(days, multiplier):
-    """One shared market, including every minute's breakers and daily rebase."""
-    companies, replay = load_companies(), load_replay()
-    symbols = [company.symbol for company in companies]
-    bases, grid = {}, []
-    for minute in range(days * 1440):
-        now = START + timedelta(minutes=minute)
-        real = replay_snapshot(replay, symbols, now)
-        row = []
-        for company in companies:
-            quote = evaluate(
-                bases.get(company.id),
-                company.start_price,
-                real.prices[company.symbol],
-                REPLAY,
-                now,
-                multiplier,
-            )
-            bases[company.id] = quote.base
-            row.append((quote.price, quote.halted_until is not None and now < quote.halted_until))
-        grid.append(row)
-    return grid
+def price_grid(days: int) -> list[tuple[Decimal, ...]]:
+    """Actual unamplified island prices; the recording contains no stocks."""
+    replay = load_replay()
+    symbols = [company.symbol for company in load_companies() if not company.is_stock]
+    return [
+        tuple(replay_minute(replay, symbols, START + timedelta(minutes=minute)).prices.values())
+        for minute in range(days * 1440)
+    ]
+
+
+def path_close(
+    stake: int,
+    entry: Decimal,
+    prices: list[Decimal],
+    side: str,
+    basis_points: int = FEE_BASIS_POINTS,
+) -> Closing:
+    """Check every supplied tick; a position reaching zero cannot recover later."""
+    price = entry
+    for price in prices:
+        if is_used_up(side, entry, price):
+            return closing_amounts(side, stake, entry, price, basis_points)
+    return closing_amounts(side, stake, entry, price, basis_points)
+
+
+def leveraged_payout(
+    stake: int, start_price: Decimal, prices: list[Decimal], direction: int = 1
+) -> int:
+    """Gross production value; each scenario accounts for its fees separately."""
+    if direction not in (-1, 1):
+        raise ValueError("A direction must be rising (1) or falling (-1).")
+    return path_close(stake, start_price, prices, RISING if direction == 1 else FALLING).value
+
+
+def affordable_stake(coins: int, remaining: int, basis_points: int = FEE_BASIS_POINTS) -> int:
+    stake = min(MAX_STAKE_COINS, remaining, coins)
+    while stake >= MIN_STAKE_COINS and stake + fee_for(stake, basis_points) > coins:
+        stake -= 1
+    return stake if stake >= MIN_STAKE_COINS else 0
 
 
 @dataclass
 class Player:
-    """Simulated wallet and holdings, never authoritative application state."""
+    """Workload accounting only; authoritative balances remain in SQL."""
 
     style: str
     coins: int
-    holdings: dict = field(default_factory=dict)
     fees: int = 0
+    stakes: int = 0
+    payouts: int = 0
     trades: int = 0
+    liquidations: int = 0
 
 
-def spot_day(player, day, grid, rng):
-    """Random, non-foresight orders; each visit makes at most one buy then one sell."""
+def exchange_day(
+    player: Player, day: int, grid: list[tuple[Decimal, ...]], rng: random.Random
+) -> None:
+    """Four separate time slots guarantee at most one position is open per player."""
     count = {"casual": 1, "case-focused": 0, "trader": 4}[player.style]
     if player.style == "casual" and rng.random() < 0.5:
         count = 0
-    events = []
-    for _ in range(count):
-        minute = day * 1440 + rng.randrange(1380)
-        company = rng.randrange(len(grid[0]))
-        events.extend([(minute, "buy", company), (minute + 60, "sell", company)])
-    spent = 0
-    for minute, side, company in sorted(events):
-        price, halted = grid[minute][company]
-        if halted:
-            continue
-        now = START + timedelta(minutes=minute)
-        units, bought_at = player.holdings.get(company, (0, now))
-        if side == "sell":
-            if not units or not can_sell_now(bought_at, now):
-                continue
-            amounts = sell_amounts(units, price)
-            player.coins += amounts.received_by_player
-            del player.holdings[company]
-        else:
-            budget = min(MAX_TRADE_COINS, DAILY_BUY_CAP_COINS - spent, player.coins)
-            bought = max(0, int(Decimal(budget) / price))
-            while bought and buy_amounts(bought, price).paid_by_player > player.coins:
-                bought -= 1
-            if not bought:
-                continue
-            amounts = buy_amounts(bought, price)
-            assert 1 <= amounts.gross <= MAX_TRADE_COINS
-            spent += amounts.gross
-            player.coins -= amounts.paid_by_player
-            player.holdings[company] = (units + bought, now)
-        player.fees += amounts.fee
-        player.trades += 1
-        assert player.coins >= 0 and spent <= DAILY_BUY_CAP_COINS
+    staked_today = 0
+    for slot in range(count):
+        minute = day * 1440 + slot * 360 + rng.randrange(300)
+        company, side = rng.randrange(len(grid[0])), rng.choice((RISING, FALLING))
+        stake = affordable_stake(player.coins, DAILY_STAKE_CAP_COINS - staked_today)
+        if not stake:
+            break
+        entry = grid[minute][company]
+        path = [grid[tick][company] for tick in range(minute + 1, minute + HOLD_MINUTES + 1)]
+        opening_fee = fee_for(stake, FEE_BASIS_POINTS)
+        closing = path_close(stake, entry, path, side)
+        player.coins -= stake + opening_fee
+        player.coins += closing.coins_change
+        player.fees += opening_fee + closing.fee
+        player.stakes += stake
+        player.payouts += closing.value
+        player.trades += 2
+        player.liquidations += closing.used_up
+        staked_today += stake
+        assert player.coins >= 0 and staked_today <= DAILY_STAKE_CAP_COINS
 
 
-def spot_simulation(players=1000, days=14, seed=12, multiplier=DEFAULT_MULTIPLIER):
-    rng = random.Random(seed)
-    kits, grid = kit_amounts(), price_grid(days, multiplier)
+def exchange_simulation(players: int = 1000, days: int = 14, seed: int = 12) -> dict:
+    if players < 3 or days < 1:
+        raise ValueError("Use at least three players and one day.")
+    rng, kits, grid = random.Random(seed), kit_amounts(), price_grid(days)
     people = [Player(STYLES[i % 3], rng.choice(kits)) for i in range(players)]
-    rows = []
+    initial, rows = sum(player.coins for player in people), []
     for day in range(days):
         for player in people:
-            spot_day(player, day, grid, rng)
-        quotes = grid[(day + 1) * 1440 - 1]
+            exchange_day(player, day, grid, rng)
         for style in STYLES:
-            cohort = [p for p in people if p.style == style]
-            cash = [p.coins for p in cohort]
-            equity = [
-                p.coins
-                + sum(
-                    sell_amounts(units, quotes[c][0]).received_by_player
-                    for c, (units, _) in p.holdings.items()
-                )
-                for p in cohort
-            ]
+            cash = [player.coins for player in people if player.style == style]
             rows.append(
-                {
-                    "day": day + 1,
-                    "style": style,
-                    "players": len(cohort),
-                    "wallet": describe(cash),
-                    "marked_net_worth": describe(equity),
-                }
+                {"day": day + 1, "style": style, "players": len(cash), "wallet": describe(cash)}
             )
+    totals = {
+        key: sum(getattr(player, key) for player in people)
+        for key in ("fees", "stakes", "payouts", "trades", "liquidations")
+    }
+    final = sum(player.coins for player in people)
+    assert final == initial - totals["stakes"] + totals["payouts"] - totals["fees"]
+    minimum_cost = MIN_STAKE_COINS + fee_for(MIN_STAKE_COINS, FEE_BASIS_POINTS)
     return {
         "days": rows,
-        "total_fees": sum(p.fees for p in people),
-        "trades": sum(p.trades for p in people),
-        "multiplier": multiplier,
-        "insolvent_wallets": sum(p.coins == 0 for p in people),
-        "public_replay_foresight_probe": replay_oracle(grid, days),
+        "initial_wallet_total": initial,
+        "final_wallet_total": final,
+        **totals,
+        "wallets_below_minimum_open_cost": sum(p.coins < minimum_cost for p in people),
     }
 
 
-def replay_oracle(grid, days):
-    """Feasible demo-only attacker: known future, nonoverlapping 10min round trips.
-
-    Chooses up to four profitable trades/day, <=500 gross each, paying both fees.
-    This is a lower bound on exploitable foresight profits, not an optimal strategy.
-    """
+def replay_oracle(grid: list[tuple[Decimal, ...]], days: int) -> dict:
+    """Demo foresight: four nonoverlapping 10-minute positions per day, both fees paid."""
     coins, history = 1000, []
     for day in range(days):
         candidates = []
-        for minute in range(day * 1440, (day + 1) * 1440 - MIN_HOLD_MINUTES):
-            for company, (price, halted) in enumerate(grid[minute]):
-                close = minute + MIN_HOLD_MINUTES
-                exit_price, exit_halted = grid[close][company]
-                units = int(Decimal(MAX_TRADE_COINS) / price)
-                if not units or halted or exit_halted:
-                    continue
-                buy, sell = buy_amounts(units, price), sell_amounts(units, exit_price)
-                profit = sell.received_by_player - buy.paid_by_player
-                if profit > 0:
-                    candidates.append((profit, minute, close, buy.paid_by_player))
+        for minute in range(day * 1440, (day + 1) * 1440 - PROBE_MINUTES):
+            close = minute + PROBE_MINUTES
+            for company, entry in enumerate(grid[minute]):
+                path = [grid[tick][company] for tick in range(minute + 1, close + 1)]
+                for side in (RISING, FALLING):
+                    result = path_close(MAX_STAKE_COINS, entry, path, side)
+                    cost = MAX_STAKE_COINS + fee_for(MAX_STAKE_COINS, FEE_BASIS_POINTS)
+                    profit = result.coins_change - cost
+                    if profit > 0:
+                        candidates.append((profit, minute, close, cost))
         selected = []
         for profit, opened, closed, cost in sorted(candidates, reverse=True):
-            if cost > coins or any(not (closed < a or opened > b) for a, b in selected):
+            if cost > coins or any(not (closed < start or opened > end) for start, end in selected):
                 continue
             coins += profit
             selected.append((opened, closed))
-            if len(selected) == 4:
+            if len(selected) == DAILY_STAKE_CAP_COINS // MAX_STAKE_COINS:
                 break
         history.append(coins)
     return {
         "initial_wallet": 1000,
         "wallet_by_day": history,
         "final_wallet": coins,
-        "note": "Public demo prices are knowable ahead of time; never rank these coins.",
+        "note": "Public demo prices are knowable; this is not evidence about live prices.",
     }
 
 
-def leveraged_payout(stake, start_price, prices, direction=1):
-    """Unimplemented 10x scenario: isolated collateral, zero floor, no fees.
-
-    Every intermediate tick is checked: liquidation cannot recover on a later tick.
-    No max profit/hold/fee policy is inferred from the absent position engine.
-    """
-    value = Decimal(stake)
-    for price in prices:
-        value = Decimal(stake) * (1 + 10 * direction * (price / start_price - 1))
-        if value <= 0:
-            return 0
-    return int(value.to_integral_value(rounding=ROUND_FLOOR))
-
-
-def leverage_risk():
+def leverage_risk() -> dict:
     replay = load_replay()
-    changes, payouts = [], []
+    values, receipts, changes = [], [], []
     for prices in replay.closes.values():
         changes.append((max(prices) / min(prices) - 1) * 100)
-        for start in range(len(prices) - MIN_HOLD_MINUTES):
-            path = prices[start + 1 : start + MIN_HOLD_MINUTES + 1]
-            for direction in (-1, 1):
-                payouts.append(leveraged_payout(500, prices[start], path, direction))
+        for start in range(len(prices) - PROBE_MINUTES):
+            path = list(prices[start + 1 : start + PROBE_MINUTES + 1])
+            for side in (RISING, FALLING):
+                closing = path_close(MAX_STAKE_COINS, prices[start], path, side)
+                values.append(closing.value)
+                receipts.append(closing.coins_change)
     return {
-        "status": "planned sensitivity only; not a server rule or 14-day forecast",
-        "stake": 500,
-        "leverage": 10,
-        "fees": "excluded: leveraged fee basis unspecified",
-        "recorded_10_minute_payout_min_max": [min(payouts), max(payouts)],
+        "status": "Production arithmetic on recorded ten-minute windows; not a forecast.",
+        "stake": MAX_STAKE_COINS,
+        "leverage": LEVERAGE,
+        "opening_fee": fee_for(MAX_STAKE_COINS, FEE_BASIS_POINTS),
+        "recorded_gross_value_min_max": [min(values), max(values)],
+        "recorded_close_receipt_min_max": [min(receipts), max(receipts)],
         "largest_recorded_price_range_percent": float(max(changes)),
-        "synthetic_adverse_10_percent_payout": leveraged_payout(500, Decimal(100), [Decimal(90)]),
-        "synthetic_favorable_10_percent_payout": leveraged_payout(
-            500, Decimal(100), [Decimal(110)]
-        ),
-        "flat_500_stake_round_trip_fee_sensitivity": {
-            "2_percent_collateral_each_side": 20,
-            "2_percent_10x_notional_each_side": 200,
-        },
+        "adverse_10_percent_gross_value": leveraged_payout(500, Decimal(100), [Decimal(90)]),
+        "favorable_10_percent_gross_value": leveraged_payout(500, Decimal(100), [Decimal(110)]),
     }
 
 
-def flat_round_trip_probe():
-    """Exhaustively check cents across supported company limits at several unit sizes."""
+def flat_round_trip_probe() -> dict:
+    """All allowed stakes, both sides and both fee regimes lose money at a flat price."""
     best, checks = -(10**9), 0
-    for cents in range(100, 50001):
-        price = Decimal(cents) / 100
-        for units in (1, 2, 5, 10, 100):
-            buy, sell = buy_amounts(units, price), sell_amounts(units, price)
-            if buy.gross <= MAX_TRADE_COINS:
-                best = max(best, sell.received_by_player - buy.paid_by_player)
-                checks += 1
+    for stake in range(MIN_STAKE_COINS, MAX_STAKE_COINS + 1):
+        for basis_points in (FEE_BASIS_POINTS, RELIT_FEE_BASIS_POINTS):
+            for side in (RISING, FALLING):
+                for price in (Decimal("0.00000001"), Decimal("1.1246"), Decimal("76159.21")):
+                    closing = closing_amounts(side, stake, price, price, basis_points)
+                    best = max(best, closing.coins_change - stake - fee_for(stake, basis_points))
+                    checks += 1
     assert best < 0
     return {"valid_pairs": checks, "largest_coin_change": best}
 
 
-def run(players=1000, days=14, seed=12, multiplier=DEFAULT_MULTIPLIER):
+def run(players: int = 1000, days: int = 14, seed: int = 12) -> dict:
     from tools.economy.planned import scenario
 
-    if players < 3 or days < 1:
-        raise ValueError("Use at least three players and one day.")
+    current = exchange_simulation(players, days, seed)
     return {
         "players": players,
         "days": days,
@@ -291,31 +267,31 @@ def run(players=1000, days=14, seed=12, multiplier=DEFAULT_MULTIPLIER):
         "replay_sha256": hashlib.sha256(REPLAY_FILE.read_bytes()).hexdigest(),
         "market_data": "90 recorded minutes, ping-pong repeated; Binance Vision CC BY-NC-SA 4.0",
         "assumptions": [
-            "Equal style counts; kits sampled uniformly; all players receive a kit on day 1.",
+            "Equal style counts; kits sampled uniformly; every player receives one kit initially.",
             "Casual: half of days, one visit; case-focused: no trades; trader: four visits/day.",
-            "Visits pick a random company/time, buy affordable units and try to sell 60min later.",
-            "Halts skip orders; holdings persist; latest purchase resets the holding clock.",
-            "Net worth marks holdings net of fees even if halted; it is not available cash.",
-            "No current-main recurring grants or case/building/pool/duel routes exist.",
+            "Visits choose a company and rising/falling side without foresight, then hold 60min.",
+            "Four daily slots are six hours apart: at most one position is open per player.",
+            "Every tick checks for zero; fees/stakes use production pre-Relighting rules.",
+            "All positions close before day end; distributions show wallet cash, not open equity.",
+            "Recorded island prices only; no stocks, external requests or recurring income.",
+            "Arithmetic/workload evidence only; HTTP and SQL protection have separate tests.",
         ],
-        "implemented_spot": spot_simulation(players, days, seed, multiplier),
-        "planned_case_numeric_caps_only": case_numbers(),
-        "planned_10x_risk": leverage_risk(),
-        "flat_spot_loop_probe": flat_round_trip_probe(),
-        "planned_all_features_scenario": scenario(players, days, seed),
+        "implemented_exchange_v2": current,
+        "case_numeric_caps_only": case_numbers(),
+        "exchange_v2_risk": leverage_risk(),
+        "flat_exchange_v2_loop_probe": flat_round_trip_probe(),
+        "public_replay_foresight_probe": replay_oracle(price_grid(days), days),
+        "counterfactual_wider_economy": scenario(players, days, seed),
     }
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--players", type=int, default=1000)
     parser.add_argument("--days", type=int, default=14)
     parser.add_argument("--seed", type=int, default=12)
-    parser.add_argument(
-        "--multiplier", type=int, choices=range(20, 101), default=DEFAULT_MULTIPLIER
-    )
     args = parser.parse_args()
-    print(json.dumps(run(args.players, args.days, args.seed, args.multiplier), indent=2))
+    print(json.dumps(run(args.players, args.days, args.seed), indent=2))
 
 
 if __name__ == "__main__":

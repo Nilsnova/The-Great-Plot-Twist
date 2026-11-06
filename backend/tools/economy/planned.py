@@ -1,38 +1,43 @@
-"""Design-only sensitivity model for features absent from main; never server rules.
+"""Counterfactual wider economy workload, separate from the implemented Exchange model.
 
 Amounts come from OPEN-WORLD sections 5, 6, 8 and 9. Activity, completion,
-building priorities and random betting outcomes below are explicit assumptions.
+building priorities and proposed recurring grants are assumptions. Market fees
+and prediction settlements use production arithmetic, not older design drafts.
 """
 
 import random
 from collections import Counter
 from datetime import timedelta
 
-from server.market.feed import load_replay, replay_snapshot
+from server.market.positions import FALLING, FEE_BASIS_POINTS, RISING, fee_for
+from server.market.replay import load_replay, replay_minute
+from server.predictions.pools import Stake, plan_settlement
+from server.predictions.stake_rules import POOL_CUT_PERCENT
 from tools.economy.simulate import (
     START,
     STYLES,
+    affordable_stake,
     case_numbers,
     describe,
     kit_amounts,
-    leveraged_payout,
+    path_close,
 )
 
 
 def split_pool(stakes, winners):
-    """Design: full refund if one-sided/no winner; otherwise floor payouts after 5% cut."""
-    total, winning = sum(stakes), sum(stakes[i] for i in winners)
-    if not winning or winning == total:
-        return list(stakes)
-    # Integer arithmetic: avoids accidentally paying an extra coin through float error.
-    return [
-        (total * 95 * stake // (100 * winning)) if i in winners else 0
-        for i, stake in enumerate(stakes)
+    """Use the live pool formula: cut 5% of losing stakes and allocate remainders."""
+    rows = [
+        Stake(i, str(i), "win" if i in winners else "lose", amount)
+        for i, amount in enumerate(stakes)
+        if amount > 0
     ]
+    plan = plan_settlement(rows, "win", POOL_CUT_PERCENT)
+    payouts = {payout.row_id: payout.coins for payout in plan.payouts}
+    return [payouts.get(i, 0) for i in range(len(stakes))]
 
 
 def scenario(players, days, seed):
-    """1000-player/14-day counterfactual, kept separate from executable-main results."""
+    """A wider activity schedule; its assumed grants are not promises of server income."""
     rng, replay, case = random.Random(seed), load_replay(), case_numbers()
     symbols = list(replay.closes)
     kits = kit_amounts()
@@ -78,21 +83,23 @@ def scenario(players, days, seed):
             if style == "trader":
                 new_stakes = 0
                 for slot in range(4):
-                    stake = min(500, balances[i])
+                    stake = affordable_stake(balances[i], 2000 - new_stakes)
                     if not stake:
                         break
                     new_stakes += stake
                     minute = day * 1440 + slot * 360 + rng.randrange(350)
                     symbol, direction = rng.choice(symbols), rng.choice((-1, 1))
                     prices = [
-                        replay_snapshot(replay, [symbol], START + timedelta(minutes=m)).prices[
-                            symbol
-                        ]
+                        replay_minute(replay, [symbol], START + timedelta(minutes=m)).prices[symbol]
                         for m in range(minute, minute + 11)
                     ]
-                    payout = leveraged_payout(stake, prices[0], prices[1:], direction)
-                    change(i, -stake, "10x_stakes")
-                    change(i, payout, "10x_payouts_no_fees")
+                    closing = path_close(
+                        stake, prices[0], prices[1:], RISING if direction == 1 else FALLING
+                    )
+                    change(i, -stake, "market_stake")
+                    change(i, -fee_for(stake, FEE_BASIS_POINTS), "market_fee")
+                    change(i, closing.value, "market_payout")
+                    change(i, -closing.fee, "market_fee")
                 assert new_stakes <= 2000  # sequential positions, at most one open
             pending = [
                 (line, level, cost) for line, level, cost in costs if (line, level) not in built[i]
@@ -129,14 +136,15 @@ def scenario(players, days, seed):
             rows.append({"day": day + 1, "style": style, "wallet": describe(cohort)})
         assert sum(balances) == sum(totals.values())
     return {
-        "status": "DESIGN SCENARIO ONLY: no API/SQL protection or balance claim",
+        "status": "COUNTERFACTUAL WORKLOAD: assumed income, resources ignored; no balance claim",
         "assumptions": [
             "Uniform random kits; casual earns on alternate days; others active daily.",
             "Active days grant full salvage/order caps; weekly co-op on active seventh days.",
             "Case caps paid days 3/5/7; shortcuts day 6 and solo light day 7.",
             "Non-traders buy one affordable building level/day, across four lines; timber ignored.",
             "Trader: four sequential <=500 stakes/day, <=2000/day, 10-minute random long/short.",
-            "Leverage fees excluded: their basis is unspecified. At most one position is open.",
+            "Market fees use the production 2% of stake on opening and closing, capped by value.",
+            "Prediction settlement uses the production 5% cut of losing stakes and remainders.",
             "Everyone may enter four fair pools and three paid duels/day if affordable.",
             "No skill advantage/draws/timeouts; refunds are probed separately, not assumed income.",
         ],
