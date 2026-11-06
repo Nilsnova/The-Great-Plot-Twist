@@ -12,8 +12,9 @@ qualifications; it does not rewrite the earlier audit record.
   replacing only one's own placeholder, preserving neighbours/order and adding
   no student numbers. The verified G8 menu path is Settings → Credits.
 - Nils confirmed G7/G8 supplies the file and group 2 will reach main before
-  teammates start. The maintainer note records that integration dependency;
-  the guide no longer tells teammates to skip their first contribution.
+  teammates start. A final read-only fetch found the file on main at `60f7fd0`;
+  the guide no longer tells teammates to skip their first contribution or wait
+  for integration.
 - IDEAS now uses Nils's supplied G9–G27 scope list, including packages without
   published refs. Added an exclusion table and concrete proposed files to touch.
   Replace the vignette runner and scene-link checker with a harbor-notice gallery
@@ -27,7 +28,10 @@ qualifications; it does not rewrite the earlier audit record.
 
 - Fetched `origin/main` and `origin/feat/g8-islet-harbor-demo`; read G8's team
   array, shell controller and experience check. Main was still `c26f303` when
-  inspected; this does not claim group 2 has already merged.
+  first inspected. After the revision was pushed as `3acd903`, a final fetch
+  observed main at `60f7fd0b89fcbaad346b05ac365b1386aa6c0f8d`; read its identical
+  team array and confirmed Settings → Credits and the self-contained workshop.
+  This source-status correction is a follow-up commit on the same branch.
 - All 49 local Markdown targets/anchors and all fifteen brief structures checked;
   `git diff --check` passed. Read-only agent review covers the scope revision.
 - Secret gate: run `detect-secrets` 1.5.0 over `docs/contribute/` and both G28
@@ -38,8 +42,9 @@ qualifications; it does not rewrite the earlier audit record.
 
 ## Remaining / branch
 
-- Group 2 integration belongs to its owners; G28 has not merged it, edited code
-  or filled any credits row. All proposals must still be checked against later
+- The credits integration prerequisite is resolved on the observed main. G28
+  did not merge it, edit code or fill any credits row. All proposals must still
+  be checked against later
   teammate changes before being claimed; their boundaries were reviewed against
   the complete scopes Nils supplied, rather than inferred from ref availability.
 - The official six-type course rubric remains unspecified; EXPLAIN labels its
