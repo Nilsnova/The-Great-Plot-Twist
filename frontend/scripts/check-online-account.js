@@ -4,14 +4,14 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import {openAccountFixture, ACCOUNT_INTRO_ACTIONS} from './online-account-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 
-async function playIntro(page) {
+async function playIntro(page,{expectKit=true}={}) {
   for (const id of ACCOUNT_INTRO_ACTIONS) {
     const skip = page.locator('.intro-modal').getByRole('button', {name: 'Show full text', exact: true});
-    if (await skip.isVisible()) await skip.click();
+    if (await skip.isVisible()) {try{await skip.click({timeout:1000});}catch(error){if(await skip.isVisible())throw error;}}
     await page.locator(`.intro-modal [data-choice="${id}"]`).click();
   }
   await page.locator('.intro-ending').waitFor();
-  await page.locator('.case-arrival .case-kit-name').filter({hasText: 'Recorded Kit'}).waitFor();
+  if(expectKit)await page.locator('.case-arrival .case-kit-name').filter({hasText: 'Recorded Kit'}).waitFor();
 }
 async function openAccount(page) {
   if (!(await page.locator('.shell-screen[open]').isVisible())) {
@@ -32,11 +32,12 @@ async function showRewards(page) {
 
 export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
   const env = await openAccountFixture(), {page} = env;
-  const report = {checks: [], requests: env.accountRequests, scenarios: []};
+  const report = {checks: [], requests: env.accountRequests, scenarios: [],reducedMotion:true};
   const check = (value, label) => { assert.ok(value, label); report.checks.push(label); };
   const folder = 'captures/20261106_G9-C1';
   try {
     await mkdir(folder, {recursive: true});
+    await page.emulateMedia({reducedMotion:'reduce'});
     for (const width of widths) {
       env.resetAccount();
       await page.setViewportSize({width, height: 812});
@@ -135,6 +136,24 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
         'All account request bodies follow their contract and public config has no bearer');
       report.scenarios.push({width, stats: env.accountStats()});
     }
+    env.resetAccount();
+    await page.setViewportSize({width:375,height:812});
+    await page.goto(env.url);
+    await page.locator('.account-summary-state').filter({hasText:'Signed out'}).waitFor();
+    await startFromTitle(page,{closeIntro:false});
+    await playIntro(page,{expectKit:false});
+    const claim=page.locator('.case-arrival').getByRole('button',{name:'Sign in with GitHub',exact:true});
+    await claim.waitFor();
+    check(env.accountStats().kitGrants===0,'An anonymous ending keeps its accepted replay and grants no kit');
+    await claim.click();
+    await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor();
+    await page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+    await page.locator('.case-arrival .case-kit-name').filter({hasText:'Recorded Kit'}).waitFor();
+    check(env.accountStats().kitGrants===1&&env.accountStats().coinsGranted===1000,
+      'Returning from arrival sign-in claims the accepted journal once when Continue resumes it');
+    check(await page.evaluate(()=>JSON.parse(localStorage.getItem('plot_twist_intro_moves_v1'))?.actions?.length)===ACCOUNT_INTRO_ACTIONS.length,
+      'The sign-in return preserves all accepted anonymous moves');
+    report.anonymousClaim={width:375,stats:env.accountStats()};
     report.browser = {pageErrorTypes: env.pageErrors, consoleErrors: env.consoleErrors,
       controlledResponses: env.controlledResponses};
     check(env.pageErrors.length === 0 && env.consoleErrors.every(error => error.resource

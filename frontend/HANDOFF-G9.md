@@ -4,6 +4,41 @@ Checkpoint notes and server requests for Claude. All authored changes stay under
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## G9 stream 5: core request-state foundation verified (cloud, November 2026)
+
+Checkpoint 1's full committed driver remains pending. Main is merged through `364d178` via `6b65028`;
+stream 3 is `387e01b`, stream 4 is `9772f3e`. Main cancelled the AI companion; do not restore the old
+`companion_llm` flag from the portable brief. The adopted privacy notice is unchanged; its stale test
+now checks the cancelled feature is absent while preserving all provider/deletion/security assertions.
+
+Changed: 300-ms loading, five-second slow reads, global/inline connection words, explicit report/retry,
+original-control cooldowns, quiet screen-reader start/end announcements and first-sign-in actions.
+GETs retry at 5/15/30 seconds, then on a tap; hidden timers pause and stale account finishes cannot apply.
+Config focus respects both backoff and exhaustion. Recovered own-account reads finish name/save/crew/
+ledger hydration, including recovery during pending name setup; recovered saves recheck conflicts.
+SDK failures retain safe numeric status only. Ledger failures show unavailable, not an empty history.
+Manual captain-setup retry is explicit. An anonymous arrival's sign-in action is flag/build gated;
+its accepted journal survives OAuth return and Continue confirms the first server grant exactly once.
+Expired writes require another explicit action. Account copy is 18 px; controls remain 16 px / 44 px.
+
+Verified: `npm test` **2,284 / 163 files**, build (166-file/twelve-line spoiler guard), loading, CSP,
+recorded online, shared call states and production chaos. Full working-tree counts include prepared
+stream-6/7 files; the exact committed checkpoint driver will exclude them. Online has 45 account checks
+plus 21 auth checks; chaos has **28 cases / 159 assertions** across account, intro, save and crew.
+Accessibility passes **38 contexts / 114 viewport samples** at 1280/375/320 with no findings/errors.
+Phone deletion/cooldown captures were reviewed. Exact evidence: `captures/20261106_G9-C1/stream5-verification.json`.
+Cold title remains **20,873 JS / 11,771 CSS bytes** (caps 21,080 / 12,000). No new dependency or browser.
+Independent review fixes and regressions cover read hydration, busy initialization, deadline/focus races,
+and sign-in gating; native typing/restoration fixture races were fixed without weakening outcomes.
+
+Coverage limit: remaining chaos groups are explicitly pending until their streams; `--all-groups`
+fails while any are missing. Later streams must extend the same production runner. Not verified:
+actual OAuth/accounts/database/socket, deployment, other engines, VoiceOver or physical devices.
+Contract additions: account.connection/namePending/canRetryName and rewards.status; no new public intent,
+top-level schema key or event. Prepared crew/presence files remain uncommitted and unwired.
+Next: preserve those files, run the complete checkpoint-1 driver on the committed code and push; then
+wire/verify/commit streams 6–7 and continue checkpoints 3–5 and overflow. Claude integrates; no deploy.
+
 ## G9 stream 4: account and replay saves verified (6 Nov 2026, UTC)
 
 Checkpoint 1 remains incomplete. Main is merged through `f91f541` via `708b7eb`; stream 3 is `387e01b`.

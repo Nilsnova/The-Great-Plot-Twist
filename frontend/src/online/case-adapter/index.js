@@ -7,6 +7,7 @@ import {bindCaseMethods} from '../../adapter/contract.js';
 import {createAdapterStore} from './store.js';
 import {createAdapterTransport} from './transport.js';
 import {createAdapterPolling} from './polling.js';
+import {createReadMonitor} from './read-monitor.js';
 import {createProfileHandlers, initializeAccountName} from './profile.js';
 import {createAccountSaves} from './saves.js';
 import {createAccountLifecycle} from './account-lifecycle.js';
@@ -47,6 +48,7 @@ export function createRealCaseAdapter(deps = {}) {
   const initialState = ['signing_in', 'error', 'expired'].includes(initialAuth?.state)
     ? initialAuth.state : store.state.accountState;
   store.commit({auth: initialAuth, accountState: initialState, signInAllowed: import.meta.env.DEV});
+  ctx.readMonitor = createReadMonitor(ctx);
   ctx.transport = createAdapterTransport(ctx);
   ctx.saves = createAccountSaves(ctx);
   const accountLifecycle = createAccountLifecycle(ctx);
@@ -62,13 +64,13 @@ export function createRealCaseAdapter(deps = {}) {
   let privateTask = null;
   let signingOut = false;
   let authIntentGeneration = 0;
-  async function hydrate() {
+  async function hydrate({automatic = false, meAlreadyRead = false} = {}) {
     if (!session.isSignedIn() || store.isClosed() || ctx.document?.hidden) return;
     const epoch = store.scope();
     if (privateTask?.epoch === epoch) return privateTask.promise;
     const task = {epoch, promise: null};
     task.promise = (async () => {
-      const result = await ctx.transport.read('me');
+      const result = meAlreadyRead ? {mapped:{accepted:true}} : await ctx.transport.read('me', {automatic});
       if (result.mapped.accepted && store.isCurrent(epoch)) {
         await initializeAccountName(ctx);
         if (!store.isCurrent(epoch)) return;
@@ -81,31 +83,40 @@ export function createRealCaseAdapter(deps = {}) {
     privateTask = task;
     try { await task.promise; } finally { if (privateTask === task) privateTask = null; }
   }
+  ctx.retryRead = async kind => {
+    const scope = store.scope();
+    const result = await ctx.transport.read(kind, {automatic: true});
+    if (kind === 'me' && result.mapped.accepted && store.isCurrent(scope)) await hydrate({automatic:true,meAlreadyRead:true});
+    if (kind === 'save' && result.mapped.accepted && store.isCurrent(scope)) accountLifecycle.reconcile();
+    return result;
+  };
   ctx.signOut = async () => {
     authIntentGeneration += 1;
+    ctx.readMonitor.reset();
     signingOut = true;
     store.invalidate();
     const authTask = ctx.auth.signOut?.();
     session.clearToken();
     ctx.transport.clearPending();
     store.commit({accountState: 'signed_out', me: null, profile: null, crew: null,
-      nameReply: null, cloudSave: null, rewardsRows: [], continuation: null});
+      nameReply: null, nameStatus: null, cloudSave: null, rewardsRows: [], rewardsStatus: null, continuation: null});
     try { await authTask; } finally { signingOut = false; }
     return ctx.accept('You are signed out. Your local intro is kept.');
   };
   const stopSession = session.onChange(({signedIn}) => {
     if (store.isClosed() || signingOut) return;
+    ctx.readMonitor.reset();
     store.invalidate();
     if (signedIn) {
       ctx.transport.clearPending();
-      store.commit({accountState:'signed_in',me:null,profile:null,crew:null,nameReply:null,
-        cloudSave:null,rewardsRows:[],continuation:null});
+      store.commit({accountState:'signed_in',me:null,profile:null,crew:null,nameReply:null,nameStatus:null,
+        cloudSave:null,rewardsRows:[],rewardsStatus:null,continuation:null});
       void hydrate();
     } else {
       authIntentGeneration += 1;
       ctx.transport.clearPending();
-      store.commit({accountState:'expired',me:null,profile:null,crew:null,nameReply:null,
-        cloudSave:null,rewardsRows:[],continuation:null,joinPreview:null});
+      store.commit({accountState:'expired',me:null,profile:null,crew:null,nameReply:null,nameStatus:null,
+        cloudSave:null,rewardsRows:[],rewardsStatus:null,continuation:null,joinPreview:null});
     }
   });
   const stopAuth = ctx.auth.subscribe?.(next => {
@@ -123,13 +134,19 @@ export function createRealCaseAdapter(deps = {}) {
     if (!ctx.state.me) await hydrate();
   };
   const polling = createAdapterPolling(ctx);
+  ctx.refreshConfig = polling.refresh;
   const boot = Promise.resolve().then(async () => {
     if (store.isClosed()) return;
     await polling.start();
   }).catch(() => { if (!store.isClosed()) store.commit({notice: ctx.refuse('not_connected')}); });
   const handlers = {...createProfileHandlers(ctx), ...createCrewHandlers(ctx), signOut: ctx.signOut};
   handlers.signIn = async () => {
-    if (session.isSignedIn()) return ctx.accept('You are already signed in.');
+    if (session.isSignedIn()) {
+      const scope=store.scope();
+      await hydrate();
+      if(!store.isCurrent(scope))return ctx.refuse('session_expired');
+      return ctx.state.nameStatus==='unavailable'?ctx.refuse('not_connected'):ctx.accept('Your account is ready.');
+    }
     if (!import.meta.env.DEV && ctx.state.config?.flags?.sign_in !== true) return ctx.refuse('feature_off');
     if (!ctx.auth.signIn) return ctx.refuse('not_connected');
     const intent = ++authIntentGeneration;
@@ -175,6 +192,7 @@ export function createRealCaseAdapter(deps = {}) {
       authIntentGeneration += 1;
       store.dispose();
       polling.dispose();
+      ctx.readMonitor.dispose();
       accountLifecycle.dispose();
       ctx.saves.dispose();
       stopSession();

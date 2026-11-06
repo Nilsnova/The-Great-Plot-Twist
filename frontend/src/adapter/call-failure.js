@@ -2,7 +2,7 @@
 const messages={
   offline:'You are offline. Your progress on this device is kept.',
   not_connected:'Service unavailable. Try again in a moment.',
-  session_expired:'Session expired. Sign in again.',
+  session_expired:'Session expired. Sign in again; your progress on this device is kept.',
   save_conflict:'This save changed on another device. Choose which copy to keep.',
   rate_limited:'Too many attempts. Try again in a moment.',
   feature_off:'This feature is unavailable. You can keep exploring.',
@@ -12,7 +12,8 @@ const messages={
 export function intentFailure(error,{online=globalThis.navigator?.onLine!==false}={}){
   const status=error?.status??error?.response?.status;
   let reason=Object.hasOwn(messages,error?.reason)?error.reason:null;
-  if(status===401)reason='session_expired';
+  if(status===0)reason='offline';
+  else if(status===401)reason='session_expired';
   else if(status===429)reason='rate_limited';
   else if(status===403)reason='forbidden';
   else if(status>=500)reason=status===503?'not_connected':'internal_error';

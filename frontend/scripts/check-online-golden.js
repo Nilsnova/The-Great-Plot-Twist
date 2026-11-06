@@ -34,13 +34,15 @@ try{
     for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern',
       'warn_harbor','shore_back','to_tower','unlock_door','climb','signal']){
       const skip=page.locator('.intro-modal').getByRole('button',{name:'Show full text'});
-      if(await skip.isVisible())await skip.click();
+      if(await skip.isVisible()){try{await skip.click({timeout:1000});}catch(error){if(await skip.isVisible())throw error;}}
       await page.locator(`.intro-modal [data-choice="${id}"]`).click();
     }
     await page.locator('.intro-ending').waitFor();
     await page.getByText('Sign in with GitHub to claim your kit. Your progress on this device is kept.',
       {exact:true}).first().waitFor();
     check(await page.locator('.case-kit-name').count()===0,'Anonymous ending never grants a local kit');
+    check(await page.locator('.case-arrival').getByRole('button',{name:'Sign in with GitHub',exact:true}).count()===0,
+      'Flag-off or unconfigured arrival exposes no sign-in control');
     const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('plot_twist_intro_moves_v1')));
     check(saved.actions.at(-1)==='signal','Anonymous ending retains the accepted replay on this device');
     check(await page.evaluate(()=>!window.__island&&!window.__plotTwist),'Production exposes no inspection hooks');

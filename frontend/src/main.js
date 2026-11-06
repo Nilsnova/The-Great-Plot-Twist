@@ -22,10 +22,10 @@ const adapter=await createClientAdapter();
 async function ensureMotion(){if(!stopMotion)stopMotion=(await import('./settings/preferences.js')).watchSystemMotion();}
 let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='';
 const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
-let festivalEntry=null;
+let festivalEntry=null,background=null;
 const loadWorld=()=>import('./shell/world-loader.js');
 const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-const festivalReady=afterPaint.then(loadWorld).then(module=>module.loadFestivalModule()).then(module=>disposed?null:(festivalEntry=module.createFestivalEntry({container,audio,caption:captions.show,focus,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open()}))).catch(()=>null);
+const festivalReady=afterPaint.then(()=>import('./shell/after-paint.js')).then(module=>{if(disposed)return null;background=module.startAfterPaint({container,audio,caption:captions.show,focus,adapter,send,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open(),isLoading:()=>loading,isDisposed:()=>disposed});return background.festivalReady;}).then(entry=>(festivalEntry=entry)).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
@@ -74,15 +74,8 @@ function updateAccount(view){
   if(attention&&noticedAccount!==key){noticedAccount=key;void accountHost.open();}
 }
 const stopAccount=adapter.subscribe(event=>updateAccount(event.view));updateAccount(adapter.read());
-let titleInput=null;
-requestAnimationFrame(()=>requestAnimationFrame(()=>{
-  if(disposed)return;
-  import('./shell/title-input.js').then(({startTitleInput})=>{
-    if(!disposed)titleInput=startTitleInput({adapter,isLoading:()=>loading,hasRuntime:()=>!!runtime});
-  });
-}));
 function dispose(){
-  if(disposed)return;disposed=true;emit({type:'app_disposed'});titleInput?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();summary.dispose();
+  if(disposed)return;disposed=true;emit({type:'app_disposed'});background?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();summary.dispose();
   shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
   if(import.meta.env.DEV)delete window.__plotTwist;
 }

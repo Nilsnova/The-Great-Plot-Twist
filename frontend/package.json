@@ -51,7 +51,8 @@
     "print:headers": "node scripts/security-headers.js",
     "test:title-start": "node scripts/check-title-start.js",
     "test:online": "npm run build && node scripts/check-online-golden.js",
-    "test:g9": "node scripts/check-g9-regression.js"
+    "test:g9": "node scripts/check-g9-regression.js",
+    "test:online:chaos": "npm run build && node scripts/check-online-chaos.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

@@ -52,11 +52,6 @@
       "authorized": true
     },
     {
-      "path": "/api/config",
-      "method": "GET",
-      "authorized": false
-    },
-    {
       "path": "/api/me/name",
       "method": "POST",
       "authorized": true
@@ -74,6 +69,11 @@
     {
       "path": "/rest/v1/wallet_transactions",
       "method": "GET"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
     },
     {
       "path": "/api/config",
@@ -142,11 +142,6 @@
       "authorized": true
     },
     {
-      "path": "/api/config",
-      "method": "GET",
-      "authorized": false
-    },
-    {
       "path": "/api/me/name",
       "method": "POST",
       "authorized": true
@@ -164,6 +159,11 @@
     {
       "path": "/rest/v1/wallet_transactions",
       "method": "GET"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
     },
     {
       "path": "/api/config",

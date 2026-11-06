@@ -6,12 +6,15 @@ import {refreshAccountRewards} from './rewards.js';
 
 export async function initializeAccountName(ctx) {
   if(!ctx.session.isSignedIn())return ctx.refuse('sign_in_required');
+  const scope=ctx.store.scope();
+  ctx.store.commit({nameStatus:'loading'});
   const result=await ctx.transport.change({route:'/api/me/name',kind:'me'});
+  if(!ctx.store.isCurrent(scope))return ctx.refuse('session_expired');
   if(result.reply?.ok&&result.mapped.accepted){
-    if(!validNameReply(result.reply.data))return ctx.refuse('invalid_request');
+    if(!validNameReply(result.reply.data)){ctx.store.commit({nameStatus:'unavailable'});return ctx.refuse('invalid_request');}
     const nameReply=result.reply.data;
-    ctx.store.commit({nameReply,me:ctx.state.me?{...ctx.state.me,captainName:nameReply.captainName}:null});
-  }
+    ctx.store.commit({nameReply,nameStatus:'ready',me:ctx.state.me?{...ctx.state.me,captainName:nameReply.captainName}:null});
+  }else ctx.store.commit({nameStatus:'unavailable'});
   return result.mapped;
 }
 
@@ -51,6 +54,7 @@ export function createProfileHandlers(ctx) {
     return result.mapped;
   }
   async function continueGame() {
+    await ctx.readMonitor?.retryFailed();
     if (!ctx.session.isSignedIn()) {
       store.commit({continuation: {source: 'local', kind: 'intro', actions: null, place: 'lighthouse_isle'}});
       return ctx.accept('Your local intro is ready.');

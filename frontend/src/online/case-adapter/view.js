@@ -17,13 +17,13 @@ function continuationView(value){
     place:typeof value.place==='string'?value.place:null};
 }
 
-function walletView(rows,balance,empty){
+function walletView(rows,balance,empty,status){
   const ledger=(Array.isArray(rows)?rows:[]).filter(row=>Number.isFinite(row.amount)).map((row,index)=>{
     const reason=typeof row.reason==='string'&&/^[a-z_]+$/.test(row.reason)?row.reason:'coin_change';
     return {id:`wallet-row-${index}`,amount:row.amount,reason,label:reason.replaceAll('_',' '),
       at:row.at??row.created_at??null};
   });
-  return {...empty,balance,ledger,recent:ledger.slice(0,5)};
+  return {...empty,balance,ledger,recent:ledger.slice(0,5),status:status??'ready'};
 }
 
 function permissionsView(state,account,crew){
@@ -39,7 +39,7 @@ export function composeRealView(state={}){
   return {...view,schema:1,mode:'online',revision:state.revision??0,now:state.now??0,account,crew,
     captain:{name:account.captainName??'Captain pending',coins,save:account.save},arrival:mapArrival(state),
     permissions:permissionsView(state,account,crew),continuation:continuationView(state.continuation),
-    rewards:walletView(state.rewardsRows,coins,view.rewards),
+    rewards:walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),
     notice:state.notice?{reason:state.notice.reason??null,message:state.notice.message??''}:null};
 }
 

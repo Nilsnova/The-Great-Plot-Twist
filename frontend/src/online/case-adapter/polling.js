@@ -7,19 +7,25 @@ export function createAdapterPolling(ctx) {
   const window = ctx.window;
   let timer = null;
   let reading = false;
+  let failed = false;
   function clear() { if (timer !== null) clearTimeout(timer); timer = null; }
   function arm() {
     clear();
     if (ctx.store.isClosed() || document?.hidden) return;
     const delay = Math.max(50, schedule.remaining('config'));
+    if (!Number.isFinite(delay)) return;
     timer = setTimeout(refresh, delay);
     timer?.unref?.();
   }
-  async function refresh() {
+  async function refresh({manual = false} = {}) {
     if (reading || ctx.store.isClosed() || document?.hidden) return;
+    if (!manual && !Number.isFinite(schedule.remaining('config'))) return;
+    if (!manual && failed && schedule.remaining('config') > 0) return;
+    if (manual) schedule.reset('config');
     reading = true;
     try {
-      const result = await ctx.transport.read('config');
+      const result = await ctx.transport.read('config', {automatic: !manual});
+      failed = !result.mapped.accepted;
       schedule.mark('config', {ok: result.mapped.accepted});
       if (result.mapped.accepted) await ctx.onConfigReady?.();
     } finally { reading = false; arm(); }
@@ -31,6 +37,7 @@ export function createAdapterPolling(ctx) {
   document?.addEventListener?.('visibilitychange', visibility);
   window?.addEventListener?.('focus', refresh);
   return {
+    refresh,
     async start() { await refresh(); },
     dispose() {
       clear();

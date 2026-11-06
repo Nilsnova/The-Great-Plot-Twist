@@ -20,6 +20,7 @@ export function createRefreshSchedule({now = Date.now, random = Math.random} = {
   function remaining(kind) {
     if (hidden || !Object.hasOwn(reads, kind) || (kind === 'crew' && !crewFormingOpen)) return Infinity;
     const read = reads[kind];
+    if (kind === 'config' && read.failures >= 4) return Infinity;
     const delay = read.failures ? backoff[Math.min(read.failures, 3) - 1] : interval(kind);
     let next = read.at === null ? started : read.at + delay;
     if (kind === 'case' && !read.failures) next = Math.min(next, caseRequestedAt);
@@ -31,7 +32,7 @@ export function createRefreshSchedule({now = Date.now, random = Math.random} = {
     if (!Object.hasOwn(reads, kind)) return;
     const read = reads[kind];
     read.at = now();
-    read.failures = ok ? 0 : Math.min(3, read.failures + 1);
+    read.failures = ok ? 0 : Math.min(kind === 'config' ? 4 : 3, read.failures + 1);
     if (kind === 'case') caseRequestedAt = Infinity;
   }
 
@@ -56,6 +57,7 @@ export function createRefreshSchedule({now = Date.now, random = Math.random} = {
     remaining,
     configure,
     requestCase,
+    reset(kind) { if (Object.hasOwn(reads, kind)) reads[kind] = {at: null, failures: 0}; },
     setHidden: value => { hidden = Boolean(value); },
   };
 }

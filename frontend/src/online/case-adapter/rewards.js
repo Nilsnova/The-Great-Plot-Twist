@@ -7,12 +7,17 @@ export function safeLedgerRows(rows){
       created_at:typeof row.created_at==='string'&&row.created_at.length<=80?row.created_at:null}));
 }
 
-export async function refreshAccountRewards(ctx){
+export async function refreshAccountRewards(ctx,{automatic=false}={}){
   const scope=ctx.store.scope();
   if(!ctx.session.isSignedIn()||ctx.store.isClosed())return ctx.refuse('sign_in_required');
+  const finish=ctx.readMonitor?.begin('ledger',{automatic,retry:()=>refreshAccountRewards(ctx,{automatic:true})});
+  ctx.store.commit({rewardsStatus:'loading'});
   let result;
   try{result=await ctx.auth?.readOwnLedger?.();}catch{result={ok:false};}
   if(!ctx.store.isCurrent(scope)||!ctx.session.isSignedIn())return ctx.refuse('session_expired');
-  ctx.store.commit({rewardsRows:result?.ok?safeLedgerRows(result.rows):[]});
-  return result?.ok?ctx.accept('Your coin ledger is up to date.'):ctx.refuse('not_connected');
+  if(result?.status===401){ctx.session.clearToken();return ctx.refuse('session_expired');}
+  ctx.store.commit(result?.ok?{rewardsRows:safeLedgerRows(result.rows),rewardsStatus:'ready'}:{rewardsStatus:'unavailable'});
+  const mapped=result?.ok?ctx.accept('Your coin ledger is up to date.'):ctx.refuse('not_connected');
+  finish?.({status:result?.ok?200:result?.status??0,mapped});
+  return mapped;
 }

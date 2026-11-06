@@ -222,17 +222,23 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     return signOutTask;
   }
   async function ownRead(makeQuery, project, empty) {
-    if (closed || !configuration || !session.isSignedIn() || signOutTask) return {ok: false, ...empty};
+    const failed = (status = 0) => ({ok: false, status, ...empty});
+    if (closed || !configuration || !session.isSignedIn() || signOutTask) return failed();
     const token = epoch;
     try {
-      const client = await clientFor(token); if (!client) return {ok: false, ...empty};
+      const client = await clientFor(token); if (!client) return failed();
       const reply = await makeQuery(client);
-      if (!isCurrent(token) || reply.error || !Array.isArray(reply.data)) return {ok: false, ...empty};
+      if (!isCurrent(token)) return failed();
+      if (reply?.error || !Array.isArray(reply?.data)) {
+        const status = Number.isInteger(reply?.status) && reply.status >= 400 && reply.status <= 599
+          ? reply.status : 0;
+        return failed(status);
+      }
       return project(reply.data);
-    } catch { return {ok: false, ...empty}; }
+    } catch { return failed(); }
   }
   function readOwnLedger() {
-    if (!playerId) return Promise.resolve({ok: false, rows: []});
+    if (!playerId) return Promise.resolve({ok: false, status: 0, rows: []});
     return ownRead(client => client.from('wallet_transactions').select('delta,reason,created_at')
       .eq('player_id', playerId).order('created_at', {ascending: false}).limit(50),
     rows => ({ok: true, rows: rows.slice(0, 50).filter(row => Number.isSafeInteger(row.delta)

@@ -464,11 +464,33 @@ describe('restricted own-player SDK reads', () => {
     expect(await test.auth.readCrewMemberIds('invalid')).toEqual({ok: false, ids: []});
   });
 
+  it.each([403, 503])('returns only safe status %i when the ledger request fails', async status => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    const privateText = placeholder(), chain = query(test, []);
+    chain.limit.mockResolvedValue({status, data: [{query: privateText, ref: privateText}],
+      error: {message: privateText, details: privateText, hint: privateText}});
+    const result = await test.auth.readOwnLedger();
+    expect(result).toEqual({ok: false, status, rows: []});
+    expect(JSON.stringify(result)).not.toContain(privateText);
+  });
+
+  it.each([200, '503', Infinity])('uses unknown status for an unsafe failed-ledger status %s', async status => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    query(test, []).limit.mockResolvedValue({status, data: null, error: {message: placeholder()}});
+    expect(await test.auth.readOwnLedger()).toEqual({ok: false, status: 0, rows: []});
+  });
+
+  it('uses unknown status for a ledger read that throws and exposes no exception fields', async () => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    query(test, []).limit.mockRejectedValue(Object.assign(new Error(placeholder()), {status: 503}));
+    expect(await test.auth.readOwnLedger()).toEqual({ok: false, status: 0, rows: []});
+  });
+
   it('discards late ledger reads after sign-out', async () => {
     const test = setup({held: sdkSession()}); await test.auth.restore();
     const chain = query(test, []), pending = deferred(); chain.limit.mockReturnValue(pending.promise);
     const read = test.auth.readOwnLedger(); await Promise.resolve();
-    await test.auth.signOut(); pending.resolve({data: [{delta: 1, reason: 'kit_grant'}], error: null});
-    expect(await read).toEqual({ok: false, rows: []});
+    await test.auth.signOut(); pending.resolve({status: 503, data: null, error: {message: placeholder()}});
+    expect(await read).toEqual({ok: false, status: 0, rows: []});
   });
 });

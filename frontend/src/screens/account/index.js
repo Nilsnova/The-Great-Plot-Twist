@@ -5,6 +5,8 @@ import {node} from '../helpers.js';
 import {createServerCallState} from '../../ui/kit/server-call-state.js';
 import {intentFailure} from '../../adapter/intent.js';
 import {createButton} from '../../ui/kit/button.js';
+import {syncIntentCooldown} from '../../ui/kit/intent-cooldown.js';
+import {createConnectionBanner} from '../../ui/connection-banner.js';
 
 const accountStates={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account error'};
 const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline copy',conflict:'Conflict'};
@@ -16,10 +18,13 @@ function stateLabel(value,labels){return labels[value]??(String(value??'').repla
 export function createAccountScreen({send,navigate}){
   const element=node('section','account-screen');element.setAttribute('aria-label','Account and saved games');
   let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0;
-  const call=createServerCallState({messageElement:node('p','account-feedback'),label:'account action',onRetry:()=>lastIntent&&invoke(...lastIntent)});
+  const connection=createConnectionBanner({inline:true,send:(...args)=>send?.(...args)});
+  let refusedFocus=null;
+  const syncCooldown=()=>syncIntentCooldown(element,refusedFocus,call.read().remaining);
+  const call=createServerCallState({messageElement:node('p','account-feedback'),label:'account action',onRetry:()=>lastIntent&&invoke(...lastIntent),onChange:()=>syncCooldown()});
   function action(parent,label,method,args=[],focus,disabled=false){
     const component=createButton({label,disabled,onClick:()=>invoke(method,...args)});if(focus)component.element.dataset.focus=focus;
-    buttons.push(component);parent.append(component.element);return component.element;
+    component.element.dataset.intent=method;buttons.push(component);parent.append(component.element);return component.element;
   }
   function clearButtons(){buttons.forEach(item=>item.dispose());buttons=[];}
   function render(){
@@ -56,6 +61,7 @@ export function createAccountScreen({send,navigate}){
     if(state==='signed_in'){
       action(actions,'Sign out','signOut',[],'account-sign-out',busy);
       if(account.canReroll)action(actions,'Change captain name once','rerollName',[],'account-reroll',busy);
+      else if(account.namePending){actions.append(node('p','account-muted','Captain setup is not ready. Your progress on this device is kept.'));if(account.canRetryName)action(actions,'Retry captain setup','signIn',[],'account-name-setup',busy);}
       else actions.append(node('p','account-muted','Your captain name change has been used.'));
     }
     action(actions,account.canContinue?(save.source==='cloud'?'Continue from cloud':'Continue from this device'):'No game to continue','continueGame',[],'account-continue',busy||!account.canContinue);
@@ -71,7 +77,7 @@ export function createAccountScreen({send,navigate}){
       }else action(actions,'Delete my data','armDelete',[],'account-delete',busy);
     }
     if(feedback){const status=node('p','account-feedback',feedback);status.setAttribute('role','status');element.append(status);}
-    element.append(call.element);restoreRequestedFocus();
+    connection.update(view);element.append(connection.element,call.element);syncCooldown();restoreRequestedFocus();
   }
   let focusKey=null;
   function restoreRequestedFocus(){
@@ -80,14 +86,17 @@ export function createAccountScreen({send,navigate}){
     const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey);
     if(target?.disabled&&busy)return;
     if(!target&&busy)return;
-    const next=target&&!target.disabled?target:element.querySelector('button:not(:disabled),input,select');
+    const available=item=>item&&!item.disabled&&!item.closest('[hidden]');
+    const next=available(target)?target:[...element.querySelectorAll('button,input,select')].find(available);
     next?.focus({preventScroll:true});
     if(focusKey==='account-delete-confirm')element.querySelector('.account-delete-confirm')?.scrollIntoView?.({block:'start'});
     focusKey=null;
   }
   async function invoke(method,...args){
     if(method==='armDelete'){deleteArmed=true;feedback='Review the full deletion notice and press Confirm deletion to continue.';focusKey='account-delete-confirm';refresh();return;}
-    if(busy||disposed)return;busy=true;const token=++request;feedback='';lastIntent=[method,...args];call.loading();refresh();
+    if(busy||disposed||(lastIntent?.[0]===method&&call.read().remaining>0))return;
+    const source=document.activeElement;refusedFocus=source?.dataset.intent===method?source.dataset.focus:[...element.querySelectorAll('[data-intent]')].find(item=>item.dataset.intent===method)?.dataset.focus??refusedFocus;
+    busy=true;const token=++request;feedback='';lastIntent=[method,...args];call.loading();refresh();
     try{const result=await send?.(method,...args);if(disposed||token!==request)return;if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());if(result?.accepted&&method==='deleteMyData')deleteArmed=false;if(result?.accepted&&method==='continueGame')navigate?.('continue',result);}
     catch(error){if(!disposed&&token===request)call.fail(intentFailure(error));}
     finally{busy=false;if(!disposed)refresh();}
@@ -98,5 +107,5 @@ export function createAccountScreen({send,navigate}){
   }
   function update(next){view=next??{};if(accountOf(view).state==='signed_out')deleteArmed=false;refresh();}
   refresh();
-  return {element,update,signIn:()=>invoke('signIn'),tick(){},close(){request++;call.clear();},dispose(){disposed=true;call.dispose();clearButtons();element.remove();}};
+  return {element,update,signIn:()=>invoke('signIn'),tick(){},close(){request++;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();element.remove();}};
 }

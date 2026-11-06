@@ -41,7 +41,10 @@ export function mapAccount(state={}){
   return {state:accountState,captainName:text(state.me?.captainName)??text(state.nameReply?.captainName),
     canSignIn:state.signInAllowed!==false&&state.auth?.configured!==false,
     signInMessage:text(state.auth?.message)??'',
+    connection:state.connection?{...state.connection}:{state:'idle',message:'',reason:null},
     canReroll:accountState==='signed_in'&&state.nameReply?.rerollsLeft>0,
+    namePending:accountState==='signed_in'&&!state.nameReply,
+    canRetryName:accountState==='signed_in'&&state.nameStatus==='unavailable',
     hasKit:!!(state.me?.kit||state.profile?.kit),
     canContinue:save.state!=='conflict'&&(!!save.source||canResumeWorld),save};
 }

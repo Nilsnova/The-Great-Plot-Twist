@@ -2,6 +2,7 @@
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
+import {auditRequestStates} from './a11y-request-states.js';
 const env=await openWorldBrowser({hmr:false}),{page}=env,prefix='captures/20261106_G8-A11y';
 const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:['Claude real-server panels absent from main'],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
 async function audit(name,selector,context='gameplay'){
@@ -20,7 +21,7 @@ async function audit(name,selector,context='gameplay'){
    for(const el of [root,...root.querySelectorAll('*')].filter(visible)){
     if(![...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())||el.matches('option,script,style')||el.closest('.kit-sr-only,.presence-sr-only'))continue;
     textCount++;const s=getComputedStyle(el),identity=el.tagName.toLowerCase()+'.'+el.classList.toString().replaceAll(' ','.');
-    const metadata=el.closest('button,label,select,output,nav,small,kbd,dt,dd,figcaption,.bulletin-day,.bulletin-next,.bulletin-resets summary,.case-caption,.case-eyebrow,.case-facts,.case-card-credit,.case-card-id,.case-seat-credit,.case-clock,.case-job-report,.partner-chart-caption,.partner-life-status,.case-cited-cards,.kit-badge');
+    const metadata=el.closest('button,a[href],label,select,output,nav,small,kbd,dt,dd,figcaption,.bulletin-day,.bulletin-next,.bulletin-resets summary,.case-caption,.case-eyebrow,.case-facts,.case-card-credit,.case-card-id,.case-seat-credit,.case-clock,.case-job-report,.partner-chart-caption,.partner-life-status,.case-cited-cards,.kit-badge');
     const minimum=h.minimumTextSize(el.closest('.kit-dialogue-text,.case-reveal-line')?'story':metadata?'metadata':context);
     if(parseFloat(s.fontSize)<minimum)fonts.push({element:identity,size:parseFloat(s.fontSize),minimum});
     if(el.closest(':disabled'))continue;
@@ -73,6 +74,7 @@ try{
  await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'signed_out',saveState:'idle',
   deviceSave:{state:'idle',kind:null},cloudSave:{state:'idle',kind:null}}));
  await page.keyboard.press('Escape');report.accountEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));
+ await auditRequestStates(page,audit);
  await audit('presence','.presence-hud');
  for(const [name,place] of [['islet-world','home_islet'],['gulls-rest','gulls_rest']]){await page.evaluate(async place=>{const g=window.__island;g.world.setRelightingComplete(true);await g.world.goTo(place,{fast:true});},place);await audit(name,'.hud');}
  await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(async()=>{const {setPreferences}=await import('/src/settings/preferences.js');setPreferences({reducedMotion:false});window.__plotTwist.adapter.dev.rehearse('relighting');window.__island.settings.hour=23;});

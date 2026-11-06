@@ -7,6 +7,7 @@ const okay = () => ({accepted: true, reason: null, message: ''});
 export function createAdapterTransport(ctx) {
   const {state, session, api, publicApi, store} = ctx;
   const pending = new Map();
+  const reads = new Map();
   const makeUid = createUidFactory({random: ctx.random, now: ctx.now});
 
   function apply(kind, data) {
@@ -17,24 +18,37 @@ export function createAdapterTransport(ctx) {
     if (kind === 'save') store.commit({cloudSave: structuredClone(data)});
   }
 
-  async function read(kind) {
+  async function readOnce(kind, {automatic = false} = {}) {
     const publicRead = kind === 'config';
     if (store.isClosed()) return {mapped: ctx.refuse('disposed')};
     if (!publicRead && !session.isSignedIn()) return {mapped: ctx.refuse('sign_in_required')};
     const scope = store.scope();
+    const finish = ctx.readMonitor?.begin(kind, {automatic, retry: () => kind === 'config' && ctx.refreshConfig
+      ? ctx.refreshConfig({manual: true}) : ctx.retryRead ? ctx.retryRead(kind) : read(kind, {automatic: true})});
     const route = {config: '/api/config', me: '/api/me', crew: '/api/crews/me', save: '/api/save'}[kind];
     let reply;
     try { reply = await (publicRead ? publicApi : api).get(route); }
     catch { reply = {ok: false, status: 0}; }
     if (store.isClosed() || (!publicRead && !store.isCurrent(scope))) {
-      return {mapped: ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired')};
+      const mapped = ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+      finish?.({status: 401, mapped});
+      return {mapped};
     }
     const mapped = reply.ok && !validReadReply(kind, reply.data)
       ? mapApiResult({ok:false,status:502,code:'database_error'})
       : mapApiResult(reply, {route, method: 'GET'});
     if (mapped.accepted) apply(kind, reply.data);
     else store.commit({notice: {reason: mapped.reason, message: mapped.message}});
+    finish?.({status: reply.ok && !mapped.accepted ? 502 : reply.status, mapped});
     return {reply, mapped};
+  }
+
+  function read(kind, options) {
+    const key = `${kind}:${kind === 'config' ? 'public' : store.scope()}`;
+    if (reads.has(key)) return reads.get(key);
+    const task = readOnce(kind, options).finally(() => { if (reads.get(key) === task) reads.delete(key); });
+    reads.set(key, task);
+    return task;
   }
 
   async function recover(kind, recovery, scope) {
@@ -69,5 +83,5 @@ export function createAdapterTransport(ctx) {
     if (mapped.recovery !== 'unknown_outcome') pending.delete(key);
     return {reply, mapped: mapped ?? okay()};
   }
-  return {read, change, clearPending: () => pending.clear()};
+  return {read, change, clearPending() { pending.clear(); reads.clear(); }};
 }

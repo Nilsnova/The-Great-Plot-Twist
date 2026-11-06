@@ -7,7 +7,7 @@ if(!['before','after'].includes(phase))throw new Error('Use --phase=before or --
 const folder=`captures/20261106_G9-C1-${phase}`,resultFile=`${folder}/Verification.json`;
 const commands=[...g8Commands,['build-stamp','node scripts/check-build-stamp.js'],
   ['problem-report','node scripts/check-problem-report.js'],['call-states','node scripts/check-call-states.js'],
-  ['csp-inventory','node scripts/check-csp-inventory.js'],['online','node scripts/check-online-golden.js']];
+  ['csp-inventory','node scripts/check-csp-inventory.js'],['online','node scripts/check-online-golden.js'],['online-chaos','node scripts/check-online-chaos.js']];
 for(const [id,path] of [['claude-islet','scripts/check-islet.js'],['market','scripts/check-market.js']]){
   try{await access(path);commands.push([id,'node '+path]);}catch{/* Add main's panels when available. */}
 }

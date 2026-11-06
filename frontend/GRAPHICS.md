@@ -945,3 +945,32 @@ keeps the journal. Late responses cannot clear or overwrite a newer account. Bro
 the complete account journey at 1280 and 375 px; accessibility includes all account states at 320 px.
 These checks use generated placeholder credentials and intercepted endpoints. Live accounts,
 databases and deployed callbacks remain unverified.
+
+
+## Request states and recovery (G9, stream 5 foundation)
+
+The request kit waits 300 ms before showing loading, marks reads slow after five seconds and offers
+fixed safe words, an explicit retry and a public problem draft. A refused control stays focusable with
+`aria-disabled` during its supplied countdown; its handler rejects activation until the deadline.
+Screen readers hear the start and end, while visible seconds change quietly. Session expiry keeps
+the accepted journal and requires a fresh user action before a write can be sent again.
+
+The adapter's GET monitor retries network/503 reads after 5, 15 and 30 seconds, then waits for a tap.
+It keeps failures by resource, pauses timer remainders while hidden and invalidates late finishes on
+logout/disposal. Public config uses the same bounded schedule and focus cannot bypass a failed read's
+deadline. A recovered own-account read completes the rest of account hydration; a recovered save
+reconciles device/cloud copies. Failed ledger reads retain a visible unavailable state and safe status,
+without forwarding SDK errors or query data. Connection retry uses the existing continuation intent;
+the standalone banner reads without navigating. No additional public intent or event was added.
+
+Nested additive fields are `account.connection {state,message,reason}`, `account.namePending`,
+`account.canRetryName` and `rewards.status`. Screens still receive only projections and send intents.
+First arrival sign-in is distinct from session expiry, obeys the production flag/public build values,
+and preserves the accepted journal for its first authoritative claim after the return and Continue.
+
+`npm run test:online:chaos` uses production UI with generated credentials and intercepted endpoints.
+Current coverage is seven faults each for account/intro/save/crew (28 cases); the report names pending
+later route groups. `--all-groups` refuses incomplete coverage. Every subsequent integration grows it.
+The 38-context accessibility pass includes all request states at 375/320; account text is 18 px and
+controls stay at least 16 px / 44 px. See the stream-5 verification manifest for exact evidence and
+limitations; live accounts, services, deployments and physical devices are not claimed.

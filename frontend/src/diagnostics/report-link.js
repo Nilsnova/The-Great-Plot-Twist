@@ -13,13 +13,17 @@ export function createProblemDescription(link) {
 }
 export function createProblemLink(openedFrom) {
   const link = node('a', 'kit-button kit-quiet problem-report', 'Report a problem');
-  requestAnimationFrame(() => {
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
     if (link.isConnected) noteUiAction(openedFrom);
   });
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   link.title = explanation;
-  const refresh = () => { link.href = createProblemUrl(readDiagnostics()); };
+  const refresh = () => {
+    const browser = typeof globalThis.document?.querySelector === 'function'
+      && typeof globalThis.innerWidth === 'number' && typeof globalThis.innerHeight === 'number';
+    link.href = createProblemUrl(browser ? readDiagnostics() : undefined);
+  };
   link.addEventListener('focus', refresh);
   link.addEventListener('click', refresh);
   refresh();

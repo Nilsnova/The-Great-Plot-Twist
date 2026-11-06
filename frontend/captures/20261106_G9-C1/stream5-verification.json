@@ -1,0 +1,89 @@
+{
+  "stage": "stream 5 core request-state foundation; checkpoint 1 full driver pending",
+  "sourceBase": "6b65028",
+  "dirty": true,
+  "unitTests": 2284,
+  "unitFiles": 163,
+  "note": "Working-tree unit/build count includes prepared, uncommitted stream-6 crew and stream-7 presence files. Set those aside before the exact committed checkpoint driver.",
+  "initialJavaScript": 20873,
+  "initialCss": 11771,
+  "commands": [
+    {
+      "command": "npm test",
+      "code": 0,
+      "log": "stream5-unit.log"
+    },
+    {
+      "command": "npm run build",
+      "code": 0,
+      "log": "stream5-build.log"
+    },
+    {
+      "command": "CAPTURE_DIR=/tmp/g9-stream5-loading CAPTURE_PREFIX=stream5 node scripts/check-loading.js",
+      "code": 0,
+      "log": "stream5-loading.log"
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "code": 0,
+      "log": "stream5-csp.log"
+    },
+    {
+      "command": "node scripts/check-online-chaos.js",
+      "code": 0,
+      "log": "stream5-chaos.log"
+    },
+    {
+      "command": "node scripts/check-call-states.js",
+      "code": 0,
+      "log": "stream5-call-states.log"
+    },
+    {
+      "command": "node scripts/check-online-golden.js",
+      "code": 0,
+      "log": "stream5-online.log"
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "code": 0,
+      "log": "stream5-a11y.log"
+    }
+  ],
+  "browser": {
+    "accountChecks": 45,
+    "anonymousClaimGrants": 1,
+    "authChecks": 21,
+    "chaosCases": 28,
+    "chaosChecks": 159,
+    "chaosGroups": [
+      "account",
+      "intro",
+      "save",
+      "crew"
+    ],
+    "chaosPendingGroups": [
+      "presence",
+      "islet",
+      "market",
+      "predictions",
+      "arena",
+      "bulletin",
+      "case",
+      "partners",
+      "finale"
+    ],
+    "a11yContexts": 38,
+    "a11yViewportSamples": 114,
+    "a11yFailures": 0,
+    "a11yErrors": 0,
+    "screenshotsReviewed": [
+      "account-delete-375.png",
+      "../20261106_G9-C1-chaos/crew-rate_limited-375.png"
+    ]
+  },
+  "notVerified": [
+    "Actual accounts, OAuth, database or Realtime",
+    "Deployed callback and preview",
+    "Other browsers, VoiceOver and physical devices"
+  ]
+}
