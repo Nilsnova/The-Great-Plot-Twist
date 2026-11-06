@@ -281,3 +281,44 @@ def test_nonfinal_or_future_final_does_not_pay_and_other_players_cannot_settle_a
         "no_such_fixture",
     )
     assert not database.calls
+
+
+class GrowingStakeDatabase(ScriptedDatabase):
+    """A concurrent commit appears only in the final own-stake snapshot."""
+
+    def __init__(self, *, initially_empty, missing_fixture=False):
+        super().__init__()
+        first, second = stake_row(), stake_row(2) | {"fixture_id": "fd-102"}
+        self.initial = [] if initially_empty else [first]
+        self.stakes = [second] if initially_empty else [first, second]
+        self.mine_reads = 0
+        self.fixtures = [fixture_row()]
+        if not missing_fixture:
+            self.fixtures.append(fixture_row() | {"fixture_id": "fd-102", "provider_match_id": 102})
+
+    async def select_rows(self, table, query):
+        if table == "sports_stakes" and query.get("order") == "id.desc":
+            self.reads.append((table, query))
+            self.mine_reads += 1
+            return self.initial if self.mine_reads == 1 else self.stakes
+        return await super().select_rows(table, query)
+
+
+@pytest.mark.parametrize("initially_empty", [True, False], ids=("empty-to-one", "new-fixture"))
+def test_mine_reads_fixture_metadata_for_the_final_concurrent_stake_snapshot(initially_empty):
+    database = GrowingStakeDatabase(initially_empty=initially_empty)
+    client, _, _ = make_client(database=database)
+    response = client.get("/api/sports/mine", headers=HEADER)
+    assert response.status_code == 200
+    expected = {"fd-102"} if initially_empty else {"fd-101", "fd-102"}
+    assert {row["fixtureId"] for row in response.json()["stakes"]} == expected
+    assert database.mine_reads == 2 and not database.calls
+    assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_mine_missing_final_fixture_metadata_is_a_generic_database_error():
+    database = GrowingStakeDatabase(initially_empty=True, missing_fixture=True)
+    client, _, _ = make_client(database=database)
+    response = client.get("/api/sports/mine", headers=HEADER)
+    assert_error(response, 502, "database_error")
+    assert not database.calls
