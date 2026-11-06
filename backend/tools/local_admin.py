@@ -60,10 +60,27 @@ IDENTIFIER = re.compile(r"[a-z][a-z0-9_]*\Z")
 CHILD_NULL_FILTERS = frozenset(("finale_posts", "finale_signals"))
 
 
+def player_uuid_list(value):
+    if not 38 <= len(value) <= 149 or not value.startswith("(") or not value.endswith(")"):
+        raise SupabaseRejected()
+    items = value[1:-1].split(",")
+    if not 1 <= len(items) <= 4:
+        raise SupabaseRejected()
+    try:
+        identifiers = [UUID(item) for item in items]
+    except ValueError:
+        raise SupabaseRejected() from None
+    if any(str(identifier) != item for identifier, item in zip(identifiers, items, strict=True)):
+        raise SupabaseRejected()
+    return identifiers
+
+
 def filter_parts(columns, column, expression):
     if column not in columns or not isinstance(expression, str):
         raise SupabaseRejected()
     operator, separator, value = expression.partition(".")
+    if separator and operator == "in" and column == "player_id":
+        return operator, player_uuid_list(value)
     if not separator or not (operator in ("eq", "gte") or (operator == "is" and value == "null")):
         raise SupabaseRejected()
     return operator, value
@@ -246,6 +263,10 @@ class LocalAdmin(SupabaseAdmin):
             operator, value = filter_parts(columns, column, expression)
             if operator == "is":
                 clauses.append(sql.SQL("{} is null").format(sql.Identifier(column)))
+                continue
+            if operator == "in":
+                clauses.append(sql.SQL("{} = any(%s::uuid[])").format(sql.Identifier(column)))
+                values.append(value)
                 continue
             symbol = "=" if operator == "eq" else ">="
             clauses.append(sql.SQL("{} {} %s").format(sql.Identifier(column), sql.SQL(symbol)))
