@@ -1,5 +1,5 @@
 // Fast title entry. The WebGL world is fetched only after New game, Continue or the tour.
-import './ui/styles.css';
+import './ui/base.css';
 import './ui/kit/kit.css';
 import './ui/shell.css';
 import {createGamepad} from './controls/gamepad.js';
