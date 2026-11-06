@@ -116,10 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**G8 complete on `feat/g8-islet-harbor-demo`.** Accepted islet builds, the opt-in Lisbon-time bulletin/tonight chip, safe distant signal, original harbor sound/life and the nine-beat presenter kit are ready. Accessibility fixes keep controls at 16 px, case body at 18 px and story/captions at 19/18 px. Provider/licence blocks are removed from gameplay; credits are reached only through Settings. The class walkthrough includes the architecture, ten-file reading path and twelve explain-back cards.
+**G9 starter complete on `feat/g9-real-adapter`, based on G8 `ea89e35`.** Build identity, private-safe issue drafts, shared server-call states and strict-CSP readiness are pushed in four checkpoints. Approved pixel art and readable text sizes remain; provider/licence blocks stay in Settings → Credits.
 
-- **Verified:** 345 tests / 58 files; build/spoiler guard; all 31 combined commands, including 91 golden-path checks, 210 chaos checks and 23 accessibility contexts after the UI correction. Tour 170.6 seconds with APIs down; cold title 21,080 bytes. Eight captains/night storm: 60 FPS / 112 calls. Evidence and limits: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C3-after/`.
-- **Next:** Claude integrates and mirrors schema-1 `bulletin`, `log.observations` and earned-only deduction clears. Main remains `8ff24cc`; real adapters/services and Claude-owned panels still need combined integration checks. Keep all attribution under Settings → Credits, with none in gameplay. Nils rehearses the documented VoiceOver/Safari/Firefox/physical-device script. The optional Exchange tour beat waits for a production-safe rehearsal.
+- **Verified:** 360 tests / 62 files, build/spoiler guard and 19 combined commands, including 16 browser scripts. Full offline demo 170.1 seconds; cold title 20,617 bytes; eight captains/night storm 59 FPS / 112 calls. Evidence: `frontend/GRAPHICS.md`, `frontend/CSP.md`, `frontend/captures/20261106_G9-4/Verification.json`.
+- **Next:** Extend this same branch when Nils supplies the full G9 brief. Claude supplies the real adapter's 401/retry metadata and request reconciliation, then enables and tests deployed CSP headers and real OAuth/Realtime. Physical-device/VoiceOver and Safari/Firefox checks remain manual; no deployment or main merge was performed.
 
 ### S Story and Mystery (owner picked today)
 
@@ -415,6 +415,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-06, G9 starter.** Codex for Nils pushed build stamps, allow-listed GitHub problem drafts, shared loading/empty/error/offline/expiry/cooldown controls and CSP readiness on `feat/g9-real-adapter` from G8 `ea89e35`. 360 tests, build/spoiler guard and 19 combined commands pass; offline demo 170.1 seconds, cold title 20,617 bytes, storm 59 FPS / 112 calls. Contracts, proposed headers, exact evidence and real-server requests are in `frontend/GRAPHICS.md`, `frontend/CSP.md` and `frontend/captures/20261106_G9-4/Verification.json`; no main merge, deployment or protected server/infrastructure edits.
 
 - **2026-11-06, G8 UI correction.** At Nils’s request, Codex removed provider/licence blocks from the gameplay HUD and bulletin and moved the Credits entry under Settings, preserving the return path to title/pause. Weather values and events are unchanged. 345 tests, build/spoiler guard and nine focused browser checks pass, including 23 accessibility contexts; cold title is 21,080 bytes. Evidence: `frontend/captures/20261106_G8-Credit-Placement/`.
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { openWorldBrowser } from './world-browser-tools.js';
 
-const policy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+import {proposedCsp as policy} from './csp-policy.js';
 const env = await openWorldBrowser({ preview: true });
 const { page } = env;
 const report = { checked: new Date().toISOString(), browser: env.browser.version(), pages: [], tour: [], errors: [], external: [] };
@@ -22,7 +22,7 @@ async function verifyPage(path) {
   const response = await page.goto(`${env.url}${path}`, { waitUntil: 'domcontentloaded' });
   assert.equal(response?.status(), 200, `${path} returns HTTP 200`);
   const headers = response.headers();
-  assert.equal(headers['content-security-policy'], policy, `${path} sends the exact production CSP`);
+  assert.equal(headers['content-security-policy'], policy, `${path} sends the proposed preview CSP`);
   assert.equal(headers['x-frame-options'], 'DENY', `${path} denies framing`);
   assert.equal(headers['x-content-type-options'], 'nosniff', `${path} disables MIME sniffing`);
   assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin', `${path} sends the referrer policy`);

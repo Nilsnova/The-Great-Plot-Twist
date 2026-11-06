@@ -1,0 +1,19 @@
+{
+  "checked": "2026-11-06T16:27:36.809Z",
+  "checks": [
+    "Pending action has an announced loading state",
+    "Failed request shows safe offline copy and an explicit retry",
+    "Phone request copy is 18 px and fits without horizontal overflow",
+    "Explicit retry recovers and clears the failure",
+    "Rate limiting disables Retry and displays the supplied seconds",
+    "Countdown never automatically sends the action",
+    "Explicit retry after cooldown reaches the adapter",
+    "Session expiry exposes the existing account sign-in action",
+    "Account action uses the same offline and retry component",
+    "Closing the case panel prevents late failures from restarting its countdown",
+    "Successful empty data has an explicit gallery example",
+    "Shared expiry component offers a caller-supplied sign-in action",
+    "No unexpected browser errors: ",
+    "No external requests"
+  ]
+}

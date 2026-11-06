@@ -2,11 +2,12 @@
 import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
+import {proposedCsp} from './scripts/csp-policy.js';
 import {resolveBuildStamp} from './scripts/build-stamp.js';
 const buildStamp=resolveBuildStamp({envSha:process.env.VERCEL_GIT_COMMIT_SHA,
  readGitSha:()=>execFileSync('git',['rev-parse','--short','HEAD'],{encoding:'utf8',timeout:1000,stdio:['ignore','pipe','ignore']})});
 export const previewSecurityHeaders={
- 'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+ 'Content-Security-Policy':proposedCsp,
  'X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin',
 };
 export default defineConfig({

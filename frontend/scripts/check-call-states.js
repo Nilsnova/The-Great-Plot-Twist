@@ -4,7 +4,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
-const env=await openWorldBrowser(),{page}=env,folder='captures/20261106_G9-3';
+const env=await openWorldBrowser(),{page}=env,folder=process.env.CAPTURE_DIR??'captures/20261106_G9-3';
 const report={checked:new Date().toISOString(),checks:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 const call=page.locator('.case-modal .server-call'),retry=call.getByRole('button',{name:'Retry case action'});
@@ -22,7 +22,7 @@ try{
   await page.setViewportSize({width:375,height:667});await page.screenshot({path:folder+'/offline-375.png'});
   check(await call.evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=18&&el.scrollWidth<=el.clientWidth+1),'Phone request copy is 18 px and fits without horizontal overflow');
   await retry.click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().crew.status==='forming');
-  check(await call.evaluate(el=>el.hidden),'Explicit retry recovers and clears the failure');
+  check(await retry.isHidden(),'Explicit retry recovers and removes the failure action');
   await page.evaluate(()=>window.__plotTwist.adapter.dev.failNext('rate_limited'));
   await page.getByRole('button',{name:/Muster with NPC/}).click();await retry.waitFor();
   check(await retry.isDisabled()&&(await call.textContent()).includes('4 s.'),'Rate limiting disables Retry and displays the supplied seconds');
@@ -32,7 +32,7 @@ try{
   await retry.click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().crew.status==='active');
   check(true,'Explicit retry after cooldown reaches the adapter');
   await page.evaluate(async()=>{window.__plotTwist.adapter.dev.failNext('offline');await window.__island.caseUi.open('search',{spot:'satchel'});});
-  await retry.waitFor();check(await call.getAttribute('data-state')==='offline','Opening search preserves a failed spot inspection');await retry.click();await page.waitForFunction(()=>document.querySelector('.case-modal .server-call')?.hidden);
+  await retry.waitFor();check(await call.getAttribute('data-state')==='offline','Opening search preserves a failed spot inspection');await retry.click();await page.waitForFunction(()=>['ready','notice'].includes(document.querySelector('.case-modal .server-call')?.dataset.state));check(await retry.isHidden(),'Successful spot inspection removes Retry while allowing its confirmation notice');
   await page.evaluate(async()=>{window.__plotTwist.adapter.dev.give('C1',1);await window.__island.caseUi.open('board');window.__plotTwist.adapter.dev.failNext('session_expired');});
   await page.locator('.case-clue[data-card="C1"]').getByRole('button',{name:'Pin my card'}).click();
   await page.locator('.account-modal[open]').waitFor();

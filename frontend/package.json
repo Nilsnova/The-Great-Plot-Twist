@@ -42,7 +42,8 @@
     "test:g8": "node scripts/check-g8-regression.js",
     "test:build-stamp": "npm run build && node scripts/check-build-stamp.js",
     "test:problem-report": "npm run build && node scripts/check-problem-report.js",
-    "test:call-states": "node scripts/check-call-states.js"
+    "test:call-states": "node scripts/check-call-states.js",
+    "test:csp:inventory": "npm run build && node scripts/check-csp-inventory.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
