@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">One captain-name reroll request</title>
+  <desc id="desc">The browser sends an action identifier through Vercel to FastAPI. FastAPI checks Supabase Auth, validates input and chooses a name. Postgres locks the profile, checks and records the action. The API returns JSON. A repeated identifier returns 409 already applied with no second reroll.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m0 0 8 4-8 4z" fill="#32665d"/></marker></defs>
+  <g font-family="Arial,Helvetica,sans-serif" fill="#17383d">
+    <g fill="#e8ede3" stroke="#32665d"><rect x="8" y="8" width="180" height="54" rx="4"/><rect x="255" y="8" width="170" height="54" rx="4"/><rect x="500" y="8" width="180" height="54" rx="4"/><rect x="755" y="8" width="190" height="54" rx="4"/><rect x="1008" y="8" width="180" height="54" rx="4"/></g>
+    <g font-size="23" font-weight="700" text-anchor="middle"><text x="98" y="43">Browser</text><text x="340" y="43">Vercel</text><text x="590" y="43">FastAPI</text><text x="850" y="43">Supabase Auth</text><text x="1098" y="43">Postgres</text></g>
+    <g stroke="#a9bcb0" stroke-width="2" stroke-dasharray="5 7"><path d="M98 65v360M340 65v360M590 65v360M850 65v360M1098 65v360"/></g>
+    <g fill="none" stroke="#32665d" stroke-width="2.5" marker-end="url(#arrow)"><path d="M98 129h242"/><path d="M340 168h250"/><path d="M590 211h260"/><path d="M850 248H590" stroke-dasharray="6 5"/><path d="M590 326h508"/><path d="M1098 372H590" stroke-dasharray="6 5"/><path d="M590 411H98" stroke-dasharray="6 5"/></g>
+    <g font-size="21"><text x="113" y="94">POST /api/me/name/reroll</text><text x="113" y="119" font-size="18">Token + actionUid</text><text x="357" y="157">Route /api</text><text x="610" y="200">1 · Verify player</text><text x="610" y="238" font-size="18">Verified identity</text></g>
+    <rect x="610" y="265" width="366" height="37" rx="4" fill="#f0e3c6"/>
+    <text x="623" y="290" font-size="20">2 · Validate body; choose name</text>
+    <text x="610" y="315" font-size="21">3 · Lock profile; check + record action</text>
+    <text x="749" y="361" font-size="20">Result or already-applied refusal</text>
+    <text x="198" y="400" font-size="21">4 · JSON reply · success = 200</text>
+    <rect x="8" y="447" width="1180" height="45" rx="4" fill="#17383d"/>
+    <text x="28" y="477" font-size="22" fill="#fbf7ec">Same actionUid again → 409 already_applied → no second reroll</text>
+  </g>
+</svg>
