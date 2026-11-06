@@ -21,7 +21,7 @@ Same-origin intent → identity dependency verifies the player → Python valida
 
 Cloud saves hold untrusted progress, not authoritative money or membership. A strict version prevents an old device overwriting a newer save; compact UTF-8 JSON is limited to 100,000 bytes. Crew lookup normalizes six-symbol codes, throttles repeated wrong guesses, and retries optimistic conflicts at most three times. A friend takes an empty seat first; partner replacement follows deterministic kit/priority rules.
 
-Database grants limit operation types and RLS limits readable rows. Players cannot directly write game state. Wallet changes require a stable reference: the database uniqueness rule makes a repeated intent safe. Live two-user permission checks remain necessary beyond unit tests.
+Database grants limit operation types and RLS limits readable rows. Players cannot directly write game state. Wallet changes require a stable reference: the database uniqueness rule makes a repeated intent safe. Scratch SQL tests exercise role/transaction boundaries, and the completed case release records actual API-to-SQL journeys. A real production OAuth/browser session and two-user live permissions check remain distinct proofs.
 
 ## Evidence
 
@@ -41,7 +41,7 @@ These prove local rules, transport boundaries, optimistic conflicts and SQL-cont
 
 ## Known limits
 
-- `frontend/src/adapter/bridge.js` selects the local fake only in development with `?case=local`; otherwise it uses `unavailable.js` and invents no kit/save/solve.
+- `frontend/src/adapter/select.js` selects the local fake only with `?case=local` in development or explicit `demo=1` rehearsal; otherwise it uses `unavailable.js` and invents no kit/save/solve.
 - Current frontend partner portraits use Deckhand/Navigator/Cook/Salvager roles; server crew partners use Lookout/Deckhand/Bosun/Cook. These are different layers, not evidence of integrated live crews.
 - Successful identity verification is cached briefly; revocation need not appear immediately. In-memory browser sessions disappear on reload.
 - An ambiguous database timeout is not proof that a write failed. Read state before retrying and preserve the action reference.

@@ -1,21 +1,21 @@
 # Rehearsal and PDF export
 
 Target: a **10:45 talk**, separate from G11's live demo and from questions. The
-speaker notes contain roughly 1,300 words; use them as prompts, not as text to
+speaker notes contain roughly 1,200 words; use them as prompts, not as text to
 read word for word. The table is a planned allocation. A human timed rehearsal
 has not been performed or claimed.
 
 | Slide | Focus | Budget | Target clock | Speaker cue |
 | --- | --- | ---: | --- | --- |
 | 1 | Problem and game | 0:45 | 0:00–0:45 | State the programming problem and the browser-game answer together. |
-| 2 | Player loop | 0:55 | 0:45–1:40 | Explain the verbs; distinguish current intro/local save from connected goals. |
-| 3 | Architecture | 1:20 | 1:40–3:00 | Point to browser, Dublin API and Ireland database; Realtime is built, flag off, hookup pending. |
+| 2 | Player loop | 0:55 | 0:45–1:40 | Explain the verbs; distinguish the completed backend from the paused browser connection. |
+| 3 | Architecture | 1:20 | 1:40–3:00 | Point to browser, Dublin API and Ireland database; private hints are built/enabled; normal game hookup awaits G9. |
 | 4 | Request sequence | 1:15 | 3:00–4:15 | Trace one name reroll, then explain the repeated-action refusal. No demo clicking. |
 | 5 | Rules and access | 1:10 | 4:15–5:25 | Contrast grants with RLS; explain why privileged server writes still need authorization. |
 | 6 | Story and browser safety | 0:55 | 5:25–6:20 | Explain fingerprint/elimination checks and configured headers; deployed behavior still needs verification. |
-| 7 | Test evidence | 1:10 | 6:20–7:30 | Give the pinned counts and two behavior examples; say what fakes do not prove. |
-| 8 | Team and AI | 1:15 | 7:30–8:45 | Explain D015's exact integration gates and the owner/human-review distinctions. |
-| 9 | Three lessons | 1:15 | 8:45–10:00 | One example each: trust boundary, retry, small agent task. |
+| 7 | Test evidence | 1:10 | 6:20–7:30 | Explain 69 mixes and two actual API/SQL journeys; keep production-browser limits explicit. |
+| 8 | Team and AI | 1:15 | 7:30–8:45 | Explain current authorized Codex integration, individual SQL review and human authorship. |
+| 9 | Three lessons | 1:15 | 8:45–10:00 | One example each: authority boundary, retry identity, screen lifetime and late handoff. |
 | 10 | Next steps and handoff | 0:45 | 10:00–10:45 | Connect, verify, rehearse; hand over to the separate G11 script or questions. |
 | **Total** | **Ten slides** | **10:45** | | **Demo and questions are not included.** |
 
@@ -24,7 +24,7 @@ has not been performed or claimed.
 1. On the actual presentation laptop, disconnect internet and open `index.html`
    from disk. Check first/last slide, arrows, click advance, every diagram, the
    paired speaker view and Print / PDF. This remains an outstanding direct-file
-   gate because this cloud Chromium blocks `file:` by policy.
+   gate on that laptop. The current managed Chromium attempt was blocked before page load by file-navigation policy; the offline disk-intercepted browser gate passed separately.
 2. Extend the display. Keep the audience window on the projector and speaker
    notes on the laptop. Check that audience slides never show the notes.
 3. Start the notes timer when speaking begins. Aim to reach the architecture
@@ -70,8 +70,7 @@ G25_PDF="$PWD/docs/presentation/The-Great-Plot-Twist.pdf" \
 The harness uses `page.pdf` with `preferCSSPageSize`, backgrounds, tagging and
 outlines enabled, and browser headers/footers disabled. Its default disk
 interception makes no real network requests; see README for its scope and the
-optional direct-file mode. Cloud policy disables the ordinary Print UI but
-allows this headless browser export; neither policy was modified.
+optional direct-file mode. The headless browser export is a separate check from the laptop’s ordinary Print UI; no browser policy is changed.
 
 If content changes, regenerate the PDF and rerun its page-count/text checks so
 the HTML and PDF continue to match. Do not include the notes in the exported

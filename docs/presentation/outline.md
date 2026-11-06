@@ -1,197 +1,63 @@
-# G25 · The Great Plot Twist
+# Class presentation: outline and speaker notes
 
-Class presentation for Introduction to Programming. Responsible teammate: Nils.
-Branch: `docs/g25-deck`. Source baseline: `origin/main` at `60f7fd0` (6 November 2026).
-This is a 10:45 explanation of the engineering, separate from G11's live-demo script.
-No case solution, identities, hidden clues or student numbers belong in the deck.
+Ten slides, 645 seconds (10:45), excluding the separate coast-to-schooner demo and questions. Updated against release-candidate `94a48ad`, 6 November 2026. Evidence and the live/candidate distinction are in [sources.md](sources.md). This is a timing allocation, not a measured human rehearsal.
 
-## 1 · A text mystery becomes a shared world · 0:45
+## 1 · The Great Plot Twist · 0:45
 
-**On screen:** The problem: turn a text adventure into a browser experience that is
-easy to enter, readable on student laptops and safe to play together. The game:
-explore an island world, investigate and make choices. Original pixel art; Python rules.
+**On screen:** the idea. Original project assets · docs/lanes/G.md · docs/PRESENTER-SCRIPT.md.
 
-**Speaker notes:** Our starting point was a text mystery called Plot Twist. The
-programming challenge was to turn that into a world people could explore, while
-keeping the story and the rules understandable. We chose a browser so classmates
-would not need to install a game. Original pixel art gives the world a consistent
-look, and the important choices still have to work as clear text. This talk is
-about the decisions behind that experience. The live demo is a separate piece:
-it will show what playing feels like. Here we explain what makes those moments
-possible, which parts we have tested, and where the implementation still has gaps.
-We will keep the mystery itself unspoiled.
+**Speaker notes:** We started with the text mystery Plot Twist and built a browser world around it. The player explores a coast, follows an introduction and works toward a case with a crew. The programming work has two sides: make the experience readable and responsive, and keep progress and play money under trustworthy rules. Our art and sound are original, with editable sources in the repository. This talk explains those decisions and their evidence. We will distinguish the completed server work from the browser connection that is still paused. The separate demo shows the coast and stops at the schooner without revealing the solution.
 
 ## 2 · Explore. Investigate. Decide. · 0:55
 
-**On screen:** A loop of travel, interaction, choices and progress. Current:
-walking, chart travel, original intro, local save. Target: a connected crew case
-with a play-money economy; connected screens remain integration work.
+**On screen:** the player loop. Case proof: docs/handoff/case-complete-release.md · frontend/src/adapter/select.js.
 
-**Speaker notes:** Think of the player loop as four verbs. Explore a place, notice
-something worth investigating, make a choice, and carry that progress into the
-next visit. The chart makes travel part of that loop instead of a list of menus.
-The intro already supports choices and a journal saved in the same browser.
-Keyboard, touch, preferences and reduced motion help different players use the
-same world. The larger design adds crews, shared progress and play-money systems.
-Those are goals supported by backend work, not a claim that every screen is
-connected today. Some case screens still use a development stand-in or an
-unavailable adapter. Keeping that distinction visible helps us test a real feature
-rather than mistake a convincing mock-up for a finished system.
+**Speaker notes:** The intended loop is travel, investigate, cooperate and continue. The world, intro, chart and local journal are playable in the browser. The minimum mystery backend is now complete: it handles clues, a shared board, partner orders, the three-light finale and an earned reveal. We have actual API-to-database playthroughs for a solo player with partners and for four players. That does not mean the normal game is already connected end to end. G9, the browser mystery adapter, is paused until the laptop returns. A local rehearsal is clearly labelled and cannot award live progress. This distinction lets us explain what works without presenting a convincing stand-in as browser multiplayer.
 
-## 3 · Three parts, one trust boundary · 1:20
+## 3 · Three parts, one trust boundary. · 1:20
 
-**On screen:** Original architecture diagram: browser; Vercel static frontend and
-FastAPI in Dublin; Supabase Auth and Postgres with grants/RLS in Ireland. Dashed
-Realtime connection labelled built, flag off, game hookup pending.
+**On screen:** the architecture. vercel.json · docs/ARCHITECTURE.md · docs/INTERFACES.md.
 
-**Speaker notes:** The browser runs plain JavaScript and uses Three.js to draw the
-world. Vite builds those files for the frontend service. On Vercel the game and the
-API share one address: requests starting with slash api go to the Python service,
-and other addresses go to the frontend. The configuration places the FastAPI
-functions in Dublin, close to the Supabase project in Ireland. Supabase provides
-GitHub sign-in and a Postgres database. Its grants control which operations a role
-may use; row-level security controls which rows that role may see. The browser
-can make permitted reads, but game writes go through the server. Realtime support is built, but its feature flag is off and the game does not
-start it yet. The dashed connection marks that remaining integration.
-The key design decision is the boundary: changing JavaScript in a browser must
-never let a player decide their own balance or progress.
+**Speaker notes:** The browser runs plain JavaScript and Three.js. Vite builds the files served by Vercel. Requests beginning with slash api go to the Python FastAPI service at the same web address. The configured function region is Dublin, near the Supabase database in Ireland. Supabase supplies identity verification and Postgres. A browser can read only what its grants and row policies permit; game writes go through the server. Private Realtime rooms carry small change hints so a crew can refetch its view. That backend and its production switch are present, while the normal game subscription hookup remains part of paused G9. The dashed connection in the diagram marks that remaining work, not a finished browser flow. Keeping the responsibilities separate also makes each part testable.
 
-## 4 · Follow one request · 1:15
+## 4 · Follow one request. · 1:15
 
-**On screen:** One original sequence diagram for the implemented captain-name
-reroll API: browser → Vercel → FastAPI → Supabase Auth/database → JSON reply.
-Same action identifier twice → 409, no second reroll. API example; account UI is built; real transport integration remains.
+**On screen:** one write, end to end. backend/server/routes/captain_name.py · account/name_store.py · case_service.py.
 
-**Speaker notes:** This example changes a generated captain name, so it explains a
-write without revealing anything about the case. The API already exists, while
-account screens are now built but real transport integration remains. A browser sends its sign-in
-token and one action identifier. Vercel routes the request to FastAPI. The server
-verifies the player through Supabase Auth and validates the body with Pydantic.
-It chooses a generated name rather than trusting a name or player identifier
-supplied by the browser. A database function locks the profile, checks the one
-allowed reroll, and records the action. The result comes back as JSON. If a network
-retry sends the same action again, the database returns already applied and the
-API answers 409. The important result is that a retry cannot spend the one reroll
-twice. Failure and repetition are part of the contract.
+**Speaker notes:** A captain-name reroll explains a write without showing any case content. The browser sends a verified session token and one action identifier. Vercel routes the request to FastAPI. The server verifies identity through Supabase and validates the body. It chooses a generated name instead of trusting an arbitrary name or a player identifier from the browser. The database locks the profile, checks the one allowed reroll and records the action. Repeating this particular action returns 409 already applied without a second effect. Case and festival intents use a different documented repeat shape: they return 200 with a stored outcome and fresh state. The shared principle is stable identity for the action. A timeout alone never tells the browser whether a write happened.
 
 ## 5 · The server decides. The database guards. · 1:10
 
-**On screen:** Verified identity → validated intent → Python rules → atomic write.
-Two database locks: grants and RLS. Unique action references prevent repeated effects.
+**On screen:** rules and access. supabase/README.md · wallet rules · case/NPC receipt and concurrency tests.
 
-**Speaker notes:** A browser is a presentation layer, not an authority. Our server
-gets the player identity from verified sign-in, checks the input and applies the
-rules. The database provides another layer of protection. A grant answers whether
-a role may use a table at all. Row-level security then answers which rows it may
-access. The server's privileged database key bypasses RLS, so server-side
-authorization still matters; RLS is not a substitute for it. Database functions
-and constraints also protect invariants such as a balance never going below zero.
-For actions that must happen once, a stable reference identifies the action.
-Retries keep that reference instead of creating a new one. Our tests check repeat
-requests and refused actions as well as success. This is how a small set of
-explicit rules can protect several different game features.
+**Speaker notes:** The browser is not allowed to decide a balance or a case result. The server starts with verified identity, validates the intent and applies Python rules. Postgres adds another boundary. Grants say whether a role may use an operation; row-level security restricts which rows that role can see. The privileged server connection bypasses RLS, so explicit caller and crew checks remain necessary. Locked writes protect money and ownership when requests race. Stable receipts make retries recoverable, including an old partner order after a seat changes. We test refusal, repetition and concurrency as well as success. The migration protocol also compares the applied text with the repository file and checks the resulting schema and security-advisor findings. These are separate forms of evidence, not one universal security test.
 
-## 6 · Protect the story and the browser · 0:55
+## 6 · Protect the story and the browser. · 0:55
 
-**On screen:** Server-only case data; built-text spoiler fingerprint guard;
-private/no-store account replies; current sign-in-page CSP. Sitewide security headers are configured; deployed behavior still needs checking.
-This offline deck has its own CSP.
+**On screen:** information and presentation. Build guard · production CSP checks · frontend/ASSETS.md · audio/festival.js.
 
-**Speaker notes:** A mystery also has an information boundary. Secret case content
-belongs on the server, not in a JavaScript bundle where anyone could read it.
-The production build checks protected reveal fingerprints and elimination data
-in built files, and checks that its fingerprints remain current. These are useful
-checks; they do not prove that every possible spoiler is absent. The browser boundary needs care too. Account
-replies use private, no-store caching, and the separate sign-in check page has a
-Content Security Policy. The current Vercel configuration also sets sitewide CSP, framing protection,
-nosniff, referrer and permissions policies. That configuration is source evidence;
-we still need live checks to prove the deployed responses carry the intended headers.
-This offline deck has its own restrictive policy and no network dependencies.
-The general lesson is to name a protection precisely, test its scope, and avoid
-turning one successful check into a claim about the whole application.
+**Speaker notes:** A mystery needs an information boundary. The server builds views containing only what that crew has earned. The browser build checks protected reveal fingerprints and elimination data in its public output. The current frontend release gate checked one hundred and thirty text files against twelve protected lines. That is specific scan coverage, not a promise that every possible paraphrase has been detected. Private API views use no-store responses. Local production browser gates check the restrictive Content Security Policy and reject external asset requests. Presentation has another useful boundary: sound starts only after a trusted gesture, shares master, music and effects controls, and has visible captions. The original festival loop and three cues were regenerated byte for byte. Muting sound never removes the visible outcome.
 
-## 7 · 7,294 tests, with a clear limit · 1:10
+## 7 · Prove a behavior, then name its limit. · 1:10
 
-**On screen:** 6,408 Python tests + 886 JavaScript tests in 72 files; Ruff and build
-passed; 99 built text files and 12 protected lines checked. Examples: duplicate actions, stale saves,
-Python/JavaScript story parity. Counts include parameterized cases and are not complete player journeys.
+**On screen:** the evidence. docs/handoff/case-complete-release.md · sources.md · root release-candidate gates.
 
-**Speaker notes:** We reran the test suites on the main commit shown on the slide.
-The backend passed six thousand four hundred and eight tests. The frontend passed eight
-hundred and eighty-six tests across seventy-two files. Ruff and the production
-build also passed, and the spoiler guard examined ninety-nine built text files.
-Large counts need context: these are test cases, many parameterized, rather than
-thousands of complete player journeys. Useful examples are refusing a repeated
-wallet reference, rejecting a stale save without changing data, and keeping the
-Python and JavaScript story engines consistent. Most service tests use controlled
-fake responses so they can exercise errors reliably. They do not prove live
-Supabase permissions, every browser path, or production hosting. Those need
-separate checks. We value the behaviors these tests protect more than the count.
+**Speaker notes:** The strongest evidence here is about complete behaviors. All sixty-nine combinations of player count and starting kits solve using production rules and starting resources. The proof needs no market income or purchased clue. Separate playthroughs send real HTTP intents through production services and views into disposable Postgres: one solo player with partners, and one four-player crew. They reach the final state and verify rewards, repeats and isolation. The completed case release recorded ten thousand eight hundred and fifty-nine backend tests. The new frontend wave passed one thousand six hundred and seventy-two tests, its build and the spoiler guard. Counts include parameterized cases rather than that many player journeys. These checks still do not establish an authenticated browser mystery flow in production, live provider availability, Safari or performance on a physical phone.
 
-## 8 · AI accelerated the work. Gates controlled integration. · 1:15
+## 8 · Small tasks. Independent checks. Human ownership. · 1:15
 
-**On screen:** Human scope → bounded agent task → tests/build/scan → independent
-agent review → Claude integration. D015 owner authorization; database work adds
-Opus review and live checks. Nils reviews at the end or ad hoc. Teammates' own PRs
-keep human peer review.
+**On screen:** team and agents. CONTRIBUTING.md · AGENTS.md · current Nils authorization · per-file release proofs.
 
-**Speaker notes:** We used coding agents to implement bounded tasks and independent
-agents to review the result. That made explicit scope important: a task names its
-goal, affected area and acceptance checks, so parallel agents do not silently
-rewrite each other's contracts. D015 records an owner-authorized integration rule,
-extended on the sixth of November. Claude integrates Claude and Codex packages
-after tests, style, build, a secret scan and independent agent review. Database
-changes add Opus review and a live database check. Nils reviews the work at the end
-or whenever he chooses. Teammates' own contributions still follow human peer
-review. This is a specific team decision, not a general recommendation to let
-agents merge anything automatically. Human ownership
-and evidence remain part of the process even when an agent writes the code.
+**Speaker notes:** We use coding agents for bounded tasks and different agents for independent review. Each task has a goal, affected files and checks, so parallel work does not silently change another component's contract. Isolated branches preserve authorship, and integration keeps the original commits. Nils has authorized Codex to coordinate the current release. Database changes have an additional per-file protocol: review the live state and migration chain, run scratch checks, apply one file, compare its exact stored text, restore the intended history version, then inspect counts and security advice. Our work remains a four-person student project. Every teammate has to understand the behavior and explain their contribution. The release checklist deliberately leaves missing credit information blank instead of guessing who owns a lane or supplying unverified names.
 
-## 9 · Three lessons we can explain · 1:15
+## 9 · Boundaries make failures explainable. · 1:15
 
-**On screen:** Put rules behind a boundary. Design for retries and failures.
-Make agent tasks small enough to review. Each lesson includes one concrete example.
+**On screen:** three lessons. Festival adapter/audio/lifecycle regressions · A7 handoff guards · browser input checks.
 
-**Speaker notes:** First, decide where a rule belongs before building its screen.
-We can redraw a wallet widget without changing who is allowed to move coins,
-because that rule belongs behind the API and in the database. Second, design for
-the second request, not just the first one. A timeout does not tell us whether a
-write happened. Stable action references and explicit errors make recovery a
-defined behavior rather than a guess. The same thinking gives outside-data
-adapters a timeout, a cache and a recorded fallback. Third, agent work needs small,
-reviewable contracts. A passing test cannot tell us that a feature was the right
-one to build, and a polished screen may still use a stand-in. Clear task boundaries,
-independent review and honest status labels help us connect useful pieces without
-losing our understanding of the program.
+**Speaker notes:** Three lessons recur across the project. First, separate presentation from authority. A local rehearsal may show a finished-looking board without changing a live crew or awarding coins. Second, keep the identity of an uncertain action. If a claim times out and a later retry is rate limited, that new refusal still does not prove the original write failed. The browser preserves its exact request until a stored outcome resolves it or the session changes. Third, test the lifetime, not just the opening. A modal must stop its polling and music. A delayed duel request must not recreate a reveal after the screen closes. We added explicit gamepad barriers so a stick cannot move the explorer behind the festival dialog. These tests turn failures into behaviors we can describe rather than timing surprises.
 
-## 10 · Next: connect, verify, rehearse · 0:45
+## 10 · Connect. Configure. Rehearse. · 0:45
 
-**On screen:** Connect real crew/account flows and hook up the built Realtime support; verify
-live RLS, concurrency and configured headers; rehearse with the G11 script. Handoff: the demo
-shows the experience, this deck explains the decisions. No demo walkthrough.
+**On screen:** next steps. Current release boundaries · docs/PRESENTER-SCRIPT.md · docs/RELEASE-CHECKLIST.md.
 
-**Speaker notes:** The next step is integration, not simply adding more screens.
-We need connected account and crew flows, the game hookup for the built Realtime
-support, and live checks of permissions and concurrent actions. Sitewide security
-headers are configured; their deployed behavior still needs verification. For class, we will rehearse with G11's demo
-script and a clear recovery plan if an outside service fails. This deck does not
-repeat that script: it explains the architecture, boundaries and evidence behind
-what the demo shows. Our goal for the presentation is that a classmate can explain
-where a request goes, why the browser is not trusted, and what a passing test does
-and does not prove. That is the programming work behind the island world.
-
-## Evidence and wording rules
-
-- Counts were rerun on `60f7fd0`: backend `uv run --locked pytest` (6,408 passed),
-  frontend `npm test` (886 passed, 72 files), `uv run --locked ruff check .`,
-  `npm run build` (99 built text files scanned). No live-database claim.
-- Read the requested `frontend/HOW-IT-WORKS.md` after the C3 main merge added it,
-  along with `frontend/GRAPHICS.md`, architecture, decision titles, code and tests.
-- Architecture: `docs/ARCHITECTURE.md`, `vercel.json`, `docs/INTERFACES.md`.
-- Request: `backend/server/routes/captain_name.py`, `backend/server/auth.py`,
-  `backend/server/account/name_store.py`, accounts migration.
-- Safety: `frontend/scripts/check-spoilers.js`, `frontend/public/auth-check.html`,
-  account response headers; distinguish configured headers from verified deployment behavior.
-- AI workflow: `CONTRIBUTING.md`, `AGENTS.md`, D015 body. Decision titles were
-  reviewed without importing story decisions or solution content into the deck.
-- Timing is a rehearsal allocation, not evidence of a delivered timed run.
+**Speaker notes:** The main remaining connection is G9, which is paused until the laptop is back. Festival, host-console and sports screens and their service boundaries are implemented and checked in the next release wave; that is separate from activating them in production. Sports remains off without its provider key and approved activation. The optional spoiler-safe ChatGPT helper remains off until an official website client is approved. We also need the missing teammate credits and the actual course submission details. For the class demonstration, use the separate presenter script, label local stand-ins and stop at the schooner. A timed human rehearsal on the real laptop and projector is still required. We will keep those missing proofs visible rather than claim them from our automated results.

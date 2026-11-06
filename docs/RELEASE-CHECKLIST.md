@@ -1,151 +1,79 @@
 # Release and submission checklist
 
-Used by the release owner and Moodle backup. Run commands from the repository root unless stated otherwise. These are actions to perform, not claims that production or Moodle has already passed. Keep private settings, login responses and case solutions off the projector.
+Used by the release owner and submission backup. These are checks to perform and record, not a declaration that a candidate is deployed. Keep private configuration, authenticated responses, course identifiers and case solutions off the projector.
 
-## Every release candidate
+## Freeze one reviewable candidate
 
-1. **Freeze and record the candidate.** Bring the task branch up to date, run the gates, obtain an independent agent review, and let Claude integrate under D015. Do not push `main` from a feature task.
+Record its SHA and working-tree state. Preserve authored commits and other writers' branches. Codex currently integrates for Nils under standing authorization: reviewed integration/main pushes and reviewed migrations do not need another routine approval. Never force-push main or edit an applied migration. Older Claude handoffs are historical; no Claude handover is required for this release.
 
-   ```bash
-   git fetch origin main
-   git merge --no-edit origin/main
-   git rev-parse HEAD
-   git status --short
-   ```
+```bash
+git rev-parse HEAD
+git status --short
+```
 
-2. **Fresh checkout, locked installation, tests, style, build and spoiler guard.** Default checks published `main`; argument two selects another branch/tag. Exit status is the number of failed steps, including steps blocked by a prerequisite. Failed-run logs remain under the printed temporary directory.
+Run the relevant tests, Ruff, build/spoiler checks and independent review before integration. Do not trigger GitHub Actions; only the scheduled daily keep-alive runs. Do not add or change `vercel.json` crons. Keep existing provider configuration unchanged, including `STOCK_API_PROVIDER=finnhub`.
 
-   ```bash
-   bash scripts/fresh-clone-check.sh
-   # Before integration, after the branch is pushed:
-   bash scripts/fresh-clone-check.sh https://github.com/Nilsnova/The-Great-Plot-Twist.git docs/g11-ship-pack
-   ```
+## Reproducible source and scratch checks
 
-   Requires Git, uv, compatible Node and npm. Only clone, `uv sync` and `npm ci` download; the remaining checks use installed tools. No browser or live database check is included. In a sandbox with read-only home caches, export `UV_CACHE_DIR=/workspace/.cache/uv` and `npm_config_cache=/workspace/.cache/npm` first.
+The disposable checkout script installs the locked application dependencies and runs ordinary backend/frontend gates. It does not test a browser, live database, provider or deployment. SQL opt-in cases can be skipped in its ordinary run: never report those skips as passes.
 
-3. **Local production browser smoke.** From `frontend/` in the candidate checkout, after installing:
+```bash
+bash scripts/fresh-clone-check.sh
+# A pushed candidate branch/tag can be checked explicitly:
+bash scripts/fresh-clone-check.sh https://github.com/Nilsnova/The-Great-Plot-Twist.git CANDIDATE_BRANCH
+```
 
-   ```bash
-   CHROME_PATH=/usr/bin/chromium CAPTURE_PREFIX=Release-Candidate npm run test:production
-   ```
+The release owner separately runs the disposable PostgreSQL checks with test-only tools, including the actual solo+NPC and four-player API journeys. From `backend/`:
 
-   Substitute the installed Chrome/Chromium path. Use a unique capture prefix and preserve historical evidence. This exercises the local build with deterministic fixtures, not the deployed service.
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=no
+```
 
-4. **Signed-out live smoke.** Open these exact addresses in a new private browser window:
+The `--tb=no` bound prevents an unexpected story assertion from copying protected prose into output. This command uses disposable SQL and no production credentials. Check actual skips/results and the current package fixtures; a source-only parse is not a transactional/concurrency proof. This documentation task does not rerun the full application suite.
 
-   ```text
-   https://the-great-plot-twist.vercel.app/
-   https://the-great-plot-twist.vercel.app/?demo=1
-   https://the-great-plot-twist.vercel.app/api/health
-   ```
+For each database file, the coordinator follows the standing protocol: an independent subagent reviews the file against read-only live state and the chain; scratch/tests pass; live history/counts/required ownership and privileges are read; one file is applied per call in timestamp order; exact stored-text MD5 and repository version are proven; expected counts and security-advisor findings are checked. Only then push code that reads the new objects. Report each application. `150000` is unused because G12 required no migration; do not fill a reserved timestamp for an unrelated fix.
 
-   Check title, Credits, readable controls, New game/intro, movement, chart travel, sound after a click, and health `status: ok`. Use the [presenter script](PRESENTER-SCRIPT.md) for **Highlights tour**, **Next beat · Space** and **End rehearsal**; stop at the schooner. Inspect Console/Network. Record browser/version/date/result and deployed revision. The audited main lacks integrated game sign-in and an online case adapter: mark unavailable capabilities honestly. There is no terminal command that substitutes for this manual UI check.
+## Browser and deployment checks
 
-5. **Live bundle spoiler scan and deployment match.** Build the exact candidate locally, then run this from `frontend/`. It downloads all built public text paths, including lazy chunks, compares bytes and checks protected fingerprints. No protected text is printed. A different or missing file blocks release until the deployed revision is identified.
+From `frontend/`, after building, run the relevant production, CSP, loading and feature gates with an installed Chromium. Use external artifact directories where supported, and preserve historical evidence.
 
-   ```bash
-   npm run build
-   node --input-type=module <<'JS'
-   import {readFile,readdir} from 'node:fs/promises';
-   import {join,relative} from 'node:path';
-   import {createHash} from 'node:crypto';
-   import {containsFingerprint} from './scripts/spoiler-guard.js';
-   const base='https://the-great-plot-twist.vercel.app/';
-   const {fingerprints}=JSON.parse(await readFile('tests/fixtures/reveal-fingerprints.json','utf8'));
-   async function collect(dir) {
-     const result=[];
-     for(const e of await readdir(dir,{withFileTypes:true})) {
-       if(e.name.startsWith('.')) continue;
-       const p=join(dir,e.name);
-       if(e.isDirectory()) result.push(...await collect(p));
-       else if(/\.(html|js|css|json|map)$/.test(e.name)) result.push(p);
-     }
-     return result;
-   }
-   const files=await collect('dist');
-   if(!files.length) throw new Error('No built text files');
-   const hash=b=>createHash('sha256').update(b).digest('hex');
-   for(const path of files) {
-     const name=relative('dist',path).split('/').map(encodeURIComponent).join('/');
-     const response=await fetch(new URL(name,base),{signal:AbortSignal.timeout(30000)});
-     if(!response.ok) throw new Error(`HTTP ${response.status}: ${name}`);
-     const body=Buffer.from(await response.arrayBuffer());
-     if(fingerprints.some(f=>containsFingerprint(body.toString('utf8'),f)))
-       throw new Error(`Protected sentence in ${name}`);
-     if(hash(body)!==hash(await readFile(path))) throw new Error(`Deployment mismatch: ${name}`);
-   }
-   console.log(`PASS ${files.length} live text files match this build and pass fingerprints`);
-   JS
-   ```
+```bash
+npm run build
+CHROME_PATH=/usr/bin/chromium node scripts/check-production.js
+CHROME_PATH=/usr/bin/chromium node scripts/check-csp.js
+CHROME_PATH=/usr/bin/chromium node scripts/check-loading.js
+CHROME_PATH=/usr/bin/chromium CAPTURE_DIR=/tmp/festival-release npm run test:festival:ui
+```
 
-   This scans the fixture's exact protected sentences, not every possible paraphrase or identity leak. Manually inspect public-content/source-map changes without copying solution text into evidence. It checks local public build paths, not arbitrary extra server files.
+These local browser checks use deterministic fixtures where stated. Host-console and sports scripts have their own boundaries; follow their package guides. A local browser test is not a successful production OAuth, provider call, browser multiplayer session or physical-device test.
 
-6. **Headers and routing.** Require successful GETs, correct HTML/JSON content types and the expected security/cache behavior from `vercel.json` and route contracts. Record absent expected headers; commands do not add them.
+After a production push, verify the deployment is READY and check `/api/health`, `/api/config` and signed-out public routes. Record the actual deployed SHA, headers and response behavior. An environment change reaches only a new deployment: redeploy and recheck config. Roll back a broken production deployment immediately, then fix forward.
 
-   ```bash
-   curl --fail --show-error --silent -I https://the-great-plot-twist.vercel.app/
-   curl --fail --show-error --silent -I https://the-great-plot-twist.vercel.app/api/health
-   curl --fail --show-error --silent -D - -o /dev/null https://the-great-plot-twist.vercel.app/api/content/intro-story
-   ```
+Keep `RELIGHT_OPEN` unset. No production solve, reward or world Relighting is used as a release test. Festival and sports stay off until Nils authorizes activation; sports also needs its provider key. The ChatGPT helper stays off until an official website client is approved. The host console uses verified host authorization, not a browser-supplied role.
 
-   A GET-only FastAPI route may return 405 to HEAD. Record that separately and use this GET-header fallback to check health:
+The current confirmed production baseline and candidate evidence are separated in [presentation sources](presentation/sources.md). Refresh them when the release owner records a newer rollout. G9 is paused until the laptop returns: a complete API/SQL case proof does not establish the normal browser mystery or multiplayer connection.
 
-   ```bash
-   curl --fail --show-error --silent -D - -o /dev/null https://the-great-plot-twist.vercel.app/api/health
-   ```
+## Before the class demo
 
-## Sunday 22 November 2026: demo readiness
+- Rehearse the [five- or ten-minute coast-to-schooner script](PRESENTER-SCRIPT.md) on the actual presentation laptop/projector. Test direct-file slides, keyboard focus, comfortable sound, reduced motion and a local recording fallback.
+- Check the active Supabase project and the latest scheduled keep-alive result privately. Read workflow history without triggering another run. No private configuration belongs in evidence or on screen.
+- Open the public game, health and config in a clean browser window. Show a source's actual live/cache/stale/recorded label; do not call a fallback live.
+- Keep the normal `?demo=1` rehearsal and `?demo=1&festival=1` memory-only festival practice clearly labelled. Neither is proof of authoritative multiplayer. Stop the mystery demo at the schooner; do not show a later reveal or celebration.
+- Confirm team credit names. `frontend/src/shell/team.js` has Nils plus three placeholders; the module and frontend walkthrough exist. Keep unprovided course-only identity fields private rather than inventing them.
+- A human timed rehearsal, Safari/physical-phone/gamepad behavior and live provider checks remain separate gates. Use an external screen recorder if a video is required; `record=1` is not an implemented recorder and production `perf=1` is not an FPS proof.
 
-- Open the team's Supabase project dashboard; check that it is active and resume it there if paused. Never copy its private configuration into these docs.
-- Check the daily keep-alive. It is scheduled for 06:17 UTC and should report a 200. With an already authenticated GitHub CLI:
+## Submission
 
-  ```bash
-  gh run list --repo Nilsnova/The-Great-Plot-Twist --workflow keepalive.yml --limit 5
-  # Replace RUN_ID with the latest scheduled run's numeric ID:
-  gh run view RUN_ID --repo Nilsnova/The-Great-Plot-Twist
-  ```
+The project plan targets Monday 23 November 2026; confirm the actual course deadline, required files, size limits and group-submission rules privately in Moodle. Confirm the primary uploader and backup; the authored plan names Nils as backup, not a completed submission.
 
-  CLI authentication is separate from Git access. Otherwise use **Actions → Keep Supabase awake → latest run**. Do not recreate credentials or add Vercel Cron.
-- Rehearse on the presentation laptop: sound on, 100% zoom, keyboard focus, responsiveness, local recording fallback and schooner stop. `record=1` and `perf=1` are unimplemented on audited main; they do not prove recording/FPS readiness.
-- Nils checks the public-name inventory in the [script](PRESENTER-SCRIPT.md). Confirm complete credits from `frontend/src/shell/team.js` when supplied; current Credits still uses placeholders. Resolve this before submission.
+After the final release gates, the authorized release owner may tag the verified commit. Do not move an existing tag. No tag or upload is performed by this ship-pack task.
 
-## Monday 23 November 2026: submission
+```bash
+git tag -a v1.0 VERIFIED_SHA -m 'The Great Plot Twist course release'
+git push origin refs/tags/v1.0
+mkdir -p ../submission
+git archive --format=zip --prefix=The-Great-Plot-Twist/ --output=../submission/The-Great-Plot-Twist-v1.0.zip v1.0
+sha256sum ../submission/The-Great-Plot-Twist-v1.0.zip > ../submission/The-Great-Plot-Twist-v1.0.sha256
+```
 
-1. Rerun all release checks on the final SHA. Complete explain-back and Nils's final/ad-hoc review under D015. Keep evidence and the presenter recording locally, outside source history.
-2. **Release owner only, after checks/integration:** tag the verified `origin/main` commit. Never move an existing tag. Run the sequence in a separate Bash subshell so a failed guard stops it. This is a future release action, not authority for G11 to push a tag or `main`.
-
-   ```bash
-   (
-     set -e
-     git fetch origin main
-     if git show-ref --verify --quiet refs/tags/v1.0; then
-       echo 'STOP: local v1.0 already exists'; exit 1
-     fi
-     remote_tag=$(git ls-remote --tags origin refs/tags/v1.0)
-     if [ -n "$remote_tag" ]; then
-       echo 'STOP: remote v1.0 already exists'; exit 1
-     fi
-     git tag -a v1.0 origin/main -m 'The Great Plot Twist course release'
-     git push origin refs/tags/v1.0
-   )
-   ```
-
-3. **Moodle source archive:** archive the tag, excluding environments/private local files/caches by construction. Verify tracked contents before uploading; Git history being public is not proof of a clean archive.
-
-   ```bash
-   mkdir -p ../submission
-   git archive --format=zip --prefix=The-Great-Plot-Twist/ --output=../submission/The-Great-Plot-Twist-v1.0.zip v1.0
-   sha256sum ../submission/The-Great-Plot-Twist-v1.0.zip > ../submission/The-Great-Plot-Twist-v1.0.sha256
-   git rev-parse 'v1.0^{commit}'
-   ```
-
-4. **Moodle uploader:** designated teammate opens the course assignment → **Add submission/Edit submission** → uploads the archive and any separately required course material → saves → presses **Submit assignment** if offered → verifies submitted status and receipt. There is no repository Moodle CLI. Confirm the actual deadline, file limits and attachments in Moodle; this repo does not establish them. Keep course-only identity information outside this public repo.
-5. **Named backup uploader: Nils.** The designated uploader privately shares the SHA, checksum and receipt with Nils. If the uploader cannot submit, Nils uses the same verified archive and confirms receipt. Check Moodle's group-submission rules and avoid competing uploads.
-
-## Gaps to recheck after integration
-
-- `frontend/src/shell/team.js` and `frontend/HOW-IT-WORKS.md` are absent; Credits remains placeholders.
-- `?demo=1` works; `?demo=1&record=1` behaves like demo alone; `?perf=1` adds no production FPS display.
-- The built-in tour continues beyond the schooner. Stop manually, or use only the three approved individual coastal visuals.
-- Old setup prose still calls the existing Vite API proxy unfinished. D015's later agent-work exception differs from older general review prose.
-- Online case screens, live trading UI and later live-system features are incompletely wired or absent. Isolated API tests do not establish live multiplayer.
+Inspect the tracked archive before upload. The designated uploader submits the verified archive and any course-only identity material through Moodle, confirms submitted status and keeps the receipt/checksum/SHA privately. A repository checklist does not prove that Moodle accepted the submission.

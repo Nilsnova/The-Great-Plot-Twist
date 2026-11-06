@@ -2,15 +2,21 @@
 
 Used by Nils and the presenter. Two timed scripts use the live site and stop at the schooner: **no twist, accusation, identity reveal or later celebration is shown**. Explain only capabilities present in the deployed build. Keep the [release checklist](RELEASE-CHECKLIST.md) beside this script.
 
+## Current scope, 6 November 2026
+
+The completed case release proves 69 player-kit mixes and actual solo+NPC/four-player API-to-SQL journeys. It does not connect the normal browser mystery: G9 is paused until the laptop returns. Original sound is implemented. Festival, host and sports candidates have focused UI/service checks; keep activation separate from those checks. Sports lacks its provider key and stays off. The optional ChatGPT helper lacks an approved official website client and stays off. See [presentation sources](presentation/sources.md) for pinned evidence and limits.
+
+The live minimum case/bulletin release is verified, but `RELIGHT_OPEN` stays unset and no production solve is used for the demo. `?demo=1` is a local presentation stand-in. The optional `?demo=1&festival=1` practice is memory-only and creates no real claim, match or coins; it is outside these mystery scripts, which still stop at the schooner.
+
 ## Before the audience arrives
 
-- **Day before:** open the Supabase dashboard and check the project is active; resume if paused. Check the latest **Keep Supabase awake** Actions run reported 200. Exact CLI commands are in the release checklist; no private settings belong on screen.
+- **Day before:** open the Supabase dashboard and check the project is active; resume if paused. Read the latest **Keep Supabase awake** Actions result without triggering another run. Follow the release checklist and keep private settings off screen.
 - Open a private window at <https://the-great-plot-twist.vercel.app/?demo=1>. Confirm that the production build matches the release candidate and that the presenter panel exists after play. Keep private dashboards, Console, course pages and account settings on a separate, unprojected desktop.
 - Set browser zoom to **100%** (`Ctrl+0`, or `Cmd+0` on macOS), use the final projector resolution, and test keyboard focus, movement and chart travel on the actual laptop. Try low quality if needed. Avoid unexpected system shortcuts and notifications.
 - Sound on: check system and browser output, open game Settings, set a comfortable volume, then click a game button to unlock Web Audio. Keep visible captions enabled. Respect reduced-motion preference; do not disable it solely to make a longer shot.
 - Check the laptop frame rate with browser performance tooling during rehearsal. **`?perf=1` is not implemented on current main**, and the built-in FPS view is development-only; that URL is not a measured pass. A smooth short sample is not a sustained hardware guarantee.
 - Record the approved run with the operating system's screen recorder, **save it locally**, play it once with network disconnected, and check audio and the final frame. **`?demo=1&record=1` currently acts like `?demo=1`; it does not record a file.** Keep an external player ready on the title frame, not an autoplaying video with later story content.
-- Confirm complete teammate credits when the pending team module arrives. Current Credits has placeholders: do not present those as verified names. Nils checks the public-name inventory below once before demo day.
+- Confirm complete teammate credits in the existing `frontend/src/shell/team.js`. Current Credits has three placeholders: do not present those as verified names. Nils checks the public-name inventory below once before demo day.
 
 ## Presenter controls: use this safe route
 
@@ -42,7 +48,7 @@ For a private rehearsal of the memory-only intro, title **Highlights tour** uses
 | 0:00–0:30 | Show title at `?demo=1`; click **New game** | “The Great Plot Twist is our browser mystery, built around an explorable pixel coast and a choice-based introduction.” |
 | 0:30–1:20 | Show the intro and one available, non-ending action; do not rush to an ending | “Choices have requirements. The same intro rules are tested in Python and JavaScript. Continue replays this browser's accepted moves; it is not a claim of a cloud save.” |
 | 1:20–2:20 | **Return to the island**; walk briefly; open Settings, show quality/sound, then Back/Resume | “The world is original pixel art. Input, collision and presentation have separate responsibilities; HTML controls remain readable.” |
-| 2:20–3:30 | Open sea chart, choose **Saltreach Harbor** and let travel finish; point at the Exchange/crew-table hooks without opening a case | “The chart connects places and the world loads the current destination. Some buildings are future hooks: the Exchange backend exists, but this build has no live trading screen.” |
+| 2:20–3:30 | Open sea chart, choose **Saltreach Harbor** and let travel finish; point at the Exchange/crew-table hooks without opening a case | “The chart connects places and the world loads the current destination. The Exchange, prediction desk and Lantern Duels now have screens and server contracts. Signed-out reading is separate from authenticated play-money actions; the normal browser mystery connection is still paused.” |
 | 3:30–4:00 | Return focus to the world and open **Individual shots** | “The static browser client calls a Python API. Python and database constraints decide authoritative account, crew and play-money changes; rehearsal visuals do not award progress.” |
 | 4:00–4:40 | Play the three approved shots, waiting between them | “Three beams trace a bearing; the fog parts; a ship appears. This is a local visual rehearsal, not a shared-case verdict.” |
 | 4:40–5:00 | Stop at the schooner; Escape → **Return to title** | “That is our demo boundary. The rest of the case is for the players. The repository includes reproducible checks and a walkthrough for each lane.” |
@@ -56,9 +62,9 @@ If travel/loading uses the buffer, shorten narration or drop the settings visit;
 | 0:00–0:45 | Title, **New game** | Introduce the project, four equal teammates and agent-assisted development with independent automated review gates. Do not invent missing credit names. |
 | 0:45–2:15 | Show two available non-ending intro choices and inventory if available | Explain condition checks, accepted/refused actions and mirrored engine tests. Do not read any server-only story file or explain the solution. |
 | 2:15–3:30 | Return to island, walk, pause/settings, resume | Explain normalized movement, collision, native pixels, visible focus, sound after a gesture and reduced-motion support. |
-| 3:30–5:00 | Chart → Harbor; show the office, Exchange and table as world landmarks | Explain route search, one active place and cleanup on travel. Distinguish a presentation hook from an implemented online feature. |
+| 3:30–5:00 | Chart → Harbor; show the office, Exchange and table as world landmarks | Explain route search, one active place and cleanup on travel. Distinguish the implemented feature screens from the still-paused normal mystery/multiplayer connection. |
 | 5:00–6:15 | Point at the weather attribution/source shown by the current build | Explain live/cache/stale/recorded fallback. If it says fallback, say “recorded fallback”; do not call it live. Do not change global server configuration on stage. |
-| 6:15–7:30 | Keep game view visible while describing the eight-line README architecture | Explain API identity checks, server-only changes, safe repeats, versioned saves and row-level read restrictions. State that current online case UI integration is incomplete. |
+| 6:15–7:30 | Keep game view visible while describing the eight-line README architecture | Explain API identity checks, server-only changes, safe repeats, versioned saves and row-level read restrictions. State that the complete case backend has real solo/four-player API-to-SQL proof, while G9 browser integration is paused. |
 | 7:30–8:30 | Pause → Credits; optionally show the art workshop in a prepared second public tab; return to game | Credit original generated graphics/audio, Open-Meteo adaptation and package licences. Explain tests, build, spoiler guard and independent agent review. Label placeholder names as a release gap if still present. |
 | 8:30–9:20 | Open **Individual shots** and play only the three approved visuals | Describe light projection, fog and the schooner without a culprit, accusation or interpretation of the mystery. |
 | 9:20–10:00 | After schooner, Escape → **Return to title**; invite code questions | Offer a lane walkthrough or explain-back question. Keep the title on screen; do not open later case screens. |

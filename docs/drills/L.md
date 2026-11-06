@@ -1,6 +1,6 @@
 # L explain-back cards
 
-Used with the [L lane page](../lanes/L.md) for Thu 19 and Sat 21 November 2026. Open source locally; line ranges are orientation aids for audited main and may move after integration. Explain the named function/test before opening the back. Do not project server-only case data.
+Used with the [L lane page](../lanes/L.md) for Thu 19 and Sat 21 November 2026. Open source locally; find the named function/test in the current revision before opening the back. The original authored line ranges are historical orientation aids, not stable API references. Do not project server-only case data.
 
 ## 1. A typo must not become a rollout — Easy
 
@@ -67,29 +67,29 @@ Retain the last good weather rather than clearing the world. Disposal stops futu
 
 </details>
 
-## 6. Money arithmetic and the market day — Medium
+## 6. Compute a leveraged position — Medium
 
-Open [backend/server/market/rules.py](../../backend/server/market/rules.py), lines 135–186 (`def price_from_real`).
+Open [backend/server/market/positions.py](../../backend/server/market/positions.py), `position_value`, `zero_price` and `closing_amounts`.
 
-**Front:** Explain these lines. Why Decimal, bounded prices and Europe/Lisbon instead of host-local time?
+**Front:** Why use explicit Decimal/integer rounding? Trace one rising and one falling position without trusting a browser-supplied value.
 
 <details>
 <summary>Back — check your explanation</summary>
 
-Explicit decimal arithmetic/rounding makes prices predictable. Bounds constrain the simulation. Named-timezone market days handle Lisbon daylight-saving changes independently of the machine timezone.
+A real percentage move changes the stake's value by ten times that move. Values round down to whole coins and never go below zero. SQL recomputes the amounts before writing, so a server arithmetic mismatch is refused rather than copied into a wallet.
 
 </details>
 
-## 7. A circuit breaker preserves ownership — Medium
+## 7. Stop losses at zero — Medium / safety
 
-Open [backend/server/market/rules.py](../../backend/server/market/rules.py), lines 198–225 (`def pause_company`).
+Open [backend/server/market/positions.py](../../backend/server/market/positions.py), `is_used_up`, and [the position tests](../../backend/server/tests/test_market_positions.py).
 
-**Front:** Explain these lines. Does pausing sell the player’s shares or erase the position?
+**Front:** What happens at exactly the zero point, or when a price jumps past it? Is that the old v1 price circuit breaker?
 
 <details>
 <summary>Back — check your explanation</summary>
 
-No. It freezes the quoted price/trading for the pause interval and changes market state; ownership remains. Explain which state is persisted and how the later evaluation resumes.
+Both cases are used up: the position closes at zero. A player cannot owe coins; the loss is limited to the stake plus opening fee. V2 does not keep v1's artificial quote floor/ceiling or circuit breaker. Bound the position's loss without inventing a bound on real market prices.
 
 </details>
 
@@ -108,22 +108,22 @@ Replay is explicit demo mode. A live failure can yield stale prices, which must 
 
 ## 9. The server prices the trade — Hard / safety
 
-Open [backend/server/routes/market.py](../../backend/server/routes/market.py), lines 198–216 (`class TradeRequest`).
+Open [backend/server/routes/market.py](../../backend/server/routes/market.py), `OpenRequest`, `CloseRequest` and their handlers.
 
-**Front:** Explain these lines. Why does the request omit a trusted price or coin delta? Read post_trade and the market_trade migration.
+**Front:** Explain these lines. Why does the request omit a trusted price or coin delta? Read post_open/post_close and the exchange-leverage migration.
 
 <details>
 <summary>Back — check your explanation</summary>
 
-D003 makes the server compute price and arithmetic. The constrained database function atomically rechecks rules and updates position, trade and ledger. A repeated actionUid must not apply a second trade.
+D003 makes the server compute price and arithmetic. The constrained database function atomically rechecks rules and updates position, action receipt and ledger. A repeated actionUid must not apply a second trade.
 
 </details>
 
 ## 10. Distinguish refused, repeated and uncertain — Hard / safety / testing
 
-Open [backend/server/tests/test_market_routes.py](../../backend/server/tests/test_market_routes.py), lines 1079–1183 (`def test_a_repeated_action_uid_is_a_409_already_applied`).
+Open [backend/server/tests/test_market_routes_open.py](../../backend/server/tests/test_market_routes_open.py), repeated-action and unknown-outcome cases.
 
-**Front:** Explain these lines. Find already_applied/prices_stale/timeout cases; compare test_market_trade_rules.py. Why different responses?
+**Front:** Explain these lines. Find already_applied/prices_stale/timeout cases; compare test_market_positions.py and the SQL contract tests. Why different responses?
 
 <details>
 <summary>Back — check your explanation</summary>

@@ -1,10 +1,10 @@
 # G — world and graphics
 
-Used by the graphics presenter and the [G drills](../drills/G.md). The intended `frontend/HOW-IT-WORKS.md` handover does not exist on audited main; use the current [GRAPHICS.md](../../frontend/GRAPHICS.md) and [asset register](../../frontend/ASSETS.md). Add the intended link only once its target lands.
+Used by the graphics presenter and the [G drills](../drills/G.md). Use the current [frontend walkthrough](../../frontend/HOW-IT-WORKS.md), [graphics contracts](../../frontend/GRAPHICS.md) and [asset register](../../frontend/ASSETS.md).
 
 ## What the player gets
 
-A crisp, top-down pixel world, movement and interaction, a keyboard-accessible sea chart, sailing transitions, visual settings, synthesized sound and a title/pause shell. Seven places are registered; six are initially reachable, while Gull's Rest has an external unlock gate. Thirty-four registered hotspots are interaction hooks, not thirty-four completed gameplay systems. Touch/gamepad input and readable HTML controls complement keyboard play.
+A crisp, top-down pixel world, movement and interaction, a keyboard-accessible sea chart, sailing transitions, visual settings, original procedural sound, four original festival recordings and a title/pause shell. Sound is gesture-gated, with captions and separate volume controls. Seven places are registered; six are initially reachable, while Gull's Rest has an external unlock gate. Thirty-four registered hotspots are interaction hooks, not thirty-four completed gameplay systems. Touch/gamepad input and readable HTML controls complement keyboard play.
 
 ## Files and data flow
 
@@ -35,7 +35,7 @@ The pure tests check image/grid contracts, input fallbacks, places/routes and di
 
 ## Known limits
 
-- A harbor building/hotspot is not evidence of working trading, predictions, duels or construction.
-- The normal production case adapter is disconnected. A local fake is explicitly rehearsal-only.
+- Trading, prediction, duel and islet screens now have implemented service contracts. A landmark alone still proves nothing about the connected journey or live provider state. Festival/host/sports candidates have separate feature gates.
+- G9, the normal production mystery adapter, is paused until the laptop returns. Explicit local rehearsals do not create live claims, matches, solves or coins.
 - `?demo=1` works; `record=1` and production `perf=1` are unimplemented. FPS diagnostics are development-only. Browser checks on one machine do not prove phone/gamepad hardware performance.
 - The built-in tour continues beyond the class-demo stop. Follow the [presenter script](../PRESENTER-SCRIPT.md), ending at the schooner.

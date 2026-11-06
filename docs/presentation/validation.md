@@ -1,65 +1,33 @@
-# G25 validation · 6 November 2026
+# Presentation validation · 6 November 2026
 
-Main baseline: `60f7fd0b89fcbaad346b05ac365b1386aa6c0f8d`. Work branch:
-`docs/g25-deck`. Refreshed and merged `origin/main` before each checkpoint;
-C3 merged the newer `60f7fd0` and refreshed the test counts, Realtime/account/header
-claims and requested frontend guide. C1/C2 retain their earlier snapshot records.
-Only the deck branch was pushed. The user authorized the three G25 handoff files outside the otherwise
-strict `docs/presentation/` write scope.
+The authored G25 checkpoints are preserved in history. Current content is reconciled against release candidate `94a48ad`; [sources.md](sources.md) separates the confirmed case production release from the new candidate wave. Updating this deck does not apply migrations, enable flags, deploy code or prove a live provider.
 
-## Presentation checks
+## Checks for this revision
 
-`node docs/presentation/check-deck.cjs`, Chromium 156, offline browser context,
-with all deck requests fulfilled from local disk and all other requests rejected:
+The checker used existing `playwright-core` and installed Chromium 156. It added no dependency and contacted no live service. Temporary reports and screenshots are outside the repository.
 
-| Check | Outcome |
-| --- | --- |
-| Ten slides; complete notes; durations sum to 645 seconds | Passed |
-| Arrow keys, click, Home/End, previous/next boundaries | Passed |
-| All original diagrams load; 1440 × 900 layout has no overflow | Passed |
-| Paired speaker view syncs in both directions, including after button focus | Passed |
-| Unrelated window messages ignored | Passed |
-| Notes timer starts, pauses and resets | Passed |
-| Standalone notes open on a bookmarked slide | Passed |
-| Narrow 390 × 844 viewport has navigation and no horizontal overflow | Passed |
-| Print shows ten slides, hides notes/controls and has no clipped slide boxes | Passed |
-| External requests, browser errors, CSP violations | **Zero** |
-| Direct `file:` browser launch | **Blocked before document load by environment policy** |
+| Check | Actual result |
+|---|---|
+| Offline disk-intercepted browser gate | **9 checks passed.** Ten slides and complete notes; 645-second allocation; keyboard/click navigation; paired and standalone notes; local timer; 390px layout; ten unclipped print pages; no external requests, browser errors or CSP violations. |
+| Direct `file:` browser gate | **Blocked before page load:** `net::ERR_BLOCKED_BY_ADMINISTRATOR`. No browser policy was changed. The offline gate does not establish filesystem behavior on the presentation laptop. |
+| Current audience PDF | Regenerated from the checked HTML: **10 pages**, landscape 841.92 × 474pt, tagged, selectable text, local vector diagrams, no forms or JavaScript. Text extraction confirmed all ten slide numbers in order and current evidence terms; speaker notes and timer controls are absent. |
+| Protected reveal fingerprints | **25 source/PDF-text files clean** against the existing fingerprint fixture. Protected prose was not printed. This scan has the same fingerprint-coverage limit as the application guard. |
+| Source and links | Shell/JavaScript syntax and **129** local Markdown/HTML/SVG target checks passed. All **40** drill cards remain. No remote-link availability or full fresh-clone run was inferred. |
+| Visual inspection | Current evidence and team slides were inspected at desktop size. The browser gate checked every slide for loaded diagrams and overflow. |
+| Independent review | A separate read-only agent checked current claims, local targets, PDF metadata and the protected-text boundary. Its status and rehearsal-cue findings were corrected; bounded review approved. |
 
-The last row remains a gate to check on the presentation laptop. It is not a
-deck error observed in the loaded page, and the offline interception test is not
-presented as a direct-file pass. Managed Chromium's `URLBlocklist` excludes local
-files; no global browser policies were changed. The implementation uses classic
-local JS/CSS/SVG, no modules, server, storage or remote dependencies.
+Reproduce the browser/export check from the repository root, with the existing frontend development dependencies installed:
 
-## PDF and content
+```sh
+CHROME_PATH=/usr/bin/chromium G25_ARTIFACTS=/tmp/ship-deck-check \
+  G25_PDF="$PWD/docs/presentation/The-Great-Plot-Twist.pdf" \
+  node docs/presentation/check-deck.cjs
+```
 
-The committed PDF was generated with the browser print renderer and the deck's
-print stylesheet. `pdfinfo` confirms ten landscape pages (approximately 16:9),
-tagged structure, no PDF JavaScript and the class-presentation title. Text
-extraction confirms the expected slide on each page with no speaker prose or
-toolbar/timer text. Original diagrams were visually inspected in both browser
-and PDF rendering; the speaker view was also inspected.
+The run's report is `/tmp/ship-deck-check/report.json`; temporary screenshots are in the same directory. The direct-file attempt used `/tmp/ship-deck-file-check`. The checked-in PDF is the durable audience artifact. No student identifiers or unverified teammate names were supplied.
 
-The rehearsal table is a 10:45 allocation, not a measured spoken rehearsal.
-The separate G11 demo and questions are outside that time. No live-demo steps,
-case solution or student numbers were included. An independent agent reviewed
-the sources, slide wording, diagrams and speaker view; its keyboard/wording
-suggestions were addressed. The existing reveal-fingerprint guard was also
-applied to deck text, SVGs, handoffs and extracted PDF text, with no matches.
+## Application evidence used by the talk
 
-Gitleaks **8.24.2**, default rules, redacted logs: each checkpoint's staged changes
-and the PDF's extracted text produced empty JSON findings. The binary's SHA256
-matched its official release checksum list. Scanner coverage is evidence, not a
-guarantee against every possible secret or spoiler.
+The completed case record proves 10,859 backend tests, 69 kit mixes and actual solo+NPC/four-player API-to-SQL playthroughs. Root reports 1,672 next-wave frontend tests and a build checking 130 public text files / 12 protected lines. Exact sources and remaining deployment/provider/browser limits are listed in [sources.md](sources.md).
 
-## Main's test evidence
-
-6,408 backend tests and 886 frontend tests passed; Ruff and the production build
-passed. The build spoiler guard checked 99 text files and 12 protected lines. Exact commands and limits
-are in [sources.md](sources.md). These runs do not establish live Supabase RLS,
-live Realtime integration, deployed headers or human delivery timing.
-
-Reproduction and PDF export commands are in [README.md](README.md) and
-[rehearsal.md](rehearsal.md). Temporary test logs, redacted scan reports and
-screenshots remain outside the repository at `/workspace/cloud-setup/g25/`.
+The 10:45 timing is a planned allocation. A human spoken rehearsal, actual laptop/projector setup and physical-device checks have not been performed by this task. Use [rehearsal.md](rehearsal.md) to record those separately.

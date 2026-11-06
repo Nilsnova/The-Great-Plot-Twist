@@ -1,50 +1,46 @@
 # L — live systems
 
-Used by the live-systems presenter and [L drills](../drills/L.md). Play-money systems have no real-money purchase, cash-out or prizes.
+Used by the live-systems presenter and [L drills](../drills/L.md). This is the integrated candidate at `94a48ad`. All coins are play money, with no purchase, cash-out or prizes. Candidate checks and production activation are separate evidence.
 
-## What the player gets today
+## What is implemented
 
-Weather is wired into the world, with source/freshness information and a recorded fallback. The Island Exchange has a tested server board, portfolio and trading rules, but no connected trading screen in this revision. The prediction kiosk, sports pavilion, arena/duel hooks and home building plots are presentation/reserved features, not complete live systems.
+| System | Implemented boundary and remaining limit |
+|---|---|
+| Weather | Browser polling, Python provider/cache/mapping, source labels and recorded fallback. A label is not a guarantee that the provider is reachable now. |
+| Island Exchange v2 | Public board, authenticated portfolio/open/close API, 10× rising/falling positions, zero-only loss bound and atomic wallet/position receipts; browser panel is wired to the existing session transport. |
+| Predictions and Lantern Duels | Screens, feature-gated services, strict intents and atomic outcomes; real signed-in browser use still depends on an actual session. |
+| Home islet | Server-authoritative building costs and immutable signal-station ownership; the case proof builds a station from starting resources. |
+| Festival | Server-owned 48-hour timer, exclusive lamp reservations and friendly FIFO ring, plus a separate memory-only browser rehearsal. Activation remains feature-gated. |
+| Host console | Verified-host read/clock controls and dedicated UI. Browser-supplied roles never authorize a host. |
+| Sports | Fixture/source/stake/settlement boundaries and pavilion screen are implemented and checked. The live provider key is missing and the feature stays off. |
 
-| System | Implemented boundary |
-| --- | --- |
-| Weather | Browser polling, Python provider/cache/mapping, visual output and attribution |
-| Island Exchange | Public board; authenticated, feature-gated portfolio/trade API; atomic database trade rules |
-| Prediction desk and sports | World art/hotspots and reserved flags; no implemented corresponding backend feature routes |
-| Duels/arena and raid | World hooks and flags; no implemented combat/raid rules |
-| Home islet | Place art, four plots and local signal-station interaction; no server construction economy |
+G9 remains paused: these systems do not imply that the normal authenticated browser mystery and multiplayer flow is connected. The optional ChatGPT helper remains off without an approved official website client.
 
-## Files and data flow
+## Trace the implementation
 
-Weather: `frontend/src/game.js` starts `frontend/src/net/weather.js` → same-origin `/api/weather` → `backend/server/weather/open_meteo.py`, `source.py`, `mapping.py` → normalized view → `frontend/src/world/weather.js`. Provider units map to bounded cloud/rain/fog/wind controls. Per-instance source cache is ten minutes, request timeout three seconds, browser polling ten minutes and HTTP response cache five minutes. Labels distinguish live, cache, stale and fallback; explicit demo mode makes no weather-provider call.
+Weather starts at `frontend/src/net/weather.js`, reads `/api/weather`, and maps a provider/cache/fallback response into `world/weather.js`. Timeouts and freshness labels keep a failed outside service from silently becoming live data.
 
-Exchange: `backend/content/market/companies.json` defines fictional companies → `backend/server/market/feed.py` obtains live values or explicit demo replay → `rules.py` maps prices/shared bases/day boundaries → `routes/market.py` returns a board. A trade sends units and a stable action identifier, not a trusted price → server arithmetic/limits → `store.py` and `supabase/migrations/20261106010000_island_exchange.sql` atomically change trade, position and wallet state.
+The Exchange screen is `frontend/src/screens/market/`. `backend/server/market/feed.py` obtains approved prices; `positions.py` computes values and fees with Decimal/integer rounding; `routes/market.py` validates the intent; `store.py` calls the reviewed `20261106090000_exchange_leverage.sql` functions. A request supplies company, direction, stake and action id, never a trusted price or balance change.
 
-The public board is readable with the market flag off and then does not persist bases. Portfolio/trade require identity and the flag. Rules include amplification 20–100, a 30% move circuit breaker for 15 minutes, a 25–400% initial-price range, 08:00 Lisbon rebasing, 2% fees, ten-minute minimum holding, 500-coin buy limit and 2,000-coin daily buy cap. Stale live prices block trading; a provider outage must not silently become public replay trading.
+Current v2 positions amplify a real percentage move by ten. At the zero point or beyond, a position closes at zero and can never create debt. The maximum loss is its stake plus opening fee. V1's artificial price floor/ceiling and circuit breaker are absent. US stock prices respect market hours; stale/unusable prices do not silently become public replay trading. `STOCK_API_PROVIDER` remains `finnhub`.
 
-`backend/server/flags.py` defaults optional features off and rejects unknown names. `frontend/src/world/places/registry.js` defines hooks; a hook is not a backend implementation. D003 keeps authoritative balances and game effects on the server.
+Festival claims never add world lights or award money. Ring pairing uses the existing three-round, zero-stake A7 rules. Unknown browser writes retain the same action UID even if a later retry is rate limited. `?demo=1&festival=1` uses an isolated memory transport and cannot enable server writes.
 
-## Evidence
+## Evidence and checks
 
-From `backend/`:
+The [completed case release](../handoff/case-complete-release.md) records 69 production-rule mixes and real solo/four-player API-to-SQL journeys. New-wave API/SQL cases live in `test_festival_api_pg.py`, `test_host_console_api_pg.py` and `test_sports_complete_api.py`; they use disposable data and no live provider credential.
+
+Run focused ordinary checks from `backend/`, without logging protected story details:
 
 ```bash
-uv run --locked pytest server/tests/test_weather_mapping.py server/tests/test_weather_source.py server/tests/test_weather_open_meteo.py server/tests/test_weather_route.py server/tests/test_market_companies.py server/tests/test_market_rules.py server/tests/test_market_feed.py server/tests/test_market_routes.py server/tests/test_market_trade_rules.py server/tests/test_market_replay_breaker.py server/tests/test_market_store.py server/tests/test_market_limits.py
+uv run --locked pytest server/tests/test_market_positions.py server/tests/test_market_routes_open.py server/tests/test_market_routes_close.py server/tests/test_festival_routes.py server/tests/test_sports_api.py --tb=no -q
 ```
 
 From `frontend/`:
 
 ```bash
-npm test -- tests/weather.test.js
-CHROME_PATH=/usr/bin/chromium npm run test:weather:wiring
+npm test -- tests/market tests/festival tests/sports
+CHROME_PATH=/usr/bin/chromium CAPTURE_DIR=/tmp/festival-review npm run test:festival:ui
 ```
 
-Injected transport/clock tests exercise cache expiration, explicit demo/no-provider behavior, stale-price refusal, arithmetic and repeat actions. The browser wiring check exercises presentation with deterministic weather; none of these establish current provider availability or live database constraints.
-
-## Known limits
-
-- Hosted database state, concurrency and RLS need live validation before any real group session.
-- The default market multiplier is high; the configured range is a rule, not a recommendation to enable trading without rehearsal.
-- The weather cache is per server instance, not a global distributed rate limiter.
-- Names in the company dataset are fictional proposals awaiting Nils's name check; do not imply legal clearance.
-- The presenter rehearsal records no game progress and is separate from live Exchange or multiplayer behavior.
+The browser gate checks production CSP/layout/audio plus a separate DEV gamepad/lifetime fixture. It does not prove provider availability, production authentication, physical-phone behavior or Safari. Keep those limits explicit when presenting.

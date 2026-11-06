@@ -1,6 +1,6 @@
 # A explain-back cards
 
-Used with the [A lane page](../lanes/A.md) for Thu 19 and Sat 21 November 2026. Open source locally; line ranges are orientation aids for audited main and may move after integration. Explain the named function/test before opening the back. Do not project server-only case data.
+Used with the [A lane page](../lanes/A.md) for Thu 19 and Sat 21 November 2026. Open source locally; find the named function/test in the current revision before opening the back. The original authored line ranges are historical orientation aids, not stable API references. Do not project server-only case data.
 
 ## 1. A session is not a disk save — Easy
 

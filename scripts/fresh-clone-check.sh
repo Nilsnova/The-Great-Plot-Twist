@@ -40,7 +40,7 @@ blocked() {
 
 if step clone git clone --quiet --depth 1 --single-branch --branch "$revision" -- "$repository" "$checkout"; then
   if step backend-install bash -c 'cd "$1/backend" && uv sync --locked' _ "$checkout"; then
-    step backend-tests bash -c 'cd "$1/backend" && .venv/bin/python -m pytest -q' _ "$checkout" || :
+    step backend-tests bash -c 'cd "$1/backend" && .venv/bin/python -m pytest -q --tb=no' _ "$checkout" || :
     step backend-ruff bash -c 'cd "$1/backend" && .venv/bin/ruff check .' _ "$checkout" || :
   else
     blocked backend-tests

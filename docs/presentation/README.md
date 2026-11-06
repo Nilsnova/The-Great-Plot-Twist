@@ -34,11 +34,7 @@ reproduction command are in the rehearsal guide.
 ## Sources and scope
 
 [Outline and speaker notes](outline.md) records C1's narrative.
-[Sources](sources.md) pins architecture and test claims to main `60f7fd0`.
-Realtime is built with its flag off and game hookup pending; account UI is built
-but real transport integration remains. Sitewide security headers are configured,
-with deployed behavior still to verify. The requested `frontend/HOW-IT-WORKS.md`
-was added by the C3 main merge and read before the final content refresh.
+[Sources](sources.md) records the completed case proof and next-wave release candidate `94a48ad`: 69 kit mixes, actual solo/four-player API-to-SQL journeys, original sound, and the festival/host/sports integration gates. G9 remains paused, sports lacks its provider key, and the optional ChatGPT helper awaits an approved official website client. Production activation and local candidate evidence are labelled separately.
 
 All artwork is original local SVG. The page's restrictive CSP uses external
 `deck.js` and `deck.css`, permits local images, and blocks network connections and
@@ -68,9 +64,4 @@ For a direct filesystem check in a browser that permits local file navigation:
 G25_FILE_MODE=1 node docs/presentation/check-deck.cjs
 ```
 
-**Environment limitation:** this cloud image's managed Chromium blocks `file:`
-navigation with `ERR_BLOCKED_BY_ADMINISTRATOR`. Its global policies were not
-changed. The disk-intercepted offline check validates rendering, CSP, controls,
-paired/standalone notes and printing, but does not substitute for opening the
-actual file on the presentation laptop. Keep that direct-file gate marked unrun
-until it is checked there. Refresh source claims and test counts if main changes.
+The current revision passed all nine offline browser checks. Its separate direct-file attempt was blocked before page load by managed Chromium policy (`ERR_BLOCKED_BY_ADMINISTRATOR`); no policy was changed. See [validation](validation.md) for the actual results. The presentation laptop/projector, direct-file behavior on that laptop, Safari and human delivery timing remain manual checks.

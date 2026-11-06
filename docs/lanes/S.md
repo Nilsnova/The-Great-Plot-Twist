@@ -6,6 +6,8 @@ Used by the story presenter and [S drills](../drills/S.md). This page explains m
 
 The Lighthouse introduction presents locations, inventory and legal choices. The four introductory world hooks open the connected intro; Continue replays the browser's accepted action journal. Later case screens include boards, search, discussion and end-state presentation against an adapter contract. Those screens have a local rehearsal adapter, but their normal production adapter is unavailable: the full authoritative online mystery is not connected merely because the screens exist.
 
+The minimum authoritative backend is complete: scoped earned views, board deductions, three-light nights, once-only Relighting and free NPC errands. Production decisions solve all 69 player-kit mixes from starting resources. Real solo+NPC and four-player HTTP-to-scratch-SQL journeys verify outcomes, rewards, repeats and crew isolation. [The recorded proof](../handoff/case-complete-release.md) is separate from G9 browser integration.
+
 ## Files and data flow
 
 | Responsibility | Files |
@@ -15,6 +17,7 @@ The Lighthouse introduction presents locations, inventory and legal choices. The
 | Intro transport, journal, replay/navigation | `frontend/src/story/intro.js`, `intro-adapter.js`, `storage.js`, `saves.js` in that folder |
 | Public data boundary | `backend/server/routes/content.py` (`PUBLIC_CONTENT`) |
 | Authoritative intro judging | `backend/server/game/referee.py`, `backend/server/routes/intro.py`, `backend/server/game/entry_kits.py` |
+| Case backend | `backend/server/game/case_service.py`, `board_service.py`, `npc_service.py`, `case_store.py`, `case_view.py`, and reviewed case migrations |
 | Case presentation contract | `frontend/src/adapter/contract.js`, `bridge.js`, `unavailable.js`, `frontend/src/screens/` |
 
 World interaction → intro fetch with bounded wait/retry → adapter view → engine checks action conditions → accepted action updates state and journal → UI refresh. Continue rebuilds the state by replaying actions. Navigation searches legal movement-only edges and tests a candidate replay before replacing the current state/log; it does not teleport or silently collect items.
@@ -28,6 +31,7 @@ From `backend/`:
 ```bash
 uv run --locked pytest plot_twist/tests -rs
 uv run --locked pytest server/tests/test_content.py server/tests/test_referee.py server/tests/test_intro_route.py
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest server/tests/test_case_complete_api.py --tb=no -q
 ```
 
 From `frontend/`:
@@ -43,5 +47,5 @@ Parity tests execute equal move sequences in Python and JavaScript, comparing ac
 
 - Local browser journals and rehearsals are not cloud saves, shared cases or awards.
 - Rehearsal case data is illustrative, not an authoritative deduction/reward source.
-- `frontend/src/story/README.md` still says nothing connects the engines; the intro is now wired, while the later online case remains disconnected.
+- G9 is paused until the laptop returns. The complete backend proof does not establish normal browser multiplayer or a live authenticated UI playthrough.
 - Do not use later case workshop screens during the spoiler-safe class demo. Use only the [approved coastal visuals](../PRESENTER-SCRIPT.md).
