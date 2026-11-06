@@ -70,6 +70,35 @@ class Solver:
 
 
 @dataclass(frozen=True)
+class Post:
+    id: int
+    light_id: str
+    seat_no: int
+    taken_second: int
+    on_post_second: int
+    player_id: str | None = None
+    npc_id: str | None = None
+    ended_second: int | None = None
+    order_no: int | None = None
+
+
+@dataclass(frozen=True)
+class Signal:
+    id: int
+    night_no: int
+    light_id: str
+    post_seat_no: int
+    aimed_seat_no: int
+    bearing: float
+    on_target: bool
+    case_second: int
+    holds_until_second: int | None = None
+    ended_second: int | None = None
+    parted: bool = False
+    aimed_by: str | None = None
+
+
+@dataclass(frozen=True)
 class CaseSnapshot:
     crew_id: str
     status: str
@@ -93,6 +122,11 @@ class CaseSnapshot:
     coins: int = 0
     timber: int = 0
     parted_players: frozenset[str] = frozenset()
+    night_no: int = 0
+    night_started_second: int | None = None
+    posts: tuple[Post, ...] = ()
+    signals: tuple[Signal, ...] = ()
+    station_ready: bool = False
 
     def seat_for_player(self, player_id: str) -> SeatState | None:
         return next((seat for seat in self.seats if seat.player_id == player_id), None)

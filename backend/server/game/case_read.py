@@ -3,6 +3,7 @@
 Used by: case_parse.py. Never include a field value in an error.
 """
 
+import math
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any
@@ -70,6 +71,8 @@ class Reader:
 
     def pair(self, name: str) -> tuple[float, float]:
         values = self.read(name, list)
-        if len(values) != 2 or any(type(item) not in (int, float) for item in values):
-            raise CaseDataError("L1", self.place, f"{name} must be two numbers")
+        if len(values) != 2 or any(
+            type(item) not in (int, float) or not math.isfinite(item) for item in values
+        ):
+            raise CaseDataError("L1", self.place, f"{name} must be two finite numbers")
         return (values[0], values[1])

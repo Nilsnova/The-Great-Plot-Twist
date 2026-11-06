@@ -2887,3 +2887,32 @@ The fixture asserts a local Unix socket, applies every migration twice, runs che
 14. A host clock move changes only its own crew, logs the action and increments revision; forming crews refuse.
 
 After case Phase 1, cumulative totals are 24 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 32 project functions excluding rls_auto_enable, 6 sequences and 6 public triggers. The six new tables are server-only; RLS-without-policy advisor INFO notices are intended.
+
+## Case Phase 2 migration
+
+`migrations/20261106080000_case_board_and_night.sql` adds pins, night posts and signal history.
+It follows Phase 1 and the home-islet migration. The exact reviewed file MD5 is
+`3d68856dbe9082e2c8e413f0db5dce0f`; no applied migration or wallet reason changes.
+
+| Table | anon / authenticated | service_role |
+|---|---|---|
+| board_pins | no access | select, insert |
+| finale_posts | no access | select, insert, update |
+| finale_signals | no access | select, insert, update |
+
+All three tables have RLS without policies; their advisor INFO notices are intentional. Both identity
+sequences have no browser or service grants. Every function uses invoker rights and an empty search
+path; execution is revoked from PUBLIC, anon and authenticated and granted to service_role only.
+The store exposes five new intents (`board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post`,
+`finale_signal`), never the two new private helpers (`finale_post_holds`, `finale_three_locks`).
+
+The crew lock serializes pin claims, deduction rewards and post/lock changes. Wallet payouts use
+player UUID order. Eligibility is rechecked under that lock; three locks require different current
+seats and different lights, `holds_until_second > now`, and an effective post. NPC seat takeover
+invalidates an old post. Failed nights retain posts and clear old locks when the next night starts.
+
+The opt-in `case_sql/` suite checks N1 to N15, strict expiry/climbing/miss boundaries, once-only
+payouts, stale snapshots, role isolation, invalid bearings and replay preservation. Independent
+concurrent tests cover pin deduplication across crews and competing claims to the same post.
+After this file the expected totals are **27 public tables, 1 view, 16 public policies, 5 realtime
+policies, 17 wallet reasons, 39 project functions, 8 sequences and 6 public triggers**.

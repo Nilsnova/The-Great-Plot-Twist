@@ -45,11 +45,23 @@ def http_refusal(reply: dict) -> None:
         raise ApiError(409, "crew_busy", "Your crew changed. Try the request again.")
 
 
+def refusal_seconds(reply: dict) -> int:
+    seconds = reply.get("seconds")
+    if type(seconds) is not int or seconds < 0:
+        raise SupabaseRejected("The refused wait could not be read.")
+    return seconds
+
+
 def refusal_answer(data: CaseData, kind: str, target: str | None, reply: dict) -> dict:
     reason = reply["reason"]
     answer = {"accepted": False, "reason": reason}
     if reason in UI_MESSAGES:
         answer["message"] = UI_MESSAGES[reason]
+        if reason in ("dawn_wait", "aim_cooldown"):
+            answer["seconds"] = refusal_seconds(reply)
+            answer["message"] = answer["message"].format(seconds=answer["seconds"])
+        elif reason == "light_not_ready" and target == "islet_signal_station":
+            answer["message"] = UI_MESSAGES["station_not_ready"]
     elif reason in ("schooner_required", "evidence_required", "accusation_cooldown"):
         key = {
             "schooner_required": "needs_schooner",
@@ -60,6 +72,29 @@ def refusal_answer(data: CaseData, kind: str, target: str | None, reply: dict) -
         answer["message"] = data.accusation.lines[key].format(seconds=seconds)
         if reason == "accusation_cooldown":
             answer["seconds"] = seconds
+    elif reason in ("pair_cooldown", "not_pinned", "different_seats_required", "wrong_pair"):
+        key = {
+            "pair_cooldown": "wait",
+            "not_pinned": "not_pinned",
+            "different_seats_required": "same_seat",
+            "wrong_pair": "wrong_pair",
+        }[reason]
+        answer["message"] = data.board.lines[key]
+        if reason in ("pair_cooldown", "wrong_pair"):
+            answer["seconds"] = refusal_seconds(reply)
+            wait = data.board.lines["wait"].format(seconds=answer["seconds"])
+            answer["message"] = (
+                wait if reason == "pair_cooldown" else answer["message"] + " " + wait
+            )
+    elif reason in ("deduction_required", "post_not_ready", "off_target"):
+        key = {
+            "deduction_required": "not_yet",
+            "post_not_ready": "not_manned",
+            "off_target": "off_target",
+        }[reason]
+        answer["message"] = data.night.lines[key]
+        if reason == "off_target":
+            answer["seconds"] = refusal_seconds(reply)
     elif kind == "search" and target is not None and reason in ("lead_locked", "locked_window"):
         route = data.route(target)
         if reason == "lead_locked":
@@ -94,6 +129,19 @@ def repeat_answer(data: CaseData, action: dict) -> dict:
                 if route.timer_minutes == 0
                 else UI_MESSAGES["started"].format(minutes=route.timer_minutes)
             )
+        elif outcome == "pinned":
+            answer["message"] = UI_MESSAGES["pinned"]
+        elif outcome == "formed":
+            answer["message"] = data.deduction(target).finding
+        elif outcome == "wrong_pair":
+            wait = data.board.lines["wait"].format(seconds=data.board.wrong_pair_wait_seconds)
+            answer["message"] = data.board.lines["wrong_pair"] + " " + wait
+        elif outcome == "night":
+            answer["message"] = data.night.lines["nightfall"]
+        elif outcome == "climbing":
+            answer["message"] = data.night.lines["on_post"].format(light=data.light(target).name)
+        elif outcome in ("locked", "parted", "off_target"):
+            answer["message"] = data.night.lines[outcome]
         elif outcome == "wrong_suspect":
             line = data.suspect(target).refused_line
             if line is None:

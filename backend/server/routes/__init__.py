@@ -18,6 +18,8 @@
     bulletin.py       GET  /api/bulletin       the harbor bulletin and the Chapter 2 hook
 
     case.py           /api/case...             earned view, card searches and accusation
+    board.py          /api/board...            own-seat pins and shared deductions
+    finale.py         /api/finale...           nightfall, light posts and signal locks
     host_case.py      /api/host/case/clock      move the host's own crew's case clock
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the

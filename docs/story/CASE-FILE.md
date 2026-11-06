@@ -361,7 +361,7 @@ If the night ends first: "Dawn breaks, and the fog keeps its secret. Your crew c
 
 - The sea chart is 448 by 256 units, the native pixels of the chart in the game (`frontend/GRAPHICS.md`). x grows to the east and y to the south, so north is up. Light positions are copied from the place registry (`frontend/src/world/places/registry.js`): the place's chart position plus half the light's beam origin, with the vertical part flipped. A test keeps the two equal (section 17). The server needs the positions to check bearings, and the registry stays in the browser (D016), so `case.json` holds its own copy.
 - The fog bank sits west of the Teeth marker at (365, 65): centre (250, 40), radius 30. Every light lies outside it.
-- The schooner's spot is chosen per crew, seeded by the crew id, within 20 units of the fog's centre. A bearing copied from another crew usually misses the 5 degree tolerance.
+- The schooner's spot is chosen per crew, seeded by the crew id, within 20 units of the fog's centre. The spot varies the picture, not the difficulty: seen from 120 to 200 units away, the whole disc spans about 6 to 10 degrees, so a copied bearing often still hits. Copying gains nothing, because every crew sees its own glow.
 - The two public lights see the fog's centre from 50 and 14 degrees, 36 apart (at least 20 are required), and the home station sees it from 341, so the beams visibly cross. Aimed at the Teeth marker instead, the same two lights would be only 11 degrees apart. So the G4 cinematic `three_lights` must receive the schooner's chart position as its `target` (its default is the Teeth marker), and L3 passes it.
 
 ### 10.8 Not part of the case
