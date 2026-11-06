@@ -62,9 +62,9 @@ git switch -c feat/yourname-first-change origin/main
 git status --short
 ```
 
-**Check the file first.** `frontend/src/shell/team.js` is absent at audited `origin/main` commit `c26f303` (6 November 2026); Credits there still renders placeholders in `shell/screens.js`. Do not create a replacement team file or edit the other teammates' placeholders. Fetch the latest main and inspect again. If the credits-owning package has not landed, **skip the credits edit, its staging/commit commands and its PR for now**. Tell its author and use the remaining time to scope your own idea. The one-hour credits route becomes executable once that file is integrated; the fake workshop already works today.
+Open `frontend/src/shell/team.js`. Its `teamMembers` array contains four display-name strings: Nils's entry and three `<name>` placeholders. Replace **one unused placeholder with your own name**, preserving the other entries and their order. Inspect the latest main before opening your PR so you do not overwrite a slot another teammate has just filled. Do not fill anybody else's entry or add student numbers; the file explicitly excludes them.
 
-When `team.js` is present, inspect its schema and comments, find the row reserved for you, and fill **only your row** with truthful information. Never guess another person's name, work or student number. Keep private course identifiers out of this public repository unless the team has explicitly agreed where they belong. Open **Credits** from the title menu and verify your own entry.
+From the title menu, open **Settings → Credits** and verify your name and the unchanged neighbouring entries. This is your first small change; leave the credits renderer and all other rows alone.
 
 ## Minutes 30–45: verify and commit
 
@@ -80,7 +80,7 @@ git status --short
 
 Tests and build must pass. The build also runs the spoiler guard. Manually check Credits and the unchanged neighbouring rows. Review for credentials, personal data and unrelated files; stage individual intended files, never a real `.env`, dependencies, captures or generated `dist/` output.
 
-Once your credits row actually exists and you have changed it:
+Once you have changed and verified your own credits row:
 
 ```bash
 git add frontend/src/shell/team.js
@@ -100,3 +100,5 @@ Ask a **different human teammate** to review the current diff. Address their com
 **D001 applies to teammates' own PRs.** D015 separately authorizes the Claude/Codex package-integration workflow; it does not give your personal contribution an exemption from human peer review. No particular lead is the mandatory reviewer.
 
 Next, choose one bounded idea from [IDEAS.md](IDEAS.md), or propose your own, and prepare [your explain-back](EXPLAIN-YOUR-CODE.md). Make real decisions, understand every submitted line, and keep your own commits and review evidence. An attribution row alone does not demonstrate that you wrote and understand game code.
+
+**Integration note for maintainers:** This guide targets main after group 2. Nils confirmed on 6 November 2026 that G7/G8 supplies `team.js` and will reach main before teammates start. Its schema and Settings → Credits path were checked on `origin/feat/g8-islet-harbor-demo` at `ea89e35`; see the [audited team file](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/ea89e35cd7d55df8a2dc2ed4785b0812b2233b11/frontend/src/shell/team.js). It is not yet in the audited main `c26f303`. Integrate the owning package before handing out this guide; G28 does not create the module or fill anyone's row.
