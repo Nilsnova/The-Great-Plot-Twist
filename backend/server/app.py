@@ -26,6 +26,7 @@ from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl
 from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
+from server.game.world_state import DatabaseWorldStage, relit_check
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
 from server.routes import (
@@ -50,13 +51,14 @@ from server.routes import (
     predictions,
     save,
     weather,
+    world,
 )
 from server.settings import Settings, settings_from_environment
 from server.sign_in_code import CodeExchanger
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
 from server.weather.source import make_weather_source
 from server.weather.state_rules import load_state_rules
-from server.world_stage import AlwaysDark, WorldStageReader
+from server.world_stage import WorldStageReader
 
 
 def new_fastapi_app(settings: Settings) -> FastAPI:
@@ -118,15 +120,15 @@ def create_app(
     if exchanger is None:
         exchanger = CodeExchanger(settings)
     if market_service is None:
-        market_service = market_or_none(settings)  # None if its data files are broken
+        market_service = market_or_none(settings, relit_check=relit_check)
     if broadcaster is None:
         broadcaster = broadcaster_from_settings(settings)
     if islet_catalogue is None:
         islet_catalogue = catalogue_or_none()  # None if buildings.json is broken
-    if world_stage is None:
-        world_stage = AlwaysDark()  # until package L3 builds world_state, the coast is dark
     if clock is None:
         clock = utc_now
+    if world_stage is None:
+        world_stage = DatabaseWorldStage(admin, clock=clock)
     if prediction_desk is None:
         prediction_desk = desk_or_none(settings)  # None if its questions file is broken
     if duel_service is None:
@@ -190,5 +192,6 @@ def create_app(
     app.include_router(case.router, prefix="/api")
     app.include_router(board.router, prefix="/api")
     app.include_router(finale.router, prefix="/api")
+    app.include_router(world.router, prefix="/api")
     app.include_router(host_case.router, prefix="/api")
     return app

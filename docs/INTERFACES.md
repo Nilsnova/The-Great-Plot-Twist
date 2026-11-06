@@ -941,6 +941,12 @@ Phase 2 adds server-only `board_pins`, `finale_posts` and `finale_signals` throu
 Only the server executes `board_pin`, `board_pair`, `finale_nightfall`, `finale_take_post` and
 `finale_signal`; `finale_post_holds` and `finale_three_locks` are private database helpers.
 
+Phase 3 adds server-only `world_state`, `world_solves` and `wall_of_lights` through
+`20261106120000_relighting.sql`. All have RLS without browser policies. The replacement
+`case_after_solve` hook runs in the same accusation transaction: a locked solve stays private,
+the first open solve relights once, and later crews add one light up to 12. The public Wall contains
+contributors only, once per player. Applying or replaying the migration leaves the coast dark.
+
 ## 5. The wallet
 
 Play money only. Coins cannot be bought, cashed out or exchanged for real prizes. One wallet per player and one ledger serve every money feature.
@@ -1326,6 +1332,21 @@ night it includes only a rounded glow; the precise target and successful light c
 only in `parted` after success. Public light coordinates use chart space, never pixel hotspots.
 Solve credit uses every successful parted lock even when it falls outside the 40 most recent
 signals. Bounded supplementary reads retain quiet lights' current locks, bearings and miss waits.
+
+### Case Phase 3 public world
+
+`GET /api/world` needs the `case` flag, accepts no query parameters and needs no authentication.
+The adapter requests it without Authorization. A successful answer uses
+`Cache-Control: public, max-age=30, s-maxage=30` and contains `stage`, `lightsOn`, `fogBankGone`,
+`gullsRestOpen`, `extraLights`, `solves`, `relitAt`, `wall` and `line`. Each Wall entry contains only
+`name` and `order`; there are no account ids, crew ids or case explanations. Dark answers have
+false world flags, an empty Wall and null line/time. An unconfigured local database returns dark;
+database failures remain errors. The bulletin and Exchange read the same shared state; the latter
+applies its existing relit listing and fee rules. Injected test services/readers remain supported.
+
+The solving crew receives `reveal.world` immediately, before public cache expiry. RELIGHT_OPEN
+remains server-only and unset until the controlled opening. Festival/lantern claims, the Star,
+title and full epilogue are outside this minimum Phase 3 contract.
 
 ## 11. Open questions for Mon 9
 

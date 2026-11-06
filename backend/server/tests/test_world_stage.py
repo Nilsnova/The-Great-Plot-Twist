@@ -1,7 +1,7 @@
 """Tests for world_stage.py: is the coast still dark, or has a crew relit it?
 
-L3 will build the real reader (it will read the table world_state). Until then the coast is
-always dark, and create_app takes any reader that has the same one method. No network here.
+L3 reads world_state by default; isolated tests may inject any reader with the same method.
+No network here.
 """
 
 import asyncio
@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 
 from server.app import create_app
+from server.game.world_state import DatabaseWorldStage
 from server.tests.helpers import CONFIGURED_SETTINGS
 from server.world_stage import DARK, RELIT, AlwaysDark, WorldStage
 
@@ -26,7 +27,7 @@ class FixedStage:
         return self.stage
 
 
-def test_the_coast_is_dark_until_l3_builds_its_reader():
+def test_the_isolated_dark_reader_keeps_the_coast_dark():
     stage = asyncio.run(AlwaysDark().read())
 
     assert stage == WorldStage(DARK, None)
@@ -78,10 +79,10 @@ def test_a_stage_cannot_be_changed_after_it_was_made():
         stage.stage = RELIT
 
 
-def test_create_app_uses_a_dark_coast_when_no_reader_is_given():
+def test_create_app_reads_the_shared_coast_when_no_reader_is_given():
     app = create_app(CONFIGURED_SETTINGS)
 
-    assert isinstance(app.state.world_stage, AlwaysDark)
+    assert isinstance(app.state.world_stage, DatabaseWorldStage)
 
 
 def test_create_app_uses_the_reader_it_is_given():

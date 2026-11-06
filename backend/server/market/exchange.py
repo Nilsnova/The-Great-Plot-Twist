@@ -403,7 +403,9 @@ def market_from_settings(
     return MarketService(companies, calendars, feed, clock=clock, relit_check=relit_check)
 
 
-def market_or_none(settings: Settings) -> MarketService | None:
+def market_or_none(
+    settings: Settings, *, relit_check: RelitCheck = never_relit
+) -> MarketService | None:
     """Like market_from_settings, but a broken data file does not stop the whole server.
 
     The exchange is a feature that is switched off by default. If its data files cannot be read
@@ -411,7 +413,7 @@ def market_or_none(settings: Settings) -> MarketService | None:
     The error goes to the log, and the exchange routes answer 503 market_unavailable.
     """
     try:
-        return market_from_settings(settings)
+        return market_from_settings(settings, relit_check=relit_check)
     except (CompaniesError, CalendarError, ReplayError) as error:
         logger.error("The Island Exchange cannot start: %s", error)
         return None
