@@ -405,3 +405,61 @@ def test_real_case_view_gets_the_bank_and_advances_partner_dialogue_without_writ
     assert witness["job"]["line"] == expected
     assert after["writeRevision"] == answer["case"]["writeRevision"]
     assert store.calls == ["order"] and len(service.broadcaster.events) == 1
+
+
+@pytest.mark.parametrize("kind", ["fetch", "man_light"])
+@pytest.mark.parametrize("change", ["takeover", "different_npc", "different_kit", "missing"])
+def test_reopen_checks_the_original_partner_before_a_second_store_rpc(kind, change):
+    from types import MethodType
+
+    from server.game.case_store import CaseStore
+
+    client, store, service, _ = npc_client()
+    assert client.get("/api/case", headers=HEADER).status_code == 200
+    body = {**ORDER, "order": kind}
+    if kind == "man_light":
+        light = next(item for item in service.data.active_lights if item.partners_may_man)
+        body["target"] = light.id
+        store.current = replace(store.current, night_no=1, night_started_second=0)
+
+    class ReopenAdmin:
+        def __init__(self):
+            self.calls = []
+
+        async def call_function(self, name, params):
+            self.calls.append(name)
+            if len(self.calls) > 1:
+                raise AssertionError("The changed partner must never reach a second RPC.")
+            return {"status": "refused", "reason": "case_not_open"}
+
+    admin = ReopenAdmin()
+    store.admin = admin
+    store.npc_fetch = MethodType(CaseStore.npc_fetch, store)
+    store.npc_man_light = MethodType(CaseStore.npc_man_light, store)
+    original_open = store.open
+    before = store.open_count
+
+    async def open_and_change_partner(current, data):
+        result = await original_open(current, data)
+        seats = []
+        for seat in store.current.seats:
+            if seat.seat_no != body["seat"]:
+                seats.append(seat)
+            elif change == "takeover":
+                seats.append(
+                    replace(seat, player_id="33333333-3333-4333-8333-333333333333", npc_id=None)
+                )
+            elif change == "different_npc":
+                seats.append(replace(seat, npc_id="another_partner"))
+            elif change == "different_kit":
+                seats.append(replace(seat, kit="informant"))
+        store.current = replace(store.current, seats=tuple(seats))
+        return result
+
+    store.open = open_and_change_partner
+    response = post(client, body)
+    assert_error(response, 409, "crew_busy")
+    assert response.headers["cache-control"] == "private, no-store"
+    expected = "npc_fetch_pin" if kind == "fetch" else "npc_man_light"
+    assert admin.calls == [expected] and store.open_count == before + 1
+    assert service.broadcaster.events == [] and store.receipts == {}

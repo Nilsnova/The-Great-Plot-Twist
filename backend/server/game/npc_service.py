@@ -89,6 +89,14 @@ async def order_partner(
         return {**answer, "case": case.view(state, player_id)}
 
     async def operation(fresh: CaseSnapshot) -> dict:
+        current = next((item for item in fresh.seats if item.seat_no == seat_no), None)
+        if (
+            current is None
+            or current.npc_id != seat.npc_id
+            or current.kit != seat.kit
+            or current.player_id is not None
+        ):
+            raise ApiError(409, "crew_busy", "Your crew changed. Try the request again.")
         if kind == "fetch":
             return await store.npc_fetch(
                 fresh, case.data, player_id, action_uid, seat_no, target, decision
