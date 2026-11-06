@@ -38,10 +38,15 @@ it('calibrates actual backing pixels while keeping CSS and world framing fixed',
       const after={width:canvas.width,height:canvas.height,css:canvas.style.cssText,bounds:[camera.left,camera.right,camera.top,camera.bottom]};
       graphics.sampleFrame(7000,{active:false});graphics.sampleFrame(10000);
       const paused={width:canvas.width,height:canvas.height};
-      graphics.renderer.dispose();graphics.renderer.forceContextLoss();canvas.remove();return {before,after,paused};
+      graphics.setQuality('low');const qualityReset={width:canvas.width,scale:graphics.renderer.userData.densityScale};
+      for(let now=12000;now<18000;now+=66.7)graphics.sampleFrame(now);
+      Object.defineProperty(window,'innerWidth',{value:375,configurable:true});Object.defineProperty(window,'innerHeight',{value:667,configurable:true});graphics.resize(camera);
+      const viewportReset={width:canvas.width,scale:graphics.renderer.userData.densityScale};
+      graphics.renderer.dispose();graphics.renderer.forceContextLoss();canvas.remove();return {before,after,paused,qualityReset,viewportReset};
     });
     expect(result.after.width).toBeLessThan(result.before.width);expect(result.after.width).toBeGreaterThanOrEqual(result.before.width*.5);
     expect(result.after.bounds).toEqual(result.before.bounds);expect(result.after.css).toBe(result.before.css);
     expect(result.paused).toEqual({width:result.after.width,height:result.after.height});
+    expect(result.qualityReset).toEqual({width:result.before.width,scale:1});expect(result.viewportReset).toEqual({width:375,scale:1});
   });
 });

@@ -18,7 +18,7 @@ export function createRenderer(container) {
     const frameWidth = recording ? 1920 : window.innerWidth;
     const frameHeight = recording ? 1080 : window.innerHeight;
     const nextDimensions=`${frameWidth}:${frameHeight}:${window.devicePixelRatio}`;
-    if(dimensions!==nextDimensions){dimensions=nextDimensions;budget.reset();}
+    if(dimensions!==nextDimensions){dimensions=nextDimensions;budget.reset({restoreDensity:true});}
     const view = pixelViewport(frameWidth, frameHeight, {quality, pixelRatio: window.devicePixelRatio,densityScale:budget.scale});
     renderer.setPixelRatio(view.pixelRatio); renderer.setSize(view.width, view.height, false);
     Object.assign(canvas.style, {width: `${view.width}px`, height: `${view.height}px`,
@@ -31,7 +31,7 @@ export function createRenderer(container) {
   function setQuality(name) {
     const next = name === 'low' ? 'low' : 'high'; renderer.shadowMap.enabled = false;
     if (next === quality) return;
-    quality = next; budget.reset(); resize();
+    quality = next; budget.reset({restoreDensity:true}); resize();
   }
   return {renderer, resize, setQuality,sampleFrame(now,{active=true}={}){
     if(!budget.sample(now,active))return false;resize();return true;

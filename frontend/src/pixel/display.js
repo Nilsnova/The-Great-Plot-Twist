@@ -24,7 +24,7 @@ export function worldViewport(width, height, viewHeight = 20, minWidth = 16) {
 export function createFrameBudget() {
   let scale=1,last=null,warmup=0,total=0,count=0,fast=0;
   function clearWindow(){total=0;count=0;}
-  function reset(){last=null;warmup=0;fast=0;clearWindow();}
+  function reset({restoreDensity=false}={}){if(restoreDensity)scale=1;last=null;warmup=0;fast=0;clearWindow();}
   return {
     get scale(){return scale;},reset,
     sample(now,active=true){

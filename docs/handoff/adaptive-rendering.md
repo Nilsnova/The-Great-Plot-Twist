@@ -19,12 +19,14 @@ A 1.5-second warmup precedes two-second windows of at least sixteen frames. Sust
 30/60/144 Hz keeps full density. A single stall cannot trigger a drop. Gaps over one second reset
 sampling; isolated long samples are bounded, while sustained three-FPS frames can still calibrate.
 Recovery adds only 0.05 after fifteen seconds of spare capacity below 21 ms, avoiding rapid oscillation.
-Resizes or changed quality reset timing and retain the chosen density; repeated same-quality calls
-are no-ops. Absolute high/low pixel caps and DPR limits remain intact.
+A changed viewport or quality explicitly restores full density and restarts calibration, so a
+new phone-sized viewport does not inherit the previous desktop density. Pauses retain the chosen
+density; repeated same-quality calls are no-ops. The pure reset helper exposes
+`reset({restoreDensity:false})` (the default) for these separate cases. Absolute high/low pixel caps and DPR limits remain intact.
 
 ## Verification
 
-- Seven pure cadence/limits tests, including stalled frames, blocked frames, three-FPS calibration,
+- Eight pure cadence/limits tests, including stalled frames, blocked frames, three-FPS calibration,
   stable projection, and slow recovery.
 - Two actual WebGL browser tests verify high/low caps plus adaptive canvas resizing with exactly
   unchanged CSS dimensions and world bounds.

@@ -22,6 +22,11 @@ describe('adaptive drawing density',()=>{
     const budget=createFrameBudget();let now=cadence(budget,0,66.7,5),scale=budget.scale;budget.sample(now+100,false);expect(budget.scale).toBe(scale);
     now=cadence(budget,now+100,16.7,10);expect(budget.scale).toBe(scale);cadence(budget,now,16.7,12);expect(budget.scale).toBeCloseTo(scale+.05);
   });
+  it('restores full density only for an explicit viewport/quality reset',()=>{
+    const budget=createFrameBudget();cadence(budget,0,66.7,5);const calibrated=budget.scale;expect(calibrated).toBeLessThan(1);
+    budget.reset();expect(budget.scale).toBe(calibrated);budget.reset({restoreDensity:true});expect(budget.scale).toBe(1);
+    cadence(budget,0,1000/60,5);expect(budget.scale).toBe(1);
+  });
   it('keeps projection/CSS dimensions and absolute pixel caps independent of adaptation',()=>{
     const full=pixelViewport(1280,720,{pixelRatio:2}),adapted=pixelViewport(1280,720,{pixelRatio:2,densityScale:.5});
     expect(adapted.width).toBe(full.width);expect(adapted.height).toBe(full.height);expect(adapted.pixelRatio).toBe(full.pixelRatio/2);
