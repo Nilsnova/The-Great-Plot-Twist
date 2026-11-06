@@ -1,0 +1,171 @@
+[
+  {
+    "id": "generator",
+    "command": "python3 scripts/pixel_art/generate.py",
+    "code": 0,
+    "ms": 11502,
+    "log": "captures/20261106_G7-Final/generator.log"
+  },
+  {
+    "id": "credits",
+    "command": "node scripts/check-credits.js",
+    "code": 0,
+    "ms": 4482,
+    "log": "captures/20261106_G7-Final/credits.log"
+  },
+  {
+    "id": "browser",
+    "command": "CAPTURE_PREFIX=G7 node scripts/check-browser.js",
+    "code": 0,
+    "ms": 32634,
+    "log": "captures/20261106_G7-Final/browser.log"
+  },
+  {
+    "id": "pixel",
+    "command": "node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 16269,
+    "log": "captures/20261106_G7-Final/pixel.log"
+  },
+  {
+    "id": "pixel-production",
+    "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 7760,
+    "log": "captures/20261106_G7-Final/pixel-production.log"
+  },
+  {
+    "id": "kit",
+    "command": "node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 3535,
+    "log": "captures/20261106_G7-Final/kit.log"
+  },
+  {
+    "id": "kit-production",
+    "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 3215,
+    "log": "captures/20261106_G7-Final/kit-production.log"
+  },
+  {
+    "id": "weather",
+    "command": "node scripts/check-weather-wiring.js",
+    "code": 0,
+    "ms": 4731,
+    "log": "captures/20261106_G7-Final/weather.log"
+  },
+  {
+    "id": "demo",
+    "command": "node scripts/check-demo.js",
+    "code": 0,
+    "ms": 172699,
+    "log": "captures/20261106_G7-Final/demo.log"
+  },
+  {
+    "id": "living",
+    "command": "node scripts/check-living.js",
+    "code": 0,
+    "ms": 14405,
+    "log": "captures/20261106_G7-Final/living.log"
+  },
+  {
+    "id": "case",
+    "command": "node scripts/check-case.js",
+    "code": 0,
+    "ms": 18950,
+    "log": "captures/20261106_G7-Final/case.log"
+  },
+  {
+    "id": "world",
+    "command": "node scripts/check-world.js",
+    "code": 0,
+    "ms": null,
+    "log": "captures/20261106_G7-Final/world.log",
+    "note": "Independent rerun after synchronous intro-close input fix; command exited 0."
+  },
+  {
+    "id": "readability",
+    "command": "node scripts/check-readability.js",
+    "code": 0,
+    "ms": 11126,
+    "log": "captures/20261106_G7-Final/readability.log"
+  },
+  {
+    "id": "cinematics",
+    "command": "node scripts/check-cinematics.js",
+    "code": 0,
+    "ms": 33085,
+    "log": "captures/20261106_G7-Final/cinematics.log"
+  },
+  {
+    "id": "intro",
+    "command": "node scripts/check-intro.js",
+    "code": 0,
+    "ms": 10513,
+    "log": "captures/20261106_G7-Final/intro.log"
+  },
+  {
+    "id": "experience",
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 13867,
+    "log": "captures/20261106_G7-Final/experience.log"
+  },
+  {
+    "id": "tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 10288,
+    "log": "captures/20261106_G7-Final/tests.log"
+  },
+  {
+    "id": "build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 1820,
+    "log": "captures/20261106_G7-Final/build.log"
+  },
+  {
+    "id": "life",
+    "command": "node scripts/check-life.js",
+    "code": 0,
+    "ms": 11434,
+    "log": "captures/20261106_G7-Final/life.log"
+  },
+  {
+    "id": "production",
+    "command": "CAPTURE_PREFIX=G7 node scripts/check-production.js",
+    "code": 0,
+    "ms": 6795,
+    "log": "captures/20261106_G7-Final/production.log"
+  },
+  {
+    "id": "loading",
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 8107,
+    "log": "captures/20261106_G7-Final/loading.log"
+  },
+  {
+    "id": "lifecycle",
+    "command": "node scripts/check-lifecycle.js",
+    "code": 0,
+    "ms": 8468,
+    "log": "captures/20261106_G7-Final/lifecycle.log"
+  },
+  {
+    "id": "golden",
+    "command": "node scripts/check-golden-path.js",
+    "code": 0,
+    "ms": 33561,
+    "log": "captures/20261106_G7-Final/golden.log"
+  },
+  {
+    "id": "chaos",
+    "command": "node scripts/check-chaos.js",
+    "code": 0,
+    "ms": 36704,
+    "log": "captures/20261106_G7-Final/chaos.log"
+  }
+]

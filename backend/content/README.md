@@ -15,6 +15,10 @@
 | `weather/` | The recorded weather answer and saved sample answers. Its own `README.md` explains them. | Server code only. |
 | `names.json` | The word lists for generated captain names such as "Brave Puffin 17" (package A2, decision D006). | The server only. It is not on the list of public content and is never served. |
 | `entry_kits.json` | The four entry kits of the case and which Act 1 ending leads to which one (package A3, decision D019). | The server only. It is not on the list of public content and is never served. |
+| `buildings.json` | The buildings of a home islet (package L2): the five spots, the price of a level 1 building and the starter timber. Format: [buildings.json](#buildingsjson-the-buildings-of-a-home-islet). | The server only. It is not on the list of public content; the browser gets everything through `GET /api/islet`. |
+| `weather_states.json` | The numbers behind the weather states (storm, fog, rain, calm), the hours of a night and the start of the harbor's almanac. | Server only. It is not on the public list. The browser sees the result in `GET /api/weather` (`state`, `tonight`) and `GET /api/bulletin`. |
+| `bulletin.json` | Every word of the harbor bulletin, the dated notices and the list of what resets when. | Server only. The browser sees it in `GET /api/bulletin`. |
+| `chapter_two_hook.json` | The Board notice and the beam of the Chapter 2 hook, "A light where no light was". | Server only. The browser gets it from `GET /api/bulletin` only after the hook has fired. |
 
 Content is data, not code. The story engine reads it and never contains story text. You can change `story.json` without touching any Python or JavaScript.
 
@@ -523,7 +527,7 @@ If a word is dropped, replace it with a neutral word that follows the rules abov
 
 The four entry kits of the case, and which Act 1 ending leads to which one (package A3, decision D019). The server reads the file with `backend/server/game/entry_kits.py`. It is **server only**: its name is not on `PUBLIC_CONTENT`, so `GET /api/content/...` never serves it. The browser gets the kit it needs in the answer of `POST /api/intro/complete`.
 
-**Pending Nils' decision (N5).** The coins and the texts come from the S0 story drafts (`CASE-FILE.md`, section 3) and wait for Nils' approval of S0. A test (`test_entry_kits.py`) pins the coins, so changing one is a visible act.
+**Settled by the story round (N5, D018).** The coins and the texts come from the S0 story drafts (`CASE-FILE.md`, section 3). They waited for Nils' approval of S0, which he gave with the story round on 5 Nov 2026, and the `kits` section of `secret/case.json` holds the same kits. A test (`test_entry_kits.py`) pins the coins, so changing one is a visible act.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -580,3 +584,122 @@ A file that breaks a rule stops the code with a message that names the file and 
 - **A changed kit changes what new players get.** A player who has an entry profile keeps it, because the first ending counts (decision D019). The profile stores the kit id, the start place and the coins as they were.
 - **A new ending or a new decision needs a kit.** If the story can end in a way that no kit covers, `kit_for` raises an error and the player gets a 500. `test_referee.py` searches the real story for every end state and fails first.
 - **A new kit id needs a new migration**, because the table `entry_profiles` lists the allowed ids. Never edit the migration that exists.
+
+## buildings.json: the buildings of a home islet
+
+`buildings.json` holds what the home islet (package L2) is made of: its five spots, which building each spot holds, what a level 1 building costs and how much timber every player starts with. It is **server only**. It is not on the list `PUBLIC_CONTENT`, so the browser never downloads it (decision D016). The browser gets everything it needs through `GET /api/islet`, which shows each spot with its price and whether the player can build it ([INTERFACES.md](../../docs/INTERFACES.md#your-home-islet-package-l2)). Keys are camelCase, like `market/companies.json`. Coins are play money only.
+
+The server reads and checks the file once, when it starts (`backend/server/game/building_catalogue.py`). A mistake stops the home islet: its routes answer `503 islet_unavailable`, the rest of the API keeps working, and the log names the entry and the field. The numbers are start values from the open-world design (`docs/story/OPEN-WORLD.md`, section 5.1) and change only by pull request.
+
+### Top-level fields
+
+| Field | Type | Meaning |
+|---|---|---|
+| `about` | text, not empty | Says what the file is. The code only checks that it is there. |
+| `playMoneyNote` | text, not empty | The line the islet panel shows to say that coins are play money. It comes with every answer of `GET /api/islet`. |
+| `starterTimber` | whole number, 0 to 100 | The timber every player gets once, when the first build makes their islet row. |
+| `priceList` | list with exactly one entry | The price of each level. Only level 1 exists until the upgrades are built. |
+| `spots` | list of 1 to 10 entries | The spots of the islet, in the order of the place registry (`frontend/src/world/places/registry.js`). |
+
+### An entry of `priceList`
+
+```json
+{ "level": 1, "coins": 300, "timber": 10 }
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `level` | the whole number 1 | The level this price is for. |
+| `coins` | whole number, 1 to 1,000,000 | Coins for the building. 1,000,000 is the biggest change the wallet allows (`MAX_DELTA` in `backend/server/wallet.py`). |
+| `timber` | whole number, 0 to 1,000 | Pieces of timber for the building. |
+
+### A spot
+
+```json
+{ "plot": "plot_2", "plotName": "Workshop plot", "type": "workshop", "name": "Workshop",
+  "about": "A bench and tools for making parts. What it can make comes in a later update.",
+  "buildable": true }
+```
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `plot` | id | yes | The hotspot of the islet in the place registry, for example `plot_2` or `islet_signal_station`. |
+| `plotName` | text, 2 to 40 characters | yes | The name of the spot that the player reads, for example "Workshop plot". |
+| `type` | id | yes | The one kind of building this spot holds, for example `workshop`. |
+| `name` | text, 2 to 40 characters | yes | The building as the player reads it, for example "Workshop". |
+| `about` | text, 1 to 160 characters | yes | One line about the building. It names no culprit: the file holds no case text. |
+| `standsFromStart` | true or false | no, default false | True only for the cabin: it is there on the first day, free, and has no levels and no row in the database. |
+| `buildable` | true or false | yes | False while the spot cannot be built yet (the windmill and the greenhouse). |
+| `lockedNote` | text, 1 to 160 characters | when needed | Why a spot is locked. Needed for a spot that is neither there from the start nor buildable. |
+
+An **id** (`plot` and `type`) is 2 to 40 characters: lowercase letters, digits and underscores.
+
+### What the loader checks
+
+- Every field above has the right type, length and range. A whole number is a whole number: not a fraction, not a text and not `true`.
+- No two spots share a `plot`, and no two share a `type`.
+- A spot that stands from the start cannot also be buildable.
+- A spot that is neither there from the start nor buildable has a `lockedNote`.
+- Exactly one spot has the `type` `signal_station`, and its `plot` is `islet_signal_station`. The finale counts it (the crew's third light).
+
+The tests are in `backend/server/tests/test_building_catalogue.py`. `test_islet_matches_migration.py` keeps the file and the SQL check rule `islet_buildings_plot_fits_building` equal.
+
+### Rules for changing the file
+
+- **Never rename a plot or a type after players have built.** Rows in `islet_buildings` point at them, and so does the finale.
+- **To open the windmill or the greenhouse** (once timber has a second source, the driftline): set `buildable` to `true`. No code change is needed, because the database already allows a building on those plots.
+- **To add a spot:** write a new migration that replaces the check rule `islet_buildings_plot_fits_building`, and add the spot here and to the place registry. The test fails until all three agree.
+- **A new price** counts for the next build. A building that stands keeps what it cost (`coins_paid` and `timber_paid` in `islet_buildings`).
+
+## The open-world files (server only)
+
+Three files belong to the open world (the weather states, the daily bulletin and the Chapter 2 hook). They are in this folder so they ship with the API, but none of them is on the public list `PUBLIC_CONTENT`, so `GET /api/content/{name}` answers 404 for them (a test checks it). The server reads each one once, when it starts, and checks every field. A mistake is reported with the file name and the field. The server does not stop because of it: the problem goes to the log, the weather route leaves out `state` and `tonight`, and `GET /api/bulletin` answers `503 bulletin_unavailable`. Their tests are in `backend/server/tests/test_weather_states.py` and `test_daily_content.py`, and they also check the real files. The design is `OPEN-WORLD.md` in the story documents (`docs/story/`, on the branch `docs/s0-story-round` until it is merged; sections 3.1 to 3.4, 5.4 and 10.2), and the build spec is `specs/open-world-must.md`.
+
+None of these texts may name the culprit or the case's answers, before or after the first solve (the spoiler rule, CASE-FILE 14.3). A test scans every text for the words that would give it away.
+
+### weather_states.json
+
+```json
+{
+  "stateFrom": {"storm": {"wind": 0.8}, "fog": {"fog": 0.5}, "rain": {"rain": 0.4}},
+  "night": {"startsHour": 18, "endsHour": 6, "hoursForState": 3},
+  "fogNightRule": {"almanacStartsOn": "2026-11-16"}
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `stateFrom` | The value of the game's weather (each from 0 to 1, see `weather/mapping.py`) at which an hour counts as a storm (`wind`), as fog (`fog`) or as rain (`rain`). Each number is above 0 and at most 1. In real units: a wind of 0.8 is 48 km/h, a fog of 0.5 is a visibility of 5 km or less (or a fog weather code) and a rain of 0.4 is 3.2 mm an hour (or a rain weather code of 0.4 or more). **The order is not in the file:** if several apply, storm comes first, then fog, then rain, otherwise calm. Cloud cover never changes the state. |
+| `night.startsHour`, `night.endsHour` | A night runs from `startsHour` (12 to 23) on one date to `endsHour` (2 to 11) on the next, Lisbon time. A night therefore spans midnight and never touches 01:00, the hour in which the Lisbon clocks change. A daytime is the rest of the date. |
+| `night.hoursForState` | A night or a daytime takes a state when this many of its hours have it (1 to 12). |
+| `fogNightRule.almanacStartsOn` | The date from which the harbor's almanac counts one fog night in every three, written `YYYY-MM-DD`. It also counts backwards from that date. |
+
+Other loops may add their own keys to this file later (storm warnings, rainy oil). The loader ignores keys it does not know.
+
+### bulletin.json
+
+| Field | Meaning |
+|---|---|
+| `stateWords` | One word for each weather state: exactly `storm`, `fog`, `rain` and `calm`. |
+| `noForecast` | The words for a night or day whose weather is not known. |
+| `weatherLine` | The first line. It must contain `{tonight}` and `{tomorrow}`, which are replaced by the words above. |
+| `fogNightLines` | The line for a fog night while the coast is dark: exactly `real` (the weather made it) and `almanac` (only the rule did). |
+| `exchange.feedWords` | One phrase for each price feed: exactly `live`, `cache`, `stale` and `replay`. |
+| `exchange.allOpen`, `exchange.somePaused` | The Exchange line. `allOpen` must contain `{feed}`. `somePaused` must contain `{feed}` and `{companies}` (the names of the paused companies, separated by commas). |
+| `relitLine`, `relitLineHours` | The line for the days after the first solve, and for how many hours it is shown (1 to 168). |
+| `calendar` | Dated notices: `{"on": "2026-11-16", "text": "..."}`. A notice is shown in the bulletin of that bulletin day (08:00 to 08:00). A date may appear only once. The list may be empty. |
+| `resets` | What resets when, as `{"when": "Every day at 00:00", "what": "A new game day begins."}`. The list is not empty. The bulletin sends it with the day, for a help box. |
+
+A text is never empty and at most 600 characters. A template may contain only its own placeholders in curly braces.
+
+### chapter_two_hook.json
+
+| Field | Meaning |
+|---|---|
+| `id` | Always `chapter_two_hook`. The browser keeps its "new" mark for the notice by it. |
+| `firesByNight` | The hook fires at the end (06:00 Lisbon time) of the first calm night among the first this many nights after the first solve, or at the end of the last of them (1 to 7). |
+| `bulletinLine` | The one line in the bulletin of the morning it fires. |
+| `notice.title`, `notice.text` | The Board notice. It describes the flashes in words ("a row of long and short flashes", as Elena's drawing in the logbook does) and names no exact pattern, so Chapter 2 can still choose one. It must not name the missing lens: the lens count comes from the ledger at Gull's Rest, which is on the spoiler list. |
+| `beam.chart` | Where the beam is on the sea chart: `x` from 0 to 447 and `y` from 0 to 255 (the chart is 448 by 256). Beyond Gull's Rest at (407, 34). Never shown in a text. |
+| `beam.pattern` | The flashes, 1 to 12 of `short` and `long`, in the order they flash. A proposal for the package that draws the beam. It must not be the harbor alarm, `long, short, long`. |
+| `beam.flash` | The timings in seconds, each above 0 and at most 10: `shortSeconds`, `longSeconds`, `gapSeconds` (between two flashes) and `pauseSeconds` (between two rounds). |

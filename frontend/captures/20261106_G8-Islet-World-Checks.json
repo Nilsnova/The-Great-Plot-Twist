@@ -1,0 +1,51 @@
+{
+  "checked": "2026-11-06T12:15:26.694Z",
+  "checks": [
+    "Only the cabin is shown before a good islet_changed answer",
+    "Built plots appear, locked plots stay hidden, and only the unlit station sprite appears by day",
+    "Built station switches to its lit sprite at night",
+    "Empty and locked plot markers replace scenery after the event removes a build",
+    "Latest islet state remains available after leaving and returning",
+    "No browser errors or external requests"
+  ],
+  "captures": {
+    "built-day-1280": "captures/20261106_G8-Islet-World-built-day-1280.png",
+    "built-night-1280": "captures/20261106_G8-Islet-World-built-night-1280.png",
+    "station-night-1280": "captures/20261106_G8-Islet-World-station-night-1280.png",
+    "built-night-375": "captures/20261106_G8-Islet-World-built-night-375.png"
+  },
+  "measurements": {
+    "day1280": {
+      "fps": 56,
+      "calls": 42,
+      "triangles": 80,
+      "geometries": 43,
+      "textures": 16,
+      "roots": 1,
+      "objects": 50,
+      "programs": 4
+    },
+    "night1280": {
+      "fps": 50,
+      "calls": 41,
+      "triangles": 80,
+      "geometries": 44,
+      "textures": 17,
+      "roots": 1,
+      "objects": 50,
+      "programs": 4
+    },
+    "night375": {
+      "fps": 61,
+      "calls": 44,
+      "triangles": 165,
+      "geometries": 46,
+      "textures": 17,
+      "roots": 1,
+      "objects": 50,
+      "programs": 6
+    }
+  },
+  "errors": [],
+  "external": []
+}

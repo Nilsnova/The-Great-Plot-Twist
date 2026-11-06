@@ -17,6 +17,7 @@ export function createCrewScreen({send,navigate}) {
     for(const seat of crew.seats){const card=node('li','crew-seat');card.dataset.kind=seat.kind;
       if(['deckhand','navigator','cook','salvager'].includes(seat.archetype)){const image=node('img','crew-portrait');image.src=`${import.meta.env.BASE_URL}pixel/crew-${seat.archetype}.png`;image.alt='';image.width=48;image.height=64;card.append(image);}
       card.append(node('span','case-eyebrow',`SEAT ${seat.seat} · ${seat.kind.toUpperCase()}`),node('h3','',seat.name),node('p','',seat.kit?.name??'Awaiting a captain'));
+      if(seat.farewell)card.append(node('p','case-caption',seat.farewell));
       if(seat.isYou)card.append(node('span','kit-badge','You'));seats.append(card);}
     element.append(seats);
     if(permissions.muster)element.append(button('Muster with NPC partners',()=>send('muster'),{focus:'muster'}));

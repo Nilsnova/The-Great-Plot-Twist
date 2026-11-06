@@ -1,0 +1,1 @@
+Local iteration output is retained here without publishing intermediate failed screenshots or superseded logs. The committed final manifest and final logs are the completion evidence. No source files are stored here.

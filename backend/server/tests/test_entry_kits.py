@@ -6,8 +6,9 @@ kit, the endings and flags are the ones the real story has, and the start places
 browser knows. A second group feeds the loader broken files and checks that each one is refused
 with a message, so a typo in the content cannot reach a player.
 
-The coins are pinned on purpose (decision N5 in specs/M1-backbone.md, PENDING Nils' approval of the
-S0 story drafts): if somebody changes an amount, a test fails and the change gets noticed.
+The coins are pinned on purpose (decision N5 in specs/M1-backbone.md, which waited for Nils'
+approval of the S0 story drafts and was settled by the story round, D018): if somebody changes an
+amount, a test fails and the change gets noticed.
 
 Used by: pytest (cd backend && uv run pytest).
 """
@@ -21,8 +22,9 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from plot_twist.engine import load_story
+from plot_twist.engine import CONTENT_DIR, load_story
 from server.app import create_app
+from server.crews.seats import KITS as SEAT_KITS
 from server.game.entry_kits import (
     DECISIONS,
     ENTRY_KITS_PATH,
@@ -36,6 +38,8 @@ from server.tests.helpers import CONFIGURED_SETTINGS, REPO_ROOT, assert_error
 from server.wallet import validate_transaction
 
 REGISTRY_PATH = REPO_ROOT / "frontend" / "src" / "world" / "places" / "registry.js"
+# The case file of the story round (package S0). It is secret: read it, never print from it.
+CASE_FILE = CONTENT_DIR / "secret" / "case.json"
 
 
 def real_kits() -> EntryKits:
@@ -78,7 +82,7 @@ def test_each_ending_and_decision_belongs_to_exactly_one_kit():
 
 
 def test_the_coins_are_1000_and_1600_for_the_stranger():
-    # PENDING Nils' decision (N5): the amounts come from the S0 drafts (CASE-FILE.md section 3).
+    # N5, settled by the story round (D018): the amounts come from the S0 drafts (CASE-FILE.md 3).
     coins = {kit.id: kit.coins for kit in real_kits().kits}
 
     assert coins == {"true_keeper": 1000, "witness": 1000, "informant": 1000, "stranger": 1600}
@@ -136,6 +140,40 @@ def test_the_kits_file_is_server_only_and_never_served():
 
     for name in ("entry-kits", "entry_kits", "entry_kits.json"):
         assert_error(client.get(f"/api/content/{name}"), 404, "content_not_found")
+
+
+def test_the_case_file_and_the_seat_rules_hold_the_same_kits_as_this_file():
+    # The case file (secret/case.json, package S0) keeps its own copy of the four kits, and the
+    # seat rules (crews/seats.py) list their ids, so a change to one copy must reach the others.
+    # The case file is secret: on a failure this test names only kit ids and field names, never
+    # a value from it.
+    kits_file = real_file()
+    case_kits = json.loads(CASE_FILE.read_text(encoding="utf-8"))["kits"]
+    ids = tuple(kit["id"] for kit in kits_file["kits"])
+
+    assert tuple(kit["id"] for kit in case_kits) == ids  # the same kits, in the case-file order
+    assert SEAT_KITS == ids
+
+    flag_of = {"none": "none", **kits_file["decisionFlags"]}  # the case file names the story flag
+    shared = {  # a field of entry_kits.json -> the same value in a kit of the case file
+        "name": lambda kit: kit["name"],
+        "ending": lambda kit: kit["act1_end"]["ending"],
+        "decision": lambda kit: kit["act1_end"]["decision"],
+        "startPlace": lambda kit: kit["starts_at"],
+        "coins": lambda kit: kit["start_coins"],
+        "cheapCard": lambda kit: kit["cheap_card"],
+        "item": lambda kit: kit["kit_item"],
+    }
+    in_the_case = {kit["id"]: kit for kit in case_kits}
+    differences = [
+        (kit["id"], field)
+        for kit in kits_file["kits"]
+        for field, read in shared.items()
+        if read(in_the_case[kit["id"]])
+        != (flag_of[kit["decision"]] if field == "decision" else kit[field])
+    ]
+
+    assert differences == []
 
 
 # --- finding a kit ---

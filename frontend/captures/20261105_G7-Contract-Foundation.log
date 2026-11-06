@@ -1,0 +1,139 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --run tests/case-arrival.test.js tests/case-board.test.js tests/case-night.test.js
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+ ❯ tests/case-arrival.test.js (8 tests | 7 failed) 18ms
+   ❯ arrival and crew adapter (7)
+     × projects the true_keeper fake entry profile 10ms
+     × projects the witness fake entry profile 1ms
+     × projects the informant fake entry profile 1ms
+     × projects the stranger fake entry profile 1ms
+     × fills missing kits in stable seat order and returns immutable copies 1ms
+     × refuses wrong/limited joins and confirms a supplied seat preview 1ms
+   × expires join throttling before a crew exists without advancing its case clock 1ms
+ ❯ tests/case-night.test.js (7 tests | 5 failed) 162ms
+   ❯ fake night authority (4)
+     × gates nightfall, spends only explicit build intent and settles a post 12ms
+     × needs ready distinct seats and three overlapping 90-second locks, then emits correct visual target 1ms
+     × expires locks and clears departed partner seats; dawn keeps buildings and gives a three-minute wait 1ms
+     × refuses off-target locks for five seconds, without inventing a lock 1ms
+   × keeps an existing lock after a miss, and rejects a lock at the exact end of night 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/case-arrival.test.js > arrival and crew adapter > projects the true_keeper fake entry profile
+ FAIL  tests/case-arrival.test.js > arrival and crew adapter > projects the witness fake entry profile
+ FAIL  tests/case-arrival.test.js > arrival and crew adapter > projects the informant fake entry profile
+ FAIL  tests/case-arrival.test.js > arrival and crew adapter > projects the stranger fake entry profile
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ tests/case-arrival.test.js:8:57
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  tests/case-arrival.test.js > arrival and crew adapter > fills missing kits in stable seat order and returns immutable copies
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ tests/case-arrival.test.js:12:45
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  tests/case-arrival.test.js > arrival and crew adapter > refuses wrong/limited joins and confirms a supplied seat preview
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ tests/case-arrival.test.js:16:45
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  tests/case-arrival.test.js > expires join throttling before a crew exists without advancing its case clock
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ tests/case-arrival.test.js:23:134
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  tests/case-night.test.js > fake night authority > gates nightfall, spends only explicit build intent and settles a post
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ crew tests/case-night.test.js:5:63
+ ❯ tests/case-night.test.js:9:101
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  tests/case-night.test.js > fake night authority > needs ready distinct seats and three overlapping 90-second locks, then emits correct visual target
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ crew tests/case-night.test.js:5:63
+ ❯ tests/case-night.test.js:10:130
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  tests/case-night.test.js > fake night authority > expires locks and clears departed partner seats; dawn keeps buildings and gives a three-minute wait
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ crew tests/case-night.test.js:5:63
+ ❯ tests/case-night.test.js:12:131
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  tests/case-night.test.js > fake night authority > refuses off-target locks for five seconds, without inventing a lock
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ crew tests/case-night.test.js:5:63
+ ❯ tests/case-night.test.js:13:99
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  tests/case-night.test.js > keeps an existing lock after a miss, and rejects a lock at the exact end of night
+ReferenceError: emptyExtensions is not defined
+ ❯ caseView src/adapter/fake/view.js:11:3
+
+ ❯ read src/adapter/fake/index.js:23:39
+ ❯ dispatch src/adapter/fake/index.js:39:44
+ ❯ Object.adapter.<computed> [as completeIntro] src/adapter/contract.js:5:58
+ ❯ crew tests/case-night.test.js:5:63
+ ❯ tests/case-night.test.js:15:112
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  12 failed | 8 passed (20)
+   Start at  23:00:58
+   Duration  514ms (tests 36%, transform 35%, import 21%, worker 7%)
+

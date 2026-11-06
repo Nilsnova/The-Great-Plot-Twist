@@ -19,8 +19,8 @@ export const routes=[
   route('C6.clerk_paid','C6','harbor_office','saltreach_harbor','Ask the day clerk now',3,{price:200}),
   route('C6.shareholder_register','C6','market_hall','saltreach_harbor','Read the shareholder register',3,{playersOnly:true,requiresShare:true}),
   route('C7.night_log','C7','signal_station','saltreach_harbor','Read the coastguard night log',0),
-  route('C8.ruin','C8','watchtower_ruin','the_teeth','Search the old watchtower',5),
-  route('C8.log_reader','C8','watchtower_ruin','the_teeth','Follow Elena’s log lead',0,{playersOnly:true,readLog:true}),
+  route('C8.ruin','C8','watchtower_ruin','the_teeth','Search the old watchtower',9),
+  route('C8.log_reader','C8','watchtower_ruin','the_teeth','Follow Elena’s log lead',4,{playersOnly:true,readLog:true}),
 ];
 export const spotNames={jail:'Harbor jail',harbor_office_window:'Office window',reef:'Reef',satchel:'Your satchel',notice_board:'Reward notice',ferry_pier:'Ferry office',back_room:'Cove back room',low_tide_cave:'Low-tide cave',home_driftline:'Your driftline beach',salvage_yard:'Salvage yard',yard_gate:'Salvage-yard gate',beach:'Wreck beach dockhand',keepers_post_room:'Keepers’ post room',harbor_office:'Harbor Office counter',market_hall:'Shareholder register',signal_station:'Coastguard signal station',watchtower_ruin:'Watchtower ruin'};
 export function windowStatus(now,id,arrivalMinutes=0) {

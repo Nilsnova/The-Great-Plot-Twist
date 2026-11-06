@@ -12,13 +12,14 @@ export const places = {
     zone('jail', 'Jail', -19, 0), zone('market_hall', 'Island Exchange', -9, -2),
     zone('prediction_kiosk', 'Prediction kiosk', 1, -2), zone('sports_pavilion', 'Sports pavilion', 12, -2),
     zone('signal_station', 'Signal station', 21, -3), zone('notice_board', 'Reward notice', 3, 8.5),
+    zone('bulletin_board','Harbor bulletin',6,8.5),
     zone('captains_table', 'Captain’s Table', -1, 3.5),zone('keepers_post_room','Keepers’ post room',-4.1,7.8,.85),zone('wall_of_lights','Wall of Lights',12,6.7) ],
     lights: [{ id: 'harbor_light', beamOrigin: { x: 9, y: -1.6675, z: 0 } }] },
   home_islet: { name: 'Home islet', chart: [302, 201], spawn: [0, 12], zones: [
     zone('plot_1', 'Cabin plot', -8, 7.5), zone('plot_2', 'Workshop plot', 7, 7.5),
     zone('plot_3', 'Windmill plot', -8, -5.5), zone('plot_4', 'Greenhouse plot', 7, -5.5),
     zone('islet_signal_station', 'Islet signal station', 0, -12),zone('home_driftline','Your driftline beach',0,18) ],
-    lights: [{ id: 'islet_signal_station', beamOrigin: { x: 0, y: 15.6425, z: 0 } }] },
+    lights: [{ id: 'islet_signal_station', beamOrigin: { x: 0, y: 16.2675, z: 0 } }] },
   smugglers_cove: { name: 'Smugglers’ Cove', chart: [112, 76], spawn: [0, 12], zones: [
     zone('back_room', 'Back room', -8, 1), zone('low_tide_cave', 'Low-tide cave', 9, 5),
     zone('arena_gate', 'Arena gate', 0, -8) ] },
@@ -28,7 +29,7 @@ export const places = {
     zone('reef', 'Reef', -8, 9), zone('watchtower_ruin', 'Watchtower ruin', -5, -3),
     zone('raid_arch', 'Raid arch', 8, 1), zone('fog_bank', 'Fog bank', 9, -9) ],
     lights: [{ id: 'ruin_light', beamOrigin: { x: -5, y: 8.5, z: 0 } }] },
-  gulls_rest: { name: 'Gull’s Rest', chart: [407, 34], spawn: [0, 10], locked: true, zones: [] },
+  gulls_rest: { name: 'Gull’s Rest', chart: [407, 34], spawn: [0, 10], locked: true, zones: [zone('gulls_rest_dock','Gull’s Rest dock',0,13),zone('lens_store','Lens store',0,2),zone('keepers_star','Keeper’s Star',5,7)] },
 };
 for (const place of Object.values(places)) { place.anchors ??= {}; place.lights ??= []; }
 export const placeIds = Object.keys(places);

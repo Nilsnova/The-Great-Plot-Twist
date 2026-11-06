@@ -12,7 +12,7 @@ try {
   function walk(key){if(seen.has(key))return;seen.add(key);for(const dependency of manifest[key].imports??[])walk(dependency);}
   walk('index.html');report.initialChunks=[];report.initialJavaScript=0;report.initialGzip=0;
   for(const key of seen){const file=manifest[key].file;if(!file.endsWith('.js'))continue;const data=await readFile('dist/'+file);report.initialChunks.push(file);report.initialJavaScript+=data.length;report.initialGzip+=gzipSync(data).length;}
-  check(report.initialJavaScript<35000,'Cold title JavaScript is below 35 kB before gzip');
+  check(report.initialJavaScript<=21080,'Cold title JavaScript stays within the G7 baseline of 21,080 bytes');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
   for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
   await stubIntro(page);await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
@@ -26,4 +26,4 @@ try {
   await startFromTitle(page);check(await page.evaluate(()=>typeof window.__island)==='undefined','The loaded production world exposes no dev inspection object');
   await page.getByRole('button',{name:'Open visual settings'}).click();await page.locator('[data-preference=quality]').selectOption('low');await page.screenshot({path:'captures/20261105_G5-Settings.png'});
   check(env.errors.length===0&&env.external.length===0,'Production title and world have no browser errors or external asset requests');console.log(JSON.stringify(report,null,2));
-} finally {await writeFile('captures/20261105_G5-Loading-Checks.json',JSON.stringify(report,null,2));await env.close();}
+} finally {await writeFile('captures/20261105_G7-Loading-Checks.json',JSON.stringify(report,null,2));await env.close();}

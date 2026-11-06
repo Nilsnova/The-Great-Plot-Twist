@@ -1,0 +1,52 @@
+{
+  "checkpoint": 1,
+  "branch": "feat/g8-islet-harbor-demo",
+  "mergedMain": "8ff24cc77ab077e5d24fee297d568558315f6ed5",
+  "tests": 316,
+  "files": 52,
+  "coldJsBytes": 21061,
+  "coldGzipBytes": 9904,
+  "commands": [
+    {
+      "command": "npm test",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-islet-world.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-bulletin.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-world.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-readability.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-production.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "result": "passed"
+    }
+  ],
+  "notVerified": [
+    "L2 and Exchange panels absent on main",
+    "real adapter and live server",
+    "actual screen readers and physical phones"
+  ]
+}

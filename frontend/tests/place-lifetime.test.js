@@ -14,6 +14,10 @@ describe('real place lifetime', () => {
     for (const id of placeIds) {
       const place = await createPlace({ id, ...adapters });
       expect(() => place.update(1/60)).not.toThrow();
+      if(id==='saltreach_harbor'){
+        expect(place.zones.some(zone=>zone.id==='bulletin_board')).toBe(false);
+        place.update(1/60,{time:0,player:{x:0,z:0},night:0,weather:{fog:0},bulletin:{status:'ready'}});
+      }
       expect(place.lights.every(light => ['x','y','z'].every(axis => Number.isFinite(light.beamOrigin[axis])))).toBe(true);
       expect(place.id).toBe(id); expect(place.zones).toEqual(places[id].zones);
       expect(place.anchors).toEqual(places[id].anchors); expect(place.lights).toEqual(places[id].lights);

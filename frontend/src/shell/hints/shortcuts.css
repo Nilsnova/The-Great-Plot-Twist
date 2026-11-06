@@ -1,0 +1,7 @@
+.shortcuts-overview{font:18px/1.6 'Courier New',monospace;color:#ece0b8}
+.shortcuts-list{display:grid;grid-template-columns:minmax(140px,.75fr) minmax(0,1.4fr);gap:8px 18px;margin:0}
+.shortcuts-list dt{font-size:16px;font-weight:bold;color:#f3d58c}
+.shortcuts-list dd{font-size:16px;line-height:1.5;margin:0;overflow-wrap:anywhere}
+.shortcuts-note{font-size:16px;line-height:1.6;margin:16px 0 0;color:#d2d9bb}
+.shortcuts-overview:focus-visible{outline:2px solid #f3d58c;outline-offset:4px}
+@media(max-width:520px){.shortcuts-list{grid-template-columns:1fr;gap:2px}.shortcuts-list dd{margin-bottom:8px}}

@@ -1,3 +1,4 @@
+import {readHttp} from './http-read.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
@@ -13,7 +14,7 @@ const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'previe
 let browser;
 try {
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch('http://127.0.0.1:4175')).ok) break; } catch { /* Preview is starting. */ }
+    try { if ((await readHttp('http://127.0.0.1:4175')).ok) break; } catch { /* Preview is starting. */ }
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   browser = await chromium.launch({ executablePath, headless: true });

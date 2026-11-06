@@ -1,5 +1,5 @@
 // Local rehearsal accepts the sole uncleared suspect. No designated identity or reveal prose.
-import {accept,refuse,effect} from './state.js';
+import {accept,refuse,effect,playerSeat} from './state.js';
 import {deductionData,suspectTitles,cardTitles} from './data.js';
 export const revealPlaceholder='[revealed by the server]';
 export function accusationView(state){
@@ -18,7 +18,8 @@ export function accuse(state,id){
   if(!Object.hasOwn(suspectTitles,id))return refuse('unknown_suspect','Choose one of the four suspects.');
   const cleared=new Set(deductionData.filter(d=>state.deductions.includes(d.id)).flatMap(d=>d.clears)),remaining=Object.keys(suspectTitles).filter(id=>!cleared.has(id));
   if(remaining.length!==1||id!==remaining[0]){state.accuseWaitUntil=state.now+60;return refuse('accusation_refused','The evidence does not support that accusation. Try again in one minute.');}
-  state.solved=true;state.revealIndex=0;state.worldRelit=true;state.festivalUntil=state.now+172800;state.wall=[{name:state.captainName,order:1}];return accept('The reveal is ready.');
+  if(state.rewardState)state.rewardState.accusedBy=playerSeat(state);
+  state.solved=true;state.revealIndex=0;state.worldRelit=true;state.festivalUntil=(state.worldNow??state.now)+172800;state.wall=[{name:state.captainName,order:1}];return accept('The reveal is ready.');
 }
 export function revealLines(state){
   const kitCites={true_keeper:['C7','C8'],witness:['C8'],informant:['C3','C4'],stranger:['C5','C6']};

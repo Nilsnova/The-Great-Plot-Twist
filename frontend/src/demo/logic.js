@@ -1,19 +1,26 @@
-// A 161-second highlights script. Only this pure state machine decides tour step timing.
+// Tour schedule and navigation rules. This file has no DOM or game imports.
 export const tourSteps=[
-  {id:'intro',title:'A page from the intro',seconds:20,copy:'Search the writing desk. The original story runs locally for this rehearsal.'},
-  {id:'arrival',title:'Arrival on Lighthouse Isle',seconds:14,copy:'Walkable pixel scenery, a readable HUD and the keeper’s cottage.'},
-  {id:'chart',title:'Set a coastal course',seconds:20,copy:'The sea chart connects the islands. Sailing follows the wind.'},
-  {id:'harbor',title:'Saltreach Harbor',seconds:20,copy:'A working harbor with named hotspots, ready for the feature teams.'},
+  {id:'intro',title:'A page from the intro',seconds:15,copy:'The original intro runs locally. Nothing from the case solution appears.'},
+  {id:'arrival',title:'Arrival on Lighthouse Isle',seconds:12,copy:'Walkable pixel scenery, the keeper’s cottage and a readable HUD.'},
+  {id:'islet',title:'Build the signal station',seconds:18,copy:'The crew builds a third light on the home islet. This rehearsal changes no live progress.'},
+  {id:'chart',title:'Set a coastal course',seconds:16,copy:'The sea chart connects the home islet to Saltreach Harbor.'},
+  {id:'harbor',title:'Harbor bulletin and live captains',seconds:28,copy:'The bulletin shows an almanac fog night while local captains walk through the harbor.'},
   {id:'board',title:'At the Captain’s Table',seconds:18,copy:'Two crew seats pin cards. D1 opens the Night of Three Lights. Local rehearsal only.'},
-  {id:'fog',title:'Recorded weather · fog override',seconds:12,copy:'A local fog override changes the coast and the procedural wind and sea.'},
-  {id:'storm',title:'Recorded weather · storm override',seconds:12,copy:'A local storm override brings rain and wind. No provider is needed.'},
-  {id:'finale',title:'The Night of Three Lights',seconds:27,copy:'Take a post, aim three beams, and watch the fog part. No accusation or reveal is shown.'},
-  {id:'relighting',title:'The Relighting',seconds:18,copy:'The public lights return. Gull’s Rest opens for a lantern festival. This tour changes no live progress.'},
+  {id:'weather',title:'Weather · almanac fog and storm',seconds:18,copy:'The harbor almanac names a fog night; the storm view is a local weather rehearsal.'},
+  {id:'finale',title:'The Night of Three Lights',seconds:27,copy:'Take a post and aim three beams. This tour never accuses or reveals anyone.'},
+  {id:'relighting',title:'The Relighting',seconds:18,copy:'The public lights return and Gull’s Rest opens. The tour changes no live progress.'},
 ];
+
+export const tourDurationSeconds=tourSteps.reduce((total,step)=>total+step.seconds,0);
+
 export function createTourMachine() {
-  let index=-1,elapsed=0;
-  return {get step(){return tourSteps[index]??null;},get index(){return index;},get elapsed(){return elapsed;},
-    get due(){return index>=0&&elapsed>=tourSteps[index].seconds;},get progress(){return index<0?0:Math.min(1,elapsed/tourSteps[index].seconds);},
-    start(){index=0;elapsed=0;},advance(){if(index<0)return false;index++;elapsed=0;if(index>=tourSteps.length){index=-1;return false;}return true;},
-    tick(dt){if(index>=0&&Number.isFinite(dt))elapsed+=Math.max(0,dt);},stop(){index=-1;elapsed=0;}};
+  let index=-1,elapsed=0,paused=false;
+  function select(next){if(!Number.isInteger(next)||next<0||next>=tourSteps.length)return false;index=next;elapsed=0;return true;}
+  function stop(){index=-1;elapsed=0;paused=false;}
+  return {get step(){return tourSteps[index]??null;},get index(){return index;},get elapsed(){return elapsed;},get paused(){return paused;},
+    get due(){return index>=0&&!paused&&elapsed>=tourSteps[index].seconds;},get progress(){return index<0?0:Math.min(1,elapsed/tourSteps[index].seconds);},
+    start(){paused=false;select(0);},advance(){if(index<0)return false;if(index+1>=tourSteps.length){stop();return false;}return select(index+1);},
+    back(){return index>0&&select(index-1);},jump(next){return select(next);},restart(){paused=false;return select(0);},
+    togglePause(){if(index<0)return paused;paused=!paused;return paused;},
+    tick(dt){if(index>=0&&!paused&&Number.isFinite(dt))elapsed+=Math.max(0,dt);},stop};
 }

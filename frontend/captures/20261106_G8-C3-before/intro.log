@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.textContent: Error: strict mode violation: locator('.intro-notes') resolved to 2 elements:
+    1) <ul hidden="" class="intro-notes intro-ending-notes"></ul> aka locator('section').filter({ hasText: 'Start a new intro' }).locator('ul')
+    2) <ul class="intro-notes">…</ul> aka getByRole('list').filter({ hasText: 'The drawer is empty now. You' })
+
+Call log:
+[2m  - waiting for locator('.intro-notes')[22m
+
+    at /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-intro.js:31:45 {
+  log: [ "  - waiting for locator('.intro-notes')" ]
+}
+
+Node.js v24.17.0
