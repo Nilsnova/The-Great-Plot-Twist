@@ -103,7 +103,7 @@ There is one Supabase project, and preview and production both use it ([SETUP.md
 
 Settled with Nils on 5 Nov 2026 (D002) and checked against the official docs the same day.
 
-- **Vercel Hobby** (free, for non-commercial use only): one project with two Vercel Services, a Beta feature available on every plan. Functions run in one region, Dublin (`dub1`). It is set in the dashboard (Settings > Functions), because new projects start in Washington (`iad1`).
+- **Vercel Hobby** (free, for non-commercial use only): one project with two Vercel Services, a Beta feature available on every plan. Functions run in one region, Dublin (`dub1`). `vercel.json` sets it (`"regions": ["dub1"]`), which overrides the dashboard setting, because new projects start in Washington (`iad1`); until 6 Nov the live API still ran there.
 - **Supabase Free:** one project in West EU (Ireland), `eu-west-1`, next to the functions. Project settings: Data API on; "Automatically expose new tables" off, so every table and function needs explicit grants; "Enable automatic RLS" on; sign-in with GitHub only (email sign-in off); no Supabase GitHub integration.
 - **Portable on purpose.** The game is a static site and the API is a plain FastAPI app. If the course publishes deployment rules later, moving costs little.
 
