@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" role="img" aria-labelledby="title desc">
+  <title id="title">Browser, Vercel and Supabase architecture</title>
+  <desc id="desc">Vercel serves static game files and routes API requests to FastAPI in Dublin. FastAPI checks Supabase Auth and writes to Postgres in Ireland. Realtime is a dashed planned connection, not connected on this revision.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m0 0 8 4-8 4z" fill="#32665d"/></marker></defs>
+  <g font-family="Arial,Helvetica,sans-serif" fill="#17383d">
+    <rect x="300" y="20" width="480" height="365" rx="10" fill="#e8ede3" stroke="#b5c6b9"/>
+    <text x="322" y="54" font-size="23" font-weight="700">Vercel · one web address</text>
+    <rect x="875" y="20" width="310" height="365" rx="10" fill="#e8ede3" stroke="#b5c6b9"/>
+    <text x="897" y="54" font-size="23" font-weight="700">Supabase · Ireland</text>
+    <rect x="15" y="150" width="220" height="166" rx="8" fill="#17383d"/>
+    <text x="37" y="187" font-size="25" fill="#fbf7ec" font-weight="700">Browser</text>
+    <text x="37" y="223" font-size="21" fill="#fbf7ec">JavaScript + Three.js</text>
+    <text x="37" y="258" font-size="21" fill="#c1d2ae">Show + ask</text>
+    <text x="37" y="288" font-size="18" fill="#c1d2ae">Untrusted client</text>
+    <rect x="322" y="80" width="240" height="92" rx="6" fill="#fbf7ec" stroke="#32665d" stroke-width="2"/>
+    <text x="342" y="114" font-size="23" font-weight="700">Frontend service</text>
+    <text x="342" y="145" font-size="20">Static Vite build</text>
+    <rect x="512" y="210" width="244" height="140" rx="6" fill="#fbf7ec" stroke="#32665d" stroke-width="2"/>
+    <text x="532" y="245" font-size="25" font-weight="700">FastAPI · Python</text>
+    <text x="532" y="278" font-size="21">Dublin · dub1</text>
+    <text x="532" y="314" font-size="21">Verify + decide + write</text>
+    <rect x="897" y="80" width="265" height="92" rx="6" fill="#fbf7ec" stroke="#32665d" stroke-width="2"/>
+    <text x="918" y="114" font-size="23" font-weight="700">Auth</text>
+    <text x="918" y="145" font-size="20">GitHub sign-in</text>
+    <rect x="897" y="230" width="265" height="120" rx="6" fill="#fbf7ec" stroke="#32665d" stroke-width="2"/>
+    <text x="918" y="265" font-size="23" font-weight="700">Postgres</text>
+    <text x="918" y="299" font-size="21">Grants + row-level</text>
+    <text x="918" y="328" font-size="21">security (RLS)</text>
+    <g fill="none" stroke="#32665d" stroke-width="2.5" marker-end="url(#arrow)">
+      <path d="M235 175V126h87"/>
+      <path d="M235 267h277"/>
+      <path d="M756 239h58V126h83"/>
+      <path d="M756 305h141"/>
+      <path d="M125 316v115h905v-81" stroke-dasharray="7 7"/>
+    </g>
+    <text x="242" y="111" font-size="18">Game files</text>
+    <text x="314" y="251" font-size="22" font-weight="700">/api/…</text>
+    <text x="792" y="203" font-size="18">Verify</text>
+    <text x="792" y="289" font-size="18">Writes</text>
+    <rect x="298" y="409" width="544" height="43" rx="3" fill="#fbf7ec"/>
+    <text x="316" y="438" font-size="22" fill="#765018">Realtime · planned, not connected</text>
+  </g>
+</svg>
