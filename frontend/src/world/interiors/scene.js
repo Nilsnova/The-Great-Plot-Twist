@@ -3,6 +3,7 @@ import {rooms} from './rooms.js';
 import {atExit,moveInRoom,nearestHotspot} from './logic.js';
 import {paintRoom,paintCaptain,paintAtmosphere} from './paint.js';
 import {createRoomControls} from './controls.js';
+import {createCaptainArt} from './captain-art.js';
 import './interiors.css';
 export {entranceFor,canEnterRoom} from './rooms.js';
 
@@ -27,11 +28,12 @@ export function createInteriors({container,resetInput,focus,onInteract,onExit,on
   element.append(canvas,header,exit,markers,pad,hud);(container??document.body).append(element);
   function enabled(){return !!room&&!disposed&&!closing&&ready&&!blocked&&!document.querySelector('dialog[open]');}
   const controls=createRoomControls({element,canvas,pad,enabled,interact:()=>activate(),exit:()=>close(),onMenu});
+  const captainArt=createCaptainArt({onReady:()=>{if(!disposed)draw();}});
   function draw(){
     if(!room||!width||!height)return;
     const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,width,height);
     c.drawImage(background,0,0,background.width,background.height,0,0,width,height);
-    paintAtmosphere(c,width,height,room,time,reduce());paintCaptain(c,width,height,position,phase,face,reduce());
+    paintAtmosphere(c,width,height,room,time,reduce());paintCaptain(c,width,height,position,phase,face,reduce(),captainArt);
   }
   function resize(){
     if(!room||disposed)return;
@@ -70,7 +72,7 @@ export function createInteriors({container,resetInput,focus,onInteract,onExit,on
     markers.replaceChildren(...room.hotspots.map(spot=>{
       const marker=button(spot.label,'interiors-hotspot',()=>activate(spot));marker.style.left=`${spot.x*100}%`;marker.style.top=`${(spot.y-.11)*100}%`;return marker;
     }));
-    element.hidden=false;ready=reduce();element.dataset.state=ready?'ready':'entering';resize();refresh();canvas.focus({preventScroll:true});
+    element.hidden=false;ready=reduce();element.dataset.state=ready?'ready':'entering';resize();captainArt.load();refresh();canvas.focus({preventScroll:true});
     if(!ready)timer=setTimeout(()=>{timer=null;if(!room||closing||disposed)return;ready=true;element.dataset.state='ready';refresh();},220);
     return true;
   }
@@ -84,7 +86,7 @@ export function createInteriors({container,resetInput,focus,onInteract,onExit,on
       if(Number.isFinite(delta)&&delta>0)time+=Math.min(delta,.05);
       refresh();draw();if(enabled()&&atExit(position))close('door');
     },dispose(){
-      if(disposed)return;disposed=true;clearTimeout(timer);timer=null;controls.dispose();
+      if(disposed)return;disposed=true;clearTimeout(timer);timer=null;controls.dispose();captainArt.dispose();
       observer?.disconnect();window.removeEventListener('resize',resize);
       room=null;roomId=null;resetInput?.();element.remove();canvas.width=canvas.height=background.width=background.height=1;
     }};

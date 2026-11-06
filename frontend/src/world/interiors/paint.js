@@ -1,5 +1,6 @@
 // Cached original room scenery plus a smooth explorer and restrained ambient light.
 import {paintFurniture} from './furniture.js';
+import {captainPose} from './captain-art.js';
 
 function windowLight(c,x,y,w,h,dusk=false) {
   const light=c.createLinearGradient(x,y,x,y+h);light.addColorStop(0,dusk?'#89b3b0':'#9ac3b9');light.addColorStop(1,'#537b7d');
@@ -73,9 +74,14 @@ export function paintRoom(c,width,height,room) {
   shade.addColorStop(0,'#071b2700');shade.addColorStop(.73,'#071b2722');shade.addColorStop(1,'#071b27aa');c.fillStyle=shade;c.fillRect(0,0,width,height);
 }
 
-export function paintCaptain(c,width,height,position,phase,face,reduce=false) {
+export function paintCaptain(c,width,height,position,phase,face,reduce=false,art=null) {
   const size=Math.max(34,Math.min(64,width*.048)),x=position.x*width,y=position.y*height,bob=reduce?0:Math.sin(phase)*size*.025;
   c.save();c.translate(x,y+bob);c.fillStyle='#10252b77';c.beginPath();c.ellipse(0,size*.12,size*.32,size*.13,0,0,Math.PI*2);c.fill();
+  const pose=captainPose(face,phase,reduce),image=art?.get(pose);
+  if(image){
+    const imageHeight=size*1.2,imageWidth=imageHeight*image.naturalWidth/image.naturalHeight;
+    if(pose.mirror)c.scale(-1,1);c.imageSmoothingEnabled=true;c.drawImage(image,-imageWidth/2,-size,imageWidth,imageHeight);c.restore();return;
+  }
   const step=reduce?0:Math.sin(phase)*size*.035;c.fillStyle='#263d3f';c.fillRect(-size*.2,-size*.04,size*.15,size*.24+step);c.fillRect(size*.05,-size*.04,size*.15,size*.24-step);
   c.fillStyle='#344c43';c.fillRect(-size*.32,-size*.53,size*.64,size*.5);c.fillStyle='#81966a';c.fillRect(-size*.25,-size*.55,size*.5,size*.44);
   c.fillStyle='#c5b47c';c.fillRect(-size*.15,-size*.36,size*.3,size*.19);c.fillStyle='#506a52';c.fillRect(-size*.11,-size*.32,size*.22,size*.1);

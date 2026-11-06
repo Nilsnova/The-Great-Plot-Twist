@@ -48,3 +48,9 @@ Arrow keys/WASD walk, E/Enter/Space inspect the nearby story hotspot, and Escape
 - `git diff --check`: clean. The shared text dictionary needs review of the ordinary words `rack`, `inspects` and `highlighted`; the branch deliberately does not edit shared text-lint files.
 
 Not verified here: the final integrated outside-doorway flow, outside HUD behavior, production deployment, multiplayer/save behavior, or the full application test/build gates. Those belong to the root integration. No live services, migrations or deployments were changed.
+
+## Shared explorer art follow-up
+
+The explorer now uses the nine existing `/pixel/hd/explorer*.png` poses from the world art package. Direction, mirrored left movement and the two walking steps follow the existing room phase/facing state; size, foot anchor, collision geometry and room input stay unchanged. Reduced motion uses a still directional pose. Images load only on first room entry, once per room-scene lifetime, and their callbacks are released on disposal. Missing or failed images retain the procedural fallback.
+
+Focused verification: `tests/interiors-logic.test.js` passed all nine cases, including lazy image loading, failed-pose fallback and disposal. The browser script passed 13 checks and captured the three desktop rooms plus 375/320px touch scenes, with all nine images loaded once in each context and no CSP/browser errors. This task worktree predates the art package, so the check used `INTERIORS_ASSET_ROOT=/workspace/redesign/frontend/public INTERIORS_ARTIFACTS=/tmp/plot-twist-interiors-hd-proof node scripts/check-interiors.js`; the integrated branch uses its own `frontend/public` by default. Screenshots are in `/tmp/plot-twist-interiors-hd-proof`. No full application suite was repeated for this follow-up.
