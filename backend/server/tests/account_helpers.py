@@ -36,7 +36,7 @@ PLAYER_ID = "11111111-2222-3333-4444-555555555555"
 PLACEHOLDER = "Captain-111111"  # what the sign-up trigger writes for PLAYER_ID
 OTHER_PLAYER_ID = "99999999-8888-7777-6666-555555555555"
 OTHER_PLACEHOLDER = "Captain-999999"
-TOKEN = "token-of-octocat"
+TOKEN = "test.octocat.signature"
 RIGHT_HEADER = {"Authorization": f"Bearer {TOKEN}"}
 
 # The time that the fake database writes into a save, in the timezone of the scratch server

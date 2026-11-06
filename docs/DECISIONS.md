@@ -116,6 +116,8 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Nils, 5 Nov 2026. Proposed in the S1 pull request (`feat/s1-import-plot-twist`). Affects S2 (the story in the browser) and A3 (the referee replays the move log with the Python engine).
 
+**Amendment, 6 Nov 2026 (Nils, G10):** Story v2 changed `backend/content/story.json`. The byte-for-byte claim and hash above describe the original import, not the current story file. The engine rules and provenance remain separate from those content edits.
+
 ## D016 · Server content lives in backend/content/; the browser gets public content through the API · 2026-11-05
 
 **Status:** Proposed in the S1 pull request. It stays proposed until Nils accepts it and a different teammate has reviewed it, because it moves the content paths of S3, S4, A2, A3, L2, L4 and L5.
@@ -244,7 +246,7 @@ Add short entries; keep the original rationale when superseding a decision.
 
 ## D019 · Referee and entry kits · 2026-11-05
 
-**Status:** Proposed in the A3 pull request (`feat/a2-a3-signin-referee`); accepted when reviewed by another teammate and merged. **One point is pending Nils:** "the first ending counts" is the recommended default (point 3). The other point that waited for him, the coins and texts of the kits (point 5, N5), came from the S0 story drafts and waited for his approval of S0; the story round settled it (D018), and the kits of `backend/content/secret/case.json` are the same as those of `entry_kits.json`.
+**Status:** Proposed in the A3 pull request (`feat/a2-a3-signin-referee`); accepted when reviewed by another teammate and merged. **N6 was decided by Nils on 6 Nov 2026:** the coins and texts of the kits are settled by the approved S0 story round (point 5, D018), and "the first ending counts" is now the decided rule (point 3).
 
 **Decision:** (1) **The server replays the move log.** At the end of Act 1 the browser sends `actions[]`, 1 to 300 action ids (`POST /api/intro/complete`). The server plays them with the original Python engine (`plot_twist/engine.py`) on its own copy of `story.json`. Every move must be accepted by the engine. The first move it does not accept (an unknown id, a move of another scene, a blocked move, a move after the ending) refuses the whole log as `422 move_refused`, and the message names that move. A log that stops before an ending is `422 no_ending`. A refused log stores nothing: the database is not called. The browser never sends an ending, a decision, a kit or a player id; any such field is refused. (2) **Eight end states, four kits.** The ending scene and the decision (read from the story flags `warned_harbor` and `trusted_fisherman`, neither meaning `none`) pick the kit: `ending_rescue` with `warned` is the True Keeper, `ending_trapped` with `warned` the Witness, with `trusted` the Informant, with `none` the Stranger. Reading the logbook (flag `read_log`) does not change the kit: it sets `readLog`, which gives the log card on the case board. The kits, the flag names and the start places are data in `backend/content/entry_kits.json`. Both decision flags set at once cannot happen in the story; if it ever did, the referee raises an error (a 500) and never picks a kit. (3) **The first ending counts** (decided by Nils on 6 Nov 2026, N6). The table `entry_profiles` has one row per player, written once and never changed. A second playthrough returns the stored profile (the stored ending, decision, kit, start place and coins), pays nothing, and says `alreadyGranted: true`. (4) **The coins move once, inside the database.** `grant_entry_kit()` locks the player, stores the profile and calls `apply_wallet_transaction()` with the reason `kit_grant` and the fixed ref `kit`, in one transaction. Python checks the amount with the wallet rules first but never moves the coins. A player who was paid the kit by hand earlier (the manual test plan does that) gets a profile and no second payment. (5) **The kits** (pending S0, N5): True Keeper, Witness and Informant 1000 coins each, Stranger 1600; the start place is `lighthouse_isle` for the True Keeper and `saltreach_harbor` for the others; each kit has a clue card (C6, C2, C4, C5) and a small item. (6) **The story file is identified, not required.** The SHA-256 of `story.json` is stored with each profile, for audits. The request carries no story version, because Story v2 only adds actions and changes no rule, so an old log replays to the same end state. A log that only a newer story allows is refused as `move_refused`, and the message tells the player to reload. This replaces the note in the content README that suggested a `409` for a different story.
 
@@ -252,38 +254,64 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Alternatives and trade-offs:** Trusting the ending in the request: rejected, a player could pick the best kit. Requiring the story hash and refusing a different story with `409` (the note that backend/content/README.md used to carry): rejected, because an old page would be sent into an error for no reason when the rules are the same. Letting a later playthrough replace the kit: rejected as the default, because the coins differ (1000 and 1600), so a second payout rule would be needed and players could farm kits. A mistaken ending can only be undone by hand: delete the row in the SQL editor (no role has a delete right on the table), and the next submission stores a new profile, but pays nothing, because the ledger already has the kit row. Paying from Python after storing the profile: rejected, two steps can break in between. Trade-offs: the route reads three small files per request (the story, the kits and the story's hash); `GET /api/me` now needs the table `entry_profiles`, so the migration must be applied before the server that reads it is deployed. That means before the branch is merged into `main` (a push to `main` deploys to production at once, and `GET /api/me` is live today) and before a preview of the branch is tested (previews share the one Supabase project). If the merge has to come first, the read of `entry_profiles` in `routes/me.py` is held back (`kit` and `place` stay `null`) and merged after the apply; a server error between the replay and the database call leaves nothing stored, which is why a `503` is safe to repeat.
 
-**Agreed by, PR and impact:** Proposed by Claude for Nils, 5 Nov 2026, in the A3 pull request. D019 was the next free number when A3 was written; the account entry it followed became D022 at merge, because the story round took D018 (no number is reserved for A3 in the roadmap). Pending Nils: N6 (the first ending counts). N5 (the coins and texts of the kits) waited for the S0 approval and was settled by the story round (D018). Affects A6 (a seat carries the entry kit, so the crew routes read `entry_profiles`), S2 (the browser sends the move log), S3 (the start place, the cheap card and the log card), S4 (the kits that NPC partners fill in), and `GET /api/me`.
+**Agreed by, PR and impact:** Proposed by Claude for Nils, 5 Nov 2026, in the A3 pull request. D019 was the next free number when A3 was written; the account entry it followed became D022 at merge, because the story round took D018 (no number is reserved for A3 in the roadmap). N5 was settled by the approved S0 story round (D018); N6 (the first ending counts) was decided by Nils on 6 Nov 2026. Affects A6 (a seat carries the entry kit, so the crew routes read `entry_profiles`), S2 (the browser sends the move log), S3 (the start place, the cheap card and the log card), S4 (the kits that NPC partners fill in), and `GET /api/me`.
 
-## D020 · Crews: codes, the guessing limit and partners at the muster · 2026-11-05
+## D027 · Case backend contracts · 2026-11-06
 
-**Status:** Proposed in the A6 pull request (`feat/a6-crews`); accepted when reviewed by another teammate and merged. Two choices waited for Nils and were marked "pending" on the branch; the story round decided both as built (D018, decisions 10 and 12; decision 12 is also a team call, confirmed at kickoff), so they are marked decided below. The number D020 was handed out in advance by the M1 spec (`specs/M1-backbone.md`), together with D018 and D019 for the account and referee packages, so the entries do not collide (the story round took D018 first, so the account entry became D022 at merge). If another branch took it first, the coordinator renumbers at merge.
+**Status:** Phase 1 built on `feat/case-backend` for Claude's review. Later phases remain gated. Nils confirmed C4, C6, C9, C16 and C18 on 6 Nov; the other rows are the specification's built defaults.
 
-**Decision:** Crews follow D012 (up to four seats, each a player or an NPC partner). On top of it:
+| Decision | Contract |
+|---|---|
+| C1 | Game refusals are 200 with accepted=false, reason, message and a fresh view. |
+| C2 | A repeated actionUid rebuilds its stored outcome first and adds repeat=true. |
+| C3 | GET /api/case and POST /api/case/search replace the old board-read and free-form act reservations. |
+| C4 | Decided: whole case seconds since muster, no pause; a host moves only their own crew. |
+| C5 | Timed results take effect at their stored acceptance-time deadline, without a settle job. |
+| C6 | Decided: a partner pin's reward is paid when its order is accepted. |
+| C7 | Concurrent searches are allowed; each seat finds each card once. |
+| C8 | The crew sees rounded glow during its own night. The specification's default remains pending Nils or the story owner. |
+| C9 | Decided: a locked solve never later changes the world; its rewards and reveal still happen. |
+| C10 | Case tables are server-only, with RLS and no player grants or policies. |
+| C11 | The case flag defaults off and gates all case routes, including the later world route. |
+| C12 | Light posts remain occupied after dawn. |
+| C13 | A player locks their own light; any crew player may lock a partner-held light. |
+| C14 | Optional route labels are data; absent labels use the card title. |
+| C15 | Every state-changing refusal is logged, so retries preserve refusals. |
+| C16 | Decided: only contributors with a share appear on the Wall of Lights. |
+| C17 | Partner pin credit starts at order acceptance; pairing waits for the actual pin. |
+| C18 | Decided: position and boarding are presentation only, never server prerequisites. |
+| C19 | Any crew player's level-one station readies the crew's home light; only players man it. |
+| C20 | RELIGHT_OPEN=true is accepted only in explicit production; unset is closed. |
 
-1. **Crew codes.** A crew gets a code of 6 symbols: `A-Z` without `I`, `L` and `O`, and `2-9` (31 symbols, about 890 million codes), made on the server with the system's secure random generator. A code is unique. A player needs an entry kit (Act 1 finished) to start or join a crew, because every seat carries a kit.
-2. **Guessing limit.** A player may type at most **10 wrong codes in 10 minutes**. The count is kept in the database (table `crew_join_failures`), not in the server's memory: every Vercel instance has its own memory and a cold start empties it, so a guesser who spreads requests over instances would get many times the limit. After the limit even a right code is refused (`429` with `Retry-After`), because the refusal comes before the code is looked at, so a guesser cannot confirm a hit. A typing mistake (not 6 symbols) is a `422` and costs no guess.
-3. **The muster.** NPC partners are seated when the crew sails: `POST /api/crews/me/start` makes the crew `active` and fills every empty seat in one step. Any player of the crew may call it.
-4. **Joining.** A friend takes the lowest open seat. A crew that has sailed has none, so the friend takes over the NPC partner who carries the friend's own kit, or else the partner whose kit comes last in the partner order, so the partners who stay keep the kits that are still missing. A crew of four players is full.
-5. **Partner kits.** Each partner carries the first kit that nobody in the crew has yet, in the order **informant, stranger, true_keeper, witness**. A partner follows the seat number (Lookout, Deckhand, Bosun, Cook).
-6. **A draft.** A crew that a player started and sits in alone gives way: joining another crew deletes it in the same step. Any other open crew stops the player from joining a second one. A player sits in at most one open crew.
-7. **Only through four functions.** The server creates, joins and sails a crew only through the database functions `crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()` (a team rule, as with the wallet). Each checks the version of the crew that the server read and answers "changed" if it moved on, so the server never acts on an old picture of a crew. The database itself guards one seat per player and per partner in a crew, the kit ids, and the code format and uniqueness.
-8. **Not in this version.** Leaving a crew and kicking a player. Partner orders and errands are package S4.
+**Migration reservations:** Phase 1 060000, Phase 2 080000, Phase 3 120000, Phase 4 130000; stream C 140000. Group 3 owns 090000, 100000 and 110000. All filenames start with 20261106. No historical or reviewed migration is edited.
 
-**Decided by Nils in the story round (story decision 10, D018).** Which kit a seat carries after a friend takes over a partner's seat: **the friend keeps their own kit**, as built. The alternative was that the seat keeps the partner's kit. It is one switch (`FRIEND_KEEPS_OWN_KIT`) in `backend/server/crews/seats.py`.
+**Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See [the specification](../specs/case-backend.md) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
 
-**Decided by Nils in the story round (story decision 12, D018).** The order in which partners fill the kits the players are missing: **informant, stranger, true_keeper, witness** (`NPC-PARTNERS.md`, section 4.2), as built. It is also a team call, so the team confirms it at kickoff. When this entry was written, `CASE-FILE.md` (sections 3 and 9) still listed true_keeper, informant, stranger, witness; the story round fixed it. It is one constant (`NPC_KIT_ORDER`) in `seats.py`.
+## D008 · Grow order is moot · 2026-11-06
 
-**Why:** The first milestone needs a crew that forms with an NPC partner in an empty seat, and the case needs all four kits in a crew (a solo player gets the other three from partners). Seating the partners at the muster, and not earlier, keeps "open seat first" meaningful and lets a friend join a forming crew without taking a partner's place. A guess limit in the database holds for every server instance. A version check on every change means two friends who join at the same moment, or a join during the muster, cannot corrupt a crew: the second request is told "changed" and reads the crew again.
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
 
-**Alternatives and trade-offs:**
+**Decision:** The earlier proposed grow order is moot. Work is already split into the browser task G9, server task G10 and Claude's integration checkpoints. Follow the dependencies of those tasks rather than waiting for a kickoff to choose the old order.
 
-- *A speed limit in memory* (like the trade limit of the Exchange): rejected. It cannot see a second server instance and a cold start empties it.
-- *Partners seated when the crew is created:* rejected. No seat would ever be open, so "open seat first" would mean nothing, and S4 assumes that a forming crew has no partners.
-- *Partners seated when the case starts (package S3):* rejected for the first milestone. S3 belongs to the second milestone, but the first one needs a partner.
-- *A table rule for "one open crew per player":* not possible, because the status lives in `crews` and the seats in `crew_seats`. The four functions keep the rule under a lock on the player's profile. The price is that a direct write to the tables would skip it, as a direct write to `wallets` would skip the ledger. Only the server holds that right.
-- *Known limits:* the limit counts per account, and each account is a GitHub sign-in (Supabase limits sign-ins per address as well). With about 200 open crews one guess hits with a chance of about 2 in 10 million, and the most a player can try in a day is about 1,440 guesses, so about 3 in 10,000 per account and day. A crew keeps its code after the muster, so a friend can still take over a partner. A player who is deleted leaves an empty seat, and a friend fills it first. In an active crew that seat stays open until a friend joins, because the muster runs only once (S3 and L3 must allow three seats), and the crew's mode stays `crew` even when only one player is left.
+**Impact:** The old grow-order question in the roadmap is historical. Group 3 still waits for Claude's group 2 confirmation; this decision does not waive that checkpoint.
 
-**Agreed by, PR and impact:** Not yet agreed. Proposed from `specs/M1-backbone.md` (its choices N3, N7 and N8). Affects A3 (the crew routes read the kit from `entry_profiles`), A2 (the delete route will hand a crew with other players to the player in the lowest seat, which leaves an open seat), S3 and L3 (they find the crew and the seat of a player with `read_open_crew_seat()`) and S4 (partners; a Witness partner starts with card C2).
+## D009 · Interfaces v1 as built · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Accept the v1 contracts in [INTERFACES.md](INTERFACES.md) as built. Later server and browser work updates those contracts together rather than inventing a second interface.
+
+## D010 · Backbone go; deployment check 1 remains open · 2026-11-06
+
+**Status:** Go, decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Continue building on the backbone. Deployment check 1 in [SETUP.md](SETUP.md) remains open; it does not block the work. This entry records the decision and does not claim a new live deployment check.
+
+## D014 · Finnhub ownership and key location · 2026-11-06
+
+**Status:** Decided by Nils; recorded by G10 on 6 Nov 2026.
+
+**Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
 ## D023 · Live presence on Supabase Realtime · 2026-11-05
 

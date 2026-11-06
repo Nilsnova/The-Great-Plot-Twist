@@ -69,7 +69,10 @@ def error_response(
 ) -> JSONResponse:
     """Build the JSON response in the one standard shape."""
     body = {"error": {"code": code, "message": message}}
-    return JSONResponse(status_code=status_code, content=body, headers=headers)
+    response = JSONResponse(status_code=status_code, content=body, headers=headers)
+    # Unhandled 500s are built outside application middleware, so set their default here too.
+    response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 def describe_validation_problems(error: RequestValidationError) -> str:

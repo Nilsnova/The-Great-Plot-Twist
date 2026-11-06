@@ -41,6 +41,7 @@ import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Annotated
+from urllib.parse import urlsplit
 
 from fastapi import Depends, Request
 from pydantic import SecretStr
@@ -120,6 +121,32 @@ def read_demo_mode(env: Mapping[str, str]) -> bool:
     if value == "true":
         return True
     raise SettingsError(f"DEMO_MODE must be 'true' or 'false' (got '{value}').")
+
+
+def read_supabase_url(env: Mapping[str, str], app_env: str) -> str:
+    """Deployed copies use a secure Supabase host. Local work may use a local service."""
+    value = read_text(env, "SUPABASE_URL").rstrip("/")
+    if app_env == "local":
+        return value
+    message = "SUPABASE_URL must be an HTTPS Supabase project URL in preview and production."
+    try:
+        url = urlsplit(value)
+        host = url.hostname or ""
+        valid = (
+            url.scheme == "https"
+            and host.endswith(".supabase.co")
+            and all(host.split("."))
+            and not any(character.isspace() for character in value)
+            and url.username is None
+            and url.password is None
+            and url.port in (None, 443)
+            and not (url.path or url.query or url.fragment)
+        )
+    except ValueError:
+        raise SettingsError(message) from None
+    if not valid:
+        raise SettingsError(message)
+    return value
 
 
 def read_relight_open(env: Mapping[str, str], app_env: str) -> bool:
@@ -205,15 +232,16 @@ def read_host_player_ids(env: Mapping[str, str]) -> frozenset[str]:
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     app_env = read_app_env(env)
+    relight_open = read_relight_open(env, app_env)
     return Settings(
         app_env=app_env,
         # No slash at the end, so we can write f"{supabase_url}/auth/v1/user" later.
-        supabase_url=read_text(env, "SUPABASE_URL").rstrip("/"),
+        supabase_url=read_supabase_url(env, app_env),
         supabase_publishable_key=read_text(env, "SUPABASE_PUBLISHABLE_KEY"),
         supabase_secret_key=SecretStr(read_text(env, "SUPABASE_SECRET_KEY")),
         cron_secret=SecretStr(read_text(env, "CRON_SECRET")),
         demo_mode=read_demo_mode(env),
-        relight_open=read_relight_open(env, app_env),
+        relight_open=relight_open,
         flags=parse_flags(env.get("FEATURE_FLAGS", "")),
         weather_place_name=read_weather_place_name(env),
         weather_latitude=read_degrees(

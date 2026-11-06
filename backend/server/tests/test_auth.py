@@ -33,7 +33,7 @@ from server.tests.helpers import (
     assert_error,
 )
 
-TOKEN = "token-of-octocat"
+TOKEN = "test.octocat.signature"
 USER_ID = "11111111-2222-3333-4444-555555555555"
 
 
@@ -126,7 +126,7 @@ def test_the_word_bearer_may_be_written_in_lowercase():
 
 
 def test_read_bearer_token_returns_just_the_token():
-    assert read_bearer_token("Bearer abc.def") == "abc.def"
+    assert read_bearer_token("Bearer abc.def.ghi") == "abc.def.ghi"
 
 
 def test_read_bearer_token_rejects_a_missing_header():
@@ -134,6 +134,39 @@ def test_read_bearer_token_rejects_a_missing_header():
         read_bearer_token(None)
 
     assert problem.value.status_code == 401
+
+
+@pytest.mark.parametrize(
+    "token", ["a" * 4093 + ".b.c", "one", "one.two", "a.b.c.d", ".b.c", "a..c", "a.b."]
+)
+def test_oversized_or_incomplete_tokens_are_refused_before_any_login_request(token):
+    client, verifier, seen = build_client(lambda request: good_answer())
+
+    response = ask(client, token)
+
+    assert_error(response, 401, "unauthorized")
+    assert response.headers["www-authenticate"] == "Bearer"
+    assert seen == []
+    assert verifier.cache == {}
+
+
+def test_a_three_part_token_at_the_size_limit_reaches_the_login_check():
+    client, _, seen = build_client(lambda request: good_answer())
+
+    response = ask(client, "a" * 4092 + ".b.c")
+
+    assert response.status_code == 200
+    assert len(seen) == 1
+
+
+def test_direct_verification_also_refuses_incomplete_tokens_without_network():
+    _, verifier, seen = build_client(lambda request: good_answer())
+
+    with pytest.raises(ApiError) as problem:
+        asyncio.run(verifier.verify("one.two"))
+
+    assert problem.value.status_code == 401
+    assert seen == []
 
 
 # --- a good login ---
@@ -251,8 +284,8 @@ def test_a_good_answer_is_remembered_for_60_seconds():
 def test_each_token_is_checked_on_its_own():
     client, _, seen = build_client(lambda request: good_answer())
 
-    ask(client, "token-one")
-    ask(client, "token-two")
+    ask(client, "test.one.signature")
+    ask(client, "test.two.signature")
 
     assert len(seen) == 2
 
@@ -269,12 +302,12 @@ def test_refused_tokens_are_not_remembered():
 def test_old_entries_are_removed_so_the_cache_cannot_grow_forever():
     clock = FakeClock()
     client, verifier, _ = build_client(lambda request: good_answer(), clock=clock)
-    ask(client, "token-one")
+    ask(client, "test.one.signature")
 
     clock.advance(61)
-    ask(client, "token-two")
+    ask(client, "test.two.signature")
 
-    assert list(verifier.cache) == [hash_token("token-two")]
+    assert list(verifier.cache) == [hash_token("test.two.signature")]
 
 
 def test_the_cache_is_keyed_by_a_hash_and_never_holds_the_token():

@@ -1,0 +1,26 @@
+"""Default API responses to no-store; keep explicit public or private cache policies.
+
+Used by: app.py for normal responses. errors.py also protects errors made outside middleware.
+"""
+
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+
+class DefaultCacheControl:
+    """Set the default on response headers without buffering or changing response bodies."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_cache_control(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                MutableHeaders(scope=message).setdefault("Cache-Control", "no-store")
+            await send(message)
+
+        await self.app(scope, receive, send_with_cache_control)

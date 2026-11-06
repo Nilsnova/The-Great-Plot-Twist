@@ -31,4 +31,10 @@ def test_relight_open_is_refused_outside_production(environment):
 
 
 def test_relight_open_accepts_only_explicit_production():
-    assert load_settings({"APP_ENV": "production", "RELIGHT_OPEN": "true"}).relight_open
+    assert load_settings(
+        {
+            "APP_ENV": "production",
+            "SUPABASE_URL": "https://fixture.supabase.co",
+            "RELIGHT_OPEN": "true",
+        }
+    ).relight_open
