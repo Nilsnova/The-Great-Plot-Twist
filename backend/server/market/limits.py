@@ -1,17 +1,18 @@
 """A speed limit for trades: each player may make only a few trades in a short time.
 
-Every trade makes the server look at the prices (and, if they are older than 5 seconds, ask Binance
-again) and talk to the database several times. A script that clicks Buy in a loop would load the
-free Supabase and Vercel plans for everybody. So a player may make at most MAX_TRADES trades in
-any WINDOW_SECONDS seconds. A person playing the game never gets near this limit. Anybody over it
-is answered with 429 too_many_requests and a hint how long to wait.
+Every trade (opening or closing a position) makes the server look at the prices (and, if they are
+older than 5 seconds, ask Binance or the stock provider again) and talk to the database several
+times. A script that clicks Open in a loop would load the free Supabase and Vercel plans for
+everybody. So a player may make at most MAX_TRADES trades in any WINDOW_SECONDS seconds. A person
+playing the game never gets near this limit. Anybody over it is answered with 429
+too_many_requests and a hint how long to wait.
 
 The count is kept in memory, once per running server instance (the same limit as the price cache,
 see adapters/base.py). It is a brake against loops and accidents, not a security guarantee: it
 cannot see a second server instance. The real protection of the money is elsewhere (the ledger
-ref, the daily buy cap, the holding time).
+ref, the daily stake cap, the limit of open positions).
 
-Used by: exchange.py (MarketService.trade) and the tests.
+Used by: exchange.py (MarketService.open_position and close_position) and the tests.
 """
 
 import math

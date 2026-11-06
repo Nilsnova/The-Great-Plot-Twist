@@ -26,12 +26,11 @@ from server.tests.bulletin_helpers import (
     FixedStage,
     World,
     make_market,
-    pause_company,
     relit_at,
     spoilers_in,
     utc,
 )
-from server.tests.helpers import assert_error, fail_with
+from server.tests.helpers import assert_error, fail_with, make_admin
 from server.tests.weather_helpers import (
     CLEAR_HOUR,
     FOGGY_HOUR,
@@ -356,31 +355,22 @@ def test_the_exchange_line_needs_the_market_flag():
 
     assert "exchange" not in flag_off.kinds()
     assert flag_off.body()["exchange"] is None
-    assert flag_on.texts()["exchange"] == "Island Exchange: live. No company is paused."
-    assert flag_on.body()["exchange"] == {"feed": "live", "pausedCompanies": []}
+    body = flag_on.body()
+    assert (
+        next(line["text"] for line in body["lines"] if line["kind"] == "exchange")
+        == "Island Exchange: live. No company is paused."
+    )
+    assert body["exchange"] == {"feed": "live", "pausedCompanies": []}
 
 
-def test_a_paused_company_is_named_in_the_line_and_in_the_exchange_object():
+def test_the_exchange_v2_has_no_pause_so_no_company_is_ever_paused():
     world = exchange_world()
-    pause_company(world.app.state.market, "harbor-trust", world.clock)
-
     body = world.body()
-
-    assert body["exchange"] == {
-        "feed": "live",
-        "pausedCompanies": [{"id": "harbor-trust", "name": "Saltreach Harbor Trust"}],
-    }
-    assert world.texts()["exchange"] == "Island Exchange: live. Paused: Saltreach Harbor Trust."
-
-
-def test_two_paused_companies_are_listed_in_the_order_of_the_board():
-    world = exchange_world()
-    pause_company(world.app.state.market, "harbor-trust", world.clock)
-    pause_company(world.app.state.market, "tidewright-works", world.clock)
-
-    names = [company["name"] for company in world.body()["exchange"]["pausedCompanies"]]
-
-    assert names == ["Saltreach Harbor Trust", "Tidewright Works"]
+    assert body["exchange"] == {"feed": "live", "pausedCompanies": []}
+    assert (
+        next(line["text"] for line in body["lines"] if line["kind"] == "exchange")
+        == "Island Exchange: live. No company is paused."
+    )
 
 
 @pytest.mark.parametrize(
@@ -395,8 +385,12 @@ def test_two_paused_companies_are_listed_in_the_order_of_the_board():
 def test_the_feed_is_named_in_words(feed, words):
     world = exchange_world({"source": feed})
 
-    assert world.body()["exchange"]["feed"] == feed
-    assert world.texts()["exchange"] == f"Island Exchange: {words}. No company is paused."
+    body = world.body()
+    assert body["exchange"]["feed"] == feed
+    assert (
+        next(line["text"] for line in body["lines"] if line["kind"] == "exchange")
+        == f"Island Exchange: {words}. No company is paused."
+    )
 
 
 def test_a_failing_exchange_leaves_out_the_exchange_line():
@@ -411,9 +405,11 @@ def test_a_failing_exchange_leaves_out_the_exchange_line():
 def test_the_bulletin_only_looks_at_the_exchange_it_saves_nothing():
     world = exchange_world()
 
+    world.app.state.admin, seen = make_admin(lambda request: httpx.Response(500))
+
     world.body()
 
-    assert world.app.state.market.memory_store.bases == {}
+    assert seen == []
 
 
 def test_a_missing_exchange_service_leaves_out_the_exchange_line():

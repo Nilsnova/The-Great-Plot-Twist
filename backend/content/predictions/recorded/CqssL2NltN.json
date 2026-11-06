@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/CqssL2NltN",
+  "answer": {
+    "id": "CqssL2NltN",
+    "slug": "will-gukesh-win-the-2026-world-ches",
+    "question": "Will Gukesh win the 2026 World Chess Championship?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1798757940000,
+    "isResolved": false
+  }
+}
