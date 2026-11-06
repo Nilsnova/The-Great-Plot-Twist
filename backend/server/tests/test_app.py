@@ -224,6 +224,8 @@ SERVICES = (
     "weather_source",
     "exchanger",
     "market_service",
+    "prediction_desk",
+    "duel_service",
     "broadcaster",
     "islet_catalogue",
     "world_stage",

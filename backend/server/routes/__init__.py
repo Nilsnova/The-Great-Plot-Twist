@@ -23,5 +23,9 @@ market.py is the Island Exchange (its rules are in server/market/).
 bulletin_answer.py is the one file here without a URL: it holds the shape of the bulletin's answer,
 so bulletin.py stays short.
 Each file with URLs creates a `router`. app.py plugs every router in under /api.
+
+market.py is the Island Exchange (its rules are in server/market/). duels.py is Lantern Duels
+(its rules are in server/duels/): GET and POST /api/duels, GET /api/duels/{id} and the routes
+/move and /cancel under it.
 To add a feature: create a new file here, then add one line in app.py.
 """

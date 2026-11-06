@@ -5,7 +5,7 @@
 > **Who uses it:** the server builder, the screen builder and the linter builder on `feat/l4-exchange-v2`, and the reviewers. Nils' answers of 5 Nov 2026 are the source of truth. Anything marked *chosen here* is a default for Nils' OK.
 
 - **Status:** draft, ready to build. Nothing here is applied to the real Supabase project.
-- **Branch:** `feat/l4-exchange-v2` in the worktree `/Users/nilslenke/Developer/The-Great-Plot-Twist-exv2` (from `main` at `3d59b6a`).
+- **Branch:** `feat/l4-exchange-v2` in the worktree `<local development checkout>` (from `main` at `3d59b6a`).
 - **Source of truth:** `20261105_Roadmap-Inputs.md`, section "Nils' answers to the Island Exchange questions (D017)", items 1 to 7. Item 2c (10x positions) replaces the x100 multiplier of items 1 and 2a. Item 7 lists the defaults this spec takes.
 - **Stock source:** the decision memo of the research workflow (5 Nov 2026) recommends **Finnhub** (free key) as primary and **Alpaca Basic** as a technical backup. This spec follows it and lists where the memo still assumed v1 (section 4.3).
 - **Suggested home:** `specs/L4-island-exchange-v2.md` (the controller commits it).
@@ -1453,5 +1453,5 @@ Rough sizes: server about 2.5 days, screen about 1.5 days, linter about half a d
 - **Worth logging for whichever skill or script plans these workflows:**
   - The computed brief asked for "wallet reasons for closes at zero". The wallet refuses 0-coin rows, so a close at zero can only be an event row.
   - The ownership list left out `wallet.py`, `test_wallet.py` and `settings.py`. Any change to wallet reasons or settings must touch them, and `test_wallet_matches_migration.py` enforces it.
-- **What I did and did not touch:** I wrote no repository files, ran no repository tests, made no commits and wrote nothing under the task-observer workspace. I checked this spec for em and en dashes in a scratch copy at `/private/tmp/claude-501/-Users-nilslenke-Desktop-02-University-Nova-Classes-Intro-to-Programming-Group-Project/569201b0-f556-4177-bafd-264473fb70ab/scratchpad/L4-island-exchange-v2-spec.md`.
+- **What I did and did not touch:** I wrote no repository files, ran no repository tests, made no commits and wrote nothing under the task-observer workspace. I checked this spec for em and en dashes in a scratch copy at `<temporary scratch directory>`.
 - **Checked on the web during this step:** the NYSE, Euronext and Xetra calendars for Nov and Dec 2026, Twelve Data's free licence, and Alpaca's free plan and snapshots endpoint (section 16). The Finnhub facts come from the memo only.

@@ -141,7 +141,7 @@ Add short entries; keep the original rationale when superseding a decision.
 6. **No price protection.** A trade goes through at the server price of that moment.
 7. **Brakes.** A trade uses a price at most 5 seconds old (fetched fresh if older); a player makes at most 10 trades in 30 seconds.
 8. **Fee:** 2 % of the stake, rounded up, at opening and again at closing; 1 % after the Relighting. The closing fee comes out of the value and is never more than it.
-9. **Limits:** at most 500 coins per position and 2,000 coins of new stakes per game day (from 08:00 Lisbon time). Chosen here: at least 10 coins per position, at most 20 open positions.
+9. **Limits:** at most 500 coins per position and 2,000 coins of new stakes per game day (from 08:00 Lisbon time). At least 10 coins per position. Decided by Nils on 6 Nov 2026: at most 20 open positions per player, with no extra 300-coin reserve.
 10. **Positions stay open across days.** No minimum holding time.
 11. **Chosen here:** the automatic close runs whenever the server looks at prices (every board look, every trade, every portfolio look) and uses only prices it fetched; positions opened on live prices close only on live prices, recording positions only on the recording; after the Relighting Greyfathom Salvage takes no new positions; an open rising position in Greyfathom Salvage is the "Greyfathom share" of card C6.
 12. **Database:** migration `20261106090000_exchange_leverage.sql` removes the v1 Exchange tables and functions and adds `exchange_positions`, `exchange_events`, the reasons `market_stake` and `market_payout` (v1's `market_fee` is reused; `market_buy` and `market_sell` stay unused, because a reason is never removed) and three server-only functions that move the coins and change the positions in one step.
@@ -163,7 +163,7 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **History: v1 (superseded).** v1 amplified real moves (game price = base x (1 + multiplier x real change), multiplier 20 to 100), held prices between 25 % and 400 % of a start price, paused a company for 15 minutes after a 30 % move, re-based every day at 08:00 Lisbon, traded whole units with a 10-minute holding time, and limited purchases to 500 coins and 2,000 a day. An independent review found trades on old prices, a predictable public replay and prices sinking toward one cent; the fixes that still apply carry over (prices at most 5 s old for trades, no replay in live mode, the daily cap, 10 trades in 30 s). Its simulations showed that at x100 prices spent most of a multi-day run near their floor. The full v1 text is in git history (`docs/DECISIONS.md` at `3d59b6a`).
 
-**Agreed by, PR and impact:** Nils, 5 Nov 2026. Built on `feat/l4-exchange-v2`. Affects the Exchange panel, card C6 (the Greyfathom share), the Relighting (fees drop, Greyfathom delisted; L3 provides the switch), D014 (Nils owns the Finnhub key) and every package that adds wallet reasons (the list now has 13).
+**Agreed by, PR and impact:** Nils, 5 Nov 2026. Built on `feat/l4-exchange-v2`. Affects the Exchange panel, card C6 (the Greyfathom share), the Relighting (fees drop, Greyfathom delisted; L3 provides the switch), D014 (Nils owns the Finnhub key) and every package that adds wallet reasons (the list has 17 after group 3).
 
 ## D018 · Story round: 19 story decisions and two scope decisions · 2026-11-05
 
@@ -433,7 +433,35 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 (and why a stale reading is limited to 15 minutes).
 
 **Agreed by, PR and impact:** proposal for Nils, 6 Nov 2026. Affects L6 (`pools.py`), the list of wallet reasons
-(13), the kiosk screen and A2 (`hosts.py`).
+(17 after group 3), the kiosk screen and A2 (`hosts.py`).
+
+## D026 · Lantern Duels rules · 2026-11-06
+
+**Status:** Proposed in the A7 pull request (`feat/a7-lantern-duels`); accepted when reviewed by another teammate and merged. The number was D018 on the branch and became D026 at the group 3 merge; the story round keeps D018. The full spec is [specs/A7-lantern-duels.md](../specs/A7-lantern-duels.md).
+
+**Decision:** Lantern Duels, the PvP arena (package A7), is a duel of **sealed signals** between two captains, behind the flag `arena`, which stays off.
+
+- *The duel.* Each captain seals a sequence of lantern signals, one per round (3 or 5 rounds): Flash outshines Shade, Shade leaves Mirror nothing to throw back, Mirror throws Flash back, and the same signal twice scores for nobody. Each captain has as much lantern oil as the duel has rounds: Flash burns 2, Mirror 1, Shade 0. More rounds won wins; equal is a draw. The challenger seals with the challenge, the other captain with the answer, and answering *is* accepting: in one database transaction the server stores the answer, opens both envelopes, decides every round and settles the coins. The browser sends only signals, never a result or an amount (D003).
+- *Challenges.* By captain name (the exact display name, in any letter case) or open to any captain, where the first answer wins. Withdraw (the challenger) and decline (the named captain) are one extra route, `POST /api/duels/{id}/cancel`, and the list is `GET /api/duels`; both are new names for the Mon 9 contract review.
+- *Money.* Stakes of 0 (friendly), 10, 25, 50 or 100 coins from each captain. The challenger's stake is held when the challenge is sent, the answerer's when they answer. The winner takes the pot minus a **cut of 5 %**, rounded down (19, 47, 95 or 190); the cut has no ledger row and is simply not paid out. A draw, a withdrawal, a decline and an expiry give every stake back. Two new wallet reasons, `arena_stake` (spend) and `arena_payout` (earn), with the ref `duel:<duel id>`, so the ledger's unique index stops a double stake or a double payout. Each money change is one atomic database function (`duel_create()`, `duel_answer()`, `duel_void()`), like `market_trade()`. Caps are checked inside the functions while the locks are held: 3 waiting challenges per captain, and 3 staked duels per day between the same two captains (the day starts at 00:00 Lisbon time).
+- *Time.* A challenge can be answered for 24 hours. The deadline is checked lazily, on the next request that touches the duel (no cron, no timer), and the database clock decides. A sealed duel has no forfeits: nobody can lose by being offline.
+- *Sealed means sealed.* A captain's signals reach the other captain only after both envelopes are in, and only inside the stored reveal. The table `duel_moves` has no grant and no policy for players, and no role (not even the server) may update or delete a row. `views.py` is the one place that decides visibility and refuses to build a view that would show a sealed signal. A test runs two fake databases that differ only in the challenger's signals and demands byte-identical answers for the named captain and for a visitor.
+- *Where the numbers live.* Python constants in `backend/server/duels/rules.py` (as D017 did for the Exchange), checked against the migration by a test.
+
+**Why:** It is fair and explainable: both captains have the same signals, oil and rounds; swapping the two captains swaps the result (checked for all 17 x 17 pairs of 3-round sequences and all 147 x 147 pairs of 5-round ones); no allowed sequence is unbeatable, so there is no safe plan, only a guess about the other captain; and sealing first is no disadvantage because nothing about the first envelope is visible. Nobody loses by being offline, which suits a class where players are not all online together. It needs few calls (about 40 per 10 quiet minutes for one open panel, polling only), well inside the free tiers, and no Realtime. One atomic function per money change keeps the ledger honest even when two requests arrive at the same moment.
+
+**Alternatives and trade-offs:**
+
+- *Live round-by-round duels now* (both captains online, a 30-second timer per round, forfeits): more calls, round timers and forfeits, and nobody may be offline. Planned for after 23 Nov as a new duel style; the migration then adds a style, a current round and a round deadline.
+- *A separate accept step:* a half-accepted duel needs a deadline and a forfeit. Rejected: answering is accepting.
+- *Hash commitments for the sealed signals:* the server is already the trusted referee and holds both envelopes, so a commitment would add code and prove nothing. Rejected.
+- *No cut:* simpler, but then duels are no coin sink and coins pass between captains without any cost. Open for Nils.
+- *`duel.json` for the numbers* (OPEN-WORLD): D017 used constants and so do we. Open for Nils.
+- *Known limits:* the round results and the outcome are an input from Python (`rules.resolve`), like the price of a trade; the database checks only what follows from them (one result per round, results from the three allowed words, an outcome that fits the counted points) because it never reads the challenger's envelope. A challenge that nobody touches stays open past its deadline, with the stake held, until the next request touches it (the panel shows the coins as held). The rival in the screen's practice ring is a local stand-in for development only.
+
+**Open for Nils** (the spec's answer stands until he decides): (1) the cut, 5 % or none; (2) stakes up to 100 from the first switch-on, or friendly duels only at first (the floor is one constant away: `ROUND_CHOICES = (3,)` and `STAKE_CHOICES = (0,)`); (3) the answer window, 24 hours or shorter for class; (4) keep live duels in the plan or drop them; (5) agree the two routes beyond the reserved names at the Mon 9 freeze; (6) Python constants instead of `duel.json`.
+
+**Agreed by, PR and impact:** Pending Nils and a different human teammate. Proposed in the A7 pull request. Affects `docs/INTERFACES.md` (five routes, the status codes, two tables, three functions, two reasons), the wallet reasons (the list now has 17 entries; keep the migration order and the Python order the same), the arena screen (browser) with a few lines in `frontend/src/game.js` (the hook at the arena gate, and the lines that make the open panel an overlay, so Escape closes it instead of opening the pause menu; these go beyond the one hook the spec first agreed and need approval), and the Mon 9 contract review. The existing test that pinned the market reasons to the end of `WALLET_REASONS` now pins them right after the first eight, because recipe 4.7 appends new reasons (the requirement changed); the arena reasons are pinned by position too (the arena pair after `prediction_payout`), so the next package that appends a reason breaks no test. The migration is applied to Supabase only after review, and `arena` stays off until Nils decides.
 
 ## Next entry
 

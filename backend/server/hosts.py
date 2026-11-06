@@ -14,7 +14,7 @@ Nils puts his own id there in the Vercel settings. A presenter route asks for a 
 The id always comes from the verified login (auth.py), never from the address, a header or the
 body, so nobody can name themselves a host. A host is an ordinary player in every other way.
 
-No route uses this yet. The presenter routes of package L3 (the case board and the finale) will.
+The prediction desk settlement route uses this check. The later presenter routes use it too.
 
 Used by: the presenter routes, and the tests in server/tests/test_hosts.py.
 """

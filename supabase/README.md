@@ -17,6 +17,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
 | [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The third migration, for the Island Exchange version 2 (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
+| [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 
 ## Project settings this migration relies on
 
@@ -122,9 +123,6 @@ It adds one table (`crew_join_failures`, with row-level security and no policy a
 |---|---|---|
 | `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
 | `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |
-| `exchange_open_position()` | Opens a position. In one step: check that the arguments add up (see below), lock the player's wallet, refuse a repeated ref, refuse more than 20 open positions or more than 2000 coins of new stakes per game day, move the coins with `apply_wallet_transaction()` (`market_stake` and `market_fee`), write the position with its zero point, write the history row. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 380}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `wallet_not_found`, or `bad_trade` when the server sent numbers that do not add up (a bug on the server side, not something a player can cause). | Run by the server only. |
-| `exchange_close_position()` | Closes one position of a player. In one step: check the arguments, lock the wallet, refuse a repeated ref, lock the position by its id **and** its player, refuse a position that is not open or was opened on another price mode, work out the value and the closing fee itself, compare them with the numbers the server sent (`bad_trade` if they differ), pay the value (`market_payout`, only if above 0) and then take the fee (`market_fee`, only if above 0), mark the position closed (or zeroed, if the stake was used up) and write the history row. | Run by the server only. |
-| `exchange_close_used_up()` | The automatic close. Takes a JSON array of prices (`company_id`, `price` as text, `quoted_at`, `mode`) and closes, in **one statement**, every open position of that company and price mode whose zero point a price has reached, if the position was opened **before** the price was quoted. At zero: no coins move, so it uses no wallet, and it writes one `zero` history row per position. Positions that another call is closing right now are skipped (`skip locked`), so two calls never wait for each other, never deadlock and never close one position twice. | Run by the server only. |
 
 An opening writes two ledger rows with the same ref (`market:open:` plus the id the browser made for the click): `market_stake` and `market_fee`. A closing by the player writes `market_payout` (if the value is above 0) and `market_fee` (if the closing fee is above 0), with the ref `market:close:` plus the id of that click. A close at zero moves **0 coins** and the wallet refuses an amount of 0, so it writes no ledger row at all, only an event with the ref `market:zero:` plus the position id. The ledger accepts each player, reason and ref once, so the same ref is fine for two different reasons.
 
@@ -140,7 +138,7 @@ The price rules (where the prices come from, when a stock market is open, what a
 
 **Price modes.** A position opened on live prices is stored with `price_mode = 'live'`, one opened on the recorded demo day with `'replay'`. `exchange_close_position()` and `exchange_close_used_up()` only use prices of the position's own mode, so mixing the two on one database can never pay out at a recorded price.
 
-After applying all three migrations, the three quick checks below show **nine** tables (the seven of the first migration and the two new ones) and **nine** policies, and there are **thirteen** wallet reasons. Run the Exchange checks at the end of the manual test plan.
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
 
 ## The accounts migration (package A2)
 
@@ -219,6 +217,22 @@ The kill switch, if a flood ever happens, is in [Changing the database later](#c
 | `islets` | One row per player who has built something: the timber the player holds, never below 0. The first build makes the row, and it starts with the **starter pack** of timber (20 today, from `backend/content/buildings.json`). The primary key is the player, so the pack arrives once. Timber is not coins, so it has no ledger. | Only the server, through `islet_build()`. |
 | `islet_buildings` | One row per building that stands on a player's islet. The primary key is the player and the plot, so a plot holds one building. A check rule keeps each plot and its kind of building together (`plot_2` workshop, `plot_3` windmill, `plot_4` greenhouse, `islet_signal_station` signal_station). The cabin on `plot_1` stands from the start and has no row. The ref (`islet:` plus the id the browser made for the click) can be used once per player. `coins_paid` and `timber_paid` record what was paid: timber has no ledger, so that row is its only record. | Only the server, through `islet_build()`. |
 | `islet_build()` | The only way a building goes up. In one step: check the arguments, lock the player's wallet, refuse a repeated ref, make the islet row with the starter pack if there is none and lock it, refuse a plot that holds a building, refuse a build when the player holds too little timber, take the coins with `apply_wallet_transaction()` (reason `building_purchase`), take the timber and write the building (level 1). It *returns* a refusal such as `{"status": "refused", "reason": "plot_occupied", "standing": "signal_station"}` with nothing charged, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `bad_build` when the server sent an argument that makes no sense, or a check error when a plot and its building do not belong together. | Run by the server only. |
+| `exchange_open_position()` | Opens a position. In one step: check that the arguments add up (see below), lock the player's wallet, refuse a repeated ref, refuse more than 20 open positions or more than 2000 coins of new stakes per game day, move the coins with `apply_wallet_transaction()` (`market_stake` and `market_fee`), write the position with its zero point, write the history row. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 380}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated ref (code `23505`, message `already_applied`), `wallet_not_found`, or `bad_trade` when the server sent numbers that do not add up (a bug on the server side, not something a player can cause). | Run by the server only. |
+| `exchange_close_position()` | Closes one position of a player. In one step: check the arguments, lock the wallet, refuse a repeated ref, lock the position by its id **and** its player, refuse a position that is not open or was opened on another price mode, work out the value and the closing fee itself, compare them with the numbers the server sent (`bad_trade` if they differ), pay the value (`market_payout`, only if above 0) and then take the fee (`market_fee`, only if above 0), mark the position closed (or zeroed, if the stake was used up) and write the history row. | Run by the server only. |
+| `exchange_close_used_up()` | The automatic close. Takes a JSON array of prices (`company_id`, `price` as text, `quoted_at`, `mode`) and closes, in **one statement**, every open position of that company and price mode whose zero point a price has reached, if the position was opened **before** the price was quoted. At zero: no coins move, so it uses no wallet, and it writes one `zero` history row per position. Positions that another call is closing right now are skipped (`skip locked`), so two calls never wait for each other, never deadlock and never close one position twice. | Run by the server only. |
+| `exchange_open_position()` | no access | no access | yes |
+| `exchange_close_position()` | no access | no access | yes |
+| `exchange_close_used_up()` | no access | no access | yes |
+| `prediction_place_stake()` | The only way a stake happens. In one step: check the arguments, make sure the pool row exists and **lock it**, lock the player's wallet, refuse a repeated stake id (code `23505`, message `already_applied`), refuse a settled pool or one past its closing time (the earlier of the stored and the given closing time counts), refuse a second stake on the question, refuse a stake over the daily cap, take the coins with `apply_wallet_transaction()` (`prediction_stake`) and write the stake. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 30}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated stake id, or `bad_stake` / `wallet_not_found` (a bug on the server side). | Run by the server only. |
+| `prediction_settle_pool()` | The only way a pool is settled. In one step: check the arguments, make sure the pool row exists and **lock it**, refuse a pool that is settled already (`23505`, `already_applied`), refuse yes or no before the pool has closed (void works at any time), read the pool from its stakes, decide how it ends (`refund_void`, `refund_no_winners`, `refund_one_sided` or `winners`), check the payouts, pay everybody with `apply_wallet_transaction()` (`prediction_payout`, ref `pool:<questionId>`) in player-id order, write the payout of every stake and mark the pool settled. It *returns* a refusal (`pool_open` or `stakes_changed`) with nothing changed, and *raises* `bad_settlement` when the arguments or the payouts do not add up. | Run by the server only. |
+| `prediction_place_stake()` | no access | no access | yes |
+| `prediction_settle_pool()` | no access | no access | yes |
+| `duel_create()` | Sends a challenge. In one step: check the arguments, lock the challenger's wallet, refuse a repeated `create_uid` (code `23505`, message `already_applied`), find a named captain (any letter case) and refuse a name nobody has, a name several captains share and the challenger's own name, refuse a fourth waiting challenge, insert the duel and the challenger's envelope, and hold the stake (`arena_stake`). | Run by the server only. |
+| `duel_answer()` | Answers a challenge. The answer IS the acceptance. In one step: lock the duel row, refuse a caller who sealed in this duel already (`23505`), check the state (`duel_taken`, `duel_closed`, `duel_expired` by the database clock), check the numbers, lock both wallets in player-id order, refuse the pair limit (`daily_pair_limit`), take the answerer's stake, store their envelope, finish the duel and pay out (`arena_payout`). **The round results and the outcome are an input from Python** (`rules.resolve`), like the price of a trade: the database never reads the challenger's envelope, but it checks that the results fit the rounds and that the outcome fits the counted points. | Run by the server only. |
+| `duel_void()` | Withdraws (the challenger), declines (the named captain) or expires (anyone, but only after `expires_at` by the database clock) a challenge, and gives the challenger's stake back (`arena_payout`). The same captain closing it the same way twice raises `23505`. | Run by the server only. |
+| `duel_create()` | no access | no access | yes |
+| `duel_answer()` | no access | no access | yes |
+| `duel_void()` | no access | no access | yes |
 
 **The starter-pack rule.** The server shows a player who has not built yet 20 timber, and `islet_build()` makes the islet row with the same number (the server passes it in, from `buildings.json`). So what the player saw is what the player gets, and the pack cannot arrive twice. 20 timber buys exactly the signal station and the workshop, in either order, so nobody can spend the starter timber in a way that blocks the finale.
 
@@ -299,7 +313,7 @@ where relnamespace = 'public'::regnamespace and relkind = 'r'
 order by relname;
 ```
 
-Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. Each later file adds its own tables, also with `rls_on` = true: `market_bases`, `market_positions` and `market_trades` (Island Exchange), `captain_name_rerolls` (accounts), `entry_profiles` (entry kits), `crew_join_failures` (crew codes), and `islets` and `islet_buildings` (home islet). The table after the three checks has the number after each file.
+Expected after group 3: 18 table rows, all with `rls_on = true`. The view `prediction_pool_sides` is not a table row.
 
 ```sql
 select tablename, policyname, cmd
@@ -308,7 +322,7 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
-Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. Every later table has one `SELECT` policy too, except `crew_join_failures`, which has none: players see nothing of it. The home islet's two are `Players can read their own islet` and `Players can read their own islet buildings`.
+Expected after group 3: 16 public policies, all SELECT. `crew_join_failures` and `duel_moves` have no player policy. The five Realtime policies are checked separately below.
 
 ```sql
 select grantee, table_name, string_agg(privilege_type, ', ' order by privilege_type) as rights
@@ -318,9 +332,9 @@ group by grantee, table_name
 order by grantee, table_name;
 ```
 
-Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. Every later table adds one such row, except `crew_join_failures`, on which players have no right at all.
+Expected after group 3: no anon row; 16 authenticated rows, all SELECT. The view, `crew_join_failures` and `duel_moves` add no player grant row.
 
-The totals after each file, when the files are applied oldest first. A file adds the same whatever else is applied, so for another set of files add up the rows you applied. The last column is `select count(*) from public.wallet_reasons;`.
+The totals after each file in timestamp order. Exchange v2 removes the three v1 tables and adds two replacements, so its net table change is minus one. The last column is `select count(*) from public.wallet_reasons;`.
 
 | After applying | Tables (check 1) | Policies (check 2) | Rows for `authenticated` (check 3) | Policies on `realtime.messages` (check 4) | Wallet reasons |
 |---|---|---|---|---|---|
@@ -331,6 +345,9 @@ The totals after each file, when the files are applied oldest first. A file adds
 | `20261106040000_crew_codes.sql` | 13 | 12 | 12 | 0 | 11 |
 | `20261106050000_live_presence.sql` | 13 | 12 | 12 | 5 | 11 |
 | `20261106070000_home_islet.sql` | 15 | 14 | 14 | 5 | 11 |
+| `20261106090000_exchange_leverage.sql` | 14 | 13 | 13 | 5 | 13 |
+| `20261106100000_prediction_desk.sql` | 16 | 15 | 15 | 5 | 15 |
+| `20261106110000_lantern_duels.sql` | 18 | 16 | 16 | 5 | 17 |
 
 With every file up to `20261106070000` applied, the database also holds 17 functions of ours (Supabase's own `rls_auto_enable()` not counted), 3 sequences and 4 triggers on our tables, as the migration review counted them on a scratch copy of the chain.
 
@@ -432,6 +449,17 @@ The three actors, and the database role behind each:
 | `prediction_stakes` | update | no access | no access | yes [7] (the column `payout` only, through `prediction_settle_pool()`; not the player, the side or the amount) |
 | `prediction_stakes` | delete | no access | no access | no access (rows disappear only when their player is deleted, by cascade) |
 
+| `duels` | One row per challenge: who, the number of rounds, the stake, the status (`open`, then once `finished`, `withdrawn`, `declined` or `expired`) and, once decided, the result of every round. It never holds a signal. `create_uid` (the `actionUid` of the click) is unique per challenger, so a repeated click cannot send two challenges. | Only the server, through `duel_create()`, `duel_answer()` and `duel_void()`. |
+| `duel_moves` | The sealed envelopes: one row per captain and round, holding a signal. The only table with a signal, so it is locked tighter than any other: players have no right on it at all (not even for their own rows), the server may only read and insert, and no role may update or delete a row. | Only `duel_create()` and `duel_answer()`. |
+| `duels` | read | no access | the duels they take part in (as challenger or opponent) | yes |
+| `duels` | insert | no access | no access | yes [8] (through `duel_create()`) |
+| `duels` | update | no access | no access | yes [8] (through `duel_answer()` and `duel_void()`) |
+| `duels` | delete | no access | no access | no access (a duel goes only by cascade, when a challenger is deleted) |
+| `duel_moves` | read | no access | **no access, not even their own** | yes |
+| `duel_moves` | insert | no access | no access | yes [8] (through `duel_create()` and `duel_answer()`) |
+| `duel_moves` | update | no access | no access | **no access**: sealed means sealed |
+| `duel_moves` | delete | no access | no access | **no access**: rows go only by cascade, with their duel or their captain |
+
 
 [1] The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
@@ -496,22 +524,22 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 | `exchange_events` | insert | no access | no access | yes \*\* (through the three functions) |
 
-| `exchange_open_position()` | no access | no access | yes |
 
-| `exchange_close_position()` | no access | no access | yes |
 
-| `exchange_close_used_up()` | no access | no access | yes |
 
 | `exchange_events_id_seq` (the event history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 
-| `prediction_place_stake()` | The only way a stake happens. In one step: check the arguments, make sure the pool row exists and **lock it**, lock the player's wallet, refuse a repeated stake id (code `23505`, message `already_applied`), refuse a settled pool or one past its closing time (the earlier of the stored and the given closing time counts), refuse a second stake on the question, refuse a stake over the daily cap, take the coins with `apply_wallet_transaction()` (`prediction_stake`) and write the stake. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 30}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated stake id, or `bad_stake` / `wallet_not_found` (a bug on the server side). | Run by the server only. |
-| `prediction_settle_pool()` | The only way a pool is settled. In one step: check the arguments, make sure the pool row exists and **lock it**, refuse a pool that is settled already (`23505`, `already_applied`), refuse yes or no before the pool has closed (void works at any time), read the pool from its stakes, decide how it ends (`refund_void`, `refund_no_winners`, `refund_one_sided` or `winners`), check the payouts, pay everybody with `apply_wallet_transaction()` (`prediction_payout`, ref `pool:<questionId>`) in player-id order, write the payout of every stake and mark the pool settled. It *returns* a refusal (`pool_open` or `stakes_changed`) with nothing changed, and *raises* `bad_settlement` when the arguments or the payouts do not add up. | Run by the server only. |
-| `prediction_place_stake()` | no access | no access | yes |
-| `prediction_settle_pool()` | no access | no access | yes |
+
+
+[7] Prediction writes use only their server RPCs; pool sides are a read-only view with no player grant.
+
+[8] Duel writes use only their server RPCs; sealed moves have no player read policy.
+
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
 
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in all fifteen tables (with every file up to `20261106070000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It skips row-level security. It can read every player's rows in all eighteen tables (with every file up to `20261106070000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It can send into any Realtime room through the Broadcast REST API, because that skips the rules on `realtime.messages`. The server uses this only to tell a crew that something changed (`backend/server/crew_broadcast.py`).
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see note [2] of the matrix.
@@ -527,7 +555,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
-The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`), the entry kit checks K1 to K5 (`20261106030000`) the live presence checks L1 to L7 (`20261106050000`) and the home islet checks H1 to H15 (`20261106070000`). Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players). None of the accounts, entry kit, crew, live presence or home islet files adds a reason.
+The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **17** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`), the entry kit checks K1 to K5 (`20261106030000`) the live presence checks L1 to L7 (`20261106050000`) and the home islet checks H1 to H15 (`20261106070000`). Run L3 after step 3 (it needs the crews that step makes) and before step 17 (which deletes the test players). None of the accounts, entry kit, crew, live presence or home islet files adds a reason.
 
 **Set up**
 
@@ -1414,14 +1442,14 @@ select reason, direction from public.wallet_reasons where reason like 'market\_%
 select count(*) from public.wallet_reasons;
 ```
 
-Expected: 5 rows: `market_buy` spend, `market_fee` spend, `market_payout` earn, `market_sell` earn, `market_stake` spend. And 13 reasons in all. The wallet refuses a wrong direction, for example a stake that adds coins:
+Expected: 5 rows: `market_buy` spend, `market_fee` spend, `market_payout` earn, `market_sell` earn, `market_stake` spend. And 17 reasons in all after group 3. The wallet refuses a wrong direction, for example a stake that adds coins:
 
 ```sql
 set local role service_role;
 select public.apply_wallet_transaction('USER_A_ID', 10, 'market_stake', 'manual-wrong-1');
 ```
 
-Expected: `wrong_direction`. Finally paste the whole third migration (`20261106090000_exchange_leverage.sql`) into the SQL editor again and run it. Expected: no error, the Exchange check for player A shows what it showed after X12, and `select count(*) from public.wallet_reasons;` still shows 13. (The file starts with a guard that only looks at the old first-version table `market_trades`, which no longer exists, so it does nothing the second time.)
+Expected: `wrong_direction`. Finally paste the whole third migration (`20261106090000_exchange_leverage.sql`) into the SQL editor again and run it. Expected: no error, the Exchange check for player A shows what it showed after X12, and `select count(*) from public.wallet_reasons;` still shows 17 after the full group 3 chain. (The file starts with a guard that only looks at the old first-version table `market_trades`, which no longer exists, so it does nothing the second time.)
 
 Delete the two test users when you are done (**Authentication > Users**). Their positions and events go with them.
 
@@ -2055,8 +2083,6 @@ Delete the test users when you are done (**Authentication > Users**). Their isle
 | `prediction_stakes` | One row per stake: the player, the side (`yes` or `no`), the coins, the `stake_id` the browser made for the click and the ledger `ref` (`stake:` plus that id). A player has one stake per question, and can use a `stake_id` once. `payout` is written when the pool is settled. | Only `prediction_place_stake()` adds a row; only `prediction_settle_pool()` writes `payout`. |
 | `prediction_pool_sides` | A view: the coins and the players on each side of each pool, added up from the stakes. It uses the rights of whoever reads it (`security_invoker`). | Nobody writes it. Only the server reads it. |
 | `prediction_pools_keep_settled()` | A trigger function, run by the trigger of the same name before every update of a `prediction_pools` row. If the row is already `settled` it raises `pool_settled`, so **a settled pool is final**: nothing can change it any more, not even the server, which holds the update right on seven of its columns. Without it, a server bug that wrote the table directly could set a settled pool back to `open` and settle it again with the other outcome (`pool:<questionId>` only stops a second payout to the same player, not one to the other player). The settlement itself is not in the way: it changes an open pool, once. | Nobody calls it. The trigger runs it. |
-| `prediction_place_stake()` | The only way a stake happens. In one step: check the arguments, make sure the pool row exists and **lock it**, lock the player's wallet, refuse a repeated stake id (code `23505`, message `already_applied`), refuse a settled pool or one past its closing time (the earlier of the stored and the given closing time counts), refuse a second stake on the question, refuse a stake over the daily cap, take the coins with `apply_wallet_transaction()` (`prediction_stake`) and write the stake. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 30}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated stake id, or `bad_stake` / `wallet_not_found` (a bug on the server side). | Run by the server only. |
-| `prediction_settle_pool()` | The only way a pool is settled. In one step: check the arguments, make sure the pool row exists and **lock it**, refuse a pool that is settled already (`23505`, `already_applied`), refuse yes or no before the pool has closed (void works at any time), read the pool from its stakes, decide how it ends (`refund_void`, `refund_no_winners`, `refund_one_sided` or `winners`), check the payouts, pay everybody with `apply_wallet_transaction()` (`prediction_payout`, ref `pool:<questionId>`) in player-id order, write the payout of every stake and mark the pool settled. It *returns* a refusal (`pool_open` or `stakes_changed`) with nothing changed, and *raises* `bad_settlement` when the arguments or the payouts do not add up. | Run by the server only. |
 
 **The server works out the payouts, and the database checks them.** The rule is written once in full, in Python (`backend/server/predictions/pools.py`): the winners share the pool in proportion to their stakes, 5 % of the losing side (rounded down) leaves the game, the leftover coins go to the largest remainders and then to the earliest stake, and everybody gets a full refund when the question is void, when nobody picked the winning side or when everybody picked the same side. `prediction_settle_pool()` does not repeat the split. It checks what it is given: the payouts must name **exactly** the stakes that get paid (a refund: every stake; a win: every winning stake), they must add up to the coins staked minus the cut, each must be at least 1 coin, a refund must be the stake, and a win must be within one coin of the exact share (`abs(coins x W - stake x D) < W`, with W the winning coins and D the shared coins). If the server ever had a bug, the database refuses the settlement with `bad_settlement` instead of paying wrong coins, so **no coin is ever created or lost**. If the pool changed between the server's read and the call (a stake disappeared because its player was deleted, or a new stake arrived, which can happen to a void while staking is still open), the answer is `stakes_changed`, and the server reads again.
 
@@ -2066,7 +2092,7 @@ Delete the test users when you are done (**Authentication > Users**). Their isle
 
 **A known limit:** if a player is deleted while a pool is open, their stake row goes with them (cascade), and those coins simply leave the game. No coin is ever created.
 
-After applying it, the three quick checks below show **twelve** tables and **twelve** policies (with the Island Exchange migration applied too), and there are **thirteen** wallet reasons. Run the checks P1 to P16 at the end of the manual test plan.
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
 
 ### Prediction desk checks (steps P1 to P16, then R1 to R4)
 
@@ -2095,14 +2121,14 @@ from public.wallets w
 where w.player_id = 'USER_A_ID';
 ```
 
-**P1. The reasons.** Both are on the list, and there are 13 reasons in all (8 + 3 from the Exchange + 2 from the desk; 10 if the Exchange migration is not applied):
+**P1. The reasons.** Both are on the list, and there are 17 reasons after the full chain (8 foundation, 3 Exchange v1, 2 Exchange v2, 2 prediction and 2 arena):
 
 ```sql
 select reason, direction from public.wallet_reasons where reason like 'prediction\_%' order by reason;
 select count(*) as reasons from public.wallet_reasons;
 ```
 
-Expected: `prediction_payout` earn and `prediction_stake` spend; `reasons` is 13.
+Expected: `prediction_payout` earn and `prediction_stake` spend; `reasons` is 17.
 
 **P2. A stake.** Player A stakes 30 coins on YES in the pool `desk-one`:
 
@@ -2378,7 +2404,7 @@ select (select count(*) from public.prediction_stakes where player_id in ('USER_
        (select count(*) from public.prediction_pools where question_id like 'desk-%') as pools;
 ```
 
-Expected: `stakes` 0 (the stakes go with their players, and those coins leave the game), and `pools` is still 10 or more: a pool is never deleted. Finally paste the whole prediction desk migration into the SQL editor again and run it. Expected: no error, `select count(*) from public.wallet_reasons;` still shows 13 (10 without the Exchange migration), and the pools are unchanged.
+Expected: `stakes` 0 (the stakes go with their players, and those coins leave the game), and `pools` is still 10 or more: a pool is never deleted. Finally paste the whole prediction desk migration into the SQL editor again and run it. Expected: no error, `select count(*) from public.wallet_reasons;` still shows 17 after the full group 3 chain (10 without the Exchange migration), and the pools are unchanged.
 
 **P16. A settled pool is final.** The function refuses a second settlement (P10), and the table refuses it too: once a pool is settled, nothing can change its row any more, not even the server, which holds the update right on seven of its columns. Without this, a server bug that wrote the table directly could set the pool `desk-pay` (settled in P9) back to open and settle it again with the other outcome, and the players on the other side would be paid from the same coins. Try it as the server:
 
@@ -2407,6 +2433,389 @@ Expected: `pool_settled` again. Run the **Pool check** of P9 once more: it still
 - **R4. The same stake id twice at the same moment: one stake.** Tab 1: A stakes 10 on `desk-r4` with the stake id `desk-a-r4-0001`, followed by `select pg_sleep(10);`. Tab 2: the same call. Expected: tab 2 waits and then fails with `already_applied`. A has one stake on `desk-r4` and was charged 10 coins once (the Desk check for A shows one ledger row `prediction_stake -10 stake:desk-a-r4-0001`).
 
 Delete the test users when you are done (**Authentication > Users**). Their stakes go with them.
+
+## The Lantern Duels migration
+
+`migrations/20261106110000_lantern_duels.sql` is the database part of Lantern Duels (package A7): two captains each seal a sequence of lantern signals, the server opens both envelopes at once, and the duel is friendly or played for equal play-coin stakes (see [INTERFACES.md, section 2](../docs/INTERFACES.md#lantern-duels-package-a7), decision [D026](../docs/DECISIONS.md) and the spec [A7-lantern-duels.md](../specs/A7-lantern-duels.md)). Run it **after** the Island Exchange migration (it uses the wallet and the profiles from the first). It is safe to run twice. Everything is explained in the file itself. It adds two wallet reasons, `arena_stake` and `arena_payout` (see the table above), and:
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `duels` | One row per challenge: who, the number of rounds, the stake, the status (`open`, then once `finished`, `withdrawn`, `declined` or `expired`) and, once decided, the result of every round. It never holds a signal. `create_uid` (the `actionUid` of the click) is unique per challenger, so a repeated click cannot send two challenges. | Only the server, through `duel_create()`, `duel_answer()` and `duel_void()`. |
+| `duel_moves` | The sealed envelopes: one row per captain and round, holding a signal. The only table with a signal, so it is locked tighter than any other: players have no right on it at all (not even for their own rows), the server may only read and insert, and no role may update or delete a row. | Only `duel_create()` and `duel_answer()`. |
+
+Like `market_trade()`, each function either does its work (`{"status": "done", ...}`) or *returns* a refusal (`{"status": "refused", "reason": "duel_taken"}`) before it writes anything, and *raises* an error for a real failure: `insufficient_funds` (from the wallet), a repeat (code `23505`, message `already_applied`), or `bad_duel` / `wallet_not_found` when the server sent numbers that do not fit (a bug on the server side). Every ledger row of a duel carries the ref `duel:` and the duel id, so a stake or a payout cannot be booked twice. The cut (5 % of the pot, rounded in the winner's disfavour) has no ledger row: it is simply not paid out. The arena rows of one duel add up to 0 for a friendly duel, a draw, a withdrawal, a decline or an expiry, and to minus the cut for a decided staked duel (-1, -3, -5 or -10 for stakes of 10, 25, 50 or 100). The locks are always taken in the same order, the duel row first and then the wallets by player id, so two requests never wait for each other forever.
+
+After the full group 3 chain through `20261106110000`, the database has **18 tables**, **one view**, **16 public policies**, **5 Realtime policies**, **16 authenticated SELECT grant rows**, **17 wallet reasons** and **24 public functions**. All 18 tables have RLS. The view is `prediction_pool_sides`; it is not counted as a table.
+
+### Lantern Duels checks (steps D1 to D12)
+
+These steps test the third migration. Run them after the foundation, the Island Exchange and the Lantern Duels migrations are all applied. Use **three new test users**, A, B and C (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID`, `USER_B_ID` and `USER_C_ID` with their ids. Run each block in its own run, with the role left on the default (`postgres`). The server works out the round results of a duel in Python; here you write them by hand (the arrays below are right for their signals). The blocks pass "one day ago" as the start of the day for the pair limit, so every duel of this test counts, and they pass the answer window (24 hours) and the most waiting challenges (3) as the server does. The race (step D3) needs `psql`, because the SQL editor runs each block as its own transaction.
+
+**D0. Names and coins.** The names make the challenges easy to address (a challenger names the opponent by display name, in any letter case). Run the three updates, then give each player 1000 coins (a new run):
+
+```sql
+update public.profiles set display_name = 'Duel Alice' where id = 'USER_A_ID';
+update public.profiles set display_name = 'Duel Bob'   where id = 'USER_B_ID';
+update public.profiles set display_name = 'Duel Carol' where id = 'USER_C_ID';
+```
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 1000, 'kit_grant', 'duel-kit') as a_balance,
+       public.apply_wallet_transaction('USER_B_ID', 1000, 'kit_grant', 'duel-kit') as b_balance,
+       public.apply_wallet_transaction('USER_C_ID', 1000, 'kit_grant', 'duel-kit') as c_balance;
+```
+
+Expected: 1000 each. We call the next block the **Duel check** and use it again below (default role). It shows each test player's coins and their arena ledger rows:
+
+```sql
+select p.display_name,
+       w.balance,
+       (select string_agg(t.reason || ' ' || t.delta, ', ' order by t.id)
+          from public.wallet_transactions t
+         where t.player_id = w.player_id and t.reason like 'arena%') as arena_rows
+from public.wallets w
+join public.profiles p on p.id = w.player_id
+where w.player_id in ('USER_A_ID', 'USER_B_ID', 'USER_C_ID')
+order by p.display_name;
+```
+
+Expected: three rows (Duel Alice, Duel Bob, Duel Carol), 1000 coins each, and no arena rows yet.
+
+**D1. The worked example, staked 100.** Alice challenges Bob: 5 rounds, 100 coins each. She seals Flash, Shade, Shade, Mirror, Shade (3 of 5 oil). The name is in lower case on purpose:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'duel bob', 5, 100, 5,
+         array['flash','shade','shade','mirror','shade'], 'duel-test-001', 24, 3) as result;
+```
+
+Expected: `status` `done`, `opponentName` `Duel Bob` (the name of the profile, not what you typed) and `balance` 900. Now Bob answers with Mirror, Flash, Shade, Shade, Mirror (4 of 5 oil). Round 1: Bob's Mirror throws Alice's Flash back. Round 2: Bob's Flash outshines Alice's Shade. Round 3: Shade against Shade scores for nobody. Round 4: Bob's Shade leaves Alice's Mirror nothing to throw. Round 5: Alice's Shade leaves Bob's Mirror nothing to throw. The results are `opponent, opponent, even, opponent, challenger` and the outcome is `opponent`, 3 to 1.
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-001'), 'USER_B_ID',
+         array['mirror','flash','shade','shade','mirror'], 'duel-answer-001',
+         array['opponent','opponent','even','opponent','challenger'], 'opponent',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: `status` `done`, `balance` 1090 and `winnerTakes` 190. The Duel check: Duel Alice 900 with `arena_stake -100`, Duel Bob 1090 with `arena_stake -100, arena_payout 190`, Duel Carol 1000. The pot was 200, the winner took 190, and the 10 coins of the cut were simply not paid out. One more look at the duel itself:
+
+```sql
+select d.status, d.outcome, d.round_results,
+       (select sum(t.delta) from public.wallet_transactions t where t.ref = 'duel:' || d.id::text) as arena_sum,
+       (select count(*) from public.duel_moves m where m.duel_id = d.id) as envelope_rows
+from public.duels d
+where d.create_uid = 'duel-test-001';
+```
+
+Expected: `finished`, `opponent`, `{opponent,opponent,even,opponent,challenger}`, `arena_sum` -10 and `envelope_rows` 10 (5 for each captain).
+
+**D2. The same challenge twice changes nothing.** Run the first block of D1 again, with the same `duel-test-001`.
+
+Expected: an error with the message `already_applied` (error code `23505`, the same code as a repeated wallet ref). The Duel check is unchanged (Duel Alice 900), and this shows one duel:
+
+```sql
+select count(*) as duels from public.duels where create_uid = 'duel-test-001';
+```
+
+**D3. Two captains answer the same open challenge at the same moment (needs psql).** First Alice sends an open challenge (no name), staked 50, 3 rounds:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', null, 3, 50, 5,
+         array['flash','shade','shade'], 'duel-test-003', 24, 3) as result;
+```
+
+Expected: `done`, `balance` 850. Now open two terminals with `psql` (copy the connection string from **Connect** in the Supabase dashboard; type the database password into the terminal only, never into a file). In terminal 1, Bob answers, but do **not** commit yet:
+
+```text
+begin;
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-003'), 'USER_B_ID',
+         array['mirror','flash','shade'], 'duel-answer-003',
+         array['opponent','opponent','even'], 'opponent', now() - interval '1 day', 3) as result;
+```
+
+In terminal 2, Carol answers the same duel with the same kind of block (`'USER_C_ID'`, the action id `'duel-answer-003c'`, the same signals and results). It **waits**, because the first answer holds the lock on the duel row. Back in terminal 1 type `commit;`. Terminal 2 now answers: `status` `refused`, `reason` `duel_taken`. Type `commit;` there too.
+
+Expected: Bob's answer was `done`, with `winnerTakes` 95 (a pot of 100 minus a cut of 5) and `balance` 1135 (1090 - 50 + 95). The Duel check: Duel Alice 850, Duel Bob 1135, Duel Carol 1000, and Carol sealed nothing:
+
+```sql
+select count(*) as carol_envelope_rows from public.duel_moves where player_id = 'USER_C_ID';
+```
+
+Expected: 0.
+
+**D4. A draw returns both stakes.** Alice challenges Carol, 3 rounds, 50 coins each, with Flash, Shade, Shade. Carol answers with Shade, Flash, Shade. Round 1: Alice's Flash outshines Carol's Shade. Round 2: Carol's Flash outshines Alice's Shade. Round 3: Shade against Shade scores for nobody. It is 1 to 1, a draw.
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'DUEL CAROL', 3, 50, 5,
+         array['flash','shade','shade'], 'duel-test-004', 24, 3) as result;
+```
+
+Expected: `done`, `balance` 800. Then:
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-004'), 'USER_C_ID',
+         array['shade','flash','shade'], 'duel-answer-004',
+         array['challenger','opponent','even'], 'draw',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: `done`, `winnerTakes` 0 and `balance` 1000. The Duel check: both players are back where they were before this step (Duel Alice 850, Duel Carol 1000), and the arena rows of this duel add up to 0:
+
+```sql
+select sum(t.delta) as arena_sum, count(*) as rows
+from public.wallet_transactions t
+where t.ref = 'duel:' || (select id::text from public.duels where create_uid = 'duel-test-004');
+```
+
+Expected: `arena_sum` 0 and `rows` 4 (two stakes and two returned stakes).
+
+**D5. Withdraw and decline give the stake back once.** Alice sends two named challenges to Bob, 100 coins each (a new run each):
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Bob', 5, 100, 5, array['shade','shade','shade','shade','shade'], 'duel-test-005', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Bob', 5, 100, 5, array['shade','shade','shade','shade','shade'], 'duel-test-006', 24, 3) as result;
+```
+
+Expected: both `done` (the second `balance` is 650). Alice withdraws the first:
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-005'), 'USER_A_ID', 'withdrawn') as result;
+```
+
+Expected: `status` `done`, `refunded` 100, `challengerBalance` 750. Run it again: an error `already_applied` (error code `23505`). Bob tries to decline the withdrawn duel (change the last two values):
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-005'), 'USER_B_ID', 'declined') as result;
+```
+
+Expected: `status` `refused`, `reason` `duel_closed`. Alice cannot decline her own challenge (the second duel), and Carol cannot withdraw it; both are refused with `not_your_duel`:
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-006'), 'USER_A_ID', 'declined') as alice_declines,
+       public.duel_void((select id from public.duels where create_uid = 'duel-test-006'), 'USER_C_ID', 'withdrawn') as carol_withdraws;
+```
+
+Now Bob declines it; the stake goes back to Alice. A second decline is an error `already_applied`:
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-006'), 'USER_B_ID', 'declined') as result;
+```
+
+Expected: `done`, `refunded` 100, `challengerBalance` 850. The Duel check: Duel Alice 850.
+
+**D6. A challenge that nobody answers expires, and is refunded once.** Alice sends an open challenge, 100 coins, then anybody asks for it to expire:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', null, 5, 100, 5, array['flash','mirror','shade','shade','shade'], 'duel-test-007', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_void((select id from public.duels where create_uid = 'duel-test-007'), 'USER_C_ID', 'expired') as result;
+```
+
+Expected: `status` `refused`, `reason` `not_expired` (the database clock says the 24 hours are not over). Pretend they are. Move the creation and the deadline back by two days together, as the default role (the deadline must stay after the creation):
+
+```sql
+update public.duels
+   set created_at = created_at - interval '2 days',
+       expires_at = expires_at - interval '2 days'
+ where create_uid = 'duel-test-007';
+```
+
+A late answer by Carol is refused and changes nothing:
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-007'), 'USER_C_ID',
+         array['shade','shade','shade','shade','shade'], 'duel-answer-007',
+         array['challenger','challenger','even','even','even'], 'challenger',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: `status` `refused`, `reason` `duel_expired`. Now Carol asks for the expiry. The run of the second block above (with `'expired'`) now does the refund; run it again. Expected: `done`, `refunded` 100, `challengerBalance` 850. Run it once more: `refused`, `duel_closed`, and Duel Alice stays at 850.
+
+**D7. A captain who cannot pay the stake changes nothing.** Take all but 50 coins away from Carol, then Alice challenges her for 100:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_C_ID', -((select balance from public.wallets where player_id = 'USER_C_ID') - 50), 'admin_adjust', 'duel-drain') as carol_balance;
+```
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Carol', 5, 100, 5, array['shade','shade','shade','shade','shade'], 'duel-test-008', 24, 3) as result;
+```
+
+Expected: `done`, `balance` 750. Carol answers:
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID',
+         array['shade','shade','shade','shade','shade'], 'duel-answer-008',
+         array['even','even','even','even','even'], 'draw',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: an error `insufficient_funds`. Nothing changed: the Duel check shows Duel Carol with 50 coins and Duel Alice with 750 (her stake is still held), and
+
+```sql
+select d.status,
+       (select count(*) from public.duel_moves m where m.duel_id = d.id and m.player_id = 'USER_C_ID') as carol_envelope_rows
+from public.duels d
+where d.create_uid = 'duel-test-008';
+```
+
+shows `open` and 0.
+
+**D8. The two caps.** First the pair limit: Alice and Bob have decided 2 staked duels today (D1 and D3). Alice sends Bob another, staked 10, and Bob answers with a limit of 2 (the server passes 3):
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', 'Duel Bob', 3, 10, 5, array['flash','shade','shade'], 'duel-test-012', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-012'), 'USER_B_ID',
+         array['shade','flash','shade'], 'duel-answer-012',
+         array['challenger','opponent','even'], 'draw',
+         now() - interval '1 day', 2) as result;
+```
+
+Expected: `status` `refused`, `reason` `daily_pair_limit`, and Bob sealed nothing. Run the answer again with the limit `3` (the last number): it is `done` (a draw, `winnerTakes` 0). Now Alice and Bob have decided 3 staked duels today. Bob challenges Alice, and Alice answers with the limit 3: she is refused too, because the limit counts either way round, so it counts the duels in both directions:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_B_ID', 'Duel Alice', 3, 10, 5, array['flash','shade','shade'], 'duel-test-013', 24, 3) as result;
+```
+
+```sql
+set local role service_role;
+select public.duel_answer((select id from public.duels where create_uid = 'duel-test-013'), 'USER_A_ID',
+         array['shade','flash','shade'], 'duel-answer-013',
+         array['challenger','opponent','even'], 'draw',
+         now() - interval '1 day', 3) as result;
+```
+
+Expected: the create is `done`, the answer `refused` with `daily_pair_limit`. A friendly duel (stake 0) is never blocked by the limit. Second, the waiting cap. Alice has one waiting challenge (`duel-test-008`). She sends two friendly open challenges (change `duel-test-009` to `duel-test-010` for the second run), and then a third:
+
+```sql
+set local role service_role;
+select public.duel_create('USER_A_ID', null, 3, 0, 5, array['shade','shade','shade'], 'duel-test-009', 24, 3) as result;
+```
+
+Expected: both `done` (the friendly ones hold no coins). Run it once more with `duel-test-011`: `status` `refused`, `reason` `too_many_waiting`. Nothing was created for `duel-test-011`.
+
+**D9. Players see only their own duels, and nothing of the envelopes.** As Bob (the second line gives the claims the Supabase login would give):
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_B_ID", "role": "authenticated"}', true);
+select count(*) as duels_seen,
+       count(*) filter (where challenger_id = 'USER_B_ID' or opponent_id = 'USER_B_ID') as duels_of_bob
+from public.duels;
+```
+
+Expected: two equal numbers (every duel Bob sees is one he takes part in), and fewer than the total number of duels (run `select count(*) from public.duels;` as the default role: it also counts the duels of Alice and Carol). Now replace the last statement:
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_B_ID", "role": "authenticated"}', true);
+select * from public.duel_moves;
+```
+
+Expected: `permission denied for table duel_moves`. Not even his own sealed signals. Change the first line to `set local role anon;` (and drop the `set_config` line) and run `select * from public.duels;`, then `select * from public.duel_moves;`. Expected: `permission denied for table ...` both times.
+
+**D10. Only the server runs the functions, and sealed means sealed.** Each statement fails, as the role in the left column, and changes nothing:
+
+| Role | Statement | Expected error mentions |
+|---|---|---|
+| `authenticated` (player B) | `select public.duel_create('USER_B_ID', null, 3, 0, 5, array['shade','shade','shade'], 'duel-test-014', 24, 3);` | `permission denied for function duel_create` |
+| `authenticated` (player B) | `select public.duel_void((select id from public.duels where create_uid = 'duel-test-008'), 'USER_B_ID', 'expired');` | `permission denied for function duel_void` |
+| `authenticated` (player B) | `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_B_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-099', array['even','even','even','even','even'], 'draw', now(), 3);` | `permission denied for function duel_answer` |
+| `authenticated` (player B) | `update public.duels set stake = 0;` | `permission denied for table duels` |
+| `service_role` | `update public.duel_moves set signal = 'flash';` | `permission denied for table duel_moves` |
+| `service_role` | `delete from public.duel_moves;` | `permission denied for table duel_moves` |
+| `service_role` | `delete from public.duels;` | `permission denied for table duels` |
+
+Put `set local role authenticated;` (with the `set_config` line from D9) or `set local role service_role;` in front of each, run it, and look at the error. Even the server cannot change a sealed signal or delete a duel.
+
+**D11. The database checks what the server sends.** Each statement is refused as the server (`set local role service_role;` in front of it) with the error in the right column, and changes nothing:
+
+| Statement | Why it is wrong | Expected error |
+|---|---|---|
+| `select public.duel_create('USER_A_ID', null, 4, 0, 5, array['shade','shade','shade','shade'], 'duel-test-015', 24, 3);` | 4 rounds: a duel has 3 or 5 | `bad_duel` |
+| `select public.duel_create('USER_A_ID', null, 3, 101, 5, array['shade','shade','shade'], 'duel-test-016', 24, 3);` | a stake of 101: the most is 100 | `bad_duel` |
+| `select public.duel_create('USER_A_ID', null, 5, 0, 5, array['shade','shade','shade'], 'duel-test-017', 24, 3);` | 3 signals for 5 rounds | `bad_duel` |
+| `select public.duel_create('USER_C_ID', null, 3, 0, 5, array['flash','sparkle','shade'], 'duel-test-018', 24, 3);` | a signal that is not a signal (Carol has no waiting challenge, so the cap does not answer first) | `duel_moves_signal_allowed` |
+| `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-098', array['challenger','challenger','challenger','challenger','challenger'], 'draw', now() - interval '1 day', 3);` | five points for the challenger, and the outcome says draw | `bad_duel` |
+| `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-097', array['even','even','even'], 'draw', now() - interval '1 day', 3);` | 3 results for 5 rounds | `bad_duel` |
+| `select public.duel_answer((select id from public.duels where create_uid = 'duel-test-008'), 'USER_C_ID', array['shade','shade','shade','shade','shade'], 'duel-answer-096', array['even','even','even','even','even'], 'draw', now() + interval '1 day', 3);` | the day starts tomorrow, so the pair limit would count nothing | `bad_duel` |
+
+A direct insert as the default role shows the table guarding itself too. Each fails with the constraint named in the error:
+
+```sql
+insert into public.duels (challenger_id, is_open, rounds, stake, cut_percent, create_uid, expires_at)
+values ('USER_A_ID', true, 3, 101, 5, 'duel-test-019', now() + interval '1 day');
+```
+
+Expected: `duels_stake_range`. Change `3, 101` to `4, 0` for `duels_rounds_allowed`, and `now() + interval '1 day'` to `now() - interval '1 day'` for `duels_expires_after_creation`.
+
+**D12. The reasons, the sums, and running the migration again.** The two new reasons are in the list, in the right direction (default role):
+
+```sql
+select reason, direction from public.wallet_reasons where reason like 'arena\_%' order by reason;
+```
+
+Expected: 2 rows: `arena_payout` earn, `arena_stake` spend. The wallet refuses a wrong direction, for example a stake that adds coins:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 10, 'arena_stake', 'manual-wrong-2');
+```
+
+Expected: `wrong_direction`. No duel created a coin. Every arena row of every test duel, added up per duel:
+
+```sql
+select d.create_uid, d.status, d.stake, coalesce(sum(t.delta), 0) as arena_sum
+from public.duels d
+left join public.wallet_transactions t on t.ref = 'duel:' || d.id::text
+where d.create_uid like 'duel-test-%'
+group by d.id, d.create_uid, d.status, d.stake
+order by d.create_uid;
+```
+
+Expected: a duel that ended without a winner (a draw, withdrawn, declined, expired, and every friendly one) adds up to 0; `duel-test-001` (finished, 100) adds up to -10 and `duel-test-003` (finished, 50) to -5, the cut of each; and the duels that are still open (`duel-test-008`, staked 100, and `duel-test-013`, staked 10) add up to minus their held stake, -100 and -10. Finally paste the whole Lantern Duels migration into the SQL editor again and run it. Expected: no error, the Duel check shows what it showed before, and `select count(*) from public.wallet_reasons;` still shows 17 after the full group 3 chain.
+
+Delete the three test users when you are done (**Authentication > Users**). Their duels, envelopes and ledger rows go with them.
+
+## Group 3 automated migration checks
+
+The complete ten-file chain applies twice on a new local PostgreSQL over a Unix socket. The checks verify the cumulative object counts, wallet directions and server-only intent grants. They never read a configured database URL. From `backend/`:
+
+```bash
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/group3_sql
+```
+
+The test-only packages stay in uv's cache. Claude reviews and applies the three protected migration files before their code reaches main; this check does not apply anything to Supabase.
 
 ## Changing the database later
 
