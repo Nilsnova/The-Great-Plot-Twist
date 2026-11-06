@@ -14,8 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Current release, 6 Nov 2026, Codex:** main `d5ad219` and production
-`dpl_2yKCaKZKv1ZFE7z6jiTtCYmTmpFK` are READY with festival, host and sports code deployed.
+**Verified application release, 6 Nov 2026, Codex:** main `cb42da3` and production
+`dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51` are READY with live extras and stabilization deployed.
 Health/config and the host page return 200. Presence, market, predictions, arena, case, bulletin
 and festival are enabled. Sports, sign-in, raid and ChatGPT helper are off. Festival waits for
 Relighting; live SQL still shows dark/null, zero solves/lights/Wall, festival actions and sports
@@ -27,10 +27,14 @@ restored to their repository versions; 150000 is unused. Live schema: **39 table
 The deployed live-extras gate passed **11,168 backend and 1,672 frontend tests**. Case services
 include all 69 kit mixes and real solo+NPC/four-human HTTP-to-SQL journeys.
 
-The next integration `integrate/stabilization-submission` includes reliability, frontend/backend
-regressions, isolated devtools, help/privacy, security/text, notices, presentation/PDF and starter
-guides. It preserves original authored checkpoints and passes independent review. Its **13,584-test
-backend gate**, **1,799 frontend tests with no skips**, build and merged browser checks pass. Rollout is recorded in [stabilization proof](handoff/stabilization-release.md).
+The stabilization/submission release includes reliability, frontend/backend regressions, isolated
+devtools, help/privacy, security/text, notices, presentation/PDF and starter guides. Original authored
+checkpoints are preserved and independent reviews pass. **13,584 backend tests plus nine benchmark
+tool tests, 1,799 frontend tests with zero skips**, build/budgets and merged browser checks pass.
+Live health/config are 200/private,no-store; build identity matches the main merge and stamps all
+122 JS/CSS assets. Help, privacy, host and software notices are 200. See the
+[stabilization proof](handoff/stabilization-release.md).
+
 Normal browser mystery/multiplayer still await **G9, paused until Nils' laptop returns**; backend
 journey proofs do not establish a connected browser session.
 
@@ -158,7 +162,7 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**Current next:** release the reviewed reliability/help/security wave, then resume G9 when the laptop is available and perform the physical-device and presentation rehearsal. The G8 notes below are historical.
+**Current next:** resume G9 when the laptop is available and perform the physical-device and presentation rehearsal. The G8 notes below are historical.
 
 **G8 complete on `feat/g8-islet-harbor-demo`.** Accepted islet builds, the opt-in Lisbon-time bulletin/tonight chip, safe distant signal, original harbor sound/life and the nine-beat presenter kit are ready. Accessibility fixes keep controls at 16 px, case body at 18 px and story/captions at 19/18 px. Provider/licence blocks are removed from gameplay; credits are reached only through Settings. The class walkthrough includes the architecture, ten-file reading path and twelve explain-back cards.
 
@@ -267,7 +271,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
-**Next server step:** complete the stabilization rollout and public read-only verification. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused; sports activation awaits its provider key and current-source proof.
+**Next server step:** resume G9 when available and prove the normal browser journey; configure/verify sports when its key is supplied. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused; sports activation awaits its provider key and current-source proof.
 
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
@@ -463,6 +467,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** pushed stabilization branch a2736a1 and main cb42da3; production dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51 READY. Build stamp matches the merge; health/config/help/privacy/host/notices return 200. Seven flags unchanged; no new live migration or gameplay writes.
 
 - **6 Nov 2026, Codex for Nils:** stabilization integration passes 13,584 backend tests plus nine benchmark-tool tests, 1,799 frontend tests with zero skips, production/spoiler/budget gates and merged browser/deck checks. Independent reviews passed; no new migration, dependency, workflow, cron, flag or G9 change. Full proof: [stabilization release](handoff/stabilization-release.md).
 
