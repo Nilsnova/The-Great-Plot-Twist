@@ -17,7 +17,6 @@ from fastapi import FastAPI
 from server import __version__
 from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
-from server.cache import DefaultCacheControl
 from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
@@ -32,6 +31,7 @@ from server.game.world_state import DatabaseWorldStage, relit_check
 from server.host_console_cache import HostConsoleHeaders
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
+from server.request_policy import RequestPolicy
 from server.routes import (
     auth_exchange,
     board,
@@ -92,7 +92,7 @@ def new_fastapi_app(settings: Settings) -> FastAPI:
         openapi_url=openapi_url,
         swagger_ui_oauth2_redirect_url=None,
     )
-    app.add_middleware(DefaultCacheControl)
+    app.add_middleware(RequestPolicy)
     return app
 
 
@@ -156,6 +156,9 @@ def create_app(
     # database reads put the player id in that address (see routes/me.py), so keep those lines
     # out of the log, even if someone switches INFO logging on to debug something else.
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
+    # Uvicorn's access logger includes raw paths and query strings. Use safe templates instead.
+    logging.getLogger("uvicorn.access").disabled = True
 
     app = new_fastapi_app(settings)
     app.add_middleware(CaseCacheControl)
