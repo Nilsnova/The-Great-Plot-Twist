@@ -1253,7 +1253,7 @@ Migrations still sort 020000, 030000, 040000.
 What worked for me (Postgres 16.2; nothing in our SQL needs a 17-only feature):
 - `uv run --no-project --python 3.12 --with pgserver --with "psycopg[binary]" python -I your_script.py`, with the script in your own scratchpad, not the repo.
 - `pgserver.get_server(<scratchpad>/pgdata, cleanup_mode="delete")` listens on a Unix socket only (no TCP port at all), and `server.cleanup()` stops it and removes the data.
-- If the controller wants Postgres 17 exactly: the only PG 17.10 binary I found is inside another project (`/Users/nilslenke/Developer/rth-localdb/node_modules/@embedded-postgres/darwin-x64/native/bin/`). Use it only with the controller's OK: `initdb` into the scratchpad, then `pg_ctl -o "-p <random 50000..59999> -k <socket dir> -c listen_addresses=''" start`, then `pg_ctl stop`.
+- If the controller wants Postgres 17 exactly: the only PG 17.10 binary I found is inside another local project, in the `native/bin/` folder of its `@embedded-postgres/darwin-x64` package (under `node_modules`). Use it only with the controller's OK: `initdb` into the scratchpad, then `pg_ctl -o "-p <random 50000..59999> -k <socket dir> -c listen_addresses=''" start`, then `pg_ctl stop`.
 
 Stand-ins for what every Supabase project already has. Run them once before the migrations:
 ```sql
@@ -1291,6 +1291,6 @@ Then:
 
 ## 9. Process notes (for the controller)
 
-- No skill was used, and nothing about a skill needs logging. Nothing in the repo was written. My scratch files are in `/private/tmp/claude-501/-Users-nilslenke-Desktop-02-University-Nova-Classes-Intro-to-Programming-Group-Project/569201b0-f556-4177-bafd-264473fb70ab/scratchpad/specsql/`: the three draft migrations, `run_scratch.py` (41 database checks), `routes_check.py` (engine routes) and `kits_check.py` (the kit rule).
+- No skill was used, and nothing about a skill needs logging. Nothing in the repo was written. My scratch files were outside the repository, in my own scratch folder: the three draft migrations, `run_scratch.py` (41 database checks), `routes_check.py` (engine routes) and `kits_check.py` (the kit rule).
 - "Story decision 10" and "story decision 12" appear in no repo document under those numbers. This spec names them by content (the seat-takeover kit and the partner kit order). The kit-order mismatch between CASE-FILE.md (sections 3 and 9) and NPC-PARTNERS.md (section 4) is in the story drafts; the story branch should fix it. Since the story round (D018), both decisions appear under these numbers in D018 and in `docs/story/`, and CASE-FILE.md uses the NPC-PARTNERS.md order.
 - Worth a line in the observation log: on this machine a scratch Postgres for migration checks is easiest through the `pgserver` wheel under Python 3.12 (`uv run --no-project --python 3.12 --with pgserver ...`). It needs no `psql`, no TCP port and no files from other projects. There is no system Postgres or `psql` here.
