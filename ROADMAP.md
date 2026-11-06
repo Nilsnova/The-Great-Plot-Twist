@@ -175,7 +175,7 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D003 | Rules live in Python on the server; the browser never writes game data | Foundation pull request (A1) | coming with the foundation update |
 | D004 | Play-money wallet: one ledger, starting balance 0, coins arrive with the entry kit, a reasons table with directions, one row per player, reason and ref | Foundation pull request (A1) | coming with the foundation update |
 | D005 | Look: top-down original pixel art, decided by Nils on 5 Nov (sprites drawn by code, 16 native pixels per world unit, nearest-neighbour scaling, on Vite, Three.js and plain JavaScript). It supersedes the earlier look studies. | G1 finish, with Codex's final pixel pass | decided; the entry is written with G1 finish |
-| D006 | Identity: GitHub sign-in only, generated captain names, preset emotes, no free text | A2 | reserved |
+| D006 | Identity: GitHub sign-in only, generated captain names, preset emotes, no free text | A2 | proposed in the A2 pull request (`feat/a2-a3-signin-referee`); the sign-in approach and the word lists wait for Nils |
 | D007 | Plot Twist imported as an unchanged copy with a provenance note; the solo repository untouched | S1 | written in the S1 pull request (`feat/s1-import-plot-twist`); proposed until reviewed |
 | D008 | Scope tiers (core, should, later), minimum versions first, the M1 cut rule and the grow order | Kickoff | reserved; the grow order is open for the kickoff |
 | D009 | Contracts v1 frozen in `docs/INTERFACES.md` | Mon 9 | reserved |
@@ -187,6 +187,9 @@ Numbers are reserved in this order. Whoever merges first uses the reserved numbe
 | D016 | Server content lives in `backend/content/`; the browser gets public content through `GET /api/content/{name}`; secret content in `backend/content/secret/` is never served; browser-only data stays in `frontend/`. It moves the content paths of S3, S4, A2, A3, L2, L4 and L5. | S1 | proposed in the S1 pull request; stays proposed until Nils accepts it (new on 5 Nov) |
 | D017 | Island Exchange rules | L4 | written in `docs/DECISIONS.md`; the chosen numbers are proposals for Nils and the team. His answers of 5 Nov, late evening, change several of them, so D017 is reworked on the Exchange branch |
 | D018 | Story round (5 Nov 2026): the 19 decisions of the approval sheet, decision 19 changed (no demo world for now, a relight lock instead) and live multiplayer as core (A4) | S0 | decided by Nils; written with the S0 pull request (`docs/s0-story-round`) |
+| D019 | Referee and entry kits | A3 | proposed in the A3 pull request (`feat/a2-a3-signin-referee`); the kit coins (N5) and "the first ending counts" (N6) wait for Nils |
+| D020 | Crews: codes, the guessing limit and partners at the muster | A6 | proposed in the A6 pull request (`feat/a6-crews`) |
+| D022 | Account data: cloud save versions, delete my data, hosts (D018 on its branch; renumbered at merge) | A2 | proposed in the A2 pull request (`feat/a2-a3-signin-referee`); "delete my data" waits for Nils |
 
 D011 (class join go/no-go after a load test) is released. The phone class join moved to later, and the demo is highlights only.
 

@@ -9,9 +9,10 @@ The browser only reads from this database. Every write comes from our Python ser
 | File | What it is |
 |---|---|
 | [migrations/20261106000000_foundation.sql](migrations/20261106000000_foundation.sql) | The first migration: seven tables, the security rules, the rights of each database role and four functions. Every table, column and policy is explained inside the file. |
-| [migrations/20261106010000_island_exchange.sql](migrations/20261106010000_island_exchange.sql) | The second migration, for the Island Exchange (package L4): three wallet reasons, three tables and two functions. Run it after the first. See [The Island Exchange migration](#the-island-exchange-migration). |
-| [migrations/20261106020000_accounts.sql](migrations/20261106020000_accounts.sql) | The third migration, for the accounts (package A2: captain names, cloud progress and "delete my data"): one table and four functions. Run it after the first. See [The accounts migration](#the-accounts-migration-package-a2). |
-| [migrations/20261106030000_entry_profiles.sql](migrations/20261106030000_entry_profiles.sql) | The fourth migration, for the referee and the entry kits (package A3): one table and one function. Run it after the first, and **before** the code that reads it is merged into `main` (see [Apply before you merge](#apply-before-you-merge)). See [The entry kits migration](#the-entry-kits-migration-package-a3). |
+| [migrations/20261106010000_island_exchange.sql](migrations/20261106010000_island_exchange.sql) | The Island Exchange (package L4): three wallet reasons, three tables and two functions. Run it after the foundation. See [The Island Exchange migration](#the-island-exchange-migration). |
+| [migrations/20261106020000_accounts.sql](migrations/20261106020000_accounts.sql) | The accounts (package A2: captain names, cloud progress and "delete my data"): one table and four functions. Run it after the foundation. See [The accounts migration](#the-accounts-migration-package-a2). |
+| [migrations/20261106030000_entry_profiles.sql](migrations/20261106030000_entry_profiles.sql) | The referee and the entry kits (package A3): one table and one function. Run it after the foundation, and **before** the code that reads it is merged into `main` (see [Apply before you merge](#apply-before-you-merge)). See [The entry kits migration](#the-entry-kits-migration-package-a3). |
+| [migrations/20261106040000_crew_codes.sql](migrations/20261106040000_crew_codes.sql) | Crew codes, the muster and partners (package A6): three new columns of `crews`, new rules for `crew_seats`, one table and four functions. Run it after the foundation. See [Crew codes, the muster and partners](#crew-codes-the-muster-and-partners-migration-20261106040000-package-a6). |
 
 ## Project settings this migration relies on
 
@@ -80,7 +81,7 @@ A player can read a crew and its seats only while they sit in that crew. The rul
 Three things to know:
 
 - **At most one open crew per player** (a crew that is `forming` or `active`) is kept by the four crew functions below, under a lock on the player's profile, and not by a table rule. By team rule the server writes crews and seats only through those functions (the same rule as the wallet). The database itself guards one seat per player and one seat per NPC partner in a crew (two unique indexes), the kit ids, and the crew code.
-- If a player is deleted, their seat row is deleted with them, and the seat is empty again: a friend who joins fills an empty seat first. If the player who created a crew is deleted, the whole crew and all its seats are deleted.
+- If a player is deleted, their seat row is deleted with them, and the seat is empty again: a friend who joins fills an empty seat first. If the player who created a crew is deleted in the dashboard (or their `profiles` row is deleted), the whole crew and all its seats are deleted. `DELETE /api/me` first hands a crew that other players sit in to the player in the lowest other seat (`delete_player()`, see [The accounts migration](#the-accounts-migration-package-a2)), so only a crew nobody else sits in goes with the player.
 - The crew migration changes no row that exists. A crew or a seat written before it (only test rows from the manual test plan) stays as it is.
 
 ### Crew codes, the muster and partners (migration 20261106040000, package A6)
@@ -102,9 +103,9 @@ Three things to know:
 
 A crew function *returns* `{"status": ...}`, or `{"status": "refused", "reason": ...}` with nothing changed when a rule says no (the same pattern as `market_trade()`). It *raises* only for a bug, such as a bad argument. Every refusal comes before the first change, because a function that returns keeps what it has done so far.
 
-Which seat a friend takes and which kit each NPC partner carries is decided by the server (`backend/server/crews/seats.py`). The database does not repeat those two rules. Two of the choices there wait for Nils and are marked `PENDING` in the code: the kit a seat carries after a friend takes over a partner (built default: the friend's own kit), and the order in which partners fill the missing kits (built default: informant, stranger, true_keeper, witness).
+Which seat a friend takes and which kit each NPC partner carries is decided by the server (`backend/server/crews/seats.py`). The database does not repeat those two rules. Two of the choices there are marked `PENDING` in the code: the kit a seat carries after a friend takes over a partner (built: the friend's own kit), and the order in which partners fill the missing kits (built: informant, stranger, true_keeper, witness). Nils decided both in the story round, as built (D018, decisions 10 and 12; decision 12 is a team call, confirmed at kickoff).
 
-After applying it, the three quick checks show **one more table** (`crew_join_failures`, with row-level security and no policy and no grant for players). Run the crew checks (steps C1 to C8) after step 17 of the manual test plan.
+It adds one table (`crew_join_failures`, with row-level security and no policy and no grant for players), and no policy and no wallet reason: see the totals under [Three quick checks after applying](#three-quick-checks-after-applying). Run the crew checks (steps C1 to C8) after step 17 of the manual test plan.
 
 ## The Island Exchange migration
 
@@ -131,7 +132,7 @@ The price rules (the multiplier, the floor and ceiling, the 30 % breaker, the da
 
 It refuses a company that has no row in `market_bases` with `unknown_company` (the server saves a base for every company before it trades).
 
-After applying it, the three quick checks below show **ten** tables and **ten** policies, and there are **eleven** wallet reasons. Run the Exchange checks at the end of the manual test plan.
+It adds three tables, three policies, three rows for `authenticated` and three wallet reasons: see the totals under [Three quick checks after applying](#three-quick-checks-after-applying). Run the Exchange checks (steps E1 to E13) of the manual test plan.
 
 ## The accounts migration (package A2)
 
@@ -189,9 +190,10 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 2. Open **SQL Editor** and start a new query.
 3. Paste the whole content of `migrations/20261106000000_foundation.sql`.
 4. Click **Run**. Expected: a success message and no error.
-5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The files start with a time stamp, so apply them oldest first. Steps 5, 6 and 7 each need only the foundation (step 3), not each other, so step 5 can wait until the Exchange goes live (see [Apply before you merge](#apply-before-you-merge) for what that means for the Supabase CLI).
+5. Do the same with `migrations/20261106010000_island_exchange.sql` (the Island Exchange), in a new query. The files start with a time stamp, so apply them oldest first. Steps 5 to 8 each need only the foundation (step 3), not each other, so step 5 can wait until the Exchange goes live (see [Apply before you merge](#apply-before-you-merge) for what that means for the Supabase CLI).
 6. Do the same with `migrations/20261106020000_accounts.sql` (captain names, cloud progress, delete my data), in a new query.
 7. Do the same with `migrations/20261106030000_entry_profiles.sql` (the referee and the entry kits), in a new query. Do this **before** the branch that reads `GET /api/me` is merged into `main`, and before you test a preview of it.
+8. Do the same with `migrations/20261106040000_crew_codes.sql` (crew codes, the muster and partners), in a new query.
 
 ### Option B: Supabase CLI
 
@@ -214,7 +216,7 @@ supabase db push
 
 Every push to `main` deploys to production at once, and previews use the same Supabase project. So a migration has to be applied **before** the code that needs it reaches `main`, or a preview you want to test. Applying a migration first is safe when it only adds things, as both new files do (the accounts file also re-words the comment on one column): the code that is live does not use the new tables and functions, and each file is safe to run twice. (A migration that changes or removes something the live code uses is a different case and needs its own plan.)
 
-Today this decides the order for one file. `20261106030000_entry_profiles.sql` matters most, because `GET /api/me` already exists and is live, and the new code makes it read `entry_profiles`. Until the table exists, every player gets `502 database_error` there. `20261106020000_accounts.sql` matters less: the new routes (names, saves, delete my data) also answer `502` until it is applied, but no screen calls them yet.
+Today this decides the order for one file. `20261106030000_entry_profiles.sql` matters most, because `GET /api/me` already exists and is live, and the new code makes it read `entry_profiles`. Until the table exists, every player gets `502 database_error` there. `20261106020000_accounts.sql` and `20261106040000_crew_codes.sql` matter less: the new routes (names, saves, delete my data; the crew routes) also answer `502` until they are applied, but no screen calls them yet. Apply them in the same sitting.
 
 The order to follow: get Nils' OK, apply `20261106020000_accounts.sql` and `20261106030000_entry_profiles.sql`, check a preview, and only then merge the branch into `main`. If a merge has to come first, keep the read of `entry_profiles` out of `backend/server/routes/me.py` (so `kit` and `place` stay `null`) and merge that read after the apply.
 
@@ -233,7 +235,7 @@ where relnamespace = 'public'::regnamespace and relkind = 'r'
 order by relname;
 ```
 
-Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. After the Island Exchange migration there are ten: also `market_bases`, `market_positions` and `market_trades`.
+Expected: the seven tables `crew_seats`, `crews`, `profiles`, `saves`, `wallet_reasons`, `wallet_transactions`, `wallets`, each with `rls_on` = true. Each later file adds its own tables, also with `rls_on` = true: `market_bases`, `market_positions` and `market_trades` (Island Exchange), `captain_name_rerolls` (accounts), `entry_profiles` (entry kits) and `crew_join_failures` (crew codes). The table after the three checks has the number after each file.
 
 ```sql
 select tablename, policyname, cmd
@@ -242,7 +244,7 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
-Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. After the Island Exchange migration there are 10 (one more on each new table).
+Expected: 7 policies, one on each table, and every `cmd` is `SELECT`. There is no policy that lets a player write. Every later table has one `SELECT` policy too, except `crew_join_failures`, which has none: players see nothing of it.
 
 ```sql
 select grantee, table_name, string_agg(privilege_type, ', ' order by privilege_type) as rights
@@ -252,7 +254,17 @@ group by grantee, table_name
 order by grantee, table_name;
 ```
 
-Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. After the Island Exchange migration: 10 rows.
+Expected: no row for `anon`. For `authenticated`, 7 rows (one per table), and `rights` is `SELECT` in every row. Every later table adds one such row, except `crew_join_failures`, on which players have no right at all.
+
+The totals after each file, when the files are applied oldest first. A file adds the same whatever else is applied, so for another set of files add up the rows you applied. The last column is `select count(*) from public.wallet_reasons;`.
+
+| After applying | Tables (check 1) | Policies (check 2) | Rows for `authenticated` (check 3) | Wallet reasons |
+|---|---|---|---|---|
+| `20261106000000_foundation.sql` | 7 | 7 | 7 | 8 |
+| `20261106010000_island_exchange.sql` | 10 | 10 | 10 | 11 |
+| `20261106020000_accounts.sql` | 11 | 11 | 11 | 11 |
+| `20261106030000_entry_profiles.sql` | 12 | 12 | 12 | 11 |
+| `20261106040000_crew_codes.sql` | 13 | 12 | 12 | 11 |
 
 ### If someone signed in before you ran the migration
 
@@ -365,10 +377,11 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 ## What the server's secret key may do
 
-- It skips row-level security. It can read every player's rows in all ten tables and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
+- It skips row-level security. It can read every player's rows in all thirteen tables (with every file up to `20261106040000` applied) and write `profiles`, `saves`, `crews` and `crew_seats` (and, see below, the Exchange tables). Its table rights are still limited: it can update `wallets` but not insert or delete one, it can add ledger rows but not edit or delete one, and it can only read `wallet_reasons`.
 - It is the only role that may run `apply_wallet_transaction()`. That is the one way to change a balance. The same holds for `market_trade()` (a trade) and `market_set_base()` (a company's base): the server runs them, nobody else.
 - On the Exchange tables it can read all three, add and change `market_bases`, add, change and delete `market_positions`, and only add `market_trades` rows. It cannot edit or delete a trade. Like the wallet, this is a rule of the team more than a lock: see note [2] of the matrix.
 - On the account functions it may read and add `captain_name_rerolls` rows (only through `reroll_captain_name()`; a re-roll is final, so no update and no delete), and it is the only role that may run `assign_captain_name()`, `reroll_captain_name()`, `save_progress()` and `delete_player()`. `delete_player()` is the most powerful call the server can make: it deletes a login and everything about a player. The Python code passes it only the id of the verified player, and only after the request said `"confirm": true`.
+- On the crew tables it writes `crews` and `crew_seats` only through the four crew functions, by team rule (note [5] of the matrix), and it may read, add and delete `crew_join_failures` rows (through `crew_find_by_code()`, which also deletes the rows older than the guessing window). It is the only role that may run `crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`.
 - On the entry kit table it may read and add `entry_profiles` rows (only through `grant_entry_kit()`; a profile is written once and the first ending counts, so no update and no delete), and it is the only role that may run `grant_entry_kit()`. That function is also the only place where the entry kit coins are paid.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
@@ -378,7 +391,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 
 You need about 30 minutes. It proves the rules for reading and writing, the money function, the eight reasons and the crews with two test players, A and B.
 
-The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The checks of the Island Exchange, including its three new reasons, are the steps E1 to E13 at the end of this plan.
+The steps 1 to 17 check the foundation migration. If the Island Exchange migration is applied too, read **11** instead of 8 for the number of reasons in steps 4 and 16. Step 15 still tests the first eight reasons. The later files have their own checks after step 17: the crew checks C1 to C8 (`20261106040000`), the Island Exchange checks E1 to E13 (`20261106010000`, including its three new reasons), the account checks N1 to N6 (`20261106020000`) and the entry kit checks K1 to K5 (`20261106030000`). None of the accounts, entry kit or crew files adds a reason.
 
 **Set up**
 

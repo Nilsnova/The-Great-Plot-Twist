@@ -678,7 +678,7 @@ Facts about sources were checked on 5 Nov 2026. A limit can change, so read the 
 
 ## 13. Contracts to add before the freeze
 
-One contract pull request before the freeze on Mon 9 Nov. Follow "Changing the database later" in [supabase/README.md](../../supabase/README.md) and recipes 4.2 and 4.7 of `docs/ENGINEERING.md` on `main`. Write a decision-log entry for the economy numbers; the next free number is the one after D018 (D018 records the story round). The Exchange's numbers are already in D017.
+One contract pull request before the freeze on Mon 9 Nov. Follow "Changing the database later" in [supabase/README.md](../../supabase/README.md) and recipes 4.2 and 4.7 of `docs/ENGINEERING.md` on `main`. Write a decision-log entry for the economy numbers; take the next free number on `main` when the pull request opens (D018 records the story round). The Exchange's numbers are already in D017.
 
 ### 13.1 Ledger reasons
 
