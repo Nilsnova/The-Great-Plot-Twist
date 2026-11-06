@@ -4,6 +4,8 @@
 >
 > **Who uses it:** whoever takes package S1 (import Plot Twist and fix the intro story), their coding agent, and the teammate who reviews that pull request.
 
+**Spoiler warning.** This file gives the culprit away, in the closing lines at the unmasking. The repository is public, so anyone can read it here. In the game, the culprit's name reaches only crews that solved the case.
+
 **Status:** approved by Nils on 5 Nov 2026. He approved decisions 1 to 4 of the approval sheet: the new lines (changes 3, 4 and 6), the third path (change 5), and the two edits that were optional until then, which are now part of Story v2 as changes 13 and 14. Changed after the review of the same day, then folded together with his answers. The branch that applies these edits to `story.json` is a different one.
 
 **Based on:** decision 2 of 5 Nov 2026 (Story v2 = small story.json edits only) and the approved skeleton, `20261105_Story-Skeleton_v1.md`, section 3. The original file is `plot_twist/story.json` in the solo Plot Twist repo at commit `e235ee4`. Place names are placeholders until the final name check.

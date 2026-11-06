@@ -4,6 +4,8 @@
 >
 > **Who uses it:** Nils first, then the four teammates and their coding agents. Start here, then open the one file your package needs.
 
+**Spoiler warning.** Three files of this round give the culprit away: [CASE-FILE.md](CASE-FILE.md), [STORY-V2-CHANGES.md](STORY-V2-CHANGES.md) and the case data [`backend/content/secret/case.json`](../../backend/content/secret/case.json). The repository is public, so anyone can read them. To play the case fresh, do not open them. In the game, the culprit's name reaches only crews that solved the case.
+
 **Status: approved by Nils on 5 November 2026, except three review changes.** He approved all 19 recommendations of the story approval sheet as written, and that evening he made two scope decisions: no demo world for now, and live multiplayer is core. Decision D018 in the [decision log](../DECISIONS.md) records the 19 decisions and the two scope decisions. The round was written, reviewed against `main` at `8d0a718`, fixed, and then folded together with Nils' answers on the same day (branch `docs/s0-story-round`, from `main` at `3ca7d38`). Three changes that the review made to the text of the approval sheet are not approved yet: they wait for his OK ([below](#changes-to-the-approval-sheet-after-the-review)). S0 is done except for that OK, which comes before the pull request. S3 and S4 start from the minimum boxes. S1's Story v2 pull request is already on `main` (`3d59b6a`).
 
 ## What is in the round
