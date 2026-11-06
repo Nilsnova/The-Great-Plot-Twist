@@ -60,6 +60,7 @@ export const caseReasons = [
   'save_unavailable',
   'schooner_required',
   'session_expired',
+  'sign_in_required',
   'share_route_unavailable',
   'too_many_tries',
   'unknown_colour',

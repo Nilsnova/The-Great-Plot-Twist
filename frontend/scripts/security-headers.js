@@ -1,5 +1,6 @@
 // Generate the strict proposal, or reproduce a validated deployed catch-all policy.
 import {pathToFileURL} from 'node:url';
+import {readPlatformPolicy} from './platform-policy.js';
 
 const policyKey='Content-Security-Policy';
 const reportKey='Content-Security-Policy-Report-Only';
@@ -55,10 +56,7 @@ function readPlatformHeaders(config,address){
     if(result[key]!==value)throw new TypeError(`Platform security header differs: ${key}`);
   }
   const policy=result[modes[0]];
-  const connect=policy.split('; ').find(directive=>directive.startsWith('connect-src '));
-  const tokens=connect?.split(' ')??[];
-  const deployedAddress=validateAddress(tokens.length===2?'':tokens[2]);
-  if(policy!==buildPolicy(deployedAddress))throw new TypeError('Platform CSP differs from the strict policy');
+  const deployedAddress=readPlatformPolicy(policy,validateAddress);
   if(address!==undefined&&validateAddress(address)!==deployedAddress){
     throw new TypeError('Public address differs from the deployed CSP');
   }

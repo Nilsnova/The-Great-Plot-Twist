@@ -22,8 +22,8 @@ async function visit(id) {
 try {
   const response=await readHttp(env.url+'/api/content/intro-story');check(response.ok,'Vite proxy reaches the actual public intro API');
   const story=await response.json();check(story.start==='cottage'&&story.scenes.lamp_room,'API returns the original story structure');
-  page.on('request',request=>{if(request.url().includes('/api/')){assert.ok(['/api/content/intro-story','/api/weather'].includes(new URL(request.url()).pathname));assert.equal(request.method(),'GET');if(new URL(request.url()).pathname==='/api/content/intro-story')report.apiReads++;}});
-  await page.goto(env.url);await startFromTitle(page);
+  page.on('request',request=>{if(request.url().includes('/api/')){assert.ok(['/api/config','/api/content/intro-story','/api/weather'].includes(new URL(request.url()).pathname));assert.equal(request.headers().authorization,undefined);assert.equal(request.method(),'GET');if(new URL(request.url()).pathname==='/api/content/intro-story')report.apiReads++;}});
+  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(()=>{window.__introEvents=[];window.__island.on('intro_ended',event=>window.__introEvents.push(event));});
   await visit('shore');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});
   await visit('desk');

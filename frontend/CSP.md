@@ -107,3 +107,11 @@ configured browser behavior is not claimed here. No worker/blob/data exception i
 The first preview's deployment reports success on GitHub, but its status provides a Vercel dashboard
 URL that could not be read without account access. No login was attempted; public preview stamp
 verification remains R14.
+
+
+Main `60f7fd0` supplies the enforced policy and additional security headers. Preview preserves that
+compact policy exactly, including its `default-src` fallbacks; it does not append the earlier
+proposal's redundant directives. The parser still requires self-only scripts/styles/images, the
+fixed object/base/form/frame boundary and at most one exact HTTPS/WSS Supabase origin pair.
+Duplicate directives, unsafe sources and mismatching public build origins fail. Live deployed header
+verification remains separate from the recorded local browser proof.

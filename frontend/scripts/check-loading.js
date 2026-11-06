@@ -15,7 +15,24 @@ try {
   check(report.initialJavaScript<=21080,'Cold title JavaScript stays within the G7 baseline of 21,080 bytes');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
   for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
+  const realChunk=manifest['src/online/case-adapter/index.js'];
+  check(realChunk?.isDynamicEntry,'Real adapter is a separate dynamic entry');
+  await page.addInitScript(()=>{
+    const observer=new MutationObserver(()=>{
+      if(!document.querySelector('#new-game'))return;
+      observer.disconnect();requestAnimationFrame(()=>{
+        window.__titleFrame={at:performance.now(),resources:performance.getEntriesByType('resource').map(r=>r.name)};
+      });
+    });observer.observe(document,{childList:true,subtree:true});
+  });
   await stubIntro(page);await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
+  await page.waitForFunction(()=>!!window.__titleFrame);
+  report.titleFrame=await page.evaluate(()=>window.__titleFrame);
+  check(!report.titleFrame.resources.some(url=>url.endsWith(realChunk.file)),
+    'The first title frame requests no real adapter chunk');
+  await page.waitForFunction(file=>performance.getEntriesByType('resource').some(r=>r.name.endsWith(file)),realChunk.file);
+  const realStart=await page.evaluate(file=>performance.getEntriesByType('resource').find(r=>r.name.endsWith(file)).startTime,realChunk.file);
+  check(realStart>=report.titleFrame.at,'Real adapter loading starts after the first title frame');
   const loaded=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));check(!loaded.some(url=>url.includes('controller-')||url.includes('settlement-')||url.includes('cinematic-demo-')||url.includes('kit-gallery-')),'Cold title requests no finale, destination, demo or gallery chunk');
   check(await page.locator('canvas[tabindex]').count()===0,'Cold production title allocates no WebGL renderer');
   report.contrast=await page.locator('#new-game').evaluate(button=>{

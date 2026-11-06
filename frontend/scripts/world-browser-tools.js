@@ -1,5 +1,6 @@
 // Shared local Chrome setup and settled frame measurements for the world smoke check.
 import {stubWeather} from './weather-browser-fixture.js';
+import {stubOfflineApi} from './api-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import {createServer,preview as createPreview} from 'vite';
 import { access, mkdir } from 'node:fs/promises';
@@ -19,6 +20,7 @@ export async function openWorldBrowser({ preview = false, hmr = true } = {}) {
     }
     browser=await chromium.launch({executablePath,headless:true});
     const page=await browser.newPage({viewport:{width:1440,height:900}});
+    await stubOfflineApi(page);
     await stubWeather(page);
     const errors=[],external=[];
     page.on('pageerror',error=>errors.push(error.message));

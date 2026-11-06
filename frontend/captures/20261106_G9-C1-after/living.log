@@ -1,0 +1,76 @@
+PASS Title sign-in uses the local adapter while APIs are down
+PASS Name can be changed once
+PASS The unchanged bundled intro opens without the intro API
+PASS Thirty nearby captains draw at most eight and keep an overflow count
+PASS Eight live captains and effects meet the draw-call budget
+PASS Eight captains with night storm effects keep the frame and draw-call budget
+PASS World requests position reports no faster than twice a second
+PASS A final stopped position is reported
+PASS The off preference removes other captains
+PASS Hiding other captains keeps this captain’s movement reports live
+PASS A speech-bubble emote appears and its cooldown comes from the adapter
+PASS Expired session explains that device progress remains
+PASS Signing in again preserves the local intro journal
+PASS Save conflict uses the explicitly selected cloud copy
+PASS Account panel wraps at 375 px
+PASS Phone captain names remain at least 16 px
+PASS Phone captain labels do not overlap one another
+PASS Only expected offline weather diagnostics occur
+PASS No external art, fonts or auth requests
+{
+  "checks": [
+    "Title sign-in uses the local adapter while APIs are down",
+    "Name can be changed once",
+    "The unchanged bundled intro opens without the intro API",
+    "Thirty nearby captains draw at most eight and keep an overflow count",
+    "Eight live captains and effects meet the draw-call budget",
+    "Eight captains with night storm effects keep the frame and draw-call budget",
+    "World requests position reports no faster than twice a second",
+    "A final stopped position is reported",
+    "The off preference removes other captains",
+    "Hiding other captains keeps this captain’s movement reports live",
+    "A speech-bubble emote appears and its cooldown comes from the adapter",
+    "Expired session explains that device progress remains",
+    "Signing in again preserves the local intro journal",
+    "Save conflict uses the explicitly selected cloud copy",
+    "Account panel wraps at 375 px",
+    "Phone captain names remain at least 16 px",
+    "Phone captain labels do not overlap one another",
+    "Only expected offline weather diagnostics occur",
+    "No external art, fonts or auth requests"
+  ],
+  "performance": {
+    "fps": 60,
+    "calls": 107,
+    "triangles": 212,
+    "geometries": 106,
+    "textures": 54,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "stormWarmup": {
+    "fps": 61,
+    "calls": 110,
+    "triangles": 215,
+    "geometries": 107,
+    "textures": 60,
+    "roots": 1,
+    "objects": 10,
+    "programs": 4
+  },
+  "graphicsDevice": {
+    "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+    "vendor": "Google Inc. (Intel)"
+  },
+  "storm": {
+    "fps": 60,
+    "calls": 112,
+    "triangles": 220,
+    "geometries": 112,
+    "textures": 62,
+    "roots": 1,
+    "objects": 10,
+    "programs": 4
+  }
+}

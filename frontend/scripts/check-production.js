@@ -1,3 +1,4 @@
+import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
@@ -20,7 +21,7 @@ try {
   browser = await chromium.launch({ executablePath, headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   const errors = [];
-  await stubWeather(page);await stubIntro(page);
+  await stubOfflineApi(page);await stubWeather(page);await stubIntro(page);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto('http://127.0.0.1:4175'); await startFromTitle(page);

@@ -1,5 +1,6 @@
 // Deterministic local-only presence. This module has no transport or account identity.
-const kits=[['true_keeper','True Keeper'],['witness','Witness'],['informant','Informant'],['stranger','Stranger']];
+import {kits as displayKits} from '../shared/kits.js';
+const kits=Object.values(displayKits).map(kit=>[kit.id,kit.name]);
 const places=['lighthouse_isle','saltreach_harbor','home_islet','smugglers_cove','wreck_point','the_teeth'];
 const spawns={lighthouse_isle:{x:-1,y:10},saltreach_harbor:{x:0,y:19},home_islet:{x:0,y:12},smugglers_cove:{x:0,y:12},wreck_point:{x:0,y:12},the_teeth:{x:0,y:12}};
 const spawn={place:'lighthouse_isle',...spawns.lighthouse_isle};

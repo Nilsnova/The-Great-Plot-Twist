@@ -1,0 +1,261 @@
+[
+  {
+    "id": "generator",
+    "command": "python3 scripts/pixel_art/generate.py",
+    "code": 0,
+    "ms": 17189,
+    "log": "captures/20261106_G9-C1-after/generator.log"
+  },
+  {
+    "id": "credits",
+    "command": "node scripts/check-credits.js",
+    "code": 0,
+    "ms": 9295,
+    "log": "captures/20261106_G9-C1-after/credits.log"
+  },
+  {
+    "id": "living",
+    "command": "node scripts/check-living.js",
+    "code": 0,
+    "ms": 21253,
+    "log": "captures/20261106_G9-C1-after/living.log"
+  },
+  {
+    "id": "life",
+    "command": "node scripts/check-life.js",
+    "code": 0,
+    "ms": 14178,
+    "log": "captures/20261106_G9-C1-after/life.log"
+  },
+  {
+    "id": "case",
+    "command": "node scripts/check-case.js",
+    "code": 0,
+    "ms": 21829,
+    "log": "captures/20261106_G9-C1-after/case.log"
+  },
+  {
+    "id": "world",
+    "command": "node scripts/check-world.js",
+    "code": 0,
+    "ms": 39599,
+    "log": "captures/20261106_G9-C1-after/world.log"
+  },
+  {
+    "id": "readability",
+    "command": "node scripts/check-readability.js",
+    "code": 0,
+    "ms": 11763,
+    "log": "captures/20261106_G9-C1-after/readability.log"
+  },
+  {
+    "id": "browser",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-browser.js",
+    "code": 0,
+    "ms": 37288,
+    "log": "captures/20261106_G9-C1-after/browser.log"
+  },
+  {
+    "id": "production",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+    "code": 0,
+    "ms": 8430,
+    "log": "captures/20261106_G9-C1-after/production.log"
+  },
+  {
+    "id": "pixel",
+    "command": "node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 23430,
+    "log": "captures/20261106_G9-C1-after/pixel.log"
+  },
+  {
+    "id": "pixel-production",
+    "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 12093,
+    "log": "captures/20261106_G9-C1-after/pixel-production.log"
+  },
+  {
+    "id": "kit",
+    "command": "node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 3950,
+    "log": "captures/20261106_G9-C1-after/kit.log"
+  },
+  {
+    "id": "kit-production",
+    "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 4528,
+    "log": "captures/20261106_G9-C1-after/kit-production.log"
+  },
+  {
+    "id": "cinematics",
+    "command": "node scripts/check-cinematics.js",
+    "code": 0,
+    "ms": 28855,
+    "log": "captures/20261106_G9-C1-after/cinematics.log"
+  },
+  {
+    "id": "weather",
+    "command": "node scripts/check-weather-wiring.js",
+    "code": 0,
+    "ms": 5566,
+    "log": "captures/20261106_G9-C1-after/weather.log"
+  },
+  {
+    "id": "experience",
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 15780,
+    "log": "captures/20261106_G9-C1-after/experience.log"
+  },
+  {
+    "id": "demo",
+    "command": "node scripts/check-demo.js",
+    "code": 0,
+    "ms": 179402,
+    "log": "captures/20261106_G9-C1-after/demo.log"
+  },
+  {
+    "id": "lifecycle",
+    "command": "node scripts/check-lifecycle.js",
+    "code": 0,
+    "ms": 5571,
+    "log": "captures/20261106_G9-C1-after/lifecycle.log"
+  },
+  {
+    "id": "islet-world",
+    "command": "node scripts/check-islet-world.js",
+    "code": 0,
+    "ms": 9257,
+    "log": "captures/20261106_G9-C1-after/islet-world.log"
+  },
+  {
+    "id": "bulletin",
+    "command": "node scripts/check-bulletin.js",
+    "code": 0,
+    "ms": 4454,
+    "log": "captures/20261106_G9-C1-after/bulletin.log"
+  },
+  {
+    "id": "hook",
+    "command": "node scripts/check-hook.js",
+    "code": 0,
+    "ms": 5506,
+    "log": "captures/20261106_G9-C1-after/hook.log"
+  },
+  {
+    "id": "harbor-life",
+    "command": "node scripts/check-harbor-life.js",
+    "code": 0,
+    "ms": 11917,
+    "log": "captures/20261106_G9-C1-after/harbor-life.log"
+  },
+  {
+    "id": "presenter",
+    "command": "node scripts/check-presenter.js",
+    "code": 0,
+    "ms": 19306,
+    "log": "captures/20261106_G9-C1-after/presenter.log"
+  },
+  {
+    "id": "golden",
+    "command": "node scripts/check-golden-path.js",
+    "code": 0,
+    "ms": 30011,
+    "log": "captures/20261106_G9-C1-after/golden.log"
+  },
+  {
+    "id": "chaos",
+    "command": "node scripts/check-chaos.js",
+    "code": 0,
+    "ms": 44702,
+    "log": "captures/20261106_G9-C1-after/chaos.log"
+  },
+  {
+    "id": "a11y",
+    "command": "node scripts/check-a11y.js",
+    "code": 0,
+    "ms": 12577,
+    "log": "captures/20261106_G9-C1-after/a11y.log"
+  },
+  {
+    "id": "build-stamp",
+    "command": "node scripts/check-build-stamp.js",
+    "code": 0,
+    "ms": 5623,
+    "log": "captures/20261106_G9-C1-after/build-stamp.log"
+  },
+  {
+    "id": "problem-report",
+    "command": "node scripts/check-problem-report.js",
+    "code": 0,
+    "ms": 3929,
+    "log": "captures/20261106_G9-C1-after/problem-report.log"
+  },
+  {
+    "id": "csp-inventory",
+    "command": "node scripts/check-csp-inventory.js",
+    "code": 0,
+    "ms": 586,
+    "log": "captures/20261106_G9-C1-after/csp-inventory.log"
+  },
+  {
+    "id": "claude-islet",
+    "command": "node scripts/check-islet.js",
+    "code": 0,
+    "ms": 11278,
+    "log": "captures/20261106_G9-C1-after/claude-islet.log"
+  },
+  {
+    "id": "tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 10222,
+    "log": "captures/20261106_G9-C1-after/tests.log"
+  },
+  {
+    "id": "build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 1679,
+    "log": "captures/20261106_G9-C1-after/build.log"
+  },
+  {
+    "id": "intro",
+    "command": "node scripts/check-intro.js",
+    "code": 0,
+    "ms": 8467,
+    "log": "captures/20261106_G9-C1-after/intro.log"
+  },
+  {
+    "id": "loading",
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 5355,
+    "log": "captures/20261106_G9-C1-after/loading.log"
+  },
+  {
+    "id": "csp",
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 8560,
+    "log": "captures/20261106_G9-C1-after/csp.log"
+  },
+  {
+    "id": "call-states",
+    "command": "node scripts/check-call-states.js",
+    "code": 0,
+    "ms": 13295,
+    "log": "captures/20261106_G9-C1-after/call-states.log"
+  },
+  {
+    "id": "online",
+    "command": "node scripts/check-online-golden.js",
+    "code": 0,
+    "ms": 8387,
+    "log": "captures/20261106_G9-C1-after/online.log"
+  }
+]

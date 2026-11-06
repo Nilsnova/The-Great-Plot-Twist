@@ -59,6 +59,17 @@ describe('security headers',()=>{
     expect(toVercelHeaders(buildSecurityHeaders(undefined,{platformConfig:platform(headers)})))
       .toEqual(platform(headers));
   });
+  it('mirrors the deployed compact policy with inherited self-only directives',()=>{
+    const policy=["default-src 'self'","script-src 'self'","style-src 'self'","img-src 'self'",
+      "connect-src 'self'","object-src 'none'","base-uri 'none'","form-action 'self'",
+      "frame-ancestors 'none'"].join('; ');
+    const headers={...base,'Content-Security-Policy':policy};
+    expect(buildSecurityHeaders(undefined,{platformConfig:platform(headers)})).toEqual(headers);
+    for(const extra of ['; connect-src *',"; script-src-attr 'unsafe-inline'",'; worker-src blob:']){
+      expect(()=>buildSecurityHeaders(undefined,{platformConfig:platform({...headers,
+        'Content-Security-Policy':policy+extra})})).toThrow(TypeError);
+    }
+  });
   it('rejects missing, duplicated and scoped deployment security blocks',()=>{
     const block=toVercelHeaders(base).headers[0];
     for(const headers of [[],[block,block],[{...block,source:'/game'}],

@@ -1,3 +1,4 @@
+import {stubOfflineApi} from './api-browser-fixture.js';
 // Real desktop/phone shell, preferences, audio and device input checks. Uses only local fixtures.
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
@@ -50,7 +51,7 @@ try {
   report.offlineAudio=await page.evaluate(async()=>{const {createSynth}=await import('/src/audio/synth.js');const context=new OfflineAudioContext(1,22050,44100),synth=createSynth(context);synth.tone(context.destination,440,0.2,0.1);const buffer=await context.startRendering(),data=buffer.getChannelData(0);synth.dispose();return {peak:Math.max(...data),finite:data.every(Number.isFinite)};});
   check(report.offlineAudio.finite&&report.offlineAudio.peak>0.01,'Original oscillator voice renders a finite non-silent waveform');report.desktop=await measure(page);
   await page.close();
-  const phone=await env.browser.newPage({viewport:{width:375,height:667},isMobile:true,hasTouch:true});phone.on('pageerror',error=>env.errors.push(error.message));phone.on('console',message=>{if(message.type()==='error')env.errors.push(message.text());});await stubWeather(phone);await stubIntro(phone);await phone.goto(env.url);await phone.locator('.shell-screen[open]').waitFor();await phone.screenshot({path:'captures/20261105_G5-Title-Phone.png'});await startFromTitle(phone);
+  const phone=await env.browser.newPage({viewport:{width:375,height:667},isMobile:true,hasTouch:true});phone.on('pageerror',error=>env.errors.push(error.message));phone.on('console',message=>{if(message.type()==='error')env.errors.push(message.text());});await stubOfflineApi(phone);await stubWeather(phone);await stubIntro(phone);await phone.goto(env.url);await phone.locator('.shell-screen[open]').waitFor();await phone.screenshot({path:'captures/20261105_G5-Title-Phone.png'});await startFromTitle(phone);
   await phone.locator('.touch-controls:not([hidden])').waitFor();const stick=await phone.locator('.touch-stick').boundingBox(),client=await phone.context().newCDPSession(phone),x=stick.x+stick.width/2,y=stick.y+stick.height/2;
   const start=await phone.evaluate(()=>window.__island.player.position.x);await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+43,y}]});await phone.waitForTimeout(300);await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   check(await phone.evaluate(start=>window.__island.player.position.x>start+0.2,start),'Actual touch drag maps the virtual stick to movement');

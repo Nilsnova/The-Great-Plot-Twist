@@ -1,0 +1,51 @@
+{
+  "checks": [
+    "Ordinary production title uses the real online adapter at 1280 px",
+    "Recorded flag-off build invents no sign-in",
+    "Anonymous ending never grants a local kit",
+    "Anonymous ending retains the accepted replay on this device",
+    "Production exposes no inspection hooks",
+    "Online intro fits 1280 px",
+    "Ordinary production title uses the real online adapter at 375 px",
+    "Recorded flag-off build invents no sign-in",
+    "Anonymous ending never grants a local kit",
+    "Anonymous ending retains the accepted replay on this device",
+    "Production exposes no inspection hooks",
+    "Online intro fits 375 px",
+    "Anonymous public reads carry no token or write",
+    "Recorded online path has no browser errors or external calls"
+  ],
+  "requests": [
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/weather",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/content/intro-story",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/weather",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/content/intro-story",
+      "method": "GET",
+      "authorized": false
+    }
+  ],
+  "stage": "stream 2: anonymous real adapter"
+}

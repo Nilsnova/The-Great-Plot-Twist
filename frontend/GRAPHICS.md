@@ -817,3 +817,44 @@ include its exact HTTPS/WSS pair. `npm run test:title-start` records title paint
 The old bulletin test's other-worktree fallback is removed. Its canonical parity check runs only when
 `../backend/content/bulletin.json` is in this checkout; it is explicitly skipped until group 2 merges.
 No main/server file was authored or edited by this stream.
+
+
+## G9 real adapter core (stream 2)
+
+Ordinary play selects a lazy online proxy. Two animation frames let the native title dialog paint
+before `src/online/case-adapter/index.js` loads. An early player intent can start it immediately.
+The factory returns synchronously; config/account/save/crew reads run outside the render loop.
+Every public view is a fresh schema-1 clone with all 24 keys, `mode: 'online'`, and no raw account,
+crew or partner identifiers. `case_updated` is delivered before an intent resolves. Disposal stops
+polling/listeners, and a session epoch rejects late private reads and recovery writes.
+
+The transport uses A2's private API and a separate token-free public API. Error mapping is in
+`reasons.js`; `uid.js` retains the same action UID across a single read-first retry after an uncertain
+write. Completed server codes reread the authoritative snapshot. Save PUT is never blindly resent.
+`validate.js` checks input shapes; read/profile envelopes are checked before replacing last-good data.
+Signed-out Act 1 stays on its local accepted-move journal; kit confirmation refuses with
+`sign_in_required`. Kit display names/archetypes live in `adapter/shared/kits.js`, imported by both
+adapters without importing rehearsal rules into the online graph.
+
+`npm run test:online` builds and plays the ordinary production path on recorded answers at 1280 and
+375 px. Stream 2 covers anonymous Act 1, the preserved journal and no local kit/account grant; later
+streams extend this same path. Every API request is intercepted. `npm run test:g9 -- --phase=after
+--keep-going` runs G8's 31 baseline commands plus G9 checks sequentially; `--resume` retries failures.
+The shared closed-service browser fixture precedes each route-specific fixture, so old production
+checks remain independent of the API. Test artifacts contain relative paths and no tokens.
+
+Main `60f7fd0` now owns the enforced platform headers. Preview mirrors their exact text, rather than
+requiring the earlier proposal's redundant explicit directives. Validation still rejects unsafe
+scripts/styles, wildcard connections, foreign project origins and duplicate directives. Header
+changes belong to Claude; G9 changes no platform configuration.
+
+
+Stream 2 verification: **1,096 tests / 91 files**, production build/spoiler guard and all **37** driver
+commands pass. Cold title is **20,971 bytes** (10,041 gzip), leaving 109 bytes below the unchanged
+21,080 cap. The real adapter remains a separate chunk requested after the first title frame. Primary
+button contrast is **6.48:1**; the world retained its counts through ten round trips at 60 fps on this
+laptop. These are local Chrome observations, not deployed/mobile-hardware results. Exact evidence:
+`captures/20261106_G9-C1/stream2-verification.json` and the sibling C1-after regression manifest.
+The old intro check now allows the expected token-free config GET while preserving the actual public
+intro API probe; the expired-account check waits for its lazy screen before asserting its sign-in
+control. A repeated refused case answer stays refused while requesting a fresh snapshot.

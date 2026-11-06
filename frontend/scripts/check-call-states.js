@@ -36,6 +36,7 @@ try{
   await page.evaluate(async()=>{window.__plotTwist.adapter.dev.give('C1',1);await window.__island.caseUi.open('board');window.__plotTwist.adapter.dev.failNext('session_expired');});
   await page.locator('.case-clue[data-card="C1"]').getByRole('button',{name:'Pin my card'}).click();
   await page.locator('.account-modal[open]').waitFor();
+  await page.locator('.account-modal[open]').getByRole('button',{name:/Sign in again with GitHub/}).waitFor();
   check(await page.locator('.account-modal[open]').getByRole('button',{name:/Sign in again with GitHub/}).isVisible(),'Session expiry exposes the existing account sign-in action');
   await page.locator('.account-modal[open]').getByRole('button',{name:/Sign in again with GitHub/}).click();
   await page.waitForFunction(()=>window.__plotTwist.adapter.read().account.state==='signed_in');

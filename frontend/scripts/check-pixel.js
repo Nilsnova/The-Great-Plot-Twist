@@ -1,3 +1,4 @@
+import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
 import {startFromTitle} from './shell-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
@@ -26,7 +27,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
   report.browser = browser.version();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await stubWeather(page);
+  await stubOfflineApi(page);await stubWeather(page);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
