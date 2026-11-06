@@ -110,4 +110,10 @@ async def get_keepalive(
     check_secret(request.headers.get("Authorization"), settings.cron_secret.get_secret_value())
     for table, column in KEEPALIVE_READS:
         await read_one_row(admin, table, column)
+    # Best effort: an unapplied console migration must not break the existing daily job.
+    # Without this durable evidence the console reports no confirmed success, never green.
+    try:
+        await admin.call_function("host_record_keepalive", {})
+    except SupabaseAdminError:
+        logger.warning("Keep-alive succeeded but its console stamp could not be recorded.")
     return KeepAliveResponse(status="ok", reads=len(KEEPALIVE_READS))

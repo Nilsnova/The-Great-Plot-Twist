@@ -159,8 +159,11 @@ def assert_not_served(client: TestClient, path: Path) -> None:
         for address in (f"/api/content/{name}", f"/api/content/{quote(name, safe='')}"):
             response = client.get(address)
             assert response.status_code == 404, address
-            if response.request.url.path == "/api/case":
-                # A literal ../case probe now normalizes to the disabled private case API.
+            route = response.request.url.path
+            if route in ("/api/case", "/api/festival") or route.startswith(
+                ("/api/case/", "/api/festival/", "/api/sports/")
+            ):
+                # Literal parent probes can normalize to an existing private feature route.
                 assert response.headers["cache-control"] == "private, no-store", address
             else:
                 assert response.headers["cache-control"] == "no-store", address

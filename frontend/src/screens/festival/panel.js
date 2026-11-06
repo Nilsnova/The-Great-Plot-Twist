@@ -1,0 +1,49 @@
+// Accessible timer, lamp reservations and friendly ring queue. Server state decides every result.
+import './festival.css';
+import '../duels/duels.css';
+import {node} from '../../ui/kit/dom.js';
+import {createModal} from '../../ui/kit/modal.js';
+import {createButton} from '../../ui/kit/button.js';
+import {getPreferences,setPreferences,onPreferences} from '../../settings/preferences.js';
+import {createPicker} from '../duels/picker.js';
+import {countdown,remainingSeconds} from './logic.js';
+export function createFestivalPanel(ctx,adapter){
+  const body=node('div','festival-body'),intro=node('p','festival-intro','Forty-eight hours of lanterns after the first Relighting. Reservations are free; the server keeps the claims.'),mode=node('p','festival-mode'),timer=node('time','festival-countdown'),phase=node('p','festival-phase'),notice=node('p','festival-notice'),login=node('p','festival-login'),grid=node('section','festival-lamps'),ring=node('section','festival-ring');
+  notice.setAttribute('role','status');phase.setAttribute('role','status');timer.setAttribute('role','timer');timer.setAttribute('aria-live','off');grid.setAttribute('aria-label','Twelve coastal lamps');
+  let view=adapter.read(),disposed=false,refreshAtZero=false,music=false,lastPhase=null,lastDuel=null;
+  const modal=createModal({title:'Lantern festival',body,onCancel:close,onClose(){ctx.resetInput?.();adapter.setVisible(false);stopMusic();ctx.focus?.();}});
+  modal.element.classList.add('festival-modal');modal.element.addEventListener('keydown',event=>event.stopPropagation());
+  const refresh=createButton({label:'Refresh festival',variant:'quiet',onClick:()=>adapter.refresh()}),retry=createButton({label:'Retry the same action',onClick:()=>act(()=>adapter.retry())}),account=createButton({label:'Open Account',variant:'quiet',onClick:()=>{close();ctx.openAccount?.();}});
+  const controls=node('div','festival-actions');controls.append(refresh.element,retry.element,account.element);
+  const ringStatus=node('p','festival-ring-status'),ringHeading=node('h3','','The Keepers’ Ring'),picker=createPicker({onChange:updateControls});picker.setRounds(3);
+  const join=createButton({label:'Join the friendly ring',onClick:()=>act(()=>adapter.join(picker.getSignals()))}),leave=createButton({label:'Leave queue',variant:'quiet',onClick:()=>act(()=>adapter.leave())}),duel=createButton({label:'Open your Lantern Duel',onClick:()=>{const id=view.festival?.ring.duelId;if(!id)return;close();if(view.mode==='local')ctx.caption?.('Local pairing rehearsed. No real duel or coins were created.');else ctx.openDuel?.(id);}});
+  const ringActions=node('div','festival-actions');ringActions.append(join.element,leave.element,duel.element);ring.append(ringHeading,node('p','','A friendly three-round Lantern Duel. No stake and no coin reward. Choose signals, then wait for another captain. Your opponent’s signals stay sealed.'),ringStatus,picker.element,ringActions);
+  const sound=node('details','festival-audio'),soundTitle=node('summary','','Festival sound and volume');
+  const playMusic=createButton({label:'Play festival music',variant:'quiet',onClick:event=>{music=!music;ctx.audio?.setFestivalMusic(music,event);playMusic.update({label:music?'Pause festival music':'Play festival music'});playMusic.element.setAttribute('aria-pressed',String(music));}});playMusic.element.setAttribute('aria-pressed','false');
+  sound.append(soundTitle,node('p','','Festival music starts only when you press Play. Music and cues use the game’s shared volume settings. All sound cues have visible text.'),playMusic.element);
+  const volumes=new Map();for(const [key,title] of [['master','Master volume'],['music','Music volume'],['effects','Effects volume']]){const label=node('label','festival-volume'),input=node('input');input.type='range';input.min='0';input.max='1';input.step='.05';input.value=getPreferences()[key];input.addEventListener('input',()=>setPreferences({[key]:Number(input.value)}));label.append(node('span','',title),input);sound.append(label);volumes.set(key,input);}
+  const stopPreferences=onPreferences(value=>{for(const[key,input]of volumes)input.value=value[key];});
+  const rehearsal=node('fieldset','festival-rehearsal');rehearsal.append(node('legend','','Local rehearsal controls'));
+  for(const[id,label]of [['waiting','Before Relighting'],['active','Active festival'],['paired','Practice pairing'],['ended','Festival ended']])rehearsal.append(createButton({label,variant:'quiet',onClick:()=>adapter.rehearse?.(id)}).element);
+  body.append(mode,intro,phase,timer,notice,login,controls,grid,ring,sound,rehearsal);
+  function updateControls(){const active=view.enabled&&view.festival?.phase==='active'&&remainingSeconds(view.festival,view.receivedAt)>0;const locked=view.busy||!!view.pending;picker.element.inert=locked;picker.element.setAttribute('aria-disabled',String(locked));join.element.disabled=!active||!view.signedIn||locked||!view.festival?.ring.available||view.festival?.ring.queued||!!view.festival?.ring.duelId||!picker.isComplete();leave.element.disabled=!active||!view.signedIn||locked||!view.festival?.ring.queued;}
+  async function act(task){const answer=await task();if(disposed||!modal.element.open)return;if(answer?.accepted&&!answer.repeat&&answer.kind==='claim')ctx.audio?.cue('festival-claim');}
+  function update(next){
+    const focused=modal.element.contains(document.activeElement)?document.activeElement.dataset.festivalLamp:null;
+    view=next;const data=view.festival,local=view.mode==='local';mode.textContent=local?'LOCAL REHEARSAL · This device only. No server claims, matches or coins.':'Live festival · Reservations and pairings are confirmed by the server.';rehearsal.hidden=!local;
+    notice.textContent=view.notice;notice.hidden=!view.notice;login.textContent=view.signedIn?(local?'Practice captain on this device.':'Signed in. Free lamp reservations and ring entry are available during the festival.'):'Sign in through Account to reserve lamps or join the ring. You can still read the festival timer.';
+    account.element.hidden=view.signedIn;retry.element.hidden=!view.pending;retry.element.disabled=view.busy;refresh.element.disabled=view.loading||view.busy;
+    phase.textContent=view.loading&&!data?'Checking festival availability…':!view.enabled?'The festival is switched off.':!data?'Reading the coastal festival…':data.phase==='waiting'?'Waiting for the first Relighting.':data.phase==='ended'?'The lantern festival has ended. Reservations are closed.':'The lantern festival is active.';
+    grid.replaceChildren();for(const lamp of data?.lamps??[]){const card=node('article','festival-lamp'),img=node('img'),title=node('h3','',lamp.label),status=node('p','',`${lamp.lit?'Light on':'Light not yet added'} · ${lamp.claimedByMe?'Your reservation':lamp.claimed?'Reserved by another captain':'Available to reserve'}`),claim=createButton({label:lamp.claimedByMe?'Reserved by you':`Reserve ${lamp.label}`,onClick:()=>act(()=>adapter.claim(lamp.id)),disabled:!view.enabled||!view.signedIn||view.busy||!!view.pending||data.phase!=='active'||remainingSeconds(data,view.receivedAt)===0||lamp.claimed});
+      const number=lamp.id.slice(-2);img.src=`${import.meta.env.BASE_URL}pixel/festival-lamp-${number}-${lamp.lit?'lit':'unlit'}.png`;img.width=48;img.height=80;img.alt='';img.loading='lazy';claim.element.dataset.festivalLamp=lamp.id;card.dataset.claimed=String(lamp.claimedByMe);card.append(img,title,status,claim.element);grid.append(card);}
+    if(focused)grid.querySelector(`[data-festival-lamp="${focused}"]`)?.focus({preventScroll:true});
+    ringStatus.textContent=data?.ring.duelId?(local?'Practice pairing ready. No live duel was created.':'Your friendly duel is ready. Open Lantern Duels to watch it.'):data?.ring.queued?'Waiting for another captain. You may leave the queue.':data?.ring.available?'Choose three signals to enter the friendly ring.':'The Keepers’ Ring is closed.';
+    duel.element.hidden=!data?.ring.duelId;duel.update({label:local?'View practice pairing':'Open your Lantern Duel'});picker.element.hidden=!!data?.ring.queued||!!data?.ring.duelId;join.element.hidden=!!data?.ring.queued||!!data?.ring.duelId;leave.element.hidden=!data?.ring.queued;
+    if(modal.element.open&&lastPhase==='active'&&data?.phase==='ended')ctx.audio?.cue('festival-timer-end');if(modal.element.open&&data?.ring.duelId&&data.ring.duelId!==lastDuel)ctx.audio?.cue('festival-ring-bell');lastPhase=data?.phase??null;lastDuel=data?.ring.duelId??null;updateControls();tick();
+  }
+  function tick(){if(!view.festival){timer.textContent='';return;}const left=remainingSeconds(view.festival,view.receivedAt);timer.textContent=view.festival.phase==='active'?`${countdown(left)} remaining`:'';if(!left&&view.festival.phase==='active'&&!refreshAtZero){refreshAtZero=true;void adapter.refresh();}if(left>0)refreshAtZero=false;updateControls();if(!left)for(const button of grid.querySelectorAll('button'))button.disabled=true;}
+  const stop=adapter.subscribe(update),clock=setInterval(()=>{if(modal.element.open&&!document.hidden)tick();},1000),visibility=()=>adapter.setVisible(modal.element.open&&!document.hidden);document.addEventListener('visibilitychange',visibility);update(view);
+  function stopMusic(){music=false;ctx.audio?.setFestivalMusic(false);playMusic.update({label:'Play festival music'});playMusic.element.setAttribute('aria-pressed','false');}
+  function close(){adapter.setVisible(false);stopMusic();modal.close();}
+  return {get active(){return modal.element.open;},open(){ctx.resetInput?.();modal.open(ctx.container);adapter.setVisible(!document.hidden);},close,dispose(){if(disposed)return;disposed=true;clearInterval(clock);stop();stopPreferences();document.removeEventListener('visibilitychange',visibility);adapter.dispose();picker.dispose();modal.dispose();}};
+}

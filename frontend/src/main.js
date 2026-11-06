@@ -4,7 +4,7 @@ import './ui/kit/kit.css';
 import './ui/shell.css';
 import {createShell} from './shell/controller.js';
 import {createLazyAccountHost} from './shell/lazy-account.js';
-import {createAccountSummary} from './screens/account/summary.js';
+import {createLazyAccountSummary as createAccountSummary} from './shell/lazy-account-summary.js';
 import {createClientAdapter} from './adapter/select.js';
 import {sendCaseIntent} from './adapter/intent.js';
 import {introJournal} from './story/intro-journal.js';
@@ -21,6 +21,8 @@ const adapter=await createClientAdapter();
 async function ensureMotion(){if(!stopMotion)stopMotion=(await import('./settings/preferences.js')).watchSystemMotion();}
 let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='';
 const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
+let festivalEntry=null;
+const festivalReady=import('./screens/festival/entry.js').then(module=>disposed?null:(festivalEntry=module.createFestivalEntry({container,audio,caption:captions.show,focus,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open()}))).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
@@ -33,10 +35,10 @@ summary.update(adapter.read());
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
   await ensureMotion();loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
-  pending=import('./game.js').then(module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,isAppBlocked:()=>accountHost.active}));
+  pending=import('./game.js').then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
-    runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
+    runtime.setFestivalAvailable?.(festivalEntry?.available===true);runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
   }catch(error){console.error(error);pending=null;shell.show('title');shell.notice('The coast could not load. Check the connection and WebGL 2, then try again.');return null;}
   finally{loading=false;status.remove();}
 }
@@ -57,7 +59,7 @@ function onEscape(){
 shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>adapter.read().account,accountSummary:summary.element,
   resetInput(){},focus,openAccount:()=>accountHost.open(),onEscape,
   demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();return (await import('./settings/view.js')).createSettingsView();},
-  hasOverlay:()=>loading||accountHost.active||!!runtime?.hasOverlay(),
+  hasOverlay:()=>loading||accountHost.active||festivalEntry?.active||!!runtime?.hasOverlay(),
   onState(mode){if(mode==='title')playRequest++;audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
   onPlay:play,async onDemo(){const game=await loadGame();game?.startDemo();},
 });
@@ -78,7 +80,7 @@ function pollTitlePad(now){
 }
 titleFrame=requestAnimationFrame(pollTitlePad);
 function dispose(){
-  if(disposed)return;disposed=true;cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();accountHost.dispose();summary.dispose();
+  if(disposed)return;disposed=true;cancelAnimationFrame(titleFrame);titlePad?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();summary.dispose();
   shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
   if(import.meta.env.DEV)delete window.__plotTwist;
 }

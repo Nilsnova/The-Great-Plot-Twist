@@ -50,6 +50,7 @@ def test_config_defaults_have_every_flag_switched_off():
         "demoMode": False,
         "flags": {name: False for name in FLAG_NAMES},
         "auth": {"provider": "github", "supabaseUrl": ""},
+        "capabilities": {"hostCaseClock": False},
     }
 
 
@@ -67,6 +68,7 @@ def test_config_lists_all_flags_in_the_agreed_order():
         "case",
         "sign_in",
         "bulletin",
+        "festival",
     ]
 
 

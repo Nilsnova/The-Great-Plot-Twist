@@ -6,3 +6,10 @@
 
 /* The board stays at native size rather than shrinking into a narrow sprite card. */
 .sprite-card[data-id=captains-board]{grid-column:span 2}
+
+/* Sound audition lives only in the workshop; controls never overflow a phone. */
+.festival-workshop{max-width:1500px;margin:36px auto 0;border-top:2px solid #69734e;padding-top:20px}
+#festival-sounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+.festival-sound{padding:16px;border:2px solid #69734e;background:#344734;min-width:0}
+.festival-sound h3{font-size:16px}.festival-sound p{font-size:14px;line-height:1.5;min-height:3em}
+.festival-sound audio{display:block;width:100%;max-width:100%}
