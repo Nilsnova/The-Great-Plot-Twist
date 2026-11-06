@@ -8,21 +8,26 @@ Ordinary pytest explicitly skips these tests if the two test-only extras are abs
 import tempfile
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from threading import Barrier
 
 import pytest
 
 from server.crews.codes import MAX_WRONG_CODES, WRONG_CODE_WINDOW_SECONDS
-from server.market.trade_rules import (
-    DAILY_BUY_CAP_COINS,
+from server.market.game_day import game_day_start
+from server.market.positions import (
+    DAILY_STAKE_CAP_COINS,
     FEE_BASIS_POINTS,
-    MAX_TRADE_COINS,
-    MIN_HOLD_SECONDS,
-    buy_amounts,
-    sell_amounts,
+    MAX_OPEN_POSITIONS,
+    MAX_STAKE_COINS,
+    MIN_STAKE_COINS,
+    closing_amounts,
+    fee_for,
 )
+from server.market.states import SweepPrice
+from server.market.store_calls import close_arguments, open_arguments, sweep_arguments
 
 MIGRATIONS = Path(__file__).resolve().parents[4] / "supabase/migrations"
 
@@ -37,19 +42,10 @@ def scratch_uri():
             uri = server.get_uri()
             with psycopg.connect(uri, autocommit=True) as connection:
                 assert connection.info.host.startswith("/"), "Only scratch Unix sockets allowed"
-                connection.execute("""
-                    create role anon;
-                    create role authenticated;
-                    create role service_role bypassrls;
-                    create schema auth;
-                    create table auth.users(id uuid primary key);
-                    create function auth.uid() returns uuid language sql stable as $$
-                      select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
-                    $$;
-                    grant usage on schema auth to authenticated, service_role;
-                """)
+                stub = Path(__file__).parents[1] / "group3_sql/stub.sql"
+                connection.execute(stub.read_text())
                 files = sorted(MIGRATIONS.glob("*.sql"))
-                assert len(files) >= 5
+                assert any(path.name == "20261106090000_exchange_leverage.sql" for path in files)
                 for path in files:
                     connection.execute(path.read_text())
             yield uri
@@ -94,27 +90,41 @@ class Scratch:
             )
         return player
 
-    def trade(self, player, side, ref, units=5, price=100, **overrides):
-        from decimal import Decimal
-
-        amounts = (buy_amounts if side == "buy" else sell_amounts)(units, Decimal(price))
-        arguments = dict(
-            player=player,
-            company="scratch-co",
-            side=side,
-            units=units,
-            price=price,
-            gross=amounts.gross,
-            fee=amounts.fee,
-            ref=ref,
-            hold=MIN_HOLD_SECONDS,
-            cap=DAILY_BUY_CAP_COINS,
-            day=datetime.now(UTC).replace(hour=0, minute=0, second=0),
-            basis=FEE_BASIS_POINTS,
-            maximum=MAX_TRADE_COINS,
+    def open(self, player, ref, stake=MAX_STAKE_COINS, side="rising", mode="replay", **overrides):
+        arguments = open_arguments(
+            str(player),
+            "scratch-co",
+            side,
+            mode,
+            Decimal(100),
+            stake,
+            fee_for(stake, FEE_BASIS_POINTS),
+            FEE_BASIS_POINTS,
+            ref,
+            game_day_start(datetime.now(UTC)),
         )
         arguments.update(overrides)
-        return self.rpc("market_trade", *arguments.values())
+        return self.rpc("exchange_open_position", *arguments.values())
+
+    def close(self, player, position, ref, price=100, mode="replay", **overrides):
+        side, stake, entry = self.execute(
+            "select side,stake,entry_price from public.exchange_positions where id=%s", (position,)
+        )[0]
+        closing = closing_amounts(side, stake, entry, Decimal(price), FEE_BASIS_POINTS)
+        arguments = close_arguments(
+            str(player), str(position), mode, Decimal(price), closing, FEE_BASIS_POINTS, ref
+        )
+        arguments.update(overrides)
+        return self.rpc("exchange_close_position", *arguments.values())
+
+    def sweep(self, player=None, price=90, mode="replay", quoted_at=None):
+        quote = SweepPrice("scratch-co", Decimal(price), quoted_at or datetime.now(UTC), mode)
+        arguments = sweep_arguments([quote], None if player is None else str(player))
+        return self.rpc(
+            "exchange_close_used_up",
+            self.psycopg.types.json.Jsonb(arguments["p_prices"]),
+            arguments["p_player_id"],
+        )
 
     def invariant(self):
         mismatches = self.execute("""
@@ -130,13 +140,6 @@ class Scratch:
 def db(scratch_uri):
     database = Scratch(scratch_uri)
     database.execute("truncate auth.users cascade")
-    database.execute("truncate public.market_bases cascade")
-    assert (
-        database.rpc(
-            "market_set_base", "scratch-co", 100, 100, datetime.now(UTC), "replay", None, None, 0
-        )
-        == 1
-    )
     yield database
     database.invariant()  # runs after every SQL attack, including rejected transactions
 
@@ -202,7 +205,7 @@ def test_wallet_rejects_invalid_mutations_atomically(db, delta, reason, ref):
 
 
 def test_privileged_sql_delta_cap_differs_from_python_policy(db):
-    # Evidence of a policy gap, not a public-player exploit. Sales have no SQL upper cap.
+    # The privileged wallet helper has no Python MAX_DELTA cap; product callers apply theirs.
     from server.wallet import MAX_DELTA, InvalidTransaction, validate_transaction
 
     player = db.player()
@@ -276,77 +279,154 @@ def test_name_reroll_concurrent_and_delayed_uid_replays(db):
     )
 
 
-def test_market_replayed_buy_and_replayed_sale_never_duplicate(db):
+def test_exchange_open_and_close_replays_never_duplicate(db):
     player = db.player(5000)
-    assert db.trade(player, "buy", "market:buy-one")["status"] == "done"
-    assert db.trade(player, "buy", "market:buy-one")["sqlstate"] == "23505"
-    age_position(db, player)
-    assert db.trade(player, "sell", "market:sell-one")["status"] == "done"
-    assert db.trade(player, "sell", "market:sell-one")["sqlstate"] == "23505"
-    assert db.trade(player, "buy", "market:buy-one")["sqlstate"] == "23505"
+    opened = db.open(player, "market:open:one")
+    assert opened["status"] == "done"
+    assert db.open(player, "market:open:one")["sqlstate"] == "23505"
+    position = opened["positionId"]
+    # Exchange v2 has no holding time: closing at the entry price only loses the two fees.
+    assert db.close(player, position, "market:close:one")["status"] == "done"
+    assert db.close(player, position, "market:close:one")["sqlstate"] == "23505"
+    assert db.open(player, "market:open:one")["sqlstate"] == "23505"
     assert db.execute("select balance from wallets where player_id=%s", (player,)) == [(4980,)]
 
 
-def age_position(db, player):
-    db.execute(
-        "update market_positions set last_buy_at=now()-interval '11 minutes' where player_id=%s",
-        (player,),
-    )
-
-
-def test_two_simultaneous_buys_with_one_uid_mutate_once(db):
+def test_two_simultaneous_opens_with_one_uid_mutate_once(db):
     player = db.player(5000)
 
-    def buy():
-        return db.trade(player, "buy", "market:same-uid")
+    def opening():
+        return db.open(player, "market:open:same-uid")
 
-    replies = race(buy, buy)
+    replies = race(opening, opening)
     assert sum(r.get("status") == "done" for r in replies) == 1
     assert sum(r.get("sqlstate") == "23505" for r in replies) == 1
-    assert db.execute("select units from market_positions where player_id=%s", (player,)) == [(5,)]
+    assert db.execute("select stake from exchange_positions where player_id=%s", (player,)) == [
+        (MAX_STAKE_COINS,)
+    ]
+    assert db.execute("select count(*) from exchange_events") == [(1,)]
 
 
-def test_daily_cap_is_atomic_across_concurrent_buys(db):
+def test_daily_cap_is_atomic_across_concurrent_opens(db):
     player = db.player(5000)
     for i in range(3):
-        assert db.trade(player, "buy", f"market:first-{i}")["status"] == "done"
+        assert db.open(player, f"market:open:first-{i}")["status"] == "done"
     replies = race(
-        lambda: db.trade(player, "buy", "market:device-a"),
-        lambda: db.trade(player, "buy", "market:device-b"),
+        lambda: db.open(player, "market:open:device-a"),
+        lambda: db.open(player, "market:open:device-b"),
     )
     assert sum(r.get("status") == "done" for r in replies) == 1
     assert sum(r.get("reason") == "daily_cap" for r in replies) == 1
-    assert db.execute("select sum(gross) from market_trades where side='buy'") == [(2000,)]
+    assert db.execute("select sum(stake) from exchange_events where kind='open'") == [
+        (DAILY_STAKE_CAP_COINS,)
+    ]
+
+
+def test_open_position_limit_is_atomic_across_devices(db):
+    player = db.player(5000)
+    for i in range(MAX_OPEN_POSITIONS - 1):
+        assert db.open(player, f"market:open:first-{i}", stake=MIN_STAKE_COINS)["status"] == "done"
+    replies = race(
+        lambda: db.open(player, "market:open:device-a", stake=MIN_STAKE_COINS),
+        lambda: db.open(player, "market:open:device-b", stake=MIN_STAKE_COINS),
+    )
+    assert sum(r.get("status") == "done" for r in replies) == 1
+    assert sum(r.get("reason") == "too_many_positions" for r in replies) == 1
+    assert db.execute("select count(*) from exchange_positions where status='open'") == [
+        (MAX_OPEN_POSITIONS,)
+    ]
+
+
+def test_opening_fee_failure_rolls_back_stake_position_and_event(db):
+    player = db.player(MAX_STAKE_COINS)
+    assert db.open(player, "market:open:fee-short")["message"] == "insufficient_funds"
+    assert db.execute("select balance from wallets where player_id=%s", (player,)) == [
+        (MAX_STAKE_COINS,)
+    ]
+    assert db.execute("select count(*) from exchange_positions") == [(0,)]
+    assert db.execute("select count(*) from exchange_events") == [(0,)]
+    assert db.execute("select count(*) from wallet_transactions where reason<>'admin_adjust'") == [
+        (0,)
+    ]
 
 
 def test_two_closes_with_different_uids_pay_only_once(db):
     player = db.player(1000)
-    assert db.trade(player, "buy", "market:open")["status"] == "done"
-    age_position(db, player)
+    position = db.open(player, "market:open:one")["positionId"]
     replies = race(
-        lambda: db.trade(player, "sell", "market:close-a"),
-        lambda: db.trade(player, "sell", "market:close-b"),
+        lambda: db.close(player, position, "market:close:a"),
+        lambda: db.close(player, position, "market:close:b"),
     )
     assert sum(r.get("status") == "done" for r in replies) == 1
-    assert sum(r.get("reason") == "not_enough_units" for r in replies) == 1
+    assert sum(r.get("reason") == "position_closed" for r in replies) == 1
     assert db.execute("select balance from wallets where player_id=%s", (player,)) == [(980,)]
+    assert db.execute("select count(*) from exchange_events where kind='close'") == [(1,)]
 
 
-def test_concurrent_and_two_day_old_sale_uid_replay_pay_once(db):
+def test_concurrent_and_two_day_old_close_uid_replay_pay_once(db):
     player = db.player(1000)
-    assert db.trade(player, "buy", "market:open")["status"] == "done"
-    age_position(db, player)
+    position = db.open(player, "market:open:one")["positionId"]
 
     def close():
-        return db.trade(player, "sell", "market:same-close")
+        return db.close(player, position, "market:close:same")
 
     replies = race(close, close)
     assert sum(r.get("status") == "done" for r in replies) == 1
     assert sum(r.get("sqlstate") == "23505" for r in replies) == 1
     db.execute(
-        "update market_trades set created_at=now()-interval '2 days' where player_id=%s", (player,)
+        "update exchange_events set created_at=now()-interval '2 days' where player_id=%s",
+        (player,),
     )
     assert close()["sqlstate"] == "23505"
+
+
+def test_closing_does_not_free_daily_stake_and_day_rollover_does_not_free_refs(db):
+    player = db.player(5000)
+    positions = [db.open(player, f"market:open:first-{i}")["positionId"] for i in range(4)]
+    assert db.close(player, positions[0], "market:close:one")["status"] == "done"
+    assert db.open(player, "market:open:over-cap")["reason"] == "daily_cap"
+    db.execute("update exchange_positions set opened_at=now()-interval '2 days'")
+    assert db.open(player, "market:open:next-day")["status"] == "done"
+    assert db.open(player, "market:open:first-0")["sqlstate"] == "23505"
+
+
+def test_concurrent_sweeps_zero_positions_once_without_moving_wallets(db):
+    player = db.player(1000)
+    position = db.open(player, "market:open:one")["positionId"]
+    balance = db.execute("select balance from wallets where player_id=%s", (player,))
+    replies = race(lambda: db.sweep(player), lambda: db.sweep(player))
+    assert sum(reply["closed"] for reply in replies) == 1
+    assert db.execute("select balance from wallets where player_id=%s", (player,)) == balance
+    assert db.execute("select status,close_value,close_fee from exchange_positions") == [
+        ("zeroed", 0, 0)
+    ]
+    assert db.execute("select count(*) from exchange_events where kind='zero'") == [(1,)]
+    assert (
+        db.close(player, position, "market:close:after-recovery", price=110)["reason"]
+        == "position_closed"
+    )
+
+
+def test_close_racing_sweep_cannot_revive_or_double_log_a_used_up_position(db):
+    player = db.player(1000)
+    position = db.open(player, "market:open:one")["positionId"]
+    replies = race(
+        lambda: db.close(player, position, "market:close:zero", price=90),
+        lambda: db.sweep(player),
+    )
+    assert any(reply.get("status") == "done" or reply.get("closed") == 1 for reply in replies)
+    assert db.execute("select count(*) from exchange_events where kind='zero'") == [(1,)]
+    assert db.execute("select balance from wallets where player_id=%s", (player,)) == [(490,)]
+
+
+def test_sweep_ignores_older_prices_other_modes_and_other_players(db):
+    player, other = db.player(1000), db.player(1000)
+    db.open(player, "market:open:one")
+    db.open(other, "market:open:other")
+    assert db.sweep(player, quoted_at=datetime.now(UTC) - timedelta(days=1))["closed"] == 0
+    assert db.sweep(player, mode="live")["closed"] == 0
+    assert db.sweep(player)["closed"] == 1
+    assert db.execute("select player_id from exchange_positions where status='open'") == [(other,)]
 
 
 def test_nonmember_cannot_start_somebody_elses_crew(db):
@@ -357,19 +437,42 @@ def test_nonmember_cannot_start_somebody_elses_crew(db):
     assert db.execute("select status from crews where id=%s", (crew,)) == [("forming",)]
 
 
-def test_market_size_hold_unknown_and_forged_gross_guards(db):
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"p_stake": 9},
+        {"p_stake": 501},
+        {"p_stake": -1},
+        {"p_stake": 10**15},
+        {"p_fee": 0},
+        {"p_company_id": "not a company"},
+        {"p_side": "buy"},
+        {"p_price_mode": "simulated"},
+        {"p_entry_price": 0},
+        {"p_entry_price": "0.000000001"},
+        {"p_leverage": 11},
+        {"p_ref": "x" * 121},
+    ],
+)
+def test_exchange_open_rejects_forged_numbers_atomically(db, changes):
     player = db.player(5000)
-    for changes in (
-        {"units": 6},
-        {"units": -1},
-        {"units": 10**15},
-        {"gross": 1},
-        {"fee": 0},
-        {"company": "unknown"},
-    ):
-        assert "sqlstate" in db.trade(player, "buy", "market:bad", **changes)
-    assert db.trade(player, "buy", "market:valid")["status"] == "done"
-    assert db.trade(player, "sell", "market:early")["reason"] == "holding_time"
+    assert db.open(player, "market:open:bad", **changes)["message"] == "bad_trade"
+    assert db.execute("select balance from wallets where player_id=%s", (player,)) == [(5000,)]
+    assert db.execute("select count(*) from exchange_positions") == [(0,)]
+    assert db.execute("select count(*) from exchange_events") == [(0,)]
+
+
+def test_exchange_close_recomputes_value_and_fee_and_hides_foreign_positions(db):
+    player, other = db.player(1000), db.player(1000)
+    position = db.open(player, "market:open:one")["positionId"]
+    assert db.close(player, position, "market:close:forged", p_value=5000)["message"] == "bad_trade"
+    assert db.close(player, position, "market:close:no-fee", p_fee=0)["message"] == "bad_trade"
+    assert (
+        db.close(player, position, "market:close:mode", mode="live")["reason"] == "wrong_price_mode"
+    )
+    assert db.close(other, position, "market:close:stolen")["reason"] == "no_such_position"
+    assert db.execute("select status from exchange_positions") == [("open",)]
+    assert db.execute("select count(*) from exchange_events") == [(1,)]
 
 
 def test_friends_race_for_same_seat_then_retry(db):
@@ -434,8 +537,8 @@ def test_wrong_crew_code_limit_is_atomic_and_player_scoped(db):
 
 def test_rls_blocks_other_players_and_privileged_money_calls(db):
     player, other = db.player(1000), db.player(2000)
-    assert db.trade(player, "buy", "market:own")["status"] == "done"
-    assert db.trade(other, "buy", "market:other")["status"] == "done"
+    assert db.open(player, "market:open:own")["status"] == "done"
+    assert db.open(other, "market:open:other")["status"] == "done"
     own_crew = db.rpc("crew_create", player, "K7QF2M", "witness")["crewId"]
     db.rpc("crew_create", other, "P7RF3N", "witness")
     for person in (player, other):
@@ -459,13 +562,16 @@ def test_rls_blocks_other_players_and_privileged_money_calls(db):
         db.rpc("reroll_captain_name", person, placeholder, "Bright Gull", "reroll-001")
     with db.psycopg.connect(db.uri, autocommit=True) as connection:
         connection.execute("set role authenticated")
-        connection.execute("select set_config('request.jwt.claim.sub',%s,false)", (str(player),))
+        connection.execute(
+            "select set_config('request.jwt.claims',%s,false)",
+            (f'{{"sub":"{player}"}}',),
+        )
         for table in (
             "wallets",
             "saves",
-            "market_positions",
+            "exchange_positions",
             "wallet_transactions",
-            "market_trades",
+            "exchange_events",
             "entry_profiles",
             "captain_name_rerolls",
             "crew_seats",
@@ -480,6 +586,16 @@ def test_rls_blocks_other_players_and_privileged_money_calls(db):
             )
         with pytest.raises(db.psycopg.errors.InsufficientPrivilege):
             connection.execute("update wallets set balance=999999 where player_id=%s", (player,))
+        for function in (
+            "exchange_open_position",
+            "exchange_close_position",
+            "exchange_close_used_up",
+        ):
+            assert connection.execute(
+                "select has_function_privilege('authenticated',p.oid,'execute') from pg_proc p "
+                "where p.pronamespace='public'::regnamespace and p.proname=%s",
+                (function,),
+            ).fetchone() == (False,)
         connection.execute("reset role")
         connection.execute("set role anon")
         with pytest.raises(db.psycopg.errors.InsufficientPrivilege):
