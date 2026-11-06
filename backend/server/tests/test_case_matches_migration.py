@@ -159,6 +159,11 @@ def test_the_store_only_calls_intent_functions():
         "case_start_route",
         "case_accuse",
         "case_clock_forward",
+        "board_pin",
+        "board_pair",
+        "finale_nightfall",
+        "finale_take_post",
+        "finale_signal",
     }
 
     class NoCalls:
