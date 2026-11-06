@@ -1,5 +1,8 @@
 # G20 checkpoint 3 — C3 final report
 
+> Historical source-branch checkpoint. These counts and limitations describe the original
+> authored branch; current integration gates are recorded separately by the release owner.
+
 Owner: Nils; `test/g20-frontend`; origin/main c26f303 fetched/merged before C1, C2 and C3.
 No configured coverage provider: counts below are a module test map, not coverage percentages.
 Rows assign tests once; 176 unrelated existing tests are unchanged and also pass.

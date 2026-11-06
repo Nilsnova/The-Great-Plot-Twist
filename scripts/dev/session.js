@@ -1,5 +1,8 @@
 // Public fake identities, in memory only. This panel is injected solely by the dev launcher.
 import {session} from '/src/online/session.js';
+if (!import.meta.env.DEV || !['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname)) {
+  throw new Error('Scratch sign-in is available only on the local development server.');
+}
 const panel = document.createElement('aside');
 panel.setAttribute('aria-label', 'Local development sign-in');
 panel.style.cssText = 'position:fixed;right:8px;top:8px;z-index:10000;padding:8px;background:#17252f;color:white;font:14px sans-serif';
@@ -20,7 +23,8 @@ function placePanel() {
   const host = [...document.querySelectorAll('dialog[open]')].at(-1) || document.body;
   if (panel.parentElement !== host) host.append(panel);
 }
-new MutationObserver(placePanel).observe(document.body, {
+const observer = new MutationObserver(placePanel);
+observer.observe(document.body, {
   subtree: true, childList: true, attributes: true, attributeFilter: ['open'],
 });
 placePanel();
@@ -46,3 +50,4 @@ button.addEventListener('click', async () => {
     status.textContent = ` ${me.displayName}: ${me.coins} demo coins`;
   } catch { session.clearToken(); status.textContent = ' Test sign-in failed. See dev.log.'; }
 });
+if (import.meta.hot) import.meta.hot.dispose(() => { observer.disconnect(); panel.remove(); });

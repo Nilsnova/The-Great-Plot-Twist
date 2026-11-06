@@ -1,5 +1,8 @@
 # G20 checkpoint 2 — C2
 
+> Historical source-branch checkpoint. These counts and limitations describe the original
+> authored branch; current integration gates are recorded separately by the release owner.
+
 Owner: Nils; branch `test/g20-frontend`; `origin/main` fetched/merged (already current).
 Scope remains new frontend/tests files plus checkpoint notes; production files unchanged.
 C2 adds 40 passing tests and two skipped bug regressions beyond C1:

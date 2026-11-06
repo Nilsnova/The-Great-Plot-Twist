@@ -3,28 +3,23 @@
 import hashlib
 import json
 from datetime import UTC, datetime
-from decimal import Decimal
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 import psycopg
+from psycopg import sql
 
-from server.market.feed import load_replay, replay_snapshot
-from server.market.rules import market_day_start
-from server.market.trade_rules import (
-    DAILY_BUY_CAP_COINS,
-    FEE_BASIS_POINTS,
-    MAX_TRADE_COINS,
-    MIN_HOLD_SECONDS,
-    buy_amounts,
-)
+from server.crews.seats import Seat, partner_seats
+from server.market.companies import load_companies
+from server.market.game_day import game_day_start
+from server.market.positions import FEE_BASIS_POINTS, fee_for
+from server.market.replay import load_replay, replay_minute
+from server.market.store_calls import open_arguments
 from tools.seed.database import ROOT, require_marker
 
 PLAYER_IDS = [uuid5(NAMESPACE_URL, f"plot-twist/g22/player/{i}") for i in range(1, 21)]
 CREW_IDS = [uuid5(NAMESPACE_URL, f"plot-twist/g22/crew/{i}") for i in range(6)]
 KITS = json.loads((ROOT / "backend/content/entry_kits.json").read_text())["kits"]
-COMPANIES = json.loads(
-    (ROOT / "backend/content/market/companies.json").read_text(), parse_float=Decimal
-)["companies"]
+COMPANIES = tuple(company for company in load_companies() if not company.is_stock)
 
 
 def wallet_once(conn: psycopg.Connection, player: UUID, delta: int, reason: str, ref: str) -> None:
@@ -39,7 +34,7 @@ def wallet_once(conn: psycopg.Connection, player: UUID, delta: int, reason: str,
 
 
 def seed(conn: psycopg.Connection, *, reset: bool = False) -> dict:
-    """One transaction; reset replaces demo users/crews and restarts the replay board."""
+    """One transaction; reset replaces only demo users/crews and their cascaded progress."""
     require_marker(conn)
     conn.execute("select pg_advisory_xact_lock(220022)")
     if reset:
@@ -93,11 +88,18 @@ def seed(conn: psycopg.Connection, *, reset: bool = False) -> dict:
                 None if status == "forming" else datetime.now(UTC),
             ),
         )
-        for seat in range(1, 5):
-            if status == "forming" and seat > (1 if mode == "solo" else 2):
-                continue
-            human = seat == 1 or (mode == "crew" and seat == 2)
-            player_index = owner_index + seat - 1
+        humans = [
+            Seat(
+                seat,
+                str(PLAYER_IDS[owner_index + seat - 1]),
+                None,
+                KITS[(owner_index + seat - 1) % len(KITS)]["id"],
+                None,
+            )
+            for seat in range(1, 2 if mode == "solo" else 3)
+        ]
+        seats = humans if status == "forming" else [*humans, *partner_seats(humans)]
+        for seat in seats:
             conn.execute(
                 """
                 insert into public.crew_seats (crew_id,seat_no,player_id,npc_id,kit)
@@ -105,51 +107,39 @@ def seed(conn: psycopg.Connection, *, reset: bool = False) -> dict:
             """,
                 (
                     crew,
-                    seat,
-                    PLAYER_IDS[player_index] if human else None,
-                    None if human else {2: "deckhand", 3: "bosun", 4: "cook"}[seat],
-                    KITS[player_index % len(KITS)]["id"],
+                    seat.seat_no,
+                    seat.player_id,
+                    seat.npc_id,
+                    seat.kit,
                 ),
             )
 
     now = datetime.now(UTC)
-    prices = replay_snapshot(load_replay(), [c["symbol"] for c in COMPANIES], now).prices
-    for company in COMPANIES:
-        version = 0
-        if reset:
-            row = conn.execute(
-                "select version from public.market_bases where company_id=%s", (company["id"],)
-            ).fetchone()
-            version = row[0] if row else 0
-        conn.execute(
-            "select public.market_set_base(%s,%s,%s,%s,'replay',null,null,%s)",
-            (company["id"], company["startPrice"], prices[company["symbol"]], now, version),
-        )
+    prices = replay_minute(load_replay(), [company.symbol for company in COMPANIES], now).prices
     for i, player in enumerate(PLAYER_IDS):
-        ref = "g22-demo-market-buy"
+        ref = "market:open:g22-demo-position"
         if conn.execute(
-            "select 1 from public.market_trades where player_id=%s and ref=%s", (player, ref)
+            "select 1 from public.exchange_events where player_id=%s and ref=%s", (player, ref)
         ).fetchone():
             continue
         company = COMPANIES[i % len(COMPANIES)]
-        amounts = buy_amounts(2, company["startPrice"])
+        params = open_arguments(
+            str(player),
+            company.id,
+            "rising",
+            "replay",
+            prices[company.symbol],
+            25,
+            fee_for(25, FEE_BASIS_POINTS),
+            FEE_BASIS_POINTS,
+            ref,
+            game_day_start(now),
+        )
         reply = conn.execute(
-            """
-            select public.market_trade(%s,%s,'buy',2,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        """,
-            (
-                player,
-                company["id"],
-                company["startPrice"],
-                amounts.gross,
-                amounts.fee,
-                ref,
-                MIN_HOLD_SECONDS,
-                DAILY_BUY_CAP_COINS,
-                market_day_start(now),
-                FEE_BASIS_POINTS,
-                MAX_TRADE_COINS,
+            sql.SQL("select public.exchange_open_position({})").format(
+                sql.SQL(",").join(sql.SQL("{} => %s").format(sql.Identifier(key)) for key in params)
             ),
+            list(params.values()),
         ).fetchone()[0]
         if reply["status"] != "done":
             raise RuntimeError("Demo purchase refused; use --reset for changed demo fixtures.")
@@ -158,8 +148,13 @@ def seed(conn: psycopg.Connection, *, reset: bool = False) -> dict:
         "crews": 6,
         "crewStates": ["forming", "active", "finished"],
         "marketPositions": conn.execute(
-            "select count(*) from public.market_positions where player_id=any(%s)",
+            "select count(*) from public.exchange_positions where player_id=any(%s)",
             (PLAYER_IDS,),
         ).fetchone()[0],
-        "skipped": ["islets (no migration)", "predictions (no migration)", "duels (no migration)"],
+        "skipped": [
+            "islets (not seeded)",
+            "predictions (not seeded)",
+            "duels (not seeded)",
+            "case/festival/sports (disabled, no live provider or shared-world writes)",
+        ],
     }

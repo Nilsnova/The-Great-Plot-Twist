@@ -1,5 +1,8 @@
 # G20 checkpoint 1 — C1
 
+> Historical source-branch checkpoint. These counts and limitations describe the original
+> authored branch; current integration gates are recorded separately by the release owner.
+
 Owner: Nils; branch `test/g20-frontend`; based on `origin/main` c26f303.
 `origin/main` fetched and merged before this checkpoint (already current).
 `frontend/HOW-IT-WORKS.md` is absent; read AGENTS.md and frontend/GRAPHICS.md instead.

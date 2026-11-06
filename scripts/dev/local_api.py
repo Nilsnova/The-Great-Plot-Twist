@@ -87,8 +87,19 @@ class LocalAdmin(SupabaseAdmin):
             if key in {"select", "limit", "order"}:
                 continue
             operator, operand = value.split(".", 1)
-            if operator not in {"eq", "gte"}:
+            if operator not in {"eq", "gte", "in"}:
                 raise ValueError("Unsupported local read filter.")
+            if operator == "in":
+                if not operand.startswith("(") or not operand.endswith(")"):
+                    raise ValueError("Unsupported local membership filter.")
+                items = operand[1:-1].split(",")
+                clauses.append(
+                    sql.SQL("{} in ({})").format(
+                        sql.Identifier(key), sql.SQL(",").join(sql.Placeholder() for _ in items)
+                    )
+                )
+                values.extend(items)
+                continue
             clauses.append(
                 sql.SQL("{} {} %s").format(
                     sql.Identifier(key), sql.SQL("=" if operator == "eq" else ">=")
@@ -147,9 +158,10 @@ class LocalVerifier(PlayerVerifier):
         self.admin = admin
 
     async def verify(self, token: str) -> Player:
-        if not re.fullmatch(r"dev-player-(0[1-9]|1[0-9]|20)", token):
+        match = re.fullmatch(r"g22\.dev-player-(0[1-9]|1[0-9]|20)\.scratch", token)
+        if match is None:
             raise unauthorized("Choose a local demo player.")
-        player = str(PLAYER_IDS[int(token[-2:]) - 1])
+        player = str(PLAYER_IDS[int(match[1]) - 1])
         if not await self.admin.select_rows("profiles", {"select": "id", "id": f"eq.{player}"}):
             raise unauthorized("This demo player was deleted. Seed again with --reset.")
         return Player(player)
@@ -160,8 +172,9 @@ class LocalExchanger:
         self.verifier = verifier
 
     async def exchange(self, code: str, code_verifier: str) -> str:
-        await self.verifier.verify(code)
-        return code
+        token = f"g22.{code}.scratch"
+        await self.verifier.verify(token)
+        return token
 
 
 def make_app(database_url: str):

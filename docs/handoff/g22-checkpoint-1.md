@@ -1,5 +1,8 @@
 # G22 checkpoint 1 — local development and demo seed
 
+> Historical source-branch checkpoint. These counts and limitations describe the original
+> authored branch; current integration gates are recorded separately by the release owner.
+
 Responsible teammate: Nils (requested Codex G22). Branch: `chore/g22-devtools`,
 based on `origin/main` at `c26f3032b150af970d57fbbcd6eea439eb26f4c4`.
 No merge or push to `main` is authorized or performed.

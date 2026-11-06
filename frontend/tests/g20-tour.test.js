@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   story: { open: vi.fn(), perform: vi.fn(), close: vi.fn(), dispose: vi.fn() },
   screens: { open: vi.fn(async () => {}), close: vi.fn(), dispose: vi.fn() },
-  adapter: { tick: vi.fn(), dispose: vi.fn(), dev: { rehearse: vi.fn() }, read: () => ({ effects: [{ name: 'three_lights', params: {} }] }) },
+  adapter: { tick: vi.fn(), dispose: vi.fn(), dev: { rehearse: vi.fn() }, read: () => ({ effects: [{ name: 'three_lights', params: {} }], presence: { others: [] } }) },
 }));
 vi.mock('../src/adapter/fake/index.js', () => ({ createFakeCaseAdapter: () => mocks.adapter }));
 vi.mock('../src/screens/controller.js', () => ({ createCaseScreens: () => mocks.screens }));
@@ -44,9 +44,13 @@ describe('G20 offline tour lifecycle', () => {
     expect(tour.start()).toBe(true); const steps = [];
     for (const step of tourSteps) {
       expect(tour.step).toBe(step.id); steps.push(tour.step);
-      await vi.advanceTimersByTimeAsync(step.seconds * 1000); tour.update(step.seconds); await flush();
+      // The current tour uses a monotonic visible clock and bounded async stage work.
+      // Advance in frame-sized seconds, letting acceptance-time waits settle between ticks.
+      for (let second = 0; second < step.seconds + 3 && tour.step === step.id; second++) {
+        await vi.advanceTimersByTimeAsync(1000); tour.update(1); await flush();
+      }
     }
-    expect(steps).toEqual(['intro', 'arrival', 'chart', 'harbor', 'board', 'fog', 'storm', 'finale', 'relighting']);
+    expect(steps).toEqual(['intro', 'arrival', 'islet', 'chart', 'harbor', 'board', 'weather', 'finale', 'relighting']);
     expect(tour.active).toBe(false); expect(tour.step).toBeNull(); expect(getWeather()).toEqual(initial); expect(settings.hour).toBe(initialHour);
     expect(ctx.world.current.id).toBe('home_islet'); expect(ctx.player.position).toMatchObject({ x: 3, y: 1, z: 4 });
     expect(ctx.restoreCase).toHaveBeenCalledWith({ marker: 'original presentation' });

@@ -30,8 +30,10 @@ Open the printed game address. Use **Scratch demo player → Test sign in** to c
 one of the 20 fake players. The panel confirms the player's name and demo coin balance.
 The normal New game / Continue / tour controls work as before. The panel sets the
 existing browser session in memory; refreshing clears the login. No GitHub round trip
-is involved. API clients may use `Authorization: Bearer dev-player-01` through
-`dev-player-20`, or exchange that public fake code at `/api/auth/exchange`.
+is involved. API clients may use the public scratch-only three-part tokens
+`Authorization: Bearer g22.dev-player-01.scratch` through `g22.dev-player-20.scratch`,
+or exchange a code such as `dev-player-01` at `/api/auth/exchange`. These are dummy
+local identities accepted only by the injected local verifier, never real login tokens.
 
 On each new start, the launcher:
 
@@ -41,7 +43,7 @@ On each new start, the launcher:
 4. Adds minimal Supabase roles and `auth.users` / `auth.uid()` stand-ins, then applies
    **every** `supabase/migrations/*.sql` file in filename order, without editing SQL.
 5. Seeds the database and starts the real FastAPI routes with explicit local settings,
-   local login/database adapters, recorded weather and replay market prices.
+   local login/database adapters, recorded weather and replay island market prices.
 6. Starts Vite with a separate dev configuration that disables `.env` loading and
    injects the test-login panel. The market feature is enabled; other flags keep their defaults.
 
@@ -66,12 +68,13 @@ The initial seed includes:
 - 20 fake players with deterministic ids, generated demo names and all four entry kits.
 - Six crews: both solo and crew modes in each existing state, `forming`, `active`, and
   `finished`; active/finished crews include NPC partners. Codes are `G22AAA` to `G22AAF`.
-- A coherent wallet ledger (kit grant, event reward, clue purchase, market purchase and fee).
-- All seven company bases, 20 initial market positions and their real SQL trade records.
+- A coherent wallet ledger (kit grant, event reward, clue purchase, exchange stake and fee).
+- Twenty initial rising replay positions in island companies and their real SQL exchange events.
 
-**Islets, predictions and duels are skipped:** this revision has no tables for them.
-The tool reports these missing categories instead of inventing schema. It seeds only
-features supported by the checked-in migrations. Players 13–20 initially have no crew,
+**Islets, predictions and duels have tables but are deliberately not pre-seeded.**
+Case, festival and sports stay disabled: this launcher makes no shared-world writes or
+provider requests. Stock companies show unavailable prices in replay mode; the recording
+contains only island prices. Players 13–20 initially have no crew,
 so they are useful for exercising create/join/start.
 
 To run the seed again, substitute the **database URL file path printed by start.sh**:
@@ -83,13 +86,13 @@ uv run --frozen --no-env-file --with pgserver --with 'psycopg[binary]' \
 ```
 
 Without `--reset`, repeating the same seed does not duplicate users, crews, grants or
-trades. Existing fixed trade references are preserved; the position count reports what
+positions. Existing fixed exchange references are preserved; the position count reports what
 is currently held, so sold positions are not silently bought again.
 
 Append `--reset` to replace the G22 demo users and crews, including their cascaded
-progress and ledger rows, and restart the seven shared scratch market bases at current
-replay prices. This clears market halts so the seed can purchase its initial positions
-again. Other users are not deleted. Crews owned by a deleted demo player are removed by
+progress and ledger rows, and create their replay positions again at current recorded
+prices. Shared world state and other players' exchange positions are not reset.
+Other users are not deleted. Crews owned by a deleted demo player are removed by
 the existing database cascade. Reset affects only this disposable database.
 
 The seed requires **both** an explicit `--scratch` and a connection naming a Unix socket
@@ -139,6 +142,13 @@ and fake sign-in / save / crew / market actions against real scratch SQL functio
 The ordinary `uv run pytest` testpaths do not include `tools/seed/tests`; use the command
 above for G22 coverage. Keep Node on PATH for the Python/JavaScript parity checks.
 The normal frontend checks remain `cd frontend && npm test && npm run build`.
+For the imported G20 native-browser components and G22 serve-only boundary, use
+`npm test -- tests/g20-*.test.js tests/g22-local-config.test.js --maxWorkers=2`.
+This bounds simultaneous Chromium instances on small development machines; the tests
+still exercise the real DOM and block all nonlocal traffic.
+With a local stack already running, `node frontend/scripts/check-local-dev.js http://127.0.0.1:5173`
+checks the injected panel, dummy sign-in, own portfolio and disabled sports/festival flags.
+It accepts only a plain loopback HTTP address and performs no stake or trade POST.
 
 ## Troubleshooting and limits
 
@@ -166,4 +176,5 @@ The normal frontend checks remain `cd frontend && npm test && npm run build`.
 - **Safety boundary:** test identities and dev routes are deliberately public and unauthenticated.
   Both HTTP services bind only to loopback. Do not deploy, tunnel or expose this launcher.
   Production `backend/main.py`, Vercel configuration and the normal Vite configuration
-  never import these adapters or inject the login panel.
+  never import these adapters or inject the login panel. The separate G22 Vite configuration
+  refuses build and preview commands; the injected script also checks DEV mode and a loopback host.

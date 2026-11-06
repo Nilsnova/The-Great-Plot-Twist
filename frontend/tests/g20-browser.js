@@ -1,14 +1,16 @@
 // Isolated real-DOM harness for G20 component unit tests, not a game/end-to-end fixture.
-import { beforeAll, afterAll } from 'vitest';
+import { beforeAll, afterAll, vi } from 'vitest';
 import { createServer } from 'vite';
 import { chromium } from 'playwright-core';
 import { fileURLToPath } from 'node:url';
 
 export function browserHarness() {
+  // Cold native Chromium/module compilation is slower than an in-process unit test.
+  vi.setConfig({ testTimeout: 20000, hookTimeout: 60000 });
   let server, browser, base;
   beforeAll(async () => {
     server = await createServer({ configFile: false, root: fileURLToPath(new URL('..', import.meta.url)),
-      server: { host: '127.0.0.1', port: 0 }, logLevel: 'error' });
+      envDir: false, server: { host: '127.0.0.1', port: 0, hmr: false }, logLevel: 'error' });
     await server.listen(); base = `http://127.0.0.1:${server.httpServer.address().port}`;
     browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true });
   }, 30000);

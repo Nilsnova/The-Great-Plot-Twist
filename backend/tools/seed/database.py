@@ -95,10 +95,25 @@ def bootstrap(conn: psycopg.Connection) -> None:
         create schema auth;
         create table auth.users (id uuid primary key, email text);
         create function auth.uid() returns uuid language sql stable as $$
-          select nullif(current_setting('request.jwt.claims', true)::json ->> 'sub', '')::uuid
+          select nullif(
+            nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub', ''
+          )::uuid
         $$;
         grant usage on schema auth, public to anon, authenticated, service_role;
         grant execute on function auth.uid() to anon, authenticated, service_role;
+        create schema realtime;
+        create table realtime.messages (
+          topic text not null, extension text not null, payload jsonb, event text,
+          private boolean default false, updated_at timestamp not null default now(),
+          inserted_at timestamp not null default now(), id uuid not null default gen_random_uuid(),
+          primary key (id, inserted_at)
+        );
+        alter table realtime.messages enable row level security;
+        create function realtime.topic() returns text language sql stable as $$
+          select nullif(current_setting('realtime.topic', true), '')::text
+        $$;
+        grant usage on schema realtime to anon, authenticated, service_role;
+        grant select, insert on realtime.messages to anon, authenticated, service_role;
     """)
 
 

@@ -90,8 +90,8 @@ def snapshot(conn):
             "wallet_transactions",
             "crews",
             "crew_seats",
-            "market_positions",
-            "market_trades",
+            "exchange_positions",
+            "exchange_events",
             "entry_profiles",
         ]
     }
@@ -120,18 +120,18 @@ def test_seed_idempotence_reset_and_wallet_consistency(scratch):
         )
         other = uuid4()
         conn.execute("insert into auth.users(id) values (%s)", (other,))
-        # A stopped market board must not prevent --reset rebuilding demo fixtures.
-        conn.execute(
-            "update public.market_bases set halted_until=now()+interval '1 hour', "
-            "frozen_price=base_game_price"
-        )
+        old_positions = conn.execute("select id from public.exchange_positions").fetchall()
+        shared_world = conn.execute("select to_jsonb(w) from public.world_state w").fetchall()
         report = seed(conn, reset=True)
         assert report["players"] == 20 and report["marketPositions"] == 20
         assert conn.execute("select id from auth.users where id=%s", (other,)).fetchone()
         assert conn.execute("select count(*) from public.wallets").fetchone()[0] == 21
-        assert not conn.execute(
-            "select 1 from public.market_bases where halted_until is not null"
-        ).fetchone()
+        assert not set(old_positions) & set(
+            conn.execute("select id from public.exchange_positions")
+        )
+        assert (
+            conn.execute("select to_jsonb(w) from public.world_state w").fetchall() == shared_world
+        )
 
 
 def test_requires_marker_even_for_local_database(tmp_path):
@@ -169,6 +169,10 @@ def test_local_login_reads_writes_and_crews_without_external_http(scratch, monke
     monkeypatch.setenv("SUPABASE_URL", "https://never-connect.example.invalid")
     monkeypatch.setenv("DEMO_MODE", "false")
     with TestClient(make_app(scratch)) as client:
+        config = client.get("/api/config").json()
+        assert config["demoMode"] is True and config["flags"]["market"] is True
+        assert not config["flags"]["sports"] and not config["flags"]["festival"]
+        assert client.get("/api/world").status_code == 404
         assert client.get("/api/me").status_code == 401
         assert client.get("/api/dev/players").status_code == 200
         response = client.post(
@@ -180,7 +184,9 @@ def test_local_login_reads_writes_and_crews_without_external_http(scratch, monke
         )
         assert response.status_code == 200
         headers = {"Authorization": f"Bearer {response.json()['accessToken']}"}
-        assert client.get("/api/me", headers=headers).json()["id"] == str(PLAYER_IDS[18])
+        me = client.get("/api/me", headers=headers)
+        assert me.status_code == 200, me.text
+        assert me.json()["id"] == str(PLAYER_IDS[18])
         save = client.get("/api/save", headers=headers).json()
         assert (
             client.put(
@@ -197,15 +203,21 @@ def test_local_login_reads_writes_and_crews_without_external_http(scratch, monke
         assert client.get("/api/weather").json()["source"] == "fallback"
         board = client.get("/api/market")
         assert board.status_code == 200
-        assert all(company["status"] == "open" for company in board.json()["companies"])
+        companies = board.json()["companies"]
+        assert all(
+            company["status"] == "open" for company in companies if company["kind"] == "island"
+        )
+        assert all(
+            company["status"] != "open" for company in companies if company["kind"] == "stock"
+        )
         assert client.get("/api/market/portfolio", headers=headers).status_code == 200
         trade = client.post(
-            "/api/market/trade",
+            "/api/market/open",
             headers=headers,
             json={
                 "companyId": "harbor-trust",
-                "side": "buy",
-                "units": 1,
+                "side": "rising",
+                "stake": 10,
                 "actionUid": "g22-api-smoke-buy",
             },
         )
@@ -215,7 +227,7 @@ def test_local_login_reads_writes_and_crews_without_external_http(scratch, monke
         assert started.status_code == 200, started.text
         assert started.json()["crew"]["status"] == "active"
         # Seeded nested crew/seat/profile projections also work.
-        owner = {"Authorization": "Bearer dev-player-03"}
+        owner = {"Authorization": "Bearer g22.dev-player-03.scratch"}
         crew = client.get("/api/crews/me", headers=owner)
         assert crew.status_code == 200, crew.text
         assert crew.json()["crew"]["id"] == str(CREW_IDS[1])
