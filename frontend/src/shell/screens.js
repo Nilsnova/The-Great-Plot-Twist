@@ -11,12 +11,3 @@ export function pixelLogo() {
 export function menuButton(label,onClick,quiet=false) {
   return createButton({label,onClick,variant:quiet?'quiet':'primary'}).element;
 }
-export function credits() {
-  const section=node('section','shell-credits');
-  section.append(node('p','','A four-person student project. Original islands, pixel art and sound, made with code.'));
-  const team=node('ul');for(let i=0;i<4;i++)team.append(node('li','','<name>'));section.append(node('h3','','The team'),team);
-  section.append(node('h3','','Data credits'),node('p','','Weather data by Open-Meteo.com, adapted for the game. CC BY 4.0.'));
-  const links=node('p');for(const [label,href] of [['Open-Meteo','https://open-meteo.com/'],['CC BY 4.0','https://creativecommons.org/licenses/by/4.0/']]) {const a=node('a','',label);a.href=href;a.target='_blank';a.rel='noopener noreferrer';links.append(a,document.createTextNode(' '));}section.append(links);
-  section.append(node('h3','','Tools and licences'),node('p','','Three.js, Vite and Vitest: MIT. Playwright Core: Apache-2.0. Pillow (art generation): HPND. Original project graphics and procedural audio use no external assets, fonts or recordings. Package notices accompany the installed tools.'));
-  return section;
-}

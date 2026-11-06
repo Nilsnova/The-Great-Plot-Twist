@@ -23,12 +23,29 @@
     "test:demo": "node scripts/check-demo.js",
     "test:loading": "npm run build && node scripts/check-loading.js",
     "test:spoilers": "npm run build",
-    "test:case": "node scripts/check-case.js"
+    "test:case": "node scripts/check-case.js",
+    "test:credits": "node scripts/check-credits.js",
+    "test:living": "node scripts/check-living.js",
+    "test:life": "node scripts/check-life.js",
+    "test:lifecycle": "node scripts/check-lifecycle.js",
+    "test:golden": "node scripts/check-golden-path.js",
+    "test:chaos": "node scripts/check-chaos.js",
+    "test:g7": "node scripts/check-g7-regression.js",
+    "test:csp": "npm run build && node scripts/check-csp.js",
+    "art:fingerprints": "node scripts/generate-reveal-fingerprints.js",
+    "test:islet:world": "node scripts/check-islet-world.js",
+    "test:bulletin": "node scripts/check-bulletin.js",
+    "test:hook": "node scripts/check-hook.js",
+    "test:harbor:life": "node scripts/check-harbor-life.js",
+    "test:presenter": "npm run build && node scripts/check-presenter.js",
+    "test:a11y": "node scripts/check-a11y.js",
+    "test:g8": "node scripts/check-g8-regression.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
     "three": "0.187.0"
   },
   "devDependencies": {

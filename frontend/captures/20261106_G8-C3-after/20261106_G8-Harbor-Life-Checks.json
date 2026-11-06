@@ -1,0 +1,103 @@
+{
+  "checked": "2026-11-06T14:56:22.298Z",
+  "checks": [
+    "Cabin smoke, built greenhouse birds and the night window appear on the home islet",
+    "Ambient motion becomes still under reduced motion",
+    "New one-shot sounds and continuous station hum use bounded low gains",
+    "Extra harbor gulls appear on a clear day",
+    "Three home-islet and harbor trips retain one active place root",
+    "Three trips return to the same harbor geometry and texture counts",
+    "No browser errors or external requests"
+  ],
+  "captures": {
+    "home-islet-night": "captures/20261106_G8-Harbor-Life-home-islet-night.png",
+    "harbor-clear-day": "captures/20261106_G8-Harbor-Life-harbor-clear-day.png"
+  },
+  "trips": [
+    {
+      "trip": 1,
+      "home": {
+        "fps": 60,
+        "calls": 44,
+        "triangles": 82,
+        "geometries": 43,
+        "textures": 16,
+        "roots": 1,
+        "objects": 53,
+        "programs": 4
+      },
+      "harbor": {
+        "fps": 60,
+        "calls": 52,
+        "triangles": 179,
+        "geometries": 50,
+        "textures": 25,
+        "roots": 1,
+        "objects": 51,
+        "programs": 5
+      }
+    },
+    {
+      "trip": 2,
+      "home": {
+        "fps": 60,
+        "calls": 44,
+        "triangles": 82,
+        "geometries": 43,
+        "textures": 16,
+        "roots": 1,
+        "objects": 53,
+        "programs": 4
+      },
+      "harbor": {
+        "fps": 60,
+        "calls": 52,
+        "triangles": 179,
+        "geometries": 50,
+        "textures": 25,
+        "roots": 1,
+        "objects": 51,
+        "programs": 5
+      }
+    },
+    {
+      "trip": 3,
+      "home": {
+        "fps": 60,
+        "calls": 44,
+        "triangles": 82,
+        "geometries": 43,
+        "textures": 16,
+        "roots": 1,
+        "objects": 53,
+        "programs": 4
+      },
+      "harbor": {
+        "fps": 60,
+        "calls": 52,
+        "triangles": 179,
+        "geometries": 50,
+        "textures": 25,
+        "roots": 1,
+        "objects": 51,
+        "programs": 5
+      }
+    }
+  ],
+  "audioCues": [
+    "Paper rustles on the harbor bulletin board",
+    "A building settles into place",
+    "A faint tone carries from far out at sea",
+    "Lighthouse foghorn · a low call across the water",
+    "A flag snaps in the storm wind"
+  ],
+  "errors": [],
+  "external": [],
+  "cueVolumes": {
+    "build": 0.035,
+    "paper": 0.016,
+    "flag": 0.021,
+    "hook": 0.018,
+    "stationHum": 0.009
+  }
+}

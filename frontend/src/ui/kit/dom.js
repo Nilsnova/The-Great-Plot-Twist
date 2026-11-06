@@ -12,7 +12,6 @@ export function content(element, value) {
   if (value instanceof Node) element.append(value);
   else if (value !== undefined) element.textContent = String(value ?? '');
 }
-export {reducedMotion} from '../../settings/preferences.js';
 
 // Portraits may reference only this build's local pixel-art directory.
 export function portraitSource(src) {

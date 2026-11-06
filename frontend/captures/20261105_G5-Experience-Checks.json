@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-05T21:22:14.225Z",
+  "checked": "2026-11-05T22:50:39.369Z",
   "checks": [
     "Cold title allocates neither WebGL nor an AudioContext",
     "Continue is disabled without a local intro",
@@ -7,7 +7,7 @@
     "Native title dialog contains keyboard focus",
     "Every experience preference is saved with bounded values",
     "Preferences contain only documented fields, no account or token data",
-    "Credits list four placeholder teammates, data attribution and tool licences",
+    "Credits list four teammates, all data attribution and tool licences",
     "Preferences survive a full page reload",
     "The first trusted input unlocks one Web Audio context",
     "Saved preferences reach world quality, motion and highlight styling",

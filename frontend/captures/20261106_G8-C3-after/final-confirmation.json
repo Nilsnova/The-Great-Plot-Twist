@@ -1,0 +1,30 @@
+[
+  {
+    "id": "final-tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 16803,
+    "log": "captures/20261106_G8-C3-after/final-tests.log"
+  },
+  {
+    "id": "final-build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 3031,
+    "log": "captures/20261106_G8-C3-after/final-build.log"
+  },
+  {
+    "id": "final-demo",
+    "command": "DEMO_FAST=1 node scripts/check-demo.js",
+    "code": 0,
+    "ms": 13340,
+    "log": "captures/20261106_G8-C3-after/final-demo.log"
+  },
+  {
+    "id": "final-csp",
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 5176,
+    "log": "captures/20261106_G8-C3-after/final-csp.log"
+  }
+]

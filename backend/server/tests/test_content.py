@@ -103,6 +103,10 @@ def test_every_public_name_serves_a_plain_json_file_in_the_content_folder(name, 
 
 SECRET_FOLDER = CONTENT_DIR / "secret"
 PUBLIC_FILES = set(PUBLIC_CONTENT.values())
+# Files that a route of their own shows on purpose (GET /api/weather and GET /api/bulletin): a
+# content address such as '../bulletin' is normalised to /api/bulletin before it reaches the API.
+# The open-world tests at the end of this file prove that the content route never serves them.
+SHOWN_BY_THEIR_OWN_ROUTE = {"weather_states.json", "bulletin.json", "chapter_two_hook.json"}
 
 
 def secret_files() -> list[Path]:
@@ -110,11 +114,12 @@ def secret_files() -> list[Path]:
 
 
 def json_files_that_are_not_public() -> list[Path]:
-    """Every JSON file under backend/content/ that is not on the public list."""
+    """Every JSON file under backend/content/ that is not on the public list and has no route."""
     return [
         path
         for path in sorted(CONTENT_DIR.rglob("*.json"))
         if path.relative_to(CONTENT_DIR).as_posix() not in PUBLIC_FILES
+        and path.relative_to(CONTENT_DIR).as_posix() not in SHOWN_BY_THEIR_OWN_ROUTE
     ]
 
 
@@ -197,3 +202,35 @@ def test_the_app_mounts_no_folder_of_static_files():
     routes = create_app(CONFIGURED_SETTINGS).routes
 
     assert [route for route in routes if isinstance(route, Mount)] == []
+
+
+# --- the open-world files are for the server only ---
+
+# The three content files of the open world (weather states, the daily bulletin and the Chapter 2
+# hook). They are read by the server and shown only through GET /api/weather and GET /api/bulletin.
+OPEN_WORLD_FILES = ("weather_states.json", "bulletin.json", "chapter_two_hook.json")
+
+
+def test_the_open_world_files_are_not_public_content():
+    assert set(PUBLIC_CONTENT.values()).isdisjoint(OPEN_WORLD_FILES)
+    assert all((CONTENT_DIR / filename).is_file() for filename in OPEN_WORLD_FILES)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "bulletin",
+        "bulletin.json",
+        "chapter-two-hook",
+        "chapter_two_hook",
+        "chapter_two_hook.json",
+        "weather-states",
+        "weather_states",
+        "weather_states.json",
+    ],
+)
+def test_the_open_world_files_cannot_be_read_through_the_content_route(name):
+    response = make_client().get(f"/api/content/{name}")
+
+    assert_error(response, 404, "content_not_found")
+    assert "A light where no light was" not in response.text

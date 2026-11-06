@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.evaluate: Error: strict mode violation: locator('.cinematic-modal progress') resolved to 2 elements:
+    1) <progress max="1" value="0.03647499999776483" aria-label="Coastal passage"></progress> aka getByRole('progressbar', { name: 'Coastal passage' })
+    2) <progress max="1" aria-label="Highlight" value="0.23521481481525633"></progress> aka getByRole('progressbar', { name: 'Highlight' })
+
+Call log:
+[2m  - waiting for locator('.cinematic-modal progress')[22m
+
+    at /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-presenter.js:54:103 {
+  log: [ "  - waiting for locator('.cinematic-modal progress')" ]
+}
+
+Node.js v24.17.0

@@ -21,6 +21,6 @@ export function createLazyCinematics(ctx) {
   window.addEventListener('keydown',key,true);
   const stop=ctx.on('finale',event=>{if(cinematicNames.includes(event.stage))play(event.stage);});
   return {get active(){return !!pending||!!controller?.active;},play,
-    skip(){cancelLoad();controller?.skip();ctx.resetInput?.();},update(dt){controller?.update(dt);},
+    skip(){cancelLoad();controller?.skip();ctx.resetInput?.();},update(dt,options){controller?.update(dt,options);},
     dispose(){if(disposed)return;disposed=true;window.removeEventListener('keydown',key,true);stop();cancelLoad();controller?.dispose();controller=null;}};
 }

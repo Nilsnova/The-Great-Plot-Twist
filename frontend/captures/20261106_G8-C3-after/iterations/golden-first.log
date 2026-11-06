@@ -1,0 +1,20 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Accepted islet_changed event makes the signal station visible in the world
+    at check (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-golden-path.js:7:33)
+    at verifyIsletStationEventFallback (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-golden-path.js:48:3)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:472:9)
+    at async newOriginalIntro (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-golden-path.js:62:54)
+    at async file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-golden-path.js:246:15 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.17.0

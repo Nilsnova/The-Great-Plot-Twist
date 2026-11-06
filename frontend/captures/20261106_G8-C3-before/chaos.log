@@ -1,0 +1,10 @@
+file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-chaos.js:41
+function core(view){return {profile:view.arrival.status,coins:view.captain.coins,ledger:view.rewards.ledger.map(row=>[row.id,row.amount]),crew:view.crew.seats.map(seat=>[seat.seat,seat.kind,seat.cards.map(card=>card.id)]),pins:view.board.pinHighlights.map(pin=>[pin.cardId,pin.seat]),deductions:view.board.deductions.filter(item=>item.complete).map(item=>item.id),jobs:view.search.jobs.map(job=>[job.id,job.done]),partnerJobs:view.partners.map(partner=>[partner.seat,partner.job?.id,partner.job?.done]),phase:view.finale.phase,aboard:view.accusation.aboard,solved:view.reveal.available,index:view.reveal.index,colour:view.world.lanternColour};}
+                                                 ^
+
+TypeError: Cannot read properties of undefined (reading 'status')
+    at core (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-chaos.js:41:50)
+    at checkBulletinFailureStates (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-chaos.js:31:24)
+    at async file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-chaos.js:127:3
+
+Node.js v24.17.0

@@ -9,7 +9,7 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
   if(state.crew?.status!=='active'||member?.kind!=='npc')return refuse('npc_required','Choose an NPC partner in your active crew.');
   if(!['search','fetch','pin','man_light','wait'].includes(order))return refuse('order_not_allowed','Partners cannot pair, accuse, aim or give hints.');
   if(state.jobs.some(job=>job.seat===seat&&!job.done))return refuse('busy','This partner is already on an errand.');
-  let cardId=null,price=0,seconds=['pin','wait'].includes(order)?300:600;
+  let cardId=null,price=0,routeSpot=null,seconds=['pin','wait'].includes(order)?300:600;
   if(order==='pin'){if(!state.found[seat].includes(target))return refuse('card_not_held','That card is not in this partner’s satchel.');if(state.pins.some(pin=>pin.cardId===target&&pin.seat===seat))return refuse('already_pinned','This partner already pinned that card.');cardId=target;}
   if(order==='fetch'||order==='search'){
     if(order==='search'&&!Object.hasOwn(spotNames,target))return refuse('unknown_spot','That search spot is not registered.');
@@ -25,7 +25,7 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
       if(!eligible.length){const paid=candidates.find(route=>route.price&&routeStatus(state,route,seat,4,true).accepted),timed=candidates.filter(route=>route.window).map(route=>windowStatus(state.now,route.window,4).minutes);
         const failures=candidates.map(route=>routeStatus(state,route,seat,4,true));if(!paid&&failures.some(result=>result.reason==='no_coins'))return refuse('no_coins','The available shortcut needs more coins.');
         return {...refuse('locked_window',timed.length?`The partner can leave in ${Math.min(...timed)} minutes.`:'This partner cannot use an available free route.'),offer:paid?{seat,order,target,price:paid.price}:null};}
-      price=eligible[0].price;}
+      price=eligible[0].price;routeSpot=eligible[0].spot;}
   }
   if(order==='man_light'){
     if(state.night?.phase!=='night')return refuse('night_required','Call nightfall before sending a partner to a light.');
@@ -36,7 +36,7 @@ export function orderPartner(state,seat,order,target,{allowPaid=false}={}) {
   state.duties=state.duties.filter(duty=>duty.seat!==seat);
   if(state.night){state.night.posts=state.night.posts.filter(post=>post.seat!==seat);state.night.locks=state.night.locks.filter(lock=>lock.seat!==seat);}
   if(order==='man_light')state.night.posts.push({seat,lightId:target,readyAt:state.now+seconds,reserved:true});
-  state.jobs.push({id:++state.jobId,seat,order,target,cardId,price,orderedBy:playerSeat(state),orderedAt:state.now,readyAt:state.now+seconds,done:false});
+  state.jobs.push({id:++state.jobId,seat,order,target,spot:routeSpot??(order==='search'?target:(routes.find(route=>route.cardId===cardId)?.spot??null)),cardId,price,orderedBy:playerSeat(state),orderedAt:state.now,readyAt:state.now+seconds,done:false});
   return accept(`${member.name} is on the way.`);
 }
 export function partnerView(state) {

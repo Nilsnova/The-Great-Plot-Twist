@@ -1,3 +1,4 @@
+import {readHttp} from './http-read.js';
 import {startFromTitle} from './shell-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
@@ -19,7 +20,7 @@ const check = (value, label) => { assert.ok(value, label); report.checks.push(la
 let browser;
 try {
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(url)).ok) break; } catch { /* Vite is starting. */ }
+    try { if ((await readHttp(url)).ok) break; } catch { /* Vite is starting. */ }
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });

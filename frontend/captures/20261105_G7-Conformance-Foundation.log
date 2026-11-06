@@ -1,0 +1,13 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --run tests/adapter-conformance.test.js tests/case-arrival.test.js tests/case-board.test.js tests/case-night.test.js
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+
+ Test Files  4 passed (4)
+      Tests  49 passed (49)
+   Start at  23:03:43
+   Duration  1.81s (transform 38%, import 30%, tests 16%, worker 9%, environment 6%)
+

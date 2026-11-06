@@ -1,0 +1,15 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --exclude tests/gulls-rest.test.js
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+
+ Test Files  46 passed (46)
+      Tests  277 passed (277)
+   Start at  00:07:12
+   Duration  3.65s (import 51%, tests 31%, transform 14%, worker 3%)
+
+    Isolate  46 workers spawned · ~337ms startup each (spawn + environment, per file)
+             at least ~1.88s faster with isolate: false — reuses workers across files instead of one per file

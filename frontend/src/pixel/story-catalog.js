@@ -9,6 +9,7 @@ for (const id of characterIds) {
   }
   storyDimensions[id+'-portrait'] = [64,80,0];
 }
+for (const name of ['wave','cheer','point','lantern','shrug']) storyDimensions[`emote-${name}`]=[24,24,0];
 Object.assign(storyDimensions, {
   'lens-hall-open':[144,160,12], 'festival-lantern-string':[160,48,4], 'wall-of-lights-open':[128,96,8],
   'false-light':[96,96,12], 'ghost-schooner':[128,112,10], 'sealed-cargo':[64,64,8], 'anchor-eye-seal':[32,32,0],

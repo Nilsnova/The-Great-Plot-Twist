@@ -1,0 +1,48 @@
+PASS Ledger shows supplied card and deduction rewards
+PASS Keepsakes remain unearned before the solve
+PASS Log records the intro ending and kit
+PASS Log reveal remains sealed before solve
+PASS Dismissed hints are device preferences
+PASS What next actions stay available when first-use hints are off
+PASS A supplied partner job starts travelling
+PASS Sea chart displays supplied partner journey lines
+PASS A completed partner errand has a visible report
+PASS Question-mark opens keyboard shortcuts
+PASS Escape closes the top help panel before pause
+PASS rewards fits at 375 px
+PASS log fits at 375 px
+PASS hints fits at 375 px
+PASS partners fits at 375 px
+PASS Crew characters remain within the world draw-call budget
+PASS Only injected API-down diagnostics, no external assets
+{
+  "checks": [
+    "Ledger shows supplied card and deduction rewards",
+    "Keepsakes remain unearned before the solve",
+    "Log records the intro ending and kit",
+    "Log reveal remains sealed before solve",
+    "Dismissed hints are device preferences",
+    "What next actions stay available when first-use hints are off",
+    "A supplied partner job starts travelling",
+    "Sea chart displays supplied partner journey lines",
+    "A completed partner errand has a visible report",
+    "Question-mark opens keyboard shortcuts",
+    "Escape closes the top help panel before pause",
+    "rewards fits at 375 px",
+    "log fits at 375 px",
+    "hints fits at 375 px",
+    "partners fits at 375 px",
+    "Crew characters remain within the world draw-call budget",
+    "Only injected API-down diagnostics, no external assets"
+  ],
+  "performance": {
+    "fps": 60,
+    "calls": 53,
+    "triangles": 184,
+    "geometries": 51,
+    "textures": 42,
+    "roots": 1,
+    "objects": 48,
+    "programs": 4
+  }
+}

@@ -29,6 +29,18 @@ This is Open-Meteo's own format, so a new sample can be copied straight from a r
 
 `backend/server/weather/open_meteo.py` explains these fields and links to Open-Meteo's documentation.
 
+The server now also asks for **hourly** weather (31 past days and 3 forecast days, in UTC), because the weather states and the fog nights need whole nights (`backend/server/weather/states.py`, `nights.py` and `fog_nights.py`). The answer then has an `hourly` block next to `current`: `time` (for example `2026-11-05T17:00`) and one list per variable, all the same length, and `utc_offset_seconds` is 0.
+
+| Field in `hourly` | Unit | Meaning |
+|---|---|---|
+| `time` | ISO 8601, UTC | The start of each hour. |
+| `weather_code` | WMO code | As in `current`. |
+| `precipitation` | millimetres | The sum of the preceding hour, so it is already millimetres per hour. |
+| `visibility` | metres | As in `current`. |
+| `wind_speed_10m` | km/h | As in `current`. |
+
+**The recording of 5 Nov 2026 has no hours.** It was saved before we asked for them, so a fallback answer (and demo mode, which only uses the recording) has no hourly block. Then every night counts as unknown: `tonight.state` is `null` in `GET /api/weather` and the harbor's almanac alone decides the fog nights. **Tests build hourly blocks in code** (`hourly_block()` and `answer_with_hours()` in `backend/server/tests/weather_helpers.py`), and the sample files stay as they are. No new recording was made, because that needs a live call; the next person who records a fallback may use the address below and keep the hourly block in `answer`.
+
 ## How to record a new fallback
 
 Do this when the default place changes, or when you want a daytime answer. The `place` in the file must be the place whose coordinates are in the `request`, because the API shows that name with the fallback weather.
@@ -36,7 +48,7 @@ Do this when the default place changes, or when you want a daytime answer. The `
 1. Call Open-Meteo once, with the coordinates of the place. The free service needs no key:
 
    ```bash
-   curl -s "https://api.open-meteo.com/v1/forecast?latitude=62.01&longitude=-6.77&current=weather_code,cloud_cover,precipitation,visibility,wind_speed_10m,is_day&wind_speed_unit=kmh&precipitation_unit=mm"
+   curl -s "https://api.open-meteo.com/v1/forecast?latitude=62.01&longitude=-6.77&current=weather_code,cloud_cover,precipitation,visibility,wind_speed_10m,is_day&hourly=weather_code,precipitation,visibility,wind_speed_10m&past_days=31&forecast_days=3&timezone=GMT&wind_speed_unit=kmh&precipitation_unit=mm"
    ```
 
 2. Paste the JSON it prints into `answer` in `recorded-fallback.json`, and set `recordedAt` to the time of the call in UTC (for example `2026-11-05T17:14:33Z`, with the `Z`), `place` to the name, and `request` to the address you called. Keep the `credit` line.

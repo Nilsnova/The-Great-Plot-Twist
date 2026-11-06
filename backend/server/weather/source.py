@@ -15,9 +15,10 @@ far below the free limits (see open_meteo.py), although Open-Meteo warns that ho
 Vercel may be limited earlier. Vercel may run several instances at once, and a cold start begins
 with an empty cache, so "once per 10 minutes" holds per instance only.
 
-The data in the cache is a PlaceReading: the weather numbers together with the name of the place
-they belong to. The recorded answer carries its own place name, so the name always matches the
-weather even if the team changes the place in the settings.
+The data in the cache is a PlaceReading: the weather now and the weather hour by hour, together
+with the name of the place they belong to. The recorded answer carries its own place name, so the
+name always matches the weather even if the team changes the place in the settings. One request
+brings everything, so the hours are cached together with the weather now and are as old as it.
 
 Demo mode (DEMO_MODE=true): Open-Meteo is never called. The source is a RecordedOnlySource, which
 goes straight to step 4 and answers with the recorded answer, labelled "fallback". It makes no
@@ -38,8 +39,8 @@ import httpx
 from server.adapters.base import CachedSource, RecordedData
 from server.clock import Clock, utc_now
 from server.settings import Settings
-from server.weather.mapping import WeatherReading
-from server.weather.open_meteo import TIMEOUT_SECONDS, fetch_reading, parse_open_meteo_answer
+from server.weather.mapping import HourReading, WeatherReading
+from server.weather.open_meteo import TIMEOUT_SECONDS, fetch_forecast, parse_forecast
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +66,15 @@ RECORDED_FILE_NAME = "recorded-fallback.json"
 
 @dataclass(frozen=True)
 class PlaceReading:
-    """The weather numbers and the name of the place they were measured at."""
+    """The weather now, the weather hour by hour, and the name of the place they belong to.
+
+    `hours` is empty when the answer had no hourly block: the recorded answer of 5 Nov 2026 was
+    saved before we asked for hours, so a fallback has none.
+    """
 
     place: str
     reading: WeatherReading
+    hours: tuple[HourReading, ...] = ()
 
 
 class RecordedOnlySource(CachedSource):
@@ -91,8 +97,10 @@ def read_recorded_file(folder: Path) -> RecordedData:
     recorded_at = datetime.fromisoformat(saved["recordedAt"])
     if recorded_at.tzinfo is None:
         raise ValueError("The recorded weather time has no timezone.")
-    reading = parse_open_meteo_answer(saved["answer"])
-    return RecordedData(data=PlaceReading(place, reading), recorded_at=recorded_at)
+    forecast = parse_forecast(saved["answer"])
+    return RecordedData(
+        data=PlaceReading(place, forecast.now, forecast.hours), recorded_at=recorded_at
+    )
 
 
 def load_recorded_weather(folder: Path = CONTENT_FOLDER) -> RecordedData | None:
@@ -118,10 +126,10 @@ def make_weather_source(
     """Build the weather source for this server. Tests pass a fake transport and clock."""
 
     async def fetch() -> PlaceReading:
-        reading = await fetch_reading(
+        forecast = await fetch_forecast(
             settings.weather_latitude, settings.weather_longitude, transport
         )
-        return PlaceReading(settings.weather_place_name, reading)
+        return PlaceReading(settings.weather_place_name, forecast.now, forecast.hours)
 
     if settings.demo_mode:
         logger.info("Demo mode: the weather route uses the recorded answer only.")

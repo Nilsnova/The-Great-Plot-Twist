@@ -1,0 +1,30 @@
+{
+  "checks": [
+    "Title sign-in uses the local adapter while APIs are down",
+    "Name can be changed once",
+    "The unchanged bundled intro opens without the intro API",
+    "Thirty nearby captains draw at most eight and keep an overflow count",
+    "Eight live captains and effects meet the draw-call budget"
+  ],
+  "performance": {
+    "fps": 35,
+    "calls": 108,
+    "triangles": 214,
+    "geometries": 107,
+    "textures": 61,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "storm": {
+    "fps": 34,
+    "calls": 110,
+    "triangles": 216,
+    "geometries": 106,
+    "textures": 63,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "failure": "Eight captains with night storm effects keep the frame and draw-call budget"
+}

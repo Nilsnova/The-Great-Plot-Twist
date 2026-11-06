@@ -20,19 +20,22 @@ try {
   await page.unroute(lazyPattern);await page.waitForTimeout(750);
   check(await page.evaluate(()=>window.__cinema.length===0)&&await page.locator('.cinematic-modal').count()===0,'Late lazy loading cannot reopen a cancelled shot or emit events');
   report.before=await measure(page);
-  const start=Date.now();await page.evaluate(()=>{window.__shot=window.__island.world.cinematic('three_lights');});
+  const start=Date.now();await page.evaluate(()=>{const started=performance.now();window.__shot=window.__island.world.cinematic('three_lights').then(result=>{window.__shotMs=performance.now()-started;return result;});});
   await page.waitForFunction(()=>document.querySelector('.cinematic-modal progress')?.value>.1);
   check(await page.evaluate(async()=>!(await window.__island.world.goTo('saltreach_harbor'))&&!window.__island.world.interact('desk')),'A cinematic blocks travel and hotspot input');
   check(await page.evaluate(()=>window.__island.world.cinematic('fog_lift'))===false,'Overlapping cinematics are refused');
   report.shots.three_lights=await measure(page);
   await page.waitForFunction(()=>document.querySelector('.cinematic-modal progress')?.value>.7);
   await page.screenshot({path:'captures/20261105_G4-three_lights.png'});
-  check(await page.evaluate(()=>window.__shot.then(result=>result.stage==='completed')),'Three-light shot completes');report.threeLightsMs=Date.now()-start;
+  check(await page.evaluate(()=>window.__shot.then(result=>result.stage==='completed')),'Three-light shot completes');report.threeLightsMs=await page.evaluate(()=>window.__shotMs);report.captureAndShotMs=Date.now()-start;
   check(report.threeLightsMs<15000,'Normal shot completes within fifteen seconds including loading');
   for(const name of ['fog_lift','schooner_reveal','unmask','relighting']) {
     await page.evaluate(name=>{window.__shot=window.__island.world.cinematic(name);},name);
     await page.waitForFunction(()=>document.querySelector('.cinematic-modal progress')?.value>.42);
-    await page.screenshot({path:`captures/20261105_G4-${name}.png`});await page.keyboard.press('Escape');
+    // Copy the small canvas before Escape; disk/screenshot latency must not end a short shot first.
+    const frame=await page.locator('.cinematic-modal canvas').evaluate(canvas=>canvas.toDataURL('image/png'));
+    await page.keyboard.press('Escape');
+    await writeFile(`captures/20261105_G4-${name}.png`,Buffer.from(frame.split(',')[1],'base64'));
     check(await page.evaluate(()=>window.__shot.then(result=>result.stage==='skipped')),`${name}: Escape skips and settles the promise`);
   }
   const expected=['three_lights','fog_lift','schooner_reveal','unmask','relighting'].flatMap((name,index)=>[{type:'cinematic',name,stage:'started'},{type:'cinematic',name,stage:index===0?'completed':'skipped'}]);
