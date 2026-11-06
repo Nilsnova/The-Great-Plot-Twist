@@ -2835,6 +2835,8 @@ The test-only packages stay in uv's cache. Claude reviews and applies the three 
   ```
 - If something here is unclear, open an issue before changing the rules for money.
 
+**Live checkpoint, 6 Nov 2026:** group 3 files 090000, 100000 and 110000 are applied and MD5-verified under their repository versions. Final counts: 18 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 24 project functions excluding rls_auto_enable, 4 sequences and 5 public triggers. See [release proofs](../docs/handoff/group3-release.md).
+
 ## Case Phase 1 migration
 
 `migrations/20261106060000_case_rules.sql` is additive and awaits Claude's review and live application. The case flag remains off. No earlier migration or wallet-reason list changes. The full sorted local chain runs twice in the disposable database checks, preserving any later replacement of the empty world hook.

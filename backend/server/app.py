@@ -144,9 +144,7 @@ def create_app(
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
     # routes/weather.py, sign_in_code.py, market/exchange.py, crew_broadcast.py,
-    # game/islet_service.py, world_stage.py and clock.py.
-    # predictions/desk.py.
-    # duels/service.py.
+    # game/islet_service.py, world_stage.py, clock.py, predictions/desk.py and duels/service.py.
     app.state.settings = settings
     app.state.verifier = verifier
     app.state.admin = admin

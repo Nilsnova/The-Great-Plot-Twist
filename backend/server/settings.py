@@ -17,6 +17,9 @@ so this file is the full list of what can be configured:
                               Torshavn, Faroe Islands). Shown on screen. Not secret.
     WEATHER_LATITUDE          that place's latitude in degrees, -90 to 90 (default: 62.01)
     WEATHER_LONGITUDE         that place's longitude in degrees, -180 to 180 (default: -6.77)
+    HOST_PLAYER_IDS           player ids (Supabase User UIDs, comma separated) of the hosts who
+                              may use presenter routes (hosts.py). Empty means nobody is a host.
+                              Not a password, but the browser never needs it.
     STOCK_API_PROVIDER        which stock-price provider the Island Exchange uses for its real
                               stock companies: empty (off, the default) or a known name (today
                               only "finnhub"). Not a secret. Set it only when the adapter is
@@ -24,9 +27,6 @@ so this file is the full list of what can be configured:
                               that the prices may be shown (docs/DECISIONS.md, D017).
     STOCK_API_KEY             the key of that provider. SERVER ONLY, like the Supabase secret key:
                               never in the browser, a log or the repo. Empty keeps the stocks off.
-    HOST_PLAYER_IDS           player ids (Supabase User UIDs, comma separated) of the hosts who
-                              may use presenter routes (hosts.py). Empty means nobody is a host.
-                              Not a password, but the browser never needs it.
 
 Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and
 crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence),
@@ -91,14 +91,14 @@ class Settings:
     weather_place_name: str = DEFAULT_WEATHER_PLACE_NAME
     weather_latitude: float = DEFAULT_WEATHER_LATITUDE
     weather_longitude: float = DEFAULT_WEATHER_LONGITUDE
+    # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
+    # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
+    host_player_ids: frozenset[str] = field(default_factory=frozenset)
     # The stock-price provider of the Island Exchange, and its key. Empty provider: stocks are off.
     stock_api_provider: str = ""
     # SecretStr prints as ********** in logs and error messages. Only market/exchange.py calls
     # .get_secret_value(), once, to build the stock source.
     stock_api_key: SecretStr = SecretStr("")
-    # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
-    # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
-    host_player_ids: frozenset[str] = field(default_factory=frozenset)
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -222,9 +222,9 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         weather_longitude=read_degrees(
             env, "WEATHER_LONGITUDE", MAX_LONGITUDE, DEFAULT_WEATHER_LONGITUDE
         ),
+        host_player_ids=read_host_player_ids(env),
         stock_api_provider=read_stock_api_provider(env),
         stock_api_key=SecretStr(read_text(env, "STOCK_API_KEY")),
-        host_player_ids=read_host_player_ids(env),
     )
 
 

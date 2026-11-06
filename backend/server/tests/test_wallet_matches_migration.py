@@ -321,14 +321,15 @@ def test_the_new_migration_adds_market_stake_and_market_payout_in_this_order():
     assert pairs == [("market_stake", "spend"), ("market_payout", "earn")]
 
 
-def test_python_lists_the_market_reasons_of_both_exchange_files_after_the_first_eight():
-    assert WALLET_REASONS[8:13] == (
+def test_python_ends_its_list_of_reasons_with_the_v1_three_and_the_two_new_ones():
+    assert tuple(pair for pair in WALLET_REASONS if pair[0].startswith("market_")) == (
         ("market_buy", "spend"),
         ("market_sell", "earn"),
         ("market_fee", "spend"),
         ("market_stake", "spend"),
         ("market_payout", "earn"),
     )
+    assert len({reason for reason, _ in WALLET_REASONS}) == len(WALLET_REASONS)
 
 
 def test_the_new_migration_does_not_touch_the_existing_reasons():

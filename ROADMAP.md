@@ -6,6 +6,39 @@
 
 **Status: v0.3, Thu 5 Nov 2026, late evening.** The story skeleton and the detailed story round (S0) are approved (three review changes to the approval sheet still wait for Nils' OK: [docs/story/README.md](docs/story/README.md#changes-to-the-approval-sheet-after-the-review)), and the look is decided: original top-down pixel art (D005). `main` is live: the game and the Python API run at https://the-great-plot-twist.vercel.app/. Foundation waves 1 and 2 are on `main`. Everyone clones and branches from `main`; see [Merge order](#merge-order-today) for what lands next. The team picks the owners of lanes S, A and L today. Open decisions are listed in [docs/STATUS.md](docs/STATUS.md#open-decisions). Next review of this file: the M1 check on Fri 13 Nov.
 
+## Execution update · 6 Nov 2026
+
+Nils authorized Codex to coordinate all lanes, review and apply migrations, push integration branches
+and main, and manage Vercel. No Claude handover is required during this period. The current target is
+feature-complete minimum versions by Sunday 8 Nov, then stabilization and submission preparation for
+23 Nov. These are targets; live completion is recorded in docs/STATUS.md.
+
+1. Release group 3: Exchange v2, predictions and duels, after gates and the reviewed 090000,
+   100000 and 110000 migrations. Enable live_presence, market, predictions and arena and verify live.
+2. Complete the case backend in phases: searches and earned case data, board/night finale,
+   Relighting/rewards, NPC partners and hardening. Apply each reviewed migration before its code.
+3. Complete G9: real sign-in, account/save, crews, presence and the case adapter; prove solo and crew
+   play end to end with once-only rewards and protected reveals.
+4. Integrate economy-abuse coverage, festival, host console and sports in dependency order, then
+   reliability, security, accessibility, developer tools, help, privacy and submission materials.
+   Nils authorized enabling completed festival and sports on 6 Nov; each still needs its proofs.
+   RELIGHT_OPEN stays unset until the separately controlled game-opening step.
+5. Add the optional AI helper described below, then rehearse the full deployed experience.
+
+**Sound is already built**, in frontend/src/audio/: original procedural title/finale music, sea/wind/rain
+ambience, footsteps, foghorns, dialogue/UI sounds, building cues and station hum. It starts after a
+user gesture, has separate master/music/effects levels and visible captions for key cues. Keep audio
+regressions in release checks; listening balance on the presenter laptop remains a rehearsal task.
+
+**AI helper (new, Nils, 6 Nov):** spoiler-safe hints and game help powered by a player's eligible
+ChatGPT plan through official Sign in with ChatGPT. Add it as an optional feature after the earned-case
+adapter. The model may see only the requesting player's earned, authorized game view and public help;
+it receives no secret case content and cannot write game state or award coins. Keep ordinary gameplay
+available when disconnected, consent is declined or usage is exhausted. Website OAuth activation is
+blocked on OpenAI approval and a registered client/callback: the official website flow is a limited
+trial, not a general-purpose client registration. Never borrow a Codex client ID or store a player's
+ChatGPT credentials. See [the integration scope](specs/AI-helper.md).
+
 ## Changes since v0.2 (Thu 5 Nov, late evening)
 
 - **The story round is approved (S0 is done).** Nils approved the 19 recommendations of the story approval sheet as written. [D018](docs/DECISIONS.md) records them. Three review changes to the text of the sheet still wait for his OK. The minimum versions of S1, S3, S4 and L3 now say what the story round needs, the S0 "Provides" line points at the real files in [docs/story/](docs/story/README.md), and the L4 and L2 texts follow D017 and G2 (a 2% fee, four plots and a signal station).

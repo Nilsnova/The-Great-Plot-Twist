@@ -9,8 +9,8 @@
     intro.py          POST /api/intro/complete replays the Act 1 move log and gives the entry kit
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
-    predictions.py    GET  /api/predictions, /api/predictions/mine and POST .../stake, .../settle:
-                      the prediction desk (settle is for hosts only)
+    predictions.py    /api/predictions...     questions, stakes and host settlement
+    duels.py          /api/duels...           sealed-signal challenges and moves
     crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
     case.py           /api/case...             earned view, card searches and accusation
     world.py          GET /api/world           public coast state and Wall of Lights
@@ -26,9 +26,5 @@ market.py is the Island Exchange (its rules are in server/market/).
 bulletin_answer.py is the one file here without a URL: it holds the shape of the bulletin's answer,
 so bulletin.py stays short.
 Each file with URLs creates a `router`. app.py plugs every router in under /api.
-
-market.py is the Island Exchange (its rules are in server/market/). duels.py is Lantern Duels
-(its rules are in server/duels/): GET and POST /api/duels, GET /api/duels/{id} and the routes
-/move and /cancel under it.
 To add a feature: create a new file here, then add one line in app.py.
 """

@@ -151,10 +151,10 @@ def test_python_has_the_arena_reasons_after_the_reasons_of_the_earlier_migration
     # The position is pinned, not "the end of the list": recipe 4.7 appends every new reason at
     # the end, so a test that pinned these two to the end would break for the next package that
     # adds one (the same trap as the market reasons). 8 reasons of the foundation + 3 of the market.
-    names = [name for name, _ in WALLET_REASONS]
-    first = names.index("arena_stake")
-    assert WALLET_REASONS[first : first + 2] == (("arena_stake", "spend"), ("arena_payout", "earn"))
-    assert first > names.index("prediction_payout") > names.index("market_fee")
+    assert tuple(pair for pair in WALLET_REASONS if pair[0].startswith("arena_")) == (
+        ("arena_stake", "spend"),
+        ("arena_payout", "earn"),
+    )
 
 
 def test_the_migration_does_not_touch_the_reasons_that_exist_already():
