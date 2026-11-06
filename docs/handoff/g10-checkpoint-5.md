@@ -1,0 +1,24 @@
+# G10 checkpoint 5: combined follow-up validation and group 2 gate
+
+- Branch: `chore/server-followups`; tested source and handoff tip `1f57307`.
+- R1/R3: `6705e33`; R7/R10/R12: `c0504ef`; integrated checkpoint: `290f260`.
+- Full backend: `3512 passed, 37 skipped in 42.10s`.
+- Case SQL, member RLS and actual local API golden path: `26 passed in 7.10s`.
+- Remaining deletion SQL checks: `11 passed, 1 warning in 3.58s`.
+- All 37 opt-in checks skipped by the ordinary runner were executed separately.
+- Ruff clean; 13 changed files formatted; seven migrations and local bootstrap parse.
+- Actual documented port-8000 command served health, config, fixture sign-in and account reads.
+- Shutdown removed its disposable database and released the port.
+- Independent final review found no blocking guard, port, query, metadata or cleanup issue.
+- Phase 1 migration: `20261106060000_case_rules.sql`.
+- MD5: `278a16fcf87bbf2f46d81ec803f1e94b`.
+- Follow-up migration: `20261106140000_followups.sql`.
+- MD5: `3c687ef351147e3d86b99523941233fd`.
+- No live database access, main push, Actions trigger or live flag activation.
+- STATUS is byte-identical to the earlier C checkpoint; no STATUS edits after the correction.
+- Dependencies, vercel.json and secret content are unchanged on this tested tree.
+- Main advanced during validation: `60f7fd0` now has A4 and the home-islet migration.
+- Group 3 and Case Phase 2 are therefore unblocked; Case Phase 1 is not yet on main.
+- Next: integrate group 3; merge current main before Case Phase 2 and its A4 nudge slice.
+- Also sync these follow-ups with group 2 and rerun integration gates before final combination.
+- Claude still reviews/applies migrations before merging code that reads them; keep case and relight closed.
