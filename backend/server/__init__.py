@@ -12,8 +12,10 @@ Where things are (one job per file):
     sign_in_code.py    swaps the one-time code from the GitHub sign-in for a login token (PKCE)
     supabase_admin.py  server-only calls to the database with the secret key
     wallet.py          the rules for changing a player's coins
+    hosts.py           the check that keeps presenter-only routes for the people who run the class
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
+    predictions/       the prediction desk: hand-picked Manifold questions and play-coin pools
 """
 
 # The version the API reports at /api/health. It must match "version" in pyproject.toml

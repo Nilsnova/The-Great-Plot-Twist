@@ -18,15 +18,19 @@ so this file is the full list of what can be configured:
     WEATHER_LONGITUDE         that place's longitude in degrees, -180 to 180 (default: -6.77)
     MARKET_MULTIPLIER         how strongly the Island Exchange amplifies real price moves, a whole
                               number from 20 to 100 (default: 100). Not a secret.
+    HOST_PLAYER_IDS           player ids (Supabase User UIDs, comma separated) of the hosts who
+                              may use presenter routes (hosts.py). Empty means nobody is a host.
+                              Not a password, but the browser never needs it.
 
 Used by: app.py (reads the environment once at start-up), auth.py and supabase_admin.py (the
 Supabase address and keys), the routes (env, demo mode, flags, the keep-alive secret),
-weather/source.py (the weather place) and the tests (they pass in a plain dictionary, so no real
-environment is needed).
+weather/source.py (the weather place), hosts.py (who is a host) and the tests (they pass in a plain
+dictionary, so no real environment is needed).
 """
 
 import math
 import os
+import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Annotated
@@ -77,6 +81,9 @@ class Settings:
     weather_longitude: float = DEFAULT_WEATHER_LONGITUDE
     # How many times a real price move is multiplied in the Island Exchange (market/rules.py).
     market_multiplier: int = DEFAULT_MULTIPLIER
+    # The ids of the players who are hosts (hosts.py). Each one is written in the canonical form,
+    # lowercase with hyphens, which is how Supabase sends the id of a signed-in player.
+    host_player_ids: frozenset[str] = field(default_factory=frozenset)
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -150,6 +157,28 @@ def read_market_multiplier(env: Mapping[str, str]) -> int:
     return multiplier
 
 
+def read_player_id(piece: str, position: int) -> str:
+    """One host id in its canonical form. A piece that is not a player id stops the server.
+
+    The error says where the bad piece is, but never repeats it: the value could be anything.
+    """
+    try:
+        return str(uuid.UUID(piece))
+    except ValueError as error:
+        raise SettingsError(
+            f"HOST_PLAYER_IDS item {position} is not a player id. "
+            "Copy the User UID from Supabase, Authentication > Users."
+        ) from error
+
+
+def read_host_player_ids(env: Mapping[str, str]) -> frozenset[str]:
+    """HOST_PLAYER_IDS: the ids of the hosts, comma separated. Empty means nobody is a host."""
+    pieces = [piece.strip() for piece in read_text(env, "HOST_PLAYER_IDS").split(",")]
+    items = [piece for piece in pieces if piece]  # ignore empty pieces such as a trailing comma
+    ids = [read_player_id(item, position) for position, item in enumerate(items, start=1)]
+    return frozenset(ids)
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     return Settings(
@@ -169,6 +198,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
             env, "WEATHER_LONGITUDE", MAX_LONGITUDE, DEFAULT_WEATHER_LONGITUDE
         ),
         market_multiplier=read_market_multiplier(env),
+        host_player_ids=read_host_player_ids(env),
     )
 
 

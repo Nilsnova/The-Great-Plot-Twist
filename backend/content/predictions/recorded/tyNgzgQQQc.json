@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/tyNgzgQQQc",
+  "answer": {
+    "id": "tyNgzgQQQc",
+    "slug": "avengers-doomsday-breaks-the-record",
+    "question": "\"Avengers: Doomsday\" breaks the record for the biggest opening weekend of all time?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1798247760000,
+    "isResolved": false
+  }
+}

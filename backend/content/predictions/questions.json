@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "questions": [
+    {
+      "id": "groundhog-2027",
+      "source": "manifold",
+      "marketId": "pRq8uqsEus",
+      "text": "Will Punxsutawney Phil see his shadow on Groundhog Day, 2 February 2027?",
+      "topic": "weather",
+      "decidedBy": "The Punxsutawney Groundhog Club announcement on 2 February 2027, as resolved on Manifold.",
+      "eventAt": "2027-02-02T12:00:00Z",
+      "closesAt": "2027-02-01T23:00:00Z",
+      "reviewedBy": "pending",
+      "reviewedOn": "pending"
+    },
+    {
+      "id": "warmest-year-2026",
+      "source": "manifold",
+      "marketId": "q68phStPls",
+      "text": "Will 2026 be the warmest year on record?",
+      "topic": "weather",
+      "decidedBy": "The market creator's reading of the global temperature records for 2026, as resolved on Manifold.",
+      "eventAt": "2027-01-08T00:00:00Z",
+      "closesAt": "2026-12-01T00:00:00Z",
+      "reviewedBy": "pending",
+      "reviewedOn": "pending"
+    },
+    {
+      "id": "avengers-opening-record",
+      "source": "manifold",
+      "marketId": "tyNgzgQQQc",
+      "text": "Will Avengers: Doomsday set a new record for the biggest North American opening weekend?",
+      "topic": "culture",
+      "decidedBy": "Box Office Mojo, domestic opening weekend above 360,091,572 dollars, as resolved on Manifold.",
+      "eventAt": "2026-12-17T23:00:00Z",
+      "closesAt": "2026-12-17T12:00:00Z",
+      "reviewedBy": "pending",
+      "reviewedOn": "pending"
+    },
+    {
+      "id": "ophelia-two-billion",
+      "source": "manifold",
+      "marketId": "uyczEh8yAh",
+      "text": "Will The Fate of Ophelia pass 2 billion plays on Spotify by the end of 2026?",
+      "topic": "culture",
+      "decidedBy": "Spotify's public play counter at the end of 2026, as resolved on Manifold.",
+      "eventAt": "2026-12-31T23:59:00Z",
+      "closesAt": "2026-12-15T00:00:00Z",
+      "reviewedBy": "pending",
+      "reviewedOn": "pending"
+    },
+    {
+      "id": "ai-song-top-20",
+      "source": "manifold",
+      "marketId": "9qO6y9sEId",
+      "text": "Will a song made mostly by AI reach the top 20 of the Billboard Hot 100 before 2027?",
+      "topic": "technology",
+      "decidedBy": "Billboard's Hot 100 chart, and the market creator's call on what counts as mostly AI, as resolved on Manifold.",
+      "closesAt": "2026-12-01T00:00:00Z",
+      "reviewedBy": "pending",
+      "reviewedOn": "pending"
+    }
+  ]
+}

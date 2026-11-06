@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/9qO6y9sEId",
+  "answer": {
+    "id": "9qO6y9sEId",
+    "slug": "acx-2026-will-an-aicreated-song-cha",
+    "question": "[ACX 2026] Will an AI-created song chart in the top 20 of the Billboard Hot 100 before 2027?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1798761540000,
+    "isResolved": false
+  }
+}

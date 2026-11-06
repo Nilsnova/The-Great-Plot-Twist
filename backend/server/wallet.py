@@ -71,6 +71,9 @@ WALLET_REASONS = (
     ("market_buy", SPEND),
     ("market_sell", EARN),
     ("market_fee", SPEND),
+    # Added by supabase/migrations/20261106100000_prediction_desk.sql (the prediction desk).
+    ("prediction_stake", SPEND),
+    ("prediction_payout", EARN),
 )
 
 

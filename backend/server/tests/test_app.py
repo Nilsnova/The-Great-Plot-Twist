@@ -29,6 +29,7 @@ SETTING_NAMES = (
     "CRON_SECRET",
     "DEMO_MODE",
     "FEATURE_FLAGS",
+    "HOST_PLAYER_IDS",
 )
 
 

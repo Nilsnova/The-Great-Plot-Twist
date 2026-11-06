@@ -44,8 +44,12 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
   let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null;
+  // Prediction desk (L5): the harbor's prediction kiosk opens it. Loaded on first use.
+  let desk=null,deskLoading=null;
+  function openDesk(){deskLoading??=import('./screens/predictions/desk.js').then(module=>{if(disposed)return null;desk=module.createDesk({container,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus()});return desk;});
+    deskLoading.then(panel=>panel?.open()).catch(error=>{deskLoading=null;console.error(error);hud.message('The prediction desk could not load. Try again.');});}
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active || caseUi?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();festival?.dispose();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:()=>!!(shell?.blocked || cinematics?.active || intro?.active || caseUi?.active || desk?.active), disposeVisuals(){cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();festival?.dispose();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !demo?.active && !world.busy && !chart.open }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -64,11 +68,12 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
   const applyCaseView=view=>{hud.setCaptain(view);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
   caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:applyCaseView,onArrival:node=>intro.setArrival(node)});
   const stopListening = on('interact', event => {hud.notify(event.id);if(!intro.active)caseUi.interact(event);});
+  const stopDesk=on('interact',event=>{if(event.id==='prediction_kiosk'&&!intro.active&&!caseUi.active)openDesk();});
   const stopPlots = on('plot_clicked', event => hud.notify(event.plot));
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    disposed=true;stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    disposed=true;stopListening();stopDesk();desk?.dispose(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose(); throw error;
   }
   const createCinematicDemo=new URLSearchParams(location.search).get('demo')==='1'?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
@@ -117,7 +122,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi };
   function dispose() {
     if(disposed)return;disposed=true;
-    touch.dispose();gamepad.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    touch.dispose();gamepad.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening(); stopDesk(); desk?.dispose(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     graphics.renderer.dispose(); container.replaceChildren(); delete window.__island;
   }
@@ -125,7 +130,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter}) {
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
-  }, { once: true });  return {dispose,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active,
+  }, { once: true });  return {dispose,hasOverlay:()=>intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||!!desk?.active,
     setMode(mode){audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
     async begin(resume=false){if(world.current?.id!=='lighthouse_isle')await world.goTo('lighthouse_isle',{fast:true});hud.start();intro.begin(resume);},
     startDemo(){return demo.start();}};

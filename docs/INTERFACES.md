@@ -57,19 +57,19 @@
 |---|---|---|---|
 | 200 | | It worked. | Show the result. |
 | 401 | `unauthorized` | No sign-in token, a malformed one, or one Supabase refused (wrong or expired). The sign-in code exchange also answers 401 to a code Supabase refuses, and the keep-alive to a missing or wrong secret. The answer carries the header `WWW-Authenticate: Bearer`. | Ask the player to sign in again. |
-| 403 | `forbidden` | Signed in, but not allowed. Planned for presenter-only routes (`require_host`, package A2). No route uses it yet. | Say "not allowed". Do not retry. |
-| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company. | Show the message. |
+| 403 | `forbidden` | Signed in, but not allowed. For presenter-only routes (`require_host`, package A2; the host ids are the setting `HOST_PLAYER_IDS`). `POST /api/predictions/settle` is the first route that uses it. | Say "not allowed". Do not retry. |
+| 404 | `not_found`, or a specific code | No such route, or no such thing, for example `ApiError(404, "no_such_island", "That island does not exist.")`. `GET /api/me` answers `player_not_set_up` for a signed-in player who has no profile or wallet row. `feature_off` means the feature flag of the route is off (the Island Exchange uses it; section 11, question 3, is still open). `no_such_company` is an unknown Exchange company, `no_such_question` a prediction desk question that is not on the list (or that nobody has read yet). | Show the message. |
 | 405 | `method_not_allowed` | The wrong method, for example `POST` to a `GET` route. | Fix the caller: it is a bug. |
-| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). | Show the message. After `already_applied`, treat the action as done. |
-| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). | Show the message. Do not resend it unchanged. |
-| 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades (more than 10 in 30 seconds by one player); the `Retry-After` header says how many seconds to wait. | Wait, then try again. |
+| 409 | `insufficient_funds`, `already_applied` | A conflict with what is saved: not enough coins, or this exact action was done before and nothing changed. Package A2 plans a 409 for a stale save version too. The Island Exchange adds `market_halted`, `holding_time`, `not_enough_units`, `daily_buy_cap` and `prices_stale` (the real prices are old, so trading is paused; nothing changed). The prediction desk adds `pool_closed`, `already_staked`, `daily_stake_cap`, `pool_open`, `outcome_conflict` and `stakes_changed`. | Show the message. After `already_applied`, treat the action as done. |
+| 422 | `validation_error`, `invalid_transaction` | The request does not fit: a word where a number belongs, a missing field, or a coin change the wallet rules refuse. Nothing changed. The Island Exchange adds `trade_too_small` and `trade_too_big` (a purchase over 500 coins; a sale has no upper limit). The prediction desk adds `stake_too_small` and `stake_too_big` (a stake is 1 to 50 coins). | Show the message. Do not resend it unchanged. |
+| 429 | `too_many_requests` | Too many requests in a short time, for example during a cooldown. The Island Exchange uses it for trades and the prediction desk for stakes (more than 10 in 30 seconds by one player); the `Retry-After` header says how many seconds to wait. | Wait, then try again. |
 | 500 | `server_error` | A bug on our side. The details go to the server log only. | Say "something went wrong". |
 | 502 | `database_error` | The database refused the call or answered strangely. | Say "something went wrong". |
-| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
+| 503 | `auth_not_configured`, `auth_unavailable`, `database_not_configured`, `database_unavailable`, `source_unavailable`, `not_configured`, `market_unavailable`, `predictions_unavailable` | The server, or a service it needs, is not set up or not reachable right now. (`market_unavailable`: the Island Exchange data files could not be read when the server started; the rest of the API works. `predictions_unavailable`: the same for the prediction desk, whose list of questions could not be read. `source_unavailable` on a prediction stake: Manifold cannot be checked right now (or the last good answer is more than 15 minutes old), so staking is paused. `source_unavailable` on `GET /api/market`: Binance has not answered once since this server instance started, so there are no prices to show.) | Try again later. For money the outcome is unknown: the coins may have moved before the call timed out, so look the `ref` up before you retry. |
 
 ## 2. Routes that exist now
 
-Seven routes exist, plus the three routes of the Island Exchange (below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
+Seven routes exist, plus the three routes of the Island Exchange and the four of the prediction desk (below) and FastAPI's list of routes. Start the API on your laptop ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)) to try them. The example answers below come from the real code; `health` and `config` are shown as they answer with an empty `.env`, the story in `content` is shortened, and `weather` is shown as it answered from the real Open-Meteo on 5 Nov 2026.
 
 ### GET /api/health
 
@@ -289,6 +289,74 @@ The rules in one list (numbers in `backend/server/market/rules.py` and `trade_ru
 
 The board needs the Exchange migration (it reads `market_bases`). Without a configured database the board still works from memory, which is good enough for a demo on a laptop but not shared between server instances.
 
+### The prediction desk (package L5)
+
+Hand-picked real questions from Manifold Markets (a play-money forecasting site), and play-coin pools that the winners share. The home of each route is the comment at the top of `backend/server/routes/predictions.py`; the rules are in `backend/server/predictions/` and are explained in decision D018 (provisional number, see [DECISIONS.md](DECISIONS.md)). Everything is behind the flag `predictions`, which stays off: while it is off, every route answers `404 feature_off` ("The prediction desk is closed for now."). Play money only: every answer of the list carries the line "Forecasting with play coins. Play money: no cash value. It cannot be bought or cashed out.", Manifold is credited in text, nothing links to a betting site, and Manifold's own probability is never shown.
+
+| Route | Who | What it does |
+|---|---|---|
+| `GET /api/predictions` | anyone | The questions that a person has read, with their pools (coins and captains on each side, and `payoutPerCoin`, about how many coins one staked coin brings back if that side wins, rounded down to 2 decimals), the status (`open`, `closed`, `settled`), `canStake` (false, for example, while the only reading of Manifold is a `stale` one older than 15 minutes), what Manifold says (`manifold.state`: `open`, `closed`, `decided`, `unknown`), where that reading comes from (`source`: `live`, `cache`, `stale`, `fallback`) and when (`fetchedAt`), the numbers of the rules, the credit line (`attribution`) and the play-money line (`playMoney`). Cached for 10 seconds (`Cache-Control: public, max-age=10, s-maxage=10`), so it takes no query parameters (`422`). |
+| `GET /api/predictions/mine` | signed in | The player's coins, what they staked today and how much they may still stake, their newest 50 stakes with the result (`won`, `lost`, `refunded`) and `host` (true or false). Sent with `Cache-Control: private, no-store`. |
+| `POST /api/predictions/stake` | signed in | `{questionId, side: "yes" or "no", amount, stakeId}`, with any extra field refused. `amount` is a whole number from 1 to 50. `stakeId` is made once per confirmed click (8 to 64 letters, digits, hyphens or underscores) and sent again on a retry. The ledger reference is `stake:<stakeId>`. |
+| `POST /api/predictions/settle` | host only (`HOST_PLAYER_IDS`) | `{questionId, outcome: "yes", "no" or "void"}`. The question id is the repeat key, because a pool settles once. A repeat answers `409 already_applied`. A retry after a `503` is always safe. |
+
+```text
+GET /api/predictions
+
+200 OK
+{"questions": [{"id": "avengers-opening-record", "text": "...", "topic": "culture",
+       "decidedBy": "...", "closesAt": "2026-12-17T12:00:00Z",
+       "status": "open", "canStake": true,
+       "outcome": null, "settlement": null, "settledAt": null,
+       "manifold": {"state": "open", "decidedAs": null, "decidedAt": null},
+       "sides": [{"side": "yes", "label": "Yes", "coins": 120, "players": 4, "payoutPerCoin": 1.63},
+                 {"side": "no",  "label": "No",  "coins": 80,  "players": 3, "payoutPerCoin": 2.42}],
+       "totalCoins": 200, "source": "cache", "fetchedAt": "2026-11-20T10:02:11Z"}],
+ "rules": {"minStake": 1, "maxStake": 50, "dailyCap": 200, "cutPercent": 5, "cutOf": "losing side",
+           "dayStarts": "00:00 Europe/Lisbon"},
+ "attribution": "Questions and results: Manifold Markets (manifold.markets), a play-money forecasting site.",
+ "playMoney": "Forecasting with play coins. Play money: no cash value. It cannot be bought or cashed out."}
+
+GET /api/predictions/mine
+Authorization: Bearer <token>
+
+200 OK
+{"coins": 940, "stakedToday": 70, "leftToday": 130, "dailyCap": 200, "host": false,
+ "stakes": [{"questionId": "avengers-opening-record", "text": "...", "side": "yes", "amount": 20,
+             "placedAt": "2026-11-20T10:01:00Z", "status": "settled", "result": "won", "payout": 34,
+             "settlement": "winners", "outcome": "yes", "settledAt": "2026-12-18T09:00:00Z"}]}
+
+POST /api/predictions/stake
+Authorization: Bearer <token>
+{"questionId": "avengers-opening-record", "side": "yes", "amount": 20, "stakeId": "q7x2k9m4ab"}
+
+200 OK
+{"questionId": "avengers-opening-record", "side": "yes", "amount": 20, "coins": 920, "stakedToday": 90,
+ "leftToday": 110, "sides": [{"side": "yes", "label": "Yes", "coins": 140, "players": 5, "payoutPerCoin": 1.54},
+                              {"side": "no", "label": "No", "coins": 80, "players": 3, "payoutPerCoin": 2.66}],
+ "totalCoins": 220}
+
+POST /api/predictions/settle
+Authorization: Bearer <token of a host>
+{"questionId": "avengers-opening-record", "outcome": "yes"}
+
+200 OK
+{"questionId": "avengers-opening-record", "outcome": "yes", "settlement": "winners",
+ "settledAt": "2026-12-18T09:00:00Z", "paidPlayers": 5, "paidCoins": 216, "cutCoins": 4}
+```
+
+The rules in one list (numbers in `backend/server/predictions/stake_rules.py`; the pool rules in `pools.py`, shared later with L6):
+
+- **A stake.** One stake per player and question, 1 to 50 whole coins, at most 200 coins per Lisbon day (the day starts at 00:00 Europe/Lisbon). A stake cannot be changed or taken back.
+- **Closing.** Each question has its own closing time in the list, at least 60 minutes before the moment that decides it. A question closes earlier if Manifold closes it or decides it. The database keeps the closing time it was given at the first stake and never changes it; at every stake the earlier of that stored time and the closing time the server knows at that moment counts. So a stored closing time never moves later. (Two server instances with different readings of Manifold can disagree for a short while.)
+- **How a pool pays out.** The winners share the pool in proportion to their stakes. A cut of **5 % of the losing side**, rounded down, leaves the game (a right forecast never gets back less than it staked). Rounding is against nobody: the payouts plus the cut add up to exactly the coins staked, each payout is less than one coin away from its exact share, and the leftover coins go to the largest remainders, then to the earliest stake. **Everybody gets a full refund** when the question is void (Manifold says CANCEL, MKT or anything else that is not YES or NO, or the host voids it), when nobody picked the winning side, and when everybody picked the same side.
+- **Settling (the minimum).** A host presses Settle YES, Settle NO or Void. YES or NO works only after the pool has closed, and if Manifold has decided, the choice must match (`409 outcome_conflict`); with only the recording, the host's word stands. Void works at any time. One SQL function pays everyone in one transaction, and a pool settles only once (a trigger also makes a settled pool final in the table itself). Automatic settlement (Manifold decided, then a 60-minute wait) comes after the minimum.
+- **Safe repeats.** The ledger ref of a stake is `stake:<stakeId>`, and the ref of every payout (a win and a refund) is `pool:<questionId>`. A repeated stake answers `409 already_applied` and changes nothing: it is the first thing the server checks after the speed limit, before the question, Manifold or the closing time, so it is the answer to a repeat whatever has changed since. A pool settles once.
+- **Manifold.** The server reads `https://api.manifold.markets/v0/market/{marketId}` (no key, 500 requests a minute per address) once per question per 2 minutes per server instance, with a 3 second timeout. If Manifold fails, the last good answer shows as `stale`, and a recorded real answer (`backend/content/predictions/recorded/`) as `fallback`. **A stake needs a real reading** (`live`, `cache` or `stale`): with only the recording the answer is `503 source_unavailable` and `canStake` is false. **A `stale` reading must not be older than 15 minutes** (`STALE_LIMIT_FOR_STAKE`): an older one is still shown (`source: "stale"`, with its `fetchedAt`) and still limits what a host may settle, but a stake on it answers `503 source_unavailable` and `canStake` is false, because the market may have been decided since and news could reach some captains first. In demo mode (`DEMO_MODE=true`) the server never calls Manifold, the recording counts as the reading, and staking works.
+- **Errors.** `401 unauthorized`, `403 forbidden` (settling when you are not a host), `404 feature_off`, `404 no_such_question`, `409 already_applied`, `409 pool_closed`, `409 already_staked`, `409 daily_stake_cap`, `409 insufficient_funds`, `409 pool_open`, `409 outcome_conflict`, `409 stakes_changed`, `422 validation_error`, `422 stake_too_small`, `422 stake_too_big`, `429 too_many_requests` (more than 10 stakes in 30 seconds), `503 predictions_unavailable`, `503 source_unavailable`, `503 database_unavailable` (the outcome is unknown; sending the same `stakeId` again is safe).
+
+The desk needs the prediction desk migration (it reads `prediction_pools`, `prediction_stakes` and `prediction_pool_sides`). Without a configured database the routes answer `503 database_not_configured`. The list of questions is `backend/content/predictions/questions.json`; every question stays `pending` (hidden, not stakeable) until a person has read the Manifold question and written their name and the date into `reviewedBy` and `reviewedOn`.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -386,6 +454,16 @@ The Island Exchange migration, `supabase/migrations/20261106010000_island_exchan
 
 `market_trade()` is the only way a trade happens (it checks that the coins and the fee follow from the units and the price, moves the coins through `apply_wallet_transaction()`, changes the position and writes the trade in one step). `market_set_base()` saves a company's base when two server instances look at the same moment. Both are for the server only.
 
+The prediction desk migration, `supabase/migrations/20261106100000_prediction_desk.sql` (package L5, run after the others), adds two tables, one view, one trigger and two functions. The rights follow the same plan: a visitor gets nothing, a signed-in player only reads, the server writes, and its update rights are per column.
+
+| Table or view | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `prediction_pools` | question: when staking closes, and how the pool ended | read every row | read, add, and change seven columns (the settlement), through `prediction_settle_pool()`; never delete | L5 |
+| `prediction_stakes` | stake: who staked how many coins on which side of which question | read their own rows | read, add (through `prediction_place_stake()`), and change the column `payout`; never delete | L5 |
+| `prediction_pool_sides` (a view) | side of a pool: the coins and the players, added up from the stakes | nothing | read | L5 |
+
+`prediction_place_stake()` is the only way a stake happens (it locks the pool, then the wallet, refuses a repeated stake id, a closed pool, a second stake on the question and a stake over the daily cap, moves the coins through `apply_wallet_transaction()` and writes the stake in one step). `prediction_settle_pool()` is the only way a pool is settled (it checks that the payouts name exactly the stakes that get paid and add up, pays everybody in player-id order and marks the pool settled in one step). Both are for the server only and run with the rights of their caller. The trigger `prediction_pools_keep_settled()` makes a settled pool final: any update of a settled `prediction_pools` row fails with `pool_settled`, even from the server, so a settled pool can never be reopened and paid a second time.
+
 Four database functions come with the first migration: `apply_wallet_transaction()` (the only way coins move, for the server only), `is_crew_member()` (used by the read rules of crews and seats, for signed-in players only), `handle_new_user()` (runs at sign-up and creates a profile, a wallet with 0 coins and an empty save) and `touch_updated_at()` (stamps `updated_at`).
 
 Details that other packages rely on:
@@ -436,6 +514,8 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `market_buy` | spend | Shares bought on the Island Exchange (migration `20261106010000`) |
 | `market_sell` | earn | Shares sold on the Island Exchange (same migration) |
 | `market_fee` | spend | The fee of an Island Exchange trade (same migration) |
+| `prediction_stake` | spend | Coins staked at the prediction desk (migration `20261106100000`); ref `stake:<stakeId>` |
+| `prediction_payout` | earn | Coins paid back from a prediction desk pool, for a win or a refund (same migration); ref `pool:<questionId>` |
 
 A new reason is one new migration plus the same pair added at the end of `WALLET_REASONS`, in one pull request ([ENGINEERING.md, recipe 4.7](ENGINEERING.md#47-add-a-wallet-reason)). Never rename a reason or change its direction. The reason names later packages have reserved are in [section 9](#9-reserved-interfaces).
 
@@ -525,7 +605,7 @@ Every name here is a draft until the freeze on Mon 9 (D009). Package ids are tho
 | L2 Your home islet | `GET /api/islet`; `POST /api/islet/build {plot, type, actionUid}`; the table `islets`; the event `plot_clicked`; `backend/content/buildings.json`; coins through `building_purchase` | draft |
 | L3 Captain's Table board and Night of Three Lights | `GET /api/board`; `POST /api/board/pin {cardId, actionUid}`; `POST /api/finale/signal {light, bearing, actionUid}`; `GET /api/world`; the tables `board_pins`, `finale_signals` and `world_state`; the event `finale`; rewards through `clue_reward` and `mystery_reward` | draft; defined by the story package S0 (skeleton under review) |
 | L4 Island Exchange (the market) | **Built** (on `main`; flag `market` off; its migration is not applied yet): `GET /api/market`, `GET /api/market/portfolio`, `POST /api/market/trade {companyId, side, units, actionUid}`; the tables `market_bases`, `market_positions` and `market_trades`; the reasons `market_buy`, `market_sell` and `market_fee`; `backend/content/market/companies.json` and `replay.json`; the setting `MARKET_MULTIPLIER`; the flag `market`. See section 2 and D017. | built, in review |
-| L5 Prediction desk | `GET /api/predictions`; `POST /api/predictions/stake {questionId, side, amount, stakeId}`; the table `prediction_stakes`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/questions.json`; the flag `predictions` | draft |
+| L5 Prediction desk | **Built** (flag `predictions` off; its migration is not applied yet): `GET /api/predictions`, `GET /api/predictions/mine`, `POST /api/predictions/stake {questionId, side, amount, stakeId}`, `POST /api/predictions/settle {questionId, outcome}` (host only); the tables `prediction_pools` and `prediction_stakes` and the view `prediction_pool_sides`; the functions `prediction_place_stake()` and `prediction_settle_pool()` and the trigger `prediction_pools_keep_settled()`; the reasons `prediction_stake` and `prediction_payout`; `backend/content/predictions/questions.json` (with `recorded/` and `samples/`); `backend/server/predictions/` (`pools.py` is shared with L6); the check `require_host` and the setting `HOST_PLAYER_IDS`. The paths changed from the roadmap: one folder per feature, as `market/` and `weather/`. See section 2 and decision D018 (provisional number). | built, in review |
 | L6 Sports predictions | `GET /api/sports`; `POST /api/sports/stake {fixtureId, pick, amount, stakeId}`; the tables `fixtures` and `sports_stakes`; the reasons `sports_stake` and `sports_payout`; the flag `sports` | draft |
 
 Every reserved table follows recipe 4.2, and every reserved reason recipe 4.7: neither exists until its package adds the migration.
@@ -547,10 +627,11 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 
 **The prediction desk (L5).**
 
-- Primary: Manifold Markets. Reading needs no key and allows 500 requests a minute per address, so only our server calls it, and it caches the answers. Manifold is a play-money site itself. Credit Manifold on the page.
-- Backup: Polymarket's Gamma API, no key. Use `/events/keyset`, because the old `/events` list is deprecated.
-- A hand-picked allow-list of 20 to 40 questions in `backend/content/questions.json`. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths or elections.
-- Settlement: once a question is resolved and a grace period of about an hour has passed, the winners share the pool. CANCEL, or any result other than YES or NO, refunds everyone.
+- **As built:** Manifold Markets is the only source. Reading needs no key and allows 500 requests a minute per address, so only our server calls it: once per question per 2 minutes per server instance, with a 3 second timeout and a recorded real answer per question as the fallback (`backend/content/predictions/recorded/`). In demo mode the server never calls Manifold. Manifold is a play-money site itself. The credit is **text only** (the `attribution` line of `GET /api/predictions`): nothing links to Manifold or to a betting site, and Manifold's own price (its probability) is **never shown**; the screen shows only the coins and the captains of our own pool.
+- **Not built yet:** Polymarket's Gamma API as a backup (use `/events/keyset`, because the old `/events` list is deprecated). Never Kalshi (its terms forbid caching and sharing the data) or Metaculus (it needs an account and hides the numbers).
+- **The paths changed from the roadmap** (one folder per feature, as `market/` and `weather/`): the allow-list is `backend/content/predictions/questions.json` (not `backend/content/questions.json`), the Manifold client is `backend/server/predictions/manifold.py` (not `adapters/predictions.py`) and the shared pool rules are `backend/server/predictions/pools.py` (not `game/pools.py`).
+- **The allow-list** is hand-picked: five questions in the minimum, up to 40 in the file. Never list questions automatically: user-made questions can be personal or in bad taste. No wars, deaths or elections (a list of blocked words checks our text of each question as a second guard). A question is shown only after a person has read it and written their name and the date into `reviewedBy` and `reviewedOn`; until then it is `pending`, hidden and not stakeable.
+- **Closing and refunds.** Each question closes at its own time, at least 60 minutes before the moment that decides it, or earlier if Manifold closes or decides it (the earlier of the time stored at the first stake and the time the server knows at that moment counts). Nobody can stake on a `stale` reading of Manifold that is older than 15 minutes. The winners share the pool, and 5 % of the losing side leaves the game. CANCEL, MKT or any result other than YES or NO refunds everyone, and so does a pool with no winners or with everybody on one side. In the minimum a host settles with a button (`POST /api/predictions/settle`, section 2); settling by itself once Manifold has decided and a grace period of about an hour has passed comes later.
 
 **Sports predictions (L6).**
 
