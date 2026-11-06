@@ -40,8 +40,8 @@ The team is turning the text mystery Plot Twist into a browser game: a top-down 
   account/save and crew services, live presence, Exchange v2, predictions and Lantern Duels.
   The case backend includes earned clues, the shared board, three-light finale, Relighting and
   free NPC orders, with solo and four-player API playthroughs over real scratch PostgreSQL.
-- **Online play is still being connected:** the G9 browser adapter is paused until Nils' laptop
-  returns. Backend multiplayer proofs do not mean the complete mystery is already playable in
+- **Online play is still being connected:** the G9 browser adapter is now actively being built in a cloud
+  session. Backend multiplayer proofs do not mean the complete mystery is already playable in
   normal browser play. [Status](docs/STATUS.md) records exact releases and flag checks.
 - **Current release:** festival and host tools deployed; sports code/database deployed with its flag
   off until its provider key and live-source proof are ready. Reliability, regression coverage,

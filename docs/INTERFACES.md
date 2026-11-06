@@ -97,8 +97,13 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false, "bulletin": false}, "auth": {"provider": "github", "supabaseUrl": ""}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "companion_llm": false, "case": false, "sign_in": false, "bulletin": false, "festival": false}, "auth": {"provider": "github", "supabaseUrl": ""}, "capabilities": {"hostCaseClock": false}}
 ```
+
+`flags` contains all eleven registered names, including `festival`. `capabilities.hostCaseClock` is
+true only while the installed host-clock route and enabled case flag make it available; host UI
+also requires the verified account's `isHost`. Current G9 integration answers are in the
+[cloud readiness note](handoff/g9-cloud-readiness.md).
 
 `auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
 
