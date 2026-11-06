@@ -378,6 +378,63 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Proposed in `feat/open-world-must`. Affects `GET /api/weather` (two new fields), `GET /api/bulletin` (new), three content files, package L3 (`world_state` keeps `relit_at` and provides the reader), package S3 (the next-lead line) and package L5 (weather questions settle on real fog only).
 
+## D018 · Prediction desk rules · 2026-11-06
+
+**Status:** Proposed in the L5 pull request (`feat/l5-prediction-desk`); accepted when reviewed by another
+teammate and merged. The number is provisional: the controller renumbers it at merge. Base: the roadmap (L5)
+and OPEN-WORLD section 8. Points marked "chosen here" need Nils' OK. The flag `predictions` stays off (Nils'
+decision 18).
+
+**Decision:**
+1. Play-coin pools only: the winners share the pool. No outside odds, no link to a betting site; Manifold's
+   own probability is never shown, only coins and captains per side and a rough payout per coin.
+2. Questions: a hand-picked allow-list in `backend/content/predictions/questions.json` (one folder per feature;
+   D016 and the roadmap said `backend/content/questions.json`), Manifold only, each read by a person
+   (`reviewedBy`); a `pending` question is hidden.
+3. Stakes (chosen here): one per player and question, 1 to 50 coins, at most 200 per Lisbon day. Staking closes
+   at the question's own time, at least 60 minutes before the deciding moment, earlier if Manifold closes or
+   decides. The database keeps the closing time it was given at the first stake and never changes it; at every
+   stake the earlier of that stored time and the time the server knows at that moment counts, so a stored
+   closing time never moves later (two server instances with different readings of Manifold can disagree for a
+   short while).
+4. Payout (chosen here; changed from OPEN-WORLD 8.1): the cut is 5 % of the LOSING side, rounded down, so a right
+   forecast never loses coins (with the old rule of 5 % of the whole pool, 99 coins on YES against 1 on NO would
+   pay the winners only 95). Largest-remainder rounding, ties to the earliest stake: payouts plus cut equal the
+   coins staked. Full refund when void (Manifold CANCEL, MKT or anything else, or the host), when nobody picked
+   the winner, and when everybody picked the same side.
+5. Settlement: a host button in the minimum (yes or no only after closing and only matching a decided Manifold;
+   void any time). Final, even if Manifold changes its mind later. Automatic settlement later: Manifold decided,
+   then a 60-minute grace, on the first request that touches the pool (no cron, D002).
+6. Database: reasons `prediction_stake` (spend, ref `stake:<stakeId>`) and `prediction_payout` (earn, ref
+   `pool:<questionId>`); tables `prediction_pools` and `prediction_stakes`, view `prediction_pool_sides`;
+   functions `prediction_place_stake()` and `prediction_settle_pool()`, each one transaction, pool lock first,
+   then wallets by player id. The server computes the payouts (`pools.py`); the database checks that they cover
+   exactly the paid stakes, add up and stay within one coin of the exact share. Update rights per column. A
+   trigger (`prediction_pools_keep_settled()`) makes a settled pool final in the table itself: it refuses every
+   update of a settled pool, so even a server bug cannot reopen a pool and pay it a second time (the ledger
+   ref `pool:<questionId>` alone would only stop a second payout to the same player).
+7. Data: Manifold, no key, cached 120 s per question per server instance, a recorded answer as the fallback;
+   demo mode never calls it. Polymarket later. Never Kalshi or Metaculus. A stake needs a real reading, and
+   (chosen here) a `stale` reading (the last good answer, kept because Manifold cannot be reached) must not be
+   older than 15 minutes: an older one is still shown and still limits a host's settlement, but nobody can
+   stake on it, because a market that was decided meanwhile would be news that only some captains know.
+8. API: `404 feature_off` while the flag is off; a repeat answers `409 already_applied` first; settle is host-only
+   (`HOST_PLAYER_IDS`, A2's contract).
+
+**Why:** forecasting fun with no money; numbers a student can explain line by line; no right forecast loses
+coins; no coin is ever created; a double click or a retry never pays twice.
+
+**Alternatives and trade-offs:** cut on the whole pool (rejected, see 4); rounding down with the leftovers in the
+cut (rejected: it rounds against the winners); several stakes or switching sides (not in the minimum); the split
+computed in SQL (rejected: the rule would be written twice in full); one stake table shared with L6 (left to L6);
+a link to Manifold (text credit only); no age limit for a stale reading (rejected: the information edge is real,
+see 7). Known limits: a player deleted while a pool is open takes their stake out of the pool; the cache is per
+instance; news can reach players before Manifold resolves, which is why pools close before the deciding moment
+(and why a stale reading is limited to 15 minutes).
+
+**Agreed by, PR and impact:** proposal for Nils, 6 Nov 2026. Affects L6 (`pools.py`), the list of wallet reasons
+(13), the kiosk screen and A2 (`hosts.py`).
+
 ## Next entry
 
 - **ID / date / title:**

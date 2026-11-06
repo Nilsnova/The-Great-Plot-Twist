@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/X3De8lrtBV1A8E63QA2p",
+  "answer": {
+    "id": "X3De8lrtBV1A8E63QA2p",
+    "slug": "will-global-warming-be-15-celsius-o-58af599f6ebf",
+    "question": "Will global warming be 1.5 °Celsius or higher in 2026, according to Berkeley Earth?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1799827140000,
+    "isResolved": false
+  }
+}

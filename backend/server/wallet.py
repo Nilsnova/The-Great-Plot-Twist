@@ -76,6 +76,9 @@ WALLET_REASONS = (
     # Added by supabase/migrations/20261106090000_exchange_leverage.sql (the Island Exchange v2).
     ("market_stake", SPEND),
     ("market_payout", EARN),
+    # Added by supabase/migrations/20261106100000_prediction_desk.sql (the prediction desk).
+    ("prediction_stake", SPEND),
+    ("prediction_payout", EARN),
 )
 
 

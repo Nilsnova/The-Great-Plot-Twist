@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-05T22:46:22Z",
+  "source": "GET https://api.manifold.markets/v0/market/q68phStPls",
+  "answer": {
+    "id": "q68phStPls",
+    "slug": "will-2026-be-the-warmest-year-ever",
+    "question": "Will 2026 be the warmest year ever?",
+    "outcomeType": "BINARY",
+    "mechanism": "cpmm-1",
+    "token": "MANA",
+    "closeTime": 1798761540000,
+    "isResolved": false
+  }
+}

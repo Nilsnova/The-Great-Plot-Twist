@@ -26,6 +26,7 @@ Where things are (one job per file):
     market/            the Island Exchange
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
+    predictions/       the prediction desk: hand-picked Manifold questions and play-coin pools
 """
 
 # The version the API reports at /api/health. It must match "version" in pyproject.toml

@@ -16,6 +16,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106050000_live_presence.sql](migrations/20261106050000_live_presence.sql) | Live presence (package A4): one helper function and five access rules for Supabase Realtime (policies on `realtime.messages`). No table. Run it after the foundation. It goes live with group 2; the flag `live_presence` stays off until the checks L1 to L7 have passed. See [The live presence migration](#the-live-presence-migration). |
 | [migrations/20261106070000_home_islet.sql](migrations/20261106070000_home_islet.sql) | The home islet (package L2): two tables and one function. Run it after the foundation. It needs nothing from the other migrations, but apply the files in time-stamp order. See [The home islet migration](#the-home-islet-migration). |
 | [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The Island Exchange version 2 migration (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
+| [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
 
 ## Project settings this migration relies on
 
@@ -67,8 +68,10 @@ The ledger accepts only the reasons in `wallet_reasons`, in this order. The Pyth
 | `market_fee` | spend | Fee paid on the Island Exchange: the opening fee and the closing fee of a position. *Added by the second migration, used again by the third.* |
 | `market_stake` | spend | Coins put into an Island Exchange position (the stake). *Added by the third migration.* |
 | `market_payout` | earn | Coins paid out when an Island Exchange position is closed. *Added by the third migration.* |
+| `prediction_stake` | spend | Coins staked on a question at the prediction desk. Ref `stake:<stakeId>`. *Added by the prediction desk migration.* |
+| `prediction_payout` | earn | Coins paid back from a prediction desk pool, for a win or a refund. Ref `pool:<questionId>`. *Added by the prediction desk migration.* |
 
-There are 13 reasons. The first eight come from the foundation migration, the next three from the second migration and the last two from the third. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
+The first eight come from the foundation migration, the next three from the second migration and the last two from the third. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
 
 The test `backend/server/tests/test_wallet_matches_migration.py` reads the migration and fails if its reasons, directions or starting balance differ from the Python code.
 
@@ -230,6 +233,29 @@ The kill switch, if a flood ever happens, is in [Changing the database later](#c
 **The finale reads it.** A signal station is never removed or downgraded: no role can update or delete a building. So "this player has a signal station" can only change from no to yes. In SQL it is `exists (select 1 from public.islet_buildings where player_id = <player> and building_type = 'signal_station')`. The table and column names are part of the contract in [INTERFACES.md](../docs/INTERFACES.md#your-home-islet-package-l2).
 
 After applying it, the three quick checks below show two more tables, two more policies and two more `authenticated` grant rows than before this migration. Run the home islet checks (steps H1 to H15) at the end of the manual test plan.
+
+## The prediction desk migration
+
+`migrations/20261106100000_prediction_desk.sql` is the database part of the prediction desk (hand-picked real questions from Manifold Markets, and play-coin pools that the winners share; see [INTERFACES.md, section 2](../docs/INTERFACES.md#the-prediction-desk-package-l5) and decision D018 in [DECISIONS.md](../docs/DECISIONS.md), whose number is provisional). Run it **after** the foundation migration, because it uses the wallet and the profiles from there. It does not need the Island Exchange migration, but it sorts after it, so the usual order (oldest first) is right. It is safe to run twice. Everything is explained in the file itself. **It is not applied to the Supabase project yet**, and the feature flag `predictions` stays off.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `prediction_pools` | One row per question: when staking closes (`closes_at`), and how the pool ended once it was settled (`status`, `outcome`, `settlement`, `settled_by`, `settled_at`, `cut_coins`, `paid_coins`). Created by the first stake or by the settlement, never deleted. It holds no running totals: they come from the stakes. | Only the server, through `prediction_place_stake()` (creates the row) and `prediction_settle_pool()` (settles it). |
+| `prediction_stakes` | One row per stake: the player, the side (`yes` or `no`), the coins, the `stake_id` the browser made for the click and the ledger `ref` (`stake:` plus that id). A player has one stake per question, and can use a `stake_id` once. `payout` is written when the pool is settled. | Only `prediction_place_stake()` adds a row; only `prediction_settle_pool()` writes `payout`. |
+| `prediction_pool_sides` | A view: the coins and the players on each side of each pool, added up from the stakes. It uses the rights of whoever reads it (`security_invoker`). | Nobody writes it. Only the server reads it. |
+| `prediction_pools_keep_settled()` | A trigger function, run by the trigger of the same name before every update of a `prediction_pools` row. If the row is already `settled` it raises `pool_settled`, so **a settled pool is final**: nothing can change it any more, not even the server, which holds the update right on seven of its columns. Without it, a server bug that wrote the table directly could set a settled pool back to `open` and settle it again with the other outcome (`pool:<questionId>` only stops a second payout to the same player, not one to the other player). The settlement itself is not in the way: it changes an open pool, once. | Nobody calls it. The trigger runs it. |
+| `prediction_place_stake()` | The only way a stake happens. In one step: check the arguments, make sure the pool row exists and **lock it**, lock the player's wallet, refuse a repeated stake id (code `23505`, message `already_applied`), refuse a settled pool or one past its closing time (the earlier of the stored and the given closing time counts), refuse a second stake on the question, refuse a stake over the daily cap, take the coins with `apply_wallet_transaction()` (`prediction_stake`) and write the stake. It *returns* a refusal such as `{"status": "refused", "reason": "daily_cap", "coinsLeft": 30}` with nothing changed, and *raises* `insufficient_funds` (from the wallet), a repeated stake id, or `bad_stake` / `wallet_not_found` (a bug on the server side). | Run by the server only. |
+| `prediction_settle_pool()` | The only way a pool is settled. In one step: check the arguments, make sure the pool row exists and **lock it**, refuse a pool that is settled already (`23505`, `already_applied`), refuse yes or no before the pool has closed (void works at any time), read the pool from its stakes, decide how it ends (`refund_void`, `refund_no_winners`, `refund_one_sided` or `winners`), check the payouts, pay everybody with `apply_wallet_transaction()` (`prediction_payout`, ref `pool:<questionId>`) in player-id order, write the payout of every stake and mark the pool settled. It *returns* a refusal (`pool_open` or `stakes_changed`) with nothing changed, and *raises* `bad_settlement` when the arguments or the payouts do not add up. | Run by the server only. |
+
+**The server works out the payouts, and the database checks them.** The rule is written once in full, in Python (`backend/server/predictions/pools.py`): the winners share the pool in proportion to their stakes, 5 % of the losing side (rounded down) leaves the game, the leftover coins go to the largest remainders and then to the earliest stake, and everybody gets a full refund when the question is void, when nobody picked the winning side or when everybody picked the same side. `prediction_settle_pool()` does not repeat the split. It checks what it is given: the payouts must name **exactly** the stakes that get paid (a refund: every stake; a win: every winning stake), they must add up to the coins staked minus the cut, each must be at least 1 coin, a refund must be the stake, and a win must be within one coin of the exact share (`abs(coins x W - stake x D) < W`, with W the winning coins and D the shared coins). If the server ever had a bug, the database refuses the settlement with `bad_settlement` instead of paying wrong coins, so **no coin is ever created or lost**. If the pool changed between the server's read and the call (a stake disappeared because its player was deleted, or a new stake arrived, which can happen to a void while staking is still open), the answer is `stakes_changed`, and the server reads again.
+
+**The lock order** is the same everywhere: the pool row first, then the wallets, by player id. A stake and a settlement of the same pool therefore happen one at a time, a pool settles once, and two settlements (or a settlement and a stake) can never wait for each other in a circle. The limits (the biggest stake, the daily cap, the cut) are passed in as arguments from `backend/server/predictions/stake_rules.py`, so the numbers live in one place.
+
+**The update rights are per column.** The server may update seven columns of `prediction_pools` (the settlement) and the column `payout` of `prediction_stakes`, and nothing else: it cannot change who staked what or how much, it cannot move a closing time, and it cannot delete a stake or a pool. (`select ... for update` needs the update right on at least one column, and the column grants give exactly that.) And once a pool is settled, even those seven columns are closed: the trigger `prediction_pools_keep_settled()` refuses every update of a settled pool with `pool_settled`.
+
+**A known limit:** if a player is deleted while a pool is open, their stake row goes with them (cascade), and those coins simply leave the game. No coin is ever created.
+
+After applying it, the three quick checks below show **twelve** tables and **twelve** policies (with the Island Exchange migration applied too), and there are **thirteen** wallet reasons. Run the checks P1 to P16 at the end of the manual test plan.
 
 ## Apply the migration
 
@@ -430,6 +456,15 @@ The three actors, and the database role behind each:
 | `exchange_events` | read | no access | own rows | yes |
 | `exchange_events` | insert | no access | no access | yes \*\* (through the three functions) |
 | `exchange_events` | update, delete | no access | no access | no access (the history is append-only: rows disappear only when their player is deleted, by cascade) |
+| `prediction_pools` | read | no access | all rows | yes |
+| `prediction_pools` | insert | no access | no access | yes \*\*\* (through `prediction_place_stake()` and `prediction_settle_pool()`) |
+| `prediction_pools` | update | no access | no access | yes \*\*\* (seven columns only, through `prediction_settle_pool()`; not `closes_at`, not `question_id`; and never a settled pool: a trigger refuses it with `pool_settled`) |
+| `prediction_pools` | delete | no access | no access | no access (a pool is never deleted) |
+| `prediction_stakes` | read | no access | own rows | yes |
+| `prediction_stakes` | insert | no access | no access | yes \*\*\* (through `prediction_place_stake()`) |
+| `prediction_stakes` | update | no access | no access | yes \*\*\* (the column `payout` only, through `prediction_settle_pool()`; not the player, the side or the amount) |
+| `prediction_stakes` | delete | no access | no access | no access (rows disappear only when their player is deleted, by cascade) |
+| `prediction_pool_sides` (a view) | read | no access | no access | yes |
 
 [1] The database lets the server update `wallets` and add ledger rows directly, because `apply_wallet_transaction()` runs with the server's rights and needs both. Our rule is that the server does this only through that function. A direct update skips the ledger row, so the balance no longer matches the ledger. Reading a balance in Python and then writing a new one can lose coins when two requests arrive together. The function cannot. A direct ledger insert would also skip the direction check, because that check lives in the function (a table rule cannot look into `wallet_reasons`). The foreign key still refuses an unknown reason, and the table still refuses a missing or blank `ref`.
 
@@ -443,6 +478,8 @@ The three actors, and the database role behind each:
 
 [6] The database lets the server add `islets` and `islet_buildings` rows and change `islets` rows directly, because `islet_build()` runs with the rights of the server. "Through `islet_build()`" in the table is our rule, not something the database enforces (the same pattern as `wallets` and the Exchange tables above). A direct write would skip the checks of `islet_build()`: the wallet, the timber, the one building per plot and the repeat check. Only the server holds that right, and the code never writes these tables directly. The server cannot edit or delete a building at all, and that is a lock: a signal station, once built, stays, and the finale counts on it.
 \*\* The database lets the server insert and update `exchange_positions` rows and add `exchange_events` rows directly, because the three functions run with the rights of the server. "Through `exchange_open_position()`" and the other function names in the table are our rule, not something the database enforces (the same pattern as `wallets` above). A direct write would skip the checks of the functions: the arithmetic, the limits, the repeat check and the wallet. Only the server holds that right, and the code never writes these tables directly.
+
+\*\*\* The database lets the server add `prediction_pools` and `prediction_stakes` rows directly, and update the listed columns directly, because the two functions run with the rights of the server. "Through `prediction_place_stake()`" and "through `prediction_settle_pool()`" in the table are our rule, not something the database enforces (the same pattern as the footnotes above). A direct write would skip the checks of the functions: the limits, the lock and the wallet. Only the server holds that right, and the code never writes these tables directly. What the database does enforce is the per-column update right: even the server cannot change a closing time, a side or an amount, and nobody can delete a stake or a pool. It also enforces the trigger: a settled pool cannot be changed again, so a direct write cannot reopen it.
 
 Rows disappear from the ledger only when their player is deleted: deleting a player (a `profiles` row, or the user under Authentication > Users) also deletes their save, wallet, ledger rows and seats, and the crews they started, through cascading foreign keys. No role needs a `delete` right on those tables for that.
 
@@ -472,6 +509,10 @@ Rows disappear from the ledger only when their player is deleted: deleting a pla
 | `exchange_close_position()` | no access | no access | yes |
 | `exchange_close_used_up()` | no access | no access | yes |
 | `exchange_events_id_seq` (the event history's id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
+| `prediction_place_stake()` | no access | no access | yes |
+| `prediction_settle_pool()` | no access | no access | yes |
+| `prediction_pools_keep_settled()` | no access | no access | no access, only its trigger runs it |
+| `prediction_stakes_id_seq` (the stakes' id counter) | no access | no access | no access, the table's own inserts do not need a right on it |
 
 "No access" means the database refuses with `permission denied`, or (for a row that belongs to someone else) shows or changes nothing.
 
@@ -506,6 +547,7 @@ Supabase's security advisor may warn that a signed-in player can run a `SECURITY
 - On the crew tables it writes `crews` and `crew_seats` only through the four crew functions, by team rule (note [5] of the matrix), and it may read, add and delete `crew_join_failures` rows (through `crew_find_by_code()`, which also deletes the rows older than the guessing window). It is the only role that may run `crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`.
 - On the entry kit table it may read and add `entry_profiles` rows (only through `grant_entry_kit()`; a profile is written once and the first ending counts, so no update and no delete), and it is the only role that may run `grant_entry_kit()`. That function is also the only place where the entry kit coins are paid.
 - On the home islet tables it can read both, add and change `islets` rows (the timber), and only add `islet_buildings` rows. It cannot edit or delete a building, and it cannot delete an islet. It is the only role that may run `islet_build()`. Like the wallet, this is a rule of the team more than a lock: see note [6] of the matrix.
+- On the prediction desk tables it can read both and the view, add rows to both, and update only the seven settlement columns of `prediction_pools` (and not at all once a pool is settled: a trigger refuses it) and the column `payout` of `prediction_stakes`. It cannot change a closing time, a side or an amount, and it cannot delete a stake or a pool. Like the wallet, the rule "only through the two functions" is a rule of the team more than a lock: see the third footnote of the matrix.
 - Because it skips RLS, the Python code must first check who is asking (the player's verified login token) and only then touch that player's rows.
 - It must never reach a browser, the repository, a log or a screenshot. It lives only in the `SUPABASE_SECRET_KEY` environment variable on Vercel, and in a local `.env` file that git ignores.
 - The browser only gets `SUPABASE_PUBLISHABLE_KEY` (as `VITE_SUPABASE_PUBLISHABLE_KEY`). That key is safe to show because the two locks above protect every table, and the browser has no right to write to any of them.
@@ -941,7 +983,7 @@ from (values
 ) as v(reason, delta);
 ```
 
-Expected: 8 rows, one per reason, with `balance_after` going 71, 72, 73, 74, 75, 74, 73, 74. Step 14 already showed that a ninth name (`cheat`) and a wrong direction are refused. Run the balance check from step 2: `balance` is 74 and `ledger_rows` is 10.
+Expected: 8 rows, one per reason, with `balance_after` going 71, 72, 73, 74, 75, 74, 73, 74. Step 14 already showed that a ninth name (`cheat`) and a wrong direction are refused. Run the balance check from step 2: `balance` is 74 and `ledger_rows` is 10. The two reasons of the prediction desk migration (`prediction_stake` and `prediction_payout`) are tested in step P1 and in P2 and P9, with their own users, so that the numbers of the steps 16 and 17 stay as they are.
 
 ### 16. Running the migration again is harmless
 
@@ -2032,6 +2074,346 @@ select public.islet_build('USER_C_ID', 'islet_signal_station', 'signal_station',
 Expected: the second tab waits until the first commits, and then answers `refused` with `plot_occupied`. C has 700 coins, 10 timber and one building: the wallet lock made the second build wait and then see the first. Delete user C when you are done.
 
 Delete the test users when you are done (**Authentication > Users**). Their islets and buildings go with them.
+
+### Prediction desk checks (steps P1 to P16, then R1 to R4)
+
+These steps test the prediction desk migration. Run them after the foundation migration and the prediction desk migration are both applied (the Island Exchange migration is not needed). Use **five new test users**, A, B, C, D and E (create them as in the set-up of this plan, so their balances start at 0), and replace `USER_A_ID` to `USER_E_ID` with their ids. The functions take their limits as arguments, so the blocks below pass them in: the closing time of the question (`now() + interval '1 day'`, or a time in the past), the biggest stake (50 coins), the daily cap (1000, so that the earlier steps cannot get in the way; step P5 uses 80) and the start of the day (here "one hour ago"). The pools have made-up question ids that start with `desk-`. The server's own questions have other ids, so these steps do not touch them.
+
+**P0. Set-up.** Give A, B, C and E 1000 coins and D only 20:
+
+```sql
+set local role service_role;
+select public.apply_wallet_transaction('USER_A_ID', 1000, 'kit_grant', 'desk-kit') as a,
+       public.apply_wallet_transaction('USER_B_ID', 1000, 'kit_grant', 'desk-kit') as b,
+       public.apply_wallet_transaction('USER_C_ID', 1000, 'kit_grant', 'desk-kit') as c,
+       public.apply_wallet_transaction('USER_D_ID', 20, 'kit_grant', 'desk-kit') as d,
+       public.apply_wallet_transaction('USER_E_ID', 1000, 'kit_grant', 'desk-kit') as e;
+```
+
+Expected: 1000, 1000, 1000, 20, 1000. We call the next block the **Desk check** and use it again below (default role). Change the id to look at another player:
+
+```sql
+select w.balance,
+       (select count(*) from public.prediction_stakes s where s.player_id = w.player_id) as stakes,
+       (select string_agg(t.reason || ' ' || t.delta || ' ' || t.ref, ', ' order by t.id)
+          from public.wallet_transactions t
+         where t.player_id = w.player_id and t.reason like 'prediction\_%') as ledger
+from public.wallets w
+where w.player_id = 'USER_A_ID';
+```
+
+**P1. The reasons.** Both are on the list, and there are 13 reasons in all (8 + 3 from the Exchange + 2 from the desk; 10 if the Exchange migration is not applied):
+
+```sql
+select reason, direction from public.wallet_reasons where reason like 'prediction\_%' order by reason;
+select count(*) as reasons from public.wallet_reasons;
+```
+
+Expected: `prediction_payout` earn and `prediction_stake` spend; `reasons` is 13.
+
+**P2. A stake.** Player A stakes 30 coins on YES in the pool `desk-one`:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-one', 'yes', 30, 'desk-a-1-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: `status` `done`, `balance` 970, `stakedToday` 30 and `sides` with one side: `yes`, 30 coins, 1 player. The Desk check for A shows `balance` 970, `stakes` 1 and `ledger` `prediction_stake -30 stake:desk-a-1-0001`.
+
+**P3. The same stake id twice changes nothing.** Run the block of P2 again:
+
+Expected: an error, message `already_applied` (error code `23505`, the same code as a repeated wallet ref). The Desk check for A is still 970, 1 stake, one ledger row. A repeat is answered `already_applied` even when the closing time has passed since, or when the amount is different.
+
+**P4. One stake per question.** A tries a second stake on `desk-one`, with another stake id and on the other side:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-one', 'no', 10, 'desk-a-1-0002', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: `status` `refused`, `reason` `already_staked`, `side` `yes`, `amount` 30. Nothing changed: the Desk check is still 970, 1 stake.
+
+**P5. The daily cap.** With a cap of 80 coins, A has already staked 30 today, so 50 more fit exactly and 10 more do not:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-two', 'yes', 50, 'desk-a-2-0001', now() + interval '1 day', 50, 80, now() - interval '1 hour') as result;
+```
+
+Expected: `status` `done`, `balance` 920, `stakedToday` 80. Now one more stake (a new run):
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-three', 'yes', 10, 'desk-a-3-0001', now() + interval '1 day', 50, 80, now() - interval '1 hour') as result;
+```
+
+Expected: `status` `refused`, `reason` `daily_cap`, `coinsLeft` 0. The Desk check for A: `balance` 920, `stakes` 2.
+
+**P6. A closed pool, and a stored closing time that never moves later.** B tries to stake on a pool whose closing time is one minute ago:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_B_ID', 'desk-closed', 'yes', 10, 'desk-b-4-0001', now() - interval '1 minute', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: `status` `refused`, `reason` `pool_closed`. Try again with a closing time tomorrow: the pool keeps the closing time it was given at the first stake (one minute ago) and never changes it, and the earlier of that and the new one counts, so the answer is `pool_closed` again:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_B_ID', 'desk-closed', 'yes', 10, 'desk-b-4-0002', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as result;
+```
+
+And A tries `desk-one` (which closes tomorrow) with a closing time from one minute ago, as the server does when Manifold has closed the market early:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-one', 'yes', 10, 'desk-a-1-0003', now() - interval '1 minute', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: `pool_closed` as well, because the earlier of the stored time (tomorrow) and the given time (one minute ago) counts. (A repeated stake id would have been answered `already_applied` first, so this call uses a new one.) The earlier time is not stored: a later call for `desk-one` that passes tomorrow again would be accepted again, until the stored time. That is why the server passes the closing time it knows at each moment. B still has 1000 coins and no stake, A is still at 920 with 2 stakes.
+
+**P7. Not enough coins.** D has 20 coins and tries to stake 30:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_D_ID', 'desk-poor', 'yes', 30, 'desk-d-4-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: an error `insufficient_funds`. D still has 20 coins and no stake, and the failed call left no pool row either:
+
+```sql
+select (select balance from public.wallets where player_id = 'USER_D_ID') as balance,
+       (select count(*) from public.prediction_stakes where player_id = 'USER_D_ID') as stakes,
+       (select count(*) from public.prediction_pools where question_id = 'desk-poor') as pool_rows;
+```
+
+Expected: 20, 0, 0.
+
+**P8. Staking the exact balance.** D stakes exactly the 20 coins:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_D_ID', 'desk-exact', 'no', 20, 'desk-d-4-0002', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: `status` `done`, `balance` 0.
+
+**P9. A settlement pays the winners.** This is the worked example A of the pool rules: A stakes 30 and B stakes 20 on YES, C stakes 50 on NO, in the pool `desk-pay`. YES wins. The pool holds 100 coins, 5 % of the 50 losing coins is 2.5, rounded down to 2, so the winners share 98 coins: exactly 58.8 and 39.2, which is 59 and 39 after the leftover coin goes to the larger remainder.
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-pay', 'yes', 30, 'desk-a-5-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as a,
+       public.prediction_place_stake('USER_B_ID', 'desk-pay', 'yes', 20, 'desk-b-5-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as b,
+       public.prediction_place_stake('USER_C_ID', 'desk-pay', 'no', 50, 'desk-c-5-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as c;
+```
+
+Expected: three results with `status` `done`. A has 890 coins, B 980 and C 950. First settle YES while staking is still open:
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-pay', 'yes', now() + interval '1 day', 5,
+  (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', case player_id when 'USER_A_ID' then 59 else 39 end) order by id)
+     from public.prediction_stakes where question_id = 'desk-pay' and side = 'yes'),
+  'host') as result;
+```
+
+Expected: `status` `refused`, `reason` `pool_open`, and `closesAt` tomorrow. Nothing was paid. Now the same with a closing time one minute ago (the server passes an earlier closing time when the question has closed):
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-pay', 'yes', now() - interval '1 minute', 5,
+  (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', case player_id when 'USER_A_ID' then 59 else 39 end) order by id)
+     from public.prediction_stakes where question_id = 'desk-pay' and side = 'yes'),
+  'host') as result;
+```
+
+Expected: `status` `done`, `settlement` `winners`, `paidPlayers` 2, `paidCoins` 98, `cutCoins` 2 and a `settledAt`. The Desk check for A now shows `balance` 949 and a second ledger row `prediction_payout 59 pool:desk-pay`; B has 1019 (`prediction_payout 39 pool:desk-pay`) and C still 950. The **Pool check** (default role) shows how the pool ended:
+
+```sql
+select p.status, p.outcome, p.settlement, p.settled_by, p.cut_coins, p.paid_coins,
+       (select string_agg(s.payout::text, ', ' order by s.id) from public.prediction_stakes s where s.question_id = p.question_id) as payouts
+from public.prediction_pools p
+where p.question_id = 'desk-pay';
+```
+
+Expected: `settled`, `yes`, `winners`, `host`, `cut_coins` 2, `paid_coins` 98, `payouts` `59, 39, 0` (the loser has a payout of 0). The 100 coins staked are the 98 paid plus the 2 that left the game.
+
+A stake on a settled pool is refused:
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_E_ID', 'desk-pay', 'yes', 10, 'desk-e-5-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as result;
+```
+
+Expected: `refused`, `pool_closed`.
+
+**P10. A pool settles once.** Run the settlement of P9 again (with the closing time in the past):
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-pay', 'yes', now() - interval '1 minute', 5,
+  (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', case player_id when 'USER_A_ID' then 59 else 39 end) order by id)
+     from public.prediction_stakes where question_id = 'desk-pay' and side = 'yes'),
+  'host') as result;
+```
+
+And then once with `'void'` and an empty list (`'[]'::jsonb`) instead:
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-pay', 'void', now() + interval '1 day', 5, '[]'::jsonb, 'host') as result;
+```
+
+Expected: an error each time, message `already_applied` (error code `23505`). The Pool check, the balances and the ledger are unchanged: not even void settles a pool twice.
+
+**P11. Wrong payouts are refused, and nothing is paid.** The pool `desk-wrong` is case A again: A 30 and B 20 on YES, C 50 on NO.
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-wrong', 'yes', 30, 'desk-a-6-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as a,
+       public.prediction_place_stake('USER_B_ID', 'desk-wrong', 'yes', 20, 'desk-b-6-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as b,
+       public.prediction_place_stake('USER_C_ID', 'desk-wrong', 'no', 50, 'desk-c-6-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as c;
+```
+
+Each statement below is the settlement of `desk-wrong` with a closing time in the past, as the server (role `service_role`) and with the payouts in the second column. Put `set local role service_role;` in front of each, run it, and then run the Pool check for `desk-wrong`: it still shows `open`.
+
+| The payouts (as the statement writes them) | Why it is wrong | Expected |
+|---|---|---|
+| A 60 and B 39 (`case player_id when 'USER_A_ID' then 60 else 39 end`, winners only) | 60 + 39 = 99, but the winners share 98 | error `bad_settlement` |
+| A 50 and B 48 (`... then 50 else 48 end`, winners only) | the sum is right, but 50 is far from the exact share 58.8 | error `bad_settlement` |
+| A 98 and B 0 (`... then 98 else 0 end`, winners only) | a payout of 0 coins | error `bad_settlement` |
+| A 98 (winners where `player_id = 'USER_A_ID'`) | the winner B is missing | `refused`, `stakes_changed` |
+| A 59, B 39 and C 1 (all three stakes, `... when 'USER_A_ID' then 59 when 'USER_B_ID' then 39 else 1 end`) | a loser is included | `refused`, `stakes_changed` |
+| outcome `void`, all three stakes, A 31, B 19 and C 50 | a refund must be the stake | error `bad_settlement` |
+
+The statement of the first row, as an example (the other rows change the `case` and the `where`):
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-wrong', 'yes', now() - interval '1 minute', 5,
+  (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', case player_id when 'USER_A_ID' then 60 else 39 end) order by id)
+     from public.prediction_stakes where question_id = 'desk-wrong' and side = 'yes'),
+  'host') as result;
+```
+
+Last, a split that is within one coin of the exact shares (58 and 40, where the exact shares are 58.8 and 39.2) is accepted, as the rule says. It is the only one of these statements that pays:
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-wrong', 'yes', now() - interval '1 minute', 5,
+  (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', case player_id when 'USER_A_ID' then 58 else 40 end) order by id)
+     from public.prediction_stakes where question_id = 'desk-wrong' and side = 'yes'),
+  'host') as result;
+```
+
+Expected: `status` `done`, `paidCoins` 98, `cutCoins` 2.
+
+**P12. Refunds are exact.** Three pools, each settled with payouts that are the stakes themselves (`'coins', amount`).
+
+- `desk-void`: A stakes 10 on YES and B stakes 20 on NO. Settle with outcome `void` while staking is still open (void works at any time).
+- `desk-nowin`: C stakes 25 on NO. Settle with outcome `yes` (nobody picked the winning side).
+- `desk-onesided`: A stakes 40 and B stakes 10, both on YES. Settle with outcome `yes` (everybody picked the same side).
+
+```sql
+set local role service_role;
+select public.prediction_place_stake('USER_A_ID', 'desk-void', 'yes', 10, 'desk-a-7-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as a,
+       public.prediction_place_stake('USER_B_ID', 'desk-void', 'no', 20, 'desk-b-7-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as b,
+       public.prediction_place_stake('USER_C_ID', 'desk-nowin', 'no', 25, 'desk-c-8-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as c,
+       public.prediction_place_stake('USER_A_ID', 'desk-onesided', 'yes', 40, 'desk-a-9-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as d,
+       public.prediction_place_stake('USER_B_ID', 'desk-onesided', 'yes', 10, 'desk-b-9-0001', now() + interval '1 day', 50, 1000, now() - interval '1 hour') as e;
+```
+
+Expected: five results with `status` `done`. Now the three settlements:
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-void', 'void', now() + interval '1 day', 5,
+         (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', amount) order by id) from public.prediction_stakes where question_id = 'desk-void'), 'host') as void,
+       public.prediction_settle_pool('desk-nowin', 'yes', now() - interval '1 minute', 5,
+         (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', amount) order by id) from public.prediction_stakes where question_id = 'desk-nowin'), 'host') as no_winners,
+       public.prediction_settle_pool('desk-onesided', 'yes', now() - interval '1 minute', 5,
+         (select jsonb_agg(jsonb_build_object('stakeRowId', id, 'coins', amount) order by id) from public.prediction_stakes where question_id = 'desk-onesided'), 'host') as one_sided;
+```
+
+Expected: `void` is `done` with `settlement` `refund_void`, `paidCoins` 30 and `cutCoins` 0; `no_winners` is `refund_no_winners` with `paidCoins` 25; `one_sided` is `refund_one_sided` with `paidCoins` 50 and `cutCoins` 0. Every player has exactly the coins they had before these stakes (A 977, B 1039, C 900, using the numbers above), and a refund of one coin less than the stake would have been refused with `bad_settlement`.
+
+**P13. An empty pool settles and pays nothing.** Nobody staked on `desk-empty`:
+
+```sql
+set local role service_role;
+select public.prediction_settle_pool('desk-empty', 'yes', now() - interval '1 minute', 5, '[]'::jsonb, 'host') as result;
+```
+
+Expected: `status` `done`, `settlement` `refund_no_winners`, `paidPlayers` 0, `paidCoins` 0, `cutCoins` 0. The pool is settled, so a stake on it is refused with `pool_closed` (repeat the stake of P9 with `'desk-empty'` and a new stake id).
+
+**P14. Privileges.** Players can read their own stakes and every pool, and nothing else. The closing time and the amounts cannot be changed, not even by the server.
+
+```sql
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub": "USER_A_ID", "role": "authenticated"}', true);
+select (select count(*) from public.prediction_stakes) as stakes_seen,
+       (select count(*) from public.prediction_stakes where player_id = 'USER_B_ID') as b_stakes_seen,
+       (select count(*) from public.prediction_pools) as pools_seen;
+```
+
+Expected: `stakes_seen` equal to A's own stakes (the Desk check shows the number), `b_stakes_seen` 0 and `pools_seen` all the pools (at least 10). Now replace the last line with one statement from the table and run again, as player A. Each one fails with `permission denied`:
+
+| Statement as player A | Expected error mentions |
+|---|---|
+| `insert into public.prediction_stakes (question_id, player_id, side, amount, stake_id, ref) values ('desk-one', 'USER_A_ID', 'yes', 1, 'desk-hack-0001', 'stake:desk-hack-0001');` | `permission denied for table prediction_stakes` |
+| `update public.prediction_stakes set amount = 1000000;` | `permission denied for table prediction_stakes` |
+| `delete from public.prediction_stakes;` | `permission denied for table prediction_stakes` |
+| `update public.prediction_pools set status = 'open';` | `permission denied for table prediction_pools` |
+| `delete from public.prediction_pools;` | `permission denied for table prediction_pools` |
+| `select * from public.prediction_pool_sides;` | `permission denied for view prediction_pool_sides` |
+| `select public.prediction_place_stake('USER_A_ID', 'desk-hack', 'yes', 1, 'desk-hack-0002', now() + interval '1 day', 50, 1000, now());` | `permission denied for function prediction_place_stake` |
+| `select public.prediction_settle_pool('desk-hack', 'void', now(), 5, '[]'::jsonb, 'host');` | `permission denied for function prediction_settle_pool` |
+
+Change the first line to `set local role anon;` (and drop the `set_config` line) and run `select * from public.prediction_pools;`, then the same for `prediction_stakes` and `prediction_pool_sides`. Expected: `permission denied for table ...` each time. Even the server cannot change who staked what, or delete anything:
+
+```sql
+set local role service_role;
+update public.prediction_stakes set amount = 1;
+```
+
+Expected: `permission denied for table prediction_stakes`. The same for `update public.prediction_stakes set side = 'no';`, `delete from public.prediction_stakes;`, `delete from public.prediction_pools;` and `update public.prediction_pools set closes_at = now();`. The server may read the view: `select * from public.prediction_pool_sides;` works.
+
+**P15. Deleting a player, and running the migration again.** Delete the five test users under **Authentication > Users**. Then run:
+
+```sql
+select (select count(*) from public.prediction_stakes where player_id in ('USER_A_ID', 'USER_B_ID', 'USER_C_ID', 'USER_D_ID', 'USER_E_ID')) as stakes,
+       (select count(*) from public.prediction_pools where question_id like 'desk-%') as pools;
+```
+
+Expected: `stakes` 0 (the stakes go with their players, and those coins leave the game), and `pools` is still 10 or more: a pool is never deleted. Finally paste the whole prediction desk migration into the SQL editor again and run it. Expected: no error, `select count(*) from public.wallet_reasons;` still shows 13 (10 without the Exchange migration), and the pools are unchanged.
+
+**P16. A settled pool is final.** The function refuses a second settlement (P10), and the table refuses it too: once a pool is settled, nothing can change its row any more, not even the server, which holds the update right on seven of its columns. Without this, a server bug that wrote the table directly could set the pool `desk-pay` (settled in P9) back to open and settle it again with the other outcome, and the players on the other side would be paid from the same coins. Try it as the server:
+
+```sql
+set local role service_role;
+update public.prediction_pools
+   set status = 'open', outcome = null, settlement = null, settled_by = null,
+       settled_at = null, cut_coins = null, paid_coins = null
+ where question_id = 'desk-pay';
+```
+
+Expected: the error `pool_settled`, and nothing changes. Any other change to a settled pool fails in the same way:
+
+```sql
+set local role service_role;
+update public.prediction_pools set paid_coins = 1000000 where question_id = 'desk-pay';
+```
+
+Expected: `pool_settled` again. Run the **Pool check** of P9 once more: it still shows `settled`, `yes`, `winners`, `host`, `cut_coins` 2 and `paid_coins` 98. (Run this step after P15: it also shows that the trigger is still there after the migration was run a second time. The pool `desk-pay` is still there, because a pool is never deleted.) A pool that is still open can be settled as before (P9, P12): the trigger only looks at a row that is already settled.
+
+**The race checks (R1 to R4).** These prove that the locks work. Each needs two query tabs of the SQL editor. In the first tab, run the block that ends with `select pg_sleep(10);`: it keeps its transaction (and so its locks) open for 10 seconds. Within 5 seconds, run the block in the second tab. The second one must **wait** (its run takes several seconds) and then give the answer written below. Use user E for R1 and the pools below for the rest, and start R2 and R3 only after the stakes of their first step exist.
+
+- **R1. The same player on two questions: the daily cap holds.** Tab 1: `set local role service_role; select public.prediction_place_stake('USER_E_ID', 'desk-r1a', 'yes', 150, 'desk-e-r1a-0001', now() + interval '1 day', 150, 200, now() - interval '1 hour'); select pg_sleep(10);` Tab 2: `set local role service_role; select public.prediction_place_stake('USER_E_ID', 'desk-r1b', 'yes', 100, 'desk-e-r1b-0001', now() + interval '1 day', 150, 200, now() - interval '1 hour');` Expected: tab 2 waits, then answers `refused`, `daily_cap`, `coinsLeft` 50. Without the wallet lock it would have let the second stake through.
+- **R2. Two settlements of one pool: one pays, one is refused.** First place the stakes like in P9, in the pool `desk-r2` and with new stake ids such as `desk-a-r2-0001`: A 30 and B 20 on YES, C 50 on NO. Then tab 1 and tab 2 run the settlement of P9 with `'desk-r2'` instead of `'desk-pay'` and a closing time one minute ago, tab 1 with `select pg_sleep(10);` after it. Expected: tab 1 `done`, tab 2 waits and then fails with `already_applied`. The ledger has exactly two `prediction_payout` rows with the ref `pool:desk-r2`.
+- **R3. A stake during a settlement waits, then finds the pool closed.** First place the stakes A 10 on YES and B 10 on NO in the pool `desk-r3` (new stake ids such as `desk-a-r3-0001`). Tab 1 settles it as `void` like in P12 (the payouts are the stakes) followed by `select pg_sleep(10);`. Tab 2: E stakes 10 on `desk-r3`. Expected: tab 2 waits and then answers `refused`, `pool_closed`.
+- **R4. The same stake id twice at the same moment: one stake.** Tab 1: A stakes 10 on `desk-r4` with the stake id `desk-a-r4-0001`, followed by `select pg_sleep(10);`. Tab 2: the same call. Expected: tab 2 waits and then fails with `already_applied`. A has one stake on `desk-r4` and was charged 10 coins once (the Desk check for A shows one ledger row `prediction_stake -10 stake:desk-a-r4-0001`).
+
+Delete the test users when you are done (**Authentication > Users**). Their stakes go with them.
 
 ## Changing the database later
 

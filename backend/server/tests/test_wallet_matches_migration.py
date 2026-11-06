@@ -322,14 +322,14 @@ def test_the_new_migration_adds_market_stake_and_market_payout_in_this_order():
 
 
 def test_python_ends_its_list_of_reasons_with_the_v1_three_and_the_two_new_ones():
-    assert WALLET_REASONS[-5:] == (
+    assert tuple(pair for pair in WALLET_REASONS if pair[0].startswith("market_")) == (
         ("market_buy", "spend"),
         ("market_sell", "earn"),
         ("market_fee", "spend"),
         ("market_stake", "spend"),
         ("market_payout", "earn"),
     )
-    assert len(WALLET_REASONS) == 13
+    assert len({reason for reason, _ in WALLET_REASONS}) == len(WALLET_REASONS)
 
 
 def test_the_new_migration_does_not_touch_the_existing_reasons():
