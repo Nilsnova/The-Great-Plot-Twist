@@ -175,13 +175,6 @@
     "log": "captures/20261106_G9-C1-after/chaos.log"
   },
   {
-    "id": "a11y",
-    "command": "node scripts/check-a11y.js",
-    "code": 0,
-    "ms": 12577,
-    "log": "captures/20261106_G9-C1-after/a11y.log"
-  },
-  {
     "id": "build-stamp",
     "command": "node scripts/check-build-stamp.js",
     "code": 0,
@@ -210,39 +203,11 @@
     "log": "captures/20261106_G9-C1-after/claude-islet.log"
   },
   {
-    "id": "tests",
-    "command": "npm test",
-    "code": 0,
-    "ms": 10222,
-    "log": "captures/20261106_G9-C1-after/tests.log"
-  },
-  {
-    "id": "build",
-    "command": "npm run build",
-    "code": 0,
-    "ms": 1679,
-    "log": "captures/20261106_G9-C1-after/build.log"
-  },
-  {
     "id": "intro",
     "command": "node scripts/check-intro.js",
     "code": 0,
     "ms": 8467,
     "log": "captures/20261106_G9-C1-after/intro.log"
-  },
-  {
-    "id": "loading",
-    "command": "node scripts/check-loading.js",
-    "code": 0,
-    "ms": 5355,
-    "log": "captures/20261106_G9-C1-after/loading.log"
-  },
-  {
-    "id": "csp",
-    "command": "node scripts/check-csp.js",
-    "code": 0,
-    "ms": 8560,
-    "log": "captures/20261106_G9-C1-after/csp.log"
   },
   {
     "id": "call-states",
@@ -252,10 +217,45 @@
     "log": "captures/20261106_G9-C1-after/call-states.log"
   },
   {
+    "id": "tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 10566,
+    "log": "captures/20261106_G9-C1-after/tests.log"
+  },
+  {
+    "id": "build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 1747,
+    "log": "captures/20261106_G9-C1-after/build.log"
+  },
+  {
+    "id": "loading",
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 4751,
+    "log": "captures/20261106_G9-C1-after/loading.log"
+  },
+  {
+    "id": "csp",
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 5353,
+    "log": "captures/20261106_G9-C1-after/csp.log"
+  },
+  {
+    "id": "a11y",
+    "command": "node scripts/check-a11y.js",
+    "code": 0,
+    "ms": 16047,
+    "log": "captures/20261106_G9-C1-after/a11y.log"
+  },
+  {
     "id": "online",
     "command": "node scripts/check-online-golden.js",
     "code": 0,
-    "ms": 8387,
+    "ms": 8477,
     "log": "captures/20261106_G9-C1-after/online.log"
   }
 ]

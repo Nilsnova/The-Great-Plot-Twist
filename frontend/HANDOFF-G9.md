@@ -4,6 +4,20 @@ Checkpoint notes and server requests for Claude. All authored changes stay under
 The setup update keeps G9 on the laptop; G10–G16 run in Codex cloud. G10 publishes the case contract on
 `feat/case-backend`; do not use an older draft as the final route contract.
 
+## Cloud handoff: laptop work stopped cleanly (6 Nov 2026, Lisbon; handoff commit accompanies this note)
+
+Nils explicitly moves the continuation to a cloud session because the laptop is closing. This
+supersedes the old laptop-only setup. Read `CLOUD-HANDOVER-G9.md` then the full portable `G9-BRIEF.md`.
+Stable stream 2 is committed and pushed at **`c8e94d7`**. Main last verified: `60f7fd0`, via `93386f8`.
+This handoff adds only tested, unused auth storage/return helpers and portable instructions; no
+sign-in wiring is claimed. Latest full unit suite: **1,127 passed / 93 files**. Production build and
+117-file/twelve-line spoiler guard pass; recorded online, loading, CSP and a11y are green.
+The regression manifest remains **37/37 green**, refreshed for the helper handoff. Exact results:
+`captures/20261106_G9-C1/cloud-handoff-verification.json`.
+Resume at **stream 3**, then 4–5 to finish checkpoint 1. Checkpoints 2–5 and overflow remain.
+No live OAuth/database/Realtime or deployed proof. Do not resume laptop implementation unless Nils
+requests it. The cloud session has all necessary code, brief, contracts and evidence on this branch.
+
 ## G9 streams done so far: real adapter core (6 Nov 2026, Lisbon; stream 2 commit accompanies this note)
 
 This is a partial checkpoint 1, not its completion. Merged main `60f7fd0` via `93386f8`; adopted A4's
@@ -64,7 +78,7 @@ Decisions for Nils: none required for checkpoint 0.
   `createProblemDescription`. UI call-state's optional `reportLink` is filled throughout in stream 5.
 - `security-headers.js`: `buildSecurityHeaders(url?, {platformConfig})`, `toVercelHeaders(headers)`;
   exact bare HTTPS Supabase origin only; source-of-truth drift fails. Current main has no headers.
-- Next: commit stream 2, run the secret scan, then stream 3 (auth) followed by streams 4–5.
+- Next: cloud continuation at stream 3 (auth), then streams 4–5. Stream 2 is pushed at c8e94d7.
   Supabase 2.118.0 is installed from main. The module/API-type review is complete.
   Browser/GPU work remains root-only and sequential. Keep all stream gates and the full checkpoint driver.
 - New evidence stays below 3 MB; use relative paths. Extra unchanged captures remain in local test cache.

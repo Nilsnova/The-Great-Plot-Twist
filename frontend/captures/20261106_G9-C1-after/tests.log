@@ -6,11 +6,11 @@
  RUN  v5.1.0 .
 
 
- Test Files  91 passed (91)
-      Tests  1096 passed (1096)
-   Start at  19:18:08
-   Duration  9.06s (tests 57%, import 32%, transform 7%, worker 3%)
+ Test Files  93 passed (93)
+      Tests  1127 passed (1127)
+   Start at  19:25:04
+   Duration  9.66s (tests 57%, import 31%, transform 8%, worker 3%)
 
-    Isolate  91 workers spawned · ~379ms startup each (spawn + environment, per file)
-             at least ~4.55s faster with isolate: false — reuses workers across files instead of one per file
+    Isolate  93 workers spawned · ~404ms startup each (spawn + environment, per file)
+             at least ~4.97s faster with isolate: false — reuses workers across files instead of one per file
 

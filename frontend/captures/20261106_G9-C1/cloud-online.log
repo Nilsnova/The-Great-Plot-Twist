@@ -1,0 +1,179 @@
+
+> the-great-plot-twist@0.1.0 test:online
+> npm run build && node scripts/check-online-golden.js
+
+
+> the-great-plot-twist@0.1.0 build
+> vite build && node scripts/check-spoilers.js
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 258 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/build-stamp.json                             0.08 kB │ gzip:   0.10 kB
+dist/ui-kit.html                                  0.66 kB │ gzip:   0.40 kB
+dist/index.html                                   2.02 kB │ gzip:   0.76 kB
+dist/asset-library.html                           2.13 kB │ gzip:   1.03 kB
+dist/.vite/manifest.json                         23.58 kB │ gzip:   3.46 kB
+dist/assets/game-CuLBcMVK.css                     0.04 kB │ gzip:   0.06 kB
+dist/assets/others-C2T4LAEk.css                   0.30 kB │ gzip:   0.24 kB
+dist/assets/hints-BvEjZ1Og.css                    0.57 kB │ gzip:   0.33 kB
+dist/assets/shortcuts-COSQtU7-.css                0.59 kB │ gzip:   0.33 kB
+dist/assets/rewards-e_ANWQxk.css                  0.59 kB │ gzip:   0.36 kB
+dist/assets/log-c-pJaD9V.css                      0.87 kB │ gzip:   0.39 kB
+dist/assets/kit-gallery-vgg6AGHm.css              1.38 kB │ gzip:   0.60 kB
+dist/assets/account-Br-x_9Vr.css                  1.60 kB │ gzip:   0.60 kB
+dist/assets/bulletin-DMiWWYLX.css                 1.60 kB │ gzip:   0.67 kB
+dist/assets/panel-bVlOn_FU.css                    2.34 kB │ gzip:   0.88 kB
+dist/assets/presence-CR3FMZdL.css                 2.40 kB │ gzip:   0.88 kB
+dist/assets/partners-CJ13KFCu.css                 2.93 kB │ gzip:   0.89 kB
+dist/assets/workshop-BVMU97A2.css                 3.03 kB │ gzip:   1.22 kB
+dist/assets/cinematic-demo-DaoKNOiC.css           3.27 kB │ gzip:   1.04 kB
+dist/assets/kit-CF1sEVK-.css                      6.36 kB │ gzip:   2.13 kB
+dist/assets/controller-BiGDP6uU.css               9.91 kB │ gzip:   2.78 kB
+dist/assets/shell-C6vm81aC.css                   10.76 kB │ gzip:   3.20 kB
+dist/assets/game-B9037jrs.css                    13.86 kB │ gzip:   3.77 kB
+dist/assets/intro-story-D07Wp8Mk.js               0.05 kB │ gzip:   0.07 kB
+dist/assets/gamepad-Dv-c8pm5.js                   0.05 kB │ gzip:   0.06 kB
+dist/assets/intent-Bw8343Ry.js                    0.05 kB │ gzip:   0.07 kB
+dist/assets/settlement-BVLwcVJO.js                0.06 kB │ gzip:   0.07 kB
+dist/assets/controller-C43J3hDj.js                0.06 kB │ gzip:   0.08 kB
+dist/assets/preferences--dZT-qzz.js               0.06 kB │ gzip:   0.08 kB
+dist/assets/format-B1JXrubu.js                    0.16 kB │ gzip:   0.14 kB
+dist/assets/events-C31BJoij.js                    0.18 kB │ gzip:   0.15 kB
+dist/assets/intro-journal-DJj67nNK.js             0.18 kB │ gzip:   0.14 kB
+dist/assets/beam-math-O9vLvuET.js                 0.23 kB │ gzip:   0.19 kB
+dist/assets/local-start-B3OooAKH.js               0.30 kB │ gzip:   0.23 kB
+dist/assets/pause-lxMvLkGX.js                     0.34 kB │ gzip:   0.25 kB
+dist/assets/contract-CZypeDED.js                  0.43 kB │ gzip:   0.30 kB
+dist/assets/visible-clock-DWOEInPi.js             0.44 kB │ gzip:   0.29 kB
+dist/assets/button-BTb4MpEB.js                    0.44 kB │ gzip:   0.30 kB
+dist/assets/panel-BL3PoS8l.js                     0.45 kB │ gzip:   0.31 kB
+dist/assets/dom-BE8XS1OM.js                       0.50 kB │ gzip:   0.32 kB
+dist/assets/info-CRAgeAO7.js                      0.52 kB │ gzip:   0.37 kB
+dist/assets/progress-yDNkDTr_.js                  0.52 kB │ gzip:   0.33 kB
+dist/assets/uiKit-DMDQ-Kh2.js                     0.57 kB │ gzip:   0.38 kB
+dist/assets/kits-LdcaTexU.js                      0.62 kB │ gzip:   0.29 kB
+dist/assets/extensions-CdpB2987.js                0.65 kB │ gzip:   0.39 kB
+dist/assets/modulepreload-polyfill-P2Xu9kJm.js    0.67 kB │ gzip:   0.38 kB
+dist/assets/screens-D18ve9zg.js                   0.67 kB │ gzip:   0.44 kB
+dist/assets/counter-ZQ7aiccc.js                   0.69 kB │ gzip:   0.44 kB
+dist/assets/logic-AxTj143E.js                     0.70 kB │ gzip:   0.44 kB
+dist/assets/frame-state-UZ8fiBuR.js               0.70 kB │ gzip:   0.47 kB
+dist/assets/report-link-Dy3YTwFc.js               0.71 kB │ gzip:   0.44 kB
+dist/assets/resources-D1pdI7rL.js                 0.77 kB │ gzip:   0.46 kB
+dist/assets/captions-view-B5zgay94.js             0.91 kB │ gzip:   0.55 kB
+dist/assets/shortcuts-CkBoTgYa.js                 0.96 kB │ gzip:   0.57 kB
+dist/assets/reveal-V8JdwYmd.js                    0.97 kB │ gzip:   0.57 kB
+dist/assets/helpers-Bhm_1_xz.js                   1.07 kB │ gzip:   0.61 kB
+dist/assets/reasons-C5cTcHCS.js                   1.13 kB │ gzip:   0.51 kB
+dist/assets/logic-DpC8Chk3.js                     1.16 kB │ gzip:   0.63 kB
+dist/assets/art-CYevqOc9.js                       1.17 kB │ gzip:   0.73 kB
+dist/assets/weather-Bgeg8eTz.js                   1.27 kB │ gzip:   0.75 kB
+dist/assets/intent-Bec6LWq6.js                    1.37 kB │ gzip:   0.78 kB
+dist/assets/subpages-orY_cngS.js                  1.38 kB │ gzip:   0.73 kB
+dist/assets/state-DWl8ze_6.js                     1.39 kB │ gzip:   0.65 kB
+dist/assets/relighting-D9rdH2My.js                1.41 kB │ gzip:   0.77 kB
+dist/assets/unavailable-DbslxiYo.js               1.49 kB │ gzip:   0.82 kB
+dist/assets/festival-DicRWhZb.js                  1.53 kB │ gzip:   0.84 kB
+dist/assets/rewards-Btc05cjI.js                   1.55 kB │ gzip:   0.81 kB
+dist/assets/credits-B3pI-x3c.js                   1.57 kB │ gzip:   0.79 kB
+dist/assets/preload-helper-DclECHGd.js            1.63 kB │ gzip:   0.83 kB
+dist/assets/accusation-B_YXnkBN.js                1.69 kB │ gzip:   0.91 kB
+dist/assets/preferences-Cget2aV_.js               1.85 kB │ gzip:   0.91 kB
+dist/assets/partners-Ch58FoM9.js                  1.87 kB │ gzip:   1.00 kB
+dist/assets/layouts-b3gFBwDg.js                   1.93 kB │ gzip:   0.90 kB
+dist/assets/logic-BNqfh2ay.js                     1.95 kB │ gzip:   1.11 kB
+dist/assets/account-host-IgMXqQ9W.js              2.03 kB │ gzip:   1.15 kB
+dist/assets/modal-DDM-2i_3.js                     2.04 kB │ gzip:   0.93 kB
+dist/assets/bulletin-C0x9x8ir.js                  2.08 kB │ gzip:   0.95 kB
+dist/assets/gamepad-ydMNPBy0.js                   2.09 kB │ gzip:   0.99 kB
+dist/assets/summary-Cm0ifBcS.js                   2.12 kB │ gzip:   1.03 kB
+dist/assets/search-qDvi4rJN.js                    2.24 kB │ gzip:   1.03 kB
+dist/assets/gulls-rest-C6nhBGqB.js                2.32 kB │ gzip:   1.12 kB
+dist/assets/log-BS-KJtIQ.js                       2.45 kB │ gzip:   1.02 kB
+dist/assets/hints-CP_WvUrv.js                     2.48 kB │ gzip:   1.18 kB
+dist/assets/view-B8yvxmSI.js                      2.51 kB │ gzip:   1.33 kB
+dist/assets/workshop-CS5tQyyL.js                  2.63 kB │ gzip:   1.34 kB
+dist/assets/server-call-state-K9bFp9Vt.js         2.74 kB │ gzip:   1.30 kB
+dist/assets/bulletin-BovpyfNw.js                  3.00 kB │ gzip:   1.24 kB
+dist/assets/catalog-DDn6gRn8.js                   3.20 kB │ gzip:   1.46 kB
+dist/assets/kit-_p6oWojh.js                       3.21 kB │ gzip:   1.51 kB
+dist/assets/presence-DfDgVnHo.js                  3.35 kB │ gzip:   1.58 kB
+dist/assets/board-D68jurOH.js                     3.52 kB │ gzip:   1.63 kB
+dist/assets/home-DOINm4E5.js                      3.89 kB │ gzip:   1.73 kB
+dist/assets/panel-CD2vLADs.js                     5.06 kB │ gzip:   2.28 kB
+dist/assets/others-CvZAPYfd.js                    5.16 kB │ gzip:   2.25 kB
+dist/assets/finale-Dx0vi2zR.js                    5.22 kB │ gzip:   2.37 kB
+dist/assets/partners-BmB7h10I.js                  5.54 kB │ gzip:   2.42 kB
+dist/assets/account-aacryxBJ.js                   5.76 kB │ gzip:   2.46 kB
+dist/assets/settlement-lF8Cy4zc.js                6.11 kB │ gzip:   2.74 kB
+dist/assets/intro-view-EnVcT2HK.js                6.46 kB │ gzip:   2.53 kB
+dist/assets/controller-CNHftZbi.js                6.97 kB │ gzip:   3.15 kB
+dist/assets/registry-t4lOiGpw.js                  7.31 kB │ gzip:   3.44 kB
+dist/assets/runtime-BpunnSXg.js                   7.67 kB │ gzip:   3.31 kB
+dist/assets/controller-DwFWd94A.js                7.72 kB │ gzip:   3.45 kB
+dist/assets/intro-story-BrIj6KTv.js               7.86 kB │ gzip:   2.94 kB
+dist/assets/kit-gallery-BzC9q8-K.js               8.96 kB │ gzip:   3.87 kB
+dist/assets/controller-Cx_Gl4cW.js               10.42 kB │ gzip:   4.08 kB
+dist/assets/game-DXXusan6.js                     12.04 kB │ gzip:   5.02 kB
+dist/assets/cinematic-demo-BPLChNXX.js           19.62 kB │ gzip:   7.77 kB
+dist/assets/case-adapter-DeIleCf4.js             25.59 kB │ gzip:   9.13 kB
+dist/assets/fake-5YKPRm9L.js                     66.65 kB │ gzip:  22.73 kB
+dist/assets/texture-BF9G0DxW.js                 208.26 kB │ gzip:  56.20 kB
+dist/assets/game-CRjTHwu5.js                    411.46 kB │ gzip: 107.16 kB
+
+✓ built in 494ms
+Spoiler guard: 117 text files, 12 protected lines, no suspect elimination data.
+{
+  "checks": [
+    "Ordinary production title uses the real online adapter at 1280 px",
+    "Recorded flag-off build invents no sign-in",
+    "Anonymous ending never grants a local kit",
+    "Anonymous ending retains the accepted replay on this device",
+    "Production exposes no inspection hooks",
+    "Online intro fits 1280 px",
+    "Ordinary production title uses the real online adapter at 375 px",
+    "Recorded flag-off build invents no sign-in",
+    "Anonymous ending never grants a local kit",
+    "Anonymous ending retains the accepted replay on this device",
+    "Production exposes no inspection hooks",
+    "Online intro fits 375 px",
+    "Anonymous public reads carry no token or write",
+    "Recorded online path has no browser errors or external calls"
+  ],
+  "requests": [
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/weather",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/content/intro-story",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/weather",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/content/intro-story",
+      "method": "GET",
+      "authorized": false
+    }
+  ],
+  "stage": "stream 2: anonymous real adapter"
+}
