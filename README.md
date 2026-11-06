@@ -40,7 +40,9 @@ The team is turning the text mystery Plot Twist into a browser game: a top-down 
 - **Online play is still being connected:** the G9 browser adapter is paused until Nils' laptop
   returns. Backend multiplayer proofs do not mean the complete mystery is already playable in
   normal browser play. [Status](docs/STATUS.md) records exact releases and flag checks.
-- **Next:** festival, host console and sports, then reliability, accessibility and submission checks.
+- **Current release:** reviewed festival, host console and sports, with their database chain applied.
+  Reliability, accessibility, help/privacy and submission checks follow; sports activation waits for
+  its provider key and verified live source.
   The optional [spoiler-safe AI helper](specs/AI-helper.md) requires official ChatGPT website-client
   approval before its login can be activated. The [roadmap](ROADMAP.md#execution-update--6-nov-2026)
   gives the remaining order.

@@ -8,8 +8,10 @@
 https://the-great-plot-twist.vercel.app/. The original v0.3 package descriptions below are retained
 as the detailed plan; use the execution update and [current status](docs/STATUS.md) for completion
 and release evidence. Group 3 is live. The case backend's four minimum phases, server followups
-and economy-abuse integration are at the release gate. G9 is paused until Nils' laptop returns.
-Festival, host console and sports are the next integration wave.
+and economy-abuse integration are live. Festival, host console and sports are reviewed, their three
+migrations are applied, and their code is at the deployment gate. Reliability, regression coverage,
+developer tools, security/text, help/privacy and release materials follow. G9 is paused until Nils'
+laptop returns; sports activation needs a provider key and the ChatGPT helper needs official approval.
 
 ## Execution update · 6 Nov 2026
 

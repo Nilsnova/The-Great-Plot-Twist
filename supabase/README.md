@@ -3000,3 +3000,35 @@ Independent concurrent tests prove one accepted order per busy partner and one s
 the same receipt. Reapplication preserves history and ledger. Expected totals: **31 public tables,
 1 view, 16 public policies, 5 realtime policies, 17 reasons, 43 project functions, 8 sequences,
 6 public triggers**. The new NPC table's RLS/no-policy INFO notice is intentional.
+
+## Festival, host-console and sports migrations
+
+These additive files follow the complete case/followups chain. No G12 migration is needed;
+150000 remains reserved and unused. Apply 160000, 170000 and 180000 separately in that order,
+with their exact reviewed repository text, stored MD5 proof and normalized history versions.
+
+| File | Reviewed MD5 | Cumulative tables / functions / sequences / triggers |
+|---|---|---|
+| `20261106160000_festival.sql` | `e5df5d833e6b2d733736a6a8e8585858` | 35 / 50 / 8 / 6 |
+| `20261106170000_host_console.sql` | `bea4b851018f4f97beccb15c88fe1e09` | 37 / 54 / 8 / 6 |
+| `20261106180000_sports_desk.sql` | `bb6e0b40dea6ea6abdba7b62b89ed7dd` | 39 / 57 / 9 / 7 |
+
+All stages retain one public view, 16 public policies, five realtime policies and 17 wallet reasons.
+The eight new tables have RLS without player policies, explicit narrow service grants and no browser
+access. Their security-advisor RLS-without-policy INFO notices are intentional. New functions use
+invoker rights, empty search paths and service-only execution; the sports identity sequence is private.
+
+Festival owns four private tables for queue serialization, action receipts, claims and sealed queue
+signals. The transaction validates FIFO identity and calls unchanged zero-stake A7 functions. Claims
+never advance world lights or mint coins. Replays remain durable after the exact 48-hour boundary.
+
+Host owns two private tables for successful cleanup receipts and keepalive health. It closes an own
+forming test crew only when another human is absent. A nonblocking profile pin under the crew lock
+avoids inversion with the existing join/delete flows; a busy refusal changes neither version nor audit.
+
+Sports owns `fixtures` and `sports_stakes`, a private sequence and a stake guard trigger. Payouts use
+the existing wallet reasons with independent references. Stakes and settlement pin profiles before
+sorted wallet locks; settlement rechecks the complete stake snapshot after waits. Concurrent account
+deletion cannot deadlock a payout or silently change its recipients. Rejected earlier 170000/180000
+draft hashes must never be applied. The final files passed independent full-chain restricted-owner,
+broad-default-grant, replay, role, conservation and real-connection concurrency checks.

@@ -14,29 +14,32 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Current release, 6 Nov 2026, Codex:** the minimum case backend, server followups and G12 are
-integrated on `integrate/case-npc`. The final combined backend/story gate passes **10,859 tests**,
-including real solo+NPC and four-player API/SQL playthroughs. All **69 kit mixes** solve using
-starting resources and production rules. Code and per-file SQL reviews pass. Reviewed migrations
-130000 and 140000 are applied verbatim, MD5-proven and restored to their repository versions.
-Live counts are **31 tables +1 view /43 project functions /17 wallet reasons**, with expected-only
-security advisors. See the [complete release proof](handoff/case-complete-release.md).
+**Current release, 6 Nov 2026, Codex:** festival, host console and sports are reviewed and
+integrated on `integrate/festival-host-sports`, following live main `fa0e49b`. The final combined
+backend gate passes **11,168 tests**; frontend **1,672 tests**, production build/spoiler guard and
+focused Chromium flows pass. Original authored commits are preserved. Reviewed migrations
+160000, 170000 and 180000 are applied one at a time, stored-MD5 proven and restored to their
+repository versions. Live counts: **39 tables +1 view /57 project functions /17 wallet reasons
+/9 sequences /7 triggers**; security advisors show known items only. See the
+[live-extras release proof](handoff/live-extras-release.md).
 
-Phase 3 production baseline is main `40ba1d5`, deployment `dpl_9yCGpVwrFygtV57MXrov3fiSJLAJ` READY.
-Health/config are 200 and the four group 3 flags are enabled. The release activates case/bulletin
-only after verifying its new deployment, then redeploys and verifies config. RELIGHT_OPEN remains
-unset; the live coast stays dark. G9 is **paused until Nils' laptop returns**, so the complete mystery
-and normal browser multiplayer still await its adapter despite the passing backend proofs.
+The case/followups/G12 release is live at main `fa0e49b`, deployment
+`dpl_2AAkC2Ta6Xegr5JNRk9yByvt2a85` READY, with health/config 200. Presence, market,
+predictions, arena, case and bulletin are enabled. The new release adds festival only after
+its deployment checks and a redeploy. **Sports stays off until its provider key and live source
+verification are ready.** RELIGHT_OPEN remains unset and the live coast stays dark; installing
+festival does not start its 48-hour clock. No production solve/reward or Relighting was tested.
 
-Next: festival backend/UI and reserved `160000`, host-console integration `170000` and sports `180000` are
-being built against the current contracts. G12 required no `150000` migration. Sports-provider keys
-are not configured in Vercel; live sports will stay off until its credential and proofs are ready.
-The ChatGPT helper requires an approved official website client. Direct live stock/cache-HIT checks
-still need the production hostname allowed by this cloud environment's network policy.
+G9 is **paused until Nils' laptop returns**: normal browser multiplayer and the complete mystery
+still await that adapter. The backend has real solo+NPC and four-player HTTP/SQL proofs and all
+69 kit mixes solve with starting resources. This does not imply normal browser play is complete.
 
-Phase1 main63e1e8c, Phase2 mainc365985 and Phase3 main `40ba1d5` are already released; their proofs are
-retained under docs/handoff. Original music, ambience and effects are built with separate controls.
-The older status paragraphs below are historical checkpoints.
+Next: integrate reliability, frontend/backend regression coverage, developer tools, security/text,
+help/privacy/starter guides and release/deck materials. G12 needed no 150000 migration. The optional
+ChatGPT helper needs an approved official website client; no login or paid fallback is active.
+Direct live stock/cache-HIT checks still need the production hostname allowed by this cloud
+network policy. Original music, ambience/effects and festival media are built with separate controls.
+Older paragraphs below are historical checkpoints.
 
 **Codex release checkpoint, 6 Nov 2026:** group 3 is integrated on `integrate/group3`; its three
 migrations (090000 Exchange v2, 100000 predictions, 110000 duels) are now applied, hash-verified and
@@ -263,7 +266,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
-**Next server step:** release the verified case/followups/G12 integration, then complete festival, host console and sports in migration order. G9 browser wiring remains paused.
+**Next server step:** verify the festival/host/sports deployment, then integrate reliability and backend regression coverage. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring remains paused.
 
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
@@ -457,6 +460,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** reviewed festival/host/sports integration passed 11,168 backend and 1,672 frontend tests; applied and proved 160000, 170000 and 180000 separately. Live schema is 39 tables/57 project functions, expected-only security advisors. Push/deployment proof is tracked in [live-extras release](handoff/live-extras-release.md); sports remains off pending its provider key.
 
 - **6 Nov, Codex:** minimum case/NPC, server followups and Exchange-v2 economy checks integrated; 10,859 backend tests pass, all 69 mixes and two actual API/SQL solves proven. Applied 130000/140000 sequentially with exact hashes, versions, counts and known-only advisors. See [complete proof](handoff/case-complete-release.md).
 

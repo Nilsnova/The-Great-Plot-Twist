@@ -1399,7 +1399,51 @@ reads never settle errands or pay rewards. Card prose remains hidden until its f
 Bounded recent history plus each seat's latest order preserve busy/duty state after other seats'
 activity. A player taking the seat hides the old partner; already accepted finds/pins still land.
 
-## 11. Open questions for Mon 9
+## 11. Live-extra contracts
+
+The later case and live-extra contracts below supersede their earlier route reservations.
+
+### Festival, host console and sports
+
+| Route | Access and body | Contract |
+|---|---|---|
+| `GET /api/festival` | `festival` flag; optional verified login; no query | Private 48-hour timer, twelve lamp states and only the caller's queue/claim facts |
+| `POST /api/festival/claim` | Login; `{lampId, actionUid}` | Atomic free reservation with a durable receipt |
+| `POST /api/festival/ring/join` | Login; `festival` and `arena`; `{signals, actionUid}` | Three sealed A7 glyphs; friendly zero-stake FIFO pairing through existing duel rules |
+| `POST /api/festival/ring/leave` | Login; `{actionUid}` | Idempotent queue departure |
+| `GET /api/host/overview` | Verified configured host | Private aggregates, readiness probes and safe build/source status |
+| `GET /api/host/crews` | Verified configured host | Newest 50 crews; captain names, no login details or case solution |
+| `POST /api/host/crews/{id}/close` | Host; `{actionUid}` UUID | Close only the host's forming test crew with no other human; no coin or seat deletion |
+| `GET /api/sports` | `sports` flag; anonymous; no query | Provider fixtures and public pools; successful responses cache for 30 seconds |
+| `GET /api/sports/mine` | `sports` flag and login | Own stakes, balances and provider-verified terminal-result checks |
+| `POST /api/sports/stake` | Login; `{fixtureId, pick, amount, stakeId}` | Whole stake 1-50, Lisbon daily cap 200; same intent ID survives uncertain retries |
+| `POST /api/sports/settle` | Login and own stake; `{fixtureId}` | Fresh provider verification; the client never sends a score, outcome or payout |
+
+Festival timing uses the first shared Relighting timestamp and ends exactly 172800 elapsed seconds
+later. A reservation changes neither `extraLights` nor money. Twelve canonical lamp IDs are
+`festival_lamp_01` through `festival_lamp_12`; lit status follows the solve-owned extra-light count.
+Festival receipts are player-scoped across intents and precede changed-target/expiry checks.
+The full DTO and errors are in [G13's contract](handoff/g13-backend-live.md).
+
+Host routes enforce `HOST_PLAYER_IDS` on the server and return 403 for visitors. The shared host
+dependency used by other routes retains its existing 401 contract. Cleanup locks the crew, pins
+the host profile without waiting and returns 409 `crew_busy` if a join/deletion owns that profile;
+it changes no crew/audit row in that case. Details: [Host console](HOST-CONSOLE.md).
+
+Sports uses provider IDs (`fd-...` or `bdl-...`), separate fixtures/stakes, and the existing prediction
+wallet reasons with `sports:` references. Winning pools take 5% of the losing side; void/no-winner/
+one-sided pools refund. Historical recordings are read-only. Missing keys, bad/old/partial provider
+data and incomplete payout snapshots fail closed. Player routes and handled errors are private
+and uncached. Source credit belongs in Settings, then Credits. The detailed DTO, provider setup
+and errors are in [G15's contract](handoff/g15-checkpoint-2.md).
+
+Every browser write keeps its original ID after an uncertain response, including a rate-limit
+response on a retry; signing out clears private state. Local festival rehearsal requires both
+`demo=1` and `festival=1`, uses memory only and never changes a server flag or sends a live write.
+
+## Historical open questions for Mon 9
+
+These are retained for context; current route contracts above and their linked specs take precedence.
 
 1. **JSON names.** Confirm camelCase in JSON (`demoMode`, `actionUid`) and snake_case in Python and SQL. Also confirm the exception for content files, which keep their own spelling (`story.json` uses snake_case keys such as `hide_when_blocked`).
 2. **Repeats.** What does a route answer when an `actionUid` comes a second time: the first answer again, or `409 already_applied` like the wallet? (The Island Exchange follows the wallet: `409 already_applied`.)
