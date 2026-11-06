@@ -1043,7 +1043,7 @@ curl -s -g "$SUPABASE_URL/rest/v1/crews?select=id,code,status,mode,version,start
   -H "apikey: $SUPABASE_SECRET_KEY"
 ```
 
-If your key does not start with `sb_secret_` (an old-style key), also add `-H "Authorization: Bearer $SUPABASE_SECRET_KEY"`, as `backend/server/supabase_admin.py` does.
+If your key is an old-style key (the long `service_role` JWT, not one of the new secret keys), also add `-H "Authorization: Bearer $SUPABASE_SECRET_KEY"`, as `backend/server/supabase_admin.py` does.
 
 Expected: a list with one crew, whose `crew_seats` holds four entries. The entries of players A, B and C carry `"profiles": {"display_name": "Captain-..."}`, and the entry of the Cook, an NPC partner, carries `"profiles": null`. If the answer is an error that talks about a relationship instead, the read in `backend/server/crews/store.py` (`CREW_COLUMNS`) has to change, so tell the team. The player-kit read (`entry_profiles?select=kit&...`) needs the migration of package A3: run it the same way with `rest/v1/entry_profiles?select=kit&limit=1` once that migration is applied.
 
