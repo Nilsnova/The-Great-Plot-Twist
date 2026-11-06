@@ -24,6 +24,7 @@ from server.routes import (
     captain_name,
     config,
     content,
+    crews,
     delete_me,
     health,
     intro,
@@ -120,4 +121,5 @@ def create_app(
     app.include_router(intro.router, prefix="/api")
     app.include_router(auth_exchange.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
+    app.include_router(crews.router, prefix="/api")
     return app

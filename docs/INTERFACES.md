@@ -441,6 +441,38 @@ The rules in one list (numbers in `backend/server/market/rules.py` and `trade_ru
 
 The board needs the Exchange migration (it reads `market_bases`). Without a configured database the board still works from memory, which is good enough for a demo on a laptop but not shared between server instances.
 
+### Crews and seats (package A6)
+
+A crew has four seats. A seat holds a player or an NPC partner (a crew mate that the game runs) and carries one of the four entry kits. A player starts a crew and gets a crew code, a friend types the code to join, and when the crew sails (the "muster") NPC partners take every empty seat, so a crew of one still has four seats. The home of each route is the comment at the top of `backend/server/routes/crews.py`; the rules are in `backend/server/crews/` and in decision [D020](DECISIONS.md#d020--crews-codes-the-guessing-limit-and-partners-at-the-muster--2026-11-05). All four routes need sign-in, answer with `Cache-Control: private, no-store`, and never show a player id.
+
+| Route | Body | What it does |
+|---|---|---|
+| `POST /api/crews` | none | Starts a crew with the player in seat 1 and answers with its crew code. A player who already started a crew and sits in it alone gets that same crew back. Needs the kit of the player's Act 1 ending: before it, `409 kit_needed`. |
+| `POST /api/crews/join` | `{"code": "k7q-f2m"}` | Joins the crew that has the code. Capitals, spaces and hyphens do not matter. The friend takes the lowest open seat; if none is open, the NPC partner who carries the friend's own kit; otherwise the partner whose kit comes last in the partner order. The seat then carries the friend's own kit. A player who started a crew and sits in it alone gives that draft up by joining another crew. |
+| `POST /api/crews/me/start` | none | The muster: the crew becomes `active`, and an NPC partner takes every empty seat, carrying the first kit that nobody in the crew has yet. |
+| `GET /api/crews/me` | | The crew the player sits in (`forming` or `active`), or `{"crew": null}`. |
+
+```text
+POST /api/crews/me/start
+Authorization: Bearer <token>
+
+200 OK
+Cache-Control: private, no-store
+{"crew": {"id": "6fcdad72-8fec-4111-9929-9bad39fd435b", "code": "K7QF2M", "status": "active",
+          "mode": "crew", "mySeat": 1, "startedAt": "2026-11-13T10:02:00Z",
+          "seats": [
+            {"seatNo": 1, "holder": "player",  "name": "Brave Puffin 17", "kit": "witness",     "partnerId": null,    "isMe": true},
+            {"seatNo": 2, "holder": "player",  "name": "Calm Gannet 42",  "kit": "stranger",    "partnerId": null,    "isMe": false},
+            {"seatNo": 3, "holder": "partner", "name": "the Bosun",       "kit": "informant",   "partnerId": "bosun", "isMe": false},
+            {"seatNo": 4, "holder": "partner", "name": "the Cook",        "kit": "true_keeper", "partnerId": "cook",  "isMe": false}]}}
+```
+
+- **The view.** `seats` always has four entries in seat order. A seat nobody holds is `{"holder": "open", "name": null, "kit": null, "partnerId": null}`. A player is shown by `profiles.display_name`, a partner by its title (the Lookout, the Deckhand, the Bosun, the Cook), and no answer holds a player id. `mode` is `solo` until a second player joins and `crew` after that; it does not go back to `solo` if a player is deleted later (D020, known limits). `status` is `forming`, `active` or `finished`. `code` is empty only for a crew made before crew codes existed. `startedAt` is a UTC time, empty while the crew is forming.
+- **Crew codes.** Six symbols from `A-Z` without `I`, `L` and `O`, and `2-9` (31 symbols). A player may type at most **10 wrong codes in 10 minutes**; the count lives in the database, because every server instance has its own memory. After that even the right code is refused (`429`), so a guesser cannot confirm a hit. A typing mistake (not six symbols) is a `422` and does not count as a guess.
+- **Errors** (standard shape): `404 wrong_code`, `404 no_crew`, `404 player_not_set_up`; `409 kit_needed`, `already_in_crew`, `crew_full` (four players), `crew_finished`, `already_seated`, `already_started`, `crew_busy` (the crew changed three times while the request ran: try again); `422 validation_error`; `429 too_many_requests` with `Retry-After`; `503 crew_codes_busy` (five codes in a row were taken: try again). A `503` from a change means the outcome is unknown: ask `GET /api/crews/me` before trying again.
+- **Safe repeats.** `POST /api/crews` gives the same draft back. `POST /api/crews/join` answers `409 already_seated`, and `POST /api/crews/me/start` answers `409 already_started`: treat both as done. A repeat never makes a second seat or a second crew.
+- **Needs** the crew migration and package A3's table `entry_profiles` (one row per player, with the kit). Before A3's migration is applied the kit read fails with `502 database_error`.
+
 ### GET /api/docs
 
 FastAPI's interactive list of every route, with the machine-readable version at `/api/openapi.json`. Served locally and on previews. In production it answers `404 not_found`.
@@ -637,18 +669,35 @@ A new reason is one new migration plus the same pair added at the end of `WALLET
 - **Solo play is a crew of one player.** The player sits in seat 1 and NPC partners fill the other seats (mode `solo`). With friends the mode is `crew`, and NPC partners fill any seats left empty. A friend can take over an NPC partner's seat.
 - A crew's status goes from `forming` to `active` to `finished`.
 - A player can read a crew and its seats only while they sit in it. Only the server creates crews and seats players and NPC partners.
-- The server, not the database, makes sure that a player has at most one active crew, never holds two seats in one crew, and that one NPC partner does not sit twice in one crew.
+- The database guards one seat per player and one seat per NPC partner in a crew (two unique indexes), the kit ids and the crew code (migration `20261106040000`, package A6). The four crew functions (`crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()`) make sure that a player sits in at most one open crew (`forming` or `active`), under a lock on the player's profile. By team rule the server writes crews and seats only through them.
 - Deleting a player removes their seat. Deleting the player who started a crew removes the whole crew.
 
 | Column | Meaning |
 |---|---|
 | `crews.id`, `created_by` | A random id, and the player who started the crew |
 | `crews.mode`, `status` | `solo` or `crew`; `forming`, `active` or `finished` |
+| `crews.code` | The crew code a friend types to join: 6 symbols from `A-Z` without `I`, `L` and `O`, and `2-9`. Unique. Empty only for a crew made before crew codes existed. |
+| `crews.version`, `started_at` | `version` counts the changes made through the crew functions (starts at 1), so a request never acts on an old picture of the crew. `started_at` is the time of the muster, empty while the crew is forming. |
 | `crew_seats.crew_id`, `seat_no` | The crew and the seat number (1 to 4). Each seat number appears once per crew. |
 | `crew_seats.player_id`, `npc_id` | Who sits there: exactly one of the two. An `npc_id` is 2 to 40 characters from a-z, 0-9 and underscore. |
-| `crew_seats.kit`, `joined_at` | The entry kit this seat carries (no format rule yet), and when the seat was taken |
+| `crew_seats.kit`, `joined_at` | The entry kit this seat carries: `true_keeper`, `witness`, `informant` or `stranger` (checked for every new or changed row), and when the seat was taken |
 
 What NPC partners do in the mystery (their orders, errands and lines) is defined by the story package S0 (skeleton under review). Package A6 adds the crew routes and crew codes, and S4 the orders for NPC partners ([section 9](#9-reserved-interfaces)).
+
+### Crew codes, the muster and partners (package A6)
+
+How a crew forms, in four steps. The home is `backend/server/routes/crews.py`; the pure rules are in `backend/server/crews/seats.py`.
+
+1. **Start.** A player with an entry kit starts a crew (`POST /api/crews`) and sits in seat 1. The crew is `forming` and has a code.
+2. **Join.** A friend types the code. The friend takes the lowest open seat. A crew that has sailed usually has no open seat, so the friend takes over the NPC partner who carries the friend's own kit, or else the partner whose kit comes last in the partner order, so the partners who stay keep the kits that are still missing. The seat carries the friend's **own** kit.
+3. **Muster.** Any player of the crew calls `POST /api/crews/me/start`. The crew becomes `active`, and NPC partners take every empty seat, lowest number first. Each partner carries the first kit of the order **informant, stranger, true_keeper, witness** that nobody in the crew carries yet. The partner follows the seat number: the Lookout (`lookout`) in seat 1, the Deckhand (`deckhand`) in 2, the Bosun (`bosun`) in 3 and the Cook (`cook`) in 4.
+4. **Play.** Nobody leaves and nobody is kicked in this version. A friend can still join a crew that has sailed, by taking over a partner.
+
+- **Pending Nils' decision (story decision 12).** The order of the partner kits is the one of `NPC-PARTNERS.md` (section 4.2). `CASE-FILE.md` (sections 3 and 9) still lists another order (true_keeper, informant, stranger, witness); the story branch has to fix that file. The order is one constant (`NPC_KIT_ORDER`) in `seats.py`.
+- **Pending Nils' decision (story decision 10).** The kit of a seat after a friend takes over a partner. Built default: the friend keeps their own kit. It is one switch (`FRIEND_KEEPS_OWN_KIT`) in `seats.py`.
+- **A draft.** A crew that a player started and sits in alone. Joining another crew deletes the draft in the same step, so a player who pressed "start a crew" by mistake is never stuck. A crew with a friend in it is not a draft: its players cannot join another crew.
+- **Guessing.** The database counts the wrong codes of each player (`crew_join_failures`) and refuses a player who typed 10 wrong codes in 10 minutes before it looks at the code. The numbers are in `backend/server/crews/codes.py`.
+- **For later packages.** The case board and the finale find the crew and the seat of a player with `read_open_crew_seat()` in `backend/server/crews/store.py`, and stamp the seat number on their own rows. Partner orders and errands are package S4. Note for S4: a Witness partner starts with card C2 in its satchel.
 
 ## 7. Realtime budget
 

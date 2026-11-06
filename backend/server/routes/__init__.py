@@ -9,6 +9,7 @@
     intro.py          POST /api/intro/complete replays the Act 1 move log and gives the entry kit
     auth_exchange.py  POST /api/auth/exchange  swaps a one-time sign-in code for a login token
     keepalive.py      GET  /api/keepalive      for one daily caller, not for the browser
+    crews.py          /api/crews...            start a crew, join with a code, the muster, my crew
 
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the
 GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).

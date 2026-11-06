@@ -15,6 +15,7 @@ Where things are (one job per file):
     hosts.py           the check for presenter-only routes: is this player a host?
     account/           captain names, the cloud save and "delete my data" (package A2)
     game/              the referee and the entry kits: replays Act 1 and gives a kit (package A3)
+    crews/             crews and seats: crew codes, seat rules and flows (the URLs: routes/crews.py)
     routes/            the URLs of the API (the game calls them; keepalive is for one daily caller)
     adapters/          the pattern for outside data (weather, stocks, sports, ...)
 """

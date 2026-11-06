@@ -64,6 +64,37 @@ Add short entries; keep the original rationale when superseding a decision.
 
 **Agreed by, PR and impact:** Nils, 5 Nov 2026. Proposed in the foundation PR. The team roadmap reserves D005 to D010 for other decisions and D012 for this one. Affects A6 (crew routes and codes), S4 (NPC partners), and S3 and L3 (rules that count seats). What NPC partners do in the mystery is defined by the story package S0 (skeleton under review).
 
+## D020 · Crews: codes, the guessing limit and partners at the muster · 2026-11-05
+
+**Status:** Proposed in the A6 pull request (`feat/a6-crews`); accepted when reviewed by another teammate and merged. Two choices wait for Nils and are marked "pending". The number D020 was handed out in advance by the M1 spec (`specs/M1-backbone.md`), together with D018 and D019 for the account and referee packages, so the entries do not collide. If another branch took it first, the coordinator renumbers at merge.
+
+**Decision:** Crews follow D012 (up to four seats, each a player or an NPC partner). On top of it:
+
+1. **Crew codes.** A crew gets a code of 6 symbols: `A-Z` without `I`, `L` and `O`, and `2-9` (31 symbols, about 890 million codes), made on the server with the system's secure random generator. A code is unique. A player needs an entry kit (Act 1 finished) to start or join a crew, because every seat carries a kit.
+2. **Guessing limit.** A player may type at most **10 wrong codes in 10 minutes**. The count is kept in the database (table `crew_join_failures`), not in the server's memory: every Vercel instance has its own memory and a cold start empties it, so a guesser who spreads requests over instances would get many times the limit. After the limit even a right code is refused (`429` with `Retry-After`), because the refusal comes before the code is looked at, so a guesser cannot confirm a hit. A typing mistake (not 6 symbols) is a `422` and costs no guess.
+3. **The muster.** NPC partners are seated when the crew sails: `POST /api/crews/me/start` makes the crew `active` and fills every empty seat in one step. Any player of the crew may call it.
+4. **Joining.** A friend takes the lowest open seat. A crew that has sailed has none, so the friend takes over the NPC partner who carries the friend's own kit, or else the partner whose kit comes last in the partner order, so the partners who stay keep the kits that are still missing. A crew of four players is full.
+5. **Partner kits.** Each partner carries the first kit that nobody in the crew has yet, in the order **informant, stranger, true_keeper, witness**. A partner follows the seat number (Lookout, Deckhand, Bosun, Cook).
+6. **A draft.** A crew that a player started and sits in alone gives way: joining another crew deletes it in the same step. Any other open crew stops the player from joining a second one. A player sits in at most one open crew.
+7. **Only through four functions.** The server creates, joins and sails a crew only through the database functions `crew_create()`, `crew_find_by_code()`, `crew_take_seat()` and `crew_start()` (a team rule, as with the wallet). Each checks the version of the crew that the server read and answers "changed" if it moved on, so the server never acts on an old picture of a crew. The database itself guards one seat per player and per partner in a crew, the kit ids, and the code format and uniqueness.
+8. **Not in this version.** Leaving a crew and kicking a player. Partner orders and errands are package S4.
+
+**Pending Nils' decision (story decision 10).** Which kit a seat carries after a friend takes over a partner's seat. Built default: **the friend keeps their own kit**. The alternative is that the seat keeps the partner's kit. It is one switch (`FRIEND_KEEPS_OWN_KIT`) in `backend/server/crews/seats.py`.
+
+**Pending Nils' decision (story decision 12).** The order in which partners fill the kits the players are missing. Built default: **informant, stranger, true_keeper, witness** (`NPC-PARTNERS.md`, section 4.2). `CASE-FILE.md` (sections 3 and 9) still lists true_keeper, informant, stranger, witness, and the story branch has to fix it. It is one constant (`NPC_KIT_ORDER`) in `seats.py`.
+
+**Why:** The first milestone needs a crew that forms with an NPC partner in an empty seat, and the case needs all four kits in a crew (a solo player gets the other three from partners). Seating the partners at the muster, and not earlier, keeps "open seat first" meaningful and lets a friend join a forming crew without taking a partner's place. A guess limit in the database holds for every server instance. A version check on every change means two friends who join at the same moment, or a join during the muster, cannot corrupt a crew: the second request is told "changed" and reads the crew again.
+
+**Alternatives and trade-offs:**
+
+- *A speed limit in memory* (like the trade limit of the Exchange): rejected. It cannot see a second server instance and a cold start empties it.
+- *Partners seated when the crew is created:* rejected. No seat would ever be open, so "open seat first" would mean nothing, and S4 assumes that a forming crew has no partners.
+- *Partners seated when the case starts (package S3):* rejected for the first milestone. S3 belongs to the second milestone, but the first one needs a partner.
+- *A table rule for "one open crew per player":* not possible, because the status lives in `crews` and the seats in `crew_seats`. The four functions keep the rule under a lock on the player's profile. The price is that a direct write to the tables would skip it, as a direct write to `wallets` would skip the ledger. Only the server holds that right.
+- *Known limits:* the limit counts per account, and each account is a GitHub sign-in (Supabase limits sign-ins per address as well). With about 200 open crews one guess hits with a chance of about 2 in 10 million, and the most a player can try in a day is about 1,440 guesses, so about 3 in 10,000 per account and day. A crew keeps its code after the muster, so a friend can still take over a partner. A player who is deleted leaves an empty seat, and a friend fills it first. In an active crew that seat stays open until a friend joins, because the muster runs only once (S3 and L3 must allow three seats), and the crew's mode stays `crew` even when only one player is left.
+
+**Agreed by, PR and impact:** Not yet agreed. Proposed from `specs/M1-backbone.md` (its choices N3, N7 and N8). Affects A3 (the crew routes read the kit from `entry_profiles`), A2 (the delete route will hand a crew with other players to the player in the lowest seat, which leaves an open seat), S3 and L3 (they find the crew and the seat of a player with `read_open_crew_seat()`) and S4 (partners; a Witness partner starts with card C2).
+
 ## D005 · Look: original top-down pixel art · 2026-11-05
 
 **Status:** Decided by Nils; recorded with the graphics package G1, which is merged into `main`.
