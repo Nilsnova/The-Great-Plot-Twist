@@ -8,7 +8,7 @@ No test uses the network. Two fakes stand in for Supabase:
 In every table the OTHER player's row comes first. A route that forgot its filter would pick
 that row up, and the tests below would catch it.
 
-The route makes four reads: the profile, the wallet, the seats and, last, the entry profile (the
+The route makes five reads: the profile, wallet, seats, entry profile and reroll record (the
 kit and the start place, package A3). The entry profile is read last on purpose: a test checks that
 a refused seats read stops the route after three reads.
 
@@ -90,6 +90,7 @@ def make_tables() -> dict[str, list[dict[str, Any]]]:
             MY_SEAT,
         ],
         "entry_profiles": [OTHER_ENTRY, MY_ENTRY],
+        "captain_name_rerolls": [{"player_id": OTHER_PLAYER_ID}],
     }
 
 
@@ -196,6 +197,8 @@ def test_a_signed_in_player_gets_their_name_coins_and_crews():
         "captainName": None,
         "kit": "true_keeper",
         "place": "lighthouse_isle",
+        "rerollsLeft": 1,
+        "isHost": False,
     }
 
 
@@ -333,27 +336,27 @@ def test_get_me_only_reads():
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    # Changed on purpose (A3): the fourth read is the entry profile.
-    assert [request.method for request in seen] == ["GET", "GET", "GET", "GET"]
+    # G9 R10 adds a fifth read for the verified player's reroll record.
+    assert [request.method for request in seen] == ["GET"] * 5
     assert not any("/rpc/" in request.url.path for request in seen)
 
 
 # --- what the route asks the database ---
 
 
-def test_it_reads_the_profile_the_wallet_the_seats_and_the_entry_profile_with_get():
-    # Changed on purpose (A3): the name of this test and its lists gained the entry profile, which
-    # is read last.
+def test_it_reads_the_profile_wallet_seats_entry_and_reroll_record_with_get():
+    # G9 R10 appends the reroll read after the existing four reads.
     client, seen = make_client()
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    assert [request.method for request in seen] == ["GET", "GET", "GET", "GET"]
+    assert [request.method for request in seen] == ["GET"] * 5
     assert [request.url.path for request in seen] == [
         "/rest/v1/profiles",
         "/rest/v1/wallets",
         "/rest/v1/crew_seats",
         "/rest/v1/entry_profiles",
+        "/rest/v1/captain_name_rerolls",
     ]
 
 
@@ -373,6 +376,7 @@ def test_every_read_is_filtered_on_the_verified_player_id_and_asks_for_few_colum
         },
         # Changed on purpose (A3): the fourth read, for the kit and the start place.
         {"select": "kit,start_place", "player_id": f"eq.{PLAYER_ID}", "limit": "1"},
+        {"select": "player_id", "player_id": f"eq.{PLAYER_ID}", "limit": "1"},
     ]
 
 
@@ -381,8 +385,8 @@ def test_the_reads_use_the_supabase_secret_key():
 
     client.get(URL, headers=RIGHT_HEADER)
 
-    # Changed on purpose (A3): four reads now.
-    assert [request.headers["apikey"] for request in seen] == [FAKE_SECRET_KEY] * 4
+    # G9 R10: five scoped reads, all through the existing server credential.
+    assert [request.headers["apikey"] for request in seen] == [FAKE_SECRET_KEY] * 5
 
 
 def test_the_player_id_comes_from_the_login_and_never_from_the_request():
