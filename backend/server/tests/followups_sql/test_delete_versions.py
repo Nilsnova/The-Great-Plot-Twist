@@ -5,6 +5,7 @@ Used by: G10 follow-up migration checks on disposable PostgreSQL, with no live s
 
 import time
 from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from uuid import UUID, uuid4
 
 import pytest
@@ -155,6 +156,51 @@ def test_concurrent_retries_do_not_increment_a_surviving_crew_twice(scratch_serv
             second.rollback()
             first.execute("truncate auth.users cascade")
             first.commit()
+
+
+@pytest.mark.parametrize("scenario", ("owner_member", "members", "last_members", "multiple_crews"))
+def test_concurrent_different_member_deletions_keep_fresh_owners_and_versions(
+    scratch_server, scenario
+):
+    import psycopg
+
+    with psycopg.connect(scratch_server.get_uri()) as seed:
+        add_players(seed)
+        if scenario == "members":
+            crew = add_crew(seed, OTHER, [(1, OTHER), (2, PLAYER), (3, FRIEND)])
+        else:
+            seats = [(1, PLAYER), (2, FRIEND)]
+            if scenario != "last_members":
+                seats.append((3, OTHER))
+            crew = add_crew(seed, PLAYER, seats)
+        expected = {crew: None if scenario == "last_members" else (OTHER, 9)}
+        if scenario == "multiple_crews":
+            shared = add_crew(seed, FRIEND, [(1, FRIEND), (2, PLAYER), (3, OTHER)])
+            untouched = add_crew(seed, OTHER, [(1, OTHER)])
+            expected.update({shared: (OTHER, 9), untouched: (OTHER, 7)})
+
+    barrier = Barrier(2)
+
+    def delete(player):
+        with psycopg.connect(scratch_server.get_uri()) as connection:
+            connection.execute("set local role service_role")
+            connection.execute("set local lock_timeout = '5s'")
+            connection.execute("set local statement_timeout = '10s'")
+            barrier.wait(timeout=5)
+            return delete_player(connection, player)
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            assert list(pool.map(delete, (PLAYER, FRIEND))) == [
+                {"status": "deleted"},
+                {"status": "deleted"},
+            ]
+        with psycopg.connect(scratch_server.get_uri()) as check:
+            for crew, state in expected.items():
+                assert crew_state(check, crew) == state
+    finally:
+        with psycopg.connect(scratch_server.get_uri()) as cleanup:
+            cleanup.execute("truncate auth.users cascade")
 
 
 @pytest.mark.parametrize("role", ["anon", "authenticated"])

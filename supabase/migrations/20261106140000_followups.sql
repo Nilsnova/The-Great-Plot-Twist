@@ -23,8 +23,21 @@ security definer
 set search_path = ''
 as $$
 begin
-  -- Serialize retries before reading any seats. Otherwise a concurrent retry
-  -- could wait on a crew update, then count the deleted seat from its old snapshot.
+  -- Lock affected crews in a shared order before any auth user. Another deleting
+  -- member must not hold its auth row while our handover checks that member's FK.
+  perform 1
+    from public.crews as c
+   where c.created_by = p_player_id
+      or exists (
+           select 1
+             from public.crew_seats as s
+            where s.crew_id = c.id
+              and s.player_id = p_player_id
+         )
+   order by c.id
+   for update;
+
+  -- Same-player retries also serialize; a retry after deletion changes no crew.
   perform 1 from auth.users where id = p_player_id for update;
   if not found then
     return jsonb_build_object('status', 'not_found');
@@ -33,6 +46,8 @@ begin
   -- Keep the original lowest-seat handover. Include crews where the player is
   -- only seated: losing that seat also invalidates a previously read version.
   -- One update per crew avoids counting the handover and freed seat twice.
+  -- This separate statement gets a fresh snapshot after the crew-lock wait, so
+  -- a handover never chooses a member that another deletion has just removed.
   update public.crews as c
      set created_by = case
            when c.created_by = p_player_id then coalesce((

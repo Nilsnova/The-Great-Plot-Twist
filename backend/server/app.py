@@ -17,11 +17,11 @@ from fastapi import FastAPI
 from server import __version__
 from server.adapters.base import CachedSource
 from server.auth import PlayerVerifier
+from server.cache import DefaultCacheControl
 from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
 from server.duels.service import DuelService
-from server.cache import DefaultCacheControl
 from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
 from server.game.case_cache import CaseCacheControl

@@ -93,10 +93,10 @@ def validate_token(token: str) -> None:
     """Refuse oversized or incomplete login tokens before caching or any outside request."""
     # A real token is plain ASCII. Refusing anything else also keeps odd bytes away from httpx,
     # which would otherwise fail with an error that looks like our fault instead of the caller's.
-    if not token.isascii():
-        raise unauthorized("The token contains characters that are not allowed.")
     if len(token) > MAX_TOKEN_LENGTH:
         raise unauthorized("The login token is too long.")
+    if not token.isascii():
+        raise unauthorized("The token contains characters that are not allowed.")
     parts = token.split(".")
     if len(parts) != 3 or not all(parts):
         raise unauthorized("The login token must have three nonempty parts.")

@@ -219,3 +219,56 @@ def test_l2_build_retry_isolation_and_delete_with_the_expanded_chain():
                     ).fetchone()[0]
                     == 0
                 )
+
+
+def test_current_case_embeds_keep_recent_signals_and_bounded_earned_summaries():
+    """The local port executes the current PostgREST aliases and per-relation bounds."""
+    pytest.importorskip("pgserver")
+    pytest.importorskip("psycopg")
+    from server.game.case_store import snapshot_query
+
+    app = create_local_app({"LOCAL_TEST_SERVER": "1", "APP_ENV": "local"})
+    with TestClient(app) as client:
+        header = {"Authorization": f"Bearer {PLAYERS[0].token}"}
+        request_ok(client, "POST", "/api/intro/complete", headers=header, json={"actions": INTRO})
+        crew = request_ok(client, "POST", "/api/crews", headers=header)["crew"]
+        request_ok(client, "POST", "/api/crews/me/start", headers=header)
+        request_ok(client, "GET", "/api/case", headers=header)
+        with app.state.local_database.connect() as database:
+            for number in range(42):
+                database.execute(
+                    "insert into public.finale_signals "
+                    "(crew_id, night_no, light_id, post_seat_no, aimed_by, aimed_seat_no, "
+                    "bearing, on_target, case_second, holds_until_second, parted) "
+                    "values (%s, 1, %s, 1, %s, 1, 0, %s, %s, %s, %s)",
+                    (
+                        crew["id"],
+                        "keepers_lamp" if number == 0 else "harbor_light",
+                        PLAYERS[0].id,
+                        number == 0,
+                        number,
+                        90 if number == 0 else None,
+                        number == 0,
+                    ),
+                )
+        rows = asyncio.run(app.state.admin.select_rows("crews", snapshot_query(crew["id"])))
+        row = rows[0]
+        assert len(row["finale_signals"]) == 40
+        assert row["finale_signals"][0]["case_second"] == 41
+        assert len(row["finale_parted_signals"]) == 1
+        assert row["finale_parted_signals"][0]["case_second"] == 0
+        assert row["finale_latest_harbor_light"][0]["case_second"] == 41
+        assert row["finale_miss_harbor_light"][0]["case_second"] == 41
+        assert row["finale_lock_keepers_lamp"][0]["case_second"] == 0
+        assert row["finale_posts"] == []
+        # Bad aliases and embedded limits remain errors, with no SQL interpolation.
+        for changes in (
+            {"select": "bad:profiles(*)"},
+            {"finale_signals.limit": "10001"},
+            {"unknown.limit": "1"},
+        ):
+            with pytest.raises(SupabaseRejected):
+                asyncio.run(
+                    app.state.admin.select_rows("crews", {**snapshot_query(crew["id"]), **changes})
+                )
+        assert request_ok(client, "GET", "/api/world")["stage"] == "dark"

@@ -994,7 +994,10 @@ def test_a_portfolio_look_is_never_cached_and_takes_no_query_parameters():
     world = World()
 
     assert world.portfolio().headers["cache-control"] == "no-store"
-    response = world.client.get("/api/market/portfolio?x=1", headers={"Authorization": "Bearer t"})
+    response = world.client.get(
+        "/api/market/portfolio?x=1",
+        headers={"Authorization": "Bearer test.market-player.signature"},
+    )
     assert_error(response, 422, "validation_error")
 
 
