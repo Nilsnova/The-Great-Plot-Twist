@@ -11,6 +11,7 @@ so this file is the full list of what can be configured:
                               /api/keepalive once a day sends it. Optional on your laptop.
                               NEVER in the repo.
     DEMO_MODE                 true or false (default: false)
+    RELIGHT_OPEN              irreversible world switch, false by default, production only
     FEATURE_FLAGS             comma-separated feature names to switch on (see flags.py)
     WEATHER_PLACE_NAME        name of the place whose real weather the game shows (default:
                               Torshavn, Faroe Islands). Shown on screen. Not secret.
@@ -83,6 +84,7 @@ class Settings:
     # there, and the route then answers 503.
     cron_secret: SecretStr = SecretStr("")
     demo_mode: bool = False
+    relight_open: bool = False
     flags: dict[str, bool] = field(default_factory=default_flags)
     # The place whose real weather the game shows. None of these three is secret: the name is
     # shown on screen and the coordinates go to Open-Meteo.
@@ -118,6 +120,18 @@ def read_demo_mode(env: Mapping[str, str]) -> bool:
     if value == "true":
         return True
     raise SettingsError(f"DEMO_MODE must be 'true' or 'false' (got '{value}').")
+
+
+def read_relight_open(env: Mapping[str, str], app_env: str) -> bool:
+    """The irreversible live switch stays closed everywhere except explicit production."""
+    value = read_text(env, "RELIGHT_OPEN").lower()
+    if value in ("", "false"):
+        return False
+    if value != "true":
+        raise SettingsError("RELIGHT_OPEN must be 'true' or 'false'.")
+    if app_env != "production":
+        raise SettingsError("RELIGHT_OPEN may be true only when APP_ENV is production.")
+    return True
 
 
 def read_weather_place_name(env: Mapping[str, str]) -> str:
@@ -190,14 +204,16 @@ def read_host_player_ids(env: Mapping[str, str]) -> frozenset[str]:
 
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
+    app_env = read_app_env(env)
     return Settings(
-        app_env=read_app_env(env),
+        app_env=app_env,
         # No slash at the end, so we can write f"{supabase_url}/auth/v1/user" later.
         supabase_url=read_text(env, "SUPABASE_URL").rstrip("/"),
         supabase_publishable_key=read_text(env, "SUPABASE_PUBLISHABLE_KEY"),
         supabase_secret_key=SecretStr(read_text(env, "SUPABASE_SECRET_KEY")),
         cron_secret=SecretStr(read_text(env, "CRON_SECRET")),
         demo_mode=read_demo_mode(env),
+        relight_open=read_relight_open(env, app_env),
         flags=parse_flags(env.get("FEATURE_FLAGS", "")),
         weather_place_name=read_weather_place_name(env),
         weather_latitude=read_degrees(

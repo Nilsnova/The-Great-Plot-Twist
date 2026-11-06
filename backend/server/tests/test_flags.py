@@ -21,6 +21,7 @@ def test_flag_names_are_exactly_the_agreed_list():
         "raid",
         "live_presence",
         "companion_llm",
+        "case",
     )
 
 

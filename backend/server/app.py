@@ -23,18 +23,23 @@ from server.daily.content import load_daily_content
 from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.game.building_catalogue import BuildingCatalogue, catalogue_or_none
+
+from server.game.case_cache import CaseCacheControl
+from server.game.case_service import CaseService, case_or_none
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
 from server.routes import (
     auth_exchange,
     bulletin,
     captain_name,
+    case,
     config,
     content,
     crews,
     delete_me,
     duels,
     health,
+    host_case,
     intro,
     islet,
     keepalive,
@@ -90,6 +95,8 @@ def create_app(
     clock: Clock | None = None,
     prediction_desk: PredictionDesk | None = None,
     duel_service: DuelService | None = None,
+
+    case_service: CaseService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -124,12 +131,16 @@ def create_app(
     if duel_service is None:
         duel_service = DuelService()  # it has no data files, so it always starts
 
+    if case_service is None:
+        case_service = case_or_none(settings)
+
     # The httpx library writes the full address of every request to the log at INFO level. Our
     # database reads put the player id in that address (see routes/me.py), so keep those lines
     # out of the log, even if someone switches INFO logging on to debug something else.
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     app = new_fastapi_app(settings)
+    app.add_middleware(CaseCacheControl)
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
     # routes/weather.py, sign_in_code.py, market/exchange.py, crew_broadcast.py,
@@ -153,6 +164,8 @@ def create_app(
     app.state.predictions = prediction_desk
     app.state.duels = duel_service
 
+    app.state.case = case_service
+
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
     app.include_router(content.router, prefix="/api")
@@ -171,4 +184,7 @@ def create_app(
     app.include_router(islet.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")
+
+    app.include_router(case.router, prefix="/api")
+    app.include_router(host_case.router, prefix="/api")
     return app

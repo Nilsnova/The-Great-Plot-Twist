@@ -1,0 +1,437 @@
+{
+ "summary": "Backend and docs merge plan for the ten branches, in the fixed order. I proved it with a trial merge in a scratch clone onto origin/main 8ff24cc. Note that origin/main moved during this run: 606ee4a became 8ff24cc at 12:55 (vercel.json regions, one test in test_me.py, the region lines in ARCHITECTURE/SETUP). The integration worktree integrate/fri6 is still at 606ee4a, so take 8ff24cc in first.\n\nEach branch merges onto main without conflict, except G7 (docs/STATUS.md) and A4 (docs/ARCHITECTURE.md). In the fixed order, the trial hit these textual conflicts:\n- A2: content README, DECISIONS\n- A6: app.py, supabase README\n- G7: STATUS\n- A4: settings.py, ARCHITECTURE, DECISIONS, INTERFACES, supabase README\n- L2: content README, app.py, game/__init__.py (add/add), routes/__init__.py, DECISIONS, INTERFACES, supabase README (and game.js)\n- open-world: content README, server/__init__.py, app.py, routes/__init__.py, test_content.py, DECISIONS, INTERFACES\n- L4 v2: settings.py, INTERFACES, supabase README (and game.js)\n- L5: server/__init__.py, app.py, routes/__init__.py, settings.py, test_wallet.py, test_wallet_matches_migration.py, wallet.py, INTERFACES, supabase README (and game.js)\n- A7: the same files as L5 except settings.py.\n\nGit shows none of the four semantic breaks below, and each was confirmed by running the suite:\n1. A2's keep_quiet tests were written before main's Story v2. 2 tests fail from group 1 on.\n2. S0's 'not on the public list' test tries '/api/content/../bulletin'. httpx normalises that to open-world's GET /api/bulletin, so 1 test fails in group 2.\n3. L4 v2 deletes market/rules.py and the v1 Board/MarketService API. Open-world's daily/exchange_summary.py, tests/bulletin_helpers.py and test_lisbon_time.py then fail to import, so `import server.app` raises ImportError and every test and the deploy break.\n4. A7 pins WALLET_REASONS[11:13]. After L4 v2 and L5 its two reasons sit at [15:17].\n\nThere are also silent auto-merge duplicates:\n- two game/ lines in server/__init__.py (L2)\n- a second HOST_PLAYER_IDS block in .env.example (L5)\n- second copies of read_player_id/read_host_player_ids in settings.py (L5; tests pass, ruff check fails with F811)\n- L4 v2's `assert len(WALLET_REASONS) == 13`, which sits outside the conflict markers and fails after L5.\n\nWith the resolutions in this plan, the trial measured:\n- main: 1509 passed\n- after group 1: 3099 passed\n- after group 2: 6405 passed\n- after group 3: 9690 passed, exit 0, and `ruff check .` 'All checks passed!'\n\nOver the same span the API grows from 10 to 20 to 23 to 33 routes; 33 is verified from OpenAPI, with no duplicate path or operationId. The migrations, the per-step counts, the decision renumbering D022 to D026 and the docs counts are in the fields below.\n\nReference copies of the final app.py, settings.py, server/__init__.py, routes/__init__.py, game/__init__.py, wallet.py, the v2 exchange_summary.py and .env.example are in <scratch> The fix patches are fix-after-group2-keep_quiet-and-bulletin.patch, fix-L4v2-port-bulletin-exchange-line.patch and fix-A7-and-L5-silent-duplicates.patch in <scratch> The trial clone itself is at <scratch> its docs were union-resolved, so it is not a docs reference.",
+ "files": [
+  {
+   "path": "backend/server/app.py",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/open-world-must",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Conflicts: A6 (route import list), then L2, open-world, L5 and A7 (every hunk: imports, signature, defaults, state comment, app.state, includes). A4 auto-merges. L4 v2 does not touch this file.\n\nFINAL after group 3 (copy: <scratch>):\n\n(1) Imports in isort order:\n- `from server import __version__`\n- `server.adapters.base` CachedSource\n- `server.auth` PlayerVerifier\n- `server.clock` Clock, utc_now (OW)\n- `server.crew_broadcast` CrewBroadcaster, broadcaster_from_settings (A4)\n- `server.daily.content` load_daily_content (OW)\n- `server.duels.service` DuelService (A7)\n- `server.errors` register_error_handlers\n- `server.game.building_catalogue` BuildingCatalogue, catalogue_or_none (L2)\n- `server.market.exchange` MarketService, market_or_none\n- `server.predictions.desk` PredictionDesk, desk_or_none (L5)\n- `from server.routes import (auth_exchange, bulletin, captain_name, config, content, crews, delete_me, duels, health, intro, islet, keepalive, market, me, predictions, save, weather)`\n- settings, sign_in_code, supabase_admin, `server.weather.source` make_weather_source\n- `server.weather.state_rules` load_state_rules (OW)\n- `server.world_stage` AlwaysDark, WorldStageReader (OW)\n\n(2) Signature: settings, verifier, admin, then `*`, then weather_source, exchanger, market_service, broadcaster (A4), islet_catalogue (L2), world_stage, clock (OW), prediction_desk (L5), duel_service (A7). Nothing goes before `*`.\n\n(3) Defaults, in the same order:\n- broadcaster_from_settings(settings)\n- catalogue_or_none()  # None if buildings.json is broken\n- AlwaysDark()  # until package L3 builds world_state\n- utc_now\n- desk_or_none(settings)  # None if its questions file is broken\n- DuelService()  # no data files\n\n(4) app.state, in this order: settings, verifier, admin, weather_source, exchanger, market, broadcaster, islet_catalogue, world_stage, clock, weather_rules = load_state_rules(), daily_content = load_daily_content() (keep OW's two comments), predictions, duels. The comment above reads: 'Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py, routes/weather.py, sign_in_code.py, market/exchange.py, crew_broadcast.py, game/islet_service.py, world_stage.py, clock.py, predictions/desk.py and duels/service.py.'\n\n(5) include_router order (17 routers, all with prefix='/api'): health, content, config, keepalive, weather, bulletin, me, captain_name, save, delete_me, intro, auth_exchange, market, crews, islet, predictions, duels.\n\n(6) Docstring: one sentence naming every fake (weather source, exchanger and crew broadcaster on fake transports; Exchange feed and clock; the islet catalogue; the world-stage reader and the routes' clock; the desk's Manifold sources and clock; the duel clock). Keep 'Every service after `admin` is keyword-only.'\n\nPER GROUP:\n- G1: main + A2's four new route modules in the import list, includes captain_name, save, delete_me, intro right after me; crews include last.\n- G2: + broadcaster (A4); + islet_catalogue and the islet include (L2); + world_stage, clock, weather_rules, daily_content and the bulletin include right after weather (OW).\n- G3: + prediction_desk and the predictions include (L5); + duel_service and the duels include (A7).",
+   "semantic_risks": "- Keyword-only rule. conftest.py records that a moved create_app parameter once made the Exchange tests fetch real Binance prices. A4 has a test that create_app(CONFIGURED_SETTINGS, None, None, broadcaster) raises TypeError.\n- Open-world's test_app.py SERVICES tuple only lists weather_source, exchanger, market_service, world_stage and clock. Extend it with broadcaster and islet_catalogue at the OW merge, and with prediction_desk and duel_service at L5/A7 (the trial did; +4 parametrized cases).\n- The clock passed to create_app is only the routes' ClockDep. The Exchange, the desk, duels and the broadcaster keep their own clocks.\n- Trial check: 33 OpenAPI operations, no duplicate (method, path) or operationId; all app.state and *Dep names unique. GET /api/me (A2) and DELETE /api/me (delete_me) share a path on purpose."
+  },
+  {
+   "path": "backend/server/settings.py",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a4-live-presence",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk"
+   ],
+   "plan": "G1: A2's version, no conflict. It adds the HOST_PLAYER_IDS docstring lines, `import uuid`, the field host_player_ids, read_player_id, read_host_player_ids, and host_player_ids= in load_settings.\n\nG2 (A4): one conflict, in the 'Used by:' paragraph. Write: 'Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence), the routes (env, demo mode, flags, the keep-alive secret), weather/source.py (the weather place), hosts.py (who is a host) and the tests (they pass in a plain dictionary, so no real environment is needed).' Keep A4's SecretStr comment '(only supabase_admin.py, crew_broadcast.py and routes/keepalive.py do that)'.\n\nG3, L4 v2 (3 conflicts):\n- Docstring list: L4 v2's STOCK_API_PROVIDER and STOCK_API_KEY lines replace MARKET_MULTIPLIER; HOST_PLAYER_IDS follows them.\n- Fields after weather_longitude: stock_api_provider and stock_api_key (with L4 v2's comments), then host_player_ids (with A2's comment). Delete market_multiplier and its comment.\n- load_settings: stock_api_provider=read_stock_api_provider(env), stock_api_key=SecretStr(read_text(env, 'STOCK_API_KEY')), host_player_ids=read_host_player_ids(env).\n- Check the auto-merged parts: no `from server.market.rules import`, no read_market_multiplier; keep `import uuid`, STOCK_PROVIDER_NAMES, read_stock_api_provider, read_player_id and read_host_player_ids.\n\nG3, L5: take OURS in all 4 conflict blocks. L5's side brings back MARKET_MULTIPLIER, market_multiplier and DEFAULT_MULTIPLIER, which import the deleted market/rules.py. Then delete the second copies of read_player_id and read_host_player_ids that git silently auto-merges below read_stock_api_provider. The trial showed this: pytest passes, ruff fails with F811.\n\nOptional at G3: add 'market/exchange.py (the stock key)' to the SecretStr comment.",
+   "semantic_risks": "- L5's settings.py, hosts.py, test_hosts.py and test_host_settings.py are byte-identical to A2's (blob 327ae25 and the others), so L5 adds nothing here.\n- L4 v2's test_market_settings asserts not hasattr(settings, 'market_multiplier').\n- HOST_PLAYER_IDS: a value that is not a UUID stops the server at start-up (Vercel setting, pending Nils N10)."
+  },
+  {
+   "path": ".env.example",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk"
+   ],
+   "plan": "G1: A2 adds the HOST_PLAYER_IDS block after MARKET_MULTIPLIER.\n\nG3, L4 v2: auto-merges. The MARKET_MULTIPLIER block becomes STOCK_API_PROVIDER plus STOCK_API_KEY, and the DEMO_MODE and MARKET_DATA_API_KEY comments are reworded.\n\nG3, L5: auto-merges a SECOND identical HOST_PLAYER_IDS block (trial). Delete it.\n\nFINAL order: APP_ENV, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, CRON_SECRET, DEMO_MODE (L4 v2 text), FEATURE_FLAGS, WEATHER_PLACE_NAME, WEATHER_LATITUDE, WEATHER_LONGITUDE, STOCK_API_PROVIDER, STOCK_API_KEY, HOST_PLAYER_IDS, VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, then the commented later keys (# MARKET_DATA_API_KEY with L4 v2's text, # SPORTS_API_KEY, # LLM_API_KEY). Every value stays empty.",
+   "semantic_risks": "These tests read the file:\n- test_env_example_no_longer_has_the_multiplier fails if the string MARKET_MULTIPLIER appears anywhere, comments included.\n- test_host_settings needs the line above HOST_PLAYER_IDS= to start with '# [SERVER ONLY]'.\n- test_market_settings needs '# [SERVER ONLY]' above STOCK_API_KEY=, and '# [safe for browser]' with 'finnhub' and 'in writing' above STOCK_API_PROVIDER=. It also needs 'stocks are not part of it' in the DEMO_MODE comment.\n- test_weather_settings needs the three weather lines and the words 'Open-Meteo' and 'Torshavn'.\n\nNo test catches a duplicated key, so remove it by hand."
+  },
+  {
+   "path": "backend/server/__init__.py",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/open-world-must",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "G1: auto-merges. A2 adds hosts.py, account/ and game/ (A3); A6 adds crews/.\n\nG2:\n- A4 adds crew_broadcast.py (auto).\n- L2 auto-merges a SECOND 'game/' line with no conflict marker (seen in the trial). Merge the two into one: 'game/  game rules bigger than one helper: the referee and the entry kits (package A3) and the home islet (package L2, its routes are in routes/islet.py)'.\n- OW conflicts with A6's crews/ line: keep crews/, then weather/, daily/, market/. OW's clock/lisbon_time/world_stage/content_fields lines auto-merge.\n\nG3:\n- L5: 2 conflicts. Drop L5's own hosts.py line, because A2's is already there. Add predictions/ after market/.\n- A7: add the duels/ line once.\n\nFINAL listing (copy: <scratch>): app.py, errors.py, settings.py, flags.py, clock.py, lisbon_time.py, world_stage.py, content_fields.py, auth.py, sign_in_code.py, supabase_admin.py, crew_broadcast.py, wallet.py, hosts.py, account/, game/, crews/, weather/, daily/, market/, predictions/, duels/, routes/, adapters/. Keep __version__ = '0.1.0' (a test pins it to pyproject)."
+  },
+  {
+   "path": "backend/server/routes/__init__.py",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/l2-home-islet",
+    "feat/open-world-must",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "G1: auto-merges. A2 replaces the me.py row and adds rows for captain_name.py, save.py, delete_me.py and intro.py. A6 adds the crews.py row after keepalive.py.\n\nG2: L2's islet.py rows and OW's weather.py and bulletin.py rows all land after the crews row. OW also changes the prose to 'bulletin_answer.py is the one file here without a URL...' and 'Each file with URLs creates a `router`.'\n\nG3: L5's predictions.py row and its prose 'predictions.py the prediction desk (its rules are in server/predictions/)'. A7's prose sentence about duels.py.\n\nFINAL docstring (copy: <scratch>):\n- Table: health, config, me, captain_name, save, delete_me, intro, auth_exchange, keepalive, crews, islet (2 lines), weather, bulletin, predictions (2 lines).\n- Prose: 'Most of them are called by the browser. keepalive.py is for one daily caller instead: the GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive). market.py is the Island Exchange (its rules are in server/market/), predictions.py the prediction desk (its rules are in server/predictions/). duels.py is Lantern Duels (its rules are in server/duels/): GET and POST /api/duels, GET /api/duels/{id} and the routes /move and /cancel under it. bulletin_answer.py is the one file here without a URL: it holds the shape of the bulletin's answer, so bulletin.py stays short. Each file with URLs creates a `router`. app.py plugs every router in under /api. To add a feature: create a new file here, then add one line in app.py.'\n\nThe me.py row 'GET /api/me  the player's name, coins, crews, kit and start place' comes from A2."
+  },
+  {
+   "path": "backend/server/game/__init__.py",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/l2-home-islet"
+   ],
+   "plan": "Both branches add this file, so L2 hits an add/add conflict. L2's text even says 'The controller combines the two lists'.\n\nFINAL (copy: <scratch>):\n- First line: 'Game rules on the server that are bigger than one small helper (package A3 starts this folder).'\n- The A3 list: entry_kits.py, referee.py, entry_profile_store.py.\n- The L2 list: building_catalogue.py, building.py, islet_store.py, islet_service.py.\n- Routes: routes/intro.py (POST /api/intro/complete) and routes/islet.py (GET /api/islet, POST /api/islet/build). routes/me.py reads kit and place through entry_profile_store.py.\n- Database parts: 20261106030000_entry_profiles.sql and 20261106070000_home_islet.sql.\n- 'Later: case.py (S3), partners.py (S4)'.\n- 'Used by: routes/intro.py, routes/me.py, routes/islet.py and later S3/L3'.\n\nNo module name clashes: entry_* versus building*/islet_*."
+  },
+  {
+   "path": "backend/server/hosts.py (with backend/server/tests/test_hosts.py and backend/server/tests/test_host_settings.py)",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/l5-prediction-desk"
+   ],
+   "plan": "A2 and L5 add byte-identical blobs of all three files (hosts.py 3768ecf, test_hosts.py 7c5f1ce, test_host_settings.py 4c8b37f). At the L5 merge they are a no-op; keep one copy.\n\nAfter G3, change the hosts.py docstring line 'No route uses this yet. The presenter routes of package L3 (the case board and the finale) will.' to 'POST /api/predictions/settle (package L5) is the first route that uses it. The presenter routes of package L3 (the case board and the finale) will too.'",
+   "semantic_risks": "L5's routes/predictions.py imports HostDep and reads settings.host_player_ids for /mine (is_host) and /settle. HostDep must stay exactly as A2 wrote it: the id always comes from the verified login."
+  },
+  {
+   "path": "backend/server/wallet.py",
+   "branches": [
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "G1 and G2: unchanged, 11 reasons.\n\nG3: conflicts at L5 and at A7. Resolve both with 'ours then theirs', so the reasons follow migration time-stamp order.\n\nFINAL WALLET_REASONS (17):\n- kit_grant, clue_reward, mystery_reward, event_reward, cargo_sale, clue_purchase, building_purchase, admin_adjust\n- # 20261106010000 (L4 v2's 3-line comment: market_buy and market_sell never used, a reason is never removed, market_fee used by both versions): market_buy, market_sell, market_fee\n- # 20261106090000: market_stake (spend), market_payout (earn)\n- # 20261106100000: prediction_stake (spend), prediction_payout (earn)\n- # 20261106110000: arena_stake (spend), arena_payout (earn)\n\nThe docstring line 'Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings, the Island Exchange, Lantern Duels)' comes from A7. Add 'the prediction desk' before Lantern Duels.",
+   "semantic_risks": "The order must equal the INSERT order across migrations sorted by file name. test_the_reasons_in_the_database_are_the_reasons_in_python_in_the_same_order reads every migration.\n\nNo group 1 or group 2 migration adds a reason: L2 uses building_purchase and A3 uses kit_grant (verified in the SQL and in the branches' tests)."
+  },
+  {
+   "path": "backend/server/tests/test_wallet.py",
+   "branches": [
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Conflicts at L5 and A7 in two tuples: the full ordered tuple (test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order) and the list_reason_names list. Use 'ours then theirs' both times.\n\nFINAL: the 17 pairs and names in the wallet.py order. L5's widened parametrize lists auto-merge: spend adds market_buy, market_fee and prediction_stake; earn adds market_sell and prediction_payout. Keep them as L5 wrote them; do not invent new cases. The test parametrized over WALLET_REASONS grows on its own (11, then 17 cases)."
+  },
+  {
+   "path": "backend/server/tests/test_wallet_matches_migration.py",
+   "branches": [
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "G3, L4 v2: no conflict. It rewrites the Exchange section for 20261106090000, adds EXCHANGE_V1, and replaces the end-of-list test with test_python_ends_its_list_of_reasons_with_the_v1_three_and_the_two_new_ones: `WALLET_REASONS[-5:]` plus `assert len(WALLET_REASONS) == 13`.\n\nG3, L5: one conflict, in that function's header. L5 edited the old v1 test. Do not take L5's [8:11] head, because the body below has five items. Also remove `assert len(WALLET_REASONS) == 13`. It sits OUTSIDE the conflict markers and fails with 15 and later 17 reasons. Replace the function with:\n\n```\ndef test_python_lists_the_five_market_reasons_together_after_the_first_eight():\n    # They were the last five until the prediction desk and Lantern Duels added theirs after them.\n    # Later migrations append more, so the test pins positions 8 to 12, not the end of the list.\n    assert WALLET_REASONS[8:13] == (\n        ('market_buy','spend'), ('market_sell','earn'), ('market_fee','spend'),\n        ('market_stake','spend'), ('market_payout','earn'),\n    )\n```\n\ntest_wallet.py already pins the whole tuple.\n\nG3, A7: same conflict again; take OURS.\n\nKeep the module-level names MIGRATIONS, SEED_INSERT, SEED_ROW, migrations_that_change_a_reason and migrations_with_an_unreadable_insert. L5's test_predictions_match_migration.py and A7's test_duels_migration.py import them from this module. Trial: the final file passes."
+  },
+  {
+   "path": "backend/server/tests/test_duels_migration.py",
+   "branches": [
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Semantic fix at the A7 merge. Git shows nothing, because only A7 adds the file.\n\nChange test_python_has_the_two_arena_reasons_right_after_the_market_reasons, which asserts `WALLET_REASONS[11:13] == (('arena_stake','spend'), ('arena_payout','earn'))`, to `WALLET_REASONS[15:17]`. Change the comment to '8 reasons of the foundation + 3 of the first Exchange + 2 of the Exchange v2 + 2 of the prediction desk'. Suggested new name: ..._right_after_the_prediction_reasons. Alternatively, make it name-based like L5's test (names.index('arena_stake') > names.index('prediction_payout')).\n\nWithout the fix the test fails: [11:13] is now market_stake and market_payout. EXCHANGE (010000) and MIGRATIONS.index(...) stay valid, because the v1 file is never deleted. L5's own test is already name-based and needs no change."
+  },
+  {
+   "path": "backend/server/tests/test_app.py",
+   "branches": [
+    "feat/open-world-must",
+    "feat/l5-prediction-desk"
+   ],
+   "plan": "Auto-merges. OW adds the SERVICES keyword-only tests and three clock tests; L5 adds HOST_PLAYER_IDS to SETTING_NAMES.\n\nRecommended additions (the trial did both and passes):\n- Extend `SERVICES = ('weather_source','exchanger','market_service','broadcaster','islet_catalogue','world_stage','clock','prediction_desk','duel_service')`: broadcaster and islet_catalogue at the OW merge, the last two at L5/A7.\n- Optional: add STOCK_API_PROVIDER and STOCK_API_KEY to SETTING_NAMES, whose comment claims 'every environment variable the server reads'. The empty_environment fixture uses it for subprocess tests."
+  },
+  {
+   "path": "backend/server/tests/test_content.py",
+   "branches": [
+    "docs/s0-story-round",
+    "feat/open-world-must"
+   ],
+   "plan": "Conflict at the OW merge: both branches append at the end of the file. Keep S0's section 'Nothing in backend/content/secret/ can be served' first, then OW's section 'the open-world files are for the server only' (OPEN_WORLD_FILES plus 8 parametrized names).\n\nSEMANTIC FIX in the same merge, needed. S0's test_a_content_file_that_is_not_on_the_public_list_cannot_be_downloaded[bulletin.json] fails. The name '../bulletin' is normalised by httpx to GET /api/bulletin, which shows bulletin.json's words on purpose.\n\nKeep the strict secret-file test unchanged. Exclude the files that their own route shows by design from json_files_that_are_not_public():\n\n```\n# Files that a route of their own shows on purpose: '../bulletin' in a content address is\n# normalised to /api/bulletin before it reaches the API. The tests at the end of this file\n# prove that the content route never serves them.\nSHOWN_BY_THEIR_OWN_ROUTE = {'weather_states.json', 'bulletin.json', 'chapter_two_hook.json'}\n```\n\nThen add `and path.relative_to(CONTENT_DIR).as_posix() not in SHOWN_BY_THEIR_OWN_ROUTE` to the filter. The trial shows -3 parametrized cases and all pass.",
+   "semantic_risks": "S0's parametrization runs over EVERY non-public *.json under backend/content, so later branches add cases by themselves: names.json, entry_kits.json, buildings.json, market/calendars.json, predictions/questions.json and 12 recorded/sample Manifold files.\n\nAny future route whose path equals a content file's stem (for example a later /api/case, or a file named like a route) breaks the same way. For secret/ files that failure is wanted."
+  },
+  {
+   "path": "backend/server/tests/test_referee.py + backend/server/tests/test_intro_route.py + backend/server/tests/story_states.py",
+   "branches": [
+    "feat/a2-a3-signin-referee"
+   ],
+   "plan": "Semantic fix at the A2 merge (group 1). A2 is based on 8d0a718, before main merged Story v2 (3d59b6a), which added the action keep_quiet at the shore. After the merge two tests fail: test_referee.py::test_keep_quiet_is_refused_on_todays_story and test_intro_route.py::test_a_forged_log_is_422_and_stores_nothing[keep_quiet, which today's story does not have].\n\nFix (trial-verified):\n(a) test_referee.py: replace that test with test_keep_quiet_ends_as_a_stranger_on_todays_story. It runs judge(STORY, KITS, TO_SHORE + ['keep_quiet'] + TO_LAMP + ['untie']) and expects (verdict.ending, verdict.decision) == ('ending_trapped', 'none').\n(b) story_states.story_v2_fixture(): insert KEEP_QUIET only `if 'keep_quiet' not in ids`. Today's story has it now; otherwise the fixture holds two keep_quiet actions.\n(c) test_intro_route.py: delete the FORGED_LOGS entry \"keep_quiet, which today's story does not have\".\n\nResult: G1 3099 passed (trial). specs/M1-backbone.md line 10 ('keep_quiet is refused on today's story') becomes a historical note: leave it."
+  },
+  {
+   "path": "backend/server/daily/exchange_summary.py + backend/server/tests/bulletin_helpers.py + backend/server/tests/test_bulletin.py + backend/server/tests/test_lisbon_time.py + backend/server/lisbon_time.py",
+   "branches": [
+    "feat/open-world-must",
+    "feat/l4-exchange-v2"
+   ],
+   "plan": "Semantic break at the L4 v2 merge. It is the most severe one: `import server.app` fails, which takes down every test and the Vercel function. Git shows no conflict, because L4 v2 does not touch these files.\n\nThe imports that break:\n- exchange_summary.py: `from server.market.exchange import Board, MarketService` and `market.board(admin, save=False)`, `board.quotes`, `quote.is_halted`, `board.snapshot.source`\n- bulletin_helpers.py: `server.market.rules` (LIVE, Base), `server.market.feed.PriceSnapshot`, the v1 constructor MarketService(companies, feed, 100, clock) and memory_store.bases\n- test_lisbon_time.py: `from server.market.rules import market_day_start`\n\nIt also breaks test_chapter_two_hook, test_daily_content and test_daily_frame, which import bulletin_helpers.\n\nPORT, done in the same merge commit (trial-verified, patch: <scratch>):\n\n(1) exchange_summary.read_exchange calls `snapshot = await market.snapshot(admin, trading_enabled=False)`. That never sweeps and never writes, so it keeps 'the bulletin only looks'.\n- feed = 'replay' if snapshot.demo_mode, else the worst reading.source of the island companies, in the order stale, live, cache.\n- No island price yet: return None, so there is no Exchange line, as with v1's failing feed.\n- paused = () always, because v2 has no circuit breaker; the field stays so `pausedCompanies: []` keeps its shape.\n- Import Snapshot from server.market.board and SOURCE_* from server.market.readings.\n\n(2) bulletin_helpers: make_market(clock, source, failing) builds `market_from_settings(settings, transport=httpx.MockTransport(fake), clock=clock)` with a fake Binance that answers all seven island pairs.\n- 'cache': warm the feed once, then advance 30 s.\n- 'stale': warm, advance 600 s, then Binance fails.\n- 'replay': LISBON_SETTINGS with demo_mode=True.\n- 'failing': Binance never answers.\n- Delete FakeFeed, pause_company and the imports of SourceUnavailable and timedelta that become unused; ruff flags them. Better: reuse FakeBinance and good_binance_answer from L4 v2's market_helpers.py.\n\n(3) test_bulletin:\n- Replace the two pause tests with test_the_exchange_v2_has_no_pause_so_no_company_is_ever_paused.\n- test_the_bulletin_only_looks... now asserts that a make_admin fake saw no request.\n- test_the_exchange_line_needs_the_market_flag and test_the_feed_is_named_in_words must read ONE response. A second look within 60 s is 'cache' in v2.\n\n(4) test_lisbon_time: import game_day_start from server.market.game_day, and change the comment and the assert (`== game_day_start(moment)`). In lisbon_time.py's docstring, change 'market/rules.py agrees, and a test checks it' to 'market/game_day.py agrees'.\n\nTrial after the port: 7306 passed after L4 v2.\n\nPRODUCT DECISION for Nils or the controller: whether v2 should list 'paused' companies (for example stale ones) in the bulletin. The plan keeps the contract and shows none.",
+   "semantic_risks": "- Naming clash. Open-world's lisbon_time.game_day is the Lisbon calendar date (00:00) ('daily caps reset when it changes'). L4 v2's market/game_day.game_day_start is 08:00 Lisbon and drives the Exchange daily stake cap. L5 (desk_day_start) and A7 (duel_day_start) use 00:00 with their own ZoneInfo fallback copies.\n- A module named lisbon_time (OW) and a function lisbon_time() in market/game_day.py (L4 v2).\n- Do not unify these in the merge; flag it for later."
+  },
+  {
+   "path": "backend/content/README.md",
+   "branches": [
+    "docs/s0-story-round",
+    "feat/a2-a3-signin-referee",
+    "feat/l2-home-islet",
+    "feat/open-world-must"
+   ],
+   "plan": "Conflicts at A2 (2), L2 and OW: the 'What lives here' table, and sections appended at the end. Main also changed line 150 since 8d0a718; that auto-merges.\n\nTable, FINAL rows:\n- story.json\n- secret/case.json (S0; it names the culprit; keep S0's wording)\n- partners.json (S0)\n- market/ (S0)\n- weather/ (S0)\n- names.json, entry_kits.json (A2)\n- buildings.json (L2)\n- weather_states.json, bulletin.json, chapter_two_hook.json (OW)\n- G3: add predictions/ (L5's own README: questions.json and the recorded and sample Manifold answers, server only).\n- DROP A2's leftover row '`secret/` (does not exist yet)': S0 replaced it.\n\nPublic/secret bullets: take A2's rewritten 'A page can hold an old story' bullet (the referee replays without a story version) and S0's extended 'Secret content' bullet (tests prove nothing in secret/ is served), together.\n\nSection order: main's sections up to 'What the tests check'; S0's 'The case data: secret/case.json and partners.json' (S0 put it before 'Where this story came from'); 'Where this story came from'; then A2's 'The format of names.json' and 'The format of entry_kits.json'; L2's 'buildings.json'; OW's 'The open-world files (server only)'. Keep S0's 6 spoiler mentions in this file.\n\nG3: the market/ row 'the seven companies and the recorded replay' becomes 'the twelve companies (seven invented island companies, five real stocks), the market calendars and the recorded replay'.\n\nThe content linter (L4 v2) scans this .md for em and en dashes. I ran it on the combined backend/content of all branches: 'Content check: 0 errors, 20 warnings, 40 files.', exit 0."
+  },
+  {
+   "path": "docs/DECISIONS.md",
+   "branches": [
+    "docs/s0-story-round",
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/open-world-must",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Conflicts at A2, A4, L2 and OW: every branch appends before '## Next entry'. A6, L4 v2, L5 and A7 auto-merged in the trial.\n\nKeep S0's lines: the 'Spoiler warning' paragraph under the intro, and the '**Spoiler warning.** Item 5 of this entry names the culprit.' line in D013.\n\nFINAL heading order (chronological, ties in merge order; '## Next entry' stays last): D001, D002, D003, D004, D012, D020 (A6 placed it right after D012, as the M1 spec asks), D005, D013, D015, D007, D016, D017, D018 (story round, kept), D006 (A2), D022 (was A2's D018, Account data), D019 (A3), D023 (was A4's D018, Live presence on Supabase Realtime), D021 (L2), D024 (was OW's D018, Open-world must..., 2026-11-06), D025 (was L5's D018, Prediction desk rules, 2026-11-06), D026 (was A7's D018, Lantern Duels rules, 2026-11-06), Next entry.\n\nD017: at G3 take L4 v2's rewritten text (it keeps a 'History: v1 (superseded)' paragraph). Until then main's v1 text stays.\n\nRenumber only inside each branch's own entry and its references (see renumber). Rewrite the status sentences that talk about the provisional number:\n- A7 D026: 'The number was D018 on its branch; the story round took D018 first, so it became D026 at merge.'\n- L5 D025: 'Renumbered from D018 to D025 at merge.'\n- A2 D019: 'D019 was the next free number when A3 was written...'\n\nLeave decision bodies that say 'No route uses it yet' (D022 point 4) or 'pending S0' (D019) as recorded. Fix the facts in the code and interface docs instead."
+  },
+  {
+   "path": "docs/INTERFACES.md",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/open-world-must",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Conflicts at nearly every merge. Rule: L4 v2 REPLACES the v1 Exchange text (rows, codes, rules, the L4 package row). Never keep v1 and v2 side by side; a 'keep both' union did that in the trial.\n\n(1) Status table, combined rows at G3:\n- 403 `forbidden`, `not_your_duel`: A2's host text (HostDep, HOST_PLAYER_IDS, 401 first) + 'POST /api/predictions/settle is the first route that uses it' (L5) + A7's not_your_duel sentence, minus A7's claim that it is 'the first code a route really uses'.\n- 404: + 'so do the home islet routes', no_such_plot, no_such_building (L2); wrong_code (A6, crews); no_such_position (L4 v2); no_such_question (L5); no_such_duel, no_such_captain (A7).\n- 409: base + stale_save, no_rerolls_left, no_name_yet (A2; drop 'Package A2 plans a 409 for a stale save version too' from G1); kit_needed, already_in_crew, already_seated, crew_full, changed, already_started (A6, from routes/crews.py; A6 did not add them); plot_occupied, not_buildable_yet, not_enough_timber (L2); the v1 Exchange list until G3, then v2's market_closed, prices_stale, company_unavailable, company_delisted, daily_stake_cap, too_many_positions, position_closed, wrong_price_mode; L5's pool_closed, already_staked, daily_stake_cap, pool_open, outcome_conflict, stakes_changed; A7's already_sealed, duel_taken, duel_closed, duel_expired, daily_pair_limit, too_many_waiting, name_not_unique.\n- 422: + save_too_big, save_not_json, move_refused, no_ending (A2); wrong_plot (L2); v1 trade_too_small/trade_too_big until G3, then v2 stake_too_small/stake_too_big '(10 to 500 coins)'; L5 uses the SAME codes '(1 to 50 coins)', so say so; A7's bad_rounds, bad_stake, wrong_signal_count, not_enough_oil, cannot_duel_yourself.\n- 429: L5's sentence + A6's '10 wrong crew codes in 10 minutes (too_many_attempts, Retry-After)'.\n- 503: + intro_unavailable (A2), crew_codes_busy (A6), islet_unavailable (L2), bulletin_unavailable (OW), predictions_unavailable and 'source_unavailable on a prediction stake' (L5). At G3 replace the Binance source_unavailable sentence with L4 v2's 'A price problem is never a 503 on the Exchange board...'.\n\n(2) Section 2 order: health, config, me, then A2's sections (me/name and reroll, GET/PUT save, DELETE me, intro/complete), auth/exchange, content, weather, bulletin (OW), keepalive, the Island Exchange (v1, replaced by v2 at G3), crews (A6), home islet (L2), prediction desk (L5), Lantern Duels (A7), GET /api/docs.\n\n(3) Section 3: A4's live_* events row in the reserved-events table, then A2's subsection 'Talking to the API: api.js and session.js' before section 4.\n\n(4) Section 4: per-migration paragraphs in time-stamp order: foundation, 010000 (v1, which L4 v2 rewrites as never applied and removed by 090000, with the tables exchange_positions and exchange_events), accounts 020000, entry profiles 030000, home islet 070000, prediction desk 100000, Lantern Duels 110000. Then 'Four database functions come with the first migration...'. A4's Realtime bullet replaces 'Realtime is not switched on for any table yet'. A2's Saves bullet.\n\n(5) Section 5: 17 reason rows at G3.\n\n(6) Section 6: A6's changes. After G1, A2's handover makes 'Deleting the player who started a crew removes the whole crew' false for DELETE /api/me; say 'only a dashboard deletion does'.\n\n(7) Section 7: A4's rewrite.\n\n(8) Section 8: A4's live_presence row.\n\n(9) Section 9 rows: A2/A3 rows (A2); the A6 row is still 'draft', so mark it built at G1; A4 (A4); L1 and the new 'Open-world must' row (OW); L2 (L2); L3 and S3 rows (OW); L4: v2's row only; L5: L5's row + OW's appended clause 'weather questions settle on real fog only...'; A7 (A7).\n\n(10) 'Rules for the live data features': L4 v2's market bullets replace v1's (no MARKET_MULTIPLIER); L5 and A7 bullets as they wrote them.\n\n(11) The A7 link '[D018](DECISIONS.md#d018--lantern-duels-rules--2026-11-06)' becomes '[D026](DECISIONS.md#d026--lantern-duels-rules--2026-11-06)'."
+  },
+  {
+   "path": "supabase/README.md",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Conflicts at A6, A4, L2, L4 v2, L5 and A7. Each branch wrote counts as if it were the only migration after the foundation and the first Exchange, so rewrite the counts; do not union them.\n\n(1) File table at the top: one row per migration, in time-stamp order, named by time stamp. No ordinals (A4, L4 v2 and A7 each call theirs 'the third migration'; A7 says 'Run it after the second'): 000000 foundation, 010000 first Exchange (L4 v2's wording at G3: merged but never applied, removed by 090000, its reasons stay), 020000 accounts, 030000 entry kits, 040000 crew codes (A6 added no row; add one at G1), 050000 live presence, 070000 home islet, 090000 Exchange v2, 100000 prediction desk, 110000 Lantern Duels.\n\n(2) Per-migration sections after the Exchange section, in time-stamp order: accounts and entry kits (A2), live presence (A4), home islet (L2), prediction desk (L5), Lantern Duels (A7). A6's crew-codes section stays under 'Crews and seats'. L4 v2 rewrites the Exchange section itself.\n\n(3) Keep A2's '### Apply before you merge'. Make one apply list of all files, oldest first. Note that 090000 needs 010000 applied first: it reuses market_fee and its reasons follow v1's.\n\n(4) Quick checks: replace every 'After applying it, the three quick checks show ...' sentence with ONE cumulative table (see docs_counts). Keep A4's fourth quick check (5 policies on realtime.messages).\n\n(5) Wallet reasons table: + 6 rows at G3, plus the 'first eight / next three ...' sentence.\n\n(6) 'Who may do what': table rows in time-stamp order. The footnote marker \\*\\*\\* is defined five times (A2 delete_player SECURITY DEFINER, A6 crew functions, L2 islet_build, L5 prediction functions, A7 duel functions). Number the footnotes, for example [1] wallet, [2] Exchange, [3] accounts and entry kits (A2 reuses \\*\\* for its two insert rows), [4] crews, [5] home islet, [6] prediction desk, [7] Lantern Duels, and re-mark the rows. Function and counter table: v2 replaces market_trade(), market_set_base() and market_trades_id_seq with exchange_* and exchange_events_id_seq.\n\n(7) 'What the server's secret key may do': 'all N tables' is 13 at G1, 15 at G2, 18 at G3.\n\n(8) Manual test plan intro: one sentence for the reason count per applied file. The other branches' references to 'steps E1 to E13' become 'X1 to X15' at G3 (L4 v2 renamed them). A7's edit to v1's E13 ('still shows 11 (13 once ...)') moves into X15 as '13 (17 with the prediction desk and Lantern Duels)'. L5's P1 '13 reasons in all' becomes 15 or 17 by what is applied.\n\n(9) Step sections after step 17: the Exchange checks, then N1-N6 and K1-K5 (A2), C1-C8 (A6), L1-L7 (A4), H1-H15 (L2), P1-P16 and R1-R4 (L5), D1-D12 (A7). Step prefixes do not collide. 'L1-L7' looks like package names L1-L5 and linter checks L1-L8; leave it."
+  },
+  {
+   "path": "docs/ENGINEERING.md",
+   "branches": [
+    "docs/s0-story-round",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet"
+   ],
+   "plan": "Auto-merges in the trial (main also changed it since 3ca7d38). Keep S0's rows and texts: the content README row, the docs/story/ row with its spoiler note, the backend/tools/ row and the simulate_case.py command. Keep A4's safety-checklist exception for realtime.messages and its Realtime row, and L2's backend/server row.\n\nInventory updates: see docs_counts. The backend/server row lists routes and packages; the backend/content row; backend/tools ('Later `lint_content.py`' is false at G3)."
+  },
+  {
+   "path": "docs/ARCHITECTURE.md",
+   "branches": [
+    "feat/a4-live-presence"
+   ],
+   "plan": "A4 conflicts with MAIN (A4's base is 3ca7d38; main has the keep-alive decision and 8ff24cc's region line). Two hunks:\n\n(a) The paragraph 'Read it from the left...': take MAIN's text (keep-alive by GitHub Actions). Add only A4's Realtime parts: 'to sign in, to read what row-level security allows and, once live presence is switched on, to join its private Realtime rooms' and 'The dotted line to Realtime is built and tested with fakes, but it has not been tried against the live project.' Drop A4's stale 'nothing calls the keep-alive route every day yet. Who will call it is an open decision for Nils.'\n\n(b) The hosting bullets: take MAIN's Vercel bullet ('vercel.json sets it (\"regions\": [\"dub1\"])...'). Take A4's Supabase bullet, which adds 'Realtime > Settings > \"Allow public access\" off'.\n\nThen: A4's 'D018 (live presence)' becomes D023 (renumber list). G2: section 4's 'The route POST /api/islet/build is planned (package L2). Every other step exists today.' becomes built. G3: add a STOCK_API_KEY row to 'Where each secret lives' (Vercel env and private .env; off until Finnhub approves in writing); MARKET_DATA_API_KEY stays a later key."
+  },
+  {
+   "path": "docs/STATUS.md",
+   "branches": [
+    "feat/g7-living-world"
+   ],
+   "plan": "G7 conflicts with MAIN in the Log (main has newer entries, among them 606ee4a 'end of day 5 Nov').\n\n- Keep every main entry and G7's four entries (checkpoints 0 to 3).\n- G7 put checkpoints 3, 2 and 1 ABOVE the line 'Newest first. One line per finished task...'. Move them below it, newest first, interleaved by date with main's lines.\n- G7's replacement of the 'G World and Graphics' lane block auto-merges; keep it.\n- The controller then refreshes 'Right now' at each group end: counts in docs_counts; In progress, Blocked and the review queue (item 1, the v1 Exchange, becomes v2 at G3)."
+  },
+  {
+   "path": "backend/tools/ (README.md from S0, __init__.py and lint_content.py from L4 v2) and backend/server/tests/test_lint_content.py",
+   "branches": [
+    "docs/s0-story-round",
+    "feat/l4-exchange-v2"
+   ],
+   "plan": "No textual conflict.\n\nAt G3:\n- backend/tools/README.md (S0, 'one program, simulate_case.py') should say there are two programs: simulate_case.py and lint_content.py (L4's linter; its header is its contract).\n- backend/tools/__init__.py (L4 v2) lists only lint_content.py; add simulate_case.py, which runs as python3 -I backend/tools/simulate_case.py.\n\nThe imports do not clash: test_case_timing.py loads simulate_case by file path (importlib), and test_lint_content.py uses `from tools import lint_content`.\n\nI ran the linter on the combined content of all branches (with --today 2026-11-06): 0 errors, 20 'no schema yet' warnings, 40 files, exit 0. test_the_real_content_folder_passes_with_no_errors only needs '0 errors'. Its L8 check passed on S0's case.json, and so did its spoiler rule (no case text longer than 20 characters in public files)."
+  },
+  {
+   "path": "supabase/migrations/",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a6-crews",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Ten files after G3, with no time-stamp collisions: 000000, 010000, 020000, 030000, 040000, 050000, 070000, 090000, 100000, 110000 (060000 and 080000 unused). After G1 there are 5, after G2 7.\n\n- Never edit 20261106010000_island_exchange.sql. L4 v2 tests that it still creates market_trades and does not mention 20261106090000.\n- Every new player table references profiles(id) on delete cascade (A7's duels.opponent_id uses set null), so A2's delete_player stays complete.\n- The renumbering touches comment lines in 020000 and 030000. Change them only if those files are not yet applied (see renumber)."
+  },
+  {
+   "path": "specs/*.md (M1-backbone, A4-live-presence, L2-home-islet, open-world-must, L4-exchange-v2, L5-prediction-desk, A7-lantern-duels)",
+   "branches": [
+    "feat/a2-a3-signin-referee",
+    "feat/a4-live-presence",
+    "feat/l2-home-islet",
+    "feat/open-world-must",
+    "feat/l4-exchange-v2",
+    "feat/l5-prediction-desk",
+    "feat/a7-lantern-duels"
+   ],
+   "plan": "Each branch adds its own spec, with no overlap. Only the decision references inside them change (renumber lists). Their 'next free number' and 'collides' notes are historical; append the final number rather than rewriting the reasoning."
+  }
+ ],
+ "renumber": [
+  {
+   "branch": "docs/s0-story-round",
+   "from": "D018",
+   "to": "D018",
+   "refs_to_change": [],
+   "refs_to_keep": [
+    "Every D018 in this branch stays: ROADMAP.md:11 '[D018](docs/DECISIONS.md) records them', :189 '| D018 | Story round (5 Nov 2026)...', :267 '(D018)'; docs/DECISIONS.md:200 '## D018 · Story round: 19 story decisions and two scope decisions · 2026-11-05'; docs/STORY.md:9, :168, :172; docs/story/CASE-FILE.md:9; docs/story/OPEN-WORLD.md:7, :681 ('the next free number is the one after D018 (D018 records the story round)'), :829; docs/story/README.md:9, :73, :75, :83; docs/story/STORY-V2-CHANGES.md:119 'next to D013 and D018'.",
+    "Approval-sheet items, all kept: 'decision 19' (DECISIONS.md:236 'This is the change to decision 19', ROADMAP.md:189/198/489), 'Decisions 11 and 12' (DECISIONS.md:249), 'decision 10/12/13/14/15/16/17/18/19' throughout docs/story/*.md and STORY.md:158."
+   ]
+  },
+  {
+   "branch": "feat/a2-a3-signin-referee",
+   "from": "D018",
+   "to": "D022",
+   "refs_to_change": [
+    "docs/DECISIONS.md:208 '## D018 · Account data: cloud save versions, delete my data, hosts · 2026-11-05' -> '## D022 · ...'",
+    "docs/DECISIONS.md:230 (D019 entry) 'D019 is the next free number after D018 (no number is reserved for A3 in the roadmap).' -> 'D019 was the next free number when A3 was written; the account entry it followed became D022 at merge (no number is reserved for A3 in the roadmap).' A plain swap would make the sentence wrong.",
+    "backend/server/account/deletion.py:8-9 '...The ledger keeps nothing about the player (decision\\nD018).' -> 'decision\\nD022'",
+    "backend/server/account/deletion.py:52 '# PENDING Nils' decision (N4 in specs/M1-backbone.md, D018): deletes every row, ledger included,' -> D022",
+    "backend/server/routes/delete_me.py:6 'money, and \"delete my data\" must really delete (decision D018).' -> D022",
+    "backend/server/routes/delete_me.py:14 'decision N4 (D018).' -> D022",
+    "backend/server/routes/delete_me.py:76 '# PENDING Nils' decision (N4 in specs/M1-backbone.md, D018): ...' -> D022",
+    "docs/INTERFACES.md:172 '(package A2, decision D018)' -> D022",
+    "docs/INTERFACES.md:203 '\"Delete my data\" (package A2, decision D018, pending Nils' OK ...)' -> D022",
+    "docs/INTERFACES.md:217 '...is part of the decision that is pending Nils (N4, D018).' -> D022",
+    "docs/INTERFACES.md:711 (A2 row) '... Decisions D006 and D018. | built; the sign-in part is pending |' -> 'D006 and D022'",
+    "specs/M1-backbone.md:91 '| D018 | Account data: cloud save versions, delete my data, hosts | A2 (W1) | after D006 |' -> '| D022 | ...'",
+    "specs/M1-backbone.md:92 '| D019 | Referee and entry kits | A3 (W1) | after D018 |' -> 'after D022'",
+    "specs/M1-backbone.md:95 'D018 to D020 are \"the next free numbers after D017\". If another branch takes them first, Claude renumbers at merge.' -> append: 'The story round took D018, so the account entry became D022 at merge; D019 and D020 kept their numbers.'",
+    "specs/M1-backbone.md:149 '- **Full (cheap, same worktree):** one re-roll, `DELETE /api/me`, D018.' -> D022",
+    "specs/M1-backbone.md:294 '(decision N4, D018):' -> D022",
+    "specs/M1-backbone.md:305 '(written into D018)' -> D022",
+    "specs/M1-backbone.md:555 '- **DECISIONS.md:** D006 and D018 (section 2.2). ... D018 covers save versions...' -> both D018 to D022",
+    "specs/M1-backbone.md:1213 '| `docs/DECISIONS.md` | D006, D018, D019 above `## Next entry` | D020 after the D012 block | clean |' -> 'D006, D022, D019'",
+    "supabase/README.md:114 '... and decisions [D006 and D018](../docs/DECISIONS.md))' -> D022",
+    "supabase/README.md:126 '... Whether the team wants this is decision D018, pending Nils.' -> D022",
+    "supabase/README.md:128 '... is part of the pending \"delete my data\" decision (D018).' -> D022",
+    "supabase/README.md:1193 '... is part of the pending \"delete my data\" decision (D018).' -> D022",
+    "supabase/migrations/20261106020000_accounts.sql:426 '-- PENDING Nils' decision (N4, D018): delete everything, the ledger included, and' -> D022. Comment only; change it only if the file is not yet applied, otherwise leave it.",
+    "supabase/migrations/20261106030000_entry_profiles.sql:43 '--      complete (decision D018).' -> D022, with the same caveat."
+   ],
+   "refs_to_keep": [
+    "specs/M1-backbone.md:50 '| N1 | Story decision 10: ...', :51 '| N2 | Story decision 12: ...', :956 '(story decision 12)', :963 '(story decision 10)', :1295 '\"Story decision 10\" and \"story decision 12\" appear in no repo document under those numbers' (approval-sheet items 10 and 12, now in S0's D018; :1295 is stale after G1 but keep it).",
+    "The spec's own ids N1 to N12 (N4, N5, N6, N9, N10, N12) are not D-numbers; D006, D019 and D020 references stay.",
+    "Cross-branch (not A2's change; keep by the rule, optionally annotate): A6 docs/DECISIONS.md D020 status '...handed out in advance by the M1 spec (`specs/M1-backbone.md`), together with D018 and D019 for the account and referee packages, so the entries do not collide.' (suggest '(D018 became D022 at merge)'); L2 docs/DECISIONS.md D021 status '(A2/A3 hold D006, D018 and D019, A6 holds D020, and the A4 spec also claims D018)' and specs/L2-home-islet.md:10 and :979 (historical; suggest '(renumbered at merge to D022 and D023)')."
+   ]
+  },
+  {
+   "branch": "feat/a4-live-presence",
+   "from": "D018",
+   "to": "D023",
+   "refs_to_change": [
+    "docs/DECISIONS.md:196 '## D018 · Live presence on Supabase Realtime · 2026-11-05' -> '## D023 · ...'",
+    "docs/ARCHITECTURE.md:7 '... D012 (crews and seats) and D018 (live presence).' -> D023",
+    "docs/ARCHITECTURE.md:16 '... [INTERFACES.md, section 7](INTERFACES.md#7-realtime-budget). Decision: D018. |' -> D023",
+    "docs/INTERFACES.md:465 '... are in [specs/A4-live-presence.md](../specs/A4-live-presence.md) and decision D018.' -> D023",
+    "docs/INTERFACES.md:621 (A4 row) '... See section 7 and D018. | built, flag off, migration not applied |' -> D023",
+    "specs/A4-live-presence.md:10 '- **Decision:** D018, the next free number after D017.' -> '- **Decision:** D023 (written as D018, the next free number after D017; renumbered at merge).'",
+    "specs/A4-live-presence.md:460 '- **`docs/DECISIONS.md`**: add D018, \"Live presence on Supabase Realtime\", before \"Next entry\":' -> D023",
+    "specs/A4-live-presence.md:520 '- [x] **Decisions:** D018.' -> D023",
+    "supabase/README.md:114 '... [INTERFACES.md, section 7](../docs/INTERFACES.md#7-realtime-budget) and decision [D018](../docs/DECISIONS.md)): players see...' -> D023"
+   ],
+   "refs_to_keep": [
+    "A4's diff has no other decision-number look-alikes. D003, D004 and D012 references stay.",
+    "Its entry describes S0's scope decision 'Live multiplayer is core' without a number; nothing to change."
+   ]
+  },
+  {
+   "branch": "feat/open-world-must",
+   "from": "D018",
+   "to": "D024",
+   "refs_to_change": [
+    "docs/DECISIONS.md:196 '## D018 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06' -> '## D024 · ...'",
+    "specs/open-world-must.md:510 'The final text is entry D018 in `docs/DECISIONS.md`. This is the draft it was written from.' -> 'entry D024'",
+    "specs/open-world-must.md:512 '**D018 · Open-world must: weather states, fog-night rule, Lisbon day, bulletin and Chapter 2 hook · 2026-11-06**' -> '**D024 · ...**'"
+   ],
+   "refs_to_keep": [
+    "specs/open-world-must.md:568 'The story branch (`docs/s0-story-round`) also changes `backend/content/README.md` and `backend/server/tests/test_content.py`, and uses D018 too.' means S0's D018; keep it.",
+    "specs/open-world-must.md:508 '## 6. Decision entry draft (next free number after D017; renumbered at merge if it is taken)' has no number; keep it.",
+    "specs/open-world-must.md:567 '...stale since decision 3 approved change 13' is approval-sheet item 3; keep it.",
+    "backend/server/lisbon_time.py docstring 'docs/DECISIONS.md, the open-world entry' has no number; fine."
+   ]
+  },
+  {
+   "branch": "feat/l5-prediction-desk",
+   "from": "D018",
+   "to": "D025",
+   "refs_to_change": [
+    "docs/DECISIONS.md:196 '## D018 · Prediction desk rules · 2026-11-06' -> '## D025 · ...'",
+    "docs/DECISIONS.md:199 (status) 'The number is provisional: the controller renumbers it at merge.' -> 'Renumbered from D018 to D025 at merge.'",
+    "backend/server/predictions/stake_rules.py:47 'POOL_CUT_PERCENT = 5  # of the LOSING side of a pool (chosen here, see D018)' -> D025",
+    "backend/server/predictions/stake_rules.py:50 '...  # oldest \"stale\" reading a stake may use (see D018)' -> D025",
+    "backend/server/tests/test_prediction_state.py:7 '...is still shown but is too old to stake on (decision D018).' -> D025",
+    "docs/INTERFACES.md:294 '...are explained in decision D018 (provisional number, see [DECISIONS.md](DECISIONS.md)).' -> 'decision D025 (see [DECISIONS.md](DECISIONS.md))'",
+    "docs/INTERFACES.md:608 (L5 row) '... See section 2 and decision D018 (provisional number). | built, in review |' -> 'decision D025'",
+    "specs/L5-prediction-desk.md:784 '### 10.2 `docs/DECISIONS.md`: one new entry, provisionally D018' -> 'one new entry, D025 (provisionally D018; renumbered at merge)'",
+    "specs/L5-prediction-desk.md:789 '## D018 · Prediction desk rules · 2026-11-06' (draft) -> D025",
+    "supabase/README.md:115 '... and decision D018 in [DECISIONS.md](../docs/DECISIONS.md), whose number is provisional).' -> 'decision D025 in [DECISIONS.md](../docs/DECISIONS.md))'"
+   ],
+   "refs_to_keep": [
+    "Nils' approval-sheet item 18 (S0's D018, item 18), keep: docs/DECISIONS.md:201 '... The flag `predictions` stays off (Nils' decision 18).'; frontend/src/screens/predictions/README.md:9 '(Nils' decision 18)'; specs/L5-prediction-desk.md:9 '(Nils' decision 18)', :793 '(Nils' decision 18)', :908 '4. Decision 18 still holds: ...'.",
+    "specs/L5-prediction-desk.md:786 'The next free number after D017 is D018, but the story round may take D018; the controller renumbers at merge.' is historical reasoning; keep it (optionally append 'It became D025.')."
+   ]
+  },
+  {
+   "branch": "feat/a7-lantern-duels",
+   "from": "D018",
+   "to": "D026",
+   "refs_to_change": [
+    "docs/DECISIONS.md:196 '## D018 · Lantern Duels rules · 2026-11-06' -> '## D026 · ...'",
+    "docs/DECISIONS.md:198 'The number D018 is a placeholder: the controller renumbers it at merge if another entry took it first (OPEN-WORLD on `s0final` also mentions a D018).' -> 'The number was D018 on its branch; the story round took D018 first, so it became D026 at merge.'",
+    "docs/INTERFACES.md:294 '...are explained in [D018](DECISIONS.md#d018--lantern-duels-rules--2026-11-06) (proposed).' -> '[D026](DECISIONS.md#d026--lantern-duels-rules--2026-11-06)'; the anchor changes too.",
+    "docs/INTERFACES.md:577 (A7 row) '... the flag `arena`. See section 2 and D018. The two new routes are agreed at the Mon 9 freeze.' -> D026",
+    "docs/INTERFACES.md:620 '- **As built (D018, proposed): sealed signals.**' -> D026",
+    "specs/A7-lantern-duels.md:1107 '- **`docs/DECISIONS.md`:** **D018 · Lantern Duels rules · 2026-11-06.** The controller renumbers it at merge; OPEN-WORLD on `s0final` also mentions a D018.' -> first one to '**D026 · Lantern Duels rules · 2026-11-06** (D018 on the branch, renumbered at merge)'",
+    "specs/A7-lantern-duels.md:1202 '- [x] **Decisions:** D018, Lantern Duels rules (renumbered at merge).' -> 'D026, Lantern Duels rules (D018 on the branch, renumbered at merge)'",
+    "supabase/README.md:115 '... decision [D018](../docs/DECISIONS.md) and the spec [A7-lantern-duels.md]...' -> D026"
+   ],
+   "refs_to_keep": [
+    "The second D018 in docs/DECISIONS.md:198 and specs/A7-lantern-duels.md:1107, 'OPEN-WORLD on `s0final` also mentions a D018', is S0's story-round D018. Keep it, or drop it with the rewritten status sentence; never change it to D026.",
+    "No 'decision 18'-style look-alikes in A7's diff."
+   ]
+  }
+ ],
+ "docs_counts": [
+  "docs/INTERFACES.md section 2 intro (main line 72) 'Seven routes exist, plus the three routes of the Island Exchange (below) and FastAPI's list of routes.' A2 and A6 never updated it; L2, OW, L4 v2, L5 and A7 each rewrote it differently.\n- G1 (20 routes): 'Seven routes exist, plus the six of the account and the entry kit (A2, A3), the four of crews (A6) and the three of the Island Exchange (all below), and FastAPI's list of routes.'\n- G2 (23 routes): 'Eight routes exist (GET /api/bulletin is new), plus the six of the account and the entry kit, the four of crews, the two of your home islet and the three of the Island Exchange (all below) ...'; keep OW's added clause about the weather's two newer fields.\n- G3 (33 routes, verified from the merged OpenAPI): '... the four of the Island Exchange, the four of the prediction desk and the five of Lantern Duels ...'.",
+  "docs/STATUS.md 'What works', backend line: 'ten routes: health, config, content/{name}, weather, me, auth/exchange (temporary), keepalive, and the Island Exchange (market, market/portfolio, market/trade ...)' and 'uv run pytest: 1487 passed'. The test number is already stale: main 8ff24cc measures 1509.\n- G1: twenty routes (+ me/name, me/name/reroll, GET and PUT save, DELETE me, intro/complete, crews, crews/join, GET crews/me, crews/me/start). pytest from the real run (trial reference: 3099 passed).\n- G2: twenty-three (+ islet, islet/build, bulletin). Trial: 6405 passed.\n- G3: thirty-three (market/trade is replaced by market/open and market/close; + 4 predictions routes and 5 duels routes). Trial: 9690 passed, ruff check clean.\nThe trial numbers include +2 and +2 cases from the extended SERVICES tuple; without it they are 6403 and 9686. The frontend 'npm test: 143 passed' must be measured by the frontend merge.",
+  "docs/STATUS.md database paragraph ('seven tables ... The Island Exchange migration (20261106010000) is on main but not applied').\n- G1: five migration files (+020000 accounts, 030000 entry_profiles, 040000 crew_codes). 030000 must be applied before A2 reaches main.\n- G2: seven (+050000 live_presence, 070000 home_islet).\n- G3: ten (+090000 exchange_leverage, which needs 010000 first and then drops v1's three tables; 100000 prediction_desk; 110000 lantern_duels).\nThe review-queue item 1 (approve applying v1) becomes 'apply 010000 then 090000' at G3.",
+  "supabase/README.md quick-check counts. Replace main's 'After applying it, the three quick checks below show ten tables and ten policies, and there are eleven wallet reasons' and every per-branch variant (A6 'one more table'; L2 'two more tables, two more policies and two more authenticated grant rows'; L4 v2 'nine tables ... nine policies ... thirteen'; L5 'twelve tables and twelve policies ... thirteen'; A7 'twelve tables and eleven policies, eleven rows for authenticated ... thirteen') with one cumulative table, as tables / public policies / authenticated grant rows / reasons:\n- 000000: 7 / 7 / 7 / 8\n- 010000: 10 / 10 / 10 / 11\n- 020000: 11 / 11 / 11 / 11\n- 030000: 12 / 12 / 12 / 11\n- 040000: 13 / 12 / 12 / 11 (crew_join_failures has no policy or grant)\n- 050000: 13 / 12 / 12 / 11, plus 5 policies on realtime.messages\n- 070000: 15 / 14 / 14 / 11\n- 090000: 14 / 13 / 13 / 13 (drops market_bases, market_positions, market_trades)\n- 100000: 16 / 15 / 15 / 15 (the view prediction_pool_sides has no grant)\n- 110000: 18 / 16 / 16 / 17 (duel_moves has no policy or grant)\nSo: G1 13/12/12/11, G2 15/14/14/11 (+5 realtime), G3 18/16/16/17. The 'Expected: the seven tables ... After the Island Exchange migration there are ten' lines in the quick checks follow the same table.",
+  "supabase/README.md wallet reasons. 'The first eight come from the foundation migration, the last three from the Island Exchange migration.' stays true for G1 and G2 (11). At G3: 'There are 17 reasons: 8 from 20261106000000, 3 from 20261106010000, then 2 each from 20261106090000, 20261106100000 and 20261106110000' (L4 v2, L5 and A7 each wrote 'the last two from' their own file). Also 'read 11 instead of 8 for the number of reasons in steps 4 and 16' becomes at G3: '11 with the first Exchange file, 13 with Exchange v2, 15 with the prediction desk, 17 with Lantern Duels'.",
+  "supabase/README.md step references. Other branches' sentences that name 'the steps E1 to E13' become 'X1 to X15' at G3 (L4 v2 renamed them). L5's P1 'there are 13 reasons in all (8 + 3 from the Exchange + 2 from the desk; 10 if the Exchange migration is not applied)' becomes '15 with the Exchange v2 file applied, 17 once Lantern Duels is applied too'. A7's 'still shows 11 (13 once the Lantern Duels ...)' (which A7 wrote into v1's E13) moves into X15 as '13 (17 with the prediction desk and Lantern Duels)'.",
+  "supabase/README.md file table: the ordinal 'The third migration' is used three times (A4 live presence, L4 v2 Exchange v2, A7 Lantern Duels, which also says 'Run it after the second'); L5 says 'Run it after the others'. Name every file by time stamp: 5 rows at G1 (A6 added no row: add one for 040000), 7 at G2, 10 at G3.",
+  "supabase/README.md 'What the server's secret key may do': 'It can read every player's rows in all nine tables' (L4 v2) and '... all twelve tables' (L5, A7). Write 13 at G1, 15 at G2, 18 at G3.",
+  "supabase/README.md matrix footnotes: the marker \\*\\*\\* is defined by A2 (delete_player SECURITY DEFINER), A6 (crew functions), L2 (islet_build), L5 (prediction functions) and A7 (duel functions). Give each its own number (A2 at G1, A6 at G1, L2 at G2, L5 and A7 at G3).",
+  "docs/INTERFACES.md section 5 reasons table: 11 rows at G1 and G2; 17 at G3 (+ market_stake, market_payout, prediction_stake, prediction_payout, arena_stake, arena_payout; L4 v2 marks market_buy and market_sell as never used).",
+  "docs/DECISIONS.md: D017 v1 text 'every package that adds wallet reasons (the list of reasons now has 11 entries...)' holds through G2. At G3, L4 v2's D017 'the list now has 13' becomes 17 (13 after this rework, 4 more from L5 and A7). Do not edit D013's spoiler line.",
+  "docs/INTERFACES.md status-table 403 row: G1 and G2 A2's text ('No route uses it yet'). G3: 'POST /api/predictions/settle is the first route that uses it'; A7's 'not_your_duel is the first code that a route really uses' becomes false; keep only the code. The same staleness is in backend/server/hosts.py's docstring 'No route uses this yet', which changes at G3.",
+  "docs/INTERFACES.md status-table 404/409/422/429/503 code lists: A6's crew codes (wrong_code 404; kit_needed, already_in_crew, already_seated, crew_full, changed, already_started 409; too_many_attempts 429; crew_codes_busy 503) are missing at G1. 'Package A2 plans a 409 for a stale save version too' must go at G1 (L2, L4 v2, L5 and A7 still carry it). At G3 the v1 Exchange codes (market_halted, holding_time, not_enough_units, daily_buy_cap, trade_too_small, trade_too_big and the Binance source_unavailable sentence) are replaced by v2's. stake_too_small and stake_too_big are shared by the Exchange (10 to 500) and the desk (1 to 50), and daily_stake_cap by both.",
+  "docs/INTERFACES.md section 9 package table: the A6 row still says 'draft' with the old route list ('crew codes in a new column or table'); make it built at G1. The L4 row is v2's only at G3. The L5 row is L5's built text plus OW's clause at G3. The A4 row 'Harbor presence (later) | The table presence; POST /api/presence...' is replaced by A4's built row at G2.",
+  "docs/INTERFACES.md section 6: 'Deleting the player who started a crew removes the whole crew.' is wrong from G1 for DELETE /api/me (A2's delete_player hands the crew to the lowest other seat; only a dashboard deletion removes it). A6's 'Pending Nils' decision (story decision 10/12)' and 'CASE-FILE.md (sections 3 and 9) still lists another order ... the story branch has to fix that file' are stale from G1: S0 records Nils' decisions 10 and 12 (11 and 12 still confirmed at kickoff), and S0's CASE-FILE.md and case.json already use informant, stranger, true_keeper, witness. The same sentences sit in docs/DECISIONS.md D020 and specs/M1-backbone.md N1 and N2. Fix the docs, not the code constants.",
+  "backend/content/README.md 'What lives here' rows: G1 drop '`secret/` (does not exist yet)' and add names.json and entry_kits.json (S0's rows for secret/case.json, partners.json, market/ and weather/ stay). G2 add buildings.json, weather_states.json, bulletin.json and chapter_two_hook.json. G3 change market/ 'the seven companies and the recorded replay' to 'the twelve companies (seven island, five real stocks), the market calendars and the recorded replay', and add a predictions/ row.",
+  "docs/ENGINEERING.md repository map. The backend/server row ('routes (`health`, `config`, `me`, `auth_exchange`, `keepalive`, `content`, `weather` and `islet`)', 'game/ ... today the home islet') becomes:\n- G1: + captain_name, save, delete_me, intro, crews; hosts.py, account/, game/ (A3), crews/.\n- G2: + bulletin; crew_broadcast.py, lisbon_time.py, world_stage.py, content_fields.py, daily/; game/ includes the home islet.\n- G3: + market (v2), predictions, duels; predictions/, duels/.\nThe backend/content row: G1 + names.json, entry_kits.json; G2 + buildings.json and the three open-world files; G3 + predictions/ and market/calendars.json. The backend/tools row 'Later `lint_content.py`' becomes at G3 'and `lint_content.py`, the content linter (L4; pytest runs it through test_lint_content.py)'.",
+  "backend/tools/README.md 'one program, simulate_case.py' becomes 'two programs' at G3. backend/tools/__init__.py (L4 v2) lists only lint_content.py; add simulate_case.py at G3.",
+  "backend/server/__init__.py listing: G1 + hosts.py, account/, game/ (A3), crews/. G2 + crew_broadcast.py, clock/lisbon_time/world_stage/content_fields, weather/, daily/, market/, and ONE game/ line covering A3 and L2. G3 + predictions/ and duels/, with one hosts.py line.",
+  "backend/server/wallet.py 'Used by: ... the Island Exchange, Lantern Duels' (A7) becomes '... the Island Exchange, the prediction desk, Lantern Duels' at G3. settings.py SecretStr comment '(only supabase_admin.py, crew_broadcast.py and routes/keepalive.py do that)': add market/exchange.py (the stock key) at G3.",
+  "docs/ARCHITECTURE.md: section 4 'The route POST /api/islet/build is planned (package L2). Every other step exists today.' is built at G2. Secrets table 'Later keys: MARKET_DATA_API_KEY, SPORTS_API_KEY, LLM_API_KEY': add a STOCK_API_KEY row at G3 (Vercel env and private .env; Finnhub; off until written approval).",
+  "A2's deletion inventory 'the profile, save, wallet, ALL ledger rows, seats, Island Exchange positions and trades, the name re-roll ...' (docs/INTERFACES.md DELETE section, supabase/README.md, backend/server/routes/delete_me.py and account/deletion.py docstrings, the comment in 20261106020000_accounts.sql). Correct through G2. At G3 it should read 'Exchange positions and events' and name the islets, prediction stakes and duels covered by the cascade rule. Leave the SQL comment if the file is applied.",
+  "ROADMAP.md decision table (S0) lists up to D018, with D006 'reserved' and D017 'reworked on the Exchange branch'. G1: D006 proposed, + D019, D020, D022. G2: + D021, D023, D024. G3: + D025, D026; D017 v2 decided. docs/story/OPEN-WORLD.md:681 'the next free number is the one after D018' becomes D027 at G3.",
+  "INTERFACES section 8 flags table: the live_presence row is A4's at G2. At G3 the arena row 'Lantern Duels, the turn-based arena' versus A7's 'sealed signals' is optional wording; market, predictions and arena all stay off."
+ ],
+ "must_not_lose": [
+  "The no-network guard in backend/server/tests/conftest.py (socket.connect and connect_ex refused). No branch changes it; keep it byte for byte.",
+  "Keyword-only create_app services. Every service after `admin` sits after `*`. Keep A4's TypeError test, and OW's SERVICES test extended to broadcaster, islet_catalogue, prediction_desk and duel_service.",
+  "Story-round spoiler labels: the paragraph at the top of docs/DECISIONS.md and D013's 'Spoiler warning' line. The labels in README.md (1), ROADMAP.md (2), backend/content/README.md (6 mentions), docs/ENGINEERING.md (1), docs/STORY.md (3), docs/story/CASE-FILE.md (2), NPC-PARTNERS.md (1), OPEN-WORLD.md (1), docs/story/README.md (2), STORY-V2-CHANGES.md (1). The spoiler_warning key in backend/content/secret/case.json.",
+  "backend/content/secret/ is never served. PUBLIC_CONTENT stays {intro-story}. Keep S0's strict secret-file tests unchanged; only the three open-world files leave the 'not on the public list' parametrization. Keep OW's test that the content route 404s for them, OW's SPOILER_WORDS scan of bulletin and hook texts, and the linter's L6/L8 rules (no secret names on the public list; no case text longer than 20 characters in public files).",
+  "Deploy order. 20261106030000_entry_profiles.sql must be applied to the live database BEFORE the A2 merge reaches origin/main: GET /api/me reads entry_profiles, a push to main deploys production, and previews share the database. Otherwise every player gets 502. D019 also documents the fallback (hold back the entry_profiles read in routes/me.py).",
+  "20261106010000_island_exchange.sql is never edited (L4 v2 tests it). It must be applied before 20261106090000, which reuses market_fee and has a guard that refuses if market_trades holds rows. Migration time stamps stay unique and in order.",
+  "Wallet reasons are append-only and in migration file order (17 at G3). Never rename one, never change a direction, never remove market_buy or market_sell.",
+  "Every new table that holds a player id references profiles(id) on delete cascade (A2's D022 point 3; all branches comply, A7's opponent uses set null), so DELETE /api/me stays complete. Keep A2's crew handover in delete_player.",
+  "HOST_PLAYER_IDS and STOCK_API_KEY are server-only. No secrets or real values in .env.example. MARKET_MULTIPLIER must not appear anywhere in .env.example.",
+  "Flags stay as built: market, predictions, arena and live_presence are off. POST /api/predictions/settle stays host-only (HostDep). The bulletin never moves the market: snapshot(trading_enabled=False), no sweep.",
+  "A7's sealed-envelope secrecy: duel_moves has no policy and no authenticated grant; test_duels_secrecy.py.",
+  "S0's backend/tools/simulate_case.py and test_case_timing.py. L4 v2's content linter and test_the_real_content_folder_passes_with_no_errors: the combined content passes with 0 errors.",
+  "G7's four STATUS.md log entries, placed below 'Newest first'. All of main's newer STATUS and ARCHITECTURE text (the keep-alive decision, 8ff24cc's vercel.json regions line). The test_vercel_functions_run_in_dublin_next_to_the_database test from 8ff24cc.",
+  "The routes/__init__.py line 'To add a feature: create a new file here, then add one line in app.py.' Every package docstring's 'Used by' line.",
+  "Gates: run `cd backend && uv run pytest` and `uv run ruff check .` with set -o pipefail and judge by exit status. ruff check catches the L5 F811 duplicates that pytest misses. `ruff format --check` already fails on main (3 files), so it is not a gate."
+ ],
+ "observations": [
+  "origin/main moved during this run, from 606ee4a to 8ff24cc at 12:55 Europe/Lisbon ('chore(deploy): run the API in Dublin'). The integration worktree The-Great-Plot-Twist-int (integrate/fri6) is still at 606ee4a, so merge 8ff24cc in first. No branch conflicts with 8ff24cc.",
+  "Method that stayed read-only. git merge-tree ran with GIT_OBJECT_DIRECTORY in scratch, so the shared object store was not touched. The trial merges ran in a `git clone --shared` scratch clone (<scratch>). Tests ran with the integration venv's python, with PYTHONDONTWRITEBYTECODE=1 and `-p no:cacheprovider`, so nothing was written into The-Great-Plot-Twist-int. No fetch, no network, no repo or worktree change.",
+  "Process: the scratchpad is shared by every agent of this session (about 350 entries, among them other agents' folders named trial, docs, tools and sim). My first helper file landed in the pre-existing shared 'tools' folder, as a new file only; nothing of others was touched. Afterwards all my work went into the unique folder bdplan-x9k2. Worth a rule: subagents use a unique subfolder.",
+  "Worth logging. A trial merge plus a test run per group found 4 semantic breaks and 4 silent duplicates that pairwise git merge-tree cannot show. Parallel branches each claimed 'the next free number D018', called their migration 'the third migration', and reused the footnote marker *** in supabase/README.md. Suggest reserving decision numbers and footnote ids per package up front.",
+  "Follow-ups, not for the merges:\n(a) A2's delete_player hands a crew over without bumping A6's crews.version.\n(b) A4's crew broadcaster has no caller yet; A6's crew routes do not send crew_changed.\n(c) Kit data exists twice: secret/case.json kits versus A3's entry_kits.json. The values match (coins 1000/1000/1000/1600, start places, cards C6/C2/C4/C5, items), but the decision words differ (warned_harbor versus warned). A consistency test would help.\n(d) Four separate Lisbon-day implementations, with 'game day' meaning 00:00 (OW) versus 08:00 (L4 v2).\n(e) A6's crew functions lock profiles FOR UPDATE, while A3 switched to FOR NO KEY UPDATE so that it does not block the money functions' foreign-key checks. That causes contention, not deadlock.\n(f) The bulletin's 'paused companies' has no v2 meaning. A product call for Nils.",
+  "Measured per branch tip (backend pytest): main 1509, S0 1526, A2 2116, A6 2408, A4 1548, L2 1789, open-world 4427, L4 v2 2409, L5 3226, A7 2182. All pass alone. STATUS.md's 1487 is stale.",
+  "Frontend is out of scope here, but: frontend/package.json is changed by G7 (npm scripts) and A4 (@supabase/supabase-js 2.118.0, plus the lock file); frontend/src/game.js conflicts at L2, L4 v2, L5 and A7. G7's adapter fixtures call /api/board (L3, not built) and expect A2/A6 fields; the frontend plan should check those contracts. L2's islet README mentions a future POST /api/islet/upgrade.",
+  "Skills: none loaded. task-observer was deliberately not invoked (subagent rule), and nothing was written under ~/Claude/task-observer."
+ ]
+}

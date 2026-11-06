@@ -22,6 +22,7 @@ FLAG_NAMES = (
     "raid",
     "live_presence",
     "companion_llm",
+    "case",
 )
 
 

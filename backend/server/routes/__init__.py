@@ -17,6 +17,9 @@
     weather.py        GET  /api/weather        the real weather, the weather state and tonight
     bulletin.py       GET  /api/bulletin       the harbor bulletin and the Chapter 2 hook
 
+    case.py           /api/case...             earned view, card searches and accusation
+    host_case.py      /api/host/case/clock      move the host's own crew's case clock
+
 Most of them are called by the browser. keepalive.py is for one daily caller instead: the
 GitHub Actions workflow .github/workflows/keepalive.yml (docs/ARCHITECTURE.md, keep-alive).
 market.py is the Island Exchange (its rules are in server/market/).
