@@ -7,4 +7,5 @@ export async function stubIntro(page) {
 export async function dismissIntro(page) {
   await page.waitForFunction(()=>!window.__island?.caseUi?.active||document.querySelector('.case-modal[open]'));
   for(const selector of ['.intro-modal','.case-modal','.islet-modal','.duel-modal','.desk-modal','.sports-modal']){const modal=page.locator(selector);if(await modal.isVisible()){await page.keyboard.press('Escape');await modal.waitFor({state:'hidden'});}}
+  const room=page.locator('.interiors-scene:not([hidden])');if(await room.count()){await page.getByRole('button',{name:'Leave room',exact:true}).click();await room.waitFor({state:'hidden'});}
 }

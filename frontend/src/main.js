@@ -14,7 +14,7 @@ import {on} from './core/events.js';
 import {node} from './ui/kit/dom.js';
 
 const container=document.querySelector('#game'),backdrop=node('img','title-backdrop');
-backdrop.src=`${import.meta.env.BASE_URL}places/title.webp`;backdrop.alt='';container.append(backdrop);
+backdrop.src=`${import.meta.env.BASE_URL}places/title.webp`;backdrop.addEventListener('error',()=>{backdrop.src=`${import.meta.env.BASE_URL}places/title.png`;},{once:true});backdrop.alt='';container.append(backdrop);
 const captions=createCaptions(container),audio=createLazyAudio({container,on,caption:captions.show});
 let stopMotion=null;
 const adapter=await createClientAdapter();

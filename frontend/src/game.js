@@ -58,6 +58,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   let interiors=null,interiorLoad=null,roomRequest=0;
   let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, marketUi=null, marketLoad=null, experience,entryDestination=null,introPassage=false,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null,bulletin=null,weatherAnswer=null;
   const externalOverlay=()=>!!(shortcuts.active||shell?.blocked||isAppBlocked?.()||demo?.active||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen()||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(shortcuts.active||shell?.blocked||isAppBlocked?.()||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen());
   const outsideBlocked=()=>externalOverlay()||world.busy||!!interiors?.active||!!interiorLoad;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:input.reset,focusGame:()=>graphics.renderer.domElement.focus()});
   // Prediction desk (L5): the harbor's prediction kiosk opens it. Loaded on first use.
@@ -67,7 +68,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   let arenaScreen = null;
   const arenaOpen = () => arenaScreen?.isArenaOpen() === true;
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:externalOverlay, disposeVisuals(){roomRequest++;interiors?.dispose();cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();arenaScreen?.disposeArena();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){roomRequest++;interiors?.dispose();cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();arenaScreen?.disposeArena();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -82,8 +83,8 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
       if(!interiors){
         interiorLoad??=import('./world/interiors/scene.js').then(module=>{
           if(disposed)return null;
-          interiors=module.createInteriors({container,resetInput:input.reset,reducedMotion,focus:()=>graphics.renderer.domElement.focus(),
-            onInteract:event=>intro.open(event.id,{resume:event.resume}),
+          interiors=module.createInteriors({container,resetInput:input.reset,reducedMotion,onMenu:()=>shell.show('pause'),focus:()=>graphics.renderer.domElement.focus(),
+            onInteract:event=>{if(intro.open(event.id,{resume:event.resume}))emit({type:'interact',id:event.id,place:event.place});},
             onExit({outside,placeId}){if(disposed||world.current?.id!==placeId)return;const p=controller.player.position;p.set(outside.x,world.current.groundHeight(outside.x,outside.z),outside.z);input.reset();}});
           return interiors;
         });
@@ -157,14 +158,14 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   demo=createCinematicDemo(container,world,{chart,sailing,player:controller.player,view,hud,isletState,quality:setUserQuality,readStats(){const info=graphics.renderer.info;return {fps,calls:info.render.calls,triangles:info.render.triangles,geometries:info.memory.geometries,textures:info.memory.textures,quality:settings.quality};},
     skipCinematic:()=>cinematics.skip(),resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
     captureCase:()=>({view:caseUi.adapter?.read()??null,world:caseWorld,relit:world.relit}),presentCase:applyCaseView,restoreCase(snapshot){if(caseUi.adapter)applyCaseView(caseUi.adapter.read());else if(snapshot?.view)applyCaseView(snapshot.view);else{caseWorld=snapshot?.world??null;world.setRelightingComplete(!!snapshot?.relit);hud.setCaptain({captain:{name:'Captain pending',coins:null,save:{state:'local',label:'Local intro only'}}});}},
-    begin(){caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
+    begin(){roomRequest++;interiors?.close('demo',{immediate:true});caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
   const deviceActions={chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>active&&!outsideBlocked()};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather:changes=>{if(!demo.active)setWeather(changes);},onUpdate(answer){
     if(demo.active)return;
     weatherAnswer=answer;emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
   }});
-  function applyPreferences(value){quality(value.quality);}
+  function applyPreferences(value){quality(value.quality);if(active&&!shell.blocked)view.start(reducedMotion());}
   const stopPreferences=onPreferences(applyPreferences),stopMotion=watchSystemMotion();applyPreferences(getPreferences());graphics.resize(view.camera);
   const resize = () => graphics.resize(view.camera); window.addEventListener('resize', resize);
   const stop = startLoop((delta, time) => {
@@ -188,17 +189,20 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     const doorway=active&&!outsideBlocked()?entranceFor(world.current?.id,controller.player.position):null;
     const zone = active&&!outsideBlocked() ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     touch.update(doorway?({cottage:'cottage',boathouse:'shore',lighthouse:'tower_door'})[doorway.roomId]:zone,active&&!outsideBlocked());
-    if(input.consume('KeyE')){
-      if(doorway&&canEnterRoom(doorway.roomId,intro.state))void enterRoom(doorway.roomId);
-      else if(zone)world.interact(zone);
-    }
+    const entering=doorway&&canEnterRoom(doorway.roomId,intro.state);
+    if(entering)void enterRoom(doorway.roomId);
+    if(input.consume('KeyE')&&!entering&&zone)world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night }); input.endFrame();
-  }, () => { if(!interiors?.active)graphics.renderer.render(scene, view.camera); });
+    hud.update(doorway?({cottage:'cottage',boathouse:'shore',lighthouse:'tower_door'})[doorway.roomId]:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:doorway?`Enter ${doorway.roomId==='lighthouse'?'the lighthouse':doorway.roomId==='boathouse'?'the boathouse':'the cottage'}`:undefined }); input.endFrame();
+  }, () => {
+    const draw=!interiors?.active&&shell.mode!=='title';
+    if(draw)graphics.renderer.render(scene,view.camera);
+    graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
+  });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},get interiors(){return interiors;}, experience,isletState,hookWorld };
@@ -213,10 +217,11 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });  return {dispose,resetInput:input.reset,setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
-    setMode(mode){if(mode!=='playing'){sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start();else view.pause();},
+    setMode(mode){if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       if(hud.closeQuickPanels?.())return true;
+      if(intro.active&&intro.closeJournal?.())return true;
       if(sportsUi.active&&!document.querySelector('.sports-modal[open]')){sportsUi.close();return true;}
       const panel=[...document.querySelectorAll('dialog[open]')].filter(node=>!node.classList.contains('cinematic-modal')&&!node.classList.contains('shell-screen')).at(-1);
       const debug=container.querySelector('.debug:not([hidden])');
@@ -226,6 +231,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
         else if(debug)hud.togglePanel(false);else void demo.stop();return true;
       }
       if(action==='skip_cinematic'){cinematics.skip();return true;}
+      if(interiorLoad&&!interiors?.active){roomRequest++;input.reset();return true;}
       if(interiors?.active){interiors.close();return true;}
       return false;
     },

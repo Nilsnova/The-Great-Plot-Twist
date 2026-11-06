@@ -20,6 +20,8 @@ try{
   await night();check(stable(waiting,await bounds()),`${viewport.width}: nightfall preserves frame size`);
   for(const id of ['keepers_lamp','harbor_light','islet_signal_station','ruin_light']){await page.locator(`[data-focus="light-tab-${id}"]`).click();check(await page.locator(`.case-light[data-light="${id}"]`).isVisible(),`${viewport.width}: ${id} selectable`);}
   await page.locator('[data-focus="light-tab-islet_signal_station"]').click();const range=page.locator('[data-focus="bearing-islet_signal_station"]');
+  const compass=page.locator('.case-light:not([hidden]) .case-compass');await compass.scrollIntoViewIfNeeded();const dialBox=await compass.boundingBox();await page.mouse.click(dialBox.x+dialBox.width/2-.1,dialBox.y+1);
+  check(await range.inputValue()==='0',`${viewport.width}: near-north pointer rounding stays in the valid 0–359 range`);
   await range.evaluate(el=>{el.value='180';el.dispatchEvent(new Event('input',{bubbles:true}));});await page.locator('[data-focus="lock-islet_signal_station"]').click();
   check(await page.evaluate(()=>!window.__caseLab.adapter.read().finale.lights.find(l=>l.id==='islet_signal_station').lock),`${viewport.width}: incorrect bearing never invents a lock`);
   check(await range.inputValue()==='180',`${viewport.width}: refusal preserves angle`);await page.evaluate(()=>window.__caseLab.adapter.dev.advance(5));await range.focus();await page.keyboard.press('ArrowRight');check(await range.inputValue()==='181',`${viewport.width}: native keyboard slider works`);

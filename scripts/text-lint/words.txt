@@ -263,6 +263,7 @@ case
 case's
 cash
 cashed
+catches
 category
 cave
 cc
@@ -276,6 +277,7 @@ change
 changed
 changes
 changing
+chapter
 charge
 charged
 chart
@@ -377,6 +379,7 @@ contains
 content
 contents
 continue
+continues
 continuing
 contract
 contributing
@@ -490,6 +493,7 @@ different
 differently
 direction
 directly
+disappear
 disappears
 discovers
 dismiss
@@ -817,6 +821,7 @@ hidden
 hide
 high
 highlight
+highlighted
 highlights
 him
 hint
@@ -877,6 +882,7 @@ inline
 input
 inside
 inspect
+inspects
 instance
 instant
 instead
@@ -927,6 +933,7 @@ joined
 joining
 jolly
 journal
+journey
 journeys
 js
 json
@@ -1460,6 +1467,7 @@ quickly
 quiet
 quoted
 r
+rack
 radio
 raid
 rain
@@ -1991,6 +1999,7 @@ trade
 traded
 trades
 trading
+trail
 transitions
 trapped
 travel
@@ -2096,6 +2105,7 @@ wandering
 want
 warm
 warmest
+warn
 warned
 was
 wasd

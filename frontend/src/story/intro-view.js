@@ -51,6 +51,7 @@ export function createIntroView({onAction,onRestart,onClose}) {
     paint();
   }
   return {element,update,setArrival(content){arrivalSlot.replaceChildren(...(content?[content]:[]));if(content)content.prepend(endingSummary);else ending.body.insertBefore(endingSummary,arrivalSlot);},
+    closeJournal(){if(!journal.open)return false;journal.open=false;journalTitle.focus();return true;},
     pause(){dialogue.pause();},focus(){dialogue.focus();},
     dispose(){dialogue.dispose();inventoryPanel.dispose();movesPanel.dispose();ending.dispose();restart.dispose();close.dispose();element.remove();}};
 }

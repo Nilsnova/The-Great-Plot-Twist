@@ -106,7 +106,7 @@ export function createHud(container, actions) {
     update(zone, stats) {
       overlay.classList.toggle('night', stats?.night > 0.4);
       const prompt = select('.interact'); prompt.hidden = !zone; prompt.dataset.zone = zone || '';
-      if (zone) prompt.querySelector('strong').textContent = names[zone];
+      if (zone) prompt.querySelector('strong').textContent = stats?.interactionLabel??names[zone];
       const now = performance.now();
       select('.toast').hidden = now > toastUntil;
       if (now < syncAt) return;

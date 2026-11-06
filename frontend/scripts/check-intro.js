@@ -9,7 +9,7 @@ const report={checked:new Date().toISOString(),checks:[],apiReads:0,endings:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 async function revealPassage() {
   const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text',exact:true});
-  if(await skip.isVisible())await skip.click();
+  if(await skip.isVisible())await skip.evaluate(button=>{if(!button.hidden)button.click();});
 }
 async function pages() {
   for(let count=0;count<30;count++){
@@ -64,7 +64,7 @@ try {
   const story=await response.json();check(story.start==='cottage'&&story.scenes.lamp_room,'API returns the original story structure');
   page.on('request',request=>{if(request.url().includes('/api/')){assert.ok(['/api/content/intro-story','/api/weather','/api/config'].includes(new URL(request.url()).pathname));assert.equal(request.method(),'GET');if(new URL(request.url()).pathname==='/api/content/intro-story')report.apiReads++;}});
   await page.goto(env.url);await startFromTitle(page);await leaveRoom();
-  await page.evaluate(()=>{window.__introEvents=[];window.__island.on('intro_ended',event=>window.__introEvents.push(event));});
+  await page.evaluate(()=>{window.__introEvents=[];window.__roomEvents=[];window.__island.on('interact',event=>window.__roomEvents.push(event));window.__island.on('intro_ended',event=>window.__introEvents.push(event));});
   await visit('shore');await closeStory();
   await visit('desk');
   check(await page.evaluate(()=>JSON.stringify(window.__island.world.intro.actions)===JSON.stringify(['to_shore','shore_back','to_desk'])),'Physical shore-to-desk visit replays shore_back then to_desk');
@@ -79,6 +79,7 @@ try {
   await choose('take_lantern');await choose('warn_harbor');await closeStory();
   await visit('tower_door');await choose('unlock_door');check(await page.locator('.intro-view').getAttribute('data-scene')==='stairwell','Stairwell plays in the dialogue box');
   await choose('climb');check(await page.locator('.intro-view').getAttribute('data-scene')==='lamp_room','Lamp room plays in the dialogue box');
+  check(await page.evaluate(()=>JSON.stringify(window.__roomEvents)===JSON.stringify(['shore','desk','shore','tower_door'].map(id=>({type:'interact',id,place:'lighthouse_isle'})))),'Room inspections preserve the original exact interaction payloads');
   await choose('signal');await pages();check(await page.locator('.intro-ending').isVisible(),'The original ending card is shown');
   check(await page.evaluate(()=>JSON.stringify(window.__introEvents)===JSON.stringify([{type:'intro_ended',ending:'ending_rescue'}])),'Rescue emits the exact intro_ended payload once');
   await page.screenshot({path:'captures/20261105_G4-Act1-Ending.png'});report.endings.push('ending_rescue');

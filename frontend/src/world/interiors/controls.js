@@ -2,7 +2,7 @@
 export function createRoomControls({element, canvas, pad, enabled, interact, exit,onMenu=()=>{}}) {
   const keys=new Set(),cleanups=[];let touch={x:0,y:0},pointer=null,lastA=false,lastB=false,lastMenu=false,tapTimer=null;
   function listen(target,name,fn,options){target.addEventListener(name,fn,options);cleanups.push(()=>target.removeEventListener(name,fn,options));}
-  function currentPad(){return [...(navigator.getGamepads?.()??[])].find(p=>p?.connected&&p.mapping==='standard');}
+  function currentPad(){try{return [...(navigator.getGamepads?.()??[])].find(p=>p?.connected&&p.mapping==='standard');}catch{return null;}}
   function reset(){clearTimeout(tapTimer);tapTimer=null;keys.clear();touch={x:0,y:0};pointer=null;const p=currentPad();lastA=!!p?.buttons[0]?.pressed;lastB=!!p?.buttons[1]?.pressed;lastMenu=!!p?.buttons[9]?.pressed;}
   function keydown(event){
     if(!enabled())return;

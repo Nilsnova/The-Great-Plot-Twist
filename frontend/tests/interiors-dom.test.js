@@ -85,3 +85,16 @@ it('releases only the owned touch pointer and does not repeat a held gamepad act
   });
   expect(result).toEqual({touch:1,released:0,actions:1,exits:1});
 });
+
+
+it('keeps rooms usable when the browser denies gamepad access',async()=>{
+  const result=await evaluate(async()=>{
+    const {createInteriors}=await window.g20Import('/src/world/interiors/scene.js');
+    Object.defineProperty(navigator,'getGamepads',{value:()=>{throw new DOMException('Blocked','SecurityError');}});
+    let inspections=0;const scene=createInteriors({container:document.body,reducedMotion:()=>true,onInteract:()=>inspections++});
+    const entered=scene.enter('cottage');scene.update(.016);scene.element.querySelector('.interiors-hotspot').click();
+    const closed=scene.close('exit',{immediate:true}),active=scene.active;scene.dispose();
+    return {entered,closed,active,inspections};
+  });
+  expect(result).toEqual({entered:true,closed:true,active:false,inspections:1});
+});

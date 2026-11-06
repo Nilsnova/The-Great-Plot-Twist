@@ -8,7 +8,7 @@ export function createFinaleScreen({send,navigate}){
   const element=node('section','case-finale'),angles=new Map(),reportedAngles=new Map();
   let model=null,bindings=[],selected=null,lastPad=0,chartStamp='';
   function setAngle(binding,value){
-    const angle=Math.round(normaliseDegrees(Number.isFinite(value)?value:0));angles.set(binding.id,angle);
+    const angle=normaliseDegrees(Math.round(normaliseDegrees(Number.isFinite(value)?value:0)));angles.set(binding.id,angle);
     binding.range.value=angle;binding.output.textContent=`${angle}°`;drawDial(binding,angle);
   }
   function drawDial(binding,angle){

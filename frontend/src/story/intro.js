@@ -32,5 +32,5 @@ export function createIntro(ctx) {
   }
   const stop=ctx.on('interact',event=>{if(event.place==='lighthouse_isle'&&introHotspots.includes(event.id))open(event.id);});
   return {get active(){return active;},get actions(){return adapter?.actions??[];},get state(){return adapter?.state??null;},
-    setArrival: view.setArrival,begin(resume=false){return open('cottage',{resume:true,fresh:!resume});},open,close,dispose(){if(disposed)return;disposed=true;stop();close();view.dispose();retry.dispose();modal.dispose();}};
+    setArrival: view.setArrival,closeJournal:view.closeJournal,begin(resume=false){return open('cottage',{resume:true,fresh:!resume});},open,close,dispose(){if(disposed)return;disposed=true;stop();close();view.dispose();retry.dispose();modal.dispose();}};
 }
