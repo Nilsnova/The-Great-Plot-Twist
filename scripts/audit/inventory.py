@@ -63,8 +63,9 @@ def refresh(rows):
             "version": info["version"],
             "license": info.get("license"),
             "license_expression": info.get("license_expression"),
-            "license_classifiers": [c for c in info.get("classifiers", [])
-                                    if c.startswith("License ::")],
+            "license_classifiers": [
+                c for c in info.get("classifiers", []) if c.startswith("License ::")
+            ],
         }
         if info["version"] != version:
             raise ValueError(f"Version mismatch for {name}")
@@ -94,7 +95,7 @@ def license_name(metadata, package):
     return "; ".join(c.removeprefix("License :: ") for c in classifiers) or "NOASSERTION"
 
 
-def generate(npm, uv, rows, evidence):
+def generate(npm, uv, rows, evidence, source_ref="HEAD"):
     runtime = runtime_python(uv)
     root_ref = "the-great-plot-twist"
     components, dependencies, inventory = [], [], []
@@ -108,8 +109,12 @@ def generate(npm, uv, rows, evidence):
         license_text = license_name(metadata, package)
         is_runtime = name in runtime if ecosystem == "pypi" else not package.get("dev", False)
         component = {
-            "type": "library", "bom-ref": ref, "name": name, "version": version,
-            "purl": ref, "licenses": [{"license": {"name": license_text}}],
+            "type": "library",
+            "bom-ref": ref,
+            "name": name,
+            "version": version,
+            "purl": ref,
+            "licenses": [{"license": {"name": license_text}}],
             "properties": [
                 {"name": "g27:ecosystem", "value": ecosystem},
                 {"name": "g27:runtime", "value": str(is_runtime).lower()},
@@ -120,47 +125,82 @@ def generate(npm, uv, rows, evidence):
         hashes = []
         if ecosystem == "npm" and package.get("integrity"):
             algorithm, digest = package["integrity"].split("-", 1)
-            hashes.append({"alg": algorithm.upper().replace("SHA", "SHA-"),
-                           "content": base64.b64decode(digest).hex()})
+            hashes.append(
+                {
+                    "alg": algorithm.upper().replace("SHA", "SHA-"),
+                    "content": base64.b64decode(digest).hex(),
+                }
+            )
         if hashes:
             component["hashes"] = hashes
         components.append(component)
         children = []
         if ecosystem == "pypi":
             versions = {p["name"]: p["version"] for p in uv["package"]}
-            children = [purl("pypi", d["name"], versions[d["name"]])
-                        for d in package.get("dependencies", [])]
+            children = [
+                purl("pypi", d["name"], versions[d["name"]])
+                for d in package.get("dependencies", [])
+            ]
         else:
             children = [by_npm_name[n] for n in package.get("dependencies", {}) if n in by_npm_name]
-            children += [by_npm_name[n] for n in package.get("optionalDependencies", {})
-                         if n in by_npm_name]
+            children += [
+                by_npm_name[n] for n in package.get("optionalDependencies", {}) if n in by_npm_name
+            ]
         dependencies.append({"ref": ref, "dependsOn": sorted(set(children))})
-        inventory.append({"ecosystem": ecosystem, "name": name, "version": version,
-                          "runtime": is_runtime, "license": license_text,
-                          "evidence": metadata["url"]})
+        inventory.append(
+            {
+                "ecosystem": ecosystem,
+                "name": name,
+                "version": version,
+                "runtime": is_runtime,
+                "license": license_text,
+                "evidence": metadata["url"],
+            }
+        )
     # This lock has unique npm names. Refuse silent flattening if future nesting changes that.
     assert len(by_npm_name) == sum(r[0] == "npm" for r in rows), "Nested duplicate npm names"
     assert len({c["bom-ref"] for c in components}) == len(rows)
-    commit = subprocess.check_output(["git", "rev-parse", "origin/main"], cwd=ROOT, text=True).strip()
+    commit = subprocess.check_output(["git", "rev-parse", source_ref], cwd=ROOT, text=True).strip()
+    for path in ("frontend/package-lock.json", "backend/uv.lock"):
+        frozen = subprocess.check_output(["git", "show", f"{commit}:{path}"], cwd=ROOT)
+        if frozen != (ROOT / path).read_bytes():
+            raise ValueError(f"Lockfile differs from reviewed commit: {path}")
     lock_properties = [{"name": "g27:reviewed-commit", "value": commit}]
     for path in ("frontend/package-lock.json", "backend/uv.lock"):
-        lock_properties.append({"name": f"g27:sha256:{path}",
-                                "value": hashlib.sha256((ROOT / path).read_bytes()).hexdigest()})
+        lock_properties.append(
+            {
+                "name": f"g27:sha256:{path}",
+                "value": hashlib.sha256((ROOT / path).read_bytes()).hexdigest(),
+            }
+        )
     application = next(p for p in uv["package"] if p["name"] == root_ref)
     python_roots = {d["name"] for d in application["dependencies"]}
     for group in application.get("dev-dependencies", {}).values():
         python_roots.update(d["name"] for d in group)
     npm_roots = set(npm["packages"][""].get("dependencies", {}))
     npm_roots.update(npm["packages"][""].get("devDependencies", {}))
-    root_dependencies = [purl(e, n, v) for e, n, v, _ in rows
-                         if (e == "pypi" and n in python_roots)
-                         or (e == "npm" and n in npm_roots)]
+    root_dependencies = [
+        purl(e, n, v)
+        for e, n, v, _ in rows
+        if (e == "pypi" and n in python_roots) or (e == "npm" and n in npm_roots)
+    ]
     dependencies.append({"ref": root_ref, "dependsOn": sorted(root_dependencies)})
-    bom = {"bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1,
-           "metadata": {"component": {"type": "application", "name": root_ref,
-                                        "bom-ref": root_ref, "version": commit},
-                        "properties": lock_properties},
-           "components": components, "dependencies": dependencies}
+    bom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "version": 1,
+        "metadata": {
+            "component": {
+                "type": "application",
+                "name": root_ref,
+                "bom-ref": root_ref,
+                "version": commit,
+            },
+            "properties": lock_properties,
+        },
+        "components": components,
+        "dependencies": dependencies,
+    }
     (OUT / "sbom.cdx.json").write_text(json.dumps(bom, indent=2) + "\n")
     (OUT / "dependency-licenses.json").write_text(json.dumps(inventory, indent=2) + "\n")
     pins = [f"{n}=={v}" for e, n, v, _ in rows if e == "pypi"]
@@ -171,8 +211,13 @@ def generate(npm, uv, rows, evidence):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh-metadata", action="store_true")
+    parser.add_argument("--source-ref", default="HEAD", help="Commit whose lockfiles are audited")
     args = parser.parse_args()
     npm, uv = read_inputs()
     rows = records(npm, uv)
-    evidence = refresh(rows) if args.refresh_metadata else json.loads((OUT / "license-metadata.json").read_text())
-    generate(npm, uv, rows, evidence)
+    evidence = (
+        refresh(rows)
+        if args.refresh_metadata
+        else json.loads((OUT / "license-metadata.json").read_text())
+    )
+    generate(npm, uv, rows, evidence, args.source_ref)

@@ -7,16 +7,16 @@
       "type": "application",
       "name": "the-great-plot-twist",
       "bom-ref": "the-great-plot-twist",
-      "version": "c26f3032b150af970d57fbbcd6eea439eb26f4c4"
+      "version": "94a48ad1c445f4cfb70c539daba3fcb1fe7e7d99"
     },
     "properties": [
       {
         "name": "g27:reviewed-commit",
-        "value": "c26f3032b150af970d57fbbcd6eea439eb26f4c4"
+        "value": "94a48ad1c445f4cfb70c539daba3fcb1fe7e7d99"
       },
       {
         "name": "g27:sha256:frontend/package-lock.json",
-        "value": "ec6edd43bda0d921e88aadf243e9181a19b50a2320526c3f1b3e04203a7cc555"
+        "value": "83cfe237c9adb3628e12471cdce07aa975b6a4000766a7294c97e54f0511171d"
       },
       {
         "name": "g27:sha256:backend/uv.lock",
@@ -787,6 +787,272 @@
     },
     {
       "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/auth-js@2.118.0",
+      "name": "@supabase/auth-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/auth-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fauth-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c567cf5f2852d8a0d27c09de32d23aa7fb419db762cffe6f69129712a51fcdf0bd5829e22abd83b39a391bb4481a28346e89b8cfac1463dcda574ed60d54df9d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/functions-js@2.118.0",
+      "name": "@supabase/functions-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/functions-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Ffunctions-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e287e57ad3dafe7a0a014e8a1deaac777173b46cd13d410945ecb530a634a3e3c81da55e3ea44f4a1217b65dfb81c57221668533eccd83aafdce1d2e51214e48"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/phoenix@0.4.5",
+      "name": "@supabase/phoenix",
+      "version": "0.4.5",
+      "purl": "pkg:npm/%40supabase/phoenix@0.4.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fphoenix/0.4.5"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6809fd1fda2f572780a4acb5d4e58eaeb386abc0d5ebcc96787e2e77694df5fce7e1a3bc65be462cbf66d69520f672ea21c4fe6437c072c65ed04fe7a9dbf697"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/postgrest-js@2.118.0",
+      "name": "@supabase/postgrest-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/postgrest-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fpostgrest-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "257cbedfb28f0291ecca8b5a4000a8beffc9cbd136dab7e258b46e4fed948e810070021e943148aec17f158e3b0f2d7d98eee52344eafb30c25fca09d8ecdf8b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/realtime-js@2.118.0",
+      "name": "@supabase/realtime-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/realtime-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Frealtime-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a730881168ea0f9ff1a846507aba6dfaaf6bb2062472b92008981fd16d942ea0b87d851e07fa7d0856b7b7dbe7f88561e9d30df6be19084dbada566f502f817f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/storage-js@2.118.0",
+      "name": "@supabase/storage-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/storage-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fstorage-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e4c3642add8ca32ec9b9dfec3d7effdbc070743c593025471894f4d1bf28a772916bd2ca4a3380614e4871f19622cb5a6ac02a63c1a46c0ea82372110e007561"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40supabase/supabase-js@2.118.0",
+      "name": "@supabase/supabase-js",
+      "version": "2.118.0",
+      "purl": "pkg:npm/%40supabase/supabase-js@2.118.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/%40supabase%2Fsupabase-js/2.118.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "17123c5173150b6506ec891e888f1fb9066aab6a08dc9792b8df0c3c80b644b55aa04031292d27a84ea48a2f44c29abc7fd80d3ccea08add58f1fd2f37f40b17"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "pkg:npm/%40types/chai@5.2.3",
       "name": "@types/chai",
       "version": "5.2.3",
@@ -1276,6 +1542,44 @@
         {
           "alg": "SHA-512",
           "content": "e71a037d7f9f2fb7da0139da82658fa5b16dc21fd1efb5a630caaa1c64bae42defbc1d181eb805f81d58999df8e35b4c8f99fade4d36d765cda09c339617df43"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/iceberg-js@0.8.1",
+      "name": "iceberg-js",
+      "version": "0.8.1",
+      "purl": "pkg:npm/iceberg-js@0.8.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/iceberg-js/0.8.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d5d8554195e17078deefbf7c21533ec68a3fd597557f338c21cf3fae05528a344adfc103a8e2681ae95af4dffc648e510fc413c4d42d2bf1a8ce9afea94a9144"
         }
       ]
     },
@@ -2264,6 +2568,44 @@
         {
           "alg": "SHA-512",
           "content": "c1747f758a5ca8a99f5a911d66388a24ec023459dd0f40cc9eb5bf7188d51adb449017d581c2c51e836b963e3b9a339589cf72c8dbbae5a96c805e0d4324dada"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/tslib@2.8.1",
+      "name": "tslib",
+      "version": "2.8.1",
+      "purl": "pkg:npm/tslib@2.8.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "0BSD"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "g27:ecosystem",
+          "value": "npm"
+        },
+        {
+          "name": "g27:runtime",
+          "value": "true"
+        },
+        {
+          "name": "g27:optional",
+          "value": "false"
+        },
+        {
+          "name": "g27:license-evidence",
+          "value": "https://registry.npmjs.org/tslib/2.8.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a0916ef781d06fe29576e49440bef09e99aa9df98bb0e03f9c087a6fa107d30084a0ad3f98f79753a737c0a0d5f373243ae1cf447b525ca294f7d2016b34bfdb"
         }
       ]
     },
@@ -3363,6 +3705,52 @@
       "dependsOn": []
     },
     {
+      "ref": "pkg:npm/%40supabase/auth-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/functions-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/phoenix@0.4.5",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/%40supabase/postgrest-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/realtime-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/%40supabase/phoenix@0.4.5",
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/storage-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/iceberg-js@0.8.1",
+        "pkg:npm/tslib@2.8.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40supabase/supabase-js@2.118.0",
+      "dependsOn": [
+        "pkg:npm/%40supabase/auth-js@2.118.0",
+        "pkg:npm/%40supabase/functions-js@2.118.0",
+        "pkg:npm/%40supabase/postgrest-js@2.118.0",
+        "pkg:npm/%40supabase/realtime-js@2.118.0",
+        "pkg:npm/%40supabase/storage-js@2.118.0"
+      ]
+    },
+    {
       "ref": "pkg:npm/%40types/chai@5.2.3",
       "dependsOn": [
         "pkg:npm/%40types/deep-eql@4.0.2",
@@ -3422,6 +3810,10 @@
     },
     {
       "ref": "pkg:npm/fsevents@2.3.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/iceberg-js@0.8.1",
       "dependsOn": []
     },
     {
@@ -3567,6 +3959,10 @@
         "pkg:npm/fdir@6.5.0",
         "pkg:npm/picomatch@4.0.7"
       ]
+    },
+    {
+      "ref": "pkg:npm/tslib@2.8.1",
+      "dependsOn": []
     },
     {
       "ref": "pkg:npm/vite@8.3.6",
@@ -3767,6 +4163,7 @@
     {
       "ref": "the-great-plot-twist",
       "dependsOn": [
+        "pkg:npm/%40supabase/supabase-js@2.118.0",
         "pkg:npm/playwright-core@1.64.1",
         "pkg:npm/three@0.187.0",
         "pkg:npm/vite@8.3.6",

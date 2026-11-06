@@ -1,5 +1,7 @@
 # G27 checkpoint 1 · 6 November 2026
 
+> Historical authored checkpoint against the original pre-integration source. Current evidence, contracts and remaining work are in [the security/text integration](security-text-integration.md); maintained audit files now describe its newer baseline.
+
 Report/docs task for Nils, with code findings handed to Claude. Branch: `docs/g27-security`, created from `origin/main`; reviewed baseline is recorded exactly in [audit-run.json](../../scripts/audit/audit-run.json). No application code, tests, dependency declarations, lockfiles, deployment config, migration, workflow, STATUS or DECISIONS was changed. No issue/PR number was provided; no policy/architecture decision is invented here.
 
 ## Changed

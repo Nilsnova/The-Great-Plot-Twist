@@ -2,8 +2,8 @@
 export const tourSteps=[
   {id:'intro',title:'A page from the intro',seconds:15,copy:'The original intro runs locally. Nothing from the case solution appears.'},
   {id:'arrival',title:'Arrival on Lighthouse Isle',seconds:12,copy:'Walkable pixel scenery, the keeper’s cottage and a readable HUD.'},
-  {id:'islet',title:'Build the signal station',seconds:18,copy:'The crew builds a third light on the home islet. This rehearsal changes no live progress.'},
-  {id:'chart',title:'Set a coastal course',seconds:16,copy:'The sea chart connects the home islet to Saltreach Harbor.'},
+  {id:'islet',title:'Build the signal station',seconds:18,copy:'The crew builds a third light on the Home islet. This rehearsal changes no live progress.'},
+  {id:'chart',title:'Set a coastal course',seconds:16,copy:'The sea chart connects the Home islet to Saltreach Harbor.'},
   {id:'harbor',title:'Harbor bulletin and live captains',seconds:28,copy:'The bulletin shows an almanac fog night while local captains walk through the harbor.'},
   {id:'board',title:'At the Captain’s Table',seconds:18,copy:'Two crew seats pin cards. D1 opens the Night of Three Lights. Local rehearsal only.'},
   {id:'weather',title:'Weather · almanac fog and storm',seconds:18,copy:'The harbor almanac names a fog night; the storm view is a local weather rehearsal.'},

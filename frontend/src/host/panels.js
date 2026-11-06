@@ -17,7 +17,7 @@ export function overviewPanels(data) {
   for(const [label,value] of [['Players registered',data.players],['Forming crews',data.crews.forming],
     ['Active crews',data.crews.active],['Finished crews',data.crews.finished],
     ['Open market positions',data.openPositions??'Unknown'],
-    ['Realtime connections',data.realtimeConnections??'Unknown — server has no count']]) {
+    ['Realtime connections',data.realtimeConnections??'Unknown: server has no count']]) {
     list.append(node('dt','',label),node('dd','',value));
   }
   summary.body.append(list,node('p','host-note',`Build ${data.build.version} · ${data.build.commit}`),

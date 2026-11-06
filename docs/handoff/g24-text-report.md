@@ -1,5 +1,7 @@
 # G24 player-facing text audit
 
+> Historical authored checkpoint against the original pre-integration source. Current evidence, contracts and remaining work are in [the security/text integration](security-text-integration.md); maintained audit files now describe its newer baseline.
+
 Audit and handover for the requesting teammate and reviewer. Branch: `chore/g24-text`, based on `origin/main` at `c26f3032b150af970d57fbbcd6eea439eb26f4c4`.
 
 ## Scope and house spelling

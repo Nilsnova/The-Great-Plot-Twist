@@ -1,5 +1,7 @@
 # G24 checkpoint 1
 
+> Historical authored checkpoint against the original pre-integration source. Current evidence, contracts and remaining work are in [the security/text integration](security-text-integration.md); maintained audit files now describe its newer baseline.
+
 Handover for the requesting teammate: linter and initial audit (C1).
 
 - Created `chore/g24-text` from fetched `origin/main`; clean starting tree, no other branch modified.

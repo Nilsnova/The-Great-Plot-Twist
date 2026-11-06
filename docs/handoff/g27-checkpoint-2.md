@@ -1,5 +1,7 @@
 # G27 checkpoint 2 · final verification · 6 November 2026
 
+> Historical authored checkpoint against the original pre-integration source. Current evidence, contracts and remaining work are in [the security/text integration](security-text-integration.md); maintained audit files now describe its newer baseline.
+
 Report commit: `9981188` on `docs/g27-security`, based on the `origin/main` source commit recorded in [audit-run.json](../../scripts/audit/audit-run.json). This checkpoint adds verification evidence only. The authorised delivery is a push of this branch; no main push, force-push, merge, live scan, secret access or Actions dispatch.
 
 ## Gate evidence

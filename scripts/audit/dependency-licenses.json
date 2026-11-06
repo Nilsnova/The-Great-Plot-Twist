@@ -161,6 +161,62 @@
   },
   {
     "ecosystem": "npm",
+    "name": "@supabase/auth-js",
+    "version": "2.118.0",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Fauth-js/2.118.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@supabase/functions-js",
+    "version": "2.118.0",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Ffunctions-js/2.118.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@supabase/phoenix",
+    "version": "0.4.5",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Fphoenix/0.4.5"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@supabase/postgrest-js",
+    "version": "2.118.0",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Fpostgrest-js/2.118.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@supabase/realtime-js",
+    "version": "2.118.0",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Frealtime-js/2.118.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@supabase/storage-js",
+    "version": "2.118.0",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Fstorage-js/2.118.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@supabase/supabase-js",
+    "version": "2.118.0",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/%40supabase%2Fsupabase-js/2.118.0"
+  },
+  {
+    "ecosystem": "npm",
     "name": "@types/chai",
     "version": "5.2.3",
     "runtime": false,
@@ -262,6 +318,14 @@
     "runtime": false,
     "license": "MIT",
     "evidence": "https://registry.npmjs.org/fsevents/2.3.3"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "iceberg-js",
+    "version": "0.8.1",
+    "runtime": true,
+    "license": "MIT",
+    "evidence": "https://registry.npmjs.org/iceberg-js/0.8.1"
   },
   {
     "ecosystem": "npm",
@@ -470,6 +534,14 @@
     "runtime": false,
     "license": "MIT",
     "evidence": "https://registry.npmjs.org/tinyglobby/0.2.17"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "tslib",
+    "version": "2.8.1",
+    "runtime": true,
+    "license": "0BSD",
+    "evidence": "https://registry.npmjs.org/tslib/2.8.1"
   },
   {
     "ecosystem": "npm",

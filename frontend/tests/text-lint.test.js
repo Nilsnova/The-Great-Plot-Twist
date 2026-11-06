@@ -36,6 +36,12 @@ describe('G24 player-facing text',()=>{
     expect(result.records).toBeGreaterThan(0); expect(result.files).toBeGreaterThan(0);
     expect(result.diagnostics.filter(issue=>!issue.reportOnly)).toEqual([]);
   });
+  it('gates the live festival, sports and host copy while retaining protected story boundaries',()=>{
+    for (const file of ['frontend/src/screens/festival/panel.js','frontend/src/screens/sports/panel.js','frontend/src/host/panels.js'])
+      expect(reportOnly(file)).toBe(false);
+    expect(reportOnly('frontend/src/screens/partners.js')).toBe(true);
+    expect(reportOnly('backend/content/story.json')).toBe(true);
+  });
   it('finds misspelled new vocabulary instead of silently learning it',()=>{
     expect(issues('A mispelled captain.').some(issue=>issue.rule==='spelling')).toBe(true);
     expect(issues('A quiet captain.')).toEqual([]);

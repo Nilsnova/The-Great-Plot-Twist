@@ -35,6 +35,7 @@ export function checkText(record, {words,policy,allowedFields=[]}) {
     if (policy.spellings[word]) add('dialect',`Use ${policy.spellings[word]} (${policy.dialect}).`);
     if (!words.has(word)) add('spelling',`Unreviewed word: ${word}. Check spelling before adding to words.txt.`);
   }
+  const tokens = text.toLowerCase().split(/[^a-z']+/);
   for (const name of policy.names) {
     const pattern = new RegExp(`\\b${escaped(name)}\\b`,'gi');
     for (const match of text.matchAll(pattern)) {
@@ -42,11 +43,14 @@ export function checkText(record, {words,policy,allowedFields=[]}) {
     }
     const nameWords = name.toLowerCase().split(' ');
     if (nameWords.length < 2) continue;
-    const tokens = text.toLowerCase().split(/[^a-z']+/);
     for (let i=0;i<=tokens.length-nameWords.length;i++) {
-      const window = tokens.slice(i,i+nameWords.length);
-      const differences = window.map((token,j)=>token === nameWords[j] ? 0 : oneEdit(token,nameWords[j]) ? 1 : 2);
-      if (differences.reduce((sum,n)=>sum+n,0) === 1) add('name',`Possible misspelling of canonical name: ${name}.`);
+      let differences=0;
+      for(let j=0;j<nameWords.length;j++) {
+        if(tokens[i+j]===nameWords[j])continue;
+        differences+=oneEdit(tokens[i+j],nameWords[j])?1:2;
+        if(differences>1)break;
+      }
+      if (differences === 1) add('name',`Possible misspelling of canonical name: ${name}.`);
     }
   }
   return issues;

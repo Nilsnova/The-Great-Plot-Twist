@@ -1,5 +1,7 @@
 # G24 checkpoint 2
 
+> Historical authored checkpoint against the original pre-integration source. Current evidence, contracts and remaining work are in [the security/text integration](security-text-integration.md); maintained audit files now describe its newer baseline.
+
 Handover for the requesting teammate: safe text fixes (C2).
 
 - Fixed all eight editable findings across six UI source files. Ranges now say `1 to 9`; missing supplied values use `?`, not an invented zero. The settings/credits labels use American spelling. A pending-credit notice replaces four raw `<name>` placeholders without inventing team members.

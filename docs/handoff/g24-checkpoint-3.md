@@ -1,5 +1,7 @@
 # G24 checkpoint 3
 
+> Historical authored checkpoint against the original pre-integration source. Current evidence, contracts and remaining work are in [the security/text integration](security-text-integration.md); maintained audit files now describe its newer baseline.
+
 Handover for the requesting teammate: ordinary-suite integration and final gates (C3).
 
 - Added 17 linter tests to the normal frontend suite. The real repository must have no editable copy errors; protected style findings remain visible. Synthetic bad fixtures prove spelling/name/style/placeholder/length rules fail meaningfully and spoilers fail even in report-only paths.

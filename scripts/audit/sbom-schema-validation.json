@@ -1,8 +1,8 @@
 {
   "result": "passed",
   "standard": "CycloneDX 1.6 JSON",
-  "sbom_sha256": "cef40c7450d5d2af2dd378f42a01a725217bea05c7454b1074cf7009e088e276",
-  "validator": "jsonschema Draft7Validator with referencing.Registry; no live application access",
+  "sbom_sha256": "7d646443079ca34eca41d206ebdd9d29dcbcadf83364650c97fba2dfcd4c6c31",
+  "validator": "jsonschema Draft7Validator with referencing.Registry; public schemas only",
   "schemas": {
     "bom-1.6.schema.json": {
       "source": "https://raw.githubusercontent.com/CycloneDX/specification/1.6/schema/bom-1.6.schema.json",
