@@ -2,7 +2,8 @@
 -- Provider results are fetched and verified by the server; browsers cannot write either table
 -- or invoke these functions. No migration statement creates a fixture, stake or payout.
 -- Reuses prediction_stake/prediction_payout with sports: refs, separate from L5 question refs.
--- Locks always follow fixture -> wallets in player-id order. Wallet locking also serialises
+-- Locks follow fixture -> profiles (key share) -> wallets in player-id order. Profile pins
+-- precede wallet locks so account-deletion cascades cannot invert that order. Wallet locking serialises
 -- the daily cap across different fixtures. Rerunning this unapplied file is safe.
 
 -- Provider identity and the original cutoff survive changed or delayed provider responses.
@@ -157,6 +158,12 @@ begin
           p_home, p_away, p_kickoff, p_closes_at)
   on conflict (fixture_id) do nothing;
   select * into v_fixture from public.fixtures where fixture_id = p_fixture_id for update;
+  -- Pin the FK parent before any wallet. delete_player removes profiles before wallets;
+  -- taking the wallet first would deadlock with its cascade at the later ledger/stake FK.
+  perform 1 from public.profiles where id = p_player_id for key share;
+  if not found then
+    return jsonb_build_object('status', 'refused', 'reason', 'player_missing');
+  end if;
   -- Wallet before the day sum: two different fixture locks cannot overspend a daily cap.
   select balance into v_coins from public.wallets where player_id = p_player_id for update;
   if not found then
@@ -266,6 +273,17 @@ begin
         or (p_outcome = 'away' and p_away_score <= p_home_score) then
     raise exception 'bad_sports_settlement';
   end if;
+  -- All FK parents precede all wallets, matching account deletion's parent-first order.
+  -- A deletion already in progress may finish while we wait for a profile. Do not retain
+  -- that old stake snapshot: the separate read below rechecks membership after every wait.
+  perform p.id from public.profiles as p
+   where p.id in (select player_id from public.sports_stakes where fixture_id = p_fixture_id)
+   order by p.id for key share;
+  for v_player in select player_id from public.sports_stakes
+                   where fixture_id = p_fixture_id order by player_id
+  loop
+    perform 1 from public.wallets where player_id = v_player for update;
+  end loop;
   select coalesce(array_agg(id order by id), '{}'::bigint[]), coalesce(sum(amount), 0),
          coalesce(sum(amount) filter (where pick = p_outcome), 0)
     into v_ids, v_total, v_winning from public.sports_stakes where fixture_id = p_fixture_id;
@@ -317,12 +335,6 @@ begin
   if v_expected is distinct from v_given then
     raise exception 'bad_sports_settlement';
   end if;
-  -- A consistent player order also protects two different fixtures settling concurrently.
-  for v_player in select player_id from public.sports_stakes
-                   where fixture_id = p_fixture_id order by player_id
-  loop
-    perform 1 from public.wallets where player_id = v_player for update;
-  end loop;
   for v_payout in select x.player_id, x.coins from jsonb_to_recordset(v_expected)
                    as x(row_id bigint, player_id uuid, coins bigint) order by x.player_id
   loop
