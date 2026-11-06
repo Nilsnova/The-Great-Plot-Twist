@@ -1,6 +1,9 @@
 """Public sports board and private stake projections; no player identifiers leave these views."""
 
+from datetime import datetime
+
 from server.predictions.stake_rules import DAILY_STAKE_CAP, MAX_STAKE, POOL_CUT_PERCENT
+from server.sports.models import Match
 from server.sports.rules import closes_at, picking_open
 from server.sports.store import FixtureRow, StakeRow
 
@@ -34,7 +37,9 @@ def pool_view(fixture: FixtureRow | None, stakes: list[StakeRow]) -> dict:
     }
 
 
-def fixture_view(match, source, now, fixture: FixtureRow | None, stakes: list[StakeRow]) -> dict:
+def fixture_view(
+    match: Match, source: str, now: datetime, fixture: FixtureRow | None, stakes: list[StakeRow]
+) -> dict:
     cutoff = closes_at(match) if fixture is None else min(closes_at(match), fixture.closes_at)
     return {
         "id": match.id,

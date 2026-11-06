@@ -4,6 +4,8 @@ Opening My Stakes refreshes completed games. No background job, client outcome o
 result authorizes payment. The SQL function recomputes every settlement independently.
 """
 
+import httpx
+
 from server.clock import Clock, utc_now
 from server.errors import ApiError
 from server.predictions.pools import Stake, plan_settlement
@@ -18,6 +20,7 @@ from server.sports.rules import outcome, picking_open, validate_pick
 from server.sports.source import SportsSource, unavailable
 from server.sports.store import SportsStore, unreadable
 from server.sports.views import PLAY_MONEY, RULES, fixture_view, my_stake_view
+from server.supabase_admin import SupabaseAdmin
 
 
 def refusal(reply: dict) -> None:
@@ -56,7 +59,7 @@ class SportsService:
         self.source = source
         self.clock = clock
 
-    async def board(self, admin) -> dict:
+    async def board(self, admin: SupabaseAdmin) -> dict:
         board = await self.source.board()
         store = SportsStore(admin)
         ids = [match.id for match in board.matches]
@@ -82,7 +85,15 @@ class SportsService:
             "simulationNote": PLAY_MONEY,
         }
 
-    async def stake(self, admin, player_id, fixture_id, pick, amount, stake_id) -> dict:
+    async def stake(
+        self,
+        admin: SupabaseAdmin,
+        player_id: str,
+        fixture_id: str,
+        pick: str,
+        amount: int,
+        stake_id: str,
+    ) -> dict:
         if type(amount) is not int or not 1 <= amount <= MAX_STAKE:
             raise ApiError(422, "invalid_amount", f"Stake 1 to {MAX_STAKE} whole play coins.")
         store = SportsStore(admin)
@@ -133,7 +144,7 @@ class SportsService:
             "simulationNote": PLAY_MONEY,
         }
 
-    async def settle(self, admin, player_id, fixture_id) -> dict:
+    async def settle(self, admin: SupabaseAdmin, player_id: str, fixture_id: str) -> dict:
         self.source.require_live()
         store = SportsStore(admin)
         fixture = await store.fixture(fixture_id)
@@ -181,7 +192,7 @@ class SportsService:
             },
         }
 
-    async def mine(self, admin, player_id) -> dict:
+    async def mine(self, admin: SupabaseAdmin, player_id: str) -> dict:
         self.source.require_live()
         store = SportsStore(admin)
         stakes = await store.mine(player_id)
@@ -214,6 +225,6 @@ class SportsService:
 
 
 def sports_from_settings(
-    settings: Settings, *, clock: Clock = utc_now, transport=None
+    settings: Settings, *, clock: Clock = utc_now, transport: httpx.AsyncBaseTransport | None = None
 ) -> SportsService:
     return SportsService(SportsSource(settings, clock=clock, transport=transport), clock=clock)

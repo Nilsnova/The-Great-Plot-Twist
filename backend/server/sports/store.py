@@ -117,7 +117,7 @@ def unreadable() -> SupabaseRejected:
     return SupabaseRejected("The sports database answer could not be read.")
 
 
-def checked(rows, model, limit):
+def checked(rows: object, model: type, limit: int) -> list:
     if not isinstance(rows, list) or len(rows) > limit:
         raise unreadable()
     try:
@@ -259,7 +259,15 @@ class SportsStore:
             raise unreadable()
         return sum(row.amount for row in rows)
 
-    async def place(self, player_id, pick, amount, stake_id, reading: SportsReading, day_start):
+    async def place(
+        self,
+        player_id: str,
+        pick: str,
+        amount: int,
+        stake_id: str,
+        reading: SportsReading,
+        day_start: datetime,
+    ) -> dict:
         match = reading.match
         params = {
             "p_fixture_id": match.id,
@@ -288,7 +296,7 @@ class SportsStore:
         result: str,
         stakes: list[StakeRow],
         plan: SettlementPlan,
-    ):
+    ) -> dict:
         return await self.run(
             "sports_settle_fixture",
             {
