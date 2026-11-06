@@ -10,9 +10,12 @@ const report = { checked: new Date().toISOString(), browser: env.browser.version
 const check = (ok, label) => { assert.ok(ok, label); report.checks.push(label); };
 const capture = name => page.screenshot({ path: `captures/20261105_World-${name}.png` });
 const go = async id => { await page.evaluate(id => window.__island.world.goTo(id, { fast: true }), id); await settle(page); };
+// The market hall opens the Island Exchange panel after a lazy import. Wait for it, then close it, so the world is free again.
+// The address asks for the panel's local fake (?market=local), so this check needs no server and never reaches a live price.
+const closeMarket = async () => { const market = page.locator('.market-modal'); await market.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await market.waitFor({ state: 'hidden' }); };
 try {
   await stubIntro(page);
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await stubIntro(page);await page.goto(env.url + '?market=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));
@@ -40,6 +43,7 @@ try {
       await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, zone.id);
       const before = await page.evaluate(() => window.__worldEvents.filter(e => e.type === 'interact').length);
       await page.keyboard.down('KeyE'); await page.waitForTimeout(100); await page.keyboard.up('KeyE'); await dismissIntro(page);
+      if (zone.id === 'market_hall') await closeMarket();
       check(await page.evaluate(({ before, id, place }) => {
         const events = window.__worldEvents.filter(e => e.type === 'interact');
         return events.length === before + 1 && JSON.stringify(events.at(-1)) === JSON.stringify({ type: 'interact', id, place });
