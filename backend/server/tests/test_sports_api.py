@@ -11,7 +11,6 @@ from fastapi.testclient import TestClient
 
 from server.app import create_app
 from server.auth import Player, unauthorized
-from server.routes.sports import router
 from server.sports.service import SportsService
 from server.sports.source import SportsSource
 from server.tests.helpers import assert_error
@@ -116,9 +115,13 @@ def make_client(*, enabled=True, final=False, unavailable=False, database=None):
 
     source = SportsSource(settings, clock=timer, transport=httpx.MockTransport(response))
     database = database or ScriptedDatabase()
-    app = create_app(settings=settings, verifier=Verifier(), admin=database)
-    app.state.sports = SportsService(source, clock=timer)
-    app.include_router(router, prefix="/api")
+    app = create_app(
+        settings=settings,
+        verifier=Verifier(),
+        admin=database,
+        sports_service=SportsService(source, clock=timer),
+        clock=timer,
+    )
     return TestClient(app), database, seen
 
 
@@ -144,6 +147,18 @@ def test_feature_off_hides_board_and_writes_and_all_money_routes_require_authent
     client, _, _ = make_client()
     assert_error(client.get("/api/sports/mine"), 401, "unauthorized")
     assert_error(client.post("/api/sports/stake", json={}), 401, "unauthorized")
+
+
+@pytest.mark.parametrize("path", ["/api/sports/mine", "/api/sports/stake", "/api/sports/settle"])
+def test_player_errors_remain_private_and_uncached(path):
+    client, _, _ = make_client()
+    response = client.get(path) if path.endswith("mine") else client.post(path, json={})
+    assert_error(response, 401, "unauthorized")
+    assert response.headers["cache-control"] == "private, no-store"
+    if not path.endswith("mine"):
+        response = client.post(path, headers=HEADER, json={})
+        assert_error(response, 422, "validation_error")
+        assert response.headers["cache-control"] == "private, no-store"
 
 
 def test_new_stake_uses_server_metadata_limits_and_verified_player_only():

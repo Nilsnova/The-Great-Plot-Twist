@@ -56,11 +56,14 @@ from server.routes import (
     me,
     predictions,
     save,
+    sports,
     weather,
     world,
 )
 from server.settings import Settings, settings_from_environment
 from server.sign_in_code import CodeExchanger
+from server.sports.cache import SportsCacheControl
+from server.sports.service import SportsService, sports_from_settings
 from server.supabase_admin import SupabaseAdmin, admin_from_settings
 from server.weather.source import make_weather_source
 from server.weather.state_rules import load_state_rules
@@ -108,6 +111,7 @@ def create_app(
     prediction_desk: PredictionDesk | None = None,
     duel_service: DuelService | None = None,
     case_service: CaseService | None = None,
+    sports_service: SportsService | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -141,6 +145,8 @@ def create_app(
         prediction_desk = desk_or_none(settings)  # None if its questions file is broken
     if duel_service is None:
         duel_service = DuelService()  # it has no data files, so it always starts
+    if sports_service is None:
+        sports_service = sports_from_settings(settings, clock=clock)
 
     if case_service is None:
         stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()
@@ -155,6 +161,7 @@ def create_app(
     app.add_middleware(CaseCacheControl)
     app.add_middleware(FestivalCacheControl)
     app.add_middleware(HostConsoleHeaders)
+    app.add_middleware(SportsCacheControl)
 
     # Routes find these through the dependencies in settings.py, auth.py, supabase_admin.py,
     # routes/weather.py, sign_in_code.py, market/exchange.py, crew_broadcast.py,
@@ -177,6 +184,7 @@ def create_app(
     app.state.daily_content = load_daily_content()
     app.state.predictions = prediction_desk
     app.state.duels = duel_service
+    app.state.sports = sports_service
 
     app.state.case = case_service
 
@@ -200,6 +208,7 @@ def create_app(
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")
     app.include_router(festival.router, prefix="/api")
+    app.include_router(sports.router, prefix="/api")
 
     app.include_router(case.router, prefix="/api")
     app.include_router(board.router, prefix="/api")

@@ -14,11 +14,9 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from server.routes.sports import router
 from server.sports.service import sports_from_settings
 from server.tests.story_states import ROUTES
 from server.tests.test_sports_source import upcoming
-from tools import local_admin
 from tools.local_players import PLAYERS
 from tools.local_server import create_local_app
 
@@ -34,22 +32,9 @@ pytestmark = pytest.mark.skipif(
         ("POSTPONED", {"home": None, "away": None}, (1000, 1000, 1000)),
     ],
 )
-def test_actual_sports_api_stakes_and_verified_results_pay_exactly_once(
-    monkeypatch, status, score, expected
-):
+def test_actual_sports_api_stakes_and_verified_results_pay_exactly_once(status, score, expected):
     pytest.importorskip("pgserver")
     pytest.importorskip("psycopg")
-    # The production local tool stays fail-closed; this test explicitly permits only G15's ports.
-    monkeypatch.setattr(local_admin, "TABLES", local_admin.TABLES | {"fixtures", "sports_stakes"})
-    monkeypatch.setattr(
-        local_admin,
-        "FUNCTIONS",
-        local_admin.FUNCTIONS
-        | {
-            "sports_place_stake",
-            "sports_settle_fixture",
-        },
-    )
     app = create_local_app({"LOCAL_TEST_SERVER": "1", "APP_ENV": "local"})
     settings = replace(
         app.state.settings,
@@ -71,7 +56,6 @@ def test_actual_sports_api_stakes_and_verified_results_pay_exactly_once(
         )
 
     app.state.sports = sports_from_settings(settings, transport=httpx.MockTransport(provider))
-    app.include_router(router, prefix="/api")
     database = app.state.local_database
     with TestClient(app) as client:
         headers, bodies = [], []

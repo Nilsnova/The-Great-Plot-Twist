@@ -27,7 +27,7 @@ TABLES = frozenset(
     "case_state case_finds case_deductions case_accusations case_solvers case_actions "
     "board_pins finale_posts finale_signals npc_orders "
     "world_state world_solves wall_of_lights "
-    "festival_claims festival_queue festival_actions".split()
+    "festival_claims festival_queue festival_actions fixtures sports_stakes".split()
 )
 FUNCTIONS = frozenset(
     "assign_captain_name reroll_captain_name save_progress delete_player grant_entry_kit "
@@ -38,7 +38,8 @@ FUNCTIONS = frozenset(
     "board_pin board_pair finale_nightfall finale_take_post finale_signal "
     "npc_fetch_pin npc_man_light "
     "festival_claim festival_ring_join festival_ring_leave festival_ring_candidate "
-    "host_console_overview host_console_crews host_close_test_crew host_record_keepalive".split()
+    "host_console_overview host_console_crews host_close_test_crew host_record_keepalive "
+    "sports_place_stake sports_settle_fixture".split()
 )
 # (parent, embedded table): (parent key, embedded key, many)
 RELATIONS = {
