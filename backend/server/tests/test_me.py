@@ -728,6 +728,19 @@ def test_vercel_functions_run_in_dublin_next_to_the_database():
     assert config["regions"] == ["dub1"]
 
 
+def test_vercel_json_sends_the_browser_security_headers():
+    # Added on 6 Nov 2026 (security audit, finding 1): the live site sent no security headers.
+    # The policy is G8's strict self-only CSP, plus the Supabase project (sign-in, Realtime).
+    config = json.loads((REPO_ROOT / "vercel.json").read_text())
+    rules = {rule["source"]: rule["headers"] for rule in config["headers"]}
+    every_page = {header["key"]: header["value"] for header in rules["/(.*)"]}
+
+    assert "script-src 'self';" in every_page["Content-Security-Policy"]
+    assert "frame-ancestors 'none'" in every_page["Content-Security-Policy"]
+    assert every_page["X-Content-Type-Options"] == "nosniff"
+    assert every_page["Referrer-Policy"] == "strict-origin-when-cross-origin"
+
+
 def test_the_keepalive_route_still_exists_for_whatever_calls_it():
     # Whatever ends up calling it daily (see the test above), the route must exist, or the free
     # Supabase project would pause after 7 days without anyone noticing.
