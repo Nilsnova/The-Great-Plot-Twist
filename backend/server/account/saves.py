@@ -66,11 +66,11 @@ def save_size(data: dict[str, Any]) -> int:
     """
     try:
         text = json.dumps(data, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+        return len(text.encode("utf-8"))
     except (TypeError, ValueError, RecursionError) as error:
         raise ApiError(
             422, "save_not_json", "The save holds a value that JSON cannot store, such as NaN."
         ) from error
-    return len(text.encode("utf-8"))
 
 
 def check_save_size(data: dict[str, Any]) -> None:
