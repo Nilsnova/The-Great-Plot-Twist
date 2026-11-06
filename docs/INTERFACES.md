@@ -74,7 +74,7 @@
 
 Case routes are specified in [section 10](#case-phase-1-contract-for-g9); their flag stays off until the full case chain and proofs pass.
 
-There are 37 API operations: the foundation and account routes, crews, the home islet and bulletin, four Island Exchange operations, four prediction desk operations and five Lantern Duels operations. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
+The API includes the foundation and account routes, crews, the home islet and bulletin, Exchange v2, predictions, Lantern Duels, and the phased case board/night/world routes. Start the API with the commands in [ENGINEERING.md](ENGINEERING.md#3-commands). The route contracts below describe their request, answer and refusal shapes.
 
 ### GET /api/health
 

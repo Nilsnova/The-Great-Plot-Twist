@@ -20,7 +20,7 @@ an env file. It only connects to its newly created PostgreSQL Unix socket.
 
 The local database executes the repository's full sorted migration chain twice. The real
 signup trigger seeds four disposable users; regular API code runs the actual story referee,
-wallet grants, crew functions and Phase 1 case rules. It does not import tests or scripted
+wallet grants, crew functions and the case rules present in the checkout. It does not import tests or scripted
 database fakes. The local SQL adapter allows only the currently used tables, functions and
 explicit embedded relations; unsupported operations fail closed. There is no network fallback.
 
@@ -47,12 +47,16 @@ CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest server/
 It checks all four logins, host restrictions, the story/coin grant and retry, crew creation,
 joining and muster, isolated player reads, case opening/search/action UID retry/host clock,
 account deletion and database directory removal. A second real API check covers L2 building,
-retry, player isolation and deletion after applying the expanded A4/L2 migration chain twice.
+retry, player isolation and deletion after applying the expanded migration chain twice.
+A third check exercises the current case reader's recent-40 signal list and bounded historical
+summaries, embedded aliases and filters, rejected unsupported queries, and the dark world API.
 Ordinary startup-guard tests run without the
 optional database packages. Use `--tb=no` on case tests to avoid printing protected prose.
 
-This harness checks the Phase 1 case and L2 building API. Group 2, including A4 and the L2
-migration, is available from `origin/main` at `60f7fd0`; the later Phase 2 world flow still
-needs its own integration checks. `DEMO_MODE` is true, the case flag is on, the `bulletin`
-and `sign_in` flags are off, and `RELIGHT_OPEN` is false. R2 security headers are now on main;
-external sign-in activation still requires the browser callback checks.
+The local port supports the board/night, home-islet and shared-world tables and intent functions;
+it also accepts the NPC tables and two intents once their migration and runtime are integrated.
+It uses explicit relation and RPC allowlists, bound SQL values, current compound ordering, and
+per-relation filters and limits. It exposes no wallet-write helper. Full solo and multiplayer
+case completion are checked separately by the integrated case proof, rather than inferred from
+this smoke test. `DEMO_MODE` is true, the case flag is on, `bulletin` and `sign_in` are off, and
+`RELIGHT_OPEN` is false. The production app never imports the local factory or fixture verifier.
