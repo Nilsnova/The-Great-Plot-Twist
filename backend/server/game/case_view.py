@@ -10,6 +10,8 @@ from server.game.case_reveal import reveal_lines
 from server.game.case_routes import card_is_open, decide_route
 from server.game.case_snapshot import CaseSnapshot, Find, SeatState
 from server.game.finale_view import credits_view, finale_view
+from server.game.npc_lines import LineBank
+from server.game.npc_view import npc_view
 
 CLOCK_KEYS = frozenset(
     {
@@ -275,7 +277,9 @@ def _reveal(data: CaseData, snapshot: CaseSnapshot, me: SeatState) -> dict:
     }
 
 
-def build_case_view(data: CaseData, snapshot: CaseSnapshot, viewer: str, now: int) -> dict | None:
+def build_case_view(
+    data: CaseData, snapshot: CaseSnapshot, viewer: str, now: int, *, lines: LineBank | None = None
+) -> dict | None:
     """Return only this crew's earned content, or no case for an unstarted visitor."""
     me = next((seat for seat in snapshot.seats if seat.player_id == viewer), None)
     if snapshot.status == "forming" or me is None:
@@ -313,5 +317,5 @@ def build_case_view(data: CaseData, snapshot: CaseSnapshot, viewer: str, now: in
         "reveal": _reveal(data, snapshot, me),
         "credits": credits_view(data, snapshot, viewer),
         "finale": finale_view(data, snapshot, me, now),
-        "partners": [],
+        "partners": [] if lines is None else npc_view(data, snapshot, viewer, now, lines),
     }
