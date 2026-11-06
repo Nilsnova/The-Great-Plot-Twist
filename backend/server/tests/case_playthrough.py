@@ -1,7 +1,7 @@
-"""Deterministic test-only four-player planner built from production case rules.
+"""Deterministic test-only planner built from production case and NPC rules.
 
-Phase 2 proves free-route card access, two-seat deductions and a night ending in a solve.
-Phase 4 extends the seats and steps to NPC orders, completing the 69-crew proof.
+Free routes and explicit partner orders produce two-seat deductions and a night ending in a solve.
+The same decisions cover all 69 starting crews without autonomous partner actions.
 """
 
 import asyncio
@@ -10,12 +10,13 @@ from datetime import UTC, datetime
 from itertools import permutations
 from uuid import UUID
 
+from server.crews.seats import Seat, partner_seats
 from server.game.board_rules import decide_pair, decide_pin
 from server.game.building import level_one_cost
 from server.game.building_catalogue import load_buildings
 from server.game.case_accusation import decide_accusation
 from server.game.case_clock import minute_of, minutes_until_open
-from server.game.case_data import CaseData, Deduction, Route
+from server.game.case_data import CaseData, Deduction, Light, Route
 from server.game.case_rewards import solve_shares
 from server.game.case_routes import decide_route
 from server.game.case_snapshot import (
@@ -23,6 +24,7 @@ from server.game.case_snapshot import (
     CaseSnapshot,
     Find,
     Formed,
+    Order,
     Pin,
     Post,
     SeatState,
@@ -36,6 +38,8 @@ from server.game.finale_rules import (
     decide_signal,
     parting_locks,
 )
+from server.game.npc_orders import busy_seconds, choose_route
+from server.tests.npc_apply import NpcApplyFailure, apply_order, leave_post
 
 
 class PlannerFailure(ValueError):
@@ -62,10 +66,14 @@ def _require(condition: bool, message: str) -> None:
 
 def starting_snapshot(data: CaseData, kits: tuple[str, ...]) -> CaseSnapshot:
     """Mirror case_open's initial journal finds without counting them as extra actions."""
-    _require(len(kits) == 4, "This proof requires four player seats.")
-    seats = tuple(
-        SeatState(number, kit, str(UUID(int=number)), name=f"Test captain {number}")
+    _require(1 <= len(kits) <= 4, "This proof requires one to four player seats.")
+    players = [
+        Seat(number, str(UUID(int=number)), None, kit, f"Test captain {number}")
         for number, kit in enumerate(kits, start=1)
+    ]
+    seats = tuple(
+        SeatState(seat.seat_no, seat.kit, seat.player_id, seat.npc_id, seat.name)
+        for seat in (*players, *partner_seats(players))
     )
     finds = tuple(
         Find(seat.seat_no, route.card_id, route.id, 0, 0)
@@ -109,6 +117,7 @@ def apply_search(
     data: CaseData, snapshot: CaseSnapshot, seat: SeatState, route: Route, now: int
 ) -> tuple[CaseSnapshot, Find]:
     """Mirror the search insert only after the actual pure decision accepts it."""
+    _require(seat.player_id is not None, "A search needs a player actor.")
     decision = decide_route(data, snapshot, seat, route.id, now)
     _require(decision.accepted, "The production search rule refused a planned step.")
     _require(route.coins == 0 and decision.price == 0, "A card proof must not buy a route.")
@@ -137,6 +146,7 @@ def apply_pin(
     data: CaseData, snapshot: CaseSnapshot, seat: SeatState, find: Find, now: int
 ) -> tuple[CaseSnapshot, int]:
     """Mirror a landed player pin after the production decision accepts it."""
+    _require(seat.player_id is not None, "A direct pin needs a player actor.")
     existing = next(
         (
             pin
@@ -160,6 +170,7 @@ def apply_pair(
     data: CaseData, snapshot: CaseSnapshot, deduction: Deduction, actor: SeatState, now: int
 ) -> CaseSnapshot:
     """Mirror a formed deduction only after the production pair decision accepts it."""
+    _require(actor.player_id is not None, "A pair needs a player actor.")
     decision = decide_pair(data, snapshot, *deduction.cards, now)
     _require(
         decision.accepted and decision.deduction_id == deduction.id,
@@ -172,21 +183,52 @@ def apply_pair(
 
 
 def _pair_candidate(
-    data: CaseData, proof: CardProof, deduction: Deduction, left, right
+    data: CaseData, proof: CardProof, deduction: Deduction, left: SeatState, right: SeatState
 ) -> CardProof:
-    snapshot, first = _find_for_card(
+    snapshot, left_ready = _card_pin(
         data, proof.snapshot, left, deduction.cards[0], proof.finished_second
     )
-    snapshot, second = _find_for_card(
+    snapshot, right_ready = _card_pin(
         data, snapshot, right, deduction.cards[1], proof.finished_second
     )
-    snapshot, left_ready = apply_pin(data, snapshot, left, first, proof.finished_second)
-    snapshot, right_ready = apply_pin(data, snapshot, right, second, proof.finished_second)
     finished = max(proof.finished_second, left_ready, right_ready)
-    snapshot = apply_pair(data, snapshot, deduction, left, finished)
+    actor = next(seat for seat in snapshot.seats if seat.player_id is not None)
+    snapshot = apply_pair(data, snapshot, deduction, actor, finished)
     return CardProof(
         snapshot, finished, (*proof.pair_seats, (deduction.id, left.seat_no, right.seat_no))
     )
+
+
+def _card_pin(
+    data: CaseData, snapshot: CaseSnapshot, seat: SeatState, card_id: str, now: int
+) -> tuple[CaseSnapshot, int]:
+    if seat.player_id is not None:
+        snapshot, find = _find_for_card(data, snapshot, seat, card_id, now)
+        return apply_pin(data, snapshot, seat, find, now)
+    existing = next(
+        (pin for pin in snapshot.pins if pin.card_id == card_id and pin.seat_no == seat.seat_no),
+        None,
+    )
+    if existing is not None:
+        return snapshot, existing.pinned_second
+    now += busy_seconds(snapshot, seat.seat_no, now)
+    held = any(find.card_id == card_id for find in snapshot.finds_for_seat(seat.seat_no))
+    if not held:
+        choice = choose_route(data, data.card(card_id), seat, now)
+        _require(choice.reason != "wrong_kit", "A partner has no free minimum route.")
+        now += choice.minutes * 60
+    snapshot, order = apply_partner_order(data, snapshot, seat, "fetch", card_id, now)
+    return snapshot, order.ready_second
+
+
+def apply_partner_order(
+    data: CaseData, snapshot: CaseSnapshot, partner: SeatState, kind: str, target: str, now: int
+) -> tuple[CaseSnapshot, Order]:
+    actor = next(seat for seat in snapshot.seats if seat.player_id is not None)
+    try:
+        return apply_order(data, snapshot, actor, partner, kind, target, now)
+    except NpcApplyFailure as error:
+        raise PlannerFailure(str(error)) from None
 
 
 def find_cards_for_crew(data: CaseData, kits: tuple[str, ...]) -> CardProof:
@@ -225,7 +267,7 @@ def _build_station(data: CaseData, proof: CardProof) -> CardProof:
         cost.coins <= data.kit(owner.kit).start_coins and cost.timber <= timber,
         "The L2 station price exceeds the starting materials.",
     )
-    players = [seat.player_id for seat in proof.snapshot.seats]
+    players = [seat.player_id for seat in proof.snapshot.seats if seat.player_id is not None]
     built = asyncio.run(stations.players_with_signal_station(None, players))
     snapshot = replace(
         proof.snapshot,
@@ -237,6 +279,7 @@ def _build_station(data: CaseData, proof: CardProof) -> CardProof:
 
 
 def apply_nightfall(data: CaseData, snapshot: CaseSnapshot, now: int) -> CaseSnapshot:
+    _require(snapshot.seats[0].player_id is not None, "Nightfall needs a player actor.")
     decision = decide_nightfall(data, snapshot, now)
     _require(decision.accepted, "The production nightfall rule refused a planned step.")
     return replace(
@@ -251,41 +294,37 @@ def apply_nightfall(data: CaseData, snapshot: CaseSnapshot, now: int) -> CaseSna
 def apply_post(
     data: CaseData, snapshot: CaseSnapshot, seat: SeatState, light_id: str, now: int
 ) -> CaseSnapshot:
+    _require(seat.player_id is not None, "A direct post needs a player actor.")
     decision = decide_post(data, snapshot, seat, light_id, now)
     _require(decision.accepted, "The production post rule refused a planned step.")
-    old_lights = {
-        post.light_id
-        for post in snapshot.posts
-        if post.seat_no == seat.seat_no and post.ended_second is None
-    }
-    posts = tuple(
-        replace(post, ended_second=now)
-        if post.light_id in old_lights and post.ended_second is None
-        else post
-        for post in snapshot.posts
+    old = next(
+        (
+            post
+            for post in snapshot.posts
+            if post.light_id == light_id and post.ended_second is None
+        ),
+        None,
     )
-    signals = tuple(
-        replace(signal, ended_second=now)
-        if signal.light_id in old_lights and signal.ended_second is None
-        else signal
-        for signal in snapshot.signals
-    )
+    if old is not None:
+        snapshot = leave_post(snapshot, old.seat_no, now)
+    snapshot = leave_post(snapshot, seat.seat_no, now)
     post = Post(
         light_id,
         seat.seat_no,
         now,
         now + decision.seconds,
         player_id=seat.player_id,
-        id=len(posts) + 1,
+        id=max((post.id for post in snapshot.posts), default=0) + 1,
     )
     return replace(
-        snapshot, posts=(*posts, post), signals=signals, write_revision=snapshot.write_revision + 1
+        snapshot, posts=(*snapshot.posts, post), write_revision=snapshot.write_revision + 1
     )
 
 
 def apply_signal(
     data: CaseData, snapshot: CaseSnapshot, seat: SeatState, light_id: str, bearing: float, now: int
 ) -> CaseSnapshot:
+    _require(seat.player_id is not None, "A signal needs a player actor.")
     decision = decide_signal(data, snapshot, seat, light_id, bearing, now)
     _require(decision.accepted, "The production signal rule refused a planned step.")
     post = next(
@@ -293,7 +332,12 @@ def apply_signal(
     )
     signals = tuple(
         replace(signal, ended_second=now)
-        if signal.light_id == light_id and signal.ended_second is None
+        if signal.light_id == light_id
+        and signal.night_no == snapshot.night_no
+        and signal.on_target
+        and signal.ended_second is None
+        and signal.holds_until_second is not None
+        and signal.holds_until_second > now
         else signal
         for signal in snapshot.signals
     )
@@ -307,7 +351,7 @@ def apply_signal(
         now,
         now + decision.seconds,
         night_no=snapshot.night_no,
-        id=len(signals) + 1,
+        id=max((signal.id for signal in signals), default=0) + 1,
     )
     snapshot = replace(
         snapshot, signals=(*signals, signal), write_revision=snapshot.write_revision + 1
@@ -328,6 +372,7 @@ def apply_signal(
 def apply_accusation(
     data: CaseData, snapshot: CaseSnapshot, actor: SeatState, now: int
 ) -> CaseSnapshot:
+    _require(actor.player_id is not None, "An accusation needs a player actor.")
     decision = decide_accusation(data, snapshot, data.accusation.culprit, now)
     _require(decision.accepted, "The production accusation rule refused a planned step.")
     accusation = Accusation(data.accusation.culprit, True, now, actor.player_id, actor.seat_no)
@@ -353,14 +398,34 @@ def solve_for_crew(data: CaseData, kits: tuple[str, ...]) -> CardProof:
     snapshot = apply_nightfall(data, proof.snapshot, now)
     lights = tuple(light for light in data.night.lights if light.tier == "must")
     _require(len(lights) == data.night.lights_needed, "The minimum needs its three lights.")
-    for seat, light in zip(snapshot.seats, lights, strict=False):
-        snapshot = apply_post(data, snapshot, seat, light.id, now)
+    snapshot = _man_lights(data, snapshot, lights, now)
     now = max(post.on_post_second for post in snapshot.posts)
     target = schooner_position(snapshot.crew_id, data.night.chart)
-    for offset, (seat, light) in enumerate(zip(snapshot.seats, lights, strict=False)):
+    for offset, light in enumerate(lights):
+        post = next(
+            post
+            for post in snapshot.posts
+            if post.light_id == light.id and post.ended_second is None
+        )
+        seat = snapshot.seat_for_player(post.player_id) if post.player_id else snapshot.seats[0]
         snapshot = apply_signal(
             data, snapshot, seat, light.id, bearing_to(light.chart_xy, target), now + offset * 10
         )
     now = snapshot.signals[-1].case_second
     snapshot = apply_accusation(data, snapshot, snapshot.seats[0], now)
     return replace(proof, snapshot=snapshot, finished_second=now)
+
+
+def _man_lights(
+    data: CaseData, snapshot: CaseSnapshot, lights: tuple[Light, ...], now: int
+) -> CaseSnapshot:
+    players = [seat for seat in snapshot.seats if seat.player_id is not None]
+    partners = [seat for seat in snapshot.seats if seat.npc_id is not None]
+    public_holders = iter((*partners, *players[1:]))
+    for light in lights:
+        seat = next(public_holders) if light.partners_may_man else players[0]
+        if seat.player_id is not None:
+            snapshot = apply_post(data, snapshot, seat, light.id, now)
+        else:
+            snapshot, _ = apply_partner_order(data, snapshot, seat, "man_light", light.id, now)
+    return snapshot
