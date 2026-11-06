@@ -1,0 +1,9 @@
+/* Presenter-laptop measurements, shown only when the owner asks for them. */
+.performance-panel{position:fixed;right:18px;top:18px;z-index:900;background:#1c3026f2;color:#f0dfb1;border:2px solid #c2a96a;box-shadow:4px 4px #0d1e14;padding:14px;min-width:255px;max-width:min(360px,calc(100vw - 36px));font-size:16px;line-height:1.45}
+.performance-panel h2{margin:0 0 10px;font-size:18px}
+.performance-panel dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0;font-variant-numeric:tabular-nums}
+.performance-panel dt,.performance-panel dd{margin:0;font-size:16px}
+.performance-panel dd{text-align:right}
+.performance-panel .kit-button{min-height:44px;margin-top:10px;font-size:16px}
+.performance-status{min-height:1.5em;margin:8px 0 0;font-size:16px}
+.recording-frame .performance-panel{right:28px;top:28px}

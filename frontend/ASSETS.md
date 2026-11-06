@@ -229,3 +229,19 @@ Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixe
 | `islet-signal-station-lit` | 80 × 128 | Matching station with a steady gold lens at night |
 
 The existing cabin, workshop, windmill and greenhouse retain their approved original art. Visibility comes from the latest accepted building event. Build dust is five pooled code-authored pixel points per plot; the storm mast is original flat pixel geometry. These shapes add no external image or font. All materials, textures, geometry and subscriptions belong to their place lifetime. The signal station keeps the same id and artwork through world and finale presentation.
+
+## G8 harbor life, signal and original sound
+
+No image, font or audio download is used. `world/ambient/harbor-life.js` draws pooled, native-grid cabin smoke, one steady night window, three greenhouse-roof gull marks (only on a built greenhouse) and three extra harbor gulls in clear weather. `world/hook/index.js` draws a tiny offshore signal from four original meshes; its chart equivalent is an accessible UI marker. Geometry is allocated once, and place/app lifetimes release it. Reduced motion keeps ambient details and the signal still.
+
+New sounds are synthesized through the existing Web Audio effects bus in `audio/controller.js`, `synth.js` and `logic.js`:
+
+| Cue | Original source | Maximum source gain | Visible equivalent |
+| --- | --- | ---: | --- |
+| Bulletin paper | Short filtered noise | 0.016 | Open bulletin and caption |
+| Building settles | Short rising tones | 0.035 | Building appearance/dust and caption |
+| Storm flag | Brief noise snap | 0.021 | Raised storm flag and caption |
+| Distant signal | Faint tone | 0.018 | Signal marker/pattern and caption |
+| Lit station | Sustained sine hum | 0.009 | Steady gold station lamp |
+
+The existing original foghorn is reused on supplied fog nights, with a caption. Storm wind/sea/rain use the G5 synthesis. Master/effects preferences multiply these gains; nothing starts before a trusted click or key. The audio owner stops the hum, one-shot voices and semantic listeners on disposal. The same project licences and team authorship apply; no new third-party licence is needed.

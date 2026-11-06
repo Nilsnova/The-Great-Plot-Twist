@@ -34,7 +34,10 @@
     "test:csp": "npm run build && node scripts/check-csp.js",
     "art:fingerprints": "node scripts/generate-reveal-fingerprints.js",
     "test:islet:world": "node scripts/check-islet-world.js",
-    "test:bulletin": "node scripts/check-bulletin.js"
+    "test:bulletin": "node scripts/check-bulletin.js",
+    "test:hook": "node scripts/check-hook.js",
+    "test:harbor:life": "node scripts/check-harbor-life.js",
+    "test:presenter": "npm run build && node scripts/check-presenter.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

@@ -5,12 +5,12 @@ export function createUnavailableCaseAdapter(){
   let disposed=false;
   const view={...emptyExtensions(),schema:1,mode:'unavailable',revision:0,now:0,
     captain:{name:'Captain pending',coins:null,save:{state:'idle',label:'Local intro only'}},
-    arrival:{status:'pending',title:'Your story is ready',endingLabel:'Act 1 complete',message:'The referee will confirm your kit when the case service connects.',items:[]},
+    arrival:{status:'pending',title:'Your story is ready',endingLabel:'Act 1 complete',message:'Connect to confirm your kit.',items:[]},
     permissions:{createCrew:false,joinCrew:false,muster:false},crew:{status:'disconnected',code:null,seats:[],joinPreview:null},
     board:{cards:[],deductions:[],suspects:[]},search:{spots:[],routes:[],jobs:[]},partners:[],finale:{phase:'waiting',lights:[]},
     accusation:{allowed:false,suspects:[],evidence:[]},reveal:{available:false,lines:[],index:0},
     world:{stage:'dark',lightsOn:false,wall:[],festivalRemaining:0},
-    notice:{reason:'not_connected',message:'The case service is not connected yet.'},effects:[]};
+    notice:{reason:'not_connected',message:'The case is offline.'},effects:[]};
   const listeners=new Set();
   const read=()=>copyView(view);
   function publish(){for(const listener of listeners)listener({type:'case_updated',view:read()});}

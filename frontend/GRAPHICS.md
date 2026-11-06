@@ -592,3 +592,50 @@ Merged `origin/main` at `8ff24cc` (merge commit `35f4d3e`), retaining Claude’s
 The captures were inspected at 1280 px and 375 px. This caught a blank phone page selector, duplicate bulletin heading, unhelpful recorded-date countdown and a station beam origin mismatch; all were corrected. The world check now explicitly excludes the switched-off bulletin hotspot; the bulletin check covers its enabled state. Evidence: `captures/20261106_G8-C1/`, `captures/20261106_G8-Bulletin-Checks.json`, `captures/20261106_G8-Islet-World-Checks.json`. New commands: `npm run test:islet:world`, `npm run test:bulletin`; strict-CSP production check: `npm run test:csp`.
 
 Not verified here: Claude’s not-yet-merged L2 panel/real adapter, live servers, actual screen-reader software and physical phones. The hook, audio/life additions, presenter kit and full combined regression/accessibility pass continue in checkpoints 2 and 3. Real-adapter additions to mirror now are the route-shaped `bulletin` field, its off default, and earned-only deduction clears. `islet_changed` keeps its documented payload unchanged.
+
+## Chapter 2 hook (G8)
+
+`bulletin.chapterTwoHook` is null until the server supplies `{id,notice:{title,text},beam:{chart:{x,y},pattern,flash:{shortSeconds,longSeconds,gapSeconds,pauseSeconds}}}`. The chart is 448 × 256 native pixels. The adapter copies this data; the screen never decides when the hook fires. The fake reuses `adapter/fake/hook.js` and placeholder notice text only. No Chapter 2 notice prose is stored here.
+
+`chart.setHook(hook)` / `chart.update(dt)` and `createHookWorld({scene,reducedMotion})` use the same safe timing helper. Short/long pulses are clamped to at least 0.34 seconds, coordinates to chart bounds, and unexpected pattern entries are ignored. Reduced motion shows a steady marker and pattern words. The bulletin shows only the supplied title/text and an opt-in **Announce flash sequence** button; closing or navigating away stops announcements. Nothing speaks automatically.
+
+The world signal maps the chart bearing from the current island at 0.14 world units per chart pixel, then extends it outward until it reaches water. This is display placement, with normal camera clipping and native-grid snapping; it does not add a destination or decide a route. `setHook(null)` hides it. App disposal releases all four meshes/materials.
+
+Schema 1 also adds **`log.observations:[{id,text}]`**, default `[]`. The fake adds only the specified generic observation, “A light flashing far out at sea”, when its hook is present. The real adapter supplies any persisted observations. No new player intent, fetch, online import or case rule is added to a screen. Verify with `node scripts/check-hook.js` / `npm run test:hook`.
+
+### Harbor sound and life
+
+`createHarborLife({place,art,ctx})` owns home smoke/window/roof gulls and the harbor’s clear-weather gulls. It subscribes to effective islet state, so rehearsals remain display-only, and reads reduced motion dynamically. `createLifetime` releases the meshes and subscription after travel. There is no per-frame geometry creation. A build raises once on an active-place empty-to-built change; entering an already built place does not replay it. Switching on reduced motion during a raise settles it immediately.
+
+Visual events are additive: `{type:'bulletin_opened'}` and `{type:'islet_build_raised',plot,preview}`. Existing interaction, travel and arrival payloads are unchanged. The audio owner uses these cues, the supplied fog-night/current storm fields, game night and current building list. Harbor and Lighthouse horns have separate timers. A forecast storm does not raise/snap a flag before it is current. The hook tone uses a null-to-present edge. Every cue has the visible equivalent listed in ASSETS.md; gain, gesture, mute and cleanup rules remain those of G5. Run `node scripts/check-harbor-life.js` / `npm run test:harbor:life`.
+
+## Presenter kit (G8)
+
+Only `?demo=1` enables the local, read-only tour. It has nine beats totalling **170 seconds**: intro, arrival, islet station build, sea chart, harbor bulletin/live captains, board, almanac fog/storm, Three Lights and Relighting/Gull’s Rest. There is no accusation or unmask beat. All data comes from the separate fake adapter and recorded weather; the tour makes no backend write. It changes the islet through a preview, then restores the latest accepted building state rather than an old snapshot. Skipping/restarting cancels deferred builds and scene waits.
+
+| Key | Presenter action |
+| --- | --- |
+| Right / Space | Next beat |
+| Left | Previous beat |
+| P | Pause/resume tour timing and scheduled scene actions |
+| B | Black out the presentation; B or Escape restores it |
+| R | Restart |
+| 1–9 | Jump to a beat |
+| H | Beat list |
+| N | Speaker notes |
+
+The tour consumes these keys before intro choices and gameplay. Escape otherwise retains the shared top-panel → cinematic → pause rule. The black screen is a native top-layer dialog, so it covers an open board or intro. `demo/speaker-notes.js` holds two or three short editable talking points per beat. Presenter tools stay in the active dialog’s layer and remain reachable while its content scrolls.
+
+`?demo=1&record=1` fixes the output frame and renderer at **1920 × 1080**, hides the cursor and trims optional HUD details. Use a 1920 × 1080 browser capture viewport to include native dialogs in the recording. `record=1` alone does nothing. The optional Exchange beat is omitted: the reviewed L4 README documents a development local fake, with no production-safe tour adapter yet.
+
+`?perf=1` enables a lazy performance panel, including without the tour. It reports FPS, actual uncapped 95th-percentile frame time, draw calls, triangles, geometry/texture counts and JS heap where supported. **Copy numbers** copies the displayed measurement labels; unsupported heap is marked unavailable. Measurements collect per frame and paint every 300 ms. Sustained FPS below 45 for five seconds offers **Switch to low quality**; it never changes settings without a tap. Run `node scripts/check-presenter.js` / `npm run test:presenter`. Pure settings, timing, navigation, flash and performance helpers are covered by Vitest.
+
+### G8 checkpoint 2 verification
+
+At checkpoint start, fetched and merged main again; `origin/main` remained `8ff24cc` and the feature was already up to date. No Claude-owned source conflict or panel integration appeared.
+
+`npm test` passes **330 tests / 55 files**. `npm run build` passes the spoiler/elimination guard (95 text files, twelve protected lines). The following passed sequentially: `node scripts/check-hook.js`, `node scripts/check-harbor-life.js`, `node scripts/check-presenter.js`, `DEMO_FAST=1 node scripts/check-demo.js`, `node scripts/check-loading.js`, `node scripts/check-csp.js`. The production presenter check has fifteen assertions, uses DOM rather than development globals, and runs with all APIs returning 503. It verifies native blanking above intro/board, pause, keyboard navigation, visible notes/toolbars and recording dimensions. The final capture was visually inspected.
+
+Measured after settling: recording/presenter with eight local captains and board, **60 FPS**, **17.5 ms p95**, **107 calls**, **212 triangles**, **106 geometries**, **59 textures**, **17.2 MB reported heap**. Home life: 61 FPS / 44 calls; harbor life: 60 FPS / 52 calls. Three return trips kept the same geometry/texture counts and one active place root. Cold title: **21,060 JS bytes / 9,963 gzip**. A short-lived loading overrun was fixed with clearer disconnected-state copy; the budget was not raised. The browser pass also caught and fixed a component-versus-element caching error and a presenter panel placed below long modal content.
+
+Evidence: `captures/20261106_G8-C2/`, `captures/20261106_G8-Presenter-Checks.json`, `captures/20261106_G8-Hook-Checks.json`, `captures/20261106_G8-Harbor-Life-Checks.json`. Not yet verified at this checkpoint: the uninterrupted 170-second run, the final combined regression/accessibility pass, real server transports/panels and physical devices. Those frontend checks continue in checkpoint 3; actual VoiceOver and noninstalled browser engines require the documented manual rehearsal.

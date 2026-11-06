@@ -116,10 +116,10 @@ Each lane has its next two packages, each with a brief. Fill in the `<...>` part
 
 ### G World and Graphics (Nils, with Codex)
 
-**G8 checkpoint 1 complete on `feat/g8-islet-harbor-demo`.** Home scenery follows accepted building events across travel, with separate tour previews, four original station/plot/sign sprites and the same station art in the finale. The opt-in harbor bulletin and tonight chip use route-shaped schema-1 data and Lisbon times. Controls remain 16 px, case body 18 px and story 19 px.
+**G8 checkpoint 2 complete on `feat/g8-islet-harbor-demo`.** The supplied Chapter 2 signal has a safe flash pattern, still reduced-motion marker, opt-in spoken sequence and generic log observation. Original harbor audio/life and a nine-beat 170-second presenter tour, notes, recording mode and performance panel are integrated. Text remains 16 px controls, 18 px case body and 19 px story.
 
-- **Verified:** 316 tests / 52 files; build/spoiler guard; islet-world, bulletin, world, readability, loading, production and strict-CSP browser checks. Islet 60–61 FPS / 41–44 calls / one root; cold title 21,061 JS bytes. Contract and captures: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C1/`.
-- **Next:** merge main for checkpoint 2, then add the supplied Chapter 2 hook, procedural harbor audio/life and presenter controls; checkpoint 3 covers combined regression, accessibility and the class walkthrough. Merged main `8ff24cc`; L2/Exchange/real adapter were still absent. Claude must mirror `bulletin`, retain its off default and supply earned-only clears. No main merge or manual deploy.
+- **Verified:** 330 tests / 55 files; build/spoiler guard; hook, ambient/audio, production presenter, tour skipping, loading and strict-CSP checks. Presenter/board: 60 FPS, 17.5 ms p95, 107 calls; three place trips retain stable resources. Cold title 21,060 bytes. Evidence and contract: `frontend/GRAPHICS.md`, `frontend/captures/20261106_G8-C2/`.
+- **Next:** fetch/merge main for checkpoint 3; run the combined game, extend golden/chaos coverage, complete accessibility and the class walkthrough/readability pass. Main remains `8ff24cc`; Claude panels/services were still absent. Real adapters must mirror `bulletin` plus `log.observations`, keep open-world features off until enabled and expose earned-only clears. No merge into main or manual deployment.
 
 ### S Story and Mystery (owner picked today)
 
@@ -415,6 +415,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-06, G8 checkpoint 2.** Codex for Nils added the supplied safe Chapter 2 signal/notice/log view, original harbor audio/life and the 170-second presenter kit with keyboard controls, notes, recording and performance overlay on `feat/g8-islet-harbor-demo`; main remains `8ff24cc`. 330 tests, build and six targeted browser commands pass; presenter 60 FPS/17.5 ms p95/107 calls, cold title 21,060 bytes. Full combined regression, accessibility and class documentation continue in checkpoint 3.
 
 - **2026-11-06, G8 checkpoint 1.** Codex for Nils added persistent event-driven islet scenery, original signal/plot/sign art, the finale/chart station marker, and the opt-in Lisbon-time harbor bulletin/tonight chip on `feat/g8-islet-harbor-demo`, after merging main `8ff24cc`. 316 tests, build and seven targeted browser checks pass; islet 60–61 FPS/41–44 calls, cold title 21,061 bytes. Real panels/services still await Claude’s merge; checkpoint 2 continues.
 

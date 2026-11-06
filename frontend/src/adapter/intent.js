@@ -1,11 +1,11 @@
 // A single safe error boundary for presentation callers. No transport or outcome rule lives here.
 const messages={
-  offline:'The connection is offline. Your progress on this device is kept.',
-  not_connected:'This service is not connected yet. Try again in a moment.',
+  offline:'You are offline. Your progress on this device is kept.',
+  not_connected:'Service unavailable. Try again in a moment.',
   session_expired:'Sign in again; your progress on this device is kept.',
   save_conflict:'This save changed on another device. Choose which copy to keep.',
   rate_limited:'Too many requests. Wait a moment, then try again.',
-  feature_off:'This feature is not available yet. The rest of the game is still playable.',
+  feature_off:'This feature is unavailable. You can keep exploring.',
 };
 export function intentFailure(error){
   const reason=Object.hasOwn(messages,error?.reason)?error.reason:'offline';

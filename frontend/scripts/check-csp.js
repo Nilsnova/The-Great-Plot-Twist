@@ -52,10 +52,11 @@ async function confirmStep(title, id) {
   await waitForStep(title);
   if (id === 'intro') await page.locator('.intro-modal[open] .intro-view').waitFor();
   if (id === 'arrival') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('LIGHTHOUSE ISLE'));
+  if (id === 'islet') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('HOME ISLET'));
   if (id === 'chart') await page.locator('.sea-chart[open]').waitFor();
-  if (id === 'harbor') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('SALTREACH HARBOR'));
+  if (id === 'harbor') { await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('SALTREACH HARBOR')); await page.locator('.case-modal[open] .case-screen-content').waitFor(); }
   if (id === 'board' || id === 'finale') await page.locator('.case-modal[open] .case-screen-content').waitFor();
-  if (id === 'fog' || id === 'storm') await page.waitForFunction(expected => document.querySelector('.presenter-panel .tour-copy')?.textContent.includes(expected), `${id} override`);
+  if (id === 'weather') await page.waitForFunction(() => document.querySelector('.presenter-panel .tour-copy')?.textContent.includes('storm'));
   if (id === 'relighting') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('GULL'));
   check(true, `Production tour reached ${title}`);
 }
@@ -93,11 +94,11 @@ try {
   const steps = [
     ['A page from the intro', 'intro'],
     ['Arrival on Lighthouse Isle', 'arrival'],
+    ['Build the signal station', 'islet'],
     ['Set a coastal course', 'chart'],
-    ['Saltreach Harbor', 'harbor'],
+    ['Harbor bulletin and live captains', 'harbor'],
     ['At the Captain’s Table', 'board'],
-    ['Recorded weather · fog override', 'fog'],
-    ['Recorded weather · storm override', 'storm'],
+    ['Weather · almanac fog and storm', 'weather'],
     ['The Night of Three Lights', 'finale'],
     ['The Relighting', 'relighting'],
   ];
