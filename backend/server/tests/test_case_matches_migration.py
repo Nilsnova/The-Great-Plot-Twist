@@ -116,3 +116,54 @@ def test_case_migration_does_not_change_wallet_reasons_or_embed_a_culprit():
     )
     # The culprit is a server-supplied argument, never a case-specific SQL literal.
     assert "p_culprit text" in SQL
+
+
+def test_rpc_argument_names_match_the_sql_parameters():
+    from server.game.case_data import load_case
+    from server.game.case_store import (
+        accuse_arguments,
+        clock_arguments,
+        open_arguments,
+        start_arguments,
+    )
+    from server.tests.case_rule_helpers import PLAYER, snapshot
+
+    data = load_case()
+    crew = snapshot()
+    arguments = {
+        "case_open": open_arguments(crew.crew_id, data),
+        "case_start_route": start_arguments(
+            crew.crew_id, data, PLAYER, "search0001", "C1.notice_board"
+        ),
+        "case_accuse": accuse_arguments(
+            crew, data, PLAYER, "accuse0001", "replaceable_suspect", False
+        ),
+        "case_clock_forward": clock_arguments(crew.crew_id, PLAYER, "clock0001", 60),
+    }
+    for name, params in arguments.items():
+        match = re.search(
+            rf"create or replace function public\.{name}\((.*?)\)\s+returns", SQL, re.S
+        )
+        assert match is not None
+        declared = [part.strip().split()[0] for part in match.group(1).split(",")]
+        assert list(params) == declared
+
+
+def test_the_store_only_calls_intent_functions():
+    import asyncio
+
+    from server.game.case_store import INTENT_FUNCTIONS, run_function
+
+    assert set(INTENT_FUNCTIONS) == {
+        "case_open",
+        "case_start_route",
+        "case_accuse",
+        "case_clock_forward",
+    }
+
+    class NoCalls:
+        async def call_function(self, name, params):
+            pytest.fail("A private helper must not be sent to the database port.")
+
+    with pytest.raises(ValueError):
+        asyncio.run(run_function(NoCalls(), "case_begin", {}))

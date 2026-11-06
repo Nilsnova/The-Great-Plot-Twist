@@ -19,6 +19,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from server.game.case_cache import is_case_path
+
 logger = logging.getLogger(__name__)
 
 # Short codes for the HTTP statuses that FastAPI itself raises (404, 405, ...).
@@ -102,7 +104,10 @@ async def handle_validation_error(request: Request, error: RequestValidationErro
 async def handle_unexpected_error(request: Request, error: Exception) -> JSONResponse:
     """A bug. The details go to the server log only, never into the response."""
     logger.error("Unexpected error on %s %s", request.method, request.url.path, exc_info=error)
-    return error_response(500, "server_error", "Something went wrong on our side. Try again.")
+    headers = {"Cache-Control": "private, no-store"} if is_case_path(request.url.path) else None
+    return error_response(
+        500, "server_error", "Something went wrong on our side. Try again.", headers
+    )
 
 
 def register_error_handlers(app: FastAPI) -> None:

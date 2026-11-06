@@ -300,16 +300,23 @@ def test_c14_clock_forward_moves_only_its_crew_and_logs_one_revision(database):
 
 
 def test_case_window_open_equals_python_window_open_for_all_case_windows(database, case_data):
+    from server.game.case_clock import window_open
+    from server.game.case_data import load_case
+
     windows = tuple(case_data["case_clock"]["windows"].values())
     assert len(windows) == 4, "The parity check must exercise all four recurring case windows."
+    loaded = load_case()
     as_server(database)
     for window in windows:
         for minute in range(120):
-            expected = (
-                window["from_minute"]
-                <= minute % window["every_minutes"]
-                < window["from_minute"] + window["open_minutes"]
+            record = next(
+                value
+                for value in loaded.windows
+                if value.every_minutes == window["every_minutes"]
+                and value.from_minute == window["from_minute"]
+                and value.open_minutes == window["open_minutes"]
             )
+            expected = window_open(record, minute)
             actual = rpc(
                 database,
                 "case_window_open",
