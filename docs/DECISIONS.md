@@ -317,7 +317,7 @@ Before the fix (floor of 5 % of the base) the same simulation at 100 left 1 to 5
 
 **Agreed by, PR and impact:** Proposed by Claude for Nils, 5 Nov 2026, in the A3 pull request. D019 was the next free number when A3 was written; the account entry it followed became D022 at merge, because the story round took D018 (no number is reserved for A3 in the roadmap). Pending Nils: N5 (the coins and texts of the kits, with the S0 approval) and N6 (the first ending counts). Affects A6 (a seat carries the entry kit, so the crew routes read `entry_profiles`), S2 (the browser sends the move log), S3 (the start place, the cheap card and the log card), S4 (the kits that NPC partners fill in), and `GET /api/me`.
 
-## D018 · Live presence on Supabase Realtime · 2026-11-05
+## D023 · Live presence on Supabase Realtime · 2026-11-05
 
 **Status:** Decided by Nils on 5 Nov 2026 in its core: live multiplayer must exist, it must stay free, and the library `@supabase/supabase-js` is approved. The details marked "chosen here" are proposed in the A4 pull request (`feat/a4-live-presence`) and need a different teammate's review.
 

@@ -7,7 +7,7 @@
 - **Status:** draft for the controller (Claude). Nils set the goal on 5 Nov 2026: live multiplayer is core, it must stay free, and `@supabase/supabase-js` is approved.
 - **Branch:** `feat/a4-live-presence` in worktree `/Users/nilslenke/Developer/The-Great-Plot-Twist-a4`, branched from `main` at `3ca7d38`.
 - **Migration:** `supabase/migrations/20261106050000_live_presence.sql`.
-- **Decision:** D018, the next free number after D017.
+- **Decision:** D023 (written as D018, the next free number after D017; the story round took D018 first, so it was renumbered at merge).
 
 ## Answer first
 
@@ -457,7 +457,7 @@ Tests marked **must** cover what the brief listed.
   - Quick checks after applying: add the policy listing.
   - Manual test plan: add steps L1 to L7 (below).
   - "Changing the database later": never add `using (true)` on `realtime.messages`; add the kill-switch SQL.
-- **`docs/DECISIONS.md`**: add D018, "Live presence on Supabase Realtime", before "Next entry":
+- **`docs/DECISIONS.md`**: add D023, "Live presence on Supabase Realtime", before "Next entry":
   - **Status:** decided by Nils on 5 Nov 2026 (core, free, library approved); the details marked "chosen here" are proposed in this PR.
   - **Decision:** sections 1 to 6 of this spec in short.
   - **Why:** it is free, needs no new account, and reuses `is_crew_member`.
@@ -517,7 +517,7 @@ Tests marked **must** cover what the brief listed.
 - [x] **Database:** the function `live_crew_id()` and 5 policies on `realtime.messages`. The README matrix is updated.
 - [x] **Shared lists:** `CREW_EVENT_KINDS` in Python and JS, kept equal by a test; `EMOTES` in JS. The flag `live_presence` keeps its name but changes meaning. No new setting.
 - [ ] **Content format:** none.
-- [x] **Decisions:** D018.
+- [x] **Decisions:** D023 (D018 on the branch, renumbered at merge).
 
 ## Deviations and open questions
 
