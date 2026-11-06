@@ -1,0 +1,15 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+
+ Test Files  58 passed (58)
+      Tests  345 passed (345)
+   Start at  16:25:42
+   Duration  6.27s (import 43%, tests 35%, transform 17%, worker 5%)
+
+    Isolate  58 workers spawned · ~460ms startup each (spawn + environment, per file)
+             at least ~3.35s faster with isolate: false — reuses workers across files instead of one per file

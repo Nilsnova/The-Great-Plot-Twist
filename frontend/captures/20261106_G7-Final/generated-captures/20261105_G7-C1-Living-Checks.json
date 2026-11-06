@@ -1,0 +1,43 @@
+{
+  "checks": [
+    "Title sign-in uses the local adapter while APIs are down",
+    "Name can be changed once",
+    "The unchanged bundled intro opens without the intro API",
+    "Thirty nearby captains draw at most eight and keep an overflow count",
+    "Eight live captains and effects meet the draw-call budget",
+    "Eight captains with night storm effects keep the frame and draw-call budget",
+    "World requests position reports no faster than twice a second",
+    "A final stopped position is reported",
+    "The off preference removes other captains",
+    "Hiding other captains keeps this captain’s movement reports live",
+    "A speech-bubble emote appears and its cooldown comes from the adapter",
+    "Expired session explains that device progress remains",
+    "Signing in again preserves the local intro journal",
+    "Save conflict uses the explicitly selected cloud copy",
+    "Account panel wraps at 375 px",
+    "Phone captain names remain at least 16 px",
+    "Phone captain labels do not overlap one another",
+    "Only expected offline weather diagnostics occur",
+    "No external art, fonts or auth requests"
+  ],
+  "performance": {
+    "fps": 61,
+    "calls": 109,
+    "triangles": 216,
+    "geometries": 106,
+    "textures": 58,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "storm": {
+    "fps": 60,
+    "calls": 111,
+    "triangles": 217,
+    "geometries": 110,
+    "textures": 60,
+    "roots": 1,
+    "objects": 10,
+    "programs": 4
+  }
+}

@@ -3,10 +3,10 @@ import {kits,npcKitOrder} from './data.js';
 import {accept,refuse} from './state.js';
 export function completeIntro(state,receipt={}) {
   if(state.profile)return accept('Your local rehearsal profile is already recorded.');
-  if(!['ending_rescue','ending_trapped'].includes(receipt.ending)||!Array.isArray(receipt.actions))return refuse('intro_incomplete','Finish the original intro before requesting a kit.');
+  if(!['ending_rescue','ending_trapped'].includes(receipt.ending)||(!Array.isArray(receipt.actions)||receipt.actions.length>1000||!receipt.actions.every(id=>typeof id==='string')))return refuse('intro_incomplete','Finish the original intro before requesting a kit.');
   const actions=receipt.actions;
   const kitId=receipt.ending==='ending_rescue'?'true_keeper':actions.includes('warn_harbor')?'witness':actions.includes('trust_fisherman')?'informant':'stranger';
-  state.profile={ending:receipt.ending,kitId,readLog:actions.includes('read_log')};state.coins=kits[kitId].coins;
+  state.profile={ending:receipt.ending,kitId,readLog:actions.includes('read_log'),actions:[...actions],place:kits[kitId].startPlace};state.coins=kits[kitId].coins;
   if(kitId==='witness')state.found[1].push('C2');return accept('Your kit is ready in the local rehearsal.');
 }
 const emptySeat=seat=>({seat,kind:'open',name:'Open seat',kitId:null});

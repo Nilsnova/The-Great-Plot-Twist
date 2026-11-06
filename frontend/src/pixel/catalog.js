@@ -29,6 +29,10 @@ Object.assign(staged, {
   greenhouse: [112,96,12], windmill: [112,160,14], 'notice-board': [48,64,6],
   'captains-table': [64,48,6], 'build-plot': [144,96,12], 'harbour-office-glow': [128,160,14],
 });
+Object.assign(staged, {
+  'islet-empty-plot':[56,64,4], 'islet-locked-sign':[64,72,4],
+  'islet-signal-station':[80,128,12], 'islet-signal-station-lit':[80,128,12],
+});
 Object.assign(staged, storyDimensions);
 Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({

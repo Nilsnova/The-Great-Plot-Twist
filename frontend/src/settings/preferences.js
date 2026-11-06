@@ -5,7 +5,7 @@ try{storage=window.localStorage;}catch{/* Storage is optional. */}
 const motionMedia=typeof window!=='undefined'?window.matchMedia?.('(prefers-reduced-motion: reduce)'):null;
 let value=storage?loadPreferences(storage):{...defaults};
 const listeners=new Set();
-export const getPreferences=()=>({...value});
+export const getPreferences=()=>normalizePreferences(value);
 export const reducedMotion=()=>motionReduced(value.reducedMotion,!!motionMedia?.matches);
 export function setPreferences(patch) {
   value=normalizePreferences({...value,...patch});const saved=savePreferences(storage,value);

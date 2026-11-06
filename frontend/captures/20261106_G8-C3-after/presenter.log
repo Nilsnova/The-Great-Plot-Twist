@@ -1,0 +1,39 @@
+{
+  "checked": "2026-11-06T15:04:00.973Z",
+  "checks": [
+    "Recording mode fixes the game frame at 1920 by 1080",
+    "Presenter controls are visible during the tour",
+    "Performance panel remains interactive in the active intro dialog",
+    "N opens the selected beat speaker notes",
+    "P freezes the active beat timer",
+    "B opens a native top-layer blank over the intro dialog",
+    "Escape restores the intro screen from blank",
+    "Right arrow advances to the arrival beat",
+    "B opens a top-layer blank above the board dialog",
+    "Escape restores the still-open board after blanking",
+    "A later tour dialog remains hidden while the presentation is blanked",
+    "Escape restores a later dialog without closing its content",
+    "Presenter controls and opened notes remain inside the recording viewport beside the board",
+    "Performance panel reports frame time and renderer counts",
+    "Draw call count stays below 150 after settle (105)",
+    "P freezes an active cinematic as well as the tour clock",
+    "Ending the rehearsal cannot leave the screen blanked",
+    "Presenter run has no JavaScript errors or external requests"
+  ],
+  "errors": [],
+  "external": [],
+  "laterDialogBlank": {
+    "blankOpen": true,
+    "blankClass": true,
+    "visibility": "hidden"
+  },
+  "performance": {
+    "Frames per second": "60",
+    "95th percentile frame": "19.0 ms",
+    "Draw calls": "105",
+    "Triangles": "208",
+    "Geometries": "104",
+    "Textures": "61",
+    "JavaScript heap": "13.2 MB"
+  }
+}

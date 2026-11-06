@@ -1,0 +1,56 @@
+[
+  {
+    "command": "node scripts/check-weather-wiring.js",
+    "code": 0,
+    "ms": 25565,
+    "log": "captures/20261106_G8-Credit-Placement/weather-wiring.log"
+  },
+  {
+    "command": "node scripts/check-credits.js",
+    "code": 0,
+    "ms": 7396,
+    "log": "captures/20261106_G8-Credit-Placement/credits.log"
+  },
+  {
+    "command": "node scripts/check-bulletin.js",
+    "code": 0,
+    "ms": 7319,
+    "log": "captures/20261106_G8-Credit-Placement/bulletin.log"
+  },
+  {
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 19993,
+    "log": "captures/20261106_G8-Credit-Placement/experience.log"
+  },
+  {
+    "command": "node scripts/check-a11y.js",
+    "code": 0,
+    "ms": 19182,
+    "log": "captures/20261106_G8-Credit-Placement/a11y.log"
+  },
+  {
+    "command": "node scripts/check-readability.js",
+    "code": 0,
+    "ms": 9719,
+    "log": "captures/20261106_G8-Credit-Placement/readability.log"
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 5717,
+    "log": "captures/20261106_G8-Credit-Placement/loading.log"
+  },
+  {
+    "command": "node scripts/check-production.js",
+    "code": 0,
+    "ms": 10750,
+    "log": "captures/20261106_G8-Credit-Placement/production.log"
+  },
+  {
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 7799,
+    "log": "captures/20261106_G8-Credit-Placement/csp.log"
+  }
+]

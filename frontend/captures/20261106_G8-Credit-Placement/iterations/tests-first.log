@@ -1,0 +1,38 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend
+
+ ❯ tests/demo.test.js (4 tests | 1 failed) 5083ms
+   × uses a separate fake fixture without authorising a solve or reveal 5052ms
+ ❯ tests/bulletin-screen.test.js (1 test | 1 failed) 2163ms
+   ❯ bulletin panel (1)
+     × renders supplied ordered lines, Lisbon dates, credit and resets; tick preserves content nodes 2159ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/bulletin-screen.test.js > bulletin panel > renders supplied ordered lines, Lisbon dates, credit and resets; tick preserves content nodes
+TypeError: Cannot read properties of null (reading 'href')
+ ❯ tests/bulletin-screen.test.js:22:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/demo.test.js > uses a separate fake fixture without authorising a solve or reveal
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/demo.test.js:9:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 56 passed (58)
+      Tests  2 failed | 343 passed (345)
+   Start at  16:20:47
+   Duration  86.98s (import 38%, tests 30%, transform 26%, worker 5%, environment 1%)
+
+    Isolate  58 workers spawned · ~5.90s startup each (spawn + environment, per file)
+             at least ~43.02s faster with isolate: false — reuses workers across files instead of one per file

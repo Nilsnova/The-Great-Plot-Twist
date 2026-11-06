@@ -1,0 +1,58 @@
+{
+  "checkpoint": 2,
+  "branch": "feat/g8-islet-harbor-demo",
+  "mergedMain": "8ff24cc77ab077e5d24fee297d568558315f6ed5",
+  "tests": 330,
+  "files": 55,
+  "coldJsBytes": 21060,
+  "coldGzipBytes": 9963,
+  "commands": [
+    {
+      "command": "npm test",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-hook.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-harbor-life.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-presenter.js",
+      "result": "passed"
+    },
+    {
+      "command": "DEMO_FAST=1 node scripts/check-demo.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "result": "passed"
+    }
+  ],
+  "presenter": {
+    "fps": 60,
+    "p95Ms": 17.5,
+    "calls": 107,
+    "triangles": 212,
+    "geometries": 106,
+    "textures": 59,
+    "heapMB": 17.2
+  },
+  "notVerified": [
+    "Uninterrupted timed tour (checkpoint 3)",
+    "Full combined regression and accessibility (checkpoint 3)",
+    "Live panels/adapter not on main",
+    "Actual screen readers/physical devices"
+  ]
+}

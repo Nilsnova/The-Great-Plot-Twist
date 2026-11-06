@@ -1,5 +1,6 @@
 // Plain scene data. Building footprints are separate from safe interaction stand points.
 const building = (asset, x, z, width = 5, depth = 3) => ({ asset, x, z, collider: { x, z: z - depth / 2, width, depth } });
+import { isletPlots } from '../islet/state.js';
 export const layouts = {
   saltreach_harbor: [
     building('harbour-office', -8, 8.5, 5.7), building('harbour-beacon', 9, 9, 2.5),
@@ -13,15 +14,8 @@ export const layouts = {
     { asset: 'lantern', x: -1.2, z: 19 },
   ],
 };
-const homeBuildings = [
-  { plot: 'plot_1', asset: 'cabin', x: -8, z: 6 },
-  { plot: 'plot_2', asset: 'workshop', x: 7, z: 6 },
-  { plot: 'plot_3', asset: 'windmill', x: -8, z: -7 },
-  { plot: 'plot_4', asset: 'greenhouse', x: 7, z: -7 },
-];
-export { homeBuildings };
-layouts.home_islet = [...homeBuildings.map(item => building(item.asset, item.x, item.z)),
-  building('signal-station', 0, -14), { asset: 'bench', x: 4, z: 13 },
+export const homeBuildings = Object.entries(isletPlots).map(([plot, item]) => ({ plot, ...item }));
+layouts.home_islet = [{ asset: 'bench', x: 4, z: 13 },
   { asset: 'barrel', x: -12, z: 7 }, { asset: 'lantern', x: -3, z: 12 }];
 layouts.smugglers_cove = [building('back-room', -8, -1, 4), building('low-tide-cave', 9, 3, 5),
   building('arena-gate', 0, -10, 5), { asset: 'barrel', x: -11, z: 1 }, { asset: 'rope-coil', x: 5, z: 9 }];

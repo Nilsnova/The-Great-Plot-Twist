@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: unmask: Escape skips and settles the promise
+    at check (file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-cinematics.js:9:33)
+    at file:///Users/nilslenke/Developer/The-Great-Plot-Twist-graphics/frontend/scripts/check-cinematics.js:36:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.17.0

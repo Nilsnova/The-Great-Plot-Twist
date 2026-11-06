@@ -1,8 +1,11 @@
-// Visual equivalents of important sound cues, placed in the currently active modal when needed.
-import {node} from '../ui/kit/dom.js';
-export function createCaptions(container) {
-  const element=node('p','sound-caption');element.setAttribute('role','status');element.setAttribute('aria-live','polite');element.hidden=true;
-  let timer;
-  return {show(text){clearTimeout(timer);const dialogs=[...document.querySelectorAll('dialog[open]')];(dialogs.at(-1)??container).append(element);element.textContent=text;element.hidden=false;timer=setTimeout(()=>{element.hidden=true;},3800);},
-    dispose(){clearTimeout(timer);element.remove();}};
+// Load caption placement with the first cue, keeping the title bootstrap small.
+export function createCaptions(container){
+  let view,pending,disposed,latest;
+  return {show(text){
+    if(disposed)return;latest=text;
+    if(view)view.show(text);
+    else pending??=import('./captions-view.js').then(({default:createCaptionsView})=>{
+      if(!disposed)(view=createCaptionsView(container)).show(latest);
+    }).catch(()=>pending=null);
+  },dispose(){disposed=true;view?.dispose();}};
 }

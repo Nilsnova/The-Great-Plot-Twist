@@ -10,7 +10,7 @@ export const cardTitles={C1:'The reward notice',C2:'Fog nights only',C3:'The sea
 export const suspectTitles={fisherman:'The fisherman in the yellow coat',salvage_foreman:'The salvage foreman',coastguard_commander:'The coastguard commander',harbor_master:'The harbor master'};
 export const deductionData=[
   {id:'D1',title:'Where',cards:['C1','C2'],clears:[],opens:['Nightfall']},
-  {id:'D2',title:'The seal',cards:['C3','C4'],clears:['fisherman'],opens:['C5','C6']},
-  {id:'D3',title:'The money',cards:['C5','C6'],clears:['salvage_foreman'],opens:['C8']},
-  {id:'D4',title:'The signal',cards:['C7','C8'],clears:['coastguard_commander'],opens:['Accusation with D2, D3 and the schooner']},
+  {id:'D2',title:'The seal',cards:['C3','C4'],clears:import.meta.env.DEV?['fisherman']:[],opens:['C5','C6']},
+  {id:'D3',title:'The money',cards:['C5','C6'],clears:import.meta.env.DEV?['salvage_foreman']:[],opens:['C8']},
+  {id:'D4',title:'The signal',cards:['C7','C8'],clears:import.meta.env.DEV?['coastguard_commander']:[],opens:['Accusation with D2, D3 and the schooner']},
 ];

@@ -1,0 +1,12 @@
+.captains-log{display:grid;gap:16px;min-width:0;font:18px/1.6 'Courier New',monospace;color:#ece0b8}
+.captains-log h3,.captains-log h4{margin:0;color:#f3d58c;line-height:1.35}
+.captains-log-section,.captains-log-intro{min-width:0;padding:16px;border:2px solid #839773;background:#263f31}
+.captains-log-section h4,.captains-log-intro h4{font-size:18px;margin-bottom:10px}
+.captains-log p{margin:8px 0;overflow-wrap:anywhere}
+.captains-log-list{display:grid;gap:8px;padding:0;margin:0;list-style:none}
+.captains-log-list li{padding:10px 12px;border-left:3px solid #a8b486;background:#20382c}
+.captains-log-empty,.captains-log-sealed,.captains-log-muted{font-size:16px;line-height:1.6;color:#d2d9bb}
+@media(max-width:450px){.captains-log-section,.captains-log-intro{padding:12px}.captains-log-list li{padding:9px}}
+
+/* Accessibility: keep readable text and full-size native targets. */
+.captains-log-muted,.captains-log-empty,.captains-log-sealed{font-size:18px}
