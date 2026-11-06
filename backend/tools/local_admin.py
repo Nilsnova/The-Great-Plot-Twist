@@ -23,17 +23,22 @@ TABLES = frozenset(
     "profiles wallets saves entry_profiles captain_name_rerolls crews crew_seats "
     "islets islet_buildings "
     "market_bases market_positions market_trades wallet_transactions wallet_reasons "
-    "case_state case_finds case_deductions case_accusations case_solvers case_actions".split()
+    "case_state case_finds case_deductions case_accusations case_solvers case_actions "
+    "board_pins finale_posts finale_signals npc_orders world_state wall_of_lights".split()
 )
 FUNCTIONS = frozenset(
     "assign_captain_name reroll_captain_name save_progress delete_player grant_entry_kit "
     "crew_create crew_find_by_code crew_take_seat crew_start market_set_base market_trade "
-    "case_open case_start_route case_accuse case_clock_forward islet_build".split()
+    "case_open case_start_route case_accuse case_clock_forward islet_build "
+    "board_pin board_pair finale_nightfall finale_take_post finale_signal "
+    "npc_fetch_pin npc_man_light "
+    "exchange_open_position exchange_close_position exchange_close_used_up".split()
 )
 # (parent, embedded table): (parent key, embedded key, many)
 RELATIONS = {
     ("crew_seats", "crews"): ("crew_id", "id", False),
     ("crew_seats", "profiles"): ("player_id", "id", False),
+    ("wall_of_lights", "profiles"): ("player_id", "id", False),
     ("crews", "crew_seats"): ("id", "crew_id", True),
     **{
         ("crews", table): ("id", "crew_id", table != "case_state")
@@ -43,10 +48,46 @@ RELATIONS = {
             "case_deductions",
             "case_accusations",
             "case_solvers",
+            "board_pins",
+            "finale_posts",
+            "finale_signals",
+            "npc_orders",
         )
     },
 }
 IDENTIFIER = re.compile(r"[a-z][a-z0-9_]*\Z")
+# Only this nullable history field is used as an embedded filter by the case store.
+CHILD_NULL_FILTERS = frozenset(("finale_posts", "finale_signals"))
+
+
+def filter_parts(columns, column, expression):
+    if column not in columns or not isinstance(expression, str):
+        raise SupabaseRejected()
+    operator, separator, value = expression.partition(".")
+    if not separator or not (operator in ("eq", "gte") or (operator == "is" and value == "null")):
+        raise SupabaseRejected()
+    return operator, value
+
+
+def order_parts(columns, expression):
+    if not isinstance(expression, str):
+        raise SupabaseRejected()
+    result = []
+    for part in expression.split(","):
+        column, separator, direction = part.partition(".")
+        if column not in columns or not separator or direction not in ("asc", "desc"):
+            raise SupabaseRejected()
+        result.append((column, direction))
+    return result
+
+
+def checked_limit(value):
+    if not isinstance(value, str) or not re.fullmatch(r"[1-9][0-9]{0,4}", value):
+        raise SupabaseRejected()
+    result = int(value)
+    if result > 10000:
+        raise SupabaseRejected()
+    return result
 
 
 def selection(text):
@@ -135,7 +176,7 @@ class LocalAdmin(SupabaseAdmin):
             raise SupabaseRejected() from None
 
     async def call_function(self, name, params):
-        if name not in FUNCTIONS:
+        if not isinstance(name, str) or name not in FUNCTIONS or not isinstance(params, dict):
             raise SupabaseRejected()
         return await asyncio.to_thread(
             self._run, lambda connection: self._call(connection, name, params)
@@ -170,7 +211,13 @@ class LocalAdmin(SupabaseAdmin):
         return connection.execute(statement, values).fetchone()[0]
 
     async def select_rows(self, table, query):
-        if table not in TABLES or "select" not in query:
+        if (
+            not isinstance(table, str)
+            or table not in TABLES
+            or not isinstance(query, dict)
+            or "select" not in query
+            or any(not isinstance(key, str) for key in query)
+        ):
             raise SupabaseRejected()
         fields = selection(query["select"])
         return await asyncio.to_thread(
@@ -196,28 +243,26 @@ class LocalAdmin(SupabaseAdmin):
         columns = self._columns(connection, table)
         clauses, values = [], []
         for column, expression in filters.items():
-            if not isinstance(expression, str):
-                raise SupabaseRejected()
-            operator, separator, value = expression.partition(".")
-            if column not in columns or not separator or operator not in ("eq", "gte"):
-                raise SupabaseRejected()
+            operator, value = filter_parts(columns, column, expression)
+            if operator == "is":
+                clauses.append(sql.SQL("{} is null").format(sql.Identifier(column)))
+                continue
             symbol = "=" if operator == "eq" else ">="
             clauses.append(sql.SQL("{} {} %s").format(sql.Identifier(column), sql.SQL(symbol)))
             values.append(value)
         statement = sql.SQL("select * from public.{}").format(sql.Identifier(table))
         if clauses:
             statement += sql.SQL(" where ") + sql.SQL(" and ").join(clauses)
-        if order:
-            column, separator, direction = order.partition(".")
-            if column not in columns or not separator or direction not in ("asc", "desc"):
-                raise SupabaseRejected()
-            statement += sql.SQL(" order by {} {}").format(
-                sql.Identifier(column), sql.SQL(direction)
-            )
+        if order is not None:
+            ordering = [
+                sql.SQL("{} {}").format(sql.Identifier(column), sql.SQL(direction))
+                for column, direction in order_parts(columns, order)
+            ]
+            statement += sql.SQL(" order by ") + sql.SQL(", ").join(ordering)
         with connection.cursor(row_factory=dict_row) as cursor:
             return cursor.execute(statement, values).fetchall()
 
-    def _project(self, connection, table, row, fields):
+    def _project(self, connection, table, row, fields, child_options=None):
         result = {}
         for name, children in fields:
             if children is None:
@@ -232,12 +277,14 @@ class LocalAdmin(SupabaseAdmin):
             if relation is None:
                 raise SupabaseRejected()
             source, destination, many = relation
+            filters, order, limit = (child_options or {}).get(name, ({}, None, 10000))
+            related_filters = {destination: f"eq.{row[source]}", **filters}
             related = (
-                []
-                if row[source] is None
-                else self._raw(connection, name, {destination: f"eq.{row[source]}"})
+                [] if row[source] is None else self._raw(connection, name, related_filters, order)
             )
-            projected = [self._project(connection, name, item, children) for item in related]
+            projected = [
+                self._project(connection, name, item, children) for item in related[:limit]
+            ]
             if not many and len(projected) > 1:
                 raise SupabaseRejected()
             result[name] = projected if many else (projected[0] if projected else None)
@@ -245,12 +292,17 @@ class LocalAdmin(SupabaseAdmin):
 
     def _select(self, connection, table, query, fields):
         self._validate_fields(connection, table, fields)
-        filters = {
-            key: value for key, value in query.items() if key not in ("select", "order", "limit")
+        top_query, child_queries = self._queries(table, query, fields)
+        nested_order = top_query.get("order") == "crews(updated_at).desc" and table == "crew_seats"
+        if nested_order:
+            top_query.pop("order")
+        filters, order, limit = self._options(connection, table, top_query)
+        # Validate every child before reading rows, even for an empty or null relation.
+        children = {
+            name: self._options(connection, name, options)
+            for name, options in child_queries.items()
         }
-        order = query.get("order")
-        nested_order = order == "crews(updated_at).desc" and table == "crew_seats"
-        rows = self._raw(connection, table, filters, None if nested_order else order)
+        rows = self._raw(connection, table, filters, order)
         if nested_order:
 
             def updated(row):
@@ -259,13 +311,36 @@ class LocalAdmin(SupabaseAdmin):
                 ]
 
             rows.sort(key=updated, reverse=True)
-        try:
-            limit = int(query.get("limit", "10000"))
-        except (ValueError, TypeError):
-            raise SupabaseRejected() from None
-        if not 1 <= limit <= 10000:
-            raise SupabaseRejected()
-        return [self._project(connection, table, row, fields) for row in rows[:limit]]
+        return [self._project(connection, table, row, fields, children) for row in rows[:limit]]
+
+    def _queries(self, table, query, fields):
+        embedded = {name for name, children in fields if children is not None}
+        top, children = {}, {}
+        for key, value in query.items():
+            if "." not in key:
+                top[key] = value
+                continue
+            name, option = key.split(".", 1)
+            relation = RELATIONS.get((table, name))
+            if name not in embedded or relation is None or not relation[2]:
+                raise SupabaseRejected()
+            if option not in ("order", "limit") and not (
+                name in CHILD_NULL_FILTERS and option == "ended_second" and value == "is.null"
+            ):
+                raise SupabaseRejected()
+            children.setdefault(name, {})[option] = value
+        return top, children
+
+    def _options(self, connection, table, query):
+        columns = self._columns(connection, table)
+        filters = {
+            key: value for key, value in query.items() if key not in ("select", "order", "limit")
+        }
+        for column, expression in filters.items():
+            filter_parts(columns, column, expression)
+        if "order" in query:
+            order_parts(columns, query["order"])
+        return filters, query.get("order"), checked_limit(query.get("limit", "10000"))
 
     def _validate_fields(self, connection, table, fields):
         columns = self._columns(connection, table)
