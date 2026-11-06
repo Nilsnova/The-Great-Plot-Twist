@@ -29,6 +29,7 @@ from server.game.case_snapshot import CaseSnapshot
 from server.game.case_store import CaseStore, solve_payments
 from server.game.case_view import build_case_view
 from server.game.finale_rules import decide_nightfall, decide_post, decide_signal
+from server.game.npc_lines import load_lines
 from server.game.station_lookup import IsletStations, NoStations
 from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -66,7 +67,9 @@ class CaseService:
         return (
             None
             if snapshot is None
-            else build_case_view(self.data, snapshot, player_id, self.now(snapshot))
+            else build_case_view(
+                self.data, snapshot, player_id, self.now(snapshot), lines=self.lines
+            )
         )
 
     async def opened_snapshot(self, store, player_id, *, write=False, crew_id=None):
@@ -102,8 +105,17 @@ class CaseService:
         return {"case": self.view(snapshot, player_id)}
 
     async def remembered(self, store, player_id: str, action: dict) -> dict:
+        if action["kind"] == "order":
+            from server.game.npc_service import remembered_order
+
+            return await remembered_order(self, store, player_id, action)
         snapshot = await store.snapshot(player_id, action["crewId"])
         return {**repeat_answer(self.data, action), "case": self.view(snapshot, player_id)}
+
+    async def order(self, admin, player_id, seat_no, kind, target, allow_paid, action_uid):
+        from server.game.npc_service import order
+
+        return await order(self, admin, player_id, seat_no, kind, target, allow_paid, action_uid)
 
     async def search(
         self, admin, player_id, route_id, action_uid, paid_confirmed=False, expected_price=None
@@ -374,6 +386,7 @@ def case_or_none(
             relight_open=settings.relight_open,
             broadcaster=broadcaster,
             stations=IsletStations(),
+            lines=load_lines(),
         )
     except (OSError, ValueError, TypeError, KeyError):
         logger.warning("The case content is unavailable; case routes are disabled.")

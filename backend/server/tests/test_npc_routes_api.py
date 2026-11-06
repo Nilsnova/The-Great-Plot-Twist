@@ -2,7 +2,6 @@
 
 import pytest
 
-from server.routes.crew_orders import router
 from server.tests.case_api_helpers import HEADER
 from server.tests.case_rule_helpers import PLAYER
 from server.tests.test_case_phase2_routes_api import Port, client
@@ -11,9 +10,7 @@ BODY = {"seat": 2, "order": "fetch", "target": "C1", "actionUid": "order0001"}
 
 
 def npc_client(port, flags="case"):
-    result = client(port, flags)
-    result.app.include_router(router, prefix="/api")
-    return result
+    return client(port, flags)
 
 
 def test_npc_intent_passes_only_the_verified_actor_and_validated_values():
