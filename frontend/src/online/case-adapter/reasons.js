@@ -65,10 +65,12 @@ function recover(result, status, code, method) {
   if (changing && (status === 0 || status === 503)) result.recovery = 'unknown_outcome';
 }
 
-export function mapApiResult(answer, {route, method} = {}) {
+export function mapApiResult(answer, {route, method, publicRead = false} = {}) {
   if (answer?.ok === true) return success(answer.data);
   if (answer?.ok !== false) return refused('internal_error');
   const {status, code} = answer;
+  // A public GET cannot expire a private account or complete a repeated write.
+  if(publicRead&&(status===401||status===409))return refused('internal_error');
   if (status === 409 && completedCodes.has(code)) return accepted('reread');
   const result = refused(reasonFor(status, code, route));
   if (status === 409 && code === 'crew_busy') result.message = 'The crew is busy. Try again.';

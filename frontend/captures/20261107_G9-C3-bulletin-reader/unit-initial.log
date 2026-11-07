@@ -1,0 +1,66 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/g9-bulletin-controller.test.js (8 tests | 1 failed) 42437ms
+   × opens the actual drawer once per visit, reads directly and stops work on navigation, close and off 20120ms
+ ❯ tests/real-bulletin-factory.test.js (15 tests | 1 failed) 8632ms
+   ❯ real factory public bulletin composition (10)
+     × clears a completed optional read failure when accepted config disables the bulletin 5660ms
+ ❯ tests/real-read-monitor.test.js (38 tests | 2 failed) 137ms
+   ❯ public read refusals do not acquire private authority (5)
+     × keeps public config409 as an error rather than a private save conflict 8ms
+     × keeps public bulletin409 as an error rather than a private save conflict 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/g9-bulletin-controller.test.js > opens the actual drawer once per visit, reads directly and stops work on navigation, close and off
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/g9-bulletin-controller.test.js:49:1
+     47| });
+     48|
+     49| it('opens the actual drawer once per visit, reads directly and stops w…
+       | ^
+     50|   await evaluate.withPage(async page=>{
+     51|     await page.clock.install({time:new Date('2026-11-16T12:00:00Z')});…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/real-bulletin-factory.test.js > real factory public bulletin composition > clears a completed optional read failure when accepted config disables the bulletin
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/real-bulletin-factory.test.js:32:3
+     30| }
+     31| describe('real factory public bulletin composition',()=>{
+     32|   it('clears a completed optional read failure when accepted config di…
+       |   ^
+     33|     const item=setup({readBulletin:()=>new Response(JSON.stringify({er…
+     34|     await vi.waitFor(()=>expect(item.adapter.read().account.connection…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/real-read-monitor.test.js > public read refusals do not acquire private authority > keeps public config409 as an error rather than a private save conflict
+ FAIL  tests/real-read-monitor.test.js > public read refusals do not acquire private authority > keeps public bulletin409 as an error rather than a private save conflict
+ReferenceError: kind is not defined
+ ❯ tests/real-read-monitor.test.js:270:19
+    268|   it.each(['config','bulletin'])('keeps public %s409 as an error rathe…
+    269|     const {monitor,commits}=setup(),detail=`private-${crypto.randomUUI…
+    270|     monitor.begin(kind,{automaticRetry:false})({status:409,
+       |                   ^
+    271|       mapped:{accepted:false,reason:'stale_save',message:detail},body:…
+    272|     expect(monitor.read()).toEqual({state:'error',reason:'internal_err…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  3 failed | 227 passed (230)
+      Tests  4 failed | 3464 passed (3468)
+   Start at  20:34:55
+   Duration  365.95s (tests 88%, import 10%, transform 1%, worker 1%)
+
+    Isolate  230 workers spawned · ~229ms startup each (spawn + environment, per file)
+             at least ~52.39s faster with isolate: false — reuses workers across files instead of one per file

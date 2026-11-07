@@ -9,6 +9,7 @@ import './quiet-hud.css';
 
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 export function createHud(container, actions) {
+  let disposed=false;
   const overlay = document.createElement('div'); overlay.className = 'hud hud-quiet';
   overlay.innerHTML = `
     <header class="masthead"><a class="wordmark" href="./" aria-label="The Great Plot Twist home"><span class="mark">✦</span> <span class="hud-brand">Saltreach</span></a>
@@ -38,6 +39,9 @@ export function createHud(container, actions) {
     </section>`;
   const captain=node('div','captain-status'),captainName=node('strong','','Captain pending'),save=node('span','','Local intro only');save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
   const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');caseToolbar.hidden=true;for(const [name,label] of [['crew','Crew'],['board','Board'],['log','Log'],['hints','What next?']]){const button=node('button','',label);button.type='button';button.onclick=()=>{closeTools();actions.caseScreen?.(name);};caseToolbar.append(button);}const festivalButton=node('button','','Festival');festivalButton.type='button';festivalButton.hidden=true;festivalButton.onclick=()=>{closeTools();actions.festival?.();};caseToolbar.append(festivalButton);overlay.append(caseToolbar);
+  const bulletinButton=node('button','bulletin-toggle','Harbor bulletin');bulletinButton.type='button';
+  bulletinButton.hidden=true;bulletinButton.setAttribute('aria-haspopup','dialog');
+  bulletinButton.onclick=()=>{if(disposed||bulletinButton.hidden)return;closeTools();actions.caseScreen?.('bulletin');};caseToolbar.append(bulletinButton);
   const tonightChip=node('aside','tonight-chip');tonightChip.hidden=true;const tonightState=node('strong'),tonightFog=node('span'),tonightStart=node('span');tonightChip.append(tonightState,tonightFog,tonightStart);caseToolbar.append(tonightChip);
   container.append(overlay);
   const controls=overlay.querySelector('.controls'),controlsToggle=overlay.querySelector('.controls-toggle'),journalToggle=overlay.querySelector('.journal-toggle');
@@ -91,8 +95,8 @@ export function createHud(container, actions) {
     if(tonightStart.textContent!==startText)tonightStart.textContent=startText;
     const label=[stateText,model.fog,startText].filter(Boolean).join('. ');if(tonightChip.getAttribute('aria-label')!==label)tonightChip.setAttribute('aria-label',label);
   }
-  return {setFestivalAvailable(value){festivalButton.hidden=!value;},setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},setBulletin(view){bulletinModel=view;tonightSyncAt=0;refreshTonight();},togglePanel,closeTools,toggleControls,closeQuickPanels,start(){select('#explore').click();},
-    dispose() { window.removeEventListener('keydown',escape,true);timers.forEach(clearTimeout); overlay.remove(); },
+  return {setFestivalAvailable(value){festivalButton.hidden=!value;},setCaptain(view){captainName.textContent=view.captain.name+((view.rewards?.keepsakes??[]).some(item=>item.id==='relighter'&&item.owned)?' · Relighter':'');captainName.title=captainName.textContent;const status=view.account?.save??view.captain.save;save.dataset.state=status.state;const prefix={saving:'Saving',offline:'Offline',conflict:'Save conflict'}[status.state];save.textContent=view.account?.state==='expired'?'Sign in again; device progress is kept':prefix&&!status.label.toLowerCase().includes(prefix.toLowerCase())?`${prefix} · ${status.label}`:status.label;},setBulletin(view){bulletinModel=view;bulletinButton.hidden=!view.bulletin||view.bulletin.status==='off';tonightSyncAt=0;refreshTonight();},togglePanel,closeTools,toggleControls,closeQuickPanels,start(){select('#explore').click();},
+    dispose() { if(disposed)return;disposed=true;window.removeEventListener('keydown',escape,true);timers.forEach(clearTimeout); overlay.remove(); },
     arrive(id) {
       select('.chapter').childNodes[1].textContent = ` ${places[id].name} `;
       select('.location strong').textContent = places[id].name;

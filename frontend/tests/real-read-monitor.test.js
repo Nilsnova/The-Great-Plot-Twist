@@ -190,3 +190,164 @@ describe('visibility, connection and cleanup',()=>{
     expect(commits).toEqual([]);expect(monitor.begin('me')(failed(0))).toBe(false);
   });
 });
+
+
+describe('externally scheduled public reads',()=>{
+  it('keeps loading and manual retry without owning a second automatic schedule',async()=>{
+    const {monitor}=setup();
+    const retry=vi.fn(()=>monitor.begin('bulletin',{retry,automaticRetry:false})(success));
+    const finish=monitor.begin('bulletin',{retry,automaticRetry:false});
+    await vi.advanceTimersByTimeAsync(300);expect(monitor.read().state).toBe('loading');
+    await vi.advanceTimersByTimeAsync(4700);expect(monitor.read().state).toBe('slow');
+    finish(failed(503));await vi.advanceTimersByTimeAsync(300000);
+    expect(retry).not.toHaveBeenCalled();expect(vi.getTimerCount()).toBe(0);
+    await monitor.retryFailed();expect(retry).toHaveBeenCalledOnce();
+    expect(monitor.read().state).toBe('online');
+  });
+  it('does not disable the crew retry owner when the public bulletin owns its schedule',async()=>{
+    const {monitor}=setup(),bulletin=vi.fn();
+    const crew=vi.fn(()=>monitor.begin('crew',{automatic:true,retry:crew})(success));
+    monitor.begin('bulletin',{retry:bulletin,automaticRetry:false})(failed(0));
+    monitor.begin('crew',{retry:crew})(failed(503));
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(crew).toHaveBeenCalledOnce();expect(bulletin).not.toHaveBeenCalled();
+    expect(monitor.read().state).toBe('offline');
+  });
+});
+
+
+describe('cancel one optional public read kind',()=>{
+  it('clears a disabled completed bulletin failure without erasing an unrelated crew failure',async()=>{
+    const {monitor}=setup(),retry=vi.fn();
+    monitor.begin('bulletin',{retry,automaticRetry:false})(failed(503));
+    monitor.begin('crew')(failed(0));monitor.clearRead('bulletin');
+    expect(monitor.read().state).toBe('offline');
+    await monitor.retryFailed();expect(retry).not.toHaveBeenCalled();
+    monitor.clearRead('crew');expect(monitor.read().state).toBe('idle');
+  });
+  it('cancels pending loading/slow work and rejects an obsolete completion',async()=>{
+    const {monitor}=setup(),finish=monitor.begin('bulletin',{automaticRetry:false});
+    await vi.advanceTimersByTimeAsync(300);expect(monitor.read().state).toBe('loading');
+    monitor.clearRead('bulletin');expect(monitor.read().state).toBe('idle');
+    expect(finish(failed(0))).toBe(false);await vi.advanceTimersByTimeAsync(10000);
+    expect(monitor.read().state).toBe('idle');expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+
+it('cancels only its own request and cannot erase a newer bulletin read',async()=>{
+  const {monitor}=setup(),old=monitor.begin('bulletin',{automaticRetry:false});
+  const fresh=monitor.begin('bulletin',{automaticRetry:false});
+  expect(old.cancel()).toBe(false);await vi.advanceTimersByTimeAsync(300);
+  expect(monitor.read().state).toBe('loading');expect(fresh.cancel()).toBe(true);
+  expect(monitor.read().state).toBe('idle');expect(fresh(failed(503))).toBe(false);
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+describe('public read refusals do not acquire private authority',()=>{
+  it.each(['config','bulletin'])('keeps public %s401 as a fixed connection error without private expiry',async kind=>{
+    const {monitor,commits}=setup(),retry=vi.fn(),detail=`private-${crypto.randomUUID()}`;
+    const result={status:401,mapped:{accepted:false,reason:'session_expired',message:detail},
+      body:{account:detail},headers:{authorization:detail}};
+    expect(monitor.begin(kind,{retry,automaticRetry:false})(result)).toBe(true);
+    expect(result.status).toBe(401);
+    expect(monitor.read()).toEqual({state:'error',reason:'internal_error',
+      message:'The service could not complete this request. Please try again.'});
+    expect(monitor.read().message).not.toMatch(/session expired|sign in/i);
+    await vi.advanceTimersByTimeAsync(60000);expect(retry).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    for(const patch of commits){
+      expect(Object.keys(patch)).toEqual(['connection']);
+      expect(Object.keys(patch.connection).sort()).toEqual(['message','reason','state']);
+      expect(JSON.stringify(patch)).not.toContain(detail);
+    }
+    expect(JSON.stringify(commits)).not.toContain('"status"');
+    expect(JSON.stringify(commits)).not.toContain('authorization');
+  });
+
+  it.each(['config','bulletin'])('keeps public %s409 as an error rather than a private save conflict',kind=>{
+    const {monitor,commits}=setup(),detail=`private-${crypto.randomUUID()}`;
+    monitor.begin(kind,{automaticRetry:false})({status:409,
+      mapped:{accepted:false,reason:'stale_save',message:detail},body:{cloudSave:detail}});
+    expect(monitor.read()).toEqual({state:'error',reason:'internal_error',
+      message:'The service could not complete this request. Please try again.'});
+    expect(monitor.read().message).not.toMatch(/which copy|conflict|sign in/i);
+    expect(commits.every(patch=>Object.keys(patch).join()==='connection'
+      &&Object.keys(patch.connection).sort().join()==='message,reason,state')).toBe(true);
+    expect(JSON.stringify(commits)).not.toContain(detail);expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('preserves genuine private me401 expiry ahead of newer public401/409 failures',()=>{
+    const {monitor}=setup();monitor.begin('config',{automaticRetry:false})(failed(401));
+    expect(monitor.read()).toMatchObject({state:'error',reason:'internal_error'});
+    monitor.begin('me')(failed(401));expect(monitor.read()).toMatchObject({state:'expired',reason:'session_expired'});
+    monitor.begin('bulletin',{automaticRetry:false})({status:409,mapped:{accepted:false,reason:'stale_save'}});
+    expect(monitor.read()).toMatchObject({state:'expired',reason:'session_expired'});
+    expect(monitor.read().message).toContain('Sign in again');
+    monitor.begin('me')(success);expect(monitor.read()).toMatchObject({state:'error',reason:'internal_error'});
+    monitor.begin('config')(success);expect(monitor.read()).toMatchObject({state:'error',reason:'internal_error'});
+    monitor.begin('bulletin',{automaticRetry:false})(success);expect(monitor.read().state).toBe('online');
+  });
+});
+
+describe('the actual public reader remains the only automatic bulletin GET owner',()=>{
+  function pair(createOnlineBulletin,api){
+    const commits=[],state={config:{flags:{bulletin:true}}},document=surface({hidden:false}),window=surface();
+    const store={isClosed:()=>false,scope:()=>0,commit:patch=>{commits.push(structuredClone(patch));Object.assign(state,patch);}};
+    const monitor=createReadMonitor({store,document,window,now:Date.now});active.push(monitor);
+    const onRead=vi.fn(({retry})=>{
+      const finish=monitor.begin('bulletin',{retry,automaticRetry:false});
+      return result=>finish({status:result.status,mapped:{accepted:result.accepted,reason:result.reason}});
+    });
+    const reader=createOnlineBulletin({state,store,publicApi:api},{document,window,now:Date.now,onRead});
+    return {reader,monitor,onRead,commits,state};
+  }
+
+  it('issues one GET at each reader-owned5/15/30 boundary and keeps manual monitor retry',async()=>{
+    const {createOnlineBulletin}=await import('../src/online/case-adapter/bulletin.js');
+    const api={get:vi.fn(async()=>({ok:false,status:503,code:'bulletin_unavailable'}))};
+    const f=pair(createOnlineBulletin,api);
+    try{
+      await f.reader.refresh();expect(api.get).toHaveBeenCalledExactlyOnceWith('/api/bulletin');
+      expect(f.monitor.read()).toMatchObject({state:'error',reason:'not_connected'});expect(vi.getTimerCount()).toBe(1);
+      for(const [index,wait] of [5000,15000,30000].entries()){
+        await vi.advanceTimersByTimeAsync(wait-1);expect(api.get).toHaveBeenCalledTimes(index+1);
+        await vi.advanceTimersByTimeAsync(1);expect(api.get).toHaveBeenCalledTimes(index+2);
+        expect(f.onRead).toHaveBeenCalledTimes(index+2);expect(vi.getTimerCount()).toBe(index===2?0:1);
+      }
+      await vi.advanceTimersByTimeAsync(300000);expect(api.get).toHaveBeenCalledTimes(4);
+      await f.monitor.retryFailed();expect(api.get).toHaveBeenCalledTimes(5);
+      expect(f.reader.remaining()).toBe(5000);expect(vi.getTimerCount()).toBe(1);
+      await vi.advanceTimersByTimeAsync(4999);expect(api.get).toHaveBeenCalledTimes(5);
+      await vi.advanceTimersByTimeAsync(1);expect(api.get).toHaveBeenCalledTimes(6);expect(vi.getTimerCount()).toBe(1);
+    }finally{f.reader.dispose();f.monitor.dispose();}
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('does not create a second429 owner or bypass the reader deadline through manual monitor retry',async()=>{
+    const [{createOnlineBulletin},{recordedBulletin}]=await Promise.all([
+      import('../src/online/case-adapter/bulletin.js'),import('./fixtures/server/bulletin.js'),
+    ]);
+    const api={get:vi.fn().mockResolvedValueOnce({ok:false,status:429,code:'too_many_requests',retryAfterSeconds:3})
+      .mockResolvedValue({ok:true,status:200,data:recordedBulletin()})};
+    const f=pair(createOnlineBulletin,api);
+    try{
+      await f.reader.refresh();const request=f.reader.read().request;
+      expect(request).toMatchObject({reason:'rate_limited',status:429,retryUntil:3000});
+      expect(f.monitor.read()).toMatchObject({state:'error',reason:'internal_error'});
+      expect(api.get).toHaveBeenCalledOnce();expect(f.onRead).toHaveBeenCalledOnce();expect(vi.getTimerCount()).toBe(1);
+      await vi.advanceTimersByTimeAsync(2999);await f.monitor.retryFailed();
+      expect(api.get).toHaveBeenCalledOnce();expect(f.onRead).toHaveBeenCalledOnce();
+      expect(f.reader.read().request).toEqual(request);expect(f.reader.remaining()).toBe(2001);expect(vi.getTimerCount()).toBe(1);
+      await vi.advanceTimersByTimeAsync(1);expect(api.get).toHaveBeenCalledOnce();
+      await f.monitor.retryFailed();expect(api.get).toHaveBeenCalledTimes(2);expect(f.onRead).toHaveBeenCalledTimes(2);
+      expect(f.reader.read().request).toBeNull();expect(f.monitor.read().state).toBe('online');
+      expect(api.get.mock.calls.every(([path])=>path==='/api/bulletin')).toBe(true);
+      const connectionPatches=f.commits.filter(patch=>Object.hasOwn(patch,'connection'));
+      expect(connectionPatches.every(patch=>Object.keys(patch.connection).sort().join()==='message,reason,state')).toBe(true);
+      await vi.advanceTimersByTimeAsync(5000);expect(api.get).toHaveBeenCalledTimes(2);
+      expect(f.monitor.read().state).toBe('idle');expect(vi.getTimerCount()).toBe(1);
+    }finally{f.reader.dispose();f.monitor.dispose();}
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});

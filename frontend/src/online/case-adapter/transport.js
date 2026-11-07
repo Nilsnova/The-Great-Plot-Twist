@@ -39,7 +39,7 @@ export function createAdapterTransport(ctx) {
     if (!isLatest()) return {stale: true, mapped: ctx.refuse('not_ready')};
     const mapped = reply.ok && !validReadReply(kind, reply.data)
       ? mapApiResult({ok:false,status:502,code:'database_error'})
-      : mapApiResult(reply, {route, method: 'GET'});
+      : mapApiResult(reply, {route, method: 'GET', publicRead});
     if (mapped.accepted) apply(kind, reply.data);
     else store.commit({notice: {reason: mapped.reason, message: mapped.message}});
     finish?.({status: reply.ok && !mapped.accepted ? 502 : reply.status, mapped});

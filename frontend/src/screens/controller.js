@@ -23,7 +23,7 @@ export function createCaseScreens(ctx) {
   const modal=createModal({title:titles.crew,body,onCancel:close,onClose(){if(!ctx.hasOtherOverlay?.())ctx.focus?.();}});modal.element.classList.add('case-modal');
   let active=false,disposed=false,current='crew',opening=null,view=ctx.adapter.read(),revision=-1,openRequest=0,busy=false,noticeAfterRevision=-1,localFailure=null;
   let lastIntent=null,callRequest=0,lastArrivalReceipt=null,lastArrivalRefusal=null,refusedFocus=null;
-  let cachedPrivate=null,lastIsletFailure='',isletDisplayRequest=0,sendGeneration=0;
+  let cachedPrivate=null,lastIsletFailure='',isletDisplayRequest=0,sendGeneration=0,closedBulletin='',bulletinFocusOwned=false;
   const callClock=typeof ctx.now==='function'?ctx.now:Date.now;
   function isletCallOptions(name,result){
     const failure=view.finale?.isletFailure;
@@ -41,9 +41,31 @@ export function createCaseScreens(ctx) {
   const call=createServerCallState({messageElement:notice,label:'case action',onRetry:()=>lastIntent&&send(...lastIntent),onSignIn:()=>send('signIn'),onChange:()=>syncCooldown()});body.append(nav,connection.element,call.element,content);
   const screens=new Map(),arrival=createArrivalScreen({navigate:open,onRetry:()=>lastArrivalReceipt&&send('completeIntro',lastArrivalReceipt),onSignIn:async()=>{const receipt=lastArrivalReceipt,claim=lastArrivalRefusal==='sign_in_required';const result=await send('signIn');if(result?.accepted&&result.view?.account?.state==='signed_in'){if(claim&&receipt&&receipt===lastArrivalReceipt)await send('completeIntro',receipt);else arrival.setResult({accepted:false,reason:'not_connected',message:'Signed in. Retry arrival confirmation.'});}}});
   screens.set('crew',createCrewScreen({send,navigate:open,openIslet:ctx.openIslet}));
-  async function screen(name,token){if(name==='bulletin'){if(view.bulletin?.status==='off')return null;if(!screens.has(name)){const {createBulletinScreen}=await import('./bulletin/index.js');if(disposed||token!==openRequest||view.bulletin?.status==='off')return null;screens.set(name,createBulletinScreen({send,navigate:open}));}return screens.get(name);}if(['rewards','log','hints'].includes(name)){if(!screens.has(name)){const module=name==='rewards'?await import('./rewards/index.js'):name==='log'?await import('./log/index.js'):await import('../shell/hints/index.js');if(disposed)return null;const component=(module.createRewardsScreen??module.createLogScreen??module.createHints)({send,navigate:open,preferences:getPreferences(),onPreferences:setPreferences});screens.set(name,component);}return screens.get(name);}if(name==='relighting'){if(!screens.has(name)){const {createRelightingScreen}=await import('./relighting.js');if(disposed)return null;screens.set(name,createRelightingScreen({send}));}return screens.get(name);}if(['accusation','reveal'].includes(name)){if(!screens.has(name)){const module=name==='reveal'?await import('./reveal.js'):await import('./accusation.js');if(disposed)return null;screens.set(name,(module.createRevealScreen??module.createAccusationScreen)({send,navigate:open}));}return screens.get(name);}if(name==='finale'){if(!screens.has(name)){const {createFinaleScreen}=await import('./finale.js');if(disposed)return null;screens.set(name,createFinaleScreen({send,navigate:open,openIslet:ctx.openIslet}));}return screens.get(name);}if(name==='arrival')return arrival;if(screens.has(name))return screens.get(name);if(['search','partners'].includes(name)){const module=name==='search'?await import('./search.js'):await import('./partners/index.js');if(disposed)return null;const view=(module.createSearchScreen??module.createPartnerLifeScreen)({send,navigate:open});screens.set(name,view);return view;}if(name==='board'){const {createBoardScreen}=await import('./board.js');if(disposed)return null;const board=createBoardScreen({send});screens.set(name,board);return board;}const unavailable={element:node('p','','This case screen is being prepared.'),update(){},tick(){},dispose(){this.element.remove();}};screens.set(name,unavailable);return unavailable;}
+  async function screen(name,token){if(name==='bulletin'){if(view.bulletin?.status==='off')return null;if(!screens.has(name)){const {createBulletinScreen}=await import('./bulletin/index.js');if(disposed||token!==openRequest||view.bulletin?.status==='off')return null;screens.set(name,createBulletinScreen({onRetry:ctx.retryBulletin}));}return screens.get(name);}if(['rewards','log','hints'].includes(name)){if(!screens.has(name)){const module=name==='rewards'?await import('./rewards/index.js'):name==='log'?await import('./log/index.js'):await import('../shell/hints/index.js');if(disposed)return null;const component=(module.createRewardsScreen??module.createLogScreen??module.createHints)({send,navigate:open,preferences:getPreferences(),onPreferences:setPreferences});screens.set(name,component);}return screens.get(name);}if(name==='relighting'){if(!screens.has(name)){const {createRelightingScreen}=await import('./relighting.js');if(disposed)return null;screens.set(name,createRelightingScreen({send}));}return screens.get(name);}if(['accusation','reveal'].includes(name)){if(!screens.has(name)){const module=name==='reveal'?await import('./reveal.js'):await import('./accusation.js');if(disposed)return null;screens.set(name,(module.createRevealScreen??module.createAccusationScreen)({send,navigate:open}));}return screens.get(name);}if(name==='finale'){if(!screens.has(name)){const {createFinaleScreen}=await import('./finale.js');if(disposed)return null;screens.set(name,createFinaleScreen({send,navigate:open,openIslet:ctx.openIslet}));}return screens.get(name);}if(name==='arrival')return arrival;if(screens.has(name))return screens.get(name);if(['search','partners'].includes(name)){const module=name==='search'?await import('./search.js'):await import('./partners/index.js');if(disposed)return null;const view=(module.createSearchScreen??module.createPartnerLifeScreen)({send,navigate:open});screens.set(name,view);return view;}if(name==='board'){const {createBoardScreen}=await import('./board.js');if(disposed)return null;const board=createBoardScreen({send});screens.set(name,board);return board;}const unavailable={element:node('p','','This case screen is being prepared.'),update(){},tick(){},dispose(){this.element.remove();}};screens.set(name,unavailable);return unavailable;}
+  function trackBulletinFocus(event){
+    const target=event.target;
+    if(disposed||target===document.body||target===document.documentElement)return;
+    bulletinFocusOwned=current==='bulletin'&&screens.get('bulletin')?.element.contains(target)===true;
+  }
+  document.addEventListener('focusin',trackBulletinFocus,true);
+  function keepClosedBulletin(){
+    const request=view.bulletin?.request;
+    if(request?.reason!=='feature_off')return false;
+    const stamp=JSON.stringify(request);
+    if(stamp===closedBulletin)return true;
+    closedBulletin=stamp;
+    const selected=screens.get('bulletin');
+    const anotherDialog=[...document.querySelectorAll('dialog[open]')].some(dialog=>dialog!==modal.element);
+    const restoreFocus=!anotherDialog&&(bulletinFocusOwned||selected?.element.contains(document.activeElement));
+    bulletinFocusOwned=false;
+    selected?.setActive?.(false);selected?.dispose();screens.delete('bulletin');content.replaceChildren();
+    localFailure={accepted:false,reason:'feature_off',message:request.message,status:404};
+    call.fail(localFailure,{retryable:false});modal.setTitle(titles.bulletin);syncCooldown();
+    if(restoreFocus)call.element.querySelector('[data-focus="report-server-call"]')?.focus({preventScroll:true});
+    return true;
+  }
   function handleBulletinOff(){
-    if(!opening||opening.name==='bulletin'){close();return;}
+    if(!opening||opening.name==='bulletin'){if(!keepClosedBulletin())close();return;}
     if(content.querySelector('.case-pending'))return;
     const message=node('p','case-pending','Opening the case · Escape to cancel');
     message.setAttribute('role','status');
@@ -83,6 +105,7 @@ export function createCaseScreens(ctx) {
   }
   async function open(name='crew',params={}){
     if(disposed||(name==='bulletin'&&view.bulletin?.status==='off'))return;
+    closedBulletin='';
     const token=++openRequest,owner={name,token};opening=owner;callRequest++;screens.get(current)?.close?.();
     try{
     const inspection=name==='search'&&params.spot?await send('inspectSpot',params.spot):null;if(disposed||token!==openRequest)return;
@@ -99,18 +122,18 @@ export function createCaseScreens(ctx) {
     for(const [id,label] of Object.entries(pages)){const option=node('option','',label);option.value=id;option.dataset.focus=`case-nav-${id}`;picker.append(option);}
     if(!Object.hasOwn(pages,name)){const option=node('option','',titles[name]??'Case');option.value=name;picker.prepend(option);}
     picker.value=name;picker.onchange=()=>open(picker.value);nav.append(picker);
-    content.replaceChildren(selected.element);revision=view.revision;selected.setPreferences?.(getPreferences());selected.update(view);syncCooldown();if(name==='finale'&&busy&&lastIntent?.[0]==='buildLight')isletDisplayRequest=callRequest;modal.open(ctx.container);if(name==='bulletin')emit({type:'bulletin_opened'});const heading=modal.element.querySelector('h2');heading.tabIndex=-1;heading.focus({preventScroll:true});modal.element.scrollTop=0;content.scrollTop=0;
+    content.replaceChildren(selected.element);revision=view.revision;selected.setPreferences?.(getPreferences());selected.update(view);syncCooldown();if(name==='finale'&&busy&&lastIntent?.[0]==='buildLight')isletDisplayRequest=callRequest;modal.open(ctx.container);if(name==='bulletin')selected.setActive?.(true);if(name==='bulletin')emit({type:'bulletin_opened'});const heading=modal.element.querySelector('h2');heading.tabIndex=-1;heading.focus({preventScroll:true});modal.element.scrollTop=0;content.scrollTop=0;
     }finally{
       if(opening===owner){
         opening=null;
-        if(active&&current==='bulletin'&&view.bulletin?.status==='off')close();
+        if(active&&current==='bulletin'&&view.bulletin?.status==='off')handleBulletinOff();
       }
     }
   }
-  function close(){opening=null;openRequest++;callRequest++;screens.get(current)?.close?.();active=false;localFailure=null;call.clear();ctx.resetInput?.();modal.close();}
+  function close(){closedBulletin='';bulletinFocusOwned=false;opening=null;openRequest++;callRequest++;screens.get(current)?.close?.();active=false;localFailure=null;call.clear();ctx.resetInput?.();modal.close();}
   const stop=ctx.adapter.subscribe(update);update();
   return {get active(){return active;},get screenName(){return current;},get view(){return view;},open,close,send,arrival:arrival.element,
     async completeIntro(receipt){lastArrivalReceipt=receipt;await send('completeIntro',receipt);return arrival.element;},
     tick(dt){ctx.adapter.tick?.(dt);if(active)screens.get(current)?.tick?.(view);},
-    dispose(){if(disposed)return;disposed=true;stop();close();for(const item of screens.values())item.dispose();arrival.dispose();call.dispose();connection.dispose();modal.dispose();}};
+    dispose(){if(disposed)return;disposed=true;document.removeEventListener('focusin',trackBulletinFocus,true);stop();close();for(const item of screens.values())item.dispose();arrival.dispose();call.dispose();connection.dispose();modal.dispose();}};
 }

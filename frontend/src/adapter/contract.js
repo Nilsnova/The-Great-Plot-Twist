@@ -12,6 +12,8 @@ export const copyView=value=>structuredClone(value);
 // finale.islet is null or {id, name, built, canBuild, buildLabel, caption};
 // finale.isletFailure is null or {reason, message, status?, retryAfterSeconds?, retryUntil?}.
 // These display fields grant no case light or outcome; private fields clear when signed out.
+// Optional public bulletin.request is null or {reason, message, status?, retryUntil?};
+// public 401/409 are read errors, and retryUntil is a client presentation deadline only.
 export const caseViewKeys = [
   'schema','mode','revision','now','captain','arrival','crew','permissions','board','search',
   'partners','finale','accusation','reveal','world','notice','effects',

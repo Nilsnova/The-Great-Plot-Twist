@@ -121,9 +121,9 @@ it('ticks the adapter while closed, pauses selected ticks, and keeps closed upda
   await evaluate.withPage(async page=>{
     await page.route('**/src/screens/bulletin/index.js*',route=>route.fulfill({contentType:'text/javascript',body:`
       export function createBulletinScreen(){
-        const element=document.createElement('section');
+        const element=document.createElement('section');let active=false;
         return {element,update(view){window.tickProof.updates.push({revision:view.revision,now:view.now,signIn:view.account.canSignIn});element.textContent='Recorded screen '+view.now;},
-          tick(view){window.tickProof.selected.push(view.now);},close(){},dispose(){element.remove();}};
+          setActive(value){active=value===true;},tick(view){if(!active)throw new Error('Inactive screen tick');window.tickProof.selected.push(view.now);},close(){active=false;},dispose(){active=false;element.remove();}};
       }`}));
     await styles(page);
     const result=await page.evaluate(async initial=>{
@@ -208,8 +208,8 @@ it.each([
 ])('clears private Crew text after navigating to a different cached page on %s',async(_label,account)=>{
   await evaluate.withPage(async page=>{
     await page.route('**/src/screens/bulletin/index.js*',route=>route.fulfill({contentType:'text/javascript',body:`
-      export function createBulletinScreen(){const element=document.createElement('section');
-        return {element,update(){element.textContent='Recorded public bulletin';},tick(){},dispose(){element.remove();}};}
+      export function createBulletinScreen(){const element=document.createElement('section');let active=false;
+        return {element,update(){element.textContent='Recorded public bulletin';},setActive(value){active=value===true;},tick(){if(!active)throw new Error('Inactive screen tick');},close(){active=false;},dispose(){active=false;element.remove();}};}
     `}));
     await styles(page);const initial=record();initial.account.hasKit=true;
     initial.permissions={createCrew:false,joinCrew:false,muster:true};

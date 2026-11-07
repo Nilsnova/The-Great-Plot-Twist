@@ -5,6 +5,18 @@ import {createUnavailableCaseAdapter} from '../src/adapter/unavailable.js';
 import {validateBulletin} from '../src/adapter/conformance/bulletin.js';
 import {caseScreenFor} from '../src/world/places/case-spots.js';
 describe('bulletin adapter integration',()=>{
+  it.each([null,'Recorded weather attribution'])('accepts nullable weather attribution %s',attribution=>{
+    const adapter=createFakeCaseAdapter();
+    try{adapter.dev.setBulletin('calm');const view=adapter.read().bulletin;
+      view.weather.attribution=attribution;expect(()=>validateBulletin(view)).not.toThrow();
+    }finally{adapter.dispose();}
+  });
+  it('rejects a non-text non-null weather attribution',()=>{
+    const adapter=createFakeCaseAdapter();
+    try{adapter.dev.setBulletin('calm');const view=adapter.read().bulletin;
+      view.weather.attribution=42;expect(()=>validateBulletin(view)).toThrow();
+    }finally{adapter.dispose();}
+  });
   it('defaults to off for both disconnected and local clients',()=>{
     for(const create of [createUnavailableCaseAdapter,createFakeCaseAdapter]){
       const adapter=create();validateBulletin(adapter.read().bulletin);

@@ -35,7 +35,7 @@
     "test:csp": "npm run build && node scripts/check-csp.js",
     "art:fingerprints": "node scripts/generate-reveal-fingerprints.js",
     "test:islet:world": "node scripts/check-islet-world.js",
-    "test:bulletin": "node scripts/check-bulletin.js",
+    "test:bulletin": "node scripts/check-bulletin-hall.js",
     "test:hook": "node scripts/check-hook.js",
     "test:harbor:life": "node scripts/check-harbor-life.js",
     "test:presenter": "npm run build && node scripts/check-presenter.js",
@@ -58,7 +58,10 @@
     "test:market": "npm run build && node scripts/check-market-hall.js",
     "test:online:market:chaos": "npm run build && node scripts/check-online-market.js --chaos",
     "test:online:predictions": "npm run build && node scripts/check-online-predictions.js",
-    "test:online:arena": "npm run build && node scripts/check-online-arena.js"
+    "test:online:arena": "npm run build && node scripts/check-online-arena.js",
+    "test:bulletin:local": "node scripts/check-bulletin.js",
+    "test:online:bulletin": "npm run build && node scripts/check-online-bulletin.js",
+    "test:online:bulletin:chaos": "npm run build && node scripts/check-online-bulletin.js --chaos"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

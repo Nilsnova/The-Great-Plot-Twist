@@ -70,4 +70,5 @@ await (await import('./check-online-islet.js')).checkOnlineIslet();
 await (await import('./check-online-market.js')).checkOnlineMarket();
 await (await import('./check-online-predictions.js')).checkOnlinePredictions();
 await (await import('./check-online-arena.js')).checkOnlineArena();
+await (await import('./check-online-bulletin.js')).checkOnlineBulletin();
 }

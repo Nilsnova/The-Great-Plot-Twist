@@ -17,6 +17,7 @@ import {createCrewLifecycle} from './crew-lifecycle.js';
 import {createLiveLifecycle} from './live-lifecycle.js';
 import {createIsletLifecycle} from './islet-lifecycle.js';
 import {createPanelWallet} from './panel-wallet.js';
+import {createLazyBulletin} from './lazy-bulletin.js';
 import {registerPanelServices} from '../panel-services.js';
 import {validateIntent} from './validate.js';
 import {introJournal} from '../../story/intro-journal.js';
@@ -54,6 +55,11 @@ export function createRealCaseAdapter(deps = {}) {
     ? initialAuth.state : store.state.accountState;
   store.commit({auth: initialAuth, accountState: initialState, signInAllowed: import.meta.env.DEV});
   ctx.readMonitor = createReadMonitor(ctx);
+  const bulletin=createLazyBulletin(ctx,{load:deps.loadBulletin,onRead:({kind,retry})=>{
+    const finish=ctx.readMonitor.begin(kind,{automatic:true,automaticRetry:false,retry});
+    return ({status,accepted,reason,cancelled})=>reason==='feature_off'||cancelled
+      ?finish.cancel():finish({status,mapped:{accepted,reason}});
+  }});
   ctx.transport = createAdapterTransport(ctx);
   ctx.saves = createAccountSaves(ctx);
   ctx.saves.pauseIdentity();
@@ -138,6 +144,7 @@ export function createRealCaseAdapter(deps = {}) {
     ctx.readMonitor.reset();
     signingOut = true;
     store.invalidate();
+    bulletin.stop();
     resetIslet();
     live.reset();
     ctx.saves.pauseIdentity();
@@ -147,6 +154,7 @@ export function createRealCaseAdapter(deps = {}) {
     store.commit({accountState: 'signed_out', auth: ctx.auth.read?.() ?? null,
       me: null, profile: null, crew: null, joinPreview: null, saveState: deviceSaveState(),
       nameReply: null, nameStatus: null, cloudSave: null, rewardsRows: [], rewardsStatus: null, continuation: null});
+    void bulletin.refresh();
     try { await authTask; } finally { signingOut = false; }
     return ctx.accept('You are signed out. Your local intro is kept.');
   };
@@ -154,6 +162,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed() || signingOut) return;
     ctx.readMonitor.reset();
     store.invalidate();
+    bulletin.stop();
     resetIslet();
     live.reset();
     ctx.saves.pauseIdentity();
@@ -170,6 +179,7 @@ export function createRealCaseAdapter(deps = {}) {
         nameReply:null,nameStatus:null,
         cloudSave:null,rewardsRows:[],rewardsStatus:null,continuation:null,joinPreview:null});
     }
+    void bulletin.refresh();
   });
   const stopAuth = ctx.auth.subscribe?.(next => {
     if (store.isClosed() || signingOut) return;
@@ -180,10 +190,13 @@ export function createRealCaseAdapter(deps = {}) {
   panelServices = registerPanelServices(session, {api: panelWallet.api, publicApi,
     getFlags: () => ctx.state.config?.flags ?? {},
     isReady: () => !store.isClosed() && ctx.state.config !== null,
-    getIdentity: () => store.scope(), getIslet: islet.getAdapter});
+    getIdentity: () => store.scope(), getIslet: islet.getAdapter,
+    retryBulletin:()=>bulletin.refresh({force:true})});
   let restoreTask = null;
   ctx.onConfigReady = async () => {
     panelServices.refresh();
+    if(ctx.state.config?.flags?.bulletin!==true)ctx.readMonitor.clearRead('bulletin');
+    void bulletin.refresh();
     live.refresh();
     const enabled = import.meta.env.DEV || ctx.state.config?.flags?.sign_in === true;
     store.commit({signInAllowed: enabled});
@@ -266,6 +279,7 @@ export function createRealCaseAdapter(deps = {}) {
       authIntentGeneration += 1;
       store.dispose();
       panelWallet.dispose();
+      bulletin.dispose();
       islet.dispose();
       panelServices.dispose();
       live.dispose();

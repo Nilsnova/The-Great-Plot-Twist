@@ -5,6 +5,7 @@ import {mapCrew} from './crew-view.js';
 import {crewPermissions} from './crew-permissions.js';
 import {projectIsletDisplay} from './islet-view.js';
 import {caseReasons} from '../../adapter/reasons.js';
+import {bulletinObservations} from './bulletin-view.js';
 
 function emptyView(){
   const adapter=createUnavailableCaseAdapter();
@@ -44,6 +45,8 @@ function isletFailureView(failure, signedIn){
 export function composeRealView(state={}){
   const view=emptyView();
   const account=mapAccount(state);
+  const bulletin=state.config?.flags?.bulletin===true&&state.bulletin
+    ?structuredClone(state.bulletin):view.bulletin;
   const crew=mapCrew(state);
   const islet=projectIsletDisplay(state.isletSnapshot,{signedIn:account.state==='signed_in',crew});
   const presenceView=state.presence??view.presence;
@@ -54,6 +57,7 @@ export function composeRealView(state={}){
     captain:{name:account.captainName??'Captain pending',coins,save:account.save},arrival:mapArrival(state),
     permissions:crewPermissions(state,account),presence:presenceView,continuation:continuationView(state.continuation),
     rewards:walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),
+    bulletin,log:{...view.log,observations:bulletinObservations(bulletin)},
     notice:state.notice?{reason:state.notice.reason??null,message:state.notice.message??''}:null};
 }
 

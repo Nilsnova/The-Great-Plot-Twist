@@ -181,3 +181,59 @@ describe('online API reason mapping', () => {
     expect(mapApiResult(null).reason).toBe('internal_error');
   });
 });
+
+describe('explicit public read failure policy',()=>{
+  const serviceMessage='The service could not complete this request. Please try again.';
+  const publicOptions=route=>({route,method:'GET',publicRead:true});
+
+  it.each(['/api/config','/api/bulletin'])('refuses public %s401 with fixed service words and no private recovery',route=>{
+    const answer=failed(401,'session_expired',{message:'UNTRUSTED_PUBLIC_DETAIL',body:{privateId:'UNTRUSTED_PUBLIC_DETAIL'}});
+    const result=mapApiResult(answer,publicOptions(route));
+    expect(result).toEqual({accepted:false,reason:'internal_error',message:serviceMessage});
+    expect(result).not.toHaveProperty('recovery');expect(answer.status).toBe(401);
+    expect(JSON.stringify(result)).not.toContain('UNTRUSTED_PUBLIC_DETAIL');
+    const call=createCallState();call.fail(result);
+    expect(call.read()).toMatchObject({phase:'error',canRetry:true,canSignIn:false,message:serviceMessage});
+  });
+
+  it.each(['stale_save','already_applied','already_seated','already_started','crew_busy','no_name_yet','crew_full','crew_finished'])
+  ('cannot turn public409 %s into success, a private conflict or a recovery action',code=>{
+    for(const route of ['/api/config','/api/bulletin']){
+      const result=mapApiResult(failed(409,code,{message:'UNTRUSTED_PUBLIC_DETAIL',data:{repeat:true}}),publicOptions(route));
+      expect(result).toEqual({accepted:false,reason:'internal_error',message:serviceMessage});
+      expect(Object.keys(result).sort()).toEqual(['accepted','message','reason']);
+      const call=createCallState();call.fail(result);
+      expect(call.read()).toMatchObject({phase:'error',canRetry:true,canSignIn:false,message:serviceMessage});
+    }
+  });
+
+  it('keeps default and explicitly private401 behavior even when a caller supplies a public-looking route',()=>{
+    for(const options of [undefined,{publicRead:false},{route:'/api/config',method:'GET'},
+      {route:'/api/me',method:'GET',publicRead:false}]){
+      const result=mapApiResult(failed(401,'unauthorized'),options);
+      expect(result).toEqual({accepted:false,reason:'session_expired',message:'Session expired. Sign in again.'});
+      const call=createCallState();call.fail(result);
+      expect(call.read()).toMatchObject({phase:'expired',canRetry:false,canSignIn:true});
+    }
+  });
+
+  it.each(['already_applied','already_seated','already_started'])('keeps private completed409 %s accepted with reread',code=>{
+    for(const options of [undefined,{publicRead:false},{route:'/api/crews/me/start',method:'POST'}]){
+      expect(mapApiResult(failed(409,code),options)).toEqual({accepted:true,reason:null,message:'',recovery:'reread'});
+    }
+  });
+
+  it('keeps private conflict and setup recovery while public409 stays refused',()=>{
+    expect(mapApiResult(failed(409,'stale_save'),{method:'PUT'})).toMatchObject({accepted:false,reason:'save_conflict'});
+    expect(mapApiResult(failed(409,'crew_busy'),{method:'POST'})).toHaveProperty('recovery','retry_once');
+    expect(mapApiResult(failed(409,'no_name_yet'),{method:'POST'})).toHaveProperty('recovery','init_name');
+  });
+
+  it.each([[0,'timeout'],[503,'case_unavailable'],[404,'feature_off'],[429,'too_many_requests'],[502,'database_error']])
+  ('preserves the existing public GET policy for HTTP%s/%s', (status,code)=>{
+    const answer=failed(status,code,{retryAfterSeconds:2.1});
+    expect(mapApiResult(answer,publicOptions('/api/config')))
+      .toEqual(mapApiResult(answer,{route:'/api/config',method:'GET'}));
+    expect(mapApiResult(answer,publicOptions('/api/bulletin'))).not.toHaveProperty('recovery');
+  });
+});

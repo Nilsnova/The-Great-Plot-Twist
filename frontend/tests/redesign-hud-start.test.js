@@ -28,7 +28,7 @@ it('retains journal actions and closes controls before opening the supplied menu
     document.querySelector('.controls-toggle').click();document.querySelector('.chart-toggle').click();document.querySelector('.hud-menu').click();
     const controlsClosed=document.querySelector('.controls').hidden;hud.dispose();return {labels,calls,closed,controlsClosed};
   });
-  expect(result).toEqual({labels:['Crew','Board','Log','What next?','Festival'],calls:['crew','chart','menu'],closed:true,controlsClosed:true});
+  expect(result).toEqual({labels:['Crew','Board','Log','What next?','Festival','Harbor bulletin'],calls:['crew','chart','menu'],closed:true,controlsClosed:true});
 });
 
 it('keeps a ready Tonight caption inside Journal with readable wrapping and phone-sized targets',async()=>{
@@ -59,7 +59,7 @@ it('keeps a ready Tonight caption inside Journal with readable wrapping and phon
     expect(layout.insideJournal).toBe(true);expect(layout.position).toBe('static');
     expect(layout.captionSizes.every(size=>size>=18)).toBe(true);expect(layout.overflow||layout.captionOverflow).toBe(false);
     expect(layout.left).toBeGreaterThanOrEqual(0);expect(layout.right).toBeLessThanOrEqual(320);
-    expect(layout.targets.length).toBe(7);expect(layout.targets.every(target=>target.width>=44&&target.height>=44)).toBe(true);
+    expect(layout.targets.length).toBe(8);expect(layout.targets.every(target=>target.width>=44&&target.height>=44)).toBe(true);
     await page.keyboard.press('Escape');expect(await tools.isHidden()).toBe(true);expect(await caption.isHidden()).toBe(true);
     expect(await journal.evaluate(button=>document.activeElement===button)).toBe(true);
     await journal.click();

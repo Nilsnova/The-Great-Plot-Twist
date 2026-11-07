@@ -1,5 +1,5 @@
 // GET presentation and bounded retries. Only fixed read kinds and public status words are retained.
-const kinds=new Set(['config','me','save','crew','ledger']);
+const kinds=new Set(['config','me','save','crew','ledger','bulletin']);
 const backoff=[5000,15000,30000];
 const failures={
   offline:{state:'offline',message:'You are offline. Your progress on this device is kept.',reason:'offline'},
@@ -59,7 +59,9 @@ export function createReadMonitor(ctx,{setTimer=globalThis.setTimeout,clearTimer
     if(next.state===connection.state&&next.message===connection.message&&next.reason===connection.reason)return;
     connection={...next};ctx.store.commit({connection:{...connection}});
   }
-  function reasonFor(status,mapped){
+  function reasonFor(kind,status,mapped){
+    // Public endpoints cannot expire an account; retain their real HTTP status for diagnostics.
+    if((kind==='config'||kind==='bulletin')&&(status===401||mapped?.reason==='session_expired'))return 'internal_error';
     if(status===401||mapped?.reason==='session_expired')return 'session_expired';
     if(status===0||mapped?.reason==='offline')return 'offline';
     if(status===503||mapped?.reason==='not_connected')return 'not_connected';
@@ -81,36 +83,42 @@ export function createReadMonitor(ctx,{setTimer=globalThis.setTimeout,clearTimer
       .finally(()=>{if(entry.retryTask===task)entry.retryTask=null;});
     entry.retryTask=task;return task;
   }
-  function begin(kind,{automatic=false,retry}={}){
+  function begin(kind,{automatic=false,retry,automaticRetry=true}={}){
     if(!kinds.has(kind))throw new TypeError('Unknown read kind.');
-    if(!live())return ()=>false;
+    if(!live())return Object.assign(()=>false,{cancel:()=>false});
     let entry=reads.get(kind);
     if(!entry){entry={kind,attempts:0,retry:null,failure:null,request:null,retryJob:null,retryTask:null,version:0};reads.set(kind,entry);}
     cancel(entry.retryJob);entry.retryJob=null;cancelRequest(entry);
     entry.version+=1;
     if(!automatic){entry.attempts=0;entry.retryTask=null;}
     if(typeof retry==='function')entry.retry=retry;
+    entry.automaticRetry=automaticRetry!==false;
     const request={generation,visible:false,isSlow:false,done:false,loading:null,slow:null};
     entry.request=request;
     const current=()=>live()&&request.generation===generation&&entry.request===request;
     request.loading=schedule(300,()=>{if(current()){request.visible=true;publish();}});
     request.slow=schedule(5000,()=>{if(current()){request.isSlow=true;request.visible=true;publish();}});
     publish();
-    return ({status,mapped}={})=>{
+    const finish=({status,mapped}={})=>{
       if(request.done||!current())return false;
       request.done=true;cancelRequest(entry);
       if(mapped?.accepted===true){
         if(entry.failure)markRecovered();
         entry.failure=null;entry.attempts=0;
       }else{
-        entry.failure={reason:reasonFor(status,mapped),sequence:++sequence};
-        if(kind!=='config'&&(status===0||status===503)&&entry.retry&&entry.attempts<backoff.length){
+        entry.failure={reason:reasonFor(kind,status,mapped),sequence:++sequence};
+        if(kind!=='config'&&entry.automaticRetry&&(status===0||status===503)&&entry.retry&&entry.attempts<backoff.length){
           const delay=backoff[entry.attempts++];
           entry.retryJob=schedule(delay,()=>{entry.retryJob=null;void runRetry(entry);});
         }
       }
       publish();return true;
     };
+    finish.cancel=()=>{
+      if(request.done||!current())return false;
+      request.done=true;clearRead(kind);return true;
+    };
+    return finish;
   }
   function visibility(){
     const next=Boolean(document?.hidden);if(next===hidden)return;hidden=next;
@@ -132,6 +140,11 @@ export function createReadMonitor(ctx,{setTimer=globalThis.setTimeout,clearTimer
     }
     await Promise.all(pending);
   }
+  function clearRead(kind){
+    if(!live())return;
+    const entry=reads.get(kind);if(!entry)return;
+    cancelRequest(entry);cancel(entry.retryJob);entry.retryJob=null;reads.delete(kind);publish();
+  }
   function reset(){
     if(closed)return;
     generation+=1;for(const job of [...jobs])cancel(job);reads.clear();recovered=false;recoveryJob=null;publish();
@@ -144,5 +157,5 @@ export function createReadMonitor(ctx,{setTimer=globalThis.setTimeout,clearTimer
   }
   document?.addEventListener?.('visibilitychange',visibility);
   window?.addEventListener?.('offline',offline);window?.addEventListener?.('online',online);
-  return {begin,retryFailed,reset,dispose,read:()=>({...connection})};
+  return {begin,retryFailed,clearRead,reset,dispose,read:()=>({...connection})};
 }

@@ -1,0 +1,305 @@
+
+> the-great-plot-twist@0.1.0 test:bulletin
+> node scripts/check-bulletin-hall.js
+
+CHAOS bulletin/offline @ 375
+CHAOS bulletin/expired @ 375
+CHAOS bulletin/feature_off @ 375
+CHAOS bulletin/stale_save @ 375
+CHAOS bulletin/rate_limited @ 375
+CHAOS bulletin/gateway @ 375
+CHAOS bulletin/unavailable @ 375
+CHAOS bulletin/offline @ 320
+CHAOS bulletin/expired @ 320
+CHAOS bulletin/feature_off @ 320
+CHAOS bulletin/stale_save @ 320
+CHAOS bulletin/rate_limited @ 320
+CHAOS bulletin/gateway @ 320
+CHAOS bulletin/unavailable @ 320
+{
+  "outcome": "passed",
+  "checks": [
+    "bulletin/offline: refusal has plain words at 375",
+    "bulletin/offline: the real route was intercepted",
+    "bulletin/offline: focus reaches the actual enabled public Retry button",
+    "bulletin/offline: a report action is available",
+    "bulletin/offline: the page fits 375 px",
+    "bulletin/expired: refusal has plain words at 375",
+    "bulletin/expired: the real route was intercepted",
+    "bulletin/expired: focus reaches the actual enabled public Retry button",
+    "bulletin/expired: a report action is available",
+    "bulletin/expired: the page fits 375 px",
+    "bulletin/feature_off: refusal has plain words at 375",
+    "bulletin/feature_off: the real route was intercepted",
+    "bulletin/feature_off: the surviving real frame Report link receives native focus",
+    "bulletin/feature_off: a report action is available",
+    "bulletin/feature_off: the page fits 375 px",
+    "bulletin/stale_save: refusal has plain words at 375",
+    "bulletin/stale_save: the real route was intercepted",
+    "bulletin/stale_save: focus reaches the actual enabled public Retry button",
+    "bulletin/stale_save: a report action is available",
+    "bulletin/stale_save: the page fits 375 px",
+    "bulletin/rate_limited: refusal has plain words at 375",
+    "bulletin/rate_limited: the real route was intercepted",
+    "bulletin/rate_limited: the real visible cooldown message receives native focus",
+    "The cooldown retains the shared polite announcement sibling",
+    "bulletin/rate_limited: a report action is available",
+    "bulletin: the cooldown disables retry",
+    "bulletin: the refused control is disabled during the wait",
+    "bulletin: a forced activation cannot bypass the cooldown",
+    "bulletin: the original three-second deadline still blocks Retry at 2999ms",
+    "bulletin: forced Retry at 2999ms sends no public GET",
+    "bulletin: the same original Retry deadline enables at exactly 3000ms",
+    "bulletin: cooldown completion neither fetches automatically nor sends a write",
+    "bulletin: the countdown never sends a write",
+    "bulletin/rate_limited: the page fits 375 px",
+    "bulletin/gateway: refusal has plain words at 375",
+    "bulletin/gateway: the real route was intercepted",
+    "bulletin/gateway: focus reaches the actual enabled public Retry button",
+    "bulletin/gateway: a report action is available",
+    "bulletin/gateway: the page fits 375 px",
+    "bulletin/unavailable: refusal has plain words at 375",
+    "bulletin/unavailable: the real route was intercepted",
+    "bulletin/unavailable: focus reaches the actual enabled public Retry button",
+    "bulletin/unavailable: a report action is available",
+    "bulletin/unavailable: the page fits 375 px",
+    "bulletin/offline: refusal has plain words at 320",
+    "bulletin/offline: the real route was intercepted",
+    "bulletin/offline: focus reaches the actual enabled public Retry button",
+    "bulletin/offline: a report action is available",
+    "bulletin/offline: the page fits 320 px",
+    "bulletin/expired: refusal has plain words at 320",
+    "bulletin/expired: the real route was intercepted",
+    "bulletin/expired: focus reaches the actual enabled public Retry button",
+    "bulletin/expired: a report action is available",
+    "bulletin/expired: the page fits 320 px",
+    "bulletin/feature_off: refusal has plain words at 320",
+    "bulletin/feature_off: the real route was intercepted",
+    "bulletin/feature_off: the surviving real frame Report link receives native focus",
+    "bulletin/feature_off: a report action is available",
+    "bulletin/feature_off: the page fits 320 px",
+    "bulletin/stale_save: refusal has plain words at 320",
+    "bulletin/stale_save: the real route was intercepted",
+    "bulletin/stale_save: focus reaches the actual enabled public Retry button",
+    "bulletin/stale_save: a report action is available",
+    "bulletin/stale_save: the page fits 320 px",
+    "bulletin/rate_limited: refusal has plain words at 320",
+    "bulletin/rate_limited: the real route was intercepted",
+    "bulletin/rate_limited: the real visible cooldown message receives native focus",
+    "The cooldown retains the shared polite announcement sibling",
+    "bulletin/rate_limited: a report action is available",
+    "bulletin: the cooldown disables retry",
+    "bulletin: the refused control is disabled during the wait",
+    "bulletin: a forced activation cannot bypass the cooldown",
+    "bulletin: the original three-second deadline still blocks Retry at 2999ms",
+    "bulletin: forced Retry at 2999ms sends no public GET",
+    "bulletin: the same original Retry deadline enables at exactly 3000ms",
+    "bulletin: cooldown completion neither fetches automatically nor sends a write",
+    "bulletin: the countdown never sends a write",
+    "bulletin/rate_limited: the page fits 320 px",
+    "bulletin/gateway: refusal has plain words at 320",
+    "bulletin/gateway: the real route was intercepted",
+    "bulletin/gateway: focus reaches the actual enabled public Retry button",
+    "bulletin/gateway: a report action is available",
+    "bulletin/gateway: the page fits 320 px",
+    "bulletin/unavailable: refusal has plain words at 320",
+    "bulletin/unavailable: the real route was intercepted",
+    "bulletin/unavailable: focus reaches the actual enabled public Retry button",
+    "bulletin/unavailable: a report action is available",
+    "bulletin/unavailable: the page fits 320 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "width": 320,
+      "status": 0
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "width": 320,
+      "status": 401
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "width": 320,
+      "status": 404
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "width": 320,
+      "status": 409
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "width": 320,
+      "status": 429
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "width": 320,
+      "status": 502
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "width": 320,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "path": "/api/bulletin",
+      "method": "GET"
+    }
+  ],
+  "coveredGroups": [
+    "bulletin"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "islet",
+    "market",
+    "predictions",
+    "arena",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}

@@ -6,8 +6,70 @@ Nils explicitly authorized cloud continuation. G10 publishes the case contract o
 
 Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils asked for the
 shortest working core release, targeting five hours. The latest review below supersedes the
-26-chunk completion queue; all 17 overflow items remain deferred. Package2 is complete locally.
+26-chunk completion queue; all 17 overflow items remain deferred. Package3 is complete locally.
 Work is stopped; wait for Nils before starting the next package.
+
+## Package3 complete: public harbor Bulletin (7 Nov 2026)
+
+**Finished; stop here until Nils asks for package4.** Verification used **24.5 minutes**,
+within the30-minute allocation. No case integration or other package was started.
+
+Changed: real anonymous Bulletin reads, five-minute cache/refresh, bounded recovery, stale/unavailable
+presentation, strict boolean flag gating, and authoritative weather/tonight/hook/Log projection.
+Public401/409 remain public read errors and cannot expire the account or create a save conflict.
+The drawer owns its retry/announcement work and cleans up on navigation, close, off and disposal.
+A terminal404 retains the existing frame's Report action; explicit config-off closes it. Rebased
+controller changes preserve package1's cancelled-opening/newer-page/Escape ownership. Package2's
+lazy loading, production-build scope and CSP foundations remain byte-for-byte intact.
+No API intent/schema/top-level key, game outcome, replay rule, dependency, art or font was added.
+Weather networking is unchanged and credits remain only in Settings.
+
+Verified: **3,468 unique unit tests /230 files**. Initial full run passed3,464 and failed four new
+test cases; three corrected files then passed61 tests, and the strengthened factory test file
+passed15. Corrections supply a missing parameter, observe the actual hidden/disabled Retry control,
+and await coherent config-off/connection-idle while proving the additional anonymous config GET.
+Runtime code was unchanged between those unit runs; no assertions/timeouts were weakened.
+
+All seven package gates pass: build/spoiler; **23 loading checks**; the named `test:bulletin`
+production gate (**35 UI checks**, **14 read-recovery checks**, **91 public fault checks /14 cases**
+at375/320 px); **five authenticated enforcing-CSP checks**, including a genuinely blocked inline
+script; **six weather-wiring checks**; **17 local Bulletin checks**; and **212 local chaos checks
+/96 fault cases**. Production layouts pass at1280/375/320 px with16 px controls,18 px body/captions,
+44 px targets and no horizontal overflow. Six recorded navigation contexts had enforcing headers
+and zero CSP events; the negative probe confirms the guard rejects an actual violation.
+Cold title remains **20,881 JS /11,878 CSS bytes**, under unchanged limits.
+
+The first production fault setup assumed a visible coin counter, contrary to the approved quiet
+HUD. The reviewed harness correction preserves actual native balance text, aria-label and its
+before/after visibility, without changing CSS or forcing visibility. The complete named gate was
+rerun and passed. Anonymous reads, exact private values, no auth renewal/mutation, original429
+boundaries, cache/backoff and server404 cleanup are all exercised. No real account/service/database
+was used. Independent controller/API/privacy/CSP and test reviews found no blocking issue.
+
+Evidence: `captures/20261107_G9-C3-bulletin-reader/proof.json`, full unit/gate reports and failure
+history, the small CSP probe and one320 px capture. **Six historical generated capture files were
+archived then restored exactly**. Total C3 evidence is **2,955,896 bytes**, below3 MB. Source base is
+`f7df758`; the proof pins42 package/bridge paths plus ten preserved earlier foundations. Earlier
+successful gates retain exact source history where their exercised code was unchanged.
+Source/evidence/handoff are committed locally together; last verified remote remains `8844962`.
+**No intermediate push, main merge or deployment.** This is package verification, not full G9.
+
+**Seven planned30-minute blocks remain (210 minutes).** About195.2 minutes of the original
+five-hour cap remained at verification, before handoff/commit; the current plan still exceeds it.
+Next is case integration (packages4–6), requiring the published R11 serialized response fixtures;
+the last authorized contract read was `3098c0a`. R16 hardware proof/known cloud FPS failures remain.
+Package7 is the coherent core journey;8–10 are final frozen full44 regression and branch publication.
+Full new modality/device certification and all17 overflow items remain deferred.
+
+Paste-ready update for Claude:
+
+> G9 Package3/stream11 is complete locally fromf7df758: the public Bulletin, tonight/hook and Log
+> projection are connected with strict flags, anonymous reads, bounded recovery and preserved
+> earlier ownership/CSP fixes.3,468 unique unit tests and all seven package gates pass; production
+> covers35 UI/14 recovery/91 public-fault checks, local chaos212/96 and enforcing CSP. Cold title
+> stays20,881 JS /11,878 CSS. Verification took24.5 minutes. Seven planned blocks remain;
+> R11 case responses/integration and R16 hardware proof remain. Full44/publication stay final;
+> remote still8844962. Stopped here pending Nils's next instruction.
 
 ## Package2 complete: prediction kiosk and Lantern Duels (7 Nov 2026)
 

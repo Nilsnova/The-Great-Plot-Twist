@@ -174,8 +174,15 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
             if(journey.control)assert.equal(await page.locator(journey.control).count(),1,'The original semantic action is unambiguous');
             check(await original.isDisabled(),`${journey.group}: the refused control is disabled during the wait`);
             await original.dispatchEvent('click');
-            await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+            const rendered=page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+            await journey.advanceRenderFrames?.(env,fault);
+            await rendered;
             check(faults.requests.length===requestsDuringWait,`${journey.group}: a forced activation cannot bypass the cooldown`);
+            if(journey.afterCooldownProbe){
+              const checkedBefore=report.checks.length;
+              await journey.afterCooldownProbe(env,fault,{check});
+              assert.ok(report.checks.length>checkedBefore,'A public cooldown probe records real boundary checks');
+            }
             await retry.waitFor({state: 'visible'});
             await page.waitForFunction(selector => {
               const control = document.querySelector(selector)?.querySelector('[data-focus="retry-server-call"]');
@@ -225,6 +232,7 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
 
 // This marker promises expectation/call overrides, post-trigger attention, semantic focus and cooldown controls.
 checkOnlineChaos.groupFaultExpectations=true;
+checkOnlineChaos.publicReadFaultHooks=true;
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   await checkOnlineChaos({requireAllGroups: process.argv.includes('--all-groups')});
@@ -233,4 +241,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   await (await import('./check-online-market.js')).checkOnlineMarketChaos({checkChaos:checkOnlineChaos});
   await (await import('./check-online-predictions.js')).checkOnlinePredictionsChaos({checkChaos:checkOnlineChaos});
   await (await import('./check-online-arena.js')).checkOnlineArenaChaos({checkChaos:checkOnlineChaos});
+  await (await import('./check-online-bulletin.js')).checkOnlineBulletinChaos({checkChaos:checkOnlineChaos});
 }
