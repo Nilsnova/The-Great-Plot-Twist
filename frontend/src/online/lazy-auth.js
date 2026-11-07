@@ -21,6 +21,7 @@ export function createLazyAuth({loadAuth = () => import('./auth.js'), ...options
     if (method === 'getAccessToken') return null;
     if (method === 'readOwnLedger') return {ok: false, rows: []};
     if (method === 'readCrewMemberIds') return {ok: false, ids: []};
+    if (method === 'readCrewSeats') return {ok: false, status: 0, seats: []};
     return {ok: false, ...read()};
   }
   function load() {
@@ -93,6 +94,7 @@ export function createLazyAuth({loadAuth = () => import('./auth.js'), ...options
     signIn: () => invoke('signIn'), restore: () => invoke('restore'), renew: () => invoke('renew'),
     getAccessToken: () => invoke('getAccessToken'),
     readOwnLedger: () => invoke('readOwnLedger'), readCrewMemberIds: id => invoke('readCrewMemberIds', id),
+    readCrewSeats: id => invoke('readCrewSeats', id),
     signOut, dispose,
   };
 }

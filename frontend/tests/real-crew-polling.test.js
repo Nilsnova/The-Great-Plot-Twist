@@ -127,13 +127,16 @@ describe('authoritative nudges, inflight sharing and identity boundaries',()=>{
     await f.poll.nudge({force:true});expect(f.api.get).toHaveBeenCalledExactlyOnceWith('/api/crews/me');
     await vi.advanceTimersByTimeAsync(60000);expect(f.api.get).toHaveBeenCalledOnce();
   });
-  it('joins concurrent ordinary/forced nudges and an existing transport read without another GET',async()=>{
+  it('shares ordinary nudges but starts a fresh forced read ahead of an older held GET',async()=>{
     const f=setup();let finish;
-    f.replies.push(()=>new Promise(resolve=>{finish=resolve;}));
-    const external=f.ctx.transport.read('crew'),first=f.poll.nudge(),second=f.poll.nudge({force:true});
-    expect(first).toBe(second);await Promise.resolve();expect(f.api.get).toHaveBeenCalledOnce();
-    finish(okay(crew()));await Promise.all([external,first,second]);
-    await vi.advanceTimersByTimeAsync(4999);expect(f.api.get).toHaveBeenCalledOnce();
+    f.replies.push(()=>new Promise(resolve=>{finish=resolve;}),okay({...crew(),status:'active'}));
+    const external=f.ctx.transport.read('crew'),first=f.poll.nudge(),ordinary=f.poll.nudge();
+    expect(first).toBe(ordinary);await Promise.resolve();expect(f.api.get).toHaveBeenCalledOnce();
+    const forced=f.poll.nudge({force:true});expect(forced).not.toBe(first);await forced;
+    expect(f.api.get).toHaveBeenCalledTimes(2);expect(f.store.read().crew.status).toBe('active');
+    finish(okay(crew()));expect((await external).stale).toBe(true);expect((await first).stale).toBe(true);
+    await vi.advanceTimersByTimeAsync(6000);expect(f.api.get).toHaveBeenCalledTimes(2);
+    expect(f.store.read().crew.status).toBe('active');
   });
   it('rechecks hidden/signout admission before a queued microtask can start a private GET',async()=>{
     const f=setup(),pending=f.poll.nudge({force:true});

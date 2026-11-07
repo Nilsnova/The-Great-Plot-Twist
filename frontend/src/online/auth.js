@@ -252,6 +252,30 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
       rows => ({ok: true, ids: [...new Set(rows.slice(0, 4).map(row => row.player_id)
         .filter(id => typeof id === 'string' && /^[a-f0-9-]{36}$/i.test(id)))]}), {ids: []});
   }
+  function readCrewSeats(crewId) {
+    const uuid = value => typeof value === 'string'
+      && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
+    const failed = () => ({ok: false, status: 0, seats: []});
+    if (!uuid(crewId)) return Promise.resolve(failed());
+    return ownRead(client => client.from('crew_seats').select('player_id,seat_no')
+      .eq('crew_id', crewId).limit(4), rows => {
+      if (rows.length > 4) return failed();
+      const seats = [], players = new Set(), numbers = new Set();
+      for (const row of rows) {
+        if (!row || typeof row !== 'object' || Array.isArray(row)
+          || !Number.isInteger(row.seat_no) || row.seat_no < 1 || row.seat_no > 4
+          || numbers.has(row.seat_no)) return failed();
+        numbers.add(row.seat_no);
+        if (row.player_id === null) continue;
+        if (!uuid(row.player_id)) return failed();
+        const playerId = row.player_id.toLowerCase();
+        if (players.has(playerId)) return failed();
+        players.add(playerId);
+        seats.push({playerId, seatNo: row.seat_no});
+      }
+      return {ok: true, seats};
+    }, {seats: []});
+  }
   function subscribe(listener) {
     if (closed || typeof listener !== 'function') return () => {};
     subscribers.add(listener);
@@ -266,5 +290,5 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     storage.close({clear: false}); clearMemory();
   }
   return {read, subscribe, signIn, handleReturn, restore, renew, getAccessToken,
-    signOut, readOwnLedger, readCrewMemberIds, dispose};
+    signOut, readOwnLedger, readCrewMemberIds, readCrewSeats, dispose};
 }

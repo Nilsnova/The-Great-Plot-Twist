@@ -32,10 +32,11 @@ export function composeRealView(state={}){
   const view=emptyView();
   const account=mapAccount(state);
   const crew=mapCrew(state);
+  const presenceView=state.presence??view.presence;
   const coins=account.state==='signed_in'&&Number.isFinite(state.me?.coins)?state.me.coins:null;
   return {...view,schema:1,mode:'online',revision:state.revision??0,now:state.now??0,account,crew,
     captain:{name:account.captainName??'Captain pending',coins,save:account.save},arrival:mapArrival(state),
-    permissions:crewPermissions(state,account),continuation:continuationView(state.continuation),
+    permissions:crewPermissions(state,account),presence:presenceView,continuation:continuationView(state.continuation),
     rewards:walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),
     notice:state.notice?{reason:state.notice.reason??null,message:state.notice.message??''}:null};
 }

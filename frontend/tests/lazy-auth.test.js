@@ -17,6 +17,7 @@ function setup(overrides = {}) {
     signOut: vi.fn(async () => ({ok: true})), dispose: vi.fn(),
     readOwnLedger: vi.fn(async () => ({ok: true, rows: []})),
     readCrewMemberIds: vi.fn(async () => ({ok: true, ids: []})),
+    readCrewSeats: vi.fn(async () => ({ok: true, seats: []})),
   };
   const createAuth = vi.fn(options => { callbacks.push(options.onState); return controller; });
   const loadAuth = vi.fn(async () => ({createAuth}));
@@ -97,6 +98,45 @@ describe('lazy auth lifetime', () => {
     await auth.signOut();
     wait.resolve({ok: true, rows: [{reason: 'kit_grant', amount: 1000}]});
     expect(await pending).toEqual({ok: false, rows: []});
+  });
+
+  it('forwards a private crew-seat read through the lazy controller', async () => {
+    const {auth, controller, loadAuth} = setup();
+    const crewId = crypto.randomUUID(), result = {ok: true, seats: [{playerId: crypto.randomUUID(), seatNo: 3}]};
+    controller.readCrewSeats.mockResolvedValue(result);
+    try {
+      expect(await auth.readCrewSeats(crewId)).toEqual(result);
+      expect(controller.readCrewSeats).toHaveBeenCalledExactlyOnceWith(crewId);
+      expect(loadAuth).toHaveBeenCalledTimes(1);
+    } finally { auth.dispose(); }
+  });
+
+  it.each(['signOut', 'dispose'])('discards private crew seats after %s', async method => {
+    const wait = deferred();
+    const {auth, controller} = setup();
+    controller.readCrewSeats.mockImplementation(() => wait.promise);
+    try {
+      const pending = auth.readCrewSeats(crypto.randomUUID());
+      await vi.waitFor(() => expect(controller.readCrewSeats).toHaveBeenCalledTimes(1));
+      await auth[method]();
+      wait.resolve({ok: true, seats: [{playerId: crypto.randomUUID(), seatNo: 2}]});
+      expect(await pending).toEqual({ok: false, status: 0, seats: []});
+    } finally { auth.dispose(); }
+  });
+
+  it('returns an empty failed seat shape if the auth chunk fails', async () => {
+    const {auth} = setup({loadAuth: async () => { throw new Error(`runtime-${crypto.randomUUID()}`); }});
+    try {
+      expect(await auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: false, status: 0, seats: []});
+    } finally { auth.dispose(); }
+  });
+
+  it('does not load the crew-seat reader on an unconfigured build', async () => {
+    const {auth, loadAuth} = setup({supabaseUrl: '', publishableKey: ''});
+    try {
+      expect(await auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: false, status: 0, seats: []});
+      expect(loadAuth).not.toHaveBeenCalled();
+    } finally { auth.dispose(); }
   });
 
   it('discards a token that completes after sign-out', async () => {

@@ -88,5 +88,10 @@ export function createAdapterTransport(ctx) {
     if (mapped.recovery !== 'unknown_outcome') pending.delete(key);
     return {reply, mapped: mapped ?? okay()};
   }
-  return {read, change, clearPending() { pending.clear(); reads.clear(); readTokens.clear(); }};
+  return {read, change, clearPending() {
+    // Account cleanup cannot supersede an anonymous config request still owned by the open adapter.
+    const key='config:public',task=store.isClosed()?null:reads.get(key),token=readTokens.get(key);
+    pending.clear();reads.clear();readTokens.clear();
+    if(task&&token!==undefined){reads.set(key,task);readTokens.set(key,token);}
+  }};
 }

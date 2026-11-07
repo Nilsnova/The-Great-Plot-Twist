@@ -14,6 +14,7 @@ import {createAccountLifecycle} from './account-lifecycle.js';
 import {refreshAccountRewards} from './rewards.js';
 import {createCrewHandlers} from './crew.js';
 import {createCrewLifecycle} from './crew-lifecycle.js';
+import {createLiveLifecycle} from './live-lifecycle.js';
 import {validateIntent} from './validate.js';
 import {introJournal} from '../../story/intro-journal.js';
 
@@ -55,6 +56,7 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.saves.pauseIdentity();
   const crewLife = createCrewLifecycle(ctx, deps);
   ctx.crewLife = crewLife;
+  const live = createLiveLifecycle(ctx, deps);
   const accountLifecycle = createAccountLifecycle(ctx);
   ctx.writeDeviceReplay = data => {
     try {
@@ -62,6 +64,7 @@ export function createRealCaseAdapter(deps = {}) {
     } catch { /* The validated cloud copy still remains available when device storage is blocked. */ }
   };
   ctx.onDeleted = () => {
+    live.reset();
     crewLife.refresh();
     ctx.saves.clearDevice();
     try { (deps.clearLocalSave ?? (() => introJournal().write('')))(); } catch { /* Best-effort device cleanup. */ }
@@ -85,6 +88,7 @@ export function createRealCaseAdapter(deps = {}) {
         if (saved.mapped.accepted) accountLifecycle.reconcile();
         await refreshAccountRewards(ctx);
         crewLife.refresh();
+        live.refresh();
       }
     })();
     privateTask = task;
@@ -106,6 +110,7 @@ export function createRealCaseAdapter(deps = {}) {
     ctx.readMonitor.reset();
     signingOut = true;
     store.invalidate();
+    live.reset();
     ctx.saves.pauseIdentity();
     const authTask = ctx.auth.signOut?.();
     session.clearToken();
@@ -120,6 +125,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed() || signingOut) return;
     ctx.readMonitor.reset();
     store.invalidate();
+    live.reset();
     ctx.saves.pauseIdentity();
     if (signedIn) {
       ctx.transport.clearPending();
@@ -143,12 +149,14 @@ export function createRealCaseAdapter(deps = {}) {
   });
   let restoreTask = null;
   ctx.onConfigReady = async () => {
+    live.refresh();
     const enabled = import.meta.env.DEV || ctx.state.config?.flags?.sign_in === true;
     store.commit({signInAllowed: enabled});
     if (enabled && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
     if (restoreTask) await restoreTask;
     if (!ctx.state.me) await hydrate();
     crewLife.refresh();
+    live.refresh();
   };
   const polling = createAdapterPolling(ctx);
   ctx.refreshConfig = polling.refresh;
@@ -156,7 +164,8 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed()) return;
     await polling.start();
   }).catch(() => { if (!store.isClosed()) store.commit({notice: ctx.refuse('not_connected')}); });
-  const handlers = {...createProfileHandlers(ctx), ...createCrewHandlers(ctx), signOut: ctx.signOut};
+  const handlers = {...createProfileHandlers(ctx), ...createCrewHandlers(ctx), signOut: ctx.signOut,
+    reportPosition: live.presence.reportPosition, setEmote: live.presence.setEmote};
   handlers.signIn = async () => {
     if (session.isSignedIn()) {
       const scope=store.scope();
@@ -179,35 +188,42 @@ export function createRealCaseAdapter(deps = {}) {
     if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
     return ctx.accept('Sign-in is ready.');
   };
+  function cosmeticReceipt(result) {
+    const {recovery, ...publicResult} = result;
+    return {...publicResult, view: store.read()};
+  }
   async function dispatch(name, args) {
-    if (store.isClosed()) return store.answer(ctx.refuse('disposed'));
+    const answer = name === 'reportPosition' || name === 'setEmote' ? cosmeticReceipt : store.answer;
+    if (store.isClosed()) return answer(ctx.refuse('disposed'));
     const invalid = validateIntent(name, args);
-    if (invalid) return store.answer(invalid);
+    if (invalid) return answer(invalid);
     if (name === 'signOut' || (name === 'continueGame' && !session.isSignedIn())) {
-      try { return store.answer(await handlers[name](...args)); }
-      catch { return store.answer(ctx.refuse('invalid_request')); }
+      try { return answer(await handlers[name](...args)); }
+      catch { return answer(ctx.refuse('invalid_request')); }
     }
     if (name === 'completeIntro' && !session.isSignedIn()) {
       const result = await ctx.saves.stageReplay({kind:'intro',actions:[...args[0].actions],place:'lighthouse_isle'});
       if (result.accepted && !session.isSignedIn()) store.commit({saveState:'saved'});
-      return store.answer(ctx.refuse('sign_in_required'));
+      return answer(ctx.refuse('sign_in_required'));
     }
     await boot;
-    if (store.isClosed()) return store.answer(ctx.refuse('disposed'));
+    if (store.isClosed()) return answer(ctx.refuse('disposed'));
     if (!['continueGame', 'signIn', 'signOut'].includes(name) && !session.isSignedIn()) {
-      return store.answer(ctx.refuse('sign_in_required'));
+      return answer(ctx.refuse('sign_in_required'));
     }
     try {
       const result = handlers[name] ? await handlers[name](...args) : ctx.refuse('feature_off');
-      return store.answer(result);
-    } catch { return store.answer(ctx.refuse('invalid_request')); }
+      if (result.accepted && ['completeIntro', 'rerollName'].includes(name)) live.refresh();
+      return answer(result);
+    } catch { return answer(ctx.refuse('invalid_request')); }
   }
   return bindCaseMethods({
-    read: store.read, subscribe: store.subscribe, tick() {},
+    read: store.read, subscribe: store.subscribe, tick() { live.tick(); },
     dispose() {
       if (store.isClosed()) return;
       authIntentGeneration += 1;
       store.dispose();
+      live.dispose();
       crewLife.dispose();
       polling.dispose();
       ctx.readMonitor.dispose();

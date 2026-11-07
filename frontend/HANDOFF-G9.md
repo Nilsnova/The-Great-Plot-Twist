@@ -4,6 +4,43 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## Stream 7 passed; continuing G9 (7 Nov 2026)
+
+A4 now uses strict flag/name/account gates, opaque peer views, movement/emotes, crew-seat RLS reads
+and scoped crew pushes. Hidden-tab cleanup rejects late imports/events/reads; a new visible sample
+observes the original 500 ms allowance. Public config reads survive private cleanup. Detached cached
+pages clear private display data, stable arrival controls retain focus, and cosmetic receipts keep
+authoritative notices. Forced crew push reads supersede older polls without a second retry owner.
+
+Verified: **2,545 unit tests / 182 files**, build/spoiler guard, loading, CSP and inventory, production
+online, recorded HTTP faults and accessibility. Online passes 18 anonymous, 21 auth, seven sign-in
+flag/expiry, 45 account, **44 crew** and **37 presence** checks, at 1280/375 px. Presence includes five
+strict flag/name/account cases, real SDK WebSocket framing, movement/stopping, waves/cooldown,
+eight peers plus two hidden, crew hints, reconnect, sign-out and deletion. All endpoints are
+intercepted and credentials are generated for each run. No real account, service or database is used.
+Actual browser sends are matched by sequence and enforce the unchanged **500 ms** allowance;
+endpoint arrival and monotonic timings remain separate diagnostics. The reviewed send-boundary
+follow-up passed all 37 presence checks after the full gate, without changing application code.
+HTTP fault coverage remains partial: account/create, join and muster are covered; later panel/case
+groups remain pending rather than receiving artificial passing coverage. Accessibility passes 43
+contexts / 129 viewport samples and the short 375 × 400 crew audit. Cold title is **21,073 JS /
+11,878 CSS bytes**, within unchanged caps. Evidence: `captures/20261107_G9-C2/stream7-proof.json`.
+
+Native hidden-tab pause remains **unverified**: installed headless Chrome keeps the background tab
+visible. Visibility was observed, never mocked. A display machine can run the same intercepted
+check with `G9_BROWSER_HEADLESS=0`. Real OAuth/services, other engines, assistive technology and
+target-hardware frames remain outside this recorded proof.
+
+This is **streams done so far, not a checkpoint**. Source base is `3788db5`; the next full driver
+must run on this stream's clean committed source before push. Origin is still `367189d` at this
+note. Main `64fc731` is adopted. R11 and R16 remain open; no budget or quality gate was relaxed.
+Next: streams 8–11 and available final-readiness work, then case streams 12–15 when R11 is published.
+No new decision is needed from Nils. No main merge, deployment, new package or browser download.
+
+Contract mirror for Claude: A4's approved emotes are exactly **wave, cheer, point, lantern, shrug**.
+Please mirror this list in `docs/INTERFACES.md` section 7 and `specs/A4-live-presence.md`; those
+protected files were read only. Schema 1, 24 view keys, 25 intents, exact events and replay persist.
+
 ## Stream 6 passed; continuing stream 7 (7 Nov 2026)
 
 Crew create/join/muster now use server snapshots, normalized two-tap joins and owned-seat

@@ -464,6 +464,83 @@ describe('restricted own-player SDK reads', () => {
     expect(await test.auth.readCrewMemberIds('invalid')).toEqual({ok: false, ids: []});
   });
 
+  it('reads private player-to-seat links without names or other account fields and skips NPC seats', async () => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    const crewId = crypto.randomUUID(), first = crypto.randomUUID(), second = crypto.randomUUID();
+    const privateText = placeholder();
+    const chain = query(test, [{player_id: first.toUpperCase(), seat_no: 4, name: privateText},
+      {player_id: null, seat_no: 2}, {player_id: second, seat_no: 1, token: privateText}]);
+    const result = await test.auth.readCrewSeats(crewId);
+    expect(result).toEqual({ok: true, seats: [{playerId: first, seatNo: 4}, {playerId: second, seatNo: 1}]});
+    expect(test.clients[0].client.from).toHaveBeenCalledExactlyOnceWith('crew_seats');
+    expect(chain.select).toHaveBeenCalledExactlyOnceWith('player_id,seat_no');
+    expect(chain.eq).toHaveBeenCalledExactlyOnceWith('crew_id', crewId);
+    expect(chain.limit).toHaveBeenCalledExactlyOnceWith(4);
+    expect(JSON.stringify(result)).not.toContain(privateText);
+    expect(JSON.stringify(test.auth.read())).not.toContain(first);
+  });
+
+  it('accepts an empty or all-NPC crew seat response without inventing players', async () => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    query(test, []);
+    expect(await test.auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: true, seats: []});
+    query(test, [{player_id: null, seat_no: 1}, {player_id: null, seat_no: 4}]);
+    expect(await test.auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: true, seats: []});
+  });
+
+  it.each(['invalid', '0'.repeat(36), null, undefined])('rejects malformed crew UUID %s before querying', async crewId => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    expect(await test.auth.readCrewSeats(crewId)).toEqual({ok: false, status: 0, seats: []});
+    expect(test.clients[0].client.from).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['malformed player UUID', () => [{player_id: '0'.repeat(36), seat_no: 1}]],
+    ['missing player id', () => [{seat_no: 1}]],
+    ['null row', () => [null]],
+    ['array row', () => [[]]],
+    ['zero seat', () => [{player_id: crypto.randomUUID(), seat_no: 0}]],
+    ['out-of-range seat', () => [{player_id: crypto.randomUUID(), seat_no: 5}]],
+    ['fractional seat', () => [{player_id: crypto.randomUUID(), seat_no: 1.5}]],
+    ['text seat', () => [{player_id: crypto.randomUUID(), seat_no: '1'}]],
+    ['duplicate seat', () => [{player_id: crypto.randomUUID(), seat_no: 1},
+      {player_id: crypto.randomUUID(), seat_no: 1}]],
+    ['duplicate NPC seat', () => [{player_id: null, seat_no: 1}, {player_id: crypto.randomUUID(), seat_no: 1}]],
+    ['duplicate player', () => {
+      const playerId = crypto.randomUUID();
+      return [{player_id: playerId, seat_no: 1}, {player_id: playerId.toUpperCase(), seat_no: 2}];
+    }],
+    ['more than four rows', () => Array.from({length: 5}, (_, index) => ({player_id: null, seat_no: index + 1}))],
+  ])('fails closed on %s without returning a partial seat map', async (_label, rows) => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    query(test, rows());
+    expect(await test.auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: false, status: 0, seats: []});
+  });
+
+  it('does not create a client for a signed-out seat read', async () => {
+    const test = setup();
+    expect(await test.auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: false, status: 0, seats: []});
+    expect(test.createClient).not.toHaveBeenCalled();
+  });
+
+  it.each([403, 503])('returns only safe seat-read status %i without query data or SDK errors', async status => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    const privateText = placeholder(), chain = query(test, []);
+    chain.limit.mockResolvedValue({status, data: [{player_id: crypto.randomUUID(), seat_no: 1, query: privateText}],
+      error: {message: privateText, details: privateText}});
+    expect(await test.auth.readCrewSeats(crypto.randomUUID())).toEqual({ok: false, status, seats: []});
+  });
+
+  it.each(['signOut', 'dispose'])('discards a seat read that completes after %s', async method => {
+    const test = setup({held: sdkSession()}); await test.auth.restore();
+    const chain = query(test, []), pending = deferred(); chain.limit.mockReturnValue(pending.promise);
+    const read = test.auth.readCrewSeats(crypto.randomUUID());
+    await vi.waitFor(() => expect(chain.limit).toHaveBeenCalledTimes(1));
+    await test.auth[method]();
+    pending.resolve({data: [{player_id: crypto.randomUUID(), seat_no: 1}], error: null});
+    expect(await read).toEqual({ok: false, status: 0, seats: []});
+  });
+
   it.each([403, 503])('returns only safe status %i when the ledger request fails', async status => {
     const test = setup({held: sdkSession()}); await test.auth.restore();
     const privateText = placeholder(), chain = query(test, []);

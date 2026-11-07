@@ -50,9 +50,10 @@ export async function checkOnlineCrew({widths=[1280,375],extended=true,musterOnl
   finally{await writeFile(folder+'/online-crew.json',JSON.stringify(report,null,2)+'\n');}
 }
 
-export async function checkOnlineCrewChaos(){
-  const {checkOnlineChaos}=await import('./check-online-chaos.js');
-  for(const action of ['join','muster'])await checkOnlineChaos({openFixture:openCrewPresenceFixture,
+export async function checkOnlineCrewChaos({checkChaos}={}){
+  // A CLI parent must pass its already-running function to avoid importing its unfinished module.
+  const runChaos=checkChaos??(await import('./check-online-chaos.js')).checkOnlineChaos;
+  for(const action of ['join','muster'])await runChaos({openFixture:openCrewPresenceFixture,
     journeys:[createRecordedCrewChaosJourney(action)],folder:`${folder}-chaos-${action}`});
 }
 

@@ -39,7 +39,7 @@ export function createCrewPolling(ctx, {isVisible, setTimer = globalThis.setTime
     const task = {scope, generation, promise: null};
     task.promise = Promise.resolve().then(() => {
       if (!current(task) || !privateReady() || (!force && !allowed())) return;
-      return ctx.transport.read('crew', {automatic: true});
+      return ctx.transport.read('crew', {automatic: true, ...(force ? {fresh: true} : {})});
     }).then(result => {
       if (result && !result.stale && current(task)) record(result);
       return result;
@@ -82,8 +82,9 @@ export function createCrewPolling(ctx, {isVisible, setTimer = globalThis.setTime
     if (!live()) return Promise.resolve();
     syncScope();
     if (!privateReady()) { clear(); return Promise.resolve(); }
-    if (pending) return pending.promise;
+    if (!forced && pending) return pending.promise;
     if (!forced && (!allowed() || blocked)) { clear(); return Promise.resolve(); }
+    if (forced) { generation += 1; clear(); pending = null; }
     return startRead(forced);
   }
   const changed = () => refresh();

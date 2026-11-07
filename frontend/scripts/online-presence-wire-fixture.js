@@ -1,6 +1,7 @@
 // A fake endpoint for the installed Phoenix v2 client. It never opens a server socket.
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {observePresenceSends,readPresenceSendTiming} from './online-presence-send-observer.js';
 
 const socketPattern = 'wss://placeholder.supabase.co/**';
 const classify = topic => topic === 'phoenix' ? 'heartbeat' : topic === 'realtime:live:world' ? 'world'
@@ -119,12 +120,14 @@ export async function installPresenceWire(page, {playerId, peerIds = Array.from(
       } catch (error) { failures.push(error.name); }
     });
   };
+  await observePresenceSends(page);
   await page.routeWebSocket(socketPattern, handler);
   function broadcast(event, payload) {
     for (const channel of channels) if (classify(channel.topic) === 'place') send(channel, 'broadcast', {type: 'broadcast', event, payload});
   }
   return {
     records, failures, peerIds,
+    readSendTiming: () => readPresenceSendTiming(page),
     get lastPosition() { return lastPosition && {...lastPosition}; },
     get connectionCount() { return sockets.size; },
     get activeRoomKinds() { return [...channels].map(channel => classify(channel.topic)); },

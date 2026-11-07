@@ -21,7 +21,7 @@ export function createPresenceHud({send,onCrew=()=>{}}={}){
   const emoteRow=node('div','presence-emotes');emoteRow.hidden=true;
   let lastEmote=null,busy=false,disposed=false;
   const call=createServerCallState({label:'emote',onRetry:()=>lastEmote&&invokeEmote(lastEmote),onSignIn:()=>send?.('signIn')});
-  async function invokeEmote(id){if(busy||disposed)return;lastEmote=id;busy=true;call.loading();try{const result=await send?.('setEmote',id);if(!disposed){if(result?.accepted)call.succeed();else call.fail(result??intentFailure());}}catch(error){if(!disposed)call.fail(intentFailure(error));}finally{busy=false;}}
+  async function invokeEmote(id){if(busy||disposed||model.status!=='live'||!model.canEmote)return;lastEmote=id;busy=true;call.loading();try{const result=await send?.('setEmote',id);if(!disposed){if(result?.accepted)call.succeed();else call.fail(result??intentFailure());}}catch(error){if(!disposed)call.fail(intentFailure(error));}finally{busy=false;}}
   const emoteButtons=emotes.map(id=>button(`Emote ${id}`,()=>{void invokeEmote(id);setEmotesOpen(false);},{focus:`presence-${id}`}));
   emoteRow.append(...emoteButtons);element.append(heading,status,count,more,crewStrip,emoteRow,call.element);
   let model={status:'off',others:[],crew:[],hiddenCount:0,canEmote:false,cooldown:0};

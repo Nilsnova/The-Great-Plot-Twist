@@ -51,6 +51,7 @@ export function createServerCallState({messageElement,label='request',onRetry,on
   function change(method,...args){if(disposed)return;stop();model[method](...args);paint();}
   paint();
   return {element,read:model.read,get phase(){return model.read().phase;},
+    refresh(){if(!disposed)paint();},
     loading:options=>change('loading',options),succeed:options=>change('succeed',options),
     showMessage:text=>change('notice',text),fail:(result,options)=>change('fail',result,options),
     setOnline:online=>change('setOnline',online),clear:()=>change('clear'),

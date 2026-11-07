@@ -90,6 +90,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
       const writesBeforeKeep = env.accountStats().saveWrites;
       await page.getByRole('button', {name: 'Keep this device', exact: true}).click();
       await page.locator('.account-conflict').waitFor({state: 'hidden'});
+      await page.locator('.account-modal[open] .server-call[data-state="ready"]').waitFor();
       check(env.accountStats().saveWrites === writesBeforeKeep + 1, 'Keep this device rereads and writes the current cloud version');
 
       env.setCloudReplay('world', ACCOUNT_INTRO_ACTIONS.slice(0, 3));
@@ -99,6 +100,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
       const writesBeforeCloud = env.accountStats().saveWrites;
       await page.getByRole('button', {name: 'Use the cloud save', exact: true}).click();
       await page.locator('.account-conflict').waitFor({state: 'hidden'});
+      await page.locator('.account-modal[open] .server-call[data-state="ready"]').waitFor();
       check(env.accountStats().saveWrites === writesBeforeCloud, 'Use the cloud save makes no replacement write');
       await page.locator('.account-screen').getByRole('button', {name: 'Continue from cloud', exact: true}).click();
       await page.locator('.account-modal').waitFor({state: 'hidden'});

@@ -24,7 +24,7 @@ export function createUnavailableCaseAdapter({message='The case is offline.'}={}
     return {accepted:false,reason:'not_connected',message:view.notice.message,view:read()};
   }
   return bindCaseMethods({read,tick(){},
-    subscribe(listener){if(disposed)return()=>{};listeners.add(listener);return()=>listeners.delete(listener);},
+    subscribe(listener){if(!disposed)listeners.add(listener);return()=>listeners.delete(listener);},
     dispose(){disposed=true;listeners.clear();},
-  },(name)=>dispatch(name));
+  },dispatch);
 }

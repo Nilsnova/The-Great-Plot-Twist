@@ -4,7 +4,8 @@ import {stubOfflineApi} from './api-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import {createServer,preview as createPreview} from 'vite';
 import { access, mkdir } from 'node:fs/promises';
-export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers,apiTarget } = {}) {
+export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers,apiTarget,
+  headless = process.env.G9_BROWSER_HEADLESS !== '0' } = {}) {
   let proxy={};
   if(apiTarget!==undefined){
     let target;try{target=new URL(apiTarget);}catch{throw new TypeError('QA API target must be a plain loopback HTTP origin.');}
@@ -28,8 +29,9 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
       if(!preview){await server.listen();await server.warmupRequest('/src/game.js');}
       url=server.resolvedUrls.local[0].replace(/\/$/,'');
     }
-    browser=await chromium.launch({executablePath,headless:true});
-    const page=await browser.newPage({viewport:{width:1440,height:900}});
+    browser=await chromium.launch({executablePath,headless});
+    const context=await browser.newContext({viewport:{width:1440,height:900}});
+    const page=await context.newPage();
     await stubOfflineApi(page);
     await stubWeather(page);
     const errors=[],external=[],pageErrors=[],consoleErrors=[];

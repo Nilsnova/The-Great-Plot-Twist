@@ -3,6 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
 import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import * as crewLifecycle from '../src/online/case-adapter/crew-lifecycle.js';
 
 const okay=data=>({ok:true,status:200,data});
 const failed=status=>({ok:false,status,code:status===503?'database_unavailable':'network_error'});
@@ -71,6 +72,7 @@ function setup({visible=false,hasCrew=true}={}){
   const fixture={adapter,session,api,auth,me,requests,crewReplies,document,window,bus,authListeners,
     crewReads:()=>requests.filter(request=>request.method==='GET'&&request.path==='/api/crews/me'),
     snapshot:()=>copy(serverCrew),
+    setServerCrew(value){serverCrew=copy(value);},
     async ready(){
       for(let step=0;step<80;step++){
         const account=adapter.read().account;
@@ -87,6 +89,14 @@ function setup({visible=false,hasCrew=true}={}){
     holdNextCrew(){const held=deferred();crewReplies.push(()=>held.promise);return held;},
   };
   fixtures.push(fixture);return fixture;
+}
+// Observe the real private lifecycle returned during synchronous factory construction, without a public test hook.
+function setupWithCrewLife(options){
+  const watched=vi.spyOn(crewLifecycle,'createCrewLifecycle');
+  try{
+    const fixture=setup(options),life=watched.mock.results.at(-1)?.value;
+    expect(typeof life?.nudge).toBe('function');return {...fixture,crewLife:life};
+  }finally{watched.mockRestore();}
 }
 beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(0);});
 afterEach(()=>{for(const fixture of fixtures.splice(0))fixture.adapter.dispose();expect(vi.getTimerCount()).toBe(0);vi.useRealTimers();});
@@ -271,6 +281,59 @@ describe('real factory crew lifecycle',()=>{
       await vi.advanceTimersByTimeAsync(1);expect(f.crewReads()).toHaveLength(5);
       expect(f.adapter.read().account.connection.state).toBe('idle');
       expect(f.requests.filter(request=>request.method==='POST'&&request.path==='/api/crews/me/start')).toHaveLength(2);
+    }finally{held.resolve(okay({crew:old}));await settle();}
+  });
+
+
+  it.each([
+    ['none','success'],['none','503'],['active','success'],['active','503'],
+  ])('reads a fresh pushed %s crew before an old forming poll settles with %s',async(status,oldResult)=>{
+    const f=setupWithCrewLife({visible:true});await f.ready();const old=f.snapshot(),held=f.holdNextCrew();
+    await vi.advanceTimersByTimeAsync(5000);expect(f.crewReads()).toHaveLength(2);
+    const fresh=status==='none'?null:{...old,status:'active',startedAt:new Date(Date.now()).toISOString(),
+      seats:old.seats.map(seat=>seat.holder==='open'?{...seat,holder:'partner',name:'Recorded partner',kit:'informant'}:seat)};
+    f.setServerCrew(fresh);let done=false;
+    const pushed=f.crewLife.nudge({force:true}).then(result=>{done=true;return result;});
+    try{
+      await settle();expect(f.crewReads()).toHaveLength(3);expect(done).toBe(true);
+      expect((await pushed).mapped.accepted).toBe(true);
+      const current=f.adapter.read();expect(current.crew.status).toBe(status);
+      held.resolve(oldResult==='success'?okay({crew:old}):failed(503));await settle();
+      expect(f.adapter.read()).toEqual(current);
+      await vi.advanceTimersByTimeAsync(60000);expect(f.crewReads()).toHaveLength(3);
+      expect(f.requests.filter(request=>request.method==='POST'&&request.path.startsWith('/api/crews'))).toHaveLength(0);
+    }finally{held.resolve(okay({crew:old}));await settle();}
+  });
+
+  it('keeps forced crew reads private and never queues a hidden push for a later show',async()=>{
+    const f=setupWithCrewLife({visible:false});await f.ready();expect(f.crewReads()).toHaveLength(1);
+    f.document.hidden=true;f.document.emit('visibilitychange');
+    await f.crewLife.nudge({force:true});expect(f.crewReads()).toHaveLength(1);
+    f.document.hidden=false;f.document.emit('visibilitychange');f.window.emit('focus');
+    await vi.advanceTimersByTimeAsync(60000);expect(f.crewReads()).toHaveLength(1);
+    f.session.clearToken();await f.crewLife.nudge({force:true});
+    f.document.emit('visibilitychange');f.window.emit('focus');
+    await vi.advanceTimersByTimeAsync(60000);expect(f.crewReads()).toHaveLength(1);
+  });
+
+  it('retains 5/15/30 recovery after a forced read fails and an obsolete poll fails later',async()=>{
+    const f=setupWithCrewLife({visible:true});await f.ready();const old=f.snapshot(),held=f.holdNextCrew();
+    await vi.advanceTimersByTimeAsync(5000);expect(f.crewReads()).toHaveLength(2);
+    f.crewReplies.push(failed(503),failed(503),failed(503),okay({crew:{...old,status:'active'}}));
+    try{
+      let done=false;const pushed=f.crewLife.nudge({force:true}).then(result=>{done=true;return result;});
+      await settle();expect(done).toBe(true);expect(f.crewReads()).toHaveLength(3);
+      expect((await pushed).mapped).toMatchObject({accepted:false,reason:'not_connected'});
+      await vi.advanceTimersByTimeAsync(4999);expect(f.crewReads()).toHaveLength(3);
+      await vi.advanceTimersByTimeAsync(1);expect(f.crewReads()).toHaveLength(4);
+      await vi.advanceTimersByTimeAsync(2000);const current=f.adapter.read();held.resolve(failed(503));await settle();
+      expect(f.adapter.read()).toEqual(current);
+      await vi.advanceTimersByTimeAsync(12999);expect(f.crewReads()).toHaveLength(4);
+      await vi.advanceTimersByTimeAsync(1);expect(f.crewReads()).toHaveLength(5);
+      await vi.advanceTimersByTimeAsync(29999);expect(f.crewReads()).toHaveLength(5);
+      await vi.advanceTimersByTimeAsync(1);expect(f.crewReads()).toHaveLength(6);
+      expect(f.adapter.read().crew.status).toBe('active');
+      expect(f.requests.filter(request=>request.method==='POST'&&request.path.startsWith('/api/crews'))).toHaveLength(0);
     }finally{held.resolve(okay({crew:old}));await settle();}
   });
 

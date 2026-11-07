@@ -1086,17 +1086,17 @@ describe('receiving', () => {
     room.broadcast('emote', emote(friend, 'dance')); // not on the list
     room.broadcast('emote', emote(friend, 'hello there')); // never text
     room.broadcast('emote', emote(friend, 'cheer')); // too soon: 2 seconds
-    room.broadcast('emote', emote(other, 'help')); // another captain has their own count
+    room.broadcast('emote', emote(other, 'lantern')); // another captain has their own count
     room.broadcast('emote', emote(playerId(99), 'wave')); // not in the room
     await settle(1999);
     room.broadcast('emote', emote(friend, 'cheer'));
     await settle(1);
-    room.broadcast('emote', emote(friend, 'nod'));
+    room.broadcast('emote', emote(friend, 'point'));
 
     expect(ofType(ctx, 'live_peer_emoted')).toEqual([
       { type: 'live_peer_emoted', id: friend, emote: 'wave' },
-      { type: 'live_peer_emoted', id: other, emote: 'help' },
-      { type: 'live_peer_emoted', id: friend, emote: 'nod' },
+      { type: 'live_peer_emoted', id: other, emote: 'lantern' },
+      { type: 'live_peer_emoted', id: friend, emote: 'point' },
     ]);
   });
 

@@ -5,7 +5,7 @@ import {bindCaseMethods} from './contract.js';
 export function createLazyOnlineAdapter({load = () => import('../online/case-adapter/index.js'), deps} = {}) {
   const empty = createUnavailableCaseAdapter();
   const view = {...empty.read(), mode: 'online', notice: null};
-  view.account = {...view.account, canSignIn: false};
+  view.account.canSignIn = false;
   empty.dispose();
   const listeners = new Set();
   let adapter, pending, stop, closed = false, frame;

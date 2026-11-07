@@ -282,7 +282,7 @@ describe('what to accept', () => {
   });
 
   it('accepts only preset emotes', () => {
-    expect(EMOTES).toEqual(['wave', 'cheer', 'nod', 'shrug', 'follow_me', 'help']);
+    expect(EMOTES).toEqual(['wave', 'cheer', 'point', 'lantern', 'shrug']);
     expect(EMOTES.map(emote => readEmote({ v: 1, id: ME, emote, seq: 7 }))).toEqual(EMOTES.map(emote => ({ id: ME, emote, seq: 7 })));
     expect(readEmote({ v: 1, id: ME, emote: 'wave', seq: 7, text: 'hello there', name: 'x' })).toEqual({ id: ME, emote: 'wave', seq: 7 });
   });

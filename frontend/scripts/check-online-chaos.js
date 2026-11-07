@@ -199,5 +199,5 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   await checkOnlineChaos({requireAllGroups: process.argv.includes('--all-groups')});
-  await (await import('./check-online-crew.js')).checkOnlineCrewChaos();
+  await (await import('./check-online-crew.js')).checkOnlineCrewChaos({checkChaos:checkOnlineChaos});
 }
