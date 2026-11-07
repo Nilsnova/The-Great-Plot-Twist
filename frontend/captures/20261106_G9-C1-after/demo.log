@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T01:59:54.553Z",
+  "checked": "2026-11-07T07:11:14.019Z",
   "checks": [
     "Bundled original intro slice opens while the API returns 503",
     "Automatic highlights finish within the 3.5-minute class limit",
@@ -24,7 +24,7 @@
       "authorized": false
     }
   ],
-  "durationMs": 170051,
+  "durationMs": 173222,
   "steps": [
     "A page from the intro",
     "Arrival on Lighthouse Isle",
@@ -37,7 +37,7 @@
     "The Relighting"
   ],
   "after": {
-    "fps": 13,
+    "fps": 7,
     "calls": 105,
     "triangles": 208,
     "geometries": 106,
@@ -47,17 +47,17 @@
     "programs": 4
   },
   "skipTimesMs": [
-    143,
-    100,
-    168,
-    121,
-    149,
-    150,
-    158,
-    235,
-    1164
+    535,
+    214,
+    871,
+    312,
+    1061,
+    377,
+    219,
+    48,
+    1905
   ],
-  "stopDuringPassageMs": 310,
+  "stopDuringPassageMs": 795,
   "expectedOfflineErrors": [
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"

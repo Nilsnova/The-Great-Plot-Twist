@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T02:05:03.379Z",
+  "checked": "2026-11-07T07:18:42.968Z",
   "checks": [
     "Recording mode fixes the game frame at 1920 by 1080",
     "Presenter controls are visible during the tour",
@@ -30,12 +30,12 @@
   },
   "usedLowQualityFallback": true,
   "performance": {
-    "Frames per second": "7",
-    "95th percentile frame": "249.2 ms",
+    "Frames per second": "11",
+    "95th percentile frame": "303.4 ms",
     "Draw calls": "97",
     "Triangles": "192",
     "Geometries": "96",
     "Textures": "27",
-    "JavaScript heap": "10.9 MB"
+    "JavaScript heap": "11.3 MB"
   }
 }

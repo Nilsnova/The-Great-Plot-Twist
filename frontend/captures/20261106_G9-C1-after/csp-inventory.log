@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T02:24:35.482Z",
+  "checked": "2026-11-07T07:33:13.083Z",
   "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
   "html": [
     {
@@ -54,24 +54,24 @@
   ],
   "literalOrigins": {
     "https://open-meteo.com": [
-      "assets/credits-CSo5SWZI.js"
+      "assets/credits-DF2M-HtY.js"
     ],
     "https://creativecommons.org": [
-      "assets/credits-CSo5SWZI.js"
+      "assets/credits-DF2M-HtY.js"
     ],
     "https://data.binance.vision": [
-      "assets/credits-CSo5SWZI.js"
+      "assets/credits-DF2M-HtY.js"
     ],
     "http://www.w3.org": [
-      "assets/game-J8ePf0vK.js",
-      "assets/kit-gallery-C-05nXeQ.js",
+      "assets/game-C00tGBpa.js",
+      "assets/kit-gallery-C8eR0gg3.js",
       "assets/partners-BmB7h10I.js",
       "assets/picker-BVmfm2Tg.js",
       "assets/texture-BF9G0DxW.js",
       "favicon.svg"
     ],
     "https://github.com": [
-      "assets/runtime-x6GVQpYN.js",
+      "assets/runtime-C6uZJq4o.js",
       "help.html",
       "privacy.html"
     ]
@@ -128,13 +128,13 @@
       ]
     },
     {
-      "file": "assets/case-adapter--3qEFpa-.js",
+      "file": "assets/case-adapter-CA9DsuaD.js",
       "capabilities": [
         "data:"
       ]
     },
     {
-      "file": "assets/credits-CSo5SWZI.js",
+      "file": "assets/credits-DF2M-HtY.js",
       "capabilities": [
         "data:"
       ]
@@ -158,7 +158,7 @@
       ]
     },
     {
-      "file": "assets/game-J8ePf0vK.js",
+      "file": "assets/game-C00tGBpa.js",
       "capabilities": [
         "data:"
       ]
@@ -171,6 +171,12 @@
     },
     {
       "file": "assets/http-Bk4a5JYD.js",
+      "capabilities": [
+        "data:"
+      ]
+    },
+    {
+      "file": "assets/live-rules-D54epALY.js",
       "capabilities": [
         "data:"
       ]
@@ -194,6 +200,12 @@
       ]
     },
     {
+      "file": "assets/realtime-D6m8l69H.js",
+      "capabilities": [
+        "data:"
+      ]
+    },
+    {
       "file": "assets/texture-BF9G0DxW.js",
       "capabilities": [
         "blob:",
@@ -206,19 +218,19 @@
     "asset-library.html: no inline script, style or event handler",
     "dist/asset-library.html: no dynamic code constructor",
     "dist/asset-library.html: no embedded data/blob resource",
-    "dist/assets/account-Bqm357L6.js: no dynamic code constructor",
+    "dist/assets/account-BhrBOGY4.js: no dynamic code constructor",
     "dist/assets/account-CSACakAC.css: no dynamic code constructor",
     "dist/assets/account-CSACakAC.css: no embedded data/blob resource",
     "dist/assets/account-DL5BwNpC.css: no dynamic code constructor",
     "dist/assets/account-DL5BwNpC.css: no embedded data/blob resource",
-    "dist/assets/account-host-8OK7x8cs.js: no dynamic code constructor",
+    "dist/assets/account-host-DtHouF1S.js: no dynamic code constructor",
     "dist/assets/accusation-B_YXnkBN.js: no dynamic code constructor",
     "dist/assets/adapter-CcVkLHN3.js: no dynamic code constructor",
     "dist/assets/adapter-DQenS_hn.js: no dynamic code constructor",
-    "dist/assets/after-paint-BS5JQohi.js: no dynamic code constructor",
+    "dist/assets/after-paint-BWJaTD6u.js: no dynamic code constructor",
     "dist/assets/api-BYxSj1Jq.js: no dynamic code constructor",
     "dist/assets/art-DWk0Edgj.js: no dynamic code constructor",
-    "dist/assets/auth--7QEedW2.js: no dynamic code constructor",
+    "dist/assets/auth-DxO7T3ZQ.js: no dynamic code constructor",
     "dist/assets/auth-return-BbrFisGl.js: no dynamic code constructor",
     "dist/assets/auth-storage-Cx5N_VNi.js: no dynamic code constructor",
     "dist/assets/beam-math-O9vLvuET.js: no dynamic code constructor",
@@ -229,26 +241,26 @@
     "dist/assets/bulletin-DMiWWYLX.css: no embedded data/blob resource",
     "dist/assets/button-BTb4MpEB.js: no dynamic code constructor",
     "dist/assets/captions-view-B5zgay94.js: no dynamic code constructor",
-    "dist/assets/case-adapter--3qEFpa-.js: no dynamic code constructor",
+    "dist/assets/case-adapter-CA9DsuaD.js: no dynamic code constructor",
     "dist/assets/catalog-BGAvqgHH.js: no dynamic code constructor",
-    "dist/assets/cinematic-demo-DBpAazJ3.js: no dynamic code constructor",
-    "dist/assets/cinematic-demo-DaoKNOiC.css: no dynamic code constructor",
-    "dist/assets/cinematic-demo-DaoKNOiC.css: no embedded data/blob resource",
-    "dist/assets/connection-banner-DafDu-rS.js: no dynamic code constructor",
+    "dist/assets/cinematic-demo-CcXsBAmk.css: no dynamic code constructor",
+    "dist/assets/cinematic-demo-CcXsBAmk.css: no embedded data/blob resource",
+    "dist/assets/cinematic-demo-DRvsKRkd.js: no dynamic code constructor",
+    "dist/assets/connection-banner-Bf89sJKV.js: no dynamic code constructor",
     "dist/assets/connection-banner-Og6kqIOk.css: no dynamic code constructor",
     "dist/assets/connection-banner-Og6kqIOk.css: no embedded data/blob resource",
     "dist/assets/contract-CZypeDED.js: no dynamic code constructor",
     "dist/assets/controller-BTVq4amK.js: no dynamic code constructor",
     "dist/assets/controller-CYWh5DfM.css: no dynamic code constructor",
     "dist/assets/controller-CYWh5DfM.css: no embedded data/blob resource",
-    "dist/assets/controller-CZP4ttHd.js: no dynamic code constructor",
-    "dist/assets/controller-uVIAY0nZ.js: no dynamic code constructor",
-    "dist/assets/controller-zUOXEATm.js: no dynamic code constructor",
+    "dist/assets/controller-WSEZAk7t.js: no dynamic code constructor",
+    "dist/assets/controller-h5HdkW29.js: no dynamic code constructor",
+    "dist/assets/controller-imYV2EPj.js: no dynamic code constructor",
     "dist/assets/counter-ZQ7aiccc.js: no dynamic code constructor",
-    "dist/assets/credits-CSo5SWZI.js: no dynamic code constructor",
-    "dist/assets/credits-CSo5SWZI.js: inventoried literal origin https://open-meteo.com",
-    "dist/assets/credits-CSo5SWZI.js: inventoried literal origin https://creativecommons.org",
-    "dist/assets/credits-CSo5SWZI.js: inventoried literal origin https://data.binance.vision",
+    "dist/assets/credits-DF2M-HtY.js: no dynamic code constructor",
+    "dist/assets/credits-DF2M-HtY.js: inventoried literal origin https://open-meteo.com",
+    "dist/assets/credits-DF2M-HtY.js: inventoried literal origin https://creativecommons.org",
+    "dist/assets/credits-DF2M-HtY.js: inventoried literal origin https://data.binance.vision",
     "dist/assets/desk-BV5dW-wj.js: no dynamic code constructor",
     "dist/assets/desk-Sym_Du7D.css: no dynamic code constructor",
     "dist/assets/desk-Sym_Du7D.css: no embedded data/blob resource",
@@ -267,15 +279,15 @@
     "dist/assets/finale-CZrTIijE.js: no dynamic code constructor",
     "dist/assets/format-B1JXrubu.js: no dynamic code constructor",
     "dist/assets/frame-state-Bncxdk4N.js: no dynamic code constructor",
-    "dist/assets/game-BcTQkGTN.css: no dynamic code constructor",
-    "dist/assets/game-BcTQkGTN.css: no embedded data/blob resource",
-    "dist/assets/game-CF-Rddcf.js: no dynamic code constructor",
-    "dist/assets/game-Dm6y_TRo.css: no dynamic code constructor",
-    "dist/assets/game-Dm6y_TRo.css: no embedded data/blob resource",
-    "dist/assets/game-J8ePf0vK.js: no dynamic code constructor",
-    "dist/assets/game-J8ePf0vK.js: inventoried literal origin http://www.w3.org",
-    "dist/assets/gamepad-Cn_uKXxt.js: no dynamic code constructor",
-    "dist/assets/gamepad-CpJrLadG.js: no dynamic code constructor",
+    "dist/assets/game-BDtsWsds.js: no dynamic code constructor",
+    "dist/assets/game-BTZAStV_.css: no dynamic code constructor",
+    "dist/assets/game-BTZAStV_.css: no embedded data/blob resource",
+    "dist/assets/game-C00tGBpa.js: no dynamic code constructor",
+    "dist/assets/game-C00tGBpa.js: inventoried literal origin http://www.w3.org",
+    "dist/assets/game-D-rW-wgQ.css: no dynamic code constructor",
+    "dist/assets/game-D-rW-wgQ.css: no embedded data/blob resource",
+    "dist/assets/gamepad-DUgO2RBV.js: no dynamic code constructor",
+    "dist/assets/gamepad-K7N3DbfX.js: no dynamic code constructor",
     "dist/assets/gulls-rest-DFcihesc.js: no dynamic code constructor",
     "dist/assets/helpers-Bhm_1_xz.js: no dynamic code constructor",
     "dist/assets/hints-BvEjZ1Og.css: no dynamic code constructor",
@@ -287,23 +299,24 @@
     "dist/assets/host-Dg0k_Xow.js: no dynamic code constructor",
     "dist/assets/http-BW0R4XlV.js: no dynamic code constructor",
     "dist/assets/http-Bk4a5JYD.js: no dynamic code constructor",
-    "dist/assets/info-BW15yOSV.js: no dynamic code constructor",
-    "dist/assets/intent-CTP79lXC.js: no dynamic code constructor",
-    "dist/assets/intent-Du4_Ytnt.js: no dynamic code constructor",
+    "dist/assets/info-BOWk-d3h.js: no dynamic code constructor",
+    "dist/assets/intent-BaQglS-C.js: no dynamic code constructor",
+    "dist/assets/intent-UhrsOgbh.js: no dynamic code constructor",
     "dist/assets/intent-cooldown-BYkl9iLZ.js: no dynamic code constructor",
     "dist/assets/intro-journal-DJj67nNK.js: no dynamic code constructor",
     "dist/assets/intro-story-BrIj6KTv.js: no dynamic code constructor",
     "dist/assets/intro-story-D07Wp8Mk.js: no dynamic code constructor",
-    "dist/assets/intro-view-BaPow6OA.js: no dynamic code constructor",
+    "dist/assets/intro-view-CI6NFSGR.js: no dynamic code constructor",
     "dist/assets/kit-Bq3XXrM4.css: no dynamic code constructor",
     "dist/assets/kit-Bq3XXrM4.css: no embedded data/blob resource",
-    "dist/assets/kit-DxeKJ0v3.js: no dynamic code constructor",
-    "dist/assets/kit-gallery-C-05nXeQ.js: no dynamic code constructor",
-    "dist/assets/kit-gallery-C-05nXeQ.js: inventoried literal origin http://www.w3.org",
+    "dist/assets/kit-gallery-C8eR0gg3.js: no dynamic code constructor",
+    "dist/assets/kit-gallery-C8eR0gg3.js: inventoried literal origin http://www.w3.org",
     "dist/assets/kit-gallery-vgg6AGHm.css: no dynamic code constructor",
     "dist/assets/kit-gallery-vgg6AGHm.css: no embedded data/blob resource",
+    "dist/assets/kit-h7S77yrs.js: no dynamic code constructor",
     "dist/assets/kits-LdcaTexU.js: no dynamic code constructor",
     "dist/assets/layouts-b3gFBwDg.js: no dynamic code constructor",
+    "dist/assets/live-rules-D54epALY.js: no dynamic code constructor",
     "dist/assets/local-DKkRlfC7.js: no dynamic code constructor",
     "dist/assets/local-start-Bn654fVI.js: no dynamic code constructor",
     "dist/assets/log-BS-KJtIQ.js: no dynamic code constructor",
@@ -335,8 +348,8 @@
     "dist/assets/partners-BmB7h10I.js: inventoried literal origin http://www.w3.org",
     "dist/assets/partners-CJ13KFCu.css: no dynamic code constructor",
     "dist/assets/partners-CJ13KFCu.css: no embedded data/blob resource",
-    "dist/assets/partners-DyrwUWp6.js: no dynamic code constructor",
-    "dist/assets/pause-DAVXkG_f.js: no dynamic code constructor",
+    "dist/assets/partners-DUsvsaOZ.js: no dynamic code constructor",
+    "dist/assets/pause-DDOcpv3G.js: no dynamic code constructor",
     "dist/assets/picker-BVmfm2Tg.js: no dynamic code constructor",
     "dist/assets/picker-BVmfm2Tg.js: inventoried literal origin http://www.w3.org",
     "dist/assets/picker-IhkEx5jl.css: no dynamic code constructor",
@@ -346,12 +359,13 @@
     "dist/assets/preload-helper-BQUUbbNx.js: no dynamic code constructor",
     "dist/assets/presence-B2xKiMXp.css: no dynamic code constructor",
     "dist/assets/presence-B2xKiMXp.css: no embedded data/blob resource",
-    "dist/assets/presence-D2hSPSc-.js: no dynamic code constructor",
+    "dist/assets/presence-C0t0Eqfg.js: no dynamic code constructor",
     "dist/assets/progress-B7cn7-lL.js: no dynamic code constructor",
+    "dist/assets/realtime-D6m8l69H.js: no dynamic code constructor",
     "dist/assets/reasons-C5cTcHCS.js: no dynamic code constructor",
     "dist/assets/registry-Ma2GGUeq.js: no dynamic code constructor",
     "dist/assets/relighting-D9rdH2My.js: no dynamic code constructor",
-    "dist/assets/report-link-B8PrZeOS.js: no dynamic code constructor",
+    "dist/assets/report-link-CS_b8XeP.js: no dynamic code constructor",
     "dist/assets/report-link-f618K_5V.css: no dynamic code constructor",
     "dist/assets/report-link-f618K_5V.css: no embedded data/blob resource",
     "dist/assets/resources-D1pdI7rL.js: no dynamic code constructor",
@@ -360,16 +374,16 @@
     "dist/assets/rewards-e_ANWQxk.css: no dynamic code constructor",
     "dist/assets/rewards-e_ANWQxk.css: no embedded data/blob resource",
     "dist/assets/rooms-CXw8jhK7.js: no dynamic code constructor",
-    "dist/assets/runtime-x6GVQpYN.js: no dynamic code constructor",
-    "dist/assets/runtime-x6GVQpYN.js: inventoried literal origin https://github.com",
+    "dist/assets/runtime-C6uZJq4o.js: no dynamic code constructor",
+    "dist/assets/runtime-C6uZJq4o.js: inventoried literal origin https://github.com",
     "dist/assets/scene-Cho5PrGb.js: no dynamic code constructor",
     "dist/assets/scene-R3kRxFoe.css: no dynamic code constructor",
     "dist/assets/scene-R3kRxFoe.css: no embedded data/blob resource",
     "dist/assets/screens-D18ve9zg.js: no dynamic code constructor",
     "dist/assets/search-gf8r2b-w.js: no dynamic code constructor",
-    "dist/assets/server-call-state-Cqpd67zt.js: no dynamic code constructor",
     "dist/assets/server-call-state-DY8iNpIG.css: no dynamic code constructor",
     "dist/assets/server-call-state-DY8iNpIG.css: no embedded data/blob resource",
+    "dist/assets/server-call-state-DeL_Z-BI.js: no dynamic code constructor",
     "dist/assets/session-CqhoU4ff.js: no dynamic code constructor",
     "dist/assets/settlement-CTvWG6Nf.js: no dynamic code constructor",
     "dist/assets/settlement-DKdmbuih.js: no dynamic code constructor",
@@ -379,17 +393,17 @@
     "dist/assets/shortcuts-COSQtU7-.css: no embedded data/blob resource",
     "dist/assets/shortcuts-D52i_jXn.js: no dynamic code constructor",
     "dist/assets/state-DWl8ze_6.js: no dynamic code constructor",
-    "dist/assets/subpages-CXf_1nhF.js: no dynamic code constructor",
+    "dist/assets/subpages-FDu6mC-Z.js: no dynamic code constructor",
     "dist/assets/summary-C5WXH3mK.js: no dynamic code constructor",
     "dist/assets/table-_alnkdz2.js: no dynamic code constructor",
     "dist/assets/tabs-W8xkK8M5.js: no dynamic code constructor",
     "dist/assets/texture-BF9G0DxW.js: no dynamic code constructor",
     "dist/assets/texture-BF9G0DxW.js: inventoried literal origin http://www.w3.org",
     "dist/assets/time-labels-D8oJzX2Q.js: no dynamic code constructor",
-    "dist/assets/uiKit-CF4lhMf7.js: no dynamic code constructor",
+    "dist/assets/uiKit-BLnj_8Xf.js: no dynamic code constructor",
     "dist/assets/uid-BkreQDZb.js: no dynamic code constructor",
-    "dist/assets/unavailable-DbslxiYo.js: no dynamic code constructor",
-    "dist/assets/view--xzZDlPP.js: no dynamic code constructor",
+    "dist/assets/unavailable-Cs2Q2AhI.js: no dynamic code constructor",
+    "dist/assets/view-BUG_LPPq.js: no dynamic code constructor",
     "dist/assets/view-CB8AA-xW.css: no dynamic code constructor",
     "dist/assets/view-CB8AA-xW.css: no embedded data/blob resource",
     "dist/assets/visible-clock-DWOEInPi.js: no dynamic code constructor",
@@ -398,8 +412,8 @@
     "dist/assets/workshop-CO2NWeWr.css: no dynamic code constructor",
     "dist/assets/workshop-CO2NWeWr.css: no embedded data/blob resource",
     "dist/assets/workshop-DUKcsRMV.js: no dynamic code constructor",
-    "dist/assets/world-loader--CdexDDb.js: no dynamic code constructor",
-    "dist/assets/world-loader-Dd1h2Am9.js: no dynamic code constructor",
+    "dist/assets/world-loader-DPC_iewW.js: no dynamic code constructor",
+    "dist/assets/world-loader-WSfonxPW.js: no dynamic code constructor",
     "dist/auth-check-api.js: no dynamic code constructor",
     "dist/auth-check-pkce.js: no dynamic code constructor",
     "dist/auth-check.css: no dynamic code constructor",
@@ -639,14 +653,26 @@
     "src/online/case-adapter/account-lifecycle.js: no authored dynamic code constructor",
     "src/online/case-adapter/account-view.js: no CSS text injection",
     "src/online/case-adapter/account-view.js: no authored dynamic code constructor",
+    "src/online/case-adapter/crew-lifecycle.js: no CSS text injection",
+    "src/online/case-adapter/crew-lifecycle.js: no authored dynamic code constructor",
+    "src/online/case-adapter/crew-permissions.js: no CSS text injection",
+    "src/online/case-adapter/crew-permissions.js: no authored dynamic code constructor",
+    "src/online/case-adapter/crew-polling.js: no CSS text injection",
+    "src/online/case-adapter/crew-polling.js: no authored dynamic code constructor",
     "src/online/case-adapter/crew-view.js: no CSS text injection",
     "src/online/case-adapter/crew-view.js: no authored dynamic code constructor",
     "src/online/case-adapter/crew.js: no CSS text injection",
     "src/online/case-adapter/crew.js: no authored dynamic code constructor",
     "src/online/case-adapter/index.js: no CSS text injection",
     "src/online/case-adapter/index.js: no authored dynamic code constructor",
+    "src/online/case-adapter/live-lifecycle.js: no CSS text injection",
+    "src/online/case-adapter/live-lifecycle.js: no authored dynamic code constructor",
     "src/online/case-adapter/polling.js: no CSS text injection",
     "src/online/case-adapter/polling.js: no authored dynamic code constructor",
+    "src/online/case-adapter/presence-view.js: no CSS text injection",
+    "src/online/case-adapter/presence-view.js: no authored dynamic code constructor",
+    "src/online/case-adapter/presence.js: no CSS text injection",
+    "src/online/case-adapter/presence.js: no authored dynamic code constructor",
     "src/online/case-adapter/profile-shapes.js: no CSS text injection",
     "src/online/case-adapter/profile-shapes.js: no authored dynamic code constructor",
     "src/online/case-adapter/profile.js: no CSS text injection",

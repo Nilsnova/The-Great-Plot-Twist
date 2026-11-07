@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T01:52:18.651Z",
+  "checked": "2026-11-07T07:10:29.060Z",
   "checks": [
     "Startup weather response still drives all four weather values",
     "Gameplay has no provider, licence or attribution block",

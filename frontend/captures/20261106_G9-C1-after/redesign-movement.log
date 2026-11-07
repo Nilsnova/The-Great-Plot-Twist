@@ -23,9 +23,9 @@
       "height": 720,
       "dpr": 1,
       "high": {
-        "width": 640,
-        "height": 360,
-        "pixelRatio": 0.5
+        "width": 1280,
+        "height": 720,
+        "pixelRatio": 1
       },
       "low": {
         "width": 1280,
@@ -43,7 +43,7 @@
         10,
         -10
       ],
-      "fps": 10,
+      "fps": 15,
       "calls": 97
     },
     {
@@ -51,9 +51,9 @@
       "height": 812,
       "dpr": 2,
       "high": {
-        "width": 281,
-        "height": 609,
-        "pixelRatio": 0.75
+        "width": 562,
+        "height": 1218,
+        "pixelRatio": 1.5
       },
       "low": {
         "width": 375,
@@ -71,7 +71,7 @@
         17.322666666666667,
         -17.322666666666667
       ],
-      "fps": 13,
+      "fps": 2,
       "calls": 97
     },
     {
@@ -79,9 +79,9 @@
       "height": 640,
       "dpr": 2,
       "high": {
-        "width": 288,
-        "height": 576,
-        "pixelRatio": 0.8999999999999999
+        "width": 264,
+        "height": 528,
+        "pixelRatio": 0.8250000000000001
       },
       "low": {
         "width": 320,

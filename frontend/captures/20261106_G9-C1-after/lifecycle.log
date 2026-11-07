@@ -1,4 +1,4 @@
-2:03:26 AM [vite] (client) [console.error] { isTrusted: true }
+7:15:21 AM [vite] (client) [console.error] { isTrusted: true }
 {
   "checks": [
     "A failed world load keeps the caller-owned account adapter alive",

@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T02:05:47.370Z",
+  "checked": "2026-11-07T07:19:25.564Z",
   "scenarios": [
     {
       "name": "solo + three NPC partners",
@@ -116,49 +116,49 @@
     "No external network requests"
   ],
   "timings": {
-    "introMs": 33332,
-    "soloScenarioMs": 104443,
+    "introMs": 28450,
+    "soloScenarioMs": 116875,
     "gullsDesktop": {
       "fps": 24,
-      "calls": 34,
-      "triangles": 74,
-      "geometries": 33,
-      "textures": 28,
+      "calls": 35,
+      "triangles": 76,
+      "geometries": 34,
+      "textures": 29,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
     "gullsPhone": {
-      "fps": 57,
-      "calls": 34,
-      "triangles": 74,
-      "geometries": 33,
-      "textures": 28,
+      "fps": 52,
+      "calls": 35,
+      "triangles": 76,
+      "geometries": 34,
+      "textures": 29,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
     "desktop": {
-      "fps": 20,
-      "calls": 34,
-      "triangles": 74,
-      "geometries": 33,
-      "textures": 28,
+      "fps": 22,
+      "calls": 35,
+      "triangles": 76,
+      "geometries": 34,
+      "textures": 29,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
     "phone": {
-      "fps": 24,
-      "calls": 34,
-      "triangles": 74,
+      "fps": 61,
+      "calls": 35,
+      "triangles": 76,
       "geometries": 33,
-      "textures": 28,
+      "textures": 29,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
-    "fourHumanScenarioMs": 98982
+    "fourHumanScenarioMs": 68695
   },
   "isletConstruction": {
     "method": "event-fallback",

@@ -50,11 +50,11 @@ PASS Only injected API-down diagnostics, no external assets
     "Only injected API-down diagnostics, no external assets"
   ],
   "performance": {
-    "fps": 41,
-    "calls": 56,
-    "triangles": 108,
+    "fps": 26,
+    "calls": 58,
+    "triangles": 112,
     "geometries": 55,
-    "textures": 59,
+    "textures": 55,
     "roots": 1,
     "objects": 51,
     "programs": 3

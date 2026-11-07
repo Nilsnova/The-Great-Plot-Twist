@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T01:44:05.882Z",
+  "checked": "2026-11-07T07:02:13.106Z",
   "checks": [
     "Board displays four held cards and seat credits",
     "Paid shortcut is separately priced",
@@ -38,11 +38,11 @@
     "Case workshop makes no external request"
   ],
   "gullsRest": {
-    "fps": 13,
+    "fps": 19,
     "calls": 36,
     "triangles": 74,
     "geometries": 35,
-    "textures": 33,
+    "textures": 37,
     "roots": 1,
     "objects": 30,
     "programs": 5

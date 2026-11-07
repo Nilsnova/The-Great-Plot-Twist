@@ -132,13 +132,13 @@
       "authorized": true
     },
     {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET"
-    },
-    {
       "path": "/api/config",
       "method": "GET",
       "authorized": false
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/api/config",
@@ -222,13 +222,13 @@
       "authorized": true
     },
     {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
       "path": "/api/config",
       "method": "GET",
       "authorized": false
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET"
     },
     {
       "path": "/api/config",
@@ -361,307 +361,6 @@
       "authorized": true
     },
     {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/crews/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me/name/reroll",
-      "method": "POST",
-      "bodyKeys": [
-        "actionUid"
-      ],
-      "authorized": true
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/intro/complete",
-      "method": "POST",
-      "bodyKeys": [
-        "actions"
-      ],
-      "authorized": true
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "PUT",
-      "bodyKeys": [
-        "data",
-        "version"
-      ],
-      "authorized": true,
-      "outcome": "unknown_committed"
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true,
-      "outcome": "unknown_write_readback"
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/intro/complete",
-      "method": "POST",
-      "bodyKeys": [
-        "actions"
-      ],
-      "authorized": true
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me/name",
-      "method": "POST",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/crews/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me/name/reroll",
-      "method": "POST",
-      "bodyKeys": [
-        "actionUid"
-      ],
-      "authorized": true
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me/name",
-      "method": "POST",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/crews/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "PUT",
-      "bodyKeys": [
-        "data",
-        "version"
-      ],
-      "authorized": true,
-      "outcome": "saved"
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me/name",
-      "method": "POST",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/crews/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/save",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me",
-      "method": "DELETE",
-      "bodyKeys": [
-        "confirm"
-      ],
-      "authorized": true
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
-      "path": "/api/me",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
-      "path": "/api/me/name",
-      "method": "POST",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
       "path": "/api/save",
       "method": "GET",
       "bodyKeys": [],
@@ -975,6 +674,83 @@
       "authorized": true
     },
     {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name/reroll",
+      "method": "POST",
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "unknown_committed"
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true,
+      "outcome": "unknown_write_readback"
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
       "path": "/rest/v1/wallet_transactions",
       "method": "GET",
       "bodyKeys": [],
@@ -985,6 +761,230 @@
       "method": "GET",
       "bodyKeys": [],
       "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name/reroll",
+      "method": "POST",
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "saved"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "DELETE",
+      "bodyKeys": [
+        "confirm"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
     },
     {
       "path": "/api/me",
@@ -1141,4 +1141,19 @@
       }
     ]
   }
+}
+{
+  "checks": 44,
+  "requests": 246,
+  "pending": [
+    "Partner errands and authoritative positions await case DTOs and stream14.",
+    "Realtime presence proof belongs to stream7."
+  ]
+}
+{
+  "checks": 37,
+  "gates": 5,
+  "unverified": [
+    "Installed headless Chrome keeps this background tab visible; native tab-pause proof still required."
+  ]
 }

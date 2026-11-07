@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T02:03:31.682Z",
+  "checked": "2026-11-07T07:15:34.094Z",
   "browser": "156.0.8078.79",
   "pages": [
     {
@@ -91,16 +91,11 @@
       "status": 503
     },
     {
-      "path": "/api/config",
-      "status": 503
-    },
-    {
       "path": "/api/weather",
       "status": 503
     }
   ],
   "expected503Diagnostics": [
-    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",

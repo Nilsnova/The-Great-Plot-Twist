@@ -4,6 +4,42 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## G9 streams done so far, not a checkpoint (7 Nov 2026, source `443400c`)
+
+Merged from main: `64fc731`, already adopted through `ca80469`; the final fetch found no new main
+or published case-contract commit. Branch: `feat/g9-real-adapter`.
+
+Changed: stream 6 wires authoritative crews/muster and their recorded recovery paths (`3788db5`);
+stream 7 wires scoped A4 presence, crew pushes, cleanup and private display guards (`443400c`).
+The compact control fixes are in `a0b9ad1`. Each stream has its own gate evidence below.
+
+Verified: `npm run test:g9 -- --phase=after --keep-going` ran with the installed Chromium selected
+through `CHROME_PATH`. It ran all
+**44 commands on committed source `443400c`: 41 passed, three failed**. All rows record
+`sourceDirty: false`; application source was also checked unchanged after the run. The run includes
+**2,545 unit tests / 182 files**, build/spoiler, loading, CSP/inventory, accessibility, exact events,
+replay, cleanup, the server-free demo tour, and the production online/account/crew/presence and
+HTTP-fault paths. Cold title remains **21,073 JS / 11,878 CSS bytes**, within unchanged caps.
+Evidence: `captures/20261107_G9-C2/clean-regression-proof.json`; all 44 result rows and logs remain in
+`captures/20261106_G9-C1-after/`. Earlier stream evidence remains intact.
+
+Browser pass: **41/44 at `443400c`**. The unchanged storm check recorded **34 FPS / 108 calls**
+(required 55 FPS), ten-trip world **15 FPS / 97 calls** (required 30 FPS), and active cinematic
+**17 FPS / 97 calls** (required 30 FPS). Each failed command stopped at its frame assertion; its
+subsequent assertions are not claimed. R16 now requests all three unchanged checks on approved
+hardware. No frame threshold, crowd, density, art, weather or first-load budget was changed.
+
+Not verified: target-hardware frames, native background-tab pause in headless Chrome, real OAuth or
+services/databases, other engines, assistive technology and physical devices. Every online test uses
+injected clients or intercepted endpoints and runtime-generated credential placeholders.
+
+Remaining: streams **8–21** and the **17 overflow items**. Continue the islet, market, prediction,
+arena and bulletin streams now; case streams 12–15 still need R11's exact serialized nested DTOs.
+Requests for Claude: R11 remains open; R16 includes the cinematic check. No new decision from Nils.
+Contract changes Claude must mirror: **wave, cheer, point, lantern, shrug** in the protected A4
+docs. Schema 1, all 24 view keys, 25 intents, exact events and accepted replay remain intact.
+No main merge or deployment was performed.
+
 ## Stream 7 passed; continuing G9 (7 Nov 2026)
 
 A4 now uses strict flag/name/account gates, opaque peer views, movement/emotes, crew-seat RLS reads
@@ -387,7 +423,7 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 | R14 · open | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |
 
 | R15 · resolved by Nils’s explicit eight-word exception | `scripts/text-lint/words.txt` | G24's shared dictionary rejects correctly spelled existing G9 copy and browser names, so the full unit gate fails | Review/add `chrome`, `firefox`, `safari`, `submitting`, `enable`, `perf`, `attempts`, `mit` | All full stream/checkpoint unit gates | Targeted tests/build/browser still run; only the eight approved vocabulary lines changed outside frontend; linter/assertions unchanged |
-| R16 · open | Presenter-laptop frame proof | Cloud SwiftShader misses unchanged 55-FPS storm / 30-FPS travel gates; checkpoint 1 is incomplete | Run unchanged offline checks on approved hardware and publish numeric evidence; see `requests/R16-presenter-frame-proof.md` | Checkpoint 1 / stream 19 | Continue independent crew/presence and panels; keep the non-checkpoint label; no quality or budget waiver |
+| R16 · open | Presenter-laptop frame proof | Cloud SwiftShader misses unchanged 55-FPS storm / 30-FPS travel and cinematic gates; checkpoint 1 is incomplete | Run unchanged offline checks on approved hardware and publish numeric evidence; see `requests/R16-presenter-frame-proof.md` | Checkpoint 1 / stream 19 | Continue independent crew/presence and panels; keep the non-checkpoint label; no quality or budget waiver |
 
 ## Browser pass
 

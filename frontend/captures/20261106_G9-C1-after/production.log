@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-07T01:49:20.599Z",
+  "checked": "2026-11-07T07:06:46.194Z",
   "browser": "156.0.8078.79",
   "checks": [
     "Static build loads a WebGL canvas",
