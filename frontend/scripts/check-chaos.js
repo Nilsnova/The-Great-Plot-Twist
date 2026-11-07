@@ -16,11 +16,12 @@ async function openCase(name,params={}){await page.evaluate(({name,params})=>win
 async function setFault(reason){await page.evaluate(reason=>window.__plotTwist.adapter.dev.failNext(reason),reason);}
 async function checkBulletinFailureStates(){
   const before=core(await read());
-  await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('off'));
+  await page.evaluate(()=>{window.__island.caseUi.close();window.__plotTwist.adapter.dev.setBulletin('off');});
   check((await read()).bulletin.status==='off','Bulletin-off state is explicit');
-  await openCase('bulletin');
-  check(await page.locator('.bulletin-screen').evaluate(element=>element.hidden),'Off bulletin renders no empty prompt');
-  await page.keyboard.press('Escape');await page.locator('.case-modal').waitFor({state:'hidden'});
+  await page.evaluate(()=>window.__island.caseUi.open('bulletin'));
+  check(await page.evaluate(()=>!window.__island.caseUi.active&&!document.querySelector('.case-modal[open]')),'Off bulletin opens no empty prompt');
+  check(await page.locator('.case-loading').evaluate(element=>element.hidden),'Off bulletin leaves no stale opening notice');
+  check(JSON.stringify(before)===JSON.stringify(core(await read())),'Bulletin off leaves gameplay unchanged');
   await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('unavailable'));
   await openCase('bulletin');
   check((await page.locator('.bulletin-status').textContent()).toLowerCase().includes('unavailable'),'Unavailable bulletin has a clear status');

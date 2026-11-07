@@ -3,11 +3,12 @@ import {caseScreenFor} from '../world/places/case-spots.js';
 import {createUnavailableCaseAdapter} from './unavailable.js';
 export function createCaseBridge(ctx) {
   const ownsAdapter=!ctx.adapter;
-  let adapter=ctx.adapter??null,host=null,pending=null,disposed=false,loading=false,request=0,effectTask=Promise.resolve(),effectId=0,stop=null;
+  let adapter=ctx.adapter??null,host=null,pending=null,disposed=false,loading=false,opening=null,request=0,effectTask=Promise.resolve(),effectId=0,stop=null;
   const status=document.createElement('p');status.className='case-loading';status.setAttribute('role','status');status.hidden=true;ctx.container.append(status);
   // Queue new server-requested shots so view delivery stays responsive and effects keep their order.
   function onView(view) {
     ctx.onView?.(view);
+    if(view.bulletin?.status==='off'&&opening?.name==='bulletin'&&opening.token===request){clearOpening();ctx.resetInput?.();}
     const effects = (view.effects ?? []).filter(item => item.id > effectId);
     if (effects.length) effectId = Math.max(...effects.map(item => item.id));
     if (!ctx.world?.cinematic) return;
@@ -54,24 +55,31 @@ export function createCaseBridge(ctx) {
     });
     return pending;
   }
-  function close(){request++;loading=false;status.hidden=true;host?.close();ctx.resetInput?.();}
+  function clearOpening(){request++;opening=null;loading=false;status.hidden=true;}
+  function close(){clearOpening();host?.close();ctx.resetInput?.();}
   const key=event=>{if(loading&&event.code==='Escape'){event.preventDefault();event.stopImmediatePropagation();close();ctx.focus?.();}};window.addEventListener('keydown',key,true);
   if(adapter)connect();
   return {get active(){return loading||!!host?.active;},get adapter(){return adapter;},
     // Token each open so Escape or a newer request can invalidate a pending import.
     async open(name, params) {
+      if(disposed||(name==='bulletin'&&adapter?.read().bulletin?.status==='off'))return;
       const token = ++request;
+      opening = {name,token};
       loading = true;
       status.hidden = false;
       status.textContent = 'Opening the case · Escape to cancel';
       ctx.resetInput?.();
+      let failed = false;
       try {
         const view = await ensure();
         if (disposed || token !== request) return;
+        if(name==='bulletin'&&adapter.read().bulletin?.status==='off')return;
         ctx.beforeOpen?.();
+        if (disposed || token !== request) return;
         await view?.open(name, params);
       } catch {
         if (!disposed && token === request) {
+          failed = true;
           status.textContent = 'The case screen could not load. Try opening it again.';
           setTimeout(() => {
             if (!disposed && token === request) status.hidden = true;
@@ -79,8 +87,9 @@ export function createCaseBridge(ctx) {
         }
       } finally {
         if (token === request) {
+          opening = null;
           loading = false;
-          if (host?.active) status.hidden = true;
+          if (!failed) status.hidden = true;
         }
       }
     },

@@ -1,0 +1,12 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/bulletin-open-lifecycle.test.js tests/bulletin-screen.test.js tests/g9-arrival-presentation.test.js tests/g9-islet-case-presentation.test.js tests/case-arrival.test.js tests/intro-arrival-stage.test.js
+
+
+ RUN  v5.1.0 <frontend>
+
+
+ Test Files  6 passed (6)
+      Tests  42 passed (42)
+   Start at  18:54:15
+   Duration  99.87s (tests 95%, import 4%)

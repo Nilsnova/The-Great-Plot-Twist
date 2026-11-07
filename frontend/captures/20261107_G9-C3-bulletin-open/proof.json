@@ -1,0 +1,147 @@
+{
+  "package": "1: Bulletin opening ownership",
+  "checked": "2026-11-07T19:09:48.291668+00:00",
+  "outcome": "package checks passed",
+  "checkpointComplete": false,
+  "sourceBase": "b94621d61562be812e71af76680a2d68ebf915af",
+  "sourceDirtyAtChecks": true,
+  "sourceFingerprints": {
+    "src/adapter/bridge.js": "a21c80fc996b03f3681bbdf06cfc402507f980c8299e3526d83189f6a3a99a59",
+    "src/screens/controller.js": "3d6145b4c0050bd3a61cad41630116ba4fc84e2001019a4a9c27c9e5fa306081",
+    "scripts/check-chaos.js": "382085fc9b0cec7a8bcf660acd81b8b15d01d874566894c3b813269d0298d74f",
+    "tests/bulletin-open-lifecycle.test.js": "f47722b359fa26dd2ff7043e022f42e4d43f3c5f0dba63032b9f49ad2e2c8952"
+  },
+  "regressions": [
+    {
+      "phase": "original red",
+      "failed": 5,
+      "passed": 3,
+      "files": 1
+    },
+    {
+      "phase": "initial candidate green",
+      "passed": 42,
+      "files": 6
+    },
+    {
+      "phase": "review edge red",
+      "failed": 3,
+      "notSelected": 8,
+      "files": 1
+    },
+    {
+      "phase": "final green",
+      "passed": 45,
+      "files": 6,
+      "nativeOpeningCases": 11
+    }
+  ],
+  "commands": [
+    {
+      "name": "build",
+      "command": "npm run build",
+      "code": 0,
+      "seconds": 4.334
+    },
+    {
+      "name": "loading",
+      "command": "node scripts/check-loading.js",
+      "code": 0,
+      "seconds": 18.319
+    },
+    {
+      "name": "chaos",
+      "command": "node scripts/check-chaos.js",
+      "code": 0,
+      "seconds": 495.215
+    }
+  ],
+  "chaos": {
+    "checks": 212,
+    "faultCases": 96,
+    "noUnexpectedErrors": true,
+    "noExternalRequests": true
+  },
+  "loading": {
+    "checks": 23,
+    "javaScript": 21071,
+    "javaScriptCap": 21080,
+    "css": 11878,
+    "cssCap": 12000
+  },
+  "logs": [
+    {
+      "name": "red-original",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/red-original.log",
+      "rawSha256": "cd7020bbe609c34530ac73b90cd263a723a7ea12db6f876ec4cb367ad16c9ce5",
+      "sha256": "60815806d5cc9c6b69c217e9eb2e29ce9063bec0bef3925b8ddffd0efcd78561"
+    },
+    {
+      "name": "green-original",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/green-original.log",
+      "rawSha256": "1ecf2f588746aa7687f55083658f38e8f5f9a4495072be9b6eb894c6d3c49686",
+      "sha256": "eaac9f307e6ec64eedaf6c7ebda4b1484a9edec5269311e55defc472fb0bf865"
+    },
+    {
+      "name": "red-review-edge",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/red-review-edge.log",
+      "rawSha256": "5da51a9fa316f734810ce98ec24ecc9ffff9817e122cde89ddf04fe01665ff4c",
+      "sha256": "afc00d464463bf4b8fde965c82f0067898325383988692cddc586d6b8f0b4af6"
+    },
+    {
+      "name": "green-final",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/green-final.log",
+      "rawSha256": "c74a433069e0f238314a35db29a0c2af9fe85ae719eae4efc260cda529d40c38",
+      "sha256": "cb6099c838c32c944739a8acbad954b3dfdc162095f9e555c4ea3edd662ac9ee"
+    },
+    {
+      "name": "build",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/build.log",
+      "rawSha256": "a3717624506ea85862b2f66eb3a01791d32dfa39505e5a5300f0a88dc9723502",
+      "sha256": "a3717624506ea85862b2f66eb3a01791d32dfa39505e5a5300f0a88dc9723502"
+    },
+    {
+      "name": "loading",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/loading.log",
+      "rawSha256": "3264becc4e54dab73d0f5a7b4ae23f803164cb05eac3d091ee52b06fd5f95fc0",
+      "sha256": "59b5ccdfd951352e8dfb0fd85bfce15b4ae729fd9f3616f2bb9f7d6c6f423e7e"
+    },
+    {
+      "name": "chaos",
+      "path": "captures/20261107_G9-C3-bulletin-open/logs/chaos.log",
+      "rawSha256": "b93f0217c355f80bcfe2dff38034f5372b86d72df4275c6f96da886931a3bd82",
+      "sha256": "f620af15e7af3eb48687ecf1462b37b7968d205cf8dbf878425e131e6b0b383e"
+    }
+  ],
+  "metrics": [
+    {
+      "path": "captures/20261107_G9-C3-bulletin-open/chaos.json",
+      "rawSha256": "b93f0217c355f80bcfe2dff38034f5372b86d72df4275c6f96da886931a3bd82",
+      "sha256": "f620af15e7af3eb48687ecf1462b37b7968d205cf8dbf878425e131e6b0b383e"
+    },
+    {
+      "path": "captures/20261107_G9-C3-bulletin-open/loading.json",
+      "rawSha256": "d5b9f9f21633e4c31902456de72e221cba88310405534fc7d6490017e87cc352",
+      "sha256": "72c753ecefe2f4af188cbb08dc019312350d3ea160bffb5fa3b5db632f336944"
+    }
+  ],
+  "independentReview": {
+    "result": "clear after active-Bulletin/newer-page finding fixed",
+    "controllerSha256": "3d6145b4c0050bd3a61cad41630116ba4fc84e2001019a4a9c27c9e5fa306081",
+    "nativeTestSha256": "f47722b359fa26dd2ff7043e022f42e4d43f3c5f0dba63032b9f49ad2e2c8952"
+  },
+  "captureRestoration": {
+    "base": "b94621d61562be812e71af76680a2d68ebf915af",
+    "files": 3,
+    "rawBytesPreserved": true
+  },
+  "rawArchive": "node_modules/.cache/g9-bulletin-package-raw-tbdapa4u",
+  "normalization": "Raw bytes archived. Logs remove ANSI/machine paths/trailing whitespace. JSON compaction removes only whitespace outside strings; numeric lexemes and all values remain.",
+  "limitations": [
+    "Package only; full G9 regression reserved for final release source.",
+    "Existing R11 case-response and R16 presenter-hardware dependencies unchanged.",
+    "All endpoints intercepted/injected; no real accounts/services/databases.",
+    "No push, main merge or deployment."
+  ],
+  "next": "Stop after this package; await Nils. Next block integrates prepared panels; rebase future C11 controller onto these ownership fixes."
+}

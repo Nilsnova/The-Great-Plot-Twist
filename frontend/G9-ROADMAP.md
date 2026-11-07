@@ -5,7 +5,8 @@
 Nils asked to reduce the 26-chunk /21½-hour completion plan toward five hours. That earlier
 plan mixed gameplay delivery with full input certification, instrumentation, submission evidence
 and repeated regression cycles. This release queue supersedes it; history is in `753e530`.
-**Implementation remains stopped until Nils asks to continue.** This review changed docs only.
+**Package1 is complete locally. Further implementation is stopped until Nils asks to continue.**
+The scope review changed docs only; the completed package is recorded below.
 
 **Five hours is a capped target, not a verified all-core completion estimate.** It assumes the
 missing R11 response fixtures are published before case integration, closely match the existing
@@ -35,7 +36,7 @@ without Nils asking to continue. An unfinished block remains unfinished.
 
 | Blocks | Budget | Necessary result |
 |---|---:|---|
-| 1 | 30 min | Apply/verify the prepared bulletin opening fix with its focused red/green and meaningful native ownership tests. |
+| 1 | 30 min | **DONE locally:** bulletin opening fix;45 focused tests,212 chaos checks/96 faults, build/spoiler and23 loading checks passed. |
 | 2–3 | 60 min | Reconcile prepared prediction/duel/bulletin code and shared hooks; run changed-domain checks. Fold the small production boundary proof into existing verification. |
 | 4–6 | 90 min | **R11 first.** Compose case validation/projection, server intents, world/effects and refresh ownership. Case leaf preparation runs in parallel with blocks1–3 after fixtures exist. This allocation is provisional until the DTOs are inspectable. |
 | 7 | 30 min | One coherent core gameplay journey plus critical refusal/retry/save/account tests and keyboard/touch/phone smoke checks. Fix release-blocking defects only. |
@@ -88,10 +89,20 @@ and budgets to manufacture a passing release.
 
 ## Current evidence and next block
 
-Source `95de0b6`: Exchange all11 stream gates passed; 3,130 tests /208 files. Last remote remains
-`8844962`; source and latest docs are local. The interrupted driver completed35/44 commands:
-32 passed; living/cinematics FPS and a bulletin opening failure remain recorded; nine commands did
-not complete. Evidence: `captures/20261107_G9-C3-market-paused/paused-proof.json`.
+**Package1 complete:** pending/off Bulletin openings clear their own loader, preserve newer native
+navigation and Escape ownership, and clean up failed replacement imports. Native tests also check
+18 px pending text and no horizontal overflow at320 px and the short375×400 viewport.
 
-The existing prepared four-file bulletin fix is the first implementation block. Case work cannot
-start until R11 is ready. See `HANDOFF-G9.md` for exact source/evidence and historical checks.
+Verified:45 focused tests /6 files, including11 native opening cases; build/spoiler,23 loading
+checks and the complete local chaos run (212 checks /96 fault cases). Cold title remains
+21,071 JS /11,878 CSS bytes, within the unchanged limits. Independent review is clear.
+Evidence: `captures/20261107_G9-C3-bulletin-open/proof.json`; source is pinned by its four hashes.
+Earlier partial/full-run evidence is preserved; this is a package result, not a completed G9 checkpoint.
+
+**Nine planned30-minute budget blocks remain (270 minutes), not a confirmed completion estimate.**
+R11/R16 and the provisional case allocation are unchanged. Next is block2, prepared panel integration,
+only after Nils asks to continue. Future C11 controller code must be rebased onto this ownership fix.
+
+The code/evidence/handoff are committed locally together. Last verified remote remains `8844962`;
+no push, main merge or deployment was performed. Final frozen regression remains reserved for the
+integrated release source. See `HANDOFF-G9.md` for the package result and historical checks.

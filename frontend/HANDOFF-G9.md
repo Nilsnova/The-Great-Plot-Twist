@@ -8,6 +8,41 @@ Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils ask
 shortest working core release, targeting five hours. The latest review below supersedes the
 26-chunk completion queue; all 17 overflow items remain deferred. Implementation stays paused.
 
+## Package1 complete: Bulletin opening ownership (7 Nov 2026)
+
+**The authorized first package is finished. Stop here; do not start block2 until Nils asks.**
+
+Changed: known-off/disposed openings load no Bulletin; cancelled lazy work cannot reopen it or
+leave an opening banner. Active and pending pages have separate owners, so Bulletin-off preserves
+newer native navigation and its Escape handling. While an off Bulletin is replaced, a readable
+pending status keeps the existing modal owning input; completion replaces it, Escape cancels it,
+and rejection clears it. Genuine load errors retain the fixed four-second notice. No new API,
+intent, adapter schema, outcome rule, timer, package, asset or CSS was added.
+
+Verified: **45 focused tests /6 files**, including **11 native opening cases**, passed. Original
+source failed5/8 regressions; the additional active-Bulletin replacement edge failed3/3 before its
+fix. Final tests cover actual module barriers, supersession, native picker/Escape, rejection cleanup,
+18 px text and no horizontal overflow at320 and375×400. Adjacent arrival/islet presentation checks
+pass. The complete local chaos command now passes **212 checks /96 fault cases**, including all
+later gameplay/refusal/error/network assertions. Build/spoiler and **23 loading checks** pass;
+cold title remains **21,071 JS /11,878 CSS bytes**. No budgets/assertions were lowered.
+
+Evidence: `captures/20261107_G9-C3-bulletin-open/proof.json`, all red/green and gate logs, complete
+chaos/loading reports and four final source fingerprints. Independent review is clear after the
+additional replacement edge was fixed. Raw generated captures are archived; the three historical
+capture files were restored exactly. Total C3 evidence is2,415,879 bytes, below3 MB.
+
+Commit scope is the bridge, case controller, chaos off block and one new native test, plus this
+handoff/roadmap/evidence. Runtime source base is `b94621d`; the candidate is pinned by the proof's
+four fingerprints. This source/evidence is committed locally together. Remote remains `8844962`;
+**no push/main merge/deployment**. All tests used injected/local/intercepted data, no real services.
+
+Not verified here: the full G9 suite or real case integration. The final frozen full regression is
+reserved for integrated release source. R11 case-response and R16 hardware dependencies remain.
+**Nine planned30-minute budget blocks remain**, with the case estimate still conditional. Next is
+prepared panel integration. Rebase future C11 controller work onto this fix; never overwrite it with
+its older prepared controller. No additional package was started.
+
 ## Lean core-release review (7 Nov 2026)
 
 **Planning review only: no application code changed, no tests started, no push.** Nils requested

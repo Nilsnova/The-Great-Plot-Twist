@@ -1,0 +1,70 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/bulletin-open-lifecycle.test.js -t visible Bulletin turns off|failed replacement
+
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/bulletin-open-lifecycle.test.js (11 tests | 3 failed | 8 skipped) 11882ms
+   × keeps a newer native page owned when the visible Bulletin turns off: cancel false 3854ms
+   × keeps a newer native page owned when the visible Bulletin turns off: cancel true 2781ms
+   × cleans up a failed replacement after Bulletin off while preserving the bridge error notice 2624ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > keeps a newer native page owned when the visible Bulletin turns off: cancel false
+ FAIL  tests/bulletin-open-lifecycle.test.js > keeps a newer native page owned when the visible Bulletin turns off: cancel true
+AssertionError: expected { active: false, …(3) } to match object { active: true, …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,7 +1,7 @@
+  {
+-   "active": true,
++   "active": false,
+    "events": [
+      {
+        "type": "bulletin_opened",
+      },
+    ],
+
+ ❯ tests/bulletin-open-lifecycle.test.js:228:33
+    226|       await page.getByLabel('Case page', {exact: true}).selectOption('…
+    227|       await page.evaluate(() => window.bulletinOpenProof.fake.dev.setB…
+    228|       expect(await state(page)).toMatchObject({active: true, events: […
+       |                                 ^
+    229|       expect(await modal(page).locator('.case-pending[role="status"]')…
+    230|         .toBe('Opening the case · Escape to cancel');
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:216:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > cleans up a failed replacement after Bulletin off while preserving the bridge error notice
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/bulletin-open-lifecycle.test.js:258:70
+    256|       await held.started;
+    257|       await page.evaluate(() => window.bulletinOpenProof.fake.dev.setB…
+    258|       expect(await modal(page).locator('.case-pending').isVisible()).t…
+       |                                                                      ^
+    259|       held.release(); await settled(page);
+    260|       expect(await modal(page).count()).toBe(0);
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:249:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 8 skipped (11)
+   Start at  18:56:59
+   Duration  13.48s (tests 90%, import 8%, transform 1%)
