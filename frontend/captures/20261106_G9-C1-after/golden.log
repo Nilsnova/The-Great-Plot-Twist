@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-06T18:14:47.459Z",
+  "checked": "2026-11-07T02:05:47.370Z",
   "scenarios": [
     {
       "name": "solo + three NPC partners",
@@ -116,49 +116,49 @@
     "No external network requests"
   ],
   "timings": {
-    "introMs": 1989,
-    "soloScenarioMs": 3851,
+    "introMs": 33332,
+    "soloScenarioMs": 104443,
     "gullsDesktop": {
-      "fps": 60,
+      "fps": 24,
       "calls": 34,
       "triangles": 74,
       "geometries": 33,
-      "textures": 23,
+      "textures": 28,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
     "gullsPhone": {
-      "fps": 60,
+      "fps": 57,
       "calls": 34,
       "triangles": 74,
       "geometries": 33,
-      "textures": 23,
+      "textures": 28,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
     "desktop": {
-      "fps": 60,
+      "fps": 20,
       "calls": 34,
       "triangles": 74,
       "geometries": 33,
-      "textures": 23,
+      "textures": 28,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
     "phone": {
-      "fps": 61,
+      "fps": 24,
       "calls": 34,
       "triangles": 74,
       "geometries": 33,
-      "textures": 23,
+      "textures": 28,
       "roots": 1,
       "objects": 30,
       "programs": 4
     },
-    "fourHumanScenarioMs": 5044
+    "fourHumanScenarioMs": 98982
   },
   "isletConstruction": {
     "method": "event-fallback",
@@ -166,6 +166,8 @@
     "note": "No islet screen source is present; this verifies the event/store/world seam only."
   },
   "apiDiagnostics": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
   ]

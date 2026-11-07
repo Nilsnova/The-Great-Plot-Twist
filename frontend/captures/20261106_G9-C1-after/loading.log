@@ -1,7 +1,9 @@
 {
-  "checked": "2026-11-06T18:25:18.312Z",
+  "checked": "2026-11-07T02:03:03.081Z",
   "checks": [
-    "Cold title JavaScript stays within the G7 baseline of 21,080 bytes",
+    "Cold title JavaScript stays within the current 21,080-byte budget",
+    "Cold title CSS is below 12 kB; world styles stay deferred",
+    "Detailed original title WebP stays below its reviewed 350 kB image budget",
     "src/game.js is a separate dynamic entry",
     "src/world/cinematics/controller.js is a separate dynamic entry",
     "src/world/places/settlement.js is a separate dynamic entry",
@@ -24,29 +26,34 @@
     "Production title and world have no browser errors or external asset requests"
   ],
   "initialChunks": [
-    "assets/game-PAwCvnWE.js",
-    "assets/modulepreload-polyfill-P2Xu9kJm.js",
-    "assets/modal-DDM-2i_3.js",
+    "assets/game-CF-Rddcf.js",
+    "assets/modal-D-3P8ZZ9.js",
     "assets/dom-BE8XS1OM.js",
     "assets/button-BTb4MpEB.js",
     "assets/screens-D18ve9zg.js",
-    "assets/preload-helper-DclECHGd.js",
+    "assets/preload-helper-BQUUbbNx.js",
     "assets/unavailable-DbslxiYo.js",
     "assets/extensions-CdpB2987.js",
     "assets/contract-CZypeDED.js",
     "assets/intro-journal-DJj67nNK.js",
     "assets/events-C31BJoij.js"
   ],
-  "initialJavaScript": 20971,
-  "initialGzip": 10041,
+  "initialJavaScript": 21072,
+  "initialGzip": 9839,
+  "initialCss": 11878,
+  "titleImageBytes": 274026,
   "lazyEntries": [
     {
+      "key": "node_modules/@supabase/supabase-js/dist/index.mjs",
+      "file": "assets/dist-Cd0T2iN4.js"
+    },
+    {
       "key": "src/adapter/intent.js",
-      "file": "assets/intent-e7OpNU0j.js"
+      "file": "assets/intent-Du4_Ytnt.js"
     },
     {
       "key": "src/adapter/local-start.js",
-      "file": "assets/local-start-B3OooAKH.js"
+      "file": "assets/local-start-Bn654fVI.js"
     },
     {
       "key": "src/audio/captions-view.js",
@@ -54,11 +61,11 @@
     },
     {
       "key": "src/audio/controller.js",
-      "file": "assets/controller-CNHftZbi.js"
+      "file": "assets/controller-BTVq4amK.js"
     },
     {
       "key": "src/controls/gamepad.js",
-      "file": "assets/gamepad-ByCTMijp.js"
+      "file": "assets/gamepad-Cn_uKXxt.js"
     },
     {
       "key": "src/demo/intro-story.json",
@@ -66,19 +73,27 @@
     },
     {
       "key": "src/game.js",
-      "file": "assets/game-Ch-vG9Na.js"
+      "file": "assets/game-J8ePf0vK.js"
+    },
+    {
+      "key": "src/online/auth-return.js",
+      "file": "assets/auth-return-BbrFisGl.js"
+    },
+    {
+      "key": "src/online/auth.js",
+      "file": "assets/auth--7QEedW2.js"
     },
     {
       "key": "src/online/case-adapter/index.js",
-      "file": "assets/case-adapter-DeIleCf4.js"
+      "file": "assets/case-adapter--3qEFpa-.js"
     },
     {
       "key": "src/screens/account/index.js",
-      "file": "assets/account-DSaHTi6G.js"
+      "file": "assets/account-Bqm357L6.js"
     },
     {
       "key": "src/screens/account/summary.js",
-      "file": "assets/summary-Cm0ifBcS.js"
+      "file": "assets/summary-C5WXH3mK.js"
     },
     {
       "key": "src/screens/accusation.js",
@@ -94,27 +109,63 @@
     },
     {
       "key": "src/screens/controller.js",
-      "file": "assets/controller-Bx6I6d9O.js"
+      "file": "assets/controller-CZP4ttHd.js"
+    },
+    {
+      "key": "src/screens/duels/index.js",
+      "file": "assets/duels-CTt1AMpP.js"
+    },
+    {
+      "key": "src/screens/festival/adapter.js",
+      "file": "assets/adapter-DQenS_hn.js"
+    },
+    {
+      "key": "src/screens/festival/entry.js",
+      "file": "assets/entry-BbnFTVJ3.js"
+    },
+    {
+      "key": "src/screens/festival/local.js",
+      "file": "assets/local-DKkRlfC7.js"
+    },
+    {
+      "key": "src/screens/festival/panel.js",
+      "file": "assets/panel-CndK6FfJ.js"
     },
     {
       "key": "src/screens/finale.js",
-      "file": "assets/finale-Dx0vi2zR.js"
+      "file": "assets/finale-CZrTIijE.js"
     },
     {
       "key": "src/screens/islet/panel.js",
-      "file": "assets/panel-CD2vLADs.js"
+      "file": "assets/panel-DP5P-9EN.js"
     },
     {
       "key": "src/screens/log/index.js",
       "file": "assets/log-BS-KJtIQ.js"
     },
     {
+      "key": "src/screens/market/http.js",
+      "file": "assets/http-Bk4a5JYD.js"
+    },
+    {
+      "key": "src/screens/market/index.js",
+      "file": "assets/market-DAfBVaNk.js"
+    },
+    {
+      "key": "src/screens/market/panel.js",
+      "file": "assets/panel-DV9cAx8g.js"
+    },
+    {
       "key": "src/screens/partners/index.js",
       "file": "assets/partners-BmB7h10I.js"
     },
     {
+      "key": "src/screens/predictions/desk.js",
+      "file": "assets/desk-BV5dW-wj.js"
+    },
+    {
       "key": "src/screens/presence/index.js",
-      "file": "assets/presence-mJl7Jt6X.js"
+      "file": "assets/presence-D2hSPSc-.js"
     },
     {
       "key": "src/screens/relighting.js",
@@ -130,11 +181,19 @@
     },
     {
       "key": "src/screens/rewards/index.js",
-      "file": "assets/rewards-Btc05cjI.js"
+      "file": "assets/rewards-DXtad0bn.js"
     },
     {
       "key": "src/screens/search.js",
-      "file": "assets/search-qDvi4rJN.js"
+      "file": "assets/search-gf8r2b-w.js"
+    },
+    {
+      "key": "src/screens/sports/http.js",
+      "file": "assets/http-BW0R4XlV.js"
+    },
+    {
+      "key": "src/screens/sports/panel.js",
+      "file": "assets/panel-DRZBAciU.js"
     },
     {
       "key": "src/settings/preferences.js",
@@ -142,15 +201,19 @@
     },
     {
       "key": "src/settings/view.js",
-      "file": "assets/view-D4_tOlnJ.js"
+      "file": "assets/view--xzZDlPP.js"
     },
     {
       "key": "src/shell/account-host.js",
-      "file": "assets/account-host-BcGm82v0.js"
+      "file": "assets/account-host-8OK7x8cs.js"
+    },
+    {
+      "key": "src/shell/after-paint.js",
+      "file": "assets/after-paint-BS5JQohi.js"
     },
     {
       "key": "src/shell/credits.js",
-      "file": "assets/credits-CKfuXdHH.js"
+      "file": "assets/credits-CSo5SWZI.js"
     },
     {
       "key": "src/shell/hints/index.js",
@@ -158,72 +221,79 @@
     },
     {
       "key": "src/shell/hints/shortcuts.js",
-      "file": "assets/shortcuts-CkBoTgYa.js"
+      "file": "assets/shortcuts-D52i_jXn.js"
     },
     {
       "key": "src/shell/pause.js",
-      "file": "assets/pause-BRvDyJXX.js"
+      "file": "assets/pause-DAVXkG_f.js"
     },
     {
       "key": "src/shell/subpages.js",
-      "file": "assets/subpages-DTcJk0TU.js"
+      "file": "assets/subpages-CXf_1nhF.js"
+    },
+    {
+      "key": "src/shell/world-loader.js",
+      "file": "assets/world-loader-Dd1h2Am9.js"
     },
     {
       "key": "src/ui/cinematic-demo.js",
-      "file": "assets/cinematic-demo-sgtV-K-y.js"
+      "file": "assets/cinematic-demo-DBpAazJ3.js"
     },
     {
       "key": "src/ui/kit-gallery.js",
-      "file": "assets/kit-gallery-BzC9q8-K.js"
+      "file": "assets/kit-gallery-C-05nXeQ.js"
     },
     {
       "key": "src/world/cinematics/controller.js",
-      "file": "assets/controller-DwFWd94A.js"
+      "file": "assets/controller-uVIAY0nZ.js"
     },
     {
       "key": "src/world/festival.js",
       "file": "assets/festival-DicRWhZb.js"
     },
     {
+      "key": "src/world/interiors/scene.js",
+      "file": "assets/scene-Cho5PrGb.js"
+    },
+    {
       "key": "src/world/others/index.js",
-      "file": "assets/others-CvZAPYfd.js"
+      "file": "assets/others-DxPHODdW.js"
     },
     {
       "key": "src/world/partners/index.js",
-      "file": "assets/partners-Ch58FoM9.js"
+      "file": "assets/partners-DyrwUWp6.js"
     },
     {
       "key": "src/world/places/gulls-rest.js",
-      "file": "assets/gulls-rest-C6nhBGqB.js"
+      "file": "assets/gulls-rest-DFcihesc.js"
     },
     {
       "key": "src/world/places/home.js",
-      "file": "assets/home-DOINm4E5.js"
+      "file": "assets/home-IQS5HIy7.js"
     },
     {
       "key": "src/world/places/settlement.js",
-      "file": "assets/settlement-BVLwcVJO.js"
+      "file": "assets/settlement-DKdmbuih.js"
     }
   ],
   "titleFrame": {
-    "at": 163.19999998807907,
+    "at": 496.5,
     "resources": [
-      "http://127.0.0.1:61275/assets/game-PAwCvnWE.js",
-      "http://127.0.0.1:61275/assets/modulepreload-polyfill-P2Xu9kJm.js",
-      "http://127.0.0.1:61275/assets/dom-BE8XS1OM.js",
-      "http://127.0.0.1:61275/assets/button-BTb4MpEB.js",
-      "http://127.0.0.1:61275/assets/modal-DDM-2i_3.js",
-      "http://127.0.0.1:61275/assets/screens-D18ve9zg.js",
-      "http://127.0.0.1:61275/assets/extensions-CdpB2987.js",
-      "http://127.0.0.1:61275/assets/preload-helper-DclECHGd.js",
-      "http://127.0.0.1:61275/assets/contract-CZypeDED.js",
-      "http://127.0.0.1:61275/assets/unavailable-DbslxiYo.js",
-      "http://127.0.0.1:61275/assets/intro-journal-DJj67nNK.js",
-      "http://127.0.0.1:61275/assets/game-CuLBcMVK.css",
-      "http://127.0.0.1:61275/assets/events-C31BJoij.js",
-      "http://127.0.0.1:61275/assets/shell-C6vm81aC.css",
-      "http://127.0.0.1:61275/assets/kit-CF1sEVK-.css"
+      "http://127.0.0.1:46485/assets/game-CF-Rddcf.js",
+      "http://127.0.0.1:46485/assets/dom-BE8XS1OM.js",
+      "http://127.0.0.1:46485/assets/button-BTb4MpEB.js",
+      "http://127.0.0.1:46485/assets/modal-D-3P8ZZ9.js",
+      "http://127.0.0.1:46485/assets/screens-D18ve9zg.js",
+      "http://127.0.0.1:46485/assets/preload-helper-BQUUbbNx.js",
+      "http://127.0.0.1:46485/assets/extensions-CdpB2987.js",
+      "http://127.0.0.1:46485/assets/contract-CZypeDED.js",
+      "http://127.0.0.1:46485/assets/unavailable-DbslxiYo.js",
+      "http://127.0.0.1:46485/assets/intro-journal-DJj67nNK.js",
+      "http://127.0.0.1:46485/assets/events-C31BJoij.js",
+      "http://127.0.0.1:46485/assets/game-BcTQkGTN.css",
+      "http://127.0.0.1:46485/assets/kit-Bq3XXrM4.css",
+      "http://127.0.0.1:46485/assets/shell-CrIwa-rZ.css"
     ]
   },
-  "contrast": 6.479354609526834
+  "contrast": 8.975531125356348
 }

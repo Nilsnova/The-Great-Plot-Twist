@@ -1,6 +1,6 @@
 {
-  "checked": "2026-11-06T18:09:00.159Z",
-  "browser": "157.0.8103.39",
+  "checked": "2026-11-07T01:49:20.599Z",
+  "browser": "156.0.8078.79",
   "checks": [
     "Static build loads a WebGL canvas",
     "No dev inspection global",

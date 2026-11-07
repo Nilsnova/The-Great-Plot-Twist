@@ -1,13 +1,19 @@
 {
-  "checked": "2026-11-06T18:18:21.626Z",
+  "checked": "2026-11-07T01:50:55.695Z",
   "checks": [
-    "Vite proxy reaches the actual public intro API",
-    "API returns the original story structure",
+    "Vite proxy reaches the injected public intro API",
+    "API returns the unchanged canonical story",
+    "boathouse: crossing the doorway opens a full-screen room",
+    "cottage: crossing the doorway opens a full-screen room",
     "Physical shore-to-desk visit replays shore_back then to_desk",
-    "Accepted pickup appears in inventory",
-    "Engine notes are visible after a change",
+    "Inventory and past prose stay collapsed during the current passage",
+    "Accepted pickup appears in the optional inventory",
+    "Engine notes remain available in Journal after a change",
+    "Closing Journal keeps the current passage open",
+    "boathouse: crossing the doorway opens a full-screen room",
     "Stairwell plays in the dialogue box",
     "Lamp room plays in the dialogue box",
+    "Room inspections preserve the original exact interaction payloads",
     "The original ending card is shown",
     "Rescue emits the exact intro_ended payload once",
     "Reload restores a replayable move journal",
@@ -15,6 +21,7 @@
     "A locked choice changes no state or move log",
     "Trapped ending emits once",
     "Closing the story restores game focus and controls",
+    "Node probe and browser story reads use only the anonymous canonical proxy endpoint",
     "No browser errors",
     "No external requests"
   ],
@@ -22,5 +29,22 @@
   "endings": [
     "ending_rescue",
     "ending_trapped"
+  ],
+  "proxyRequests": [
+    {
+      "method": "GET",
+      "path": "/api/content/intro-story",
+      "authorized": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/content/intro-story",
+      "authorized": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/content/intro-story",
+      "authorized": false
+    }
   ]
 }

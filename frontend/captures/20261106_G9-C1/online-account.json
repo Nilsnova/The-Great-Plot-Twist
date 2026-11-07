@@ -78,6 +78,12 @@
       "authorized": true
     },
     {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
       "path": "/api/save",
       "method": "GET",
       "bodyKeys": [],
@@ -88,12 +94,6 @@
       "method": "GET",
       "bodyKeys": [],
       "authorized": true
-    },
-    {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
     },
     {
       "path": "/rest/v1/wallet_transactions",
@@ -179,12 +179,6 @@
       "authorized": false
     },
     {
-      "path": "/api/config",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": false
-    },
-    {
       "path": "/api/me",
       "method": "GET",
       "bodyKeys": [],
@@ -195,6 +189,12 @@
       "method": "POST",
       "bodyKeys": [],
       "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
     },
     {
       "path": "/api/save",
@@ -391,16 +391,16 @@
       "authorized": true
     },
     {
-      "path": "/rest/v1/wallet_transactions",
-      "method": "GET",
-      "bodyKeys": [],
-      "authorized": true
-    },
-    {
       "path": "/api/config",
       "method": "GET",
       "bodyKeys": [],
       "authorized": false
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
     },
     {
       "path": "/api/me/name/reroll",

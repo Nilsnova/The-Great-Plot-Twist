@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-06T18:15:19.089Z",
+  "checked": "2026-11-07T02:10:35.311Z",
   "checks": [
     "account.rerollName offline: core gameplay state is unchanged",
     "account.rerollName offline shows a player-safe notice",
@@ -600,27 +600,28 @@
   ],
   "timings": {
     "desktop": {
-      "fps": 60,
+      "fps": 8,
       "calls": 58,
       "triangles": 191,
       "geometries": 56,
-      "textures": 31,
+      "textures": 41,
       "roots": 1,
       "objects": 51,
       "programs": 5
     },
     "phone": {
-      "fps": 60,
-      "calls": 58,
-      "triangles": 191,
+      "fps": 20,
+      "calls": 55,
+      "triangles": 106,
       "geometries": 56,
-      "textures": 31,
+      "textures": 41,
       "roots": 1,
       "objects": 51,
       "programs": 5
     }
   },
   "apiDiagnostics": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
   ]
 }

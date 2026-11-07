@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-06T18:10:19.237Z",
+  "checked": "2026-11-07T01:52:18.651Z",
   "checks": [
     "Startup weather response still drives all four weather values",
     "Gameplay has no provider, licence or attribution block",
@@ -11,17 +11,17 @@
   "hud": [
     {
       "viewport": 1280,
-      "x": 1032.171875,
-      "y": 718.796875,
-      "width": 223.828125,
-      "height": 58
+      "x": 1041.171875,
+      "y": 730,
+      "width": 218.828125,
+      "height": 54
     },
     {
       "viewport": 375,
-      "x": 190.5,
-      "y": 595,
-      "width": 172.5,
-      "height": 62
+      "x": 237.984375,
+      "y": 603,
+      "width": 125.015625,
+      "height": 52
     }
   ]
 }

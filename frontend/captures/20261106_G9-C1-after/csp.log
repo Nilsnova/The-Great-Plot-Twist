@@ -1,6 +1,6 @@
 {
-  "checked": "2026-11-06T18:25:22.566Z",
-  "browser": "157.0.8103.39",
+  "checked": "2026-11-07T02:03:31.682Z",
+  "browser": "156.0.8078.79",
   "pages": [
     {
       "path": "/",
@@ -8,7 +8,7 @@
       "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
       "styles": {
         "fontFamily": "\"Courier New\", monospace",
-        "sheetCount": 4
+        "sheetCount": 6
       },
       "violations": []
     },
@@ -18,7 +18,7 @@
       "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
       "styles": {
         "fontFamily": "\"Courier New\", monospace",
-        "sheetCount": 4
+        "sheetCount": 6
       },
       "violations": []
     },
@@ -38,7 +38,7 @@
       "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
       "styles": {
         "fontFamily": "\"Courier New\", monospace",
-        "sheetCount": 2
+        "sheetCount": 4
       },
       "violations": []
     },
@@ -83,11 +83,26 @@
       "status": 503
     },
     {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
       "path": "/api/weather",
       "status": 503
     }
   ],
   "expected503Diagnostics": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
     "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"

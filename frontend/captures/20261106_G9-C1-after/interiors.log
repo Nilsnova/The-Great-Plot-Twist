@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "Explorer images stay unloaded until a room is entered",
+    "The lighthouse refuses entry until its opened-door gate is supplied",
+    "cottage occupies the full desktop and dispatches its unchanged story interaction",
+    "boathouse occupies the full desktop and dispatches its unchanged story interaction",
+    "lighthouse occupies the full desktop and dispatches its unchanged story interaction",
+    "Every room restores the parent island through its owned exit callback",
+    "Arrow input moves the actual room explorer",
+    "Escape leaves the room and releases movement",
+    "375px room keeps a full scene, readable header and nonoverlapping 44px exit",
+    "320px room keeps a full scene, readable header and nonoverlapping 44px exit",
+    "Disposal removes the room and its resize/input owners",
+    "All nine HD explorer poses load once per owned browser context",
+    "Strict production CSP has no violations, browser errors or external requests"
+  ],
+  "screenshots": [
+    "[temporary capture]",
+    "[temporary capture]",
+    "[temporary capture]",
+    "[temporary capture]",
+    "[temporary capture]"
+  ]
+}

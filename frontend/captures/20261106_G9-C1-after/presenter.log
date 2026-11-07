@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-06T18:14:28.899Z",
+  "checked": "2026-11-07T02:05:03.379Z",
   "checks": [
     "Recording mode fixes the game frame at 1920 by 1080",
     "Presenter controls are visible during the tour",
@@ -14,8 +14,9 @@
     "A later tour dialog remains hidden while the presentation is blanked",
     "Escape restores a later dialog without closing its content",
     "Presenter controls and opened notes remain inside the recording viewport beside the board",
+    "Slower devices can use the offered low quality control",
     "Performance panel reports frame time and renderer counts",
-    "Draw call count stays below 150 after settle (105)",
+    "Draw call count stays below 150 after settle (97)",
     "P freezes an active cinematic as well as the tour clock",
     "Ending the rehearsal cannot leave the screen blanked",
     "Presenter run has no JavaScript errors or external requests"
@@ -27,13 +28,14 @@
     "blankClass": true,
     "visibility": "hidden"
   },
+  "usedLowQualityFallback": true,
   "performance": {
-    "Frames per second": "60",
-    "95th percentile frame": "18.5 ms",
-    "Draw calls": "105",
-    "Triangles": "208",
-    "Geometries": "104",
-    "Textures": "59",
-    "JavaScript heap": "13.8 MB"
+    "Frames per second": "7",
+    "95th percentile frame": "249.2 ms",
+    "Draw calls": "97",
+    "Triangles": "192",
+    "Geometries": "96",
+    "Textures": "27",
+    "JavaScript heap": "10.9 MB"
   }
 }

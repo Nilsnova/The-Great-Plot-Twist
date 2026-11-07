@@ -2,6 +2,7 @@
   "checks": [
     "Credits do not appear on the title menu",
     "Four editable team credit rows",
+    "Unknown teammate names are explicit pending credits without raw placeholders",
     "Credits include Nils Lenke",
     "Credits include Open-Meteo.com",
     "Credits include Binance Vision",

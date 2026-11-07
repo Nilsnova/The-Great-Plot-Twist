@@ -4,81 +4,63 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
-## G9 streams done so far, not a checkpoint: checkpoint 1 integration verified; final driver pending (7 Nov 2026; base ca80469)
+## G9 streams done so far, not a checkpoint (7 Nov 2026; source 03dd379)
 
-Merged from main: `64fc731` through `ca80469`, after earlier checkpoint-1 syncs including
-`db4ddba`/`1da59ae`, `f23e86e`, `f91f541`/`708b7eb` and `364d178`/`6b65028`.
-Branch stays `feat/g9-real-adapter`; no reset, rebase, force push, main integration or deployment.
-Streams 2–5 are implemented. This note describes the current uncommitted integration stage; the
-checkpoint is not complete, and no checkpoint push is claimed yet.
+Streams 2–5 are implemented and the sign-in/account stream gate is green. **Checkpoint 1 is incomplete.**
+Main `64fc731` is adopted through `ca80469`, after earlier merges through `db4ddba`, `f23e86e`,
+`f91f541` and `364d178`. Branch stays `feat/g9-real-adapter`; Claude integrates. No reset, rebase,
+force push, main integration, manual deployment, real account or live database was used.
 
-Changed: stream 2 (`c8e94d7`) supplies the lazy real adapter, shared display data, schema-1 projections,
-validation, recovery and production regression driver. Stream 3 (`387e01b`) adds lazy GitHub PKCE,
-clean callback handling, tab-only session persistence, renewal and logout. Stream 4 (`9772f3e`) adds
-server-owned names/kit grants, own-row rewards, replay saves, explicit conflict choices and confirmed
-deletion. Stream 5 (`74d9a82`, followed by `89aa9bc`) adds safe loading/retry/refusal states, cooldowns,
-reports and recorded production chaos. Cloud proof portability is committed at `ca20f61`.
+Changed: stream 2 (`c8e94d7`) supplies the real adapter core; stream 3 (`387e01b`) wires lazy GitHub
+PKCE/renewal/logout; stream 4 (`9772f3e`) adds authoritative names/kit/rewards/replay saves/conflicts/
+deletion; stream 5 (`74d9a82`, `89aa9bc`) adds loading/retry/cooldown/report states and recorded chaos.
+Cloud proof portability is `ca20f61`. Integration `03dd379` adopts main's compact rooms/story/quiet HUD,
+fixes stale logout/preview/conflict state, and prevents autosaves or Continue from bypassing the current
+identity's cloud reconciliation. Phone text/targets, contrast and arrival focus are preserved.
 
-The current integration adopts main's compact rooms, original detailed coastal art, short passages,
-quiet HUD, three primary case tabs and full case-page picker. Browser journeys use the public account,
-Continue/More, Journal, room-exit and light-tab controls. Assertions for outcomes, exact actions/events,
-UIDs, timing, resources, frame rates and budgets are preserved. Auth/logout wording, checked-code
-cleanup and signed-out Continue no longer retain old account state. Autosaving waits for the current
-identity's initial cloud reconciliation. Continue waits for private hydration, checks identity scope and
-reconciles fresh save reads before applying any cloud continuation; conflicts preserve the device replay
-until an explicit choice. Readable text, 44-pixel controls, solid contrast underlays and modal caption
-rows are retained. Expanded account, Journal, indoor dialog and HUD accessibility states are covered.
+Verified on exact clean source `03dd379`: `npm test` **2,326 tests / 171 files**, build/spoiler guard,
+`npm run test:online` (**18 anonymous + 21 auth + 7 flag/expiry + 45 account checks**), production chaos
+(**28 cases / 160 assertions**, four groups; nine future groups explicitly pending), loading, CSP and
+CSP inventory. Accessibility passes **43 contexts / 129 viewport samples**. Original golden/chaos,
+production, both pixel/UI-kit modes, lifecycle, presenter and main's six visual-release checks pass.
+Cold title: **21,072 JS / 11,878 CSS bytes**, unchanged caps **21,080 / 12,000**. No dependency or
+browser was added. Phone arrival/deletion were reviewed. Independent account/save review found no
+critical issue. Commit-range secret scan and final push checks are recorded at the push.
 
-Verified: the combined gate passes `npm test` (**2,326 tests / 171 files**), build/spoiler guard,
-`npm run test:online` (**18 anonymous + 21 auth + 7 flag/expiry + 45 account checks**), production
-chaos (**28 cases / 160 assertions**, four groups; nine later groups explicitly pending), main's six
-case/interior/intro/HUD/movement/integration browser checks, loading, CSP and CSP inventory.
-Accessibility passes **43 contexts / 129 viewport samples**, with no failures or browser errors.
-Cold title: **21,072 JS / 11,878 CSS bytes**, caps **21,080 / 12,000** unchanged; original detailed
-WebP is 274,026 bytes under main's reviewed 350,000-byte cap. No package or browser was added.
-Phone arrival and deletion were reviewed. Exact summary: `captures/20261106_G9-C1/main-integration-verification.json`.
+Full `npm run test:g9 -- --phase=after --keep-going` completed **37/44**, retaining source-identical
+passes with `--resume` after an environment restart. Every row identifies `03dd379` and clean source.
+Evidence: `captures/20261106_G9-C1/checkpoint1-03dd379-driver.json` and the after logs. Temporary
+capture paths are normalized; the interrupted first-run history is retained separately.
 
-Browser pass: the combined pre-commit gate above is green. Four remaining legacy harnesses now share
-the already verified atomic public text-reveal gesture, avoiding the same disappearing-role race.
-Their exact-commit proof remains pending in `npm run test:g9 -- --phase=after --keep-going` (44 commands).
-Record the tested SHA and every command in the checkpoint JSON; first-driver failures remain historical.
-Do not reuse resume results after source/commit changes: the driver checks both commit and source state.
+Open failures (no gate or quality was reduced):
+- `living`: night storm **33 FPS / 109 calls** on SwiftShader, versus **55 FPS / <150 calls**; initial
+  same-source run was 26 FPS / 111 calls. `world`: ten-trip sample **20 FPS / 97 calls**, versus 30 FPS.
+- `browser`: obsolete fixed-DPR retina assertion conflicts with main's bounded adaptive framebuffer.
+- `experience`: title-pad fixture needs the new Friends step before Settings.
+- `bulletin`: Tonight is unconditionally hidden by quiet HUD; prepared fix puts it inside opt-in Journal.
+- `build-stamp`: opt-in Performance panel blocks the native room Exit click.
+- `claude-islet`: fixture waits for a deliberately blocked world prompt while the panel is open.
 
-Not verified: the final committed 44-command checkpoint driver and final
-commit-range secret scan; actual OAuth/accounts, live databases or sockets; deployed callback/headers
-or a public preview stamp; Safari/Firefox, VoiceOver or physical phone/controller. Tests use injected
-clients, intercepted endpoints, generated credential placeholders and an owned loopback fixture serving
-unchanged public intro bytes through Vite's actual proxy. They do not use real services or accounts.
+Next: continue from these passed streams under this non-checkpoint label (the brief allows early
+stream pushes after three hours), profile unchanged workloads, then apply hash-checked fixes and gates.
+Do not call checkpoint 1 complete until the full driver passes. Keep all frame/draw/title limits and
+onscreen art/weather/crowd/density unchanged. Original stream-6/7 files remain SHA-preserved and absent;
+restore only after proof/push, checking main deltas before replacing tracked files. Continue streams
+6–11, then available final-readiness work while R11 is open; finish case streams when DTO examples arrive.
 
-Remaining: commit the reviewed integration and curated evidence, run the exact-commit checkpoint
-driver and safety check, then push. Keep the checkpoint evidence to about 3 MB.
-After checkpoint-1 proof/push, SHA-check and restore the isolated stream-6/7 preparations and wire,
-verify and commit them separately. Then finish streams 8–11 (checkpoint 3), streams 12–15 against the
-published case DTO fixtures (checkpoint 4), streams 16–21 (checkpoint 5), and the ordered overflow.
-Never stall on unavailable case examples: advance another authorized stream whose inputs exist.
+Requests for Claude: **R11 remains open for sanitized serialized case response examples**. Published
+four-phase routes/fixtures at `3098c0a` still expose CaseSnapshot inputs, not exact nested response
+shapes for earned cards/leads/jobs/lights/partners/credits. Workaround: existing approved placeholder
+schema fixtures only; never read secret case data or the server serializer. R2/R5/R14 deployed/callback/
+public-preview proof remains external. Dictionary R15 is resolved by Nils's exact eight-word exception.
 
-Requests for Claude: **R11 remains open for sanitized serialized case DTO examples**. Published routes
-for all four phases exist at `3098c0a` and on main, but `case_fixtures` currently provide CaseSnapshot
-inputs, not exact nested response keys/types. Please publish redacted serialized GET-case answers for
-active/night/solved states, replacing all IDs and prose with placeholders while preserving shapes for
-cards, leads, search jobs, lights/posts/locks, partner targets/jobs, credits and parted state. This blocks
-verified projections in streams 12–15. Current workaround: approved frontend schema fixtures only;
-never inspect case secrets or the server view implementation. R2/R5 deployment/callback proof and
-R14 public preview proof remain external; the full request table below is retained.
-
-Contract changes Claude must mirror: `mode: 'online'`, reason `sign_in_required`, additive account
-sign-in/setup, name/connection/retry and save-summary fields, and `rewards.status`. Schema stays 1;
-the 24 view keys, 25 intents and exact event/replay behavior remain. Cloud `data` is
-`{kind:'intro'|'world', actions:[accepted_id,...], place:known_place_id}` (at most 300 validated IDs /
-100,000 bytes), never an engine snapshot, auth data or case answers. Default auth persistence is this
-tab's `sessionStorage`, with guarded memory fallback and a tab-persisted PKCE verifier. The game
-never calls `POST /api/auth/exchange`; Claude owns its eventual retirement with the check page/tests.
-The cancelled AI companion stays removed. Credits stay only in Settings → Credits.
-
-Decisions for Nils: none for the current approved scope. Before a final checkpoint note, replace this
-in-progress heading with the required checkpoint-1 heading, final Lisbon time/SHA and verified counts
-only after every required gate is green. If pushing passed streams earlier because the checkpoint has
-exceeded about three hours, retain the exact label “streams done so far, not a checkpoint”.
+Contract changes: mode `online`, reason `sign_in_required`, additive account sign-in/setup/name/
+connection/retry/save fields and `rewards.status`; schema 1, 24 keys, 25 intents and exact events remain.
+Replay data is `{kind:'intro'|'world', actions:[accepted_id,...], place:known_place_id}` (max 300 IDs /
+100,000 bytes), never snapshots/auth/case answers. Default SDK persistence is tab-only sessionStorage
+with guarded fallback/verifier; bearer stays in A2 memory. Callback/auth headers use approved public
+build bindings. No decision is needed from Nils. Actual services, OAuth, databases, sockets, deployed
+callbacks, Safari/Firefox, VoiceOver, physical devices and the presenter laptop remain unverified.
 
 ## Checkpoint-1 cloud portability follow-up (not yet a completed checkpoint)
 
@@ -333,3 +315,7 @@ Additional isolated preparations (syntax/static review only, unapplied and untes
 - `node_modules/.cache/g9-online67-candidates-f91e65db69/`: stream-6/7 intercepted browser fixtures.
 - `node_modules/.cache/g9-production-proof-8supx1iy/`: stream-16 production boundary proofs.
 All have hash manifests and integration notes; apply only after checkpoint-1 proof, then run real gates.
+
+Further isolated candidates (syntax/static review only; unapplied, untested):
+- `node_modules/.cache/g9-stream10-integration-review-8aag_jnp/`: prediction/arena modules, tests and G13 handoff note.
+- `node_modules/.cache/g9-presence-render-6bd5bae39249/`: unchanged-quality captain-label layout optimization plus tests.
