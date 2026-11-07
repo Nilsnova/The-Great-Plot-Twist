@@ -4,6 +4,34 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## Stream 8 committed; full regression recorded (7 Nov 2026, source `e720eaf`)
+
+Changed: authoritative islet integration is committed as `e720eaf`. Main `64fc731` is already
+adopted; the latest fetch found no new main or published case-contract commit. Branch remains
+`feat/g9-real-adapter`. This note and its evidence do not change application source.
+
+Verified: the full driver ran all **44 commands on clean committed source `e720eaf`: 41 passed**.
+Initial failures were living, world and a production intro-view timeout. The isolated diagnostic
+and **two unchanged original production-command reruns passed all seven assertions**, on the same
+clean source. The initial timeout remains recorded; its cause is unproved and no application fix
+is claimed. Latest individual command outcomes are **42 passed / two failed**, combining that full
+run with the production reruns, not claiming a second full run. Evidence, all 44 logs and every
+rerun: `captures/20261107_G9-C3-after/clean-regression-proof.json`. Historical C2/C3 evidence and
+its source/hash chains are preserved.
+
+Browser pass: **streams done so far, not a checkpoint**. The unchanged storm gate measured
+**12 FPS / 112 calls** (requires 55 FPS); travel after ten trips measured **14 FPS / 97 calls**
+(requires 30 FPS). Cinematics passed this run at **30 FPS / 97 calls**, including its later cleanup
+and event assertions. R16 still requests presenter-hardware proof. No frame threshold, density,
+art, weather, crowd count or loading budget was reduced. Cold title remains **21,071 JS /
+11,878 CSS bytes**. All 11 stream gates and **2,896 unit tests / 195 files** passed.
+
+Not verified: R11's live case connection, real OAuth/services/databases, native hidden-tab pause,
+other engines, assistive technology and physical devices. Tests use intercepted/injected endpoints
+and generated placeholders only. Remaining: streams **9–21**, all **17 overflow items**, R11/R16.
+Continue market, predictions/arena, bulletin and available final-readiness work. No new decision
+is needed from Nils. No main merge, deployment or external message was performed.
+
 ## G9 stream 8: islet path passed; continuing G9 (7 Nov 2026)
 
 Merged from main: `64fc731`, already adopted through `ca80469`; latest main and published case

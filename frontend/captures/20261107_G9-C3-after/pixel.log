@@ -1,0 +1,26 @@
+{
+  "checked": "2026-11-07T09:42:23.301Z",
+  "checks": [
+    "Workshop lists public art without finale variants",
+    "Explicit rehearsal gallery lists every registered drawing",
+    "260 PNGs decode at their exact native sizes with visible pixels",
+    "Search finds the side-facing animation family",
+    "Native sprite detail opens",
+    "Escape closes sprite detail",
+    "Staged-art filter agrees with selective preload metadata",
+    "Game requests only active pixel artwork",
+    "World keeps bounded responsive rendering with a usable density floor",
+    "Renderer disables antialiasing",
+    "One explorer uses continuous finite world coordinates",
+    "No browser errors or external requests ()"
+  ],
+  "files": 260,
+  "browser": "156.0.8078.79",
+  "display": {
+    "imageRendering": "auto",
+    "width": 1440,
+    "height": 900,
+    "cssWidth": 1440,
+    "cssHeight": 900
+  }
+}

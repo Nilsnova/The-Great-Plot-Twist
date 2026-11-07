@@ -1,0 +1,398 @@
+[
+  {
+    "id": "tests",
+    "command": "npm test",
+    "code": 0,
+    "ms": 219744,
+    "log": "captures/20261107_G9-C3-after/tests.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "build",
+    "command": "npm run build",
+    "code": 0,
+    "ms": 3963,
+    "log": "captures/20261107_G9-C3-after/build.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "generator",
+    "command": "python3 scripts/pixel_art/generate.py",
+    "code": 0,
+    "ms": 9690,
+    "log": "captures/20261107_G9-C3-after/generator.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "credits",
+    "command": "node scripts/check-credits.js",
+    "code": 0,
+    "ms": 12907,
+    "log": "captures/20261107_G9-C3-after/credits.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "living",
+    "command": "node scripts/check-living.js",
+    "code": 1,
+    "ms": 44294,
+    "log": "captures/20261107_G9-C3-after/living.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "life",
+    "command": "node scripts/check-life.js",
+    "code": 0,
+    "ms": 59873,
+    "log": "captures/20261107_G9-C3-after/life.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "case",
+    "command": "node scripts/check-case.js",
+    "code": 0,
+    "ms": 34827,
+    "log": "captures/20261107_G9-C3-after/case.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "world",
+    "command": "node scripts/check-world.js",
+    "code": 1,
+    "ms": 127497,
+    "log": "captures/20261107_G9-C3-after/world.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "readability",
+    "command": "node scripts/check-readability.js",
+    "code": 0,
+    "ms": 59348,
+    "log": "captures/20261107_G9-C3-after/readability.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "browser",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-browser.js",
+    "code": 0,
+    "ms": 88267,
+    "log": "captures/20261107_G9-C3-after/browser.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "production",
+    "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+    "code": 1,
+    "ms": 32983,
+    "log": "captures/20261107_G9-C3-after/production.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "pixel",
+    "command": "node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 24424,
+    "log": "captures/20261107_G9-C3-after/pixel.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "pixel-production",
+    "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+    "code": 0,
+    "ms": 12447,
+    "log": "captures/20261107_G9-C3-after/pixel-production.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "kit",
+    "command": "node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 4052,
+    "log": "captures/20261107_G9-C3-after/kit.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "kit-production",
+    "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+    "code": 0,
+    "ms": 2790,
+    "log": "captures/20261107_G9-C3-after/kit-production.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "cinematics",
+    "command": "node scripts/check-cinematics.js",
+    "code": 0,
+    "ms": 44363,
+    "log": "captures/20261107_G9-C3-after/cinematics.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "intro",
+    "command": "node scripts/check-intro.js",
+    "code": 0,
+    "ms": 53780,
+    "log": "captures/20261107_G9-C3-after/intro.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "weather",
+    "command": "node scripts/check-weather-wiring.js",
+    "code": 0,
+    "ms": 11266,
+    "log": "captures/20261107_G9-C3-after/weather.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "experience",
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 29116,
+    "log": "captures/20261107_G9-C3-after/experience.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "demo",
+    "command": "node scripts/check-demo.js",
+    "code": 0,
+    "ms": 187798,
+    "log": "captures/20261107_G9-C3-after/demo.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "loading",
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 8928,
+    "log": "captures/20261107_G9-C3-after/loading.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "lifecycle",
+    "command": "node scripts/check-lifecycle.js",
+    "code": 0,
+    "ms": 7733,
+    "log": "captures/20261107_G9-C3-after/lifecycle.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "csp",
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 16019,
+    "log": "captures/20261107_G9-C3-after/csp.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "islet-world",
+    "command": "node scripts/check-islet-world.js",
+    "code": 0,
+    "ms": 19990,
+    "log": "captures/20261107_G9-C3-after/islet-world.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "bulletin",
+    "command": "node scripts/check-bulletin.js",
+    "code": 0,
+    "ms": 14316,
+    "log": "captures/20261107_G9-C3-after/bulletin.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "hook",
+    "command": "node scripts/check-hook.js",
+    "code": 0,
+    "ms": 12998,
+    "log": "captures/20261107_G9-C3-after/hook.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "harbor-life",
+    "command": "node scripts/check-harbor-life.js",
+    "code": 0,
+    "ms": 31962,
+    "log": "captures/20261107_G9-C3-after/harbor-life.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "presenter",
+    "command": "node scripts/check-presenter.js",
+    "code": 0,
+    "ms": 45991,
+    "log": "captures/20261107_G9-C3-after/presenter.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "golden",
+    "command": "node scripts/check-golden-path.js",
+    "code": 0,
+    "ms": 231610,
+    "log": "captures/20261107_G9-C3-after/golden.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "chaos",
+    "command": "node scripts/check-chaos.js",
+    "code": 0,
+    "ms": 359409,
+    "log": "captures/20261107_G9-C3-after/chaos.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "a11y",
+    "command": "node scripts/check-a11y.js",
+    "code": 0,
+    "ms": 191777,
+    "log": "captures/20261107_G9-C3-after/a11y.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "build-stamp",
+    "command": "node scripts/check-build-stamp.js",
+    "code": 0,
+    "ms": 14243,
+    "log": "captures/20261107_G9-C3-after/build-stamp.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "problem-report",
+    "command": "node scripts/check-problem-report.js",
+    "code": 0,
+    "ms": 5747,
+    "log": "captures/20261107_G9-C3-after/problem-report.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "call-states",
+    "command": "node scripts/check-call-states.js",
+    "code": 0,
+    "ms": 20074,
+    "log": "captures/20261107_G9-C3-after/call-states.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "csp-inventory",
+    "command": "node scripts/check-csp-inventory.js",
+    "code": 0,
+    "ms": 688,
+    "log": "captures/20261107_G9-C3-after/csp-inventory.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "online",
+    "command": "node scripts/check-online-golden.js",
+    "code": 0,
+    "ms": 497782,
+    "log": "captures/20261107_G9-C3-after/online.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "online-chaos",
+    "command": "node scripts/check-online-chaos.js",
+    "code": 0,
+    "ms": 282412,
+    "log": "captures/20261107_G9-C3-after/online-chaos.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "claude-islet",
+    "command": "node scripts/check-islet.js",
+    "code": 0,
+    "ms": 35190,
+    "log": "captures/20261107_G9-C3-after/claude-islet.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "case-redesign",
+    "command": "node scripts/check-case-redesign.js",
+    "code": 0,
+    "ms": 13572,
+    "log": "captures/20261107_G9-C3-after/case-redesign.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "interiors",
+    "command": "node scripts/check-interiors.js",
+    "code": 0,
+    "ms": 6205,
+    "log": "captures/20261107_G9-C3-after/interiors.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "intro-pages",
+    "command": "node scripts/check-intro-pages.js",
+    "code": 0,
+    "ms": 31616,
+    "log": "captures/20261107_G9-C3-after/intro-pages.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "redesign-hud",
+    "command": "node scripts/check-redesign-hud.js",
+    "code": 0,
+    "ms": 8450,
+    "log": "captures/20261107_G9-C3-after/redesign-hud.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "redesign-movement",
+    "command": "node scripts/check-redesign-movement.js",
+    "code": 0,
+    "ms": 26265,
+    "log": "captures/20261107_G9-C3-after/redesign-movement.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  },
+  {
+    "id": "redesign-integration",
+    "command": "node scripts/check-redesign-integration.js",
+    "code": 0,
+    "ms": 14538,
+    "log": "captures/20261107_G9-C3-after/redesign-integration.log",
+    "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+    "sourceDirty": false
+  }
+]

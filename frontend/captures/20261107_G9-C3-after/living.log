@@ -1,0 +1,21 @@
+PASS Title sign-in uses the local adapter while APIs are down
+PASS Name can be changed once
+PASS The unchanged bundled intro opens without the intro API
+PASS Thirty nearby captains draw at most eight and keep an overflow count
+PASS Eight live captains and effects meet the draw-call budget
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Eight captains with night storm effects keep the frame and draw-call budget
+    at check (file://./scripts/check-living.js:9:33)
+    at file://./scripts/check-living.js:34:40 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

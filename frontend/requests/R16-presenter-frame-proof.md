@@ -2,14 +2,17 @@
 
 1. **Route or setting:** no API, database or header change. This is the existing presenter-laptop
    performance requirement in G9 stream 19 and the checkpoint browser driver.
-2. **Missing proof:** clean committed source `443400c` passes **41/44 commands**. The cloud
-   ANGLE/Vulkan SwiftShader run records **34 FPS / 108 draw calls** in the eight-captain night storm
-   (requires 55 FPS and fewer than 150 calls), **15 FPS / 97 calls** after ten round trips (requires
-   30 FPS), and **17 FPS / 97 calls** during the active cinematic (requires 30 FPS). Every command
-   stopped at its original frame assertion; later assertions in that command were not reached.
-   Exact metrics are retained under `captures/20261107_G9-C2/regression-*.json`, with all 44 logs
-   and source stamps in `captures/20261106_G9-C1-after/`. The earlier `03dd379` run remains in git
-   history with its 37/44 result. These observations do not establish a cause or a hardware pass.
+2. **Missing proof:** clean committed source `e720eaf` initially passes **41/44 commands**. Two
+   unchanged production-command reruns passed after an initial intro timeout; latest individual
+   outcomes are 42/44, with no second full-run claim. The cloud ANGLE/Vulkan SwiftShader run
+   records **12 FPS / 112 draw calls** in the eight-captain night storm (requires 55 FPS and fewer
+   than 150 calls), and **14 FPS / 97 calls** after ten round trips (requires 30 FPS). Those two
+   commands stopped at their original frame assertions; later assertions were not reached.
+   **Cinematics passed** this run at **30 FPS / 97 calls**, including its subsequent assertions.
+   Exact current metrics, all 44 logs, initial failures, reruns and clean source stamps are under
+   `captures/20261107_G9-C3-after/`. Historical `443400c` evidence remains under C2 (41/44 with
+   three frame failures), with its logs in `captures/20261106_G9-C1-after/`. These observations
+   do not establish a cause or a hardware pass.
 3. **Why it matters:** the classroom/presenter frame requirement is not proved. G9 must not label
    checkpoint 1 complete or claim a hardware pass from a cloud software-renderer result.
 4. **Exact request:** run the unchanged offline/intercepted checks `node scripts/check-living.js`,
