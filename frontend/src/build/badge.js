@@ -1,4 +1,5 @@
 // A small world version label; presenter URLs omit it entirely.
+import './badge.css';
 const buildStamp=__BUILD_STAMP__;
 import {formatBuildStamp} from './format.js';
 import {node} from '../ui/kit/dom.js';

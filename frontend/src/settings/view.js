@@ -1,4 +1,5 @@
 // Readable native settings controls. Used by both the title and pause menu.
+import '../shell/preferences.css';
 import {node,uniqueId} from '../ui/kit/dom.js';
 import {getPreferences,setPreferences} from './preferences.js';
 import {noteAdapterView} from '../diagnostics/runtime.js';

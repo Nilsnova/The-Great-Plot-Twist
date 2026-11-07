@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parseColour, compositeColour, luminance, contrastRatio, withinViewport,
   hasHorizontalOverflow, touchTargetMeetsMinimum, minimumTextSize, duplicateNames,
+  insideClosedDetails, renderedForAudit,
 } from '../scripts/a11y-helpers.js';
 
 describe('accessibility colour measurements', () => {
@@ -42,6 +43,52 @@ describe('accessibility colour measurements', () => {
     expect(compositeColour(parseColour('transparent'), parseColour('transparent')).a).toBe(0);
     expect(compositeColour(parseColour('rgb(255 0 0 / .5)'), parseColour('rgb(0 0 255 / .5)')))
       .toEqual({ r: 170, g: 0, b: 85, a: 0.75 });
+  });
+});
+
+describe('native disclosure visibility in the accessibility audit', () => {
+  function element(tagName, parentElement = null, properties = {}) {
+    const el = { tagName: tagName.toUpperCase(), parentElement, children: [],
+      open: false, hidden: false, inert: false, ariaHidden: false,
+      getClientRects: () => [{ width: 80, height: 44 }],
+      getBoundingClientRect: () => ({ width: 80, height: 44 }),
+      contains(child) { for (let node = child; node; node = node.parentElement) if (node === this) return true; return false; },
+      closest() { for (let node = this; node; node = node.parentElement) if (node.hidden || node.inert || node.ariaHidden) return node; return null; },
+      ...properties };
+    parentElement?.children.push(el);return el;
+  }
+  const rendered = el => renderedForAudit(el, () => ({ visibility: 'visible' }));
+
+  it('excludes closed disclosure content even if the browser reports nonzero boxes', () => {
+    const details = element('details'), summary = element('summary', details), icon = element('span', summary);
+    const body = element('section', details), button = element('button', body);
+    expect(rendered(details)).toBe(true);expect(rendered(summary)).toBe(true);expect(rendered(icon)).toBe(true);
+    expect(rendered(body)).toBe(false);expect(rendered(button)).toBe(false);
+    details.open = true;expect(rendered(button)).toBe(true);
+  });
+
+  it('checks every closed details ancestor, including an outer closed disclosure', () => {
+    const outer = element('details'), outerSummary = element('summary', outer), body = element('section', outer);
+    const inner = element('details', body, { open: true }), innerSummary = element('summary', inner), button = element('button', innerSummary);
+    expect(insideClosedDetails(button)).toBe(true);outer.open = true;expect(insideClosedDetails(button)).toBe(false);
+    inner.open = false;expect(rendered(innerSummary)).toBe(true);expect(rendered(button)).toBe(true);
+    expect(rendered(outerSummary)).toBe(true);
+  });
+
+  it('allows only the first direct summary of each closed details', () => {
+    const details = element('details'), body = element('section', details);
+    const nested = element('summary', body), first = element('summary', details), second = element('summary', details);
+    expect(rendered(first)).toBe(true);expect(rendered(second)).toBe(false);expect(rendered(nested)).toBe(false);
+  });
+
+  it('rejects zero-height, hidden, inert and collapsed content without reducing size floors', () => {
+    expect(rendered(element('button', null, { getBoundingClientRect: () => ({ width: 80, height: 0 }) }))).toBe(false);
+    expect(rendered(element('button', element('section', null, { inert: true })))).toBe(false);
+    expect(rendered(element('button', element('section', null, { hidden: true })))).toBe(false);
+    expect(rendered(element('button', element('section', null, { ariaHidden: true })))).toBe(false);
+    expect(renderedForAudit(element('button'), () => ({ visibility: 'collapse' }))).toBe(false);
+    expect(renderedForAudit(element('button'), () => ({ visibility: 'hidden' }))).toBe(false);
+    expect(rendered(element('button'))).toBe(true);
   });
 });
 

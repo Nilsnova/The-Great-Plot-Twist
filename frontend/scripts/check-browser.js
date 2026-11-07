@@ -78,7 +78,9 @@ try {
     return zones;
   });
   for (const [index, zone] of events.entries()) {
-    await page.evaluate(zone => window.__island.player.position.set(zone.x, zone.y, zone.z), zone);
+    // The cottage doorway now enters its room automatically; its outside E zone is still available.
+    await page.evaluate(zone => {const game=window.__island,z=zone.id==='cottage'?7:zone.z;
+      game.player.position.set(zone.x,zone.id==='cottage'?game.world.current.groundHeight(zone.x,z):zone.y,z);}, zone);
     await page.waitForFunction(id => document.querySelector('.interact')?.dataset.zone === id, zone.id);
     await page.keyboard.down('KeyE');
     await page.waitForFunction(count => window.__received.length >= count, index + 1);
@@ -88,6 +90,7 @@ try {
   check(received.length === 4 && received.every((event, index) => event.type === 'interact' && event.id === events[index].id), `All four hooks emit exactly once per held E press: ${JSON.stringify(received)}`);
   await page.evaluate(() => { const game = window.__island; game.player.position.set(-7, 4, 7); });
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700); await page.keyboard.up('KeyW');
+  await dismissIntro(page);
   await page.waitForFunction(() => document.querySelector('.toast').hidden);
   await capture('Exploration');
   await page.evaluate(() => { window.__island.player.position.set(-1, 0, 10);

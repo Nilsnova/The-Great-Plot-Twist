@@ -12,7 +12,10 @@ const sourceDirty=!!execFileSync('git',['status','--porcelain','--',...codePaths
 const commands=[...g8Commands,['build-stamp','node scripts/check-build-stamp.js'],
   ['problem-report','node scripts/check-problem-report.js'],['call-states','node scripts/check-call-states.js'],
   ['csp-inventory','node scripts/check-csp-inventory.js'],['online','node scripts/check-online-golden.js'],['online-chaos','node scripts/check-online-chaos.js']];
-for(const [id,path] of [['claude-islet','scripts/check-islet.js'],['market','scripts/check-market.js']]){
+for(const [id,path] of [['claude-islet','scripts/check-islet.js'],['market','scripts/check-market.js'],
+  ['case-redesign','scripts/check-case-redesign.js'],['interiors','scripts/check-interiors.js'],
+  ['intro-pages','scripts/check-intro-pages.js'],['redesign-hud','scripts/check-redesign-hud.js'],
+  ['redesign-movement','scripts/check-redesign-movement.js'],['redesign-integration','scripts/check-redesign-integration.js']]){
   try{await access(path);commands.push([id,'node '+path]);}catch{/* Add main's panels when available. */}
 }
 await mkdir(folder,{recursive:true});let report=[];

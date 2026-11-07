@@ -40,3 +40,18 @@ body:has(#case-lab){margin:0;background:#1e3c31;color:#ece0b8;overflow:auto}.cas
 /* Keep the only useful action beside the clock and make the offline next step visible. */
 .case-night-overview{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;min-height:58px}.case-night-status{max-width:none}.case-night-action{height:44px;align-self:center}.case-night-empty{padding:6px 4px}.case-finale>.case-bearing-chart{max-width:420px}.case-night-empty p{margin-bottom:12px}
 @media(max-width:760px){.case-night-overview{grid-template-columns:minmax(0,1fr) auto;min-height:92px;gap:8px}.case-night-status{grid-column:1/-1}.case-night-action{justify-self:end}.case-night-action .kit-button{padding:9px 12px}}
+
+/* Readable case copy uses the existing content scroller instead of reducing text on phones. */
+.case-modal .case-screen-content{font-size:18px}
+.case-modal .case-screen-content :is(p,li,dt,dd,small,figcaption,td,th){font-size:18px}
+.case-modal .case-screen-content .case-reveal-line{font-size:19px}
+.case-modal .case-notice,.case-empty,.case-pair-wait,.case-loading{font-size:18px}
+.case-modal :is(button,input,select,summary){min-height:44px}
+.case-modal :is(button:not(.kit-icon-button),input,select){font-size:16px}
+.case-modal :is(.case-caption,.case-bearing-chart figcaption){font-size:18px}
+
+/* Keep contrast measurable and reserve a row only while a modal caption is visible. */
+.case-modal[open]{background-color:#203b33}
+.case-modal[open]:has(>.sound-caption:not([hidden])){grid-template-rows:auto auto minmax(0,1fr)}
+.case-night-help summary{font-size:18px}
+.case-nav>[aria-current=page]{color:#fff0c5}

@@ -9,7 +9,7 @@ import {createAdapterTransport} from './transport.js';
 import {createAdapterPolling} from './polling.js';
 import {createReadMonitor} from './read-monitor.js';
 import {createProfileHandlers, initializeAccountName} from './profile.js';
-import {createAccountSaves} from './saves.js';
+import {createAccountSaves, replaySaveData} from './saves.js';
 import {createAccountLifecycle} from './account-lifecycle.js';
 import {refreshAccountRewards} from './rewards.js';
 import {createCrewHandlers} from './crew.js';
@@ -51,6 +51,7 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.readMonitor = createReadMonitor(ctx);
   ctx.transport = createAdapterTransport(ctx);
   ctx.saves = createAccountSaves(ctx);
+  ctx.saves.pauseIdentity();
   const accountLifecycle = createAccountLifecycle(ctx);
   ctx.writeDeviceReplay = data => {
     try {
@@ -64,6 +65,7 @@ export function createRealCaseAdapter(deps = {}) {
   let privateTask = null;
   let signingOut = false;
   let authIntentGeneration = 0;
+  const deviceSaveState = () => replaySaveData(ctx.state.deviceSave?.data) ? 'saved' : 'idle';
   async function hydrate({automatic = false, meAlreadyRead = false} = {}) {
     if (!session.isSignedIn() || store.isClosed() || ctx.document?.hidden) return;
     const epoch = store.scope();
@@ -74,15 +76,19 @@ export function createRealCaseAdapter(deps = {}) {
       if (result.mapped.accepted && store.isCurrent(epoch)) {
         await initializeAccountName(ctx);
         if (!store.isCurrent(epoch)) return;
-        await Promise.all([ctx.transport.read('save'), ctx.transport.read('crew')]);
+        const [saved] = await Promise.all([ctx.transport.read('save'), ctx.transport.read('crew')]);
         if (!store.isCurrent(epoch)) return;
-        accountLifecycle.reconcile();
+        if (saved.mapped.accepted) accountLifecycle.reconcile();
         await refreshAccountRewards(ctx);
       }
     })();
     privateTask = task;
     try { await task.promise; } finally { if (privateTask === task) privateTask = null; }
   }
+  ctx.waitForSave = async () => {
+    const task = privateTask;
+    if (task?.epoch === store.scope()) await task.promise;
+  };
   ctx.retryRead = async kind => {
     const scope = store.scope();
     const result = await ctx.transport.read(kind, {automatic: true});
@@ -95,10 +101,12 @@ export function createRealCaseAdapter(deps = {}) {
     ctx.readMonitor.reset();
     signingOut = true;
     store.invalidate();
+    ctx.saves.pauseIdentity();
     const authTask = ctx.auth.signOut?.();
     session.clearToken();
     ctx.transport.clearPending();
-    store.commit({accountState: 'signed_out', me: null, profile: null, crew: null,
+    store.commit({accountState: 'signed_out', auth: ctx.auth.read?.() ?? null,
+      me: null, profile: null, crew: null, joinPreview: null, saveState: deviceSaveState(),
       nameReply: null, nameStatus: null, cloudSave: null, rewardsRows: [], rewardsStatus: null, continuation: null});
     try { await authTask; } finally { signingOut = false; }
     return ctx.accept('You are signed out. Your local intro is kept.');
@@ -107,15 +115,18 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed() || signingOut) return;
     ctx.readMonitor.reset();
     store.invalidate();
+    ctx.saves.pauseIdentity();
     if (signedIn) {
       ctx.transport.clearPending();
-      store.commit({accountState:'signed_in',me:null,profile:null,crew:null,nameReply:null,nameStatus:null,
+      store.commit({accountState:'signed_in',me:null,profile:null,crew:null,joinPreview:null,
+        saveState:deviceSaveState(),nameReply:null,nameStatus:null,
         cloudSave:null,rewardsRows:[],rewardsStatus:null,continuation:null});
       void hydrate();
     } else {
       authIntentGeneration += 1;
       ctx.transport.clearPending();
-      store.commit({accountState:'expired',me:null,profile:null,crew:null,nameReply:null,nameStatus:null,
+      store.commit({accountState:'expired',me:null,profile:null,crew:null,saveState:deviceSaveState(),
+        nameReply:null,nameStatus:null,
         cloudSave:null,rewardsRows:[],rewardsStatus:null,continuation:null,joinPreview:null});
     }
   });

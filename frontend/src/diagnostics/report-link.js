@@ -1,4 +1,5 @@
 // Prepare an external public issue draft with an explicit account notice; never submit it.
+import './report.css';
 import {node, uniqueId} from '../ui/kit/dom.js';
 import {createProblemUrl} from './report-url.js';
 import {noteUiAction, readDiagnostics} from './runtime.js';

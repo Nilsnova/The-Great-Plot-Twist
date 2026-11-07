@@ -28,14 +28,14 @@ export function createOnlineChaosFaults(page) {
     requests.push({group: selected.group, fault: fault.id, path, method: request.method()});
     if (fault.status === 0) return route.abort('failed');
     return route.fulfill({status: fault.status,
-      headers: fault.status === 429 ? {'Retry-After': '3'} : {},
+      headers: fault.status === 429 ? {'Retry-After': String(selected.cooldownSeconds)} : {},
       json: {error: {code: fault.code, message: 'Recorded service failure.'}}});
   };
   return {
     requests,
     async install() { await page.route('**/api/**', handler); },
-    set({group, paths, method = 'POST'}, fault) {
-      selected = {group, paths: [...paths], method, fault};
+    set({group, paths, method = 'POST', cooldownSeconds = 3}, fault) {
+      selected = {group, paths: [...paths], method, cooldownSeconds, fault};
     },
     clear() { selected = null; },
     async dispose() { selected = null; await page.unroute('**/api/**', handler); },

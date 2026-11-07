@@ -12,7 +12,9 @@ export function createModal({ title = 'Details', body = '', onClose, onCancel } 
   const key = event => {
     if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(onCancel)onCancel();else close('escape');return;}
     if(event.key!=='Tab')return;
-    const controls=[...element.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea,a[href],summary,[tabindex="0"]')].filter(control=>control.getClientRects().length);
+    const controls=[...element.querySelectorAll('button,input,select,textarea,a[href],summary,[tabindex="0"]')]
+      .filter(control=>!control.disabled&&control.offsetHeight
+        &&!control.closest('[hidden],[inert],details:not([open])>:not(summary)'));
     const first=controls[0],last=controls.at(-1);
     if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){event.preventDefault();(event.shiftKey?last:first)?.focus();}
   };

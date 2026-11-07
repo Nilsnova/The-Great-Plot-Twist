@@ -42,15 +42,24 @@ it('keeps supplied captain data literal and its save state honest',async()=>{
 });
 
 it('shows friends from the title without pretending a disconnected build has online crews',async()=>{
-  const result=await evaluate(async()=>{
-    const {createShell}=await window.g20Import('/src/shell/controller.js');const plays=[];
-    const shell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,onPlay:value=>plays.push(value)});
-    const buttons=[...document.querySelectorAll('.shell-menu button')],friend=buttons.find(button=>button.textContent==='Play with friends');
-    const initial=buttons.map(button=>button.textContent);friend.click();const title=document.querySelector('.shell-screen h2').textContent,copy=document.querySelector('.shell-copy').textContent;
-    const before=plays.length;[...document.querySelectorAll('.shell-menu button')].find(button=>button.textContent==='Play solo').click();
-    const result={initial,title,copy,before,plays,mode:shell.mode};shell.dispose();return result;
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createShell}=await window.g20Import('/src/shell/controller.js');window.friendPlays=[];
+      window.friendShell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},
+        focus(){},hasOverlay:()=>false,onPlay:value=>window.friendPlays.push(value)});
+    });
+    expect(await page.locator('.shell-menu button').allTextContents())
+      .toEqual(['New game','Play with friends','Continue','Settings']);
+    await page.getByRole('button',{name:'Play with friends',exact:true}).click();
+    const solo=page.getByRole('button',{name:'Play solo',exact:true});await solo.waitFor();
+    expect(await page.locator('.shell-screen h2').textContent()).toBe('Play with friends');
+    expect(await page.locator('.shell-copy').textContent()).toContain('not connected');
+    expect(await page.evaluate(()=>window.friendPlays.length)).toBe(0);
+    await solo.click();
+    expect(await page.evaluate(()=>({plays:window.friendPlays,mode:window.friendShell.mode})))
+      .toEqual({plays:[false],mode:'playing'});
+    await page.evaluate(()=>window.friendShell.dispose());
   });
-  expect(result.initial).toEqual(['New game','Play with friends','Continue','Settings']);expect(result.title).toBe('Play with friends');expect(result.copy).toContain('not connected');expect(result.before).toBe(0);expect(result.plays).toEqual([false]);expect(result.mode).toBe('playing');
 });
 
 it('delegates to an explicit online entry without inventing a local multiplayer session',async()=>{

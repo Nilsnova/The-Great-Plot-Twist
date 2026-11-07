@@ -8,10 +8,11 @@ import {openAuthFixture} from './online-auth-fixture.js';
 import {createOnlineChaosFaults, onlineChaosFaults, onlineChaosRouteGroups} from './online-chaos-fixtures.js';
 import {introChaosJourney,saveChaosJourney} from './online-chaos-account-journeys.js';
 import {signInFromTitle} from './online-chaos-signin.js';
+import {openAccountControls, openCrewFromHud} from './online-browser-actions.js';
 
 async function openSignedInAccount({page, url}) {
   await signInFromTitle({page,url});
-  await page.getByRole('button', {name: 'Account and saves', exact: true}).click();
+  await openAccountControls(page);
   await page.locator('.account-modal[open]').waitFor();
   await page.getByRole('button', {name: 'Change captain name once', exact: true}).waitFor();
 }
@@ -64,7 +65,7 @@ export function createCrewChaosJourney() {
       await page.locator('.account-modal').waitFor({state: 'hidden'});
       await page.locator('.shell-menu').getByRole('button', {name: 'Continue', exact: true}).click();
       await page.locator('.hud.exploring').waitFor();
-      await page.locator('.case-toolbar').getByRole('button', {name: 'Crew', exact: true}).click();
+      await openCrewFromHud(page);
       await page.locator('.case-modal[open] .case-crew').waitFor();
       await page.getByRole('button', {name: 'Start a crew', exact: true}).waitFor();
     },
@@ -125,7 +126,7 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
           const before = await journey.snapshot(env, fault);
           const requestStart = faults.requests.length;
           faults.set(journey, fault);
-          await journey.trigger(env, fault);
+          await journey.trigger(env, fault, {before, check});
           const call = page.locator(journey.call);
           await call.waitFor({state: 'visible'});
           await page.waitForFunction(({selector, phase}) =>
@@ -134,9 +135,12 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
           check(fault.words.test(await call.textContent()), `${journey.group}/${fault.id}: refusal has plain words at ${width}`);
           check(faults.requests.length > requestStart, `${journey.group}/${fault.id}: the real route was intercepted`);
           await journey.unchanged(env, before, fault);
-          const expectedFocus = journey.expectedFocus?.(fault) ?? (fault.status === 401 ? 'account-sign-in' : journey.focus);
-          await page.waitForFunction(key => document.activeElement?.dataset.focus === key, expectedFocus);
-          check(true, `${journey.group}/${fault.id}: focus stays on the next available control`);
+          if (journey.checkFocus && fault.status === 401) await journey.checkFocus(env, fault, check);
+          else {
+            const expectedFocus = journey.expectedFocus?.(fault) ?? (fault.status === 401 ? 'account-sign-in' : journey.focus);
+            await page.waitForFunction(key => document.activeElement?.dataset.focus === key, expectedFocus);
+            check(true, `${journey.group}/${fault.id}: focus stays on the next available control`);
+          }
           const reportLink = call.getByRole('link', {name: 'Report a problem', exact: true});
           check(await reportLink.isVisible(), `${journey.group}/${fault.id}: a report action is available`);
           if (fault.status === 429) {

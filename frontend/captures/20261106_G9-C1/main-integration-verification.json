@@ -1,0 +1,119 @@
+{
+  "checked": "2026-11-07T01:39:36.534169+00:00",
+  "stage": "pre-commit combined main integration; full checkpoint driver pending",
+  "baseCommit": "ca80469",
+  "mergedMain": "64fc731",
+  "sourceDirty": true,
+  "gates": [
+    {
+      "command": "npm test",
+      "code": 0
+    },
+    {
+      "command": "npm run build",
+      "code": 0
+    },
+    {
+      "command": "npm run test:online",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-online-chaos.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-case-redesign.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-interiors.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-intro-pages.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-redesign-hud.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-redesign-movement.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-redesign-integration.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-csp-inventory.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "code": 0
+    }
+  ],
+  "unit": {
+    "tests": 2326,
+    "files": 171
+  },
+  "online": {
+    "golden": 18,
+    "auth": 21,
+    "signin-gate": 7,
+    "account": 45
+  },
+  "chaos": {
+    "cases": 28,
+    "assertions": 160,
+    "coveredGroups": [
+      "account",
+      "intro",
+      "save",
+      "crew"
+    ],
+    "pendingGroups": [
+      "presence",
+      "islet",
+      "market",
+      "predictions",
+      "arena",
+      "bulletin",
+      "case",
+      "partners",
+      "finale"
+    ],
+    "coverage": "partial"
+  },
+  "loading": {
+    "initialJavaScript": 21072,
+    "initialCss": 11878,
+    "titleImageBytes": 274026,
+    "contrast": 8.975531125356348
+  },
+  "caps": {
+    "javaScript": 21080,
+    "css": 12000,
+    "imageBytes": 350000
+  },
+  "a11y": {
+    "contexts": 43,
+    "viewportSamples": 129,
+    "errors": []
+  },
+  "review": "Independent account/save review found no critical issue; four remaining harnesses now share the verified atomic text reveal and will be covered by the committed driver.",
+  "limits": [
+    "No live account, OAuth, database, socket or deployed proof",
+    "Remaining nine chaos route groups await their streams",
+    "Exact committed 44-command checkpoint pass pending"
+  ]
+}

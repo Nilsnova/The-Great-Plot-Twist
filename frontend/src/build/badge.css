@@ -1,0 +1,4 @@
+/* Feature styles arrive with their lazy owner. */
+.build-badge{position:fixed;right:24px;bottom:88px;font:16px/1.4 'Courier New',monospace;padding:3px 7px;color:#fff0c8;background:#20382fe6;pointer-events:none}
+body.presenter-blanking .build-badge{display:none}
+@media(max-width:600px){.build-badge{right:12px;bottom:84px}}

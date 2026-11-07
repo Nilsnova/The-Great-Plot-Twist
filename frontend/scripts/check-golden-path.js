@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
+import {dismissIntro} from './intro-browser-fixture.js';
+import {openCrewFromHud,chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
 
 const env=await openWorldBrowser(),{page}=env,report={checked:new Date().toISOString(),scenarios:[],checks:[],timings:{}};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
@@ -15,21 +17,18 @@ async function openCase(name,params={}){
   await page.evaluate(({name,params})=>window.__island.caseUi.open(name,params),{name,params});
   await page.locator('.case-modal[open]').waitFor();await page.locator('.case-screen-content').waitFor();
 }
-async function chooseIntro(id){
-  const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text'});
-  if(await skip.isVisible())await skip.click();
-  const choice=page.locator(`.intro-modal [data-choice="${id}"]`);await choice.waitFor({state:'visible'});await choice.click();
-}
+const chooseIntro=id=>chooseIntroAction(page,id);
 async function finishOriginalIntro(){
   try{await page.locator('.intro-modal[open] .intro-view').waitFor();}
   catch(error){const diagnostic=await introDiagnostic();report.introFailure=diagnostic;throw new Error(`${error.message}\nIntro startup diagnostic: ${JSON.stringify(diagnostic)}`);}
   for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb','signal'])await chooseIntro(id);
+  await finishIntroPassages(page);
   await page.locator('.intro-modal .intro-ending').waitFor();
   await waitFor(()=>window.__plotTwist.adapter.read().arrival.status==='ready');
   const profile=await page.evaluate(()=>window.__plotTwist.adapter.read().arrival.kit?.id);
   check(profile==='true_keeper','Original ending through the UI yields the accepted True Keeper kit');
   await page.locator('.intro-arrival-slot .case-arrival').waitFor({state:'visible'});
-  await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});
+  await dismissIntro(page);
   // Let the arrival hand-off finish before a test asks the world to travel elsewhere.
   await page.evaluate(async()=>{await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);await window.__island.world.whenIdle();});
 }
@@ -65,7 +64,7 @@ async function newOriginalIntro(){
   await waitForRuntime();await finishOriginalIntro();await verifyIsletStationEventFallback();
 }
 async function makeCrew({humans=false}={}){
-  await openCase('crew');await page.getByRole('button',{name:'Start a crew',exact:true}).click();
+  await openCrewFromHud(page);await page.getByRole('button',{name:'Start a crew',exact:true}).click();
   await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
   if(humans)await page.evaluate(()=>window.__plotTwist.adapter.dev.setSeats([
     {seat:2,kitId:'informant',name:'Captain Shoal'},{seat:3,kitId:'stranger',name:'Captain Reed'},{seat:4,kitId:'witness',name:'Captain Wren'},
@@ -134,6 +133,7 @@ async function soloCase(){
 async function solveNightSolo(){
   await openCase('finale');
   const stationReady=await page.evaluate(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
+  await page.locator('[data-focus="light-tab-islet_signal_station"]').click();
   if(!stationReady)await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button').first().click();
   await waitFor(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
   check(true,'Finale uses the signal station supplied by the islet event');
@@ -142,12 +142,13 @@ async function solveNightSolo(){
   for(const [seat,light] of [[2,'keepers_lamp'],[3,'harbor_light']]){
     const row=page.locator(`.partner-life-card[data-seat="${seat}"]`);await row.getByLabel('Order',{exact:true}).selectOption('man_light');await row.getByLabel('Target',{exact:true}).selectOption(light);await row.getByRole('button',{name:/^Send order ·/}).click();await waitFor(({seat})=>window.__plotTwist.adapter.read().partners.find(partner=>partner.seat===seat)?.job?.order==='man_light',{seat});
   }
-  await openCase('finale');await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button',{name:'Take this post · 1 minute'}).click();await advance(600);
+  await openCase('finale');await page.locator('[data-focus="light-tab-islet_signal_station"]').click();await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button',{name:'Take this post · 1 minute'}).click();await advance(600);
   await lockThreeLightsSolo();
 }
 async function lockThreeLightsSolo(){
   const angles=await page.evaluate(async()=>{const n=await import('/src/adapter/fake/night.js'),m=await import('/src/screens/beam-math.js');return Object.fromEntries(n.lightLocations.slice(0,3).map(light=>[light.id,m.bearingBetween(light,n.rehearsalGlow)]));});
   for(const id of ['keepers_lamp','harbor_light','islet_signal_station']){
+    await page.locator(`[data-focus="light-tab-${id}"]`).click();
     const row=page.locator(`.case-light[data-light="${id}"]`),range=row.locator('input[type=range]');await range.evaluate((input,value)=>{input.value=String(Math.round(value));input.dispatchEvent(new Event('input',{bubbles:true}));},angles[id]);
     await row.getByRole('button',{name:'Lock this beam'}).click();
   }
@@ -157,13 +158,15 @@ async function lockThreeLightsSolo(){
 async function solveNightFourHumans(){
   await openCase('finale');
   const stationReady=await page.evaluate(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
+  await page.locator('[data-focus="light-tab-islet_signal_station"]').click();
   if(!stationReady)await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button').first().click();
   await waitFor(()=>window.__plotTwist.adapter.read().finale.lights.find(light=>light.id==='islet_signal_station')?.ready);
   await page.getByRole('button',{name:'Call nightfall',exact:true}).click();await waitFor(()=>window.__plotTwist.adapter.read().finale.phase==='night');
   await peerIntent(2,'takePost','keepers_lamp');await peerIntent(3,'takePost','harbor_light');
-  await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button',{name:'Take this post · 1 minute'}).click();await advance(60);
+  await page.locator('[data-focus="light-tab-islet_signal_station"]').click();await page.locator('.case-light[data-light="islet_signal_station"]').getByRole('button',{name:'Take this post · 1 minute'}).click();await advance(60);
   const angles=await page.evaluate(async()=>{const n=await import('/src/adapter/fake/night.js'),m=await import('/src/screens/beam-math.js');return Object.fromEntries(n.lightLocations.slice(0,3).map(light=>[light.id,m.bearingBetween(light,n.rehearsalGlow)]));});
   await peerIntent(2,'aim','keepers_lamp',angles.keepers_lamp);await peerIntent(3,'aim','harbor_light',angles.harbor_light);
+  await page.locator('[data-focus="light-tab-islet_signal_station"]').click();
   const row=page.locator('.case-light[data-light="islet_signal_station"]'),range=row.locator('input[type=range]');await range.evaluate((input,value)=>{input.value=String(Math.round(value));input.dispatchEvent(new Event('input',{bubbles:true}));},angles.islet_signal_station);await row.getByRole('button',{name:'Lock this beam'}).click();
   await waitFor(()=>window.__plotTwist.adapter.read().accusation.schoonerFound);check(true,'Four-human crew opens the schooner with two peer aim intents and the local slider');
 }

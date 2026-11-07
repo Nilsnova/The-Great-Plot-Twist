@@ -92,10 +92,11 @@ describe('real account profile',()=>{
     expect(test.store.state.continuation.kind).toBe('intro');
   });
   it('projects sign-in availability without importing auth into presentation code',()=>{
-    const test=setup();test.store.commit({signInAllowed:false,auth:{configured:true,message:'Sign-in opens later.'}});
-    expect(test.store.read().account).toMatchObject({canSignIn:false,signInMessage:'Sign-in opens later.'});
+    const test=setup();test.store.commit({signInAllowed:false,auth:{configured:true,message:'You are signed in.'}});
+    expect(test.store.read().account).toMatchObject({canSignIn:false,
+      signInMessage:'Sign-in opens later. Your progress on this device is kept.'});
     test.store.commit({signInAllowed:true,auth:{configured:false,message:'Sign-in is not configured.'}});
-    expect(test.store.read().account.canSignIn).toBe(false);
+    expect(test.store.read().account).toMatchObject({canSignIn:false,signInMessage:'Sign-in is not configured.'});
   });
 });
 

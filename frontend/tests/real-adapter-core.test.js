@@ -1,5 +1,5 @@
 // Recorded server answers exercise the real adapter without opening a socket or using credentials.
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
 import {createApi} from '../src/online/api.js';
 import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
@@ -70,6 +70,38 @@ describe('real adapter core',()=>{
     const adapter=createRealCaseAdapter({...deps,publicApi:deps.api});
     try{expect((await adapter.continueGame()).accepted).toBe(true);}
     finally{adapter.dispose();}
+  });
+  it('continues an anonymous replay without retrying a previously failed public config read',async()=>{
+    const deps=serverApi();
+    let finishRetry,configReads=0,continuing;
+    const retry=new Promise(resolve=>{finishRetry=resolve;});
+    const originalGet=deps.api.get;
+    deps.api.get=path=>{
+      if(path!=='/api/config')return originalGet(path);
+      configReads++;
+      return configReads===1?Promise.resolve({ok:false,status:0,code:'network_error'}):retry;
+    };
+    const journal=JSON.stringify({version:1,actions:['to_desk','take_key']});
+    const writeLocalSave=vi.fn();
+    const adapter=createRealCaseAdapter({...deps,publicApi:deps.api,
+      readLocalSave:()=>journal,writeLocalSave});
+    try{
+      await vi.waitFor(()=>expect(adapter.read().account.connection.state).toBe('offline'));
+      const deviceBefore=adapter.read().account.save.device;
+      let result=null;
+      continuing=adapter.continueGame().then(value=>{result=value;return value;});
+      await flush();
+      expect(result).toMatchObject({accepted:true,view:{continuation:{source:'local',kind:'intro'}}});
+      expect(configReads).toBe(1);
+      expect(adapter.read().account.save.device).toEqual(deviceBefore);
+      expect(JSON.parse(journal).actions).toEqual(['to_desk','take_key']);
+      expect(writeLocalSave).not.toHaveBeenCalled();
+      expect(deps.calls.some(call=>call.method!=='GET')).toBe(false);
+    }finally{
+      adapter.dispose();
+      finishRetry({ok:true,status:200,data:{flags:{}}});
+      await continuing;
+    }
   });
   it('signs out while bootstrap is pending and ignores the old private response',async()=>{
     const deps=serverApi({signedIn:true});let finish;

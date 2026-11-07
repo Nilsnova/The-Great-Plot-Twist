@@ -2,6 +2,7 @@
   "checks": [
     "Ordinary production title uses the real online adapter at 1280 px",
     "Recorded flag-off build invents no sign-in",
+    "Dialogue paging never enters the accepted move journal",
     "Anonymous ending never grants a local kit",
     "Flag-off or unconfigured arrival exposes no sign-in control",
     "Anonymous ending retains the accepted replay on this device",
@@ -9,6 +10,7 @@
     "Online intro fits 1280 px",
     "Ordinary production title uses the real online adapter at 375 px",
     "Recorded flag-off build invents no sign-in",
+    "Dialogue paging never enters the accepted move journal",
     "Anonymous ending never grants a local kit",
     "Flag-off or unconfigured arrival exposes no sign-in control",
     "Anonymous ending retains the accepted replay on this device",

@@ -4,6 +4,8 @@ import {randomUUID} from 'node:crypto';
 import {ACCOUNT_INTRO_ACTIONS} from './online-account-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 import {signInFromTitle} from './online-chaos-signin.js';
+import {openAccountControls, chooseIntroAction, findIntroChoice,
+  finishIntroPassages, assertEngineReplay} from './online-browser-actions.js';
 
 const finalAction = ACCOUNT_INTRO_ACTIONS.at(-1);
 const saveOverrides = new WeakMap();
@@ -23,14 +25,6 @@ async function useUnclaimedAccount({page, fixtureUserId}) {
     : route.fallback();
   accountOverrides.set(page, handler);
   await page.route('**/api/me', handler);
-}
-
-async function finishIntroText(page) {
-  const skip = page.locator('.intro-modal').getByRole('button', {name: 'Show full text', exact: true});
-  if (await skip.isVisible()) {
-    try {await skip.click({timeout:1000});}
-    catch(error){if(await skip.isVisible())throw error;}
-  }
 }
 
 async function snapshot({page}) {
@@ -55,6 +49,8 @@ function assertNoGrants(before, after, label) {
 
 export const introChaosJourney = Object.freeze({
   group: 'intro', paths: ['/api/intro/complete'], method: 'POST',
+  // This active wait spans the remaining public story pages before the arrival card is shown.
+  cooldownSeconds: 12,
   call: '.case-arrival .server-call', focus: 'retry-server-call',
   expectedFocus(fault) {
     if (fault.status === 401) return 'account-sign-in';
@@ -65,21 +61,36 @@ export const introChaosJourney = Object.freeze({
     await useUnclaimedAccount(env);
     await signInFromTitle(env);
     await startFromTitle(page, {closeIntro: false});
-    for (const id of ACCOUNT_INTRO_ACTIONS.slice(0, -1)) {
-      await finishIntroText(page);
-      await page.locator(`.intro-modal [data-choice="${id}"]`).click();
-    }
-    await finishIntroText(page);
-    await page.locator(`.intro-modal [data-choice="${finalAction}"]`).waitFor();
+    for (const id of ACCOUNT_INTRO_ACTIONS.slice(0, -1)) await chooseIntroAction(page, id);
+    await (await findIntroChoice(page, finalAction)).waitFor();
   },
-  async trigger({page}) {
-    const control = page.locator(`.intro-modal [data-choice="${finalAction}"]`);
+  async trigger(env, fault, {before, check}) {
+    const {page} = env, control = await findIntroChoice(page, finalAction);
     await control.focus();
     await control.click();
+    if (fault.status === 401) {
+      const account = page.locator('.account-modal[open]');
+      await account.waitFor();
+      await account.locator('.account-banner[data-state="expired"]').waitFor();
+      await page.waitForFunction(() => document.activeElement?.dataset.focus === 'account-sign-in');
+      check(true, 'intro/expired: immediate expiry opens Account and focuses sign-in before final passages');
+      await introChaosJourney.unchanged(env, before);
+      await account.getByRole('button', {name: 'Close dialog', exact: true}).click();
+      await account.waitFor({state: 'hidden'});
+    }
+    await finishIntroPassages(page);
+    await assertEngineReplay(page);
+  },
+  async checkFocus({page}, fault, check) {
+    const signIn = page.locator('.case-arrival .server-call').getByRole('button', {name: 'Sign in again', exact: true});
+    assert.ok(await signIn.isVisible() && await signIn.isEnabled(), 'The retained arrival refusal offers sign-in');
+    await page.waitForFunction(() => document.activeElement?.dataset.focus === 'sign-in-server-call');
+    check(true, 'intro/expired: after closing Account and finishing prose, the retained arrival sign-in is reachable');
   },
   snapshot,
   async unchanged(env, before) {
     const after = await snapshot(env);
+    await assertEngineReplay(env.page);
     assertNoGrants(before, after, 'A refused intro confirmation');
     assert.equal(before.journal?.version, 1, 'The staged intro has a versioned local replay');
     assert.deepEqual(before.journal.actions, ACCOUNT_INTRO_ACTIONS.slice(0, -1),
@@ -125,7 +136,7 @@ export const saveChaosJourney = Object.freeze({
     saveOverrides.set(page, handler);
     await page.route('**/api/save', handler);
     await signInFromTitle(env);
-    await page.getByRole('button', {name: 'Account and saves', exact: true}).click();
+    await openAccountControls(page);
     await page.locator('.account-modal[open]').waitFor();
     await page.locator('.account-screen').getByRole('button', {name: 'Continue from cloud', exact: true}).waitFor();
   },

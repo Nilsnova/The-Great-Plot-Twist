@@ -4,23 +4,24 @@ import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
 import {createSession} from '../src/online/session.js';
 
 const okay = data => ({ok: true, status: 200, data});
-function setup() {
+function setup({authOverrides = {}, cloudSave = {version: 1, data: {}}, meOverrides = {}} = {}) {
   const session = createSession();
   session.setToken(`fixture-${crypto.randomUUID()}`);
   const clear = vi.fn();
   const me = {id: 'private-placeholder', captainName: 'Recorded Captain', coins: 0,
-    kit: null, place: null, crews: []};
+    kit: null, place: null, crews: [], ...meOverrides};
   const api = {
     get: vi.fn(async path => okay(path === '/api/config' ? {flags: {sign_in: true}}
-      : path === '/api/me' ? me : path === '/api/crews/me' ? {crew: null} : {version: 1, data: {}})),
+      : path === '/api/me' ? me : path === '/api/crews/me' ? {crew: null} : cloudSave)),
     post: vi.fn(async () => okay({captainName: me.captainName, rerollsLeft: 1})),
     del: vi.fn(async () => okay({deleted: true})),
   };
-  const auth = {signOut: vi.fn(async () => {}), dispose() {}, readOwnLedger: async () => ({ok: true, rows: []})};
+  const auth = {signOut: vi.fn(async () => {}), dispose() {},
+    readOwnLedger: async () => ({ok: true, rows: []}), ...authOverrides};
   const adapter = createRealCaseAdapter({session, api, publicApi: api, auth, clearLocalSave: clear,
     readLocalSave: () => ({version: 1, actions: ['to_desk']}), document: {}, window: {}});
   const ready = () => vi.waitFor(() => expect(adapter.read().account.canReroll).toBe(true));
-  return {session, clear, api, auth, adapter, ready};
+  return {session, clear, api, auth, adapter, ready, me, cloudSave};
 }
 describe('account deletion device cleanup', () => {
   it('accepts a current successful sign-in that fills the in-memory session', async () => {
@@ -110,6 +111,73 @@ describe('account deletion device cleanup', () => {
       await test.adapter.signOut();
       expect(test.clear).not.toHaveBeenCalled();
       expect(test.adapter.read().account.save.device.state).toBe('saved');
+    } finally { test.adapter.dispose(); }
+  });
+  it('shows the current signed-out auth message even when logout notifies synchronously', async () => {
+    let state = {state: 'signed_in', configured: true, message: 'You are signed in.'};
+    const listeners = new Set();
+    const authOverrides = {
+      read: () => ({...state}),
+      subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+      signOut: vi.fn(async () => {
+        state = {state: 'signed_out', configured: true,
+          message: 'You are signed out. Your progress on this device is kept.'};
+        for (const listener of listeners) listener({...state});
+      }),
+    };
+    const test = setup({authOverrides});
+    try {
+      await test.ready();
+      expect(test.adapter.read().account.signInMessage).toBe('You are signed in.');
+      await test.adapter.signOut();
+      expect(test.adapter.read().account).toMatchObject({state: 'signed_out',
+        signInMessage: 'You are signed out. Your progress on this device is kept.'});
+    } finally { test.adapter.dispose(); }
+  });
+  it('removes a checked crew code on logout and keeps it out of the next identity', async () => {
+    const test = setup({meOverrides: {kit: 'witness', place: 'saltreach_harbor'}});
+    try {
+      await test.ready();
+      expect((await test.adapter.joinCrew('old-22x')).accepted).toBe(true);
+      expect(test.adapter.read().crew.joinPreview?.code).toBe('OLD22X');
+      await test.adapter.signOut();
+      expect(test.adapter.read().crew.joinPreview).toBeNull();
+      Object.assign(test.me, {id: crypto.randomUUID(), captainName: 'Second Recorded Captain', kit: null, place: null});
+      test.auth.signIn = vi.fn(async () => {
+        test.session.setToken(`fixture-${crypto.randomUUID()}`);
+        return {ok: true};
+      });
+      expect((await test.adapter.signIn()).accepted).toBe(true);
+      const view = test.adapter.read();
+      expect(view.account.captainName).toBe('Second Recorded Captain');
+      expect(view.crew.joinPreview).toBeNull();
+      expect(JSON.stringify(view)).not.toContain('OLD22X');
+    } finally { test.adapter.dispose(); }
+  });
+  it('leaves a conflicting cloud save behind while preserving local Continue for the next identity', async () => {
+    const test = setup({cloudSave: {version: 2, data: {
+      kind: 'intro', actions: ['to_shore'], place: 'lighthouse_isle'}, updatedAt: null}});
+    try {
+      await test.ready();
+      await vi.waitFor(() => expect(test.adapter.read().account.save.state).toBe('conflict'));
+      expect(test.adapter.read().account.canContinue).toBe(false);
+      await test.adapter.signOut();
+      expect(test.adapter.read().account).toMatchObject({state: 'signed_out', canContinue: true,
+        save: {state: 'saved', device: {state: 'saved'}, cloud: {state: 'idle'}}});
+      const reads = test.api.get.mock.calls.length;
+      expect(await test.adapter.continueGame()).toMatchObject({accepted: true,
+        view: {continuation: {source: 'local', kind: 'intro'}}});
+      expect(test.api.get).toHaveBeenCalledTimes(reads);
+      Object.assign(test.cloudSave, {version: 1, data: {}, updatedAt: null});
+      Object.assign(test.me, {id: crypto.randomUUID(), captainName: 'Second Recorded Captain'});
+      test.auth.signIn = vi.fn(async () => {
+        test.session.setToken(`fixture-${crypto.randomUUID()}`);
+        return {ok: true};
+      });
+      expect((await test.adapter.signIn()).accepted).toBe(true);
+      expect(test.adapter.read().account).toMatchObject({state: 'signed_in', canContinue: true,
+        captainName: 'Second Recorded Captain', save: {state: 'saved', source: 'device'}});
+      expect(test.clear).not.toHaveBeenCalled();
     } finally { test.adapter.dispose(); }
   });
   it('clears the journal only after an explicitly confirmed, validated deletion', async () => {

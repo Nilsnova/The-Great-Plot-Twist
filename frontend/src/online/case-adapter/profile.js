@@ -54,11 +54,15 @@ export function createProfileHandlers(ctx) {
     return result.mapped;
   }
   async function continueGame() {
-    await ctx.readMonitor?.retryFailed();
     if (!ctx.session.isSignedIn()) {
       store.commit({continuation: {source: 'local', kind: 'intro', actions: null, place: 'lighthouse_isle'}});
       return ctx.accept('Your local intro is ready.');
     }
+    const started = store.scope();
+    await ctx.readMonitor?.retryFailed();
+    if (!store.isCurrent(started)) return ctx.refuse('session_expired');
+    await ctx.waitForSave?.();
+    if (!store.isCurrent(started)) return ctx.refuse('session_expired');
     if (state.saveState === 'conflict') return ctx.refuse('save_conflict');
     const scope = store.scope();
     const me = await transport.read('me');
@@ -67,6 +71,10 @@ export function createProfileHandlers(ctx) {
     const missing = saved.reply?.status === 404 && saved.reply.code === 'player_not_set_up';
     if (!saved.mapped.accepted && !(missing && state.me?.kit)) return saved.mapped;
     if (!store.isCurrent(scope)) return ctx.refuse('session_expired');
+    if (saved.mapped.accepted) {
+      const reconciled = ctx.saves?.reconcile?.();
+      if (reconciled && !reconciled.accepted) return reconciled;
+    }
     if (missing) store.commit({cloudSave: null});
     const data = replaySaveData(state.cloudSave?.data);
     if (validReplay(data)) {

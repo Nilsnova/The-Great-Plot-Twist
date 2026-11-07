@@ -939,6 +939,14 @@ hidden tabs and do no work in the frame loop. An unknown PUT outcome reads the c
 another write. Conflicts require a choice: keep this device rereads the version before replacing the
 cloud copy, while use cloud updates the device journal and continuation without a replacement PUT.
 
+Each identity starts with automatic cloud writes paused until its current authoritative save has
+been reconciled. Device moves may continue to stage while reads are pending; a delayed crew read
+cannot let an autosave overwrite a different cloud replay before the conflict choice appears.
+Late flushes are scoped to the identity and cannot clear a newer pending write. Continue also waits
+for pending initial hydration and reconciles its fresh save read before publishing a continuation;
+it cannot silently choose a different cloud replay. Logout removes the
+checked crew preview and cloud-conflict state while keeping valid device progress continuable.
+
 Deletion requires two taps and explains the complete data removal, including coin ledger history.
 Only `{deleted: true}` clears the accepted-action journal and owned auth persistence; ordinary logout
 keeps the journal. Late responses cannot clear or overwrite a newer account. Browser fixtures cover

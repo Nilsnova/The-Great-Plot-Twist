@@ -4,6 +4,7 @@ import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
+import {revealIntroText} from './online-browser-actions.js';
 const root=fileURLToPath(new URL('..',import.meta.url));
 const story=JSON.parse(await readFile(new URL('../../backend/content/story.json',import.meta.url),'utf8'));
 const captures=process.env.INTRO_PAGE_CAPTURES||'/tmp/intro-pages-checks';await mkdir(captures,{recursive:true});
@@ -13,7 +14,7 @@ const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/u
 const report={checks:[],viewports:[]},check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 const rescue=['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb','signal'];
 const trapped=['to_desk','take_key','desk_back','to_shore','take_lantern','trust_fisherman','shore_back','to_tower','unlock_door','climb','untie'];
-const html='<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/src/ui/kit/kit.css"><link rel="stylesheet" href="/src/ui/intro.css"><link rel="stylesheet" href="/src/ui/devices.css"><link rel="stylesheet" href="/intro-pages.css"><script type="module" src="/intro-pages.js"></script></head><body><button id="open">Open story</button><div class="scene" aria-hidden="true">LIGHTHOUSE ISLE</div></body></html>';
+const html='<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/src/ui/base.css"><link rel="stylesheet" href="/src/ui/kit/kit.css"><link rel="stylesheet" href="/src/ui/intro.css"><link rel="stylesheet" href="/src/ui/devices.css"><link rel="stylesheet" href="/intro-pages.css"><script type="module" src="/intro-pages.js"></script></head><body><button id="open">Open story</button><div class="scene" aria-hidden="true">LIGHTHOUSE ISLE</div></body></html>';
 const bootstrap=`import {createIntro} from '/src/story/intro.js';import {setPreferences} from '/src/settings/preferences.js';setPreferences({textSpeed:TEXT_SPEED});window.setTextSpeed=value=>setPreferences({textSpeed:value});window.events=[];window.scenes=[];window.endingReceipts=[];window.intro=createIntro({container:document.body,world:{busy:false,current:{id:'lighthouse_isle'}},on(){return()=>{}},emit(e){window.events.push(e)},onSceneChange(scene){window.scenes.push(scene)},onEnding(e){window.endingReceipts.push(e)}});document.querySelector('#open').onclick=()=>window.intro.begin(true);window.ready=true;`;
 async function pageFor(viewport,{failOnce=false,textSpeed=0,reducedMotion='no-preference'}={}){
   const context=await browser.newContext({viewport,reducedMotion}),page=await context.newPage(),errors=[];let reads=0;
@@ -26,7 +27,7 @@ async function pageFor(viewport,{failOnce=false,textSpeed=0,reducedMotion='no-pr
     if(path.startsWith('/api/'))return route.abort();return route.continue();});
   await page.goto(origin+'/intro-pages');await page.waitForFunction(()=>window.ready);return {context,page,errors,get reads(){return reads;}};
 }
-async function pages(page){for(let n=0;n<30;n++){const skip=page.getByRole('button',{name:'Show full text',exact:true});if(await skip.isVisible())await skip.click();const next=page.locator('[data-choice="intro:next"]');if(!await next.count())return;await next.click();}throw Error('Unbounded passage loop');}
+async function pages(page){for(let n=0;n<30;n++){await revealIntroText(page);const next=page.locator('[data-choice="intro:next"]');if(!await next.count())return;await next.click();}throw Error('Unbounded passage loop');}
 async function choose(page,id){await pages(page);for(let n=0;n<4;n++){const target=page.locator(`[data-choice="${id}"]`);if(await target.count()){await target.click();return;}await page.locator('[data-choice="intro:more"]').click();await pages(page);}throw Error('Choice missing '+id);}
 async function fit(page,label){
   const result=await page.evaluate(()=>{const modal=document.querySelector('.intro-modal'),box=modal.getBoundingClientRect();const text=modal.querySelector('.kit-dialogue-text');const controls=[...modal.querySelectorAll('button,summary')].filter(e=>e.getClientRects().length&&!e.closest('.intro-journal-body'));

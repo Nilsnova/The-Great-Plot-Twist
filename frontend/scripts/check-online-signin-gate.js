@@ -4,6 +4,7 @@ import {writeFile} from 'node:fs/promises';
 import {openAuthFixture} from './online-auth-fixture.js';
 import {signInFromTitle} from './online-chaos-signin.js';
 import {settle} from './world-browser-tools.js';
+import {openAccountControls} from './online-browser-actions.js';
 
 export async function checkOnlineSignInGate(){
   const env=await openAuthFixture(),{page}=env,report={checks:[]};
@@ -19,7 +20,7 @@ export async function checkOnlineSignInGate(){
     await Promise.all([signInFromTitle(env),page.waitForResponse(response=>
       new URL(response.url()).pathname==='/rest/v1/wallet_transactions')]);
     await settle(page);
-    await page.getByRole('button',{name:'Account and saves',exact:true}).click();
+    await openAccountControls(page);
     await page.locator('.account-modal[open] .account-screen').waitFor();
     await page.keyboard.press('Escape');
     await page.locator('.account-modal').waitFor({state:'hidden'});

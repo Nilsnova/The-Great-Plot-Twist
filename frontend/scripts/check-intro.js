@@ -2,6 +2,7 @@
 import {readHttp} from './http-read.js';
 import {openIntroApiFixture} from './intro-api-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
+import {revealIntroText} from './online-browser-actions.js';
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
@@ -11,8 +12,7 @@ const {page}=env;
 const report={checked:new Date().toISOString(),checks:[],apiReads:0,endings:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 async function revealPassage() {
-  const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text',exact:true});
-  if(await skip.isVisible())await skip.evaluate(button=>{if(!button.hidden)button.click();});
+  await revealIntroText(page);
 }
 async function pages() {
   for(let count=0;count<30;count++){

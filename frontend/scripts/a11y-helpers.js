@@ -1,5 +1,5 @@
-// Pure colour, geometry and text checks shared by browser accessibility audits.
-// Colour channels use 0–255; alpha uses 0–1. No browser globals are needed.
+// Colour, geometry, text and rendered visibility checks shared by accessibility audits.
+// Colour channels use 0–255; alpha uses 0–1. DOM checks accept an injected style reader.
 function validColour(colour) {
   return colour && ['r', 'g', 'b'].every((key) =>
     Number.isFinite(colour[key]) && colour[key] >= 0 && colour[key] <= 255)
@@ -122,4 +122,22 @@ export function duplicateNames(names) {
     seen.add(normalized);
   }
   return [...duplicates];
+}
+
+// Closed native details may still expose descendant boxes. Only their first direct
+// summary (and its contents) participates in rendered content and keyboard order.
+export function insideClosedDetails(element) {
+  for (let ancestor = element?.parentElement; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor.tagName?.toLowerCase() !== 'details' || ancestor.open) continue;
+    const summary = [...ancestor.children].find(child => child.tagName?.toLowerCase() === 'summary');
+    if (!summary || !(summary === element || summary.contains(element))) return true;
+  }
+  return false;
+}
+
+export function renderedForAudit(element, styleOf = el => globalThis.getComputedStyle(el)) {
+  if (!element?.getClientRects().length || element.closest('[hidden],[inert],[aria-hidden="true"]')
+    || insideClosedDetails(element)) return false;
+  const rect = element.getBoundingClientRect(), style = styleOf(element);
+  return rect.width > 1 && rect.height > 1 && !['hidden', 'collapse'].includes(style.visibility);
 }

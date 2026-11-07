@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {mkdir, writeFile} from 'node:fs/promises';
 import {openAuthFixture} from './online-auth-fixture.js';
+import {signInFromTitle} from './online-chaos-signin.js';
+import {expandTitleAccount, openAccountControls} from './online-browser-actions.js';
 
 export async function checkOnlineAuth() {
   const env = await openAuthFixture();
@@ -12,8 +14,7 @@ export async function checkOnlineAuth() {
     for (const width of [1280, 375]) {
       Object.assign(env.checks, {pkce: false, exchanged: false, refreshed: false, signedOut: false});
       await page.setViewportSize({width, height: 812});
-      await page.goto(env.url);
-      await page.getByRole('button', {name: 'Sign in with GitHub', exact: true}).click();
+      await signInFromTitle(env);
       await page.locator('.account-summary-state').filter({hasText: 'Signed in'}).waitFor();
       check(env.checks.pkce && env.checks.exchanged, 'Bundled GitHub flow exchanges a PKCE verifier at ' + width);
       check(!new URL(page.url()).searchParams.has('code'), 'Return code is removed from the address');
@@ -22,9 +23,10 @@ export async function checkOnlineAuth() {
       'The default session persists only in this tab');
       check(await page.evaluate(() => !window.__plotTwist && !window.__island), 'Auth needs no production hooks');
       await page.reload();
+      await expandTitleAccount(page);
       await page.locator('.account-summary-state').filter({hasText: 'Signed in'}).waitFor();
       check(true, 'This tab restores its session after reload at ' + width);
-      await page.getByRole('button', {name: 'Account and saves', exact: true}).click();
+      await openAccountControls(page);
       await page.getByRole('button', {name: 'Sign out', exact: true}).waitFor();
       if (width === 375) await page.screenshot({path: 'captures/20261106_G9-C1/auth-account-375.png'});
       const logout = page.waitForResponse(response => new URL(response.url()).pathname === '/auth/v1/logout'

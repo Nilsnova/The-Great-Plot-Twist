@@ -4,14 +4,14 @@ import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {auditRequestStates} from './a11y-request-states.js';
 const env=await openWorldBrowser({hmr:false}),{page}=env,prefix='captures/20261106_G8-A11y';
-const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:['Claude real-server panels absent from main'],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
+const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:['Market, prediction, duel and islet panel audits await their G9 streams'],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
 async function audit(name,selector,context='gameplay'){
  const root=page.locator(selector).last();await root.waitFor({state:'visible'});const sizes=[];
  for(const width of [1280,375,320]){
   await page.setViewportSize({width,height:900});
   sizes.push(await root.evaluate(async(root,{width,context})=>{
    const h=await import('/scripts/a11y-helpers.js');
-   const visible=el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&!el.closest('[hidden],[aria-hidden="true"]')&&el.getBoundingClientRect().width>1;
+   const visible=el=>h.renderedForAudit(el);
    const nameOf=el=>el.getAttribute('aria-label')??(el.getAttribute('aria-labelledby')?.split(/\s+/).map(id=>document.getElementById(id)?.textContent??'').join(' '))??(el.labels?.length?[...el.labels].map(l=>l.textContent).join(' '):el.getAttribute('alt')??el.textContent.trim());
    const controls=[...root.querySelectorAll('button,input,select,a[href],summary,[role="img"]')].filter(visible);
    const missingNames=controls.filter(el=>!nameOf(el)).map(el=>el.tagName+'.'+el.className);
@@ -22,7 +22,7 @@ async function audit(name,selector,context='gameplay'){
     if(![...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())||el.matches('option,script,style')||el.closest('.kit-sr-only,.presence-sr-only'))continue;
     textCount++;const s=getComputedStyle(el),identity=el.tagName.toLowerCase()+'.'+el.classList.toString().replaceAll(' ','.');
     const metadata=el.closest('button,a[href],label,select,output,nav,small,kbd,dt,dd,figcaption,.bulletin-day,.bulletin-next,.bulletin-resets summary,.case-caption,.case-eyebrow,.case-facts,.case-card-credit,.case-card-id,.case-seat-credit,.case-clock,.case-job-report,.partner-chart-caption,.partner-life-status,.case-cited-cards,.kit-badge');
-    const minimum=h.minimumTextSize(el.closest('.kit-dialogue-text,.case-reveal-line')?'story':metadata?'metadata':context);
+    const minimum=h.minimumTextSize(el.closest('.kit-dialogue-text,.case-reveal-line,.intro-original,.intro-notes,.intro-journal-ending-notes')?'story':metadata?'metadata':context);
     if(parseFloat(s.fontSize)<minimum)fonts.push({element:identity,size:parseFloat(s.fontSize),minimum});
     if(el.closest(':disabled'))continue;
     let bg={r:255,g:255,b:255,a:1},unknownBackground=false;const ancestors=[];for(let n=el;n;n=n.parentElement)ancestors.unshift(n);
@@ -35,11 +35,11 @@ async function audit(name,selector,context='gameplay'){
   if(width===375)await page.screenshot({path:`${prefix}-${name}-375.png`});
  }
  await page.setViewportSize({width:1280,height:900});
- const isDialog=await root.evaluate(root=>root.matches('dialog'));
- const focus=await root.evaluate(root=>{const controls=[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href],summary,[tabindex="0"]')].filter(el=>el.getClientRects().length);controls.forEach((el,i)=>el.dataset.a11yOrder=String(i));controls[0]?.focus();return {count:controls.length,positiveTabindex:controls.some(el=>el.tabIndex>0),steps:[]};});
+ const isDialog=await root.evaluate(root=>root.matches('dialog,[role="dialog"]'));
+ const focus=await root.evaluate(async root=>{const {renderedForAudit}=await import('/scripts/a11y-helpers.js');const controls=[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary,[tabindex="0"]')].filter(el=>renderedForAudit(el));root.querySelectorAll('[data-a11y-order]').forEach(el=>delete el.dataset.a11yOrder);controls.forEach((el,i)=>el.dataset.a11yOrder=String(i));controls[0]?.focus();return {count:controls.length,positiveTabindex:controls.some(el=>el.tabIndex>0),order:controls.map(el=>({tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder})),steps:[]};});
  const steps=isDialog?focus.count-1:Math.min(1,focus.count-1);
- for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate((root,i)=>{const el=document.activeElement,s=getComputedStyle(el);return {domOrder:el.dataset.a11yOrder===String(i),inside:root.contains(el),visible:s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0};},i));}
- if(await root.evaluate(root=>root.matches('dialog'))){await root.evaluate(root=>[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href],summary')].filter(el=>el.getClientRects().length).at(-1)?.focus());await page.keyboard.press('Tab');focus.trapped=await root.evaluate(root=>root.contains(document.activeElement));}
+ for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate(async(root,i)=>{const {renderedForAudit}=await import('/scripts/a11y-helpers.js');const el=document.activeElement,s=getComputedStyle(el);return {domOrder:el.dataset.a11yOrder===String(i),inside:root.contains(el),visible:renderedForAudit(el)&&s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0,expectedOrder:String(i),actual:{tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null}};},i));}
+ if(isDialog){await root.evaluate(async root=>{const {renderedForAudit}=await import('/scripts/a11y-helpers.js');[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary,[tabindex="0"]')].filter(el=>renderedForAudit(el)).at(-1)?.focus();});await page.keyboard.press('Tab');focus.trapped=await root.evaluate(root=>root.contains(document.activeElement));focus.trapTarget=await root.evaluate(()=>{const el=document.activeElement;return {tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null};});}
  report.screens.push({name,sizes,focus});console.log('Audited '+name);await writeFile(prefix+'-Checks.json',JSON.stringify(report,null,2));
 }
 try{
@@ -49,8 +49,12 @@ try{
   await page.evaluate(async name=>{const {adapter:a,screens}=window.__caseLab;if(name==='partners'){const partner=a.read().partners.find(p=>p.seat===2);const target=partner?.targets?.fetch?.[0];if(target)await a.orderPartner(2,'fetch',target.id);}if(name==='finale'){a.dev.rehearse('board');a.dev.rehearse('finale');}if(name==='accusation'){for(const [first,second] of [['C3','C4'],['C5','C6'],['C7','C8']]){a.dev.give(first,1);a.dev.give(second,2);await a.pin(first);a.dev.pinForSeat(second,2);await a.pair(first,second);}a.dev.rehearse('lock');await a.boardSchooner();}if(name==='reveal'){const suspect=a.read().accusation.suspects.find(s=>!s.cleared);const result=await a.accuse(suspect.id);if(!result.accepted)throw Error('Placeholder reveal setup failed: '+result.reason);}if(name==='relighting')a.dev.rehearse('relighting');if(name==='bulletin')a.dev.setBulletin('hook');await screens.open(name);},name);await audit(name,'.case-modal[open]','case');await page.keyboard.press('Escape');report.screens.at(-1).escapeClosed=await page.locator('.case-modal[open]').count()===0;
  }
  await stubIntro(page);await page.goto(env.url+'/?case=local&demo=1');await audit('title','.shell-screen[open]');
- await page.getByRole('button',{name:'Settings',exact:true}).click();await audit('settings','.shell-screen[open]');await page.getByRole('button',{name:'Credits',exact:true}).click();await page.locator('.shell-credits').waitFor();await audit('credits','.shell-screen[open]');await page.keyboard.press('Escape');report.creditsEscapeSettings=await page.locator('.shell-screen[open]').getAttribute('data-mode')==='settings';await page.keyboard.press('Escape');report.settingsEscapeTitle=await page.locator('.shell-screen[open]').getAttribute('data-mode')==='title';
- await page.getByRole('button',{name:'New game',exact:true}).click();await page.locator('.intro-modal[open] .intro-view').waitFor();await audit('intro','.intro-modal[open]');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});report.screens.at(-1).escapeClosed=true;report.introEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));
+ await page.locator('.shell-account>summary').click();await page.locator('.shell-account .account-summary').waitFor();await audit('title-account-expanded','.shell-screen[open]');await page.locator('.shell-account>summary').click();
+ await page.getByRole('button',{name:'Settings',exact:true}).click();await page.locator('.preferences').waitFor();await audit('settings','.shell-screen[open]');await page.getByRole('button',{name:'Credits',exact:true}).click();await page.locator('.shell-credits').waitFor();await audit('credits','.shell-screen[open]');await page.keyboard.press('Escape');report.creditsEscapeSettings=await page.locator('.shell-screen[open]').getAttribute('data-mode')==='settings';await page.keyboard.press('Escape');report.settingsEscapeTitle=await page.locator('.shell-screen[open]').getAttribute('data-mode')==='title';
+ await page.getByRole('button',{name:'New game',exact:true}).click();await page.locator('.intro-modal[open] .intro-view').waitFor();await audit('intro','.intro-modal[open]');
+ await page.locator('.intro-journal>summary').click();await page.locator('.intro-journal[open]').waitFor();await audit('intro-journal','.intro-modal[open]');await page.keyboard.press('Escape');report.journalEscapeIntro=await page.evaluate(()=>!document.querySelector('.intro-journal')?.open&&document.querySelector('.intro-modal')?.open);
+ await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});report.screens.at(-1).escapeClosed=true;report.introEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));
+ const room=page.locator('.interiors-scene:not([hidden])');await room.waitFor();await page.waitForFunction(()=>document.querySelector('.interiors-scene:not([hidden])')?.dataset.state==='ready');await audit('interior-cottage','.interiors-scene:not([hidden])');await room.getByRole('button',{name:'Leave room',exact:true}).click();await room.waitFor({state:'hidden'});report.interiorExitCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas:not(.interiors-canvas)'));
  await page.waitForFunction(()=>window.__island);await page.evaluate(()=>window.__island.caseUi.close());
  await page.setViewportSize({width:375,height:900});await page.evaluate(()=>window.__island.audio.cue('build'));await page.locator('.sound-caption:not([hidden])').waitFor();
  report.worldCaption=await page.locator('.sound-caption:not([hidden])').evaluate(el=>{const a=el.getBoundingClientRect(),b=document.querySelector('.bottom-bar').getBoundingClientRect();return {nonoverlap:a.bottom<=b.top,inside:a.top>=0&&a.left>=0&&a.right<=innerWidth&&a.bottom<=innerHeight,size:parseFloat(getComputedStyle(el).fontSize)};});
@@ -59,6 +63,7 @@ try{
  report.modalCaption=await page.locator('.case-modal[open] .sound-caption:not([hidden])').evaluate(el=>{const a=el.getBoundingClientRect(),dialog=el.closest('dialog'),header=dialog.querySelector('.kit-modal-header').getBoundingClientRect(),body=dialog.querySelector('.kit-modal-body').getBoundingClientRect();return {between:a.top>=header.bottom&&a.bottom<=body.top,inside:a.top>=0&&a.left>=0&&a.right<=innerWidth&&a.bottom<=innerHeight,size:parseFloat(getComputedStyle(el).fontSize)};});
  await page.screenshot({path:prefix+'-modal-caption-375.png'});
  await audit('main-crew','.case-modal[open]','case');await page.keyboard.press('Escape');report.caseEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));await audit('world','.hud');
+ await page.getByRole('button',{name:'Controls',exact:true}).click();await page.locator('.controls:not([hidden])').waitFor();await audit('world-controls','.hud');await page.getByRole('button',{name:'Journal',exact:true}).click();await page.locator('.case-toolbar:not([hidden])').waitFor();await audit('world-journal','.hud');await page.keyboard.press('Escape');report.hudJournalEscape=await page.evaluate(()=>document.querySelector('.case-toolbar')?.hidden&&document.activeElement?.matches('.journal-toggle'));
  await page.evaluate(()=>window.__plotTwist.accountHost.open());
  await audit('account','.account-modal[open]');
  for(const state of ['signing_in','signed_in','expired','error']){
@@ -69,7 +74,7 @@ try{
   deviceSave:{state:'saved',label:'Device progress',kind:'intro',actions:['to_desk'],place:'lighthouse_isle'},
   cloudSave:{state:'saved',label:'Cloud progress',kind:'intro',actions:['to_shore'],place:'lighthouse_isle'}}));
  await audit('account-conflict','.account-modal[open]');
- await page.getByRole('button',{name:'Delete my data',exact:true}).click();
+ await page.locator('.account-modal[open]').getByRole('button',{name:'Delete my data',exact:true}).click();
  await audit('account-delete','.account-modal[open]');
  await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'signed_out',saveState:'idle',
   deviceSave:{state:'idle',kind:null},cloudSave:{state:'idle',kind:null}}));
@@ -88,7 +93,7 @@ finally{
  report.failures=report.screens.flatMap(screen=>screen.sizes.flatMap(m=>['missingNames','duplicates','smallTargets','fonts','contrast'].filter(key=>m[key].length).map(key=>({screen:screen.name,width:m.width,check:key,count:m[key].length}))));
  for(const screen of report.screens){for(const m of screen.sizes){for(const key of ['overflow','documentOverflow'])if(m[key])report.failures.push({screen:screen.name,width:m.width,check:key});if(!m.fitsViewport)report.failures.push({screen:screen.name,width:m.width,check:'fitsViewport'});}if(screen.focus.positiveTabindex||screen.focus.steps.some(step=>!step.domOrder||!step.inside||!step.visible)||screen.focus.trapped===false||screen.escapeClosed===false)report.failures.push({screen:screen.name,check:'keyboard'});}
  for(const [name,caption] of [['world',report.worldCaption],['modal',report.modalCaption]])if(!caption||!caption.inside||caption.size<18||caption.nonoverlap===false||caption.between===false)report.failures.push({check:name+'Caption'});
- if(report.externalRequests.length)report.failures.push({check:'externalRequests'});for(const check of ['creditsEscapeSettings','settingsEscapeTitle','introEscapeCanvas','caseEscapeCanvas','accountEscapeCanvas'])if(report[check]!==true)report.failures.push({check});if(report.reducedMotion?.fireworksVisible||report.reducedMotion?.runningAnimations.length)report.failures.push({check:'reducedMotion'});
+ if(report.externalRequests.length)report.failures.push({check:'externalRequests'});for(const check of ['creditsEscapeSettings','settingsEscapeTitle','journalEscapeIntro','introEscapeCanvas','interiorExitCanvas','hudJournalEscape','caseEscapeCanvas','accountEscapeCanvas'])if(report[check]!==true)report.failures.push({check});if(report.reducedMotion?.fireworksVisible||report.reducedMotion?.runningAnimations.length)report.failures.push({check:'reducedMotion'});
  await writeFile(prefix+'-Checks.json',JSON.stringify(report,null,2));await env.close();
 }
 console.log(JSON.stringify({screens:report.screens.length,failures:report.failures,errors:report.errors},null,2));

@@ -3,26 +3,23 @@ import assert from 'node:assert/strict';
 import {mkdir, writeFile} from 'node:fs/promises';
 import {openAccountFixture, ACCOUNT_INTRO_ACTIONS} from './online-account-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
+import {signInFromTitle} from './online-chaos-signin.js';
+import {expandTitleAccount, openAccountControls, openCrewFromHud,
+  chooseIntroAction, finishIntroPassages, assertEngineReplay} from './online-browser-actions.js';
 
 async function playIntro(page,{expectKit=true}={}) {
-  for (const id of ACCOUNT_INTRO_ACTIONS) {
-    const skip = page.locator('.intro-modal').getByRole('button', {name: 'Show full text', exact: true});
-    if (await skip.isVisible()) {try{await skip.click({timeout:1000});}catch(error){if(await skip.isVisible())throw error;}}
-    await page.locator(`.intro-modal [data-choice="${id}"]`).click();
-  }
+  for (const id of ACCOUNT_INTRO_ACTIONS) await chooseIntroAction(page, id);
+  await finishIntroPassages(page);
+  await assertEngineReplay(page);
   await page.locator('.intro-ending').waitFor();
   if(expectKit)await page.locator('.case-arrival .case-kit-name').filter({hasText: 'Recorded Kit'}).waitFor();
 }
 async function openAccount(page) {
-  if (!(await page.locator('.shell-screen[open]').isVisible())) {
-    await page.keyboard.press('Escape');
-    await page.locator('.shell-screen[open][data-mode="pause"]').waitFor();
-  }
-  await page.locator('.shell-screen[open]').getByRole('button', {name: 'Account and saves', exact: true}).click();
+  await openAccountControls(page);
   await page.locator('.account-screen .account-status').filter({hasText: 'Signed in'}).waitFor();
 }
 async function showRewards(page) {
-  await page.locator('.case-toolbar').getByRole('button', {name: 'Crew', exact: true}).click();
+  await openCrewFromHud(page);
   const modal = page.locator('.case-modal[open]'), picker = modal.getByRole('combobox', {name: 'Case page'});
   await modal.waitFor();
   if (await picker.isVisible()) await picker.selectOption('rewards');
@@ -41,8 +38,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     for (const width of widths) {
       env.resetAccount();
       await page.setViewportSize({width, height: 812});
-      await page.goto(env.url);
-      await page.getByRole('button', {name: 'Sign in with GitHub', exact: true}).click();
+      await signInFromTitle(env);
       await page.locator('.account-summary-state').filter({hasText: 'Signed in'}).waitFor();
       await openAccount(page);
       await page.locator('.account-screen .account-status').filter({hasText: 'Recorded Captain'}).waitFor();
@@ -76,6 +72,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
       env.showStaleRerollOnce();
       env.setCloudReplay('intro', ACCOUNT_INTRO_ACTIONS);
       await page.reload();
+      await expandTitleAccount(page);
       await page.locator('.account-summary-state').filter({hasText: 'Signed in'}).waitFor();
       await openAccount(page);
       await page.getByRole('button', {name: 'Change captain name once', exact: true}).click();
@@ -88,6 +85,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
 
       env.setCloudReplay('intro', ACCOUNT_INTRO_ACTIONS.slice(0, 2));
       await page.reload();
+      await expandTitleAccount(page);
       await page.locator('.account-conflict').waitFor();
       const writesBeforeKeep = env.accountStats().saveWrites;
       await page.getByRole('button', {name: 'Keep this device', exact: true}).click();
@@ -96,6 +94,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
 
       env.setCloudReplay('world', ACCOUNT_INTRO_ACTIONS.slice(0, 3));
       await page.reload();
+      await expandTitleAccount(page);
       await page.locator('.account-conflict').waitFor();
       const writesBeforeCloud = env.accountStats().saveWrites;
       await page.getByRole('button', {name: 'Use the cloud save', exact: true}).click();
@@ -139,6 +138,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     env.resetAccount();
     await page.setViewportSize({width:375,height:812});
     await page.goto(env.url);
+    await expandTitleAccount(page);
     await page.locator('.account-summary-state').filter({hasText:'Signed out'}).waitFor();
     await startFromTitle(page,{closeIntro:false});
     await playIntro(page,{expectKit:false});
@@ -146,8 +146,12 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     await claim.waitFor();
     check(env.accountStats().kitGrants===0,'An anonymous ending keeps its accepted replay and grants no kit');
     await claim.click();
+    await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor({state:'attached'});
+    await expandTitleAccount(page);
     await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor();
     await page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+    await finishIntroPassages(page);
+    await assertEngineReplay(page);
     await page.locator('.case-arrival .case-kit-name').filter({hasText:'Recorded Kit'}).waitFor();
     check(env.accountStats().kitGrants===1&&env.accountStats().coinsGranted===1000,
       'Returning from arrival sign-in claims the accepted journal once when Continue resumes it');

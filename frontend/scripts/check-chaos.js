@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
+import {dismissIntro} from './intro-browser-fixture.js';
+import {openAccountControls,openCrewFromHud,chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
 
 const env=await openWorldBrowser(),{page}=env,report={checked:new Date().toISOString(),checks:[],faults:[],timings:{}};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
@@ -64,12 +66,12 @@ async function faultMatrix(screen,trigger,{notice='.case-modal[open] .case-notic
     report.faults.push({screen,reason});await recoverAccount(reason,keepAccount);
   }
 }
-async function chooseIntro(id){const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text'});if(await skip.isVisible())await skip.click();const choice=page.locator(`.intro-modal [data-choice="${id}"]`);await choice.waitFor({state:'visible'});await choice.click();}
+const chooseIntro=id=>chooseIntroAction(page,id);
 async function playIntro({failEnd=false}={}){
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb'])await chooseIntro(id);
-  if(failEnd)await setFault('offline');await chooseIntro('untie');await page.locator('.intro-modal .intro-ending').waitFor();
-  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();return;}
+  if(failEnd)await setFault('offline');await chooseIntro('untie');await finishIntroPassages(page);await page.locator('.intro-modal .intro-ending').waitFor();
+  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();return;}
   await waitFor(()=>window.__plotTwist.adapter.read().arrival.status==='ready');
 }
 async function searchAndPinPreparation(){
@@ -96,13 +98,14 @@ async function pairPreparation(){
   await page.evaluate(async()=>{const a=window.__plotTwist.adapter,d=a.dev;for(const [id,seat] of [['C5',3],['C6',4],['C7',1],['C8',4]]){d.give(id,seat);d.pinForSeat(id,seat);}d.pinForSeat('C3',1);await a.pair('C3','C4');await a.pair('C5','C6');await a.pair('C7','C8');});
 }
 async function nightPreparation(){
-  await openCase('finale');const light=page.locator('.case-light[data-light="islet_signal_station"]'),build=light.getByRole('button').first();await faultMatrix('finale.buildLight',()=>build.click());await build.click();
+  await openCase('finale');await page.locator('[data-focus="light-tab-islet_signal_station"]').click();const light=page.locator('.case-light[data-light="islet_signal_station"]'),build=light.getByRole('button').first();await faultMatrix('finale.buildLight',()=>build.click());await build.click();
   const nightfall=page.getByRole('button',{name:'Call nightfall',exact:true});await faultMatrix('finale.callNightfall',()=>nightfall.click());await nightfall.click();await waitFor(()=>window.__plotTwist.adapter.read().finale.phase==='night');
   const partners=await page.evaluate(async()=>{const a=window.__plotTwist.adapter;return [await a.orderPartner(2,'man_light','keepers_lamp'),await a.orderPartner(3,'man_light','harbor_light')];});
   check(partners.every(result=>result.accepted),'Partner light orders are accepted for the night setup');
-  await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));const takePost=light.getByRole('button',{name:'Take this post · 1 minute'});await faultMatrix('finale.takePost',()=>takePost.click());await takePost.click();await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(60));
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));await page.locator('[data-focus="light-tab-islet_signal_station"]').click();const takePost=light.getByRole('button',{name:'Take this post · 1 minute'});await faultMatrix('finale.takePost',()=>takePost.click());await takePost.click();await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(60));
   const angles=await page.evaluate(async()=>{const n=await import('/src/adapter/fake/night.js'),m=await import('/src/screens/beam-math.js');return Object.fromEntries(n.lightLocations.slice(0,3).map(item=>[item.id,m.bearingBetween(item,n.rehearsalGlow)]));});
   for(const id of ['keepers_lamp','harbor_light']){const result=await page.evaluate(async({id,degrees})=>window.__plotTwist.adapter.aim(id,degrees),{id,degrees:angles[id]});check(result.accepted,`Partner beam ${id} is aimed`);}
+  await page.locator('[data-focus="light-tab-islet_signal_station"]').click();
   const row=page.locator('.case-light[data-light="islet_signal_station"]'),range=row.locator('input[type=range]');await range.evaluate((input,value)=>{input.value=String(Math.round(value));input.dispatchEvent(new Event('input',{bubbles:true}));},angles.islet_signal_station);
   const lock=row.getByRole('button',{name:'Lock this beam'});await faultMatrix('finale.aim',()=>lock.click());await lock.click();await waitFor(()=>window.__plotTwist.adapter.read().accusation.schoonerFound);
 }
@@ -119,11 +122,11 @@ async function solveRemainder(){
 try{
   await mkdir('captures',{recursive:true});const apiResponses=[];page.on('response',response=>{if(new URL(response.url()).pathname.startsWith('/api/'))apiResponses.push({path:new URL(response.url()).pathname,status:response.status()});});
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline chaos rehearsal"}'}));await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
-  await page.evaluate(async()=>window.__plotTwist.adapter.signIn());await waitFor(()=>window.__plotTwist.adapter.read().account.state==='signed_in');await page.evaluate(()=>window.__plotTwist.accountHost.open());await page.locator('.account-modal[open]').waitFor();
+  await page.evaluate(async()=>window.__plotTwist.adapter.signIn());await waitFor(()=>window.__plotTwist.adapter.read().account.state==='signed_in');await openAccountControls(page);await page.locator('.account-modal[open]').waitFor();
   const reroll=page.getByRole('button',{name:'Change captain name once'});await faultMatrix('account.rerollName',()=>reroll.click(),{notice:'.account-modal[open] .account-feedback',keepAccount:true});await reroll.click();await waitFor(()=>window.__plotTwist.adapter.read().account.canReroll===false);await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
   await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro({failEnd:true});
-  await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();
-  await openCase('crew');const create=page.getByRole('button',{name:'Start a crew',exact:true});await faultMatrix('crew.createCrew',()=>create.click());await create.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
+  await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();
+  await dismissIntro(page);await openCrewFromHud(page);const create=page.getByRole('button',{name:'Start a crew',exact:true});await faultMatrix('crew.createCrew',()=>create.click());await create.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
   const muster=page.getByRole('button',{name:/Muster/});await faultMatrix('crew.muster',()=>muster.click());await muster.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='active');
   await checkBulletinFailureStates();await checkIsletEventNeverArrives();
   await searchAndPinPreparation();await partnerPreparation();await pairPreparation();await nightPreparation();await solveRemainder();

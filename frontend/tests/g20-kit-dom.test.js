@@ -39,3 +39,40 @@ it('modal Escape closes with a reason and restores the invoking focus', async ()
   });
   expect(result).toEqual({ literal: '<img src=x>', tags: 0, reasons: ['escape'], restored: true, connected: false });
 });
+
+it('wraps modal focus around visible controls while disclosures and inert content change',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createModal}=await window.g20Import('/src/ui/kit/modal.js');
+      const opener=document.createElement('button');opener.textContent='Open recorded modal';
+      document.body.append(opener);opener.focus();
+      const body=document.createElement('div'),first=document.createElement('button');
+      first.textContent='First inside';
+      const details=document.createElement('details'),summary=document.createElement('summary');
+      summary.textContent='More controls';
+      const last=document.createElement('button');last.textContent='Disclosure action';details.append(summary,last);
+      const inert=document.createElement('div');inert.inert=true;
+      const blocked=document.createElement('button');blocked.textContent='Inert action';inert.append(blocked);
+      const disabled=document.createElement('textarea');disabled.disabled=true;disabled.setAttribute('aria-label','Disabled text');
+      body.append(first,details,inert,disabled);
+      const modal=createModal({title:'Recorded focus',body});modal.open();window.focusModal={modal,opener};
+    });
+    const close=page.getByRole('button',{name:'Close dialog',exact:true});
+    const summary=page.locator('summary');
+    await page.getByRole('button',{name:'First inside',exact:true}).focus();
+    await page.keyboard.press('Tab');expect(await summary.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Tab');expect(await close.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Shift+Tab');expect(await summary.evaluate(el=>el===document.activeElement)).toBe(true);
+    await summary.press('Enter');await page.locator('details[open]').waitFor();
+    await page.keyboard.press('Tab');
+    expect(await page.getByRole('button',{name:'Disclosure action',exact:true})
+      .evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Tab');expect(await close.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Shift+Tab');
+    expect(await page.getByRole('button',{name:'Disclosure action',exact:true})
+      .evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>document.activeElement===window.focusModal.opener);
+    await page.evaluate(()=>window.focusModal.modal.dispose());
+  });
+});
