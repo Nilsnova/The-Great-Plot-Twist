@@ -33,9 +33,12 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 *Last updated: 6 Nov 2026, Codex server integration.*
 
-The team is turning the text mystery Plot Twist into a browser game: a top-down pixel-art island world with GitHub sign-in, a shared mystery and a play-money economy.
+The team is turning the text mystery Plot Twist into a browser game: a detailed top-down island world with GitHub sign-in, a shared mystery and a play-money economy.
 
 - **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
+- **Visual redesign:** detailed title/island art, compact replacing story passages, full-screen rooms,
+  a quiet HUD with optional controls, smoother motion and stable visual light challenges. See the
+  [redesign evidence](docs/handoff/visual-redesign-release.md).
 - **Built:** the playable intro, sea chart and harbor, original music/ambience/effects, weather,
   account/save and crew services, live presence, Exchange v2, predictions and Lantern Duels.
   The case backend includes earned clues, the shared board, three-light finale, Relighting and
@@ -43,8 +46,8 @@ The team is turning the text mystery Plot Twist into a browser game: a top-down 
 - **Online play is still being connected:** the G9 browser adapter is now actively being built in a cloud
   session. Backend multiplayer proofs do not mean the complete mystery is already playable in
   normal browser play. [Status](docs/STATUS.md) records exact releases and flag checks.
-- **Current release:** festival and host tools deployed; sports code/database deployed with its flag
-  off until its provider key and live-source proof are ready. Reliability, regression coverage,
+- **Current release:** festival and host tools deployed; sports is enabled with a verified live football-data.org
+  feed. Browser account actions still depend on G9. Reliability, regression coverage,
   help/privacy, security/notices and submission materials are deployed with passing release gates.
   The [roadmap](ROADMAP.md#execution-update--6-nov-2026) gives the remaining order.
 - **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.

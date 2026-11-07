@@ -2,7 +2,7 @@
 export function startLoop(update, render) {
   let previous = performance.now(), elapsed = 0, frame;
   function tick(now) {
-    const delta = Math.min((now - previous) / 1000, 0.05);
+    const delta = Math.min((now - previous) / 1000, 0.1);
     previous = now;
     if (!document.hidden) { elapsed += delta; update(delta, elapsed); render(); }
     frame = requestAnimationFrame(tick);

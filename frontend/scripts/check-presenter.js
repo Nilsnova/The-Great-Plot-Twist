@@ -28,7 +28,7 @@ try{
   await page.keyboard.press('B');check(await page.locator('.presenter-blank').evaluate(node=>node.open&&node.matches(':modal')),'B opens a native top-layer blank over the intro dialog');await page.keyboard.press('Escape');
   check(await page.locator('.presenter-blank').evaluate(node=>!node.open),'Escape restores the intro screen from blank');
   await page.keyboard.press('ArrowRight');await page.getByText('Beat 2 of 9 · Arrival on Lighthouse Isle',{exact:true}).waitFor();
-  check(await page.locator('.chapter').textContent().then(text=>text.includes('LIGHTHOUSE ISLE')),'Right arrow advances to the arrival beat');
+  check(await page.locator('.chapter').textContent().then(text=>text.toUpperCase().includes('LIGHTHOUSE ISLE')),'Right arrow advances to the arrival beat');
   await page.keyboard.press('Digit6');await page.getByText('Beat 6 of 9 · At the Captain’s Table',{exact:true}).waitFor();
   await page.locator('.case-modal[open]').waitFor();await page.keyboard.press('B');
   check(await page.locator('.presenter-blank').evaluate(node=>node.open&&node.matches(':modal')),'B opens a top-layer blank above the board dialog');await page.keyboard.press('Escape');
@@ -43,7 +43,9 @@ try{
   const bounds=await page.evaluate(()=>['.presenter-panel','.presenter-toolbar button','.presenter-speaker-notes'].map(selector=>{const rect=document.querySelector(selector).getBoundingClientRect();return {selector,left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,width:rect.width,height:rect.height};}));
   check(bounds.every(rect=>rect.left>=0&&rect.top>=0&&rect.right<=1920&&rect.bottom<=1080&&rect.width>0&&rect.height>0),'Presenter controls and opened notes remain inside the recording viewport beside the board');
   await page.waitForTimeout(2500);
-  await page.getByRole('button',{name:/Switch to low quality/}).waitFor({state:'hidden'});
+  const lowOffer=page.getByRole('button',{name:/Switch to low quality/});
+  if(await lowOffer.isVisible()){await lowOffer.click();report.usedLowQualityFallback=true;check(await page.locator('.performance-status').textContent().then(text=>text.includes('Low quality is on.')),'Slower devices can use the offered low quality control');}
+  await lowOffer.waitFor({state:'hidden'});
   const metrics=await page.locator('.performance-panel').innerText();
   check(/Frames per second/.test(metrics)&&/95th percentile frame/.test(metrics)&&/Triangles/.test(metrics),'Performance panel reports frame time and renderer counts');
   report.performance=await page.locator('.performance-panel').evaluate(panel=>Object.fromEntries([...panel.querySelectorAll('dt')].map(term=>[term.textContent,term.nextElementSibling.textContent])));

@@ -51,6 +51,8 @@ try {
     const availableZones=places[id].zones.filter(zone=>zone.id!=='bulletin_board');
     check(await page.evaluate(zones=>JSON.stringify(window.__island.world.current.zones)===JSON.stringify(zones),availableZones), `${id}: only enabled hotspots are offered`);
     for (const zone of availableZones) {
+      // Full-room inspection, legal story navigation and both endings are exercised by check-intro.
+      if(id==='lighthouse_isle'&&['cottage','desk','shore','tower_door'].includes(zone.id))continue;
       await page.evaluate(z => { window.__island.player.position.set(z.x, z.y, z.z); }, zone);
       await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, zone.id);
       const before = await page.evaluate(() => window.__worldEvents.filter(e => e.type === 'interact').length);

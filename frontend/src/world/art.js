@@ -1,16 +1,17 @@
-// Load selected original PNGs and place anchored sprites on the native pixel grid.
+// Source texture density is independent of the unchanged logical sprite geometry.
 import * as THREE from 'three';
 import { loadTexture } from './texture.js';
 import { pixelArtIds, pixelById, pixelSizes, snapPixel } from '../pixel/catalog.js';
 export const artSizes = pixelSizes;
 
-export async function loadArt(names = pixelArtIds) {
+export async function loadArt(names = pixelArtIds, { detail = true } = {}) {
   if (!Array.isArray(names)) throw new Error('Art names must be an array.');
   const ids = [...new Set(names)];
   for (const id of ids) if (!Object.hasOwn(artSizes, id)) throw new Error(`Unknown drawing: ${id}`);
   const loader = new THREE.TextureLoader(), materials = {};
   const results = await Promise.allSettled(ids.map(async name => {
-    const path = `pixel/${name}.png`;
+    const item = pixelById[name];
+    const path = `pixel/${detail && item.detail ? item.detail.file : item.file}`;
     const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`, loader);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter;

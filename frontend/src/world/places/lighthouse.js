@@ -13,7 +13,8 @@ export async function createLighthousePlace(ctx = {}) {
   const group = new THREE.Group(); group.name = 'place:lighthouse_isle';
   const dispose = createLifetime(group, art), frameState = createFrameState(ctx, places.lighthouse_isle.spawn);
   try {
-    const texture = await (ctx.loadBackdrop ?? loadBackdrop)('pixel/ground.png');
+    const readBackdrop=ctx.loadBackdrop??loadBackdrop;
+    const texture = await readBackdrop('pixel/hd/ground.png').catch(()=>readBackdrop('pixel/ground.png'));
     const island = createIsland(group, art, texture), boat = createBoat(group, art);
     return { ...places.lighthouse_isle, id: 'lighthouse_isle', group, groundHeight, colliders: island.colliders,
       update(dt, state) { state = frameState(dt, state); island.update(state.player, state.time, state.relit?Math.max(.65,state.night):state.night, state.weather); boat.update(state.time, state.weather); }, dispose };

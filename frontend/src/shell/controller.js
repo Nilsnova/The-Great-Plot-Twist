@@ -18,11 +18,13 @@ export function createShell(ctx) {
     modal.element.dataset.mode=mode;
     const body=node('div','shell-body'),nav=node('nav','shell-menu');nav.setAttribute('aria-label','Game menu');
     if(mode==='title') {
-      modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','THE SALTREACH ISLES'),node('p','shell-copy','A quiet coast. An unfinished story.'));
+      modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','AN ISLAND MYSTERY'),node('p','shell-copy','The lighthouse is dark. Find the missing keeper.'));
       const fresh=menuButton('New game',()=>start(false)),resume=menuButton('Continue',()=>start(true));fresh.id='new-game';
-      resumeControl=resume;resume.disabled=!(hasLocalIntro(ctx.readSave())||ctx.readAccount?.().canContinue);nav.append(fresh,resume,menuButton('Settings',()=>page('settings'),true));
+      resumeControl=resume;resume.disabled=!(hasLocalIntro(ctx.readSave())||ctx.readAccount?.().canContinue);nav.append(fresh,menuButton('Play with friends',()=>ctx.onPlayFriends?ctx.onPlayFriends():page('friends')),resume,menuButton('Settings',()=>page('settings'),true));
       if(ctx.demo)nav.append(menuButton('Highlights tour',()=>{play();ctx.onDemo();},true));
-      freshNote=node('p','shell-note',introNote(ctx.readAccount?.()));body.append(nav);if(ctx.accountSummary)body.append(ctx.accountSummary);body.append(freshNote);
+      freshNote=node('p','shell-note',introNote(ctx.readAccount?.()));body.append(nav);if(ctx.accountSummary){const details=node('details','shell-account'),summary=node('summary','','Account and saves');details.append(summary,ctx.accountSummary,freshNote);body.append(details);}
+    } else if(mode==='friends') {
+      modal.setTitle('Play with friends');body.append(node('p','shell-copy','Online crews are not connected in this build.'),node('p','shell-note','You can explore solo now. Your progress stays in this browser.'));nav.append(menuButton('Play solo',()=>start(false)),menuButton('Back',back,true));body.append(nav);
     } else {
       modal.setTitle(({pause:'A moment ashore',credits:'Made together'})[mode]??'Settings');
       const loading=node('p','','Loading…');loading.setAttribute('role','status');body.append(loading);

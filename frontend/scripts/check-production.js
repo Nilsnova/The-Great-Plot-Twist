@@ -25,7 +25,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto('http://127.0.0.1:4175'); await startFromTitle(page);
-  assert.equal(await page.locator('canvas[tabindex="0"]').count(), 1);
+  assert.equal(await page.locator('canvas[tabindex="0"]:visible').count(), 1);
   assert.equal(await page.evaluate(() => typeof window.__island), 'undefined');
   assert.equal(await page.locator('.performance').count(), 0);
   await page.getByRole('button', { name: 'Open visual settings' }).click();
@@ -34,9 +34,9 @@ try {
   await closeSettings(page,{keyboard:true});
   assert.equal(await page.locator('.shell-screen').isHidden(),true);
   assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'CANVAS');
-  await page.getByRole('button', { name: 'Open sea chart' }).click();
+  await page.keyboard.press('KeyM');
   await page.locator('[data-place=saltreach_harbor]').click();
-  await page.waitForFunction(() => document.querySelector('.chapter').textContent.includes('SALTREACH HARBOR'));
+  await page.waitForFunction(() => document.querySelector('.chapter').textContent.toUpperCase().includes('SALTREACH HARBOR'));
   assert.equal(await page.locator('.sailing').isHidden(), true);
   assert.equal(await page.locator('.sailing').isHidden(), true);
   assert.deepEqual(errors, []);

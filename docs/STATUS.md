@@ -14,12 +14,19 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**Verified application release, 6 Nov 2026, Codex:** main `cb42da3` and production
-`dpl_8U92ojsjmFxwS1cRwkjqwuvAJy51` are READY with live extras and stabilization deployed.
-Health/config and the host page return 200. Presence, market, predictions, arena, case, bulletin
-and festival are enabled. Sports, sign-in and raid are off. Festival waits for
-Relighting; live SQL still shows dark/null, zero solves/lights/Wall, festival actions and sports
-stakes. RELIGHT_OPEN remains unset. See [live-extras proof](handoff/live-extras-release.md).
+**Verified baseline before the visual release, 6 Nov 2026, Codex:** main `364d178` and production
+`dpl_4HmGdZCJrhgKS8DWF2qUN7eMAhPj` are READY with the AI companion removed.
+Presence, market, predictions, arena, case, bulletin, festival and sports are enabled; sign-in
+and raid remain off. Queryless health/config/sports returned 200 with ten real Premier League
+fixtures from football-data.org. The key stays sensitive and Production-only. No gameplay write
+was used for this proof. See [sports activation](handoff/sports-live-activation.md).
+RELIGHT_OPEN remains unset; festival waits for the first Relighting.
+
+The [visual simplification](UX-SIMPLIFICATION.md) integrates original detailed title art, freshly
+drawn 4× island sprites, 4096×3072 terrain, actual dense rendering, smoother player/camera motion,
+full-screen explorable rooms, short replacing dialogue passages, a quiet HUD and a stable visual
+light challenge. Integrated tests and independent review pass; exact evidence is recorded in
+[the visual release proof](handoff/visual-redesign-release.md). Neither these visuals nor the title's Friends entry imply G9 is connected.
 
 All reviewed migrations through 180000 are applied separately, exact stored MD5 proven and
 restored to their repository versions; 150000 is unused. Live schema: **39 tables +1 view
@@ -44,7 +51,7 @@ journey proofs do not establish a connected browser session.
 Nils cancelled the AI companion on 6 Nov. Its backend context code, tests, feature flag and
 active specification are removed; the ten remaining flags keep their existing behavior.
 
-External needs: sports provider key directly in Vercel and the production-host network allowlist for direct cloud stock/cache checks. Later hand-in needs
+No build input is currently needed from Nils. A disposable Vercel Sandbox provided read-only production access without relaxing route guards or exposing secrets. Later hand-in needs
 three teammate names, private submission details and physical laptop/projector/spoken rehearsal.
 Original music, ambience/effects and festival media are already built. Older paragraphs below are
 historical checkpoints; use the current roadmap and proof links for release state.
@@ -275,7 +282,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### A Accounts and Multiplayer (owner picked today)
 
-**Next server step:** support the active cloud G9 work and prove its merged normal browser journey; configure/verify sports when its key is supplied. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring is active in the cloud; sports activation awaits its provider key and current-source proof.
+**Next server step:** support the active cloud G9 work and prove its merged normal browser journey; sports provider activation is complete. All case and live-extra migrations through 180000 are applied; 150000 is unused. G9 browser wiring is active in the cloud; sports activation has its current-source proof.
 
 **Status (5 Nov, late evening):** foundation wave 2 is on `main`, and Claude applied its migration through the Supabase connection (remote version `20261106000000`). What is left of A1-next is the two-user test plan (deploy check 4) and the sign-in round trip on `/auth-check.html` (check 5, in Nils' review queue).
 
@@ -372,7 +379,7 @@ Report:      Finish with: changed, verified (exact commands and result lines), n
 
 ### L Live Systems (owner picked today)
 
-**Current next:** sports provider setup/read-only verification; existing market/prediction/arena flags are already on. Festival is enabled and waiting for the first Relighting. The older lane briefs below are historical.
+**Current next:** complete the visual release and integrate reviewed G9; sports provider setup/read-only verification passed; existing market/prediction/arena flags are already on. Festival is enabled and waiting for the first Relighting. The older lane briefs below are historical.
 
 **Status (5 Nov, late evening):** L1 live weather is done: merged (`3e80605`) and wired into the game by Codex (`c52613b`). The L4 Island Exchange minimum is on `main` with the flag `market` off (`d7857d9`, decision D017); its migration waits for Nils, and the trading screen comes after his Exchange decisions. Next for the lane: L3 (Next 2 below).
 
@@ -471,6 +478,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **6 Nov 2026, Codex for Nils:** activated sports on main `364d178` after protected preview and canonical production read-only provider proofs; ten real fixtures returned, eight flags verified, sensitive key scope restored, temporary Sandbox deleted. Visual simplification is integrated locally, full frontend suite 1,859/133 files passes, original endings/local-save journey and responsive screen checks pass; final character and adaptive rendering checks pass; production identity verification follows the push.
 
 - **6 Nov 2026, Codex for Nils:** Nils cancelled the AI companion. Removed its backend context module/tests, flag and active specification, deleted future-provider configuration and application prerequisites, and updated the ten-flag API/smoke contracts. Historical entries below record earlier work only; no AI feature remains planned.
 

@@ -53,13 +53,13 @@ async function waitForStep(title) {
 async function confirmStep(title, id) {
   await waitForStep(title);
   if (id === 'intro') await page.locator('.intro-modal[open] .intro-view').waitFor();
-  if (id === 'arrival') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('LIGHTHOUSE ISLE'));
-  if (id === 'islet') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('HOME ISLET'));
+  if (id === 'arrival') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('LIGHTHOUSE ISLE'));
+  if (id === 'islet') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('HOME ISLET'));
   if (id === 'chart') await page.locator('.sea-chart[open]').waitFor();
-  if (id === 'harbor') { await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('SALTREACH HARBOR')); await page.locator('.case-modal[open] .case-screen-content').waitFor(); }
+  if (id === 'harbor') { await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('SALTREACH HARBOR')); await page.locator('.case-modal[open] .case-screen-content').waitFor(); }
   if (id === 'board' || id === 'finale') await page.locator('.case-modal[open] .case-screen-content').waitFor();
   if (id === 'weather') await page.waitForFunction(() => document.querySelector('.presenter-panel .tour-copy')?.textContent.includes('storm'));
-  if (id === 'relighting') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.includes('GULL'));
+  if (id === 'relighting') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('GULL'));
   check(true, `Production tour reached ${title}`);
 }
 
