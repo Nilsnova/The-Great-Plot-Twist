@@ -15,11 +15,16 @@ export function createMarketSession({ adapter, timeZone, onNotice } = {}) {
   const state = { board: null, portfolio: null, signedIn: null, boardNote: null, portfolioNote: null };
   const listeners = new Set();
   const inFlight = new Map();
+  let identity = 0, closed = false;
 
   // Overlapping refreshes of the same thing share one request.
   function once(name, load) {
-    if (!inFlight.has(name)) inFlight.set(name, load().finally(() => inFlight.delete(name)));
-    return inFlight.get(name);
+    const key = name === 'portfolio' ? `${name}:${identity}` : name;
+    if (!inFlight.has(key)) {
+      const task = load().finally(() => { if (inFlight.get(key) === task) inFlight.delete(key); });
+      inFlight.set(key, task);
+    }
+    return inFlight.get(key);
   }
   const tell = () => { for (const listener of [...listeners]) listener(); };
   // An adapter never throws. If one does, it counts as a failed read, so the last good view stays.
@@ -29,23 +34,33 @@ export function createMarketSession({ adapter, timeZone, onNotice } = {}) {
 
   const refreshBoard = () => once('board', async () => {
     const result = await look('board');
+    if (closed) return result;
     if (result.ok) { state.board = result.data; state.boardNote = null; } else state.boardNote = failureNote(result, state.board, timeZone);
     tell();
     return result;
   });
 
-  const refreshPortfolio = () => once('portfolio', async () => {
-    const result = await look('portfolio');
-    if (result.ok) {
-      const notices = zeroNotices(state.portfolio, result.data);
-      Object.assign(state, { portfolio: result.data, signedIn: true, portfolioNote: null });
-      if (notices.length) onNotice?.(notices.join(' '));
-    } else if (result.code === 'unauthorized') {
-      Object.assign(state, { portfolio: null, signedIn: false, portfolioNote: null });
-    } else state.portfolioNote = failureNote(result, state.portfolio, timeZone);
-    tell();
-    return result;
-  });
+  const refreshPortfolio = () => {
+    const scope = identity;
+    return once('portfolio', async () => {
+      const result = await look('portfolio');
+      if (closed || scope !== identity) return { ok: false, code: 'unauthorized', status: 401 };
+      if (result.ok) {
+        const notices = zeroNotices(state.portfolio, result.data);
+        Object.assign(state, { portfolio: result.data, signedIn: true, portfolioNote: null });
+        if (notices.length) onNotice?.(notices.join(' '));
+      } else if (result.code === 'unauthorized') {
+        Object.assign(state, { portfolio: null, signedIn: false, portfolioNote: null });
+      } else state.portfolioNote = failureNote(result, state.portfolio, timeZone);
+      tell();
+      return result;
+    });
+  };
+  function resetPrivate(signedIn = false) {
+    identity += 1;
+    Object.assign(state, { portfolio: null, signedIn: Boolean(signedIn), portfolioNote: null });
+    if (!closed) tell();
+  }
 
   return {
     get board() { return state.board; },
@@ -56,7 +71,9 @@ export function createMarketSession({ adapter, timeZone, onNotice } = {}) {
     company: id => state.board?.companies.find(company => company?.id === id) ?? null,
     refreshBoard,
     refreshPortfolio,
+    resetPrivate,
     refreshAll: () => Promise.all([refreshBoard(), refreshPortfolio()]),
-    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    subscribe(listener) { if (closed) return () => {}; listeners.add(listener); return () => listeners.delete(listener); },
+    dispose() { resetPrivate(); closed = true; listeners.clear(); inFlight.clear(); },
   };
 }

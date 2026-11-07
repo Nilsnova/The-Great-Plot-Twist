@@ -67,4 +67,5 @@ await (await import('./check-online-account.js')).checkOnlineAccount();
 await (await import('./check-online-crew.js')).checkOnlineCrew();
 await (await import('./check-online-presence.js')).checkOnlinePresence();
 await (await import('./check-online-islet.js')).checkOnlineIslet();
+await (await import('./check-online-market.js')).checkOnlineMarket();
 }

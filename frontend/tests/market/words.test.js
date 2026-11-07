@@ -29,21 +29,49 @@ describe('status words', () => {
   });
 
   it('says when a closed market opens again', () => {
-    const state = { kind: 'stock', status: 'closed', reason: 'outside_hours', opensAt: '2026-11-06T14:30:00Z' };
-    expect(statusWords(state, at)).toBe('Closed, opens 14:30');
-    expect(statusWords({ ...state, opensAt: '2026-11-07T14:30:00Z' }, at)).toBe('Closed, opens tomorrow 14:30');
+    const state = { kind: 'stock', market: 'us', status: 'closed', reason: 'outside_hours', opensAt: '2026-11-06T14:30:00Z' };
+    expect(statusWords(state, at)).toBe('Closed, opens 14:30 Lisbon time');
+    expect(statusWords({ ...state, opensAt: '2026-11-07T14:30:00Z' }, at)).toBe('Closed, opens tomorrow 14:30 Lisbon time');
   });
 
   it('names the weekday for a weekend and the holiday for a holiday', () => {
-    const weekend = { kind: 'stock', status: 'closed', reason: 'weekend', opensAt: '2026-11-09T14:30:00Z' };
-    expect(statusWords(weekend, at)).toBe('Closed for the weekend, opens Monday 14:30');
-    const holiday = { kind: 'stock', status: 'closed', reason: 'holiday', holiday: 'Thanksgiving Day', opensAt: '2026-11-27T14:30:00Z' };
-    expect(statusWords(holiday, at)).toBe('Closed for Thanksgiving Day, opens Friday 14:30');
+    const weekend = { kind: 'stock', market: 'us', status: 'closed', reason: 'weekend', opensAt: '2026-11-09T14:30:00Z' };
+    expect(statusWords(weekend, at)).toBe('Closed for the weekend, opens Monday 14:30 Lisbon time');
+    const holiday = { kind: 'stock', market: 'us', status: 'closed', reason: 'holiday', holiday: 'Thanksgiving Day', opensAt: '2026-11-27T14:30:00Z' };
+    expect(statusWords(holiday, at)).toBe('Closed for Thanksgiving Day, opens Friday 14:30 Lisbon time');
   });
 
   it('copes with a holiday that has no name', () => {
-    const holiday = { kind: 'stock', status: 'closed', reason: 'holiday', holiday: null, opensAt: '2026-11-27T14:30:00Z' };
-    expect(statusWords(holiday, at)).toBe('Closed for a holiday, opens Friday 14:30');
+    const holiday = { kind: 'stock', market: 'us', status: 'closed', reason: 'holiday', holiday: null, opensAt: '2026-11-27T14:30:00Z' };
+    expect(statusWords(holiday, at)).toBe('Closed for a holiday, opens Friday 14:30 Lisbon time');
+  });
+
+  it.each([
+    ['summer', '2026-07-07T13:30:00Z', '2026-07-07T10:00:00Z', '14:30'],
+    ['winter', '2026-01-06T14:30:00Z', '2026-01-06T10:00:00Z', '14:30'],
+    ['different US and European DST weeks', '2026-03-16T13:30:00Z', '2026-03-16T10:00:00Z', '13:30'],
+  ])('shows the supplied US opening in Lisbon during %s even for a New York caller', (_season, opensAt, now, expected) => {
+    const state = { kind: 'stock', market: 'us', status: 'closed', reason: 'outside_hours', opensAt };
+    expect(statusWords(state, { now, timeZone: 'America/New_York' })).toBe(`Closed, opens ${expected} Lisbon time`);
+    expect(statusWords(state, { now })).toBe(`Closed, opens ${expected} Lisbon time`);
+  });
+
+  it('counts opening days in Lisbon when the player is still on the previous day', () => {
+    const state = { kind: 'stock', market: 'us', status: 'closed', reason: 'outside_hours', opensAt: '2026-07-13T13:30:00Z' };
+    expect(statusWords(state, { now: '2026-07-12T23:30:00Z', timeZone: 'America/New_York' })).toBe('Closed, opens 14:30 Lisbon time');
+  });
+
+  it('keeps US closing and last-price times in the player zone and does not label an unknown opening', () => {
+    const local = { now: '2026-07-07T12:00:00Z', timeZone: 'America/New_York' };
+    const stock = { kind: 'stock', market: 'us' };
+    expect(statusWords({ ...stock, status: 'open', closesAt: '2026-07-07T20:00:00Z' }, local)).toBe('Open until 16:00');
+    expect(statusWords({ ...stock, status: 'stale', reason: 'source_away', priceAt: '2026-07-07T11:59:00Z' }, local))
+      .toBe('Price source not answering. Last price 07:59. Trading paused.');
+    for (const opensAt of [null, undefined, 'not a date']) {
+      expect(statusWords({ ...stock, status: 'closed', reason: 'outside_hours', opensAt }, local)).toBe('Closed');
+    }
+    expect(statusWords({ kind: 'island', market: 'always', status: 'closed', reason: 'outside_hours', opensAt: '2026-07-07T13:30:00Z' }, local))
+      .toBe('Closed, opens 09:30');
   });
 
   it('says plainly when the opening hours are not known', () => {

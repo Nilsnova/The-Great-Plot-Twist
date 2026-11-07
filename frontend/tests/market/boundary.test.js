@@ -66,4 +66,13 @@ describe('the panel boundary', () => {
       expect(source, name).not.toMatch(/\*\s*(?:0\.9|1\.1|leverage|10)\b|Math\.(?:ceil|floor)\(/);
     }
   });
+
+  it('keeps credits out of gameplay and the simulation note in both panes', async () => {
+    const board = await read(SRC, 'board-view.js'), positions = await read(SRC, 'positions-view.js');
+    expect(board).not.toMatch(/creditRows|market-credits/);
+    expect(positions).not.toMatch(/creditRows|market-credits/);
+    expect(board).toContain('market-simulation');
+    expect(positions).toContain('boardNotes(board).simulation');
+    expect(positions).toContain('element.append(simulation,');
+  });
 });

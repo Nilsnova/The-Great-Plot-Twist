@@ -14,39 +14,55 @@ async function makeAdapter(ctx) {
   // import.meta.env.DEV stands in front on purpose: the build then drops this branch, and the fake is not shipped.
   if (import.meta.env.DEV && chooseAdapterKind({ dev: import.meta.env.DEV, search }) === 'fake') {
     const { createFakeMarketAdapter } = await import('./fake.js');
-    return createFakeMarketAdapter({ scenario: new URLSearchParams(search).get('scenario') ?? undefined });
+    return { adapter: createFakeMarketAdapter({ scenario: new URLSearchParams(search).get('scenario') ?? undefined }), local: true };
   }
   const { createMarketHttpAdapter } = await import('./http.js');
-  return createMarketHttpAdapter({ getToken: ctx.getToken });
+  return { adapter: createMarketHttpAdapter({ getToken: ctx.getToken, request: ctx.request, publicGet: ctx.publicGet }), local: false };
 }
 
 export function createMarketEntry(ctx) {
-  let panel = null, pending = null, disposed = false;
+  let panel = null, pending = null, disposed = false, generation = 0, opening = false;
+  const loadPanel = ctx.loadPanel ?? (() => import('./panel.js'));
 
-  async function build() {
-    const adapter = await makeAdapter(ctx);
-    const { createMarketPanel } = await import('./panel.js');
-    if (disposed) return null;
-    const { container, resetInput, focusGame, openShareholderRegister } = ctx;
-    panel = createMarketPanel({ container, adapter, resetInput, focusGame, openShareholderRegister });
+  async function build(scope) {
+    const { adapter, local } = await makeAdapter(ctx);
+    if (disposed || scope !== generation) return null;
+    const { createMarketPanel } = await loadPanel();
+    if (disposed || scope !== generation) return null;
+    const { container, resetInput, focusGame, openShareholderRegister, onSessionChange, onSignIn } = ctx;
+    const created = createMarketPanel({ container, adapter, resetInput, focusGame, openShareholderRegister,
+      onSessionChange: local ? undefined : onSessionChange, onSignIn });
+    if (disposed || scope !== generation) { created.dispose(); return null; }
+    panel = created;
     if (import.meta.env.DEV) window.__market = { adapter, panel };
     return panel;
   }
-  function load() {
-    pending ??= build().catch(error => { pending = null; throw error; });
-    return pending;
+  function load(scope) {
+    if (panel) return Promise.resolve(panel);
+    if (pending?.scope === scope) return pending.promise;
+    const task = {scope, promise: null};
+    task.promise = build(scope).finally(() => { if (pending === task) pending = null; });
+    pending = task;
+    return task.promise;
   }
 
   return {
-    get active() { return Boolean(panel?.active); },
+    get active() { return opening || Boolean(panel?.active); },
     async open() {
-      const view = await load();
-      if (view && !disposed) view.open();
+      if (disposed) return;
+      const scope = generation; opening = true;
+      try { const view = await load(scope); if (view && !disposed && scope === generation) view.open(); }
+      catch (error) { if (!disposed && scope === generation) throw error; }
+      finally { if (scope === generation) opening = false; }
     },
-    close() { panel?.close(); },
+    close() {
+      const active = opening || Boolean(panel?.active);
+      generation += 1; opening = false; pending = null; panel?.close();
+      return active;
+    },
     dispose() {
       if (disposed) return;
-      disposed = true;
+      disposed = true; generation += 1; opening = false; pending = null;
       panel?.dispose();
       if (import.meta.env.DEV) delete window.__market;
     },

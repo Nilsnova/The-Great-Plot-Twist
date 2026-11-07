@@ -4,6 +4,47 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+Current scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils confirmed that all required
+G9 features remain in scope and all 17 overflow items are deferred. Historical remaining-work
+lists below are superseded by that decision. Work is now reported in 30–60-minute slices.
+
+## Chunk 1: Exchange verified locally (7 Nov 2026)
+
+Changed: stream 9 wires the adopted Island Exchange to the current private service lease and
+anonymous price client. Strict flags, server prices/limits, original uncertain click IDs and fresh
+read-before-resend remain authoritative. Accepted or uncertain trades reconcile the shared wallet
+and own ledger through fresh server reads. Older ledger replies cannot overwrite newer ones.
+US stock reopening captions use Lisbon time; exact server credits appear only in Settings → Credits.
+Expiry closes private market UI without reopening it over Account. A successful Check again keeps
+its confirmation visible while the unresolved trade still requires an explicit resend.
+
+Verified: **all 11 stream commands passed**, including **3,130 tests / 208 files**, build/spoiler,
+loading, CSP/inventory, the full recorded online and fault runs, accessibility and the world check.
+The market passes **106 checks at 1280/375 px** and **14 fault cases / 81 checks at 375/320 px**.
+The actual Rewards screen and shared coin counter follow accepted, unknown and repeated trades;
+recorded ledger rows and Settings-only credits are checked through native controls. Accessibility
+passes **50 contexts / 150 viewport samples**, including the short 375 × 400 market audit.
+World passes all **62 checks**, including ten trips at **32 FPS / 97 calls** and later travel/error
+assertions. Cold title remains **21,071 JS / 11,878 CSS bytes**, within the unchanged caps.
+
+Evidence: `captures/20261107_G9-C3-market/stream9-proof.json`, its 54 source fingerprints and
+normalized logs, plus the market/fault reports and selected desktop/phone captures. Earlier C2/C3
+evidence is preserved. Failed attempts and the red/green regressions are recorded; no check was
+weakened. Source base is `8844962`; the committed candidate is pinned by those fingerprints.
+
+**Local stream delivery; not a pushed checkpoint.** Next is roadmap chunk 2: run the full
+44-command driver on this clean committed source, perform the engineering check, then push and
+verify the remote SHA. Last verified remote remains `8844962`. Main `64fc731` is already adopted;
+the latest fetch found no new main or published case-contract commit.
+
+Not verified: R16 presenter/night-storm proof, R11's live case paths, native background-tab pause,
+other engines, assistive technology or physical devices. Live OAuth/services/databases were not
+used. All test clients/endpoints are injected or intercepted with generated placeholders.
+Remaining: required streams **10–21**; all **17 overflow items are deferred**. Prepared later
+modules are unverified coordinator drafts. R11/R16 remain external; no decision is pending for Nils.
+Schema 1, 24 view keys, 25 intents, exact events, accepted replay and server-free demo remain intact.
+No package, asset, font, budget, main merge or deployment was added.
+
 ## Stream 8 committed; full regression recorded (7 Nov 2026, source `e720eaf`)
 
 Changed: authoritative islet integration is committed as `e720eaf`. Main `64fc731` is already

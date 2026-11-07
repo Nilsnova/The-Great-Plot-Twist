@@ -4,7 +4,7 @@
 import { coinsText, coinsLabel, signedCoinsText, priceText, zeroPointText, momentText } from './format.js';
 import { statusWords, profitWords, sideWords, demoWords, DELISTED_WORDS } from './words.js';
 
-export const SOON_WORDS = 'Trading opens soon.';
+export const SOON_WORDS = 'Trading opens later.';
 const SIMULATION_FALLBACK = 'Simulation with play money. Real names and real prices, no real money and no prizes.';
 const listOf = value => (Array.isArray(value) ? value.filter(item => item !== null && typeof item === 'object') : []);
 // How to show a price: the first source that knows it. A position knows its own (the server sends them), else the board's company does.
@@ -22,14 +22,15 @@ function blockedWords(company, tradingEnabled, statusText) {
 
 function boardRow(company, tradingEnabled, context) {
   const statusText = statusWords(company, context);
+  const canOpen = Boolean(company.canOpen) && tradingEnabled && Number.isFinite(company.price);
   return {
     id: company.id, heading: company.name, ticker: company.ticker, kind: company.kind, status: company.status, tagline: company.tagline,
     followsText: `Follows ${company.follows}`, marketName: company.marketName,
     priceLabel: company.status === 'open' ? 'Price' : 'Last price',
     priceText: company.price == null ? 'Not available' : priceText(company.price, styleOf(company)),
     priceAtText: company.priceAt ? momentText(company.priceAt, context) : '',
-    statusText, canOpen: Boolean(company.canOpen), delisted: Boolean(company.delisted),
-    blockedText: company.canOpen ? null : blockedWords(company, tradingEnabled, statusText),
+    statusText, canOpen, delisted: Boolean(company.delisted),
+    blockedText: canOpen ? null : blockedWords(company, tradingEnabled, statusText),
     zeroPrices: company.zeroPrices ?? null, ...styleOf(company),
   };
 }

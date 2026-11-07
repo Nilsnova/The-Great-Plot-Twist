@@ -2,7 +2,22 @@
 import {teamMembers} from './team.js';
 import {node} from '../ui/kit/dom.js';
 import {createBuildInfo} from '../build/info.js';
-export function credits() {
+import {session as defaultSession} from '../online/session.js';
+import {readMarketCredits} from '../online/market-credits.js';
+
+function marketCredit(credit) {
+  const row=node('p','shell-market-credit');
+  function append(label,href) {
+    if(label===null||label==='')return;
+    if(!href){row.append(document.createTextNode(label));return;}
+    const link=node('a','',label);link.href=href;link.target='_blank';link.rel='noopener noreferrer';row.append(link);
+  }
+  append(credit.text,credit.href);
+  if(credit.licenceText){row.append(document.createTextNode(' '));append(credit.licenceText,credit.licenceHref);}
+  return row;
+}
+
+export function credits({session=defaultSession}={}) {
   const section=node('section','shell-credits');
   section.append(node('p','','A four-person student project. Original islands, pixel art and sound, made with code.'));
   const team=node('ul');for(const name of teamMembers)team.append(node('li','',name));section.append(node('h3','','The team'),team);
@@ -11,6 +26,7 @@ export function credits() {
   section.append(node('p','','Island Exchange live market data: Binance public market data. Recorded replay: Binance Vision, CC BY-NC-SA 4.0. Adapted to one-minute closing prices for a 90-minute replay.'));
   section.append(node('p','','Football data provided by the Football-Data.org API. Basketball data provided by BALLDONTLIE. Scores may be delayed. Sports predictions are a play-money simulation.'));
   const marketLinks=node('p');for(const [label,href] of [['Binance market data','https://data.binance.vision/'],['Replay license · CC BY-NC-SA 4.0','https://creativecommons.org/licenses/by-nc-sa/4.0/']]){const link=node('a','',label);link.href=href;link.target='_blank';link.rel='noopener noreferrer';marketLinks.append(link,document.createTextNode(' '));}section.append(marketLinks);
+  for(const credit of readMarketCredits(session))section.append(marketCredit(credit));
   section.append(node('h3','','Tools and licenses'),node('p','','Three.js, Vite and Vitest: MIT. Playwright Core: Apache-2.0. Pillow (art generation): HPND. Original project graphics and procedural audio use no external assets, fonts or recordings. Third-party software notices accompany the built game.'));
   section.append(node('p','','Supabase JavaScript client and components: MIT, © 2020 Supabase.'));
   if(import.meta.env.PROD){const notices=node('a','','Third-party software notices');notices.href='./third-party-notices.md';notices.target='_blank';notices.rel='noopener noreferrer';section.append(notices);}

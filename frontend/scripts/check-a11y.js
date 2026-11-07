@@ -5,8 +5,9 @@ import {stubIntro} from './intro-browser-fixture.js';
 import {auditRequestStates} from './a11y-request-states.js';
 import {auditCrewShortViewport} from './a11y-crew-short.js';
 import {auditIsletPanel} from './a11y-islet.js';
+import {auditMarketPanel} from './a11y-market.js';
 const env=await openWorldBrowser({hmr:false}),{page}=env,prefix='captures/20261106_G8-A11y';
-const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:['Market, prediction and duel panel audits await their G9 streams'],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
+const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:['Prediction and duel panel audits await their G9 streams'],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
 async function audit(name,selector,context='gameplay'){
  const root=page.locator(selector).last();await root.waitFor({state:'visible'});const sizes=[];
  for(const width of [1280,375,320]){
@@ -18,7 +19,7 @@ async function audit(name,selector,context='gameplay'){
    const controls=[...root.querySelectorAll('button,input,select,a[href],summary,[role="img"]')].filter(visible);
    const missingNames=controls.filter(el=>!nameOf(el)).map(el=>el.tagName+'.'+el.className);
    const duplicates=h.duplicateNames(controls.filter(el=>el.matches('button')).map(nameOf));
-   const smallTargets=width===375?controls.filter(el=>!el.disabled&&!el.matches('[role="img"]')&&!h.touchTargetMeetsMinimum(el.getBoundingClientRect())).map(el=>({name:nameOf(el),width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height})):[];
+   const smallTargets=width===375?controls.filter(el=>!el.disabled&&!el.matches('[role="img"]')&&!h.touchTargetMeetsMinimum(h.touchRectForAudit(el))).map(el=>({name:nameOf(el),width:h.touchRectForAudit(el).width,height:h.touchRectForAudit(el).height})):[];
    const fonts=[],contrast=[],imageBackgrounds=new Set();let minimumContrast=21,textCount=0;
    for(const el of [root,...root.querySelectorAll('*')].filter(visible)){
     if(![...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())||el.matches('option,script,style')||el.closest('.kit-sr-only,.presence-sr-only'))continue;
@@ -38,10 +39,10 @@ async function audit(name,selector,context='gameplay'){
  }
  await page.setViewportSize({width:1280,height:900});
  const isDialog=await root.evaluate(root=>root.matches('dialog,[role="dialog"]'));
- const focus=await root.evaluate(async root=>{const {renderedForAudit}=await import('/scripts/a11y-helpers.js');const controls=[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary,[tabindex="0"]')].filter(el=>renderedForAudit(el));root.querySelectorAll('[data-a11y-order]').forEach(el=>delete el.dataset.a11yOrder);controls.forEach((el,i)=>el.dataset.a11yOrder=String(i));controls[0]?.focus();return {count:controls.length,positiveTabindex:controls.some(el=>el.tabIndex>0),order:controls.map(el=>({tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder})),steps:[]};});
+ const focus=await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');const candidates=h.focusCandidatesForAudit(root),controls=h.tabbableForAudit(root);root.querySelectorAll('[data-a11y-order]').forEach(el=>delete el.dataset.a11yOrder);controls.forEach((el,i)=>el.dataset.a11yOrder=String(i));controls[0]?.focus();return {count:controls.length,positiveTabindex:candidates.some(el=>el.tabIndex>0),order:controls.map(el=>({tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder})),steps:[]};});
  const steps=isDialog?focus.count-1:Math.min(1,focus.count-1);
- for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate(async(root,i)=>{const {renderedForAudit}=await import('/scripts/a11y-helpers.js');const el=document.activeElement,s=getComputedStyle(el);return {domOrder:el.dataset.a11yOrder===String(i),inside:root.contains(el),visible:renderedForAudit(el)&&s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0,expectedOrder:String(i),actual:{tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null}};},i));}
- if(isDialog){await root.evaluate(async root=>{const {renderedForAudit}=await import('/scripts/a11y-helpers.js');[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary,[tabindex="0"]')].filter(el=>renderedForAudit(el)).at(-1)?.focus();});await page.keyboard.press('Tab');focus.trapped=await root.evaluate(root=>root.contains(document.activeElement));focus.trapTarget=await root.evaluate(()=>{const el=document.activeElement;return {tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null};});}
+ for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate(async(root,i)=>{const h=await import('/scripts/a11y-helpers.js');const el=document.activeElement;return {domOrder:el.dataset.a11yOrder===String(i),inside:root.contains(el),visible:h.visibleFocusForAudit(el),expectedOrder:String(i),actual:{tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null}};},i));}
+ if(isDialog){await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');h.tabbableForAudit(root).at(-1)?.focus();});await page.keyboard.press('Tab');focus.trapped=await root.evaluate(root=>root.contains(document.activeElement));focus.trapTarget=await root.evaluate(()=>{const el=document.activeElement;return {tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null};});}
  report.screens.push({name,sizes,focus});console.log('Audited '+name);await writeFile(prefix+'-Checks.json',JSON.stringify(report,null,2));
 }
 try{
@@ -91,12 +92,14 @@ try{
  await page.waitForFunction(()=>window.__island.scene.getObjectByName('coastal-fireworks')?.visible===false);
  report.reducedMotion=await page.evaluate(()=>({wasActive:true,fireworksVisible:window.__island.scene.getObjectByName('coastal-fireworks').visible,runningAnimations:document.getAnimations().filter(a=>a.playState==='running').map(a=>a.animationName??'unknown')}));
  report.isletPanel=await auditIsletPanel(page,{url:env.url,audit,capture:prefix+'-islet-short-375x400.png'});
+ report.marketPanel=await auditMarketPanel(page,{url:env.url,audit,capture:prefix+'-market-short-375x400.png'});
 }catch(error){report.errors.push(error.stack);}
 finally{
  report.browserErrors=env.errors;report.externalRequests=env.external;
  report.failures=report.screens.flatMap(screen=>screen.sizes.flatMap(m=>['missingNames','duplicates','smallTargets','fonts','contrast'].filter(key=>m[key].length).map(key=>({screen:screen.name,width:m.width,check:key,count:m[key].length}))));
  for(const [check,passed] of Object.entries(report.crewShort?.checks??{crewShortAudit:false}))if(!passed)report.failures.push({screen:'crew-short-local',width:375,height:400,check});
  for(const [check,passed] of Object.entries(report.isletPanel?.checks??{isletPanelAudit:false}))if(!passed)report.failures.push({screen:'islet-short-local',width:375,height:400,check});
+ for(const [check,passed] of Object.entries(report.marketPanel?.checks??{marketPanelAudit:false}))if(!passed)report.failures.push({screen:'market-short-local',width:375,height:400,check});
  for(const screen of report.screens){for(const m of screen.sizes){for(const key of ['overflow','documentOverflow'])if(m[key])report.failures.push({screen:screen.name,width:m.width,check:key});if(!m.fitsViewport)report.failures.push({screen:screen.name,width:m.width,check:'fitsViewport'});}if(screen.focus.positiveTabindex||screen.focus.steps.some(step=>!step.domOrder||!step.inside||!step.visible)||screen.focus.trapped===false||screen.escapeClosed===false)report.failures.push({screen:screen.name,check:'keyboard'});}
  for(const [name,caption] of [['world',report.worldCaption],['modal',report.modalCaption]])if(!caption||!caption.inside||caption.size<18||caption.nonoverlap===false||caption.between===false)report.failures.push({check:name+'Caption'});
  if(report.externalRequests.length)report.failures.push({check:'externalRequests'});for(const check of ['creditsEscapeSettings','settingsEscapeTitle','journalEscapeIntro','introEscapeCanvas','interiorExitCanvas','hudJournalEscape','caseEscapeCanvas','accountEscapeCanvas'])if(report[check]!==true)report.failures.push({check});if(report.reducedMotion?.fireworksVisible||report.reducedMotion?.runningAnimations.length)report.failures.push({check:'reducedMotion'});

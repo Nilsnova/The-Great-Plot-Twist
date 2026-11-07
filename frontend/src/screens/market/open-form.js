@@ -42,7 +42,7 @@ export function createOpenForm({ onSubmit, onCancel }) {
   const element = node('div', 'market-form');
   element.setAttribute('role', 'group');
   element.setAttribute('aria-label', 'Open a position');
-  let row = null, rules = null, busy = false;
+  let row = null, rules = null, busy = false, disabled = false, generation = 0;
   const side = radioGroup('Which way will the price go?', `${id}-side`, refresh);
   const stake = radioGroup('Stake', `${id}-stake`, refresh);
   const note = node('p', 'market-note'), zero = node('p', 'market-preview'), loss = node('p', 'market-preview');
@@ -60,27 +60,29 @@ export function createOpenForm({ onSubmit, onCancel }) {
       setText(paragraph, text);
       paragraph.hidden = !text;
     }
-    confirm.update({ label: preview.confirmLabel, disabled: busy || !preview.ready });
+    confirm.update({ label: preview.confirmLabel, disabled: disabled || busy || !preview.ready });
     return preview;
   }
 
   async function submit() {
     const preview = refresh();
-    if (!preview.ready || busy) return;
+    if (!preview.ready || busy || disabled) return;
+    const scope = generation;
     busy = true;
     refresh();
-    try { await onSubmit({ companyId: row.id, side: preview.side, stake: preview.stake }); } finally { busy = false; refresh(); }
+    try { await onSubmit({ companyId: row.id, side: preview.side, stake: preview.stake }); }
+    finally { if (scope === generation) { busy = false; refresh(); } }
   }
 
   return {
     element,
-    update(nextRow, nextRules) {
-      row = nextRow; rules = nextRules;
+    update(nextRow, nextRules, options = {}) {
+      row = nextRow; rules = nextRules; disabled = Boolean(options.disabled);
       const choices = rules?.stakeChoices ?? [];
       stake.setOptions(choices.map(choice => ({ value: choice.stake, label: `${coinsText(choice.stake)} coins + ${coinsText(choice.fee)} fee` })));
       refresh();
     },
-    reset() { side.clear(); stake.clear(); refresh(); },
+    reset() { generation += 1; busy = false; side.clear(); stake.clear(); refresh(); },
     focus() { side.focus(); },
   };
 }

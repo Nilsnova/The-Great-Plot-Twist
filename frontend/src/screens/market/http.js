@@ -11,14 +11,14 @@
 // One uid belongs to one click: sending the same uid again can never trade twice (the server answers
 // 409 already_applied). The browser never sends a price or a player id.
 //
-// When the outcome of open or close is not known (no answer, a timeout of 10 seconds, a 503 or 504 that
+// When the outcome of open or close is not known (no answer, a timeout of 10 seconds, a 5xx that
 // does not say "nothing was done", or an answer we cannot read) the code is "outcome_unknown".
 import { makeActionUid } from './uid.js';
 import { ERROR_FALLBACKS } from './words.js';
 
 const BASE = '/api/market';
 const DEFAULT_TIMEOUT_MS = 10000;
-// 503 answers that say nothing was done. Any other 503 on a trade could have happened after the coins moved.
+// Only these 503 answers say nothing was done. Other 5xx replies may arrive after the coins moved.
 const CLEAR_REFUSALS = new Set(['market_unavailable', 'database_not_configured']);
 
 const isObject = value => value !== null && typeof value === 'object';
@@ -43,7 +43,8 @@ async function readJson(response) {
   try { return { value: await response.json() }; } catch { return { value: undefined }; }
 }
 
-export function createMarketHttpAdapter({ fetchImpl, getToken = () => null, makeUid = makeActionUid, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+export function createMarketHttpAdapter({ fetchImpl, getToken = () => null, makeUid = makeActionUid,
+  timeoutMs = DEFAULT_TIMEOUT_MS, request, publicGet } = {}) {
   const send = fetchImpl ?? ((...args) => globalThis.fetch(...args));
 
   async function tokenNow() {
@@ -58,12 +59,29 @@ export function createMarketHttpAdapter({ fetchImpl, getToken = () => null, make
     }
     const error = body.value?.error;
     const code = typeof error?.code === 'string' && error.code ? error.code : (response.status >= 500 ? 'server_error' : 'bad_response');
-    const unknown = response.status === 504 || (response.status === 503 && !CLEAR_REFUSALS.has(code));
+    const nothingDone = response.status === 503 && CLEAR_REFUSALS.has(code);
+    const unknown = response.status >= 500 && response.status <= 599 && !nothingDone;
     if (trade && unknown) return unknownOutcome(response.status);
     return failure(code, typeof error?.message === 'string' ? error.message : '', response.status, retryAfter(response.headers));
   }
 
+  function fromFacade(name, result, trade) {
+    const status = Number.isInteger(result?.status) ? result.status : result?.ok ? 200 : 0;
+    if (!result || typeof result.ok !== 'boolean') return trade ? unknownOutcome(0) : failure('bad_response', '', 0);
+    if (status === 0) return trade ? unknownOutcome(0) : failure('network_error', ERROR_FALLBACKS.network_error, 0);
+    if (trade && !result.ok && status >= 200 && status < 300) return unknownOutcome(status);
+    const code = status === 401 ? 'unauthorized' : status === 429 ? 'too_many_requests' : result.code;
+    const wait = Number.isFinite(result.retryAfterSeconds) && result.retryAfterSeconds > 0 ? String(result.retryAfterSeconds) : '';
+    return interpret(name, { ok: result.ok, status, headers: { get: () => wait } },
+      { value: result.ok ? result.data : { error: { code, message: result.message } } }, trade);
+  }
+
   async function call(name, { method = 'GET', path = BASE, body, auth = false, trade = false }) {
+    const facade = auth ? request : publicGet;
+    if (typeof facade === 'function') {
+      try { return fromFacade(name, await (auth ? facade(path, { method, ...(body && { body }) }) : facade(path)), trade); }
+      catch { return trade ? unknownOutcome(0) : failure('network_error', ERROR_FALLBACKS.network_error, 0); }
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {

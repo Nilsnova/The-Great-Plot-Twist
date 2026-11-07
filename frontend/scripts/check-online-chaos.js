@@ -230,4 +230,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   await checkOnlineChaos({requireAllGroups: process.argv.includes('--all-groups')});
   await (await import('./check-online-crew.js')).checkOnlineCrewChaos({checkChaos:checkOnlineChaos});
   await (await import('./check-online-islet.js')).checkOnlineIsletChaos({checkChaos:checkOnlineChaos});
+  await (await import('./check-online-market.js')).checkOnlineMarketChaos({checkChaos:checkOnlineChaos});
 }

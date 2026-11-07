@@ -40,9 +40,9 @@ describe('boardRows', () => {
     expect(row.priceLabel).toBe('Last price');
     expect(row.priceText).toBe('271.20 USD');
     expect(row.priceAtText).toBe('yesterday 20:59');
-    expect(row.statusText).toBe('Closed, opens 14:30');
+    expect(row.statusText).toBe('Closed, opens 14:30 Lisbon time');
     expect(row.canOpen).toBe(false);
-    expect(row.blockedText).toBe('Closed, opens 14:30');
+    expect(row.blockedText).toBe('Closed, opens 14:30 Lisbon time');
   });
 
   it('never leaves a company without a reason when it cannot be opened', () => {
@@ -60,8 +60,14 @@ describe('boardRows', () => {
     const delisted = company({ delisted: true, canOpen: false });
     expect(boardRows(board([delisted]), at)[0].blockedText).toBe('Delisted after the Relighting: you can only close positions.');
     const soon = boardRows(board([company({ canOpen: false })], { tradingEnabled: false }), at)[0];
-    expect(soon.blockedText).toBe('Trading opens soon.');
+    expect(soon.blockedText).toBe('Trading opens later.');
     expect(soon.statusText).toBe('Open around the clock');
+  });
+
+  it('shows no open control without a price or while the server board turns trading off', () => {
+    expect(boardRows(board([company({price: null})]), at)[0].canOpen).toBe(false);
+    expect(boardRows(board([company()], {tradingEnabled: false}), at)[0])
+      .toMatchObject({canOpen: false, blockedText: 'Trading opens later.'});
   });
 
   it('copes with a missing or broken board', () => {
@@ -176,10 +182,20 @@ describe('positionRows', () => {
       ...PORTFOLIO.positions[0], id: 'a1', companyId: 'apple', name: 'Apple', price: 271.2, priceAt: '2026-11-05T20:59:59Z',
       companyStatus: 'closed', companyReason: 'outside_hours', opensAt: '2026-11-06T14:30:00Z', canClose: false,
     };
-    const apple = company({ id: 'apple', name: 'Apple', kind: 'stock', currency: 'USD', status: 'closed', reason: 'outside_hours', canOpen: false });
+    const apple = company({ id: 'apple', name: 'Apple', kind: 'stock', market: 'us', currency: 'USD', status: 'closed', reason: 'outside_hours', canOpen: false });
     const view = positionRows({ ...PORTFOLIO, positions: [waiting] }, board([apple]), at);
     expect(view.open[0]).toMatchObject({ canClose: false, priceLabel: 'Last price', priceText: '271.20 USD', receiveText: null, confirmText: null });
-    expect(view.open[0].blockedText).toBe('Closed, opens 14:30');
+    expect(view.open[0].blockedText).toBe('Closed, opens 14:30 Lisbon time');
+  });
+
+  it('uses Lisbon opening captions on stock positions while preserving their player-local price timestamps', () => {
+    const waiting = { ...PORTFOLIO.positions[0], companyStatus: 'closed', companyReason: 'outside_hours', canClose: false,
+      opensAt: '2026-07-07T13:30:00Z', priceAt: '2026-07-07T11:59:00Z' };
+    const stock = company({ kind: 'stock', market: 'us', currency: 'USD', canOpen: false });
+    const [row] = positionRows({ ...PORTFOLIO, generatedAt: '2026-07-07T12:00:00Z', positions: [waiting] }, board([stock]),
+      { timeZone: 'America/New_York' }).open;
+    expect(row.blockedText).toBe('Closed, opens 14:30 Lisbon time');
+    expect(row.priceAtText).toBe('07:59'); expect(row.canClose).toBe(false);
   });
 
   it('names the holiday from the board when the position row has only the reason', () => {
@@ -255,7 +271,7 @@ describe('notes and credits', () => {
     expect(live).toEqual({ demo: null, soon: null, simulation: 'Simulation with play money.' });
     const demo = boardNotes(board([company()], { demo: true, demoNote: null, tradingEnabled: false, simulationNote: '' }));
     expect(demo.demo).toContain('Demo recording');
-    expect(demo.soon).toBe('Trading opens soon.');
+    expect(demo.soon).toBe('Trading opens later.');
     expect(demo.simulation).toBe('Simulation with play money. Real names and real prices, no real money and no prizes.');
   });
 

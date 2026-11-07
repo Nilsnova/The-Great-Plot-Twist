@@ -54,7 +54,9 @@
     "test:g9": "node scripts/check-g9-regression.js",
     "test:online:chaos": "npm run build && node scripts/check-online-chaos.js",
     "test:online:islet": "npm run build && node scripts/check-online-islet.js",
-    "test:online:islet:chaos": "npm run build && node scripts/check-online-islet.js --chaos"
+    "test:online:islet:chaos": "npm run build && node scripts/check-online-islet.js --chaos",
+    "test:market": "npm run build && node scripts/check-market-hall.js",
+    "test:online:market:chaos": "npm run build && node scripts/check-online-market.js --chaos"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

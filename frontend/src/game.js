@@ -23,6 +23,7 @@ import {sendCaseIntent} from './adapter/intent.js';
 import {createCaseBridge} from './adapter/bridge.js';
 import {attachIsletPanel} from './screens/islet/host.js';
 import {createIsletHost} from './online/islet-host.js';
+import {createMarketHost} from './online/market-host.js';
 import {createIntro} from './story/intro.js';
 import {entranceFor,canEnterRoom} from './world/interiors/rooms.js';
 import {createLazyCinematics} from './world/cinematics/lazy.js';
@@ -121,20 +122,20 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>caseAdapter?.dev?.setIsletBuilt?.(built));
   const applyCaseView=view=>{bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
   caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,openIslet:()=>{caseUi.close();void stopPlots.open('islet_signal_station');},onView:view=>{noteAdapterView(view);if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
-  // The Island Exchange panel is made on the first visit to the market hall; its code loads only then.
-  // The load is kept as one promise, so two quick presses of E (or A, or a tap) still make one panel.
-  function loadMarket() {
-    marketLoad ??= import('./screens/market/index.js').then(module => {
-      if(disposed)return null;
-      marketUi = module.createMarketEntry({ container, getToken:session.getToken, resetInput: input.reset, focusGame: () => graphics.renderer.domElement.focus(),
-        openShareholderRegister: () => caseUi.open('search', { spot: 'market_hall' }) });
-      return marketUi;
-    }).catch(error => { marketLoad = null; throw error; });
-    return marketLoad;
-  }
-  async function openMarket() {
-    try { const market = await loadMarket(); if (!disposed && market) await market.open(); }
-    catch (error) { console.error(error); hud.message('The Island Exchange could not open. Try again.'); }
+  // Public prices and private trading share the factory's explicit-session capabilities.
+  marketUi=createMarketHost({session,container,resetInput:input.reset,
+    focusGame:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
+    openShareholderRegister:()=>caseUi.open('search',{spot:'market_hall'}),
+    onSignIn:()=>{marketUi.close();festivalEntry?.openAccount?.();}});
+  const panelClosed=event=>{
+    const element=event.target;
+    if(!element?.open&&element?.matches?.('.market-modal')
+      &&container.querySelector('.market-modal')===element&&marketUi.pending)marketUi.close();
+  };
+  container.addEventListener('close',panelClosed,true);
+  async function openMarket(){
+    const task=marketUi.open();marketLoad=task;
+    try{return await task;}finally{if(marketLoad===task)marketLoad=null;}
   }
   const stopListening = on('interact', event => {
     hud.notify(event.id);
@@ -159,7 +160,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
-    disposed=true;stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    disposed=true;container.removeEventListener('close',panelClosed,true);stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     buildBadge.dispose();createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   const createCinematicDemo=['demo','perf'].some(key=>new URLSearchParams(location.search).get(key)==='1')?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
@@ -215,7 +216,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},get interiors(){return interiors;}, experience,isletState,hookWorld };
   function dispose() {
-    if(disposed)return;disposed=true;
+    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);
     roomRequest++;interiors?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     disposeDiagnostics();buildBadge.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
@@ -225,9 +226,10 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });  return {dispose,resetInput:input.reset,setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
-    setMode(mode){if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
+    setMode(mode){if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){marketUi?.close();sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
+      if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(stopPlots.active){stopPlots.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(hud.closeQuickPanels?.())return true;
       if(intro.active&&intro.closeJournal?.())return true;

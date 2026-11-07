@@ -1,0 +1,1339 @@
+{
+  "stage": "stream9",
+  "checked": "2026-11-07T11:43:59.244762+00:00",
+  "outcome": "stream gates passed",
+  "checkpointComplete": false,
+  "sourceBase": "8844962d6074b7efb4f68e569b5c04624477f224",
+  "sourceDirty": true,
+  "sourceFingerprints": {
+    "package.json": "99841f988bc96cefefee8e2b904fc5ddf9d6fac7e0a3f7ff37b48fae01283399",
+    "scripts/a11y-helpers.js": "1c4e68939484e65150b3486af565814b15cd7797b70dcfd156c8b5d41b4631bb",
+    "scripts/a11y-market.js": "e4990ed31510eaca8b955534774a7969d8a52ca5d3632ab77bfeef8a27ad6a80",
+    "scripts/check-a11y.js": "4fc5e3e38ba4b91b498ba17a8d47e4f3c9fc11c76ad71a4ce1f75d58805cca60",
+    "scripts/check-market-hall.js": "bf36c907c5e803ca582c869165fef143eac5d28d3cebe8c512b808f4e1af484a",
+    "scripts/check-online-chaos.js": "cff247ed651fef0d720f7e2c4feda3071be6f2d5898f994b64830d7f6ce93ef3",
+    "scripts/check-online-golden.js": "9e9354159832288a87b95e421bb19791715dfa9564d1296b794f48c74ced4c58",
+    "scripts/check-online-market.js": "e2040b4de675a9a1765dbf25a92dc00a08cad92a03e345278ca0ba48749d8d47",
+    "scripts/online-market-fixture.js": "8ef246c225fad28b7aa2ec932b3000ae8d00b120ba7513a92ca4775cb0290754",
+    "scripts/online-market-journeys.js": "8c7a86d405d8c7f6efa7fb94b81465740dd4ab3ee928a1eadf18586bdb92e6fb",
+    "src/game.js": "79a6b10a95f45e6e34dc54a6d18f34f881131c65ab134ce8cfb358b87e20e5af",
+    "src/online/case-adapter/index.js": "c794e7cb1e3dc513b81e1a53af8d9186d3954cbe5c4bb87f40a09b3958625f89",
+    "src/online/case-adapter/panel-wallet.js": "f210ee0de8f695b510e8781281e0f95a686f282a02958bf63ea02b54bc5796f2",
+    "src/online/case-adapter/rewards.js": "c2b2dab4c73f9f701061e06287f1c4fab8f7c1b9b04c3d510b3d58c1b7376f2c",
+    "src/online/market-credits.js": "11dcc6dcb2c180c2441ecbb8b9f2cd387f8a73e4f769286db5f04d254030817d",
+    "src/online/market-host.js": "8e11da26045eaeb6c898e9c2a73b8c9d0cd10c0544f878d3aad9443b56799346",
+    "src/online/market-policy.js": "524e3c236bbdb6c9c91352371529e677343739d20d79947806500a0847a334b2",
+    "src/screens/market/README.md": "5bb6f94dfaf392a290f01511b5d6abff9ba6401cd1ae0321d0bbec56ae8127dc",
+    "src/screens/market/board-view.js": "7a18c011e38d2b0977f460c6a84aa4e46d1b7f2075aa3290091946a8ff701f66",
+    "src/screens/market/call-results.js": "2fd25909597167a063228a89808386c7674fde94017cff5b71cd30ed1f6aa334",
+    "src/screens/market/http.js": "33a9e987bc71c6c470f2bce8d8182236875e9e2701404025f0e495d43758c9a0",
+    "src/screens/market/index.js": "8cfda59144d9064fb4a547ed273cd35c6bcf6af9b1be3c746596e3c01a783e16",
+    "src/screens/market/market.css": "bae9ed35bd0913461a8b00e13fec1d992c9b4e9a30d6b98636f5f09e530946fd",
+    "src/screens/market/open-form.js": "9528d765d4489f0d08f0303bd3e47e2bd97091a01bb3556da90277f6ce59978f",
+    "src/screens/market/panel.js": "4675c692631c7f0f5ad9663abce551ff83ee7505fca1088b8e1238d00208d4a8",
+    "src/screens/market/positions-view.js": "98e6bc0e6d78d0b7f5974b710961a02087fe4f94ef3e65f9727e5a9f33b31f8e",
+    "src/screens/market/request-state.js": "0651f75a0bb6962990c702d3aa315d70a2909b6d168c7b7c00564b7794e2c285",
+    "src/screens/market/session.js": "fff445125ee474bc1e4e6051f9c4128583dc04960fad5caa5b8106ef265470e6",
+    "src/screens/market/trades.js": "03185befbb1604cfb8623578d1e9292e9758d6699a420c749f2ac88b2eff0f58",
+    "src/screens/market/view-models.js": "d5a782b415e6786211268986301e1ae9c28f1eadc1fb7d5030285aa2308274d6",
+    "src/screens/market/words.js": "96ac1a9d807952c50b8017af802056f8221ef38f71d4b1837d03841c8e1fb9a2",
+    "src/shell/after-paint.js": "73b931be8a0c888cf9a5457e757e8ac290a00e1dc122b056f8cbc8441852944c",
+    "src/shell/credits.js": "647b89fe6b7fd559192455e65bfc567e65b376637465690a8bb31f93230fc232",
+    "tests/a11y-helpers.test.js": "1ec7ae2f3672f18e5192c2a917fd4c70523d709ede28707c1628c9e9a484d845",
+    "tests/a11y-native-controls.test.js": "69b86f2c452f37130cc2ab310dc4a9d1ccd7fbc76e0a3836c746725b3d333aa1",
+    "tests/market-credits-settings.test.js": "bbc147cb51b2d2052be087ca3f36eecd6f173be73f3a250c5e7f3b0066923cf8",
+    "tests/market-credits.test.js": "4306dd8147c008a9eccf18c51350840677e517c33d787ca666d612f63c2a65c7",
+    "tests/market-host.test.js": "761a0baaf613e9bc914f99eb7a6d89f2079a4bb1a0266441d453059721d8ce82",
+    "tests/market-policy.test.js": "b2740c12f11227be30b23d3178b58253bd4f0bbfde58493b7d4f0e5ae30c39fb",
+    "tests/market/boundary.test.js": "373662f8f33f6581cf71ce84be082abf290543d27e8743e02deb8b3b493f1dec",
+    "tests/market/call-ui.test.js": "800255b220d22e502e36ce8bd0e13a2acc9e6cc6a7bc9a26ceb64281ebded1c1",
+    "tests/market/check-again.test.js": "b817b7cbbe5f0f71499f93d0754a5f01428eb7708cf75df501f86db3b86c0004",
+    "tests/market/css.test.js": "8cd44d9275978e31ada0bf031008445b948a39213f08211c800c12e9dd651978",
+    "tests/market/entry-lifetime.test.js": "1da0ffadb01b2eb62acf865bd537b3b1b558bacd2032c54fcd8c57977a1b3ef5",
+    "tests/market/form.test.js": "2875f7f7d550311bc7b6fdf6adaaed3a09b28d15d06914a50428a1eed8924a3a",
+    "tests/market/http.test.js": "5336fcce75bb376413549e6405314a60fb67a93f09c698d458a6e76de09fdfef",
+    "tests/market/panel-lifetime.test.js": "ed57b647196a89e7be884fd892ffe5880d658ba8384bab8d61c41808031d696b",
+    "tests/market/positions-lifetime.test.js": "a0b423a2fab71bdad4337d7c972ca2d190e4379313851cb344c9cf7a0fe43c4c",
+    "tests/market/session.test.js": "8ab347f59e4b32b534805da1e8ee677df27da3601572b60c3ed2a45d1d3a01bf",
+    "tests/market/trades.test.js": "cb4be033ae3e21be018f749f0321db0067ece9e64b32bf526c7415a869c4b6a2",
+    "tests/market/view-models.test.js": "66ceb10edcc36263eecca50a20dd19fcca42f8cccab1d584af11e7d6a4d1e0ce",
+    "tests/market/words.test.js": "7b662aa710f3020ea31c3d75dd76bc046e2922c3e3549cd0824a53be4182f7bb",
+    "tests/panel-wallet.test.js": "a3b96dd03459d73676d447bbb306b81f0588827dd2ee28c709c2ac4f204a6fb4",
+    "tests/real-ledger-ordering.test.js": "cd758d273a0e55f1c6cca2a605dbd2adab2237a8f876795595bada120b2c7877"
+  },
+  "gates": [
+    {
+      "name": "build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 2.78,
+      "log": "captures/20261107_G9-C3-market/logs/build.log",
+      "rawSha256": "ad95b0c7e2f2697d2364365eb5044ee2b627de502d054f3a40fa40643ae3241c",
+      "sha256": "ad95b0c7e2f2697d2364365eb5044ee2b627de502d054f3a40fa40643ae3241c"
+    },
+    {
+      "name": "loading",
+      "command": "node scripts/check-loading.js",
+      "exitCode": 0,
+      "seconds": 16.78,
+      "log": "captures/20261107_G9-C3-market/logs/loading.log",
+      "rawSha256": "8bfe504c0d4a5ff7ac567b466523811115882eab408da0e7597853ee94677e57",
+      "sha256": "c976b95d8f201ddb3f6ee3e11c6afd3569cedd003f4517d71d3be1b92eaffde4"
+    },
+    {
+      "name": "market-chaos",
+      "command": "node scripts/check-online-market.js --chaos",
+      "exitCode": 0,
+      "seconds": 264.63,
+      "log": "captures/20261107_G9-C3-market/logs/market-chaos.log",
+      "rawSha256": "cc89ec341874bccf54d8ba567f165c7757a6f602a45a2480c8de2a49b7cf5a48",
+      "sha256": "68d73eec510c37aee351721585f4f53d2023e7d575403bbb5087d18fbb94204c"
+    },
+    {
+      "name": "market",
+      "command": "node scripts/check-market-hall.js",
+      "exitCode": 0,
+      "seconds": 222.64,
+      "log": "captures/20261107_G9-C3-market/logs/market.log",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unit",
+      "command": "npm test",
+      "exitCode": 0,
+      "seconds": 180.72,
+      "log": "captures/20261107_G9-C3-market/logs/unit.log",
+      "rawSha256": "9818e0ad4e40184223b387328669413073950ff4ad59f5cf3ba8aab90deeb808",
+      "sha256": "0355672489d526641e37d5612bf8cde98bd2602a53c122c23ae40ddaa968e436"
+    },
+    {
+      "name": "csp",
+      "command": "node scripts/check-csp.js",
+      "exitCode": 0,
+      "seconds": 16.53,
+      "log": "captures/20261107_G9-C3-market/logs/csp.log",
+      "rawSha256": "263e351c05bf7986abc448f0a5b3bca2ccb0cbaddd5d8440c915c4985d94a155",
+      "sha256": "2db603aa1390eda3702ace99d330b1cbd13ede768a236212b23f1aa215dbbe39"
+    },
+    {
+      "name": "inventory",
+      "command": "node scripts/check-csp-inventory.js",
+      "exitCode": 0,
+      "seconds": 0.53,
+      "log": "captures/20261107_G9-C3-market/logs/inventory.log",
+      "rawSha256": "cee4d08d517794e237ee566a5c48d83ffee54353346f87cd5a4f597ddfc1fe25",
+      "sha256": "1dd877613a7f33adb44e3acf20bc32d247dc95792e05563631d441b5581916d5"
+    },
+    {
+      "name": "online",
+      "command": "node scripts/check-online-golden.js",
+      "exitCode": 0,
+      "seconds": 750.55,
+      "log": "captures/20261107_G9-C3-market/logs/online.log",
+      "rawSha256": "41d81613f24e07825bc6d7988bc1cca8cae2457adb536d7ca3b12978d7a71876",
+      "sha256": "c6e921d6d1a0fbbec3aea39c4e4231d251168884bd69a311baea4ddd30c01956"
+    },
+    {
+      "name": "online-chaos",
+      "command": "node scripts/check-online-chaos.js",
+      "exitCode": 0,
+      "seconds": 469.91,
+      "log": "captures/20261107_G9-C3-market/logs/online-chaos.log",
+      "rawSha256": "e7b78e0877825708db186d34b2d60bf654b76521ab75cf2444bd56e26f59130c",
+      "sha256": "2b54a17f756290368a26fbe35812bbb256ac11497da27793af9c31f538a653d9"
+    },
+    {
+      "name": "a11y",
+      "command": "node scripts/check-a11y.js",
+      "exitCode": 0,
+      "seconds": 242.44,
+      "log": "captures/20261107_G9-C3-market/logs/a11y.log",
+      "rawSha256": "27c732c1b0d290825caa21fb93e7d8d97a016aad6c61b2d1b0cad9e8a191e669",
+      "sha256": "683136eda97f50a1dd93c6a164be6a0704ac03ce65fd66ada05813fbad487473"
+    },
+    {
+      "name": "world",
+      "command": "node scripts/check-world.js",
+      "exitCode": 0,
+      "seconds": 94.64,
+      "log": "captures/20261107_G9-C3-market/logs/world.log",
+      "rawSha256": "2ecb13d0f3fd5c4cd6449fed8a0b54ffbccef183f88ce6a4694e74e41c5ca426",
+      "sha256": "e0ae9b348c1abc6d294a0ad617658a6924e0eed5cccd0fea880ee7f9853dc662"
+    }
+  ],
+  "unit": {
+    "tests": 3130,
+    "files": 208
+  },
+  "coldTitle": {
+    "javaScript": 21071,
+    "css": 11878,
+    "javaScriptCap": 21080,
+    "cssCap": 12000
+  },
+  "market": {
+    "checks": 106,
+    "report": "captures/20261107_G9-C3-market/online-market.json"
+  },
+  "marketFaults": {
+    "cases": 14,
+    "checks": 81,
+    "coverage": "market group only; other route groups remain explicitly partial",
+    "report": "captures/20261107_G9-C3-market-chaos/online-chaos.json"
+  },
+  "accessibility": {
+    "contexts": 50,
+    "viewportSamples": 150,
+    "market": {
+      "width": 375,
+      "height": 400,
+      "checks": {
+        "simulationNotice": true,
+        "creditsOnlyInSettings": true,
+        "nativeTabsArrows": true,
+        "nativeSideArrows": true,
+        "nativeStakeArrows": true,
+        "fitsViewport": true,
+        "noPanelOverflow": true,
+        "noDocumentOverflow": true,
+        "targets44": true,
+        "escapeClosed": true,
+        "noPause": true,
+        "canvasFocus": true,
+        "noLiveMarketRequests": true
+      }
+    },
+    "marketScreens": [
+      {
+        "name": "market-prices",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 65,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 65,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 65,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 8,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "7"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "7"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-open-form",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 78,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 78,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 78,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 11,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "7"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "8"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "9"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "10"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "7"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "8",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "8"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "9",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "9"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "10",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "10"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-open-confirmation",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 12,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "7"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "8"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "9"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "10"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "11"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "7"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "8",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "8"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "9",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "9"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "10",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "10"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "11",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "11"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-positions",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 7,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "6"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "6"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-close-confirmation",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 81,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 81,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 81,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 8,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "7"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "7"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      }
+    ]
+  },
+  "visualReview": {
+    "checked": "2026-11-07T11:37:21.945871+00:00",
+    "captures": [
+      {
+        "path": "captures/20261107_G9-C3-market/market-trading-paused-1280.png",
+        "sha256": "99ac902787b1f3e35fc471a150f91edbc126a32587fb9b4b8566888f90c119c5"
+      },
+      {
+        "path": "captures/20261107_G9-C3-market/market-falling-repeat-375.png",
+        "sha256": "8ece3b1f197084c503e787f647fa20c5faecf91192f38617e2cb7f72d88dd521"
+      }
+    ],
+    "observed": "Final frozen candidate: approved pixel style, readable18px body and16px controls, wrapped stock/Lisbon captions and987coin repeat receipt; ordinary vertical scrolling, no gameplay credits or horizontal clipping."
+  },
+  "knownFailures": [],
+  "regressionEvidence": [
+    {
+      "log": "captures/20261107_G9-C3-market/logs/check-message-red.log",
+      "rawSha256": "5d552b76fecc3f9eaac3d9fd884a2cb87886695e59023ec9fdf3217c575195cc",
+      "sha256": "98ac77baf2c399eba29d3d3589b122ea1bce7116b4f2d96de74a40c461f0388d"
+    },
+    {
+      "log": "captures/20261107_G9-C3-market/logs/check-message-green.log",
+      "rawSha256": "f13876b95e8963c9466407b3893fe192cbb7c160629032a70615a5f66d96fb64",
+      "sha256": "2eabe8adb57706b79ce6a532d1c8bf20cbc386f46dbbf8e22a756294410eef32"
+    },
+    {
+      "log": "captures/20261107_G9-C3-market/logs/expiry-red.log",
+      "rawSha256": "4360533048a4603cda25f6f61ecb45cd9b0697ce9b501a3c1dff15252ba4aac3",
+      "sha256": "9c0a80e81370f7bb003eb1c31d216bfac87a71877c95c85267d07bfc38d346b5"
+    },
+    {
+      "log": "captures/20261107_G9-C3-market/logs/expiry-green.log",
+      "rawSha256": "ad7470acd18f755de700593b4342d94104cc1a5ccfe3664b6ec113e389830bd2",
+      "sha256": "406ac11fd1ff4467ffb4344c313848d9dba5cc470202aabaa9d424a10c15e73d"
+    }
+  ],
+  "corrections": [
+    "Actual call owner now retains successful Check again confirmation while keeping the same uncertain UID and requiring an explicit resend.",
+    "An expired/signed-out private market no longer reopens its anonymous board above Account; a fresh explicit anonymous visit still works.",
+    "Native lateral walking uses the published capped frame duration and still requires the real hotspot prompt; no game state hooks.",
+    "The isolated native Credits fixture supplies its build identity constant; application behavior was unchanged by that fixture repair."
+  ],
+  "limitations": [
+    "Streams done so far, not a completed checkpoint; R16 presenter-hardware proof remains open.",
+    "R11 exact case DTOs remain required; live case paths are not claimed.",
+    "All endpoints are injected/intercepted with runtime-generated credential placeholders; no live account, service or database was tested.",
+    "Native background-tab pause, other engines, assistive technology and physical devices remain unverified.",
+    "All17 overflow items are deferred by explicit user decision."
+  ],
+  "logNormalization": "Terminal escapes/machine paths/trailing whitespace removed; JSON whitespace compacted without dropping values. Raw and normalized hashes retained."
+}

@@ -1,4 +1,5 @@
 // Own-row wallet reads become a small public ledger. References and database identifiers are discarded.
+const ledgerRequests=new WeakMap();
 export function safeLedgerRows(rows){
   if(!Array.isArray(rows))return [];
   return rows.slice(0,50).filter(row=>Number.isInteger(row?.amount)&&row.amount!==0
@@ -10,11 +11,13 @@ export function safeLedgerRows(rows){
 export async function refreshAccountRewards(ctx,{automatic=false}={}){
   const scope=ctx.store.scope();
   if(!ctx.session.isSignedIn()||ctx.store.isClosed())return ctx.refuse('sign_in_required');
+  const request={};ledgerRequests.set(ctx,request);
   const finish=ctx.readMonitor?.begin('ledger',{automatic,retry:()=>refreshAccountRewards(ctx,{automatic:true})});
   ctx.store.commit({rewardsStatus:'loading'});
   let result;
   try{result=await ctx.auth?.readOwnLedger?.();}catch{result={ok:false};}
   if(!ctx.store.isCurrent(scope)||!ctx.session.isSignedIn())return ctx.refuse('session_expired');
+  if(ledgerRequests.get(ctx)!==request)return ctx.refuse('not_ready');
   if(result?.status===401){ctx.session.clearToken();return ctx.refuse('session_expired');}
   ctx.store.commit(result?.ok?{rewardsRows:safeLedgerRows(result.rows),rewardsStatus:'ready'}:{rewardsStatus:'unavailable'});
   const mapped=result?.ok?ctx.accept('Your coin ledger is up to date.'):ctx.refuse('not_connected');

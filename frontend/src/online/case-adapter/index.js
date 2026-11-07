@@ -16,6 +16,7 @@ import {createCrewHandlers} from './crew.js';
 import {createCrewLifecycle} from './crew-lifecycle.js';
 import {createLiveLifecycle} from './live-lifecycle.js';
 import {createIsletLifecycle} from './islet-lifecycle.js';
+import {createPanelWallet} from './panel-wallet.js';
 import {registerPanelServices} from '../panel-services.js';
 import {validateIntent} from './validate.js';
 import {introJournal} from '../../story/intro-journal.js';
@@ -56,6 +57,7 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.transport = createAdapterTransport(ctx);
   ctx.saves = createAccountSaves(ctx);
   ctx.saves.pauseIdentity();
+  const panelWallet = createPanelWallet(ctx);
   let panelServices = null;
   const islet = createIsletLifecycle(ctx, {loadIslet: deps.loadIslet,
     isDemo: deps.isDemo ?? (() => new URLSearchParams(ctx.window?.location?.search ?? '').get('demo') === '1')});
@@ -175,7 +177,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (['signing_in', 'error', 'expired'].includes(next.state)) patch.accountState = next.state;
     store.commit(patch);
   });
-  panelServices = registerPanelServices(session, {api, publicApi,
+  panelServices = registerPanelServices(session, {api: panelWallet.api, publicApi,
     getFlags: () => ctx.state.config?.flags ?? {},
     isReady: () => !store.isClosed() && ctx.state.config !== null,
     getIdentity: () => store.scope(), getIslet: islet.getAdapter});
@@ -263,6 +265,7 @@ export function createRealCaseAdapter(deps = {}) {
       if (store.isClosed()) return;
       authIntentGeneration += 1;
       store.dispose();
+      panelWallet.dispose();
       islet.dispose();
       panelServices.dispose();
       live.dispose();
