@@ -1,0 +1,121 @@
+{
+  "status": "targeted portability checks passed; full checkpoint still pending",
+  "baseCommit": "89aa9bc",
+  "sourceDirty": true,
+  "browser": "installed Chromium via CHROME_PATH",
+  "commands": [
+    {
+      "id": "unit",
+      "command": "./node_modules/.bin/vitest run tests/intro-api-fixture.test.js tests/sdk-origin-inventory.test.js tests/real-account-profile.test.js",
+      "exitCode": 0,
+      "tests": 47,
+      "files": 3
+    },
+    {
+      "id": "build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "spoilerGuard": "166 text files; 12 protected lines; no suspect elimination data"
+    },
+    {
+      "id": "inventory",
+      "command": "node scripts/check-csp-inventory.js",
+      "exitCode": 0,
+      "checks": 982,
+      "sdkVersion": "2.118.0",
+      "sdkLiteralOrigins": [
+        {
+          "file": "assets/dist-Cd0T2iN4.js",
+          "origin": "https://github.com",
+          "classification": "documentation",
+          "purpose": "SDK migration and Node support links in warning text; no request targets.",
+          "evidence": [
+            "@supabase/realtime-js/src/RealtimeChannel.ts: server-version warning",
+            "@supabase/auth-js/src/GoTrueClient.ts: deprecated lock-option warning",
+            "@supabase/supabase-js/src/index.ts: Node support warning"
+          ],
+          "urls": [
+            "https://github.com/supabase/supabase-js/blob/master/packages/core/realtime-js/migrations/httpsend-server-version.md",
+            "https://github.com/supabase/supabase-js/blob/master/packages/core/auth-js/migrations/lockless-coordination.md",
+            "https://github.com/orgs/supabase/discussions/45715"
+          ]
+        },
+        {
+          "file": "assets/dist-Cd0T2iN4.js",
+          "origin": "http://localhost:9999",
+          "classification": "dormant-default",
+          "purpose": "GoTrue standalone fallback; SupabaseClient supplies the validated project auth/v1 URL.",
+          "evidence": [
+            "@supabase/auth-js/src/lib/constants.ts: GOTRUE_URL",
+            "@supabase/auth-js/src/GoTrueClient.ts: DEFAULT_OPTIONS overridden by constructor options",
+            "@supabase/supabase-js/src/SupabaseClient.ts: _initSupabaseAuthClient supplies authUrl"
+          ],
+          "urls": [
+            "http://localhost:9999"
+          ]
+        },
+        {
+          "file": "assets/dist-Cd0T2iN4.js",
+          "origin": "https://developer.mozilla.org",
+          "classification": "documentation",
+          "purpose": "LockManager specification link inside the SDK warning text; no request target.",
+          "evidence": [
+            "@supabase/auth-js/src/lib/locks.ts: null-lock warning"
+          ],
+          "urls": [
+            "https://developer.mozilla.org/en-US/docs/Web/API/LockManager/request"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "intro",
+      "command": "node scripts/check-intro.js",
+      "exitCode": 0,
+      "checks": 17
+    },
+    {
+      "id": "world",
+      "command": "node scripts/check-world.js",
+      "exitCode": 0,
+      "checks": 66
+    },
+    {
+      "id": "production",
+      "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+      "exitCode": 0,
+      "checks": 7
+    },
+    {
+      "id": "pixel",
+      "command": "node scripts/check-pixel.js",
+      "exitCode": 0,
+      "checks": 12
+    },
+    {
+      "id": "pixel-production",
+      "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+      "exitCode": 0,
+      "checks": 11
+    },
+    {
+      "id": "demo",
+      "command": "node scripts/check-demo.js",
+      "exitCode": 0,
+      "checks": 10,
+      "durationMs": 169955,
+      "publicRequests": [
+        {
+          "path": "/api/config",
+          "method": "GET",
+          "authorized": false
+        },
+        {
+          "path": "/api/weather",
+          "method": "GET",
+          "authorized": false
+        }
+      ]
+    }
+  ]
+}

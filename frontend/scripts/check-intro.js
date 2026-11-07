@@ -1,16 +1,18 @@
 import {readHttp} from './http-read.js';
-import {stubIntro} from './intro-browser-fixture.js';
+import {openIntroApiFixture} from './intro-api-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
-// Play both original endings through the actual public API and reusable dialogue UI.
+// Play both original endings through the actual Vite proxy and an injected canonical public API.
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
-const env=await openWorldBrowser(),{page}=env;
+const fixture=await openIntroApiFixture();let env;
+try{env=await openWorldBrowser({apiTarget:fixture.url});}catch(error){await fixture.close();throw error;}
+const {page}=env;
 const report={checked:new Date().toISOString(),checks:[],apiReads:0,endings:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 const choose=async id=>{
   const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text'});
-  if(await skip.isVisible())await skip.click();
+  if(await skip.isVisible()){try{await skip.click({timeout:1000});}catch(error){if(await skip.isVisible())throw error;}}
   await page.locator(`.intro-modal [data-choice="${id}"]`).click();
 };
 async function visit(id) {
@@ -20,10 +22,10 @@ async function visit(id) {
   await page.waitForFunction(id=>window.__island.world.intro.active&&window.__island.world.intro.state&&(window.__island.world.intro.state.ended||window.__island.world.intro.state.scene===id),id);
 }
 try {
-  const response=await readHttp(env.url+'/api/content/intro-story');check(response.ok,'Vite proxy reaches the actual public intro API');
-  const story=await response.json();check(story.start==='cottage'&&story.scenes.lamp_room,'API returns the original story structure');
+  const response=await readHttp(env.url+'/api/content/intro-story');check(response.ok,'Vite proxy reaches the injected public intro API');
+  const story=await response.json();assert.deepEqual(story,fixture.canonical);check(story.start==='cottage'&&story.scenes.lamp_room,'API returns the unchanged canonical story');
   page.on('request',request=>{if(request.url().includes('/api/')){assert.ok(['/api/config','/api/content/intro-story','/api/weather'].includes(new URL(request.url()).pathname));assert.equal(request.headers().authorization,undefined);assert.equal(request.method(),'GET');if(new URL(request.url()).pathname==='/api/content/intro-story')report.apiReads++;}});
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await page.route('**/api/content/intro-story',route=>route.continue());await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(()=>{window.__introEvents=[];window.__island.on('intro_ended',event=>window.__introEvents.push(event));});
   await visit('shore');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});
   await visit('desk');
@@ -53,5 +55,8 @@ try {
   check(await page.evaluate(()=>JSON.stringify(window.__introEvents)===JSON.stringify([{type:'intro_ended',ending:'ending_trapped'}])),'Trapped ending emits once');
   await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});
   check(await page.evaluate(()=>document.activeElement?.tagName==='CANVAS'&&!window.__island.world.busy),'Closing the story restores game focus and controls');
+  report.proxyRequests=fixture.requests;
+  check(fixture.requests.length>=report.apiReads+1&&fixture.requests.every(request=>request.method==='GET'&&!request.authorized&&request.path==='/api/content/intro-story'),
+    'Node probe and browser story reads use only the anonymous canonical proxy endpoint');
   check(env.errors.length===0,'No browser errors');check(env.external.length===0,'No external requests');console.log(JSON.stringify(report,null,2));
-} finally {await writeFile('captures/20261105_G4-Intro-Checks.json',JSON.stringify(report,null,2));await env.close();}
+} finally {try{await writeFile('captures/20261105_G4-Intro-Checks.json',JSON.stringify(report,null,2));}finally{try{await env.close();}finally{await fixture.close();}}}

@@ -4,6 +4,24 @@ Checkpoint notes and server requests for Claude. All authored changes stay under
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## Checkpoint-1 cloud portability follow-up (not yet a completed checkpoint)
+
+The first full committed run at `89aa9bc` passed 30 of 38 commands. All failures are retained in
+`captures/20261106_G9-C1/checkpoint1-first-driver.json`; this is not a green checkpoint. The account
+mapper now keeps the controller's explicit setup message. Cloud browser runs use installed Chromium
+through `CHROME_PATH`, with no browser download. The intro check owns an anonymous loopback fixture
+serving unchanged public story bytes through Vite's actual proxy, rather than assuming a laptop API.
+World presentation uses the existing fictional sports board; demo allows only anonymous config/weather
+GETs while preserving every timed-tour, journal and event assertion. SDK origin inventory classifies
+only exact pinned-library literals without adding CSP permissions. HTML inventory checks the exact
+four compiled entries plus the existing auth-check/help/privacy pages, rejecting extra/missing pages.
+
+Main has advanced from `364d178` to `64fc731` with the approved visual/interior release. Adopt its
+modules and original actions before final checkpoint proof. The latest published G10 contract at
+`3098c0a` still lacks sanitized serialized case DTO examples; R11 remains open for those examples.
+No actual service/account/database or deployed proof is claimed. Prepared streams 6–7 remain backed up
+and separate. Next: finish targeted portability checks, merge main, then the full committed driver.
+
 ## Checkpoint-1 review follow-up in progress
 
 Stream-5 foundation is committed at `74d9a82`; the complete driver is not yet accepted. Its first pass

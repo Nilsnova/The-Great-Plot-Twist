@@ -4,11 +4,18 @@ Inventory of the production build, 6 November 2026. This document proposes the H
 
 ## Scripts, styles and URL schemes
 
-The built site has four HTML documents: `index.html`, `asset-library.html`, `ui-kit.html`, and the existing team-only `auth-check.html`. Each uses external same-origin module scripts and CSS. There are **zero inline script bodies, inline event handlers, `<style>` blocks or authored `style=` attributes** in those HTML files. The title emblem is drawn in a 2D canvas; it is not an embedded image URL. Local PNG sprites, place plates, the SVG favicon, JavaScript chunks and styles all load from the same origin.
+The built site has four Vite entry documents (`index.html`, `asset-library.html`, `ui-kit.html`, `host.html`) and three existing public pages (`auth-check.html`, `help.html`, `privacy.html`). The inventory requires exactly these seven paths and the four declared manifest entries. Each uses external same-origin module scripts and CSS. There are **zero inline script bodies, inline event handlers, `<style>` blocks or authored `style=` attributes** in those HTML files. The title emblem is drawn in a 2D canvas; it is not an embedded image URL. Local PNG sprites, place plates, the SVG favicon, JavaScript chunks and styles all load from the same origin.
 
 There are no authored `eval()` or `new Function()` calls, embedded `data:` resources, `blob:` object URLs, workers, remote fonts, downloaded audio or remote textures. Audio is synthesized with Web Audio. Fonts are the system `Courier New`/monospace stack, with no font request.
 
 The Three.js texture chunk contains **dormant** `blob:` protocol recognition, data-URL recognition and a `toDataURL()` image-serialization helper. The game does not call those loading/serialization branches. They are library capabilities, not resource dependencies; the policy does not allow `blob:` or `data:`. No `unsafe-eval`, `unsafe-inline`, nonce, hash or wildcard origin is needed by the current build.
+
+The pinned Supabase 2.118.0 dynamic chunk also contains a dormant standalone auth default
+(`http://localhost:9999`) and fixed MDN/GitHub documentation links in warning text. The inventory
+classifies these only in the exact SDK manifest entry, with reviewed URL boundaries, counts and
+installed package versions. The configured client supplies the project's auth URL. These literals
+add no CSP permission; authored or changed uses fail the inventory and require another review.
+
 
 The two constant `style.cssText` assignments in `ui/chart.js` and `world/others/index.js` are moved to `.chart-partner-lines` and `.other-captain-label` stylesheet rules. Constant chart signal marker/legend styles also move to CSS. Runtime geometry, colour and visibility still use individual CSSOM properties. These can appear as `style` attributes in a live DOM inspection, although there is no authored HTML style attribute or arbitrary CSS text insertion. [MDN documents the distinction between direct properties and restricted `cssText`/style-attribute insertion.](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/style-src-attr)
 
@@ -79,7 +86,7 @@ Keep `public/auth-check.html` and its own meta policy unchanged. Both policies a
 
 ## Checks and integration requests
 
-`npm run test:csp:inventory` builds, runs the spoiler guard and scans the four built HTML files, source style insertion, dynamic-code constructors, embedded URL schemes and literal outside origins. `npm run test:csp` rehearses the built pages and nine-beat demo under the proposed header with all APIs returning 503. It records policy violations, browser errors and external requests. The test-only Playwright init script is instrumentation; it is not shipped inline code.
+`npm run test:csp:inventory` builds, runs the spoiler guard and scans the seven approved built HTML files, source style insertion, dynamic-code constructors, embedded URL schemes and literal outside origins. `npm run test:csp` rehearses the built pages and nine-beat demo under the proposed header with all APIs returning 503. It records policy violations, browser errors and external requests. The test-only Playwright init script is instrumentation; it is not shipped inline code.
 
 Claude should enable the HTTP header after integration, then verify deployed response headers and real OAuth/session expiry/Realtime with the approved HTTPS and WSS origins. Confirm any avatar/storage images, extra auth origin, workers, media or downloaded fonts before changing the source list. No extra wildcard, `data:`, `blob:`, inline-script or inline-style exception is proposed. Safari/Firefox and physical assistive-technology checks remain manual; current automated evidence uses installed Chrome.
 

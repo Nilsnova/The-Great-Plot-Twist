@@ -4,7 +4,16 @@ import {stubOfflineApi} from './api-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import {createServer,preview as createPreview} from 'vite';
 import { access, mkdir } from 'node:fs/promises';
-export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers } = {}) {
+export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers,apiTarget } = {}) {
+  let proxy={};
+  if(apiTarget!==undefined){
+    let target;try{target=new URL(apiTarget);}catch{throw new TypeError('QA API target must be a plain loopback HTTP origin.');}
+    if(target.protocol!=='http:'||!['127.0.0.1','[::1]'].includes(target.hostname)||!target.port
+      ||target.username||target.password||target.pathname!=='/'||target.search||target.hash)
+      throw new TypeError('QA API target must be a plain loopback HTTP origin.');
+    if(process.env.TEST_URL)throw new TypeError('An injected API target requires an owned QA server.');
+    proxy={proxy:{'/api':target.origin}};
+  }
   const candidates = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
@@ -15,7 +24,7 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
     if(!url){
       const network={host:'127.0.0.1',port:0,strictPort:true};
       server=preview?await createPreview({logLevel:'error',...(outDir?{build:{outDir}}:{}),
-        preview:{...network,...(headers?{headers}:{})}}):await createServer({logLevel:'error',server:{...network,hmr}});
+        preview:{...network,...(headers?{headers}:{}),...proxy}}):await createServer({logLevel:'error',server:{...network,hmr,...proxy}});
       if(!preview){await server.listen();await server.warmupRequest('/src/game.js');}
       url=server.resolvedUrls.local[0].replace(/\/$/,'');
     }

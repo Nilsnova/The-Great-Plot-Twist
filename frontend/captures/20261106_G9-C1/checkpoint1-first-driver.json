@@ -1,0 +1,350 @@
+{
+  "status": "incomplete; first full committed checkpoint run",
+  "passed": 30,
+  "total": 38,
+  "sourceCommit": "89aa9bc",
+  "commands": [
+    {
+      "id": "tests",
+      "command": "npm test",
+      "code": 1,
+      "ms": 73472,
+      "log": "captures/20261106_G9-C1-after/tests.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "build",
+      "command": "npm run build",
+      "code": 0,
+      "ms": 1460,
+      "log": "captures/20261106_G9-C1-after/build.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "generator",
+      "command": "python3 scripts/pixel_art/generate.py",
+      "code": 0,
+      "ms": 5714,
+      "log": "captures/20261106_G9-C1-after/generator.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "credits",
+      "command": "node scripts/check-credits.js",
+      "code": 0,
+      "ms": 4131,
+      "log": "captures/20261106_G9-C1-after/credits.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "living",
+      "command": "node scripts/check-living.js",
+      "code": 0,
+      "ms": 20761,
+      "log": "captures/20261106_G9-C1-after/living.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "life",
+      "command": "node scripts/check-life.js",
+      "code": 0,
+      "ms": 17266,
+      "log": "captures/20261106_G9-C1-after/life.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "case",
+      "command": "node scripts/check-case.js",
+      "code": 0,
+      "ms": 18085,
+      "log": "captures/20261106_G9-C1-after/case.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "world",
+      "command": "node scripts/check-world.js",
+      "code": 1,
+      "ms": 43020,
+      "log": "captures/20261106_G9-C1-after/world.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "readability",
+      "command": "node scripts/check-readability.js",
+      "code": 0,
+      "ms": 7169,
+      "log": "captures/20261106_G9-C1-after/readability.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "browser",
+      "command": "CAPTURE_PREFIX=G8 node scripts/check-browser.js",
+      "code": 0,
+      "ms": 33212,
+      "log": "captures/20261106_G9-C1-after/browser.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "production",
+      "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+      "code": 1,
+      "ms": 1047,
+      "log": "captures/20261106_G9-C1-after/production.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "pixel",
+      "command": "node scripts/check-pixel.js",
+      "code": 1,
+      "ms": 1135,
+      "log": "captures/20261106_G9-C1-after/pixel.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "pixel-production",
+      "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+      "code": 1,
+      "ms": 1069,
+      "log": "captures/20261106_G9-C1-after/pixel-production.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "kit",
+      "command": "node scripts/check-ui-kit.js",
+      "code": 0,
+      "ms": 3408,
+      "log": "captures/20261106_G9-C1-after/kit.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "kit-production",
+      "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+      "code": 0,
+      "ms": 2846,
+      "log": "captures/20261106_G9-C1-after/kit-production.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "cinematics",
+      "command": "node scripts/check-cinematics.js",
+      "code": 0,
+      "ms": 29269,
+      "log": "captures/20261106_G9-C1-after/cinematics.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "intro",
+      "command": "node scripts/check-intro.js",
+      "code": 1,
+      "ms": 2095,
+      "log": "captures/20261106_G9-C1-after/intro.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "weather",
+      "command": "node scripts/check-weather-wiring.js",
+      "code": 0,
+      "ms": 5898,
+      "log": "captures/20261106_G9-C1-after/weather.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "experience",
+      "command": "node scripts/check-experience.js",
+      "code": 0,
+      "ms": 16772,
+      "log": "captures/20261106_G9-C1-after/experience.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "demo",
+      "command": "node scripts/check-demo.js",
+      "code": 1,
+      "ms": 176883,
+      "log": "captures/20261106_G9-C1-after/demo.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "loading",
+      "command": "node scripts/check-loading.js",
+      "code": 0,
+      "ms": 5887,
+      "log": "captures/20261106_G9-C1-after/loading.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "lifecycle",
+      "command": "node scripts/check-lifecycle.js",
+      "code": 0,
+      "ms": 8619,
+      "log": "captures/20261106_G9-C1-after/lifecycle.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "csp",
+      "command": "node scripts/check-csp.js",
+      "code": 0,
+      "ms": 6286,
+      "log": "captures/20261106_G9-C1-after/csp.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "islet-world",
+      "command": "node scripts/check-islet-world.js",
+      "code": 0,
+      "ms": 10403,
+      "log": "captures/20261106_G9-C1-after/islet-world.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "bulletin",
+      "command": "node scripts/check-bulletin.js",
+      "code": 0,
+      "ms": 6162,
+      "log": "captures/20261106_G9-C1-after/bulletin.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "hook",
+      "command": "node scripts/check-hook.js",
+      "code": 0,
+      "ms": 5766,
+      "log": "captures/20261106_G9-C1-after/hook.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "harbor-life",
+      "command": "node scripts/check-harbor-life.js",
+      "code": 0,
+      "ms": 12376,
+      "log": "captures/20261106_G9-C1-after/harbor-life.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "presenter",
+      "command": "node scripts/check-presenter.js",
+      "code": 0,
+      "ms": 18228,
+      "log": "captures/20261106_G9-C1-after/presenter.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "golden",
+      "command": "node scripts/check-golden-path.js",
+      "code": 0,
+      "ms": 43920,
+      "log": "captures/20261106_G9-C1-after/golden.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "chaos",
+      "command": "node scripts/check-chaos.js",
+      "code": 0,
+      "ms": 146315,
+      "log": "captures/20261106_G9-C1-after/chaos.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "a11y",
+      "command": "node scripts/check-a11y.js",
+      "code": 0,
+      "ms": 36666,
+      "log": "captures/20261106_G9-C1-after/a11y.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "build-stamp",
+      "command": "node scripts/check-build-stamp.js",
+      "code": 0,
+      "ms": 9167,
+      "log": "captures/20261106_G9-C1-after/build-stamp.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "problem-report",
+      "command": "node scripts/check-problem-report.js",
+      "code": 0,
+      "ms": 5426,
+      "log": "captures/20261106_G9-C1-after/problem-report.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "call-states",
+      "command": "node scripts/check-call-states.js",
+      "code": 0,
+      "ms": 20208,
+      "log": "captures/20261106_G9-C1-after/call-states.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "csp-inventory",
+      "command": "node scripts/check-csp-inventory.js",
+      "code": 1,
+      "ms": 267,
+      "log": "captures/20261106_G9-C1-after/csp-inventory.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "online",
+      "command": "node scripts/check-online-golden.js",
+      "code": 0,
+      "ms": 62837,
+      "log": "captures/20261106_G9-C1-after/online.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "online-chaos",
+      "command": "node scripts/check-online-chaos.js",
+      "code": 0,
+      "ms": 90598,
+      "log": "captures/20261106_G9-C1-after/online-chaos.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    },
+    {
+      "id": "claude-islet",
+      "command": "node scripts/check-islet.js",
+      "code": 0,
+      "ms": 16633,
+      "log": "captures/20261106_G9-C1-after/claude-islet.log",
+      "commit": "89aa9bc8efac783f2ccafbd151f802a80cd0a753",
+      "sourceDirty": false
+    }
+  ]
+}

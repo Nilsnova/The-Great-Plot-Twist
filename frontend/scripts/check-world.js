@@ -5,8 +5,10 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { placeIds, places } from '../src/world/places/registry.js';
 import { openWorldBrowser, settle, measure, explorerVisible } from './world-browser-tools.js';
+import { BOARD } from '../tests/sports/sample-answers.js';
 const env = await openWorldBrowser(), { page } = env;
-const report = { checked: new Date().toISOString(), browser: env.browser.version(), viewport: '1440 × 900, DPR 1', checks: [], places: {}, roundTrips: [] };
+const report = { checked: new Date().toISOString(), browser: env.browser.version(), viewport: '1440 × 900, DPR 1', checks: [], places: {}, roundTrips: [],
+  consoleErrors: env.consoleErrors, pageErrors: env.pageErrors };
 const check = (ok, label) => { assert.ok(ok, label); report.checks.push(label); };
 const captureRoot = process.env.CAPTURE_DIR || 'captures';
 await mkdir(captureRoot, {recursive:true});
@@ -18,6 +20,10 @@ const go = async id => { await page.evaluate(id => window.__island.world.goTo(id
 const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', market_hall: '.market-modal', prediction_kiosk: '.desk-modal', sports_pavilion: '.sports-modal', arena_gate: '.duel-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
 try {
+  const sports = {...BOARD, source: 'recorded',
+    fixtures: BOARD.fixtures.map(fixture => ({...fixture, source: 'recorded', canStake: false}))};
+  await page.route('**/api/sports', route => route.request().method() === 'GET'
+    ? route.fulfill({json: sports}) : route.fallback());
   await stubIntro(page);await page.goto(env.url + '?market=local&desk=local&arena=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
