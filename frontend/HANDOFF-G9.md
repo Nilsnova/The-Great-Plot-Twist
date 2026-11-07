@@ -4,9 +4,55 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
-Current scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils confirmed that all required
-G9 features remain in scope and all 17 overflow items are deferred. Historical remaining-work
-lists below are superseded by that decision. Work is now reported in 30–60-minute slices.
+Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils asked for the
+shortest working core release, targeting five hours. The latest review below supersedes the
+26-chunk completion queue; all 17 overflow items remain deferred. Implementation stays paused.
+
+## Lean core-release review (7 Nov 2026)
+
+**Planning review only: no application code changed, no tests started, no push.** Nils requested
+scrutiny toward five hours, not another autonomous implementation run. Wait for “continue”.
+
+The first release keeps all gameplay: sign-in/account/save, crews/presence, islet/Exchange,
+prepared prediction/duel/bulletin connections and the full mystery through partners, night,
+solve/reveal and Relighting. Keep basic keyboard/touch/focus/phone usability, server authority,
+wallet/save/UID recovery, privacy/spoilers, strict CSP, byte budgets, credits and server-free demo.
+
+Remove intermediate full-regression cycles and identical standalone repeats. Defer new gamepad
+editor/full modality certification, extra performance telemetry/instrumentation, submission galleries,
+broad explanatory-doc polishing and rollout of a separate composed-CSP harness unless an actual
+security coverage gap needs it. Current security assertions/headers and existing tests remain.
+Authenticated prediction/duel/bulletin and new case journeys must run under exact enforcing CSP
+and fail on violations/unexpected origins using the existing production fixture; public/tour CSP
+alone is insufficient. Add missing assertions or reuse prepared composition for a real gap.
+These are first-release deferrals, not claims that original full G9 acceptance is complete.
+
+The revised queue has a **five-hour budget: ten30-minute blocks**, with one final frozen regression
+reserved90 minutes. This is an active-work budget excluding user pauses and external waits.
+Prepared case leaf work may run in parallel; only root runs browsers/tests. Total agent hours may
+be greater than the coordinator budget. **This is a conditional target, not an established all-core completion estimate.**
+Exact serialized case DTOs remain missing at authorized ref `3098c0a`; current online case sections
+are empty, eight write handlers/four local presentation handlers and case/world execution remain.
+G10 must publish redacted active/jobs/partners, night/parting and solved/reveal/credits responses.
+No private implementation reads or invented frontend outcomes are acceptable shortcuts.
+
+Until those inputs are inspectable, the90-minute case allocation is provisional. If it cannot fit,
+stop and report its remaining work; do not silently extend a block or label missing gameplay done.
+R16 hardware proof remains external, and cloud FPS failures remain failures. Claude owns main and
+rollout. Each authorized30-minute block ends with a report and stop; no automatic next block.
+
+Current source/evidence are unchanged: source `95de0b6`, local metadata `753e530` before this review,
+remote `8844962`, Exchange all11 stream checks green, subsequent driver35/44 completed with32 passes
+and3 failures. No completion/remote claim changed. The old26-chunk notes below are historical.
+
+Latest paste-ready update for Claude:
+
+> G9 has been reviewed for a core-first release. Gameplay remains in scope; submission extras,
+> exhaustive input certification and telemetry move after the first release. One final full suite
+> replaces intermediate full-regression cycles. Five active hours is a conditional sprint budget,
+> not a confirmed completion estimate. R11 still needs published redacted serialized case responses;
+> authenticated new flows still require enforcing-CSP proof. No implementation or push happened in
+> this review. Remote remains 8844962; source95de0b6 is local. Wait for Nils to authorize the next block.
 
 ## Stopped at Nils’s chunk boundary (7 Nov 2026)
 
