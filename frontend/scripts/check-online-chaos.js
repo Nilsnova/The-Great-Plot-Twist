@@ -231,4 +231,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   await (await import('./check-online-crew.js')).checkOnlineCrewChaos({checkChaos:checkOnlineChaos});
   await (await import('./check-online-islet.js')).checkOnlineIsletChaos({checkChaos:checkOnlineChaos});
   await (await import('./check-online-market.js')).checkOnlineMarketChaos({checkChaos:checkOnlineChaos});
+  await (await import('./check-online-predictions.js')).checkOnlinePredictionsChaos({checkChaos:checkOnlineChaos});
+  await (await import('./check-online-arena.js')).checkOnlineArenaChaos({checkChaos:checkOnlineChaos});
 }

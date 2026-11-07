@@ -7,6 +7,7 @@
 import { duelPath } from './http-client.js';
 import { messageFor } from './messages.js';
 import { newActionUid } from './logic.js';
+import {validDuelDetail} from './http-shapes.js';
 
 // What each intent sends. The cancel route has no body and needs no uid.
 const REQUESTS = {
@@ -19,8 +20,11 @@ const REQUESTS = {
   cancel: ({ duelId }) => ({ path: `${duelPath(duelId)}/cancel` }),
 };
 
-export function createIntents({ client, store, poller, loadDetail }) {
+export function createIntents({ client, store, poller, loadDetail, begin=()=>null, current=()=>true,
+  blocked=()=>null }) {
   let pending = null; // the intent whose outcome is unknown, kept with its actionUid
+  let active = null;
+  const stale=()=>({ok:false,code:'unauthorized',message:messageFor('unauthorized'),view:store.read()});
 
   function finish(intent) {
     if (pending === intent) pending = null;
@@ -56,25 +60,65 @@ export function createIntents({ client, store, poller, loadDetail }) {
   async function refused(intent, answer) {
     finish(intent);
     if (answer.status === 401) store.set({ mode: 'signed_out' });
-    store.notify(answer.code);
+    store.notify(answer.code,{status:answer.status,retryAfterSeconds:answer.retryAfterMs/1000});
     await poller.kick();
     return { ok: false, code: answer.code, message: messageFor(answer.code), view: store.read() };
   }
 
   async function perform(kind, args) {
+    const ticket=begin();if(!current(ticket))return stale();
+    const denial=blocked();if(denial)return {ok:false,code:denial,message:messageFor(denial),view:store.read()};
+    if(active)return {ok:false,code:'busy',message:messageFor('too_many_requests'),view:store.read()};
+    const flight={};active=flight;
+    try{
     store.clearNotice();
     const isRepeat = pending?.kind === kind && JSON.stringify(pending.args) === JSON.stringify(args);
-    const intent = isRepeat ? pending : { kind, args, uid: newActionUid() };
-    const request = REQUESTS[kind](args, intent.uid);
+    const intent = isRepeat ? pending : { kind, args:structuredClone(args), uid: newActionUid(), needsRead: false };
+    if (isRepeat && intent.needsRead) {
+      // A closed or hidden panel cannot learn whether its old POST was applied. Read first,
+      // then only an explicit activation may repeat the exact body and UID.
+      await poller.kick();
+      if (!current(ticket) || pending !== intent) return stale();
+      const view = store.read(), failure = view.notice?.code;
+      if (view.mode !== 'ready' || ['retrying','too_many_requests','feature_off','unauthorized'].includes(failure)) {
+        return {ok:false,code:failure ?? 'database_unavailable',message:messageFor(failure ?? 'database_unavailable'),view};
+      }
+    }
+    // Keep ownership before sending: pause may happen while the response is still held.
+    pending = intent; intent.needsRead = true;
+    const request = REQUESTS[kind](intent.args, intent.uid);
     const answer = await client.send('POST', request.path, { body: request.body });
-    if (answer.ok) return succeeded(intent, answer.data);
-    if (answer.code === 'already_applied') return alreadyDone(intent);
-    if (answer.network || answer.status >= 500) return lost(intent);
-    return refused(intent, answer);
+    if(!current(ticket)||answer.stale)return stale();
+    if(answer.ok&&!validDuelDetail(answer.data))return await lost(intent);
+    const result=answer.ok?await succeeded(intent,answer.data):answer.code==='already_applied'?await alreadyDone(intent)
+      :answer.network||answer.status>=500?await lost(intent):await refused(intent,answer);
+    return current(ticket)?result:stale();
+    }finally{if(active===flight)active=null;}
   }
 
   // Sends the unfinished intent again with its own actionUid, or returns null if there is none.
   const retry = () => (pending ? perform(pending.kind, pending.args) : null);
 
-  return { perform, retry };
+  return { perform, retry, hasPending:()=>pending!==null,
+    pause(){if(pending)pending.needsRead=true;active=null;},reset(){pending=null;active=null;} };
+}
+
+// A refused action's safe wait survives readback and ordinary hiding, never a private owner reset.
+export function createDuelCooldown(dataStore, now) {
+  let held = null;
+  const waiting = () => held !== null && held.retryUntil > now();
+  const store = {...dataStore,
+    clearNotice(codes) { if (!waiting()) dataStore.clearNotice(codes); },
+    notify(code, extra = {}) {
+      if (extra.status === 429) {
+        const seconds = extra.retryAfterSeconds;
+        const wait = Number.isFinite(seconds) && seconds >= 0 ? Math.min(300000, seconds * 1000) : 0;
+        const retryUntil = Math.max(held?.retryUntil ?? 0, now() + wait);
+        held = {status: 429, retryAfterSeconds: wait / 1000, retryUntil};
+        dataStore.notify('too_many_requests', held);
+      } else if (!waiting()) dataStore.notify(code, extra);
+    },
+  };
+  return {store, waiting, clear() { held = null; },
+    restore() { if (waiting()) dataStore.notify('too_many_requests', held); }};
 }

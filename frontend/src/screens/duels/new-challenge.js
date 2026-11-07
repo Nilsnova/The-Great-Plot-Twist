@@ -29,7 +29,7 @@ function group(legendText, ...children) {
 
 export function createNewChallenge({ onSend }) {
   const element = node('form', 'duel-form'), id = uniqueId('duel-form');
-  let rounds = ROUND_CHOICES[0], stake = 0, byName = false, coins = 0, rulesKey = '', stakeChoices = [];
+  let rounds = ROUND_CHOICES[0], stake = 0, byName = false, coins = 0, rulesKey = '', stakeChoices = [], disposed=false;
   element.noValidate = true;
   element.addEventListener('submit', event => event.preventDefault());
 
@@ -95,8 +95,10 @@ export function createNewChallenge({ onSend }) {
   }
 
   async function send() {
+    if(disposed)return;
     sealButton.disabled = true;
     const result = await onSend({ opponentName: byName ? nameInput.value.trim() : null, rounds, stake, signals: picker.getSignals() });
+    if(disposed)return;
     if (result?.ok) reset();
     refreshSeal();
   }
@@ -115,6 +117,7 @@ export function createNewChallenge({ onSend }) {
   return {
     element,
     update(view) {
+      if(disposed)return;
       coins = view.coins ?? 0;
       const key = JSON.stringify([view.rules.roundChoices, view.rules.stakeChoices]);
       if (key !== rulesKey) {
@@ -126,10 +129,12 @@ export function createNewChallenge({ onSend }) {
     },
     // Rematch: open the form with the other captain's name filled in.
     prefill(name) {
+      if(disposed)return;
       namedCaptain.input.click();
       nameInput.value = name;
       refreshSeal();
       nameInput.focus();
     },
+    dispose(){disposed=true;nameInput.value='';coins=stake=0;stakeChoices=[];picker.dispose();element.replaceChildren();element.remove();},
   };
 }

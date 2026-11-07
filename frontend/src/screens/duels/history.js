@@ -66,5 +66,5 @@ export function createHistory({ onWithdraw, onShowSignals, onReplay, onRematch }
     });
   }
 
-  return { element, update };
+  return { element, update,dispose(){memo.last=null;element.replaceChildren();element.remove();} };
 }

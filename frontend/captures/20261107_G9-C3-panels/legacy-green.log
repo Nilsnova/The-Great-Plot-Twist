@@ -1,0 +1,15 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/duels-index.test.js tests/duels-entry-lifecycle.test.js tests/duels-fake.test.js
+
+
+ RUN  v5.1.0 <frontend>
+
+
+ Test Files  3 passed (3)
+      Tests  70 passed (70)
+   Start at  19:31:34
+   Duration  1.49s (tests 40%, transform 34%, import 23%, worker 3%)
+
+    Isolate  3 workers spawned · ~271ms startup each (spawn + environment, per file)
+             at least ~542ms faster with isolate: false — reuses workers across files instead of one per file

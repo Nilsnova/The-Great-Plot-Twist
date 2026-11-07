@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Cold title JavaScript stays within the current 21,080-byte budget
+    at check (file://<frontend>/scripts/check-loading.js:13:33)
+    at file://<frontend>/scripts/check-loading.js:19:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

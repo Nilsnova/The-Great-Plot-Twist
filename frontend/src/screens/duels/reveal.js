@@ -30,7 +30,7 @@ export function createReveal({ onLeave } = {}) {
   const line = node('p', 'duel-line'), banner = node('p', 'duel-banner'), tableBox = node('div', 'duel-reveal-table');
   const speech = node('p', 'kit-sr-only'), actions = node('div', 'duel-actions');
   const left = lantern('you'), right = lantern('them');
-  let steps = [], timer = null, duel = null;
+  let steps = [], timer = null, duel = null, disposed=false;
   element.hidden = true;
   speech.setAttribute('aria-live', 'polite');
   scene.setAttribute('aria-hidden', 'true');
@@ -82,6 +82,7 @@ export function createReveal({ onLeave } = {}) {
   }
 
   function show(index) {
+    if(disposed||!steps[index])return;
     clearTimeout(timer);
     const step = steps[index];
     speech.textContent = step.speech;
@@ -91,12 +92,14 @@ export function createReveal({ onLeave } = {}) {
   }
 
   function leave() {
+    if(disposed)return;
     clearTimeout(timer);
     element.hidden = true;
     onLeave?.();
   }
 
   function play(finishedDuel) {
+    if(disposed)return;
     clearTimeout(timer);
     duel = finishedDuel;
     steps = revealSteps(duel, { reducedMotion: reducedMotion() });
@@ -125,7 +128,9 @@ export function createReveal({ onLeave } = {}) {
     element, play, leave,
     get active() { return !element.hidden; },
     dispose() {
+      disposed=true;duel=null;steps=[];
       clearTimeout(timer);
+      element.replaceChildren();
       element.remove();
     },
   };

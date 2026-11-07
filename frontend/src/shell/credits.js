@@ -27,6 +27,7 @@ export function credits({session=defaultSession}={}) {
   section.append(node('p','','Football data provided by the Football-Data.org API. Basketball data provided by BALLDONTLIE. Scores may be delayed. Sports predictions are a play-money simulation.'));
   const marketLinks=node('p');for(const [label,href] of [['Binance market data','https://data.binance.vision/'],['Replay license · CC BY-NC-SA 4.0','https://creativecommons.org/licenses/by-nc-sa/4.0/']]){const link=node('a','',label);link.href=href;link.target='_blank';link.rel='noopener noreferrer';marketLinks.append(link,document.createTextNode(' '));}section.append(marketLinks);
   for(const credit of readMarketCredits(session))section.append(marketCredit(credit));
+  section.append(node('p','','Questions and results: Manifold Markets (manifold.markets), a play-money forecasting site.'));
   section.append(node('h3','','Tools and licenses'),node('p','','Three.js, Vite and Vitest: MIT. Playwright Core: Apache-2.0. Pillow (art generation): HPND. Original project graphics and procedural audio use no external assets, fonts or recordings. Third-party software notices accompany the built game.'));
   section.append(node('p','','Supabase JavaScript client and components: MIT, © 2020 Supabase.'));
   if(import.meta.env.PROD){const notices=node('a','','Third-party software notices');notices.href='./third-party-notices.md';notices.target='_blank';notices.rel='noopener noreferrer';section.append(notices);}

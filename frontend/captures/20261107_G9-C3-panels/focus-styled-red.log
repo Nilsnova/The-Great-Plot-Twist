@@ -1,0 +1,27 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/g9-duels-failure-focus.test.js (5 tests | 1 failed) 10757ms
+   × repairs genuine disabled-send focus loss to the available failure action without resending 4773ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/g9-duels-failure-focus.test.js > repairs genuine disabled-send focus loss to the available failure action without resending
+TimeoutError: page.waitForFunction: Timeout 3000ms exceeded.
+ ❯ tests/g9-duels-failure-focus.test.js:48:18
+     46|       await send(page);await page.evaluate(()=>window.arenaFocusProof.…
+     47|       await retry(page).waitFor({state:'visible'});
+     48|       await page.waitForFunction(()=>document.activeElement===document…
+       |                  ^
+     49|       expect(await retry(page).evaluate(button=>document.activeElement…
+     50|       expect(await page.evaluate(()=>({writes:window.arenaFocusProof.w…
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/g9-duels-failure-focus.test.js:43:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  20:14:50
+   Duration  11.77s (tests 93%, import 6%, transform 1%)

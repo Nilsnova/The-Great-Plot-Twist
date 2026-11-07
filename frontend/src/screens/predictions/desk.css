@@ -24,7 +24,7 @@
   display: grid;
   gap: 14px;
   min-width: 0;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.6;
 }
 .desk-body p,
@@ -108,7 +108,7 @@
   color: #f1dfaa;
 }
 .desk-meta .kit-badge {
-  font-size: 16px;
+  font-size: 18px;
 }
 .desk-closing,
 .desk-manifold {
@@ -167,8 +167,8 @@
   cursor: pointer;
 }
 .desk-choice input {
-  width: 22px;
-  height: 22px;
+  width: 44px;
+  height: 44px;
   accent-color: #f3d58c;
 }
 .desk-label {
@@ -203,6 +203,20 @@
 
 .desk-stake-main {
   font-weight: bold;
+}
+
+.desk-modal .kit-button,
+.desk-modal .kit-tab,
+.desk-modal input,
+.desk-modal select {
+  min-height: 44px;
+  font-size: 16px;
+}
+.desk-modal .desk-meta,
+.desk-modal .desk-hint,
+.desk-modal .desk-footer,
+.desk-modal .desk-status {
+  font-size: 18px;
 }
 
 @media (max-width: 450px) {

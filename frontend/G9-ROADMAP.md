@@ -5,8 +5,8 @@
 Nils asked to reduce the 26-chunk /21½-hour completion plan toward five hours. That earlier
 plan mixed gameplay delivery with full input certification, instrumentation, submission evidence
 and repeated regression cycles. This release queue supersedes it; history is in `753e530`.
-**Package1 is complete locally. Further implementation is stopped until Nils asks to continue.**
-The scope review changed docs only; the completed package is recorded below.
+**Packages1–2 are complete locally. Work is stopped until Nils asks for package3.**
+The latest evidence and remaining budget are below.
 
 **Five hours is a capped target, not a verified all-core completion estimate.** It assumes the
 missing R11 response fixtures are published before case integration, closely match the existing
@@ -37,7 +37,8 @@ without Nils asking to continue. An unfinished block remains unfinished.
 | Blocks | Budget | Necessary result |
 |---|---:|---|
 | 1 | 30 min | **DONE locally:** bulletin opening fix;45 focused tests,212 chaos checks/96 faults, build/spoiler and23 loading checks passed. |
-| 2–3 | 60 min | Reconcile prepared prediction/duel/bulletin code and shared hooks; run changed-domain checks. Fold the small production boundary proof into existing verification. |
+| 2 | 30 min | **DONE locally:** prediction/duel connections;623 unique focused tests,41/20 production checks,123 fault checks/21 cases, build/spoiler/loading/CSP. Verification actually used59.1 min. |
+| 3 | 30 min | Connect the prepared Bulletin reader/shared hooks; preserve package1 ownership and package2 lazy/CSP boundaries. Run its changed-domain checks. |
 | 4–6 | 90 min | **R11 first.** Compose case validation/projection, server intents, world/effects and refresh ownership. Case leaf preparation runs in parallel with blocks1–3 after fixtures exist. This allocation is provisional until the DTOs are inspectable. |
 | 7 | 30 min | One coherent core gameplay journey plus critical refusal/retry/save/account tests and keyboard/touch/phone smoke checks. Fix release-blocking defects only. |
 | 8–10 | 90 min | One final frozen-source regression, including build/spoiler, conformance, online/faults, production/CSP, loading and accessibility; concise handoff, selected evidence, normal push and remote-SHA verification. |
@@ -89,20 +90,26 @@ and budgets to manufacture a passing release.
 
 ## Current evidence and next block
 
-**Package1 complete:** pending/off Bulletin openings clear their own loader, preserve newer native
-navigation and Escape ownership, and clean up failed replacement imports. Native tests also check
-18 px pending text and no horizontal overflow at320 px and the short375×400 viewport.
+**Packages1–2 complete locally.** Package1 owns cancelled/off Bulletin openings. Package2 connects
+predictions/duels and fixes authoritative read-back, cooldown/cleanup and native failed-action focus.
+Its evidence is `captures/20261107_G9-C3-panels/proof.json`;623 unique focused tests,41 prediction
+and20 duel checks,123 fault checks/21 cases, build/spoiler,23 loading checks and six enforcing-CSP
+checks pass. Cold title is20,881 JS /11,878 CSS bytes, within unchanged limits. Earlier failures
+and exact source histories remain inspectable. Neither package completes the full G9 checkpoint.
 
-Verified:45 focused tests /6 files, including11 native opening cases; build/spoiler,23 loading
-checks and the complete local chaos run (212 checks /96 fault cases). Cold title remains
-21,071 JS /11,878 CSS bytes, within the unchanged limits. Independent review is clear.
-Evidence: `captures/20261107_G9-C3-bulletin-open/proof.json`; source is pinned by its four hashes.
-Earlier partial/full-run evidence is preserved; this is a package result, not a completed G9 checkpoint.
+**Eight planned30-minute blocks remain (240 planned minutes), not a confirmed completion estimate.**
+Package1 used19.2 minutes and package2 verification used59.1; about221.7 minutes of the original
+five-hour cap remained at verification, before final handoff/commit. The current planned total
+exceeds that cap. Do not silently claim the five-hour target met; R11's provisional case allocation,
+known cloud FPS failures and R16 hardware proof remain unresolved. No gameplay was cut to hide this.
+All17 overflow items and the pre-release extras listed above remain deferred.
 
-**Nine planned30-minute budget blocks remain (270 minutes), not a confirmed completion estimate.**
-R11/R16 and the provisional case allocation are unchanged. Next is block2, prepared panel integration,
-only after Nils asks to continue. Future C11 controller code must be rebased onto this ownership fix.
+**Next is package3, the Bulletin reader, only after Nils asks.** Rebase its prepared controller onto
+package1; preserve package2's world-loader boundary and production fixture CSP/NODE_ENV guards.
+Packages4–6 are case integration after R11, package7 is the coherent core journey, and packages8–10
+are final frozen regression/handoff/publication. Existing working source is reused throughout.
 
-The code/evidence/handoff are committed locally together. Last verified remote remains `8844962`;
-no push, main merge or deployment was performed. Final frozen regression remains reserved for the
-integrated release source. See `HANDOFF-G9.md` for the package result and historical checks.
+Source/evidence/handoff are committed locally together; candidate source is pinned by the proof.
+Last verified remote remains `8844962`; no intermediate push, main merge or deployment occurred.
+One final full44 regression stays reserved for the integrated release source. `HANDOFF-G9.md`
+contains exact results, limitations and the Claude update. Work is stopped at this package boundary.

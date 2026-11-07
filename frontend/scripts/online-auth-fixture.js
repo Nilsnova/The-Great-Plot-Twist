@@ -24,10 +24,18 @@ const recordedIslet = () => ({coins: 0, timber: 0, signalStationBuilt: false,
 export async function openAuthFixture() {
   const outDir = '.test-cache/g9-online-dist';
   const key = ['sb', 'publishable', randomBytes(24).toString('hex')].join('_');
-  await build({logLevel: 'silent', define: {
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(origin),
-    'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(key),
-  }, build: {outDir, emptyOutDir: true}});
+  // A preceding practice server can leave NODE_ENV=development in this sequential test process.
+  const previousNodeEnv=process.env.NODE_ENV;
+  process.env.NODE_ENV='production';
+  try{
+    await build({mode:'production',logLevel: 'silent', define: {
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(origin),
+      'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(key),
+    }, build: {outDir, emptyOutDir: true}});
+  }finally{
+    if(previousNodeEnv===undefined)delete process.env.NODE_ENV;
+    else process.env.NODE_ENV=previousNodeEnv;
+  }
   execFileSync(process.execPath, ['scripts/check-spoilers.js', outDir], {stdio: 'pipe'});
   const platformConfig = JSON.parse(await readFile(new URL('../../vercel.json', import.meta.url), 'utf8'));
   const headers = {...buildSecurityHeaders(undefined, {platformConfig})};

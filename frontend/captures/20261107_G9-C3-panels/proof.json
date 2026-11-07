@@ -1,0 +1,392 @@
+{
+  "package": 2,
+  "scope": "prediction kiosk and Lantern Duels; G9 stream10 only",
+  "status": "focused package gates passed; full integrated G9 regression not run",
+  "sourceBase": "500fcfc7231dbfc7b2fe6544810ca23f687a2589",
+  "remoteBaseline": "8844962",
+  "started": "2026-11-07T19:26:02+00:00",
+  "verifiedAt": "2026-11-07T20:25:08.106296+00:00",
+  "activeMinutesThroughVerification": 59.1,
+  "focusedUnit": {
+    "files": 28,
+    "tests": 623,
+    "nativeRefusalFocus": {
+      "redFailed": 1,
+      "redPassed": 4,
+      "greenPassed": 5
+    },
+    "scope": "27 domain files passed on final runtime source in the expanded run; five native cases separately passed after awaiting actual asynchronous focus. The intermediate expanded run retains its transient early-focus failure."
+  },
+  "loading": {
+    "checks": 23,
+    "coldJs": 20881,
+    "coldCss": 11878,
+    "jsCap": 21080
+  },
+  "sourceFingerprints": {
+    "package.json": "caa5702859af83d0e32262cc250fbe3785808e7788401431fd0aa77f79d48eaf",
+    "scripts/check-a11y.js": "0412924f8ac5a23ba7f2fc1c4a46a3c9c5dd126b4f5f5ccb15788387143da327",
+    "scripts/check-online-chaos.js": "3919d2ee0223b36c931827af8b819874fb82be69aea9a56cd3fd8c1dd609cc19",
+    "scripts/check-online-golden.js": "2086e64b87b63be11305fd4af637969d958555d8d84814bd02c6bd1b596efbfb",
+    "scripts/online-auth-fixture.js": "d47b7e7e477b9f782fd388d2c9804ee591811159b028b12345bed3681cd76af6",
+    "src/game.js": "3728f6e652111a842d66263424676130787f3c482dc87ef25a83e561e37c144c",
+    "src/main.js": "f9bd2e6cd09be46b5faca9a88f9eec4505ba89feb4abbb33d98650667e827c45",
+    "src/screens/duels/challenges.js": "84938cf624a77b2953a5edc50f6b7efe666f33a0b4e61fc3a898cb2b7aadebfc",
+    "src/screens/duels/duels.css": "25d8cd3299346ae72c8add966cb2cea5d585a514c127396bdf43997c2324edfd",
+    "src/screens/duels/history.js": "a1cbae427c776db9e18254fcb8118876d02760eac6ab78f42c18e09be6b88190",
+    "src/screens/duels/http-adapter.js": "c15a115d480b27cebc7f4e53fa5755c1a02217f96722a74c1500cc1d2188ccc6",
+    "src/screens/duels/http-client.js": "f24c5b66f3816cf1e28e0c01f5312e06b8911943c98d99eb80665a54372db801",
+    "src/screens/duels/http-intents.js": "0db943b17daf6ad3f5cd146fd0ab18e5ee61999b7bb89e85d9170d55109595ea",
+    "src/screens/duels/index.js": "9aecb6521c27cc4463186eb4477ce77826720ab87869a2e371de67707449bca8",
+    "src/screens/duels/new-challenge.js": "6a14aa3436244c5eb9a6d4b7ebfda87d372f5fd59c90434b9b6fb0b1f545f3c2",
+    "src/screens/duels/panel-status.js": "d6d84ebd454aefe25dd88d5e07b2309ca79436a0ab8f55cd5b003815e794a825",
+    "src/screens/duels/panel.js": "cb4fd2d423d1d6a348747bee6d8d8f95e214f1f6252286c13c1625aae765d85e",
+    "src/screens/duels/picker.js": "5fd2b5281b6a6ff24b5b178695aa58c1a69301b41c94ee206e798973abb45708",
+    "src/screens/duels/reveal.js": "a4f99056a9067e0c926cf8aa4d013ecc124531c2e2d33e1f79f3f147d38e2fdc",
+    "src/screens/duels/view-store.js": "ffb12396bdcdb295d93e04888da065011a40b0b847f331114d936c2eafd1d8cd",
+    "src/screens/predictions/adapter-http.js": "5124de86678a1fed974898490bba151777c2ac41d39afe45e7edd7753dff76b3",
+    "src/screens/predictions/adapter.js": "f308f89fdf27cc95d232ead68834cb119cbbe7d58a15f0021e77a4688a5c2f69",
+    "src/screens/predictions/desk.css": "9a2b81b4b3484554bf535bf021510767e0d44a4d1e60261158a00b4770171bd0",
+    "src/screens/predictions/desk.js": "4471e9fc510a8ee6244e27c31261d55fd8b4f6bd8e765f31c76c6347f04cab5f",
+    "src/screens/predictions/flow.js": "702213c4bd167b110010ee371f853291988c113d9b12c6d6863391febc5a68d7",
+    "src/screens/predictions/questions-view.js": "b678339ea5541b6df0915cbab3b9d85af0922a4b609ea25c91979bd0d6932981",
+    "src/screens/predictions/stake-form.js": "6109a3b24a623ead9452f72a56eeb171a3decb1620475a2b10ced3e11c99f7a2",
+    "src/shell/after-paint.js": "24ad0655cbe95eaf4a7ea83c826a45c5c36a058bf3f2d5d2b806ba7689a1de62",
+    "src/shell/credits.js": "0c3034aa0b6a2dc919e7daff7a51ff5cd9574183f09faf08f8651c6bea1db917",
+    "src/shell/world-loader.js": "235905b73980bbfc1e90b8573fda7fbe49f4343a521e06d654c27531bbb13770",
+    "tests/duels-entry-lifecycle.test.js": "890409c00edd94d7969250bf58c4a8e0c9b4679de6f060271130a0a60d49a23d",
+    "tests/duels-fake.test.js": "656463508ca715f2792a677c5da7e85fcc1728e857406b80ab4e662f3e74e5d8",
+    "tests/duels-index.test.js": "a6393f55d5aba2097ea7b06fe2f9ab43d7c44c0c3c6ca330c2ff489366e24763",
+    "tests/market-credits-settings.test.js": "eb49ebf915993a8d2ec8815ec7abe5542887eca6841ae4aee84fa3810696381d",
+    "scripts/a11y-arena.js": "66c09caa95b9911237e8f0a2ca11add61b58391c5a6af294d5738a6927374674",
+    "scripts/a11y-predictions.js": "19894009692909a2408a698ef50e282128ea7f6f9cd9922fc537a15690fe3b2e",
+    "scripts/check-online-arena.js": "1b96e4711162903ba256d069206589bf0dfbce6ce441561246455cc6054701f3",
+    "scripts/check-online-predictions.js": "71885ea9e70cde260e30d3ca0949a67f431ba07857fb57ea9865a83cb8f0e90b",
+    "scripts/local-panel-journeys.js": "3a05ebb0fa1e32d7a64f66f0cded2e67f6da8b51b46dda201655dce8bcd30921",
+    "scripts/online-panel-actions.js": "6852503849144905779bcd9f03a1dc9505eae162e7930ea285013e7704c04c3b",
+    "scripts/online-panel-fixture.js": "17b790edb1837f71cbbb56349a784b1766edece92dc5a1d41e208d7a34625709",
+    "scripts/panel-flag-journey.js": "0b071af24b0b3586f4215f5b67c9eba6739f4df1fa90f08066f764ed3ffa95aa",
+    "src/online/arena-entry.js": "bfc59bb867a8f0e317ccfb7f6456c0a593d2e2ce55fb5f23cfbb11b6cb5dc8cc",
+    "src/online/predictions-entry.js": "a120540e99857ee63891cddbb59e1b3f9bc3769cb4a7db9e5610a47d9566604d",
+    "src/screens/duels/http-shapes.js": "374ecd9a458fb3d7a63bb7726ad1e16ddfd1c28c12f731b10ddbb0690f3aac4d",
+    "src/screens/predictions/g9-policy.js": "f293fc0e5be0b289d673760b9e3c19fbc9bd5d77acde63269887e69a05ded38f",
+    "tests/arena-entry.test.js": "8a784872e200a9c6097aae7e9c20412e0996fd6b3a2c95b8197209c5927949cc",
+    "tests/g9-after-paint-services.test.js": "99b40574243cb172c1a08788fee09925271224e65e1229cdc7e622382cfcf213",
+    "tests/g9-duels-close-lifecycle.test.js": "2d57014627e817e3904f807f79901b18bf4ce9dece7702c26d09328a482ab528",
+    "tests/g9-duels-cooldown.test.js": "d542b14e77bf52022e87821127a8feeae2b01552cc62455df482bfb40ec390d2",
+    "tests/g9-duels-open-lifecycle.test.js": "1fa5d78de9419519b8e2d1f1ed0bb1c34d8ef2391faa16ad4d894beea4f35fac",
+    "tests/g9-panel-action-names.test.js": "bdf2e9cd512c49f3fd6062f4bcdf63450e3888e0de1fc595a6644750560e6e25",
+    "tests/predictions-entry.test.js": "120cf24ca40ca1da1f3f455a30e711a0cf6c067f482262c728781dc15e579bf1",
+    "tests/predictions/g9-close-lifecycle.test.js": "06a3a037893dd909857ea1ab8c7f46c9beaf88b9f5c79817284fd9ee1a768b1d",
+    "tests/predictions/g9-cooldown-safety.test.js": "7ff691a7d7b7dce3c1ce274e2edb2277fa0df8b47a80d39f9256d20a7cce24ad",
+    "tests/predictions/g9-integration.test.js": "1cb87e0d2e00ba5ace2bfaa78f050324e3cbbb5ce7ffcfe2cc8b8e37d2099045",
+    "tests/predictions/g9-readback-display.test.js": "f00d8c360b7670f732aaf1686c7da1450c05d3524b1b025116b413fbebdb3b5c",
+    "tests/g9-duels-failure-focus.test.js": "4f61518594fdf986995ee09ed1685ee6d2cdad67e7770f01960153ac2f743edf"
+  },
+  "commands": [
+    {
+      "name": "csp-probe",
+      "command": "node node_modules/.cache/g9-package2-csp-probe.mjs",
+      "code": 0,
+      "seconds": 8.729,
+      "log": "g9-package2-csp-probe.log"
+    },
+    {
+      "name": "predictions",
+      "command": "node scripts/check-online-predictions.js",
+      "code": 0,
+      "seconds": 156.326,
+      "log": "g9-package2-predictions.log"
+    },
+    {
+      "name": "build",
+      "command": "npm run build",
+      "code": 0,
+      "seconds": 2.883,
+      "log": "g9-package2-build.log"
+    },
+    {
+      "name": "loading",
+      "command": "node scripts/check-loading.js",
+      "code": 0,
+      "seconds": 18.229,
+      "log": "g9-package2-loading.log"
+    },
+    {
+      "name": "predictions-chaos",
+      "command": "node scripts/check-online-predictions.js --chaos",
+      "code": 0,
+      "seconds": 160.348,
+      "log": "g9-package2-predictions-chaos.log"
+    },
+    {
+      "name": "arena-chaos",
+      "command": "node scripts/check-online-arena.js --chaos",
+      "code": 0,
+      "seconds": 76.207,
+      "log": "g9-package2-arena-chaos.log"
+    },
+    {
+      "name": "arena",
+      "command": "node scripts/check-online-arena.js",
+      "code": 0,
+      "seconds": 182.554,
+      "log": "g9-package2-arena.log"
+    }
+  ],
+  "evidence": {
+    "predictions.json": {
+      "rawSha256": "19daaf7087cbb7963fd5d16597ed716043e8c0c40e8816b9417d3cc7aca0b1a7",
+      "savedSha256": "73d7b07e0426143de6ce3d2dab4bf5b619c8b61a95bc0e139d5b36838d59bb40"
+    },
+    "arena.json": {
+      "rawSha256": "6c2aa848a08b1f78452c31ff1f07159f996b6cfddeedb158f6813228b6df8e3e",
+      "savedSha256": "48814a24887c52436d33137bf10ace58c9e40bb274be556eaa2a6c63b7870d62"
+    },
+    "predictions-chaos.json": {
+      "rawSha256": "7588c858eadf5a5aa6957637822850365edfe65c70843eff0b69845170740ef2",
+      "savedSha256": "f4e95b89d77ca03a1e593677a75b2cfa06f797fdc531c24a3f6ef82592aba8a8"
+    },
+    "arena-chaos.json": {
+      "rawSha256": "968b5b79ef9a1a16135a3f7c42cecf8a83c2b1182cebac6eff7ccf3cd5567395",
+      "savedSha256": "6e23d00e0fef6cd1b0be6fae7eeef9003d78cc63eea32afc1a935ce2801e76e9"
+    },
+    "unit.log": {
+      "rawSha256": "06f364e2ff6f9921747304b9d89d3b4a59913c50227e31cf48dade66bc9dd8d2",
+      "savedSha256": "f7e5063befb026625b7b72302b62f8f198086179f57fe83cba046ab482d2ed29"
+    },
+    "unit-final.log": {
+      "rawSha256": "29d9b35ef1dd275bc6e7134aa3f3d1f6c783c528761ecf803fb7eca683a9272b",
+      "savedSha256": "3557d79125009c178c76392a772b4d871a9e7dc6e1a5cee7f5126a1702a929a7"
+    },
+    "unit-verified.log": {
+      "rawSha256": "997c2a03eb7a7382543bbd71f0439ffb52f9de4521e524b10479441c56748674",
+      "savedSha256": "74ff9bf3df5c939f817e01ac52b37210fcd4212a254d39011cc4764a0a4a110c"
+    },
+    "focus-red.log": {
+      "rawSha256": "b219fb14ea91bb4241a2984666669a548b87f6108037db08635ebea6eae65768",
+      "savedSha256": "ed6792f22714e3f14c741682932d132e72a73656ff3c24c2760abb395fefb5a8"
+    },
+    "focus-green.log": {
+      "rawSha256": "a779b47e3d8d0eb249753e6f3ecb2691be3e13486d5b6b7d463fdf8eb7d3934b",
+      "savedSha256": "5896e8f40cb1c6561e592620176d291f975a29e290e76ca5383da3632f64590f"
+    },
+    "focus-styled-red.log": {
+      "rawSha256": "940e3f7b6cd89b3ccc0a44a1a1b7d2e564972b75e55676fda9478d26a38650b6",
+      "savedSha256": "eee5a54edd96a1cd7be42b6ca331242e9cee6a74801d815c0e238ca4e4155db5"
+    },
+    "focus-styled-green.log": {
+      "rawSha256": "e21ef482f87464fa4fadddb27ab03a2a019d4023a00bbf5a24d8a4a1cefeb293",
+      "savedSha256": "70a0a27a9dd96a6c854e3c8d9ae6865545e5fd0b95e22411328e90b218b914f8"
+    },
+    "focus-diagnostic.log": {
+      "rawSha256": "3054c84d16f55f93723b76c087bcd28c2ce23d896fd0293a14be14a562151aba",
+      "savedSha256": "4a85b962db6c3f82f611abe798ce05dbabfd9e36a8d1af30dc80d2ea00397ef1"
+    },
+    "legacy-green.log": {
+      "rawSha256": "d8a88726692ead8b5ecbefc92ecd0eef0a3d5d9d91b5f3f9b3042538314b2132",
+      "savedSha256": "167088a8600dc1837fee66d413ea29b1f99d6479102271cce06bcfd2e586c648"
+    },
+    "prediction-red.log": {
+      "rawSha256": "7da5c1d396ec3cd2874d2ca1ee1c70bb93fc7e2dc1dbed43b1dbb6ef200282f2",
+      "savedSha256": "2c8c6559babdd633673e9223f4d4f1cba181b026c47f321e8aa0325c6b7492bb"
+    },
+    "cold-build.log": {
+      "rawSha256": "54d22aaa955711a31ff25065ca8616b95aa8eb40e23e1b70f978fb14540973e1",
+      "savedSha256": "54d22aaa955711a31ff25065ca8616b95aa8eb40e23e1b70f978fb14540973e1"
+    },
+    "cold-loading.log": {
+      "rawSha256": "a637b7e2d125652af6876e533e116a36e81957e99f97a551a7ea78dcb49492b6",
+      "savedSha256": "a637b7e2d125652af6876e533e116a36e81957e99f97a551a7ea78dcb49492b6"
+    },
+    "csp-probe.log": {
+      "rawSha256": "2d72b8ef315047580d2c6619e96fa4e985ae5f5b8f45adc93cd935c761537ab5",
+      "savedSha256": "2d72b8ef315047580d2c6619e96fa4e985ae5f5b8f45adc93cd935c761537ab5"
+    },
+    "predictions.log": {
+      "rawSha256": "6ae5ffe8c073fde7dbd49828344e93cf2b9d8d5644d0cc4e796d0ebaccf92311",
+      "savedSha256": "6ae5ffe8c073fde7dbd49828344e93cf2b9d8d5644d0cc4e796d0ebaccf92311"
+    },
+    "arena.log": {
+      "rawSha256": "435fa1555c801ef0a923cb0fb224377f952a002c63bdeb646c70854d56477d02",
+      "savedSha256": "435fa1555c801ef0a923cb0fb224377f952a002c63bdeb646c70854d56477d02"
+    },
+    "predictions-chaos.log": {
+      "rawSha256": "e9b0bfdc3fbbf039cd9e81b1cf93ff4b020162708a04486161571dea893a309d",
+      "savedSha256": "e9b0bfdc3fbbf039cd9e81b1cf93ff4b020162708a04486161571dea893a309d"
+    },
+    "arena-chaos.log": {
+      "rawSha256": "959f824f3b671df58704ebf8e88395f0f04c91d52d84a59c62d5f1390d171eb2",
+      "savedSha256": "959f824f3b671df58704ebf8e88395f0f04c91d52d84a59c62d5f1390d171eb2"
+    },
+    "attempt1-loading.log": {
+      "rawSha256": "5b617b12fac77332e772e902479007713b0630bf1640239dd91bf4f43427a17f",
+      "savedSha256": "3eeb5b4c5c46371affe04c0b2192c6dc5f283a48697fc9281128e9c7bc69f157"
+    },
+    "attempt2-predictions.log": {
+      "rawSha256": "9f9e0935b159100c52b0ed0997a1bdfb46af40892f63ee6cb53d858b2560d5e1",
+      "savedSha256": "c0e2a9827ca3761c5c9e47787cdf8b749b4e2fa6c6817e9ec5381d2f1ea3391a"
+    },
+    "attempt3-predictions.log": {
+      "rawSha256": "a6ff27480160be2d31a03530b29641a8a90300f6fad16b8a7b845e8f69d1aefc",
+      "savedSha256": "fa30382fb37bf88a4b098e75f0a48630cff88c08b241f0beb941a79a68106258"
+    },
+    "attempt4-predictions.log": {
+      "rawSha256": "f16ab776620d5a7fbb079e8e6660e71e518d67c05deea49c4e20258ab4b03fa6",
+      "savedSha256": "b0dd5a3f5211fc8179cf8047754bda318c10dc2e2f7bfe9c38ccb8ce3a7343f0"
+    },
+    "attempt5-predictions.log": {
+      "rawSha256": "eef136c87974e2460a9685921c9bd4410c0db200256d3eccece7341098f4ac4f",
+      "savedSha256": "527d47d6d7a56afc295b37da3d8e57ef04457d02e6e9f395b95078e9fd94fdc4"
+    },
+    "attempt6-arena.log": {
+      "rawSha256": "c914afa47e9a41b5e6d594e5803bd470ab45ae7d7bd6117687b79564b143152c",
+      "savedSha256": "6e3e4b37f546f3e955f3972ac0e26ffdc585cc7cff44b913cf1b1778c14a382a"
+    },
+    "attempt6-predictions-chaos.log": {
+      "rawSha256": "4e43e8d5afb5959d24f4ac66319b540ba860bc94d56365ec1bb8f1627ccc9671",
+      "savedSha256": "8bc2ea22007ddc64d1ad0f5e6c5efd9c2128d019d8164f644dfa06e594b1bc2d"
+    },
+    "attempt6-arena-chaos.log": {
+      "rawSha256": "1bf18d859ffe3d49bff939c273b67038c0c4d50be4595cd38aa8832e187619bf",
+      "savedSha256": "ad65287915118e68dccca3aa3b78a20fd89be15e04a34213d196ad72b433ccd4"
+    },
+    "attempt8-arena.log": {
+      "rawSha256": "600fa3dddb4afa98f817ced4d7ff3ead3bde0d58236f2701f307ee602e37a9d2",
+      "savedSha256": "92e991a5471e344794e015b05f32e8c115c35b018eac0ec2b9977b6bf74db8a6"
+    },
+    "loading.json": {
+      "rawSha256": "adaa4d2c7e5c18c5cb591528983b734cf2644f84a8d41b876b82eb26149dafa6",
+      "savedSha256": "e6bf77370c312fee253e49ade76235e19a1c43d0d754b5f0f965d3cd5f1af13c"
+    },
+    "build.log": {
+      "rawSha256": "2b6492c69e08ac2403d28c9fd2dddc9da36cd05176ffa484c48f4db6ff8fde91",
+      "savedSha256": "2b6492c69e08ac2403d28c9fd2dddc9da36cd05176ffa484c48f4db6ff8fde91"
+    },
+    "loading-final.log": {
+      "rawSha256": "e30bea4a63c0014572c5d03e8e4bbed4c49f58159f633728e13b2b466267ab58",
+      "savedSha256": "e30bea4a63c0014572c5d03e8e4bbed4c49f58159f633728e13b2b466267ab58"
+    },
+    "attempt7-arena.log": {
+      "rawSha256": "3075445793d6e0f1d636e62788fa17ef77e70504ea15ad355a0f48a6e791227e",
+      "savedSha256": "a466c65d26b4e4de97c1469251811a431c3110e5df9d169b37585e890e3754e5"
+    },
+    "attempt7-predictions-chaos.log": {
+      "rawSha256": "13c284882cebfd54d826b72bd1797d1170e7c0d83f7163592edb20ef54f9a965",
+      "savedSha256": "ace071f4346e8c5957d8914362630fa600ea40840972c245723cd261ccb257df"
+    },
+    "attempt7-arena-chaos.log": {
+      "rawSha256": "74b579a0f10c783cccca0beeedc338f11aa90f4830e3a9a9d660c81d283cc5de",
+      "savedSha256": "bb80b8a28a6bc4b96396fe898940be216dae88447da3d4f2e7c6d956b186a4f4"
+    },
+    "csp-probe.json": {
+      "rawSha256": "f04e86a94fa122e938f0b80c72a68a5ff4147680c1e445905d51e527194311da",
+      "savedSha256": "9f4bc06324804ef8ce1d4c9d6c0f02bce9c56e6da9693885bb72934cea927c03"
+    },
+    "unit-files-original.json": {
+      "rawSha256": "a385cbfbac90dea9ebb67ecbec5b4f99e32440b75feed58424b2af5c8d935c0d",
+      "savedSha256": "f3d0a667e0e735d14e6681018e436b0059dd5a75e47af38b12346afff6ab9aa9"
+    },
+    "unit-files.json": {
+      "rawSha256": "1027d5ad74cbac18d6240c509cd0e1587402071e440ea5e8568f5a85994b43d8",
+      "savedSha256": "70f7e4bfee483285a3e9001f83db3a4ad69d90e1eef22b27d3a2c303945bc6c9"
+    },
+    "gates.json": {
+      "rawSha256": "dba36e06072e9bc84e94d111cbe947f10ee26d92b4f6cdf4046f936a562cee7b",
+      "savedSha256": "a68c2b9a791f5ff30a6b5b91bd9d01ead2a27c8657969e2ea2dd89c826410904"
+    }
+  },
+  "previousAttempts": [
+    "stale legacy capability/disposal tests updated without dropping assertions",
+    "red-first read-back display/focus regression fixed",
+    "title21108 exceeded21080: existing lazy world loader now owns after-paint import; title20881",
+    "practice world canvas ambiguity fixed",
+    "preceding development build leaked DEV-only data: production NODE_ENV scoped/restored; unchanged spoiler guard passes",
+    "native walking anchored to visible Table prompt and actual capped RAF frames",
+    "receipt appeared before mine balance refresh: runner awaits visible283 account balance",
+    "closed arena uses native caption, full-label radio receives check, and401 waits automatic Account attention; fault hooks assert CSP/privacy",
+    "409 expectation preserves exact injected plain server refusal; close waits native canvas focus",
+    "native Send disabled-focus loss reproduced1red/4green: current-generation refusal restores available action without stealing newer focus or Account"
+  ],
+  "review": "Independent review found no release-blocking issue; narrow native runner followup reviewed separately",
+  "verificationFollowup": {
+    "preservedGates": [
+      "csp-probe",
+      "predictions",
+      "build",
+      "loading",
+      "predictions-chaos",
+      "arena-chaos"
+    ],
+    "priorGateSourceFingerprints": {
+      "package.json": "caa5702859af83d0e32262cc250fbe3785808e7788401431fd0aa77f79d48eaf",
+      "scripts/check-a11y.js": "0412924f8ac5a23ba7f2fc1c4a46a3c9c5dd126b4f5f5ccb15788387143da327",
+      "scripts/check-online-chaos.js": "3919d2ee0223b36c931827af8b819874fb82be69aea9a56cd3fd8c1dd609cc19",
+      "scripts/check-online-golden.js": "2086e64b87b63be11305fd4af637969d958555d8d84814bd02c6bd1b596efbfb",
+      "scripts/online-auth-fixture.js": "d47b7e7e477b9f782fd388d2c9804ee591811159b028b12345bed3681cd76af6",
+      "src/game.js": "3728f6e652111a842d66263424676130787f3c482dc87ef25a83e561e37c144c",
+      "src/main.js": "f9bd2e6cd09be46b5faca9a88f9eec4505ba89feb4abbb33d98650667e827c45",
+      "src/screens/duels/challenges.js": "84938cf624a77b2953a5edc50f6b7efe666f33a0b4e61fc3a898cb2b7aadebfc",
+      "src/screens/duels/duels.css": "25d8cd3299346ae72c8add966cb2cea5d585a514c127396bdf43997c2324edfd",
+      "src/screens/duels/history.js": "a1cbae427c776db9e18254fcb8118876d02760eac6ab78f42c18e09be6b88190",
+      "src/screens/duels/http-adapter.js": "c15a115d480b27cebc7f4e53fa5755c1a02217f96722a74c1500cc1d2188ccc6",
+      "src/screens/duels/http-client.js": "f24c5b66f3816cf1e28e0c01f5312e06b8911943c98d99eb80665a54372db801",
+      "src/screens/duels/http-intents.js": "0db943b17daf6ad3f5cd146fd0ab18e5ee61999b7bb89e85d9170d55109595ea",
+      "src/screens/duels/index.js": "9aecb6521c27cc4463186eb4477ce77826720ab87869a2e371de67707449bca8",
+      "src/screens/duels/new-challenge.js": "6a14aa3436244c5eb9a6d4b7ebfda87d372f5fd59c90434b9b6fb0b1f545f3c2",
+      "src/screens/duels/panel-status.js": "d6d84ebd454aefe25dd88d5e07b2309ca79436a0ab8f55cd5b003815e794a825",
+      "src/screens/duels/panel.js": "cb4fd2d423d1d6a348747bee6d8d8f95e214f1f6252286c13c1625aae765d85e",
+      "src/screens/duels/picker.js": "5fd2b5281b6a6ff24b5b178695aa58c1a69301b41c94ee206e798973abb45708",
+      "src/screens/duels/reveal.js": "a4f99056a9067e0c926cf8aa4d013ecc124531c2e2d33e1f79f3f147d38e2fdc",
+      "src/screens/duels/view-store.js": "ffb12396bdcdb295d93e04888da065011a40b0b847f331114d936c2eafd1d8cd",
+      "src/screens/predictions/adapter-http.js": "5124de86678a1fed974898490bba151777c2ac41d39afe45e7edd7753dff76b3",
+      "src/screens/predictions/adapter.js": "f308f89fdf27cc95d232ead68834cb119cbbe7d58a15f0021e77a4688a5c2f69",
+      "src/screens/predictions/desk.css": "9a2b81b4b3484554bf535bf021510767e0d44a4d1e60261158a00b4770171bd0",
+      "src/screens/predictions/desk.js": "4471e9fc510a8ee6244e27c31261d55fd8b4f6bd8e765f31c76c6347f04cab5f",
+      "src/screens/predictions/flow.js": "702213c4bd167b110010ee371f853291988c113d9b12c6d6863391febc5a68d7",
+      "src/screens/predictions/questions-view.js": "b678339ea5541b6df0915cbab3b9d85af0922a4b609ea25c91979bd0d6932981",
+      "src/screens/predictions/stake-form.js": "6109a3b24a623ead9452f72a56eeb171a3decb1620475a2b10ced3e11c99f7a2",
+      "src/shell/after-paint.js": "24ad0655cbe95eaf4a7ea83c826a45c5c36a058bf3f2d5d2b806ba7689a1de62",
+      "src/shell/credits.js": "0c3034aa0b6a2dc919e7daff7a51ff5cd9574183f09faf08f8651c6bea1db917",
+      "src/shell/world-loader.js": "235905b73980bbfc1e90b8573fda7fbe49f4343a521e06d654c27531bbb13770",
+      "tests/duels-entry-lifecycle.test.js": "890409c00edd94d7969250bf58c4a8e0c9b4679de6f060271130a0a60d49a23d",
+      "tests/duels-fake.test.js": "656463508ca715f2792a677c5da7e85fcc1728e857406b80ab4e662f3e74e5d8",
+      "tests/duels-index.test.js": "a6393f55d5aba2097ea7b06fe2f9ab43d7c44c0c3c6ca330c2ff489366e24763",
+      "tests/market-credits-settings.test.js": "eb49ebf915993a8d2ec8815ec7abe5542887eca6841ae4aee84fa3810696381d",
+      "scripts/a11y-arena.js": "66c09caa95b9911237e8f0a2ca11add61b58391c5a6af294d5738a6927374674",
+      "scripts/a11y-predictions.js": "19894009692909a2408a698ef50e282128ea7f6f9cd9922fc537a15690fe3b2e",
+      "scripts/check-online-arena.js": "5fd6ca1fb001a8ff9b2a729265f0ac8c3f88e4267c894e6b670fae5e3cd7fb34",
+      "scripts/check-online-predictions.js": "71885ea9e70cde260e30d3ca0949a67f431ba07857fb57ea9865a83cb8f0e90b",
+      "scripts/local-panel-journeys.js": "3a05ebb0fa1e32d7a64f66f0cded2e67f6da8b51b46dda201655dce8bcd30921",
+      "scripts/online-panel-actions.js": "6852503849144905779bcd9f03a1dc9505eae162e7930ea285013e7704c04c3b",
+      "scripts/online-panel-fixture.js": "17b790edb1837f71cbbb56349a784b1766edece92dc5a1d41e208d7a34625709",
+      "scripts/panel-flag-journey.js": "0b071af24b0b3586f4215f5b67c9eba6739f4df1fa90f08066f764ed3ffa95aa",
+      "src/online/arena-entry.js": "bfc59bb867a8f0e317ccfb7f6456c0a593d2e2ce55fb5f23cfbb11b6cb5dc8cc",
+      "src/online/predictions-entry.js": "a120540e99857ee63891cddbb59e1b3f9bc3769cb4a7db9e5610a47d9566604d",
+      "src/screens/duels/http-shapes.js": "374ecd9a458fb3d7a63bb7726ad1e16ddfd1c28c12f731b10ddbb0690f3aac4d",
+      "src/screens/predictions/g9-policy.js": "f293fc0e5be0b289d673760b9e3c19fbc9bd5d77acde63269887e69a05ded38f",
+      "tests/arena-entry.test.js": "8a784872e200a9c6097aae7e9c20412e0996fd6b3a2c95b8197209c5927949cc",
+      "tests/g9-after-paint-services.test.js": "99b40574243cb172c1a08788fee09925271224e65e1229cdc7e622382cfcf213",
+      "tests/g9-duels-close-lifecycle.test.js": "2d57014627e817e3904f807f79901b18bf4ce9dece7702c26d09328a482ab528",
+      "tests/g9-duels-cooldown.test.js": "d542b14e77bf52022e87821127a8feeae2b01552cc62455df482bfb40ec390d2",
+      "tests/g9-duels-open-lifecycle.test.js": "1fa5d78de9419519b8e2d1f1ed0bb1c34d8ef2391faa16ad4d894beea4f35fac",
+      "tests/g9-panel-action-names.test.js": "bdf2e9cd512c49f3fd6062f4bcdf63450e3888e0de1fc595a6644750560e6e25",
+      "tests/predictions-entry.test.js": "120cf24ca40ca1da1f3f455a30e711a0cf6c067f482262c728781dc15e579bf1",
+      "tests/predictions/g9-close-lifecycle.test.js": "06a3a037893dd909857ea1ab8c7f46c9beaf88b9f5c79817284fd9ee1a768b1d",
+      "tests/predictions/g9-cooldown-safety.test.js": "7ff691a7d7b7dce3c1ce274e2edb2277fa0df8b47a80d39f9256d20a7cce24ad",
+      "tests/predictions/g9-integration.test.js": "1cb87e0d2e00ba5ace2bfaa78f050324e3cbbb5ce7ffcfe2cc8b8e37d2099045",
+      "tests/predictions/g9-readback-display.test.js": "f00d8c360b7670f732aaf1686c7da1450c05d3524b1b025116b413fbebdb3b5c",
+      "tests/g9-duels-failure-focus.test.js": "4f61518594fdf986995ee09ed1685ee6d2cdad67e7770f01960153ac2f743edf"
+    },
+    "scope": "Only the arena golden assertion now targets the actual focusable world canvas, matching its already-passing native focus wait. Application, fixtures and all other exercised paths unchanged. Successful gates retained with exact source history."
+  },
+  "limits": [
+    "No real service/account/database",
+    "Final full44 regression reserved for integrated release source",
+    "R11 case DTO and R16 hardware dependencies unchanged",
+    "No full new gamepad/device certification",
+    "No push/main merge/deployment in this package",
+    "Stop after local package commit"
+  ],
+  "normalization": "Logs strip ANSI and trailing blank lines; absolute workspace/runtime paths use fixed labels. JSON removes only whitespace outside strings. The duplicate Buffer dump is omitted with its raw SHA retained."
+}

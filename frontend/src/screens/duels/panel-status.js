@@ -6,6 +6,7 @@
 import { formatCoins } from '../../ui/kit/logic.js';
 import { messageFor } from './messages.js';
 import { button, changed, node, redraw } from './dom.js';
+import {createServerCallState} from '../../ui/kit/server-call-state.js';
 
 const POLL_TEXT = { fast: 'Checking every 5 s', slow: 'Checking every 30 s', paused: 'Paused.', off: '' };
 const WAITING_TEXT = {
@@ -14,11 +15,14 @@ const WAITING_TEXT = {
 
 export const isReady = view => view.mode === 'ready' || view.mode === 'practice';
 
-export function createStatus({ onRefresh, onRetry, onWatch }) {
+export function createStatus({ onRefresh, onRetry, onWatch, onSignIn, onCooldown, now = Date.now }) {
   const practice = node('p', 'duel-practice', 'Practice ring: a local stand-in rival. Nothing is saved.');
   const wallet = node('p', 'duel-wallet'), polling = node('div', 'duel-polling'), message = node('p', 'duel-message');
   const notice = node('div', 'duel-notice'), done = node('p', 'duel-done');
   const memo = { polling: {}, notice: {} };
+  let currentView=null,lastCall=null;
+  const call=createServerCallState({label:'duel request',now,onRetry:()=>currentView?.canRetry?onRetry():onRefresh(),
+    onSignIn,onChange:()=>onCooldown?.(call.read().remaining>0)});
   notice.setAttribute('role', 'status');
   done.setAttribute('role', 'status');
 
@@ -36,16 +40,24 @@ export function createStatus({ onRefresh, onRetry, onWatch }) {
     if (!changed(memo.notice, [current, view.canRetry])) return;
     redraw(notice, () => {
       notice.replaceChildren();
-      if (current) notice.append(node('p', '', current.message));
-      if (view.canRetry) notice.append(button('Try again', onRetry, { focus: 'try-again' }));
+      if (current?.code==='decided') notice.append(node('p', '', current.message));
       if (current?.code === 'decided') notice.append(button('Watch the reveal', () => onWatch(current.duelId), { focus: 'watch' }));
     });
   }
 
   return {
-    elements: [practice, wallet, polling, message, notice, done],
+    elements: [practice, wallet, polling, message, notice, done,call.element],
+    focusFailure(){
+      if(!call.element.isConnected||call.element.hidden)return;
+      const target=[...call.element.querySelectorAll('button,a[href]')].find(control=>
+        !control.matches(':disabled')&&!control.closest('[hidden],[inert]')&&control.getClientRects().length);
+      target?.focus({preventScroll:false});
+    },
+    blocked:()=>call.read().remaining>0,
+    dispose(){call.dispose();currentView=null;},
     say(text) { done.textContent = text; },
     update(view, played, revealing = false) { // while a reveal plays, the coins stay hidden so they do not spoil it
+      currentView=view;
       const ready = isReady(view);
       practice.hidden = view.mode !== 'practice';
       message.hidden = ready;
@@ -56,6 +68,20 @@ export function createStatus({ onRefresh, onRetry, onWatch }) {
       wallet.textContent = `Coins: ${formatCoins(view.coins)}.${held}`;
       drawPolling(view);
       drawNotice(view, played);
+      const current=view.notice?.code==='decided'?null:view.notice;
+      const signature=JSON.stringify([view.mode,current]);
+      if(signature!==lastCall){
+        lastCall=signature;
+        if(view.mode==='loading')call.loading({read:true});
+        else if(current||view.mode==='signed_out'){
+          const code=current?.code??'unauthorized',status=current?.status;
+          const reason=code==='unauthorized'?'sign_in_required':status===429||code==='too_many_requests'?'rate_limited'
+            :code==='database_unavailable'?'not_connected':code==='retrying'?(status===0?'offline':'not_connected'):'duel_refused';
+          const remaining=Number.isFinite(current?.retryUntil)?Math.max(0,current.retryUntil-now()):undefined;
+          call.fail({reason,message:current?.message??messageFor(code),retryAfterSeconds:current?.retryAfterSeconds},
+            {retryAfterMs:remaining});
+        }else call.clear();
+      }
     },
   };
 }

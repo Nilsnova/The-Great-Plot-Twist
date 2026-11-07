@@ -12,23 +12,36 @@ import { createRulesCard } from './rules-card.js';
 import { createReveal } from './reveal.js';
 import { createStatus, isReady } from './panel-status.js';
 import { node, whenRemoved } from './dom.js';
+import {GENERIC_MESSAGE} from './messages.js';
 
 const TAB_IDS = ['challenges', 'new', 'yours', 'rules'];
 
 export function createPanel(ctx, adapter, onGone) {
   const played = new Set(); // reveals the player has watched, so their reminder disappears
-  let tabId = TAB_IDS[0], tabIndex = 0, view = adapter.read(), busy = false, disposed = false, seenNotice = 0, stopWatching = null, openGeneration = 0;
+  let tabId = TAB_IDS[0], tabIndex = 0, view = adapter.read(), busy = false, disposed = false, seenNotice = 0, stopWatching = null, openGeneration = 0, controls=null;
 
   // One click at a time: a second click while an intent is in flight is ignored.
   async function guard(task) {
-    if (busy) return undefined;
-    busy = true;
+    if (busy||disposed||!modal.element.open||status.blocked()) return undefined;
+    const generation=openGeneration;
+    const operation = {}; busy = operation;
     status.say('');
-    try { return await task(); } finally { busy = false; }
+    try {
+      const result=await task();
+      if(disposed||!modal.element.open||generation!==openGeneration)return undefined;
+      const doc=modal.element.ownerDocument,active=doc?.activeElement;
+      // A disabled native action can blur to body. Repair only this still-current modal's lost focus.
+      if(result?.ok===false&&doc&&!doc.hidden
+        &&[...doc.querySelectorAll('dialog[open]')].every(dialog=>dialog===modal.element)
+        &&(active===doc.body||modal.element.contains(active)&&active.matches(':disabled')))status.focusFailure();
+      return result;
+    }
+    finally { if(busy===operation)busy=false; }
   }
 
   function play(duel) {
     if(disposed||!modal.element.open)return;
+    if(!duel||!Array.isArray(duel.reveal)){status.say(GENERIC_MESSAGE);return;}
     played.add(duel.id);
     tabs.element.hidden = true;
     reveal.play(duel);
@@ -48,6 +61,8 @@ export function createPanel(ctx, adapter, onGone) {
     onRefresh: () => guard(() => adapter.refresh()),
     onRetry: () => guard(() => adapter.retry()),
     onWatch: watch,
+    onSignIn:ctx.onSignIn,
+    onCooldown:blocked=>{if(controls)controls.disabled=blocked;},
   });
   const challenges = createChallenges({
     onAnswer: async (id, signals) => {
@@ -93,7 +108,8 @@ export function createPanel(ctx, adapter, onGone) {
   });
 
   const body = node('div', 'duel-body');
-  body.append(node('p', 'duel-intro', 'The ring at Smugglers’ Cove. Simulation, play money.'), ...status.elements, tabs.element, reveal.element);
+  controls=node('fieldset','duel-controls');controls.setAttribute('aria-label','Duel controls');controls.append(tabs.element);
+  body.append(node('p', 'duel-intro', 'The ring at Smugglers’ Cove. Simulation, play money.'), ...status.elements, controls, reveal.element);
   const modal = createModal({ title: 'Lantern Duels', body, onCancel: () => (reveal.active ? reveal.leave() : modal.close()), onClose });
   const heading = modal.element.querySelector('h2');
   heading.tabIndex = -1;
@@ -103,6 +119,7 @@ export function createPanel(ctx, adapter, onGone) {
   function render(next) {
     view = next;
     status.update(view, played, reveal.active);
+    controls.disabled=status.blocked();
     tabs.element.hidden = !isReady(view) || reveal.active;
     for (const part of [challenges, form, history, rules]) part.update(view);
     const decided = view.notice?.code === 'decided' && view.notice.id !== seenNotice;
@@ -111,16 +128,21 @@ export function createPanel(ctx, adapter, onGone) {
     if (tabId === 'yours' && view.selected?.id === view.notice.duelId) play(view.selected); // they are watching: show it
   }
 
-  function onClose() {
-    openGeneration++;
+  function onClose(reason) {
+    openGeneration++;busy=false;
     adapter.setVisible(false);
     ctx.resetInput?.();
-    ctx.focus?.();
+    if(reason!=='dispose')ctx.focus?.();
   }
 
-  const onVisibility = () => adapter.setVisible(modal.element.open && !document.hidden);
+  const onVisibility = () => {
+    if(disposed)return;
+    if(document.hidden){openGeneration++;busy=false;}
+    adapter.setVisible(modal.element.open && !document.hidden);
+  };
   const stopListening = adapter.subscribe(render);
   document.addEventListener('visibilitychange', onVisibility);
+  const stopIdentity=ctx.onIdentityChange?.(()=>dispose());
   render(view);
 
   function dispose() {
@@ -128,9 +150,11 @@ export function createPanel(ctx, adapter, onGone) {
     disposed = true;openGeneration++;
     stopWatching?.();
     document.removeEventListener('visibilitychange', onVisibility);
+    stopIdentity?.();status.dispose();
     stopListening();
     adapter.dispose();
-    for (const part of [reveal, tabs, modal]) part.dispose();
+    for (const part of [challenges,form,history,rules,reveal,tabs,modal]) part.dispose?.();
+    played.clear();view=null;body.replaceChildren();
     onGone?.();
   }
 
@@ -138,12 +162,15 @@ export function createPanel(ctx, adapter, onGone) {
     element: modal.element,
     isGone: () => disposed,
     open(duelId) {
-      const generation=++openGeneration;
-      if (modal.element.open) return heading.focus();
-      ctx.resetInput?.();
-      modal.open(ctx.container, heading);
-      stopWatching ??= whenRemoved(ctx.container, modal.element, dispose); // the game shut down: stop all work
-      adapter.setVisible(!document.hidden);
+      if(disposed)return;
+      const generation=++openGeneration;busy=false;
+      if (modal.element.open) heading.focus();
+      else {
+        ctx.resetInput?.();
+        modal.open(ctx.container, heading);
+        stopWatching ??= whenRemoved(ctx.container, modal.element, dispose); // the game shut down: stop all work
+        adapter.setVisible(!document.hidden);
+      }
       if(duelId)return adapter.refresh().then(()=>{if(!disposed&&modal.element.open&&generation===openGeneration)return watch(duelId,generation);});
     },
     close: () => {openGeneration++;modal.close();},

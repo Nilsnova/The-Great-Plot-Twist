@@ -56,7 +56,9 @@
     "test:online:islet": "npm run build && node scripts/check-online-islet.js",
     "test:online:islet:chaos": "npm run build && node scripts/check-online-islet.js --chaos",
     "test:market": "npm run build && node scripts/check-market-hall.js",
-    "test:online:market:chaos": "npm run build && node scripts/check-online-market.js --chaos"
+    "test:online:market:chaos": "npm run build && node scripts/check-online-market.js --chaos",
+    "test:online:predictions": "npm run build && node scripts/check-online-predictions.js",
+    "test:online:arena": "npm run build && node scripts/check-online-arena.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

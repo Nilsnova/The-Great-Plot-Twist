@@ -6,7 +6,70 @@ Nils explicitly authorized cloud continuation. G10 publishes the case contract o
 
 Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils asked for the
 shortest working core release, targeting five hours. The latest review below supersedes the
-26-chunk completion queue; all 17 overflow items remain deferred. Implementation stays paused.
+26-chunk completion queue; all 17 overflow items remain deferred. Package2 is complete locally.
+Work is stopped; wait for Nils before starting the next package.
+
+## Package2 complete: prediction kiosk and Lantern Duels (7 Nov 2026)
+
+**This package is finished. Stop here; do not start package3 until Nils asks.**
+Verification used **59.1 active minutes**, exceeding the30-minute allocation. No next package
+was started. The five-hour target remains conditional: eight planned30-minute blocks remain
+(240 planned minutes), versus about221.7 minutes left in the original cap at verification.
+The current planned total therefore exceeds that cap; case integration is still unproven.
+
+Changed: connected the prepared prediction/duel panels to scoped private requests and strict
+flags before lazy imports. Preserved stable write IDs, read-before-retry, authoritative receipts,
+shared wallet observation, cooldown deadlines and account/close/hide cleanup. Prediction recovery
+displays the confirmed server row even after edits. A genuine native disabled-submit focus loss
+now returns to an available failure action only while its modal/generation still owns lost focus;
+it preserves newer controls, Account attention, closed and reopened panels. Credits stay in Settings.
+The existing world-loader now owns after-paint loading to keep the cold title under its cap.
+
+Verified: **618 domain tests /27 files plus five native refusal-focus cases** (623 unique tests
+across28 files). The native regression failed1/5 before repair, with all four ownership guards
+already green; all five pass after repair with production CSS and bounded native focus observation.
+The expanded intermediate log retains its early asynchronous-focus assertion failure; the five-case
+follow-up is the green result. No test calls focus to manufacture the recovery.
+
+Production checks passed: **41 prediction checks**, **20 duel checks**, **81 prediction fault checks
+/14 cases** at375 and320 px, **42 duel fault checks /7 cases**, build/spoiler, **23 loading checks**
+and **six enforcing-CSP boundary checks**, including an actually blocked inline script. Practice
+runs use independent1280/375 contexts (13 checks each for predictions,15 each for duels).
+Production journeys cover strict false/string flags, same-page flag refresh, native hotspots,
+unknown applied/unapplied writes, exact bodies, server-provided results/Replay, focus, save CAS,
+font/target sizes and phone fit. Authenticated fault paths assert CSP/privacy too.
+Cold title: **20,881 JS /11,878 CSS bytes**; unchanged21,080-byte JS cap. All requests are local,
+injected or intercepted; no real account/service/database, package, external asset or font was added.
+
+Evidence: `captures/20261107_G9-C3-panels/proof.json`, complete numeric reports, red/green and failed
+attempt logs, the small CSP probe and two selected phone captures. Total C3 evidence is
+**2,724,316 bytes**, below3 MB. Raw generated captures and the flagged DEV-only diagnostic chunk
+remain ignored; that chunk is excluded from commits. Production fixtures now explicitly scope and
+restore NODE_ENV, so preceding practice cannot leak DEV-only data. The unchanged spoiler guard
+caught the original bad build. Native selector/timing corrections retain the original semantic
+assertions. Independent review found no release-blocking issue in the final application fixes.
+
+Source base: `500fcfc`; final candidate has58 source fingerprints in the proof. Successful earlier
+gates are retained with their exact source history when their exercised code was unchanged;
+affected duel/fault/build/loading gates were rerun. This is focused package verification, **not a
+completed full G9 regression**. Known cloud FPS failures/R16 hardware proof, R11 case responses
+(last authorized read at `3098c0a`), case integration and full new input/device certification remain.
+This source/evidence/handoff is committed locally together. Last verified remote is `8844962`;
+**no intermediate push, main merge or deployment**. Final full44 is reserved for integrated source.
+
+Next: package3, the Bulletin reader/shared hooks. Rebase its prepared controller onto package1's
+ownership fix; preserve the new world-loader boundary and production fixture CSP/NODE_ENV guards.
+Reuse the existing UI and server views. Do not start case integration without the published DTOs.
+
+Paste-ready update for Claude:
+
+> Package2 (G9 stream10) is complete locally from500fcfc: predictions and Lantern Duels are wired,
+> with authoritative retry/read-back, cleanup/cooldowns and guarded native failure focus.623 unique
+> focused tests,41 prediction/20 duel checks,123 fault checks over21 cases,23 loading checks,
+> build/spoiler and six enforcing-CSP checks pass. Cold title20,881 JS /11,878 CSS; budgets unchanged.
+> Full44 remains for final integrated source; remote is still8844962. Package verification took
+> 59.1 minutes, over30. Eight planned blocks remain; the five-hour cap is currently over budget,
+> and R11/R16 remain dependencies. Stopped here; next is Bulletin, preserving package1 ownership.
 
 ## Package1 complete: Bulletin opening ownership (7 Nov 2026)
 

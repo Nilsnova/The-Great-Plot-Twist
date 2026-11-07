@@ -1,0 +1,37 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/g9-duels-failure-focus.test.js (5 tests | 1 failed) 8952ms
+   × repairs genuine disabled-send focus loss to the available failure action without resending 2141ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/g9-duels-failure-focus.test.js > repairs genuine disabled-send focus loss to the available failure action without resending
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/g9-duels-failure-focus.test.js:48:83
+     46|       await send(page);await page.evaluate(()=>window.arenaFocusProof.…
+     47|       await retry(page).waitFor({state:'visible'});
+     48|       expect(await retry(page).evaluate(button=>document.activeElement…
+       |                                                                                   ^
+     49|       expect(await page.evaluate(()=>({writes:window.arenaFocusProof.w…
+     50|         open:window.arenaFocusProof.panel.element.open}))).toEqual({wr…
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/g9-duels-failure-focus.test.js:43:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 27 passed (28)
+      Tests  1 failed | 622 passed (623)
+   Start at  20:13:18
+   Duration  53.12s (tests 90%, import 9%, transform 1%)
+
+    Isolate  28 workers spawned · ~167ms startup each (spawn + environment, per file)
+             at least ~4.52s faster with isolate: false — reuses workers across files instead of one per file

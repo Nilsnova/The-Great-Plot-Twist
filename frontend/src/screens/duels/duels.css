@@ -1,4 +1,4 @@
-/* Lantern Duels panel. Uses the pixel UI kit colours. Text is at least 14 px, controls at least
+/* Lantern Duels panel. Uses the pixel UI kit colours. Text is at least 18 px, controls at least
    44 px tall, and the layout holds at 375 px with no horizontal scroll. Colour is never the only
    clue: signals have shapes and names, points have words and border styles. */
 .duel-modal { width: min(820px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); }
@@ -94,3 +94,12 @@
   .duel-strip li { min-width: 52px; padding: 6px; }
   .duel-actions .kit-button { flex: 1 1 auto; }
 }
+
+/* Existing content scrolls while words and native targets keep their readable sizes. */
+.duel-controls{min-width:0;margin:0;padding:0;border:0}
+.duel-body,.duel-card p,.duel-body h4,.duel-polling,.duel-when,.duel-hint,.duel-chip,
+.duel-option-reason,.duel-lantern-name,.duel-lantern-signal,.duel-strip li{font-size:18px}
+.duel-modal :is(button,input,select),.duel-option{font-size:16px;min-height:44px}
+.duel-modal .kit-tabs,.duel-modal .kit-tabpanel,.duel-form,.duel-field{min-width:0}
+.duel-body{overflow-wrap:anywhere}
+.duel-modal :is(p,li,small,figcaption,dt,dd,th,td,caption){font-size:18px}

@@ -25,7 +25,7 @@ const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
 let festivalEntry=null,background=null;
 const loadWorld=()=>import('./shell/world-loader.js');
 const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-const festivalReady=afterPaint.then(()=>import('./shell/after-paint.js')).then(module=>{if(disposed)return null;background=module.startAfterPaint({container,audio,caption:captions.show,focus,adapter,send,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open(),isLoading:()=>loading,isDisposed:()=>disposed});return background.festivalReady;}).then(entry=>(festivalEntry=entry)).catch(()=>null);
+const festivalReady=afterPaint.then(loadWorld).then(module=>module.loadAfterPaintModule()).then(module=>{if(disposed)return null;background=module.startAfterPaint({container,audio,caption:captions.show,focus,adapter,send,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open(),isLoading:()=>loading,isDisposed:()=>disposed});return background.festivalReady;}).then(entry=>(festivalEntry=entry)).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);

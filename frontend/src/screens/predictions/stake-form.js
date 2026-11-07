@@ -56,7 +56,11 @@ export function buildStakeForm({ id, model, form, actions }) {
     const text = stakeConfirmText({ side: form.side, amount: Number(form.amount) });
     block.append(confirmGroup({ text, busy: form.busy, onConfirm: actions.confirm, onBack: actions.back }));
   } else {
-    block.append(button('Stake', () => {}, { focus: 'stake', type: 'submit' }));
+    const stake = button('Stake', () => {}, { focus: 'stake', type: 'submit' });
+    stake.id = uniqueId('desk-stake');
+    // The existing question heading contributes public text to the name, never its opaque id.
+    stake.setAttribute('aria-labelledby', `${stake.id} desk-title-${id}`);
+    block.append(stake);
   }
   block.addEventListener('submit', event => {
     event.preventDefault();

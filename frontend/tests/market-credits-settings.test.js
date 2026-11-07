@@ -49,7 +49,8 @@ it('renders exact server credit and licence text safely, without another request
   ]);
   expect(result.publicReads).toBe(1);expect(result.privateReads).toBe(0);expect(result.afterDispose).toBe(0);
   for(const retained of ['Nils Lenke','Weather data by Open-Meteo.com','Binance public market data',
-    'Football-Data.org API','Supabase JavaScript client and components: MIT'])expect(result.staticText).toContain(retained);
+    'Football-Data.org API','Supabase JavaScript client and components: MIT',
+    'Questions and results: Manifold Markets (manifold.markets), a play-money forecasting site.'])expect(result.staticText).toContain(retained);
 });
 
 it('selects the default or injected session without falling back to another registered owner',async()=>{

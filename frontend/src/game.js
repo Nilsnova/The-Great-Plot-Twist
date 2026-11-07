@@ -24,6 +24,8 @@ import {createCaseBridge} from './adapter/bridge.js';
 import {attachIsletPanel} from './screens/islet/host.js';
 import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
+import {createPredictionsEntry} from './online/predictions-entry.js';
+import {findPanelEntry,findPanelServices} from './online/panel-services.js';
 import {createIntro} from './story/intro.js';
 import {entranceFor,canEnterRoom} from './world/interiors/rooms.js';
 import {createLazyCinematics} from './world/cinematics/lazy.js';
@@ -66,14 +68,23 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const worldBlocked=()=>!!(shortcuts.active||shell?.blocked||isAppBlocked?.()||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen());
   const outsideBlocked=()=>externalOverlay()||world.busy||!!interiors?.active||!!interiorLoad;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:input.reset,focusGame:()=>graphics.renderer.domElement.focus()});
-  // Prediction desk (L5): the harbor's prediction kiosk opens it. Loaded on first use.
-  let desk=null,deskLoading=null;
-  function openDesk(){deskLoading??=import('./screens/predictions/desk.js').then(module=>{if(disposed)return null;desk=module.createDesk({container,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus()});return desk;});
-    deskLoading.then(panel=>panel?.open()).catch(error=>{deskLoading=null;console.error(error);hud.message('The prediction desk could not load. Try again.');});}
-  let arenaScreen = null;
-  const arenaOpen = () => arenaScreen?.isArenaOpen() === true;
+  // The desk and app-owned ring capture current private capabilities before loading their screens.
+  const desk=createPredictionsEntry({session,container,resetInput:input.reset,
+    focus:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
+    onSignIn:()=>{desk.close();festivalEntry?.openAccount?.();}});
+  const openDesk=()=>void desk.open();
+  const arenaEntry=findPanelEntry(session,'arena');
+  const arenaOpen=()=>arenaEntry?.active===true;
+  const practice=new URLSearchParams(location.search);
+  function panelLabel(zone){
+    if(!['prediction_kiosk','arena_gate'].includes(zone))return;
+    const feature=zone==='prediction_kiosk'?'predictions':'arena';
+    const local=import.meta.env.DEV&&practice.get(feature==='predictions'?'desk':'arena')==='local';
+    if(local||findPanelServices(session)?.getFlags()?.[feature]===true)return;
+    return feature==='predictions'?'The prediction desk is closed for now.':'The ring is closed for now.';
+  }
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){roomRequest++;interiors?.dispose();cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();arenaScreen?.disposeArena();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){roomRequest++;interiors?.dispose();cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();arenaEntry?.invalidate();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -128,9 +139,11 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     openShareholderRegister:()=>caseUi.open('search',{spot:'market_hall'}),
     onSignIn:()=>{marketUi.close();festivalEntry?.openAccount?.();}});
   const panelClosed=event=>{
-    const element=event.target;
-    if(!element?.open&&element?.matches?.('.market-modal')
-      &&container.querySelector('.market-modal')===element&&marketUi.pending)marketUi.close();
+    const element=event.target;if(element?.open||!element?.matches)return;
+    if(element.matches('.market-modal')&&container.querySelector('.market-modal')===element
+      &&marketUi.pending)marketUi.close();
+    if(element.matches('.desk-modal')&&container.querySelector('.desk-modal')===element
+      &&desk.pending)desk.close();
   };
   container.addEventListener('close',panelClosed,true);
   async function openMarket(){
@@ -145,12 +158,10 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     if (event.id === 'market_hall') { openMarket(); return; }
     caseUi.interact(event);
   });
-  // A7 Lantern Duels: the arena gate opens the duel panel, loaded only when first needed.
-  const stopArena = on('interact', event => {
-    if (event.id !== 'arena_gate' || intro.active) return;
-    import('./screens/duels/index.js')
-      .then(module => { if(disposed)return; arenaScreen = module; return module.openArena({ container, getToken:session.getToken, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus() }); })
-      .catch(() => hud.message('The ring could not open. Try again.'));
+  // Both this hotspot and the festival handoff use the same app-owned ring entry.
+  const stopArena=on('interact',event=>{
+    if(event.id!=='arena_gate'||intro.active)return;
+    if(arenaEntry)void arenaEntry.open();else hud.message('The ring is closed for now.');
   });
   const stopPlots = createIsletHost({session,attach:attachIsletPanel,container,on,emit,
     resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
@@ -206,7 +217,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(doorway?({cottage:'cottage',boathouse:'shore',lighthouse:'tower_door'})[doorway.roomId]:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:doorway?`Enter ${doorway.roomId==='lighthouse'?'the lighthouse':doorway.roomId==='boathouse'?'the boathouse':'the cottage'}`:undefined }); input.endFrame();
+    hud.update(doorway?({cottage:'cottage',boathouse:'shore',lighthouse:'tower_door'})[doorway.roomId]:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:doorway?`Enter ${doorway.roomId==='lighthouse'?'the lighthouse':doorway.roomId==='boathouse'?'the boathouse':'the cottage'}`:panelLabel(zone) }); input.endFrame();
   }, () => {
     const draw=!interiors?.active&&shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);
@@ -226,9 +237,11 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });  return {dispose,resetInput:input.reset,setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
-    setMode(mode){if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){marketUi?.close();sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
+    setMode(mode){if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){marketUi?.close();desk.close();arenaEntry?.close();sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
+      if(arenaEntry?.pending&&!container.querySelector('.duel-modal[open]')){arenaEntry.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
+      if(desk.pending&&!container.querySelector('.desk-modal[open]')){desk.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(stopPlots.active){stopPlots.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(hud.closeQuickPanels?.())return true;
