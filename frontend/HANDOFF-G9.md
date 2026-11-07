@@ -8,6 +8,47 @@ Current scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils confirmed t
 G9 features remain in scope and all 17 overflow items are deferred. Historical remaining-work
 lists below are superseded by that decision. Work is now reported in 30–60-minute slices.
 
+## Stopped at Nils’s chunk boundary (7 Nov 2026)
+
+**Work is stopped. Do not start another chunk until Nils asks to continue.** The regression slice
+ran about 40 minutes; it exceeded the requested 30-minute boundary. No test/browser/agent task is
+still running. No application source changed during this slice.
+
+Completed implementation: Exchange source `95de0b6`, all 11 stream gates green as recorded below.
+The subsequent clean-source driver was stopped during online: **35/44 completed, 32 passed,
+three failed; nine not completed.** It is not a completed full run or checkpoint. Failures:
+night storm **31 FPS /108 calls**, cinematics **16 FPS /97 calls**, and the local chaos suite's
+bulletin opening timeout. World passes all 62 checks at **32 FPS /97 calls** after ten trips.
+Accessibility passes; cold title stays **21,071 JS /11,878 CSS bytes**.
+
+The bulletin failure is an older pending-import/flag-off ownership race plus an outdated off-modal
+expectation. A four-file fix and native regression tests are prepared and independently reviewed,
+but **not applied or runtime-tested**. Next chunk is its red-first verification and stream gate.
+Later draft ownership and the forming-crew polling/editor issue are preserved in coordinator notes.
+
+Evidence: `captures/20261107_G9-C3-market-paused/paused-proof.json`; all 35 rows, three failed logs
+and full selected numeric reports are preserved. Every raw generated capture/log is archived;
+historical committed captures were restored exactly. User cancellation is recorded separately from
+functional failure. All C3 evidence remains under 3 MB. No real service/account/database was used.
+
+**26 chunks remain, each estimated 30–60 minutes, about 21½ active hours in total.** The counted
+queue, completion checks, parallel ownership and R11/R16 dependencies are in `G9-ROADMAP.md`.
+All 17 overflow items are deferred. No new decision is needed from Nils.
+
+Local source is `95de0b6`; last verified remote remains `8844962`. Exchange and these latest notes
+are **not pushed**. Finish verification before publishing the team baseline. No main merge,
+deployment or external message was performed.
+
+Paste-ready update for Claude:
+
+> G9 is paused at Nils’s requested chunk boundary. Exchange is locally committed at 95de0b6 with
+> all 11 stream gates passing. The following full regression was interrupted at 35/44 commands:
+> 32 passed, two FPS failures and one local bulletin-opening failure; nine did not complete.
+> A bounded bulletin fix is prepared, unverified. Latest remote is still 8844962. There are 26
+> required 30–60-minute chunks left; all 17 overflow items are deferred. R11 needs the exact
+> published serialized nested case DTOs/placeholder fixtures; R16 needs presenter-hardware proof.
+> Read frontend/G9-ROADMAP.md and HANDOFF-G9.md. Do not merge this as a completed checkpoint.
+
 ## Chunk 1: Exchange verified locally (7 Nov 2026)
 
 Changed: stream 9 wires the adopted Island Exchange to the current private service lease and

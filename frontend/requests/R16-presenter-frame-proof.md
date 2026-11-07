@@ -1,5 +1,13 @@
 # R16: presenter-laptop frame proof
 
+Latest local observation, 7 Nov 2026, source `95de0b6`: the driver was stopped at Nils’s request
+after 35/44 commands (32 passed, three failed). This is a partial run. Storm records **31 FPS /
+108 calls**; cinematics **16 FPS /97 calls**; world passes **32 FPS /97 calls** and all subsequent
+assertions. A separate local bulletin-opening failure is unrelated to this hardware request.
+Evidence: `captures/20261107_G9-C3-market-paused/paused-proof.json`. Source is not pushed yet;
+last verified remote remains `8844962`. Historical full-run observations below remain unchanged.
+
+
 1. **Route or setting:** no API, database or header change. This is the existing presenter-laptop
    performance requirement in G9 stream 19 and the checkpoint browser driver.
 2. **Missing proof:** clean committed source `e720eaf` initially passes **41/44 commands**. Two

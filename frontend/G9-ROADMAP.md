@@ -1,89 +1,82 @@
 # G9 required-feature finish queue
 
-Nils confirmed this scope on 7 November 2026: finish the required G9 features and a verified team
-handoff. **All 17 overflow items are deferred.** Keyboard, touch, gamepad and accessibility remain
-required. The approved pixel style, server authority, replay, privacy and budgets remain unchanged.
+Nils confirmed the finish line on 7 November 2026: required G9 features and a verified team
+handoff. **All 17 overflow items are deferred.** Required gameplay, input, privacy, security,
+replay and budget requirements remain.
 
-Work in 30–60-minute slices toward these 22 reviewable results. A failed check gets a specific
-follow-up slice; it does not become an unexplained multi-hour task. Long sequential browser gates
-may span two slices: report their command and progress, keep source frozen, then continue the same
-run. Commit coherent streams; publish after the required checkpoint checks. A local commit is not
-a remote handoff.
+## Stopped at the requested chunk boundary
 
-## Current pickup state
+- Exchange is complete locally at `95de0b6`: all 11 stream commands pass.
+- The following regression slice ran about **40 minutes** before Nils requested a stop.
+  **35/44 commands completed: 32 passed, three failed.** Online was interrupted; nine commands
+  were not completed. This is an incomplete run, not a checkpoint.
+- Source is unchanged. Raw evidence is archived; earlier capture/proof bytes are restored.
+  No test, browser or implementation task remains running.
+- Last verified remote is `8844962`; Exchange source and this queue are **not pushed**.
+  Main `64fc731` is adopted. Keep `feat/g9-real-adapter`; never reset, rebase or force-push it.
 
-- Branch: `feat/g9-real-adapter`. Last verified remote head: `8844962`, including islet source
-  `e720eaf`. Main `64fc731` is adopted. Do not reset, recreate, rebase or force-push this branch.
-- Stream 9, the Exchange, completes the first slice locally: all 11 stream commands pass, including
-  3,130 unit tests, 106 market checks, 14 fault cases / 81 checks, aggregate online/fault checks,
-  accessibility and the world check. Source/evidence are delivered with this handoff.
-  **Remote Exchange readiness requires chunk 2's committed-source regression and push.**
-- Predictions/arena, bulletin, production/CSP and input work already have prepared drafts. These
-  are coordinator-owned, local and unverified until their gates pass. Reuse them; do not rebuild
-  them or describe them as published features.
-- Read `HANDOFF-G9.md` for exact source/evidence and `G9-BRIEF.md` for acceptance details. This file
-  is the short execution queue; it does not replace the approved contracts.
+## Remaining: 26 chunks
 
-## Work slices
+Each chunk targets **30–60 minutes**. Listed estimates total about **21½ hours** of active work;
+external waits are separate. Finish one chunk, stop and report its result and the remaining count.
+**Do not start the next chunk without Nils asking to continue.** An observed defect gets a counted
+follow-up; do not silently extend a chunk. Resume long gates on frozen source, preserve every
+attempt and stop at command boundaries. An interrupted run never counts as a completed gate.
 
-| # | Result | Completion check / dependency |
-|---|---|---|
-| 1 | Close the Exchange implementation | Finish its stream checks, address new failures, commit source/evidence and update the handoff. Keep R16's hardware failure explicit; do not claim a completed checkpoint. |
-| 2 | Publish a usable team baseline | Run the exact committed-source 44-command driver and engineering scan, preserve every failure, push normally and verify the remote SHA. Publish pickup instructions. |
-| 3 | Adopt prediction and duel fixes | Reconcile the prepared C10 code; focused cooldown, safe error-copy, credits and lifecycle tests pass. Disjoint leaf reviews can run in parallel. |
-| 4 | Verify and commit both panels | Recorded stake/full duel, fresh local 1280/375 journeys, strict-off, five-minute flag refresh, recovery, Escape and accessibility pass; run the stream gate. |
-| 5 | Adopt the bulletin reader | Reconcile prepared C11 data/projection/controller code; public-only requests, stale/off states, nullable attribution and safe failures pass focused tests. |
-| 6 | Verify and commit the bulletin | Recorded read/retry/cache/announcement paths, production-off and the stream gate pass. Preserve read-only behavior and public 401/409 handling. |
-| 7 | Prove the production adapter boundary | Use the prepared C16 proof. Production uses the real/disconnected path; development stand-ins stay guarded; the server-free demo still works. |
-| 8 | Compose final security checks | Use the prepared C17 fixture/runner. Shared account, wallet, save and SDK ownership are consistent; authoritative CLI wiring tests pass. |
-| 9 | Integrate required input components | Reuse the prepared focus/navigation, Back release, HUD, text editor and finale-stick work. Wire ownership/cleanup and pass native component tests. |
-| 10 | Prove account and crew input | Public keyboard, actual touch and gamepad paths enter/edit/confirm/back correctly, with no movement behind controls or stale-account input. |
-| 11 | Prove panel input | The same input modes exercise islet, Exchange, prediction and duel actions through public controls; preserve UID, wallet and save assertions. |
-| 12 | Map the published case view | **R11 first.** Map only authorized serialized DTOs and placeholder fixtures; conformance and earned-state guards pass. |
-| 13 | Prove case freshness | Push/deadline/poll/hidden-tab rules, reload/effect memory and null-case-to-Crew behavior pass; stream 12 is committed. |
-| 14 | Finish board and searches | Pin/pair, refusal/success, price reconfirmation and completed-search paths pass with keyboard/touch and the stream-13 gate. |
-| 15 | Finish partner orders | Supported fetch/man-light intents, unsupported-order refusals, authoritative progress and receipts pass; stream 14 is committed. |
-| 16 | Finish the three-light night | Supplied posts, aim, normalized bearings, accepted locks and once-only effects pass. No inferred winning angle or server outcome. |
-| 17 | Finish solve and the changed coast | Wrong-accusation cooldown, solve, runtime-only reveal and locked/relit world pass spoiler/privacy checks; stream 15 is committed. |
-| 18 | Complete input and phone proof | Add case actions to the modality paths. Audit 375×812, 390×844, 812×375, 320 px and the short code field; stream-18 gate and parity table pass. |
-| 19 | Close performance and load evidence | Check lazy-load inventory, unchanged byte/draw/resource/wire budgets and telemetry. R16 hardware proof is a separate external dependency. |
-| 20 | Complete the recorded golden path | One coherent 1280/375 path covers all required features, shared wallet/save state, sign-out/deletion and required fault groups. Split happy/fault runs if needed. |
-| 21 | Finish security, screenshots and docs | All six composed CSP flows pass. Code-matched docs and indexed placeholder screenshots fit evidence budgets; manual-device limits are explicit. |
-| 22 | Publish the final handoff | Freeze source, run the full driver/new gates and engineering scan, update the handoff, push and verify its SHA. Supply the paste-ready Claude update. |
+| # | Result | Minutes | Completion check / dependency |
+|---|---|---:|---|
+| 1 | Fix cancelled bulletin openings | 45 | Verify prepared fix red-first: off, held import, Escape, newer native page and load-error ownership. Remaining chaos scenarios and stream gate pass; commit. |
+| 2 | Baseline regression, first segment | 30 | First bounded segment of exact driver on clean committed source; archive rows/logs and stop at a command boundary. |
+| 3 | Baseline regression, second segment and push | 60 | Finish all 44 commands, retain failures, scan, update handoff, push normally and verify remote SHA. R16 remains explicit. |
+| 4 | Adopt prediction and duel fixes | 45 | Reconcile prepared C10 code; cooldown, safe error copy, credits and lifecycle tests pass. |
+| 5 | Verify and commit both panels | 60 | Recorded stake/full duel, fresh local 1280/375 paths, strict-off, flag refresh, recovery, Escape and accessibility pass. |
+| 6 | Adopt the bulletin reader | 30 | Reconcile prepared C11 with chunk 1; public reads, stale/off states, attribution and safe failures pass focused tests. |
+| 7 | Verify and commit the bulletin | 45 | Recorded read/retry/cache/announcement and production-off paths pass; public 401/409 never expire the account. |
+| 8 | Prove production adapter boundary | 30 | Prepared C16 checks prove production real/disconnected path, guarded development stand-ins and server-free demo. |
+| 9 | Compose final security checks | 45 | Reconcile prepared C17; shared account/wallet/save/SDK ownership and authoritative CLI wiring pass. |
+| 10 | Integrate required input components | 60 | Prepared navigation, Back release, HUD, editor and finale-stick work; ownership/cleanup tests and Controls hints pass. |
+| 11 | Prove account and crew input | 60 | Keyboard/touch/gamepad edit/confirm/back and no movement behind controls. Resolve unchanged forming-crew polls replacing active editor input. |
+| 12 | Prove panel input | 60 | All three modes exercise islet, Exchange, prediction and duel actions; preserve UID, wallet and save checks. |
+| 13 | Map published case view | 60 | **R11 first:** exact serialized DTOs and placeholder fixtures. Conformance and earned-state guards pass. |
+| 14 | Prove case freshness | 45 | Push/deadline/poll/hidden-tab rules, reload/effect memory and null-case-to-Crew behavior pass. |
+| 15 | Finish board and searches | 60 | Pin/pair, refusal/success, price reconfirmation and completed searches pass with required input checks. |
+| 16 | Finish partner orders | 45 | Supported fetch/man-light, unsupported-order refusals, server progress and receipts pass. |
+| 17 | Finish three-light night | 60 | Supplied posts, aim, bearings, accepted locks and once-only effects; no inferred winning outcome. |
+| 18 | Finish solve and changed coast | 60 | Wrong-accusation cooldown, solve, runtime-only reveal and locked/relit world pass spoiler/privacy gates. |
+| 19 | Complete case input and phone proof | 60 | Case modality paths; 375×812, 390×844, 812×375, 320 px and short fields; parity table has no gap. |
+| 20 | Finish lazy-load inventory | 30 | Document/assert dynamic chunks and cold requests; retain unchanged byte budgets. |
+| 21 | Finish safe Copy numbers metrics | 30 | Prepared actual request counts, owned polling states and safe Realtime status; no metadata capture or per-frame allocation. |
+| 22 | Prove real-adapter performance | 60 | Recorded eight-peer/night, polling pause and resources. **R16 hardware proof is external.** |
+| 23 | Complete recorded golden path | 60 | Coherent 1280/375 gameplay, shared wallet/save, sign-out/deletion and required fault groups. |
+| 24 | Finish screenshots and explanatory docs | 60 | Code-matched docs and indexed placeholder shots fit budgets; manual-device limits explicit. |
+| 25 | Final regression, first segment | 30 | Freeze final source; full driver/new gates including six composed CSP flows; preserve first segment. |
+| 26 | Final regression, second segment and handoff | 60 | Finish gates/engineering scan, retain failures, update handoff, push/verify SHA and provide Claude update. |
 
-Items 3–11 can progress while R11 blocks the case lane. Items 12–17 become ready when the required
-contract and routes are published. Final input/golden checks follow the implemented features.
-Publishing slices recur at coherent boundaries; item 2 is the first one, not the only one.
+## Parallel ownership and dependencies
 
-## Parallel ownership and external work
+- Coordinator: shared hooks, applying drafts, sequential runtime checks, commits and pushes.
+  Bounded workers may review disjoint leaf files during an authorized chunk. Prepared drafts are
+  local and unverified; reuse them. All work is now stopped.
+- Teammates: agree a file boundary and start their own branch from a published SHA. Do not edit
+  the active G9 worktree or duplicate prepared modules. Handoffs state source, files, checks,
+  unresolved failures and next command.
+- **G10 / R11:** publish exact redacted serialized nested case DTOs and fixtures on the authorized
+  case branch. Current fixtures are snapshot inputs. Never inspect private implementation or
+  secret case data to fill the gap. Chunks 1–12 can proceed before this input.
+- **Presenter / R16:** run unchanged offline/intercepted checks on approved hardware and publish
+  source SHA/numbers. Cloud FPS failures remain failures.
+- **Claude:** main integration, server/platform settings and deployment. G9 edits frontend only,
+  apart from the approved eight-word dictionary exception.
 
-- The coordinator owns shared hooks, application of prepared changes, browser/runtime checks,
-  commits and pushes. Bounded workers may prepare or review disjoint leaf files concurrently.
-  Keep one browser owner, including unit commands that launch Chromium.
-- A teammate taking code work starts from the published SHA on their own branch and agrees the
-  file boundary first. Do not edit the active G9 worktree or duplicate coordinator-owned drafts.
-  Every handoff states the source SHA, changed files, checks, unresolved failures and next command.
-- **G10 / R11:** publish the exact redacted serialized nested case DTOs and fixtures on the
-  authorized case branch. No frontend estimate substitutes for this dependency. Never inspect
-  secret case data or private implementation to fill a missing contract.
-- **Presenter proof / R16:** run unchanged offline/intercepted frame checks on approved hardware
-  and publish the source SHA and numeric result. Cloud frame failures remain failures.
-- **Claude:** owns main integration, server/platform settings and deployment. G9 changes only
-  `frontend/`, apart from the already approved eight-word dictionary exception.
-- Live accounts, services and databases are outside the authorized test policy. No live-service
-  or database pass is claimed. Actual device/assistive-technology results remain manual evidence,
-  not something inferred from headless Chromium.
+## Scope scrutiny
 
-## Work removed from the active queue
+Every row implements an approved required feature, fixes an observed defect, or supplies required
+verification/handoff evidence. Load/performance and long regression work are split explicitly.
+Optional overflow, new packages/art/fonts, redesigns, unrelated refactors, general frameworks and
+duplicate standalone proofs are outside this queue. Keep required gates; reuse aggregates that
+execute identical checks/options on unchanged source.
 
-- All 17 overflow items. Revisit them only after the required-feature handoff.
-- New packages, art, fonts, visual redesigns and general-purpose frameworks are unnecessary here.
-- Rebuilding already prepared modules, unrelated refactors and repeated copies of the same proof.
-- Repeating a standalone journey when an aggregate already executes the identical function with
-  identical options on unchanged source. Reduced `extended:false` runs do not replace local or
-  hot-flag coverage. Keep all required gates; rerun affected checks after fixes and the full driver
-  before a push.
-
-This queue keeps required gameplay, account/save integrity, outcome authority, privacy, spoilers,
-security, input access and regression proof. A blocker or an unverified environment stays visible
-in the handoff; it is never converted into a passing check.
+Tests use injected clients/intercepted endpoints and generated placeholders. Real accounts,
+services and databases are outside the authorized test policy. Actual devices and assistive
+technology need manual evidence. Preserve approved style, 16/18/19/18 px text, 44 px targets,
+320 px fit, server authority, exact events/replay, Settings-only credits and server-free demo.
