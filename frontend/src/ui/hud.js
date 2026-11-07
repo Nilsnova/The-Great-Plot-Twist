@@ -38,7 +38,7 @@ export function createHud(container, actions) {
     </section>`;
   const captain=node('div','captain-status'),captainName=node('strong','','Captain pending'),save=node('span','','Local intro only');save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
   const caseToolbar=node('nav','case-toolbar');caseToolbar.setAttribute('aria-label','Case tools');caseToolbar.hidden=true;for(const [name,label] of [['crew','Crew'],['board','Board'],['log','Log'],['hints','What next?']]){const button=node('button','',label);button.type='button';button.onclick=()=>{closeTools();actions.caseScreen?.(name);};caseToolbar.append(button);}const festivalButton=node('button','','Festival');festivalButton.type='button';festivalButton.hidden=true;festivalButton.onclick=()=>{closeTools();actions.festival?.();};caseToolbar.append(festivalButton);overlay.append(caseToolbar);
-  const tonightChip=node('aside','tonight-chip');tonightChip.hidden=true;const tonightState=node('strong'),tonightFog=node('span'),tonightStart=node('span');tonightChip.append(tonightState,tonightFog,tonightStart);overlay.append(tonightChip);
+  const tonightChip=node('aside','tonight-chip');tonightChip.hidden=true;const tonightState=node('strong'),tonightFog=node('span'),tonightStart=node('span');tonightChip.append(tonightState,tonightFog,tonightStart);caseToolbar.append(tonightChip);
   container.append(overlay);
   const controls=overlay.querySelector('.controls'),controlsToggle=overlay.querySelector('.controls-toggle'),journalToggle=overlay.querySelector('.journal-toggle');
   controls.setAttribute('aria-label','Game controls');controls.id='island-controls';controlsToggle.setAttribute('aria-controls',controls.id);

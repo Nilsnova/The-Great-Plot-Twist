@@ -15,7 +15,12 @@ try {
   await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
   check(await page.evaluate(()=>!window.__island&&window.__audioCreated===0),'Cold title allocates neither WebGL nor an AudioContext');
   check(await page.getByRole('button',{name:'Continue',exact:true}).isDisabled(),'Continue is disabled without a local intro');
-  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};window.__padPolls=0;Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPolls++;return [window.__pad];}});});await page.waitForFunction(()=>window.__padPolls>=3);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForFunction(()=>document.activeElement?.textContent==='Settings');
+  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};window.__padPolls=0;Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPolls++;return [window.__pad];}});});await page.waitForFunction(()=>window.__padPolls>=3);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForFunction(()=>document.activeElement?.textContent==='Play with friends');
+  check(await page.evaluate(()=>document.activeElement.textContent==='Play with friends'),'Gamepad follows the approved title order through Friends');
+  const releasedAt=await page.evaluate(()=>{window.__pad.buttons[13].pressed=false;return window.__padPolls;});
+  await page.waitForFunction(previous=>window.__padPolls>previous+1,releasedAt);
+  await page.evaluate(()=>window.__pad.buttons[13].pressed=true);
+  await page.waitForFunction(()=>document.activeElement?.textContent==='Settings');
   check(await page.evaluate(()=>document.activeElement.textContent==='Settings'&&window.__audioCreated===0),'Gamepad can navigate the cold title without allocating audio');await page.evaluate(()=>window.__pad.buttons[13].pressed=false);
   await page.locator('.shell-screen[open] .shell-menu button:visible').last().focus();await page.keyboard.press('Tab');
   check(await page.evaluate(()=>document.querySelector('.shell-screen[open]').contains(document.activeElement)),'Native title dialog contains keyboard focus');
@@ -58,7 +63,7 @@ try {
   await phone.locator('.touch-controls:not([hidden])').waitFor();const stick=await phone.locator('.touch-stick').boundingBox(),client=await phone.context().newCDPSession(phone),x=stick.x+stick.width/2,y=stick.y+stick.height/2;
   const start=await phone.evaluate(()=>window.__island.player.position.x);await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+43,y}]});await phone.waitForTimeout(300);await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   check(await phone.evaluate(start=>window.__island.player.position.x>start+0.2,start),'Actual touch drag maps the virtual stick to movement');
-  await phone.getByRole('button',{name:'Menu',exact:true}).click();await phone.getByRole('button',{name:'Settings',exact:true}).click();await phone.screenshot({path:'captures/20261105_G5-Settings-Phone.png'});
+  await phone.locator('.touch-controls:not([hidden])').getByRole('button',{name:'Menu',exact:true}).tap();await phone.getByRole('button',{name:'Settings',exact:true}).click();await phone.screenshot({path:'captures/20261105_G5-Settings-Phone.png'});
   const bounds=await phone.locator('.shell-screen').boundingBox();check(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=375&&bounds.y+bounds.height<=667,'Phone settings fit and scroll within the viewport');await closeSettings(phone);
   check(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Phone HUD and menus create no page overflow');await phone.screenshot({path:'captures/20261105_G5-Touch.png'});
   const footer=await phone.locator('.bottom-bar').boundingBox(),touch=await phone.locator('.touch-controls').boundingBox();check(touch.y+touch.height<=footer.y,'Phone touch controls and weather footer do not overlap');

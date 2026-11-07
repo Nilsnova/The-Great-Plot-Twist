@@ -1,3 +1,4 @@
+import {pixelViewport} from '../src/pixel/display.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
@@ -51,6 +52,8 @@ try {
         points: Math.max(...samples.map(sample => sample.points)),
         nativeFramebuffer: [game.renderer.domElement.width, game.renderer.domElement.height],
         integerUpscale: game.renderer.userData.pixelScale,
+        densityScale: game.renderer.userData.densityScale, quality: game.renderer.userData.quality,
+        cssSize: [game.renderer.domElement.clientWidth, game.renderer.domElement.clientHeight],
         devicePixelRatio, pixelRatio: game.renderer.getPixelRatio(), shadows: game.renderer.shadowMap.enabled };
     });
     report.modes[name] = stats;
@@ -108,7 +111,7 @@ try {
   await page.evaluate(()=>window.__island.setWeather({fog:1,rain:0}));
   await page.locator('[data-preference=quality]').selectOption('low'); await measure('fog-low');
   await page.evaluate(()=>window.__island.setWeather({fog:0.38,rain:1,wind:1})); await measure('storm-low');
-  check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality preserves the native pixel grid and reduces effect density');
+  check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality keeps its approved pixel-ratio cap and reduces effect density');
   await page.locator('[data-preference=quality]').selectOption('high'); await page.keyboard.press('Tab');
   await page.locator('[data-preference=quality]').focus();await closeSettings(page,{keyboard:true});
   check(await page.locator('.shell-screen').isHidden(), 'Escape closes settings while a form control has focus');
@@ -119,8 +122,26 @@ try {
   await stubOfflineApi(retina);await stubWeather(retina);await stubIntro(retina);await retina.goto(url);await startFromTitle(retina);await retina.waitForTimeout(1200);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
-  check(report.modes['retina-high'].pixelRatio === 1 && report.modes['retina-low'].pixelRatio === 1,
-    'Pixel renderer uses a DPR-independent native buffer in both qualities');
+  for (const [quality, maximum, ratioCap] of [['high', 1920 * 1080, 1.5], ['low', 1280 * 720, 1]]) {
+    const sample = report.modes[`retina-${quality}`];
+    const expected = pixelViewport(1440, 900, {quality, pixelRatio: 2, densityScale: sample.densityScale});
+    check(sample.devicePixelRatio === 2 && sample.quality === quality
+      && Number.isFinite(sample.densityScale) && sample.densityScale >= 0.5 && sample.densityScale <= 1,
+    `Retina ${quality} records its DPR, quality and approved adaptive density`);
+    check(sample.pixelRatio === expected.pixelRatio
+      && sample.nativeFramebuffer[0] === expected.drawingWidth
+      && sample.nativeFramebuffer[1] === expected.drawingHeight,
+    `Retina ${quality} ratio and native buffer exactly match pixelViewport`);
+    check(sample.nativeFramebuffer[0] === Math.floor(1440 * sample.pixelRatio)
+      && sample.nativeFramebuffer[1] === Math.floor(900 * sample.pixelRatio)
+      && sample.nativeFramebuffer[0] * sample.nativeFramebuffer[1] <= maximum
+      && sample.pixelRatio <= ratioCap,
+    `Retina ${quality} uses exact floor-sized pixels within its approved buffer and ratio caps`);
+    check(sample.cssSize[0] === 1440 && sample.cssSize[1] === 900,
+      `Retina ${quality} keeps the full 1440 by 900 CSS viewport`);
+  }
+  check(report.modes['retina-high'].cssSize.every((size, index) => size === report.modes['retina-low'].cssSize[index]),
+    'Retina quality changes preserve CSS dimensions while adapting backing pixels');
   await writeFile(`captures/${stamp}_${prefix}-Retina-Checks.json`, JSON.stringify({
     checked: new Date().toISOString(), viewport: '1440 × 900, device DPR 2',
     high: report.modes['retina-high'], low: report.modes['retina-low'],

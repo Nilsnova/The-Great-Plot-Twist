@@ -31,6 +31,47 @@ it('retains journal actions and closes controls before opening the supplied menu
   expect(result).toEqual({labels:['Crew','Board','Log','What next?','Festival'],calls:['crew','chart','menu'],closed:true,controlsClosed:true});
 });
 
+it('keeps a ready Tonight caption inside Journal with readable wrapping and phone-sized targets',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.setViewportSize({width:320,height:568});
+    await page.evaluate(async()=>{
+      await window.g20Import('/src/ui/styles.css');await window.g20Import('/src/ui/readability.css');await window.g20Import('/src/ui/devices.css');
+      const {createHud}=await window.g20Import('/src/ui/hud.js');
+      window.tonightHud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});window.tonightHud.start();
+    });
+    const journal=page.getByRole('button',{name:'Journal',exact:true}),tools=page.locator('.case-toolbar'),caption=page.locator('.tonight-chip');
+    expect(await tools.isHidden()).toBe(true);expect(await caption.isHidden()).toBe(true);
+    await page.evaluate(()=>window.tonightHud.setBulletin({bulletin:{status:'ready',weather:{tonight:{
+      state:'calm',startsAt:new Date(Date.now()+7*60_000).toISOString(),isNow:false,isFogNight:true,fogNightKind:'almanac',
+    }}}}));
+    expect(await caption.getAttribute('hidden')).toBeNull();expect(await caption.isHidden()).toBe(true);
+    expect(await journal.getAttribute('aria-expanded')).toBe('false');
+    await journal.click();expect(await tools.isVisible()).toBe(true);expect(await caption.isVisible()).toBe(true);
+    expect(await caption.textContent()).toContain('Tonight · calm');expect(await caption.textContent()).toContain("by the harbor's almanac");
+    const layout=await page.evaluate(()=>{
+      const chip=document.querySelector('.tonight-chip'),bounds=chip.getBoundingClientRect();
+      return {insideJournal:chip.parentElement===document.querySelector('.case-toolbar'),position:getComputedStyle(chip).position,
+        captionSizes:[chip,...chip.children].map(element=>parseFloat(getComputedStyle(element).fontSize)),
+        overflow:document.documentElement.scrollWidth>innerWidth,captionOverflow:chip.scrollWidth>chip.clientWidth,
+        left:bounds.left,right:bounds.right,targets:[...document.querySelectorAll('.hud-actions button,.case-toolbar button')]
+          .filter(button=>button.getClientRects().length).map(button=>{const rect=button.getBoundingClientRect();return {width:rect.width,height:rect.height};})};
+    });
+    expect(layout.insideJournal).toBe(true);expect(layout.position).toBe('static');
+    expect(layout.captionSizes.every(size=>size>=18)).toBe(true);expect(layout.overflow||layout.captionOverflow).toBe(false);
+    expect(layout.left).toBeGreaterThanOrEqual(0);expect(layout.right).toBeLessThanOrEqual(320);
+    expect(layout.targets.length).toBe(7);expect(layout.targets.every(target=>target.width>=44&&target.height>=44)).toBe(true);
+    await page.keyboard.press('Escape');expect(await tools.isHidden()).toBe(true);expect(await caption.isHidden()).toBe(true);
+    expect(await journal.evaluate(button=>document.activeElement===button)).toBe(true);
+    await journal.click();
+    for(const status of ['off','unavailable']){
+      await page.evaluate(status=>window.tonightHud.setBulletin({bulletin:{status}}),status);
+      expect(await caption.getAttribute('hidden')).not.toBeNull();expect(await caption.isHidden()).toBe(true);
+      expect(await tools.isVisible()).toBe(true);
+    }
+    await page.evaluate(()=>window.tonightHud.dispose());
+  });
+});
+
 it('keeps supplied captain data literal and its save state honest',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});

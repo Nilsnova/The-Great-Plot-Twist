@@ -29,7 +29,7 @@ for(const [id,command] of commands){
     for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{output+=chunk;});
     child.on('error',()=>resolve(1));child.on('exit',code=>resolve(code??1));
   });
-  output=output.replaceAll(process.cwd(),'.').replace(/\/Users\/[^\s\n"']+/g,'[local path]');
+  output=output.replaceAll(process.cwd(),'.').replace(/\/Users\/[^\s\n"']+/g,'[local path]').replace(/\/tmp\/[^\s\n"']+/g,'[temporary capture]');
   const log=`${folder}/${id}.log`;await writeFile(log,output);
   report=report.filter(item=>item.id!==id);report.push({id,command,code,ms:Date.now()-start,log,commit,sourceDirty});
   await writeFile(resultFile,JSON.stringify(report,null,2)+'\n');

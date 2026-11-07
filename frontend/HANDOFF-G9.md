@@ -4,6 +4,22 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## Verified UI follow-up; continuing stream 6 (7 Nov 2026)
+
+Origin is verified at `367189d`; exact clean source `03dd379` remains the 37/44 baseline below.
+The UI-only follow-up passes **2,333 tests / 172 files**, build/spoiler guard and production online.
+Targeted browser, experience/input, bulletin/Journal, build-stamp controls, islet controls,
+accessibility and loading checks pass. Cold title remains **21,072 JS / 11,878 CSS bytes**.
+Those targeted UI checks ran with a same-pixel culling experiment; the final full stream gate ran
+again after restoring main rendering. The experiment is parked, with no FPS improvement claimed.
+The 55-FPS storm / 30-FPS travel proof remains unresolved (R16); no gate or quality changed.
+Evidence: `captures/20261106_G9-C1/ui-integration-followup.json`. This is **not a completed checkpoint**.
+
+Next: continue crew/presence and panel streams. Their preparations are isolated and untested until
+applied; original stream-6/7 files remain SHA-preserved. The next full driver must use its final
+committed source. R11 still blocks exact case DTO projections; R16 requests unchanged target-hardware
+frame proof. No real account, service, database, deployment or main merge has been used.
+
 ## G9 streams done so far, not a checkpoint (7 Nov 2026; source 03dd379)
 
 Streams 2–5 are implemented and the sign-in/account stream gate is green. **Checkpoint 1 is incomplete.**
@@ -303,6 +319,7 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 | R14 · open | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |
 
 | R15 · resolved by Nils’s explicit eight-word exception | `scripts/text-lint/words.txt` | G24's shared dictionary rejects correctly spelled existing G9 copy and browser names, so the full unit gate fails | Review/add `chrome`, `firefox`, `safari`, `submitting`, `enable`, `perf`, `attempts`, `mit` | All full stream/checkpoint unit gates | Targeted tests/build/browser still run; only the eight approved vocabulary lines changed outside frontend; linter/assertions unchanged |
+| R16 · open | Presenter-laptop frame proof | Cloud SwiftShader misses unchanged 55-FPS storm / 30-FPS travel gates; checkpoint 1 is incomplete | Run unchanged offline checks on approved hardware and publish numeric evidence; see `requests/R16-presenter-frame-proof.md` | Checkpoint 1 / stream 19 | Continue independent crew/presence and panels; keep the non-checkpoint label; no quality or budget waiver |
 
 ## Browser pass
 
