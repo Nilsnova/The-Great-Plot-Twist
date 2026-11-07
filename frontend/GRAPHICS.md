@@ -982,3 +982,32 @@ later route groups. `--all-groups` refuses incomplete coverage. Every subsequent
 The 38-context accessibility pass includes all request states at 375/320; account text is 18 px and
 controls stay at least 16 px / 44 px. See the stream-5 verification manifest for exact evidence and
 limitations; live accounts, services, deployments and physical devices are not claimed.
+
+
+## G9 stream 8: authoritative home islet
+
+The exact session’s factory owns one L2 engine shared by the islet panel and the existing station
+`buildLight` intent. The complete five-plot server catalogue supplies prices, materials, permissions
+and standing buildings. A fresh accepted GET precedes an explicit retry of an uncertain write;
+refused resends keep the original click ID until an authoritative built answer or account reset.
+The shared call UI owns loading/slow/report states and the original 429 deadline. No timer repeats
+a build. Sign-out/expiry/deletion clear private world builds and invalidate held work.
+
+The muster reminder opens that panel. The finale can display its supplied station card while the
+case remains disconnected; live case projection and post-build refresh still wait for R11. Actual
+local rehearsal builds through the panel, sees the station stand and uses the third light. The
+recorded production path builds through A2 and captures the actual station after public chart
+travel and native walking. Native cloud-save readiness is asserted before captures.
+
+Optional nested contract fields are `crew.isletReminder`, `finale.islet` and `finale.isletFailure`;
+see `src/adapter/contract.js` and shared conformance. Schema 1, 24 keys, 25 intents, exact
+`islet_changed` events, replay and the server-free tour remain intact. The Account expiry panel
+reuses one genuine expired/report component, preserving primary sign-in focus and the device journal.
+
+All 11 stream checks pass: 2,896 tests/195 files, 42 production islet checks,
+7 islet faults/42 assertions, 45 accessibility contexts/135 samples and short 375 × 400 audits.
+Cold title is 21,071 JS/11,878 CSS bytes under unchanged caps.
+See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json) for fingerprints, complete gate
+logs, prior failed attempts and limitations. This is not a checkpoint: committed-source full44,
+R11’s case DTOs and R16’s target-hardware frames remain outstanding. No real account/service/database,
+other-engine or physical-device proof is implied.

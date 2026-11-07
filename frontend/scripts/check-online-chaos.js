@@ -95,6 +95,20 @@ export function createCrewChaosJourney() {
   };
 }
 
+// Group copy may differ, but every journey still proves a real failure phase and all shared guards.
+function faultExpectation(journey,fault){
+  const supplied=journey.faultExpectation?.(fault)??{};
+  assert.ok(supplied&&typeof supplied==='object'&&!Array.isArray(supplied)&&typeof supplied.then!=='function',
+    'A journey supplies synchronous fault expectations');
+  assert.ok(Object.keys(supplied).every(key=>['phase','words','call'].includes(key)),
+    'Fault expectations may change only the public phase, words and call selector');
+  const phase=supplied.phase??fault.phase,words=supplied.words??fault.words,call=supplied.call??journey.call;
+  assert.ok(['offline','expired','error','rate_limited'].includes(phase),'A fault keeps an explicit failure phase');
+  assert.ok(words instanceof RegExp&&words.source!=='(?:)'&&words.source!=='.*','A fault checks meaningful public words');
+  assert.ok(typeof call==='string'&&call.trim(),'A fault names an actual public call-state element');
+  return {phase,words,call};
+}
+
 // A later stream supplies an actual setup/trigger/snapshot journey for each additional route group.
 // The returned pendingGroups are an explicit coverage limit, not successful fault checks.
 export async function checkOnlineChaos({openFixture = openAuthFixture,
@@ -108,7 +122,7 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
   const collectError = error => pageErrors.push(error.name);
   page.on('pageerror', collectError);
   const coveredGroups = [...new Set(journeys.map(journey => journey.group))];
-  const report = {checks: [], cases: [], requests: faults.requests, coveredGroups,reducedMotion:true,
+  const report = {outcome:'running',checks: [], cases: [], requests: faults.requests, coveredGroups,reducedMotion:true,
     pendingGroups: onlineChaosRouteGroups.filter(group => !coveredGroups.includes(group))};
   report.coverage = report.pendingGroups.length ? 'partial' : 'complete';
   const check = (value, label) => { assert.ok(value, label); report.checks.push(label); };
@@ -127,16 +141,22 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
           const requestStart = faults.requests.length;
           faults.set(journey, fault);
           await journey.trigger(env, fault, {before, check});
-          const call = page.locator(journey.call);
+          await journey.afterTrigger?.(env, fault, {before, check});
+          const expected=faultExpectation(journey,fault),call=page.locator(expected.call);
           await call.waitFor({state: 'visible'});
           await page.waitForFunction(({selector, phase}) =>
             document.querySelector(selector)?.dataset.state === phase,
-          {selector: journey.call, phase: fault.phase});
-          check(fault.words.test(await call.textContent()), `${journey.group}/${fault.id}: refusal has plain words at ${width}`);
+          {selector: expected.call, phase: expected.phase});
+          expected.words.lastIndex=0;
+          check(expected.words.test(await call.textContent()), `${journey.group}/${fault.id}: refusal has plain words at ${width}`);
           check(faults.requests.length > requestStart, `${journey.group}/${fault.id}: the real route was intercepted`);
           await journey.unchanged(env, before, fault);
-          if (journey.checkFocus && fault.status === 401) await journey.checkFocus(env, fault, check);
-          else {
+          // Legacy intro hooks handle only expiry; a group-expectation journey opts into semantic focus for every fault.
+          if (journey.checkFocus && (fault.status === 401 || typeof journey.faultExpectation==='function')) {
+            const checkedBefore=report.checks.length;
+            await journey.checkFocus(env, fault, check);
+            assert.ok(report.checks.length>checkedBefore,'A semantic focus hook records a checked public control');
+          } else {
             const expectedFocus = journey.expectedFocus?.(fault) ?? (fault.status === 401 ? 'account-sign-in' : journey.focus);
             await page.waitForFunction(key => document.activeElement?.dataset.focus === key, expectedFocus);
             check(true, `${journey.group}/${fault.id}: focus stays on the next available control`);
@@ -148,15 +168,19 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
             check(await retry.isDisabled(), `${journey.group}: the cooldown disables retry`);
             const requestsDuringWait = faults.requests.length;
             if(width===375)await page.screenshot({path:`${folder}/${journey.group}-${fault.id}-${width}.png`});
-            const original=page.locator(`[data-focus="${journey.focus}"]`).last();
+            assert.ok(journey.control===undefined||typeof journey.control==='string'&&journey.control.trim(),
+              'A semantic cooldown control is a real public selector');
+            const original=page.locator(journey.control??`[data-focus="${journey.focus}"]`).last();
+            if(journey.control)assert.equal(await page.locator(journey.control).count(),1,'The original semantic action is unambiguous');
             check(await original.isDisabled(),`${journey.group}: the refused control is disabled during the wait`);
             await original.dispatchEvent('click');
+            await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
             check(faults.requests.length===requestsDuringWait,`${journey.group}: a forced activation cannot bypass the cooldown`);
             await retry.waitFor({state: 'visible'});
             await page.waitForFunction(selector => {
               const control = document.querySelector(selector)?.querySelector('[data-focus="retry-server-call"]');
               return control && !control.disabled;
-            }, journey.call);
+            }, expected.call);
             check(faults.requests.length === requestsDuringWait, `${journey.group}: the countdown never sends a write`);
           }
           check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
@@ -175,9 +199,11 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
     check(env.external.every(value => new URL(value).origin === 'https://placeholder.supabase.co'),
       'All external requests stay on intercepted placeholder endpoints');
     if (requireAllGroups) check(report.pendingGroups.length === 0, 'Every online route group has a production UI journey');
+    report.outcome='passed';
     if (log) console.log(JSON.stringify(report, null, 2));
     return report;
   } catch(error) {
+    report.outcome='failed';
     report.failure={type:error.name,browser:await page.evaluate(()=>({
       accountState:document.querySelector('.account-summary-state')?.textContent??null,
       dialogs:[...document.querySelectorAll('dialog[open]')].map(element=>element.className),
@@ -197,7 +223,11 @@ export async function checkOnlineChaos({openFixture = openAuthFixture,
   }
 }
 
+// This marker promises expectation/call overrides, post-trigger attention, semantic focus and cooldown controls.
+checkOnlineChaos.groupFaultExpectations=true;
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   await checkOnlineChaos({requireAllGroups: process.argv.includes('--all-groups')});
   await (await import('./check-online-crew.js')).checkOnlineCrewChaos({checkChaos:checkOnlineChaos});
+  await (await import('./check-online-islet.js')).checkOnlineIsletChaos({checkChaos:checkOnlineChaos});
 }

@@ -7,7 +7,7 @@ function normalizedCode(value){
   return /^[A-Z0-9]{1,20}$/.test(code)?code:null;
 }
 
-export function createCrewScreen({send,navigate}) {
+export function createCrewScreen({send,navigate,openIslet}) {
   const element=node('section','case-crew'),status=node('p','case-caption');
   status.setAttribute('role','status');
   let view={},code=null,pending=false,disposed=false,generation=0,identityPaused=false;
@@ -110,6 +110,14 @@ export function createCrewScreen({send,navigate}) {
     }
     element.append(seats);
     if(permissions().muster===true){muster=button('Muster with NPC partners',()=>{if(token===generation)return invoke('muster');},{focus:'muster'});element.append(muster);}
+    if(ready()&&crew.isletReminder&&typeof openIslet==='function'){
+      const reminder=node('section','crew-islet-reminder');
+      reminder.append(node('p','case-caption',crew.isletReminder.message),
+        button(crew.isletReminder.actionLabel,()=>{
+          if(!disposed&&token===generation&&ready()&&view.crew?.isletReminder)openIslet();
+        },{focus:'crew-open-islet'}));
+      element.append(reminder);
+    }
     element.append(button('Open the Captain’s Table',()=>navigate('board'),{quiet:true}),status);
     if(view.mode==='local')element.append(node('p','case-caption','Local rehearsal code to join: LANTERN. This does not join a live crew.'));
     availability();

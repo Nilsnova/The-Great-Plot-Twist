@@ -17,7 +17,7 @@ function stateLabel(value,labels){return labels[value]??(String(value??'').repla
 
 export function createAccountScreen({send,navigate}){
   const element=node('section','account-screen');element.setAttribute('aria-label','Account and saved games');
-  let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0;
+  let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0,expiryAttention=false;
   const connection=createConnectionBanner({inline:true,send:(...args)=>send?.(...args)});
   let refusedFocus=null;
   const syncCooldown=()=>syncIntentCooldown(element,refusedFocus,call.read().remaining);
@@ -96,7 +96,7 @@ export function createAccountScreen({send,navigate}){
     if(method==='armDelete'){deleteArmed=true;feedback='Review the full deletion notice and press Confirm deletion to continue.';focusKey='account-delete-confirm';refresh();return;}
     if(busy||disposed||(lastIntent?.[0]===method&&call.read().remaining>0))return;
     const source=document.activeElement;refusedFocus=source?.dataset.intent===method?source.dataset.focus:[...element.querySelectorAll('[data-intent]')].find(item=>item.dataset.intent===method)?.dataset.focus??refusedFocus;
-    busy=true;const token=++request;feedback='';lastIntent=[method,...args];call.loading();refresh();
+    busy=true;const token=++request;feedback='';expiryAttention=false;lastIntent=[method,...args];call.loading();refresh();
     try{const result=await send?.(method,...args);if(disposed||token!==request)return;if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());if(result?.accepted&&method==='deleteMyData')deleteArmed=false;if(result?.accepted&&method==='continueGame')navigate?.('continue',result);}
     catch(error){if(!disposed&&token===request)call.fail(intentFailure(error));}
     finally{busy=false;if(!disposed)refresh();}
@@ -105,7 +105,17 @@ export function createAccountScreen({send,navigate}){
     if(!focusKey&&element.contains(document.activeElement))focusKey=document.activeElement.dataset.focus??null;
     render();
   }
-  function update(next){view=next??{};if(accountOf(view).state==='signed_out')deleteArmed=false;refresh();}
+  function showExpiry(){
+    if(disposed)return;expiryAttention=true;feedback='';
+    call.fail(intentFailure({status:401}),{retryable:false});
+  }
+  function update(next){
+    const previous=accountOf(view).state;view=next??{};const state=accountOf(view).state;
+    if(state==='signed_out')deleteArmed=false;
+    if(state==='expired'&&(previous!=='expired'||call.phase==='idle'))showExpiry();
+    else if(state!=='expired'&&expiryAttention){expiryAttention=false;call.clear();}
+    refresh();
+  }
   refresh();
-  return {element,update,signIn:()=>invoke('signIn'),tick(){},close(){request++;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();element.remove();}};
+  return {element,update,signIn:()=>invoke('signIn'),showExpiry(){showExpiry();refresh();},tick(){},close(){request++;expiryAttention=false;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();element.remove();}};
 }

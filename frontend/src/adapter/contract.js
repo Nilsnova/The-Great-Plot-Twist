@@ -8,6 +8,10 @@ export function bindCaseMethods(adapter,dispatch) {
 export const copyView=value=>structuredClone(value);
 
 // Additive G7 view parts retain schema 1. Real adapters return every key, even when disconnected.
+// Optional G9 nested display: crew.isletReminder is null or {message, actionLabel};
+// finale.islet is null or {id, name, built, canBuild, buildLabel, caption};
+// finale.isletFailure is null or {reason, message, status?, retryAfterSeconds?, retryUntil?}.
+// These display fields grant no case light or outcome; private fields clear when signed out.
 export const caseViewKeys = [
   'schema','mode','revision','now','captain','arrival','crew','permissions','board','search',
   'partners','finale','accusation','reveal','world','notice','effects',

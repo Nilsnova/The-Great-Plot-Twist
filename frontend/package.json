@@ -52,7 +52,9 @@
     "test:title-start": "node scripts/check-title-start.js",
     "test:online": "npm run build && node scripts/check-online-golden.js",
     "test:g9": "node scripts/check-g9-regression.js",
-    "test:online:chaos": "npm run build && node scripts/check-online-chaos.js"
+    "test:online:chaos": "npm run build && node scripts/check-online-chaos.js",
+    "test:online:islet": "npm run build && node scripts/check-online-islet.js",
+    "test:online:islet:chaos": "npm run build && node scripts/check-online-islet.js --chaos"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

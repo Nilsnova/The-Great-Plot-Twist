@@ -2,7 +2,7 @@
 import {createUnavailableCaseAdapter} from './unavailable.js';
 import {bindCaseMethods} from './contract.js';
 
-export function createLazyOnlineAdapter({load = () => import('../online/case-adapter/index.js'), deps} = {}) {
+export function createLazyOnlineAdapter({load = () => import('./online-loader.js').then(module => module.loadRealAdapterModule()), deps} = {}) {
   const empty = createUnavailableCaseAdapter();
   const view = {...empty.read(), mode: 'online', notice: null};
   view.account.canSignIn = false;

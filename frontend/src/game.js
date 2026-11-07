@@ -8,7 +8,7 @@ import './ui/cinematics.css';
 import './ui/intro.css';
 import './ui/shell.css';
 import './ui/devices.css';
-import {session} from './online/session.js';
+import {session as defaultSession} from './online/session.js';
 import {createSportsEntry} from './screens/sports/index.js';
 import {createTouchControls} from './controls/touch.js';
 import {createGamepad} from './controls/gamepad.js';
@@ -22,6 +22,7 @@ import {createHookWorld} from './world/hook/index.js';
 import {sendCaseIntent} from './adapter/intent.js';
 import {createCaseBridge} from './adapter/bridge.js';
 import {attachIsletPanel} from './screens/islet/host.js';
+import {createIsletHost} from './online/islet-host.js';
 import {createIntro} from './story/intro.js';
 import {entranceFor,canEnterRoom} from './world/interiors/rooms.js';
 import {createLazyCinematics} from './world/cinematics/lazy.js';
@@ -48,7 +49,7 @@ import { createHud } from './ui/hud.js';
 import {createBuildBadge} from './build/badge.js';
 import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 
-export async function startGame({container,shell,audio,captions,caseAdapter,isAppBlocked,festivalEntry}) {
+export async function startGame({container,shell,audio,captions,caseAdapter,isAppBlocked,festivalEntry,session=defaultSession}) {
   startDiagnostics();noteAdapterView(caseAdapter?.read());
   const shortcuts=createShortcutsHost(container);
   const scene = new THREE.Scene();
@@ -119,7 +120,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     isBlocked:outsideBlocked});
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>caseAdapter?.dev?.setIsletBuilt?.(built));
   const applyCaseView=view=>{bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
-  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,onView:view=>{noteAdapterView(view);if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
+  caseUi=createCaseBridge({container,adapter:caseAdapter,world,resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,openIslet:()=>{caseUi.close();void stopPlots.open('islet_signal_station');},onView:view=>{noteAdapterView(view);if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
   // The Island Exchange panel is made on the first visit to the market hall; its code loads only then.
   // The load is kept as one promise, so two quick presses of E (or A, or a tap) still make one panel.
   function loadMarket() {
@@ -150,7 +151,11 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
       .then(module => { if(disposed)return; arenaScreen = module; return module.openArena({ container, getToken:session.getToken, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus() }); })
       .catch(() => hud.message('The ring could not open. Try again.'));
   });
-  const stopPlots = attachIsletPanel({container, on, emit, resetInput: input.reset, focus: () => graphics.renderer.domElement.focus()});
+  const stopPlots = createIsletHost({session,attach:attachIsletPanel,container,on,emit,
+    resetInput:input.reset,focus:()=>graphics.renderer.domElement.focus(),
+    resetWorld:()=>isletState.resetAccount(),
+    isDemo:()=>demo?.active===true||new URLSearchParams(location.search).get('demo')==='1'});
+  void stopPlots.refresh();
   const stopArrivals = on('arrived', event => hud.arrive(event.place));
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
@@ -223,6 +228,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     setMode(mode){if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
+      if(stopPlots.active){stopPlots.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(hud.closeQuickPanels?.())return true;
       if(intro.active&&intro.closeJournal?.())return true;
       if(sportsUi.active&&!document.querySelector('.sports-modal[open]')){sportsUi.close();return true;}

@@ -1,0 +1,160 @@
+{
+  "outcome": "passed",
+  "checks": [
+    "islet/offline: refusal has plain words at 375",
+    "islet/offline: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/offline: a report action is available",
+    "islet/offline: the page fits 375 px",
+    "islet/expired: refusal has plain words at 375",
+    "islet/expired: the real route was intercepted",
+    "islet/expired: Account receives sign-in focus immediately",
+    "islet/expired: a report action is available",
+    "islet/expired: the page fits 375 px",
+    "islet/feature_off: refusal has plain words at 375",
+    "islet/feature_off: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/feature_off: a report action is available",
+    "islet/feature_off: the page fits 375 px",
+    "islet/stale_save: refusal has plain words at 375",
+    "islet/stale_save: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/stale_save: a report action is available",
+    "islet/stale_save: the page fits 375 px",
+    "islet/rate_limited: refusal has plain words at 375",
+    "islet/rate_limited: the real route was intercepted",
+    "islet/rate_limited: the disabled action leaves focus on its station heading",
+    "islet/rate_limited: a report action is available",
+    "islet: the cooldown disables retry",
+    "islet: the refused control is disabled during the wait",
+    "islet: a forced activation cannot bypass the cooldown",
+    "islet: the countdown never sends a write",
+    "islet/rate_limited: the page fits 375 px",
+    "islet/gateway: refusal has plain words at 375",
+    "islet/gateway: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/gateway: a report action is available",
+    "islet/gateway: the page fits 375 px",
+    "islet/unavailable: refusal has plain words at 375",
+    "islet/unavailable: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/unavailable: a report action is available",
+    "islet/unavailable: the page fits 375 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "islet",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "islet",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "islet",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "islet",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "islet",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "islet",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "islet",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "islet",
+      "fault": "offline",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "expired",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "expired",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "feature_off",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "stale_save",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "rate_limited",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "gateway",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "unavailable",
+      "path": "/api/islet/build",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "islet"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "market",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}

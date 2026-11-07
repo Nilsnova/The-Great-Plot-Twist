@@ -38,6 +38,8 @@ export function createSpotCard({onBuild}) {
   function update(spot, labels) {
     plot = spot.plot;
     card.dataset.plot = spot.plot;
+    heading.dataset.focus = `islet-plot-${spot.plot}`;
+    button.element.dataset.focus = `islet-build-${spot.plot}`;
     card.dataset.state = labels.tone;
     badge.dataset.tone = labels.tone;
     setText(heading, spot.name);

@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
+import {places} from '../src/world/places/registry.js';
 import {dismissIntro} from './intro-browser-fixture.js';
 import {openCrewFromHud,chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
 
@@ -32,25 +33,50 @@ async function finishOriginalIntro(){
   // Let the arrival hand-off finish before a test asks the world to travel elsewhere.
   await page.evaluate(async()=>{await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);await window.__island.world.whenIdle();});
 }
-async function verifyIsletStationEventFallback(){
-  const home=await page.evaluate(async()=>{
+async function verifyIsletStationPanel(){
+  await page.evaluate(async()=>{
     const world=window.__island.world;
-    if(world.current?.id!=='saltreach_harbor'&&world.current?.id!=='home_islet')await world.goTo('saltreach_harbor',{fast:true});
+    if(world.current?.id!=='saltreach_harbor'&&world.current?.id!=='home_islet')
+      await world.goTo('saltreach_harbor',{fast:true});
     if(world.current?.id!=='home_islet')await world.goTo('home_islet',{fast:true});
-    window.__island.emit({type:'islet_changed',built:['plot_1','islet_signal_station'],signalStationBuilt:true});
-    return world.current?.id;
+    window.__goldenIsletEvents=[];
+    window.__stopGoldenIslet=window.__island.on('islet_changed',event=>window.__goldenIsletEvents.push(event));
   });
-  check(home==='home_islet','Islet event fallback reaches the home-islet world');
+  const zone=places.home_islet.zones.find(item=>item.id==='plot_2');
+  await page.evaluate(({x,z})=>{
+    const game=window.__island;
+    game.player.position.set(x,game.world.current.groundHeight(x,z),z);
+    game.renderer.domElement.focus();
+  },zone);
+  await page.waitForFunction(()=>document.querySelector('.interact')?.dataset.zone==='plot_2');
+  await page.keyboard.press('KeyE');
+  const panel=page.locator('.islet-modal[open]');await panel.waitFor();
+  await panel.locator('.islet-spot[data-plot="islet_signal_station"] button').click();
+  await page.waitForFunction(()=>document.querySelector('.islet-status')?.textContent.startsWith('Signal station built.'));
+  check(await panel.locator('.islet-wallet').innerText()==='You have 700 coins and 10 timber.',
+    'The local islet panel confirms its supplied station cost and remaining resources');
+  await page.keyboard.press('Escape');
+  check(await panel.count()===0&&!await page.locator('.shell-screen[open]').count(),
+    'Escape closes the constructed islet panel without opening Pause');
   await waitFor(()=>window.__island.isletState.getBuilt().includes('islet_signal_station'));
   const visible=await page.evaluate(()=>{
-    const group=window.__island.world.current?.group;let visible=false;
-    group?.traverse(object=>{if(['islet-signal-station','islet-signal-station-lit'].includes(object.userData?.asset)&&object.visible&&object.parent===group)visible=true;});
-    return visible;
+    const group=window.__island.world.current?.group;let shown=false;
+    group?.traverse(object=>{
+      if(['islet-signal-station','islet-signal-station-lit'].includes(object.userData?.asset)
+        &&object.visible&&object.parent===group)shown=true;
+    });
+    window.__stopGoldenIslet();return shown;
   });
-  check(visible,'Accepted islet_changed event makes the signal station visible in the world');
-  report.isletConstruction={method:'event-fallback',panelVerified:false,note:'No islet screen source is present; this verifies the event/store/world seam only.'};
-  const returned=await page.evaluate(()=>window.__island.world.goTo('saltreach_harbor',{fast:true}));
-  check(returned===true,'The world returns to Harbor after the islet event check');
+  check(visible,'Building through the local panel makes the station stand in the world');
+  check(await page.evaluate(()=>JSON.stringify(window.__goldenIsletEvents.at(-1)))===
+    '{"type":"islet_changed","built":["plot_1","islet_signal_station"],"signalStationBuilt":true}',
+  'The genuine panel build emits the exact accepted islet_changed payload');
+  await waitFor(()=>window.__plotTwist.adapter.read().finale.lights
+    .find(light=>light.id==='islet_signal_station')?.ready===true);
+  check(true,'The panel-built station supplies the third light to the local case rehearsal');
+  report.isletConstruction={method:'local-panel',panelVerified:true,thirdLight:true};
+  check(await page.evaluate(()=>window.__island.world.goTo('saltreach_harbor',{fast:true}))===true,
+    'The world returns to Harbor after the local islet panel build');
 }
 async function newOriginalIntro(){
   // Exercise New game from the solved runtime before isolating the second crew scenario.
@@ -59,9 +85,9 @@ async function newOriginalIntro(){
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   check(await page.evaluate(()=>window.__island.world.current?.id==='lighthouse_isle'),'New game returns the solved Gull’s Rest runtime to the original intro');
   // A new page gives the four-human scenario an independent adapter and move journal.
-  await page.goto(env.url+'/?case=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
+  await page.goto(env.url+'/?case=local&islet=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   await page.locator('.shell-screen[open] #new-game').waitFor();await page.getByRole('button',{name:'New game',exact:true}).click();
-  await waitForRuntime();await finishOriginalIntro();await verifyIsletStationEventFallback();
+  await waitForRuntime();await finishOriginalIntro();await verifyIsletStationPanel();
 }
 async function makeCrew({humans=false}={}){
   await openCrewFromHud(page);await page.getByRole('button',{name:'Start a crew',exact:true}).click();
@@ -241,10 +267,10 @@ try{
   await mkdir('captures',{recursive:true});
   const apiResponses=[];page.on('response',response=>{if(new URL(response.url()).pathname.startsWith('/api/'))apiResponses.push({path:new URL(response.url()).pathname,status:response.status()});});
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline golden-path rehearsal"}'}));
-  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local&islet=local');
   await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   check(await page.evaluate(()=>window.__plotTwist?.adapter.read().mode==='local'),'Browser uses the explicit local fake while all API routes return 503');
-  let t=started();await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await finishOriginalIntro();await verifyIsletStationEventFallback();report.timings.introMs=Math.round(started()-t);
+  let t=started();await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await finishOriginalIntro();await verifyIsletStationPanel();report.timings.introMs=Math.round(started()-t);
   t=started();await soloCase();await solveNightSolo();await accuseRevealAndFestival();report.timings.soloScenarioMs=Math.round(started()-t);
   let solo=await apiView();check(solo.board.cards.length===8&&solo.board.deductions.filter(item=>item.complete).length===4,'Solo player plus three NPCs recorded all eight cards and D1–D4');await rewardMilestones({humans:false});await captureGullsRest();
   report.scenarios.push({name:'solo + three NPC partners',cards:solo.board.cards.length,deductions:solo.board.deductions.filter(item=>item.complete).map(item=>item.id)});

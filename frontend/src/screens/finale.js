@@ -4,9 +4,9 @@ import {getPreferences} from '../settings/preferences.js';
 import {normaliseDegrees,pointerBearing} from './beam-math.js';
 const highlight=()=>getPreferences().colourblind?'#d5f5ff':'#f3d58c';
 const radians=value=>value*Math.PI/180;
-export function createFinaleScreen({send,navigate}){
+export function createFinaleScreen({send,navigate,openIslet}){
   const element=node('section','case-finale'),angles=new Map(),reportedAngles=new Map();
-  let model=null,bindings=[],selected=null,lastPad=0,chartStamp='';
+  let model=null,bindings=[],selected=null,lastPad=0,chartStamp='',disposed=false,renderGeneration=0;
   function setAngle(binding,value){
     const angle=normaliseDegrees(Math.round(normaliseDegrees(Number.isFinite(value)?value:0)));angles.set(binding.id,angle);
     binding.range.value=angle;binding.output.textContent=`${angle}°`;drawDial(binding,angle);
@@ -53,6 +53,7 @@ export function createFinaleScreen({send,navigate}){
     if(stamp===chartStamp)return;chartStamp=stamp;drawChart(canvas,model);
   }
   return {element,update(view){
+    if(disposed)return;const generation=++renderGeneration;
     model=view.finale;restoreFocus(element,()=>{
       bindings=[];chartStamp='';element.replaceChildren();
       const figure=node('figure','case-bearing-chart'),map=node('canvas');map.width=896;map.height=512;
@@ -60,7 +61,15 @@ export function createFinaleScreen({send,navigate}){
       figure.append(map,node('figcaption','',model.glow?'Find the glow. North is up.':'Light posts · north is up.'));
       const connected=view.mode!=='unavailable'&&view.crew?.status==='active'&&(model.lights?.length??0)>0;
       if(!connected){
-        const empty=node('div','case-night-empty');empty.append(node('h3','','Three lights. One crew.'),node('p','',view.mode==='unavailable'?'Online play is still being connected. Your local intro stays on this device.':'Start or join a crew to prepare the lights together.'),button('Open crew',()=>navigate('crew'),{focus:'night-crew'}));
+        const empty=node('div','case-night-empty');empty.append(node('h3','','Three lights. One crew.'),node('p','',view.mode==='unavailable'?'Online play is still being connected. Your local intro stays on this device.':view.crew?.status==='active'?'Prepare your signal station on your home islet.':'Start or join a crew to prepare the lights together.'),button('Open crew',()=>navigate('crew'),{focus:'night-crew'}));
+        if(model.islet){
+          const station=model.islet,card=node('article','case-light case-islet-light');
+          card.append(node('h3','',station.name),node('p','case-caption',station.caption));
+          if(!station.built)card.append(button(station.buildLabel,()=>{if(!disposed&&generation===renderGeneration)return send('buildLight',station.id);},
+            {disabled:station.canBuild!==true,focus:`build-${station.id}`}));
+          if(typeof openIslet==='function')card.append(button('Open your islet',()=>{if(!disposed&&generation===renderGeneration)openIslet();},{quiet:true,focus:'finale-open-islet'}));
+          empty.append(card);
+        }
         element.append(empty,figure);refreshChart();return;
       }
       const header=node('div','case-night-overview'),status=node('p','case-night-status',model.status??''),clock=node('p','case-night-clock');
@@ -93,7 +102,7 @@ export function createFinaleScreen({send,navigate}){
       const jobs=node('div','case-build-jobs');for(const job of model.buildJobs??[])jobs.append(node('p','',job.done?job.report:`Preparing light · ${secondsLabel(job.remaining)}`));
       element.append(help,jobs);
     });this.tick(view);
-  },tick(view){
+  },tick(view){if(disposed)return;
     model=view.finale;refreshChart();const clock=element.querySelector('.case-night-clock');
     if(clock)clock.textContent=model.phase==='dawn'?`Next night · ${secondsLabel(model.dawnRemaining)}`:model.phase==='night'?`Night · ${secondsLabel(model.remaining)}`:model.phase==='success'?'Three lights locked':'Prepare your lights';
     const call=element.querySelector('[data-focus="nightfall"]');if(call){call.disabled=!model.canCall;call.hidden=model.phase==='success';}
@@ -112,5 +121,5 @@ export function createFinaleScreen({send,navigate}){
       try{pad=navigator.getGamepads?.()?.find(p=>p?.connected);}catch{/* Native inputs remain available. */}
       if(binding&&pad&&Math.abs(pad.axes[0]??0)>.4){lastPad=performance.now();setAngle(binding,(angles.get(binding.id)??0)+Math.sign(pad.axes[0])*2);}
     }
-  },dispose(){element.remove();bindings=[];}};
+  },dispose(){if(disposed)return;disposed=true;renderGeneration++;model=null;bindings=[];angles.clear();reportedAngles.clear();element.replaceChildren();element.remove();}};
 }

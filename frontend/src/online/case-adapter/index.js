@@ -15,6 +15,8 @@ import {refreshAccountRewards} from './rewards.js';
 import {createCrewHandlers} from './crew.js';
 import {createCrewLifecycle} from './crew-lifecycle.js';
 import {createLiveLifecycle} from './live-lifecycle.js';
+import {createIsletLifecycle} from './islet-lifecycle.js';
+import {registerPanelServices} from '../panel-services.js';
 import {validateIntent} from './validate.js';
 import {introJournal} from '../../story/intro-journal.js';
 
@@ -54,6 +56,17 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.transport = createAdapterTransport(ctx);
   ctx.saves = createAccountSaves(ctx);
   ctx.saves.pauseIdentity();
+  let panelServices = null;
+  const islet = createIsletLifecycle(ctx, {loadIslet: deps.loadIslet,
+    isDemo: deps.isDemo ?? (() => new URLSearchParams(ctx.window?.location?.search ?? '').get('demo') === '1')});
+  const resetIslet = () => {
+    store.commit({isletFailure: null});
+    islet.reset();
+    panelServices?.invalidate();
+  };
+  ctx.onIsletFailure = failure => {
+    if (!store.isClosed()) store.commit({isletFailure: {...failure}});
+  };
   const crewLife = createCrewLifecycle(ctx, deps);
   ctx.crewLife = crewLife;
   const live = createLiveLifecycle(ctx, deps);
@@ -64,12 +77,14 @@ export function createRealCaseAdapter(deps = {}) {
     } catch { /* The validated cloud copy still remains available when device storage is blocked. */ }
   };
   ctx.onDeleted = () => {
+    resetIslet();
     live.reset();
     crewLife.refresh();
     ctx.saves.clearDevice();
     try { (deps.clearLocalSave ?? (() => introJournal().write('')))(); } catch { /* Best-effort device cleanup. */ }
   };
   let privateTask = null;
+  let hydratedScope = null;
   let signingOut = false;
   let authIntentGeneration = 0;
   const deviceSaveState = () => replaySaveData(ctx.state.deviceSave?.data) ? 'saved' : 'idle';
@@ -89,6 +104,7 @@ export function createRealCaseAdapter(deps = {}) {
         await refreshAccountRewards(ctx);
         crewLife.refresh();
         live.refresh();
+        if (store.isCurrent(epoch)) hydratedScope = epoch;
       }
     })();
     privateTask = task;
@@ -97,6 +113,16 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.waitForSave = async () => {
     const task = privateTask;
     if (task?.epoch === store.scope()) await task.promise;
+  };
+  // Wallet reads wait for existing setup first. A recovered initial me read can then finish setup.
+  ctx.onMeRefreshed = async () => {
+    const epoch = store.scope();
+    const setup = privateTask?.epoch === epoch ? privateTask : null;
+    if (setup) await setup.promise;
+    if (!store.isCurrent(epoch) || !session.isSignedIn()) return {ledgerHandled: false};
+    if (hydratedScope === epoch) return {ledgerHandled: setup !== null};
+    await hydrate({automatic: true, meAlreadyRead: true});
+    return {ledgerHandled: store.isCurrent(epoch) && hydratedScope === epoch};
   };
   ctx.retryRead = async kind => {
     const scope = store.scope();
@@ -110,6 +136,7 @@ export function createRealCaseAdapter(deps = {}) {
     ctx.readMonitor.reset();
     signingOut = true;
     store.invalidate();
+    resetIslet();
     live.reset();
     ctx.saves.pauseIdentity();
     const authTask = ctx.auth.signOut?.();
@@ -125,6 +152,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed() || signingOut) return;
     ctx.readMonitor.reset();
     store.invalidate();
+    resetIslet();
     live.reset();
     ctx.saves.pauseIdentity();
     if (signedIn) {
@@ -147,8 +175,13 @@ export function createRealCaseAdapter(deps = {}) {
     if (['signing_in', 'error', 'expired'].includes(next.state)) patch.accountState = next.state;
     store.commit(patch);
   });
+  panelServices = registerPanelServices(session, {api, publicApi,
+    getFlags: () => ctx.state.config?.flags ?? {},
+    isReady: () => !store.isClosed() && ctx.state.config !== null,
+    getIdentity: () => store.scope(), getIslet: islet.getAdapter});
   let restoreTask = null;
   ctx.onConfigReady = async () => {
+    panelServices.refresh();
     live.refresh();
     const enabled = import.meta.env.DEV || ctx.state.config?.flags?.sign_in === true;
     store.commit({signInAllowed: enabled});
@@ -165,7 +198,14 @@ export function createRealCaseAdapter(deps = {}) {
     await polling.start();
   }).catch(() => { if (!store.isClosed()) store.commit({notice: ctx.refuse('not_connected')}); });
   const handlers = {...createProfileHandlers(ctx), ...createCrewHandlers(ctx), signOut: ctx.signOut,
-    reportPosition: live.presence.reportPosition, setEmote: live.presence.setEmote};
+    reportPosition: live.presence.reportPosition, setEmote: live.presence.setEmote,
+    async buildLight(id) {
+      const scope = store.scope();
+      store.commit({isletFailure: null});
+      const result = await islet.buildLight(id);
+      if (store.isCurrent(scope) && result.accepted) store.commit({isletFailure: null});
+      return result;
+    }};
   handlers.signIn = async () => {
     if (session.isSignedIn()) {
       const scope=store.scope();
@@ -223,6 +263,8 @@ export function createRealCaseAdapter(deps = {}) {
       if (store.isClosed()) return;
       authIntentGeneration += 1;
       store.dispose();
+      islet.dispose();
+      panelServices.dispose();
       live.dispose();
       crewLife.dispose();
       polling.dispose();

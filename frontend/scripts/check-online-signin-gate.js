@@ -1,4 +1,4 @@
-// A live flag change must also hide sign-in in an external previous-request failure.
+// A live flag change hides sign-in in the unified Account previous-request failure.
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openAuthFixture} from './online-auth-fixture.js';
@@ -33,8 +33,10 @@ export async function checkOnlineSignInGate(){
     await page.getByText('Sign-in opens later. Your progress on this device is kept.',{exact:true}).first().waitFor();
     denied=true;await resume.click();
     const modal=page.locator('.account-modal[open]');await modal.waitFor();
-    const external=modal.locator('.account-result').locator('..');
+    const external=modal.locator('.account-screen > .server-call');
     await external.waitFor({state:'visible'});
+    assert.equal(await external.getAttribute('data-state'),'expired','The actual shared Account failure is expired');
+    assert.equal(await modal.locator('.server-call:visible').count(),1,'Account keeps one genuine failure panel');
     await external.locator('[data-focus="sign-in-server-call"]').waitFor({state:'hidden'});
     check(await modal.getByRole('button',{name:/^Sign in/}).count()===0,
       'A disabled sign-in flag hides native and previous-request sign-in controls');

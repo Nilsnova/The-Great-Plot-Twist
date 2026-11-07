@@ -9,6 +9,9 @@ export const MESSAGES = {
   server: 'Something went wrong on our side. Try again in a moment.',
   unknown: 'Something went wrong. Try again.',
   unreadable: 'We could not read the answer from the server. Please try again.',
+  tooMany: 'Too many attempts. Try again in a moment.',
+  featureOff: 'This feature is unavailable. You can keep exploring.',
+  saveConflict: 'This save changed on another device. Choose which copy to keep.',
   busy: 'Another build is still running.',
   noSuchPlot: 'That plot is not on your islet.',
   checking: 'We could not confirm the build. Checking your islet now.',
@@ -21,7 +24,16 @@ export const MESSAGES = {
 
 const STATES = ['built', 'empty', 'locked'];
 const NEEDS = ['coins', 'timber'];
-const MAX_SPOTS = 10;
+const BUSINESS_CODES = new Set(['insufficient_funds', 'not_enough_timber', 'plot_occupied', 'not_buildable_yet',
+  'no_such_plot', 'no_such_building', 'wrong_plot', 'validation_error']);
+const FAILURE_CODES = new Set([...BUSINESS_CODES, 'network_error', 'timeout', 'unauthorized', 'forbidden',
+  'database_unavailable', 'islet_unavailable', 'server_error', 'unavailable', 'unreadable',
+  'too_many_requests', 'feature_off', 'stale_save']);
+// The published five-plot catalogue. Keep this pure view independent of world rendering.
+const PLOT_TYPES = new Map([
+  ['plot_1', 'cabin'], ['plot_2', 'workshop'], ['plot_3', 'windmill'], ['plot_4', 'greenhouse'],
+  ['islet_signal_station', 'signal_station'],
+]);
 
 const isRecord = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 const isText = value => typeof value === 'string' && value.trim() !== '';
@@ -51,6 +63,7 @@ function readCost(raw) {
 function readSpot(raw) {
   if (!isRecord(raw) || !STATES.includes(raw.state)) return null;
   if (![raw.plot, raw.plotName, raw.type, raw.name, raw.about].every(isText)) return null;
+  if (PLOT_TYPES.get(raw.plot) !== raw.type) return null;
   const cost = readCost(raw.cost);
   if (cost === undefined) return null;
   return {
@@ -63,19 +76,30 @@ function readSpot(raw) {
 
 // Copies the fields of GET /api/islet that the panel uses. Null means the answer cannot be trusted.
 export function readIsletAnswer(data) {
-  if (!isRecord(data) || !Array.isArray(data.spots) || data.spots.length > MAX_SPOTS) return null;
-  const spots = data.spots.map(readSpot);
+  if (!isRecord(data) || !Array.isArray(data.spots) || data.spots.length !== PLOT_TYPES.size
+    || typeof data.signalStationBuilt !== 'boolean') return null;
+  const spots = Array.from(data.spots, readSpot);
   const coins = readCount(data.coins);
   const timber = readCount(data.timber);
   const plots = new Set(spots.map(spot => spot?.plot));
   if (spots.includes(null) || coins === null || timber === null || plots.size !== spots.length) return null;
+  const cabin = spots.find(spot => spot.plot === 'plot_1');
+  const station = spots.find(spot => spot.plot === 'islet_signal_station');
+  if (cabin.state !== 'built' || data.signalStationBuilt !== (station.state === 'built')) return null;
   return {
-    coins, timber, spots, signalStationBuilt: data.signalStationBuilt === true,
+    coins, timber, spots, signalStationBuilt: data.signalStationBuilt,
     playMoneyNote: isText(data.playMoneyNote) ? data.playMoneyNote : PLAY_MONEY_NOTE,
   };
 }
 
 export const builtPlots = view => view.spots.filter(spot => spot.state === 'built').map(spot => spot.plot);
+
+// An unreadable successful write may still have charged the server-owned cost: read back before deciding.
+export function validBuildReceipt(receipt, spot) {
+  return isRecord(receipt) && receipt.plot === spot.plot && receipt.type === spot.type
+    && isText(receipt.name) && Number.isSafeInteger(receipt.level) && receipt.level > 0
+    && ['coinsPaid', 'timberPaid', 'coins', 'timber'].every(key => readCount(receipt[key]) !== null);
+}
 
 export const buildingNotice = spot => makeNotice('info', 'building', `Building the ${spot.name.toLowerCase()}...`);
 
@@ -100,8 +124,17 @@ function fallbackMessage(status) {
   return MESSAGES.unknown;
 }
 
-// A failed answer becomes an error notice. The message of the server wins over our own words.
+// Only the published business refusals carry server prose. Transport failures have fixed public copy.
 export function failureNotice(result) {
-  const message = isText(result.message) ? result.message : fallbackMessage(result.status);
-  return makeNotice('error', isText(result.code) ? result.code : 'error', message);
+  const code = FAILURE_CODES.has(result.code) ? result.code : 'error';
+  let message;
+  if (result.status === 401 || result.status === 0) message = fallbackMessage(result.status);
+  else if (result.status === 429) message = MESSAGES.tooMany;
+  else if (result.status >= 500) message = MESSAGES.server;
+  else if (code === 'unreadable') message = MESSAGES.unreadable;
+  else if (code === 'feature_off') message = MESSAGES.featureOff;
+  else if (code === 'stale_save') message = MESSAGES.saveConflict;
+  else if (result.status >= 400 && result.status < 500 && BUSINESS_CODES.has(code) && isText(result.message)) message = result.message;
+  else message = fallbackMessage(result.status);
+  return makeNotice('error', code, message);
 }

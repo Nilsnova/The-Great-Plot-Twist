@@ -8,6 +8,19 @@ import {buildSecurityHeaders} from './security-headers.js';
 import {stubIntro} from './intro-browser-fixture.js';
 
 const origin = 'https://placeholder.supabase.co';
+// Earlier auth/crew journeys keep the recorded captain at zero coins and do not build on the islet.
+// The later islet fixture owns its own route and wallet; this GET-only baseline grants nothing.
+const recordedIslet = () => ({coins: 0, timber: 0, signalStationBuilt: false,
+  playMoneyNote: 'Play money. No cash value. It cannot be bought or cashed out.',
+  spots: [
+    ['plot_1', 'cabin', 'Cabin', 'built'], ['plot_2', 'workshop', 'Workshop', 'empty'],
+    ['plot_3', 'windmill', 'Windmill', 'locked'], ['plot_4', 'greenhouse', 'Greenhouse', 'locked'],
+    ['islet_signal_station', 'signal_station', 'Signal station', 'empty'],
+  ].map(([plot, type, name, state]) => ({plot, type, name, state, plotName: `Recorded ${name.toLowerCase()} plot`,
+    about: 'Recorded building information.', level: null, builtAt: null,
+    cost: state === 'built' ? null : {coins: 300, timber: 10},
+    missing: state === 'empty' ? ['coins', 'timber'] : [], canBuild: false,
+    lockedNote: state === 'locked' ? 'This recorded plot opens later.' : null}))});
 export async function openAuthFixture() {
   const outDir = '.test-cache/g9-online-dist';
   const key = ['sb', 'publishable', randomBytes(24).toString('hex')].join('_');
@@ -84,6 +97,11 @@ export async function openAuthFixture() {
     if (path === '/api/me/name') data = {captainName: 'Recorded Captain', rerollsLeft: 1};
     if (path === '/api/crews/me') data = {crew: null};
     if (path === '/api/save') data = {version: 1, data: {}, updatedAt: null};
+    if (path === '/api/islet' && request.method() === 'GET') {
+      if (!request.headers().authorization) return route.fulfill({status: 401,
+        json: {error: {code: 'unauthorized', message: 'Recorded sign-in is required.'}}});
+      data = recordedIslet();
+    }
     return route.fulfill({status: data ? 200 : 503, json: data
       ?? {error: {code: 'unavailable', message: 'Recorded offline service.'}}});
   });

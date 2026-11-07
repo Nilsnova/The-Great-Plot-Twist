@@ -10,9 +10,9 @@ The panel lets a player build on their own home islet. The server owns the rules
 
 | File | Its one job |
 |---|---|
-| `host.js` | `attachIsletPanel(...)`, called once from `game.js`. Picks the transport, opens the panel on `plot_clicked` (at the four plots: the signal station's hotspot opens the finale screen, which has its own build step), closes it on `travel`, refreshes on `arrived` at `home_islet` (in live mode only when `canAsk()` says the player is signed in), emits `islet_changed`, and returns `stop()`. |
-| `adapter.js` | The view and the two intents. It maps them to the two routes through an injected transport and keeps one click id per build. |
-| `view.js` | Pure functions: the first view, the server answer read into view data, and the notices. |
+| `host.js` | `attachIsletPanel(...)`, attached by the session-scoped `online/islet-host.js` hook in `game.js`. Uses the factory-owned live adapter, or picks the local/unavailable transport, opens the panel on `plot_clicked` (at the four plots: the signal station's hotspot opens the finale screen, which has its own build step), closes it on `travel`, refreshes on `arrived` at `home_islet` (in live mode only when `canAsk()` says the player is signed in), emits `islet_changed`, and returns `stop()`. |
+| `adapter.js` | The shared L2 engine and its two intents. It maps them to the two routes through an injected transport and keeps one click id per uncertain build. |
+| `view.js` | Pure functions: the first view, the complete five-plot server answer validated into view data, and safe notices. |
 | `labels.js` | Pure functions: the texts of a card (badge, price, what is missing, button) and the coins line. |
 | `action-uid.js` | `makeActionUid(randomBytes)`: the 16 character click id. |
 | `panel.js` | DOM only: the kit modal with the wallet line, the status line and the cards. |
@@ -23,6 +23,24 @@ The panel lets a player build on their own home islet. The server owns the rules
 | `fake-catalogue.js` | The fake's copy of `backend/content/buildings.json`. The frontend build on Vercel cannot read `backend/`, so `tests/islet-catalogue.test.js` keeps the two equal. |
 
 Rules for this folder: plain JavaScript ES modules, each file under 150 lines with a one-line header comment, text only through `textContent`, UI from `src/ui/kit`. Screens never call `fetch` and never decide a rule. Not even the adapter calls `fetch`: it uses the transport it is given. `tests/islet-boundary.test.js` checks these rules.
+
+## G9 live ownership and recovery
+
+Normal play receives one factory-owned L2 engine through the exact session’s private panel services.
+The islet panel and `buildLight('islet_signal_station')` use that same engine and authoritative view.
+The factory hydrates the account before reconciling a changed wallet; the game also asks for the
+initial islet view before the first visit. The world draws only accepted `islet_changed` answers.
+Signing out, expiry, deletion and account replacement clear private plots and invalidate late work.
+
+An uncertain build keeps its original click id. Explicit retry first obtains a fresh accepted islet
+answer, then repeats that same request only if the server still reports the plot unbuilt. No timer
+repeats a build. The common request component supplies loading/slow/failure/report states and the
+original 429 deadline, including when the panel is reopened. Controls cannot bypass a pending call
+or cooldown. Closing the panel keeps the factory engine; ending the account lifetime clears it.
+
+The crew reminder opens the panel, and the finale’s station button sends the existing `buildLight`
+intent. The station card can be shown before the case is connected. Exact live-case projection and
+its post-build refresh remain part of streams 12-15, pending R11’s serialized case DTOs.
 
 ## The transport
 
@@ -36,7 +54,10 @@ Rules for this folder: plain JavaScript ES modules, each file under 150 lines wi
 
 `?islet=local` wins over a passed transport in a dev build, so the rehearsal keeps working after the sign-in is wired.
 
-**Signed in or not.** The refresh on arrival is silent, and A2's `api` answers a 401 by making the session forget the token, which shows the sign-in prompt. So in live mode `attachIsletPanel` takes an optional `canAsk()` (it defaults to always true) and the arrival refresh waits until it says the player is signed in. Opening the panel always asks, because the player asked for it, and a 401 then shows "Please sign in again." in the panel. The local fake and unavailable mode ignore `canAsk`.
+**Signed in or not.** The live hook asks only while its exact session is ready and signed in.
+Without that capability it shows the unavailable panel and sends no private request. A final 401
+clears the private panel and opens Account with the real sign-in action. Local rehearsal remains
+isolated from live services.
 
 ## The view and the intents
 
@@ -76,7 +97,7 @@ Rules for this folder: plain JavaScript ES modules, each file under 150 lines wi
 |---|---|
 | 200 | Drops the click id, refreshes, then shows "Signal station built. You have 700 coins and 10 timber left." |
 | 409 `already_applied` | Treats it as done: drops the click id, refreshes, says nothing was charged twice. |
-| Any other 4xx | Shows the message of the server, drops the click id, refreshes. |
+| Any other 4xx | Shows safe failure words and refreshes. A fresh first refusal keeps no click id; a refused resend retains its earlier uncertain click id. |
 | No answer (status 0) or any 5xx | **Keeps the click id** and marks the spot `retry`. Shows "We could not confirm the build. Checking your islet now." and refreshes. If the spot is built now, drops the id and shows "Built." If not, the button says "Try again: build the signal station (it will not charge twice)", with the name of its building. |
 
 The retry rule in one sentence: the adapter keeps the click id only when the answer does not say what happened. A retry sends the same id again, and the server answers `already_applied` if the first request went through. The id is made once per click by `makeActionUid`.
@@ -93,7 +114,7 @@ The retry rule in one sentence: the adapter keeps the click id only when the ans
 - **Screen reader.** Each card is an `article` named by its heading, the cards sit in a list, every button names its building ("Build the workshop for 300 coins and 10 timber") and is also described by its card heading, and every change of the status line is announced. No two buttons on the page share a name (WCAG 2.4.6).
 - **Reduced motion.** The panel has no animation. The global reduced-motion setting still applies to everything around it.
 - **Colour.** The state is always written in words in the badge. Borders are solid, filled or dashed as well, and gold follows the colour-blind setting through `--kit-gold`.
-- **375 px.** One column, full-width buttons of at least 44 px, text of at least 14 px, no sideways scrolling.
+- **375 px.** One column, full-width buttons of at least 44 px, controls of at least 16 px and body text of at least 18 px, no sideways scrolling.
 
 ## What game.js and the test helpers do with it
 
@@ -101,7 +122,7 @@ The retry rule in one sentence: the adapter keeps the click id only when the ans
 
 | Where | What | Why |
 |---|---|---|
-| The import and `const stopPlots = attachIsletPanel({container, on, emit, resetInput: input.reset, focus: ...})` | Replaces the old `plot_clicked` listener, so `dispose()` and the start-up failure path still stop it. | One call wires the whole folder. |
+| The import and `const stopPlots = createIsletHost({session, attach: attachIsletPanel, ...})` | Replaces the old `plot_clicked` listener, so `dispose()` and the start-up failure path still stop it. | One call wires the whole folder. |
 | `hasOverlay` in the object that `startGame` returns: `stopPlots.active` is added to its list of overlays | `stop` carries an `active` flag that is true while the panel is open. | The shell listens for Escape before anything else (`shell/controller.js`, capture phase on `window`) and opens the Pause menu unless `hasOverlay()` is true. Without this, Escape would open Pause over the panel instead of closing the panel. |
 | `deviceActions.isPlaying` ends with `&&!stopPlots.active` | While the panel is open the gamepad is not playing, so it uses its dialog mode (D-pad moves focus, A presses the focused button, B or Start closes). | Without it the stick walks the explorer behind the panel, A presses E (at the signal station that opens the case finale over the panel), Y opens the chart and Start opens Pause. A gamepad-only player could neither build nor close the panel. |
 | The gate of `controller.update` ends with `&& !stopPlots.active` | The explorer stands still while the panel is open, whatever pushes it. | A stick or touch push left over from before the panel opened must not walk the explorer under the dialog. |

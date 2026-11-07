@@ -1,4 +1,4 @@
-// Keeps the latest server-announced home-islet buildings for the lifetime of the game.
+// Keeps account-scoped home-islet buildings separate from presenter-only previews.
 export const isletPlots = Object.freeze({
   plot_1: Object.freeze({ asset: 'cabin', x: -8, z: 6, defaultBuilt: true }),
   plot_2: Object.freeze({ asset: 'workshop', x: 7, z: 6 }),
@@ -71,6 +71,16 @@ export function createIsletState({ on }) {
       if (disposed || !preview) return;
       preview = null;
       publish();
+    },
+    resetAccount() {
+      if (disposed) return false;
+      const actualChanged = latest.length !== 1 || latest[0] !== 'plot_1';
+      if (!actualChanged && preview === null) return false;
+      latest = cabinOnly;
+      preview = null;
+      if (actualChanged) for (const listener of [...actualListeners]) listener([...latest]);
+      publish();
+      return true;
     },
     dispose() { if (disposed) return; disposed = true; unsubscribe?.(); listeners.clear(); actualListeners.clear(); },
   };

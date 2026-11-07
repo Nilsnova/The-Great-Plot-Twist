@@ -36,4 +36,46 @@ describe('call state',()=>{
     now=4000;expect(state.read()).toMatchObject({remaining:0,canRetry:true,phase:'rate_limited'});
     state.clear();expect(state.read()).toMatchObject({phase:'idle',remaining:0,canRetry:false});
   });
+  it.each(['rate_limited','too_many_tries'])('keeps an exact private 1.5s remaining deadline for %s',reason=>{
+    let now=1500;const state=createCallState({now:()=>now});
+    state.fail({reason,retryAfterSeconds:2},{retryAfterMs:1500});
+    expect(state.read()).toMatchObject({phase:'rate_limited',remaining:2,canRetry:false});
+    now=2500;expect(state.read()).toMatchObject({remaining:1,nextUpdate:500,canRetry:false});
+    now=2999;expect(state.read()).toMatchObject({remaining:1,canRetry:false});
+    now=3000;expect(state.read()).toMatchObject({remaining:0,nextUpdate:0,canRetry:true});
+    expect(state.read().message).toContain('try again now');
+  });
+  it('accepts fractional milliseconds and exact zero without reviving a completed wait from rounded seconds',()=>{
+    let now=1000;const state=createCallState({now:()=>now});
+    state.fail({reason:'rate_limited',retryAfterSeconds:2},{retryAfterMs:1500.5});
+    now=2500.49;expect(state.read().canRetry).toBe(false);
+    now=2500.5;expect(state.read()).toMatchObject({remaining:0,canRetry:true});
+    now=4000;state.fail({reason:'rate_limited',retryAfterSeconds:3},{retryAfterMs:0});
+    expect(state.read()).toMatchObject({phase:'rate_limited',remaining:0,canRetry:true,nextUpdate:0});
+  });
+  it.each([-1,86400001,NaN,Infinity,-Infinity,'1500',true,null,undefined])('falls back to bounded rounded seconds for invalid private milliseconds %s',retryAfterMs=>{
+    let now=1000;const state=createCallState({now:()=>now});
+    state.fail({reason:'rate_limited',retryAfterSeconds:1.2},{retryAfterMs});
+    now=2999;expect(state.read()).toMatchObject({remaining:1,canRetry:false});
+    now=3000;expect(state.read()).toMatchObject({remaining:0,canRetry:true});
+  });
+  it('does not read a millisecond override from the public result or alter the bounded seconds fallback',()=>{
+    let now=1000;const state=createCallState({now:()=>now});
+    state.fail({reason:'rate_limited',retryAfterSeconds:3,retryAfterMs:0});
+    now=2500;expect(state.read()).toMatchObject({remaining:2,canRetry:false});
+    now=4000;expect(state.read().canRetry).toBe(true);
+    state.fail({reason:'rate_limited',retryAfterSeconds:86401},{retryAfterMs:-1});
+    expect(state.read()).toMatchObject({remaining:0,canRetry:true});
+  });
+  it('bounds the private wait to one day and preserves caller retryability and non-rate phases',()=>{
+    let now=1000;const state=createCallState({now:()=>now});
+    state.fail({reason:'rate_limited',retryAfterSeconds:0},{retryAfterMs:86400000,retryable:false});
+    expect(state.read()).toMatchObject({remaining:86400,canRetry:false});
+    now+=86400000;expect(state.read()).toMatchObject({remaining:0,canRetry:false});
+    for(const reason of ['offline','session_expired','forbidden']){
+      const control=createCallState({now:()=>now});control.fail({reason,message:'Existing words'});
+      state.fail({reason,message:'Existing words'},{retryAfterMs:1500});
+      expect(state.read()).toEqual(control.read());
+    }
+  });
 });

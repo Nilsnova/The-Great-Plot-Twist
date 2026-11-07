@@ -8,14 +8,15 @@ export function createCallState({now=()=>performance.now()}={}){
   function loading({read=false}={}){clear();phase='loading';started=now();reading=read;message='Loading…';}
   function succeed({empty=false,message:text=''}={}){clear();phase=empty?'empty':'ready';message=empty?(text||'Nothing here yet.'):text;}
   function notice(text){clear();phase=text?'notice':'idle';message=text||'';}
-  function fail(result,{retryable:allow=true}={}){
+  function fail(result,{retryable:allow=true,retryAfterMs}={}){
     clear();reason=result?.reason??'internal_error';message=result?.message||'The request could not be completed.';
     phase=reason==='offline'?'offline':reason==='session_expired'?'expired':['rate_limited','too_many_tries'].includes(reason)?'rate_limited':'error';
     retryable=allow&&retryReasons.has(reason);
     if(phase==='rate_limited'){
       const value=result?.retryAfterSeconds;
       const seconds=typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=86400?Math.ceil(value):0;
-      deadline=now()+seconds*1000;
+      const exact=typeof retryAfterMs==='number'&&Number.isFinite(retryAfterMs)&&retryAfterMs>=0&&retryAfterMs<=86400000;
+      deadline=now()+(exact?retryAfterMs:seconds*1000);
     }
   }
   function setOnline(online){

@@ -4,6 +4,50 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## G9 stream 8: islet path passed; continuing G9 (7 Nov 2026)
+
+Merged from main: `64fc731`, already adopted through `ca80469`; latest main and published case
+contract remain unchanged. Branch: `feat/g9-real-adapter`. Source base: `4d2b7e2`;
+the verified candidate is pinned by all 60 source fingerprints in the evidence.
+
+Changed: one factory-owned L2 engine supplies the real islet panel and existing `buildLight` intent.
+Authenticated startup reads, complete five-plot validation, account/read epochs, fresh read-before-retry,
+original uncertain click IDs and fresh wallet/ledger reconciliation keep server answers authoritative.
+Crew reminders open the same panel; the finale displays the supplied station card. Expiry opens one
+real Account expired/report state, and old-account controller work cannot block or unlock a new send.
+The world clears private builds at account boundaries. No new package, asset, font or budget.
+
+Verified: all **11 stream-gate commands passed**, including **2,896 unit tests / 195 files**,
+build/spoiler, loading, CSP/inventory, L2 panel/world, the actual local panel-to-world-to-third-light
+rehearsal, complete production online and HTTP-fault paths, and accessibility. The production islet
+path passes **42 checks** at 1280/375 px, all three unknown-outcome scenarios and expiry.
+Islet faults pass **7 cases / 42 checks**. Accessibility passes **45 contexts / 135 viewport samples**
+and the short 375 × 400 crew/islet audits. Cold title is **21,071 JS / 11,878 CSS bytes**,
+within unchanged caps. Actual server-confirmed stations and healthy native save status were reviewed
+in both world captures. Evidence: `captures/20261107_G9-C3/stream8-proof.json`; failed attempts and
+corrections are identified there. Every endpoint is injected/intercepted with generated placeholders.
+
+Browser pass: stream 8 green on the fingerprinted candidate. **Streams done so far, not a checkpoint.**
+The clean full 44-command driver must run on committed source before the next push. R16 remains
+open for the three unchanged cloud frame failures; no threshold, density, art or weather was reduced.
+
+Not verified: live case third-light projection/post-build refresh (R11), real OAuth/services/databases,
+native hidden-tab pause, other engines, assistive technology or physical devices. The local third-light
+rehearsal does not claim that the live case is connected.
+
+Remaining: streams **9–21** and all **17 overflow items**; continue market, prediction/arena, bulletin
+and available final-readiness work while R11 blocks case streams 12–15. Requests for Claude: R11/R16
+unchanged. No new decision for Nils. No main merge, deployment or external message was performed.
+
+Contract mirror for Claude: optional nested schema-1 `crew.isletReminder {message, actionLabel}`,
+`finale.islet {id, name, built, canBuild, buildLabel, caption}`, and `finale.isletFailure`
+`{reason, message, status?, retryAfterSeconds?, retryUntil?}`; absent legacy fields remain valid and
+private fields clear outside signed-in state. `retryUntil` is a presentation deadline only. Shared
+conformance validates these fields. No new reason, top-level view key, intent or event: schema 1,
+24 keys, 25 intents and accepted replay remain intact. L2 maps `not_enough_timber`→`materials_required`,
+`insufficient_funds`→`no_coins`, `plot_occupied`→`already_built`, `not_buildable_yet`→`light_not_ready`;
+`already_applied` starts an authoritative readback; the world still requires an accepted GET. A4 emotes remain wave/cheer/point/lantern/shrug.
+
 ## G9 streams done so far, not a checkpoint (7 Nov 2026, source `443400c`)
 
 Merged from main: `64fc731`, already adopted through `ca80469`; the final fetch found no new main

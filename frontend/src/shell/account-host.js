@@ -14,6 +14,7 @@ export function createAccountHost({container,adapter,focus,onContinue}){
   }
   function update(view){
     if(disposed)return;syncSignIn(view);
+    if(view?.account?.state==='expired')external.clear();
     const key=JSON.stringify(view.account);
     if(key===lastKey)return;lastKey=key;screen?.update(view);
   }
@@ -21,6 +22,7 @@ export function createAccountHost({container,adapter,focus,onContinue}){
   function notice(result,retry){
     if(!modal||disposed||!active)return;retryExternal=retry??null;
     syncSignIn(adapter.read());
+    if(result?.reason==='session_expired'&&screen?.showExpiry){external.clear();retryExternal=null;screen.showExpiry();return;}
     if(typeof result==='string')external.showMessage(result);else external.fail(result,{retryable:!!retry});
     modal.body.append(external.element);
   }

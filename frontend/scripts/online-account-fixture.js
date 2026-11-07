@@ -41,6 +41,20 @@ export async function openAccountFixture() {
   const me = () => ({id: playerId, displayName: 'Recorded Captain', captainName: state.named ? state.captainName : null,
     coins: state.granted ? 1000 : 0, crews: [], kit: state.granted ? 'true_keeper' : null,
     place: state.granted ? 'lighthouse_isle' : null});
+  // Account reload/Continue boots L2 after the existing kit grant; use this same recorded wallet.
+  function islet() {
+    return {coins: me().coins, timber: 0, signalStationBuilt: false,
+      playMoneyNote: 'Play money. No cash value. It cannot be bought or cashed out.',
+      spots: [
+        ['plot_1', 'cabin', 'Cabin', 'built'], ['plot_2', 'workshop', 'Workshop', 'empty'],
+        ['plot_3', 'windmill', 'Windmill', 'locked'], ['plot_4', 'greenhouse', 'Greenhouse', 'locked'],
+        ['islet_signal_station', 'signal_station', 'Signal station', 'empty'],
+      ].map(([plot, type, name, plotState]) => ({plot, type, name, state: plotState,
+        plotName: `Recorded ${name.toLowerCase()} plot`, about: 'Recorded building information.',
+        level: null, builtAt: null, cost: plotState === 'built' ? null : {coins: 300, timber: 10},
+        missing: plotState === 'empty' ? state.granted ? ['timber'] : ['coins', 'timber'] : [],
+        canBuild: false, lockedNote: plotState === 'locked' ? 'This recorded plot opens later.' : null}))};
+  }
   function nameReply() {
     const rerollsLeft = state.staleNameOnce ? 1 : state.rerollsLeft;
     state.staleNameOnce = false;
@@ -62,7 +76,7 @@ export async function openAccountFixture() {
   await env.page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname, method = request.method();
     if (!['/api/config', '/api/me', '/api/me/name', '/api/me/name/reroll',
-      '/api/intro/complete', '/api/save', '/api/crews/me'].includes(path)) return route.fallback();
+      '/api/intro/complete', '/api/save', '/api/crews/me', '/api/islet'].includes(path)) return route.fallback();
     const body = readBody(request);
     const record = {path, method, bodyKeys: plainObject(body) ? Object.keys(body).sort() : [],
       authorized: !!request.headers().authorization};
@@ -74,6 +88,7 @@ export async function openAccountFixture() {
     }
     if (!record.authorized || state.deleted) return error(route, 401, 'unauthorized');
     if (path === '/api/me' && method === 'GET') return route.fulfill({json: me()});
+    if (path === '/api/islet' && method === 'GET') return route.fulfill({json: islet()});
     if (path === '/api/crews/me' && method === 'GET') return route.fulfill({json: {crew: null}});
     if (path === '/api/me/name' && method === 'POST') {
       if (body !== null && (!plainObject(body) || Object.keys(body).length)) return invalid(route);

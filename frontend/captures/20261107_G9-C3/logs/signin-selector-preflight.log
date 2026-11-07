@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "A disabled sign-in flag hides native and previous-request sign-in controls",
+    "The previous-request failure keeps a visible next step",
+    "The account notice stays above the title and its report action remains reachable",
+    "A refused Continue returns to the title after its account notice closes",
+    "The flag-change and expiry path has no uncaught browser errors",
+    "The flag-change check opens no Realtime socket",
+    "All outside requests use intercepted placeholder endpoints"
+  ]
+}
