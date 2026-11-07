@@ -56,7 +56,11 @@ describe('real adapter core',()=>{
   it('validates input before sending an intent request and never exposes server identifiers',async()=>{
     const deps=serverApi({signedIn:true});const adapter=createRealCaseAdapter({...deps,publicApi:deps.api});
     try{
-      await flush();const before=deps.calls.filter(call=>call.method!=='GET').length;
+      await vi.waitFor(()=>{
+        expect(deps.calls.some(call=>call.path==='/api/me/name')).toBe(true);
+        expect(adapter.read().account.namePending).toBe(false);
+      });
+      const before=deps.calls.filter(call=>call.method!=='GET').length;
       for(const receipt of [{actions:[]},{actions:['UPPER']},{actions:Array(301).fill('to_desk')}]){
         expect((await adapter.completeIntro(receipt)).reason).toBe('intro_incomplete');
       }

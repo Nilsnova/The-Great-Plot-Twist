@@ -3,6 +3,7 @@ import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {auditRequestStates} from './a11y-request-states.js';
+import {auditCrewShortViewport} from './a11y-crew-short.js';
 const env=await openWorldBrowser({hmr:false}),{page}=env,prefix='captures/20261106_G8-A11y';
 const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:['Market, prediction, duel and islet panel audits await their G9 streams'],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
 async function audit(name,selector,context='gameplay'){
@@ -44,6 +45,7 @@ async function audit(name,selector,context='gameplay'){
 }
 try{
  await page.goto(env.url+'/case-lab.html?demo=1');await page.waitForFunction(()=>window.__caseLab);
+ report.crewShort=await auditCrewShortViewport(page,{capture:prefix+'-crew-short-375x400.png'});
  await page.evaluate(async()=>{const a=window.__caseLab.adapter;a.dev.rehearse('board');a.dev.give('C3',1);a.dev.give('C4',1);});
  for(const name of ['arrival','crew','board','search','partners','finale','accusation','reveal','relighting','rewards','log','hints','bulletin']){
   await page.evaluate(async name=>{const {adapter:a,screens}=window.__caseLab;if(name==='partners'){const partner=a.read().partners.find(p=>p.seat===2);const target=partner?.targets?.fetch?.[0];if(target)await a.orderPartner(2,'fetch',target.id);}if(name==='finale'){a.dev.rehearse('board');a.dev.rehearse('finale');}if(name==='accusation'){for(const [first,second] of [['C3','C4'],['C5','C6'],['C7','C8']]){a.dev.give(first,1);a.dev.give(second,2);await a.pin(first);a.dev.pinForSeat(second,2);await a.pair(first,second);}a.dev.rehearse('lock');await a.boardSchooner();}if(name==='reveal'){const suspect=a.read().accusation.suspects.find(s=>!s.cleared);const result=await a.accuse(suspect.id);if(!result.accepted)throw Error('Placeholder reveal setup failed: '+result.reason);}if(name==='relighting')a.dev.rehearse('relighting');if(name==='bulletin')a.dev.setBulletin('hook');await screens.open(name);},name);await audit(name,'.case-modal[open]','case');await page.keyboard.press('Escape');report.screens.at(-1).escapeClosed=await page.locator('.case-modal[open]').count()===0;
@@ -91,6 +93,7 @@ try{
 finally{
  report.browserErrors=env.errors;report.externalRequests=env.external;
  report.failures=report.screens.flatMap(screen=>screen.sizes.flatMap(m=>['missingNames','duplicates','smallTargets','fonts','contrast'].filter(key=>m[key].length).map(key=>({screen:screen.name,width:m.width,check:key,count:m[key].length}))));
+ for(const [check,passed] of Object.entries(report.crewShort?.checks??{crewShortAudit:false}))if(!passed)report.failures.push({screen:'crew-short-local',width:375,height:400,check});
  for(const screen of report.screens){for(const m of screen.sizes){for(const key of ['overflow','documentOverflow'])if(m[key])report.failures.push({screen:screen.name,width:m.width,check:key});if(!m.fitsViewport)report.failures.push({screen:screen.name,width:m.width,check:'fitsViewport'});}if(screen.focus.positiveTabindex||screen.focus.steps.some(step=>!step.domOrder||!step.inside||!step.visible)||screen.focus.trapped===false||screen.escapeClosed===false)report.failures.push({screen:screen.name,check:'keyboard'});}
  for(const [name,caption] of [['world',report.worldCaption],['modal',report.modalCaption]])if(!caption||!caption.inside||caption.size<18||caption.nonoverlap===false||caption.between===false)report.failures.push({check:name+'Caption'});
  if(report.externalRequests.length)report.failures.push({check:'externalRequests'});for(const check of ['creditsEscapeSettings','settingsEscapeTitle','journalEscapeIntro','introEscapeCanvas','interiorExitCanvas','hudJournalEscape','caseEscapeCanvas','accountEscapeCanvas'])if(report[check]!==true)report.failures.push({check});if(report.reducedMotion?.fireworksVisible||report.reducedMotion?.runningAnimations.length)report.failures.push({check:'reducedMotion'});

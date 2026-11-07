@@ -1,0 +1,2077 @@
+{
+  "stage": "stream6",
+  "outcome": "passed",
+  "coverage": "full crew",
+  "widths": [
+    1280,
+    375
+  ],
+  "checks": [
+    "Create uses exactly one body-free POST",
+    "The authoritative muster shows two captains and two partner seats",
+    "The world is unobstructed after the server-confirmed muster",
+    "A forming captain in seat two can ask the server to muster",
+    "Joining a solo draft uses the normalized code only after confirmation",
+    "The code field accepts the approved twenty-character limit",
+    "The 1-character normalized boundary reaches the server",
+    "The code field accepts the approved twenty-character limit",
+    "The 20-character normalized boundary reaches the server",
+    "A former finished crew allows a new create request",
+    "Three confirmed wrong guesses are visible refusals",
+    "The server wait disables retry",
+    "Forced join activation cannot bypass the server countdown",
+    "The countdown itself sends no write",
+    "Phone code entry keeps automatic capitalization",
+    "Phone code entry requests a fitting keyboard",
+    "The focused code field stays in the short viewport",
+    "The crew screen fits the short phone viewport",
+    "Crew controls never add presentation actions to engine replay",
+    "Crew golden 1280 has no unhandled browser errors",
+    "Create uses exactly one body-free POST",
+    "The authoritative muster shows two captains and two partner seats",
+    "The world is unobstructed after the server-confirmed muster",
+    "A forming captain in seat two can ask the server to muster",
+    "Joining a solo draft uses the normalized code only after confirmation",
+    "The code field accepts the approved twenty-character limit",
+    "The 1-character normalized boundary reaches the server",
+    "The code field accepts the approved twenty-character limit",
+    "The 20-character normalized boundary reaches the server",
+    "A former finished crew allows a new create request",
+    "Three confirmed wrong guesses are visible refusals",
+    "The server wait disables retry",
+    "Forced join activation cannot bypass the server countdown",
+    "The countdown itself sends no write",
+    "Phone code entry keeps automatic capitalization",
+    "Phone code entry requests a fitting keyboard",
+    "The focused code field stays in the short viewport",
+    "The crew screen fits the short phone viewport",
+    "Crew controls never add presentation actions to engine replay",
+    "Crew golden 375 has no unhandled browser errors",
+    "Unknown join/muster outcomes read back before one same-body repeat.",
+    "Unknown crew outcomes has no unhandled browser errors",
+    "A late old-account muster cannot restore partners, reads or live rooms.",
+    "Late crew cleanup has no unhandled browser errors"
+  ],
+  "requests": [
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "authorized": true,
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 1,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 20,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 7,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "authorized": true,
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 1,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 20,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 7,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "authorized": true,
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/join",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "code"
+      ],
+      "codeLength": 6,
+      "codeNormalized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "authorized": true,
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    },
+    {
+      "path": "/api/crews/me/start",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [],
+      "codeLength": null,
+      "codeNormalized": null
+    }
+  ],
+  "captures": [
+    "captures/20261107_G9-C2/crew-muster-1280.png",
+    "captures/20261107_G9-C2/world-after-muster-1280.png",
+    "captures/20261107_G9-C2/crew-countdown-1280.png",
+    "captures/20261107_G9-C2/crew-muster-375.png",
+    "captures/20261107_G9-C2/world-after-muster-375.png",
+    "captures/20261107_G9-C2/crew-countdown-375.png"
+  ],
+  "pending": [
+    "Partner errands and authoritative positions await case DTOs and stream14.",
+    "Realtime presence proof belongs to stream7."
+  ]
+}

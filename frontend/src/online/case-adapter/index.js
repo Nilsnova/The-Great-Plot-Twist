@@ -13,6 +13,7 @@ import {createAccountSaves, replaySaveData} from './saves.js';
 import {createAccountLifecycle} from './account-lifecycle.js';
 import {refreshAccountRewards} from './rewards.js';
 import {createCrewHandlers} from './crew.js';
+import {createCrewLifecycle} from './crew-lifecycle.js';
 import {validateIntent} from './validate.js';
 import {introJournal} from '../../story/intro-journal.js';
 
@@ -52,6 +53,8 @@ export function createRealCaseAdapter(deps = {}) {
   ctx.transport = createAdapterTransport(ctx);
   ctx.saves = createAccountSaves(ctx);
   ctx.saves.pauseIdentity();
+  const crewLife = createCrewLifecycle(ctx, deps);
+  ctx.crewLife = crewLife;
   const accountLifecycle = createAccountLifecycle(ctx);
   ctx.writeDeviceReplay = data => {
     try {
@@ -59,6 +62,7 @@ export function createRealCaseAdapter(deps = {}) {
     } catch { /* The validated cloud copy still remains available when device storage is blocked. */ }
   };
   ctx.onDeleted = () => {
+    crewLife.refresh();
     ctx.saves.clearDevice();
     try { (deps.clearLocalSave ?? (() => introJournal().write('')))(); } catch { /* Best-effort device cleanup. */ }
   };
@@ -80,6 +84,7 @@ export function createRealCaseAdapter(deps = {}) {
         if (!store.isCurrent(epoch)) return;
         if (saved.mapped.accepted) accountLifecycle.reconcile();
         await refreshAccountRewards(ctx);
+        crewLife.refresh();
       }
     })();
     privateTask = task;
@@ -143,6 +148,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (enabled && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
     if (restoreTask) await restoreTask;
     if (!ctx.state.me) await hydrate();
+    crewLife.refresh();
   };
   const polling = createAdapterPolling(ctx);
   ctx.refreshConfig = polling.refresh;
@@ -202,6 +208,7 @@ export function createRealCaseAdapter(deps = {}) {
       if (store.isClosed()) return;
       authIntentGeneration += 1;
       store.dispose();
+      crewLife.dispose();
       polling.dispose();
       ctx.readMonitor.dispose();
       accountLifecycle.dispose();

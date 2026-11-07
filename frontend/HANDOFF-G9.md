@@ -4,6 +4,37 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; use its published contract and fixtures only.
 
+## Stream 6 passed; continuing stream 7 (7 Nov 2026)
+
+Crew create/join/muster now use server snapshots, normalized two-tap joins and owned-seat
+permissions. Visible forming crews poll every 5 s; read-monitor recovery remains the sole
+5/15/30-second retry owner. Successful/uncertain writes start fresh readbacks, so an older held
+poll cannot restore seats, publish a stale failure or delay the next healthy poll. Input and
+clipboard continuations guard account readiness and the currently displayed code.
+
+Verified: **2,425 unit tests / 177 files**, build/spoiler guard, loading and production online.
+The online run includes **44 crew checks at 1280/375 px**; join and muster fault journeys each
+pass **7 cases / 42 assertions**. Accessibility passes **43 contexts / 129 viewport samples**
+plus the new **375 × 400 crew audit** (focus, keyboard attributes, 16/18 px text, 44 px targets,
+clipping and overflow). Cold title remains **21,072 JS / 11,878 CSS bytes**, within unchanged caps.
+Two server-mustered partners are visible on the crew screen and as idle harbor art in both reviewed
+world captures. Cosmetic staging stays inside the renderer; actual case poses/jobs/orders await R11.
+Evidence: `captures/20261107_G9-C2/stream6-proof.json`, source fingerprints and recorded reports.
+
+This is **streams done so far, not a checkpoint**. Source base is local `a0b9ad1`; origin remains
+verified at `367189d`. Main `64fc731` is already adopted. No real account, service, database,
+deployment, main merge, package addition, browser download or budget change was used.
+The final online gate passed after correcting two test-fixture issues; the failed attempts remain
+summarized in the proof. The fixture now also answers cloud saves with versioned replay data.
+
+Next: stream 7, including the prepared closed-screen privacy/controller guard and public-config
+lifetime regression before any push. Then finish 8–11 and available final-readiness work while
+R11 is open. R16 frame proof still blocks checkpoint 1; run the full driver on final committed
+source before the next push. Remaining streams: 7–21 and overflow; case streams 12–15 need R11.
+Public schema 1, 24 view keys, 25 intents, events and accepted-action replay are unchanged.
+No new decision is needed from Nils. Real OAuth/services, native tab behavior in a headless browser,
+other engines, assistive technology and target hardware remain outside this recorded proof.
+
 ## Verified UI follow-up; continuing stream 6 (7 Nov 2026)
 
 Origin is verified at `367189d`; exact clean source `03dd379` remains the 37/44 baseline below.

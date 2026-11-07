@@ -63,3 +63,4 @@ try{
 await (await import('./check-online-auth.js')).checkOnlineAuth();
 await (await import('./check-online-signin-gate.js')).checkOnlineSignInGate();
 await (await import('./check-online-account.js')).checkOnlineAccount();
+await (await import('./check-online-crew.js')).checkOnlineCrew();

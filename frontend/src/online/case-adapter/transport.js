@@ -8,6 +8,8 @@ export function createAdapterTransport(ctx) {
   const {state, session, api, publicApi, store} = ctx;
   const pending = new Map();
   const reads = new Map();
+  const readTokens = new Map();
+  let readSequence = 0;
   const makeUid = createUidFactory({random: ctx.random, now: ctx.now});
 
   function apply(kind, data) {
@@ -18,7 +20,7 @@ export function createAdapterTransport(ctx) {
     if (kind === 'save') store.commit({cloudSave: structuredClone(data)});
   }
 
-  async function readOnce(kind, {automatic = false} = {}) {
+  async function readOnce(kind, {automatic = false, fresh = false} = {}, isLatest) {
     const publicRead = kind === 'config';
     if (store.isClosed()) return {mapped: ctx.refuse('disposed')};
     if (!publicRead && !session.isSignedIn()) return {mapped: ctx.refuse('sign_in_required')};
@@ -34,19 +36,22 @@ export function createAdapterTransport(ctx) {
       finish?.({status: 401, mapped});
       return {mapped};
     }
+    if (!isLatest()) return {stale: true, mapped: ctx.refuse('not_ready')};
     const mapped = reply.ok && !validReadReply(kind, reply.data)
       ? mapApiResult({ok:false,status:502,code:'database_error'})
       : mapApiResult(reply, {route, method: 'GET'});
     if (mapped.accepted) apply(kind, reply.data);
     else store.commit({notice: {reason: mapped.reason, message: mapped.message}});
     finish?.({status: reply.ok && !mapped.accepted ? 502 : reply.status, mapped});
-    return {reply, mapped};
+    return {reply, mapped, ...(fresh ? {fresh: true} : {})};
   }
 
-  function read(kind, options) {
+  function read(kind, options = {}) {
     const key = `${kind}:${kind === 'config' ? 'public' : store.scope()}`;
-    if (reads.has(key)) return reads.get(key);
-    const task = readOnce(kind, options).finally(() => { if (reads.get(key) === task) reads.delete(key); });
+    if (reads.has(key) && options.fresh !== true) return reads.get(key);
+    const token = ++readSequence;
+    readTokens.set(key, token);
+    const task = readOnce(kind, options, () => readTokens.get(key) === token).finally(() => { if (reads.get(key) === task) reads.delete(key); });
     reads.set(key, task);
     return task;
   }
@@ -58,7 +63,7 @@ export function createAdapterTransport(ctx) {
       if (store.isCurrent(scope) && reply.ok) store.commit({nameReply: reply.data});
       return;
     }
-    if (kind) await read(kind);
+    if (kind) await (ctx.transport?.read ?? read)(kind, {fresh: true});
   }
 
   async function change({route, body, kind, method = 'post', actionUid = false}) {
@@ -83,5 +88,5 @@ export function createAdapterTransport(ctx) {
     if (mapped.recovery !== 'unknown_outcome') pending.delete(key);
     return {reply, mapped: mapped ?? okay()};
   }
-  return {read, change, clearPending() { pending.clear(); reads.clear(); }};
+  return {read, change, clearPending() { pending.clear(); reads.clear(); readTokens.clear(); }};
 }

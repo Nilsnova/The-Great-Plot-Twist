@@ -2,6 +2,7 @@
 import {createUnavailableCaseAdapter} from '../../adapter/unavailable.js';
 import {mapAccount,mapArrival} from './account-view.js';
 import {mapCrew} from './crew-view.js';
+import {crewPermissions} from './crew-permissions.js';
 
 function emptyView(){
   const adapter=createUnavailableCaseAdapter();
@@ -26,10 +27,6 @@ function walletView(rows,balance,empty,status){
   return {...empty,balance,ledger,recent:ledger.slice(0,5),status:status??'ready'};
 }
 
-function permissionsView(state,account,crew){
-  const canForm=account.state==='signed_in'&&account.hasKit&&!state.crew;
-  return {createCrew:canForm,joinCrew:canForm,muster:account.state==='signed_in'&&crew.status==='forming'};
-}
 
 export function composeRealView(state={}){
   const view=emptyView();
@@ -38,7 +35,7 @@ export function composeRealView(state={}){
   const coins=account.state==='signed_in'&&Number.isFinite(state.me?.coins)?state.me.coins:null;
   return {...view,schema:1,mode:'online',revision:state.revision??0,now:state.now??0,account,crew,
     captain:{name:account.captainName??'Captain pending',coins,save:account.save},arrival:mapArrival(state),
-    permissions:permissionsView(state,account,crew),continuation:continuationView(state.continuation),
+    permissions:crewPermissions(state,account),continuation:continuationView(state.continuation),
     rewards:walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),
     notice:state.notice?{reason:state.notice.reason??null,message:state.notice.message??''}:null};
 }
