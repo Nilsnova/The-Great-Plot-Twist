@@ -17,12 +17,19 @@ Phones support tapping a clear map path or floor to walk, plus the existing move
 Independent reviewers checked the G9 auth/account/crew core, complete case contract, and final mobile/onboarding integration. The mobile review found and fixed queued-frame cancellation, secondary capture loss and a room detour bound before release.
 
 - Full frontend suite: **3,676 tests in 247 files passed**.
-- Real Chromium CDP touch input at 375×667, 320×568 and 844×390: **33 checks passed**, including map arrival/stop, menu cancellation, held/released joystick, floor taps and nonoverlapping fixture hint/HUD. See `frontend/captures/20261108-mobile-walking/`.
+- Real Chromium CDP touch input at 375×667, 320×568 and 844×390: **36 checks passed**, including map arrival/stop, menu cancellation, held/released joystick, floor taps and nonoverlapping fixture hint/HUD/interaction prompt. See `frontend/captures/20261108-mobile-walking/`.
 - Open panels: **48 layouts** across 12 real component fixtures passed; palette contrast at least 7.12:1. Representative screenshots were inspected. See the separate open-panel handoff for scope.
+- Cold title: **21,008 JavaScript bytes / 11,878 CSS bytes**, below unchanged 21,080 / 12,000 caps. Settings preload metadata now stays in the existing lazy world loader.
+- Final focused input/onboarding rerun: **40 tests passed**; documented `test:input` gate: **56 tests passed**.
 - Text lint: **0 editable diagnostics**, 38 existing report-only notices.
 - Build and spoiler guard passed: 188 text files, 12 protected lines.
 
-Final integrated accessibility, cold-title/CSP, recorded online failure and production checks are recorded below once completed.
+- Integrated accessibility: **61 screens passed**, no failures, browser exceptions or external requests; includes keyboard order, focus return, contrast, 44px targets, short viewports and reduced motion.
+
+- Strict CSP: five production pages and the recorded tour passed with zero violations or external asset requests.
+- Production static smoke check: all seven checks passed, including Settings, saved quality, focus restoration and chart travel.
+
+Recorded online-failure / golden-journey checks and deployment verification are still running at this integration checkpoint.
 
 ## Scope and limits
 

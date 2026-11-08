@@ -11,3 +11,5 @@
 .touch-stick-group{display:grid;justify-items:center;gap:8px}.touch-move-help{font:600 16px/1.2 system-ui,sans-serif;color:#fff1cc;background:#183b35;padding:5px 8px;border-radius:8px;white-space:nowrap}.tap-destination{position:fixed;z-index:7;width:30px;height:18px;transform:translate(-50%,-50%);border:3px solid #ffe0a0;border-radius:50%;box-shadow:0 0 0 3px #183b35a6;pointer-events:none}.tap-destination:after{content:'';position:absolute;inset:5px 10px;background:#fff1cc;border-radius:50%}
 
 @media(max-width:600px) and (pointer:coarse){.touch-controls{bottom:82px}}
+.touch-actions button{border:1px solid #b5ba92;border-radius:9px;background:#183b39ed;color:#fff0c5;font-family:system-ui,sans-serif;box-shadow:0 3px 12px #071e2926}.touch-thumb{border-radius:50%;box-shadow:0 3px 10px #071e2955}
+@media(max-width:600px) and (pointer:coarse){.hud.hud-quiet .interact{bottom:230px}}

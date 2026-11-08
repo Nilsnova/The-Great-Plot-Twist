@@ -3,3 +3,5 @@ export const loadGameModule = () => import('../game.js');
 export const loadFestivalModule = () => import('../screens/festival/entry.js');
 
 export const loadAfterPaintModule=()=>import('./after-paint.js');
+
+export const loadSettingsModule=()=>import('../settings/view.js');

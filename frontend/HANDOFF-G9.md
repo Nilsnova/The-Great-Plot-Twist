@@ -943,3 +943,16 @@ All have hash manifests and integration notes; apply only after checkpoint-1 pro
 Further isolated candidates (syntax/static review only; unapplied, untested):
 - `node_modules/.cache/g9-stream10-integration-review-8aag_jnp/`: prediction/arena modules, tests and G13 handoff note.
 - `node_modules/.cache/g9-presence-render-6bd5bae39249/`: unchanged-quality captain-label layout optimization plus tests.
+
+## Overflow 1–3 release · 8 November 2026
+
+The [integration release note](../docs/handoff/overflow-1-3-release.md) records the first three
+requested overflow items: playtest recovery fixes, accessibility and five first-time hints.
+It also covers reliable map/room tap walking and consistent open-panel visuals. The complete
+published G9 adapter is preserved. The remaining overflow items retain their existing acceptance
+checks; no AI companion, backend, migration, provider or feature-flag change is included.
+
+Automation: 3,676 frontend tests, 61 accessibility screens and 36 complete phone touch/layout checks
+passed. Cold title remains under its unchanged cap at 21,008 JS / 11,878 CSS bytes. Real OAuth,
+real crews, physical devices, VoiceOver and target-hardware frame proofs remain separate evidence.
+See the release note for the final production and online-failure verification.

@@ -815,6 +815,8 @@ These rules hold for every case route:
 - **Note for Claude:** the sections Claude should mirror in `docs/INTERFACES.md`.
 
 ## Overflow: when checkpoints 0 to 5 are done, work down this list in order
+
+**8 November:** items 1–3 implemented in the [overflow release](../docs/handoff/overflow-1-3-release.md), including phone walking and open-panel polish. Known hardware-only frame proofs remain filed there; the remaining items below keep their own acceptance checks.
 Each item is small and shippable, with its own commit, its own check and a line in the checkpoint note. Push after every two or three items. Items marked "(no browser)" can be done fully in the cloud; all others need a browser pass.
 
 1. Fix what the golden path, the chaos run and the phone pass found. **Done when:** each finding is fixed, or filed with a reason.

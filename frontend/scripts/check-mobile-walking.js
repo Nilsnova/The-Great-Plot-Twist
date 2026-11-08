@@ -51,6 +51,13 @@ try{
     check(layout.inside&&!layout.covered.length&&layout.badgeHidden,'fixture hint and touch HUD do not overlap '+viewport.width);
     await page.screenshot({path:`${folder}/world-${viewport.width}.png`});
     await page.getByRole('button',{name:'Dismiss tip · Keep your story',exact:true}).click();
+    const promptClear=await page.evaluate(()=>{
+      const node=document.querySelector('.interact'),label=node.querySelector('strong'),text=label.textContent,hidden=node.hidden;
+      node.hidden=false;label.textContent='Inspect the shoreline';const p=node.getBoundingClientRect();
+      const overlap=[...document.querySelectorAll('.touch-stick-group,.touch-actions')].some(e=>{const r=e.getBoundingClientRect();return p.left<r.right&&p.right>r.left&&p.top<r.bottom&&p.bottom>r.top;});
+      node.hidden=hidden;label.textContent=text;return !overlap;
+    });
+    check(promptClear,'fixture interaction prompt clears touch controls '+viewport.width);
     await page.evaluate(()=>{const g=window.__island;g.player.position.set(-7,g.world.current.groundHeight(-7,5.1),5.1);});await page.locator('.interiors-scene:not([hidden])').waitFor();
     const room=page.locator('.interiors-scene:not([hidden])');
     const right=await page.getByRole('button',{name:'Walk right',exact:true}).boundingBox();

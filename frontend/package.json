@@ -61,7 +61,10 @@
     "test:online:arena": "npm run build && node scripts/check-online-arena.js",
     "test:bulletin:local": "node scripts/check-bulletin.js",
     "test:online:bulletin": "npm run build && node scripts/check-online-bulletin.js",
-    "test:online:bulletin:chaos": "npm run build && node scripts/check-online-bulletin.js --chaos"
+    "test:online:bulletin:chaos": "npm run build && node scripts/check-online-bulletin.js --chaos",
+    "test:input": "vitest run --maxWorkers=1 tests/g20-input.test.js tests/map-touch.test.js tests/interiors-tap.test.js tests/tap-path.test.js",
+    "test:mobile": "node scripts/check-mobile-walking.js",
+    "test:panels": "node scripts/check-open-panels.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

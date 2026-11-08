@@ -1,0 +1,63 @@
+{
+  "checks": [
+    "clear world tap target 375",
+    "tap reaches clear destination 375",
+    "tap stops at destination 375",
+    "menu cancels route 375",
+    "stick hit target unobstructed 375",
+    "real joystick hold moves 375",
+    "real joystick release stops 375",
+    "fixture hint and touch HUD do not overlap 375",
+    "fixture interaction prompt clears touch controls 375",
+    "room floor tap target clear 375",
+    "room tap creates collision-safe route 375",
+    "no game errors 375",
+    "clear world tap target 320",
+    "tap reaches clear destination 320",
+    "tap stops at destination 320",
+    "menu cancels route 320",
+    "stick hit target unobstructed 320",
+    "real joystick hold moves 320",
+    "real joystick release stops 320",
+    "fixture hint and touch HUD do not overlap 320",
+    "fixture interaction prompt clears touch controls 320",
+    "room floor tap target clear 320",
+    "room tap creates collision-safe route 320",
+    "no game errors 320",
+    "clear world tap target 844",
+    "tap reaches clear destination 844",
+    "tap stops at destination 844",
+    "menu cancels route 844",
+    "stick hit target unobstructed 844",
+    "real joystick hold moves 844",
+    "real joystick release stops 844",
+    "fixture hint and touch HUD do not overlap 844",
+    "fixture interaction prompt clears touch controls 844",
+    "room floor tap target clear 844",
+    "room tap creates collision-safe route 844",
+    "no game errors 844"
+  ],
+  "views": [
+    {
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "errors": []
+    }
+  ]
+}

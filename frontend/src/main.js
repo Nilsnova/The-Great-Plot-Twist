@@ -63,7 +63,7 @@ function onEscape(){
 }
 shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>adapter.read().account,accountSummary:summary.element,
   resetInput(){},focus,openAccount:()=>accountHost.open(),onEscape,
-  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();return (await import('./settings/view.js')).createSettingsView(adapter.read());},
+  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();const loader=await loadWorld();return (await loader.loadSettingsModule()).createSettingsView(adapter.read());},
   hasOverlay:()=>loading||accountHost.active||festivalEntry?.active||!!runtime?.hasOverlay(),
   onState(mode){if(mode==='title'){playRequest++;summary.start();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
   onPlay:play,async onDemo(){const game=await loadGame();game?.startDemo();},

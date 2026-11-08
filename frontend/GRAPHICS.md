@@ -1011,3 +1011,18 @@ See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json) for fingerpr
 logs, prior failed attempts and limitations. This is not a checkpoint: committed-source full44,
 R11’s case DTOs and R16’s target-hardware frames remain outstanding. No real account/service/database,
 other-engine or physical-device proof is implied.
+
+
+## Overflow 1–3: idle hints, accessibility and touch walking
+
+The [release note](../docs/handoff/overflow-1-3-release.md) records the reviewed G9 integration,
+recovery fixes, five device-dismissed hints and shared open-panel styles.
+On phones, tap a clear map path or room floor to walk, or hold the movement stick / room D-pad.
+Manual input and overlays cancel a route; movement still uses the ordinary collision controller.
+Hints stay clear of the HUD and touch controls and pause during movement or open panels.
+
+Run `npm run test:input` for bounded route, pointer cancellation and input arbitration regressions.
+Run `npm run test:mobile` for complete Chromium/CDP touch checks at 320px, 375px and landscape.
+Run `npm run test:panels` for the 12-panel / four-viewport layout proof, and `npm run test:a11y`
+for the complete keyboard, contrast, target-size and reduced-motion audit.
+These use local fixtures; physical devices, screen readers and real OAuth/crews remain separate checks.
