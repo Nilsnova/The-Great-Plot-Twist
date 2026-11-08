@@ -1,18 +1,22 @@
-// Readability rules of the panel's stylesheet (spec 9.5): text of at least 14 px, touch targets of 44 px, calm motion.
+// Approved G9 readability: 18 px body and captions, 16 px controls, 44 px targets and calm motion.
 import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 
 const css = await readFile(new URL('../../src/screens/market/market.css', import.meta.url), 'utf8');
 
 describe('market.css', () => {
-  it('never sets text smaller than 14 px', () => {
+  it('never sets text smaller than 16 px and gives body text and captions 18 px', () => {
     const sizes = [...css.matchAll(/font(?:-size)?\s*:\s*(?:[a-z-]+\s+)*(\d+(?:\.\d+)?)px/g)].map(match => Number(match[1]));
     expect(sizes.length).toBeGreaterThan(3);
-    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(14);
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
+    expect(css).toMatch(/\.market-body\{[^}]*font-size:18px/);
+    expect(css).toMatch(/\.market-note\{[^}]*font-size:18px/);
+    expect(css).toMatch(/\.market-fact dt\{[^}]*font-size:18px/);
   });
 
   it('gives choices and buttons a touch target of at least 44 px', () => {
     expect(css).toMatch(/\.market-choice[^{]*\{[^}]*min-height:\s*44px/);
+    expect(css).toMatch(/\.market-modal \.kit-button[^}]*font-size:16px;min-height:44px/);
   });
 
   it('turns every animation and transition off for reduced motion, by setting and by system preference', () => {

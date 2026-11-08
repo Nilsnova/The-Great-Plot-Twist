@@ -1,0 +1,2211 @@
+CHAOS account/offline @ 375
+CHAOS account/expired @ 375
+CHAOS account/feature_off @ 375
+CHAOS account/stale_save @ 375
+CHAOS account/rate_limited @ 375
+CHAOS account/gateway @ 375
+CHAOS account/unavailable @ 375
+CHAOS intro/offline @ 375
+CHAOS intro/expired @ 375
+CHAOS intro/feature_off @ 375
+CHAOS intro/stale_save @ 375
+CHAOS intro/rate_limited @ 375
+CHAOS intro/gateway @ 375
+CHAOS intro/unavailable @ 375
+CHAOS save/offline @ 375
+CHAOS save/expired @ 375
+CHAOS save/feature_off @ 375
+CHAOS save/stale_save @ 375
+CHAOS save/rate_limited @ 375
+CHAOS save/gateway @ 375
+CHAOS save/unavailable @ 375
+CHAOS crew/offline @ 375
+CHAOS crew/expired @ 375
+CHAOS crew/feature_off @ 375
+CHAOS crew/stale_save @ 375
+CHAOS crew/rate_limited @ 375
+CHAOS crew/gateway @ 375
+CHAOS crew/unavailable @ 375
+{
+  "outcome": "passed",
+  "checks": [
+    "account/offline: refusal has plain words at 375",
+    "account/offline: the real route was intercepted",
+    "account/offline: focus stays on the next available control",
+    "account/offline: a report action is available",
+    "account/offline: the page fits 375 px",
+    "account/expired: refusal has plain words at 375",
+    "account/expired: the real route was intercepted",
+    "account/expired: focus stays on the next available control",
+    "account/expired: a report action is available",
+    "account/expired: the page fits 375 px",
+    "account/feature_off: refusal has plain words at 375",
+    "account/feature_off: the real route was intercepted",
+    "account/feature_off: focus stays on the next available control",
+    "account/feature_off: a report action is available",
+    "account/feature_off: the page fits 375 px",
+    "account/stale_save: refusal has plain words at 375",
+    "account/stale_save: the real route was intercepted",
+    "account/stale_save: focus stays on the next available control",
+    "account/stale_save: a report action is available",
+    "account/stale_save: the page fits 375 px",
+    "account/rate_limited: refusal has plain words at 375",
+    "account/rate_limited: the real route was intercepted",
+    "account/rate_limited: focus stays on the next available control",
+    "account/rate_limited: a report action is available",
+    "account: the cooldown disables retry",
+    "account: the refused control is disabled during the wait",
+    "account: a forced activation cannot bypass the cooldown",
+    "account: the countdown never sends a write",
+    "account/rate_limited: the page fits 375 px",
+    "account/gateway: refusal has plain words at 375",
+    "account/gateway: the real route was intercepted",
+    "account/gateway: focus stays on the next available control",
+    "account/gateway: a report action is available",
+    "account/gateway: the page fits 375 px",
+    "account/unavailable: refusal has plain words at 375",
+    "account/unavailable: the real route was intercepted",
+    "account/unavailable: focus stays on the next available control",
+    "account/unavailable: a report action is available",
+    "account/unavailable: the page fits 375 px",
+    "intro/offline: refusal has plain words at 375",
+    "intro/offline: the real route was intercepted",
+    "intro/offline: focus stays on the next available control",
+    "intro/offline: a report action is available",
+    "intro/offline: the page fits 375 px",
+    "intro/expired: immediate expiry opens Account and focuses sign-in before final passages",
+    "intro/expired: refusal has plain words at 375",
+    "intro/expired: the real route was intercepted",
+    "intro/expired: after closing Account and finishing prose, the retained arrival sign-in is reachable",
+    "intro/expired: a report action is available",
+    "intro/expired: the page fits 375 px",
+    "intro/feature_off: refusal has plain words at 375",
+    "intro/feature_off: the real route was intercepted",
+    "intro/feature_off: focus stays on the next available control",
+    "intro/feature_off: a report action is available",
+    "intro/feature_off: the page fits 375 px",
+    "intro/stale_save: refusal has plain words at 375",
+    "intro/stale_save: the real route was intercepted",
+    "intro/stale_save: focus stays on the next available control",
+    "intro/stale_save: a report action is available",
+    "intro/stale_save: the page fits 375 px",
+    "intro/rate_limited: refusal has plain words at 375",
+    "intro/rate_limited: the real route was intercepted",
+    "intro/rate_limited: focus stays on the next available control",
+    "intro/rate_limited: a report action is available",
+    "intro: the cooldown disables retry",
+    "intro: the refused control is disabled during the wait",
+    "intro: a forced activation cannot bypass the cooldown",
+    "intro: the countdown never sends a write",
+    "intro/rate_limited: the page fits 375 px",
+    "intro/gateway: refusal has plain words at 375",
+    "intro/gateway: the real route was intercepted",
+    "intro/gateway: focus stays on the next available control",
+    "intro/gateway: a report action is available",
+    "intro/gateway: the page fits 375 px",
+    "intro/unavailable: refusal has plain words at 375",
+    "intro/unavailable: the real route was intercepted",
+    "intro/unavailable: focus stays on the next available control",
+    "intro/unavailable: a report action is available",
+    "intro/unavailable: the page fits 375 px",
+    "save/offline: refusal has plain words at 375",
+    "save/offline: the real route was intercepted",
+    "save/offline: focus stays on the next available control",
+    "save/offline: a report action is available",
+    "save/offline: the page fits 375 px",
+    "save/expired: refusal has plain words at 375",
+    "save/expired: the real route was intercepted",
+    "save/expired: focus stays on the next available control",
+    "save/expired: a report action is available",
+    "save/expired: the page fits 375 px",
+    "save/feature_off: refusal has plain words at 375",
+    "save/feature_off: the real route was intercepted",
+    "save/feature_off: focus stays on the next available control",
+    "save/feature_off: a report action is available",
+    "save/feature_off: the page fits 375 px",
+    "save/stale_save: refusal has plain words at 375",
+    "save/stale_save: the real route was intercepted",
+    "save/stale_save: focus stays on the next available control",
+    "save/stale_save: a report action is available",
+    "save/stale_save: the page fits 375 px",
+    "save/rate_limited: refusal has plain words at 375",
+    "save/rate_limited: the real route was intercepted",
+    "save/rate_limited: focus stays on the next available control",
+    "save/rate_limited: a report action is available",
+    "save: the cooldown disables retry",
+    "save: the refused control is disabled during the wait",
+    "save: a forced activation cannot bypass the cooldown",
+    "save: the countdown never sends a write",
+    "save/rate_limited: the page fits 375 px",
+    "save/gateway: refusal has plain words at 375",
+    "save/gateway: the real route was intercepted",
+    "save/gateway: focus stays on the next available control",
+    "save/gateway: a report action is available",
+    "save/gateway: the page fits 375 px",
+    "save/unavailable: refusal has plain words at 375",
+    "save/unavailable: the real route was intercepted",
+    "save/unavailable: focus stays on the next available control",
+    "save/unavailable: a report action is available",
+    "save/unavailable: the page fits 375 px",
+    "crew/offline: refusal has plain words at 375",
+    "crew/offline: the real route was intercepted",
+    "crew/offline: focus stays on the next available control",
+    "crew/offline: a report action is available",
+    "crew/offline: the page fits 375 px",
+    "crew/expired: refusal has plain words at 375",
+    "crew/expired: the real route was intercepted",
+    "crew/expired: focus stays on the next available control",
+    "crew/expired: a report action is available",
+    "crew/expired: the page fits 375 px",
+    "crew/feature_off: refusal has plain words at 375",
+    "crew/feature_off: the real route was intercepted",
+    "crew/feature_off: focus stays on the next available control",
+    "crew/feature_off: a report action is available",
+    "crew/feature_off: the page fits 375 px",
+    "crew/stale_save: refusal has plain words at 375",
+    "crew/stale_save: the real route was intercepted",
+    "crew/stale_save: focus stays on the next available control",
+    "crew/stale_save: a report action is available",
+    "crew/stale_save: the page fits 375 px",
+    "crew/rate_limited: refusal has plain words at 375",
+    "crew/rate_limited: the real route was intercepted",
+    "crew/rate_limited: focus stays on the next available control",
+    "crew/rate_limited: a report action is available",
+    "crew: the cooldown disables retry",
+    "crew: the refused control is disabled during the wait",
+    "crew: a forced activation cannot bypass the cooldown",
+    "crew: the countdown never sends a write",
+    "crew/rate_limited: the page fits 375 px",
+    "crew/gateway: refusal has plain words at 375",
+    "crew/gateway: the real route was intercepted",
+    "crew/gateway: focus stays on the next available control",
+    "crew/gateway: a report action is available",
+    "crew/gateway: the page fits 375 px",
+    "crew/unavailable: refusal has plain words at 375",
+    "crew/unavailable: the real route was intercepted",
+    "crew/unavailable: focus stays on the next available control",
+    "crew/unavailable: a report action is available",
+    "crew/unavailable: the page fits 375 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "account",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "account",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "account",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "account",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "account",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "account",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "account",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "intro",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "intro",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "intro",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "intro",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "intro",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "intro",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "intro",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "save",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "save",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "save",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "save",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "save",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "save",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "save",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "crew",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "crew",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "crew",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "crew",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "crew",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "account",
+      "fault": "offline",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "offline",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "expired",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "expired",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "feature_off",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "stale_save",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "rate_limited",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "gateway",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "unavailable",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "account",
+      "fault": "unavailable",
+      "path": "/api/me/name/reroll",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "offline",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "offline",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "expired",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "expired",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "feature_off",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "stale_save",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "rate_limited",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "gateway",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "unavailable",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "intro",
+      "fault": "unavailable",
+      "path": "/api/intro/complete",
+      "method": "POST"
+    },
+    {
+      "group": "save",
+      "fault": "offline",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "expired",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "expired",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "feature_off",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "stale_save",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "rate_limited",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "gateway",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "save",
+      "fault": "unavailable",
+      "path": "/api/save",
+      "method": "GET"
+    },
+    {
+      "group": "crew",
+      "fault": "offline",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "offline",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "feature_off",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "stale_save",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "rate_limited",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "gateway",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "path": "/api/crews",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "path": "/api/crews",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "presence",
+    "islet",
+    "market",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS crew/offline @ 375
+CHAOS crew/expired @ 375
+CHAOS crew/feature_off @ 375
+CHAOS crew/stale_save @ 375
+CHAOS crew/rate_limited @ 375
+CHAOS crew/gateway @ 375
+CHAOS crew/unavailable @ 375
+{
+  "outcome": "passed",
+  "checks": [
+    "crew/offline: refusal has plain words at 375",
+    "crew/offline: the real route was intercepted",
+    "crew/offline: focus stays on the next available control",
+    "crew/offline: a report action is available",
+    "crew/offline: the page fits 375 px",
+    "crew/expired: refusal has plain words at 375",
+    "crew/expired: the real route was intercepted",
+    "crew/expired: focus stays on the next available control",
+    "crew/expired: a report action is available",
+    "crew/expired: the page fits 375 px",
+    "crew/feature_off: refusal has plain words at 375",
+    "crew/feature_off: the real route was intercepted",
+    "crew/feature_off: focus stays on the next available control",
+    "crew/feature_off: a report action is available",
+    "crew/feature_off: the page fits 375 px",
+    "crew/stale_save: refusal has plain words at 375",
+    "crew/stale_save: the real route was intercepted",
+    "crew/stale_save: focus stays on the next available control",
+    "crew/stale_save: a report action is available",
+    "crew/stale_save: the page fits 375 px",
+    "crew/rate_limited: refusal has plain words at 375",
+    "crew/rate_limited: the real route was intercepted",
+    "crew/rate_limited: focus stays on the next available control",
+    "crew/rate_limited: a report action is available",
+    "crew: the cooldown disables retry",
+    "crew: the refused control is disabled during the wait",
+    "crew: a forced activation cannot bypass the cooldown",
+    "crew: the countdown never sends a write",
+    "crew/rate_limited: the page fits 375 px",
+    "crew/gateway: refusal has plain words at 375",
+    "crew/gateway: the real route was intercepted",
+    "crew/gateway: focus stays on the next available control",
+    "crew/gateway: a report action is available",
+    "crew/gateway: the page fits 375 px",
+    "crew/unavailable: refusal has plain words at 375",
+    "crew/unavailable: the real route was intercepted",
+    "crew/unavailable: focus stays on the next available control",
+    "crew/unavailable: a report action is available",
+    "crew/unavailable: the page fits 375 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "crew",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "crew",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "crew",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "crew",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "crew",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "crew",
+      "fault": "offline",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "offline",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "feature_off",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "stale_save",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "rate_limited",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "gateway",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "path": "/api/crews/join",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "path": "/api/crews/join",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "crew"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "presence",
+    "islet",
+    "market",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS crew/offline @ 375
+CHAOS crew/expired @ 375
+CHAOS crew/feature_off @ 375
+CHAOS crew/stale_save @ 375
+CHAOS crew/rate_limited @ 375
+CHAOS crew/gateway @ 375
+CHAOS crew/unavailable @ 375
+{
+  "outcome": "passed",
+  "checks": [
+    "crew/offline: refusal has plain words at 375",
+    "crew/offline: the real route was intercepted",
+    "crew/offline: focus stays on the next available control",
+    "crew/offline: a report action is available",
+    "crew/offline: the page fits 375 px",
+    "crew/expired: refusal has plain words at 375",
+    "crew/expired: the real route was intercepted",
+    "crew/expired: focus stays on the next available control",
+    "crew/expired: a report action is available",
+    "crew/expired: the page fits 375 px",
+    "crew/feature_off: refusal has plain words at 375",
+    "crew/feature_off: the real route was intercepted",
+    "crew/feature_off: focus stays on the next available control",
+    "crew/feature_off: a report action is available",
+    "crew/feature_off: the page fits 375 px",
+    "crew/stale_save: refusal has plain words at 375",
+    "crew/stale_save: the real route was intercepted",
+    "crew/stale_save: focus stays on the next available control",
+    "crew/stale_save: a report action is available",
+    "crew/stale_save: the page fits 375 px",
+    "crew/rate_limited: refusal has plain words at 375",
+    "crew/rate_limited: the real route was intercepted",
+    "crew/rate_limited: focus stays on the next available control",
+    "crew/rate_limited: a report action is available",
+    "crew: the cooldown disables retry",
+    "crew: the refused control is disabled during the wait",
+    "crew: a forced activation cannot bypass the cooldown",
+    "crew: the countdown never sends a write",
+    "crew/rate_limited: the page fits 375 px",
+    "crew/gateway: refusal has plain words at 375",
+    "crew/gateway: the real route was intercepted",
+    "crew/gateway: focus stays on the next available control",
+    "crew/gateway: a report action is available",
+    "crew/gateway: the page fits 375 px",
+    "crew/unavailable: refusal has plain words at 375",
+    "crew/unavailable: the real route was intercepted",
+    "crew/unavailable: focus stays on the next available control",
+    "crew/unavailable: a report action is available",
+    "crew/unavailable: the page fits 375 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "crew",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "crew",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "crew",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "crew",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "crew",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "crew",
+      "fault": "offline",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "offline",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "expired",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "feature_off",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "stale_save",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "rate_limited",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "gateway",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    },
+    {
+      "group": "crew",
+      "fault": "unavailable",
+      "path": "/api/crews/me/start",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "crew"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "presence",
+    "islet",
+    "market",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS islet/offline @ 375
+CHAOS islet/expired @ 375
+CHAOS islet/feature_off @ 375
+CHAOS islet/stale_save @ 375
+CHAOS islet/rate_limited @ 375
+CHAOS islet/gateway @ 375
+CHAOS islet/unavailable @ 375
+{
+  "outcome": "passed",
+  "checks": [
+    "islet/offline: refusal has plain words at 375",
+    "islet/offline: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/offline: a report action is available",
+    "islet/offline: the page fits 375 px",
+    "islet/expired: refusal has plain words at 375",
+    "islet/expired: the real route was intercepted",
+    "islet/expired: Account receives sign-in focus immediately",
+    "islet/expired: a report action is available",
+    "islet/expired: the page fits 375 px",
+    "islet/feature_off: refusal has plain words at 375",
+    "islet/feature_off: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/feature_off: a report action is available",
+    "islet/feature_off: the page fits 375 px",
+    "islet/stale_save: refusal has plain words at 375",
+    "islet/stale_save: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/stale_save: a report action is available",
+    "islet/stale_save: the page fits 375 px",
+    "islet/rate_limited: refusal has plain words at 375",
+    "islet/rate_limited: the real route was intercepted",
+    "islet/rate_limited: the disabled action leaves focus on its station heading",
+    "islet/rate_limited: a report action is available",
+    "islet: the cooldown disables retry",
+    "islet: the refused control is disabled during the wait",
+    "islet: a forced activation cannot bypass the cooldown",
+    "islet: the countdown never sends a write",
+    "islet/rate_limited: the page fits 375 px",
+    "islet/gateway: refusal has plain words at 375",
+    "islet/gateway: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/gateway: a report action is available",
+    "islet/gateway: the page fits 375 px",
+    "islet/unavailable: refusal has plain words at 375",
+    "islet/unavailable: the real route was intercepted",
+    "Islet refusal restores focus to its available build action or station heading",
+    "islet/unavailable: a report action is available",
+    "islet/unavailable: the page fits 375 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "islet",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "islet",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "islet",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "islet",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "islet",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "islet",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "islet",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "islet",
+      "fault": "offline",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "expired",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "expired",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "feature_off",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "stale_save",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "rate_limited",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "gateway",
+      "path": "/api/islet/build",
+      "method": "POST"
+    },
+    {
+      "group": "islet",
+      "fault": "unavailable",
+      "path": "/api/islet/build",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "islet"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "market",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS market/offline @ 375
+CHAOS market/expired @ 375
+CHAOS market/feature_off @ 375
+CHAOS market/stale_save @ 375
+CHAOS market/rate_limited @ 375
+CHAOS market/gateway @ 375
+CHAOS market/unavailable @ 375
+CHAOS market/offline @ 320
+CHAOS market/expired @ 320
+CHAOS market/feature_off @ 320
+CHAOS market/stale_save @ 320
+CHAOS market/rate_limited @ 320
+CHAOS market/gateway @ 320
+CHAOS market/unavailable @ 320
+{
+  "outcome": "passed",
+  "checks": [
+    "market/offline: refusal has plain words at 375",
+    "market/offline: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/offline: a report action is available",
+    "market/offline: the page fits 375 px",
+    "market/expired: refusal has plain words at 375",
+    "market/expired: the real route was intercepted",
+    "Market expiry gives the actual Account sign-in button focus",
+    "market/expired: a report action is available",
+    "market/expired: the page fits 375 px",
+    "market/feature_off: refusal has plain words at 375",
+    "market/feature_off: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/feature_off: a report action is available",
+    "market/feature_off: the page fits 375 px",
+    "market/stale_save: refusal has plain words at 375",
+    "market/stale_save: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/stale_save: a report action is available",
+    "market/stale_save: the page fits 375 px",
+    "market/rate_limited: refusal has plain words at 375",
+    "market/rate_limited: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/rate_limited: a report action is available",
+    "market: the cooldown disables retry",
+    "market: the refused control is disabled during the wait",
+    "market: a forced activation cannot bypass the cooldown",
+    "market: the countdown never sends a write",
+    "market/rate_limited: the page fits 375 px",
+    "market/gateway: refusal has plain words at 375",
+    "market/gateway: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/gateway: a report action is available",
+    "market/gateway: the page fits 375 px",
+    "market/unavailable: refusal has plain words at 375",
+    "market/unavailable: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/unavailable: a report action is available",
+    "market/unavailable: the page fits 375 px",
+    "market/offline: refusal has plain words at 320",
+    "market/offline: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/offline: a report action is available",
+    "market/offline: the page fits 320 px",
+    "market/expired: refusal has plain words at 320",
+    "market/expired: the real route was intercepted",
+    "Market expiry gives the actual Account sign-in button focus",
+    "market/expired: a report action is available",
+    "market/expired: the page fits 320 px",
+    "market/feature_off: refusal has plain words at 320",
+    "market/feature_off: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/feature_off: a report action is available",
+    "market/feature_off: the page fits 320 px",
+    "market/stale_save: refusal has plain words at 320",
+    "market/stale_save: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/stale_save: a report action is available",
+    "market/stale_save: the page fits 320 px",
+    "market/rate_limited: refusal has plain words at 320",
+    "market/rate_limited: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/rate_limited: a report action is available",
+    "market: the cooldown disables retry",
+    "market: the refused control is disabled during the wait",
+    "market: a forced activation cannot bypass the cooldown",
+    "market: the countdown never sends a write",
+    "market/rate_limited: the page fits 320 px",
+    "market/gateway: refusal has plain words at 320",
+    "market/gateway: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/gateway: a report action is available",
+    "market/gateway: the page fits 320 px",
+    "market/unavailable: refusal has plain words at 320",
+    "market/unavailable: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/unavailable: a report action is available",
+    "market/unavailable: the page fits 320 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "market",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "market",
+      "fault": "offline",
+      "width": 320,
+      "status": 0
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "width": 320,
+      "status": 401
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "width": 320,
+      "status": 404
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "width": 320,
+      "status": 409
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "width": 320,
+      "status": 429
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "width": 320,
+      "status": 502
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "width": 320,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "market",
+      "fault": "offline",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "offline",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "path": "/api/market/open",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "market"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "islet",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS predictions/offline @ 375
+CHAOS predictions/expired @ 375
+CHAOS predictions/feature_off @ 375
+CHAOS predictions/stale_save @ 375
+CHAOS predictions/rate_limited @ 375
+CHAOS predictions/gateway @ 375
+CHAOS predictions/unavailable @ 375
+CHAOS predictions/offline @ 320
+CHAOS predictions/expired @ 320
+CHAOS predictions/feature_off @ 320
+CHAOS predictions/stale_save @ 320
+CHAOS predictions/rate_limited @ 320
+CHAOS predictions/gateway @ 320
+CHAOS predictions/unavailable @ 320
+{
+  "outcome": "passed",
+  "checks": [
+    "predictions/offline: refusal has plain words at 375",
+    "predictions/offline: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/offline: a report action is available",
+    "predictions/offline: the page fits 375 px",
+    "predictions/expired: refusal has plain words at 375",
+    "predictions/expired: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/expired: a report action is available",
+    "predictions/expired: the page fits 375 px",
+    "predictions/feature_off: refusal has plain words at 375",
+    "predictions/feature_off: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/feature_off: a report action is available",
+    "predictions/feature_off: the page fits 375 px",
+    "predictions/stale_save: refusal has plain words at 375",
+    "predictions/stale_save: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/stale_save: a report action is available",
+    "predictions/stale_save: the page fits 375 px",
+    "predictions/rate_limited: refusal has plain words at 375",
+    "predictions/rate_limited: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/rate_limited: a report action is available",
+    "predictions: the cooldown disables retry",
+    "predictions: the refused control is disabled during the wait",
+    "predictions: a forced activation cannot bypass the cooldown",
+    "predictions: the countdown never sends a write",
+    "predictions/rate_limited: the page fits 375 px",
+    "predictions/gateway: refusal has plain words at 375",
+    "predictions/gateway: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/gateway: a report action is available",
+    "predictions/gateway: the page fits 375 px",
+    "predictions/unavailable: refusal has plain words at 375",
+    "predictions/unavailable: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/unavailable: a report action is available",
+    "predictions/unavailable: the page fits 375 px",
+    "predictions/offline: refusal has plain words at 320",
+    "predictions/offline: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/offline: a report action is available",
+    "predictions/offline: the page fits 320 px",
+    "predictions/expired: refusal has plain words at 320",
+    "predictions/expired: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/expired: a report action is available",
+    "predictions/expired: the page fits 320 px",
+    "predictions/feature_off: refusal has plain words at 320",
+    "predictions/feature_off: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/feature_off: a report action is available",
+    "predictions/feature_off: the page fits 320 px",
+    "predictions/stale_save: refusal has plain words at 320",
+    "predictions/stale_save: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/stale_save: a report action is available",
+    "predictions/stale_save: the page fits 320 px",
+    "predictions/rate_limited: refusal has plain words at 320",
+    "predictions/rate_limited: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/rate_limited: a report action is available",
+    "predictions: the cooldown disables retry",
+    "predictions: the refused control is disabled during the wait",
+    "predictions: a forced activation cannot bypass the cooldown",
+    "predictions: the countdown never sends a write",
+    "predictions/rate_limited: the page fits 320 px",
+    "predictions/gateway: refusal has plain words at 320",
+    "predictions/gateway: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/gateway: a report action is available",
+    "predictions/gateway: the page fits 320 px",
+    "predictions/unavailable: refusal has plain words at 320",
+    "predictions/unavailable: the real route was intercepted",
+    "Prediction refusal focuses its next available public control",
+    "predictions/unavailable: a report action is available",
+    "predictions/unavailable: the page fits 320 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "predictions",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "predictions",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "predictions",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "predictions",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "predictions",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "predictions",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "predictions",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "predictions",
+      "fault": "offline",
+      "width": 320,
+      "status": 0
+    },
+    {
+      "group": "predictions",
+      "fault": "expired",
+      "width": 320,
+      "status": 401
+    },
+    {
+      "group": "predictions",
+      "fault": "feature_off",
+      "width": 320,
+      "status": 404
+    },
+    {
+      "group": "predictions",
+      "fault": "stale_save",
+      "width": 320,
+      "status": 409
+    },
+    {
+      "group": "predictions",
+      "fault": "rate_limited",
+      "width": 320,
+      "status": 429
+    },
+    {
+      "group": "predictions",
+      "fault": "gateway",
+      "width": 320,
+      "status": 502
+    },
+    {
+      "group": "predictions",
+      "fault": "unavailable",
+      "width": 320,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "predictions",
+      "fault": "offline",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "expired",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "expired",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "feature_off",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "stale_save",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "rate_limited",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "gateway",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "unavailable",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "offline",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "expired",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "expired",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "feature_off",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "stale_save",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "rate_limited",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "gateway",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    },
+    {
+      "group": "predictions",
+      "fault": "unavailable",
+      "path": "/api/predictions/stake",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "predictions"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "islet",
+    "market",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS arena/offline @ 375
+CHAOS arena/expired @ 375
+CHAOS arena/feature_off @ 375
+CHAOS arena/stale_save @ 375
+CHAOS arena/rate_limited @ 375
+CHAOS arena/gateway @ 375
+CHAOS arena/unavailable @ 375
+{
+  "outcome": "passed",
+  "checks": [
+    "arena/offline: refusal has plain words at 375",
+    "arena/offline: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/offline: a report action is available",
+    "arena/offline: the page fits 375 px",
+    "arena/expired: refusal has plain words at 375",
+    "arena/expired: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/expired: a report action is available",
+    "arena/expired: the page fits 375 px",
+    "arena/feature_off: refusal has plain words at 375",
+    "arena/feature_off: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/feature_off: a report action is available",
+    "arena/feature_off: the page fits 375 px",
+    "arena/stale_save: refusal has plain words at 375",
+    "arena/stale_save: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/stale_save: a report action is available",
+    "arena/stale_save: the page fits 375 px",
+    "arena/rate_limited: refusal has plain words at 375",
+    "arena/rate_limited: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/rate_limited: a report action is available",
+    "arena: the cooldown disables retry",
+    "arena: the refused control is disabled during the wait",
+    "arena: a forced activation cannot bypass the cooldown",
+    "arena: the countdown never sends a write",
+    "arena/rate_limited: the page fits 375 px",
+    "arena/gateway: refusal has plain words at 375",
+    "arena/gateway: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/gateway: a report action is available",
+    "arena/gateway: the page fits 375 px",
+    "arena/unavailable: refusal has plain words at 375",
+    "arena/unavailable: the real route was intercepted",
+    "Arena refusal keeps focus on an available control or its attention dialog",
+    "arena/unavailable: a report action is available",
+    "arena/unavailable: the page fits 375 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "arena",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "arena",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "arena",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "arena",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "arena",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "arena",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "arena",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "arena",
+      "fault": "offline",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "expired",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "expired",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "feature_off",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "stale_save",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "rate_limited",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "gateway",
+      "path": "/api/duels",
+      "method": "POST"
+    },
+    {
+      "group": "arena",
+      "fault": "unavailable",
+      "path": "/api/duels",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "arena"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "islet",
+    "market",
+    "predictions",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}
+CHAOS bulletin/offline @ 375
+CHAOS bulletin/expired @ 375
+CHAOS bulletin/feature_off @ 375
+CHAOS bulletin/stale_save @ 375
+CHAOS bulletin/rate_limited @ 375
+CHAOS bulletin/gateway @ 375
+CHAOS bulletin/unavailable @ 375
+CHAOS bulletin/offline @ 320
+CHAOS bulletin/expired @ 320
+CHAOS bulletin/feature_off @ 320
+CHAOS bulletin/stale_save @ 320
+CHAOS bulletin/rate_limited @ 320
+CHAOS bulletin/gateway @ 320
+CHAOS bulletin/unavailable @ 320
+{
+  "outcome": "passed",
+  "checks": [
+    "bulletin/offline: refusal has plain words at 375",
+    "bulletin/offline: the real route was intercepted",
+    "bulletin/offline: focus reaches the actual enabled public Retry button",
+    "bulletin/offline: a report action is available",
+    "bulletin/offline: the page fits 375 px",
+    "bulletin/expired: refusal has plain words at 375",
+    "bulletin/expired: the real route was intercepted",
+    "bulletin/expired: focus reaches the actual enabled public Retry button",
+    "bulletin/expired: a report action is available",
+    "bulletin/expired: the page fits 375 px",
+    "bulletin/feature_off: refusal has plain words at 375",
+    "bulletin/feature_off: the real route was intercepted",
+    "bulletin/feature_off: the surviving real frame Report link receives native focus",
+    "bulletin/feature_off: a report action is available",
+    "bulletin/feature_off: the page fits 375 px",
+    "bulletin/stale_save: refusal has plain words at 375",
+    "bulletin/stale_save: the real route was intercepted",
+    "bulletin/stale_save: focus reaches the actual enabled public Retry button",
+    "bulletin/stale_save: a report action is available",
+    "bulletin/stale_save: the page fits 375 px",
+    "bulletin/rate_limited: refusal has plain words at 375",
+    "bulletin/rate_limited: the real route was intercepted",
+    "bulletin/rate_limited: the real visible cooldown message receives native focus",
+    "The cooldown retains the shared polite announcement sibling",
+    "bulletin/rate_limited: a report action is available",
+    "bulletin: the cooldown disables retry",
+    "bulletin: the refused control is disabled during the wait",
+    "bulletin: a forced activation cannot bypass the cooldown",
+    "bulletin: the original three-second deadline still blocks Retry at 2999ms",
+    "bulletin: forced Retry at 2999ms sends no public GET",
+    "bulletin: the same original Retry deadline enables at exactly 3000ms",
+    "bulletin: cooldown completion neither fetches automatically nor sends a write",
+    "bulletin: the countdown never sends a write",
+    "bulletin/rate_limited: the page fits 375 px",
+    "bulletin/gateway: refusal has plain words at 375",
+    "bulletin/gateway: the real route was intercepted",
+    "bulletin/gateway: focus reaches the actual enabled public Retry button",
+    "bulletin/gateway: a report action is available",
+    "bulletin/gateway: the page fits 375 px",
+    "bulletin/unavailable: refusal has plain words at 375",
+    "bulletin/unavailable: the real route was intercepted",
+    "bulletin/unavailable: focus reaches the actual enabled public Retry button",
+    "bulletin/unavailable: a report action is available",
+    "bulletin/unavailable: the page fits 375 px",
+    "bulletin/offline: refusal has plain words at 320",
+    "bulletin/offline: the real route was intercepted",
+    "bulletin/offline: focus reaches the actual enabled public Retry button",
+    "bulletin/offline: a report action is available",
+    "bulletin/offline: the page fits 320 px",
+    "bulletin/expired: refusal has plain words at 320",
+    "bulletin/expired: the real route was intercepted",
+    "bulletin/expired: focus reaches the actual enabled public Retry button",
+    "bulletin/expired: a report action is available",
+    "bulletin/expired: the page fits 320 px",
+    "bulletin/feature_off: refusal has plain words at 320",
+    "bulletin/feature_off: the real route was intercepted",
+    "bulletin/feature_off: the surviving real frame Report link receives native focus",
+    "bulletin/feature_off: a report action is available",
+    "bulletin/feature_off: the page fits 320 px",
+    "bulletin/stale_save: refusal has plain words at 320",
+    "bulletin/stale_save: the real route was intercepted",
+    "bulletin/stale_save: focus reaches the actual enabled public Retry button",
+    "bulletin/stale_save: a report action is available",
+    "bulletin/stale_save: the page fits 320 px",
+    "bulletin/rate_limited: refusal has plain words at 320",
+    "bulletin/rate_limited: the real route was intercepted",
+    "bulletin/rate_limited: the real visible cooldown message receives native focus",
+    "The cooldown retains the shared polite announcement sibling",
+    "bulletin/rate_limited: a report action is available",
+    "bulletin: the cooldown disables retry",
+    "bulletin: the refused control is disabled during the wait",
+    "bulletin: a forced activation cannot bypass the cooldown",
+    "bulletin: the original three-second deadline still blocks Retry at 2999ms",
+    "bulletin: forced Retry at 2999ms sends no public GET",
+    "bulletin: the same original Retry deadline enables at exactly 3000ms",
+    "bulletin: cooldown completion neither fetches automatically nor sends a write",
+    "bulletin: the countdown never sends a write",
+    "bulletin/rate_limited: the page fits 320 px",
+    "bulletin/gateway: refusal has plain words at 320",
+    "bulletin/gateway: the real route was intercepted",
+    "bulletin/gateway: focus reaches the actual enabled public Retry button",
+    "bulletin/gateway: a report action is available",
+    "bulletin/gateway: the page fits 320 px",
+    "bulletin/unavailable: refusal has plain words at 320",
+    "bulletin/unavailable: the real route was intercepted",
+    "bulletin/unavailable: focus reaches the actual enabled public Retry button",
+    "bulletin/unavailable: a report action is available",
+    "bulletin/unavailable: the page fits 320 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "width": 320,
+      "status": 0
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "width": 320,
+      "status": 401
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "width": 320,
+      "status": 404
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "width": 320,
+      "status": 409
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "width": 320,
+      "status": 429
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "width": 320,
+      "status": 502
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "width": 320,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "offline",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "expired",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "feature_off",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "stale_save",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "rate_limited",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "gateway",
+      "path": "/api/bulletin",
+      "method": "GET"
+    },
+    {
+      "group": "bulletin",
+      "fault": "unavailable",
+      "path": "/api/bulletin",
+      "method": "GET"
+    }
+  ],
+  "coveredGroups": [
+    "bulletin"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "islet",
+    "market",
+    "predictions",
+    "arena",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}

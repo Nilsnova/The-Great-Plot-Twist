@@ -23,7 +23,9 @@ export function createWorldExperience(ctx){
   function apply(view){
     if(coins&&view.rewards.balance!==latest?.rewards.balance)coins.update(view.rewards);
     latest=view;
-    if(view.presence.status!=='off'||view.rewards.balance!==null||view.partners.length)void prepare();
+    const mustered=view.mode==='online'&&view.account?.state==='signed_in'&&view.account?.hasKit===true
+      &&view.crew?.status==='active'&&Array.isArray(view.crew.seats)&&view.crew.seats.some(seat=>seat?.kind==='npc');
+    if(view.presence.status!=='off'||view.rewards.balance!==null||view.partners.length||mustered)void prepare();
     partners?.ingest(view);others?.ingest(view.presence);hud?.update(view);
   }
   function update(dt,{speed=0}={}){

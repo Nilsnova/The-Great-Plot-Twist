@@ -1,4 +1,5 @@
 // Presence actors are visual only; input samples and visibility filters come from the caller.
+import './labels.css';
 import * as THREE from 'three';
 import {artSizes,projectPoint} from '../art.js';
 import {PRESENCE_LIMITS,placePresenceLabels,resolveActorAsset,samplePosition,selectNearby,shouldSnapSample} from './logic.js';
@@ -38,7 +39,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
   function attachRenderable(record,asset){
     if(record.group)return;
     const group=new THREE.Group(),body=makeMesh(asset,materialFor(art,asset),asset);group.add(body);
-    const label=document.createElement('div');label.className='other-captain-label';label.style.cssText='position:absolute;z-index:31;box-sizing:border-box;width:180px;min-height:26px;padding:2px 6px;background:#20392de8;color:#fff0c5;border:1px solid #82966f;font:16px/1.2 Courier New,monospace;white-space:nowrap;text-align:center;pointer-events:none;overflow:hidden;text-overflow:ellipsis;';
+    const label=document.createElement('div');label.className='other-captain-label';
     label.setAttribute('aria-hidden','true');container.append(label);
     Object.assign(record,{group,body,label,asset,emoteMesh:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null});
     body.userData.peerId=record.id;root.add(group);

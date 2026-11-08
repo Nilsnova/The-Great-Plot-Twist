@@ -1,0 +1,14 @@
+CHAOS arena/offline @ 375
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: Timeout 30000ms exceeded.
+    at Object.checkFocus (<frontend>/scripts/check-online-arena.js:208:18)
+    at checkOnlineChaos (<frontend>/scripts/check-online-chaos.js:157:27)
+    at async file://<frontend>/scripts/check-online-arena.js:246:39 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

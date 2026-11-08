@@ -10,6 +10,7 @@
 // The pretend server speaks the plain-text form of the Realtime protocol (version 1.0.0). The library's
 // default is a binary form for broadcasts; that is its own business and not what we are checking.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
 import { startRealtime } from '../src/online/realtime.js';
 import { playerId, worldOf } from './realtime-fakes.js';
 
@@ -18,47 +19,53 @@ const FRIEND = playerId(2);
 const HARBOR = 'saltreach_harbor';
 const CREW_ID = '11111111-1111-4111-8111-111111111111';
 const URL = 'https://example.supabase.co';
-const KEY = 'test-publishable-key'; // a stand-in: the module never checks the key's form
+const KEY = 'fixture-key-' + crypto.randomUUID(); // Generated stand-ins, used only by the injected client.
+const TOKEN = 'fixture-token-' + crypto.randomUUID();
 
 // The state of one pretend server, and the fake WebSocket that talks to it.
 let server;
+let controllers, clients;
 class FakeSocket {
-  constructor(url, protocols) {
+  constructor(url, protocols, owner) {
     this.url = url;
     this.protocols = protocols;
     this.readyState = 0;
-    server.sockets.push(this);
-    setTimeout(() => {
+    this.owner = owner;
+    owner.sockets.push(this);
+    owner.enqueue(() => {
+      if (this.readyState !== 0) return;
       this.readyState = 1;
       this.onopen?.({});
-    }, 0);
+    });
   }
 
   send(text) {
-    server.receive(this, JSON.parse(text));
+    this.owner.enqueue(() => this.owner.receive(this, JSON.parse(text)));
   }
 
   close(code, reason) {
     this.readyState = 3;
-    this.onclose?.({ code, reason });
+    this.owner.enqueue(() => this.onclose?.({ code, reason }));
   }
 }
 
 function makeServer() {
   return {
+    disposed: false,
+    enqueue(run) { queueMicrotask(() => { if (!this.disposed) run(); }); },
+    dispose() { this.disposed = true; },
     sockets: [],
     joins: [], // every phx_join: { topic, payload }
     pushes: [], // everything else a client pushed: { topic, event, payload }
     refused: new Map(), // topic -> the reason a join is refused with
     presence: {}, // the raw presence state, by topic
-    deliver(topic, event, payload) { // push a message to the client, as the server does
-      const socket = this.sockets.at(-1);
-      socket.onmessage({ data: JSON.stringify({ topic, event, payload, ref: null, join_ref: this.joinRefs[topic] ?? null }) });
+    deliver(topic, event, payload, socket = this.sockets.at(-1)) { // push a message to its owning client
+      this.enqueue(() => socket.onmessage?.({ data: JSON.stringify({ topic, event, payload, ref: null, join_ref: this.joinRefs[topic] ?? null }) }));
     },
     joinRefs: {},
     receive(socket, message) {
       const { topic, event, payload, ref, join_ref: joinRef } = message;
-      const reply = response => socket.onmessage({ data: JSON.stringify({ topic, event: 'phx_reply', payload: response, ref, join_ref: joinRef }) });
+      const reply = response => this.enqueue(() => socket.onmessage?.({ data: JSON.stringify({ topic, event: 'phx_reply', payload: response, ref, join_ref: joinRef }) }));
       if (event === 'heartbeat') return reply({ status: 'ok', response: {} });
       if (event === 'phx_leave') return reply({ status: 'ok', response: {} });
       if (event !== 'phx_join') {
@@ -70,7 +77,7 @@ function makeServer() {
       if (this.refused.has(topic)) return reply({ status: 'error', response: { reason: this.refused.get(topic) } });
       reply({ status: 'ok', response: {} });
       // A room with presence turned on is sent the state of the room right after the join.
-      if (payload.config?.presence?.enabled) setTimeout(() => this.deliver(topic, 'presence_state', this.presence[topic] ?? {}), 0);
+      if (payload.config?.presence?.enabled) this.deliver(topic, 'presence_state', this.presence[topic] ?? {}, socket);
       return undefined;
     },
   };
@@ -82,9 +89,9 @@ const raw = people => Object.fromEntries(Object.entries(worldOf(people)).map(([i
 // Every address that the library asked fetch for. The only read of a table is the names of captains.
 let fetched;
 const isProfilesRead = url => url.includes('/rest/v1/profiles');
-async function fakeFetch(input) {
+async function fakeFetch(input, ownedFetches) {
   const url = typeof input === 'string' ? input : (input?.url ?? String(input));
-  fetched.push(url);
+  ownedFetches.push(url);
   if (!isProfilesRead(url)) throw new Error(`No network in tests, but the library asked for ${url}`);
   return new Response('[]', { status: 200, headers: { 'content-type': 'application/json' } });
 }
@@ -92,31 +99,52 @@ async function fakeFetch(input) {
 beforeEach(() => {
   server = makeServer();
   fetched = [];
+  controllers = [];
+  clients = [];
   vi.stubGlobal('fetch', () => { throw new Error('No network in tests: the global fetch was used.'); });
 });
-afterEach(() => {
-  expect(fetched.filter(url => !isProfilesRead(url))).toEqual([]);
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
+afterEach(async () => {
+  try {
+    for (const live of controllers) live.stop();
+    await Promise.all(clients.map(client => client.removeAllChannels()));
+    expect(fetched.filter(url => !isProfilesRead(url))).toEqual([]);
+  } finally {
+    try { await Promise.all(clients.map(client => client.realtime.disconnect())); }
+    finally {
+      server.dispose();
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  }
 });
 
 // Start the module with the real library and a fake WebSocket.
 async function startWithRealLibrary(over = {}) {
-  const { createClient } = await import('@supabase/supabase-js');
+  const ownedServer = server, ownedFetches = fetched;
+  // Delayed work from a failed test must never attach its socket or reads to the next server.
+  class OwnedSocket extends FakeSocket {
+    constructor(url, protocols) { super(url, protocols, ownedServer); }
+  }
   const events = [];
   const live = startRealtime({
     enabled: true,
     playerId: ME,
-    getAccessToken: async () => 'token-for-tests',
+    getAccessToken: async () => TOKEN,
     supabaseUrl: URL,
     publishableKey: KEY,
     emit: event => events.push(event),
-    createClient: (url, key, options) => createClient(url, key, {
-      ...options, global: { fetch: fakeFetch }, realtime: { transport: FakeSocket, vsn: '1.0.0' },
-    }),
+    createClient: (url, key, options) => {
+      const client = createClient(url, key, {
+        ...options, global: { fetch: input => fakeFetch(input, ownedFetches) },
+        realtime: { transport: OwnedSocket, vsn: '1.0.0' },
+      });
+      clients.push(client);
+      return client;
+    },
     random: () => 0,
     ...over,
   });
+  controllers.push(live);
   return { live, events };
 }
 
@@ -134,9 +162,9 @@ describe('the real library, with a pretend server', () => {
     const world = server.joins.find(join => join.topic === 'realtime:live:world');
     expect(world.payload.config.private).toBe(true);
     expect(world.payload.config.presence).toMatchObject({ key: ME, enabled: true });
-    expect(world.payload.access_token).toBe('token-for-tests');
+    expect(world.payload.access_token).toBe(TOKEN);
     expect(server.sockets[0].url).toContain('apikey=' + KEY);
-    expect(server.sockets[0].url).not.toContain('token-for-tests');
+    expect(server.sockets[0].url).not.toContain(TOKEN);
     await waitFor(() => expect(topics()).toContain(`realtime:live:crew:${CREW_ID}`));
     expect(server.joins.find(join => join.topic === `realtime:live:crew:${CREW_ID}`).payload.config.private).toBe(true);
 
@@ -144,7 +172,7 @@ describe('the real library, with a pretend server', () => {
     await waitFor(() => expect(topics()).toContain('realtime:live:place:saltreach_harbor:1'));
     const room = server.joins.find(join => join.topic === 'realtime:live:place:saltreach_harbor:1');
     expect(room.payload.config.private).toBe(true);
-    expect(room.payload.access_token).toBe('token-for-tests');
+    expect(room.payload.access_token).toBe(TOKEN);
 
     // Once the room is joined, we tell the world where we are, and only that.
     await waitFor(() => expect(server.pushes.find(push => push.event === 'presence')).toBeDefined());

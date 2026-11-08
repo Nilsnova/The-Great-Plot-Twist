@@ -1,0 +1,39 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 .
+
+ ❯ tests/g9-islet-case-presentation.test.js (11 tests | 1 failed) 28650ms
+   × shows early 429 before the final receipt and preserves exact milliseconds through final completion and fractional reopen 2008ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/g9-islet-case-presentation.test.js > shows early 429 before the final receipt and preserves exact milliseconds through final completion and fractional reopen
+Error: clock.pauseAt: Error: Cannot fast-forward to the past
+    at ClockController._innerFastForwardTo (eval at evaluate (:370:30), <anonymous>:201:13)
+    at ClockController.pauseAt (eval at evaluate (:370:30), <anonymous>:132:16)
+    at async <anonymous>:396:30
+ ❯ freezeClock tests/g9-islet-case-presentation.test.js:65:78
+     63| }
+     64| async function open(page,name='finale'){await page.evaluate(name=>wind…
+     65| async function freezeClock(page){await page.clock.install();await page…
+       |                                                                              ^
+     66| async function dispose(page){await page.evaluate(async()=>{
+     67|   const proof=window.isletCaseProof;proof.screens.dispose();for(const …
+ ❯ tests/g9-islet-case-presentation.test.js:111:40
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/g9-islet-case-presentation.test.js:110:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 236 passed (237)
+      Tests  1 failed | 3591 passed (3592)
+   Start at  15:31:35
+   Duration  448.38s (tests 87%, import 11%, transform 1%, worker 1%)
+
+    Isolate  237 workers spawned · ~272ms startup each (spawn + environment, per file)
+             at least ~64.19s faster with isolate: false — reuses workers across files instead of one per file
+

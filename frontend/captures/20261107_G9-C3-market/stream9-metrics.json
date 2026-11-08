@@ -1,0 +1,1370 @@
+{
+  "coldTitle": {
+    "javaScript": 21071,
+    "css": 11878,
+    "javaScriptCap": 21080,
+    "cssCap": 12000
+  },
+  "world": {
+    "checked": "2026-11-07T11:41:25.784Z",
+    "browser": "156.0.8078.79",
+    "viewport": "1440 \u00d7 900, DPR 1",
+    "checks": [
+      "Uncharted Gull\u2019s Rest is locked",
+      "Locked chart selection emits nothing and preserves the place",
+      "Only the passage is in memory during travel",
+      "Keyboard chart travel and skip emit exact travel and arrival payloads",
+      "The lit office window is visible from the dock spawn at night",
+      "lighthouse_isle: only enabled hotspots are offered",
+      "lighthouse_isle/keepers_lamp: exact event, once per held E",
+      "lighthouse_isle: explorer visible on the path",
+      "lighthouse_isle within rendering budget",
+      "saltreach_harbor: only enabled hotspots are offered",
+      "saltreach_harbor/harbor_office: exact event, once per held E",
+      "saltreach_harbor/harbor_office_window: exact event, once per held E",
+      "saltreach_harbor/harbor_light: exact event, once per held E",
+      "saltreach_harbor/ferry_pier: exact event, once per held E",
+      "saltreach_harbor/jail: exact event, once per held E",
+      "saltreach_harbor/market_hall: exact event, once per held E",
+      "saltreach_harbor/prediction_kiosk: exact event, once per held E",
+      "saltreach_harbor/sports_pavilion: exact event, once per held E",
+      "saltreach_harbor/signal_station: exact event, once per held E",
+      "saltreach_harbor/notice_board: exact event, once per held E",
+      "saltreach_harbor/captains_table: exact event, once per held E",
+      "saltreach_harbor/keepers_post_room: exact event, once per held E",
+      "saltreach_harbor/wall_of_lights: exact event, once per held E",
+      "saltreach_harbor: explorer visible on the path",
+      "saltreach_harbor within rendering budget",
+      "home_islet: only enabled hotspots are offered",
+      "home_islet/plot_1: exact event, once per held E",
+      "home_islet/plot_2: exact event, once per held E",
+      "home_islet/plot_3: exact event, once per held E",
+      "home_islet/plot_4: exact event, once per held E",
+      "home_islet/islet_signal_station: exact event, once per held E",
+      "home_islet/home_driftline: exact event, once per held E",
+      "home_islet: explorer visible on the path",
+      "home_islet within rendering budget",
+      "Pointer selection emits the exact plot payload",
+      "smugglers_cove: only enabled hotspots are offered",
+      "smugglers_cove/back_room: exact event, once per held E",
+      "smugglers_cove/low_tide_cave: exact event, once per held E",
+      "smugglers_cove/arena_gate: exact event, once per held E",
+      "smugglers_cove: explorer visible on the path",
+      "smugglers_cove within rendering budget",
+      "wreck_point: only enabled hotspots are offered",
+      "wreck_point/salvage_yard: exact event, once per held E",
+      "wreck_point/yard_gate: exact event, once per held E",
+      "wreck_point/beach: exact event, once per held E",
+      "wreck_point: explorer visible on the path",
+      "wreck_point within rendering budget",
+      "the_teeth: only enabled hotspots are offered",
+      "the_teeth/reef: exact event, once per held E",
+      "the_teeth/watchtower_ruin: exact event, once per held E",
+      "the_teeth/raid_arch: exact event, once per held E",
+      "the_teeth/fog_bank: exact event, once per held E",
+      "the_teeth: explorer visible on the path",
+      "the_teeth within rendering budget",
+      "The integration gate opens Gull\u2019s Rest",
+      "Ten round trips retain exactly the same resource and object counts",
+      "After ten round trips: FPS and rendering within budget",
+      "Reduced motion skips sailing",
+      "Low quality reveals the landing through a flat fade",
+      "Unskipped wind-driven passage lasts about five seconds",
+      "No browser errors",
+      "No external requests"
+    ],
+    "places": {
+      "lighthouse_isle": {
+        "fps": 18,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 98,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 4
+      },
+      "saltreach_harbor": {
+        "fps": 44,
+        "calls": 51,
+        "triangles": 178,
+        "geometries": 49,
+        "textures": 25,
+        "roots": 1,
+        "objects": 51,
+        "programs": 4
+      },
+      "home_islet": {
+        "fps": 42,
+        "calls": 43,
+        "triangles": 82,
+        "geometries": 43,
+        "textures": 14,
+        "roots": 1,
+        "objects": 53,
+        "programs": 5
+      },
+      "smugglers_cove": {
+        "fps": 49,
+        "calls": 28,
+        "triangles": 54,
+        "geometries": 27,
+        "textures": 12,
+        "roots": 1,
+        "objects": 24,
+        "programs": 3
+      },
+      "wreck_point": {
+        "fps": 42,
+        "calls": 30,
+        "triangles": 58,
+        "geometries": 29,
+        "textures": 14,
+        "roots": 1,
+        "objects": 26,
+        "programs": 3
+      },
+      "the_teeth": {
+        "fps": 31,
+        "calls": 27,
+        "triangles": 132,
+        "geometries": 25,
+        "textures": 12,
+        "roots": 1,
+        "objects": 24,
+        "programs": 4
+      }
+    },
+    "roundTrips": [
+      {
+        "fps": 43,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 25,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 45,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 44,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 44,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 40,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 37,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 42,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 37,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 46,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "before": {
+      "fps": 31,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "after": {
+      "fps": 32,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "reducedMotionMs": 328,
+    "windOnePassageMs": 4967,
+    "errors": [],
+    "externalRequests": []
+  },
+  "accessibility": {
+    "contexts": 50,
+    "viewportSamples": 150,
+    "market": {
+      "width": 375,
+      "height": 400,
+      "checks": {
+        "simulationNotice": true,
+        "creditsOnlyInSettings": true,
+        "nativeTabsArrows": true,
+        "nativeSideArrows": true,
+        "nativeStakeArrows": true,
+        "fitsViewport": true,
+        "noPanelOverflow": true,
+        "noDocumentOverflow": true,
+        "targets44": true,
+        "escapeClosed": true,
+        "noPause": true,
+        "canvasFocus": true,
+        "noLiveMarketRequests": true
+      }
+    },
+    "marketScreens": [
+      {
+        "name": "market-prices",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 65,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 65,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 65,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 8,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "7"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "7"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-open-form",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 78,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 78,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 78,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 11,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "7"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "8"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "9"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "10"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "7"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "8",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "8"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "9",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "9"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "10",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "10"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-open-confirmation",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 12,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "INPUT",
+              "class": "",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "7"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "8"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "9"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "10"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "11"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "INPUT",
+                "class": "",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "7"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "8",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "8"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "9",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "9"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "10",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "10"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "11",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "11"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-positions",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 80,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 7,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "6"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "6"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      },
+      {
+        "name": "market-close-confirmation",
+        "sizes": [
+          {
+            "width": 1280,
+            "textCount": 81,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 375,
+            "textCount": 81,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          },
+          {
+            "width": 320,
+            "textCount": 81,
+            "minimumContrast": 6.160905454061178,
+            "missingNames": [],
+            "duplicates": [],
+            "smallTargets": [],
+            "fonts": [],
+            "contrast": [],
+            "imageBackgrounds": [],
+            "overflow": false,
+            "documentOverflow": false,
+            "fitsViewport": true
+          }
+        ],
+        "focus": {
+          "count": 8,
+          "positiveTabindex": false,
+          "order": [
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet kit-icon-button",
+              "dataFocus": null,
+              "order": "0"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-tab",
+              "dataFocus": null,
+              "order": "1"
+            },
+            {
+              "tag": "SECTION",
+              "class": "kit-tabpanel",
+              "dataFocus": null,
+              "order": "2"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "3"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "4"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "5"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button ",
+              "dataFocus": null,
+              "order": "6"
+            },
+            {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "7"
+            }
+          ],
+          "steps": [
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "1",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-tab",
+                "dataFocus": null,
+                "order": "1"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "2",
+              "actual": {
+                "tag": "SECTION",
+                "class": "kit-tabpanel",
+                "dataFocus": null,
+                "order": "2"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "3",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "3"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "4",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "4"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "5",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "5"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "6",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button ",
+                "dataFocus": null,
+                "order": "6"
+              }
+            },
+            {
+              "domOrder": true,
+              "inside": true,
+              "visible": true,
+              "expectedOrder": "7",
+              "actual": {
+                "tag": "BUTTON",
+                "class": "kit-button kit-quiet",
+                "dataFocus": null,
+                "order": "7"
+              }
+            }
+          ],
+          "trapped": true,
+          "trapTarget": {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
+            "dataFocus": null,
+            "order": "0"
+          }
+        }
+      }
+    ]
+  }
+}

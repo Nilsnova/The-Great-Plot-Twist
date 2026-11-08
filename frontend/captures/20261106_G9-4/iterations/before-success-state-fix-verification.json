@@ -1,0 +1,37 @@
+[
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "seconds": 17.89
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "seconds": 3.96
+  },
+  {
+    "command": "node scripts/check-csp-inventory.js",
+    "exitCode": 0,
+    "seconds": 0.5
+  },
+  {
+    "command": "node scripts/check-csp.js",
+    "exitCode": 0,
+    "seconds": 25.01
+  },
+  {
+    "command": "node scripts/check-build-stamp.js",
+    "exitCode": 0,
+    "seconds": 7.32
+  },
+  {
+    "command": "node scripts/check-problem-report.js",
+    "exitCode": 0,
+    "seconds": 4.22
+  },
+  {
+    "command": "node scripts/check-call-states.js",
+    "exitCode": 1,
+    "seconds": 39.11
+  }
+]

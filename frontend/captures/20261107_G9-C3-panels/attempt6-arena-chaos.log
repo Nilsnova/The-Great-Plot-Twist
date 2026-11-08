@@ -1,0 +1,67 @@
+CHAOS arena/offline @ 375
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.duel-modal[open] .duel-form').locator('.duel-round').first().getByText('Shade, 0 oil', { exact: true })
+    - locator resolved to <span class="duel-option-name">Shade, 0 oil</span>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <input type="radio" value="shade" name="duel-picker-10-0"/> intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <input type="radio" value="shade" name="duel-picker-10-0"/> intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    51 × waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - <input type="radio" value="shade" name="duel-picker-10-0"/> intercepts pointer events
+     - retrying click action
+       - waiting 500ms
+
+    at pickShade (<frontend>/scripts/check-online-arena.js:117:82)
+    at async prepareChallenge (<frontend>/scripts/check-online-arena.js:123:3)
+    at async Object.setup (<frontend>/scripts/check-online-arena.js:195:68)
+    at async checkOnlineChaos (<frontend>/scripts/check-online-chaos.js:139:11)
+    at async file://<frontend>/scripts/check-online-arena.js:246:39 {
+  log: [
+    "  - waiting for locator('.duel-modal[open] .duel-form').locator('.duel-round').first().getByText('Shade, 0 oil', { exact: true })",
+    '    - locator resolved to <span class="duel-option-name">Shade, 0 oil</span>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <input type="radio" value="shade" name="duel-picker-10-0"/> intercepts pointer events',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <input type="radio" value="shade" name="duel-picker-10-0"/> intercepts pointer events',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    51 × waiting for element to be visible, enabled and stable',
+    '       - element is visible, enabled and stable',
+    '       - scrolling into view if needed',
+    '       - done scrolling',
+    '       - <input type="radio" value="shade" name="duel-picker-10-0"/> intercepts pointer events',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

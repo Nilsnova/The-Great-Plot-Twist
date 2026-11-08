@@ -7,3 +7,7 @@
 
 /* Accessibility: keep readable text and full-size native targets. */
 .presence-hud button,.presence-heading button{min-height:44px;min-width:44px}
+
+/* Presence shares the quiet HUD without covering its controls or open journal. */
+.hud-quiet .presence-hud{left:20px;right:auto;top:88px}
+@media(max-width:700px){.hud-quiet .presence-hud{left:12px;right:auto;top:142px;width:min(350px,calc(100vw - 24px))}.hud-quiet:has(.case-toolbar:not([hidden])) .presence-hud{visibility:hidden;pointer-events:none}}

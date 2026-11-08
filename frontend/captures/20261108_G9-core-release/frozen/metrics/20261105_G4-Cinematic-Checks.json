@@ -1,0 +1,57 @@
+{
+  "checked": "2026-11-08T15:46:06.089Z",
+  "checks": [
+    "Normal play has no rehearsal controls",
+    "Unknown cinematic is refused without events",
+    "Escape cancels a lazily loading shot before it starts",
+    "Late lazy loading cannot reopen a cancelled shot or emit events",
+    "A cinematic blocks travel and hotspot input",
+    "Overlapping cinematics are refused",
+    "Three-light shot completes",
+    "Normal shot completes within fifteen seconds including loading",
+    "fog_lift: Escape skips and settles the promise",
+    "schooner_reveal: Escape skips and settles the promise",
+    "unmask: Escape skips and settles the promise",
+    "relighting: Escape skips and settles the promise",
+    "Every shot emits exact started and terminal payloads once",
+    "Visuals do not decide Relighting or move the player to another place",
+    "Reduced motion skips animation",
+    "Reduced-motion passage settles quickly",
+    "Cinematics release their bitmaps without extra world geometry or textures"
+  ],
+  "shots": {
+    "three_lights": {
+      "fps": 15,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    }
+  },
+  "before": {
+    "fps": 20,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "threeLightsMs": 8299.09999999404,
+  "captureAndShotMs": 8380,
+  "reducedMotionMs": 202,
+  "after": {
+    "fps": 18,
+    "calls": 97,
+    "triangles": 192,
+    "geometries": 96,
+    "textures": 27,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  }
+}

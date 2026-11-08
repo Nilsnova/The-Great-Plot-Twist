@@ -8,7 +8,8 @@ Play money only. The screen shows what the server says and sends what the player
 
 ## What the player sees
 
-- **Prices tab.** One card per company: name, what it follows ("Follows Bitcoin"), the real price with its currency and time, the status in words, and "Open a position". A company that cannot be opened shows the reason as text, never a silent disabled button. On top: the demo label (demo mode), "Trading opens soon." (flag off), the simulation note and every credit with its link.
+- **Prices tab.** One card per company: name, what it follows ("Follows Bitcoin"), the real price with its currency and time, the status in words, and "Open a position". A company that cannot be opened shows the reason as text, never a silent disabled button. On top: the demo label (demo mode), "Trading opens later." (flag off), the simulation note. Data credits appear only in Settings > Credits.
+- US stock opening captions show the server's `opensAt` in Lisbon time and say "Lisbon time". Price timestamps and market closing times keep the player's own time zone.
 - **Open form** (inside the card): rising or falling, a stake from `rules.stakeChoices` ("100 coins + 2 fee"), the 10x note, the estimated zero point, "You can lose at most 102 coins" and the confirm button ("Open rising position for 102 coins"). Nothing is preselected, so no click opens a position by accident.
 - **Your positions tab.** The coins, "Staked today", "Open positions", each open position with entry price, zero point, price now, worth now, and profit or loss in words ("Up 15 coins", "Down 20 coins"). "Close position" asks once more ("Close and receive about 113 coins?"). Below: the recently closed positions ("Closed by you: +113 coins" or "Closed at zero: ...").
 - **One status line** (`role="status"`) announces results and refusals. A position that closed at zero while the panel was open is announced once ("Your falling position in Pier Post Courier reached its zero point and closed at zero.").
@@ -91,3 +92,15 @@ cd frontend && npm run build     # the build includes the spoiler guard
 ```
 
 The tests need no network and no DOM. `boundary.test.js` keeps the team boundary: only `http.js` calls `fetch`, only `index.js` imports `http.js` or `fake.js`, every file starts with a header comment and stays under 150 lines, and no text contains an em or en dash.
+
+## G9 application capabilities
+
+The game supplies its explicit session's current A2 request function and separate anonymous public
+client. Prices remain available when trading is closed; portfolio and trade calls require the exact
+market flag and signed-in scope. No panel owns token renewal. Ordinary close retains an uncertain
+trade's original action id; account or permission cleanup erases private presentation.
+
+All requests use the shared status, report, sign-in and retry controls. A read retry stays a read.
+An explicit uncertain-trade retry first completes a current portfolio read, then reuses the original
+body and action id. A refused resend keeps that original uncertain attempt. The server supplies
+prices, balances, rules, simulation copy and outcomes.

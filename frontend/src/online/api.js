@@ -13,7 +13,7 @@
 //     `code` is the server's own short word (see the error shape in docs/INTERFACES.md). Without one
 //     it is a word for the status, or network_error or timeout (status 0).
 //   * turns 401, 409 and 429 into messages a player can read:
-//       401  "Please sign in again." and the session forgets the token, so the game shows sign-in.
+//       401  renews once when auth is available, then asks for sign-in if the retry is refused.
 //       409  the server's own message (it explains, for example "This was already done."). The code
 //            is kept, so a caller can treat already_applied, already_seated and already_started as done.
 //       429  "Wait N seconds", from the Retry-After header of the server.
@@ -107,7 +107,9 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
   function prepare(method, path, body) {
     checkPath(path);
     const headers = {};
-    const token = session.getToken();
+    const publicRead = method === 'GET'
+      && ['/api/config', '/api/world', '/api/bulletin', '/api/market'].includes(path.split('?')[0]);
+    const token = publicRead ? null : session.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
     const options = { method, headers };
     if (body !== undefined) {
@@ -117,14 +119,67 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
     return options;
   }
 
+  function sameSession(scope, token) {
+    if (typeof session.getScope === 'function') return session.getScope() === scope;
+    return session.getToken() === token;
+  }
+
+  function waitForRenewal(signal) {
+    return new Promise(resolve => {
+      let done = false;
+      const aborted = () => finish(false);
+      function finish(result) {
+        if (done) return;
+        done = true;
+        signal.removeEventListener('abort', aborted);
+        resolve(result === true);
+      }
+      signal.addEventListener('abort', aborted, {once: true});
+      Promise.resolve().then(() => session.renewToken()).then(finish, () => finish(false));
+      if (signal.aborted) aborted();
+    });
+  }
+
+  async function renewedOptions(options, scope, signal) {
+    const token = options.headers.Authorization?.slice(7);
+    if (!token || !sameSession(scope, token) || signal.aborted) return null;
+    let renewed = session.getToken() !== token;
+    if (!renewed && typeof session.renewToken === 'function') renewed = await waitForRenewal(signal);
+    if (!renewed || !sameSession(scope, token) || signal.aborted) return null;
+    const fresh = session.getToken();
+    if (!fresh) return null;
+    return {...options, headers: {...options.headers, Authorization: `Bearer ${fresh}`}};
+  }
+
   async function send(path, options) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), limit);
+    const scope = session.getScope?.();
+    let sent = options;
     try {
-      const response = await fetchImpl(path, { ...options, signal: controller.signal });
+      let response = await fetchImpl(path, { ...sent, signal: controller.signal });
+      if (response.status === 401) {
+        const retry = await renewedOptions(sent, scope, controller.signal);
+        if (controller.signal.aborted) return failure(0, 'timeout', MESSAGES.timeout);
+        if (retry) {
+          const firstBody = await readBody(response);
+          if (controller.signal.aborted) return failure(0, 'timeout', MESSAGES.timeout);
+          const retryToken = retry.headers.Authorization.slice(7);
+          if (!sameSession(scope, retryToken) || session.getToken() !== retryToken) {
+            return describeFailure(response, firstBody, {clearToken() {}});
+          }
+          sent = retry;
+          response = await fetchImpl(path, {...sent, signal: controller.signal});
+        }
+      }
       const body = await readBody(response);
       if (response.ok) return { ok: true, status: response.status, data: body };
-      return describeFailure(response, body, session);
+      const sentToken = sent.headers.Authorization?.slice(7);
+      return describeFailure(response, body, {clearToken() {
+        if (sentToken && sameSession(scope, sentToken) && session.getToken() === sentToken) {
+          session.clearToken();
+        }
+      }});
     } catch {
       if (controller.signal.aborted) return failure(0, 'timeout', MESSAGES.timeout);
       return failure(0, 'network_error', MESSAGES.network);

@@ -1,5 +1,5 @@
-// Pure colour, geometry and text checks shared by browser accessibility audits.
-// Colour channels use 0–255; alpha uses 0–1. No browser globals are needed.
+// Colour, geometry, text and rendered visibility checks shared by accessibility audits.
+// Colour channels use 0–255; alpha uses 0–1. DOM checks accept an injected style reader.
 function validColour(colour) {
   return colour && ['r', 'g', 'b'].every((key) =>
     Number.isFinite(colour[key]) && colour[key] >= 0 && colour[key] <= 255)
@@ -122,4 +122,84 @@ export function duplicateNames(names) {
     seen.add(normalized);
   }
   return [...duplicates];
+}
+
+// Closed native details may still expose descendant boxes. Only their first direct
+// summary (and its contents) participates in rendered content and keyboard order.
+export function insideClosedDetails(element) {
+  for (let ancestor = element?.parentElement; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor.tagName?.toLowerCase() !== 'details' || ancestor.open) continue;
+    const summary = [...ancestor.children].find(child => child.tagName?.toLowerCase() === 'summary');
+    if (!summary || !(summary === element || summary.contains(element))) return true;
+  }
+  return false;
+}
+
+export function renderedForAudit(element, styleOf = el => globalThis.getComputedStyle(el)) {
+  if (!element?.getClientRects().length || element.closest('[hidden],[inert],[aria-hidden="true"]')
+    || insideClosedDetails(element)) return false;
+  const rect = element.getBoundingClientRect(), style = styleOf(element);
+  return rect.width > 1 && rect.height > 1 && !['hidden', 'collapse'].includes(style.visibility);
+}
+
+// Keep every candidate for positive-tabindex checks; radio collapse applies only to traversal.
+export function focusCandidatesForAudit(root, styleOf) {
+  return [...root.querySelectorAll('button,input,select,textarea,a[href],summary,[tabindex]')]
+    .filter(element => !element.matches(':disabled') && element.tabIndex >= 0 && renderedForAudit(element, styleOf));
+}
+
+// Forward Tab enters a named native radio group once. Form ownership and the actual tree define it,
+// including checked members outside an audited subsection. Unnamed radios are independent stops.
+export function tabbableForAudit(root, styleOf) {
+  const selected = new Map();
+  return focusCandidatesForAudit(root, styleOf).filter(element => {
+    if (element.tagName.toLowerCase() !== 'input' || element.type !== 'radio' || !element.name) return true;
+    const tree = element.getRootNode();
+    if (!selected.has(tree)) selected.set(tree, new Map());
+    const forms = selected.get(tree), form = element.form;
+    if (!forms.has(form)) forms.set(form, new Map());
+    const groups = forms.get(form);
+    if (!groups.has(element.name)) {
+      const members = [...tree.querySelectorAll('input')].filter(member => member.type === 'radio'
+        && member.name === element.name && member.form === form && !member.matches(':disabled')
+        && member.tabIndex >= 0 && renderedForAudit(member, styleOf));
+      groups.set(element.name, members.find(member => member.checked) ?? members[0]);
+    }
+    return groups.get(element.name) === element;
+  });
+}
+
+// A native radio/checkbox label is itself a click target. Never merge separate rectangles or use a
+// decorative ancestor, hidden/inert label, disabled input, or pointer-disabled label as extra area.
+export function touchRectForAudit(element, styleOf = el => globalThis.getComputedStyle(el)) {
+  const own = element.getBoundingClientRect();
+  if (element.tagName.toLowerCase() !== 'input' || !['radio', 'checkbox'].includes(element.type)
+    || element.matches(':disabled') || !renderedForAudit(element, styleOf)) return own;
+  const labels = [...(element.labels ?? [])].filter(label => label.control === element
+    && renderedForAudit(label, styleOf) && styleOf(label).pointerEvents !== 'none');
+  return labels.reduce((best, label) => {
+    const rect = label.getBoundingClientRect(), size = Math.min(rect.width, rect.height), held = Math.min(best.width, best.height);
+    return size > held || size === held && rect.width * rect.height > best.width * best.height ? rect : best;
+  }, own);
+}
+
+// Native transparent radio overlays may paint their visible focus ring on their genuine label.
+// A focusable element alone is not proof: the current outline must survive color/ancestor opacity.
+export function visibleFocusForAudit(element, styleOf = el => globalThis.getComputedStyle(el)) {
+  if (!element?.matches(':focus') || !renderedForAudit(element, styleOf)) return false;
+  const outlined = indicator => {
+    if (!renderedForAudit(indicator, styleOf)) return false;
+    const style = styleOf(indicator), color = parseColour(style.outlineColor);
+    const width = Number.parseFloat(style.outlineWidth);
+    if (!style.outlineStyle || ['none', 'hidden'].includes(style.outlineStyle)
+      || !Number.isFinite(width) || width <= 0 || !color || color.a <= 0) return false;
+    for (let node = indicator; node; node = node.parentElement) {
+      const opacity = Number(styleOf(node).opacity ?? 1);
+      if (!Number.isFinite(opacity) || opacity <= 0) return false;
+    }
+    return true;
+  };
+  if (outlined(element)) return true;
+  if (element.tagName.toLowerCase() !== 'input' || !['radio', 'checkbox'].includes(element.type)) return false;
+  return [...(element.labels ?? [])].some(label => label.control === element && outlined(label));
 }

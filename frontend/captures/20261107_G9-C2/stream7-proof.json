@@ -1,0 +1,603 @@
+{
+  "checked": "2026-11-07T06:55:52.448846+00:00",
+  "stage": "stream7",
+  "outcome": "passed",
+  "checkpointComplete": false,
+  "sourceBase": "3788db5cc61b01dc3d630abfe5b41a3eca8a857b",
+  "sourceDirty": true,
+  "sourceFingerprints": {
+    "scripts/check-online-account.js": "83a87cf8bd371eb673d2faa85b1c26dbfba661bf9c77b16fade55c24a4cd3a2e",
+    "scripts/check-online-chaos.js": "b38561a66defb9075a3a2cbe52b76d363900481df5555a8f53477a9f7188f679",
+    "scripts/check-online-crew.js": "d337bb95f8dba12d5c3b70aceea94411e8c0f9ece9f1bc5e1ac9fc60b26f7834",
+    "scripts/check-online-golden.js": "0c3d8e14cf64e86ab1084fd10bc5040394df9c0ed2a3de41fe1132fbdeb180ab",
+    "scripts/check-online-presence.js": "b1c57af15d4590c5bb4a05bc6e786023715e0fcfa106354e224af6395b9bb1c5",
+    "scripts/online-presence-journeys.js": "ff48364a5b129b4db6214d78280e0cb3c1d7bbb2ad6989279d5fae9e3ce5a465",
+    "scripts/online-presence-send-observer.js": "fdc7b14c07898cf6cdaf94e83af2f78e407c6a2b31e08584154b490c3d1aafce",
+    "scripts/online-presence-wire-fixture.js": "ddd923a14d5875d358947855071a451b53c469df8a4648ffd4f3cad6fb50ef27",
+    "scripts/world-browser-tools.js": "9454f49918cfc7e84494d755ae66c80c80144a74d579919b31c1ea3e66349c09",
+    "src/adapter/lazy-online.js": "ba9b0227cea5498d83ceebd9a420738b69585d0bb8944b83cdfb4f349d164a82",
+    "src/adapter/unavailable.js": "66574335b532c4c980a25036cdaeca2362aa5c1fb68391509b7551c2afffc2bc",
+    "src/controls/presence-report.js": "0dc1bc4f409c202f914f0d9cf5c31f2fbcfda8b606214cbdda31fc4e6ac70d24",
+    "src/net/live-rules.js": "9c0646030561861526f16ab39b40b8ca38948f3b9759bcfdbc7e01bb4720aa82",
+    "src/online/auth.js": "ade9cb4fef73faac0ef408d5e12d712900d5dfad14f62b700843456bc28390e0",
+    "src/online/case-adapter/crew-polling.js": "66200ef439764d1267536192ee371a8fc05faa6ae4766979c5496ef57d64ecf0",
+    "src/online/case-adapter/index.js": "18467d4afd674feee4e3428e656bb301df5156d2326a9ed5bf215e8634e5ebb0",
+    "src/online/case-adapter/live-lifecycle.js": "e0b49e05c62e367d0c7fb5f2adad67cbb423631c54ed3be52547033ecac426e4",
+    "src/online/case-adapter/presence-view.js": "cfd1b86b773d0673562127f7c82765703887215115efae8cf3a1cef0593eb02d",
+    "src/online/case-adapter/presence.js": "b473c8048a89415ef2bf20e71c37b0df53d427a3923986d301cdff56b1d071c4",
+    "src/online/case-adapter/transport.js": "095732f599c2be8f29c50e95c8ccedd7d656adcc67df7d46be13cf18abce403d",
+    "src/online/case-adapter/view.js": "91c8ee8bd2d4aac905ea7ca0919fa61c547086895a1ab214371c1ed51ef75004",
+    "src/online/lazy-auth.js": "b73ea24c2fdb5ff4325291c8a4ff478a08bacfbbbfd6d6a699542c35b84f84fe",
+    "src/screens/arrival.js": "c23d15411d5f1b1c900977b28f94092e3fdadb93644034415523bdd147d5ea58",
+    "src/screens/controller.js": "3bfef6da98c84eb48ee30cdcfd20545a2e0d987198a0ed3b755da80f361f1abf",
+    "src/screens/presence/index.js": "4e70d8b6d15606ecd5f93a6be21e2e3bbe0f814149ba8d032fe2cbb6a809a4fb",
+    "src/ui/kit/server-call-state.js": "101fd407586ed6649fee3182b976c4e4fe6e8c4fa229bf9ca6b755c4713a506e",
+    "tests/auth.test.js": "879d0d55af25ea3edba38e64e0df55cd347449f11d7b11f957ef9e826764ad17",
+    "tests/g9-arrival-presentation.test.js": "8cd0a887c77629f99ab20c831f743f0ebb387b8c13c94623c11e641046edb4d4",
+    "tests/lazy-auth.test.js": "49b031595e20ee3c658a3c050b7ae770521a71f7283584fe972d6be1331c1c3a",
+    "tests/live-rules.test.js": "735c57c200a605ca9fde644f191eed07dc44f1a114d259bf7a0d5c134a71f537",
+    "tests/position-report.test.js": "e12ff09627dd746355f8d54926df14a40b089836401cf17deaa33e68516fc195",
+    "tests/presence-screen.test.js": "cf479b55309c10cd7fcf276c89e0836caf58167c5b999dc515dfc182b6d36ea0",
+    "tests/real-crew-lifecycle.test.js": "5eceedd3a92fedef8a32e09bad30cab4eb980fdde5b2d691f1815118e6b8d562",
+    "tests/real-crew-polling.test.js": "fc64fd04609517cc119d876758ad1d045f044cfe8e9afe2bcb2ee9dcab671715",
+    "tests/real-presence-lifecycle.test.js": "e18e2555e5eeddcfb659397c4bc9c1c37a73bb000f0e4b5d7c2d4b1776b8be8b",
+    "tests/real-presence-view.test.js": "1e3fc3948f5ec540b5da8e6fa2a28438be02190bfc7469b665c6b85a8be3a13e",
+    "tests/real-presence.test.js": "f8825d6994dd5da74cafa4dd4e4ce5b2e68044fc2d15cb892369fddf8b97bac0",
+    "tests/real-public-config-lifetime.test.js": "320e49ce41009f2b3778cfc3b5ded5cdc49fb02443ca53497fc5b99dc2b5e69f",
+    "tests/realtime.test.js": "a6f44ec7a3e068dc80efaf28cae452d48b1f7d00b45848c83d3031c9db014a08"
+  },
+  "gate": [
+    {
+      "name": "unit",
+      "command": "npm test",
+      "exitCode": 0,
+      "seconds": 168.39
+    },
+    {
+      "name": "build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 2.57
+    },
+    {
+      "name": "loading",
+      "command": "node scripts/check-loading.js",
+      "exitCode": 0,
+      "seconds": 9.77
+    },
+    {
+      "name": "csp",
+      "command": "node scripts/check-csp.js",
+      "exitCode": 0,
+      "seconds": 15.75
+    },
+    {
+      "name": "csp-inventory",
+      "command": "node scripts/check-csp-inventory.js",
+      "exitCode": 0,
+      "seconds": 0.69
+    },
+    {
+      "name": "online",
+      "command": "npm run test:online",
+      "exitCode": 0,
+      "seconds": 407.5
+    },
+    {
+      "name": "chaos",
+      "command": "node scripts/check-online-chaos.js",
+      "exitCode": 0,
+      "seconds": 184.44
+    },
+    {
+      "name": "a11y",
+      "command": "npm run test:a11y",
+      "exitCode": 0,
+      "seconds": 216.27
+    }
+  ],
+  "postGateVerification": {
+    "status": "passed",
+    "reason": "Move observed clocks after parsing, directly before forwarding the unchanged socket send.",
+    "path": "scripts/online-presence-send-observer.js",
+    "beforeSha256": "ee173e9f52dd4dc10f07c83d787235edb95f8868cb359db07382c21259dd18b6",
+    "afterSha256": "fdc7b14c07898cf6cdaf94e83af2f78e407c6a2b31e08584154b490c3d1aafce",
+    "productSourceChanged": false,
+    "command": "node scripts/check-online-presence.js",
+    "started": "2026-11-07T06:51:15.487765+00:00",
+    "exitCode": 0,
+    "checks": 37,
+    "gates": 5,
+    "protocol": [
+      {
+        "label": "flag false",
+        "activeConnections": 0,
+        "openedConnections": 0,
+        "positions": 0,
+        "moving": 0,
+        "stopped": 0,
+        "emotes": 0,
+        "advertisedMinimumGapMs": null,
+        "browserEmissions": 0,
+        "minimumBrowserSendGapMs": null,
+        "minimumBrowserMonotonicGapMs": null,
+        "minimumEndpointArrivalGapMs": null
+      },
+      {
+        "label": "string flag",
+        "activeConnections": 0,
+        "openedConnections": 0,
+        "positions": 0,
+        "moving": 0,
+        "stopped": 0,
+        "emotes": 0,
+        "advertisedMinimumGapMs": null,
+        "browserEmissions": 0,
+        "minimumBrowserSendGapMs": null,
+        "minimumBrowserMonotonicGapMs": null,
+        "minimumEndpointArrivalGapMs": null
+      },
+      {
+        "label": "number flag",
+        "activeConnections": 0,
+        "openedConnections": 0,
+        "positions": 0,
+        "moving": 0,
+        "stopped": 0,
+        "emotes": 0,
+        "advertisedMinimumGapMs": null,
+        "browserEmissions": 0,
+        "minimumBrowserSendGapMs": null,
+        "minimumBrowserMonotonicGapMs": null,
+        "minimumEndpointArrivalGapMs": null
+      },
+      {
+        "label": "name pending",
+        "activeConnections": 0,
+        "openedConnections": 0,
+        "positions": 0,
+        "moving": 0,
+        "stopped": 0,
+        "emotes": 0,
+        "advertisedMinimumGapMs": null,
+        "browserEmissions": 0,
+        "minimumBrowserSendGapMs": null,
+        "minimumBrowserMonotonicGapMs": null,
+        "minimumEndpointArrivalGapMs": null
+      },
+      {
+        "label": "signed out",
+        "activeConnections": 0,
+        "openedConnections": 0,
+        "positions": 0,
+        "moving": 0,
+        "stopped": 0,
+        "emotes": 0,
+        "advertisedMinimumGapMs": null,
+        "browserEmissions": 0,
+        "minimumBrowserSendGapMs": null,
+        "minimumBrowserMonotonicGapMs": null,
+        "minimumEndpointArrivalGapMs": null
+      },
+      {
+        "label": "Presence 1280",
+        "activeConnections": 0,
+        "openedConnections": 2,
+        "positions": 11,
+        "moving": 6,
+        "stopped": 5,
+        "emotes": 1,
+        "advertisedMinimumGapMs": 500,
+        "browserEmissions": 11,
+        "minimumBrowserSendGapMs": 522,
+        "minimumBrowserMonotonicGapMs": 521.8999999985099,
+        "minimumEndpointArrivalGapMs": 511
+      },
+      {
+        "label": "Presence 375",
+        "activeConnections": 0,
+        "openedConnections": 2,
+        "positions": 11,
+        "moving": 6,
+        "stopped": 5,
+        "emotes": 1,
+        "advertisedMinimumGapMs": 500,
+        "browserEmissions": 11,
+        "minimumBrowserSendGapMs": 500,
+        "minimumBrowserMonotonicGapMs": 500.3999999985099,
+        "minimumEndpointArrivalGapMs": 498
+      },
+      {
+        "label": "Deletion cleanup",
+        "activeConnections": 0,
+        "openedConnections": 1,
+        "positions": 5,
+        "moving": 3,
+        "stopped": 2,
+        "emotes": 0,
+        "advertisedMinimumGapMs": 500,
+        "browserEmissions": 5,
+        "minimumBrowserSendGapMs": 537,
+        "minimumBrowserMonotonicGapMs": 537.6000000014901,
+        "minimumEndpointArrivalGapMs": 537
+      }
+    ],
+    "unverified": [
+      "Installed headless Chrome keeps this background tab visible; native tab-pause proof still required."
+    ],
+    "checked": "2026-11-07T06:55:52.364945+00:00"
+  },
+  "unit": {
+    "tests": 2545,
+    "files": 182
+  },
+  "online": {
+    "anonymousChecks": 18,
+    "authChecks": 21,
+    "signInFlagChecks": 7,
+    "accountChecks": 45,
+    "crewChecks": 44,
+    "crewRequests": 244,
+    "presenceChecks": 37,
+    "presenceRequests": 72,
+    "widths": [
+      1280,
+      375
+    ],
+    "strictPresenceGates": [
+      {
+        "label": "flag false",
+        "verified": true,
+        "strictFlag": false,
+        "generatedName": true,
+        "signedIn": true
+      },
+      {
+        "label": "string flag",
+        "verified": true,
+        "strictFlag": false,
+        "generatedName": true,
+        "signedIn": true
+      },
+      {
+        "label": "number flag",
+        "verified": true,
+        "strictFlag": false,
+        "generatedName": true,
+        "signedIn": true
+      },
+      {
+        "label": "name pending",
+        "verified": true,
+        "strictFlag": true,
+        "generatedName": false,
+        "signedIn": true
+      },
+      {
+        "label": "signed out",
+        "verified": true,
+        "strictFlag": true,
+        "generatedName": true,
+        "signedIn": false
+      }
+    ]
+  },
+  "chaos": [
+    {
+      "action": "account/create",
+      "cases": 28,
+      "assertions": 160,
+      "coverage": "partial",
+      "pendingGroups": [
+        "presence",
+        "islet",
+        "market",
+        "predictions",
+        "arena",
+        "bulletin",
+        "case",
+        "partners",
+        "finale"
+      ]
+    },
+    {
+      "action": "join",
+      "cases": 7,
+      "assertions": 42,
+      "coverage": "partial",
+      "pendingGroups": [
+        "account",
+        "intro",
+        "save",
+        "presence",
+        "islet",
+        "market",
+        "predictions",
+        "arena",
+        "bulletin",
+        "case",
+        "partners",
+        "finale"
+      ]
+    },
+    {
+      "action": "muster",
+      "cases": 7,
+      "assertions": 42,
+      "coverage": "partial",
+      "pendingGroups": [
+        "account",
+        "intro",
+        "save",
+        "presence",
+        "islet",
+        "market",
+        "predictions",
+        "arena",
+        "bulletin",
+        "case",
+        "partners",
+        "finale"
+      ]
+    }
+  ],
+  "a11y": {
+    "contexts": 43,
+    "viewportSamples": 129,
+    "shortCrew": {
+      "fixture": "local-component-lab",
+      "metrics": {
+        "viewport": {
+          "width": 375,
+          "height": 400
+        },
+        "focused": true,
+        "enabled": true,
+        "rendered": true,
+        "autocapitalize": "characters",
+        "inputmode": "text",
+        "field": {
+          "width": 234,
+          "height": 44,
+          "size": 16,
+          "insideViewport": true,
+          "insideContent": true,
+          "hit": true
+        },
+        "controls": {
+          "count": 4,
+          "smallTargets": 0,
+          "minimumSize": 16
+        },
+        "body": {
+          "count": 14,
+          "minimumSize": 18
+        },
+        "overflow": false,
+        "dialogFits": true
+      },
+      "checks": {
+        "focusedCode": true,
+        "codeKeyboard": true,
+        "crewTargets": true,
+        "crewText": true,
+        "crewOverflow": true
+      }
+    },
+    "failures": [],
+    "errors": [],
+    "browserErrors": []
+  },
+  "loading": {
+    "initialJavaScript": 21073,
+    "initialCss": 11878,
+    "titleImageBytes": 274026
+  },
+  "coldGraph": {
+    "sdkInInitialGraph": false,
+    "realtimeInInitialGraph": false
+  },
+  "protocol": [
+    {
+      "label": "flag false",
+      "activeConnections": 0,
+      "openedConnections": 0,
+      "positions": 0,
+      "moving": 0,
+      "stopped": 0,
+      "emotes": 0,
+      "advertisedMinimumGapMs": null,
+      "browserEmissions": 0,
+      "minimumBrowserSendGapMs": null,
+      "minimumBrowserMonotonicGapMs": null,
+      "minimumEndpointArrivalGapMs": null
+    },
+    {
+      "label": "string flag",
+      "activeConnections": 0,
+      "openedConnections": 0,
+      "positions": 0,
+      "moving": 0,
+      "stopped": 0,
+      "emotes": 0,
+      "advertisedMinimumGapMs": null,
+      "browserEmissions": 0,
+      "minimumBrowserSendGapMs": null,
+      "minimumBrowserMonotonicGapMs": null,
+      "minimumEndpointArrivalGapMs": null
+    },
+    {
+      "label": "number flag",
+      "activeConnections": 0,
+      "openedConnections": 0,
+      "positions": 0,
+      "moving": 0,
+      "stopped": 0,
+      "emotes": 0,
+      "advertisedMinimumGapMs": null,
+      "browserEmissions": 0,
+      "minimumBrowserSendGapMs": null,
+      "minimumBrowserMonotonicGapMs": null,
+      "minimumEndpointArrivalGapMs": null
+    },
+    {
+      "label": "name pending",
+      "activeConnections": 0,
+      "openedConnections": 0,
+      "positions": 0,
+      "moving": 0,
+      "stopped": 0,
+      "emotes": 0,
+      "advertisedMinimumGapMs": null,
+      "browserEmissions": 0,
+      "minimumBrowserSendGapMs": null,
+      "minimumBrowserMonotonicGapMs": null,
+      "minimumEndpointArrivalGapMs": null
+    },
+    {
+      "label": "signed out",
+      "activeConnections": 0,
+      "openedConnections": 0,
+      "positions": 0,
+      "moving": 0,
+      "stopped": 0,
+      "emotes": 0,
+      "advertisedMinimumGapMs": null,
+      "browserEmissions": 0,
+      "minimumBrowserSendGapMs": null,
+      "minimumBrowserMonotonicGapMs": null,
+      "minimumEndpointArrivalGapMs": null
+    },
+    {
+      "label": "Presence 1280",
+      "activeConnections": 0,
+      "openedConnections": 2,
+      "positions": 11,
+      "moving": 6,
+      "stopped": 5,
+      "emotes": 1,
+      "advertisedMinimumGapMs": 500,
+      "browserEmissions": 11,
+      "minimumBrowserSendGapMs": 522,
+      "minimumBrowserMonotonicGapMs": 521.8999999985099,
+      "minimumEndpointArrivalGapMs": 511
+    },
+    {
+      "label": "Presence 375",
+      "activeConnections": 0,
+      "openedConnections": 2,
+      "positions": 11,
+      "moving": 6,
+      "stopped": 5,
+      "emotes": 1,
+      "advertisedMinimumGapMs": 500,
+      "browserEmissions": 11,
+      "minimumBrowserSendGapMs": 500,
+      "minimumBrowserMonotonicGapMs": 500.3999999985099,
+      "minimumEndpointArrivalGapMs": 498
+    },
+    {
+      "label": "Deletion cleanup",
+      "activeConnections": 0,
+      "openedConnections": 1,
+      "positions": 5,
+      "moving": 3,
+      "stopped": 2,
+      "emotes": 0,
+      "advertisedMinimumGapMs": 500,
+      "browserEmissions": 5,
+      "minimumBrowserSendGapMs": 537,
+      "minimumBrowserMonotonicGapMs": 537.6000000014901,
+      "minimumEndpointArrivalGapMs": 537
+    }
+  ],
+  "nativePause": [
+    {
+      "label": "Presence 1280",
+      "verified": false,
+      "reason": "Installed headless Chrome keeps this background tab visible; native tab-pause proof still required."
+    },
+    {
+      "label": "Presence 375",
+      "verified": false,
+      "reason": "Installed headless Chrome keeps this background tab visible; native tab-pause proof still required."
+    }
+  ],
+  "timingMeasurement": {
+    "gate": "Date.now at the actual routed WebSocket.send call",
+    "minimumAllowanceMs": 500,
+    "endpointArrival": "Diagnostic only: asynchronous automation delivery is measured separately.",
+    "historicalFailedEndpointGapMs": 466,
+    "historicalBrowserSendTimeAvailable": false,
+    "phoneProbe": {
+      "matchedEmissions": 11,
+      "missing": 0,
+      "minimumBrowserSendGapMs": 500,
+      "minimumMonotonicGapMs": 500.5
+    },
+    "runnerLoadProbe": {
+      "loadMs": 100,
+      "matchedEmissions": 15,
+      "missing": 0,
+      "minimumBrowserSendGapMs": 506,
+      "minimumEndpointArrivalGapMs": 506,
+      "reproducedHistoricalGap": false
+    }
+  },
+  "visualReview": {
+    "captures": [
+      "captures/20261107_G9-C2/presence-eight-plus-more-1280.png",
+      "captures/20261107_G9-C2/presence-two-captains-wave-375.png"
+    ],
+    "phoneWaveReviewed": true,
+    "desktopEightPlusTwoReviewed": true
+  },
+  "attempts": [
+    {
+      "number": 1,
+      "failed": "unit",
+      "finding": "Off-state projection changed its sampling time on a no-op read; stable projection now preserves it."
+    },
+    {
+      "number": 2,
+      "failed": "loading",
+      "finding": "Shared live-rules preload metadata exceeded the unchanged cap. Three behavior-preserving startup simplifications restored headroom."
+    },
+    {
+      "number": 3,
+      "failed": "online anonymous",
+      "finding": "Persistent arrival included an empty hidden kit marker. The marker is now assigned only for a supplied kit, with a regression assertion."
+    },
+    {
+      "number": 4,
+      "failed": "chaos runner",
+      "finding": "After 28 passing cases, an unfinished parent module was dynamically imported by the crew runner. The parent now injects its existing function; the standalone fallback remains."
+    },
+    {
+      "number": 5,
+      "failed": "presence journey readiness",
+      "finding": "The test walked into the map edge during the permitted reconnect announcement jitter. It now observes the fresh intercepted announcement before driving the next movement proof; the focused 15-check path passed."
+    },
+    {
+      "number": 6,
+      "failed": "account journey completion",
+      "finding": "Conflict controls disappear during saving before PUT completion; the assertion now waits for the real successful account-call state before checking exact write counts."
+    },
+    {
+      "number": 7,
+      "failed": "endpoint timing proxy",
+      "finding": "An automation endpoint callback gap was 466 ms. The proof now matches every position to its browser emission and requires the unchanged 500 ms send allowance there; endpoint and monotonic timings remain explicit diagnostics."
+    },
+    {
+      "number": 8,
+      "outcome": "passed"
+    }
+  ],
+  "remaining": [
+    "Installed headless Chrome keeps this background tab visible; native tab-pause proof still required.",
+    "Full 44-command self-check on clean committed source before push.",
+    "R11 serialized case DTO examples for streams12-15.",
+    "R16 unchanged target-hardware frame proof.",
+    "Streams8-21 and the approved overflow list remain; this is not a completed checkpoint."
+  ]
+}

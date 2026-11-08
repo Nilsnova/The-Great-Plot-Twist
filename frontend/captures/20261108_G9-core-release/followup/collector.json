@@ -1,0 +1,43 @@
+{
+  "head": "b46178ede29fc036a013d3ed6c247aeb6a3686e8",
+  "base": "646e3a0",
+  "sourceSha256": {
+    "frontend/scripts/check-chaos.js": "2082bec44ddc1d1c8542cf3a79a5808f916302f33e4a8f7df24f3187e80a3aa1",
+    "frontend/scripts/check-online-case.js": "ffa745b8b6ae8241fce1db6c305fd6e578786c4db388a42535e95ae6db79698b",
+    "frontend/scripts/online-case-fixture.js": "1b392c27e304e270ebfa6fbc27879b14c45d565b5d9f631bcfe26705ce3f058c",
+    "frontend/scripts/online-case-journeys.js": "ad156daa33ee87256d3b85da4b1398153c4dfe2643ecc2e2500876cfef51d3d2",
+    "frontend/scripts/world-browser-tools.js": "dfb0e15e82eb5ebf348b7c626a9a3c72561e720875c7a905bb04c3ecf9acf690",
+    "frontend/src/online/case-adapter/case-lifecycle.js": "e6e433ad642663d11b8e3802176fd2279ba9fde8e6753d5fed6942d53ca78548",
+    "frontend/src/online/case-adapter/store.js": "bb635d33d624376880a1640d94033b511e9a917b055a93e7b5d4b1b63206fde1",
+    "frontend/src/screens/board.js": "ae1ba5b4654cba238894a6784965243dc9ddb153d969e77e929a8a3e3be4efad",
+    "frontend/src/screens/duels/duels.css": "d0425968e0d1ccb554e67c53055ca7c13fa2cc8ba0973e4acf36750b4b77284d",
+    "frontend/src/screens/reveal.js": "7e1d75dda8c9b2e13bfe0c41683e1decb447d947f69871aba9131eb95d73a907",
+    "frontend/src/screens/search.js": "55e70df2cee2482e8b656e9966da940d8ecbb72687df617fda8a97795e538b54",
+    "frontend/tests/case-controls-stability.test.js": "92577143f0937610f162f51b9bef7405c480a72d4b710b2b2fc34c04b7ac1113",
+    "frontend/tests/g9-islet-case-presentation.test.js": "2f3984d40404073b6c9033fd1dfdf1f3cd42df31d4e416cc5dc8d293fa1521c8",
+    "frontend/tests/reveal-world-authority.test.js": "a4b1375bb7bf3ed711c9e01314e592afc6a366744e2404883b91eebab8727dd1"
+  },
+  "rawBackup": "node_modules/.cache/g9-final-followups-raw-3903fb14848a",
+  "files": {
+    "logs/g9-release-affected-unit.log": "81d32662fe887e40154e12755a8286f7552f993a7bf3f8e7e466c577c37ca511",
+    "logs/g9-release-panels-case.log": "07a528ae422ed7637f10a3a41b424b96f89f197e899ae77b5e3f571b4f31d035",
+    "logs/g9-controls-unit-final.log": "44598eebd4347b02050a18b9a4426a5c89125107ad0ebd889dbd7f174837ecc9",
+    "logs/g9-controls-unit-final2.log": "bdabaa119ffc1533f2af0048b3b0a3ab8f4de7c33513b4517186f8b4ca56a4b4",
+    "logs/g9-case-controls-final.log": "2011d1ef4bf44f2925a93350b99cede93a5155f8ae57b30cb87830d09ae2c2ff",
+    "logs/g9-a11y-final.log": "094521016d17043959120084829fa7254947ad092927358a6806f964832eee21",
+    "logs/g9-chaos-final.log": "1a09d209b381477a4108eea9a684ec0ad2d37d866552042b4edb8fcf2c3009c1",
+    "logs/g9-unit-final.log": "bcb8f838169b49cf5d81a3e46120a1f5591f52b725105a2a16fe177c4ae54129",
+    "logs/g9-build-final.log": "f12dcf994a1ec49b10260db584ef285453b92eb4dc6dc1e3c2e4ae8a38c0454e",
+    "logs/g9-loading-final.log": "bdf0986ccfc2326d849980fcb112476989354ac3506a4bd579b7dc7cd3d58537",
+    "logs/g9-csp-final.log": "9420b1f27a1786e4168b606673241ba818734b71dbce1e4cb765ca97260479c3",
+    "logs/g9-case-final.log": "2011d1ef4bf44f2925a93350b99cede93a5155f8ae57b30cb87830d09ae2c2ff",
+    "reports/20261106_G8-A11y-Checks.json": "f341e8d53608a8bd252aca6cd067ba52706b8ff97d48fb6b2ef7912c8408c591",
+    "reports/20261106_G7-Chaos-Checks.json": "1a09d209b381477a4108eea9a684ec0ad2d37d866552042b4edb8fcf2c3009c1",
+    "reports/online-case.json": "2dfdda43aabfee5335706f32d3df8a8d3c32769560dc90636e1c460d3931dec5",
+    "reports/online-predictions.json": "19daaf7087cbb7963fd5d16597ed716043e8c0c40e8816b9417d3cc7aca0b1a7",
+    "reports/online-arena.json": "74d7e6baf2b9617d23f682ce791b00b90053c7dbf371be9158574056c595b219",
+    "reports/online-bulletin.json": "51417a87ca75ceaee45ed537bdb5091d6827732d1198c8aabe75ffecc8955b3f"
+  },
+  "missingOptionalLogs": [],
+  "note": "Collection only; final outcomes are recorded separately by the coordinator."
+}

@@ -16,7 +16,7 @@ export function createPicker({ onChange } = {}) {
   const oilLine = node('p', 'duel-oil'), roundsBox = node('div', 'duel-rounds');
   const bar = createProgress({ label: 'Lantern oil', value: 0, max: 1 });
   const groupId = uniqueId('duel-picker');
-  let total = 0, picks = [], options = [];
+  let total = 0, picks = [], options = [], disposed=false;
   oilLine.setAttribute('aria-live', 'polite');
 
   // One <label> with a hidden radio inside, so the whole big button is clickable.
@@ -28,6 +28,7 @@ export function createPicker({ onChange } = {}) {
     input.name = `${groupId}-${roundIndex}`;
     input.value = signal;
     input.addEventListener('change', () => {
+      if(disposed)return;
       picks = pick(total, picks, roundIndex, signal);
       refresh();
       onChange?.({ signals: [...picks], complete: isSealable(total, picks) });
@@ -54,6 +55,7 @@ export function createPicker({ onChange } = {}) {
 
   // Shows what is chosen, disables what the oil cannot pay for, and says why.
   function refresh() {
+    if(disposed)return;
     for (const { input, reason, signal, roundIndex } of options) {
       const allowed = canPick(total, picks, roundIndex, signal);
       input.checked = picks[roundIndex] === signal;
@@ -67,6 +69,7 @@ export function createPicker({ onChange } = {}) {
   }
 
   const clearButton = button('Clear', () => {
+    if(disposed)return;
     picks = emptyPicks(total);
     refresh();
     onChange?.({ signals: [...picks], complete: false });
@@ -77,6 +80,7 @@ export function createPicker({ onChange } = {}) {
   return {
     element,
     setRounds(count) {
+      if(disposed)return;
       total = count;
       picks = emptyPicks(count);
       build();
@@ -85,6 +89,6 @@ export function createPicker({ onChange } = {}) {
     getSignals: () => [...picks],
     isComplete: () => isSealable(total, picks),
     clear: () => clearButton.click(),
-    dispose() { element.remove(); },
+    dispose() { disposed=true;picks=[];options=[];element.replaceChildren();element.remove(); },
   };
 }

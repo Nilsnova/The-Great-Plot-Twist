@@ -1,0 +1,46 @@
+{
+  "stage": "stream 3; checkpoint 1 incomplete",
+  "unitTests": 2141,
+  "unitFiles": 152,
+  "note": "Full working-tree count includes 23 prepared stream-4 account tests; those helpers remain uncommitted and unwired.",
+  "initialJavaScript": 20873,
+  "initialCss": 11771,
+  "commands": [
+    {
+      "command": "npm test",
+      "code": 0,
+      "log": "captures/20261106_G9-C1/stream3-unit.log"
+    },
+    {
+      "command": "npm run build",
+      "code": 0,
+      "log": "captures/20261106_G9-C1/stream3-build.log"
+    },
+    {
+      "command": "node scripts/check-online-golden.js",
+      "code": 0,
+      "log": "captures/20261106_G9-C1/stream3-online.log"
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "code": 0,
+      "log": "captures/20261106_G9-C1/stream3-loading.log"
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "code": 0,
+      "log": "captures/20261106_G9-C1/stream3-csp.log"
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "code": 0,
+      "log": "captures/20261106_G9-C1/stream3-a11y.log"
+    }
+  ],
+  "independentReview": "Three lifecycle findings fixed and independently re-reviewed; no unresolved actionable findings in bounded review.",
+  "notVerified": [
+    "Real OAuth, database or Realtime",
+    "Deployed callback/headers/preview",
+    "Safari, Firefox, VoiceOver, physical phone/gamepad"
+  ]
+}

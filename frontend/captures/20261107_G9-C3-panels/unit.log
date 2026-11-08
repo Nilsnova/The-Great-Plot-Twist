@@ -1,0 +1,197 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/g9-duels-cooldown.test.js tests/duels-poll.test.js tests/g9-duels-close-lifecycle.test.js tests/duels-logic.test.js tests/duels-index.test.js tests/arena-entry.test.js tests/g9-duels-open-lifecycle.test.js tests/duels-http.test.js tests/market-credits-settings.test.js tests/predictions-entry.test.js tests/duels-text.test.js tests/duels-entry-lifecycle.test.js tests/g9-after-paint-services.test.js tests/g9-panel-action-names.test.js tests/duels-fake.test.js tests/predictions/http-adapter.test.js tests/predictions/request.test.js tests/predictions/desk-state.test.js tests/predictions/g9-cooldown-safety.test.js tests/predictions/view-model.test.js tests/predictions/adapter-choice.test.js tests/predictions/g9-integration.test.js tests/predictions/g9-close-lifecycle.test.js tests/predictions/presenter-model.test.js tests/predictions/flow.test.js tests/predictions/fake-adapter.test.js
+
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/duels-fake.test.js (59 tests | 1 failed) 119ms
+   ❯ the practice adapter (15)
+     × stops the rival when the adapter is disposed 13ms
+ ❯ tests/duels-index.test.js (8 tests | 7 failed) 58ms
+   ❯ isArenaOpen (5)
+     × is true while the panel is open 14ms
+     × is false again once the player closes the dialog 3ms
+     × is false after the game shut the panel down 2ms
+     × is false for a panel that says it is gone, even if its dialog still says open 2ms
+   ❯ openArena (3)
+     × builds one panel for two quick presses 3ms
+     × opens the same panel again after it was closed 1ms
+     × builds a fresh panel after the game shut the old one down 1ms
+ ❯ tests/duels-entry-lifecycle.test.js (3 tests | 3 failed) 31ms
+   ❯ arena owner lifetime (2)
+     × disposes an adapter that finishes loading after the game closes 16ms
+     × lets a new game open while an old load is still pending 3ms
+   ❯ festival duel handoff (1)
+     × forwards the server-provided duel id and awaits the existing detail panel 9ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/duels-entry-lifecycle.test.js > arena owner lifetime > disposes an adapter that finishes loading after the game closes
+AssertionError: expected "vi.fn()" to be called once, but got 0 times
+ ❯ tests/duels-entry-lifecycle.test.js:16:29
+     14|     const adapter={dispose:vi.fn()};finish(adapter);
+     15|     await pending;
+     16|     expect(adapter.dispose).toHaveBeenCalledOnce();
+       |                             ^
+     17|     expect(fakes.panel).not.toHaveBeenCalled();
+     18|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  tests/duels-entry-lifecycle.test.js > arena owner lifetime > lets a new game open while an old load is still pending
+AssertionError: expected "vi.fn()" to be called once, but got 0 times
+ ❯ tests/duels-entry-lifecycle.test.js:27:24
+     25|     await openArena({});
+     26|     finish({dispose:vi.fn()});await old;
+     27|     expect(panel.open).toHaveBeenCalledOnce();
+       |                        ^
+     28|     expect(fakes.panel).toHaveBeenCalledOnce();
+     29|     disposeArena();expect(panel.dispose).toHaveBeenCalledOnce();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  tests/duels-entry-lifecycle.test.js > festival duel handoff > forwards the server-provided duel id and awaits the existing detail panel
+AssertionError: expected undefined to be 'fixture-duel' // Object.is equality
+
+- Expected:
+"fixture-duel"
+
++ Received:
+undefined
+
+ ❯ tests/duels-entry-lifecycle.test.js:37:53
+     35|     const adapter={dispose:vi.fn()},panel={open:vi.fn(async id=>id),di…
+     36|     fakes.choose.mockReturnValueOnce(adapter);fakes.panel.mockReturnVa…
+     37|     await expect(openArena({duelId:'fixture-duel'})).resolves.toBe('fi…
+       |                                                     ^
+     38|     expect(panel.open).toHaveBeenCalledWith('fixture-duel');disposeAre…
+     39|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  tests/duels-fake.test.js > the practice adapter > stops the rival when the adapter is disposed
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/duels-fake.test.js:352:34
+    350|     adapter.dispose();
+    351|     await vi.advanceTimersByTimeAsync(10000);
+    352|     expect(adapter.read().yours).toHaveLength(1);
+       |                                  ^
+    353|   });
+    354|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  tests/duels-index.test.js > isArenaOpen > is true while the panel is open
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/duels-index.test.js:56:27
+     54|     await openArena(CTX);
+     55|
+     56|     expect(isArenaOpen()).toBe(true);
+       |                           ^
+     57|   });
+     58|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  tests/duels-index.test.js > isArenaOpen > is false again once the player closes the dialog
+TypeError: Cannot read properties of undefined (reading 'element')
+ ❯ tests/duels-index.test.js:63:15
+     61|     await openArena(CTX);
+     62|
+     63|     panels[0].element.open = false;
+       |               ^
+     64|
+     65|     expect(isArenaOpen()).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  tests/duels-index.test.js > isArenaOpen > is false after the game shut the panel down
+TypeError: Cannot read properties of undefined (reading 'shutDown')
+ ❯ tests/duels-index.test.js:72:15
+     70|     await openArena(CTX);
+     71|
+     72|     panels[0].shutDown();
+       |               ^
+     73|
+     74|     expect(isArenaOpen()).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  tests/duels-index.test.js > isArenaOpen > is false for a panel that says it is gone, even if its dialog still says open
+TypeError: Cannot set properties of undefined (setting 'gone')
+ ❯ tests/duels-index.test.js:81:20
+     79|     await openArena(CTX);
+     80|
+     81|     panels[0].gone = true; // gone, and index.js has not heard about i…
+       |                    ^
+     82|
+     83|     expect(isArenaOpen()).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  tests/duels-index.test.js > openArena > builds one panel for two quick presses
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/duels-index.test.js:93:20
+     91|     await Promise.all([openArena(CTX), openArena(CTX)]);
+     92|
+     93|     expect(panels).toHaveLength(1);
+       |                    ^
+     94|   });
+     95|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  tests/duels-index.test.js > openArena > opens the same panel again after it was closed
+TypeError: Cannot read properties of undefined (reading 'element')
+ ❯ tests/duels-index.test.js:99:15
+     97|     const { openArena, isArenaOpen } = await freshEntry();
+     98|     await openArena(CTX);
+     99|     panels[0].element.open = false;
+       |               ^
+    100|
+    101|     await openArena(CTX);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  tests/duels-index.test.js > openArena > builds a fresh panel after the game shut the old one down
+TypeError: Cannot read properties of undefined (reading 'shutDown')
+ ❯ tests/duels-index.test.js:110:15
+    108|     const { openArena, isArenaOpen } = await freshEntry();
+    109|     await openArena(CTX);
+    110|     panels[0].shutDown();
+       |               ^
+    111|
+    112|     await openArena(CTX);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  3 failed | 23 passed (26)
+      Tests  11 failed | 601 passed (612)
+   Start at  19:27:00
+   Duration  33.48s (tests 83%, import 13%, transform 3%, worker 1%)
+
+    Isolate  26 workers spawned · ~203ms startup each (spawn + environment, per file)
+             at least ~5.08s faster with isolate: false — reuses workers across files instead of one per file

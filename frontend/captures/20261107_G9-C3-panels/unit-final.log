@@ -1,0 +1,15 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/g9-duels-cooldown.test.js tests/duels-poll.test.js tests/g9-duels-close-lifecycle.test.js tests/duels-logic.test.js tests/duels-index.test.js tests/arena-entry.test.js tests/g9-duels-open-lifecycle.test.js tests/duels-http.test.js tests/market-credits-settings.test.js tests/predictions-entry.test.js tests/duels-text.test.js tests/duels-entry-lifecycle.test.js tests/g9-after-paint-services.test.js tests/g9-panel-action-names.test.js tests/duels-fake.test.js tests/predictions/http-adapter.test.js tests/predictions/request.test.js tests/predictions/desk-state.test.js tests/predictions/g9-cooldown-safety.test.js tests/predictions/view-model.test.js tests/predictions/adapter-choice.test.js tests/predictions/g9-integration.test.js tests/predictions/g9-close-lifecycle.test.js tests/predictions/presenter-model.test.js tests/predictions/flow.test.js tests/predictions/fake-adapter.test.js tests/predictions/g9-readback-display.test.js
+
+
+ RUN  v5.1.0 <frontend>
+
+
+ Test Files  27 passed (27)
+      Tests  618 passed (618)
+   Start at  19:36:12
+   Duration  39.97s (tests 85%, import 13%, transform 1%, worker 1%)
+
+    Isolate  27 workers spawned · ~195ms startup each (spawn + environment, per file)
+             at least ~5.07s faster with isolate: false — reuses workers across files instead of one per file

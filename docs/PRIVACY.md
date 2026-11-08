@@ -2,11 +2,11 @@
 
 For players of The Great Plot Twist and the course team. **Student project, not legal advice.**
 
-Reviewed on 6 November 2026 against the current repository, including the case, Exchange, festival, host console and sports packages. This is not a check of live provider retention settings. The [data inventory](DATA-INVENTORY.md) gives the technical record.
+Reviewed on 8 November 2026 against the current repository, including browser sign-in, cloud saves, crews, the case, Exchange, festival, host console and sports packages. This is not a check of live provider retention settings. The [data inventory](DATA-INVENTORY.md) gives the technical record.
 
 ## What we keep and why
 
-You can explore and play the local intro without signing in. The ordinary browser game is still waiting for its complete online account/case connection. A local rehearsal does not create a live account, crew, cloud save or reward.
+You can explore and play the opening story without signing in. The connected game uses GitHub sign-in for cloud saves, crews and the shared mystery. A local rehearsal does not create a live account, crew, cloud save or reward.
 
 Connected account features use GitHub sign-in through Supabase. The game identifies you by a player ID and a generated captain name, rather than displaying your GitHub name or email. Supabase's own login records can contain account details.
 
@@ -30,7 +30,7 @@ Application failures can log request paths and tracebacks. Supabase/Vercel logs 
 
 ## Delete my data
 
-When connected, open **Account and saves**, choose **Delete my data**, read the notice and choose **Confirm deletion**. While the ordinary game cannot confirm your account, contact **Nils through the course page** for access or deletion help. Clearing site data or signing out does not delete an account.
+When signed in, open **Account and saves**, choose **Delete my data**, read the notice and choose **Confirm deletion**. If sign-in or deletion is unavailable, contact **Nils through the course page** for access or deletion help. Clearing site data or signing out does not delete an account.
 
 Successful account deletion removes the Supabase login, profile, saves, wallet and **all of your ledger history**, together with your account-linked game rows. A shared crew you own is passed to the other human player in the lowest occupied seat. An owned crew with no other human member is removed. Other players and surviving shared case/world records remain; applicable historical actor links become empty. A timeout leaves the outcome unknown and needs a follow-up check.
 
@@ -42,8 +42,9 @@ The game code has no advertising or analytics integration and sets no applicatio
 
 - Local storage keeps graphics/audio/accessibility preferences and the intro action list. Starting a new intro replaces its actions; clearing this site's data removes local progress and preferences. There is no automatic expiry.
 - An older story helper can leave a legacy save key on a browser that used it.
+- GitHub sign-in keeps the Supabase SDK's sign-in session, including tokens and user details returned by Supabase, in this tab's `sessionStorage`. Temporary PKCE secrets for the sign-in return are stored there too. Reloading can restore sign-in; the browser controls the tab session's lifetime and can restore it with a saved browser session.
+- Sign-out or a rejected session clears the current in-memory access token and removes this game's stored sign-in session and PKCE entries when browser storage permits. Finishing or rejecting the sign-in return also removes its PKCE entries. An abandoned sign-in can leave them until sign-out or the tab session ends. These steps do not delete cloud records or local progress/preferences.
 - The team's separate sign-in check temporarily keeps a PKCE secret in tab session storage until used, forgotten or the tab session ends.
-- Login tokens stay in memory, not application cookies or persistent storage. Reloading, signing out or a rejected session drops the page's token; it does not delete cloud records.
 
 The standalone help and privacy pages make no game API calls, write no storage and send no telemetry. Their external links open only when followed. Use your own browser profile on a shared device.
 

@@ -54,7 +54,12 @@ async function standAt(x, y, z, settleMs = 300) {
 async function standOnZone(id) {
   const {x, y, z} = zones[id];
   await standAt(x, y, z, 0);
-  await page.waitForFunction(id => document.querySelector('.interact').dataset.zone === id, id);
+  await page.waitForFunction(({id,x,z}) => {
+    const game=window.__island;
+    if(document.querySelector('.islet-modal[open]'))
+      return Math.hypot(game.player.position.x-x,game.player.position.z-z)<0.001;
+    return document.querySelector('.interact').dataset.zone===id;
+  },{id,x,z});
 }
 async function walked(action) { // how far the explorer moves while `action` runs
   const before = await where();

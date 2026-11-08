@@ -1,21 +1,28 @@
+import {stubOfflineApi} from './api-browser-fixture.js';
 // Real desktop/phone shell, preferences, audio and device input checks. Uses only local fixtures.
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
-import {stubIntro} from './intro-browser-fixture.js';
+import {stubIntro,dismissIntro} from './intro-browser-fixture.js';
 import {stubWeather} from './weather-browser-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
+import {chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
 const env=await openWorldBrowser(),{page}=env,report={checked:new Date().toISOString(),checks:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
-async function choose(id){const skip=page.getByRole('button',{name:'Show full text'});if(await skip.isVisible())await skip.click();await page.locator(`[data-choice=${id}]`).click();}
+const choose=id=>chooseIntroAction(page,id);
 try {
   await stubIntro(page);await page.addInitScript(()=>{window.__audioCreated=0;const Native=window.AudioContext;if(Native)window.AudioContext=class extends Native{constructor(...args){super(...args);window.__audioCreated++;}};});
   await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
   check(await page.evaluate(()=>!window.__island&&window.__audioCreated===0),'Cold title allocates neither WebGL nor an AudioContext');
   check(await page.getByRole('button',{name:'Continue',exact:true}).isDisabled(),'Continue is disabled without a local intro');
-  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[window.__pad]});});await page.waitForTimeout(60);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForTimeout(80);
+  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};window.__padPolls=0;Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPolls++;return [window.__pad];}});});await page.waitForFunction(()=>window.__padPolls>=3);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForFunction(()=>document.activeElement?.textContent==='Play with friends');
+  check(await page.evaluate(()=>document.activeElement.textContent==='Play with friends'),'Gamepad follows the approved title order through Friends');
+  const releasedAt=await page.evaluate(()=>{window.__pad.buttons[13].pressed=false;return window.__padPolls;});
+  await page.waitForFunction(previous=>window.__padPolls>previous+1,releasedAt);
+  await page.evaluate(()=>window.__pad.buttons[13].pressed=true);
+  await page.waitForFunction(()=>document.activeElement?.textContent==='Settings');
   check(await page.evaluate(()=>document.activeElement.textContent==='Settings'&&window.__audioCreated===0),'Gamepad can navigate the cold title without allocating audio');await page.evaluate(()=>window.__pad.buttons[13].pressed=false);
-  await page.locator('.shell-screen button').last().focus();await page.keyboard.press('Tab');
+  await page.locator('.shell-screen[open] .shell-menu button:visible').last().focus();await page.keyboard.press('Tab');
   check(await page.evaluate(()=>document.querySelector('.shell-screen[open]').contains(document.activeElement)),'Native title dialog contains keyboard focus');
   await page.getByRole('button',{name:'Settings',exact:true}).click();
   await page.locator('[data-preference=quality]').selectOption('low');
@@ -31,16 +38,18 @@ try {
   await startFromTitle(page,{closeIntro:false});
   check(await page.evaluate(()=>window.__island.audio.state==='running'&&window.__audioCreated===1),'The first trusted input unlocks one Web Audio context');
   check(await page.evaluate(()=>window.__island.settings.quality==='low'&&document.documentElement.dataset.reducedMotion==='true'&&document.documentElement.dataset.colourblind==='true'),'Saved preferences reach world quality, motion and highlight styling');
-  check(await page.getByRole('button',{name:'Show full text'}).isHidden(),'Instant text applies to the intro dialogue');
+  await finishIntroPassages(page);check(await page.getByRole('button',{name:'Show full text'}).isHidden(),'Instant text applies to the intro dialogue');
   await choose('to_desk');await choose('take_key');const journal=await page.evaluate(()=>localStorage.getItem('plot_twist_intro_moves_v1'));
   await page.reload();await startFromTitle(page,{resume:true,closeIntro:false});
+  await finishIntroPassages(page);
   check(await page.evaluate(journal=>localStorage.getItem('plot_twist_intro_moves_v1')===journal&&window.__island.world.intro.state.scene==='desk',journal),'Continue replays the same local journal and scene');
+  await page.locator('.intro-journal>summary').click();
   check((await page.locator('.intro-inventory').textContent()).includes('Brass key'),'Continue restores inventory from accepted moves');
-  await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');await dismissIntro(page);await page.keyboard.press('Escape');await page.locator('.shell-screen[open][data-mode="pause"]').waitFor();
   const position=await page.evaluate(()=>window.__island.player.position.toArray());await page.keyboard.down('KeyW');await page.waitForTimeout(200);await page.keyboard.up('KeyW');
   check(await page.evaluate(position=>JSON.stringify(window.__island.player.position.toArray())===JSON.stringify(position),position),'Pause blocks held movement');
   await page.screenshot({path:'captures/20261105_G5-Pause.png'});await page.getByRole('button',{name:'Return to title',exact:true}).click();await startFromTitle(page,{closeIntro:false});
-  check(await page.evaluate(()=>window.__island.world.intro.actions.length===0&&window.__island.world.intro.state.scene==='cottage'),'New game resets only the local intro');await page.keyboard.press('Escape');
+  check(await page.evaluate(()=>window.__island.world.intro.actions.length===0&&window.__island.world.intro.state.scene==='cottage'),'New game resets only the local intro');await dismissIntro(page);
   await page.evaluate(()=>{window.__pad={id:'Test standard pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[window.__pad]});});
   const before=await page.evaluate(()=>window.__island.player.position.x);await page.waitForTimeout(60);await page.evaluate(()=>window.__pad.axes[0]=1);await page.waitForTimeout(250);await page.evaluate(()=>window.__pad.axes[0]=0);
   check(await page.evaluate(before=>window.__island.player.position.x>before+0.2,before),'Standard gamepad stick moves the player');
@@ -50,15 +59,15 @@ try {
   report.offlineAudio=await page.evaluate(async()=>{const {createSynth}=await import('/src/audio/synth.js');const context=new OfflineAudioContext(1,22050,44100),synth=createSynth(context);synth.tone(context.destination,440,0.2,0.1);const buffer=await context.startRendering(),data=buffer.getChannelData(0);synth.dispose();return {peak:Math.max(...data),finite:data.every(Number.isFinite)};});
   check(report.offlineAudio.finite&&report.offlineAudio.peak>0.01,'Original oscillator voice renders a finite non-silent waveform');report.desktop=await measure(page);
   await page.close();
-  const phone=await env.browser.newPage({viewport:{width:375,height:667},isMobile:true,hasTouch:true});phone.on('pageerror',error=>env.errors.push(error.message));phone.on('console',message=>{if(message.type()==='error')env.errors.push(message.text());});await stubWeather(phone);await stubIntro(phone);await phone.goto(env.url);await phone.locator('.shell-screen[open]').waitFor();await phone.screenshot({path:'captures/20261105_G5-Title-Phone.png'});await startFromTitle(phone);
+  const phone=await env.browser.newPage({viewport:{width:375,height:667},isMobile:true,hasTouch:true});phone.on('pageerror',error=>env.errors.push(error.message));phone.on('console',message=>{if(message.type()==='error')env.errors.push(message.text());});await stubOfflineApi(phone);await stubWeather(phone);await stubIntro(phone);await phone.goto(env.url);await phone.locator('.shell-screen[open]').waitFor();await phone.screenshot({path:'captures/20261105_G5-Title-Phone.png'});await startFromTitle(phone);
   await phone.locator('.touch-controls:not([hidden])').waitFor();const stick=await phone.locator('.touch-stick').boundingBox(),client=await phone.context().newCDPSession(phone),x=stick.x+stick.width/2,y=stick.y+stick.height/2;
   const start=await phone.evaluate(()=>window.__island.player.position.x);await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+43,y}]});await phone.waitForTimeout(300);await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   check(await phone.evaluate(start=>window.__island.player.position.x>start+0.2,start),'Actual touch drag maps the virtual stick to movement');
-  await phone.getByRole('button',{name:'Menu',exact:true}).click();await phone.getByRole('button',{name:'Settings',exact:true}).click();await phone.screenshot({path:'captures/20261105_G5-Settings-Phone.png'});
+  await phone.locator('.touch-controls:not([hidden])').getByRole('button',{name:'Menu',exact:true}).tap();await phone.getByRole('button',{name:'Settings',exact:true}).click();await phone.screenshot({path:'captures/20261105_G5-Settings-Phone.png'});
   const bounds=await phone.locator('.shell-screen').boundingBox();check(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=375&&bounds.y+bounds.height<=667,'Phone settings fit and scroll within the viewport');await closeSettings(phone);
   check(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Phone HUD and menus create no page overflow');await phone.screenshot({path:'captures/20261105_G5-Touch.png'});
   const footer=await phone.locator('.bottom-bar').boundingBox(),touch=await phone.locator('.touch-controls').boundingBox();check(touch.y+touch.height<=footer.y,'Phone touch controls and weather footer do not overlap');
-  await phone.getByRole('button',{name:'Chart',exact:true}).click();await phone.locator('.sea-chart[open]').waitFor();check(await phone.locator('.chart-scroll').evaluate(node=>node.scrollWidth>node.clientWidth),'Phone chart pans its native pixels without fractional shrinking');
+  await phone.locator('.hud.exploring .hud-actions').getByRole('button',{name:'Controls',exact:true}).click();await phone.getByRole('button',{name:'Open sea chart',exact:true}).click();await phone.locator('.sea-chart[open]').waitFor();check(await phone.locator('.chart-scroll').evaluate(node=>node.scrollWidth>node.clientWidth),'Phone chart pans its native pixels without fractional shrinking');
   await phone.locator('[data-place=saltreach_harbor]').click();await phone.locator('.sailing').waitFor({state:'visible'});await phone.getByRole('button',{name:'Skip passage'}).click();await phone.waitForFunction(()=>window.__island.world.current?.id==='saltreach_harbor');check(true,'Touch chart and passage controls reach Harbor');
   check(env.errors.length===0&&env.external.length===0,'Desktop checks have no browser errors or external asset requests');console.log(JSON.stringify(report,null,2));
 } finally {await writeFile('captures/20261105_G5-Experience-Checks.json',JSON.stringify(report,null,2));await env.close();}

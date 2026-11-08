@@ -2,6 +2,7 @@
 import {describe,it,expect} from 'vitest';
 import {caseMethods,caseReasons,caseViewKeys} from '../contract.js';
 import {validateBulletin} from './bulletin.js';
+import {validateIsletDisplay} from './islet.js';
 
 const stableView=view=>{const copy=structuredClone(view);delete copy.revision;delete copy.notice;return copy;};
 const hasKeys=(value,keys)=>expect(Object.keys(value)).toEqual(expect.arrayContaining(keys));
@@ -9,6 +10,7 @@ const stringOrNull=value=>expect(value===null||typeof value==='string').toBe(tru
 const allowed=(value,values)=>expect(values).toContain(value);
 function validateExtensions(view){
   validateBulletin(view.bulletin);
+  validateIsletDisplay(view);
   const p=view.presence,a=view.account,r=view.rewards,l=view.log,h=view.hints;
   hasKeys(p,['localEmote','canEmote','cooldown','emotes']);expect(typeof p.canEmote).toBe('boolean');expect(Number.isFinite(p.cooldown)&&p.cooldown>=0).toBe(true);expect(Array.isArray(p.emotes)).toBe(true);
   if(p.localEmote!==null){hasKeys(p.localEmote,['id','until']);allowed(p.localEmote.id,['wave','cheer','point','lantern','shrug']);expect(Number.isFinite(p.localEmote.until)).toBe(true);}
@@ -48,6 +50,7 @@ const validResult=result=>{
   expect(Object.keys(result.view)).toEqual(expect.arrayContaining(caseViewKeys));
   if(result.accepted)expect(result.reason).toBeNull();
   else expect(caseReasons).toContain(result.reason);
+  if(result.retryAfterSeconds!==undefined){expect(result.accepted).toBe(false);expect(['rate_limited','too_many_tries']).toContain(result.reason);expect(typeof result.retryAfterSeconds).toBe('number');expect(Number.isFinite(result.retryAfterSeconds)&&result.retryAfterSeconds>=0&&result.retryAfterSeconds<=86400).toBe(true);}
 };
 
 /** Register reusable adapter checks. Driver: {options,probes,prepare,sequence,assertProgress,stableView}. */

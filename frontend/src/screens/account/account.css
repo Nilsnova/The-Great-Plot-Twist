@@ -1,5 +1,5 @@
 .account-summary,.account-screen{font:18px/1.6 'Courier New',monospace;color:#ece0b8}
 .account-summary{display:grid;gap:8px;min-width:0}
-.account-summary strong{color:#f3d58c}.account-summary-note{font-size:16px;line-height:1.5;margin:0;color:#d2d9bb}.account-summary-state{font-weight:bold;color:#f3d58c}
+.account-summary strong{color:#f3d58c}.account-summary-note{font-size:18px;line-height:1.5;margin:0;color:#d2d9bb}.account-summary-state{font-weight:bold;color:#f3d58c}
 .account-summary-actions,.account-actions,.account-save-choices{display:flex;gap:10px;flex-wrap:wrap}
 .account-summary button,.account-screen button{font:16px/1.4 'Courier New',monospace;min-height:44px}

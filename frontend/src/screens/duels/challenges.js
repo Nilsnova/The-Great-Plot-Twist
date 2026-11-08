@@ -12,7 +12,8 @@ export function createChallenges({ onAnswer, onDecline }) {
   const element = node('div', 'duel-challenges'), listBox = node('div'), answerBox = node('section', 'duel-answer');
   const heading = node('h3'), terms = node('p'), hint = node('p', 'duel-hint');
   const memo = {};
-  let current = null, coins = 0, busy = false;
+  const numbers = new Map();let nextNumber = 0;
+  let current = null, coins = 0, busy = false, disposed = false;
   answerBox.hidden = true;
   heading.tabIndex = -1;
   hint.setAttribute('aria-live', 'polite');
@@ -35,14 +36,17 @@ export function createChallenges({ onAnswer, onDecline }) {
   }
 
   async function seal() {
+    if(disposed||busy||!current)return;
     busy = true;
     refreshSeal();
     await onAnswer(current.id, picker.getSignals());
+    if(disposed)return;
     busy = false;
     leaveAnswer();
   }
 
   function startAnswer(duel) {
+    if(disposed)return;
     current = duel;
     heading.textContent = `Answer ${duel.challengerName}`;
     terms.textContent = `${termsText(duel)}. Answer within ${timeLeftText(duel.expiresAt, Date.now())}.`;
@@ -54,6 +58,7 @@ export function createChallenges({ onAnswer, onDecline }) {
   }
 
   function leaveAnswer() {
+    if(disposed)return;
     const id = current?.id;
     current = null;
     answerBox.hidden = true;
@@ -63,11 +68,19 @@ export function createChallenges({ onAnswer, onDecline }) {
   }
 
   function card(duel, nowMs) {
+    if(!numbers.has(duel.id))numbers.set(duel.id,++nextNumber);
+    const context=`challenge ${numbers.get(duel.id)} from ${duel.challengerName}`;
     const box = node('article', 'duel-card');
     box.append(node('h4', '', duel.challengerName), node('p', '', termsText(duel)), node('p', '', `Answer within ${timeLeftText(duel.expiresAt, nowMs)}`));
     const actions = node('div', 'duel-actions');
-    if (duel.canAnswer) actions.append(button('Answer', () => startAnswer(duel), { focus: `answer-${duel.id}` }));
-    if (duel.canDecline) actions.append(button('Decline', () => onDecline(duel.id), { quiet: true, focus: `decline-${duel.id}` }));
+    if (duel.canAnswer) {
+      const answer=button('Answer', () => startAnswer(duel), { focus: `answer-${duel.id}` });
+      answer.setAttribute('aria-label',`Answer ${context}`);actions.append(answer);
+    }
+    if (duel.canDecline) {
+      const decline=button('Decline', () => onDecline(duel.id), { quiet: true, focus: `decline-${duel.id}` });
+      decline.setAttribute('aria-label',`Decline ${context}`);actions.append(decline);
+    }
     box.append(actions);
     return box;
   }
@@ -84,6 +97,7 @@ export function createChallenges({ onAnswer, onDecline }) {
   }
 
   function update(view) {
+    if(disposed)return;
     coins = view.coins ?? 0;
     const nowMs = Date.now() + view.serverOffsetMs;
     const stillThere = [...view.incoming, ...view.openChallenges].some(duel => duel.id === current?.id);
@@ -92,5 +106,5 @@ export function createChallenges({ onAnswer, onDecline }) {
     if (changed(memo, [view.incoming, view.openChallenges, Math.floor(nowMs / 60000)])) redraw(listBox, () => drawList(view, nowMs));
   }
 
-  return { element, update };
+  return { element, update,dispose(){disposed=true;current=null;coins=0;memo.last=null;numbers.clear();picker.dispose();element.replaceChildren();element.remove();} };
 }

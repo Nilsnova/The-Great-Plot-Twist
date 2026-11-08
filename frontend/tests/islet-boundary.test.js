@@ -63,7 +63,11 @@ describe('the hook in game.js', () => {
   });
 
   it('replaces the plot listener with the host, so dispose and the failure path still call stopPlots', () => {
-    expect(game).toMatch(/const stopPlots = attachIsletPanel\(\{container, on, emit, resetInput: input\.reset, focus: \(\) => graphics\.renderer\.domElement\.focus\(\)\}\);/);
+    expect(game).toContain("import {createIsletHost} from './online/islet-host.js';");
+    expect(game).toContain('const stopPlots = createIsletHost({session,attach:attachIsletPanel,container,on,emit,');
+    expect(game).toContain('resetWorld:()=>isletState.resetAccount()');
+    expect(game).toContain('void stopPlots.refresh();');
+    expect(game).toContain('if(stopPlots.active){stopPlots.close();input.reset();');
     expect(game).not.toContain("on('plot_clicked'");
     expect(game.match(/stopPlots\(\)/g)).toHaveLength(2);
   });

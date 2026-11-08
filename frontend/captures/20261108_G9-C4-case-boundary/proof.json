@@ -1,0 +1,112 @@
+{
+  "package": 4,
+  "scope": "published case request/outer-envelope groundwork and local unsupported lantern refusal; live case integration remains blocked",
+  "sourceBase": "2647676",
+  "started": "2026-11-08T09:19:21.422437+00:00",
+  "verifiedAt": "2026-11-08T09:34:58.128348+00:00",
+  "verificationMinutes": 15.61,
+  "status": "bounded independent work verified; no populated-case/world projection or live case writes completed",
+  "publishedInputs": [
+    {
+      "ref": "3098c0afb040ab80829b28d39c1195905da3c4ca",
+      "path": "docs/INTERFACES.md",
+      "gitBlob": "dbe14d0acae1368d9f5633f6a7c95996850d5574",
+      "scope": "published case contract section or authorized fixture only; no backend implementation/secret read"
+    },
+    {
+      "ref": "3098c0afb040ab80829b28d39c1195905da3c4ca",
+      "path": "backend/server/tests/case_fixtures.py",
+      "gitBlob": "3e35ba99d3bd887312561f2521efab41ff0d96d5",
+      "scope": "published case contract section or authorized fixture only; no backend implementation/secret read"
+    }
+  ],
+  "request": "requests/R11-case-and-world-wire-fixtures.md",
+  "sourceFingerprints": {
+    "src/online/case-adapter/index.js": "da98a1d461caa7c5aca499310b287b8fdf97f7d27fee1ccc81dccbd369540f6d",
+    "src/online/case-adapter/case-wire.js": "0c9d64789dc8c3585732d4902ff0701610a6d15b31d92e64b9c9a597771a570b",
+    "tests/real-lantern-boundary.test.js": "6d1909e5f0bda72ef557e3a8016381c505498aa22a587d77bb985faeebbb9080",
+    "tests/real-case-wire.test.js": "2962aee0579aafdc8d4731bd894c4c4f911c54061bb9983acef91c92f179e705"
+  },
+  "requestSha256": "c86f181e42688ddd74b835fbc7331bf597248381f4ddfdc3ac6cbf20e81a1834",
+  "preservedFoundations": {
+    "src/adapter/bridge.js": "a21c80fc996b03f3681bbdf06cfc402507f980c8299e3526d83189f6a3a99a59",
+    "src/screens/controller.js": "30266c90a5edcaa11b48ae877e945aafa71a111c71d4a9b288bcd247892fd4ba",
+    "src/main.js": "f9bd2e6cd09be46b5faca9a88f9eec4505ba89feb4abbb33d98650667e827c45",
+    "src/shell/world-loader.js": "235905b73980bbfc1e90b8573fda7fbe49f4343a521e06d654c27531bbb13770",
+    "scripts/online-auth-fixture.js": "d47b7e7e477b9f782fd388d2c9804ee591811159b028b12345bed3681cd76af6",
+    "scripts/online-panel-fixture.js": "17b790edb1837f71cbbb56349a784b1766edece92dc5a1d41e208d7a34625709",
+    "scripts/online-bulletin-fixture.js": "bd022f92b0cd248f626a9e4ef7d09723f2271420407180e36629ba5a6a981724"
+  },
+  "unit": {
+    "files": 7,
+    "tests": 160,
+    "lanternBefore": {
+      "failed": 3,
+      "passed": 5
+    },
+    "wireBefore": {
+      "failed": 6,
+      "passed": 19,
+      "note": "Five malformed outer-case values exposed missing type boundary; an additional Proxy matcher assertion inspected the fixture and was corrected to identity booleans. The final array row tests a real empty array."
+    }
+  },
+  "build": {
+    "passed": true,
+    "spoilerProtectedLines": 12,
+    "textFiles": 186
+  },
+  "loading": {
+    "checks": 23,
+    "coldJs": 20881,
+    "coldCss": 11878,
+    "jsCap": 21080
+  },
+  "codecBundled": false,
+  "evidence": {
+    "lantern-red.log": {
+      "rawSha256": "669e12770e6fb30ac4c93bd898ed7a249862d6a693319b80bb1b4d602cfa81c6",
+      "savedSha256": "5d70b6d28f5f1ca782f5d59d1b8ed9df48fe559045a3baa337eb292090767472"
+    },
+    "lantern-green.log": {
+      "rawSha256": "5279f6b1dddf9ee616c86b3cfe75eaa1da05b460e65a51126ae31b5403b7cfbc",
+      "savedSha256": "f8b96bb444aedcd6fb95b8ac69315c49278be0ba07d35b1481cd561560a58e08"
+    },
+    "wire-red.log": {
+      "rawSha256": "5242156a25ba597b59886a2ed99af2dea70f3c860e85f1192d57f69385fef51e",
+      "savedSha256": "6e3c5a15711ce7040d595318153fb7adc63aa6b922f10274b5919ca6479ddbd0"
+    },
+    "unit-intermediate.log": {
+      "rawSha256": "73918cf9076c7bf9cf0feb8111970be79338ed26664537e3746ae8634fead260",
+      "savedSha256": "3b2652d2e0d2d366ce65efc2c2a8546ce391baea0309ce96f6a4888d18f4d8e2"
+    },
+    "unit.log": {
+      "rawSha256": "cfeff2949f5d0078658eb84312dd8f798599f35de2a136619a7f7d6d64c57959",
+      "savedSha256": "f2d3b637b32bbd9ffab25af207ffc393ac28a9f325f1d826b29f0ed838a33b28"
+    },
+    "build.log": {
+      "rawSha256": "1c52e6452a1065a53010adc27bcd3978ce3327bd4c982e58a69ddd9434d413fc",
+      "savedSha256": "1c52e6452a1065a53010adc27bcd3978ce3327bd4c982e58a69ddd9434d413fc"
+    },
+    "loading.log": {
+      "rawSha256": "11ade4004693ca6857717f804339f99e25d8662bdcd2552d72c65d8e5f662ace",
+      "savedSha256": "11ade4004693ca6857717f804339f99e25d8662bdcd2552d72c65d8e5f662ace"
+    },
+    "gates.json": {
+      "rawSha256": "e32a35193ad23212eaf8cd57d9673be3de8e595a5d900367067be4b5196b469e",
+      "savedSha256": "46d5ba18d2b5bf460cba318d07f86be31e2d1d24f967cc564fdff94c587dba7c"
+    },
+    "loading.json": {
+      "rawSha256": "ed36e2c65032cb2bc1ad16d32fda2c663000c8a797b94c63bde54ee3c6936344",
+      "savedSha256": "af2c47755c2bf165d97068e27a5b03611d8a3f79cdc1d74e9f49b3eefd4a22bf"
+    }
+  },
+  "review": "Independent published-contract, request, envelope and facade reviews complete; outer record-or-null gap fixed.",
+  "notVerified": [
+    "R11 serialized active/jobs/partners/night/parting/solved/reveal/credits and exact relit world types still missing",
+    "Codec intentionally not connected to HTTP or state commits; caller must validate nested case and identity/generation before applying",
+    "Full online case journey and final full44 not run",
+    "R16 hardware/FPS dependency unchanged",
+    "No new UI/browser case claim; existing loading browser gate only",
+    "No real service/account/database, dependency, art/font, budget increase, push, main merge or deployment"
+  ]
+}

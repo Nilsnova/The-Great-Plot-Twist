@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "Issue URL has the fixed destination and stays below 7,000 characters",
+    "Settings draft contains the build identity and no invented place",
+    "Issue URL has the fixed destination and stays below 7,000 characters",
+    "Viewport updates while arbitrary UI labels/ids are excluded",
+    "What happened section stays empty",
+    "Issue URL has the fixed destination and stays below 7,000 characters",
+    "Pause has a draft with the public current place and semantic UI actions",
+    "History is bounded to ten action names",
+    "Issue URL has the fixed destination and stays below 7,000 characters",
+    "Gamepad input is a coarse enum, without its device id",
+    "Issue URL has the fixed destination and stays below 7,000 characters",
+    "Touch input is recorded as a coarse enum",
+    "Inspecting a report makes no external request and produces no browser errors"
+  ]
+}

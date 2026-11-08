@@ -1,37 +1,74 @@
 // Shared local Chrome setup and settled frame measurements for the world smoke check.
 import {stubWeather} from './weather-browser-fixture.js';
+import {stubOfflineApi} from './api-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import {createServer,preview as createPreview} from 'vite';
-import { access, mkdir } from 'node:fs/promises';
-export async function openWorldBrowser({ preview = false, hmr = true } = {}) {
+import { access, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers,apiTarget,
+  headless = process.env.G9_BROWSER_HEADLESS !== '0' } = {}) {
+  let proxy={};
+  if(apiTarget!==undefined){
+    let target;try{target=new URL(apiTarget);}catch{throw new TypeError('QA API target must be a plain loopback HTTP origin.');}
+    if(target.protocol!=='http:'||!['127.0.0.1','[::1]'].includes(target.hostname)||!target.port
+      ||target.username||target.password||target.pathname!=='/'||target.search||target.hash)
+      throw new TypeError('QA API target must be a plain loopback HTTP origin.');
+    if(process.env.TEST_URL)throw new TypeError('An injected API target requires an owned QA server.');
+    proxy={proxy:{'/api':target.origin}};
+  }
   const candidates = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
   if (!executablePath) throw new Error('Install Chrome or set CHROME_PATH.');
-  let url=process.env.TEST_URL,server=null,browser=null;
+  let url=process.env.TEST_URL,server=null,browser=null,closing,serverCache=null;
+  const ownsServer=!url,previousNodeEnv=process.env.NODE_ENV;
+  function close(){
+    if(!closing)closing=Promise.resolve().then(async()=>{
+      try{await browser?.close();}finally{
+        try{await server?.close();}finally{
+          try{if(serverCache)await rm(serverCache,{recursive:true,force:true});}
+          finally{if(ownsServer){
+              if(previousNodeEnv===undefined)delete process.env.NODE_ENV;
+              else process.env.NODE_ENV=previousNodeEnv;
+          }}
+        }
+      }
+    });
+    return closing;
+  }
   try {
     // An owned, ephemeral server cannot accidentally serve a previous check's dev/preview mode.
     if(!url){
+      process.env.NODE_ENV=preview?'production':'development';
       const network={host:'127.0.0.1',port:0,strictPort:true};
-      server=preview?await createPreview({logLevel:'error',preview:network}):await createServer({logLevel:'error',server:{...network,hmr}});
+      // Other QA servers may use the same checkout. Never replace their optimizer cache.
+      if(!preview)serverCache=await mkdtemp(join(tmpdir(),'plot-world-cache-'));
+      server=preview?await createPreview({logLevel:'error',...(outDir?{build:{outDir}}:{}),
+        preview:{...network,...(headers?{headers}:{}),...proxy}}):await createServer({logLevel:'error',cacheDir:serverCache,server:{...network,hmr,...proxy}});
       if(!preview){await server.listen();await server.warmupRequest('/src/game.js');}
       url=server.resolvedUrls.local[0].replace(/\/$/,'');
     }
-    browser=await chromium.launch({executablePath,headless:true});
-    const page=await browser.newPage({viewport:{width:1440,height:900}});
+    browser=await chromium.launch({executablePath,headless});
+    const context=await browser.newContext({viewport:{width:1440,height:900}});
+    const page=await context.newPage();
+    await stubOfflineApi(page);
     await stubWeather(page);
-    const errors=[],external=[];
-    page.on('pageerror',error=>errors.push(error.message));
-    page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
+    const errors=[],external=[],pageErrors=[],consoleErrors=[];
+    page.on('pageerror',error=>{errors.push(error.message);pageErrors.push(error.name);});
+    page.on('console',message=>{
+      if(message.type()!=='error')return;
+      const text=message.text();errors.push(text);
+      let path=null;
+      try{path=new URL(message.location().url).pathname.replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi,':id');}catch{}
+      const status=text.match(/server responded with a status of (\d{3})/);
+      consoleErrors.push({path,status:status?Number(status[1]):null,resource:text.startsWith('Failed to load resource:')});
+    });
     page.on('request',request=>{if(!request.url().startsWith(url)&&!request.url().startsWith('data:'))external.push(request.url());});
     await mkdir('captures',{recursive:true});
-    let closed=false;
-    return {page,browser,errors,external,url,close:async()=>{
-      if(closed)return;closed=true;
-      try{await browser.close();}finally{await server?.close();}
-    }};
+    return {page,browser,errors,external,pageErrors,consoleErrors,url,close};
   }catch(error){
-    try{await browser?.close();}finally{await server?.close();}
+    await close();
     throw error;
   }
 }

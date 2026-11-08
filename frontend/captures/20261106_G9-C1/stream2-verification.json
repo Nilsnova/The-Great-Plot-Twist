@@ -1,0 +1,43 @@
+{
+  "stream": 2,
+  "checkpointComplete": false,
+  "main": "60f7fd0",
+  "merge": "93386f8",
+  "unit": {
+    "command": "npm test",
+    "files": 91,
+    "passed": 1096,
+    "failed": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "code": 0,
+    "spoilerGuard": "passed"
+  },
+  "online": {
+    "command": "npm run test:online",
+    "code": 0,
+    "widths": [
+      1280,
+      375
+    ],
+    "liveServices": false
+  },
+  "regression": {
+    "command": "npm run test:g9 -- --phase=after --keep-going; --resume --rerun=tests,build,loading,csp,online",
+    "passed": 37,
+    "failed": 0,
+    "manifest": "captures/20261106_G9-C1-after/Verification.json"
+  },
+  "coldTitle": {
+    "bytes": 20971,
+    "cap": 21080,
+    "headroom": 109,
+    "adapterAfterFirstFrame": true
+  },
+  "notVerified": [
+    "Real OAuth, database and Realtime",
+    "Deployed preview/headers",
+    "Physical devices, other browsers and screen reader"
+  ]
+}

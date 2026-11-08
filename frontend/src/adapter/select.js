@@ -1,15 +1,25 @@
-// One composition point for Claude's real adapter. Local rehearsal stays explicit and network-free.
+// The sole adapter composition point. Background network work belongs to the real factory.
 import {createUnavailableCaseAdapter} from './unavailable.js';
-import {introJournal} from '../story/intro-journal.js';
-export async function createClientAdapter(){
-  const query=new URLSearchParams(location.search);
-  const local=query.get('case')==='local'&&(import.meta.env.DEV||query.get('demo')==='1');
-  if(!local)return createUnavailableCaseAdapter();
-  let localActions=null;
-  try{
-    const saved=JSON.parse(introJournal().read());
-    if(saved?.version===1&&Array.isArray(saved.actions)&&saved.actions.every(id=>typeof id==='string'))localActions=saved.actions;
-  }catch{/* An invalid convenience save never blocks the title. */}
-  const {createFakeCaseAdapter}=await import('./fake/index.js');
-  return createFakeCaseAdapter({localActions});
+import {adapterChoice,hasSignInReturn} from './selection.js';
+import {createLazyOnlineAdapter} from './lazy-online.js';
+
+async function prepareSignInReturn() {
+  const {takeAuthReturn} = await import('../online/auth-return.js');
+  const returned = takeAuthReturn();
+  const {createAuth} = await import('../online/auth.js');
+  const auth = createAuth();
+  void auth.handleReturn(returned);
+  return auth;
+}
+
+export async function createClientAdapter() {
+  const search = location.search;
+  const choice = adapterChoice(search, import.meta.env.DEV);
+  if (choice === 'local') {
+    const {createLocalAdapter} = await import('./local-start.js');
+    return createLocalAdapter();
+  }
+  if (choice === 'unavailable') return createUnavailableCaseAdapter();
+  const auth = hasSignInReturn(search) ? await prepareSignInReturn() : null;
+  return createLazyOnlineAdapter(auth ? {deps: {auth}} : undefined);
 }

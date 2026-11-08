@@ -346,10 +346,25 @@ describe('the practice adapter', () => {
   });
 
   it('stops the rival when the adapter is disposed', async () => {
+    const listener = vi.fn();
+    adapter.subscribe(listener);
     await send();
-    adapter.dispose();
-    await vi.advanceTimersByTimeAsync(10000);
     expect(adapter.read().yours).toHaveLength(1);
+    expect(listener).toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(1);
+    listener.mockClear();
+    adapter.dispose();
+    const cleared = adapter.read();
+    expect(cleared).toMatchObject({
+      mode: 'signed_out', coins: null, heldCoins: 0, incoming: [], openChallenges: [],
+      yours: [], recent: [], selected: null, sealed: {}, notice: null, canRetry: false, polling: 'off',
+    });
+    expect(vi.getTimerCount()).toBe(0);
+    expect(listener).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(adapter.read()).toEqual(cleared);
+    expect(listener).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('answers a challenge and leaves the finished duel ready for the reveal', async () => {

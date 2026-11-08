@@ -1,0 +1,73 @@
+{
+  "checks": [
+    "The title uses original detailed artwork, not a scaled thumbnail",
+    "Title starts without a WebGL renderer",
+    "Friends is visible immediately and honestly describes the pending G9 connection",
+    "Desktop dialogue stays compact at 330px",
+    "Story history starts collapsed",
+    "Dialogue blocks outside movement",
+    "Entering the cottage replaces the whole viewport",
+    "Controls and Journal tools are hidden by default",
+    "Desktop framebuffer contains 1280×720 actual pixels",
+    "World loads freshly detailed sprites and ground at their original geometry",
+    "Pause menu blocks outside movement",
+    "Movement starts immediately and stops without drifting",
+    "Walking across a doorway automatically opens the full-screen room",
+    "Leaving restores a safe outside position without immediately reopening the room",
+    "375px: compact HUD has no horizontal overflow or header overlap",
+    "320px: compact HUD has no horizontal overflow or header overlap",
+    "844px: compact HUD has no horizontal overflow or header overlap",
+    "Return to title closes the room and restores the illustrated backdrop above the canvas",
+    "Integrated journey has no browser errors",
+    "Integrated journey requests no external assets"
+  ],
+  "viewports": [
+    {
+      "width": 375,
+      "height": 667,
+      "body": true,
+      "headerBottom": 70.1875,
+      "actionsTop": 82,
+      "framebuffer": [
+        375,
+        667
+      ]
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "body": true,
+      "headerBottom": 70.1875,
+      "actionsTop": 82,
+      "framebuffer": [
+        320,
+        568
+      ]
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "body": true,
+      "headerBottom": 70.1875,
+      "actionsTop": 76,
+      "framebuffer": [
+        844,
+        390
+      ]
+    }
+  ],
+  "density": {
+    "framebuffer": [
+      1280,
+      720
+    ],
+    "textures": 27,
+    "calls": 97,
+    "player": [
+      -7,
+      3.339247048914752,
+      7
+    ],
+    "zoom": 1
+  }
+}

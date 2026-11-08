@@ -1,0 +1,180 @@
+{
+  "checked": "2026-11-07T04:30:52.448470+00:00",
+  "stage": "stream6",
+  "outcome": "passed",
+  "checkpointComplete": false,
+  "sourceBase": "a0b9ad1694f9009f31552acfe5314b034ef7109a",
+  "sourceDirty": true,
+  "sourceFingerprints": {
+    "scripts/a11y-crew-short.js": "95c3cd5aa181c4ec8fd27586813921d538ad8e04bbea8f401fa5462c2842baa3",
+    "scripts/check-a11y.js": "4a6632cc971ad80cb35a68ea89dec654f29d3307e6dd8d3614a1ecd4b6d7f036",
+    "scripts/check-online-chaos.js": "6848b958f3d9901091cc30f7366fdecdb5a2f2ce41518c92f110ca9839a3b27f",
+    "scripts/check-online-crew.js": "374d1385b6052353647218bf9774ee3a92a73c4240c1b5ce4f2c633c47fb814a",
+    "scripts/check-online-golden.js": "022eeff1642f7999c7b0a0c5f9e46034e8df2983ff0d51310c704008ea0e28e8",
+    "scripts/online-crew-journeys.js": "f5ac64000fbf016440e090fadf09b08865ad24b202317c4679e0d356f614052c",
+    "scripts/online-crew-presence-fixture.js": "1b466367a4a7891accae666fd12a40e2e0565e323a37b7819bcb6577adb75235",
+    "scripts/online-presence-wire-fixture.js": "36ba082d1c3f8795bc309696400ec1be0026fa13f9fde460e56c96c153eee000",
+    "src/online/case-adapter/crew-lifecycle.js": "1e62578e80e6da4f863522474ceb3b8b812ef6ea94ccc771f5eb7a70b4abcdba",
+    "src/online/case-adapter/crew-permissions.js": "2ae0adcc4cec9639e3fef4cd7ba2c30a649de3883c95cf2a708d5308a6e774d7",
+    "src/online/case-adapter/crew-polling.js": "553218f44c85106b5f2117ceb282be7e7d52ad7e6ec911dc010ed76783d36538",
+    "src/online/case-adapter/crew.js": "3473eb542727f7c84ef315a7855fa9c50a1b49078856fef6452a1afe147b1f0e",
+    "src/online/case-adapter/index.js": "2a036375246713e31e06771afc8491b0efaf8a808428131c5388522858634f28",
+    "src/online/case-adapter/transport.js": "5f48e7ea611794205d596b9c795305eddd008fa5b16cd3818cacbcec53207e4f",
+    "src/online/case-adapter/view.js": "ee69b9c794d4a5832337f760630638d08c6c8a72d42c950345bb612cc8daf29e",
+    "src/screens/crew.js": "480909d0915620152053e534983ff453914683edf4235682a9e144f48c97b1c0",
+    "src/world/experience.js": "6d9458b88ff6901a8e63887ebb6f8ad83690b6dcdd8e45bfb777011c8e9bc0fb",
+    "src/world/partners/index.js": "6d820128b2540e74f183715992b3d9c3c9ac5454d2c605c5a6e13daa3112265b",
+    "tests/crew-screen-privacy.test.js": "7d197b46d352838534a2e08d25a5ff0a89b2a427555b8b8d10af1d1c5f8473b8",
+    "tests/partner-life-world.test.js": "a9462de8bdb687cfd33c10401158e63752b1463b8a065c83a5ad269b6662bab0",
+    "tests/real-adapter-core.test.js": "470793cf2c7ee42141901824bdc43c718d0a8da4965b0837bb2a31010b7684e3",
+    "tests/real-crew-lifecycle.test.js": "3e24518a0df9d5b5b02740e95b7cdc01b0b255f1cd8674b7defbba9d28c22378",
+    "tests/real-crew-permissions.test.js": "05eda97ad152b1a0b1a0253395e5dfd3afc99b90f90bf8197f2e834b9803cb9a",
+    "tests/real-crew-polling.test.js": "563e2f908344bbeed998dc935d783003b275c0e1e08c901bc770681b57a10bc8",
+    "tests/real-crew.test.js": "953b1ed4ff36d2407f0841762b64747df55b28070974bed31ef5a20c6aa84d0e"
+  },
+  "gate": [
+    {
+      "name": "unit",
+      "command": "npm test",
+      "exitCode": 0,
+      "seconds": 141.54
+    },
+    {
+      "name": "build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 1.69
+    },
+    {
+      "name": "loading",
+      "command": "node scripts/check-loading.js",
+      "exitCode": 0,
+      "seconds": 11.52
+    },
+    {
+      "name": "online",
+      "command": "npm run test:online",
+      "exitCode": 0,
+      "seconds": 398.53
+    },
+    {
+      "name": "crew-chaos",
+      "command": "node scripts/check-online-crew.js --chaos",
+      "exitCode": 0,
+      "seconds": 82.06
+    },
+    {
+      "name": "a11y",
+      "command": "npm run test:a11y",
+      "exitCode": 0,
+      "seconds": 193.53
+    }
+  ],
+  "unit": {
+    "tests": 2425,
+    "files": 177
+  },
+  "crew": {
+    "checks": 44,
+    "requests": 245,
+    "widths": [
+      1280,
+      375
+    ]
+  },
+  "chaos": [
+    {
+      "action": "join",
+      "cases": 7,
+      "assertions": 42
+    },
+    {
+      "action": "muster",
+      "cases": 7,
+      "assertions": 42
+    }
+  ],
+  "a11y": {
+    "contexts": 43,
+    "viewportSamples": 129,
+    "shortCrew": {
+      "fixture": "local-component-lab",
+      "metrics": {
+        "viewport": {
+          "width": 375,
+          "height": 400
+        },
+        "focused": true,
+        "enabled": true,
+        "rendered": true,
+        "autocapitalize": "characters",
+        "inputmode": "text",
+        "field": {
+          "width": 234,
+          "height": 44,
+          "size": 16,
+          "insideViewport": true,
+          "insideContent": true,
+          "hit": true
+        },
+        "controls": {
+          "count": 4,
+          "smallTargets": 0,
+          "minimumSize": 16
+        },
+        "body": {
+          "count": 14,
+          "minimumSize": 18
+        },
+        "overflow": false,
+        "dialogFits": true
+      },
+      "checks": {
+        "focusedCode": true,
+        "codeKeyboard": true,
+        "crewTargets": true,
+        "crewText": true,
+        "crewOverflow": true
+      }
+    },
+    "failures": [],
+    "errors": []
+  },
+  "loading": {
+    "initialJavaScript": 21072,
+    "initialCss": 11878,
+    "titleImageBytes": 274026
+  },
+  "visualReview": {
+    "widths": [
+      1280,
+      375
+    ],
+    "confirmedNpcSeats": 2,
+    "worldArtVerified": true,
+    "scope": "Server-confirmed seats supply idle harbor art. Case actor locations, errands and chart state remain pending."
+  },
+  "attempts": [
+    {
+      "number": 1,
+      "online": "failed",
+      "reason": "Fixture trace included a legitimate poll before the tested write."
+    },
+    {
+      "number": 2,
+      "online": "failed",
+      "reason": "World fixture selected the hidden title-logo canvas."
+    },
+    {
+      "number": 3,
+      "gate": "passed",
+      "musterVisualTarget": "8 checks passed at both widths before this gate."
+    }
+  ],
+  "remaining": [
+    "Stream7 presence and closed-screen controller privacy guard before the next push.",
+    "R11 serialized case DTO examples for streams12-15.",
+    "R16 unchanged target-hardware frame proof.",
+    "Full44-command self-check on final committed source before push."
+  ]
+}

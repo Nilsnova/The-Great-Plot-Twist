@@ -96,7 +96,7 @@ The view is `{ mode, revision, rules, coins, heldCoins, incoming, openChallenges
 The local practice ring is for development only: it is removed from the production build.
 
 1. `cd frontend && npm install && npm run dev`, then open the address Vite prints with `?arena=local` added, for example `http://127.0.0.1:5173/?arena=local`.
-2. Choose **New game**, leave the intro with **Return to the island**, sail to Smugglers' Cove (sea chart, key M), walk to the arena gate and press E.
+2. Choose **New game**, leave the intro with **Back to island**, sail to Smugglers' Cove (sea chart, key M), walk to the arena gate and press E.
 3. The panel says "Practice ring: a local stand-in rival. Nothing is saved." It starts with 500 coins, a named challenge from Brave Puffin 17, an open challenge from Captain-7c41d2 and two past duels. Challenge anyone: the rival answers about 6 seconds later.
 4. Without `?arena=local`, the panel talks to the real routes and, with the flag off, says the ring is closed.
 

@@ -723,6 +723,142 @@ After this correction, `npm test` passes 345 tests in 58 files and `npm run buil
 
 The expanded accessibility pass includes Credits: **23 contexts / 69 viewport samples / 202 Tab steps / 1,537 text measurements**, minimum computed contrast **4.694:1**, zero failures/browser errors/external requests. Current cold title JavaScript is **21,080 bytes / 9,956 gzip**, matching the unchanged G7 ceiling. The original pre-feedback checkpoint measurements above remain historical evidence. Future integration must keep data/legal attribution in Settings → Credits and out of gameplay overlays.
 
+
+## Build identity (G9 starter)
+
+Vite injects `__BUILD_STAMP__ = {sha,builtAt}` at compile time and emits the same public fields in `build-stamp.json`. SHA resolution is validated `VERCEL_GIT_COMMIT_SHA`, then local `git rev-parse --short HEAD`, then `dev`; only a seven-character hex commit and ISO timestamp reach the browser. No environment object, credential or runtime Git/API call is exposed. `scripts/build-stamp.js` has injected dependencies so its fallback order is unit-tested.
+
+Settings and Credits show the identity and build time explicitly in Europe/Lisbon. The world has a 16 px corner badge above its conditions strip. Presenter URLs (`?demo=1`, including recording) omit that badge, and app teardown/failed world loading dispose it. Captions treat its area as occupied. Run `npm run test:build-stamp` to verify compiled files, Settings/Credits, the phone badge and presenter exclusion.
+
+
+## Problem reports (G9 starter)
+
+Settings and Pause contain a prepared **Report a problem** link to the fixed `https://github.com/Nilsnova/The-Great-Plot-Twist/issues/new` destination. It opens an editable draft in another tab, never submits it, and uses `noopener noreferrer`. The synchronous click handler refreshes the encoded URL without awaiting code or opening a scripted popup. Pause and other submenus load on demand to retain the title budget; request tokens discard late menus after Escape or navigation.
+
+`diagnostics/report-url.js` accepts only `{build:{sha,builtAt},placeId,viewport:{width,height},inputType,actions}`. Commit/time, public registry place ids, bounded numeric dimensions, the `touch|mouse|gamepad` enum and fixed semantic action vocabulary are individually validated. Unknown keys and values are dropped. The body ends with an empty **What happened?** section and the URL is strictly shorter than 7,000 characters. No player/account/crew identifiers, names, device ids, tokens, URLs, save contents, case state, intent arguments, typed text or error strings are read into the report. The three-value field records the last pointer/controller kind and defaults to `mouse` on desktop; command keys do not overwrite an observed touch/gamepad type.
+
+`diagnostics/trace.js` keeps only the last ten allowed action names in memory, returns copies and never persists them. The app-owned collector observes fixed control labels/command keys and the public `arrived` event, not outcomes. Gamepad code supplies only the coarse input enum. `{type:'app_disposed'}` clears its listeners/history; development hot disposal also cleans it up. Report controls attached after a cancelled asynchronous menu do not start a collector. The builder has unit privacy/bounds tests; `npm run test:problem-report` verifies menus, current place, viewport, input enums and unknown-label exclusion without navigating to GitHub.
+
+
+## Server-call states (G9 starter)
+
+`adapter/intent.js` is the shared presentation boundary. Screens still send intents through their supplied adapter and never call `fetch`. `call-failure.js` translates HTTP 401 → `session_expired`, 403 → `forbidden`, 429 → `rate_limited`, 503 → `not_connected`, other 5xx → `internal_error`; failed-fetch/network exceptions and `navigator.onLine === false` yield `offline`. Unknown exception text is never shown. Business refusals retain their supplied explanation and do not acquire a Retry button. Result views stay owned by the adapter.
+
+The real adapter should return `{accepted:false,reason,message,view,retryAfterSeconds?}` or throw an error with `status` and optional `retryAfterSeconds`. Parse HTTP `Retry-After` at the transport boundary, not inside screens; provide a finite number of seconds in `[0,86400]`. The UI rounds up. A 401 should also publish the expired account view. Keep server request/idempotency identifiers inside the adapter: an explicit retry after a lost response must reuse/reconcile that request, especially for paid actions. The screen does not infer whether the server accepted a timed-out operation.
+
+`createCallState({now?})` is the pure state model. `createServerCallState({label,onRetry?,onSignIn?,messageElement?})` provides an accessible DOM element. Call `loading()` before awaiting an intent; `succeed()` on success; `succeed({empty:true,message:'No records yet.'})` only for a successful response that the caller knows is empty; `fail(result,{retryable?})` on refusal. `showMessage(text)` is passive copy and `clear()` resets presentation. `dispose()` removes its node and timer. Text uses `textContent`, 18 px copy, 16 px/44 px buttons and live status/alert roles; there is no animation.
+
+Retry is explicit for transport failures. A 429 counts down from a monotonic deadline once per displayed second, disables Retry until zero, and never calls the adapter automatically. Closing/disposal clears scoped countdowns; a hidden/detached dialog stops its pending timer. Authentication remains a caller-supplied action, with the existing account panel retaining its GitHub control. Save conflicts use the existing explicit copy-choice controls, not generic Retry.
+
+Crew/board/search/partner/finale actions share one scoped case status; search inspection refusals remain visible when its screen opens. Navigation invalidates late status delivery without discarding adapter state. Intro arrival has its own status and explicit confirmation retry; a pending/refused receipt does not create a kit or destination. Account actions, external Continue failures and user-triggered emotes use the same component. Background position samples keep their quiet bounded reporter and presence connection label. Six gallery examples show loading, empty, error, offline, expiry and rate limiting. The fake adds a deterministic four-second `retryAfterSeconds` to its one-shot rate-limit fault without changing case rules.
+
+Run `npm run test:call-states` for deferred loading, 375 px readability, explicit recovery, cooldown without auto-retry, account expiry/retry, late-close cleanup and empty-state samples while all APIs return 503. Pure tests cover safe failure mapping, domain refusals, states and injected-clock countdowns. Real transport/header parsing and retry reconciliation await Claude's adapter.
+
+
+## Strict CSP readiness (G9 starter)
+
+[CSP.md](CSP.md) inventories every built entry, authored/runtime style path, URL scheme and outside origin, and gives Claude the proposed HTTP policy. The four production HTML pages use same-origin script/CSS files with no inline scripts, style blocks, event attributes or authored style attributes. Constant chart/label CSS text moves to stylesheets; dynamic layout uses individual CSSOM properties. No remote asset/font/audio load, `eval`, `unsafe-inline`, `unsafe-eval`, `data:` or `blob:` allowance is needed. Dormant Three.js URL recognition/serialization helpers are listed separately from active resource loads.
+
+Vite preview and `check-csp.js` share `scripts/csp-policy.js`, including explicit `script-src-attr`/`style-src-attr 'none'` and only the approved Supabase HTTPS/WSS connection origins alongside self. Credit/issue/OAuth navigation is documented separately. The existing team-check page's additional meta policy is preserved. Run `npm run test:csp:inventory` and `npm run test:csp`; the latter rehearses the built nine-beat tour with every API down. This package does not edit `vercel.json` or enable deployed headers. Claude must validate the integrated real adapter, deployed headers, OAuth and Realtime separately.
+
+
+## G9 starter verification and handoff
+
+Items 1–3 landed at `cae6dad`, `bb7599e` and `f413006`; item 4 contains the CSP readiness inventory/policy and final evidence. **360 tests / 62 files**, `npm run build` and the **107-file/twelve-line spoiler guard** pass. [Combined verification](captures/20261106_G9-4/Verification.json) lists **19 exact commands, all successful**, including 16 browser scripts across the starter: identity, report privacy, shared call states, chaos, golden paths, kit, case, intro, lifecycle, loading, accessibility, timed demo, CSP, presence, signal and production. Earlier item-3 regression logs and final frozen-source runs are retained alongside captures; attempted runs remain in `iterations/`.
+
+Cold title: **20,617 bytes / 9,803 gzip**, below the unchanged 21,080-byte cap. Eight captains with night storm: **59 FPS / 112 calls / one place root**. The full API-independent demo completes in **170.1 seconds**; policy rehearsal also walks all nine highlights with every API returning 503. Accessibility: **23 contexts / 69 viewport samples**, minimum sampled text contrast **4.694:1**, zero reported accessibility failures. The 375 px failure capture keeps request copy at 18 px and action controls at 16 px / 44 px.
+
+Requests for Claude: return bounded numeric `retryAfterSeconds`, publish expired account state on 401, and keep request reconciliation/idempotency inside the real adapter for explicit retries after lost responses. Enable/rehearse the proposed HTTP policy after integration and confirm only the exact approved Supabase HTTPS/WSS origins are required. Real services, deployed headers, Safari/Firefox and physical device/VoiceOver checks remain unverified. No backend, auth transport, weather client, case rules, infrastructure or new dependency is changed. Continue the full G9 brief on this same branch.
+
+
+## G9 playtest identity and reports (stream 0)
+
+The original SHA fallback order is unchanged. Local builds append `-dirty` when Git sees uncommitted
+files; valid `VERCEL_GIT_COMMIT_SHA` wins on Vercel. `environment` is only `preview`, `production` or
+null, from `VERCEL_ENV`. The public stamp remains `build-stamp.json` and `__BUILD_STAMP__`. Build HTML
+contains the title label. A build-only virtual stylesheet places the same label inside the title header
+without shipping JavaScript for that label; the generated CSS is extracted into a normal hashed local
+stylesheet. Settings, Credits, the presenter-hidden world badge and performance clipboard copies agree.
+
+Issue titles use `[playtest <sha>] <place or screen>: `. Added context is restricted to screen/mode/account
+state enums, browser family and major version, and numeric performance summaries only when `perf=1` runs.
+The last-ten list accepts fixed UI actions and `caseMethods` → `accepted|caseReasons`, never arguments.
+`noteAdapterView`, `noteIntentOutcome` and `notePerformanceSummary` retain only these allowed fields in
+memory. Unknown values are dropped, old actions are trimmed for the URL budget, and no length exception
+is thrown. Both description sections remain blank, with a visible public-GitHub/account explanation.
+`createServerCallState` accepts a `reportLink` hook; stream 5 fills it for every error state.
+
+Stream 0 gate: unit/build/loading, title stamp/performance copy, problem report, CSP and accessibility
+checks pass. Its independent title graph is 20,971 bytes; stream 1 adds further headroom before the real
+adapter. The unchanged refusal vocabulary lives in `adapter/reasons.js` and is re-exported by `contract.js`
+so diagnostics can load it separately. No schema, method, reason or browser event is added. Requests and
+ongoing checkpoint state are in [HANDOFF-G9.md](HANDOFF-G9.md).
+
+
+## G9 adapter selection and title headroom (stream 1)
+
+`adapter/selection.js` pins the query table: local rehearsal needs development or `demo=1`; production
+`case=local` alone stays disconnected; a plain demo uses its own disconnected world; ordinary play has
+one lazy real-adapter entry. Checkpoint 0 deliberately keeps `REAL_ADAPTER_READY=false` until stream 2
+passes conformance. Its reserved factory is a placeholder, not an online implementation. A failed
+chunk has a plain disconnected notice. The sign-in return hook recognizes only the presence of code
+or error; stream 3 implements PKCE and address cleaning.
+
+The richer account summary loads after the title paints, with disposal/cancel guards and an Account
+button fallback for import failure. The refusal list loads independently while `contract.js` preserves
+its existing exports. Cold title JavaScript is **19,679 bytes**, leaving **1,401 bytes** under the
+unchanged 21,080 cap (starter baseline 20,617). One laptop observation measured title readiness / first
+contentful paint at 158.3 / 192 ms before, and 524.9 / 508 ms after; these uncontrolled samples on a busy
+laptop do not demonstrate a latency improvement. The network never gates this disconnected title.
+
+The header builder and source-of-truth rule are in [CSP.md](CSP.md), Security headers (G9).
+`npm run print:headers` prints the no-address proposal; pass the approved public Supabase origin to
+include its exact HTTPS/WSS pair. `npm run test:title-start` records title paint timing.
+The old bulletin test's other-worktree fallback is removed. Its canonical parity check runs only when
+`../backend/content/bulletin.json` is in this checkout; it is explicitly skipped until group 2 merges.
+No main/server file was authored or edited by this stream.
+
+
+## G9 real adapter core (stream 2)
+
+Ordinary play selects a lazy online proxy. Two animation frames let the native title dialog paint
+before `src/online/case-adapter/index.js` loads. An early player intent can start it immediately.
+The factory returns synchronously; config/account/save/crew reads run outside the render loop.
+Every public view is a fresh schema-1 clone with all 24 keys, `mode: 'online'`, and no raw account,
+crew or partner identifiers. `case_updated` is delivered before an intent resolves. Disposal stops
+polling/listeners, and a session epoch rejects late private reads and recovery writes.
+
+The transport uses A2's private API and a separate token-free public API. Error mapping is in
+`reasons.js`; `uid.js` retains the same action UID across a single read-first retry after an uncertain
+write. Completed server codes reread the authoritative snapshot. Save PUT is never blindly resent.
+`validate.js` checks input shapes; read/profile envelopes are checked before replacing last-good data.
+Signed-out Act 1 stays on its local accepted-move journal; kit confirmation refuses with
+`sign_in_required`. Kit display names/archetypes live in `adapter/shared/kits.js`, imported by both
+adapters without importing rehearsal rules into the online graph.
+
+`npm run test:online` builds and plays the ordinary production path on recorded answers at 1280 and
+375 px. Stream 2 covers anonymous Act 1, the preserved journal and no local kit/account grant; later
+streams extend this same path. Every API request is intercepted. `npm run test:g9 -- --phase=after
+--keep-going` runs G8's 31 baseline commands plus G9 checks sequentially; `--resume` retries failures.
+The shared closed-service browser fixture precedes each route-specific fixture, so old production
+checks remain independent of the API. Test artifacts contain relative paths and no tokens.
+
+Main `60f7fd0` now owns the enforced platform headers. Preview mirrors their exact text, rather than
+requiring the earlier proposal's redundant explicit directives. Validation still rejects unsafe
+scripts/styles, wildcard connections, foreign project origins and duplicate directives. Header
+changes belong to Claude; G9 changes no platform configuration.
+
+
+Stream 2 verification: **1,096 tests / 91 files**, production build/spoiler guard and all **37** driver
+commands pass. Cold title is **20,971 bytes** (10,041 gzip), leaving 109 bytes below the unchanged
+21,080 cap. The real adapter remains a separate chunk requested after the first title frame. Primary
+button contrast is **6.48:1**; the world retained its counts through ten round trips at 60 fps on this
+laptop. These are local Chrome observations, not deployed/mobile-hardware results. Exact evidence:
+`captures/20261106_G9-C1/stream2-verification.json` and the sibling C1-after regression manifest.
+The old intro check now allows the expected token-free config GET while preserving the actual public
+intro API probe; the expired-account check waits for its lazy screen before asserting its sign-in
+control. A repeated refused case answer stays refused while requesting a fresh snapshot.
+
 ## G13 checkpoint 1: festival workshop and pure rules
 
 Nils' G13 is on `feat/g13-festival`. The 56 original pixel additions (twelve lamps
@@ -761,3 +897,137 @@ Safari, physical phones and live server/storage integration remain unverified.
 The earlier checkpoint's deferred frontend work is now implemented in `src/screens/festival/`. The live feature remains controlled by the server's `festival` flag; the new title/pause and HUD launchers do not depend on the paused ordinary case adapter. The server owns timer/claim/ring state and friendly-duel outcomes. The explicitly labelled `?demo=1&festival=1` rehearsal has a separate memory-only transport and creates no real claims, matches or coins. See the screen's README for the frozen request shapes, retry/privacy behavior and browser gates.
 
 The original loop and cues now use the existing trusted-gesture audio owner and music/effects buses. Play starts festival music; shared volume controls and visible captions remain available. All 56 festival drawings remain outside the world's default preload. The additional recorded-audio module is lazy, and the account summary retains its title slot while loading its presentation after first paint.
+
+
+## Sign-in (G9, stream 3)
+
+`online/auth.js` lazily loads the pinned Supabase SDK for GitHub PKCE/S256 only. The selector consumes
+and removes callback fields before starting auth. Ordinary title startup waits for no auth request;
+restoration starts after the title/config, and production sign-in controls require `flags.sign_in`.
+Without the public build values, Account explains that sign-in is not set up and Act 1 remains local.
+
+The SDK owns opaque session strings through `auth-storage.js`; its default is `sessionStorage` for
+this tab, with memory fallback. PKCE verifiers always need tab storage. A unique SDK broadcast namespace
+maps to stable owned storage keys, so another tab cannot adopt this tab's auth broadcasts. A2's
+`session.js` still contains only the access token in memory. A2 retries a 401 once after deduplicated
+renewal, checking identity again before replay; cached public routes never carry authorization.
+
+Logout clears owned persistence immediately, detaches the old SDK into opaque private memory for
+its normal logout, and closes it after completion or a ten-second limit. Epochs prevent old exchanges,
+refreshes, responses or lazy imports from restoring a signed-out identity. Normal app disposal keeps
+tab persistence for reload and blocks late SDK writes. No refresh token is read by application code.
+
+Recorded production checks use a generated placeholder key and tokens, an intercepted Supabase origin
+and main's exact header set with only that origin substituted. They verify PKCE, address cleaning,
+tab-only persistence, reload, logout, public requests and absence of production inspection hooks.
+Full notices are retained in Settings → Credits. Actual OAuth/deployed and physical-device proofs
+remain separate. See [the stream-3 gate](captures/20261106_G9-C1/stream3-verification.json).
+
+
+## Account, replay saves and deletion (G9, stream 4)
+
+Sign-in initializes the server-owned captain name before any presence starts. The server confirms the
+first Act 1 kit and coin grant; replaying Act 1 displays “Welcome back” and keeps that first grant.
+The account screen displays the supplied reroll allowance, save state and Lisbon-local timestamps.
+Rewards show only the own-row amount, plain reason and date, with no ledger references or player IDs.
+
+Cloud `data` is `{kind: 'intro' | 'world', actions: [accepted_action_id, ...], place: known_place_id}`.
+The replay has at most 300 validated action IDs and 100,000 encoded bytes; it contains no engine
+snapshot, case answer, reveal text or auth data. Intro replays use `lighthouse_isle`. Saving happens
+after confirmed Act 1, on later place changes and at most once a minute while dirty. Timers pause in
+hidden tabs and do no work in the frame loop. An unknown PUT outcome reads the current save before
+another write. Conflicts require a choice: keep this device rereads the version before replacing the
+cloud copy, while use cloud updates the device journal and continuation without a replacement PUT.
+
+Each identity starts with automatic cloud writes paused until its current authoritative save has
+been reconciled. Device moves may continue to stage while reads are pending; a delayed crew read
+cannot let an autosave overwrite a different cloud replay before the conflict choice appears.
+Late flushes are scoped to the identity and cannot clear a newer pending write. Continue also waits
+for pending initial hydration and reconciles its fresh save read before publishing a continuation;
+it cannot silently choose a different cloud replay. Logout removes the
+checked crew preview and cloud-conflict state while keeping valid device progress continuable.
+
+Deletion requires two taps and explains the complete data removal, including coin ledger history.
+Only `{deleted: true}` clears the accepted-action journal and owned auth persistence; ordinary logout
+keeps the journal. Late responses cannot clear or overwrite a newer account. Browser fixtures cover
+the complete account journey at 1280 and 375 px; accessibility includes all account states at 320 px.
+These checks use generated placeholder credentials and intercepted endpoints. Live accounts,
+databases and deployed callbacks remain unverified.
+
+
+## Request states and recovery (G9, stream 5 foundation)
+
+The request kit waits 300 ms before showing loading, marks reads slow after five seconds and offers
+fixed safe words, an explicit retry and a public problem draft. A refused control stays focusable with
+`aria-disabled` during its supplied countdown; its handler rejects activation until the deadline.
+Screen readers hear the start and end, while visible seconds change quietly. Session expiry keeps
+the accepted journal and requires a fresh user action before a write can be sent again.
+
+The adapter's GET monitor retries network/503 reads after 5, 15 and 30 seconds, then waits for a tap.
+It keeps failures by resource, pauses timer remainders while hidden and invalidates late finishes on
+logout/disposal. Public config uses the same bounded schedule and focus cannot bypass a failed read's
+deadline. A recovered own-account read completes the rest of account hydration; a recovered save
+reconciles device/cloud copies. Failed ledger reads retain a visible unavailable state and safe status,
+without forwarding SDK errors or query data. Connection retry uses the existing continuation intent;
+the standalone banner reads without navigating. No additional public intent or event was added.
+
+Nested additive fields are `account.connection {state,message,reason}`, `account.namePending`,
+`account.canRetryName` and `rewards.status`. Screens still receive only projections and send intents.
+First arrival sign-in is distinct from session expiry, obeys the production flag/public build values,
+and preserves the accepted journal for its first authoritative claim after the return and Continue.
+
+`npm run test:online:chaos` uses production UI with generated credentials and intercepted endpoints.
+Current coverage is seven faults each for account/intro/save/crew (28 cases); the report names pending
+later route groups. `--all-groups` refuses incomplete coverage. Every subsequent integration grows it.
+The 38-context accessibility pass includes all request states at 375/320; account text is 18 px and
+controls stay at least 16 px / 44 px. See the stream-5 verification manifest for exact evidence and
+limitations; live accounts, services, deployments and physical devices are not claimed.
+
+
+## G9 stream 8: authoritative home islet
+
+The exact session’s factory owns one L2 engine shared by the islet panel and the existing station
+`buildLight` intent. The complete five-plot server catalogue supplies prices, materials, permissions
+and standing buildings. A fresh accepted GET precedes an explicit retry of an uncertain write;
+refused resends keep the original click ID until an authoritative built answer or account reset.
+The shared call UI owns loading/slow/report states and the original 429 deadline. No timer repeats
+a build. Sign-out/expiry/deletion clear private world builds and invalidate held work.
+
+The muster reminder opens that panel. The finale can display its supplied station card while the
+case remains disconnected; live case projection and post-build refresh still wait for R11. Actual
+local rehearsal builds through the panel, sees the station stand and uses the third light. The
+recorded production path builds through A2 and captures the actual station after public chart
+travel and native walking. Native cloud-save readiness is asserted before captures.
+
+Optional nested contract fields are `crew.isletReminder`, `finale.islet` and `finale.isletFailure`;
+see `src/adapter/contract.js` and shared conformance. Schema 1, 24 keys, 25 intents, exact
+`islet_changed` events, replay and the server-free tour remain intact. The Account expiry panel
+reuses one genuine expired/report component, preserving primary sign-in focus and the device journal.
+
+All 11 stream checks pass: 2,896 tests/195 files, 42 production islet checks,
+7 islet faults/42 assertions, 45 accessibility contexts/135 samples and short 375 × 400 audits.
+Cold title is 21,071 JS/11,878 CSS bytes under unchanged caps.
+See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json) for fingerprints, complete gate
+logs, prior failed attempts and limitations. This is not a checkpoint: committed-source full44,
+R11’s case DTOs and R16’s target-hardware frames remain outstanding. No real account/service/database,
+other-engine or physical-device proof is implied.
+
+
+## Overflow 1–3: idle hints, accessibility and touch walking
+
+The [release note](../docs/handoff/overflow-1-3-release.md) records the reviewed G9 integration,
+recovery fixes, five device-dismissed hints and shared open-panel styles.
+On phones, tap a clear map path or room floor to walk, or hold the movement stick / room D-pad.
+Manual input and overlays cancel a route; movement still uses the ordinary collision controller.
+Hints stay clear of the HUD and touch controls and pause during movement or open panels.
+
+Run `npm run test:input` for bounded route, pointer cancellation and input arbitration regressions.
+Run `npm run test:mobile` for complete Chromium/CDP touch checks at 320px, 375px and landscape.
+Run `npm run test:panels` for the 12-panel / four-viewport layout proof, and `npm run test:a11y`
+for the complete keyboard, contrast, target-size and reduced-motion audit.
+These use local fixtures; physical devices, screen readers and real OAuth/crews remain separate checks.
+
+The deeper player-experience pass adds `test:friends`, `test:settings:visuals`,
+`test:inspections` and `test:story:polish`. These cover staged multiplayer entry, initial
+focus, readable supporting pages, earned inspection results and compact story controls.
+Each visual report records fixture-only scope and physical-device limits.

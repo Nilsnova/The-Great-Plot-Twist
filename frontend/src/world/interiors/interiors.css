@@ -1,6 +1,7 @@
 /* An opaque room replaces the island view; only a title, an exit and nearby actions remain. */
 .interiors-scene{position:fixed;inset:0;z-index:80;width:100vw;height:100dvh;overflow:hidden;background:#152a31;color:#f5e7c5;font-family:system-ui,sans-serif;isolation:isolate;touch-action:none}
 .interiors-scene[hidden]{display:none!important}.interiors-canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto;outline:none}
+.interiors-destination{position:absolute;width:24px;height:12px;transform:translate(-50%,-50%);border:2px solid #ffe6a4;border-radius:50%;box-shadow:0 0 0 3px #102d35b0;pointer-events:none}.interiors-destination[hidden]{display:none}
 .interiors-heading{position:absolute;top:max(18px,env(safe-area-inset-top));left:clamp(16px,4vw,64px);max-width:calc(100% - 190px);padding:12px 18px 14px;border-radius:10px;background:linear-gradient(120deg,#122b34ee,#142d33b8);box-shadow:0 8px 30px #07171f40;pointer-events:none}
 .interiors-title{margin:0;color:#f7e2b4;font:600 clamp(20px,2.7vw,34px)/1.14 Georgia,serif;letter-spacing:0}.interiors-objective{margin:7px 0 0;color:#e0e6d4;font-size:clamp(13px,1.5vw,17px);line-height:1.4}
 .interiors-exit,.interiors-act,.interiors-hotspot,.interiors-direction{font-family:system-ui,sans-serif;border:1px solid #d6bd83;color:#fff1cb;box-shadow:0 3px 12px #091d2760;cursor:pointer;touch-action:none}
@@ -14,3 +15,19 @@
 @media(pointer:coarse){.interiors-pad{display:grid}}
 @media(max-width:600px){.interiors-heading{top:max(12px,env(safe-area-inset-top));left:12px;max-width:calc(100% - 100px);padding:11px 13px}.interiors-exit{right:12px;top:max(15px,env(safe-area-inset-top));padding:0 11px;width:76px;font-size:13px}.interiors-title{font-size:21px}.interiors-objective{font-size:13px;margin-top:6px}.interiors-hotspot{padding:9px 12px 9px 27px;font-size:12px;max-width:52vw;white-space:normal;text-align:center}.interiors-hud{bottom:max(14px,env(safe-area-inset-bottom));gap:8px;width:max-content;padding:7px 9px 7px 13px}.interiors-action-label{font-size:12px;max-width:180px}.interiors-act{font-size:12px;min-width:90px;padding:9px 11px}}
 @media(prefers-reduced-motion:reduce){.interiors-scene[data-state]{animation:none}}
+
+/* Full-size room controls stay within the same opaque, full-screen room. */
+.interiors-heading,.interiors-hud,.interiors-exit,.interiors-act,.interiors-hotspot{box-sizing:border-box}
+.interiors-heading{overflow-wrap:anywhere}.interiors-objective{font-size:16px}
+.interiors-exit,.interiors-act,.interiors-hotspot{font-size:16px;min-height:44px}
+.interiors-action-label{font-size:16px;min-width:0;overflow-wrap:anywhere}
+.interiors-hud{min-width:0}.interiors-act{white-space:normal}
+@media(max-width:600px){
+  .interiors-heading{max-width:calc(100% - 136px)}
+  .interiors-exit{width:100px;padding:8px;font-size:16px;white-space:normal}
+  .interiors-hotspot{font-size:16px;max-width:52vw}
+  .interiors-hud{width:calc(100% - 24px);max-width:calc(100% - 24px);gap:8px}
+  .interiors-action-label{font-size:16px;flex:1}
+  .interiors-act{font-size:16px;min-width:90px;max-width:60%;flex:0 1 auto}
+  .interiors-pad{bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px))}
+}

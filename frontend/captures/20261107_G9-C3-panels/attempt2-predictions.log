@@ -1,0 +1,21 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.focus: Error: strict mode violation: locator('canvas[tabindex="0"]') resolved to 2 elements:
+    1) <canvas tabindex="0" width="1280" height="812" data-engine="three.js r187" aria-label="Saltreach Isles. Use WASD to walk, E to interact, M for the sea chart, and the wheel to zoom."></canvas> aka getByLabel('Saltreach Isles. Use WASD to')
+    2) <canvas role="img" tabindex="0" width="1280" height="812" class="interiors-canvas" aria-label="Keeper’s cottage. Use arrow keys or WASD to walk. E inspects the highlighted object. Escape leaves the room."></canvas> aka getByLabel('Keeper’s cottage. Use arrow')
+
+Call log:
+  - waiting for locator('canvas[tabindex="0"]')
+
+    at chartLanding (<frontend>/scripts/local-panel-journeys.js:15:46)
+    at openPractice (<frontend>/scripts/local-panel-journeys.js:28:9)
+    at async localPredictionGolden (<frontend>/scripts/local-panel-journeys.js:57:45)
+    at async checkLocalPanel (<frontend>/scripts/local-panel-journeys.js:152:31)
+    at async checkOnlinePredictions (<frontend>/scripts/check-online-predictions.js:151:31)
+    at async file://<frontend>/scripts/check-online-predictions.js:165:80 {
+  log: [ `  - waiting for locator('canvas[tabindex="0"]')` ]
+}
+
+Node.js v24.22.1

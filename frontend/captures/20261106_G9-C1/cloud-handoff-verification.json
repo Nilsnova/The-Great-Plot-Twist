@@ -1,0 +1,30 @@
+{
+  "completedCheckpoint": false,
+  "stableStream2": "c8e94d7",
+  "next": "stream 3",
+  "unit": {
+    "command": "npm test",
+    "files": 93,
+    "passed": 1127
+  },
+  "build": {
+    "command": "npm run build",
+    "code": 0,
+    "spoilerGuard": "117 files / 12 protected lines"
+  },
+  "online": {
+    "command": "npm run test:online",
+    "code": 0
+  },
+  "regression": {
+    "command": "npm run test:g9 -- --phase=after --keep-going --resume --rerun=tests,build,online,loading,csp,a11y",
+    "passed": 37,
+    "failed": 0,
+    "manifest": "captures/20261106_G9-C1-after/Verification.json"
+  },
+  "unusedHelpers": [
+    "src/online/auth-storage.js",
+    "src/online/auth-return.js"
+  ],
+  "liveServicesUsed": false
+}

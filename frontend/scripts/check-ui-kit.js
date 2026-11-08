@@ -8,7 +8,7 @@ const report = { checked:new Date().toISOString(), production, checks:[] };
 const check = (ok,label) => { assert.ok(ok,label); report.checks.push(label); };
 try {
   await page.goto(env.url+'/ui-kit.html'); await page.locator('.kit-dialogue').waitFor();
-  check(await page.locator('.kit-panel').count() === 9,'Gallery shows all nine component groups');
+  check(await page.locator('.kit-panel').count() === 15,'Gallery shows nine component groups and six request states');
   await page.getByRole('button',{name:'Open a panel',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'visible'}); await page.keyboard.press('Escape');
   await page.getByRole('dialog').waitFor({state:'hidden'});

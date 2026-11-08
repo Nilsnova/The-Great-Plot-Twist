@@ -1,8 +1,26 @@
 // Route-shaped bulletin validation, reusable by fake and real-adapter tests.
 import {expect} from 'vitest';
 const nullableObject=value=>expect(value===null||typeof value==='object').toBe(true);
+// Public request metadata contains no server body, private identity or authentication action.
+function validateRequest(bulletin){
+  if(!('request' in bulletin)||bulletin.request===null)return;
+  const request=bulletin.request,optional=['status','retryUntil'];
+  expect(Object.keys(request).sort()).toEqual(['reason','message',...optional.filter(key=>key in request)].sort());
+  expect(['offline','not_connected','internal_error','rate_limited','feature_off']).toContain(request.reason);
+  expect(typeof request.message==='string'&&request.message.length>0).toBe(true);
+  if('status' in request)expect(Number.isInteger(request.status)&&request.status>=0&&request.status<=599).toBe(true);
+  if(request.status===401||request.status===409)expect(request.reason).toBe('internal_error');
+  if('retryUntil' in request)expect(request.reason==='rate_limited'&&Number.isFinite(request.retryUntil)
+    &&request.retryUntil>=0&&request.retryUntil<=Number.MAX_SAFE_INTEGER).toBe(true);
+  if(request.reason==='rate_limited')expect('retryUntil' in request).toBe(true);
+  if(request.reason==='feature_off'){
+    expect(bulletin.status).toBe('off');expect(bulletin.lines).toEqual([]);
+    for(const key of ['day','weather','exchange','chapterTwoHook'])expect(bulletin[key]).toBeNull();
+  }
+}
 export function validateBulletin(bulletin){
   expect(bulletin).toBeTruthy();
+  validateRequest(bulletin);
   expect(Object.keys(bulletin)).toEqual(expect.arrayContaining(['status','day','lines','weather','exchange','chapterTwoHook']));
   expect(['off','loading','ready','unavailable']).toContain(bulletin.status);
   expect(Array.isArray(bulletin.lines)).toBe(true);
@@ -23,7 +41,7 @@ export function validateBulletin(bulletin){
     expect(typeof tonight.isNow).toBe('boolean');expect(typeof tonight.isFogNight).toBe('boolean');
     expect([null,'real','almanac']).toContain(tonight.fogNightKind);
   }
-  if(bulletin.weather){expect(typeof bulletin.weather.attribution).toBe('string');}
+  if(bulletin.weather){expect(bulletin.weather.attribution===null||typeof bulletin.weather.attribution==='string').toBe(true);}
   if(bulletin.exchange){expect(['live','cache','stale','replay']).toContain(bulletin.exchange.feed);expect(Array.isArray(bulletin.exchange.pausedCompanies)).toBe(true);}
   const hook=bulletin.chapterTwoHook;
   if(hook){

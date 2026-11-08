@@ -21,14 +21,14 @@ defineAdapterConformance('memory fake',()=>createFakeCaseAdapter(),driver);
 describe('offline route fixture harness',()=>{
   it('returns queued recorded JSON replies and records requests without network',async()=>{
     const request=createFixtureRequest(caseFixtures());
-    const route=[['GET','/api/me'],['POST','/api/intro/complete'],['POST','/api/crews'],['GET','/api/board'],['PUT','/api/save']];
+    const route=[['GET','/api/me'],['POST','/api/intro/complete'],['POST','/api/crews'],['GET','/api/case'],['PUT','/api/save']];
     for(const [method,path] of route){
       const response=await request(path,{method});
       expect(response).toBeInstanceOf(Response);
       await response.json();
     }
     expect(request.calls.map(call=>`${call.method} ${call.path}`)).toEqual([
-      'GET /api/me','POST /api/intro/complete','POST /api/crews','GET /api/board','PUT /api/save',
+      'GET /api/me','POST /api/intro/complete','POST /api/crews','GET /api/case','PUT /api/save',
     ]);
     expect(request.remaining()).toBe(0);
     await expect(request('/api/unexpected')).rejects.toThrow(/fixture mismatch/);

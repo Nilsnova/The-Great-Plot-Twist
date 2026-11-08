@@ -1,0 +1,8 @@
+
+ RUN  v5.1.0 <frontend>
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  20:15:19
+   Duration  14.59s (tests 94%, import 5%, transform 1%)

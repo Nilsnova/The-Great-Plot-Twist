@@ -1,0 +1,2326 @@
+{
+  "checked": "2026-11-06T16:30:43.009Z",
+  "screens": [
+    {
+      "name": "arrival",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 28,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 18,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 18,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 12,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "crew",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 29,
+          "minimumContrast": 6.160905454061178,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 19,
+          "minimumContrast": 6.160905454061178,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 19,
+          "minimumContrast": 6.160905454061178,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 14,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "board",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 60,
+          "minimumContrast": 6.1211236707197,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [
+            "span.case-card-id",
+            "h3.",
+            "span.kit-badge",
+            "p.case-card-credit",
+            "span.case-seat-credit",
+            "button.kit-button."
+          ],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 50,
+          "minimumContrast": 6.1211236707197,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [
+            "span.case-card-id",
+            "h3.",
+            "span.kit-badge",
+            "p.case-card-credit",
+            "span.case-seat-credit",
+            "button.kit-button."
+          ],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 50,
+          "minimumContrast": 6.1211236707197,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [
+            "span.case-card-id",
+            "h3.",
+            "span.kit-badge",
+            "p.case-card-credit",
+            "span.case-seat-credit",
+            "button.kit-button."
+          ],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 16,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "search",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 24,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 14,
+          "minimumContrast": 7.074473862992005,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 14,
+          "minimumContrast": 7.074473862992005,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 11,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "partners",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 34,
+          "minimumContrast": 5.866223365754869,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 24,
+          "minimumContrast": 5.866223365754869,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 24,
+          "minimumContrast": 5.866223365754869,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 19,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "finale",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 43,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 33,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 33,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 18,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "accusation",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 23,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 13,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 13,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 13,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "reveal",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 23,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 13,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 13,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 12,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "relighting",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 20,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 10,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 10,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 14,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "rewards",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 59,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 49,
+          "minimumContrast": 8.594066937055086,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 49,
+          "minimumContrast": 8.594066937055086,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 11,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "log",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 47,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 37,
+          "minimumContrast": 7.826368973039406,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 37,
+          "minimumContrast": 7.826368973039406,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 11,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "hints",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 17,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 7,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 7,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 14,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "bulletin",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 24,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 14,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 14,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 13,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "title",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 15,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 15,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 15,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 5,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      }
+    },
+    {
+      "name": "settings",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 2,
+          "minimumContrast": 8.640180802498676,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 18,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 18,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 12,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      }
+    },
+    {
+      "name": "credits",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 20,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 20,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 20,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 5,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      }
+    },
+    {
+      "name": "intro",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 12,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 12,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 12,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 3,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      },
+      "escapeClosed": true
+    },
+    {
+      "name": "main-crew",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 29,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 19,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 19,
+          "minimumContrast": 6.432703277709889,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 13,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      }
+    },
+    {
+      "name": "world",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 34,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 18,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 18,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 9,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "account",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 11,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 11,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 11,
+          "minimumContrast": 6.479354609526834,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 2,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ],
+        "trapped": true
+      }
+    },
+    {
+      "name": "presence",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 9,
+          "minimumContrast": 5.998301893256843,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 7,
+          "minimumContrast": 5.998301893256843,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 7,
+          "minimumContrast": 5.998301893256843,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 2,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "islet-world",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 25,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 17,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 17,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 9,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "gulls-rest",
+      "sizes": [
+        {
+          "width": 1280,
+          "textCount": 33,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 375,
+          "textCount": 17,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        },
+        {
+          "width": 320,
+          "textCount": 17,
+          "minimumContrast": 4.693671497398343,
+          "missingNames": [],
+          "duplicates": [],
+          "smallTargets": [],
+          "fonts": [],
+          "contrast": [],
+          "imageBackgrounds": [],
+          "overflow": false,
+          "documentOverflow": false,
+          "fitsViewport": true
+        }
+      ],
+      "focus": {
+        "count": 9,
+        "positiveTabindex": false,
+        "steps": [
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "skipped": [
+    "Claude real-server panels absent from main"
+  ],
+  "manual": [
+    "VoiceOver",
+    "Physical phone",
+    "Image/canvas contrast and flash analysis",
+    "Other browser engines"
+  ],
+  "creditsEscapeSettings": true,
+  "settingsEscapeTitle": true,
+  "introEscapeCanvas": true,
+  "worldCaption": {
+    "nonoverlap": true,
+    "inside": true,
+    "size": 18
+  },
+  "modalCaption": {
+    "between": true,
+    "inside": true,
+    "size": 18
+  },
+  "caseEscapeCanvas": true,
+  "accountEscapeCanvas": true,
+  "reducedMotion": {
+    "wasActive": true,
+    "fireworksVisible": false,
+    "runningAnimations": []
+  },
+  "browserErrors": [],
+  "externalRequests": [],
+  "failures": []
+}

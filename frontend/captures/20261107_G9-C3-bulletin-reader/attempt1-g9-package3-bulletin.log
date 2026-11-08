@@ -1,0 +1,27 @@
+
+> the-great-plot-twist@0.1.0 test:bulletin
+> node scripts/check-bulletin-hall.js
+
+CHAOS bulletin/offline @ 375
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.captain-status .coin-counter') to be visible
+    61 × locator resolved to hidden <span role="status" class="coin-counter" aria-label="0 coins">0 ◇</span>
+
+    at Object.setup (<frontend>/scripts/online-bulletin-chaos.js:80:82)
+    at async checkOnlineChaos (<frontend>/scripts/check-online-chaos.js:139:11)
+    at async checkOnlineBulletinChaos (<frontend>/scripts/online-bulletin-chaos.js:200:16)
+    at async checkOnlineBulletin (<frontend>/scripts/check-online-bulletin.js:87:25)
+    at async file://<frontend>/scripts/check-bulletin-hall.js:3:1 {
+  log: [
+    "  - waiting for locator('.captain-status .coin-counter') to be visible",
+    '    61 × locator resolved to hidden <span role="status" class="coin-counter" aria-label="0 coins">0 ◇</span>'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

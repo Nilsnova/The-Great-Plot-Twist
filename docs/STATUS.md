@@ -14,6 +14,19 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**Current integration, 8 Nov 2026, Codex for Nils:** G9 is published and its live runtime is preserved
+in `integrate/overflow-1-3`. The first three overflow items, native phone tap-to-walk, clearer Friends
+and case guidance, polished inspection/Settings/support pages and caption-safe story frames are reviewed.
+The final clean frontend run passes **3,719 tests in 252 files**; combined phone/accessibility checks
+pass **36 checks / 61 screens**, with cold-title and strict-CSP budgets unchanged. Recorded native
+journeys and fault proofs pass. See the [final visual evidence](handoff/player-experience-visual-pass.md)
+and [overflow release](handoff/overflow-1-3-release.md). Main merge, deployment identity and public-route
+verification are the release steps; private OAuth/crew and physical-device checks remain distinct.
+No new key or configuration is needed from Nils. No backend, SQL, feature flag or provider was changed.
+
+**Historical checkpoints follow.** Their statements about G9 being unfinished or sign-in being off
+refer to earlier releases; use the current integration and its dated proof for this work.
+
 **Verified baseline before the visual release, 6 Nov 2026, Codex:** main `364d178` and production
 `dpl_4HmGdZCJrhgKS8DWF2qUN7eMAhPj` are READY with the AI companion removed.
 Presence, market, predictions, arena, case, bulletin, festival and sports are enabled; sign-in
@@ -478,6 +491,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-08.** Codex for Nils: integrated reviewed G9 overflow 1–3, collision-aware phone tap-to-walk, idle onboarding, truthful Friends entry, inline case guidance and visual polish across inspection, story and support screens on `integrate/overflow-1-3`. Final clean frontend **3,719/252**, mobile **36**, accessibility **61**, caption **51**, CSP seven pages/zero violations; budgets, recorded native journeys and fault checks pass. [Release evidence](handoff/player-experience-visual-pass.md). Main/deployment verification follows; no backend/SQL/env/provider/workflow changes.
 
 - **6 Nov 2026, Codex for Nils:** activated sports on main `364d178` after protected preview and canonical production read-only provider proofs; ten real fixtures returned, eight flags verified, sensitive key scope restored, temporary Sandbox deleted. Visual simplification is integrated locally, full frontend suite 1,859/133 files passes, original endings/local-save journey and responsive screen checks pass; final character and adaptive rendering checks pass; production identity verification follows the push.
 

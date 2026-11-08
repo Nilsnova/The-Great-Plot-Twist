@@ -1,0 +1,169 @@
+{
+  "sourceCommit": "03dd379931073eeaced0c2631bb950189f68ead5",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "devicePixelRatio": 1
+  },
+  "living": {
+    "performance": {
+      "fps": 15,
+      "calls": 110,
+      "triangles": 218,
+      "geometries": 107,
+      "textures": 60,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "stormWarmup": {
+      "fps": 26,
+      "calls": 107,
+      "triangles": 210,
+      "geometries": 106,
+      "textures": 62,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "storm": {
+      "fps": 33,
+      "calls": 109,
+      "triangles": 213,
+      "geometries": 108,
+      "textures": 64,
+      "roots": 1,
+      "objects": 10,
+      "programs": 4
+    },
+    "graphicsDevice": {
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "vendor": "Google Inc. (Google)"
+    },
+    "failure": "Eight captains with night storm effects keep the frame and draw-call budget"
+  },
+  "world": {
+    "before": {
+      "fps": 15,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "after": {
+      "fps": 20,
+      "calls": 97,
+      "triangles": 192,
+      "geometries": 96,
+      "textures": 27,
+      "roots": 1,
+      "objects": 10,
+      "programs": 3
+    },
+    "roundTrips": [
+      {
+        "fps": 17,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 31,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 14,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 9,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 24,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 17,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 15,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 16,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 18,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      },
+      {
+        "fps": 63,
+        "calls": 97,
+        "triangles": 192,
+        "geometries": 96,
+        "textures": 27,
+        "roots": 1,
+        "objects": 10,
+        "programs": 3
+      }
+    ]
+  }
+}

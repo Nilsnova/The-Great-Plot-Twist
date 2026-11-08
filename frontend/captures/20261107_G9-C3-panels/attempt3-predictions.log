@@ -1,0 +1,26 @@
+node:internal/errors:986
+  const err = new Error(message);
+              ^
+
+Error: Command failed: <node> scripts/check-spoilers.js .test-cache/g9-online-dist
+file://<frontend>/scripts/check-spoilers.js:16
+for(const path of paths){const text=await readFile(path,'utf8');if(path.endsWith('.js')&&hasEliminationData(text))throw new Error(`Suspect elimination data found in ${path}`);for(const entry of fingerprints)if(containsFingerprint(text,entry))throw new Error(`Protected ${entry.label} line found in ${path}`);}
+                                                                                                                        ^
+
+Error: Suspect elimination data found in .test-cache/g9-online-dist/assets/fake-9JeGLG75.js
+    at file://<frontend>/scripts/check-spoilers.js:16:121
+
+Node.js v24.22.1
+
+    at genericNodeError (node:internal/errors:986:15)
+    at wrappedFn (node:internal/errors:540:14)
+    at checkExecSyncError (node:child_process:943:11)
+    at execFileSync (node:child_process:979:15)
+    at openAuthFixture (file://<frontend>/scripts/online-auth-fixture.js:31:3)
+    at async openPanelFixture (file://<frontend>/scripts/online-panel-fixture.js:28:13)
+    at async checkPanelFlagRefresh (file://<frontend>/scripts/panel-flag-journey.js:9:13)
+    at async checkOnlinePredictions (file://<frontend>/scripts/check-online-predictions.js:152:37)
+    at async file://<frontend>/scripts/check-online-predictions.js:165:80 {
+  status: 1,
+  signal: null,
+  [duplicate Buffer dump omitted; raw SHA recorded]

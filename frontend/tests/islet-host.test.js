@@ -1,6 +1,7 @@
 // The host wires the islet to the game: it picks the transport, opens the panel on a plot click and tells the world what stands.
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {attachIsletPanel} from '../src/screens/islet/host.js';
+import {createIsletAdapter} from '../src/screens/islet/adapter.js';
 import {createFakeIsletTransport} from '../src/screens/islet/fake-transport.js';
 
 // A tiny event bus with the same on/emit shape as src/core/events.js, so each test starts clean.
@@ -53,7 +54,77 @@ afterEach(() => {
   delete globalThis.__isletLocal;
 });
 
+describe('factory-owned shared islet adapter', () => {
+  it('does not announce or call the private projection after an earlier shared observer stops the host', async () => {
+    const shared = createIsletAdapter({transport: createFakeIsletTransport(), mode: 'live'}), onView = vi.fn();
+    let f; const unsubscribe = shared.subscribe(event => { if (event.answered) f.stop(); });
+    f = attach({suppliedAdapter: shared, onView});
+    try {
+      expect(await f.stop.refresh()).toMatchObject({accepted: false, code: 'disposed'});
+      expect(f.changes).toEqual([]); expect(onView).not.toHaveBeenCalled();
+    } finally { f.stop(); unsubscribe(); shared.dispose(); }
+  });
+  it('does not run the private projection when an accepted world event synchronously stops the host', async () => {
+    const onView = vi.fn(), f = attach({transport: createFakeIsletTransport(), onView});
+    f.bus.on('islet_changed', () => f.stop());
+    try {
+      await f.stop.refresh(); expect(f.changes).toHaveLength(1); expect(onView).not.toHaveBeenCalled();
+    } finally { f.stop(); }
+  });
+  it('uses the supplied instance while leaving its reset and disposal to the factory', async () => {
+    const shared = createIsletAdapter({transport: createFakeIsletTransport(), mode: 'live'});
+    const reset = vi.spyOn(shared, 'resetPrivate'), dispose = vi.spyOn(shared, 'dispose'), privateReset = vi.fn();
+    let identity;
+    const stopped = vi.fn(), f = attach({suppliedAdapter: shared, onPrivateReset: privateReset,
+      onSessionChange: listener => { identity = listener; return stopped; }});
+    try {
+      await f.stop.refresh(); await f.stop.open('plot_2');
+      expect(f.contexts[0].adapter).toBe(shared);
+      identity({signedIn: false});
+      expect(f.panel.disposed).toBe(1); expect(f.stop.active).toBe(false);
+      expect(reset).not.toHaveBeenCalled(); expect(privateReset).toHaveBeenCalledOnce();
+      f.stop(); expect(dispose).not.toHaveBeenCalled(); expect(stopped).toHaveBeenCalledOnce();
+      expect(shared.read().spots).toHaveLength(5);
+      shared.resetPrivate(); expect(shared.read().spots).toEqual([]);
+    } finally { f.stop(); shared.dispose(); }
+  });
+  it('lets an explicit dev local rehearsal own its fake instead of adopting the supplied live instance', async () => {
+    const shared = createIsletAdapter({transport: createFakeIsletTransport(), mode: 'live'});
+    const read = vi.spyOn(shared, 'refresh'), reset = vi.spyOn(shared, 'resetPrivate'), dispose = vi.spyOn(shared, 'dispose');
+    const f = attach({suppliedAdapter: shared, dev: true, search: '?islet=local',
+      loadFake: async () => ({createFakeIsletTransport}), canAsk: () => false});
+    try {
+      await f.stop.refresh(); await f.stop.open('plot_2');
+      expect(f.contexts[0].adapter).not.toBe(shared); expect(f.contexts[0].adapter.read().mode).toBe('local');
+      expect(read).not.toHaveBeenCalled(); expect(reset).not.toHaveBeenCalled();
+      f.stop(); expect(dispose).not.toHaveBeenCalled(); expect(globalThis.__isletLocal).toBeUndefined();
+    } finally { f.stop(); shared.dispose(); }
+  });
+  it('publishes only an accepted read snapshot to the private callback without changing the world event', async () => {
+    const onView = vi.fn(({view}) => { view.coins = 0; view.spots.length = 0; });
+    const f = attach({transport: createFakeIsletTransport(), onView});
+    try {
+      await f.stop.refresh();
+      expect(onView).toHaveBeenCalledOnce(); expect(onView.mock.calls[0][0].answered).toBe(true);
+      expect(f.changes).toEqual([{type: 'islet_changed', built: ['plot_1'], signalStationBuilt: false}]);
+      await f.stop.open('plot_2'); expect(f.contexts[0].adapter.read().coins).toBe(1000);
+      expect(f.contexts[0].adapter.read().spots).toHaveLength(5);
+    } finally { f.stop(); }
+  });
+});
+
 describe('opening the panel', () => {
+  it('counts a pending import as active and cancels it through close before a late panel can open', async () => {
+    const slow = deferred(), module = fakePanelModule();
+    const f = attach({transport: createFakeIsletTransport(), loadPanel: () => slow.promise});
+    try {
+      const opening = f.stop.open('plot_2'); expect(f.stop.active).toBe(true);
+      expect(f.stop.close()).toBe(true); expect(f.stop.active).toBe(false);
+      slow.resolve({createIsletPanel(context) { module.contexts.push(context); return module.panel; }});
+      expect(await opening).toBe(false); expect(module.contexts).toEqual([]); expect(module.panel.opened).toEqual([]);
+      expect(f.stop.active).toBe(false); expect(f.stop.close()).toBe(false);
+    } finally { f.stop(); }
+  });
   it('loads the panel once and opens it at the plot that was clicked', async () => {
     const {bus, loadPanel, panel} = attach({transport: createFakeIsletTransport()});
     click(bus, 'plot_2');
@@ -363,5 +434,95 @@ describe('stop', () => {
     arrive(bus, 'home_islet');
     await settle();
     expect(changes).toEqual([]);
+  });
+});
+
+describe('explicit refresh, navigation and private identity boundaries', () => {
+  it('reads startup state and opens the station directly without inventing arrival or plot events', async () => {
+    const transport = {get: vi.fn(path => createFakeIsletTransport().get(path)), post: vi.fn()};
+    const f = attach({transport}), arrival = vi.fn(), plot = vi.fn();
+    f.bus.on('arrived', arrival); f.bus.on('plot_clicked', plot);
+    try {
+      expect((await f.stop.refresh()).accepted).toBe(true);
+      expect(transport.get).toHaveBeenCalledExactlyOnceWith('/api/islet');
+      expect(f.changes).toEqual([{type: 'islet_changed', built: ['plot_1'], signalStationBuilt: false}]);
+      expect(f.loadPanel).not.toHaveBeenCalled();
+      expect(await f.stop.open()).toBe(true);
+      expect(f.panel.opened).toEqual(['islet_signal_station']);
+      expect(arrival).not.toHaveBeenCalled(); expect(plot).not.toHaveBeenCalled();
+      expect(f.stop.active).toBe(true);
+    } finally { f.stop(); }
+  });
+
+  it('gates silent live refreshes and shares an overlapping current-identity startup read', async () => {
+    let signedIn = false;
+    const wait = deferred(), transport = {get: vi.fn(() => wait.promise), post: vi.fn()};
+    const f = attach({transport, canAsk: () => signedIn});
+    try {
+      expect(await f.stop.refresh()).toMatchObject({accepted: false, code: 'sign_in_required'});
+      expect(transport.get).not.toHaveBeenCalled();
+      signedIn = true;
+      const first = f.stop.refresh(), second = f.stop.refresh();
+      expect(second).toBe(first); expect(transport.get).toHaveBeenCalledTimes(1);
+      wait.resolve(await createFakeIsletTransport().get('/api/islet'));
+      expect((await first).accepted).toBe(true); expect(f.changes).toHaveLength(1);
+    } finally { f.stop(); }
+  });
+
+  it('disposes private panel data, blocks an old read and keeps the next identity refresh independent', async () => {
+    const answer = await createFakeIsletTransport().get('/api/islet'), old = deferred(), fresh = deferred();
+    const transport = {get: vi.fn().mockResolvedValueOnce(answer)
+      .mockImplementationOnce(() => old.promise).mockImplementationOnce(() => fresh.promise), post: vi.fn()};
+    let signedIn = true, changed;
+    const unsubscribe = vi.fn(), onPrivateReset = vi.fn();
+    const f = attach({transport, canAsk: () => signedIn, onPrivateReset,
+      onSessionChange(listener) { changed = listener; return unsubscribe; }});
+    try {
+      await f.stop.open('plot_2'); await f.stop.refresh();
+      const adapter = f.contexts[0].adapter, revision = adapter.read().revision;
+      expect(adapter.read().coins).toBe(1000); f.changes.length = 0;
+      const oldRead = f.stop.refresh();
+      signedIn = false; changed({signedIn: false});
+      expect(f.panel.disposed).toBe(1); expect(f.stop.active).toBe(false);
+      expect(adapter.read()).toMatchObject({coins: null, timber: null, spots: [], notice: null, busyPlot: null});
+      expect(adapter.read().revision).toBeGreaterThan(revision); expect(f.changes).toEqual([]);
+      signedIn = true; changed({signedIn: true}); const nextRead = f.stop.refresh();
+      expect(transport.get).toHaveBeenCalledTimes(3);
+      old.resolve(answer);
+      expect(await oldRead).toMatchObject({accepted: false, code: 'session_expired'});
+      expect(f.stop.refresh()).toBe(nextRead); expect(transport.get).toHaveBeenCalledTimes(3);
+      const current = structuredClone(answer); current.data.coins = 27; fresh.resolve(current);
+      expect((await nextRead).accepted).toBe(true); expect(adapter.read().coins).toBe(27);
+      expect(f.changes).toEqual([{type: 'islet_changed', built: ['plot_1'], signalStationBuilt: false}]);
+      expect(onPrivateReset).toHaveBeenCalledTimes(2);
+      await f.stop.open(); expect(f.contexts).toHaveLength(2);
+      f.stop(); expect(unsubscribe).toHaveBeenCalledTimes(1);
+      const reads = transport.get.mock.calls.length; changed({signedIn: true});
+      expect(transport.get).toHaveBeenCalledTimes(reads);
+    } finally { f.stop(); }
+  });
+
+  it('cancels a pending panel chunk on identity change and never opens after stop', async () => {
+    const wait = deferred(), module = fakePanelModule(); let changed;
+    const f = attach({transport: createFakeIsletTransport(), loadPanel: () => wait.promise,
+      canAsk: () => false, onSessionChange(listener) { changed = listener; return () => {}; }});
+    try {
+      const opening = f.stop.open(); changed({signedIn: false});
+      wait.resolve({createIsletPanel(context) { module.contexts.push(context); return module.panel; }});
+      expect(await opening).toBe(false); expect(module.contexts).toEqual([]);
+      f.stop(); expect(await f.stop.open()).toBe(false);
+      expect(await f.stop.refresh()).toMatchObject({accepted: false, code: 'disposed'});
+    } finally { f.stop(); }
+  });
+
+  it.each([{dev: true, search: '?islet=local'}, {dev: false, search: ''}])
+  ('keeps local and unavailable modes independent of real auth events: %j', async options => {
+    const onSessionChange = vi.fn(), onPrivateReset = vi.fn();
+    const f = attach({...options, onSessionChange, onPrivateReset, canAsk: () => false});
+    try {
+      await f.stop.refresh();
+      expect(onSessionChange).not.toHaveBeenCalled(); expect(onPrivateReset).not.toHaveBeenCalled();
+      if (options.dev) expect(f.changes).toHaveLength(1); else expect(f.changes).toEqual([]);
+    } finally { f.stop(); }
   });
 });

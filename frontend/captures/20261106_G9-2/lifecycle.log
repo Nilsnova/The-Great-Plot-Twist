@@ -1,0 +1,18 @@
+5:08:56 PM [vite] (client) [console.error] { isTrusted: true }
+{
+  "checks": [
+    "A failed world load keeps the caller-owned account adapter alive",
+    "The same adapter still accepts intents after the failure",
+    "Retry preserves the signed-in account state",
+    "Retry owns one world canvas",
+    "Retry owns one place root",
+    "Story text is at least 19 CSS px on the phone",
+    "Application teardown disposes its shared adapter exactly once",
+    "Teardown removes the world canvas",
+    "Retry introduces no unexpected browser error or external asset request"
+  ],
+  "expectedLoadDiagnostics": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Event"
+  ]
+}

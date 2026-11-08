@@ -7,7 +7,7 @@ export function createShell(ctx) {
   let mode='title',returnTo='title',disposed=false,request=0,resumeControl=null;
   const modal=createModal({title:'The Great Plot Twist',onClose(){if(mode==='playing'&&!ctx.hasOverlay())ctx.focus();},onCancel(){if(mode==='pause')play();else if(mode!=='title')back();}});
   modal.element.classList.add('shell-screen');
-  function play() {mode='playing';modal.close();ctx.resetInput();ctx.onState(mode);ctx.focus();}
+  function play() {request++;mode='playing';modal.close();ctx.resetInput();ctx.onState(mode);ctx.focus();}
   function start(resume) {play();ctx.onPlay(resume);}
   function page(name) {returnTo=mode==='pause'?'pause':'title';show(name);}
   function back(){show(mode==='credits'?'settings':returnTo);}
@@ -21,21 +21,12 @@ export function createShell(ctx) {
       resumeControl=resume;resume.disabled=!(hasLocalIntro(ctx.readSave())||ctx.readAccount?.().canContinue);nav.append(fresh,menuButton('Play with friends',()=>ctx.onPlayFriends?ctx.onPlayFriends():page('friends')),resume,menuButton('Settings',()=>page('settings'),true));
       if(ctx.demo)nav.append(menuButton('Highlights tour',()=>{play();ctx.onDemo();},true));
       body.append(nav);if(ctx.accountSummary){const details=node('details','shell-account'),summary=node('summary','','Account and saves');details.append(summary,ctx.accountSummary);body.append(details);}
-    } else if(mode==='friends') {
-      modal.setTitle('Play with friends');body.append(node('p','shell-copy','Online crews are not connected in this build.'),node('p','shell-note','You can explore solo now. Your progress stays in this browser.'));nav.append(menuButton('Play solo',()=>start(false)),menuButton('Back',back,true));body.append(nav);
-    } else if(mode==='pause') {
-      modal.setTitle('A moment ashore');nav.append(menuButton('Resume',play),menuButton('Settings',()=>page('settings'),true),menuButton('Return to title',()=>show('title'),true));if(ctx.openAccount)nav.append(menuButton('Account and saves',ctx.openAccount,true));body.append(nav);
     } else {
-      modal.setTitle(mode==='credits'?'Made together':'Settings');
-      if(mode==='credits')import('./credits.js').then(module=>{if(!disposed&&token===request)body.append(module.credits());});
-      else {const loading=node('p','','Opening settings…');loading.setAttribute('role','status');body.append(loading);Promise.all([import('./preferences.css'),ctx.settingsView?.()]).then(([,element])=>{if(!disposed&&token===request&&mode==='settings'&&element)loading.replaceWith(element);}).catch(()=>{if(token===request)loading.textContent='Settings could not load. Go back and try again.';});}
-      if(mode==='settings'){
-        body.append(menuButton('Credits',()=>show('credits'),true));
-        for(const [label,path] of [['How to play','help.html'],['Privacy','privacy.html']]){
-          const link=node('a','kit-button kit-quiet',label);link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';body.append(link);
-        }
-      }
-      body.append(menuButton('Back',back,true));
+      modal.setTitle(({pause:'A moment ashore',credits:'Made together',friends:'Play with friends'})[mode]??'Settings');
+      const loading=node('p','','Loading…');loading.setAttribute('role','status');body.append(loading);
+      const isCurrent=()=>!disposed&&token===request;
+      import('./subpages.js').then(({fillSubpage})=>{if(isCurrent())return fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back});})
+        .catch(()=>{if(isCurrent())body.replaceChildren(menuButton(mode==='pause'?'Resume':'Back',mode==='pause'?play:back));});
     }
     modal.setContent(body);modal.open(ctx.container);body.querySelector('button,input,select,a')?.focus();
   }

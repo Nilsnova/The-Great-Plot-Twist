@@ -1,5 +1,6 @@
 a
 aapl
+abandoned
 aboard
 about
 above
@@ -112,6 +113,7 @@ assistive
 at
 atmosphere
 attempt
+attempts
 attribution
 audio
 audit
@@ -295,6 +297,7 @@ choose
 choosing
 chosen
 christmas
+chrome
 cinematic
 circled
 cited
@@ -365,6 +368,7 @@ confirm
 confirmation
 confirmed
 confirming
+confirms
 conflict
 connect
 connected
@@ -556,6 +560,7 @@ emblem
 emote
 emotes
 empty
+enable
 enabled
 end
 ended
@@ -601,6 +606,7 @@ expected
 expired
 expiry
 explain
+explains
 explicitly
 exploration
 explore
@@ -663,6 +669,7 @@ finished
 finishes
 finishing
 finnhub
+firefox
 first
 fish
 fisherman
@@ -710,10 +717,12 @@ frame
 frames
 frankfurt
 free
+freely
 fresh
 freshness
 friday
 friend
+friend's
 friendly
 friends
 from
@@ -865,6 +874,7 @@ idle
 ids
 if
 image
+images
 implementations
 in
 inc
@@ -1004,6 +1014,7 @@ licences
 license
 licenses
 lid
+lifetime
 lift
 light
 lighter
@@ -1122,6 +1133,7 @@ mirror
 missing
 mist
 misty
+mit
 mixed
 modal
 mode
@@ -1328,10 +1340,12 @@ pending
 people
 per
 percentile
+perf
 performance
 periodically
 permanently
 permit
+permits
 persistent
 person
 personal
@@ -1520,6 +1534,7 @@ rehearsal
 rehearse
 rehearsed
 rejected
+rejecting
 relaxed
 release
 reliably
@@ -1617,6 +1632,7 @@ runs
 rustles
 s
 sa
+safari
 safe
 safely
 sail
@@ -1644,6 +1660,7 @@ scenery
 schema
 schooner
 science
+score
 scoreboard
 scores
 screen
@@ -1651,6 +1668,7 @@ screens
 screenshots
 scripts
 scroll
+sdk's
 sea
 seal
 sealed
@@ -1689,6 +1707,8 @@ serves
 service
 services
 session
+session's
+sessionstorage
 set
 sets
 settings
@@ -1868,6 +1888,7 @@ student
 sturdy
 styles
 submit
+submitting
 subscribed
 subscriber
 success
@@ -1897,6 +1918,7 @@ switched
 symbols
 t
 tab
+tab's
 table
 tables
 tabs
@@ -2060,6 +2082,7 @@ usdt
 use
 used
 useful
+user
 uses
 using
 utc
@@ -2203,3 +2226,4 @@ z
 zero
 zesty
 zoom
+zooms

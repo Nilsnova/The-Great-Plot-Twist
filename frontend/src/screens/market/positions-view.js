@@ -4,7 +4,7 @@
 import { node } from '../../ui/kit/dom.js';
 import { createButton } from '../../ui/kit/button.js';
 import { fact, factList, setText, syncList } from './parts.js';
-import { positionRows } from './view-models.js';
+import { positionRows, boardNotes } from './view-models.js';
 import { SIGN_IN_WORDS } from './words.js';
 
 function createPosition(onClosePosition) {
@@ -15,33 +15,49 @@ function createPosition(onClosePosition) {
     price: fact('Price now'), value: fact('Worth now'), profit: fact('Profit or loss'),
   };
   const receive = node('p', 'market-preview'), confirmText = node('p', 'market-preview');
-  const ask = createButton({ label: 'Close position', onClick: () => { confirming = true; draw(); yes.element.focus(); } });
+  const ask = createButton({ label: 'Close position', onClick: () => {
+    if (disposed || disabled || !row?.canClose) return;
+    confirming = true; draw(); yes.element.focus();
+  } });
   const yes = createButton({ label: 'Yes, close it', onClick: close });
-  const keep = createButton({ label: 'Keep it', variant: 'quiet', onClick: () => { confirming = false; draw(); ask.element.focus(); } });
+  const keep = createButton({ label: 'Keep it', variant: 'quiet', onClick: () => {
+    if (disposed) return;
+    confirming = false; draw(); ask.element.focus();
+  } });
   const confirmBox = node('div', 'market-form-actions');
   confirmBox.append(yes.element, keep.element);
   element.append(title, factList(...Object.values(facts)), receive, blocked, ask.element, confirmText, confirmBox);
-  let row = null, confirming = false, busy = false;
+  let row = null, confirming = false, busy = false, disabled = false, disposed = false, generation = 0;
 
   function draw() {
+    if (disposed) return;
     const asking = confirming && row.canClose;
     ask.element.hidden = !row.canClose || asking;
     receive.hidden = !row.canClose || asking;
     confirmText.hidden = confirmBox.hidden = !asking;
-    for (const button of [yes, keep]) button.update({ disabled: busy });
+    ask.update({ disabled }); yes.update({ disabled: busy || disabled }); keep.update({ disabled: busy });
     blocked.hidden = row.canClose;
   }
   async function close() {
-    if (busy) return;
+    if (disposed || busy || disabled || !confirming || !row?.canClose) return;
+    const scope = generation, positionId = row.id;
     busy = true; draw();
-    try { await onClosePosition({ positionId: row.id }); } finally { busy = false; confirming = false; draw(); }
+    try { await onClosePosition({ positionId }); }
+    finally { if (!disposed && scope === generation) { busy = false; confirming = false; draw(); } }
   }
 
   return {
     element,
     reset() { confirming = false; if (row) draw(); },
-    update(next) {
-      row = next;
+    dispose() {
+      if (disposed) return;
+      disposed = true; generation += 1; busy = false; confirming = false; row = null;
+      ask.dispose(); yes.dispose(); keep.dispose();
+      element.replaceChildren(); element.remove();
+    },
+    update(next, options = {}) {
+      if (disposed) return;
+      row = next; disabled = Boolean(options.disabled);
       if (!row.canClose) confirming = false;
       element.dataset.direction = row.direction;
       if (title.dataset.heading !== row.heading) { title.dataset.heading = row.heading; title.replaceChildren(row.heading, ' ', side); }
@@ -78,6 +94,7 @@ function createClosed() {
 
 export function createPositionsView({ onClosePosition, timeZone }) {
   const element = node('div', 'market-positions');
+  const simulation = node('p', 'market-note market-simulation');
   const note = node('p', 'market-refresh-note'), signIn = node('p', 'market-blocked', SIGN_IN_WORDS);
   const loading = node('p', 'market-empty', 'Loading your positions…');
   const account = node('div', 'market-account'), coins = node('p', 'market-coins'), staked = node('p'), count = node('p');
@@ -86,24 +103,41 @@ export function createPositionsView({ onClosePosition, timeZone }) {
   const closedList = node('ul', 'market-position-list'), closedEmpty = node('p', 'market-empty');
   account.append(coins, staked, count);
   const body = [account, openTitle, openList, openEmpty, closedTitle, closedList, closedEmpty];
-  element.append(note, signIn, loading, ...body);
+  element.append(simulation, note, signIn, loading, ...body);
   const openItems = new Map(), closedItems = new Map();
+  let disposed = false;
+  function discard(rows) {
+    for (const [id, item] of openItems) if (!rows.some(row => row.id === id)) item.dispose();
+  }
 
   return {
     element,
-    reset() { for (const item of openItems.values()) item.reset(); },
-    update({ portfolio, board, signedIn, note: text }) {
+    reset() { if (!disposed) for (const item of openItems.values()) item.reset(); },
+    dispose() {
+      if (disposed) return; disposed = true; discard([]);
+      openItems.clear(); closedItems.clear(); element.replaceChildren(); element.remove();
+    },
+    update({ portfolio, board, signedIn, note: text, disabled = false }) {
+      if (disposed) return;
       const view = positionRows(portfolio, board, { timeZone });
+      discard(view.open);
+      setText(simulation, boardNotes(board).simulation);
       setText(note, text);
       note.hidden = !text;
       signIn.hidden = signedIn !== false;
       loading.hidden = Boolean(portfolio) || signedIn === false || Boolean(text);
       for (const part of body) part.hidden = !portfolio;
-      if (!portfolio) return;
+      if (!portfolio) {
+        for (const line of [coins, staked, count]) setText(line, '');
+        syncList(openList, openItems, [], () => createPosition(onClosePosition));
+        syncList(closedList, closedItems, [], createClosed);
+        setText(openEmpty, ''); setText(closedEmpty, '');
+        return;
+      }
       setText(coins, `You have ${view.coinsText}`);
       setText(staked, view.stakedText);
       setText(count, view.openCountText);
-      syncList(openList, openItems, view.open, () => createPosition(onClosePosition));
+      syncList(openList, openItems, view.open, () => createPosition(onClosePosition), (item, row) => item.update(row, { disabled }));
       syncList(closedList, closedItems, view.closed, createClosed);
       setText(openEmpty, view.emptyOpenText);
       openEmpty.hidden = view.open.length > 0;

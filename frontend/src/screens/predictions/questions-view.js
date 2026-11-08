@@ -15,32 +15,68 @@ import { focusKey, node, setText } from './dom-helpers.js';
 import { GENERIC_LINE } from './messages.js';
 import { buildStakeForm } from './stake-form.js';
 import { cardModel, checkStakeInput, coinsText, stakePlacedLine, todayLine } from './view-model.js';
+import {createServerCallState} from '../../ui/kit/server-call-state.js';
+import {predictionFailure} from './g9-policy.js';
 
-export function createQuestionsView({ flow, refresh, timeZone }) {
+function confirmedStake(reply, questionId) {
+  const row = reply?.data;
+  return row?.questionId === questionId && ['yes', 'no'].includes(row.side)
+    && Number.isSafeInteger(row.amount) && row.amount > 0 ? {side: row.side, amount: row.amount} : null;
+}
+
+export function createQuestionsView({flow, refresh, timeZone, onSignIn,
+  capture = () => null, isCurrent = () => true}) {
   const element = node('div', 'desk-questions');
   const account = node('p', 'desk-account');
   const empty = node('p', 'desk-empty', 'There are no questions on the desk right now. Check back soon.');
   const list = createCardList('desk-cards');
-  element.append(account, empty, list.element);
+  let retryQuestion = null;
+  const call = createServerCallState({label: 'prediction stake', onRetry: () => retryQuestion && confirm(retryQuestion),
+    onSignIn, onChange: () => syncCooldown()});
+  element.append(account, empty, call.element, list.element);
 
   const forms = new Map(); // question id -> what the player is doing on that card
   let latest = null; // { state, now } from the last update
   let focusStakeOf = null; // the question whose "Your stake" line gets the focus after the next draw
-  let disposed = false;
+  let disposed = false, cooldownTimer = null;
+  const canAct = () => !disposed && isCurrent(capture());
+
+  function syncCooldown() {
+    if (disposed) return;
+    clearTimeout(cooldownTimer); cooldownTimer = null;
+    const now = Date.now(); let next = Infinity, changed = false;
+    for (const [id, form] of forms) {
+      const held = flow.retryUntil ?? 0;
+      if (held > now) form.retryUntil = Math.max(form.retryUntil, held);
+      const waiting = form.retryUntil > now;
+      const controls = list.card(id)?.article.querySelectorAll('[data-focus="confirm"],[data-focus="stake"]') ?? [];
+      for (const control of controls) control.disabled = form.busy || waiting;
+      if (waiting) next = Math.min(next, form.retryUntil - now);
+      else if (form.retryUntil) {
+        form.retryUntil = 0; form.notice = 'You can try again now.'; changed = true;
+      }
+    }
+    if (Number.isFinite(next)) cooldownTimer = setTimeout(syncCooldown, Math.max(1, next));
+    if (changed) { if (retryQuestion === null) call.clear(); draw(); }
+  }
 
   function formFor(id) {
-    if (!forms.has(id)) forms.set(id, { side: null, amount: '', step: 'edit', busy: false, notice: '', placed: null });
+    if (!forms.has(id)) forms.set(id, {side: null, amount: '', step: 'edit', busy: false,
+      notice: '', placed: null, retryUntil: flow.retryUntil ?? 0});
     return forms.get(id);
   }
 
   function focusOn(id, key) {
+    if (!canAct()) return;
     const card = list.card(id);
     if (card) focusKey(card.article, key);
   }
 
   // Stake: check what the player typed, then show the confirm step.
   function submit(id) {
+    if (!canAct() || !latest) return;
     const form = formFor(id);
+    if (form.busy || form.retryUntil > Date.now()) return;
     const { state } = latest;
     const rules = state.list?.rules;
     const check = checkStakeInput({ side: form.side, amountText: form.amount, rules, leftToday: state.mine?.leftToday });
@@ -56,35 +92,51 @@ export function createQuestionsView({ flow, refresh, timeZone }) {
   }
 
   function goBack(id) {
-    Object.assign(formFor(id), { step: 'edit', notice: '' });
+    if (!canAct()) return;
+    const form = formFor(id);
+    retryQuestion = null;
+    Object.assign(form, {step: 'edit', notice: form.retryUntil > Date.now() ? form.notice : ''});
     draw();
     focusOn(id, 'stake');
   }
 
   // Confirm: send the stake. flow.js decides what comes next (done, back to the form, or try again).
   async function confirm(id) {
+    if (!canAct() || formFor(id).step !== 'confirm' || formFor(id).retryUntil > Date.now()) return;
+    const ticket = capture();
     const form = formFor(id);
     if (form.busy) return;
     const ask = { questionId: id, side: form.side, amount: Number(form.amount) };
-    Object.assign(form, { busy: true, notice: '' });
+    retryQuestion = id; call.loading();
+    Object.assign(form, { busy: true, notice: '', retryUntil: 0 });
     draw();
     focusOn(id, 'confirm-text'); // the Confirm button is disabled while the request is in flight
     let result;
     try {
       result = await flow.stake(ask);
-    } catch (error) {
-      console.error(error);
+    } catch {
       result = { done: false, step: 'edit', notice: GENERIC_LINE };
     }
+    if (disposed || !isCurrent(ticket) || result.cancelled) return;
     Object.assign(form, { busy: false, step: result.step, notice: result.notice });
+    if (result.reply?.kind === 'wait' && Number.isFinite(result.reply.seconds)) {
+      form.retryUntil = flow.retryUntil ?? 0;
+    }
     if (result.done) {
-      Object.assign(form, { placed: { side: ask.side, amount: ask.amount }, side: null, amount: '', step: 'edit' });
+      Object.assign(form, { placed: confirmedStake(result.reply, id), side: null, amount: '', step: 'edit' });
       focusStakeOf = id;
     }
-    if (disposed) return;
+    if (result.done) call.succeed();
+    else call.fail(predictionFailure(result.reply), result.reply?.kind === 'wait'
+      ? {retryAfterMs: Math.min(86400000, Math.max(0, form.retryUntil - Date.now()))} : undefined);
     draw();
-    if (!result.done) focusOn(id, form.step === 'confirm' ? 'confirm' : 'stake');
-    await refresh();
+    if (!result.done && !disposed && isCurrent(ticket)) {
+      if (['closed', 'wait'].includes(result.reply?.kind)) {
+        const report = call.element.querySelector('[data-focus="report-server-call"]');
+        if (canAct() && report?.isConnected && !report.hidden && !call.element.hidden) report.focus({preventScroll: false});
+      } else focusOn(id, form.step === 'confirm' ? 'confirm' : 'stake');
+    }
+    if (result.refresh !== false && isCurrent(ticket)) await refresh();
   }
 
   function renderCard(body, article, model, form) {
@@ -138,22 +190,28 @@ export function createQuestionsView({ flow, refresh, timeZone }) {
       focusOn(focusStakeOf, 'your-stake');
       focusStakeOf = null;
     }
+    syncCooldown();
   }
 
   return {
     element,
     update(state, now = Date.now()) {
+      if (disposed) return;
       latest = { state, now };
       draw();
     },
     cancelConfirm() {
+      if (!canAct()) return false;
       const entry = [...forms].find(([, form]) => form.step === 'confirm' && !form.busy);
       if (!entry) return false;
       goBack(entry[0]);
       return true;
     },
     dispose() {
+      if (disposed) return;
       disposed = true;
+      clearTimeout(cooldownTimer); cooldownTimer = null;
+      forms.clear(); latest = null; retryQuestion = null; call.dispose();
       element.remove();
     },
   };

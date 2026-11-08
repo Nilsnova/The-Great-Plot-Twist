@@ -1,0 +1,141 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/bulletin-open-lifecycle.test.js
+
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/bulletin-open-lifecycle.test.js (8 tests | 5 failed) 24704ms
+   × refuses known-off and disposed opens before requesting a controller or Bulletin module 4288ms
+   × cancels its first Bulletin import on off with prior Crew false, then opens unavailable normally 2303ms
+   × cancels its first Bulletin import on off with prior Crew true, then opens unavailable normally 3705ms
+   × keeps a genuine module failure notice for its existing timeout and permits later Crew navigation 2555ms
+   × does not cancel a newer native picker import when off cancels the old bridge-owned Bulletin loader 3013ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > refuses known-off and disposed opens before requesting a controller or Bulletin module
+AssertionError: expected { active: true, …(3) } to match object { active: false, events: [], …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "active": false,
+-   "canvasFocused": true,
+-   "events": [],
++   "active": true,
++   "canvasFocused": false,
++   "events": [
++     {
++       "type": "bulletin_opened",
++     },
++   ],
+  }
+
+ ❯ tests/bulletin-open-lifecycle.test.js:70:33
+     68|     try {
+     69|       await page.evaluate(() => window.bulletinOpenProof.bridge.open('…
+     70|       expect(await state(page)).toMatchObject({active: false, events: …
+       |                                 ^
+     71|       expect(await modal(page).count()).toBe(0); expect(await banner(p…
+     72|       await page.evaluate(async () => {const p = window.bulletinOpenPr…
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:62:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > cancels its first Bulletin import on off with prior Crew false, then opens unavailable normally
+AssertionError: expected { active: true, events: [], …(2) } to match object { active: false, events: [] }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "active": false,
++   "active": true,
+    "events": [],
+  }
+
+ ❯ tests/bulletin-open-lifecycle.test.js:89:33
+     87|       await page.evaluate(() => window.bulletinOpenProof.fake.dev.setB…
+     88|       // Assert before releasing the module: cancellation must not dep…
+     89|       expect(await state(page)).toMatchObject({active: crew, events: […
+       |                                 ^
+     90|       expect(await modal(page).count()).toBe(crew ? 1 : 0); expect(awa…
+     91|       held.release(); await settled(page);
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:81:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > cancels its first Bulletin import on off with prior Crew true, then opens unavailable normally
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/bulletin-open-lifecycle.test.js:90:41
+     88|       // Assert before releasing the module: cancellation must not dep…
+     89|       expect(await state(page)).toMatchObject({active: crew, events: […
+     90|       expect(await modal(page).count()).toBe(crew ? 1 : 0); expect(awa…
+       |                                         ^
+     91|       held.release(); await settled(page);
+     92|       expect(await page.locator('.bulletin-screen').count()).toBe(0);
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:81:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > keeps a genuine module failure notice for its existing timeout and permits later Crew navigation
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/bulletin-open-lifecycle.test.js:151:46
+    149|       expect(await state(page)).toMatchObject({active: true, events: […
+    150|       expect(await modal(page).locator('.case-crew').isVisible()).toBe…
+    151|       expect(await banner(page).isVisible()).toBe(true);
+       |                                              ^
+    152|       expect(await banner(page).textContent()).toBe('The case screen c…
+    153|       await page.clock.runFor(4001); expect(await banner(page).isHidde…
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:144:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/bulletin-open-lifecycle.test.js > does not cancel a newer native picker import when off cancels the old bridge-owned Bulletin loader
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/bulletin-open-lifecycle.test.js:199:45
+    197|       await page.evaluate(() => window.bulletinOpenProof.fake.dev.setB…
+    198|       expect(await modal(page).locator('.case-crew').isVisible()).toBe…
+    199|       expect(await banner(page).isHidden()).toBe(true);
+       |                                             ^
+    200|       board.release(); await page.evaluate(() => window.bulletinOpenPr…
+    201|       expect(await modal(page).locator('.case-board').isVisible()).toB…
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/bulletin-open-lifecycle.test.js:186:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 3 passed (8)
+   Start at  18:53:28
+   Duration  26.18s (tests 96%, import 4%)

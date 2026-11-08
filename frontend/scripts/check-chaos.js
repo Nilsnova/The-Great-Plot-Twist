@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
+import {dismissIntro} from './intro-browser-fixture.js';
+import {openAccountControls,openCrewFromHud,chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
 
 const env=await openWorldBrowser(),{page}=env,report={checked:new Date().toISOString(),checks:[],faults:[],timings:{}};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
@@ -14,11 +16,12 @@ async function openCase(name,params={}){await page.evaluate(({name,params})=>win
 async function setFault(reason){await page.evaluate(reason=>window.__plotTwist.adapter.dev.failNext(reason),reason);}
 async function checkBulletinFailureStates(){
   const before=core(await read());
-  await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('off'));
+  await page.evaluate(()=>{window.__island.caseUi.close();window.__plotTwist.adapter.dev.setBulletin('off');});
   check((await read()).bulletin.status==='off','Bulletin-off state is explicit');
-  await openCase('bulletin');
-  check(await page.locator('.bulletin-screen').evaluate(element=>element.hidden),'Off bulletin renders no empty prompt');
-  await page.keyboard.press('Escape');await page.locator('.case-modal').waitFor({state:'hidden'});
+  await page.evaluate(()=>window.__island.caseUi.open('bulletin'));
+  check(await page.evaluate(()=>!window.__island.caseUi.active&&!document.querySelector('.case-modal[open]')),'Off bulletin opens no empty prompt');
+  check(await page.locator('.case-loading').evaluate(element=>element.hidden),'Off bulletin leaves no stale opening notice');
+  check(JSON.stringify(before)===JSON.stringify(core(await read())),'Bulletin off leaves gameplay unchanged');
   await page.evaluate(()=>window.__plotTwist.adapter.dev.setBulletin('unavailable'));
   await openCase('bulletin');
   check((await page.locator('.bulletin-status').textContent()).toLowerCase().includes('unavailable'),'Unavailable bulletin has a clear status');
@@ -54,22 +57,52 @@ async function recoverAccount(reason,keepOpen=false){
   }
   if((reason==='session_expired'||reason==='save_conflict')&&!keepOpen){await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});}
 }
+async function observeTrigger(){
+  return page.evaluateHandle(()=>{
+    const counts={pointerdown:0,pointerup:0,click:0};let last=null;
+    const identity=node=>({tag:node instanceof Element?node.tagName.toLowerCase():null,
+      dataFocus:node instanceof Element&&/^[a-z0-9_.:-]{1,96}$/i.test(node.dataset.focus??'')?node.dataset.focus:null});
+    const record=event=>{counts[event.type]++;last=event.target;};
+    for(const type of Object.keys(counts))document.addEventListener(type,record,true);
+    return {
+      reset(){for(const type of Object.keys(counts))counts[type]=0;last=null;},
+      read(){
+        const active=document.activeElement,box=active instanceof Element?active.getBoundingClientRect():null;
+        const rect=box?{x:box.x,y:box.y,width:box.width,height:box.height}:null;
+        const x=box?box.x+box.width/2:null,y=box?box.y+box.height/2:null;
+        const hit=Number.isFinite(x)&&Number.isFinite(y)?document.elementFromPoint(x,y):null;
+        return {counts:{...counts},active:identity(active),lastPointer:identity(last),
+          openDialogs:document.querySelectorAll('dialog[open]').length,activeRect:rect,activeCenterHit:identity(hit)};
+      },
+      stop(){for(const type of Object.keys(counts))document.removeEventListener(type,record,true);last=null;},
+    };
+  });
+}
 async function faultMatrix(screen,trigger,{notice='.case-modal[open] .case-notice',keepAccount=false}={}){
-  for(const reason of reasons){
-    const before=await read();await setFault(reason);await trigger();
+  const observer=await observeTrigger();
+  try{for(const reason of reasons){
+    const before=await read();await setFault(reason);
+    const context={screen,reason,attempt:(report.attempts??=[]).length+1};report.attempts.push(context);
+    await observer.evaluate(value=>value.reset());
+    try{await trigger();}catch(error){
+      const diagnostic=await observer.evaluate(value=>value.read()).catch(()=>({observerUnavailable:true}));
+      (report.triggerFailures??=[]).push({...context,...diagnostic});throw error;
+    }
     await waitFor(reason=>window.__plotTwist.adapter.read().notice?.reason===reason,reason);
     await unchanged(before,`${screen} ${reason}`);
     const message=(await page.locator(notice).last().textContent().catch(()=>''))?.trim()??'';
     check(message.length>8&&!/TypeError|Error:|stack trace/i.test(message),`${screen} ${reason} shows a player-safe notice`);
     report.faults.push({screen,reason});await recoverAccount(reason,keepAccount);
+  }}finally{
+    await observer.evaluate(value=>value.stop()).catch(()=>{});await observer.dispose().catch(()=>{});
   }
 }
-async function chooseIntro(id){const skip=page.locator('.intro-modal .kit-dialogue').getByRole('button',{name:'Show full text'});if(await skip.isVisible())await skip.click();const choice=page.locator(`.intro-modal [data-choice="${id}"]`);await choice.waitFor({state:'visible'});await choice.click();}
+const chooseIntro=id=>chooseIntroAction(page,id);
 async function playIntro({failEnd=false}={}){
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb'])await chooseIntro(id);
-  if(failEnd)await setFault('offline');await chooseIntro('untie');await page.locator('.intro-modal .intro-ending').waitFor();
-  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();return;}
+  if(failEnd)await setFault('offline');await chooseIntro('untie');await finishIntroPassages(page);await page.locator('.intro-modal .intro-ending').waitFor();
+  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();return;}
   await waitFor(()=>window.__plotTwist.adapter.read().arrival.status==='ready');
 }
 async function searchAndPinPreparation(){
@@ -96,13 +129,14 @@ async function pairPreparation(){
   await page.evaluate(async()=>{const a=window.__plotTwist.adapter,d=a.dev;for(const [id,seat] of [['C5',3],['C6',4],['C7',1],['C8',4]]){d.give(id,seat);d.pinForSeat(id,seat);}d.pinForSeat('C3',1);await a.pair('C3','C4');await a.pair('C5','C6');await a.pair('C7','C8');});
 }
 async function nightPreparation(){
-  await openCase('finale');const light=page.locator('.case-light[data-light="islet_signal_station"]'),build=light.getByRole('button').first();await faultMatrix('finale.buildLight',()=>build.click());await build.click();
+  await openCase('finale');await page.locator('[data-focus="light-tab-islet_signal_station"]').click();const light=page.locator('.case-light[data-light="islet_signal_station"]'),build=light.getByRole('button').first();await faultMatrix('finale.buildLight',()=>build.click());await build.click();
   const nightfall=page.getByRole('button',{name:'Call nightfall',exact:true});await faultMatrix('finale.callNightfall',()=>nightfall.click());await nightfall.click();await waitFor(()=>window.__plotTwist.adapter.read().finale.phase==='night');
   const partners=await page.evaluate(async()=>{const a=window.__plotTwist.adapter;return [await a.orderPartner(2,'man_light','keepers_lamp'),await a.orderPartner(3,'man_light','harbor_light')];});
   check(partners.every(result=>result.accepted),'Partner light orders are accepted for the night setup');
-  await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));const takePost=light.getByRole('button',{name:'Take this post · 1 minute'});await faultMatrix('finale.takePost',()=>takePost.click());await takePost.click();await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(60));
+  await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(600));await page.locator('[data-focus="light-tab-islet_signal_station"]').click();const takePost=light.getByRole('button',{name:'Take this post · 1 minute'});await faultMatrix('finale.takePost',()=>takePost.click());await takePost.click();await page.evaluate(()=>window.__plotTwist.adapter.dev.advanceCase(60));
   const angles=await page.evaluate(async()=>{const n=await import('/src/adapter/fake/night.js'),m=await import('/src/screens/beam-math.js');return Object.fromEntries(n.lightLocations.slice(0,3).map(item=>[item.id,m.bearingBetween(item,n.rehearsalGlow)]));});
   for(const id of ['keepers_lamp','harbor_light']){const result=await page.evaluate(async({id,degrees})=>window.__plotTwist.adapter.aim(id,degrees),{id,degrees:angles[id]});check(result.accepted,`Partner beam ${id} is aimed`);}
+  await page.locator('[data-focus="light-tab-islet_signal_station"]').click();
   const row=page.locator('.case-light[data-light="islet_signal_station"]'),range=row.locator('input[type=range]');await range.evaluate((input,value)=>{input.value=String(Math.round(value));input.dispatchEvent(new Event('input',{bubbles:true}));},angles.islet_signal_station);
   const lock=row.getByRole('button',{name:'Lock this beam'});await faultMatrix('finale.aim',()=>lock.click());await lock.click();await waitFor(()=>window.__plotTwist.adapter.read().accusation.schoonerFound);
 }
@@ -119,11 +153,11 @@ async function solveRemainder(){
 try{
   await mkdir('captures',{recursive:true});const apiResponses=[];page.on('response',response=>{if(new URL(response.url()).pathname.startsWith('/api/'))apiResponses.push({path:new URL(response.url()).pathname,status:response.status()});});
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline chaos rehearsal"}'}));await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
-  await page.evaluate(async()=>window.__plotTwist.adapter.signIn());await waitFor(()=>window.__plotTwist.adapter.read().account.state==='signed_in');await page.evaluate(()=>window.__plotTwist.accountHost.open());await page.locator('.account-modal[open]').waitFor();
+  await page.evaluate(async()=>window.__plotTwist.adapter.signIn());await waitFor(()=>window.__plotTwist.adapter.read().account.state==='signed_in');await openAccountControls(page);await page.locator('.account-modal[open]').waitFor();
   const reroll=page.getByRole('button',{name:'Change captain name once'});await faultMatrix('account.rerollName',()=>reroll.click(),{notice:'.account-modal[open] .account-feedback',keepAccount:true});await reroll.click();await waitFor(()=>window.__plotTwist.adapter.read().account.canReroll===false);await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
   await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro({failEnd:true});
-  await page.keyboard.press('Escape');await page.locator('.intro-modal').waitFor({state:'hidden'});await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();
-  await openCase('crew');const create=page.getByRole('button',{name:'Start a crew',exact:true});await faultMatrix('crew.createCrew',()=>create.click());await create.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
+  await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'New game',exact:true}).click();await waitForRuntime();await playIntro();
+  await dismissIntro(page);await openCrewFromHud(page);const create=page.getByRole('button',{name:'Start a crew',exact:true});await faultMatrix('crew.createCrew',()=>create.click());await create.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
   const muster=page.getByRole('button',{name:/Muster/});await faultMatrix('crew.muster',()=>muster.click());await muster.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='active');
   await checkBulletinFailureStates();await checkIsletEventNeverArrives();
   await searchAndPinPreparation();await partnerPreparation();await pairPreparation();await nightPreparation();await solveRemainder();

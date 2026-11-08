@@ -7,6 +7,24 @@ class Element{constructor(tag){this.tagName=tag;this.children=[];this.style={};t
 const view={status:'live',place:'saltreach_harbor',others:[{id:'p1',name:'Captain Shoal',kit:{id:'witness',name:'Witness'},x:1,y:2,facing:'front',moving:false,emote:null,isCrew:true,at:1000}],hiddenCount:2,crew:[{id:'c1',seat:1,name:'Captain Shoal',kit:{id:'witness',name:'Witness'},online:true,place:'saltreach_harbor',isPartner:true}],sampledAt:1000,localEmote:null,canEmote:true,cooldown:0};
 
 describe('presence HUD',()=>{
+  it('ignores stale activations while emotes are off, waiting or disposed',async()=>{
+    const previous=globalThis.document;globalThis.document={createElement:tag=>new Element(tag)};
+    try{
+      const send=vi.fn(async()=>({accepted:true,reason:null,message:''})),hud=createPresenceHud({send});
+      hud.update(view);const buttons=[];
+      const walk=element=>{if(element.tagName==='button')buttons.push(element);element.children.forEach(walk);};
+      walk(hud.element);const wave=buttons.find(button=>button.textContent==='Emote wave');
+      for(const status of ['off','offline','reconnecting']){
+        hud.update({...view,status,canEmote:false});expect(wave.disabled).toBe(true);wave.click();
+      }
+      expect(send).not.toHaveBeenCalled();
+      hud.update(view);wave.click();await Promise.resolve();expect(send).toHaveBeenCalledOnce();
+      hud.update({...view,canEmote:false,cooldown:3000});expect(wave.disabled).toBe(true);wave.click();
+      expect(send).toHaveBeenCalledOnce();hud.update(view);wave.click();await Promise.resolve();
+      expect(send).toHaveBeenCalledTimes(2);hud.dispose();wave.click();expect(send).toHaveBeenCalledTimes(2);
+    }finally{globalThis.document=previous;}
+  });
+
   it('shows accessible count, supplies five emote intents and opens crew callback',()=>{
     const previous=globalThis.document;globalThis.document={createElement:tag=>new Element(tag)};
     try{

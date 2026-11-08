@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Closing the arena returns focus to the game
+    at recordedArenaGolden (file://<frontend>/scripts/check-online-arena.js:164:10)
+    at async run (file://<frontend>/scripts/check-online-arena.js:221:22)
+    at async checkOnlineArena (file://<frontend>/scripts/check-online-arena.js:227:31)
+    at async file://<frontend>/scripts/check-online-arena.js:248:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

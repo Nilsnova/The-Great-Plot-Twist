@@ -6,6 +6,8 @@ import {node} from '../../ui/kit/dom.js';
 import {cardLabels, walletLine} from './labels.js';
 import {createSpotCard} from './spot-card.js';
 import {setText, showText} from './set-text.js';
+import {createServerCallState} from '../../ui/kit/server-call-state.js';
+import {createIsletRequests, createIsletRequestClock} from './request-state.js';
 
 const LOCAL_NOTE = 'Local rehearsal: nothing here is saved.';
 const UP_TO_DATE = 'Your islet is up to date.';
@@ -14,6 +16,7 @@ export function createIsletPanel({container, adapter, resetInput, focus}) {
   const cards = new Map(); // plot -> spot card
   let order = []; // the plots in the order the list shows them
   let lastPlot = null; // the card that last had focus
+  let disposed = false, requests;
 
   const wallet = node('p', 'islet-wallet');
   const refresh = createButton({label: 'Refresh', variant: 'quiet', onClick: refreshIslet});
@@ -22,12 +25,17 @@ export function createIsletPanel({container, adapter, resetInput, focus}) {
   const status = node('p', 'islet-status');
   const list = node('ul', 'islet-spots');
   const root = node('div', 'islet-panel');
+  const clock = createIsletRequestClock();
+  const call = createServerCallState({label: 'islet request', onRetry: () => requests?.retry(),
+    now: clock.now, onChange: () => syncRequestControls()});
+  refresh.element.dataset.focus = 'islet-refresh';
   status.setAttribute('role', 'status');
   list.setAttribute('aria-label', 'Plots on your islet');
   top.append(wallet, refresh.element);
-  root.append(top, note, status, list);
+  root.append(top, note, call.element, status, list);
 
   function onClose(reason) {
+    requests?.cancel();
     resetInput?.();
     if (reason !== 'dispose') focus?.();
   }
@@ -48,13 +56,13 @@ export function createIsletPanel({container, adapter, resetInput, focus}) {
 
   // The status line says when a manual refresh worked, so a screen reader hears an answer.
   async function refreshIslet() {
-    const result = await adapter.refresh();
-    if (result.accepted && isOpen()) setText(status, UP_TO_DATE);
+    const result = await requests.refresh();
+    if (!disposed && result.accepted && isOpen()) setText(status, UP_TO_DATE);
   }
 
   function onBuild(plot) {
     lastPlot = plot;
-    adapter.build(plot);
+    void requests.build(plot);
   }
 
   function rebuildList(plots) {
@@ -71,7 +79,11 @@ export function createIsletPanel({container, adapter, resetInput, focus}) {
   function showCards(view) {
     const plots = view.spots.map(spot => spot.plot);
     if (plots.join() !== order.join()) rebuildList(plots);
-    for (const spot of view.spots) cards.get(spot.plot).update(spot, cardLabels(spot, view));
+    for (const spot of view.spots) {
+      const labels = cardLabels(spot, view);
+      if (labels.button && requests?.blocked) labels.button = {...labels.button, disabled: true};
+      cards.get(spot.plot).update(spot, labels);
+    }
   }
 
   function focusCard(plot) {
@@ -89,26 +101,41 @@ export function createIsletPanel({container, adapter, resetInput, focus}) {
     setText(status, view.notice?.message ?? (view.status === 'loading' ? 'Loading your islet...' : ''));
     status.dataset.tone = view.notice?.tone ?? 'info';
     refresh.element.hidden = view.mode === 'unavailable';
-    refresh.update({disabled: view.busyPlot !== null});
+    refresh.update({disabled: view.busyPlot !== null || requests?.blocked === true});
     showCards(view);
     keepFocus();
   }
+  function syncRequestControls() {
+    if (disposed) return;
+    render(adapter.read());
+    const retry = call.element.querySelector('[data-focus="retry-server-call"]');
+    if (retry) retry.disabled = requests?.busy === true || !call.read().canRetry;
+  }
+
+  requests = createIsletRequests({adapter, call, presentFailure: failure => clock.fail(call, failure), onChange: syncRequestControls,
+    onSettled: intent => {
+      if (intent.kind === 'build' && isOpen() && document.activeElement === cards.get(intent.plot)?.heading) focusCard(intent.plot);
+    }});
 
   const stopWatching = adapter.subscribe(event => { if (isOpen()) render(event.view); });
 
   // Shows what the adapter has now, asks for fresh data, and puts focus on the card of the clicked plot.
   function open(plot) {
+    if (disposed) return;
     resetInput?.();
     lastPlot = plot;
     render(adapter.read());
     if (isOpen()) focusCard(plot);
     else modal.open(container, cards.get(plot)?.focusTarget() ?? title);
-    adapter.refresh().then(() => {
-      if (isOpen() && document.activeElement === title) focusCard(plot);
+    requests.refresh().then(() => {
+      if (!disposed && isOpen() && document.activeElement === title) focusCard(plot);
     });
   }
 
   function dispose() {
+    if (disposed) return;
+    disposed = true;
+    requests.dispose();
     stopWatching();
     modal.element.removeEventListener('keydown', keepKeys);
     for (const card of cards.values()) card.dispose();
@@ -117,5 +144,5 @@ export function createIsletPanel({container, adapter, resetInput, focus}) {
     modal.dispose();
   }
 
-  return {open, close: () => modal.close(), dispose, get active() { return isOpen(); }};
+  return {open, close() { requests.cancel(); modal.close(); }, dispose, get active() { return isOpen(); }};
 }

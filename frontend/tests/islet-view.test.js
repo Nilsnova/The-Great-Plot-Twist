@@ -1,7 +1,7 @@
 // The pure side of the islet panel: reading the server answer, notices and every card label. No DOM.
 import {describe, expect, it} from 'vitest';
 import {
-  MESSAGES, PLAY_MONEY_NOTE, builtNotice, builtPlots, buildingNotice, createEmptyView, failureNotice, readIsletAnswer,
+  MESSAGES, PLAY_MONEY_NOTE, builtNotice, builtPlots, buildingNotice, createEmptyView, failureNotice, readIsletAnswer, validBuildReceipt,
 } from '../src/screens/islet/view.js';
 import {cardLabels, walletLine} from '../src/screens/islet/labels.js';
 
@@ -15,12 +15,33 @@ function serverSpot(fields) {
 const cabin = serverSpot({plot: 'plot_1', plotName: 'Cabin plot', type: 'cabin', name: 'Cabin', about: 'Your home.', state: 'built', cost: null, canBuild: false});
 const workshop = serverSpot({});
 const windmill = serverSpot({plot: 'plot_3', plotName: 'Windmill plot', type: 'windmill', name: 'Windmill', state: 'locked', canBuild: false, lockedNote: LOCKED_NOTE});
+const greenhouse = serverSpot({plot: 'plot_4', plotName: 'Greenhouse plot', type: 'greenhouse', name: 'Greenhouse', state: 'locked', canBuild: false, lockedNote: LOCKED_NOTE});
 const station = serverSpot({plot: 'islet_signal_station', plotName: 'Islet signal station', type: 'signal_station', name: 'Signal station'});
+const serverSpots = () => [cabin, workshop, windmill, greenhouse, station];
 
 function serverAnswer(fields) {
-  return {coins: 1000, timber: 20, signalStationBuilt: false, playMoneyNote: PLAY_MONEY_NOTE, spots: [cabin, workshop, windmill, station], ...fields};
+  return {coins: 1000, timber: 20, signalStationBuilt: false, playMoneyNote: PLAY_MONEY_NOTE, spots: serverSpots(), ...fields};
 }
+const answerWithSpot = (plot, fields, answerFields = {}) => serverAnswer({
+  ...answerFields, spots: serverSpots().map(spot => spot.plot === plot ? {...spot, ...fields} : spot),
+});
 const held = (coins, timber, busyPlot = null) => ({coins, timber, busyPlot});
+
+describe('published build receipts', () => {
+  const receipt = {plot: station.plot, type: station.type, name: 'Signal station', level: 1,
+    coinsPaid: 300, timberPaid: 10, coins: 700, timber: 10};
+  it('accepts the documented receipt without calculating a cost or granting anything', () => {
+    expect(validBuildReceipt(receipt, station)).toBe(true);
+  });
+  it.each([['plot', 'plot_2'], ['type', 'workshop'], ['name', ''], ['level', 0],
+    ['coinsPaid', -1], ['timberPaid', undefined], ['coins', 1.5], ['timber', '10']])
+  ('rejects an unreadable %s before a successful build is announced', (key, value) => {
+    expect(validBuildReceipt({...receipt, [key]: value}, station)).toBe(false);
+  });
+  it.each([null, undefined, {}, []].map(value => [value]))('rejects an unreadable body %s', value => {
+    expect(validBuildReceipt(value, station)).toBe(false);
+  });
+});
 
 describe('createEmptyView', () => {
   it('starts a live view as loading, with nothing known yet', () => {
@@ -44,10 +65,12 @@ describe('createEmptyView', () => {
 
 describe('readIsletAnswer', () => {
   it('copies coins, timber, the station flag and every spot in the order the server sent them', () => {
-    const value = readIsletAnswer(serverAnswer({signalStationBuilt: true}));
+    const builtStation = {...station, state: 'built', level: 1, builtAt: '2026-11-16T10:00:00Z', cost: null, canBuild: false};
+    const value = readIsletAnswer(serverAnswer({signalStationBuilt: true, spots: [greenhouse, cabin, windmill, workshop, builtStation]}));
     expect(value).toMatchObject({coins: 1000, timber: 20, signalStationBuilt: true, playMoneyNote: PLAY_MONEY_NOTE});
-    expect(value.spots.map(spot => spot.plot)).toEqual(['plot_1', 'plot_2', 'plot_3', 'islet_signal_station']);
-    expect(value.spots[3]).toEqual({...station, retry: false});
+    expect(value.spots.map(spot => spot.plot)).toEqual(['plot_4', 'plot_1', 'plot_3', 'plot_2', 'islet_signal_station']);
+    expect(value.spots[4]).toEqual({...builtStation, retry: false});
+    expect(builtPlots(value)).toEqual(['plot_1', 'islet_signal_station']);
   });
 
   it('adds retry: false to every spot', () => {
@@ -55,7 +78,7 @@ describe('readIsletAnswer', () => {
   });
 
   it('keeps only the fields it knows', () => {
-    const value = readIsletAnswer(serverAnswer({secret: 'x', spots: [{...cabin, secret: 'y'}]}));
+    const value = readIsletAnswer(answerWithSpot('plot_1', {secret: 'y'}, {secret: 'x'}));
     expect(value).not.toHaveProperty('secret');
     expect(value.spots[0]).not.toHaveProperty('secret');
   });
@@ -72,11 +95,24 @@ describe('readIsletAnswer', () => {
     ['no coins', serverAnswer({coins: undefined})],
     ['negative timber', serverAnswer({timber: -1})],
     ['fractional coins', serverAnswer({coins: 1.5})],
-    ['more than ten spots', serverAnswer({spots: Array.from({length: 11}, (_, index) => serverSpot({plot: `plot_${index + 10}`}))})],
-    ['two spots on the same plot', serverAnswer({spots: [workshop, workshop]})],
-    ['a spot in an unknown state', serverAnswer({spots: [serverSpot({state: 'half-built'})]})],
-    ['a spot without a name', serverAnswer({spots: [serverSpot({name: ''})]})],
-    ['a spot with a broken cost', serverAnswer({spots: [serverSpot({cost: {coins: 'many', timber: 10}})]})],
+    ['a missing plot', serverAnswer({spots: [cabin, workshop, windmill, station]})],
+    ['an extra plot', serverAnswer({spots: [...serverSpots(), serverSpot({plot: 'plot_5'})]})],
+    ['two spots on the same plot', serverAnswer({spots: [cabin, workshop, windmill, greenhouse, workshop]})],
+    ['an unreadable spot among the five plots', serverAnswer({spots: [cabin, workshop, null, greenhouse, station]})],
+    ['an unknown plot replacing the cabin', answerWithSpot('plot_1', {plot: 'plot_5'})],
+    ['an unknown built plot replacing the workshop', answerWithSpot('plot_2', {plot: 'unknown_plot', state: 'built'})],
+    ['a known plot with another building type', answerWithSpot('plot_2', {type: 'signal_station'})],
+    ['an empty cabin', answerWithSpot('plot_1', {state: 'empty'})],
+    ['a locked cabin', answerWithSpot('plot_1', {state: 'locked'})],
+    ['an unknown state', answerWithSpot('plot_2', {state: 'half-built'})],
+    ['a spot without a name', answerWithSpot('plot_2', {name: ''})],
+    ['a spot with a broken cost', answerWithSpot('plot_2', {cost: {coins: 'many', timber: 10}})],
+    ['a missing station flag', serverAnswer({signalStationBuilt: undefined})],
+    ['a string station flag', serverAnswer({signalStationBuilt: 'true'})],
+    ['a numeric station flag', serverAnswer({signalStationBuilt: 0})],
+    ['a built station flag while its plot is empty', serverAnswer({signalStationBuilt: true})],
+    ['a built station flag while its plot is locked', answerWithSpot('islet_signal_station', {state: 'locked'}, {signalStationBuilt: true})],
+    ['an unbuilt station flag while its plot stands', answerWithSpot('islet_signal_station', {state: 'built', level: 1, cost: null, canBuild: false})],
   ])('is null for an answer with %s', (_label, answer) => {
     expect(readIsletAnswer(answer)).toBeNull();
   });
@@ -158,7 +194,6 @@ describe('cardLabels', () => {
   });
 
   it('names the building in every build button, so no two buttons on the page share a name', () => {
-    const greenhouse = serverSpot({plot: 'plot_4', plotName: 'Greenhouse plot', type: 'greenhouse', name: 'Greenhouse', state: 'locked', canBuild: false, lockedNote: LOCKED_NOTE});
     const spots = [workshop, windmill, greenhouse, station];
     const labels = spots.map(fields => cardLabels(spot(fields), held(1000, 20)).button.label);
     expect(new Set(labels).size).toBe(spots.length);
@@ -224,6 +259,34 @@ describe('notices', () => {
   it('shows the message of the server for a failure', () => {
     const result = {ok: false, status: 409, code: 'insufficient_funds', message: 'The signal station costs 300 coins. You do not have enough coins.'};
     expect(failureNotice(result)).toEqual({tone: 'error', code: 'insufficient_funds', message: result.message});
+  });
+
+  it.each(['not_enough_timber', 'plot_occupied', 'not_buildable_yet', 'no_such_plot',
+    'no_such_building', 'wrong_plot', 'validation_error'])('keeps the published %s business explanation', code => {
+    const message = 'Check the plot details before building.';
+    expect(failureNotice({ok: false, status: 409, code, message})).toEqual({tone: 'error', code, message});
+  });
+
+  it.each([
+    [401, 'unauthorized', MESSAGES.signIn], [0, 'network_error', MESSAGES.network],
+    [0, 'timeout', MESSAGES.network], [429, 'too_many_requests', MESSAGES.tooMany],
+    [500, 'server_error', MESSAGES.server], [502, 'unreadable', MESSAGES.server],
+    [503, 'database_unavailable', MESSAGES.server], [503, 'islet_unavailable', MESSAGES.server],
+    [503, 'unavailable', MESSAGES.server], [200, 'unreadable', MESSAGES.unreadable],
+    [404, 'feature_off', MESSAGES.featureOff], [409, 'stale_save', MESSAGES.saveConflict],
+    [403, 'forbidden', MESSAGES.unknown], [418, 'teapot', MESSAGES.unknown],
+  ])('replaces untrusted transport text for %s/%s with fixed public copy', (status, code, message) => {
+    const secret = `private-${crypto.randomUUID()}`;
+    const notice = failureNotice({ok: false, status, code, message: secret, body: {secret}});
+    expect(notice.message).toBe(message);
+    expect(JSON.stringify(notice)).not.toContain(secret);
+  });
+
+  it('does not copy an unknown private code or treat a business code on a server error as public prose', () => {
+    const secret = `private-${crypto.randomUUID()}`;
+    expect(failureNotice({status: 503, code: secret, message: secret})).toEqual({tone: 'error', code: 'error', message: MESSAGES.server});
+    expect(failureNotice({status: 500, code: 'insufficient_funds', message: secret}).message).toBe(MESSAGES.server);
+    expect(failureNotice({code: 'insufficient_funds', message: secret}).message).toBe(MESSAGES.unknown);
   });
 
   it('has a plain message for a failure that brought none', () => {

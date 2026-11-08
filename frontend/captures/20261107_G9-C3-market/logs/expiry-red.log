@@ -1,0 +1,33 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/market-host.test.js (14 tests | 1 failed) 74ms
+   ❯ private market boundary cleanup (5)
+     × leaves Account attention unobscured after expiry while allowing a later explicit anonymous price visit 24ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/market-host.test.js > private market boundary cleanup > leaves Account attention unobscured after expiry while allowing a later explicit anonymous price visit
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/market-host.test.js:133:69
+    131|     const fixture = provider(), {host, module} = hostFor(fixture); awa…
+    132|     const old = module.entries[0]; fixture.session.change(false);
+    133|     expect(old.dispose).toHaveBeenCalledOnce(); expect(host.active).to…
+       |                                                                     ^
+    134|     await Promise.resolve(); await Promise.resolve(); expect(module.en…
+    135|     expect(await host.open()).toBe(true); expect(module.entries).toHav…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 passed (14)
+   Start at  11:04:03
+   Duration  479ms (transform 41%, tests 38%, import 16%, worker 5%)

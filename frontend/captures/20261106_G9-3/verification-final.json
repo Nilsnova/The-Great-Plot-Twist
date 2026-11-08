@@ -1,0 +1,27 @@
+[
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "seconds": 14.18
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "seconds": 2.68
+  },
+  {
+    "command": "node scripts/check-call-states.js",
+    "exitCode": 0,
+    "seconds": 29.44
+  },
+  {
+    "command": "node scripts/check-demo.js",
+    "exitCode": 0,
+    "seconds": 184.54
+  },
+  {
+    "command": "node scripts/check-csp.js",
+    "exitCode": 0,
+    "seconds": 28.91
+  }
+]

@@ -298,3 +298,29 @@ Run `npm test` and `npm run build`; after the build, `CHROME_PATH=/usr/bin/chrom
 `local.js` is the explicitly labelled `?demo=1&festival=1` rehearsal. It accepts no network transport or token. Its lifecycle controls, claims and pairing remain on this device. The query cannot turn on a server feature flag.
 
 `src/audio/festival.js` loads the four original recordings only after the existing audio owner has a running, gesture-unlocked context. It connects them to the existing music/effects buses. The festival loop requires Play and stops when its panel closes; shared volume sliders include exact mute. `shell/lazy-account-summary.js` retains a stable account slot while loading its presentation after the first title paint, keeping the title within the existing JavaScript budget.
+
+
+## G9: one live islet engine
+
+The game’s [islet hook](src/online/islet-host.js) watches its exact session’s
+[private panel services](src/online/panel-services.js). The factory’s
+[islet lifecycle](src/online/case-adapter/islet-lifecycle.js) owns one
+[L2 engine](src/screens/islet/adapter.js), so the panel and the existing finale `buildLight` intent
+share server snapshots and uncertain click IDs. Screens display those views and send intents;
+A2 remains the authenticated transport. A changed wallet triggers fresh own-account/ledger reads.
+
+An uncertain build first reads the authoritative islet before an explicit repeat. The repeat keeps
+the original click ID, including if a resend is refused. Only an accepted build, a confirmed built readback or an
+account reset clears the uncertainty. An old account’s held controller completion cannot block or
+unlock the next account’s request. Closing/reopening an ordinary panel keeps its factory engine.
+
+The world draws accepted `islet_changed` answers and clears actual/private plots at account boundaries;
+its server-free tour preview remains separate. The muster reminder and finale’s Open your islet
+control open the same panel. Live case projection/post-build refresh remains deferred to streams
+12–15 pending R11. The local full-case rehearsal proves the panel-to-world-to-third-light path.
+
+Run `npm run test:online:islet` and `npm run test:online:islet:chaos` after the normal stream gate.
+Both use production UI, generated credential placeholders and intercepted endpoints. The recordings
+wait for native cloud-save acknowledgement and physically walk to the confirmed station before
+capturing it. See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json). Real services,
+physical hardware and the full online case remain outside that proof.

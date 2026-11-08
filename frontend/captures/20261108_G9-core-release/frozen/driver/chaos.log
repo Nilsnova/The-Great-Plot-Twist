@@ -1,0 +1,31 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 12000ms exceeded.
+Call log:
+  - waiting for locator('.partner-life-card[data-seat="2"]').getByRole('button', { name: /^Send order ·/ })
+    - locator resolved to <button type="button" class="kit-button " data-focus="send-partner-2" aria-label="Send order · Seat 2">Send order</button>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+
+    at ./scripts/check-chaos.js:92:125
+    at faultMatrix (./scripts/check-chaos.js:62:60)
+    at async partnerPreparation (./scripts/check-chaos.js:92:67)
+    at async file://./scripts/check-chaos.js:133:35 {
+  log: [
+    `  - waiting for locator('.partner-life-card[data-seat="2"]').getByRole('button', { name: /^Send order ·/ })`,
+    '    - locator resolved to <button type="button" class="kit-button " data-focus="send-partner-2" aria-label="Send order · Seat 2">Send order</button>',
+    '  - attempting click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '    - element is visible, enabled and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

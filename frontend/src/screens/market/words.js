@@ -54,10 +54,11 @@ export function errorWords(error, context = {}) {
   return message || ERROR_FALLBACKS[code];
 }
 
-// ", opens Monday 14:30", or nothing when the server did not say when.
+// US stock openings use Lisbon time; other timestamps keep the player's zone.
 function opening(state, options, alwaysDay = false) {
-  const when = momentText(state.opensAt, { ...options, alwaysDay });
-  return when === UNKNOWN ? '' : `, opens ${when}`;
+  const lisbon = state.kind === 'stock' && state.market === 'us';
+  const when = momentText(state.opensAt, { ...options, ...(lisbon ? { timeZone: 'Europe/Lisbon' } : {}), alwaysDay });
+  return when === UNKNOWN ? '' : `, opens ${when}${lisbon ? ' Lisbon time' : ''}`;
 }
 
 const CLOSED = {

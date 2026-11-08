@@ -1,0 +1,567 @@
+{
+  "stage": "case",
+  "outcome": "passed",
+  "widths": [
+    1280,
+    320
+  ],
+  "worldScenarios": [
+    {
+      "width": 1280,
+      "worldLocked": true
+    },
+    {
+      "width": 320,
+      "worldLocked": false
+    }
+  ],
+  "checks": [
+    "Only the two server-earned cards are displayed",
+    "Pin uses one published POST and displays the server-confirmed pin",
+    "Pair displays the supplied deduction without calculating its outcome",
+    "Search completes only when a later authoritative GET supplies the earned result",
+    "Partner order displays the supplied completion with one allowed unpaid intent",
+    "Nightfall, post and one native bearing intent display the server-supplied three-light success",
+    "A completed case with a locked world keeps the public coast dark",
+    "Refused and unknown accusations retain authority; accepted reveal paging and the public coast stay server-backed",
+    "Case controls preserve engine replay, production CSP and private request boundaries",
+    "Only the two server-earned cards are displayed",
+    "Pin uses one published POST and displays the server-confirmed pin",
+    "Pair displays the supplied deduction without calculating its outcome",
+    "Search completes only when a later authoritative GET supplies the earned result",
+    "Partner order displays the supplied completion with one allowed unpaid intent",
+    "Nightfall, post and one native bearing intent display the server-supplied three-light success",
+    "A completed case displays the independently confirmed relit coast",
+    "Refused and unknown accusations retain authority; accepted reveal paging and the public coast stay server-backed",
+    "Case controls preserve engine replay, production CSP and private request boundaries",
+    "Unknown pin outcome waits for explicit Retry, reads back, then repeats the same UID and body once"
+  ],
+  "requests": [
+    {
+      "sequence": 1,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 2,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 3,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 4,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 5,
+      "path": "/api/board/pin",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "cardId"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 6,
+      "path": "/api/board/pair",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "cards"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 7,
+      "path": "/api/case/search",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "expectedPrice",
+        "paidConfirmed",
+        "routeId"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 8,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 9,
+      "path": "/api/crews/me/orders",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "allowPaid",
+        "order",
+        "seat",
+        "target"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 10,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 11,
+      "path": "/api/finale/nightfall",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 12,
+      "path": "/api/finale/post",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "light"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 13,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 14,
+      "path": "/api/finale/signal",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "bearing",
+        "light"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 15,
+      "path": "/api/case/accuse",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "suspect"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 16,
+      "path": "/api/case/accuse",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "suspect"
+      ],
+      "uidPresent": true,
+      "sameUid": false,
+      "sameBody": false
+    },
+    {
+      "sequence": 17,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 18,
+      "path": "/api/case/accuse",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "suspect"
+      ],
+      "uidPresent": true,
+      "sameUid": true,
+      "sameBody": true
+    },
+    {
+      "sequence": 19,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 1,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 2,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 3,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 4,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 5,
+      "path": "/api/board/pin",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "cardId"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 6,
+      "path": "/api/board/pair",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "cards"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 7,
+      "path": "/api/case/search",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "expectedPrice",
+        "paidConfirmed",
+        "routeId"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 8,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 9,
+      "path": "/api/crews/me/orders",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "allowPaid",
+        "order",
+        "seat",
+        "target"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 10,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 11,
+      "path": "/api/finale/nightfall",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 12,
+      "path": "/api/finale/post",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "light"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 13,
+      "path": "/api/finale/signal",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "bearing",
+        "light"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 14,
+      "path": "/api/case/accuse",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "suspect"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 15,
+      "path": "/api/case/accuse",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "suspect"
+      ],
+      "uidPresent": true,
+      "sameUid": false,
+      "sameBody": false
+    },
+    {
+      "sequence": 16,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 17,
+      "path": "/api/case/accuse",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "suspect"
+      ],
+      "uidPresent": true,
+      "sameUid": true,
+      "sameBody": true
+    },
+    {
+      "sequence": 18,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 1,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 2,
+      "path": "/api/world",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 3,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 4,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 5,
+      "path": "/api/board/pin",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "cardId"
+      ],
+      "uidPresent": true,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 6,
+      "path": "/api/case",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidPresent": false,
+      "sameUid": null,
+      "sameBody": null
+    },
+    {
+      "sequence": 7,
+      "path": "/api/board/pin",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "cardId"
+      ],
+      "uidPresent": true,
+      "sameUid": true,
+      "sameBody": true
+    }
+  ],
+  "captures": [
+    "captures/20261108_G9-case/earned-board-1280.png",
+    "captures/20261108_G9-case/recorded-pier-1280.png",
+    "captures/20261108_G9-case/earned-board-320.png",
+    "captures/20261108_G9-case/recorded-pier-320.png"
+  ],
+  "coverage": "eight published case routes, native keyboard/touch pin, search and partner completion, night, accusation/reveal/public coast",
+  "pending": [
+    "Seven-fault coverage for the eight case route groups and physical-device certification are not claimed by this runner."
+  ]
+}

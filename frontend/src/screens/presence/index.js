@@ -1,4 +1,6 @@
 // Accessible controls for supplied presence data; world filters remain with the caller.
+import {createServerCallState} from '../../ui/kit/server-call-state.js';
+import {intentFailure} from '../../adapter/intent.js';
 import {node,button} from '../helpers.js';
 import './presence.css';
 
@@ -17,8 +19,11 @@ export function createPresenceHud({send,onCrew=()=>{}}={}){
   const crewStrip=node('div','presence-crew-strip');crewStrip.setAttribute('aria-label','Crew seats');
   const seats=[1,2,3,4].map(()=>node('span','presence-seat'));crewStrip.append(...seats);
   const emoteRow=node('div','presence-emotes');emoteRow.hidden=true;
-  const emoteButtons=emotes.map(id=>button(`Emote ${id}`,()=>{send?.('setEmote',id);setEmotesOpen(false);},{focus:`presence-${id}`}));
-  emoteRow.append(...emoteButtons);element.append(heading,status,count,more,crewStrip,emoteRow);
+  let lastEmote=null,busy=false,disposed=false;
+  const call=createServerCallState({label:'emote',onRetry:()=>lastEmote&&invokeEmote(lastEmote),onSignIn:()=>send?.('signIn')});
+  async function invokeEmote(id){if(busy||disposed||model.status!=='live'||!model.canEmote)return;lastEmote=id;busy=true;call.loading();try{const result=await send?.('setEmote',id);if(!disposed){if(result?.accepted)call.succeed();else call.fail(result??intentFailure());}}catch(error){if(!disposed)call.fail(intentFailure(error));}finally{busy=false;}}
+  const emoteButtons=emotes.map(id=>button(`Emote ${id}`,()=>{void invokeEmote(id);setEmotesOpen(false);},{focus:`presence-${id}`}));
+  emoteRow.append(...emoteButtons);element.append(heading,status,count,more,crewStrip,emoteRow,call.element);
   let model={status:'off',others:[],crew:[],hiddenCount:0,canEmote:false,cooldown:0};
   let counts={drawn:0,hidden:0,ids:[]};
 
@@ -62,5 +67,5 @@ export function createPresenceHud({send,onCrew=()=>{}}={}){
   return {element,update,setCounts(value={}){
     const ids=Array.isArray(value.ids)?value.ids:counts.ids;
     counts={drawn:Math.max(0,value.drawn??0),hidden:Math.max(0,value.hidden??0),ids};updateSummary();
-  },dispose(){element.remove();}};
+  },dispose(){disposed=true;call.dispose();element.remove();}};
 }

@@ -8,8 +8,9 @@ import { OUTCOME_UNKNOWN } from '../../src/screens/market/words.js';
 const intent = { companyId: 'harbor-trust', side: 'rising', stake: 100 };
 const failure = (code, status = 409, extra = {}) => ({ ok: false, code, message: '', status, retryAfterSeconds: null, ...extra });
 const unknown = () => failure('outcome_unknown', 0);
+const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; };
 
-async function setup({ scripted = false, fake: fakeOptions } = {}) {
+async function setup({ scripted = false, fake: fakeOptions, now } = {}) {
   const fake = createFakeMarketAdapter(fakeOptions);
   const adapter = {
     board: vi.fn((...args) => fake.board(...args)),
@@ -21,7 +22,7 @@ async function setup({ scripted = false, fake: fakeOptions } = {}) {
   await session.refreshAll();
   adapter.board.mockClear(); adapter.portfolio.mockClear();
   let count = 0;
-  const trades = createTrades({ adapter, session, makeUid: () => `click-uid-${++count}` });
+  const trades = createTrades({ adapter, session, now, makeUid: () => `click-uid-${++count}` });
   return { fake, adapter, session, trades };
 }
 
@@ -154,6 +155,52 @@ describe('when the outcome is not known', () => {
     expect(trades.pending.uid).toBe('click-uid-1');
   });
 
+  it('waits for the old readback and a successful current read before repeating the same held body and uid', async () => {
+    const {adapter, trades, session} = await setup({scripted: true});
+    const old = deferred(), current = deferred(), started = deferred();
+    const portfolio = structuredClone(session.portfolio);
+    portfolio.positions = [{...portfolio.positions[0], id: crypto.randomUUID(),
+      companyId: intent.companyId, side: intent.side, stake: intent.stake}];
+    adapter.portfolio.mockReturnValueOnce(old.promise).mockImplementationOnce(() => { started.resolve(); return current.promise; });
+    adapter.open.mockResolvedValueOnce(unknown()).mockResolvedValueOnce(failure('already_applied'));
+    await trades.open(intent); const held = trades.pending;
+    const repeated = trades.sendAgain();
+    expect(trades.busy).toBe(true); expect((await trades.sendAgain()).kind).toBe('busy');
+    expect(adapter.open).toHaveBeenCalledTimes(1); expect(adapter.portfolio).toHaveBeenCalledTimes(1);
+    old.resolve({ok: true, data: portfolio}); await started.promise;
+    expect(adapter.portfolio).toHaveBeenCalledTimes(2); expect(adapter.open).toHaveBeenCalledTimes(1);
+    current.resolve({ok: true, data: portfolio}); expect((await repeated).kind).toBe('already_done');
+    expect(adapter.open.mock.calls[1]).toEqual([held.intent, {uid: held.uid}]);
+    expect(adapter.open).toHaveBeenCalledTimes(2); expect(trades.pending).toBeNull();
+  });
+
+  it.each([failure('network_error', 0), failure('database_unavailable', 503), failure('unauthorized', 401),
+    failure('too_many_requests', 429, {retryAfterSeconds: 3})])('keeps the uid and sends no repeat when preflight fails with $code', async read => {
+    const {adapter, trades} = await setup({scripted: true, now: () => 0});
+    adapter.open.mockResolvedValueOnce(unknown()); await (await trades.open(intent)).refreshed;
+    const held = trades.pending; adapter.portfolio.mockResolvedValueOnce(read);
+    expect((await trades.sendAgain()).kind).toBe('unknown');
+    expect(adapter.open).toHaveBeenCalledTimes(1); expect(trades.pending).toBe(held); expect(trades.busy).toBe(false);
+    if (read.status === 429) {
+      const reads = adapter.portfolio.mock.calls.length;
+      expect((await trades.sendAgain()).kind).toBe('rate_limited'); expect(adapter.portfolio).toHaveBeenCalledTimes(reads);
+    }
+  });
+
+  it('discards an old preflight continuation without sending or unlocking the new account trade', async () => {
+    const {adapter, trades, session} = await setup({scripted: true});
+    adapter.open.mockResolvedValueOnce(unknown()); await (await trades.open(intent)).refreshed;
+    const held = deferred(), started = deferred(), fresh = deferred(), portfolio = structuredClone(session.portfolio);
+    adapter.portfolio.mockImplementationOnce(() => { started.resolve(); return held.promise; });
+    const repeated = trades.sendAgain(); await started.promise;
+    trades.resetPrivate(); session.resetPrivate(true); adapter.open.mockReturnValueOnce(fresh.promise);
+    const newTrade = trades.open({...intent, side: 'falling'});
+    held.resolve({ok: true, data: portfolio}); expect((await repeated).kind).toBe('expired');
+    expect(adapter.open).toHaveBeenCalledTimes(2); expect(trades.busy).toBe(true);
+    fresh.resolve(unknown()); await newTrade;
+    expect(trades.pending).toMatchObject({intent: {...intent, side: 'falling'}, uid: 'click-uid-2'});
+  });
+
   it('refuses a new trade until the unknown one is settled', async () => {
     const { adapter, trades } = await setup({ scripted: true });
     adapter.open.mockResolvedValueOnce(unknown());
@@ -166,12 +213,12 @@ describe('when the outcome is not known', () => {
     expect(adapter.close).not.toHaveBeenCalled();
   });
 
-  it('clears the attempt when sending again is refused for a clear reason', async () => {
+  it('retains the original uncertain attempt when sending again is refused for a clear reason', async () => {
     const { adapter, trades } = await setup({ scripted: true });
     adapter.open.mockResolvedValueOnce(unknown()).mockResolvedValueOnce(failure('market_closed'));
-    await trades.open(intent);
-    expect((await trades.sendAgain()).kind).toBe('refused');
-    expect(trades.pending).toBe(null);
+    await trades.open(intent);const held=trades.pending;
+    expect((await trades.sendAgain()).kind).toBe('unknown');
+    expect(trades.pending).toBe(held);expect(trades.pending.uid).toBe('click-uid-1');
   });
 
   it('checks again by refreshing the portfolio and explains what to look for', async () => {
@@ -233,12 +280,12 @@ describe('forgetting a trade that could not be confirmed', () => {
     const { adapter, trades } = await setup({ scripted: true });
     adapter.open.mockResolvedValueOnce(unknown());
     await trades.open(intent);
-    let release;
-    adapter.open.mockImplementationOnce(() => new Promise(resolve => { release = () => resolve(unknown()); }));
+    let release; const started = deferred();
+    adapter.open.mockImplementationOnce(() => new Promise(resolve => { release = () => resolve(unknown()); started.resolve(); }));
     const again = trades.sendAgain();
     expect(trades.forget().kind).toBe('nothing');
     expect(trades.pending).not.toBe(null);
-    release();
+    await started.promise; release();
     await again;
     expect(trades.pending.uid).toBe('click-uid-1');
   });
@@ -282,5 +329,63 @@ describe('closing a position', () => {
     expect(trades.pending).toEqual({ kind: 'close', intent: { positionId: 'x' }, uid: 'click-uid-1' });
     await trades.sendAgain();
     expect(adapter.close.mock.calls[1]).toEqual([{ positionId: 'x' }, { uid: 'click-uid-1' }]);
+  });
+});
+
+describe('rate-limit deadlines', () => {
+  it('counts down the server wait and blocks new open, close and resend calls without consuming a uid', async () => {
+    let now = 0;
+    const {fake, adapter, trades} = await setup({now: () => now});
+    fake.dev.failNext('too_many_requests');
+    await trades.open(intent);
+    expect(trades.retryAfterSeconds).toBe(7);
+    now = 6001;
+    expect(await trades.open(intent)).toMatchObject({kind: 'rate_limited', retryAfterSeconds: 1,
+      message: 'You are trading very fast. Wait 1 second, then try again.'});
+    expect(await trades.close({positionId: 'old-position'})).toMatchObject({kind: 'rate_limited'});
+    expect(await trades.sendAgain()).toMatchObject({kind: 'rate_limited'});
+    expect(adapter.open).toHaveBeenCalledTimes(1);
+    expect(adapter.close).not.toHaveBeenCalled();
+    now = 7000;
+    expect(trades.retryAfterSeconds).toBe(0);
+    expect((await trades.open(intent)).kind).toBe('done');
+    expect(adapter.open.mock.calls.map(call => call[1].uid)).toEqual(['click-uid-1', 'click-uid-2']);
+  });
+});
+
+describe('trade identity boundaries', () => {
+  const deferred = () => {
+    let resolve;
+    const promise = new Promise(done => { resolve = done; });
+    return {promise, resolve};
+  };
+  it('drops an old unknown attempt and its uid instead of resending it as the next account', async () => {
+    const {adapter, trades} = await setup({scripted: true});
+    adapter.open.mockResolvedValueOnce(unknown()).mockResolvedValueOnce(unknown());
+    await trades.open(intent);
+    trades.resetPrivate();
+    expect(trades.pending).toBeNull();
+    expect((await trades.sendAgain()).kind).toBe('nothing');
+    await trades.open(intent);
+    expect(adapter.open.mock.calls.map(call => call[1].uid)).toEqual(['click-uid-1', 'click-uid-2']);
+    expect(trades.pending.uid).toBe('click-uid-2');
+  });
+
+  it('ignores an old trade result without clearing the new account busy state or refreshing its positions', async () => {
+    const {adapter, trades} = await setup({scripted: true});
+    const old = deferred(), fresh = deferred();
+    adapter.open.mockImplementationOnce(() => old.promise).mockImplementationOnce(() => fresh.promise);
+    const oldTrade = trades.open(intent);
+    trades.resetPrivate();
+    const freshTrade = trades.open({...intent, side: 'falling'});
+    old.resolve({ok: true, data: {positionId: 'old-position'}});
+    expect((await oldTrade).kind).toBe('expired');
+    expect(trades.busy).toBe(true);
+    expect(adapter.board).not.toHaveBeenCalled();
+    expect(adapter.portfolio).not.toHaveBeenCalled();
+    fresh.resolve(unknown());
+    expect((await freshTrade).kind).toBe('unknown');
+    expect(trades.busy).toBe(false);
+    expect(trades.pending).toEqual({kind: 'open', intent: {...intent, side: 'falling'}, uid: 'click-uid-2'});
   });
 });

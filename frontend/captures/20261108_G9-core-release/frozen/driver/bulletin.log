@@ -1,0 +1,28 @@
+{
+  "checked": "2026-11-08T15:52:44.214Z",
+  "checks": [
+    "Default off bulletin hides the tonight chip",
+    "Off bulletin has no harbor hotspot or prompt",
+    "Ready bulletin keeps the default world HUD quiet",
+    "Tonight chip shows the supplied period state",
+    "Tonight chip labels an almanac fog night",
+    "Closing Journal restores the quiet HUD before walking",
+    "World keyboard focus is explicit after reading Journal",
+    "Harbor bulletin opens from its registered hotspot",
+    "Calm bulletin shows canonical weather and Exchange lines in order",
+    "Bulletin keeps attribution in Settings → Credits",
+    "Bulletin fits a 375 px phone without horizontal overflow",
+    "Unavailable bulletin displays its plain fallback",
+    "Unavailable bulletin keeps the tonight caption explicitly hidden",
+    "Escape closes the bulletin and restores game focus",
+    "Storm scenario raises the harbor mast flag",
+    "Browser has no console or page errors",
+    "Browser makes no external requests"
+  ],
+  "screenshots": [
+    "captures/20261106_G8-Bulletin-Desktop.png",
+    "captures/20261106_G8-Bulletin-Phone.png"
+  ],
+  "errors": [],
+  "external": []
+}

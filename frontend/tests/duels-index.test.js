@@ -24,7 +24,10 @@ vi.mock('../src/screens/duels/panel.js', () => ({
 }));
 vi.mock('../src/screens/duels/http-adapter.js', () => ({ createHttpAdapter: () => ({ stand: 'in' }) }));
 
-const CTX = { container: {}, resetInput() {}, focus() {} };
+// Stable injected private capabilities mirror the app's approved lease; no network is called.
+const CTX = {container: {}, resetInput() {}, focus() {},
+  request: {get() {}, post() {}, publicGet() {}},
+  getFlags: () => ({arena: true}), getIdentity: () => 1, onIdentityChange: () => () => {}};
 
 // A fresh copy of index.js for every test, because the panel lives in module state.
 async function freshEntry() {

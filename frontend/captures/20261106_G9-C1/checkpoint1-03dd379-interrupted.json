@@ -1,0 +1,142 @@
+{
+  "status": "interrupted by environment restart; resumed same clean commit",
+  "sourceCommit": "03dd379931073eeaced0c2631bb950189f68ead5",
+  "completed": 19,
+  "interruptedBeforeCompletionOf": "demo",
+  "commands": [
+    {
+      "id": "tests",
+      "code": 0,
+      "ms": 144071,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "build",
+      "code": 0,
+      "ms": 2633,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "generator",
+      "code": 0,
+      "ms": 7804,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "credits",
+      "code": 0,
+      "ms": 8834,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "living",
+      "code": 1,
+      "ms": 33848,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "life",
+      "code": 0,
+      "ms": 49864,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "case",
+      "code": 0,
+      "ms": 26714,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "world",
+      "code": 1,
+      "ms": 111793,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "readability",
+      "code": 0,
+      "ms": 44178,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "browser",
+      "code": 1,
+      "ms": 112813,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "production",
+      "code": 0,
+      "ms": 21857,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "pixel",
+      "code": 0,
+      "ms": 25542,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "pixel-production",
+      "code": 0,
+      "ms": 13257,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "kit",
+      "code": 0,
+      "ms": 3202,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "kit-production",
+      "code": 0,
+      "ms": 2333,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "cinematics",
+      "code": 1,
+      "ms": 44592,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "intro",
+      "code": 0,
+      "ms": 84758,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "weather",
+      "code": 0,
+      "ms": 14419,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    },
+    {
+      "id": "experience",
+      "code": 1,
+      "ms": 32739,
+      "commit": "03dd379931073eeaced0c2631bb950189f68ead5",
+      "sourceDirty": false
+    }
+  ],
+  "note": "Latest complete results are in the after/Verification.json. Cinematics passed on the same-source resumed run; this retains its earlier failed frame gate."
+}

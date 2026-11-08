@@ -1,0 +1,802 @@
+{
+  "stage": "stream9",
+  "checks": [
+    "A false, string or numeric market flag keeps anonymous prices and both notices, with no private read or write.",
+    "A false, string or numeric market flag keeps anonymous prices and both notices, with no private read or write.",
+    "A false, string or numeric market flag keeps anonymous prices and both notices, with no private read or write.",
+    "The trading pause uses the approved caption",
+    "A server trading pause shows its plain closed line and offers no open intent",
+    "The recorded harbor receives an incrementing save acknowledgement before market captures",
+    "Prices show the recorded play-money simulation note",
+    "The allowed market opening loads its manifest-owned resources",
+    "Recorded US stocks show closed Lisbon reopening, stale last price and unavailable/no-price states without stake controls.",
+    "Market source credits stay out of the gameplay panel.",
+    "Cancelling the position form sends no change",
+    "The rising position shows the authoritative account balance",
+    "Your positions show the same play-money simulation note",
+    "One confirmed rising intent creates one server position",
+    "The shared captain wallet adopts 989 coins after the accepted rising position.",
+    "Asking to close does not send a change before confirmation",
+    "The confirmed close shows the server account balance",
+    "The explicit close confirmation closes one server position",
+    "The shared captain wallet adopts 998 coins after the accepted close.",
+    "An applied unknown falling trade displays only the server account balance",
+    "The intercepted unknown answer represents one applied falling trade",
+    "The shared captain wallet reads 987 coins after the server-applied unknown trade.",
+    "Check again reads own positions without sending another change",
+    "Reading the unknown outcome adds no ledger grant",
+    "The idempotent repeat keeps the authoritative balance",
+    "Send again first obtains a new own-portfolio answer before its same-UID write",
+    "Send again reuses the original action UID and receives already-applied without another position",
+    "Own positions are read between the unknown open and its same-UID repeat, allowing ordinary read polls",
+    "Only the three accepted market changes add their server ledger reasons",
+    "Market intents preserve this device’s accepted intro replay",
+    "The recorded market fits the requested viewport",
+    "Market changes send only the published intent fields",
+    "Recorded prices use anonymous public reads",
+    "Own positions and changes use the intercepted signed-in session",
+    "The shared captain wallet retains 987 coins after the idempotent unknown repeat.",
+    "Server limits show 20 open positions and 2,000 daily stake; body18, controls16, targets44 and320px fit remain readable.",
+    "Actual Rewards shows 987 coins and exactly six fixed own-market ledger rows after the final accepted changes.",
+    "Only Settings → Credits displays the exact recorded server price-source link.",
+    "An unapplied unknown trade keeps the authoritative server balance",
+    "An unapplied unknown trade grants no position or ledger entry",
+    "An uncertain unapplied trade is not automatically repeated",
+    "Check again for an unapplied trade sends no write",
+    "Closing an unknown market trade returns focus to the public canvas",
+    "Ordinary close and public reopening preserve the unknown trade without resending it",
+    "Only explicit Send again reads fresh own positions and repeats the exact original UID for an unapplied trade",
+    "The server accepts the unapplied same-UID repeat once and charges only its published stake and fee",
+    "The once-accepted repeat displays the server balance",
+    "An unapplied unknown retry preserves accepted device replay",
+    "Market changes send only the published intent fields",
+    "Recorded prices use anonymous public reads",
+    "Own positions and changes use the intercepted signed-in session",
+    "The shared captain wallet adopts 989 coins after the once-accepted unapplied repeat.",
+    "Actual Rewards shows 989 coins and only the two rows from the once-accepted retry.",
+    "A false, string or numeric market flag keeps anonymous prices and both notices, with no private read or write.",
+    "A false, string or numeric market flag keeps anonymous prices and both notices, with no private read or write.",
+    "A false, string or numeric market flag keeps anonymous prices and both notices, with no private read or write.",
+    "The trading pause uses the approved caption",
+    "A server trading pause shows its plain closed line and offers no open intent",
+    "The recorded harbor receives an incrementing save acknowledgement before market captures",
+    "Prices show the recorded play-money simulation note",
+    "The allowed market opening loads its manifest-owned resources",
+    "Recorded US stocks show closed Lisbon reopening, stale last price and unavailable/no-price states without stake controls.",
+    "Market source credits stay out of the gameplay panel.",
+    "Cancelling the position form sends no change",
+    "The rising position shows the authoritative account balance",
+    "Your positions show the same play-money simulation note",
+    "One confirmed rising intent creates one server position",
+    "The shared captain wallet adopts 989 coins after the accepted rising position.",
+    "Asking to close does not send a change before confirmation",
+    "The confirmed close shows the server account balance",
+    "The explicit close confirmation closes one server position",
+    "The shared captain wallet adopts 998 coins after the accepted close.",
+    "An applied unknown falling trade displays only the server account balance",
+    "The intercepted unknown answer represents one applied falling trade",
+    "The shared captain wallet reads 987 coins after the server-applied unknown trade.",
+    "Check again reads own positions without sending another change",
+    "Reading the unknown outcome adds no ledger grant",
+    "The idempotent repeat keeps the authoritative balance",
+    "Send again first obtains a new own-portfolio answer before its same-UID write",
+    "Send again reuses the original action UID and receives already-applied without another position",
+    "Own positions are read between the unknown open and its same-UID repeat, allowing ordinary read polls",
+    "Only the three accepted market changes add their server ledger reasons",
+    "Market intents preserve this device’s accepted intro replay",
+    "The recorded market fits the requested viewport",
+    "Market changes send only the published intent fields",
+    "Recorded prices use anonymous public reads",
+    "Own positions and changes use the intercepted signed-in session",
+    "The shared captain wallet retains 987 coins after the idempotent unknown repeat.",
+    "Server limits show 20 open positions and 2,000 daily stake; body18, controls16, targets44 and320px fit remain readable.",
+    "Actual Rewards shows 987 coins and exactly six fixed own-market ledger rows after the final accepted changes.",
+    "Only Settings → Credits displays the exact recorded server price-source link.",
+    "An unapplied unknown trade keeps the authoritative server balance",
+    "An unapplied unknown trade grants no position or ledger entry",
+    "An uncertain unapplied trade is not automatically repeated",
+    "Check again for an unapplied trade sends no write",
+    "Closing an unknown market trade returns focus to the public canvas",
+    "Ordinary close and public reopening preserve the unknown trade without resending it",
+    "Only explicit Send again reads fresh own positions and repeats the exact original UID for an unapplied trade",
+    "The server accepts the unapplied same-UID repeat once and charges only its published stake and fee",
+    "The once-accepted repeat displays the server balance",
+    "An unapplied unknown retry preserves accepted device replay",
+    "Market changes send only the published intent fields",
+    "Recorded prices use anonymous public reads",
+    "Own positions and changes use the intercepted signed-in session",
+    "The shared captain wallet adopts 989 coins after the once-accepted unapplied repeat.",
+    "Actual Rewards shows 989 coins and only the two rows from the once-accepted retry."
+  ],
+  "requests": [
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/close",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "positionId"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": true
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": true
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/close",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "positionId"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": true
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/open",
+      "method": "POST",
+      "authorized": true,
+      "bodyKeys": [
+        "actionUid",
+        "companyId",
+        "side",
+        "stake"
+      ],
+      "uidValid": true,
+      "uidMatchesPrior": true
+    },
+    {
+      "path": "/api/market",
+      "method": "GET",
+      "authorized": false,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    },
+    {
+      "path": "/api/market/portfolio",
+      "method": "GET",
+      "authorized": true,
+      "bodyKeys": [],
+      "uidValid": false,
+      "uidMatchesPrior": false
+    }
+  ],
+  "proofs": [
+    {
+      "phase": "golden",
+      "opens": 2,
+      "closes": 1,
+      "repeats": 1,
+      "unknownApplied": true,
+      "sameUidRepeat": true,
+      "ledgerReasons": [
+        "market_stake",
+        "market_fee",
+        "market_payout",
+        "market_fee",
+        "market_stake",
+        "market_fee"
+      ],
+      "allBodiesExpected": true,
+      "allPublicAnonymous": true,
+      "allPrivateAuthorized": true
+    },
+    {
+      "phase": "unapplied",
+      "opens": 1,
+      "closes": 0,
+      "repeats": 0,
+      "unknownApplied": false,
+      "sameUidRepeat": false,
+      "ledgerReasons": [
+        "market_stake",
+        "market_fee"
+      ],
+      "allBodiesExpected": true,
+      "allPublicAnonymous": true,
+      "allPrivateAuthorized": true
+    },
+    {
+      "phase": "golden",
+      "opens": 2,
+      "closes": 1,
+      "repeats": 1,
+      "unknownApplied": true,
+      "sameUidRepeat": true,
+      "ledgerReasons": [
+        "market_stake",
+        "market_fee",
+        "market_payout",
+        "market_fee",
+        "market_stake",
+        "market_fee"
+      ],
+      "allBodiesExpected": true,
+      "allPublicAnonymous": true,
+      "allPrivateAuthorized": true
+    },
+    {
+      "phase": "unapplied",
+      "opens": 1,
+      "closes": 0,
+      "repeats": 0,
+      "unknownApplied": false,
+      "sameUidRepeat": false,
+      "ledgerReasons": [
+        "market_stake",
+        "market_fee"
+      ],
+      "allBodiesExpected": true,
+      "allPublicAnonymous": true,
+      "allPrivateAuthorized": true
+    }
+  ],
+  "pending": [
+    "Seven-fault market common-call, focus and physical-path coverage runs separately through checkOnlineMarketChaos."
+  ]
+}

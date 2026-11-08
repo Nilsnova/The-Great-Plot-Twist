@@ -1,0 +1,592 @@
+{
+  "sourceCommit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+  "sourceDirty": false,
+  "checked": "2026-11-07T10:29:00.726785+00:00",
+  "command": "npm run test:g9 -- --phase=after --keep-going",
+  "outcome": "streams done so far, not a checkpoint",
+  "checkpointComplete": false,
+  "initialFullRun": {
+    "completed": 44,
+    "passed": 41,
+    "failed": [
+      "living",
+      "world",
+      "production"
+    ],
+    "report": "captures/20261107_G9-C3-after/Verification.json",
+    "rawReportSha256": "7cecb3a4dc25d41a1bdd92842f7beafadbba8d5f3b62cb2f99d1ba59442286f4"
+  },
+  "logs": [
+    {
+      "id": "tests",
+      "command": "npm test",
+      "code": 0,
+      "ms": 219744,
+      "log": "captures/20261107_G9-C3-after/tests.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "fc400ce51306f423f6b43ab220907ef4299cda4affbf58efde83fabcdc5dc4da",
+      "sha256": "a8a1b44a67e2e43c4fc6865dd621e8418faebb7f2ad88e283883dd97198771af"
+    },
+    {
+      "id": "build",
+      "command": "npm run build",
+      "code": 0,
+      "ms": 3963,
+      "log": "captures/20261107_G9-C3-after/build.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "9e6efec46a9a71721e9bdad4f504b7bbc17ec231f8ea2906bbc220b313875b26",
+      "sha256": "9e6efec46a9a71721e9bdad4f504b7bbc17ec231f8ea2906bbc220b313875b26"
+    },
+    {
+      "id": "generator",
+      "command": "python3 scripts/pixel_art/generate.py",
+      "code": 0,
+      "ms": 9690,
+      "log": "captures/20261107_G9-C3-after/generator.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "cc352fd587c332de063dcd4ef0c279699177e14aa2c57fd64fc0dee966fbdbbb",
+      "sha256": "cc352fd587c332de063dcd4ef0c279699177e14aa2c57fd64fc0dee966fbdbbb"
+    },
+    {
+      "id": "credits",
+      "command": "node scripts/check-credits.js",
+      "code": 0,
+      "ms": 12907,
+      "log": "captures/20261107_G9-C3-after/credits.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "6baff89bfe82094e861881d77d97a78c297375a0317e2f1c657ea4c900b3d464",
+      "sha256": "6baff89bfe82094e861881d77d97a78c297375a0317e2f1c657ea4c900b3d464"
+    },
+    {
+      "id": "living",
+      "command": "node scripts/check-living.js",
+      "code": 1,
+      "ms": 44294,
+      "log": "captures/20261107_G9-C3-after/living.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "b4173649175e6188f098fac177df7feca3a88f98483656e59fbe5ca5db03a9ec",
+      "sha256": "b4173649175e6188f098fac177df7feca3a88f98483656e59fbe5ca5db03a9ec"
+    },
+    {
+      "id": "life",
+      "command": "node scripts/check-life.js",
+      "code": 0,
+      "ms": 59873,
+      "log": "captures/20261107_G9-C3-after/life.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "8d7fcde7e3ef9db99db98ba0dd2a16be5f07f1445d42a1453cf4b7e08f0110c0",
+      "sha256": "8d7fcde7e3ef9db99db98ba0dd2a16be5f07f1445d42a1453cf4b7e08f0110c0"
+    },
+    {
+      "id": "case",
+      "command": "node scripts/check-case.js",
+      "code": 0,
+      "ms": 34827,
+      "log": "captures/20261107_G9-C3-after/case.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "67c42c2a31120e2810c12fa8cfaa577c3ef728771f401ee9189c6c27adb9eeb7",
+      "sha256": "67c42c2a31120e2810c12fa8cfaa577c3ef728771f401ee9189c6c27adb9eeb7"
+    },
+    {
+      "id": "world",
+      "command": "node scripts/check-world.js",
+      "code": 1,
+      "ms": 127497,
+      "log": "captures/20261107_G9-C3-after/world.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "d78f0619802accae308fe71e61ac554bfa81872758a7f41651db9058443df191",
+      "sha256": "d78f0619802accae308fe71e61ac554bfa81872758a7f41651db9058443df191"
+    },
+    {
+      "id": "readability",
+      "command": "node scripts/check-readability.js",
+      "code": 0,
+      "ms": 59348,
+      "log": "captures/20261107_G9-C3-after/readability.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "b91e40cd9426efecd6c3331c13c51694b6ab8046a8aba993bd1cc70e70dd1d4f",
+      "sha256": "b91e40cd9426efecd6c3331c13c51694b6ab8046a8aba993bd1cc70e70dd1d4f"
+    },
+    {
+      "id": "browser",
+      "command": "CAPTURE_PREFIX=G8 node scripts/check-browser.js",
+      "code": 0,
+      "ms": 88267,
+      "log": "captures/20261107_G9-C3-after/browser.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "3309a069a2f6f5cbefc184e38b93489364ca922f7f9bfea9090a7fa2d5a809b3",
+      "sha256": "3309a069a2f6f5cbefc184e38b93489364ca922f7f9bfea9090a7fa2d5a809b3"
+    },
+    {
+      "id": "production",
+      "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+      "code": 1,
+      "ms": 32983,
+      "log": "captures/20261107_G9-C3-after/production.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "9e661e38dfd4e114cd1384b55d94ffd228b3212e15bb01fc8f6ed0044b2af08d",
+      "sha256": "b800a82b8f573fa000093c1effcf2e1a76d2585384ebb89ffb987274560c6eca"
+    },
+    {
+      "id": "pixel",
+      "command": "node scripts/check-pixel.js",
+      "code": 0,
+      "ms": 24424,
+      "log": "captures/20261107_G9-C3-after/pixel.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "80e8c1e8062dcd0ae1f2cb163bc76bd34f7303e7d945072a518249f10930a5ce",
+      "sha256": "80e8c1e8062dcd0ae1f2cb163bc76bd34f7303e7d945072a518249f10930a5ce"
+    },
+    {
+      "id": "pixel-production",
+      "command": "ART_PRODUCTION=1 node scripts/check-pixel.js",
+      "code": 0,
+      "ms": 12447,
+      "log": "captures/20261107_G9-C3-after/pixel-production.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "4ac7875f0a172babaeef0ac43d08913bcb8fa68aded439ba7daffc4d7aa0b7b1",
+      "sha256": "4ac7875f0a172babaeef0ac43d08913bcb8fa68aded439ba7daffc4d7aa0b7b1"
+    },
+    {
+      "id": "kit",
+      "command": "node scripts/check-ui-kit.js",
+      "code": 0,
+      "ms": 4052,
+      "log": "captures/20261107_G9-C3-after/kit.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "da68d9c5ee576ea1c331868643a1adcfbb71bd91875f53640e0c91b439584fc0",
+      "sha256": "da68d9c5ee576ea1c331868643a1adcfbb71bd91875f53640e0c91b439584fc0"
+    },
+    {
+      "id": "kit-production",
+      "command": "KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
+      "code": 0,
+      "ms": 2790,
+      "log": "captures/20261107_G9-C3-after/kit-production.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "f27d09bf2863c63007e8541393431c638aa69014325488bd6d389f3ad57bedfb",
+      "sha256": "f27d09bf2863c63007e8541393431c638aa69014325488bd6d389f3ad57bedfb"
+    },
+    {
+      "id": "cinematics",
+      "command": "node scripts/check-cinematics.js",
+      "code": 0,
+      "ms": 44363,
+      "log": "captures/20261107_G9-C3-after/cinematics.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "cda04dabb85ec5fca5ff14785c90a608802b0b53988a9433a1bd93006431d2f9",
+      "sha256": "cda04dabb85ec5fca5ff14785c90a608802b0b53988a9433a1bd93006431d2f9"
+    },
+    {
+      "id": "intro",
+      "command": "node scripts/check-intro.js",
+      "code": 0,
+      "ms": 53780,
+      "log": "captures/20261107_G9-C3-after/intro.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "e42a72ed801cbcbb3608951a89daacf8a18c3df96efd293ef5ce071f7163f831",
+      "sha256": "e42a72ed801cbcbb3608951a89daacf8a18c3df96efd293ef5ce071f7163f831"
+    },
+    {
+      "id": "weather",
+      "command": "node scripts/check-weather-wiring.js",
+      "code": 0,
+      "ms": 11266,
+      "log": "captures/20261107_G9-C3-after/weather.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "df03f079293179938dc3f3811414b220e46e24c3bc10f8c5f5a9ff328dc24bac",
+      "sha256": "df03f079293179938dc3f3811414b220e46e24c3bc10f8c5f5a9ff328dc24bac"
+    },
+    {
+      "id": "experience",
+      "command": "node scripts/check-experience.js",
+      "code": 0,
+      "ms": 29116,
+      "log": "captures/20261107_G9-C3-after/experience.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "13017c93eb0bd9da1d7329985d4b1e75c7f34079e5fed75f77e5e48f80076818",
+      "sha256": "13017c93eb0bd9da1d7329985d4b1e75c7f34079e5fed75f77e5e48f80076818"
+    },
+    {
+      "id": "demo",
+      "command": "node scripts/check-demo.js",
+      "code": 0,
+      "ms": 187798,
+      "log": "captures/20261107_G9-C3-after/demo.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "ccf67448a50b1e9c01dd5adc649ab51adc532e63f315faaa86e0f31e2207dca2",
+      "sha256": "ccf67448a50b1e9c01dd5adc649ab51adc532e63f315faaa86e0f31e2207dca2"
+    },
+    {
+      "id": "loading",
+      "command": "node scripts/check-loading.js",
+      "code": 0,
+      "ms": 8928,
+      "log": "captures/20261107_G9-C3-after/loading.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "9fa3eaa3967537fea57fcee52bae1272a0f47e2a0b6bf79240478a98a8d9e0b7",
+      "sha256": "9fa3eaa3967537fea57fcee52bae1272a0f47e2a0b6bf79240478a98a8d9e0b7"
+    },
+    {
+      "id": "lifecycle",
+      "command": "node scripts/check-lifecycle.js",
+      "code": 0,
+      "ms": 7733,
+      "log": "captures/20261107_G9-C3-after/lifecycle.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "66b3e9eede62fbd743c8ba56dd3845ce6e542cf84c90f05ccfe64c6c9be6778a",
+      "sha256": "66b3e9eede62fbd743c8ba56dd3845ce6e542cf84c90f05ccfe64c6c9be6778a"
+    },
+    {
+      "id": "csp",
+      "command": "node scripts/check-csp.js",
+      "code": 0,
+      "ms": 16019,
+      "log": "captures/20261107_G9-C3-after/csp.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "f59e249f35839134dc4fba0c2e6f5e03ebfaae363a9768155ab72e2ef44f09d0",
+      "sha256": "f59e249f35839134dc4fba0c2e6f5e03ebfaae363a9768155ab72e2ef44f09d0"
+    },
+    {
+      "id": "islet-world",
+      "command": "node scripts/check-islet-world.js",
+      "code": 0,
+      "ms": 19990,
+      "log": "captures/20261107_G9-C3-after/islet-world.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "ce55eee7273f3760de7478cb2528c062a1bb6971406fc25da7be9838ed607f2f",
+      "sha256": "ce55eee7273f3760de7478cb2528c062a1bb6971406fc25da7be9838ed607f2f"
+    },
+    {
+      "id": "bulletin",
+      "command": "node scripts/check-bulletin.js",
+      "code": 0,
+      "ms": 14316,
+      "log": "captures/20261107_G9-C3-after/bulletin.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "3e858867d63e8b95a8a7cc76a1a7865e562e4bdf0d9e8f3b8535a7b3313a960c",
+      "sha256": "3e858867d63e8b95a8a7cc76a1a7865e562e4bdf0d9e8f3b8535a7b3313a960c"
+    },
+    {
+      "id": "hook",
+      "command": "node scripts/check-hook.js",
+      "code": 0,
+      "ms": 12998,
+      "log": "captures/20261107_G9-C3-after/hook.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "9db4455f49f1686d36e97e70905dd70059fcf790a2a6d24e1c5f586373876d70",
+      "sha256": "9db4455f49f1686d36e97e70905dd70059fcf790a2a6d24e1c5f586373876d70"
+    },
+    {
+      "id": "harbor-life",
+      "command": "node scripts/check-harbor-life.js",
+      "code": 0,
+      "ms": 31962,
+      "log": "captures/20261107_G9-C3-after/harbor-life.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "8e4011fbff51a06cb444a9619a742676c3a50b7bf53a17051feb4af55212a266",
+      "sha256": "8e4011fbff51a06cb444a9619a742676c3a50b7bf53a17051feb4af55212a266"
+    },
+    {
+      "id": "presenter",
+      "command": "node scripts/check-presenter.js",
+      "code": 0,
+      "ms": 45991,
+      "log": "captures/20261107_G9-C3-after/presenter.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "d46536eefd94845f306bc734509a5d1ec4514834fd630ceb80cf090d380f5e1b",
+      "sha256": "d46536eefd94845f306bc734509a5d1ec4514834fd630ceb80cf090d380f5e1b"
+    },
+    {
+      "id": "golden",
+      "command": "node scripts/check-golden-path.js",
+      "code": 0,
+      "ms": 231610,
+      "log": "captures/20261107_G9-C3-after/golden.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "a259c865ae5677c2db471c841e2dd5464290790285dd29235f72e1bce3e8294d",
+      "sha256": "a259c865ae5677c2db471c841e2dd5464290790285dd29235f72e1bce3e8294d"
+    },
+    {
+      "id": "chaos",
+      "command": "node scripts/check-chaos.js",
+      "code": 0,
+      "ms": 359409,
+      "log": "captures/20261107_G9-C3-after/chaos.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "6668eb71746e5ac3ebdf08d58962fb5809f9c7a0525150c5f0b8c6af434e75a6",
+      "sha256": "6668eb71746e5ac3ebdf08d58962fb5809f9c7a0525150c5f0b8c6af434e75a6"
+    },
+    {
+      "id": "a11y",
+      "command": "node scripts/check-a11y.js",
+      "code": 0,
+      "ms": 191777,
+      "log": "captures/20261107_G9-C3-after/a11y.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "b16ced0b2ec5bf4edeeaddb85dda6469d927028a797dde0e3640ed85ee85da70",
+      "sha256": "b16ced0b2ec5bf4edeeaddb85dda6469d927028a797dde0e3640ed85ee85da70"
+    },
+    {
+      "id": "build-stamp",
+      "command": "node scripts/check-build-stamp.js",
+      "code": 0,
+      "ms": 14243,
+      "log": "captures/20261107_G9-C3-after/build-stamp.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "c58c8fd36ef0ea6ddf778bd2584d7a2359562928f00099e1c8f4ee982f1887a2",
+      "sha256": "c58c8fd36ef0ea6ddf778bd2584d7a2359562928f00099e1c8f4ee982f1887a2"
+    },
+    {
+      "id": "problem-report",
+      "command": "node scripts/check-problem-report.js",
+      "code": 0,
+      "ms": 5747,
+      "log": "captures/20261107_G9-C3-after/problem-report.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "7490bee4c210a3112a742d4697c7635ef32006d8ceb0e1c9d8fa5499caf9ba6f",
+      "sha256": "7490bee4c210a3112a742d4697c7635ef32006d8ceb0e1c9d8fa5499caf9ba6f"
+    },
+    {
+      "id": "call-states",
+      "command": "node scripts/check-call-states.js",
+      "code": 0,
+      "ms": 20074,
+      "log": "captures/20261107_G9-C3-after/call-states.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "6082d806d4a9802195072f7acd583876d3a32698af7cc5fdd042b47304bc4464",
+      "sha256": "6082d806d4a9802195072f7acd583876d3a32698af7cc5fdd042b47304bc4464"
+    },
+    {
+      "id": "csp-inventory",
+      "command": "node scripts/check-csp-inventory.js",
+      "code": 0,
+      "ms": 688,
+      "log": "captures/20261107_G9-C3-after/csp-inventory.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "55120dc372a686b9d6d548698f297aa556210537010baaf94631dc08f8222e95",
+      "sha256": "55120dc372a686b9d6d548698f297aa556210537010baaf94631dc08f8222e95"
+    },
+    {
+      "id": "online",
+      "command": "node scripts/check-online-golden.js",
+      "code": 0,
+      "ms": 497782,
+      "log": "captures/20261107_G9-C3-after/online.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "b8f639c7171389ba7a601e9a1fa0f03ecdf284aab410456cdabf710307256d7c",
+      "sha256": "b8f639c7171389ba7a601e9a1fa0f03ecdf284aab410456cdabf710307256d7c"
+    },
+    {
+      "id": "online-chaos",
+      "command": "node scripts/check-online-chaos.js",
+      "code": 0,
+      "ms": 282412,
+      "log": "captures/20261107_G9-C3-after/online-chaos.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "7171457a7fd6ea0a2d8d9baa939e69c182840d2ecd9b9af6ceb1b5bac68bf8a1",
+      "sha256": "7171457a7fd6ea0a2d8d9baa939e69c182840d2ecd9b9af6ceb1b5bac68bf8a1"
+    },
+    {
+      "id": "claude-islet",
+      "command": "node scripts/check-islet.js",
+      "code": 0,
+      "ms": 35190,
+      "log": "captures/20261107_G9-C3-after/claude-islet.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "feddfa13d6a9d37dc5b25412ce490e5e32fa007b01fd3e075c6fb5fe1c13b2c2",
+      "sha256": "feddfa13d6a9d37dc5b25412ce490e5e32fa007b01fd3e075c6fb5fe1c13b2c2"
+    },
+    {
+      "id": "case-redesign",
+      "command": "node scripts/check-case-redesign.js",
+      "code": 0,
+      "ms": 13572,
+      "log": "captures/20261107_G9-C3-after/case-redesign.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "5913c7569d99d64ab6966853145c1239ed6fa4888cefc24b7ce6fe40f3747f8c",
+      "sha256": "5913c7569d99d64ab6966853145c1239ed6fa4888cefc24b7ce6fe40f3747f8c"
+    },
+    {
+      "id": "interiors",
+      "command": "node scripts/check-interiors.js",
+      "code": 0,
+      "ms": 6205,
+      "log": "captures/20261107_G9-C3-after/interiors.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "27549a2e1dc9e96b738204bc8da2e4d3d04aa55a55454a86cef54fbabe163da0",
+      "sha256": "27549a2e1dc9e96b738204bc8da2e4d3d04aa55a55454a86cef54fbabe163da0"
+    },
+    {
+      "id": "intro-pages",
+      "command": "node scripts/check-intro-pages.js",
+      "code": 0,
+      "ms": 31616,
+      "log": "captures/20261107_G9-C3-after/intro-pages.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "10b541670e4b40ba54c4171ff7c59b5230af03d5c863a69ba7aed9b0cb3ad8fb",
+      "sha256": "10b541670e4b40ba54c4171ff7c59b5230af03d5c863a69ba7aed9b0cb3ad8fb"
+    },
+    {
+      "id": "redesign-hud",
+      "command": "node scripts/check-redesign-hud.js",
+      "code": 0,
+      "ms": 8450,
+      "log": "captures/20261107_G9-C3-after/redesign-hud.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "045a90e48257e12643a9053309d807f50940818c31121b2742c1bf9b7dd7ed4a",
+      "sha256": "045a90e48257e12643a9053309d807f50940818c31121b2742c1bf9b7dd7ed4a"
+    },
+    {
+      "id": "redesign-movement",
+      "command": "node scripts/check-redesign-movement.js",
+      "code": 0,
+      "ms": 26265,
+      "log": "captures/20261107_G9-C3-after/redesign-movement.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "676edd391a28fe19d3651f9bbb7655fdeed1a29eca9a72b6881bf43b10affa17",
+      "sha256": "676edd391a28fe19d3651f9bbb7655fdeed1a29eca9a72b6881bf43b10affa17"
+    },
+    {
+      "id": "redesign-integration",
+      "command": "node scripts/check-redesign-integration.js",
+      "code": 0,
+      "ms": 14538,
+      "log": "captures/20261107_G9-C3-after/redesign-integration.log",
+      "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+      "sourceDirty": false,
+      "rawSha256": "efaa5353dcf4469dba29d1683b8ffb6e22ba45ed9bb90d41fccbe9c7791d1e96",
+      "sha256": "efaa5353dcf4469dba29d1683b8ffb6e22ba45ed9bb90d41fccbe9c7791d1e96"
+    }
+  ],
+  "metrics": [
+    {
+      "path": "captures/20261107_G9-C3-after/regression-living.json",
+      "sha256": "fbaf2adfffbfee1274c0567732806e5925031563de561f1db4102f0bae474a33"
+    },
+    {
+      "path": "captures/20261107_G9-C3-after/regression-world.json",
+      "sha256": "fbfc0608e56db6b21e848ea82c5a301ef92a4c220c5f6d9221939b09936de282"
+    },
+    {
+      "path": "captures/20261107_G9-C3-after/regression-cinematics.json",
+      "sha256": "89e874b83ab5f8bb36cb8070f317ae51010f2e5264d73442ce71cda1740ebf6d"
+    },
+    {
+      "path": "captures/20261107_G9-C3-after/regression-loading.json",
+      "sha256": "5ae3d93c3a08f281f3b30db7f6b3972fdaae207c2bf12c625ac62802ad6f2ec2"
+    }
+  ],
+  "productionFollowups": {
+    "unchangedOriginalCommandAttempts": [
+      {
+        "id": "production",
+        "attempt": 1,
+        "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+        "code": 0,
+        "seconds": 15.8,
+        "log": "captures/20261107_G9-C3-after/production-rerun-1.log",
+        "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+        "sourceDirty": false,
+        "rawSha256": "9901f62ced676db637d703b4479d43f8be895c092f90acb7f18ca2a50c3da700",
+        "sha256": "9901f62ced676db637d703b4479d43f8be895c092f90acb7f18ca2a50c3da700"
+      },
+      {
+        "id": "production",
+        "attempt": 2,
+        "command": "CAPTURE_PREFIX=G8 node scripts/check-production.js",
+        "code": 0,
+        "seconds": 13.9,
+        "log": "captures/20261107_G9-C3-after/production-rerun-2.log",
+        "commit": "e720eaff20e0985ef74cea8fda02fa6cf726a434",
+        "sourceDirty": false,
+        "rawSha256": "cb14910919a27ce43aa10cada700c75cb3ec93806b1aa35ea0b98fd50d26d9d2",
+        "sha256": "cb14910919a27ce43aa10cada700c75cb3ec93806b1aa35ea0b98fd50d26d9d2"
+      }
+    ],
+    "diagnostic": {
+      "code": 0,
+      "log": "captures/20261107_G9-C3-after/production-diagnostic.log",
+      "rawSha256": "47ff2ad0e3cffaa0f7e623c77a4bc490751236efd9c2aa71e8ee213331296b29",
+      "sha256": "47ff2ad0e3cffaa0f7e623c77a4bc490751236efd9c2aa71e8ee213331296b29",
+      "change": "Catch-only safe diagnostic metadata; all seven original assertions and waits retained."
+    },
+    "finding": "Initial intro-view timeout was not reproduced. No application fix or cause is claimed."
+  },
+  "latestCommandOutcomes": {
+    "passed": 42,
+    "failed": [
+      "living",
+      "world"
+    ],
+    "qualification": "Combines the initial full run with unchanged production-command reruns; not a second full 44-command run."
+  },
+  "frameObservations": {
+    "storm": {
+      "fps": 12,
+      "calls": 112,
+      "requiredFps": 55
+    },
+    "worldAfterTenTrips": {
+      "fps": 14,
+      "calls": 97,
+      "requiredFps": 30
+    },
+    "activeCinematic": {
+      "fps": 30,
+      "calls": 97,
+      "requiredFps": 30,
+      "commandPassed": true
+    }
+  },
+  "limitations": [
+    "R16 presenter hardware frame proof remains open; original gates and rendering quality unchanged.",
+    "R11 exact serialized case DTOs remain unavailable; live case connection is not claimed.",
+    "Real accounts, services, databases, native hidden-tab pause, other engines, assistive technology and physical devices remain unverified."
+  ],
+  "logNormalization": "Terminal escapes, machine paths, trailing whitespace and trailing blank lines removed. Raw and normalized hashes retained.",
+  "browserSelection": "Installed Chromium selected through CHROME_PATH; no browser download."
+}

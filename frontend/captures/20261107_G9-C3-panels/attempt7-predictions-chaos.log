@@ -1,0 +1,21 @@
+CHAOS predictions/offline @ 375
+CHAOS predictions/expired @ 375
+CHAOS predictions/feature_off @ 375
+CHAOS predictions/stale_save @ 375
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: predictions/stale_save: refusal has plain words at 375
+    at check (file://<frontend>/scripts/check-online-chaos.js:128:44)
+    at checkOnlineChaos (file://<frontend>/scripts/check-online-chaos.js:151:11)
+    at async file://<frontend>/scripts/check-online-predictions.js:166:39 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

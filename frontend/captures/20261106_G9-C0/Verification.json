@@ -1,0 +1,85 @@
+{
+  "checkpoint": 0,
+  "mergedMain": "c26f303",
+  "mergeCommit": "996daef",
+  "stream0": "ee72758",
+  "verifiedBuild": {
+    "sha": "ee72758-dirty",
+    "builtAt": "2026-11-06T17:15:33.133Z",
+    "environment": null
+  },
+  "unitTests": 500,
+  "unitFiles": 67,
+  "coldJavaScript": 19679,
+  "headroom": 1401,
+  "titleBefore": {
+    "titleReadyMs": 158.30000001192093,
+    "firstPaintMs": 192
+  },
+  "titleAfter": {
+    "titleReadyMs": 524.9000000059605,
+    "firstPaintMs": 508
+  },
+  "commands": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "seconds": null,
+      "evidence": "s1-final-unit.log"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 2.62
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "exitCode": 0,
+      "seconds": 10.78
+    },
+    {
+      "command": "node scripts/check-title-start.js --phase=after",
+      "exitCode": 0,
+      "seconds": 6.75
+    },
+    {
+      "command": "node scripts/check-build-stamp.js",
+      "exitCode": 0,
+      "seconds": 14.69
+    },
+    {
+      "command": "node scripts/check-problem-report.js",
+      "exitCode": 0,
+      "seconds": 11.6
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "exitCode": 0,
+      "seconds": 12.43
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "exitCode": 0,
+      "seconds": 27.38
+    },
+    {
+      "command": "node scripts/check-csp-inventory.js",
+      "exitCode": 0,
+      "seconds": 1.86
+    }
+  ],
+  "stream0Gate": "stream0-verification.json",
+  "secretScan": "No matches on origin/main..HEAD; repeat after final commit",
+  "preview": {
+    "deploymentStatus": "success at 0b6b809",
+    "stamp": "not verified: dashboard URL is not accessible without account access; no login attempted"
+  },
+  "notVerified": [
+    "Vercel preview stamp (R14)",
+    "Deployed headers",
+    "Real OAuth/session/Realtime",
+    "Safari/Firefox/VoiceOver/physical devices"
+  ],
+  "unitSkipped": 1,
+  "unitSkipReason": "Canonical bulletin data is not on main yet; no other-worktree fallback"
+}

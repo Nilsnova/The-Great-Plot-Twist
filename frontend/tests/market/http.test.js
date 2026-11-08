@@ -184,6 +184,32 @@ describe('when the outcome of a trade is not known', () => {
     expect(await adapter.close({ positionId: '7b3e' }, { uid: 'u-7654321' })).toMatchObject({ ok: false, code: 'database_not_configured', status: 503 });
   });
 
+  it.each([
+    [500, 'server_error'], [502, 'bad_gateway'], [501, 'market_unavailable'],
+    [505, 'database_not_configured'], [507, 'server_error'], [599, 'server_error'],
+  ])('keeps uncertain HTTP%i opens and closes unknown without repeating a request', async (status, code) => {
+    const privateText = `fixture-${crypto.randomUUID()}`, credential = `fixture-${crypto.randomUUID()}`;
+    const fetchImpl = later([refusal(status, code, privateText), refusal(status, code, privateText)]);
+    const adapter = adapterFor(fetchImpl, {getToken: () => credential});
+    const openUid = crypto.randomUUID(), closeUid = crypto.randomUUID();
+    const opened = await adapter.open(intent, {uid: openUid});
+    const closed = await adapter.close({positionId: crypto.randomUUID()}, {uid: closeUid});
+    for (const result of [opened, closed]) {
+      expect(result).toMatchObject({ok: false, code: 'outcome_unknown', status});
+      expect(result.message).not.toContain(privateText);
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl.mock.calls.map(call => JSON.parse(call[1].body).actionUid)).toEqual([openUid, closeUid]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each([500, 502, 599])('keeps HTTP%i reads as ordinary failures without unknown-write recovery', async status => {
+    const credential = `fixture-${crypto.randomUUID()}`;
+    const adapter = adapterFor(later([refusal(status, 'server_error'), refusal(status, 'server_error')]), {getToken: () => credential});
+    expect(await adapter.board()).toMatchObject({ok: false, code: 'server_error', status});
+    expect(await adapter.portfolio()).toMatchObject({ok: false, code: 'server_error', status});
+  });
+
   it('treats a good status with an unreadable body as an unknown outcome, because the trade may have happened', async () => {
     const adapter = adapterFor(later([new Response('<html>', { status: 200 }), reply({ nothing: true }), reply({ nothing: true })]));
     expect(await adapter.open(intent, { uid: 'u-1234567' })).toMatchObject(unknown);
@@ -234,5 +260,100 @@ describe('it never throws and never leaves a timer behind', () => {
       expect(await createMarketHttpAdapter().board()).toMatchObject({ ok: true });
       expect(globalThis.fetch.mock.calls[0][0]).toBe('/api/market');
     } finally { globalThis.fetch = original; }
+  });
+});
+
+describe('optional normalized A2 facades', () => {
+  const intent = {companyId: 'harbor-trust', side: 'rising', stake: 100};
+  function facades() {
+    const fetchImpl = vi.fn(() => { throw new Error('Fallback must not run'); });
+    const getToken = vi.fn(() => `runtime-${crypto.randomUUID()}`);
+    const publicGet = vi.fn(async () => ({ok: true, status: 200, data: BOARD}));
+    const request = vi.fn(async path => ({ok: true, status: 200,
+      data: path.endsWith('/portfolio') ? PORTFOLIO : path.endsWith('/close') ? CLOSED : OPENED}));
+    return {fetchImpl, getToken, publicGet, request,
+      adapter: createMarketHttpAdapter({fetchImpl, getToken, publicGet, request})};
+  }
+  it('uses only the public client for the board without consulting an auth token', async () => {
+    const test = facades();
+    expect(await test.adapter.board()).toEqual({ok: true, data: BOARD});
+    expect(test.publicGet).toHaveBeenCalledExactlyOnceWith('/api/market');
+    expect(test.request).not.toHaveBeenCalled();
+    expect(test.getToken).not.toHaveBeenCalled();
+    expect(test.fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('sends only contract fields and preserves the action uid through the private facade', async () => {
+    const test = facades(), uid = crypto.randomUUID();
+    await test.adapter.portfolio();
+    await test.adapter.open({...intent, price: 1, playerId: crypto.randomUUID()}, {uid});
+    await test.adapter.open(intent, {uid});
+    await test.adapter.close({positionId: 'recorded-position', price: 2}, {uid});
+    expect(test.request.mock.calls).toEqual([
+      ['/api/market/portfolio', {method: 'GET'}],
+      ['/api/market/open', {method: 'POST', body: {...intent, actionUid: uid}}],
+      ['/api/market/open', {method: 'POST', body: {...intent, actionUid: uid}}],
+      ['/api/market/close', {method: 'POST', body: {positionId: 'recorded-position', actionUid: uid}}],
+    ]);
+    expect(test.publicGet).not.toHaveBeenCalled();
+    expect(test.fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [0, 'timeout', 'outcome_unknown'],
+    [500, 'server_error', 'outcome_unknown'],
+    [501, 'market_unavailable', 'outcome_unknown'],
+    [502, 'bad_gateway', 'outcome_unknown'],
+    [503, 'database_unavailable', 'outcome_unknown'],
+    [504, 'server_error', 'outcome_unknown'],
+    [505, 'database_not_configured', 'outcome_unknown'],
+    [599, 'server_error', 'outcome_unknown'],
+    [503, 'market_unavailable', 'market_unavailable'],
+    [503, 'database_not_configured', 'database_not_configured'],
+    [401, 'unauthorized', 'unauthorized'],
+    [429, 'too_many_requests', 'too_many_requests'],
+  ])('preserves the trade recovery meaning of status %i code %s', async (status, code, expected) => {
+    const test = facades();
+    test.request.mockResolvedValueOnce({ok: false, status, code, message: 'Recorded refusal.', retryAfterSeconds: 7});
+    expect(await test.adapter.open(intent, {uid: crypto.randomUUID()}))
+      .toMatchObject({ok: false, status, code: expected});
+  });
+
+  it.each([500, 502, 507, 599])('retains an uncertain normalized HTTP%i close with no fallback or automatic repeat', async status => {
+    const test = facades(), positionId = crypto.randomUUID(), uid = crypto.randomUUID();
+    test.request.mockResolvedValueOnce({ok: false, status, code: 'server_error', message: `fixture-${crypto.randomUUID()}`});
+    expect(await test.adapter.close({positionId}, {uid})).toMatchObject({ok: false, code: 'outcome_unknown', status});
+    expect(test.request.mock.calls).toEqual([['/api/market/close', {method: 'POST', body: {positionId, actionUid: uid}}]]);
+    expect(test.fetchImpl).not.toHaveBeenCalled();
+    expect(test.publicGet).not.toHaveBeenCalled();
+    expect(test.getToken).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('keeps the countdown seconds and validates success shapes through the facade', async () => {
+    const test = facades();
+    test.request.mockResolvedValueOnce({ok: false, status: 429, code: 'too_many_requests', retryAfterSeconds: 7});
+    expect((await test.adapter.open(intent)).retryAfterSeconds).toBe(7);
+    test.request.mockResolvedValueOnce({ok: true, status: 200, data: {coins: 1}});
+    expect(await test.adapter.portfolio()).toMatchObject({ok: false, code: 'bad_response', status: 200});
+    test.request.mockResolvedValueOnce({ok: true, status: 200, data: {coins: 1}});
+    expect(await test.adapter.open(intent)).toMatchObject({ok: false, code: 'outcome_unknown', status: 200});
+    test.publicGet.mockResolvedValueOnce({ok: true, status: 200, data: {companies: []}});
+    expect(await test.adapter.board()).toMatchObject({ok: false, code: 'bad_response'});
+  });
+
+  it.each([200, 201, 204])('keeps an unreadable normalized HTTP%i write as an unknown outcome', async status => {
+    const test = facades();
+    test.request.mockResolvedValueOnce({ok: false, status, code: 'bad_response'});
+    expect(await test.adapter.open(intent)).toMatchObject({ok: false, code: 'outcome_unknown', status});
+  });
+
+  it('treats rejected facade calls as safe read failures or unknown writes', async () => {
+    const test = facades();
+    test.publicGet.mockRejectedValueOnce(new Error(`runtime-${crypto.randomUUID()}`));
+    test.request.mockRejectedValueOnce(new Error(`runtime-${crypto.randomUUID()}`));
+    expect(await test.adapter.board()).toMatchObject({ok: false, code: 'network_error', status: 0});
+    expect(await test.adapter.open(intent)).toMatchObject({ok: false, code: 'outcome_unknown', status: 0});
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

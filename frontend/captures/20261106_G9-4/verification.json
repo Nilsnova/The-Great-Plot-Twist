@@ -1,0 +1,202 @@
+{
+  "branch": "feat/g9-real-adapter",
+  "base": "ea89e35",
+  "checkpointCommits": [
+    "cae6dad",
+    "bb7599e",
+    "f413006"
+  ],
+  "unitTests": 360,
+  "unitFiles": 62,
+  "commands": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "seconds": 17.89,
+      "canonicalCommand": "npm test",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 3.96,
+      "canonicalCommand": "npm run build",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "CAPTURE_DIR=captures/20261106_G9-4/call-states node scripts/check-call-states.js",
+      "exitCode": 0,
+      "seconds": 10.82,
+      "canonicalCommand": "node scripts/check-call-states.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-chaos.js",
+      "exitCode": 0,
+      "seconds": 34.23,
+      "canonicalCommand": "node scripts/check-chaos.js",
+      "evidence": "captures/20261106_G9-3/iterations/before-final-verification.json"
+    },
+    {
+      "command": "node scripts/check-golden-path.js",
+      "exitCode": 0,
+      "seconds": 33.18,
+      "canonicalCommand": "node scripts/check-golden-path.js",
+      "evidence": "captures/20261106_G9-3/iterations/before-final-verification.json"
+    },
+    {
+      "command": "node scripts/check-ui-kit.js",
+      "exitCode": 0,
+      "seconds": 3.9,
+      "canonicalCommand": "node scripts/check-ui-kit.js",
+      "evidence": "captures/20261106_G9-3/iterations/before-final-verification.json"
+    },
+    {
+      "command": "node scripts/check-case.js",
+      "exitCode": 0,
+      "seconds": 16.26,
+      "canonicalCommand": "node scripts/check-case.js",
+      "evidence": "captures/20261106_G9-3/iterations/before-final-verification.json"
+    },
+    {
+      "command": "node scripts/check-intro.js",
+      "exitCode": 0,
+      "seconds": 11.49,
+      "canonicalCommand": "node scripts/check-intro.js",
+      "evidence": "captures/20261106_G9-3/iterations/before-final-verification.json"
+    },
+    {
+      "command": "node scripts/check-lifecycle.js",
+      "exitCode": 0,
+      "seconds": 8.03,
+      "canonicalCommand": "node scripts/check-lifecycle.js",
+      "evidence": "captures/20261106_G9-3/iterations/before-final-verification.json"
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "exitCode": 0,
+      "seconds": 6.69,
+      "canonicalCommand": "node scripts/check-loading.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "exitCode": 0,
+      "seconds": 20.96,
+      "canonicalCommand": "node scripts/check-a11y.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-demo.js",
+      "exitCode": 0,
+      "seconds": 184.54,
+      "canonicalCommand": "node scripts/check-demo.js",
+      "evidence": "captures/20261106_G9-3/verification-final.json"
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "exitCode": 0,
+      "seconds": 25.01,
+      "canonicalCommand": "node scripts/check-csp.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-csp-inventory.js",
+      "exitCode": 0,
+      "seconds": 0.5,
+      "canonicalCommand": "node scripts/check-csp-inventory.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-build-stamp.js",
+      "exitCode": 0,
+      "seconds": 7.32,
+      "canonicalCommand": "node scripts/check-build-stamp.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-problem-report.js",
+      "exitCode": 0,
+      "seconds": 4.22,
+      "canonicalCommand": "node scripts/check-problem-report.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-living.js",
+      "exitCode": 0,
+      "seconds": 24.04,
+      "canonicalCommand": "node scripts/check-living.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-hook.js",
+      "exitCode": 0,
+      "seconds": 7.68,
+      "canonicalCommand": "node scripts/check-hook.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    },
+    {
+      "command": "node scripts/check-production.js",
+      "exitCode": 0,
+      "seconds": 5.51,
+      "canonicalCommand": "node scripts/check-production.js",
+      "evidence": "captures/20261106_G9-4/verification.json"
+    }
+  ],
+  "browserScripts": 16,
+  "builtTextFiles": 107,
+  "protectedSpoilerLines": 12,
+  "coldJavaScript": 20617,
+  "coldGzip": 9803,
+  "storm": {
+    "fps": 59,
+    "calls": 112,
+    "triangles": 220,
+    "geometries": 107,
+    "textures": 62,
+    "roots": 1,
+    "objects": 10,
+    "programs": 4
+  },
+  "a11y": {
+    "contexts": 23,
+    "samples": 69,
+    "minimumContrast": 4.693671497398343
+  },
+  "cspHtml": [
+    {
+      "file": "asset-library.html",
+      "inlineScripts": 0,
+      "styleBlocks": 0,
+      "styleAttributes": 0,
+      "eventAttributes": 0
+    },
+    {
+      "file": "auth-check.html",
+      "inlineScripts": 0,
+      "styleBlocks": 0,
+      "styleAttributes": 0,
+      "eventAttributes": 0
+    },
+    {
+      "file": "index.html",
+      "inlineScripts": 0,
+      "styleBlocks": 0,
+      "styleAttributes": 0,
+      "eventAttributes": 0
+    },
+    {
+      "file": "ui-kit.html",
+      "inlineScripts": 0,
+      "styleBlocks": 0,
+      "styleAttributes": 0,
+      "eventAttributes": 0
+    }
+  ],
+  "notVerified": [
+    "Deployed headers",
+    "Real OAuth / session / Realtime",
+    "Real-adapter idempotency and Retry-After parsing",
+    "Safari / Firefox / physical phone / VoiceOver"
+  ]
+}

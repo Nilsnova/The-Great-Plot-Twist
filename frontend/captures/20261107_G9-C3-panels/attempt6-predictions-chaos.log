@@ -1,0 +1,79 @@
+CHAOS predictions/offline @ 375
+CHAOS predictions/expired @ 375
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.hud.exploring').getByRole('button', { name: 'Menu', exact: true })
+    - locator resolved to <button class="hud-menu">Menu</button>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> intercepts pointer events
+  - retrying click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <section class="account-screen" aria-label="Account and saved games">…</section> from <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> subtree intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <section class="account-screen" aria-label="Account and saved games">…</section> from <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> subtree intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    50 × waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - <section class="account-screen" aria-label="Account and saved games">…</section> from <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> subtree intercepts pointer events
+     - retrying click action
+       - waiting 500ms
+
+    at openAccountControls (<frontend>/scripts/online-browser-actions.js:25:91)
+    at async Object.afterTrigger (<frontend>/scripts/check-online-predictions.js:132:57)
+    at async checkOnlineChaos (<frontend>/scripts/check-online-chaos.js:144:11)
+    at async file://<frontend>/scripts/check-online-predictions.js:166:39 {
+  log: [
+    "  - waiting for locator('.hud.exploring').getByRole('button', { name: 'Menu', exact: true })",
+    '    - locator resolved to <button class="hud-menu">Menu</button>',
+    '  - attempting click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '    - element is visible, enabled and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling',
+    '    - <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> intercepts pointer events',
+    '  - retrying click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '    - element is visible, enabled and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling',
+    '    - <section class="account-screen" aria-label="Account and saved games">…</section> from <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> subtree intercepts pointer events',
+    '  - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <section class="account-screen" aria-label="Account and saved games">…</section> from <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> subtree intercepts pointer events',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    50 × waiting for element to be visible, enabled and stable',
+    '       - element is visible, enabled and stable',
+    '       - scrolling into view if needed',
+    '       - done scrolling',
+    '       - <section class="account-screen" aria-label="Account and saved games">…</section> from <dialog open="" aria-labelledby="modal-22" class="kit-modal account-modal">…</dialog> subtree intercepts pointer events',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

@@ -123,15 +123,60 @@ describe('refresh', () => {
   });
 });
 
+describe('latest started read ownership', () => {
+  it.each(['reset', 'dispose'])('returns safely when a failure publication causes a reentrant %s', async cleanup => {
+    const adapter = createIsletAdapter({mode: 'live', transport: {
+      get: async () => ({ok: false, status: 503, code: 'database_unavailable'}),
+    }});
+    let changed = false;
+    adapter.subscribe(event => {
+      if (!event.view.notice || changed) return;
+      changed = true; if (cleanup === 'reset') adapter.resetPrivate(); else adapter.dispose();
+    });
+    await expect(adapter.refresh()).resolves.toMatchObject({accepted: false, code: cleanup === 'reset' ? 'session_expired' : 'disposed'});
+    expect(adapter.read().notice).toBeNull(); adapter.dispose();
+  });
+  it('stops an accepted publication after a prior observer resets its private epoch', async () => {
+    const {adapter} = setup(); await adapter.refresh(); let reset = false;
+    adapter.subscribe(event => { if (event.answered && !reset) { reset = true; adapter.resetPrivate(); } });
+    const later = vi.fn(); adapter.subscribe(later);
+    expect(await adapter.refresh()).toMatchObject({accepted: false, code: 'session_expired'});
+    expect(later).toHaveBeenCalledOnce(); expect(later.mock.calls[0][0]).toMatchObject({answered: false, view: {coins: null, spots: []}});
+    expect(adapter.read().spots).toEqual([]); adapter.dispose();
+  });
+  it.each(['success', 'error'])('ignores a pre-build %s response after the newer recovery read fails', async olderResult => {
+    const fake = createFakeIsletTransport(), held = deferred();
+    let reads = 0;
+    const transport = {get: () => ++reads === 2 ? held.promise : reads === 3
+      ? Promise.resolve({ok: false, status: 0, code: 'network_error'}) : fake.get(ISLET),
+      post: async () => ({ok: false, status: 503, code: 'database_unavailable'})};
+    const adapter = createIsletAdapter({transport, mode: 'live', makeUid: () => crypto.randomUUID()});
+    try {
+      await adapter.refresh(); const old = adapter.refresh();
+      expect((await adapter.build(STATION)).code).toBe('unconfirmed');
+      const current = adapter.read(), listener = vi.fn(); adapter.subscribe(listener);
+      held.resolve(olderResult === 'success' ? await createFakeIsletTransport({coins: 5}).get(ISLET)
+        : {ok: false, status: 503, code: 'database_unavailable'});
+      expect((await old).code).toBe('superseded');
+      expect(adapter.read()).toEqual(current); expect(listener).not.toHaveBeenCalled();
+    } finally { adapter.dispose(); }
+  });
+});
+
 describe('build: the normal path', () => {
   it('posts plot, type and actionUid, with the type copied from the spot the server sent', async () => {
     const answer = await createFakeIsletTransport().get(ISLET);
-    answer.data.spots[1].type = 'odd_type';
     const post = vi.fn(async () => ({ok: false, status: 404, code: 'no_such_building', message: 'No such building.'}));
     const adapter = createIsletAdapter({transport: {get: async () => answer, post}, mode: 'live', makeUid: counter()});
     await adapter.refresh();
     await adapter.build('plot_2');
-    expect(post).toHaveBeenCalledWith(BUILD, {plot: 'plot_2', type: 'odd_type', actionUid: 'click-0001'});
+    expect(post).toHaveBeenCalledWith(BUILD, {plot: 'plot_2', type: answer.data.spots[1].type, actionUid: 'click-0001'});
+  });
+  it('refuses an unpublished plot/type snapshot before it can authorize a build', async () => {
+    const answer = await createFakeIsletTransport().get(ISLET); answer.data.spots[1].type = 'odd_type';
+    const post = vi.fn(), adapter = createIsletAdapter({transport: {get: async () => answer, post}, mode: 'live'});
+    expect((await adapter.refresh()).accepted).toBe(false);
+    expect((await adapter.build('plot_2')).code).toBe('no_such_plot'); expect(post).not.toHaveBeenCalled();
   });
 
   it('shows the receipt, then the fresh islet, and frees the buttons', async () => {
@@ -386,5 +431,113 @@ describe('subscribe and dispose', () => {
     expect(await adapter.refresh()).toMatchObject({accepted: false, code: 'disposed'});
     expect(transport.posts()).toHaveLength(0);
     expect(transport.gets()).toHaveLength(1);
+  });
+});
+
+describe('private identity boundaries', () => {
+  const receipt = {plot: STATION, type: 'signal_station', name: 'Signal station', level: 1,
+    coinsPaid: 300, timberPaid: 10, coins: 700, timber: 10};
+  it('erases loaded private state and ignores an old GET after the next identity has answered', async () => {
+    const answer = await createFakeIsletTransport().get(ISLET), old = deferred(), fresh = deferred();
+    const get = vi.fn().mockResolvedValueOnce(answer).mockImplementationOnce(() => old.promise).mockImplementationOnce(() => fresh.promise);
+    const adapter = createIsletAdapter({transport: {get}, mode: 'live'}), events = [];
+    try {
+      await adapter.refresh(); adapter.subscribe(event => events.push(event));
+      const reading = adapter.refresh(), revision = adapter.read().revision;
+      adapter.resetPrivate();
+      expect(adapter.read()).toMatchObject({coins: null, timber: null, spots: [], busyPlot: null, notice: null});
+      expect(adapter.read().revision).toBeGreaterThan(revision);
+      const next = adapter.refresh(), current = structuredClone(answer);
+      current.data.coins = 42; fresh.resolve(current); await next;
+      const count = events.length; old.resolve(answer);
+      expect(await reading).toMatchObject({accepted: false, code: 'session_expired'});
+      expect(adapter.read().coins).toBe(42); expect(events).toHaveLength(count);
+      expect(events.filter(event => event.answered)).toHaveLength(1);
+    } finally { adapter.dispose(); }
+  });
+
+  it('drops an unknown build uid at an identity boundary while keeping same-identity retries unchanged', async () => {
+    const {fake, adapter, transport} = setup();
+    try {
+      await adapter.refresh(); fake.dev.failNext('server');
+      expect((await adapter.build(STATION)).code).toBe('unconfirmed');
+      expect(spotOf(adapter, STATION).retry).toBe(true);
+      adapter.resetPrivate(); await adapter.refresh();
+      expect(spotOf(adapter, STATION).retry).toBe(false);
+      expect((await adapter.build(STATION)).accepted).toBe(true);
+      const ids = transport.posts().map(call => call.body.actionUid);
+      expect(ids).toHaveLength(2); expect(ids[1]).not.toBe(ids[0]);
+    } finally { adapter.dispose(); }
+  });
+
+  it('cannot settle an old POST or clear the next identity busy build', async () => {
+    const fake = createFakeIsletTransport(), old = deferred(), fresh = deferred();
+    const transport = {get: vi.fn(path => fake.get(path)),
+      post: vi.fn().mockImplementationOnce(() => old.promise).mockImplementationOnce(() => fresh.promise)};
+    const adapter = createIsletAdapter({transport, mode: 'live', makeUid: counter()});
+    try {
+      await adapter.refresh(); const first = adapter.build(STATION);
+      adapter.resetPrivate(); await adapter.refresh(); const second = adapter.build(STATION);
+      const reads = transport.get.mock.calls.length;
+      old.resolve({ok: true, status: 200, data: receipt});
+      expect(await first).toMatchObject({accepted: false, code: 'session_expired'});
+      expect(transport.get).toHaveBeenCalledTimes(reads);
+      expect(adapter.read()).toMatchObject({coins: 1000, busyPlot: STATION, notice: {code: 'building'}});
+      fresh.resolve({ok: false, status: 409, code: 'not_enough_timber', message: 'Recorded current refusal.'});
+      await second;
+      expect(adapter.read()).toMatchObject({busyPlot: null, notice: {code: 'not_enough_timber'}});
+    } finally { adapter.dispose(); }
+  });
+
+  it('cannot publish an old recovery GET or start another read while a fresh build is pending', async () => {
+    const fake = createFakeIsletTransport(), recovery = deferred(), fresh = deferred();
+    const transport = {get: vi.fn(path => fake.get(path)), post: vi.fn()
+      .mockResolvedValueOnce({ok: false, status: 503, code: 'database_unavailable'})
+      .mockImplementationOnce(() => fresh.promise)};
+    const adapter = createIsletAdapter({transport, mode: 'live', makeUid: counter()}), answered = vi.fn();
+    try {
+      await adapter.refresh(); transport.get.mockImplementationOnce(() => recovery.promise);
+      const first = adapter.build(STATION);
+      await vi.waitFor(() => expect(transport.get).toHaveBeenCalledTimes(2));
+      adapter.resetPrivate(); await adapter.refresh();
+      adapter.subscribe(event => { if (event.answered) answered(); });
+      const second = adapter.build(STATION), reads = transport.get.mock.calls.length;
+      recovery.resolve(await fake.get(ISLET));
+      expect(await first).toMatchObject({accepted: false, code: 'session_expired'});
+      expect(transport.get).toHaveBeenCalledTimes(reads); expect(answered).not.toHaveBeenCalled();
+      expect(adapter.read()).toMatchObject({busyPlot: STATION, notice: {code: 'building'}});
+      fresh.resolve({ok: false, status: 409, code: 'not_enough_timber', message: 'Recorded current refusal.'});
+      await second;
+      expect(adapter.read()).toMatchObject({busyPlot: null, notice: {code: 'not_enough_timber'}});
+    } finally { adapter.dispose(); }
+  });
+
+  it('uses readback and the same uid after an unreadable HTTP200 build instead of inventing success', async () => {
+    const fake = createFakeIsletTransport(); let sends = 0;
+    const transport = {get: vi.fn(path => fake.get(path)), post: vi.fn((path, body) =>
+      ++sends === 1 ? Promise.resolve({ok: true, status: 200, data: null}) : fake.post(path, body))};
+    const adapter = createIsletAdapter({transport, mode: 'live', makeUid: counter()});
+    try {
+      await adapter.refresh();
+      expect(await adapter.build(STATION)).toMatchObject({accepted: false, code: 'unconfirmed'});
+      expect(adapter.read()).toMatchObject({coins: 1000, signalStationBuilt: false});
+      expect(spotOf(adapter, STATION)).toMatchObject({state: 'empty', retry: true});
+      expect((await adapter.build(STATION)).accepted).toBe(true);
+      expect(transport.post.mock.calls.map(([, body]) => body.actionUid)).toEqual(['click-0001', 'click-0001']);
+      expect(adapter.read()).toMatchObject({coins: 700, timber: 10, signalStationBuilt: true});
+    } finally { adapter.dispose(); }
+  });
+
+  it('erases a loaded wallet, spots and notice on disposal and ignores a pending answer', async () => {
+    const fake = createFakeIsletTransport(), pending = deferred();
+    const transport = {get: vi.fn(path => fake.get(path))};
+    const adapter = createIsletAdapter({transport, mode: 'live'}), listener = vi.fn();
+    await adapter.refresh(); expect(adapter.read().coins).toBe(1000);
+    transport.get.mockImplementationOnce(() => pending.promise);
+    const reading = adapter.refresh(); adapter.subscribe(listener); adapter.dispose();
+    expect(adapter.read()).toMatchObject({coins: null, timber: null, spots: [], busyPlot: null, notice: null});
+    pending.resolve(await fake.get(ISLET));
+    expect(await reading).toMatchObject({accepted: false, code: 'disposed'});
+    expect(listener).not.toHaveBeenCalled();
   });
 });

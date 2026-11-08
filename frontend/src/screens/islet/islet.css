@@ -7,10 +7,10 @@
 
 .islet-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .islet-wallet { margin: 0; font-size: 18px; font-weight: bold; color: #edcf8c; }
-.islet-note { margin: 0; font-size: 14px; line-height: 1.55; color: #d1dabc; }
+.islet-note { margin: 0; font-size: 18px; line-height: 1.55; color: #d1dabc; }
 
 /* The status line stays in the page when empty, so a screen reader announces the first message. */
-.islet-status { margin: 0; padding: 12px 16px; background: #3a5741; border-left: 6px solid #8da474; font-size: 16px; line-height: 1.55; overflow-wrap: anywhere; }
+.islet-status { margin: 0; padding: 12px 16px; background: #3a5741; border-left: 6px solid #8da474; font-size: 18px; line-height: 1.55; overflow-wrap: anywhere; }
 .islet-status:empty { padding: 0; border: 0; }
 .islet-status[data-tone='success'] { border-left-color: var(--kit-gold, #f3d58c); }
 .islet-status[data-tone='error'] { border-left: 6px double #ffd9a0; background: #4a4234; }
@@ -23,18 +23,20 @@
 .islet-spot-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .islet-spot-name { margin: 0; font-size: 19px; line-height: 1.3; color: #f1dfaa; overflow-wrap: anywhere; }
 
-.islet-line { margin: 0; font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
-.islet-plot { font-size: 14px; color: #d1dabc; }
+.islet-line { margin: 0; font-size: 18px; line-height: 1.55; overflow-wrap: anywhere; }
+.islet-plot { font-size: 18px; color: #d1dabc; }
 .islet-cost { font-weight: bold; }
 .islet-missing { color: #ffd9a0; }
 .islet-detail { color: #d1dabc; }
 
 /* The badge says the state in words. Its border and fill differ too, so colour is never the only cue. */
-.islet-badge { padding: 3px 8px; border: 2px solid #8da474; font: 14px/1.4 'Courier New', monospace; white-space: nowrap; background: #3a5741; color: #ece0b8; }
+.islet-badge { padding: 3px 8px; border: 2px solid #8da474; font: 18px/1.4 'Courier New', monospace; white-space: nowrap; background: #3a5741; color: #ece0b8; }
 .islet-badge[data-tone='built'] { background: var(--kit-gold, #f3d58c); border-color: var(--kit-gold, #f3d58c); color: #20392d; font-weight: bold; }
 .islet-badge[data-tone='locked'] { border-style: dashed; background: transparent; color: #d1dabc; }
 
 .islet-spot .kit-button { width: 100%; margin-top: auto; }
+.islet-modal .kit-button { min-width: 44px; min-height: 44px; max-width: 100%; font-size: 16px; white-space: normal; overflow-wrap: anywhere; }
+.islet-top, .islet-status, .islet-note, .islet-panel .server-call { min-width: 0; overflow-wrap: anywhere; }
 
 @media (max-width: 450px) {
   .islet-modal { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding: 12px; }

@@ -21,10 +21,16 @@ try{
     await page.screenshot({path:join(output,`title-${width}.png`)});
   }
   await page.getByRole('button',{name:'Play with friends',exact:true}).click();
+  await page.getByText('Online crews are not connected in this build.',{exact:true}).waitFor();
   check(await page.getByText('Online crews are not connected in this build.',{exact:true}).isVisible(),'Unavailable online play has a short truthful explanation');
   await page.getByRole('button',{name:'Back',exact:true}).click();await page.locator('#new-game').click();
-  await page.locator('.intro-modal[open]').waitFor();await page.keyboard.press('Escape');
+  await page.locator('.intro-modal[open]').waitFor();
+  await page.locator('.intro-modal[open] .intro-view').waitFor();
+  const room=page.locator('.interiors-scene:not([hidden])');await room.waitFor();
+  await page.waitForFunction(()=>document.querySelector('.interiors-scene:not([hidden])')?.dataset.state==='ready');
+  await page.keyboard.press('Escape');
   await page.locator('.intro-modal[open]').waitFor({state:'hidden'});
+  await room.getByRole('button',{name:'Leave room',exact:true}).click();await room.waitFor({state:'hidden'});
   for(const [width,height] of [[1280,720],[375,667],[320,568]]){
     await page.setViewportSize({width,height});
     check(await page.locator('.controls').isHidden()&&await page.locator('.case-toolbar').isHidden(),`No permanent controls/tools at ${width}px`);

@@ -1,0 +1,207 @@
+{
+  "checks": [
+    "Bundled GitHub flow exchanges a PKCE verifier at 1280",
+    "Return code is removed from the address",
+    "The default session persists only in this tab",
+    "Auth needs no production hooks",
+    "This tab restores its session after reload at 1280",
+    "Sign-out reaches the intercepted SDK endpoint",
+    "Sign-out removes only the owned auth persistence",
+    "Auth fits 1280",
+    "Bundled GitHub flow exchanges a PKCE verifier at 375",
+    "Return code is removed from the address",
+    "The default session persists only in this tab",
+    "Auth needs no production hooks",
+    "This tab restores its session after reload at 375",
+    "Sign-out reaches the intercepted SDK endpoint",
+    "Sign-out removes only the owned auth persistence",
+    "Auth fits 375",
+    "Bundled auth has no browser errors",
+    "Auth opens no Realtime socket while presence is off",
+    "Every external auth request stays on the intercepted placeholder origin",
+    "The game never uses the temporary exchange route",
+    "Public config never carries a bearer token"
+  ],
+  "requests": [
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/auth/v1/authorize",
+      "method": "GET"
+    },
+    {
+      "path": "/auth/v1/token",
+      "method": "POST"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
+      "path": "/auth/v1/logout",
+      "method": "POST"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/auth/v1/authorize",
+      "method": "GET"
+    },
+    {
+      "path": "/auth/v1/token",
+      "method": "POST"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
+      "path": "/auth/v1/logout",
+      "method": "POST"
+    }
+  ]
+}

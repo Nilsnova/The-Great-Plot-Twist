@@ -1,0 +1,4 @@
+.connection-banner{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:30;box-sizing:border-box;width:min(36rem,calc(100vw - 24px));max-height:35vh;overflow:auto;padding:12px;border:2px solid #edcf8c;background:#263e31;color:#f5edcf;font:18px/1.5 'Courier New',monospace;overflow-wrap:anywhere}
+.connection-banner p{margin:0}.connection-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}.connection-actions button,.connection-actions a{min-height:44px;font-size:16px}.connection-banner[hidden],.connection-banner [hidden]{display:none!important}
+body:has(dialog[open]) .connection-banner:not(.connection-inline){display:none}.connection-inline{position:static;transform:none;width:auto;max-height:none;margin:12px 0}
+[data-cooldown=true]{cursor:wait}.intent-cooldown{white-space:normal}

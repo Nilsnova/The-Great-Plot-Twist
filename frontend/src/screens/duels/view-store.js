@@ -9,7 +9,7 @@ import { messageFor } from './messages.js';
 const CLOCK_SLACK_MS = 5000; // the server clock and the device clock differ by less than this: ignore it
 
 export function createViewStore(first = {}) {
-  let revision = 0, noticeId = 0, listSignature = '';
+  let revision = 0, noticeId = 0, listSignature = '', disposed = false;
   const listeners = new Set();
   const view = {
     mode: 'loading', revision, rules: DEFAULT_RULES, coins: null, heldCoins: 0,
@@ -27,6 +27,7 @@ export function createViewStore(first = {}) {
 
   // Changes only the named fields, and publishes only if one of them really differs.
   function set(patch) {
+    if(disposed)return false;
     const differs = Object.keys(patch).some(key => JSON.stringify(view[key]) !== JSON.stringify(patch[key]));
     if (!differs) return false;
     Object.assign(view, structuredClone(patch));
@@ -37,6 +38,7 @@ export function createViewStore(first = {}) {
   // Takes an answer of GET /api/duels. Tells the caller whether the lists changed, and which of the
   // challenges this player was waiting on have just been decided.
   function applyList(data, { nowMs, mode }) {
+    if(disposed)return {changed:false,decided:[]};
     const waitingBefore = view.yours.map(duel => duel.id);
     const lists = [data.coins, data.heldCoins, data.incoming, data.openChallenges, data.yours, data.recent];
     const changed = JSON.stringify(lists) !== listSignature;
@@ -53,6 +55,7 @@ export function createViewStore(first = {}) {
 
   // One duel in full (for the reveal). Remembers the player's own sealed signals for the cards.
   function showDetail(detail) {
+    if(disposed||!detail||typeof detail!=='object')return;
     const sealed = detail.yourSignals ? { ...view.sealed, [detail.id]: detail.yourSignals } : view.sealed;
     set({ selected: detail, sealed });
   }
@@ -71,10 +74,16 @@ export function createViewStore(first = {}) {
 
   return {
     read, set, applyList, showDetail, notify, clearNotice,
+    reset(mode='signed_out'){
+      listSignature='';set({mode,rules:DEFAULT_RULES,coins:null,heldCoins:0,incoming:[],openChallenges:[],
+        yours:[],recent:[],selected:null,sealed:{},serverOffsetMs:0,notice:null,canRetry:false});
+    },
     subscribe(listener) {
+      if(disposed)return ()=>{};
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    dispose() { listeners.clear(); },
+    dispose() { listeners.clear();listSignature='';Object.assign(view,{mode:'signed_out',coins:null,heldCoins:0,
+      incoming:[],openChallenges:[],yours:[],recent:[],selected:null,sealed:{},notice:null,canRetry:false,polling:'off'});disposed=true; },
   };
 }

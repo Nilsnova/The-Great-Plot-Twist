@@ -1,0 +1,30 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/real-case-wire.test.js (25 tests | 1 failed) 32ms
+   ❯ outer case intent envelope only (7)
+     × preserves an original repeated refusal and passes its opaque payload/extras through without inspecting them 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > preserves an original repeated refusal and passes its opaque payload/extras through without inspecting them
+Error: Nested case inspection is forbidden in this leaf.
+ ❯ Object.get tests/real-case-wire.test.js:66:48
+     64| describe('outer case intent envelope only', () => {
+     65|   it('preserves an original repeated refusal and passes its opaque pay…
+     66|     const opaque = new Proxy({}, {get() {throw new Error('Nested case …
+       |                                                ^
+     67|     const answer = {accepted: false, reason: 'accusation_refused', mes…
+     68|       case: opaque, seconds: 60, extra: {recorded: true}};
+ ❯ tests/real-case-wire.test.js:70:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 159 passed (160)
+   Start at  09:30:26
+   Duration  4.27s (tests 80%, import 13%, transform 6%, worker 1%)
+
+    Isolate  7 workers spawned · ~172ms startup each (spawn + environment, per file)
+             at least ~1.03s faster with isolate: false — reuses workers across files instead of one per file

@@ -1,0 +1,62 @@
+{
+  "stage": "stream 4; checkpoint 1 incomplete",
+  "sourceBase": "708b7eb",
+  "dirty": true,
+  "unitTests": 2175,
+  "unitFiles": 157,
+  "note": "Full working-tree count includes prepared, uncommitted stream-5 call-state tests and kit enhancements. The completed checkpoint gate will verify the combined clean commit.",
+  "initialJavaScript": 20874,
+  "initialCss": 11771,
+  "commands": [
+    {
+      "command": "npm test",
+      "code": 0,
+      "log": "stream4-unit.log"
+    },
+    {
+      "command": "npm run build",
+      "code": 0,
+      "log": "stream4-build.log"
+    },
+    {
+      "command": "CAPTURE_DIR=/tmp/g9-stream4-loading CAPTURE_PREFIX=stream4 node scripts/check-loading.js",
+      "code": 0,
+      "log": "stream4-loading.log"
+    },
+    {
+      "command": "node scripts/check-online-golden.js",
+      "code": 0,
+      "log": "stream4-online.log"
+    },
+    {
+      "command": "node scripts/check-csp.js",
+      "code": 0,
+      "log": "stream4-csp.log"
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "code": 0,
+      "log": "stream4-a11y.log"
+    }
+  ],
+  "browser": {
+    "accountChecks": 42,
+    "authChecks": 21,
+    "widths": [
+      1280,
+      375
+    ],
+    "a11yContexts": 29,
+    "a11yViewportSamples": 87,
+    "a11yFailures": 0,
+    "a11yErrors": 0,
+    "screenshotsReviewed": [
+      "account-delete-375.png"
+    ]
+  },
+  "notVerified": [
+    "Actual OAuth, accounts, databases or Realtime",
+    "Deployed callback and preview",
+    "Physical devices, Safari, Firefox and VoiceOver"
+  ]
+}

@@ -1,0 +1,861 @@
+{
+  "checks": [
+    "Sign-in initializes the captain name at 1280",
+    "The server grants one captain-name change",
+    "Arrival displays the first server-confirmed kit and coin grant at 1280",
+    "Arrival displays the supplied item and start-place text",
+    "An unknown save is read back before any further write",
+    "The accepted intro journal remains available on this device",
+    "Replaying the intro keeps the first kit and pays no second grant",
+    "The server refuses a second reroll from a stale screen",
+    "The refused reroll control is removed",
+    "Keep this device rereads and writes the current cloud version",
+    "Use the cloud save makes no replacement write",
+    "Continue resumes the confirmed world instead of restarting Act 1",
+    "Own-row rewards show only the amount and plain reason",
+    "The first deletion tap sends no request",
+    "The confirmation explains that coin ledger history is deleted",
+    "The confirmed deletion sends one authoritative request",
+    "Deletion clears the local journal and owned auth persistence",
+    "Account controls fit 1280 px",
+    "All account request bodies follow their contract and public config has no bearer",
+    "Sign-in initializes the captain name at 375",
+    "The server grants one captain-name change",
+    "Arrival displays the first server-confirmed kit and coin grant at 375",
+    "Arrival displays the supplied item and start-place text",
+    "An unknown save is read back before any further write",
+    "The accepted intro journal remains available on this device",
+    "Replaying the intro keeps the first kit and pays no second grant",
+    "The server refuses a second reroll from a stale screen",
+    "The refused reroll control is removed",
+    "Keep this device rereads and writes the current cloud version",
+    "Use the cloud save makes no replacement write",
+    "Continue resumes the confirmed world instead of restarting Act 1",
+    "Own-row rewards show only the amount and plain reason",
+    "The first deletion tap sends no request",
+    "The confirmation explains that coin ledger history is deleted",
+    "The confirmed deletion sends one authoritative request",
+    "Deletion clears the local journal and owned auth persistence",
+    "Account controls fit 375 px",
+    "All account request bodies follow their contract and public config has no bearer",
+    "An anonymous ending keeps its accepted replay and grants no kit",
+    "Returning from arrival sign-in claims the accepted journal once when Continue resumes it",
+    "The sign-in return preserves all accepted anonymous moves",
+    "Recorded account path has no errors beyond its exact intercepted HTTP refusals",
+    "Account checks open no Realtime sockets",
+    "Every external account request uses the intercepted placeholder origin",
+    "Account UI never uses the temporary exchange endpoint"
+  ],
+  "requests": [
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name/reroll",
+      "method": "POST",
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "unknown_committed"
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true,
+      "outcome": "unknown_write_readback"
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name/reroll",
+      "method": "POST",
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "saved"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "DELETE",
+      "bodyKeys": [
+        "confirm"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name/reroll",
+      "method": "POST",
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "unknown_committed"
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true,
+      "outcome": "unknown_write_readback"
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name/reroll",
+      "method": "POST",
+      "bodyKeys": [
+        "actionUid"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "saved"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "DELETE",
+      "bodyKeys": [
+        "confirm"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/me/name",
+      "method": "POST",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": false
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/intro/complete",
+      "method": "POST",
+      "bodyKeys": [
+        "actions"
+      ],
+      "authorized": true
+    },
+    {
+      "path": "/api/me",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "PUT",
+      "bodyKeys": [
+        "data",
+        "version"
+      ],
+      "authorized": true,
+      "outcome": "saved"
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET",
+      "bodyKeys": [],
+      "authorized": true
+    }
+  ],
+  "scenarios": [
+    {
+      "width": 1280,
+      "stats": {
+        "nameInitializations": 4,
+        "rerollsGranted": 1,
+        "rerollsRefused": 1,
+        "introRequests": 2,
+        "kitGrants": 1,
+        "kitRepeats": 1,
+        "coinsGranted": 1000,
+        "saveReads": 8,
+        "saveWrites": 2,
+        "saveConflicts": 0,
+        "unknownSaveOutcomes": 1,
+        "unknownSaveReadbacks": 1,
+        "blindSaveRetries": 0,
+        "ledgerReads": 6,
+        "deletes": 1,
+        "publicBearerLeaks": 0,
+        "invalidBodies": 0
+      }
+    },
+    {
+      "width": 375,
+      "stats": {
+        "nameInitializations": 4,
+        "rerollsGranted": 1,
+        "rerollsRefused": 1,
+        "introRequests": 2,
+        "kitGrants": 1,
+        "kitRepeats": 1,
+        "coinsGranted": 1000,
+        "saveReads": 8,
+        "saveWrites": 2,
+        "saveConflicts": 0,
+        "unknownSaveOutcomes": 1,
+        "unknownSaveReadbacks": 1,
+        "blindSaveRetries": 0,
+        "ledgerReads": 6,
+        "deletes": 1,
+        "publicBearerLeaks": 0,
+        "invalidBodies": 0
+      }
+    }
+  ],
+  "reducedMotion": true,
+  "anonymousClaim": {
+    "width": 375,
+    "stats": {
+      "nameInitializations": 1,
+      "rerollsGranted": 0,
+      "rerollsRefused": 0,
+      "introRequests": 1,
+      "kitGrants": 1,
+      "kitRepeats": 0,
+      "coinsGranted": 1000,
+      "saveReads": 2,
+      "saveWrites": 1,
+      "saveConflicts": 0,
+      "unknownSaveOutcomes": 0,
+      "unknownSaveReadbacks": 0,
+      "blindSaveRetries": 0,
+      "ledgerReads": 2,
+      "deletes": 0,
+      "publicBearerLeaks": 0,
+      "invalidBodies": 0
+    }
+  },
+  "browser": {
+    "pageErrorTypes": [],
+    "consoleErrors": [
+      {
+        "path": "/api/save",
+        "status": 503,
+        "resource": true
+      },
+      {
+        "path": "/api/me/name/reroll",
+        "status": 409,
+        "resource": true
+      },
+      {
+        "path": "/api/save",
+        "status": 503,
+        "resource": true
+      },
+      {
+        "path": "/api/me/name/reroll",
+        "status": 409,
+        "resource": true
+      }
+    ],
+    "controlledResponses": [
+      {
+        "path": "/api/save",
+        "status": 503
+      },
+      {
+        "path": "/api/me/name/reroll",
+        "status": 409
+      },
+      {
+        "path": "/api/save",
+        "status": 503
+      },
+      {
+        "path": "/api/me/name/reroll",
+        "status": 409
+      }
+    ]
+  }
+}

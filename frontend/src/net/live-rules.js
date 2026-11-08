@@ -21,7 +21,7 @@ export const PROTOCOL_VERSION = 1; // the "v" in every payload, so a newer shape
 export const WORLD_TOPIC = 'live:world';
 export const FACINGS = ['up', 'down', 'left', 'right'];
 // Preset emotes only, never free text. The names are a proposal; decision D006 (A2) may rename them.
-export const EMOTES = ['wave', 'cheer', 'nod', 'shrug', 'follow_me', 'help'];
+export const EMOTES = ['wave', 'cheer', 'point', 'lantern', 'shrug'];
 // What the server may tell a crew (backend/server/crew_broadcast.py has the same list).
 export const CREW_EVENT_KINDS = ['board_changed', 'finale_changed', 'case_changed', 'partner_changed', 'crew_changed'];
 // Every player has their own home islet, so nobody shares a room there.

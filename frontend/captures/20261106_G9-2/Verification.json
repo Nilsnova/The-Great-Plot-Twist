@@ -1,0 +1,32 @@
+[
+  {
+    "command": "node scripts/check-problem-report.js",
+    "code": 0,
+    "ms": 9535
+  },
+  {
+    "command": "node scripts/check-loading.js",
+    "code": 0,
+    "ms": 4198
+  },
+  {
+    "command": "node scripts/check-experience.js",
+    "code": 0,
+    "ms": 17262
+  },
+  {
+    "command": "node scripts/check-lifecycle.js",
+    "code": 0,
+    "ms": 6031
+  },
+  {
+    "command": "node scripts/check-a11y.js",
+    "code": 0,
+    "ms": 13221
+  },
+  {
+    "command": "node scripts/check-csp.js",
+    "code": 0,
+    "ms": 5612
+  }
+]

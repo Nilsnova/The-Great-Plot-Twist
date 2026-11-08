@@ -1,0 +1,225 @@
+{
+  "package": 3,
+  "scope": "Bulletin reader, public weather/hook projection and shared hooks; stop after local commit",
+  "sourceBase": "f7df758",
+  "verifiedAt": "2026-11-07T20:56:13.352575+00:00",
+  "started": "2026-11-07T20:31:44.213504+00:00",
+  "activeMinutesThroughVerification": 24.49,
+  "status": "focused package gates passed; final full44 not run",
+  "unit": {
+    "files": 230,
+    "uniqueTests": 3468,
+    "initial": {
+      "passed": 3464,
+      "failed": 4
+    },
+    "correctedFollowup": {
+      "files": 3,
+      "tests": 61
+    },
+    "finalFactoryAssertions": {
+      "files": 1,
+      "tests": 15
+    },
+    "scope": "All initial failures were new test setup/observation errors: missing each callback argument, hidden Retry role lookup, and incomplete off/idle observation. Runtime source unchanged between full unit run and corrected file runs."
+  },
+  "sourceFingerprints": {
+    "src/online/case-adapter/bulletin.js": "1561af0a7a9e2ef9374a9def70556b175e694ee8795c55a3eaa1862efb9ed186",
+    "src/online/case-adapter/bulletin-view.js": "16604523bc504132a6948ba859b24e18994633cece243ad7d039c8ac9b438555",
+    "tests/real-bulletin.test.js": "87a56db8852d3043b56218ca5bac5909d30facdfa563864ff48497c50c0fb4e1",
+    "tests/real-bulletin-view.test.js": "fe272abf94ba7e227fa98c12ed50c7502ebde998fa606a7596510ace4bbfad3e",
+    "tests/fixtures/server/bulletin.js": "9b2d611008f2271bf959012bb78d9eb7a75440e4fa3c5bfeaed93654f722e563",
+    "src/online/case-adapter/lazy-bulletin.js": "70b776693002827b2322b62cd9cbae923a04fdc757e72b28ffc97cf412fa9cfd",
+    "tests/real-lazy-bulletin.test.js": "72e8b68d586e4f3ae2db3fd74e98c2fda0edb078cf76abaff6b1f8f919346496",
+    "src/online/case-adapter/read-monitor.js": "d7a984b9949fa8d914ad40ce476e49713aa9278f3bf1499c77cf505b0195ba5a",
+    "tests/real-read-monitor.test.js": "461f7d3bb9c3b483cb68bd8b4cf74cf7b6c46749f5e57e6228f9a558735c6e95",
+    "src/online/case-adapter/view.js": "9d70c693611073b643c09c4e61bd59d0ee8fd44a3bc3d3ba5504104945a106ee",
+    "tests/real-bulletin-projection.test.js": "0a02ccbd90a099167f0674f3e5b46ba048910c76f49778897c20c3379203a352",
+    "src/online/case-adapter/index.js": "f27f9f2223d7e2e78e82d566472bfc73abc884cfeec14c9acff717dda1aa2307",
+    "src/online/panel-services.js": "09e04725c89f934dc1cb95c31c4f2541cd206712fbcfe9079ba9d4232eba6391",
+    "tests/real-bulletin-factory.test.js": "6738a96c1d486179d23415eabae075e4fa9085a391bf0697883b9ddca3325e06",
+    "src/screens/controller.js": "30266c90a5edcaa11b48ae877e945aafa71a111c71d4a9b288bcd247892fd4ba",
+    "src/game.js": "7838251e18901b332d1df5c308c98672cbfe3d8ff993cd7e21fc05c2530dfe46",
+    "src/ui/hud.js": "dd640c34b4fff909d2a0519d32a435a775eb15998c403e159475dc5daba576bd",
+    "src/ui/quiet-hud.css": "f122548b545eb7ce4960e45f42fcb70239210c4ed3d4c6ff15d89ac3593231d1",
+    "src/adapter/conformance/bulletin.js": "580af5562f4428b613a0ce8d89876e7a59251af011ac5bbf189065b75af9102d",
+    "tests/bulletin-conformance.test.js": "ed9c2ae63633c595fe6761b04e515410126b6e981a3ec7a9ea6d145591309bfa",
+    "src/screens/bulletin/index.js": "53db8cea16ccf841f8315bd2ae0f2ae6f8f4fb78f8961e82b30af0a0e9445072",
+    "src/screens/bulletin/bulletin.css": "bf89cf9f059fc9eae74b986f1d9f6a30b8c1c5ea13731c3f60b4560ebfc485bf",
+    "tests/bulletin-screen.test.js": "b18a86207aa3717edbd384d96b5065c8168be662fd39946f640af7ec763c5d1b",
+    "tests/g9-arrival-presentation.test.js": "6877f5c95a95b852fa8108688dff3916230912a569337b11101656b808299c24",
+    "tests/redesign-hud-start.test.js": "4486825fc024e9b49b35fef0b856e05075ee7c4acbd234bf1655939a25b64915",
+    "tests/g9-bulletin-controller.test.js": "aaff61196f0381fd28afa6c61eb9821a827d4c41ea7884f11193d08eebbfee01",
+    "tests/g9-bulletin-hud.test.js": "879c0f53983daba061d938521dd48ff37f48258037fba8d7a7c8baea86339382",
+    "scripts/online-bulletin-fixture.js": "bd022f92b0cd248f626a9e4ef7d09723f2271420407180e36629ba5a6a981724",
+    "scripts/check-online-bulletin.js": "6cf67f185c531b0a4bada8c773ffda3c67747b62ecdd309b7fb46c76e2754e67",
+    "scripts/online-bulletin-read-faults.js": "f61bb07e2845e2eb6a51316daeb384937994a1f9a85d40ef32f5b1ae4019dd0d",
+    "tests/bulletin-call-presentation.test.js": "2bdeb97c2ed9690c9998ed28d9e195da3f6a11ebb8b9b24c3447c7f655aa2e41",
+    "scripts/online-bulletin-chaos.js": "f9be1a97f87680e0e23e5af8b6afb1ab1d619b25be2e9aeab79739ec05e68359",
+    "tests/online-reasons.test.js": "0494f42ebc26148f05637e99a0107ce20f5662f1b7aac84494049c3855413354",
+    "src/adapter/contract.js": "7d8f54fac526c0a5ffbc86c773a87941b4aaf7d898936f106f30d74d9401cbc9",
+    "scripts/check-online-golden.js": "b060a3b6f3c42fa5b5864fcbfcc7ff85c82f6eb119a6f211793b4d7d1a39a4d6",
+    "scripts/check-online-chaos.js": "13493273d689c59e4d12afe99a606e6d7170f320046cb5d010b8077ed179a16b",
+    "package.json": "44e23a13f0215fa30a9e3ff595178bb2d6dba360353b3be65ac35c004358ae09",
+    "scripts/check-bulletin-hall.js": "db7e4d3ee2bae14f272ae81b7983f8b3d7e173308b9613477344356c1195a888",
+    "tests/bulletin-request-conformance.test.js": "53ad74ff3f7d8e1564863e4e05c14d3062f382d507d70f675ec856500245ee1e",
+    "src/online/case-adapter/reasons.js": "37336dc9d32b498ca029c8f0f4e94ac1bc67f42d5e4a8f9c7e16b74e9c17c370",
+    "src/online/case-adapter/transport.js": "182b95213dc3840130dbddde593688781e62608061f6ae830e574a76eb737739",
+    "src/adapter/bridge.js": "a21c80fc996b03f3681bbdf06cfc402507f980c8299e3526d83189f6a3a99a59"
+  },
+  "preservedP1P2Files": {
+    "src/adapter/bridge.js": "a21c80fc996b03f3681bbdf06cfc402507f980c8299e3526d83189f6a3a99a59",
+    "src/main.js": "f9bd2e6cd09be46b5faca9a88f9eec4505ba89feb4abbb33d98650667e827c45",
+    "src/shell/world-loader.js": "235905b73980bbfc1e90b8573fda7fbe49f4343a521e06d654c27531bbb13770",
+    "scripts/online-auth-fixture.js": "d47b7e7e477b9f782fd388d2c9804ee591811159b028b12345bed3681cd76af6",
+    "scripts/online-panel-fixture.js": "17b790edb1837f71cbbb56349a784b1766edece92dc5a1d41e208d7a34625709",
+    "scripts/online-panel-actions.js": "6852503849144905779bcd9f03a1dc9505eae162e7930ea285013e7704c04c3b",
+    "scripts/check-online-predictions.js": "71885ea9e70cde260e30d3ca0949a67f431ba07857fb57ea9865a83cb8f0e90b",
+    "scripts/check-online-arena.js": "1b96e4711162903ba256d069206589bf0dfbce6ce441561246455cc6054701f3",
+    "src/screens/duels/panel.js": "cb4fd2d423d1d6a348747bee6d8d8f95e214f1f6252286c13c1625aae765d85e",
+    "src/screens/duels/panel-status.js": "d6d84ebd454aefe25dd88d5e07b2309ca79436a0ab8f55cd5b003815e794a825"
+  },
+  "commands": [
+    {
+      "name": "build",
+      "command": "npm run build",
+      "code": 0,
+      "seconds": 3.502,
+      "log": "g9-package3-build.log"
+    },
+    {
+      "name": "loading",
+      "command": "node scripts/check-loading.js",
+      "code": 0,
+      "seconds": 18.036,
+      "log": "g9-package3-loading.log"
+    },
+    {
+      "name": "csp-probe",
+      "command": "node node_modules/.cache/g9-package3-csp-probe.mjs",
+      "code": 0,
+      "seconds": 9.998,
+      "log": "g9-package3-csp-probe.log"
+    },
+    {
+      "name": "weather",
+      "command": "npm run test:weather:wiring",
+      "code": 0,
+      "seconds": 22.811,
+      "log": "g9-package3-weather.log"
+    },
+    {
+      "name": "bulletin-local",
+      "command": "npm run test:bulletin:local",
+      "code": 0,
+      "seconds": 14.775,
+      "log": "g9-package3-bulletin-local.log"
+    },
+    {
+      "name": "chaos-local",
+      "command": "node scripts/check-chaos.js",
+      "code": 0,
+      "seconds": 415.211,
+      "log": "g9-package3-chaos-local.log"
+    },
+    {
+      "name": "bulletin",
+      "command": "npm run test:bulletin",
+      "code": 0,
+      "seconds": 107.863,
+      "log": "g9-package3-bulletin.log"
+    }
+  ],
+  "evidence": {
+    "unit-initial.log": {
+      "rawSha256": "967692e5bd5cf4d099fb6d247978f4bbbcc3713a7b320cf5c70699bd8b77e4cc",
+      "savedSha256": "af45d8ac7165ce49ba8d833f702e64079d8e020976bd123da7d66e932089d474"
+    },
+    "unit-followup.log": {
+      "rawSha256": "b86ed0b5871166cd91f57a503a502527ad771f8b606f43fe1e89f8b354efadaa",
+      "savedSha256": "2013d073da8704ea784742a50e69048da9af2daba74d32a5ec78c3e51a25ec8b"
+    },
+    "factory-final.log": {
+      "rawSha256": "7d3743e7ed40126de9ab9a708edd6678409a8c4a8a3d933d13e7f7972ff8bb32",
+      "savedSha256": "d0efa60f8c7f9a4bb70ac3671bea6e82aa02e11d80a769851cd86233409d7963"
+    },
+    "build.log": {
+      "rawSha256": "adc2a533bfdc23c875f5fd923357b925617a4cdd784ec01207c09fe4352e9c68",
+      "savedSha256": "adc2a533bfdc23c875f5fd923357b925617a4cdd784ec01207c09fe4352e9c68"
+    },
+    "loading.log": {
+      "rawSha256": "ce5cf5070bfe6bc064a857aa139660736fa29da78dbb24a4bef826571e1c784c",
+      "savedSha256": "ce5cf5070bfe6bc064a857aa139660736fa29da78dbb24a4bef826571e1c784c"
+    },
+    "bulletin.log": {
+      "rawSha256": "b5b00e339418d0eeb12b72e79e10d74724937feb3944516b3b4996e890543864",
+      "savedSha256": "b5b00e339418d0eeb12b72e79e10d74724937feb3944516b3b4996e890543864"
+    },
+    "csp-probe.log": {
+      "rawSha256": "4df6536d05c339812144314d4035b9f6f655785a0be6de767a3b6e1ab8f5bb89",
+      "savedSha256": "4df6536d05c339812144314d4035b9f6f655785a0be6de767a3b6e1ab8f5bb89"
+    },
+    "weather.log": {
+      "rawSha256": "5bfeb5b04b5a7bf5d1aad5c65fd48bd843f4fcdd110d73f1f7c0c0614b849511",
+      "savedSha256": "5bfeb5b04b5a7bf5d1aad5c65fd48bd843f4fcdd110d73f1f7c0c0614b849511"
+    },
+    "bulletin-local.log": {
+      "rawSha256": "034cbc0347f78df9a521d712a6c50e371e77e387614c054902610122202c488c",
+      "savedSha256": "034cbc0347f78df9a521d712a6c50e371e77e387614c054902610122202c488c"
+    },
+    "chaos-local.log": {
+      "rawSha256": "6af4acc1ce9e1780e3818d68ac436522754ade1495cffdf0f8a950d367f5cefa",
+      "savedSha256": "6af4acc1ce9e1780e3818d68ac436522754ade1495cffdf0f8a950d367f5cefa"
+    },
+    "gates.json": {
+      "rawSha256": "fcdac9fa35f2dfdac8b5fd3ffd834d913dce0ef91d1a8150503d451adf1637af",
+      "savedSha256": "834431461c8ed54d1188e0778c4a3928b9bff66bc242f55e2914c5ff42bb3eaa"
+    },
+    "csp-probe.json": {
+      "rawSha256": "e57d6cb1a387b35c0f57ed059f08570d4e47ee00f352ab95d8911f58c3d81649",
+      "savedSha256": "d9ea935de82d10fba2d90d2ff726782c9efc26bb1ec0a5c25f2e1183a24008ca"
+    },
+    "loading.json": {
+      "rawSha256": "33a25bc35ce06d8ee35037c8d2a71edd70729b3baba68ad6368d00f57899d42e",
+      "savedSha256": "7515e2de61b6f907856d802e213d8cdcdc9a772e5b3ce71ffff0ffdeb8cabacd"
+    },
+    "bulletin.json": {
+      "rawSha256": "c2fbda265690685d08233c3363737c7030d7b40d351e5af772915703a872ba4b",
+      "savedSha256": "5d1ada86202ba9a65baf55b3350ee650e41d235dcd324ef3e1485cca6dc583b0"
+    },
+    "weather.json": {
+      "rawSha256": "03a40779becd971aee7cdc3e4e9887b1330e57d2af19511007b08f4e5cc89584",
+      "savedSha256": "afb3a0120f951c7a340510973377ce65c2dd614894bec34e7fffd77b66e4fd26"
+    },
+    "bulletin-local.json": {
+      "rawSha256": "827b988ed283bdcf1ead4f3bf55b0459cd0a936cb4c230142c28fc46e88189f0",
+      "savedSha256": "081f8a1a74ee50d20ca575d373566b2eefa9534a9f7ab22a5f4a17adcb546fba"
+    },
+    "chaos-local.json": {
+      "rawSha256": "6af4acc1ce9e1780e3818d68ac436522754ade1495cffdf0f8a950d367f5cefa",
+      "savedSha256": "4ec05d19ef6d2f8b228c9f920a46880822180835034e7672412dd10799bc0509"
+    },
+    "attempt1-g9-package3-bulletin.log": {
+      "rawSha256": "0f3d42c0d2fe45a8ce9a55c96ec5d70bd1d53d3bd422da86bf622ddb31470af4",
+      "savedSha256": "fb4dfaf8e45e322666d995c8838566e3d15abfb575bf5d7a450d38d06ed3a0a9"
+    },
+    "attempt1-online-bulletin.json": {
+      "rawSha256": "85acd7a01a4364768bc99eb042fb9c994a4ecfbbb1c1fdc21bc8397d549c2f97",
+      "savedSha256": "1a6b3291ea1212d1af239e620109fcd0aa3ca45bf5898a7d7f6c9cff8d6a197d"
+    },
+    "attempt1-g9-package3-gates.json": {
+      "rawSha256": "66102568a741af08315018c2f788da11816734c31b50043560e22f9205fe5622",
+      "savedSha256": "19c413149ff3a8aa031879f782d8b3a6a4cf06761aa6b72fc8b2e8ca9b9b342c"
+    }
+  },
+  "normalization": "ANSI and trailing blank lines stripped; machine paths replaced with fixed labels. JSON removes only whitespace outside strings, preserving numeric lexemes. Raw SHA retained.",
+  "review": "Independent controller rebase, API/privacy, CSP fixture and test followup reviews clear; wallet-visibility harness correction independently reviewed.",
+  "limits": [
+    "No real accounts/services/databases, new packages, external art/fonts or budget increase",
+    "Final full44 reserved for integrated release source",
+    "R11 case DTO/integration and R16 hardware/FPS remain",
+    "No new full modality/device certification",
+    "No intermediate push/main merge/deployment",
+    "Next package requires Nils continuation"
+  ]
+}

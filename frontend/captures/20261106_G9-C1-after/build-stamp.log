@@ -1,0 +1,19 @@
+{
+  "stamp": {
+    "sha": "443400c-dirty",
+    "builtAt": "2026-11-07T07:00:54.970Z",
+    "environment": null
+  },
+  "checks": [
+    "Built JavaScript contains the injected stamp",
+    "Built title HTML contains the release identity",
+    "Title renders the stamp inside its header at 16 px",
+    "Settings displays the injected commit and build time",
+    "Credits uses the same build identity",
+    "Normal gameplay has a small version badge",
+    "Phone badge remains readable and above the weather controls",
+    "Presenter mode contains no corner build label",
+    "Performance copy contains the same identity and build time",
+    "Build stamp has no browser error or external dependency"
+  ]
+}

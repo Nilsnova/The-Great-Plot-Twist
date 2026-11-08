@@ -1,0 +1,30 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/market/call-ui.test.js (23 tests | 1 failed) 458ms
+   ❯ Market common call presentation (23)
+     × keeps the successful positions-check message visible while its uncertain trade still requires an explicit resend 47ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/market/call-ui.test.js > Market common call presentation > keeps the successful positions-check message visible while its uncertain trade still requires an explicit resend
+AssertionError: expected 'We could not confirm this. Check your…' to be 'Updated your positions. If your trade…' // Object.is equality
+
+Expected: "Updated your positions. If your trade is not listed, send it again, or forget it."
+Received: "We could not confirm this. Check your positions before you try again."
+
+ ❯ tests/market/call-ui.test.js:100:35
+     98|     const result=await f.calls.run(()=>f.trades.checkAgain(),{read:tru…
+     99|     expect(result.kind).toBe('checked');expect(f.trades.pending).toBe(…
+    100|     expect(f.message.textContent).toBe('Updated your positions. If you…
+       |                                   ^
+    101|     f.close();f.reopen();expect(f.message.textContent).toBe(result.mes…
+    102|     expect(f.adapter.open).toHaveBeenCalledOnce();expect(f.trades.pend…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 passed (23)
+   Start at  10:53:11
+   Duration  1.62s (tests 50%, transform 25%, import 24%, worker 2%)

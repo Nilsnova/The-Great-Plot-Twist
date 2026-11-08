@@ -165,3 +165,54 @@ describe('listeners', () => {
     expect(heard).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('private identity boundaries', () => {
+  const deferred = () => {
+    let resolve;
+    const promise = new Promise(done => { resolve = done; });
+    return {promise, resolve};
+  };
+  it('clears private positions immediately and isolates late reads from the next identity', async () => {
+    const old = deferred(), fresh = deferred(), onNotice = vi.fn();
+    const adapter = {portfolio: vi.fn().mockResolvedValueOnce(ok(portfolio([position('old-position')]))), board: vi.fn()};
+    const session = createMarketSession({adapter, onNotice});
+    await session.refreshPortfolio();
+    adapter.portfolio.mockImplementationOnce(() => old.promise).mockImplementationOnce(() => fresh.promise);
+    const oldRead = session.refreshPortfolio();
+    session.resetPrivate(false);
+    expect(session.portfolio).toBeNull();
+    expect(session.portfolioNote).toBeNull();
+    expect(session.signedIn).toBe(false);
+    session.resetPrivate(true);
+    const freshRead = session.refreshPortfolio();
+    expect(adapter.portfolio).toHaveBeenCalledTimes(3);
+    old.resolve(ok(portfolio([], [position('old-position', {closedAs: 'zeroed'})])));
+    expect(await oldRead).toMatchObject({ok: false, code: 'unauthorized'});
+    expect(session.portfolio).toBeNull();
+    expect(onNotice).not.toHaveBeenCalled();
+    expect(session.refreshPortfolio()).toBe(freshRead);
+    fresh.resolve(ok({...portfolio([position('fresh-position')]), coins: 27}));
+    await freshRead;
+    expect(session.portfolio.positions.map(item => item.id)).toEqual(['fresh-position']);
+    expect(session.portfolio.coins).toBe(27);
+    expect(onNotice).not.toHaveBeenCalled();
+  });
+
+  it('keeps the public price board across an identity reset but ignores private replies after disposal', async () => {
+    const pending = deferred(), heard = vi.fn();
+    const adapter = createFakeMarketAdapter();
+    const session = createMarketSession({adapter});
+    await session.refreshBoard();
+    const board = session.board;
+    session.resetPrivate(false);
+    expect(session.board).toBe(board);
+    adapter.portfolio = () => pending.promise;
+    const reading = session.refreshPortfolio();
+    session.dispose();
+    session.subscribe(heard);
+    pending.resolve(ok(portfolio([position('old-position')])));
+    await reading;
+    expect(session.portfolio).toBeNull();
+    expect(heard).not.toHaveBeenCalled();
+  });
+});

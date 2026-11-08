@@ -41,12 +41,9 @@ describe('bulletin fake view',()=>{
     setBulletinScenario(s,'real',base);expect(bulletinView(s).weather.tonight.isNow).toBe(true);
     setBulletinScenario(s,'storm',base);expect(bulletinView(s).weather.tonight.isNow).toBe(true);
   });
-  it('keeps copied normal bulletin text in parity with the canonical server content when available',()=>{
-    const local=resolve(process.cwd(),'../backend/content/bulletin.json');
-    const openWorld='/Users/nilslenke/Developer/The-Great-Plot-Twist-ow/backend/content/bulletin.json';
-    const path=existsSync(local)?local:existsSync(openWorld)?openWorld:null;
-    if(!path){expect(true).toBe(true);return;}
-    const source=JSON.parse(readFileSync(path,'utf8'));
+  const canonicalPath=resolve(process.cwd(),'../backend/content/bulletin.json');
+  it.skipIf(!existsSync(canonicalPath))('keeps copied normal bulletin text in parity with canonical checkout content',()=>{
+    const source=JSON.parse(readFileSync(canonicalPath,'utf8'));
     expect(canonicalBulletinCopy).toEqual({stateWords:source.stateWords,noForecast:source.noForecast,weatherLine:source.weatherLine,
       fogNightLines:source.fogNightLines,exchange:source.exchange,relitLine:source.relitLine,relitLineHours:source.relitLineHours,calendar:source.calendar,resets:source.resets});
   });

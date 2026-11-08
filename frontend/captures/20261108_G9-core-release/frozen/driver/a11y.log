@@ -1,0 +1,103 @@
+Audited arrival
+Audited crew
+Audited board
+Audited search
+Audited partners
+Audited finale
+Audited accusation
+Audited reveal
+Audited relighting
+Audited rewards
+Audited log
+Audited hints
+Audited bulletin
+Audited title
+Audited title-account-expanded
+Audited settings
+Audited credits
+Audited intro
+Audited intro-journal
+Audited interior-cottage
+Audited main-crew
+Audited world
+Audited world-controls
+Audited world-journal
+Audited account
+Audited account-signing_in
+Audited account-signed_in
+Audited account-expired
+Audited account-error
+Audited account-conflict
+Audited account-delete
+Audited request-loading
+Audited request-slow
+Audited request-empty
+Audited request-error
+Audited request-offline
+Audited request-expired
+Audited request-sign_in_required
+Audited request-rate_limited
+Audited request-online
+Audited presence
+Audited islet-world
+Audited gulls-rest
+Audited islet-panel
+Audited islet-built
+Audited market-prices
+Audited market-open-form
+Audited market-open-confirmation
+Audited market-positions
+Audited market-close-confirmation
+Audited predictions-questions
+Audited predictions-confirm
+Audited predictions-staked
+Audited predictions-stakes
+Audited arena-challenges
+Audited arena-answer-form
+Audited arena-new-challenge
+Audited arena-reveal
+Audited arena-history
+Audited arena-rules
+Audited arena-replay
+{
+  "screens": 61,
+  "failures": [
+    {
+      "screen": "arena-answer-form",
+      "width": 1280,
+      "check": "contrast",
+      "count": 3
+    },
+    {
+      "screen": "arena-answer-form",
+      "width": 375,
+      "check": "contrast",
+      "count": 3
+    },
+    {
+      "screen": "arena-answer-form",
+      "width": 320,
+      "check": "contrast",
+      "count": 3
+    },
+    {
+      "screen": "arena-new-challenge",
+      "width": 1280,
+      "check": "contrast",
+      "count": 6
+    },
+    {
+      "screen": "arena-new-challenge",
+      "width": 375,
+      "check": "contrast",
+      "count": 6
+    },
+    {
+      "screen": "arena-new-challenge",
+      "width": 320,
+      "check": "contrast",
+      "count": 6
+    }
+  ],
+  "errors": []
+}

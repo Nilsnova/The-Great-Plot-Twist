@@ -1,0 +1,44 @@
+{
+  "checks": [
+    "Title sign-in uses the local adapter while APIs are down",
+    "Name can be changed once",
+    "The unchanged bundled intro opens without the intro API",
+    "Thirty nearby captains draw at most eight and keep an overflow count",
+    "Eight live captains and effects meet the draw-call budget"
+  ],
+  "performance": {
+    "fps": 11,
+    "calls": 110,
+    "triangles": 218,
+    "geometries": 104,
+    "textures": 59,
+    "roots": 1,
+    "objects": 10,
+    "programs": 3
+  },
+  "stormWarmup": {
+    "fps": 13,
+    "calls": 108,
+    "triangles": 211,
+    "geometries": 107,
+    "textures": 60,
+    "roots": 1,
+    "objects": 10,
+    "programs": 4
+  },
+  "graphicsDevice": {
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "vendor": "Google Inc. (Google)"
+  },
+  "storm": {
+    "fps": 12,
+    "calls": 112,
+    "triangles": 219,
+    "geometries": 106,
+    "textures": 64,
+    "roots": 1,
+    "objects": 10,
+    "programs": 4
+  },
+  "failure": "Eight captains with night storm effects keep the frame and draw-call budget"
+}

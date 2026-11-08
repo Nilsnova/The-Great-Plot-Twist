@@ -1,0 +1,93 @@
+{
+  "runtimeSource": "b46178ede29fc036a013d3ed6c247aeb6a3686e8",
+  "verifiedAt": "2026-11-08T17:38:16.363903+00:00",
+  "frozenBaseline": {
+    "source": "646e3a099a97c9ca89fab6cd6c31e90ed8fb88e4",
+    "passed": 38,
+    "total": 44,
+    "failed": [
+      "tests",
+      "living",
+      "cinematics",
+      "chaos",
+      "a11y",
+      "online"
+    ],
+    "evidence": "frozen/",
+    "note": "Original failures retained. No new full44 aggregate pass claimed."
+  },
+  "followup": {
+    "unit": {
+      "tests": 3599,
+      "files": 239,
+      "passed": true
+    },
+    "a11y": {
+      "screens": 61,
+      "failures": 0,
+      "errors": 0,
+      "passed": true
+    },
+    "localChaos": {
+      "checks": 212,
+      "faults": 96,
+      "passed": true,
+      "note": "Original native-click timeout did not recur; native clicks/assertions/timeouts unchanged."
+    },
+    "case": {
+      "checks": 19,
+      "requests": 44,
+      "widths": [
+        1280,
+        320
+      ],
+      "passed": true,
+      "worldScenarios": [
+        {
+          "width": 1280,
+          "worldLocked": true
+        },
+        {
+          "width": 320,
+          "worldLocked": false
+        }
+      ]
+    },
+    "panels": {
+      "predictions": 41,
+      "arena": 20,
+      "bulletin": 35,
+      "passed": true,
+      "note": "Aggregate online prefix passed in frozen run; post-fix suffix replayed separately."
+    },
+    "build": {
+      "passed": true,
+      "spoilerFiles": 186,
+      "protectedLines": 12
+    },
+    "loading": {
+      "checks": 23,
+      "javaScript": 20881,
+      "css": 11878,
+      "cap": 21080,
+      "passed": true
+    },
+    "csp": {
+      "pages": 5,
+      "violations": 0,
+      "passed": true
+    }
+  },
+  "limits": [
+    "R16: unchanged storm55FPS and cinematic30FPS gates fail on cloud SwiftShader; presenter hardware proof deferred.",
+    "Live OAuth/backend outcomes/database behavior not tested under the no-real-services test boundary.",
+    "Seven-fault browser matrix for the eight new case routes and expanded modality/device certification not claimed.",
+    "All17 approved overflow items deferred."
+  ],
+  "publication": {
+    "deployedCommit": "ee92ca87bdedc69e87af51cd4ce18e3dc922eb27",
+    "proof": "publication.json",
+    "status": "READY; static identity and headers verified",
+    "postDeployBrowser": "Blocked by cloud network allowlist; not claimed."
+  }
+}

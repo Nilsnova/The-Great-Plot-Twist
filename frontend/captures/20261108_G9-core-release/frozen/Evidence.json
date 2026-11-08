@@ -1,0 +1,217 @@
+{
+  "commit": "646e3a099a97c9ca89fab6cd6c31e90ed8fb88e4",
+  "gates": 44,
+  "passed": 38,
+  "failed": [
+    "tests",
+    "living",
+    "cinematics",
+    "chaos",
+    "a11y",
+    "online"
+  ],
+  "rawArchive": "node_modules/.cache/g9-final44-raw",
+  "credentials": {
+    "findings": [],
+    "reviewedSynthetic": false
+  },
+  "sanitization": "ANSI controls and filesystem-root prefixes only; original numeric text retained; no failed log omitted",
+  "files": {
+    "driver/Verification.json": {
+      "bytes": 11225,
+      "sha256": "edaa44753198898e9a69f5c3e532652292064a911b43e052943065a1e9bd1861"
+    },
+    "driver/a11y.log": {
+      "bytes": 2061,
+      "sha256": "990fab07cadea4447492b0dbd305382df007d30d5bd45600dfa97a73de13ee0c"
+    },
+    "driver/browser.log": {
+      "bytes": 5861,
+      "sha256": "38f74bca956acc1f61ebc582d89375f07de449d991cbf642673ae600586c9d79"
+    },
+    "driver/build-stamp.log": {
+      "bytes": 700,
+      "sha256": "c3e12df0f6fb7b4789742019a858232ef37666350ec30e9d6ed0a0a65982854b"
+    },
+    "driver/build.log": {
+      "bytes": 13186,
+      "sha256": "50d771b36b55573dfe95835dff91d2928d89c3315a79208a239ba991cbed177e"
+    },
+    "driver/bulletin.log": {
+      "bytes": 1172,
+      "sha256": "aa927344584f14ab5453177451fb8dbd8db52c5a5757d44126792b3516cfc400"
+    },
+    "driver/call-states.log": {
+      "bytes": 1053,
+      "sha256": "52aa0801446a817d96f4b63606b3e72f4886fc9a991baa9658b69730f0f3d9ba"
+    },
+    "driver/case-redesign.log": {
+      "bytes": 7281,
+      "sha256": "80bceffa4f085bd09f5908ebe2da3e3a7ac291ab43f5d33f71d02ddda608e55a"
+    },
+    "driver/case.log": {
+      "bytes": 2219,
+      "sha256": "0737376fdade7decf719da459d477eb52cf2e760cde26c77277302dea8f6e7e6"
+    },
+    "driver/chaos.log": {
+      "bytes": 1337,
+      "sha256": "c6e3d2311795ff19e2ad8270054185f55f8aea8a9d7a2c2b7497ee23cff5cd2f"
+    },
+    "driver/cinematics.log": {
+      "bytes": 402,
+      "sha256": "090690bb94833a0082731b6645277946ffaaccea9d7376cb807e5d43a7c6c0bd"
+    },
+    "driver/claude-islet.log": {
+      "bytes": 1953,
+      "sha256": "feddfa13d6a9d37dc5b25412ce490e5e32fa007b01fd3e075c6fb5fe1c13b2c2"
+    },
+    "driver/credits.log": {
+      "bytes": 642,
+      "sha256": "6baff89bfe82094e861881d77d97a78c297375a0317e2f1c657ea4c900b3d464"
+    },
+    "driver/csp-inventory.log": {
+      "bytes": 77890,
+      "sha256": "78b84dd75eed7b6898f95453fff55e37aa1924b2e4e6855eacc075f4f297491a"
+    },
+    "driver/csp.log": {
+      "bytes": 4080,
+      "sha256": "d81bc24cc5efeb4621e0f4aebca1027ae2af40bbe138dc212f765a003d83b102"
+    },
+    "driver/demo.log": {
+      "bytes": 1954,
+      "sha256": "e96f233695f418fe7e894582effa4733157a959dbfaad9c099db1e2e681b7773"
+    },
+    "driver/experience.log": {
+      "bytes": 1876,
+      "sha256": "d1c52d16ce38d58ba55a33faa2ddd75223aac0af24ccc2f5924974b21fcda5b5"
+    },
+    "driver/generator.log": {
+      "bytes": 64,
+      "sha256": "cc352fd587c332de063dcd4ef0c279699177e14aa2c57fd64fc0dee966fbdbbb"
+    },
+    "driver/golden.log": {
+      "bytes": 7518,
+      "sha256": "e6ea191fd4dd080c4c9672595a329547d113503f69ce61da816e9de070367667"
+    },
+    "driver/harbor-life.log": {
+      "bytes": 438,
+      "sha256": "8e4011fbff51a06cb444a9619a742676c3a50b7bf53a17051feb4af55212a266"
+    },
+    "driver/hook.log": {
+      "bytes": 777,
+      "sha256": "e576668ad06b73382ef4c70972f1a8e5798cea9ad67b10f356dedff00a63c546"
+    },
+    "driver/interiors.log": {
+      "bytes": 1144,
+      "sha256": "27549a2e1dc9e96b738204bc8da2e4d3d04aa55a55454a86cef54fbabe163da0"
+    },
+    "driver/intro-pages.log": {
+      "bytes": 4659,
+      "sha256": "10b541670e4b40ba54c4171ff7c59b5230af03d5c863a69ba7aed9b0cb3ad8fb"
+    },
+    "driver/intro.log": {
+      "bytes": 1728,
+      "sha256": "6f46e8628747a18768ec9a6ddfd90cf71f737e8d474e7ef96173bf6f89796d62"
+    },
+    "driver/islet-world.log": {
+      "bytes": 410,
+      "sha256": "ce55eee7273f3760de7478cb2528c062a1bb6971406fc25da7be9838ed607f2f"
+    },
+    "driver/kit-production.log": {
+      "bytes": 865,
+      "sha256": "2783f7d2d90c4fbc43ddf8cc318134e9423953bc3beb06044e302ea6e208e7bb"
+    },
+    "driver/kit.log": {
+      "bytes": 1097,
+      "sha256": "156eadd8d44c1a160e45abddca2c14d56253e0ec65be46b62d266caa180cf7e0"
+    },
+    "driver/life.log": {
+      "bytes": 2596,
+      "sha256": "67a97d7c6db8cb59586f165bb0c06a5a40993b2696168e7777dc3072f1335ece"
+    },
+    "driver/lifecycle.log": {
+      "bytes": 931,
+      "sha256": "1b1cafd441c7ae11382eca146e4be61f436a5e86e662174e6a4e287786c6b048"
+    },
+    "driver/living.log": {
+      "bytes": 713,
+      "sha256": "b4173649175e6188f098fac177df7feca3a88f98483656e59fbe5ca5db03a9ec"
+    },
+    "driver/loading.log": {
+      "bytes": 9149,
+      "sha256": "653cb9b6b444dd3cb780ab220db09abf14ec661cf984060a80debdac278d5b20"
+    },
+    "driver/online-chaos.log": {
+      "bytes": 64654,
+      "sha256": "62cc1b568474bb6243785669394e22781f3ebfad98eb79a044e7c8bbfa09a27d"
+    },
+    "driver/online.log": {
+      "bytes": 27191,
+      "sha256": "4d6501a677bc3f0b070eb1d3c780b1599ec40f041d81af15e11ad029aea12f9c"
+    },
+    "driver/pixel-production.log": {
+      "bytes": 837,
+      "sha256": "b300e93cfff21fdd925a17959a0d9ff0d337691b379636f5c85ce99b9530bd61"
+    },
+    "driver/pixel.log": {
+      "bytes": 889,
+      "sha256": "611aefa19cd4ebbf7d3d066ed5491d808c87af56a4e2446a94546f42008562d4"
+    },
+    "driver/presenter.log": {
+      "bytes": 1615,
+      "sha256": "e0581df5aac99b927ba69acb23a570e4aaff3383988fdf267bfc2d4eedef8ad9"
+    },
+    "driver/problem-report.log": {
+      "bytes": 2070,
+      "sha256": "7490bee4c210a3112a742d4697c7635ef32006d8ceb0e1c9d8fa5499caf9ba6f"
+    },
+    "driver/production.log": {
+      "bytes": 396,
+      "sha256": "fb6604a57425a2e95925dc568d787ccb2b0f601f436d52784a0dd2d017a32bdf"
+    },
+    "driver/readability.log": {
+      "bytes": 5837,
+      "sha256": "9d0de18ae85b3dd37141e19884f1da0225d984749b690ad746089815c35c637a"
+    },
+    "driver/redesign-hud.log": {
+      "bytes": 1830,
+      "sha256": "045a90e48257e12643a9053309d807f50940818c31121b2742c1bf9b7dd7ed4a"
+    },
+    "driver/redesign-integration.log": {
+      "bytes": 2040,
+      "sha256": "efaa5353dcf4469dba29d1683b8ffb6e22ba45ed9bb90d41fccbe9c7791d1e96"
+    },
+    "driver/redesign-movement.log": {
+      "bytes": 2280,
+      "sha256": "c6a743cf34fe879035f69998c7301176ace82a76f0a85bd92f5418ef8c0e4b51"
+    },
+    "driver/tests.log": {
+      "bytes": 1863,
+      "sha256": "81da2a8e61fe748a0e33335f610487a80d661b14165ce7258de5eb167448e703"
+    },
+    "driver/weather.log": {
+      "bytes": 721,
+      "sha256": "79b877cbb3d2221851c63e4ebb0fb881d7566c7be026b8be1b3b1d827477c4aa"
+    },
+    "driver/world.log": {
+      "bytes": 7143,
+      "sha256": "f91b43944d68fd00096520ba54178e5efdd52dc91e352ebfe6ba00704bb7eda8"
+    },
+    "metrics/20261105_G4-Cinematic-Checks.json": {
+      "bytes": 1652,
+      "sha256": "358e0327e01f0b94c42cb72e2bef313baeb969cad557109e1ff027dc15268e23"
+    },
+    "metrics/20261105_G5-Loading-Checks.json": {
+      "bytes": 9218,
+      "sha256": "aec3ec90c8ee5eaee17bfcaffbad2c92eaaafeef9d111520b3f4d68b1dd5d1d1"
+    },
+    "metrics/20261105_G7-C1-Living-Checks.json": {
+      "bytes": 1106,
+      "sha256": "77b433dc590315e489ac8fff83070a20f68d08a8c3da220cf32295993b3fcf7b"
+    },
+    "metrics/20261105_World-Checks.json": {
+      "bytes": 7142,
+      "sha256": "9479b2cd20585b90897925eacc74e2b4e10639b364f8c3429df08346beb81adb"
+    }
+  }
+}

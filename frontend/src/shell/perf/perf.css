@@ -1,9 +1,16 @@
 /* Presenter-laptop measurements, shown only when the owner asks for them. */
-.performance-panel{position:fixed;right:18px;top:18px;z-index:900;background:#1c3026f2;color:#f0dfb1;border:2px solid #c2a96a;box-shadow:4px 4px #0d1e14;padding:14px;min-width:255px;max-width:min(360px,calc(100vw - 36px));font-size:16px;line-height:1.45}
+.performance-panel{position:fixed;right:18px;top:148px;z-index:900;background:#1c3026f2;color:#f0dfb1;border:2px solid #c2a96a;box-shadow:4px 4px #0d1e14;padding:14px;min-width:0;width:min(360px,calc(100vw - 36px));max-width:calc(100vw - 36px);max-height:calc(100dvh - 166px);overflow:auto;box-sizing:border-box;pointer-events:none;font-size:16px;line-height:1.45}
 .performance-panel h2{margin:0 0 10px;font-size:18px}
-.performance-panel dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0;font-variant-numeric:tabular-nums}
-.performance-panel dt,.performance-panel dd{margin:0;font-size:16px}
+.performance-panel dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;margin:0;font-variant-numeric:tabular-nums}
+.performance-panel dt,.performance-panel dd{min-width:0;margin:0;font-size:16px;overflow-wrap:anywhere}
 .performance-panel dd{text-align:right}
-.performance-panel .kit-button{min-height:44px;margin-top:10px;font-size:16px}
+.performance-panel .kit-button{display:block;width:max-content;max-width:100%;min-height:44px;margin:10px 0 0 auto;padding:8px 12px;font-size:16px;white-space:normal;pointer-events:auto}
 .performance-status{min-height:1.5em;margin:8px 0 0;font-size:16px}
-.recording-frame .performance-panel{right:28px;top:28px}
+.recording-frame .performance-panel{right:28px;top:148px}
+@media(max-width:700px){.performance-panel,.recording-frame .performance-panel{right:12px;top:142px;width:min(360px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 154px)}}
+@media(max-width:450px){.performance-panel{padding:10px;line-height:1.35}.performance-panel h2{margin-bottom:8px}.performance-panel dl{gap:3px 8px}}
+@media(max-height:500px){
+  .performance-panel,.recording-frame .performance-panel{left:12px;right:auto;top:12px;width:min(420px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:8px;line-height:1.25}
+  .performance-panel h2{margin-bottom:4px}.performance-panel dl{gap:2px 8px}
+  .performance-panel .kit-button{display:inline-block;width:auto;margin:4px 8px 0 0}.performance-panel .kit-button:last-child{margin-right:0}.performance-status{min-height:1.25em;margin-top:4px}
+}

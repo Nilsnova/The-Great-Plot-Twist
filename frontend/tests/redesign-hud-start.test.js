@@ -28,7 +28,48 @@ it('retains journal actions and closes controls before opening the supplied menu
     document.querySelector('.controls-toggle').click();document.querySelector('.chart-toggle').click();document.querySelector('.hud-menu').click();
     const controlsClosed=document.querySelector('.controls').hidden;hud.dispose();return {labels,calls,closed,controlsClosed};
   });
-  expect(result).toEqual({labels:['Crew','Board','Log','What next?','Festival'],calls:['crew','chart','menu'],closed:true,controlsClosed:true});
+  expect(result).toEqual({labels:['Crew','Board','Log','What next?','Festival','Harbor bulletin'],calls:['crew','chart','menu'],closed:true,controlsClosed:true});
+});
+
+it('keeps a ready Tonight caption inside Journal with readable wrapping and phone-sized targets',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.setViewportSize({width:320,height:568});
+    await page.evaluate(async()=>{
+      await window.g20Import('/src/ui/styles.css');await window.g20Import('/src/ui/readability.css');await window.g20Import('/src/ui/devices.css');
+      const {createHud}=await window.g20Import('/src/ui/hud.js');
+      window.tonightHud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});window.tonightHud.start();
+    });
+    const journal=page.getByRole('button',{name:'Journal',exact:true}),tools=page.locator('.case-toolbar'),caption=page.locator('.tonight-chip');
+    expect(await tools.isHidden()).toBe(true);expect(await caption.isHidden()).toBe(true);
+    await page.evaluate(()=>window.tonightHud.setBulletin({bulletin:{status:'ready',weather:{tonight:{
+      state:'calm',startsAt:new Date(Date.now()+7*60_000).toISOString(),isNow:false,isFogNight:true,fogNightKind:'almanac',
+    }}}}));
+    expect(await caption.getAttribute('hidden')).toBeNull();expect(await caption.isHidden()).toBe(true);
+    expect(await journal.getAttribute('aria-expanded')).toBe('false');
+    await journal.click();expect(await tools.isVisible()).toBe(true);expect(await caption.isVisible()).toBe(true);
+    expect(await caption.textContent()).toContain('Tonight · calm');expect(await caption.textContent()).toContain("by the harbor's almanac");
+    const layout=await page.evaluate(()=>{
+      const chip=document.querySelector('.tonight-chip'),bounds=chip.getBoundingClientRect();
+      return {insideJournal:chip.parentElement===document.querySelector('.case-toolbar'),position:getComputedStyle(chip).position,
+        captionSizes:[chip,...chip.children].map(element=>parseFloat(getComputedStyle(element).fontSize)),
+        overflow:document.documentElement.scrollWidth>innerWidth,captionOverflow:chip.scrollWidth>chip.clientWidth,
+        left:bounds.left,right:bounds.right,targets:[...document.querySelectorAll('.hud-actions button,.case-toolbar button')]
+          .filter(button=>button.getClientRects().length).map(button=>{const rect=button.getBoundingClientRect();return {width:rect.width,height:rect.height};})};
+    });
+    expect(layout.insideJournal).toBe(true);expect(layout.position).toBe('static');
+    expect(layout.captionSizes.every(size=>size>=18)).toBe(true);expect(layout.overflow||layout.captionOverflow).toBe(false);
+    expect(layout.left).toBeGreaterThanOrEqual(0);expect(layout.right).toBeLessThanOrEqual(320);
+    expect(layout.targets.length).toBe(8);expect(layout.targets.every(target=>target.width>=44&&target.height>=44)).toBe(true);
+    await page.keyboard.press('Escape');expect(await tools.isHidden()).toBe(true);expect(await caption.isHidden()).toBe(true);
+    expect(await journal.evaluate(button=>document.activeElement===button)).toBe(true);
+    await journal.click();
+    for(const status of ['off','unavailable']){
+      await page.evaluate(status=>window.tonightHud.setBulletin({bulletin:{status}}),status);
+      expect(await caption.getAttribute('hidden')).not.toBeNull();expect(await caption.isHidden()).toBe(true);
+      expect(await tools.isVisible()).toBe(true);
+    }
+    await page.evaluate(()=>window.tonightHud.dispose());
+  });
 });
 
 it('keeps supplied captain data literal and its save state honest',async()=>{
@@ -42,15 +83,28 @@ it('keeps supplied captain data literal and its save state honest',async()=>{
 });
 
 it('shows friends from the title without pretending a disconnected build has online crews',async()=>{
-  const result=await evaluate(async()=>{
-    const {createShell}=await window.g20Import('/src/shell/controller.js');const plays=[];
-    const shell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,onPlay:value=>plays.push(value)});
-    const buttons=[...document.querySelectorAll('.shell-menu button')],friend=buttons.find(button=>button.textContent==='Play with friends');
-    const initial=buttons.map(button=>button.textContent);friend.click();const title=document.querySelector('.shell-screen h2').textContent,copy=document.querySelector('.shell-copy').textContent;
-    const before=plays.length;[...document.querySelectorAll('.shell-menu button')].find(button=>button.textContent==='Play solo').click();
-    const result={initial,title,copy,before,plays,mode:shell.mode};shell.dispose();return result;
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createShell}=await window.g20Import('/src/shell/controller.js');window.friendPlays=[];window.friendAccounts=0;
+      window.friendShell=createShell({container:document.body,readSave:()=>null,readAccount:()=>({state:'signed_out',canSignIn:false,hasKit:false}),resetInput(){},onState(){},
+        focus(){},hasOverlay:()=>false,openAccount(){window.friendAccounts++;},onPlay:value=>window.friendPlays.push(value)});
+    });
+    expect(await page.locator('.shell-menu button').allTextContents())
+      .toEqual(['New game','Play with friends','Continue','Settings']);
+    await page.getByRole('button',{name:'Play with friends',exact:true}).click();
+    const solo=page.getByRole('button',{name:'Start a new story',exact:true});await solo.waitFor();
+    expect(await page.locator('.shell-screen h2').textContent()).toBe('Play with friends');
+    expect(await page.locator('.friends-guide h3').textContent()).toBe('Explore the island');
+    expect(await page.locator('.friends-guide .shell-copy').textContent()).toContain('Online crews are unavailable');
+    expect(await page.locator('.friends-help').getAttribute('open')).toBeNull();
+    expect(await page.getByRole('button',{name:'Account and saves',exact:true}).count()).toBe(0);
+    expect(await page.evaluate(()=>window.friendAccounts)).toBe(0);
+    expect(await page.evaluate(()=>window.friendPlays.length)).toBe(0);
+    await solo.click();
+    expect(await page.evaluate(()=>({plays:window.friendPlays,mode:window.friendShell.mode})))
+      .toEqual({plays:[false],mode:'playing'});
+    await page.evaluate(()=>window.friendShell.dispose());
   });
-  expect(result.initial).toEqual(['New game','Play with friends','Continue','Settings']);expect(result.title).toBe('Play with friends');expect(result.copy).toContain('not connected');expect(result.before).toBe(0);expect(result.plays).toEqual([false]);expect(result.mode).toBe('playing');
 });
 
 it('delegates to an explicit online entry without inventing a local multiplayer session',async()=>{

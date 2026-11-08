@@ -1,0 +1,289 @@
+{
+  "outcome": "passed",
+  "checks": [
+    "market/offline: refusal has plain words at 375",
+    "market/offline: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/offline: a report action is available",
+    "market/offline: the page fits 375 px",
+    "market/expired: refusal has plain words at 375",
+    "market/expired: the real route was intercepted",
+    "Market expiry gives the actual Account sign-in button focus",
+    "market/expired: a report action is available",
+    "market/expired: the page fits 375 px",
+    "market/feature_off: refusal has plain words at 375",
+    "market/feature_off: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/feature_off: a report action is available",
+    "market/feature_off: the page fits 375 px",
+    "market/stale_save: refusal has plain words at 375",
+    "market/stale_save: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/stale_save: a report action is available",
+    "market/stale_save: the page fits 375 px",
+    "market/rate_limited: refusal has plain words at 375",
+    "market/rate_limited: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/rate_limited: a report action is available",
+    "market: the cooldown disables retry",
+    "market: the refused control is disabled during the wait",
+    "market: a forced activation cannot bypass the cooldown",
+    "market: the countdown never sends a write",
+    "market/rate_limited: the page fits 375 px",
+    "market/gateway: refusal has plain words at 375",
+    "market/gateway: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/gateway: a report action is available",
+    "market/gateway: the page fits 375 px",
+    "market/unavailable: refusal has plain words at 375",
+    "market/unavailable: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/unavailable: a report action is available",
+    "market/unavailable: the page fits 375 px",
+    "market/offline: refusal has plain words at 320",
+    "market/offline: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/offline: a report action is available",
+    "market/offline: the page fits 320 px",
+    "market/expired: refusal has plain words at 320",
+    "market/expired: the real route was intercepted",
+    "Market expiry gives the actual Account sign-in button focus",
+    "market/expired: a report action is available",
+    "market/expired: the page fits 320 px",
+    "market/feature_off: refusal has plain words at 320",
+    "market/feature_off: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/feature_off: a report action is available",
+    "market/feature_off: the page fits 320 px",
+    "market/stale_save: refusal has plain words at 320",
+    "market/stale_save: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/stale_save: a report action is available",
+    "market/stale_save: the page fits 320 px",
+    "market/rate_limited: refusal has plain words at 320",
+    "market/rate_limited: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/rate_limited: a report action is available",
+    "market: the cooldown disables retry",
+    "market: the refused control is disabled during the wait",
+    "market: a forced activation cannot bypass the cooldown",
+    "market: the countdown never sends a write",
+    "market/rate_limited: the page fits 320 px",
+    "market/gateway: refusal has plain words at 320",
+    "market/gateway: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/gateway: a report action is available",
+    "market/gateway: the page fits 320 px",
+    "market/unavailable: refusal has plain words at 320",
+    "market/unavailable: the real route was intercepted",
+    "Market refusal focuses its actual visible status paragraph without a test focus action",
+    "market/unavailable: a report action is available",
+    "market/unavailable: the page fits 320 px",
+    "Fault journeys have no uncaught browser errors",
+    "Fault journeys never use the retired sign-in exchange",
+    "All external requests stay on intercepted placeholder endpoints"
+  ],
+  "cases": [
+    {
+      "group": "market",
+      "fault": "offline",
+      "width": 375,
+      "status": 0
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "width": 375,
+      "status": 401
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "width": 375,
+      "status": 404
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "width": 375,
+      "status": 409
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "width": 375,
+      "status": 429
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "width": 375,
+      "status": 502
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "width": 375,
+      "status": 503
+    },
+    {
+      "group": "market",
+      "fault": "offline",
+      "width": 320,
+      "status": 0
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "width": 320,
+      "status": 401
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "width": 320,
+      "status": 404
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "width": 320,
+      "status": 409
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "width": 320,
+      "status": 429
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "width": 320,
+      "status": 502
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "width": 320,
+      "status": 503
+    }
+  ],
+  "requests": [
+    {
+      "group": "market",
+      "fault": "offline",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "offline",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "expired",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "feature_off",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "stale_save",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "rate_limited",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "gateway",
+      "path": "/api/market/open",
+      "method": "POST"
+    },
+    {
+      "group": "market",
+      "fault": "unavailable",
+      "path": "/api/market/open",
+      "method": "POST"
+    }
+  ],
+  "coveredGroups": [
+    "market"
+  ],
+  "reducedMotion": true,
+  "pendingGroups": [
+    "account",
+    "intro",
+    "save",
+    "crew",
+    "presence",
+    "islet",
+    "predictions",
+    "arena",
+    "bulletin",
+    "case",
+    "partners",
+    "finale"
+  ],
+  "coverage": "partial"
+}

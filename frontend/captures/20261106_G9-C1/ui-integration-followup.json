@@ -1,0 +1,75 @@
+{
+  "checked": "2026-11-07T03:24:40.008284+00:00",
+  "status": "UI stream gate passed; checkpoint frame proof remains open",
+  "sourceBase": "367189d",
+  "sourceDirty": true,
+  "unit": {
+    "tests": 2333,
+    "files": 172
+  },
+  "streamGate": [
+    {
+      "command": "npm test",
+      "code": 0
+    },
+    {
+      "command": "npm run build",
+      "code": 0
+    },
+    {
+      "command": "npm run test:online",
+      "code": 0
+    }
+  ],
+  "affectedUiChecks": [
+    {
+      "command": "node scripts/check-browser.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-experience.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-bulletin.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-build-stamp.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-islet.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-a11y.js",
+      "code": 0
+    },
+    {
+      "command": "node scripts/check-loading.js",
+      "code": 0
+    }
+  ],
+  "targetedUiRendererNote": "Affected UI checks passed while a same-pixel culling experiment was present. It was then parked; final full unit/build/online gate passed after restoring main rendering. No FPS gain or frame-gate pass is claimed.",
+  "rendererChanges": false,
+  "lastFullDriver": {
+    "sourceCommit": "03dd379",
+    "passed": 37,
+    "total": 44
+  },
+  "frameProof": "R16: unchanged 55FPSstorm/30FPSroundtrips unresolved on cloudSwiftShader",
+  "pendingContract": "R11 sanitized serialized case examples",
+  "sourceSha256": {
+    "scripts/check-browser.js": "f063f9ad45071a379f10609a4795ed80afdfcd0a4e2ec74148973e3c70196ddc",
+    "scripts/check-bulletin.js": "d9ecb1f73587b18706c99fc3809b729c0643e60ec5d58918a7661c8d474117d5",
+    "scripts/check-experience.js": "5b4827b3161ec6b05b2df93899c425b7a8da80674c904d38f3a5e6d7ce30fb01",
+    "scripts/check-g9-regression.js": "df9585fae3042659064b14b9fd81d299f8f2c860604b697ea8cadd1d5feb86af",
+    "scripts/check-islet.js": "f2a31269b98b50d61d73bfa37ae1112c2108b819533353a2fce6c7d65ab82ca4",
+    "src/shell/perf/perf.css": "143b71acc012ea9939169c4859631671195a41d5a64e37c593fad346d63b9e5f",
+    "src/ui/hud.js": "5102dace9e48050f81394ba490f41df9683021f0bfb7574b68f2da95177fca53",
+    "src/ui/quiet-hud.css": "9b9ca95f5f910859458b0fbc1c4fd910dc971e1b609310795564120ab9eb65a0",
+    "tests/redesign-hud-start.test.js": "6c524bfb0652363224840348eef5555f72ab21a07ee2571bd3c55d6a98c7d7dc",
+    "tests/performance-panel-controls.test.js": "2acfa2fde0a4e7c9ec77ee3c66e01fab7bb66f22f326a41ad5f2f59f33f70cc8"
+  }
+}

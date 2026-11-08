@@ -1,7 +1,14 @@
-// Local hint preferences and display-only action filtering; case availability stays in the fake.
+// Bounded device hint preferences and display-only action filtering; the adapter supplies availability.
 export function normalizeHintPreferences(value={}){
-  const dismissed=Array.isArray(value.dismissedHints)?[...new Set(value.dismissedHints.filter(id=>typeof id==='string'))].slice(0,100):[];
+  if(!value||typeof value!=='object'||Array.isArray(value))value={};
+  const dismissed=Array.isArray(value.dismissedHints)?[...new Set(value.dismissedHints.filter(id=>typeof id==='string'&&/^[a-z0-9_-]{1,64}$/.test(id)))].slice(0,100):[];
   return {hintsEnabled:value.hintsEnabled!==false,dismissedHints:dismissed};
+}
+
+export function dismissHint(value,id){
+  const prefs=normalizeHintPreferences(value);
+  if(typeof id!=='string'||!/^[a-z0-9_-]{1,64}$/.test(id))return prefs;
+  return {...prefs,dismissedHints:[...prefs.dismissedHints.filter(item=>item!==id),id].slice(-100)};
 }
 
 export function filterHintActions(actions=[]){

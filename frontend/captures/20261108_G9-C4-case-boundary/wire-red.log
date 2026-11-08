@@ -1,0 +1,152 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/real-case-wire.test.js (25 tests | 6 failed) 41ms
+   ❯ outer case intent envelope only (7)
+     × preserves an original repeated refusal and passes its opaque payload/extras through without inspecting them 7ms
+     × rejects a non-view outer case value undefined 4ms
+     × rejects a non-view outer case value 0 1ms
+     × rejects a non-view outer case value opaque 1ms
+     × rejects a non-view outer case value undefined 1ms
+     × rejects a non-view outer case value false 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > preserves an original repeated refusal and passes its opaque payload/extras through without inspecting them
+Error: Nested case inspection is forbidden in this leaf.
+ ❯ Object.get tests/real-case-wire.test.js:66:48
+     64| describe('outer case intent envelope only', () => {
+     65|   it('preserves an original repeated refusal and passes its opaque pay…
+     66|     const opaque = new Proxy({}, {get() {throw new Error('Nested case …
+       |                                                ^
+     67|     const answer = {accepted: false, reason: 'accusation_refused', mes…
+     68|       case: opaque, seconds: 60, extra: {recorded: true}};
+ ❯ tests/real-case-wire.test.js:70:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > rejects a non-view outer case value undefined
+AssertionError: expected { accepted: true, reason: null, …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accepted": true,
+  "case": undefined,
+  "message": "",
+  "reason": null,
+}
+
+ ❯ tests/real-case-wire.test.js:76:86
+     74|
+     75|   it.each([undefined, 0, 'opaque', [], false])('rejects a non-view out…
+     76|     expect(parseCaseIntentAnswer({accepted:true,reason:null,message:''…
+       |                                                                                      ^
+     77|   });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > rejects a non-view outer case value 0
+AssertionError: expected { accepted: true, reason: null, …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accepted": true,
+  "case": 0,
+  "message": "",
+  "reason": null,
+}
+
+ ❯ tests/real-case-wire.test.js:76:86
+     74|
+     75|   it.each([undefined, 0, 'opaque', [], false])('rejects a non-view out…
+     76|     expect(parseCaseIntentAnswer({accepted:true,reason:null,message:''…
+       |                                                                                      ^
+     77|   });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > rejects a non-view outer case value opaque
+AssertionError: expected { accepted: true, reason: null, …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accepted": true,
+  "case": "opaque",
+  "message": "",
+  "reason": null,
+}
+
+ ❯ tests/real-case-wire.test.js:76:86
+     74|
+     75|   it.each([undefined, 0, 'opaque', [], false])('rejects a non-view out…
+     76|     expect(parseCaseIntentAnswer({accepted:true,reason:null,message:''…
+       |                                                                                      ^
+     77|   });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > rejects a non-view outer case value undefined
+AssertionError: expected { accepted: true, reason: null, …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accepted": true,
+  "case": [],
+  "message": "",
+  "reason": null,
+}
+
+ ❯ tests/real-case-wire.test.js:76:86
+     74|
+     75|   it.each([undefined, 0, 'opaque', [], false])('rejects a non-view out…
+     76|     expect(parseCaseIntentAnswer({accepted:true,reason:null,message:''…
+       |                                                                                      ^
+     77|   });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/real-case-wire.test.js > outer case intent envelope only > rejects a non-view outer case value false
+AssertionError: expected { accepted: true, reason: null, …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accepted": true,
+  "case": false,
+  "message": "",
+  "reason": null,
+}
+
+ ❯ tests/real-case-wire.test.js:76:86
+     74|
+     75|   it.each([undefined, 0, 'opaque', [], false])('rejects a non-view out…
+     76|     expect(parseCaseIntentAnswer({accepted:true,reason:null,message:''…
+       |                                                                                      ^
+     77|   });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 19 passed (25)
+   Start at  09:29:24
+   Duration  426ms (transform 47%, tests 32%, import 15%, worker 5%)

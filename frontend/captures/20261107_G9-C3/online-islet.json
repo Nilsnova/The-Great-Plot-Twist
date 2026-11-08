@@ -1,0 +1,315 @@
+{
+  "stage": "stream8",
+  "outcome": "passed",
+  "coverage": "golden, unknown outcomes and expiry",
+  "widths": [
+    1280,
+    375
+  ],
+  "checks": [
+    "Continue receives an accepted incrementing server save before the islet journey",
+    "The production islet panel uses the real A2 transport",
+    "One pending build disables its public control",
+    "A forced second activation sends no duplicate build",
+    "The accepted server snapshot replaces Build with the standing building",
+    "The server receipt shows the successful building and remaining resources",
+    "The A2 build body has exactly actionUid, plot and server-supplied type",
+    "Production exposes no inspection or local-fake hooks",
+    "The islet panel has no horizontal overflow",
+    "Islet request records contain only the approved safe fields",
+    "The islet journey has no uncaught errors or Realtime connection",
+    "Outside requests stay on intercepted placeholder endpoints",
+    "The built panel capture keeps the native captain save status ready without Offline or Conflict",
+    "Escape restores focus to the game",
+    "Closing the islet does not open Pause",
+    "Public chart landings and physical walking reach the server-confirmed station prompt for the world capture",
+    "The built world capture keeps the native captain save status ready without Offline or Conflict",
+    "Islet golden 1280 has no unhandled browser errors",
+    "Continue receives an accepted incrementing server save before the islet journey",
+    "The production islet panel uses the real A2 transport",
+    "One pending build disables its public control",
+    "A forced second activation sends no duplicate build",
+    "The accepted server snapshot replaces Build with the standing building",
+    "The server receipt shows the successful building and remaining resources",
+    "The A2 build body has exactly actionUid, plot and server-supplied type",
+    "Production exposes no inspection or local-fake hooks",
+    "The islet panel has no horizontal overflow",
+    "Islet request records contain only the approved safe fields",
+    "The islet journey has no uncaught errors or Realtime connection",
+    "Outside requests stay on intercepted placeholder endpoints",
+    "The built panel capture keeps the native captain save status ready without Offline or Conflict",
+    "Escape restores focus to the game",
+    "Closing the islet does not open Pause",
+    "Public chart landings and physical walking reach the server-confirmed station prompt for the world capture",
+    "The built world capture keeps the native captain save status ready without Offline or Conflict",
+    "Islet golden 375 has no unhandled browser errors",
+    "Unknown 503 applied=true with answered readback charges once and reads before any retry write",
+    "Unknown 503 applied=true with offline readback charges once and reads before any retry write",
+    "Unknown 503 applied=false with offline readback charges once and reads before any retry write",
+    "Unknown islet outcomes has no unhandled browser errors",
+    "Immediate expiry clears the private islet UI and gives Account focus without charging",
+    "Islet expiry has no unhandled browser errors"
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/islet",
+      "bodyKeys": [],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/islet/build",
+      "bodyKeys": [
+        "actionUid",
+        "plot",
+        "type"
+      ],
+      "actionUidMatchesPrevious": true
+    }
+  ],
+  "captures": [
+    "captures/20261107_G9-C3/islet-built-1280.png",
+    "captures/20261107_G9-C3/islet-world-built-1280.png",
+    "captures/20261107_G9-C3/islet-built-375.png",
+    "captures/20261107_G9-C3/islet-world-built-375.png"
+  ],
+  "unknownOutcomeCases": 3,
+  "expiryVerified": true,
+  "pending": [
+    "World-building screenshots require the coordinator’s sequential visual review.",
+    "Seven-fault islet coverage runs separately through checkOnlineIsletChaos."
+  ]
+}

@@ -15,11 +15,11 @@ export function createChart(container, world, travel, focusGame) {
   let partners=[],hasStar=false,stationBuilt=false;
   const station=document.createElement('span');station.className='chart-station-marker';station.textContent='◆';station.setAttribute('role','img');station.setAttribute('aria-label','Built signal station');station.hidden=true;dialog.querySelector('.chart-map').append(station);
   const hookMarker=document.createElement('span');hookMarker.className='chart-hook-marker';hookMarker.textContent='✦';hookMarker.hidden=true;hookMarker.setAttribute('role','img');
-  Object.assign(hookMarker.style,{position:'absolute',transform:'translate(-50%,-50%)',zIndex:'25',color:'#fff0c5',textShadow:'0 0 4px #f3d58c, 2px 2px #263b30',font:'bold 24px/1 Courier New,monospace',pointerEvents:'none'});dialog.querySelector('.chart-map').append(hookMarker);
+  dialog.querySelector('.chart-map').append(hookMarker);
   const hookLegend=document.createElement('p');hookLegend.className='chart-hook-legend';hookLegend.hidden=true;
-  Object.assign(hookLegend.style,{font:'16px/1.5 Courier New,monospace',color:'#fff0c5',margin:'8px 0'});dialog.querySelector('footer').prepend(hookLegend);
+  dialog.querySelector('footer').prepend(hookLegend);
   let hook=null,hookKey='',hookFlash=initialFlashState();
-  const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('viewBox','0 0 448 256');lines.setAttribute('aria-label','Partner journeys');lines.setAttribute('role','img');lines.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';dialog.querySelector('.chart-map').append(lines);
+  const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('viewBox','0 0 448 256');lines.setAttribute('aria-label','Partner journeys');lines.setAttribute('role','img');lines.classList.add('chart-partner-lines');dialog.querySelector('.chart-map').append(lines);
   function drawPartners(){lines.replaceChildren();for(const partner of partners){const line=partner.life?.chartLine;if(!line?.active)continue;const path=document.createElementNS(lines.namespaceURI,'line');for(const [key,value] of Object.entries({x1:line.from.x,y1:line.from.y,x2:line.to.x,y2:line.to.y,stroke:'#f3d58c','stroke-width':2,'stroke-dasharray':'4 3'}))path.setAttribute(key,String(value));const title=document.createElementNS(lines.namespaceURI,'title');title.textContent=`${partner.name}: ${line.label}`;path.append(title);lines.append(path);}}
   const buttons = [...dialog.querySelectorAll('[data-place]')];
   buttons.forEach(button => {

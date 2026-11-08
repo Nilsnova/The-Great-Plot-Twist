@@ -1,0 +1,167 @@
+{
+  "stage": "Core case implementation checkpoint; final frozen regression pending",
+  "backendDtoRef": "64fc731c91a5458f0a9820ff8e2938335b3b51c9",
+  "noRealAccountsServicesOrData": true,
+  "verification": {
+    "nativeCleanupNavigationAndDuelFocus": {
+      "files": 5,
+      "passed": 44
+    },
+    "lifecycleProjection": {
+      "files": 2,
+      "passed": 27
+    },
+    "intentProtocolProjectionFocusedBeforeReadiness": {
+      "files": 4,
+      "passed": 94
+    },
+    "desktopProductionCase": {
+      "checks": 8,
+      "requests": 22
+    },
+    "phone320ProductionCaseAndUnknownPin": {
+      "checks": 9,
+      "requests": 25
+    },
+    "loading": {
+      "checks": 23,
+      "javascript": 20881,
+      "css": 11878,
+      "javascriptCap": 21080
+    },
+    "buildSpoiler": true
+  },
+  "initialFailures": [
+    {
+      "gate": "full unit",
+      "passed": 3564,
+      "failed": 2,
+      "causes": [
+        "Disabled-case finale shape regression, corrected",
+        "Duel native disabled-focus timing race, fixed in4b82a30"
+      ]
+    },
+    {
+      "gate": "new case browser harness",
+      "causes": [
+        "Transient success/notice status synchronization",
+        "Phone navigation uses page select"
+      ]
+    },
+    {
+      "gate": "new case integration",
+      "causes": [
+        "Forming null case must reset when crew starts, corrected"
+      ]
+    },
+    {
+      "gate": "new cinematic ownership test",
+      "causes": [
+        "Unrelated cinematic guard retains current host; corrected assertion"
+      ]
+    }
+  ],
+  "finalAggregate": "NOT RUN YET",
+  "sourceFiles": [
+    {
+      "path": "scripts/check-online-bulletin.js",
+      "sha256": "cfec6af3b4b2b54640ba68eafce59e83abf0ef175baa31d45f1df21a743dadaa"
+    },
+    {
+      "path": "scripts/check-online-case.js",
+      "sha256": "52542a231daa11ef9d6423e82029ed341006346b6e94e9b0eee97e4f146b9b01"
+    },
+    {
+      "path": "scripts/check-online-golden.js",
+      "sha256": "e250670c2008e88f0a2f546a1d40dd1ae6654991bf323bfe9d31d7800e872ae0"
+    },
+    {
+      "path": "scripts/online-case-fixture.js",
+      "sha256": "c36e18f6f4357ac98141c8cf688c9ed0399c29e1150a0f6a31b846a0cf004706"
+    },
+    {
+      "path": "scripts/online-case-journeys.js",
+      "sha256": "aff0749e8101d75c068596840961de99b45da1b40adf6ff9bbe1aae23fb6d3f7"
+    },
+    {
+      "path": "src/adapter/bridge.js",
+      "sha256": "cfdc83652db45e6a518ec0208195d2a03498c8b2c82bd0244b7dfe0ffc2063c7"
+    },
+    {
+      "path": "src/adapter/contract.js",
+      "sha256": "ce4e84ab721fc951b029f3f3e3692f65b71ca7e9b1a8251b6de6c05fde52c527"
+    },
+    {
+      "path": "src/game.js",
+      "sha256": "1aee2b7caf3f0d9a42b19874072cf72fe0c04ccd7e7f1bd10a258d601ba2b1d2"
+    },
+    {
+      "path": "src/online/case-adapter/case-effects.js",
+      "sha256": "9cd2f552ee91ae5c32a16876fcf271db55dea70590fcbbaf1543696008fd7a6a"
+    },
+    {
+      "path": "src/online/case-adapter/case-intents.js",
+      "sha256": "26f797c04ce0169242e72cdca1fe732ec9ea84bd69e00e174e70d469922f36bc"
+    },
+    {
+      "path": "src/online/case-adapter/case-lifecycle.js",
+      "sha256": "4c3f7469c3806a58a5b6df713e1c8b0aabfe56f37ef39a2ca6bc1927f88214b5"
+    },
+    {
+      "path": "src/online/case-adapter/case-shapes.js",
+      "sha256": "4bb5cd77be59b424c1e46e84b7e60ce48dc7129414e2f8b9390994f4d952b38b"
+    },
+    {
+      "path": "src/online/case-adapter/case-view.js",
+      "sha256": "381ff8676e9e4fef2376378cacd188a625cd22bb83659c996128a51033879b6d"
+    },
+    {
+      "path": "src/online/case-adapter/case-wire.js",
+      "sha256": "bf7c70eb029fccbe9f8fd81002e560addda6390e818072052614a58c30d23ee5"
+    },
+    {
+      "path": "src/online/case-adapter/index.js",
+      "sha256": "dac5dc0b82eade54f36101ff25012e84bcd5708d16bc39b52ea262a85b347de1"
+    },
+    {
+      "path": "src/online/case-adapter/read-monitor.js",
+      "sha256": "636422a06d3fcfcf1a9418d71a957171d4538faf3fe055f1e1b4bb9e5192d4b3"
+    },
+    {
+      "path": "src/online/case-adapter/view.js",
+      "sha256": "2c08c72adbf28c8dee67e8f93300f571ac043deb03030b880dac57d7fe1a5534"
+    },
+    {
+      "path": "src/screens/controller.js",
+      "sha256": "0811beebd3cd42329f7485c8ab7433d3f931d980402ec4588c995ea6ad45945d"
+    },
+    {
+      "path": "src/screens/duels/panel.js",
+      "sha256": "049894b68b1f6096c5d6936777eda90becd946a96953c9d256facedc2f64eca6"
+    },
+    {
+      "path": "tests/case-ready-controller.test.js",
+      "sha256": "5102676e834568d6ce1d0c75b5664fb7a71732ac658af1041fb14537ae8087ad"
+    },
+    {
+      "path": "tests/g9-case-effect-cleanup.test.js",
+      "sha256": "17ce291d09e9ae6a711b1fddb954f5727a832207b685e8b50e38868785db52c7"
+    },
+    {
+      "path": "tests/real-case-intents.test.js",
+      "sha256": "a6e3998507dc39bf4dc45ae6ba0b1ac068eb41bb5345ee84e89c1b4e1c82dcb7"
+    },
+    {
+      "path": "tests/real-case-lifecycle.test.js",
+      "sha256": "cc5c7418bcaa1425d9216c1f611b4a1523b65c26865e8f336b4110805b8f3e7c"
+    },
+    {
+      "path": "tests/real-case-projection.test.js",
+      "sha256": "84b6dc897a6b75d3668e8d42dd3e23f3a7cf179015ec42eda948bcf7b643ad42"
+    },
+    {
+      "path": "tests/real-case-wire.test.js",
+      "sha256": "aaa4ea82b36e924d9d42ff07cd0d62771832740d824d4d5675ef55819595d703"
+    }
+  ]
+}

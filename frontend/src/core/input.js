@@ -32,9 +32,9 @@ export function createInput(canvas) {
   return {
     held, pointer, reset,
     setVirtual(source,value){virtual.set(source,value);},press(key){pressed.add(key);},
-    axis(positive, negative) {
+    axis(positive, negative, {excludeSource} = {}) {
       const keyboard=Number(positive.some(key => held.has(key)))-Number(negative.some(key => held.has(key)));
-      return combinedAxis(keyboard,[...virtual.values()],positive.includes('KeyD')?'x':'y');
+      return combinedAxis(keyboard,[...virtual].filter(([source])=>source!==excludeSource).map(([,value])=>value),positive.includes('KeyD')?'x':'y');
     },
     consume(key) { const value = pressed.has(key); pressed.delete(key); return value; },
     endFrame() { pressed.clear(); pointer.x = 0; pointer.y = 0; pointer.wheel = 0; },

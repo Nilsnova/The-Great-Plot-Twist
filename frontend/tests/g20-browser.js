@@ -3,18 +3,28 @@ import { beforeAll, afterAll, vi } from 'vitest';
 import { createServer } from 'vite';
 import { chromium } from 'playwright-core';
 import { fileURLToPath } from 'node:url';
+import {mkdir} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createBuildIdentityPlugin} from '../scripts/build-identity.js';
+import {stubOfflineApi} from '../scripts/api-browser-fixture.js';
 
 export function browserHarness() {
   // Cold native Chromium/module compilation is slower than an in-process unit test.
   vi.setConfig({ testTimeout: 20000, hookTimeout: 60000 });
-  let server, browser, base;
+  let server, browser, base, cacheDir;
   beforeAll(async () => {
+    // Sequential files reuse one temporary cache; separate Vitest runs never replace it.
+    cacheDir=join(tmpdir(),`plot-dom-cache-${process.ppid}`);await mkdir(cacheDir,{recursive:true});
     server = await createServer({ configFile: false, root: fileURLToPath(new URL('..', import.meta.url)),
+      cacheDir,
+      plugins: [createBuildIdentityPlugin({sha: 'dev', builtAt: '2026-11-06T00:00:00.000Z'})],
+      define: {__BUILD_STAMP__: JSON.stringify({sha: 'dev', builtAt: '2026-11-06T00:00:00.000Z'})},
       envDir: false, server: { host: '127.0.0.1', port: 0, hmr: false }, logLevel: 'error' });
     await server.listen(); base = `http://127.0.0.1:${server.httpServer.address().port}`;
     browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true });
   }, 30000);
-  afterAll(async () => { await browser?.close(); await server?.close(); });
+  afterAll(async () => {try{await browser?.close();}finally{await server?.close();}});
   const evaluate = async (action, argument, modules = {}, usePage = false) => {
     const context = await browser.newContext();
     try {
@@ -26,6 +36,7 @@ export function browserHarness() {
         if (url.pathname === '/g20-harness') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body></body></html>' });
         return route.continue();
       });
+      await stubOfflineApi(page);
       await page.goto(base + '/g20-harness');
       // Define import inside Chromium: Vitest transforms imports in Node callbacks for SSR.
       await page.addScriptTag({ type: 'module', content: 'window.g20Import = path => import(path);' });

@@ -1,0 +1,34 @@
+Audited arrival
+Audited crew
+Audited board
+Audited search
+Audited partners
+Audited finale
+Audited accusation
+Audited reveal
+Audited relighting
+Audited rewards
+Audited log
+Audited hints
+Audited bulletin
+Audited title
+Audited settings
+Audited credits
+Audited intro
+Audited main-crew
+Audited world
+Audited account
+Audited account-signing_in
+Audited account-signed_in
+Audited account-expired
+Audited account-error
+Audited account-conflict
+Audited account-delete
+Audited presence
+Audited islet-world
+Audited gulls-rest
+{
+  "screens": 29,
+  "failures": [],
+  "errors": []
+}
