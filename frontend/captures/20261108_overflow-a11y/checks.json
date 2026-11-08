@@ -1,0 +1,60 @@
+{
+  "report": [
+    {
+      "screen": "account-cancel",
+      "width": 320,
+      "height": 400,
+      "focus": "Keep my data",
+      "focusVisible": true,
+      "overflow": false,
+      "fits": true,
+      "targets44": true
+    },
+    {
+      "screen": "account-restored",
+      "width": 320,
+      "height": 400,
+      "focus": "Delete my data",
+      "inside": true
+    },
+    {
+      "screen": "account-cancel",
+      "width": 375,
+      "height": 400,
+      "focus": "Keep my data",
+      "focusVisible": true,
+      "overflow": false,
+      "fits": true,
+      "targets44": true
+    },
+    {
+      "screen": "account-restored",
+      "width": 375,
+      "height": 400,
+      "focus": "Delete my data",
+      "inside": true
+    },
+    {
+      "screen": "busy-form",
+      "width": 320,
+      "height": 400,
+      "focus": "tabpanel",
+      "focusVisible": true,
+      "overflow": false,
+      "fits": true,
+      "targets44": true
+    },
+    {
+      "screen": "busy-form",
+      "width": 375,
+      "height": 400,
+      "focus": "tabpanel",
+      "focusVisible": true,
+      "overflow": false,
+      "fits": true,
+      "targets44": true
+    }
+  ],
+  "errors": [],
+  "external": []
+}

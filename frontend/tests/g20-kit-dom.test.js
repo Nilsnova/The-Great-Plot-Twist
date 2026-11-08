@@ -76,3 +76,53 @@ it('wraps modal focus around visible controls while disclosures and inert conten
     await page.evaluate(()=>window.focusModal.modal.dispose());
   });
 });
+
+it('wraps past a busy prediction form to the last native tab stop, then restores the form stops',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createModal}=await window.g20Import('/src/ui/kit/modal.js');
+      const {createTabs}=await window.g20Import('/src/ui/kit/tabs.js');
+      const {buildStakeForm}=await window.g20Import('/src/screens/predictions/stake-form.js');
+      const body=document.createElement('div');
+      const form=buildStakeForm({id:'recorded-question',model:{legend:'Your forecast',amountLabel:'Coins',
+        min:1,max:100,hint:'Recorded limit'},form:{side:'yes',amount:'10',step:'confirm',busy:true},
+        actions:{submit(){},confirm(){},back(){}}});
+      body.append(form);
+      const tabs=createTabs({items:[{id:'questions',label:'Questions',body},{id:'mine',label:'My stakes',body:'No stakes'}]});
+      const modal=createModal({title:'Recorded kiosk',body:tabs.element});modal.open();
+      window.nativeModal={modal,tabs};
+    });
+    const close=page.getByRole('button',{name:'Close dialog',exact:true});
+    const panel=page.getByRole('tabpanel',{name:'Questions',exact:true});
+    await close.focus();await page.keyboard.press('Shift+Tab');
+    expect(await panel.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Tab');expect(await close.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.evaluate(()=>{
+      const root=window.nativeModal.modal.element;root.querySelector('fieldset').disabled=false;
+      root.querySelector('input[type=number]').disabled=false;
+      root.querySelectorAll('.desk-confirm button').forEach(button=>button.disabled=false);
+    });
+    const back=page.getByRole('button',{name:'Back',exact:true});
+    await close.focus();await page.keyboard.press('Shift+Tab');
+    expect(await back.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Tab');expect(await close.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.evaluate(()=>{window.nativeModal.modal.dispose();window.nativeModal.tabs.dispose();});
+  });
+});
+
+it('wraps to the checked native radio instead of the last unchecked option',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createModal}=await window.g20Import('/src/ui/kit/modal.js');
+      const body=document.createElement('div');
+      body.innerHTML='<label><input type="radio" name="recorded-side" checked>Yes</label>'
+        +'<label><input type="radio" name="recorded-side">No</label>';
+      const modal=createModal({title:'Recorded choices',body});modal.open();window.radioModal=modal;
+    });
+    const close=page.getByRole('button',{name:'Close dialog',exact:true});
+    await close.focus();await page.keyboard.press('Shift+Tab');
+    expect(await page.getByRole('radio',{name:'Yes',exact:true}).evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.keyboard.press('Tab');expect(await close.evaluate(el=>el===document.activeElement)).toBe(true);
+    await page.evaluate(()=>window.radioModal.dispose());
+  });
+});

@@ -3,7 +3,9 @@ import {reducedMotion} from '../settings/preferences.js';
 import {node,button,labelledSelect,restoreFocus,secondsLabel} from './helpers.js';
 const frames={new:'clue-frame-new',pinned:'clue-frame-pinned',used:'clue-frame-used'};
 export function createBoardScreen({send}) {
-  const element=node('section','case-board');let first='',second='',rendered=null;const seenPins=new Set(),timers=[];
+  const element=node('section','case-board'),announcement=node('p','kit-sr-only');
+  announcement.setAttribute('role','status');announcement.setAttribute('aria-atomic','true');
+  let first='',second='',rendered=null,waiting=false;const seenPins=new Set(),timers=[];
   function pinCredits(card){const line=node('p','case-card-credit','Pinned: ');if(!card.pinnedBy.length)line.append(document.createTextNode('Not pinned'));for(const pin of card.pinnedBy){const badge=node('span','case-seat-credit',pin.label);badge.dataset.seat=pin.seat;line.append(badge);}return line;}
   function cardView(card) {
     const item=node('article','case-clue');item.dataset.state=card.state;item.dataset.card=card.id;item.style.borderImageSource=`url("${import.meta.env.BASE_URL}pixel/${frames[card.state]??frames.new}.png")`;
@@ -31,6 +33,16 @@ export function createBoardScreen({send}) {
     const suspects=node('section','case-suspects');suspects.append(node('h3','','Suspects'));const list=node('ul');
     for(const suspect of board.suspects){const row=node('li','',suspect.title);row.dataset.cleared=String(suspect.cleared);row.append(node('span','kit-badge',suspect.cleared?`Cleared · ${suspect.clearedBy}`:'Not cleared'));list.append(row);}suspects.append(list);element.append(suspects);
     if(board.logLead)element.append(node('p','case-caption','Elena’s log is a lead, not a pinnable card.'));
-    element.append(node('p','case-pair-wait'));this.tick(view);
-  });},tick(view){const label=element.querySelector('.case-pair-wait');const pair=element.querySelector('[data-focus=pair-cards]');if(pair)pair.disabled=!view.board.canPair;if(label){label.textContent=view.board.pairWait?`Pairing available in ${secondsLabel(view.board.pairWait)}`:'';label.setAttribute('role','status');}},dispose(){timers.forEach(clearTimeout);element.remove();}};
+    const wait=node('p','case-pair-wait');wait.setAttribute('aria-live','off');
+    element.append(wait,announcement);this.tick(view);
+  });},tick(view){
+    const board=view.board,label=element.querySelector('.case-pair-wait'),pair=element.querySelector('[data-focus=pair-cards]');
+    if(pair)pair.disabled=!board.canPair;
+    const nextWaiting=board.pairWait>0,text=nextWaiting?`Pairing available in ${secondsLabel(board.pairWait)}`:'';
+    if(label&&label.textContent!==text)label.textContent=text;
+    // A display clock must not interrupt a screen reader on every frame or second.
+    if(nextWaiting!==waiting)announcement.textContent=nextWaiting?`${text}.`:board.canPair?'You can pair cards again.':'';
+    else if(!nextWaiting&&!board.canPair&&announcement.textContent)announcement.textContent='';
+    waiting=nextWaiting;
+  },dispose(){timers.forEach(clearTimeout);element.remove();}};
 }

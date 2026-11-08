@@ -73,7 +73,8 @@ export function createAccountScreen({send,navigate}){
         const heading=node('h4','','Delete all your player data?');heading.id='account-delete-title';
         const description=node('p','','This removes your account data, captain name, kit, saves, crew membership, coins, rewards and ledger history. This cannot be undone. Other crew members and shared case progress remain. If your crew has other players, leadership passes to the next occupied player seat.');description.id='account-delete-description';confirm.append(heading,description);
         const controls=node('div','account-actions');const confirmButton=action(controls,'Confirm deletion','deleteMyData',[{confirm:true}],'account-delete-confirm',busy);confirmButton.setAttribute('aria-describedby',description.id);
-        const cancel=createButton({label:'Keep my data',variant:'quiet',onClick:()=>{deleteArmed=false;feedback='';render();}});buttons.push(cancel);controls.append(cancel.element);confirm.append(controls);element.append(confirm);
+        const cancel=createButton({label:'Keep my data',variant:'quiet',onClick:()=>{deleteArmed=false;feedback='';focusKey='account-delete';refresh();}});
+        cancel.element.dataset.focus='account-delete-cancel';buttons.push(cancel);controls.append(cancel.element);confirm.append(controls);element.append(confirm);
       }else action(actions,'Delete my data','armDelete',[],'account-delete',busy);
     }
     if(feedback){const status=node('p','account-feedback',feedback);status.setAttribute('role','status');element.append(status);}

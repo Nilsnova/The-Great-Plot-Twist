@@ -107,6 +107,29 @@ it('publishes fresh display clocks with the same revision and event while retain
   }finally{store.dispose();session.clearToken();}
 });
 
+it('announces a board cooldown and readiness once while the visible timer keeps counting',async()=>{
+  const result=await native(async view=>{
+    const {createBoardScreen}=await window.g20Import('/src/screens/board.js');
+    const screen=createBoardScreen({send(){throw Error('Display clocks must not send intents');}});
+    screen.update(view);document.body.append(screen.element);
+    const announcement=screen.element.querySelector('[role="status"]');
+    const changes=[],observer=new MutationObserver(()=>changes.push(announcement.textContent));
+    observer.observe(announcement,{childList:true,subtree:true,characterData:true});
+    const draw=async(wait,canPair)=>{view.board.pairWait=wait;view.board.canPair=canPair;
+      screen.update(view);await Promise.resolve();};
+    await draw(3,false);await draw(2,false);await draw(1,false);await draw(1,false);
+    const during={changes:[...changes],text:screen.element.querySelector('.case-pair-wait').textContent,
+      live:screen.element.querySelector('.case-pair-wait').getAttribute('aria-live'),
+      sameNode:announcement===screen.element.querySelector('[role="status"]')};
+    await draw(0,true);await draw(0,true);
+    const ready={changes:[...changes],text:announcement.textContent};
+    view.board.cards=[];await draw(0,false);
+    const cleared=announcement.textContent;observer.disconnect();screen.dispose();return {during,ready,cleared};
+  },boardRecord());
+  expect(result).toEqual({during:{changes:['Pairing available in 0:03.'],text:'Pairing available in 0:01',live:'off',sameNode:true},
+    ready:{changes:['Pairing available in 0:03.','You can pair cards again.'],text:'You can pair cards again.'},cleared:''});
+});
+
 it('keeps native search progress and its percentage in sync without inventing job completion',async()=>{
   const result=await native(async()=>{
     const {createSearchScreen}=await window.g20Import('/src/screens/search.js');
