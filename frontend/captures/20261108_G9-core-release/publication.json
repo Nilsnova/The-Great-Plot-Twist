@@ -1,0 +1,53 @@
+{
+  "url": "https://the-great-plot-twist.vercel.app/",
+  "deployedCommit": "ee92ca87bdedc69e87af51cd4ce18e3dc922eb27",
+  "runtimeSource": "b46178ede29fc036a013d3ed6c247aeb6a3686e8",
+  "deploymentId": "dpl_JC6WUy1pdVvxf7jybFg7Vapay6u1",
+  "readyState": "READY",
+  "target": "production",
+  "canonicalAliasAssigned": true,
+  "stamp": {
+    "status": 200,
+    "sha": "ee92ca8",
+    "builtAt": "2026-11-08T17:39:13.837Z",
+    "environment": "production"
+  },
+  "headers": {
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+    "cross-origin-opener-policy": "same-origin-allow-popups",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin"
+  },
+  "staticHtml": {
+    "status": 200,
+    "scripts": [
+      "./assets/game-D8yve1o0.js"
+    ],
+    "styles": [
+      "./assets/game-Q9m-N80d.css",
+      "./assets/kit-Bq3XXrM4.css",
+      "./assets/shell-CrIwa-rZ.css"
+    ]
+  },
+  "staticEntry": {
+    "status": 200,
+    "url": "https://the-great-plot-twist.vercel.app/assets/game-D8yve1o0.js",
+    "characters": 12456,
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  "configuration": {
+    "changedOnly": "FEATURE_FLAGS value; appended sign_in",
+    "target": [
+      "production",
+      "preview"
+    ],
+    "value": "live_presence,market,predictions,arena,case,bulletin,festival,sports,sign_in"
+  },
+  "postDeployBrowser": {
+    "outcome": "blocked",
+    "reason": "Cloud enforced allowlist excludes the production hostname. Initial Playwright static request failed EAI_AGAIN; no account, API or database traffic was sent. No live browser/demo startup pass is claimed."
+  },
+  "verificationBoundary": "Vercel connector fetched static deployment files only; application journeys used injected/intercepted responses."
+}

@@ -84,5 +84,10 @@
     "Seven-fault browser matrix for the eight new case routes and expanded modality/device certification not claimed.",
     "All17 approved overflow items deferred."
   ],
-  "publication": "Pending; see publication.json after rollout."
+  "publication": {
+    "deployedCommit": "ee92ca87bdedc69e87af51cd4ce18e3dc922eb27",
+    "proof": "publication.json",
+    "status": "READY; static identity and headers verified",
+    "postDeployBrowser": "Blocked by cloud network allowlist; not claimed."
+  }
 }

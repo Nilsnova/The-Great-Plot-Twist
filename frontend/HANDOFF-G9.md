@@ -1,27 +1,82 @@
-## Core case implementation ready for final regression · 8 Nov 2026
+# G9 core published · 8 Nov 2026
 
-Nils authorizes publication and serializer/schema reads, excluding secret content. Authored changes
-stay frontend-only. Adopted main `64fc731` supplies every required case route; R11 is resolved by the
-approved schema audit and synthetic serialized fixtures, without executing backend rules.
+Live: https://the-great-plot-twist.vercel.app/ · [PR #3](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/3).
+Production commit: `ee92ca87bdedc69e87af51cd4ce18e3dc922eb27`; verified runtime source: `b46178e`.
+The deployed src/scripts/tests trees exactly match the verified runtime. This handoff is a later
+metadata-only commit. Main remains `64fc731`; Claude owns review and main integration.
+These notes supersede all historical stop, blocked-case and pending-publication notes below.
 
-Implemented: the earned case projection, all eight intents, stable IDs/read-before-explicit-retry,
-bounded refresh/cooldowns, public world reads, searches/partners/night/signals, accusation/runtime
-reveal/Relighting, null-case Crew navigation and private cinematic cleanup. Duel failure focus now
-retains native activation ownership across automatic re-enabling (4b82a30), without stealing another
-control or modal's focus. Bulletin opening ownership remains intact.
+## Changed
 
-Focused proof:44 native cleanup/navigation/focus tests in 5 files;27 lifecycle/projection tests in 2;
-94 earlier protocol/intent/projection checks in 4. Recorded production case: desktop 8 checks/22 requests;
-320 px plus explicit unknown-pin recovery 9 checks/25 requests, all eight POST routes, enforcing CSP,
-original replay and no real accounts/services/data. Build/spoiler and 23 loading checks pass; cold title
-20,881 JS /11,878 CSS against unchanged21,080 JS cap. Evidence:captures/20261108_G9-case/checkpoint/.
-Initial failures and corrections remain recorded there; no reveal/story screenshots were captured.
+The core connects PKCE/account/save, crews/presence, islet, Exchange, predictions, Lantern Duels,
+public Bulletin and the earned case through board/searches, partner orders, night/posts/signals,
+accusation, runtime reveal and public Relighting. All eight case intents send server-approved shapes;
+scoped reads, stable action IDs, explicit read-before-retry and private cleanup remain enforced.
+Screens display outcomes. Timer updates preserve native Board controls, and search progress stays
+normalized without declaring a job complete. Public coast completion follows public server authority.
 
-Final frozen full regression and publication are still pending. Production config metadata contains
-all gameplay flags but omits sign_in; activate it only with the final verified release. No live OAuth,
-real backend outcome/database, physical-device or full new gamepad certification is claimed. All 17
-approved overflow items remain deferred. Next: committed-source full gate, normal push, existing
-Vercel root-project deployment, static published identity/header proof and the final Claude update.
+R11 is resolved through the approved main serializer/schema audit and schematic fixtures.
+Secret case content and real player data were excluded. No real account, auth service, gameplay API
+or database was used in tests. Authored edits remain frontend-only, apart from Nils's earlier exact
+eight-word dictionary exception. Credits, original events/replay, the server-free demo and pixel style
+remain preserved; no package, external art/font, browser download or budget increase was added.
+
+## Verified
+
+| Check on the final runtime | Result |
+| --- | --- |
+| Full unit suite | 3,599 tests /239 files passed |
+| Full accessibility | 61 screens; zero failures/errors |
+| Local native fault recovery | 212 checks /96 fault cases passed, unchanged clicks/assertions/timeouts |
+| Recorded production case | 19 checks /44 requests; all eight POST routes, desktop locked/dark +320 px relit, explicit uncertain retry, replay and enforcing CSP |
+| Production panel follow-up | 41 prediction,20 Arena,35 Bulletin checks passed |
+| Final build/spoiler | Passed;186 text files,12 protected lines |
+| Final loading | 23 checks;20,881 JS /11,878 CSS bytes; unchanged21,080 JS cap |
+| Final CSP | Five pages; zero violations |
+
+Evidence: [final results](captures/20261108_G9-core-release/final-results.json), complete
+[follow-up logs/reports](captures/20261108_G9-core-release/followup/), and the original
+[frozen44 evidence](captures/20261108_G9-core-release/frozen/). The frozen `646e3a0` run was38/44:
+unit clock fixture, living, cinematics, local chaos, accessibility and aggregate online failed.
+All originals are retained. Focused fixes and the fresh passes above do not constitute a second
+full44 aggregate pass. The aggregate online prefix passed in that frozen run; its corrected panel
+suffix and new case journey were subsequently replayed separately. The native chaos timeout did
+not recur on the unchanged complete rerun; its original failure was not deleted.
+
+## Published and limits
+
+Vercel production deployment `dpl_JC6WUy1pdVvxf7jybFg7Vapay6u1` is READY and owns the canonical domain.
+Static build stamp reports `ee92ca8`, environment `production`; HTML, module entry and exact enforcing
+CSP/COOP/Permissions/security headers were verified with the Vercel connector. The only configuration
+change appended `sign_in` to the existing plain FEATURE_FLAGS row for Production/Preview; existing
+flags and scopes were preserved. No main merge, migration, backend edit or protection change occurred.
+See [publication proof](captures/20261108_G9-core-release/publication.json).
+
+This is the playable-core release, with these explicit verification limits:
+
+- R16 remains open: cloud storm12 FPS/111 calls and cinematics15 FPS/97 calls fail unchanged55/30 FPS
+  gates. The frozen world check passed36 FPS/97 calls. Presenter-hardware proof remains required.
+- Live OAuth/backend outcomes/database behavior are unverified under the no-real-services test rule.
+- Post-deploy browser startup was blocked by the cloud's enforced network allowlist (initial static
+  fetch failed EAI_AGAIN). Static connector proof passed; no live browser/demo-startup pass is claimed.
+- The seven-fault browser matrix for all eight new case routes, physical devices, other engines,
+  assistive technology and expanded gamepad certification are not claimed. All17 overflow items remain deferred.
+
+## Next owners and Claude update
+
+No further core feature package is queued. Claude can review PR #3 and integrate main through the
+normal human-review process. Nils/presenter owner can run the unchanged offline/intercepted R16
+checks on the presenter laptop. These may proceed independently. A human sign-in/playthrough checks
+the remaining live integration assumptions; this agent must retain the no-real-services test boundary.
+
+> G9 core is published at https://the-great-plot-twist.vercel.app/ from ee92ca8 on
+> feat/g9-real-adapter; PR #3 is ready for review. Main remains64fc731. Full unit3599/239,
+> accessibility61, local chaos212/96, recorded case19/44, panel follow-ups, build/loading/CSP pass.
+> Title20,881 JS/11,878 CSS; budgets unchanged. R11 is resolved without secret content. Original
+> frozen38/44 failures are retained; no second full44 pass is claimed. R16 hardware proof, live
+> OAuth/backend verification and post-deploy browser startup remain unverified; the cloud allowlist
+> blocks the last of those. All17 overflow items stay deferred. Exact proof/limits are in
+> frontend/HANDOFF-G9.md and captures/20261108_G9-core-release/. Please review/integrate; no main merge was performed.
 
 # G9 browser handoff
 
@@ -29,9 +84,8 @@ Checkpoint notes and server requests for Claude. Authored changes stay under `fr
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
 `feat/case-backend`; approved serializer/schema reads now also apply, excluding secret content.
 
-Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). The implementation above
-supersedes the historical blocked/package-stop notes below. Remaining release work is the final gate
-and publication; all 17 overflow items remain deferred.
+Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). The published core above supersedes the historical blocked/package-stop notes below. No additional
+core feature package is queued; owner actions and verification limits are listed above.
 
 ## Package4 boundary work complete; case integration still blocked
 
@@ -857,8 +911,8 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 | Id / status | Route or setting | Missing behaviour / why it matters | Proposed shape | Blocks | Meanwhile |
 | --- | --- | --- | --- | --- | --- |
 | R1 · ready on main `f23e86e` | Disposable API/test identities | Current readiness note documents four local identities and an opt-in scratch startup | `docs/handoff/g9-cloud-readiness.md` / local test-server guide | Stream 20 B proof remains | Recorded/intercepted part A; no live services |
-| R2 · on main / team deployment proof | `vercel.json` headers | Preserve main’s enforcing CSP, exact Supabase origins, audio and popup-compatible COOP | Source of truth remains current main; fixture substitutes only the placeholder origin | G9 deployed callback/preview proof | Exact local enforcing preview |
-| R3 · ready / production off | `flags.sign_in` | Registered and default false; enable externally after callback/settings proof | Existing boolean contract | Live sign-in rollout | Production controls strictly gated |
+| R2 · deployed header proof recorded | `vercel.json` headers | Preserve main’s enforcing CSP, exact Supabase origins, audio and popup-compatible COOP | Source of truth remains current main; fixture substitutes only the placeholder origin | G9 deployed callback/preview proof | Exact local enforcing preview |
+| R3 · enabled Production/Preview in published core | `flags.sign_in` | Only this existing flag was appended for the authorized core rollout; actual OAuth round trip remains unverified under R5 | Existing boolean contract | No frontend rollout block | Production controls enabled; user sign-in still requires provider success |
 | R4 · open | `/api/auth/exchange`, `/auth-check.html`, coupled backend tests/checklist | Temporary team check should retire together after in-game sign-in is live | Remove temporary route/page/tests together in a server/integration package | Nothing | G9 never calls the exchange route and leaves public auth-check files untouched |
 | R5 · bindings ready / callback proof pending | Public build values and redirect | Main confirms Production/Preview binding names; G9’s actual callback round trip is not verified | Existing `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY`, root game return | Live sign-in proof | Generated placeholder build and intercepted PKCE |
 | R6 · ready / team reports enabled | Bulletin flag | Flag and fail-before-read behavior are on main | Existing `flags.bulletin` boolean | G9 bulletin integration/proof | Read only when strictly true |
@@ -866,13 +920,13 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 | R8 · ready on main | Crew push hints | Successful join/muster emits one post-commit version hint | Existing A4 `live_crew_updated` contract | G9 crew/presence wiring | Five-second poll only while forming crew screen is open |
 | R9 · optional/open | `POST /api/crews/join` | Optional server preview before spending a wrong guess | `{code, preview:true}` returns preview only, never joins | Nothing | First tap normalizes/previews code shape locally, second confirms |
 | R10 · ready on main | Account metadata | GET me supplies verified `rerollsLeft` and `isHost` | Existing additive fields; still initialize the idempotent name after sign-in | G9 mapping/proof | Host controls remain hidden unless verified/capable |
-| R11 · resolved with approved schema reads | Published case contract and adopted main `64fc731` serializers/schemas | Synthetic serialized response fixtures and strict earned projections now exist in frontend | scripts/online-case-fixture.js and src/online/case-adapter/case-shapes.js | Final recorded case regression | Secret content and real data remain excluded |
+| R11 · resolved with approved schema reads | Published case contract and adopted main `64fc731` serializers/schemas | Strict earned projections and schematic serialized fixtures are wired | scripts/online-case-fixture.js and src/online/case-adapter/case-shapes.js | None for core frontend integration | Final recorded case19 checks/44 requests passed; secret content and real data excluded |
 | R12 · resolved on main | Weather attribution | Readiness confirms credits only in Settings → Credits | Existing contract | Nothing | Preserve clean HUD and weather check |
 | R13 · process/open | G10 changes to `backend/content/secret/` | New secret content can invalidate committed reveal fingerprints | Same server commit runs frontend build and commits regenerated hash-only fingerprint fixture | Subsequent build gates | Regenerate only the hash fixture after a merge if build requests it |
-| R14 · open | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |
+| R14 · connector static identity verified; anonymous preview access unverified | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |
 
 | R15 · resolved by Nils’s explicit eight-word exception | `scripts/text-lint/words.txt` | G24's shared dictionary rejects correctly spelled existing G9 copy and browser names, so the full unit gate fails | Review/add `chrome`, `firefox`, `safari`, `submitting`, `enable`, `perf`, `attempts`, `mit` | All full stream/checkpoint unit gates | Targeted tests/build/browser still run; only the eight approved vocabulary lines changed outside frontend; linter/assertions unchanged |
-| R16 · open | Presenter-laptop frame proof | Cloud SwiftShader misses unchanged 55-FPS storm / 30-FPS travel and cinematic gates; checkpoint 1 is incomplete | Run unchanged offline checks on approved hardware and publish numeric evidence; see `requests/R16-presenter-frame-proof.md` | Checkpoint 1 / stream 19 | Continue independent crew/presence and panels; keep the non-checkpoint label; no quality or budget waiver |
+| R16 · open | Presenter-laptop frame proof | Cloud SwiftShader misses unchanged storm/cinematic FPS gates | Run unchanged offline checks on approved hardware and publish numeric evidence; see requests/R16-presenter-frame-proof.md | Full G9 hardware acceptance | Core published with explicit limit; no quality, threshold or budget reduction |
 
 ## Browser pass
 

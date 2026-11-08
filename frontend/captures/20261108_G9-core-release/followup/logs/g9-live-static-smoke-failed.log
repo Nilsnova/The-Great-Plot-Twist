@@ -1,0 +1,31 @@
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+route.fetch: getaddrinfo EAI_AGAIN the-great-plot-twist.vercel.app
+Call log:
+  - → GET https://the-great-plot-twist.vercel.app/build-stamp.json
+    - user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36
+    - accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+    - accept-encoding: gzip,deflate,br
+    - upgrade-insecure-requests: 1
+    - sec-ch-ua: "Not:A-Brand";v="8", "Chromium";v="156"
+    - sec-ch-ua-mobile: ?0
+    - sec-ch-ua-platform: "Linux"
+
+    at <frontend>/node_modules/.cache/g9-live-static-smoke.mjs:40:32 {
+  log: [
+    '  - → GET https://the-great-plot-twist.vercel.app/build-stamp.json',
+    '    - user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36',
+    '    - accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    '    - accept-encoding: gzip,deflate,br',
+    '    - upgrade-insecure-requests: 1',
+    '    - sec-ch-ua: "Not:A-Brand";v="8", "Chromium";v="156"',
+    '    - sec-ch-ua-mobile: ?0',
+    '    - sec-ch-ua-platform: "Linux"'
+  ],
+  name: 'Error',
+  code: 'EAI_AGAIN'
+}
+
+Node.js v24.22.1
