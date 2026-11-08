@@ -6,8 +6,73 @@ Nils explicitly authorized cloud continuation. G10 publishes the case contract o
 
 Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils asked for the
 shortest working core release, targeting five hours. The latest review below supersedes the
-26-chunk completion queue; all 17 overflow items remain deferred. Package3 is complete locally.
-Work is stopped; wait for Nils before starting the next package.
+26-chunk completion queue; all 17 overflow items remain deferred. Package4’s independent boundary work is complete locally;
+populated case/Relighting integration remains blocked by R11. Work is stopped at this boundary.
+
+## Package4 boundary work complete; case integration still blocked
+
+**The bounded independent work is finished; this is not completed case gameplay.** Verification
+used **15.6 minutes**. Nils asked to do everything possible to finish quickly; no newer approved
+response fixtures were supplied. The latest fetched `feat/case-backend` is still `3098c0a`.
+
+Changed: one pure codec for the eight published case POST routes, with exact own-key bodies,
+caller-owned UID preservation, strict partner options/card pairs and finite bearing normalization.
+It does not send, retry, generate UIDs, validate nested case data, apply outcomes or touch identity.
+Its outer-answer parser preserves refused `repeat:true` outcomes and opaque route extras, while
+requiring the known case object-or-null type. **It remains unwired** until the response validator,
+identity/generation fences and explicit recovery owner can be completed from R11. Do not reuse
+`transport.change()` blindly: its automatic uncertain-write retry is not the case recovery policy.
+Future case callers must retain the original UID/body, read back, and only then allow a manual retry.
+
+One live facade fix: `claimLantern` now returns the approved local `festival_closed` refusal after
+disposal/input validation and before config/auth waits. G9 has no lantern route; G13 owns that UI.
+It neither invites an unnecessary sign-in nor grants a colour/reward. The original malformed-input
+and disposed receipts remain intact. No schema, top-level key, intent, dependency, art/font or UI
+change was added. Earlier ownership, anonymous Bulletin, lazy loading and CSP foundations remain.
+
+Verified: **160 tests /7 focused files**, build/spoiler and **23 loading checks**. The native facade
+regression reproduced three failures/five passes before repair; all eight cases now pass, including
+pending-config signed-in/out calls, hydrated wallet/ledger/save/crew/world/effects/journal preservation,
+malformed colours and frozen disposal. The codec tests reject malformed outer values, unknown or
+missing body fields and unsafe partner shortcuts; repeated refusals stay refused. A Proxy test's
+matcher was corrected to identity booleans so the matcher itself does not inspect the opaque case.
+No nested DTO was invented or certified. Independent final review is clear.
+Cold title remains **20,881 JS /11,878 CSS bytes**, under unchanged limits. The unwired codec is
+absent from the production manifest. No new case browser journey or full G9 regression is claimed.
+All clients and replies were injected; no real account/service/database or external asset was used.
+
+R11 was independently rechecked using **only** the published case-contract section and authorized
+`case_fixtures.py`. That file contains snapshot inputs, not serialized route responses. Active
+cards/routes/jobs, partners, night/post/lock/parting, solved/reveal/credits and exact relit-world scalar
+types remain unspecified. The public world nine-key list alone is insufficient for a strict relit
+fixture. The actionable upstream request is [requests/R11-case-and-world-wire-fixtures.md](requests/R11-case-and-world-wire-fixtures.md).
+G10 must publish placeholder serialized case states plus dark/relit world responses and type notes.
+Do not inspect implementation/secret data or guess fields to bypass this dependency.
+
+Evidence: `captures/20261108_G9-C4-case-boundary/proof.json`, complete red/green/build/loading logs
+and authorized input blob references. C4 evidence is45,703 bytes. Runtime source base is `2647676`;
+four source/test fingerprints and seven preserved foundations are recorded. Existing C3 evidence
+is unchanged. Source/evidence/handoff are committed locally together; remote remains `8844962`.
+**No intermediate push, main merge or deployment.**
+
+**Six planned30-minute budget blocks remain (180 minutes), with case duration unconfirmed.**
+About177.3 minutes of the original five-hour cap remained at verification, before handoff/commit.
+Packages5–6 must perform the still-missing case validation/projection, live intent/recovery and
+world/effects integration after R11;7 is the coherent core journey;8–10 are final full44/handoff/push.
+The case allocation cannot be confirmed until DTOs are inspectable. R16 hardware/known cloud FPS
+failures remain. Do not replace more blocked case work with protocol-only chunks or claim the
+mystery is playable from this boundary. All17 overflow items remain deferred.
+
+Paste-ready update for Claude:
+
+> G9 Package4's safe boundary work is complete locally from2647676: exact eight-route request
+> codec and opaque outer-envelope checks, plus the real local claimLantern→festival_closed fix.
+>160 focused tests, build/spoiler and23 loading checks pass; title20,881 JS /11,878 CSS. Codec
+> remains unwired and live case gameplay is still blocked. R11 request is in
+> frontend/requests/R11-case-and-world-wire-fixtures.md: publish serialized active/jobs/partners,
+> night/parting, solved/reveal/credits and complete dark/relit world examples with exact types.
+> Only published contract/authorized fixtures were read; no secret/implementation workaround.
+> Six budget blocks remain provisionally; R16/final full44/publication remain. Stopped here.
 
 ## Package3 complete: public harbor Bulletin (7 Nov 2026)
 

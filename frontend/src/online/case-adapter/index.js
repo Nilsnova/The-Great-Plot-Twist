@@ -28,6 +28,7 @@ const messages = {
   sign_in_required: 'Sign in with GitHub to claim your kit. Your progress on this device is kept.',
   session_expired: 'Sign in again; your progress on this device is kept.',
   feature_off: 'This feature opens later. You can keep exploring.',
+  festival_closed: 'The lantern festival is not open.',
   not_connected: 'Service unavailable. Try again in a moment.',
   not_ready: 'This part is not ready yet. You can keep exploring.',
 };
@@ -252,6 +253,8 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed()) return answer(ctx.refuse('disposed'));
     const invalid = validateIntent(name, args);
     if (invalid) return answer(invalid);
+    // G13 owns lantern selection; G9 has no claim route, even while config is pending.
+    if (name === 'claimLantern') return answer(ctx.refuse('festival_closed'));
     if (name === 'signOut' || (name === 'continueGame' && !session.isSignedIn())) {
       try { return answer(await handlers[name](...args)); }
       catch { return answer(ctx.refuse('invalid_request')); }

@@ -1,0 +1,55 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/real-lantern-boundary.test.js (8 tests | 3 failed) 104ms
+   × refuses locally during pending config, signed in false, without changing private state 20ms
+   × refuses locally during pending config, signed in true, without changing private state 10ms
+   × preserves a hydrated wallet, save, crew, world, effects and local journal 58ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/real-lantern-boundary.test.js > refuses locally during pending config, signed in false, without changing private state
+ FAIL  tests/real-lantern-boundary.test.js > refuses locally during pending config, signed in true, without changing private state
+AssertionError: expected undefined to match object { accepted: false, …(2) }
+
+- Expected:
+{
+  "accepted": false,
+  "message": "The lantern festival is not open.",
+  "reason": "festival_closed",
+}
+
++ Received:
+undefined
+
+ ❯ tests/real-lantern-boundary.test.js:25:33
+     23|   let reply;const task=item.adapter.claimLantern('sea').then(value=>{r…
+     24|   try{
+     25|     await flush();expect(reply).toMatchObject({accepted:false,reason:'…
+       |                                 ^
+     26|     expect(stable(reply.view)).toEqual(before);expect(item.session.get…
+     27|     expect(item.session.getScope()).toBe(scope);expect(item.publicApi.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/real-lantern-boundary.test.js > preserves a hydrated wallet, save, crew, world, effects and local journal
+AssertionError: expected 'feature_off' to be 'festival_closed' // Object.is equality
+
+Expected: "festival_closed"
+Received: "feature_off"
+
+ ❯ tests/real-lantern-boundary.test.js:48:73
+     46|   const calls=[publicApi.get,...Object.values(api)].map(fn=>fn.mock.ca…
+     47|   for(const colour of ['sea','unpublished-colour','']){
+     48|     const reply=await adapter.claimLantern(colour);expect(reply.reason…
+       |                                                                         ^
+     49|     expect(reply.accepted).toBe(false);expect(stable(reply.view)).toEq…
+     50|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 5 passed (8)
+   Start at  09:26:17
+   Duration  646ms (transform 51%, tests 28%, import 19%, worker 1%)
