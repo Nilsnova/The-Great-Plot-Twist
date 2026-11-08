@@ -24,19 +24,25 @@ export function createPanel(ctx, adapter, onGone) {
   async function guard(task) {
     if (busy||disposed||!modal.element.open||status.blocked()) return undefined;
     const generation=openGeneration;
-    const operation = {}; busy = operation;
+    const doc=modal.element.ownerDocument,activation=doc?.activeElement;
+    const disabledActivation=activation?.matches?.(':disabled')===true;
+    let yielded=false;
+    const focusChanged=event=>{if(event.target!==activation&&event.target!==doc.body&&event.target!==doc.documentElement)yielded=true;};
+    const operation = {stopFocus:()=>doc?.removeEventListener('focusin',focusChanged,true)}; busy = operation;
+    doc?.addEventListener('focusin',focusChanged,true);
     status.say('');
     try {
       const result=await task();
       if(disposed||!modal.element.open||generation!==openGeneration)return undefined;
-      const doc=modal.element.ownerDocument,active=doc?.activeElement;
+      const active=doc?.activeElement;
       // A disabled native action can blur to body. Repair only this still-current modal's lost focus.
-      if(result?.ok===false&&doc&&!doc.hidden
+      if(result?.ok===false&&doc&&!doc.hidden&&!yielded
         &&[...doc.querySelectorAll('dialog[open]')].every(dialog=>dialog===modal.element)
-        &&(active===doc.body||modal.element.contains(active)&&active.matches(':disabled')))status.focusFailure();
+        &&(active===doc.body||modal.element.contains(active)&&active.matches(':disabled')
+          ||disabledActivation&&active===activation))status.focusFailure();
       return result;
     }
-    finally { if(busy===operation)busy=false; }
+    finally { operation.stopFocus();if(busy===operation)busy=false; }
   }
 
   function play(duel) {
@@ -129,7 +135,7 @@ export function createPanel(ctx, adapter, onGone) {
   }
 
   function onClose(reason) {
-    openGeneration++;busy=false;
+    openGeneration++;busy?.stopFocus?.();busy=false;
     adapter.setVisible(false);
     ctx.resetInput?.();
     if(reason!=='dispose')ctx.focus?.();
@@ -137,7 +143,7 @@ export function createPanel(ctx, adapter, onGone) {
 
   const onVisibility = () => {
     if(disposed)return;
-    if(document.hidden){openGeneration++;busy=false;}
+    if(document.hidden){openGeneration++;busy?.stopFocus?.();busy=false;}
     adapter.setVisible(modal.element.open && !document.hidden);
   };
   const stopListening = adapter.subscribe(render);
@@ -147,7 +153,7 @@ export function createPanel(ctx, adapter, onGone) {
 
   function dispose() {
     if (disposed) return;
-    disposed = true;openGeneration++;
+    disposed = true;openGeneration++;busy?.stopFocus?.();busy=false;
     stopWatching?.();
     document.removeEventListener('visibilitychange', onVisibility);
     stopIdentity?.();status.dispose();
@@ -163,7 +169,7 @@ export function createPanel(ctx, adapter, onGone) {
     isGone: () => disposed,
     open(duelId) {
       if(disposed)return;
-      const generation=++openGeneration;busy=false;
+      const generation=++openGeneration;busy?.stopFocus?.();busy=false;
       if (modal.element.open) heading.focus();
       else {
         ctx.resetInput?.();
