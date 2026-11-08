@@ -16,6 +16,7 @@ import {createCrewHandlers} from './crew.js';
 import {createCrewLifecycle} from './crew-lifecycle.js';
 import {createLiveLifecycle} from './live-lifecycle.js';
 import {createIsletLifecycle} from './islet-lifecycle.js';
+import {createCaseLifecycle} from './case-lifecycle.js';
 import {createPanelWallet} from './panel-wallet.js';
 import {createLazyBulletin} from './lazy-bulletin.js';
 import {registerPanelServices} from '../panel-services.js';
@@ -78,6 +79,8 @@ export function createRealCaseAdapter(deps = {}) {
   };
   const crewLife = createCrewLifecycle(ctx, deps);
   ctx.crewLife = crewLife;
+  ctx.refreshRewards = () => refreshAccountRewards(ctx);
+  const cases = createCaseLifecycle(ctx, deps);
   const live = createLiveLifecycle(ctx, deps);
   const accountLifecycle = createAccountLifecycle(ctx);
   ctx.writeDeviceReplay = data => {
@@ -86,6 +89,7 @@ export function createRealCaseAdapter(deps = {}) {
     } catch { /* The validated cloud copy still remains available when device storage is blocked. */ }
   };
   ctx.onDeleted = () => {
+    cases.reset();
     resetIslet();
     live.reset();
     crewLife.refresh();
@@ -145,6 +149,7 @@ export function createRealCaseAdapter(deps = {}) {
     ctx.readMonitor.reset();
     signingOut = true;
     store.invalidate();
+    cases.reset();
     bulletin.stop();
     resetIslet();
     live.reset();
@@ -163,6 +168,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed() || signingOut) return;
     ctx.readMonitor.reset();
     store.invalidate();
+    cases.reset();
     bulletin.stop();
     resetIslet();
     live.reset();
@@ -195,6 +201,7 @@ export function createRealCaseAdapter(deps = {}) {
     retryBulletin:()=>bulletin.refresh({force:true})});
   let restoreTask = null;
   ctx.onConfigReady = async () => {
+    void cases.refresh();
     panelServices.refresh();
     if(ctx.state.config?.flags?.bulletin!==true)ctx.readMonitor.clearRead('bulletin');
     void bulletin.refresh();
@@ -213,7 +220,7 @@ export function createRealCaseAdapter(deps = {}) {
     if (store.isClosed()) return;
     await polling.start();
   }).catch(() => { if (!store.isClosed()) store.commit({notice: ctx.refuse('not_connected')}); });
-  const handlers = {...createProfileHandlers(ctx), ...createCrewHandlers(ctx), signOut: ctx.signOut,
+  const handlers = {...createProfileHandlers(ctx), ...createCrewHandlers(ctx), ...cases.handlers, signOut: ctx.signOut,
     reportPosition: live.presence.reportPosition, setEmote: live.presence.setEmote,
     async buildLight(id) {
       const scope = store.scope();
@@ -276,13 +283,14 @@ export function createRealCaseAdapter(deps = {}) {
     } catch { return answer(ctx.refuse('invalid_request')); }
   }
   return bindCaseMethods({
-    read: store.read, subscribe: store.subscribe, tick() { live.tick(); },
+    read: store.read, subscribe: store.subscribe, tick() { live.tick(); cases.tick(); },
     dispose() {
       if (store.isClosed()) return;
       authIntentGeneration += 1;
       store.dispose();
       panelWallet.dispose();
       bulletin.dispose();
+      cases.dispose();
       islet.dispose();
       panelServices.dispose();
       live.dispose();

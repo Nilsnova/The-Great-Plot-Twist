@@ -30,7 +30,7 @@ async function auditDrawer(page){
   });
 }
 export async function checkOnlineBulletin({openFixture=openBulletinFixture,
-  folder='captures/20261107_G9-C3-bulletin',faults=true,checkChaos}={}){
+  folder='captures/20261107_G9-C3-bulletin',faults=true,publicChaos=true,checkChaos}={}){
   const report={checks:[],layouts:[],requests:[],security:[],coverage:{eventCount:'not observable in production',
     eventProof:'Existing event/conformance checks remain required; no production hook is added.'}};
   const check=(value,label)=>{assert.ok(value,label);report.checks.push(label);};
@@ -84,7 +84,7 @@ export async function checkOnlineBulletin({openFixture=openBulletinFixture,
   }
   if(faults){
     report.readFaults=await checkOnlineBulletinReadFaults({openFixture,folder:folder+'/reads'});
-    report.publicFaults=await checkOnlineBulletinChaos({checkChaos,openFixture,folder:folder+'/chaos'});
+    if(publicChaos)report.publicFaults=await checkOnlineBulletinChaos({checkChaos,openFixture,folder:folder+'/chaos'});
   }
   return report;
   }catch(error){report.failure={type:error.name};throw error;}

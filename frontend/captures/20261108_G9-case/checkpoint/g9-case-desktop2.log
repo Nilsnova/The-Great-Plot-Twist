@@ -1,0 +1,7 @@
+{
+  "checks": 8,
+  "requests": 22,
+  "pending": [
+    "Seven-fault coverage for the eight case route groups and physical-device certification are not claimed by this runner."
+  ]
+}

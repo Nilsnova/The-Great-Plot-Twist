@@ -8,6 +8,7 @@ import {createModal} from '../ui/kit/modal.js';
 import {node,button} from './helpers.js';
 import {syncIntentCooldown} from '../ui/kit/intent-cooldown.js';
 import {createConnectionBanner} from '../ui/connection-banner.js';
+const earnedScreens=new Set(['board','search','partners','finale','accusation','reveal']);
 import {createArrivalScreen} from './arrival.js';
 import {createCrewScreen} from './crew.js';
 const titles={arrival:'Keep your story',crew:'Your crew',board:'The Captain’s Table',search:'Search the coast',partners:'Partner orders',finale:'The Night of Three Lights',accusation:'Aboard the schooner',reveal:'The reveal',relighting:'The coast relit',rewards:'Your voyage',log:'Captain’s Log',hints:'What next?',bulletin:'Harbor bulletin'};
@@ -93,7 +94,9 @@ export function createCaseScreens(ctx) {
     cachedPrivate=nextPrivate;
     if(clearCached)for(const [name,component] of screens)if(name!==current)component.update(view);
     connection.update(view);call.setSignInAllowed(view.account?.canSignIn!==false);if(active&&current==='bulletin'&&view.bulletin?.status==='off')handleBulletinOff();arrival.update(view);ctx.onView?.(view);if(!busy&&localFailure?.reason==='session_expired'&&view.account.state==='signed_in'){localFailure=null;call.clear();}if(!busy&&!localFailure)call.showMessage(view.mode!=='unavailable'&&view.revision<=noticeAfterRevision?'':view.notice?.message??'');
-    if(view.revision!==revision){revision=view.revision;screens.get(current)?.update(view);}if(active)screens.get(current)?.tick?.(view);syncCooldown();}
+    if(view.revision!==revision){revision=view.revision;screens.get(current)?.update(view);}if(active)screens.get(current)?.tick?.(view);syncCooldown();
+    if(active&&view.crew?.caseReady===false&&earnedScreens.has(current)&&opening?.name!=='crew')void open('crew');
+  }
   async function send(name,...args){
     if(busy||disposed||(lastIntent?.[0]===name&&call.read().remaining>0))return;if(content.contains(document.activeElement))refusedFocus=document.activeElement?.dataset.focus??refusedFocus;busy=true;const token=++callRequest,owner=++sendGeneration;lastIntent=[name,...args];if(name==='buildLight')isletDisplayRequest=token;localFailure=null;lastIsletFailure='';call.loading({read:name==='buildLight'});if(name==='completeIntro')arrival.loading();
     try{
@@ -104,6 +107,7 @@ export function createCaseScreens(ctx) {
     }finally{if(owner===sendGeneration)busy=false;}
   }
   async function open(name='crew',params={}){
+    if(view.crew?.caseReady===false&&earnedScreens.has(name))name='crew';
     if(disposed||(name==='bulletin'&&view.bulletin?.status==='off'))return;
     closedBulletin='';
     const token=++openRequest,owner={name,token};opening=owner;callRequest++;screens.get(current)?.close?.();

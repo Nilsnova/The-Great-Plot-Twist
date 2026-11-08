@@ -1,13 +1,37 @@
+## Core case implementation ready for final regression · 8 Nov 2026
+
+Nils authorizes publication and serializer/schema reads, excluding secret content. Authored changes
+stay frontend-only. Adopted main `64fc731` supplies every required case route; R11 is resolved by the
+approved schema audit and synthetic serialized fixtures, without executing backend rules.
+
+Implemented: the earned case projection, all eight intents, stable IDs/read-before-explicit-retry,
+bounded refresh/cooldowns, public world reads, searches/partners/night/signals, accusation/runtime
+reveal/Relighting, null-case Crew navigation and private cinematic cleanup. Duel failure focus now
+retains native activation ownership across automatic re-enabling (4b82a30), without stealing another
+control or modal's focus. Bulletin opening ownership remains intact.
+
+Focused proof:44 native cleanup/navigation/focus tests in 5 files;27 lifecycle/projection tests in 2;
+94 earlier protocol/intent/projection checks in 4. Recorded production case: desktop 8 checks/22 requests;
+320 px plus explicit unknown-pin recovery 9 checks/25 requests, all eight POST routes, enforcing CSP,
+original replay and no real accounts/services/data. Build/spoiler and 23 loading checks pass; cold title
+20,881 JS /11,878 CSS against unchanged21,080 JS cap. Evidence:captures/20261108_G9-case/checkpoint/.
+Initial failures and corrections remain recorded there; no reveal/story screenshots were captured.
+
+Final frozen full regression and publication are still pending. Production config metadata contains
+all gameplay flags but omits sign_in; activate it only with the final verified release. No live OAuth,
+real backend outcome/database, physical-device or full new gamepad certification is claimed. All 17
+approved overflow items remain deferred. Next: committed-source full gate, normal push, existing
+Vercel root-project deployment, static published identity/header proof and the final Claude update.
+
 # G9 browser handoff
 
 Checkpoint notes and server requests for Claude. Authored changes stay under `frontend/`, except Nils’s approved eight-word dictionary update.
 Nils explicitly authorized cloud continuation. G10 publishes the case contract on
-`feat/case-backend`; use its published contract and fixtures only.
+`feat/case-backend`; approved serializer/schema reads now also apply, excluding secret content.
 
-Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). Nils asked for the
-shortest working core release, targeting five hours. The latest review below supersedes the
-26-chunk completion queue; all 17 overflow items remain deferred. Package4’s independent boundary work is complete locally;
-populated case/Relighting integration remains blocked by R11. Work is stopped at this boundary.
+Current release scope and pickup queue: [G9-ROADMAP.md](G9-ROADMAP.md). The implementation above
+supersedes the historical blocked/package-stop notes below. Remaining release work is the final gate
+and publication; all 17 overflow items remain deferred.
 
 ## Package4 boundary work complete; case integration still blocked
 
@@ -61,13 +85,13 @@ Packages5–6 must perform the still-missing case validation/projection, live in
 world/effects integration after R11;7 is the coherent core journey;8–10 are final full44/handoff/push.
 The case allocation cannot be confirmed until DTOs are inspectable. R16 hardware/known cloud FPS
 failures remain. Do not replace more blocked case work with protocol-only chunks or claim the
-mystery is playable from this boundary. All17 overflow items remain deferred.
+mystery is playable from this boundary. All 17 overflow items remain deferred.
 
 Paste-ready update for Claude:
 
 > G9 Package4's safe boundary work is complete locally from2647676: exact eight-route request
 > codec and opaque outer-envelope checks, plus the real local claimLantern→festival_closed fix.
->160 focused tests, build/spoiler and23 loading checks pass; title20,881 JS /11,878 CSS. Codec
+>160 focused tests, build/spoiler and 23 loading checks pass; title20,881 JS /11,878 CSS. Codec
 > remains unwired and live case gameplay is still blocked. R11 request is in
 > frontend/requests/R11-case-and-world-wire-fixtures.md: publish serialized active/jobs/partners,
 > night/parting, solved/reveal/credits and complete dark/relit world examples with exact types.
@@ -124,7 +148,7 @@ five-hour cap remained at verification, before handoff/commit; the current plan 
 Next is case integration (packages4–6), requiring the published R11 serialized response fixtures;
 the last authorized contract read was `3098c0a`. R16 hardware proof/known cloud FPS failures remain.
 Package7 is the coherent core journey;8–10 are final frozen full44 regression and branch publication.
-Full new modality/device certification and all17 overflow items remain deferred.
+Full new modality/device certification and all 17 overflow items remain deferred.
 
 Paste-ready update for Claude:
 
@@ -842,7 +866,7 @@ Settings and database changes belong to Claude/G10. No request authorizes G9 to 
 | R8 · ready on main | Crew push hints | Successful join/muster emits one post-commit version hint | Existing A4 `live_crew_updated` contract | G9 crew/presence wiring | Five-second poll only while forming crew screen is open |
 | R9 · optional/open | `POST /api/crews/join` | Optional server preview before spending a wrong guess | `{code, preview:true}` returns preview only, never joins | Nothing | First tap normalizes/previews code shape locally, second confirms |
 | R10 · ready on main | Account metadata | GET me supplies verified `rerollsLeft` and `isHost` | Existing additive fields; still initialize the idempotent name after sign-in | G9 mapping/proof | Host controls remain hidden unless verified/capable |
-| R11 · all phases published; serialized nested DTO needed | Published case contract / `case_fixtures` at `3098c0a` and main | Current fixtures are CaseSnapshot inputs; exact nested card/lead/search/job/light/partner/credit DTO keys/types are not published there | Add redacted serialized GET-case fixtures for active/night/solved states, replacing every ID/prose value with placeholders while preserving exact keys/types | Verified streams 12–15 projections | Use approved frontend schema fixtures; never inspect secret data or view implementation |
+| R11 · resolved with approved schema reads | Published case contract and adopted main `64fc731` serializers/schemas | Synthetic serialized response fixtures and strict earned projections now exist in frontend | scripts/online-case-fixture.js and src/online/case-adapter/case-shapes.js | Final recorded case regression | Secret content and real data remain excluded |
 | R12 · resolved on main | Weather attribution | Readiness confirms credits only in Settings → Credits | Existing contract | Nothing | Preserve clean HUD and weather check |
 | R13 · process/open | G10 changes to `backend/content/secret/` | New secret content can invalidate committed reveal fingerprints | Same server commit runs frontend build and commits regenerated hash-only fingerprint fixture | Subsequent build gates | Regenerate only the hash fixture after a merge if build requests it |
 | R14 · open | Public preview URL / Vercel system build values | GitHub reports successful deployment but only links an inaccessible dashboard; preview SHA cannot be checked without login | Give an accessible preview origin and confirm `build-stamp.json` has a real SHA and `environment: preview`; enable Vercel system build values if SHA is dev | Stream 0 preview verification only | Compiled local stamp/env/fallback and browser checks pass; no account login attempted |

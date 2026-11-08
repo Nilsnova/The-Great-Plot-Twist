@@ -1,0 +1,53 @@
+
+ RUN  v5.1.0 .
+
+ ❯ tests/g9-duels-failure-focus.test.js (5 tests | 1 failed) 10127ms
+   × repairs genuine disabled-send focus loss to the available failure action without resending 4608ms
+ ❯ tests/real-islet-projection.test.js (61 tests | 1 failed) 151ms
+   ❯ islet additions to the real schema-1 view (12)
+     × adds only nested display fields and retains the exact existing 24 top-level keys 52ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/g9-duels-failure-focus.test.js > repairs genuine disabled-send focus loss to the available failure action without resending
+TimeoutError: page.waitForFunction: Timeout 3000ms exceeded.
+ ❯ tests/g9-duels-failure-focus.test.js:48:18
+     46|       await send(page);await page.evaluate(()=>window.arenaFocusProof.…
+     47|       await retry(page).waitFor({state:'visible'});
+     48|       await page.waitForFunction(()=>document.activeElement===document…
+       |                  ^
+     49|       expect(await retry(page).evaluate(button=>document.activeElement…
+     50|       expect(await page.evaluate(()=>({writes:window.arenaFocusProof.w…
+ ❯ evaluate tests/g20-browser.js:38:24
+ ❯ tests/g9-duels-failure-focus.test.js:43:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/real-islet-projection.test.js > islet additions to the real schema-1 view > adds only nested display fields and retains the exact existing 24 top-level keys
+AssertionError: expected { phase: 'waiting', lights: [], …(6) } to not have property "canCall"
+
+- Expected:
+undefined
+
++ Received:
+false
+
+ ❯ tests/real-islet-projection.test.js:38:82
+     36|       buildLabel: 'Build the recorded signal station for 275 coins and…
+     37|     expect(view.finale).toMatchObject({phase: 'waiting', lights: [], i…
+     38|     expect(view.finale).not.toHaveProperty('buildJobs'); expect(view.f…
+       |                                                                                  ^
+     39|   });
+     40|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 233 passed (235)
+      Tests  2 failed | 3564 passed (3566)
+   Start at  15:01:26
+   Duration  297.90s (tests 86%, import 13%, transform 1%, worker 1%)
+
+    Isolate  235 workers spawned · ~192ms startup each (spawn + environment, per file)
+             at least ~44.98s faster with isolate: false — reuses workers across files instead of one per file
+

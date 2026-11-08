@@ -6,6 +6,7 @@ import {crewPermissions} from './crew-permissions.js';
 import {projectIsletDisplay} from './islet-view.js';
 import {caseReasons} from '../../adapter/reasons.js';
 import {bulletinObservations} from './bulletin-view.js';
+import {projectCase} from './case-view.js';
 
 function emptyView(){
   const adapter=createUnavailableCaseAdapter();
@@ -51,13 +52,21 @@ export function composeRealView(state={}){
   const islet=projectIsletDisplay(state.isletSnapshot,{signedIn:account.state==='signed_in',crew});
   const presenceView=state.presence??view.presence;
   const coins=account.state==='signed_in'&&Number.isFinite(state.me?.coins)?state.me.coins:null;
-  return {...view,schema:1,mode:'online',revision:state.revision??0,now:state.now??0,account,
-    crew:{...crew,isletReminder:islet.reminder},
-    finale:{...view.finale,islet:islet.station,isletFailure:isletFailureView(state.isletFailure,account.state==='signed_in')},
+  const connected=state.config?.flags?.case===true;
+  const earned=connected?projectCase(account.state==='signed_in'?state.case:null,
+    {...state.casePresentation,world:state.worldSnapshot,elapsed:state.caseElapsed??0}):
+    {now:state.now??0,board:view.board,search:view.search,partners:view.partners,finale:view.finale,
+      accusation:view.accusation,reveal:view.reveal,world:view.world,rewards:{},log:{}};
+  return {...view,schema:1,mode:'online',revision:state.revision??0,account,
+    now:earned.now,board:earned.board,search:earned.search,partners:earned.partners,
+    accusation:earned.accusation,reveal:earned.reveal,world:earned.world,effects:connected&&account.state==='signed_in'?state.effects??[]:[],
+    crew:{...crew,isletReminder:islet.reminder,...(connected&&account.state==='signed_in'
+      ?{caseReady:state.caseLoaded===true?state.case!==null:null}:{})},
+    finale:{...view.finale,...earned.finale,islet:islet.station,isletFailure:isletFailureView(state.isletFailure,account.state==='signed_in')},
     captain:{name:account.captainName??'Captain pending',coins,save:account.save},arrival:mapArrival(state),
     permissions:crewPermissions(state,account),presence:presenceView,continuation:continuationView(state.continuation),
-    rewards:walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),
-    bulletin,log:{...view.log,observations:bulletinObservations(bulletin)},
+    rewards:{...walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),...earned.rewards},
+    bulletin,log:{...view.log,...earned.log,observations:bulletinObservations(bulletin)},
     notice:state.notice?{reason:state.notice.reason??null,message:state.notice.message??''}:null};
 }
 

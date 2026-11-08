@@ -70,5 +70,7 @@ await (await import('./check-online-islet.js')).checkOnlineIslet();
 await (await import('./check-online-market.js')).checkOnlineMarket();
 await (await import('./check-online-predictions.js')).checkOnlinePredictions();
 await (await import('./check-online-arena.js')).checkOnlineArena();
-await (await import('./check-online-bulletin.js')).checkOnlineBulletin();
+// The final online-chaos gate owns the public seven-fault matrix; retain this reader's recovery checks here.
+await (await import('./check-online-bulletin.js')).checkOnlineBulletin({publicChaos:false});
+await (await import('./check-online-case.js')).checkOnlineCase();
 }

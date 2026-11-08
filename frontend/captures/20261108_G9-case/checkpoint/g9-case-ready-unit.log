@@ -1,0 +1,9 @@
+
+ RUN  v5.1.0 .
+
+
+ Test Files  2 passed (2)
+      Tests  27 passed (27)
+   Start at  15:19:34
+   Duration  1.59s (import 73%, transform 17%, tests 8%, worker 1%)
+

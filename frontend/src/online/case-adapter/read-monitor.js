@@ -1,5 +1,5 @@
 // GET presentation and bounded retries. Only fixed read kinds and public status words are retained.
-const kinds=new Set(['config','me','save','crew','ledger','bulletin']);
+const kinds=new Set(['config','me','save','crew','ledger','bulletin','case','world']);
 const backoff=[5000,15000,30000];
 const failures={
   offline:{state:'offline',message:'You are offline. Your progress on this device is kept.',reason:'offline'},
@@ -61,7 +61,7 @@ export function createReadMonitor(ctx,{setTimer=globalThis.setTimeout,clearTimer
   }
   function reasonFor(kind,status,mapped){
     // Public endpoints cannot expire an account; retain their real HTTP status for diagnostics.
-    if((kind==='config'||kind==='bulletin')&&(status===401||mapped?.reason==='session_expired'))return 'internal_error';
+    if((kind==='config'||kind==='bulletin'||kind==='world')&&(status===401||mapped?.reason==='session_expired'))return 'internal_error';
     if(status===401||mapped?.reason==='session_expired')return 'session_expired';
     if(status===0||mapped?.reason==='offline')return 'offline';
     if(status===503||mapped?.reason==='not_connected')return 'not_connected';
