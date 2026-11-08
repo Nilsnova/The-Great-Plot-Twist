@@ -85,16 +85,20 @@ it('keeps supplied captain data literal and its save state honest',async()=>{
 it('shows friends from the title without pretending a disconnected build has online crews',async()=>{
   await evaluate.withPage(async page=>{
     await page.evaluate(async()=>{
-      const {createShell}=await window.g20Import('/src/shell/controller.js');window.friendPlays=[];
-      window.friendShell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},
-        focus(){},hasOverlay:()=>false,onPlay:value=>window.friendPlays.push(value)});
+      const {createShell}=await window.g20Import('/src/shell/controller.js');window.friendPlays=[];window.friendAccounts=0;
+      window.friendShell=createShell({container:document.body,readSave:()=>null,readAccount:()=>({state:'signed_out',canSignIn:false,hasKit:false}),resetInput(){},onState(){},
+        focus(){},hasOverlay:()=>false,openAccount(){window.friendAccounts++;},onPlay:value=>window.friendPlays.push(value)});
     });
     expect(await page.locator('.shell-menu button').allTextContents())
       .toEqual(['New game','Play with friends','Continue','Settings']);
     await page.getByRole('button',{name:'Play with friends',exact:true}).click();
-    const solo=page.getByRole('button',{name:'Play solo',exact:true});await solo.waitFor();
+    const solo=page.getByRole('button',{name:'Start a new story',exact:true});await solo.waitFor();
     expect(await page.locator('.shell-screen h2').textContent()).toBe('Play with friends');
-    expect(await page.locator('.shell-copy').textContent()).toContain('not connected');
+    expect(await page.locator('.friends-guide h3').textContent()).toBe('Explore the island');
+    expect(await page.locator('.friends-guide .shell-copy').textContent()).toContain('Online crews are unavailable');
+    expect(await page.locator('.friends-help').getAttribute('open')).toBeNull();
+    expect(await page.getByRole('button',{name:'Account and saves',exact:true}).count()).toBe(0);
+    expect(await page.evaluate(()=>window.friendAccounts)).toBe(0);
     expect(await page.evaluate(()=>window.friendPlays.length)).toBe(0);
     await solo.click();
     expect(await page.evaluate(()=>({plays:window.friendPlays,mode:window.friendShell.mode})))
