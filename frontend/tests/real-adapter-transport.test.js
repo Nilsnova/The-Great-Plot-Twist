@@ -71,6 +71,20 @@ describe('real adapter transport', () => {
     } finally { test.adapter.dispose(); }
   });
 
+  it('keeps the uncertain action UID when its automatic retry is rate limited', async () => {
+    const test = setup([failure(503, 'database_unavailable'), failure(429, 'rate_limited'),
+      okay({captainName: me.captainName, rerollsLeft: 0})]);
+    try {
+      await test.ready();
+      test.calls.length = 0;
+      expect(await test.adapter.rerollName()).toMatchObject({accepted: false, reason: 'rate_limited'});
+      expect((await test.adapter.rerollName()).accepted).toBe(true);
+      const writes = test.calls.filter(call => call.method === 'POST');
+      expect(writes).toHaveLength(3);
+      expect(writes.map(call => call.body.actionUid)).toEqual(Array(3).fill(writes[0].body.actionUid));
+    } finally { test.adapter.dispose(); }
+  });
+
   it.each(['already_applied', 'already_seated', 'already_started'])('accepts %s then rereads', async code => {
     const test = setup([failure(409, code)]);
     try {

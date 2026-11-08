@@ -85,7 +85,8 @@ export function createAdapterTransport(ctx) {
     if (!store.isCurrent(scope)) return {mapped: ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired')};
     if (mapped.recovery === 'reread') await recover(kind, mapped.recovery, scope);
     if (!store.isCurrent(scope)) return {mapped: ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired')};
-    if (mapped.recovery !== 'unknown_outcome') pending.delete(key);
+    // A rate-limited retry does not resolve an earlier uncertain action.
+    if (mapped.recovery !== 'unknown_outcome' && mapped.reason !== 'rate_limited') pending.delete(key);
     return {reply, mapped: mapped ?? okay()};
   }
   return {read, change, clearPending() {
