@@ -36,7 +36,10 @@ export function createAccountHost({container,adapter,focus,onContinue}){
       if(disposed||token!==request)return;
       if(!screen)screen=createAccountScreen({send,navigate(name,result){if(name==='continue'){close();onContinue?.(result);}}});
       const view=adapter.read();syncSignIn(view);modal.setContent(screen.element);screen.update(view);
-      screen.element.querySelector('button:not(:disabled)')?.focus();
+      const expired=view.account?.state==='expired'?screen.element.querySelector('[data-focus="account-sign-in"]:not(:disabled)'):null;
+      expired?.scrollIntoView({block:'nearest',inline:'nearest'});
+      (expired??modal.element.querySelector('.kit-modal-header button'))?.focus({preventScroll:true});
+      if(!expired){modal.body.scrollTop=0;modal.element.scrollTop=0;}
     }catch{if(!disposed&&token===request)notice('The account panel could not load. Close it and try again.');}
   }
   return {get active(){return active;},open,close,update,notice,

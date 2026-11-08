@@ -7,7 +7,7 @@ import {createShell} from './shell/controller.js';
 import {createLazyAccountHost} from './shell/lazy-account.js';
 import {createLazyAccountSummary} from './shell/lazy-summary.js';
 import {createClientAdapter} from './adapter/select.js';
-async function sendCaseIntent(...args){return (await import('./adapter/intent.js')).sendCaseIntent(...args);}
+async function sendCaseIntent(...args){return (await (await loadWorld()).loadIntentModule()).sendCaseIntent(...args);}
 import {introJournal} from './story/intro-journal.js';
 import {createLazyAudio} from './audio/lazy.js';
 import {createCaptions} from './audio/captions.js';
@@ -25,8 +25,9 @@ const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
 let festivalEntry=null,background=null;
 const loadWorld=()=>import('./shell/world-loader.js');
 const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-const festivalReady=afterPaint.then(loadWorld).then(module=>module.loadAfterPaintModule()).then(module=>{if(disposed)return null;background=module.startAfterPaint({container,audio,caption:captions.show,focus,adapter,send,runtime:()=>runtime,shell:()=>shell,openAccount:()=>accountHost.open(),isLoading:()=>loading,isDisposed:()=>disposed});return background.festivalReady;}).then(entry=>(festivalEntry=entry)).catch(()=>null);
+const festivalReady=afterPaint.then(loadWorld).then(module=>module.loadAfterPaintModule()).then(module=>{if(disposed)return null;background=module.startAfterPaint({container,audio,caption:captions.show,focus,adapter,send,runtime:()=>runtime,shell:()=>shell,openAccount,isLoading:()=>loading,isDisposed:()=>disposed});return background.festivalReady;}).then(entry=>(festivalEntry=entry)).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
+function openAccount(){return accountHost.open();}
 async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
   if(disposed)return result;
@@ -34,19 +35,19 @@ async function send(name,...args){
   if(!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
   return result;
 }
-const summary=createLazyAccountSummary({send,openAccount:()=>accountHost.open()});
+const summary=createLazyAccountSummary({send,openAccount});
 summary.update(adapter.read());
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
   await ensureMotion();loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
-  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,openAccount:()=>accountHost.open(),isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
+  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,openAccount,isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
     runtime.setFestivalAvailable?.(festivalEntry?.available===true);runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
   }catch(error){console.error(error);pending=null;shell.show('title');shell.notice('The coast could not load. Check the connection and WebGL 2, then try again.');return null;}
   finally{loading=false;status.remove();}
 }
-async function play(resume,ready){
+async function play(resume,ready,crew=false){
   const token=++playRequest;
   const result=resume?(ready??await sendCaseIntent(adapter,'continueGame')):null;
   if(disposed||token!==playRequest)return;
@@ -54,7 +55,12 @@ async function play(resume,ready){
   const continuation=result?.view?.continuation;
   if(continuation?.source==='cloud'&&Array.isArray(continuation.actions))introJournal().write(JSON.stringify({version:1,actions:continuation.actions}));
   shell.play();const game=await loadGame();
-  if(!disposed&&token===playRequest&&shell.mode==='playing')await game?.begin(resume,continuation);
+  if(!disposed&&token===playRequest&&shell.mode==='playing'){
+    await game?.begin(resume,continuation);
+    if(crew&&!disposed&&token===playRequest&&shell.mode==='playing'&&!accountHost.active&&!festivalEntry?.active&&!game?.hasOverlay?.()){
+      const account=adapter.read().account;if(account.state==='signed_in'&&account.hasKit===true)await game?.openCrew();
+    }
+  }
 }
 function onEscape(){
   if(accountHost.active){accountHost.close();return true;}
@@ -62,7 +68,7 @@ function onEscape(){
   return runtime?.handleEscape?.()??false;
 }
 shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>adapter.read().account,accountSummary:summary.element,
-  resetInput(){},focus,openAccount:()=>accountHost.open(),onEscape,
+  resetInput(){},focus,openAccount,onEscape,
   demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();const loader=await loadWorld();return (await loader.loadSettingsModule()).createSettingsView(adapter.read());},
   hasOverlay:()=>loading||accountHost.active||festivalEntry?.active||!!runtime?.hasOverlay(),
   onState(mode){if(mode==='title'){playRequest++;summary.start();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},

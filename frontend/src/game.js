@@ -265,7 +265,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
-  }, { once: true });  return {dispose,resetInput:resetControls,setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
+  }, { once: true });  return {dispose,resetInput:resetControls,openCrew:()=>caseUi.open('crew'),setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
     setMode(mode){mapTouch?.cancel();if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){marketUi?.close();desk.close();arenaEntry?.close();sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}

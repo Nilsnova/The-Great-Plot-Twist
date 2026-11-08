@@ -3,10 +3,8 @@ import {node} from '../ui/kit/dom.js';
 import {menuButton} from './screens.js';
 export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back}){
   if(mode==='friends'){
-    const solo=menuButton('Play solo',()=>{play();ctx.onPlay(false);});
-    nav.append(solo,menuButton('Back',back,true));
-    body.replaceChildren(node('p','shell-copy','Online crews are not connected in this build.'),
-      node('p','shell-note','You can explore solo now. Your progress stays in this browser.'),nav);
+    const {fillFriendsPage}=await import('./friends.js');if(!isCurrent())return;
+    fillFriendsPage({body,nav,ctx,isCurrent,play,back});
   }else if(mode==='pause'){
     const {fillPauseMenu}=await import('./pause.js');if(!isCurrent())return;
     fillPauseMenu(nav,{play,page,show,openAccount:ctx.openAccount});body.replaceChildren(nav);
@@ -22,5 +20,9 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
     }
     body.append(menuButton('Back',back,true));
   }
-  body.querySelector('button,input,select,a')?.focus();
+  if(mode==='credits'||mode==='friends'){
+    const dialog=body.closest('dialog'),heading=dialog?.querySelector('.kit-heading');
+    if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+    body.closest('.kit-modal-body')?.scrollTo(0,0);if(dialog)dialog.scrollTop=0;
+  }else body.querySelector('button,input,select,a')?.focus();
 }
