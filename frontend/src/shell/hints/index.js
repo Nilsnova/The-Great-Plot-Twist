@@ -2,13 +2,14 @@
 import './hints.css';
 import {node} from '../../ui/kit/dom.js';
 import {createButton} from '../../ui/kit/button.js';
-import {filterHintActions,normalizeHintPreferences} from './logic.js';
+import {dismissHint,filterHintActions,normalizeHintPreferences} from './logic.js';
+import {onboardingHints} from './onboarding-logic.js';
 
 export {filterHintActions,normalizeHintPreferences};
 
-export function createHints({navigate,preferences={},onPreferences}={}){
+export function createHints({navigate,preferences={},onPreferences,onboardingAction,readIntroComplete=()=>false}={}){
   const element=node('section','case-hints');element.setAttribute('aria-label','Case guidance');
-  let model={items:[],actions:[]},prefs=normalizeHintPreferences(preferences),buttons=[];
+  let model={items:[],actions:[]},fullView=null,prefs=normalizeHintPreferences(preferences),buttons=[];
   function addButton(parent,label,onClick,focus){
     const component=createButton({label,onClick,variant:'quiet'});if(focus)component.element.dataset.focus=focus;
     if(focus?.startsWith('dismiss-'))component.element.setAttribute('aria-label',`Dismiss tip · ${parent.querySelector('h4')?.textContent??focus}`);
@@ -22,10 +23,15 @@ export function createHints({navigate,preferences={},onPreferences}={}){
     const toggle=node('div','case-hint-controls');addButton(toggle,prefs.hintsEnabled?'Hints on':'Hints off',()=>persist({...prefs,hintsEnabled:!prefs.hintsEnabled}),'hints-toggle');element.append(toggle);
     if(prefs.hintsEnabled){
       const dismissed=new Set(prefs.dismissedHints);
-      for(const hint of model.items??[]){
+      const first=onboardingHints(fullView,{introComplete:readIntroComplete()}).find(hint=>!dismissed.has(hint.id));
+      const supplied=Array.isArray(model.items)?model.items:[];
+      for(const hint of [...(first?[first]:[]),...supplied]){
         if(!hint?.id||dismissed.has(hint.id))continue;
         const card=node('article','case-hint'),heading=node('h4','',hint.title??'Tip');card.append(heading,node('p','',hint.body??''));
-        addButton(card,'Dismiss tip',()=>persist({...prefs,dismissedHints:[...prefs.dismissedHints,hint.id]}),`dismiss-${hint.id}`);element.append(card);
+        if(hint===first&&typeof onboardingAction==='function')addButton(card,hint.label,()=>{
+          persist(dismissHint(prefs,hint.id));onboardingAction(hint.action);
+        },`onboarding-${hint.action}`);
+        addButton(card,'Dismiss tip',()=>persist(dismissHint(prefs,hint.id)),`dismiss-${hint.id}`);element.append(card);
       }
     }else element.append(node('p','case-hint-empty','First-time hints are off for this device.'));
       const actions=filterHintActions(model.actions),list=node('div','case-hint-actions');
@@ -34,7 +40,7 @@ export function createHints({navigate,preferences={},onPreferences}={}){
 
     if(focusKey){const target=[...element.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey&&!item.disabled);(target??element.querySelector('button:not(:disabled)'))?.focus({preventScroll:true});}
   }
-  function update(view){model=view?.hints??view??{items:[],actions:[]};render();}
+  function update(view){fullView=view?.account?view:null;model=view?.hints??view??{items:[],actions:[]};render();}
   function dispose(){buttons.forEach(item=>item.dispose());buttons=[];element.remove();}
   render();
   return {element,update,setPreferences(value){prefs=normalizeHintPreferences(value);render();},dispose};
