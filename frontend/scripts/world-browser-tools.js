@@ -19,10 +19,25 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
   if (!executablePath) throw new Error('Install Chrome or set CHROME_PATH.');
-  let url=process.env.TEST_URL,server=null,browser=null;
+  let url=process.env.TEST_URL,server=null,browser=null,closing;
+  const ownsServer=!url,previousNodeEnv=process.env.NODE_ENV;
+  function close(){
+    if(!closing)closing=Promise.resolve().then(async()=>{
+      try{await browser?.close();}finally{
+        try{await server?.close();}finally{
+          if(ownsServer){
+            if(previousNodeEnv===undefined)delete process.env.NODE_ENV;
+            else process.env.NODE_ENV=previousNodeEnv;
+          }
+        }
+      }
+    });
+    return closing;
+  }
   try {
     // An owned, ephemeral server cannot accidentally serve a previous check's dev/preview mode.
     if(!url){
+      process.env.NODE_ENV=preview?'production':'development';
       const network={host:'127.0.0.1',port:0,strictPort:true};
       server=preview?await createPreview({logLevel:'error',...(outDir?{build:{outDir}}:{}),
         preview:{...network,...(headers?{headers}:{}),...proxy}}):await createServer({logLevel:'error',server:{...network,hmr,...proxy}});
@@ -46,13 +61,9 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
     });
     page.on('request',request=>{if(!request.url().startsWith(url)&&!request.url().startsWith('data:'))external.push(request.url());});
     await mkdir('captures',{recursive:true});
-    let closed=false;
-    return {page,browser,errors,external,pageErrors,consoleErrors,url,close:async()=>{
-      if(closed)return;closed=true;
-      try{await browser.close();}finally{await server?.close();}
-    }};
+    return {page,browser,errors,external,pageErrors,consoleErrors,url,close};
   }catch(error){
-    try{await browser?.close();}finally{await server?.close();}
+    await close();
     throw error;
   }
 }

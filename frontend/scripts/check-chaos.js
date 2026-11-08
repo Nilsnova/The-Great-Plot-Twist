@@ -57,14 +57,44 @@ async function recoverAccount(reason,keepOpen=false){
   }
   if((reason==='session_expired'||reason==='save_conflict')&&!keepOpen){await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});}
 }
+async function observeTrigger(){
+  return page.evaluateHandle(()=>{
+    const counts={pointerdown:0,pointerup:0,click:0};let last=null;
+    const identity=node=>({tag:node instanceof Element?node.tagName.toLowerCase():null,
+      dataFocus:node instanceof Element&&/^[a-z0-9_.:-]{1,96}$/i.test(node.dataset.focus??'')?node.dataset.focus:null});
+    const record=event=>{counts[event.type]++;last=event.target;};
+    for(const type of Object.keys(counts))document.addEventListener(type,record,true);
+    return {
+      reset(){for(const type of Object.keys(counts))counts[type]=0;last=null;},
+      read(){
+        const active=document.activeElement,box=active instanceof Element?active.getBoundingClientRect():null;
+        const rect=box?{x:box.x,y:box.y,width:box.width,height:box.height}:null;
+        const x=box?box.x+box.width/2:null,y=box?box.y+box.height/2:null;
+        const hit=Number.isFinite(x)&&Number.isFinite(y)?document.elementFromPoint(x,y):null;
+        return {counts:{...counts},active:identity(active),lastPointer:identity(last),
+          openDialogs:document.querySelectorAll('dialog[open]').length,activeRect:rect,activeCenterHit:identity(hit)};
+      },
+      stop(){for(const type of Object.keys(counts))document.removeEventListener(type,record,true);last=null;},
+    };
+  });
+}
 async function faultMatrix(screen,trigger,{notice='.case-modal[open] .case-notice',keepAccount=false}={}){
-  for(const reason of reasons){
-    const before=await read();await setFault(reason);await trigger();
+  const observer=await observeTrigger();
+  try{for(const reason of reasons){
+    const before=await read();await setFault(reason);
+    const context={screen,reason,attempt:(report.attempts??=[]).length+1};report.attempts.push(context);
+    await observer.evaluate(value=>value.reset());
+    try{await trigger();}catch(error){
+      const diagnostic=await observer.evaluate(value=>value.read()).catch(()=>({observerUnavailable:true}));
+      (report.triggerFailures??=[]).push({...context,...diagnostic});throw error;
+    }
     await waitFor(reason=>window.__plotTwist.adapter.read().notice?.reason===reason,reason);
     await unchanged(before,`${screen} ${reason}`);
     const message=(await page.locator(notice).last().textContent().catch(()=>''))?.trim()??'';
     check(message.length>8&&!/TypeError|Error:|stack trace/i.test(message),`${screen} ${reason} shows a player-safe notice`);
     report.faults.push({screen,reason});await recoverAccount(reason,keepAccount);
+  }}finally{
+    await observer.evaluate(value=>value.stop()).catch(()=>{});await observer.dispose().catch(()=>{});
   }
 }
 const chooseIntro=id=>chooseIntroAction(page,id);

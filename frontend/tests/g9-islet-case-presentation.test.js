@@ -62,7 +62,13 @@ async function mount(page,{crewStatus='active',canBuild=true,coins=0}={}){
   },{crewStatus,canBuild,coins});
 }
 async function open(page,name='finale'){await page.evaluate(name=>window.isletCaseProof.screens.open(name),name);}
-async function freezeClock(page){await page.clock.install();await page.clock.pauseAt(await page.evaluate(()=>Date.now()+20));}
+async function freezeClock(page){
+  // Both callers freeze before starting a build or creating any failure/cooldown deadline.
+  // Use fixed virtual headroom, rather than racing a 20 ms browser-to-runner round trip.
+  const anchor=Date.parse('2026-11-08T12:00:00Z');
+  await page.clock.install({time:anchor});
+  await page.clock.pauseAt(anchor+60000);
+}
 async function dispose(page){await page.evaluate(async()=>{
   const proof=window.isletCaseProof;proof.screens.dispose();for(const stop of proof.eventStops)stop();
   for(const held of proof.pending)held.resolve({accepted:false,reason:'disposed',message:'Recorded closure.',view:proof.read()});
