@@ -36,7 +36,8 @@ export function createAccountSaves(ctx){
     return ctx.refuse('save_conflict');
   }
   async function readLatest(scope,owner=identity){
-    const result=await transport.read('save');
+    // Recovery and explicit choices must observe a read started after this operation.
+    const result=await transport.read('save',{fresh:true});
     if(!current(scope,owner))return {mapped:expired()};
     return result;
   }
