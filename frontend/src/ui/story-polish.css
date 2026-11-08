@@ -12,3 +12,10 @@
   .intro-modal .intro-view .kit-dialogue{padding-block:0}
   .intro-modal .intro-view .kit-choices{gap:2px;min-height:0}
 }
+
+/* Important sound captions keep a row without pushing the fixed story footer off-screen. */
+.kit-modal.intro-modal[open]:has(>.sound-caption:not([hidden])){display:grid;grid-template-rows:44px auto minmax(0,1fr);row-gap:2px}
+.intro-modal:has(>.sound-caption:not([hidden]))>.kit-modal-body{height:auto;min-height:0;overflow:hidden}
+.intro-modal>.sound-caption.in-dialog{margin:0;padding:2px 8px;border-width:1px;border-radius:6px;font:18px/1.2 system-ui,sans-serif}
+.intro-modal:has(>.sound-caption:not([hidden])) .kit-dialogue-text{flex:0 0 auto;min-height:0}
+.intro-modal:has(>.sound-caption:not([hidden])) .kit-dialogue-copy{scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#c6ad75 #183c36}
