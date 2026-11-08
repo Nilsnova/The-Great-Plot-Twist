@@ -4,8 +4,10 @@ import {browserHarness} from './g20-browser.js';
 const evaluate=browserHarness();
 
 async function mount(page,{detailOnly=false,readbackWait=null}={}){
-  await page.clock.install({time:new Date('2026-11-07T00:00:00Z')});
-  await page.clock.pauseAt(await page.evaluate(()=>Date.now()+20));
+  // Freeze before creating adapter/status timers without a browser-RPC startup deadline.
+  const installedAt=Date.parse('2026-11-07T00:00:00Z');
+  await page.clock.install({time:installedAt});
+  await page.clock.pauseAt(installedAt+60000);
   await page.evaluate(async options=>{
     const {createHttpAdapter}=await window.g20Import('/src/screens/duels/http-adapter.js');
     const {createStatus}=await window.g20Import('/src/screens/duels/panel-status.js');
