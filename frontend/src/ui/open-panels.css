@@ -1,0 +1,250 @@
+/* Open game panels share the illustrated coast's teal, warm paper and brass.
+   Loaded on demand: the title, story dialogue and presenter layout keep their own styles. */
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) {
+  --panel-ink:#f4ecd7;
+  --panel-muted:#d0ddd4;
+  --panel-gold:#f3d58c;
+  --panel-border:#849d91;
+  --panel-surface:#18383c;
+  --panel-card:#1c3c3f;
+  color:var(--panel-ink);
+  font-family:system-ui,sans-serif;
+  line-height:1.55;
+  background:linear-gradient(135deg,#18383e,#183630);
+  background-color:#183630;
+  border:1px solid #bca77b;
+  border-radius:16px;
+  box-shadow:0 24px 80px #041c25b3,inset 0 1px #e6dfbd1a;
+}
+
+/* Other panels retain their content width. A single body scroller leaves Close reachable. */
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])[open] {
+  display:flex;
+  flex-direction:column;
+  max-width:calc(100vw - 28px);
+  max-height:calc(100dvh - 28px);
+  padding:20px;
+  overflow:hidden;
+}
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-body {
+  min-height:0;
+  min-width:0;
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  padding:0 5px 4px 0;
+  max-height:none;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-header {
+  flex-shrink:0;
+  align-items:center;
+  gap:16px;
+  margin:0 0 18px;
+  padding:0 0 14px;
+  border-bottom:1px solid #819b8f66;
+  background:transparent;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-header .kit-heading {
+  min-width:0;
+  margin:0;
+  color:#ffe7b2;
+  font:600 clamp(23px,2.5vw,29px)/1.2 Georgia,serif;
+  overflow-wrap:anywhere;
+  text-align:left;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])::backdrop {
+  background:#06232ac9;
+}
+
+/* The game keeps its native controls, clear focus rings and full-size touch targets. */
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) :is(.kit-button,.kit-tab) {
+  min-width:44px;
+  min-height:44px;
+  max-width:100%;
+  padding:10px 16px;
+  border:1px solid #a0b39a;
+  border-radius:8px;
+  background:#355654;
+  color:#fff0cd;
+  font:600 16px/1.4 system-ui,sans-serif;
+  box-shadow:inset 0 1px #ffffff0d;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  text-decoration:none;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) .kit-quiet {
+  background:#19373b;
+  border-color:#849d91;
+  color:#e4e5d2;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) :is(.kit-button,.kit-tab):hover:not(:disabled) {
+  background:#446864;
+  border-color:#e4d4a2;
+  color:#fff4d9;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) .kit-icon-button {
+  flex:none;
+  padding:8px;
+  font:400 27px/1 system-ui,sans-serif;
+  background:#183539;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) :is(button,input,select,a,summary):focus-visible {
+  outline:3px solid var(--panel-gold);
+  outline-offset:3px;
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) :is(.kit-tab[aria-selected=true],.case-nav>[aria-current=page],.case-light-tabs [aria-pressed=true]) {
+  background:#f0d493;
+  border-color:#fff0c5;
+  color:#17363a;
+}
+.kit-modal.account-modal [data-intent=signIn],.kit-modal.account-modal [data-intent=continueGame],
+.kit-modal.case-modal .crew-join>.kit-button {
+  color:#17363a;
+  background:#f0d493;
+  border-color:#fff0c5;
+}
+.kit-modal.account-modal [data-intent=deleteMyData],.kit-modal.account-modal [data-intent=armDelete] {
+  border-color:#dfb59b;
+  color:#ffe0cb;
+  background:#483a36;
+}
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.kit-tabs,.kit-tablist,.kit-tabpanel) {
+  min-width:0;
+}
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) .kit-tabs {
+  background:transparent;
+  border:0;
+  font-family:inherit;
+}
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) .kit-tablist {
+  gap:8px;
+  padding:0 0 14px;
+  border-bottom:1px solid #819b8f66;
+}
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) .kit-tabpanel {
+  padding:18px 0 0;
+}
+
+/* Cards create a quiet hierarchy without burying useful warnings or legal copy. */
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.account-save,.crew-seat,.case-arrival,.case-log-card,.case-route,.case-job,.case-partner,.case-deduction,.market-card,.market-position,.market-closed,.desk-card,.desk-stake,.duel-card,.duel-lantern,.sports-card,.islet-spot) {
+  min-width:0;
+  padding:18px;
+  border-width:1px;
+  border-color:var(--panel-border);
+  border-radius:10px;
+  background:var(--panel-card);
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.account-status,.account-banner,.account-feedback,.case-notice,.market-status,.market-blocked,.desk-notice,.desk-status:not(:empty),.duel-message,.duel-notice,.duel-done,.islet-status:not(:empty)) {
+  border-radius:0 8px 8px 0;
+  background:#29494a;
+  color:#f4ecd7;
+  padding:12px 16px;
+}
+.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.market-note,.market-follows,.market-tagline,.desk-rule,.desk-hint,.desk-footer,.duel-intro,.duel-hint,.duel-when,.islet-note,.islet-detail,.islet-plot) {
+  color:var(--panel-muted);
+}
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.kit-badge,.islet-badge,.sports-badge,.duel-chip) {
+  font-family:system-ui,sans-serif;
+  border-radius:5px;
+}
+.account-screen,.account-screen button,.account-screen :is(h3,h4),
+.islet-modal .islet-badge,.case-modal :is(.case-field,.case-field input,.case-field select) {
+  font-family:system-ui,sans-serif;
+}
+.account-screen :is(h3,h4),.case-modal .case-arrival h3 {
+  color:#ffe7b2;
+}
+.account-modal :is(.account-conflict,.account-delete-confirm) {
+  display:grid;
+  gap:12px;
+  padding:18px;
+  border:1px solid #ddbc86;
+  border-radius:10px;
+  background:#353f38;
+}
+.account-modal :is(.account-conflict,.account-delete-confirm)>p { margin:0; }
+.account-modal .account-muted { color:#d0ddd4; }
+.account-modal :is(.account-actions,.account-save-choices) { gap:10px; }
+.case-modal .crew-code { border-radius:8px; background:#102f35; border-width:1px; }
+.case-modal .crew-seat h3 { clear:none; }
+.case-modal .case-cards { border-radius:10px; }
+.case-modal :is(.case-pair-controls,.case-empty,.case-reveal-line) { border-radius:8px; }
+.case-modal .case-screen-content { padding-top:2px; }
+
+/* Forms and settings use the same surfaces; radio and checkbox hit areas stay native. */
+.kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea) {
+  box-sizing:border-box;
+  min-height:44px;
+  min-width:0;
+  max-width:100%;
+  padding:10px 12px;
+  background:#102f35;
+  color:#fff1d2;
+  border:1px solid #9eafa0;
+  border-radius:7px;
+  font:16px/1.4 system-ui,sans-serif;
+}
+:is(.market-modal,.desk-modal,.duel-modal) :is(.market-choices,.desk-fieldset,.duel-group,.duel-round) {
+  border:1px solid #849d91;
+  border-radius:8px;
+}
+:is(.market-modal,.desk-modal,.duel-modal) :is(.market-choice,.desk-choice,.duel-choice,.duel-option) {
+  border-radius:7px;
+}
+.shell-screen[data-mode=settings] .preference {
+  padding:14px;
+  border:1px solid #799487;
+  border-radius:9px;
+  background:#18373a;
+}
+.shell-screen[data-mode=settings] :is(.preferences,.preference,.controls-overview,.preferences-status) { font-size:18px; }
+.shell-screen[data-mode=settings] .controls-overview { border-top:1px solid #819b8f66; padding-top:14px; }
+.sports-modal .sports-body { font-family:system-ui,sans-serif; }
+.sports-modal .sports-body :is(p,li,small,figcaption,.sports-eyebrow,.sports-simulation,.sports-freshness,.sports-time,.sports-rules,.sports-competition,.sports-badge,.sports-reference,.sports-footer) { font-size:18px; }
+.sports-modal .sports-field label { font-size:16px; }
+.sports-modal .sports-summary { padding:0 0 18px; }
+.sports-modal :is(.sports-notice,.sports-pending,.sports-warning) { border-radius:8px; }
+.sports-modal .sports-pool { grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr)); }
+.sports-modal .sports-pool li { border-radius:6px; }
+.duel-modal .duel-card { gap:12px; }
+.duel-modal .duel-option { padding:12px 6px; }
+.duel-modal .duel-choice:has(input:checked),.duel-modal .duel-option:has(input:checked) { background:#355e59; }
+.islet-modal .islet-spots { grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)); }
+.islet-modal .islet-spot { gap:12px; }
+.kit-modal.islet-modal .islet-spot[data-state=built],
+.kit-modal.case-modal .case-deduction[data-complete=true] { border-color:#f3d58c; }
+.kit-modal.market-modal .market-position { border-left-width:6px; }
+.kit-modal.market-modal .market-position[data-direction=up] { border-left-color:#b8d98a; }
+.kit-modal.market-modal .market-position[data-direction=down] { border-left-color:#e1a46c; border-left-style:double; }
+.kit-modal.market-modal .market-position[data-direction=even] { border-left-color:#8d9678; }
+
+@media(max-width:600px) {
+  .kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])[open] {
+    width:calc(100vw - 16px);
+    max-width:calc(100vw - 16px);
+    max-height:calc(100dvh - 16px);
+    padding:14px;
+    border-radius:12px;
+  }
+  .kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-header {
+    gap:10px;
+    margin-bottom:14px;
+    padding-bottom:10px;
+  }
+  .kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-header .kit-heading { font-size:23px; }
+  .kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.account-save,.crew-seat,.case-arrival,.case-route,.case-job,.case-partner,.case-deduction,.market-card,.market-position,.market-closed,.desk-card,.desk-stake,.duel-card,.sports-card,.islet-spot) { padding:14px; }
+  .account-modal :is(.account-actions,.account-save-choices)>.kit-button { flex:1 1 100%; }
+  .case-modal .crew-join { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+  .case-modal .crew-code { max-width:100%; padding:12px 14px; }
+  .market-modal .market-form { grid-template-columns:minmax(0,1fr); }
+  .desk-modal .desk-choice { padding:8px; }
+}
+@media(max-height:450px) {
+  .kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])[open] { padding:12px 16px; }
+  .kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-header { margin-bottom:10px; padding-bottom:8px; }
+}
+
+/* No motion is added. Keep system and in-game reduced-motion scrolling immediate. */
+@media(prefers-reduced-motion:reduce) {
+  .kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) .kit-modal-body { scroll-behavior:auto; }
+}
