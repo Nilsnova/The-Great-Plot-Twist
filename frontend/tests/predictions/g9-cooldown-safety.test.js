@@ -96,7 +96,9 @@ describe('prediction transport copy and durable receipt-clock ownership', () => 
 });
 
 async function mountDesk(page) {
-  await page.clock.install(); await page.clock.pauseAt(await page.evaluate(() => Date.now() + 20));
+  // Pause before mounting Desk timers; browser RPC latency must not consume the startup window.
+  const installedAt = Date.parse('2026-11-08T12:00:00Z');
+  await page.clock.install({time: installedAt}); await page.clock.pauseAt(installedAt + 60000);
   await page.evaluate(async () => {
     await window.g20Import('/src/ui/base.css'); await window.g20Import('/src/ui/kit/kit.css');
     const {createDesk} = await window.g20Import('/src/screens/predictions/desk.js');
