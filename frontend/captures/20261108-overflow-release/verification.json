@@ -1,0 +1,55 @@
+{
+  "reviewedRuntimeCommit": "47ed309",
+  "fullFrontend": {
+    "tests": 3719,
+    "files": 252,
+    "failures": 0
+  },
+  "accessibilityScreens": 61,
+  "mobileChecks": 36,
+  "friendsChecks": 29,
+  "settingsStates": 75,
+  "inspectionLayouts": 100,
+  "storyVisualChecks": 112,
+  "storyCaptionChecks": 51,
+  "introPageChecks": 77,
+  "coldJavaScript": 21066,
+  "coldCss": 11892,
+  "cspPages": 7,
+  "cspViolations": 0,
+  "recordedFaults": {
+    "cases": 98,
+    "assertions": 581,
+    "groups": [
+      "account",
+      "arena",
+      "bulletin",
+      "crew",
+      "intro",
+      "islet",
+      "market",
+      "predictions",
+      "save"
+    ],
+    "scope": "Implemented fault groups; no claim of every possible server-route failure."
+  },
+  "finalRecordedJourneys": {
+    "predictions": 41,
+    "arena": 20,
+    "bulletin": 35,
+    "case": 19
+  },
+  "buildStampChecks": 10,
+  "problemReportChecks": 38,
+  "limits": [
+    "Recorded/synthetic API and auth data; no real player progress was written.",
+    "Physical phones, other browser engines, live private OAuth/crew journeys and screen readers remain manual checks.",
+    "Existing SwiftShader storm/cinematic frame limitations remain filed; no thresholds changed."
+  ],
+  "integrationNotes": [
+    "Legacy disconnected Friends test updated to the real lazy fallback.",
+    "Prediction and duel fixture clock startup uses deterministic time before mounting; expiry assertions and timeouts retained.",
+    "Development browser servers isolate optimizer caches; DOM tests share a temporary cache only within one Vitest run.",
+    "The earlier native prediction-flag timeout did not reproduce; the exact-artifact rerun and final full prediction journey passed with original keyboard path and timeout."
+  ]
+}

@@ -68,7 +68,8 @@
     "test:friends": "npm run build && node scripts/check-friends-entry.js",
     "test:settings:visuals": "node scripts/check-settings-visuals.js",
     "test:inspections": "node scripts/check-inspection-views.js",
-    "test:story:polish": "node scripts/check-story-polish.js"
+    "test:story:polish": "node scripts/check-story-polish.js",
+    "test:story:captions": "node scripts/check-intro-captions.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

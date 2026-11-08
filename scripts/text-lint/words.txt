@@ -1,5 +1,6 @@
 a
 aapl
+abandoned
 aboard
 about
 above
@@ -367,6 +368,7 @@ confirm
 confirmation
 confirmed
 confirming
+confirms
 conflict
 connect
 connected
@@ -604,6 +606,7 @@ expected
 expired
 expiry
 explain
+explains
 explicitly
 exploration
 explore
@@ -714,10 +717,12 @@ frame
 frames
 frankfurt
 free
+freely
 fresh
 freshness
 friday
 friend
+friend's
 friendly
 friends
 from
@@ -869,6 +874,7 @@ idle
 ids
 if
 image
+images
 implementations
 in
 inc
@@ -1008,6 +1014,7 @@ licences
 license
 licenses
 lid
+lifetime
 lift
 light
 lighter
@@ -1338,6 +1345,7 @@ performance
 periodically
 permanently
 permit
+permits
 persistent
 person
 personal
@@ -1526,6 +1534,7 @@ rehearsal
 rehearse
 rehearsed
 rejected
+rejecting
 relaxed
 release
 reliably
@@ -1651,6 +1660,7 @@ scenery
 schema
 schooner
 science
+score
 scoreboard
 scores
 screen
@@ -1658,6 +1668,7 @@ screens
 screenshots
 scripts
 scroll
+sdk's
 sea
 seal
 sealed
@@ -1696,6 +1707,8 @@ serves
 service
 services
 session
+session's
+sessionstorage
 set
 sets
 settings
@@ -1905,6 +1918,7 @@ switched
 symbols
 t
 tab
+tab's
 table
 tables
 tabs
@@ -2068,6 +2082,7 @@ usdt
 use
 used
 useful
+user
 uses
 using
 utc
@@ -2211,3 +2226,4 @@ z
 zero
 zesty
 zoom
+zooms

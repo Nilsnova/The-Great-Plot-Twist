@@ -12,7 +12,7 @@ Account, case pages, Settings, Exchange, predictions, Arena, Sports and Islet no
 
 Phones support tapping a clear map path or floor to walk, plus the existing movement stick and room D-pad. Bounded local pathfinding uses the same terrain/furniture/building collision checks as manual movement; the ordinary controller moves the player. Manual input, overlays, lost/cancelled touch capture, multiple fingers, blur, visibility changes, travel, room changes and disposal cancel routes. Markers are static and decorative. The movement stick has a visible label; version information remains in Settings/reports while its world badge is hidden on touch devices.
 
-## Review and verification
+## Initial checkpoint verification
 
 Independent reviewers checked the G9 auth/account/crew core, complete case contract, and final mobile/onboarding integration. The mobile review found and fixed queued-frame cancellation, secondary capture loss and a room detour bound before release.
 
@@ -29,7 +29,11 @@ Independent reviewers checked the G9 auth/account/crew core, complete case contr
 - Strict CSP: five production pages and the recorded tour passed with zero violations or external asset requests.
 - Production static smoke check: all seven checks passed, including Settings, saved quality, focus restoration and chart travel.
 
-Recorded online-failure / golden-journey checks and deployment verification are still running at this integration checkpoint.
+## Final integrated release verification
+
+The deeper [player-experience pass](player-experience-visual-pass.md) is integrated, including truthful Friends entry, inline case guidance, inspection/supporting-page layouts and caption-safe story frames. The final clean suite passed **3,719 tests in 252 files** with zero failures. Repeated combined checks passed 36 mobile checks, 61 accessibility screens, 29 Friends checks and 51 caption checks. Cold title sizes are **21,066 JavaScript bytes / 11,892 CSS bytes**; seven production pages and the tour pass CSP without violations. Build/spoiler guard now covers 194 text files / 12 protected lines. Text lint has zero editable errors, with 47 report-only findings.
+
+Recorded native predictions/Arena/bulletin/case journeys pass; the implemented online-failure groups pass **98 cases / 581 assertions**. The [curated verification manifest](../../frontend/captures/20261108-overflow-release/verification.json) records exact counts and limitations. Production identity, routes, flags and asset verification follow the main push; the earlier figures above remain the initial checkpoint, not the final release total.
 
 ## Scope and limits
 

@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-08T18:21:20.269Z",
+  "checked": "2026-11-08T19:24:17.345Z",
   "screens": [
     {
       "name": "arrival",
@@ -19,13 +19,13 @@
             "p.case-eyebrow",
             "h3.",
             "strong.case-kit-name",
+            "button.kit-button.",
             "dt.",
             "dd.",
             "li.",
             "h4.",
             "p.",
             "small.",
-            "button.kit-button.",
             "p.case-caption"
           ],
           "overflow": false,
@@ -35,7 +35,7 @@
         {
           "width": 375,
           "textCount": 18,
-          "minimumContrast": 6.479354609526834,
+          "minimumContrast": 7.489781079568097,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -46,13 +46,13 @@
             "p.case-eyebrow",
             "h3.",
             "strong.case-kit-name",
+            "button.kit-button.",
             "dt.",
             "dd.",
             "li.",
             "h4.",
             "p.",
             "small.",
-            "button.kit-button.",
             "p.case-caption"
           ],
           "overflow": false,
@@ -62,7 +62,7 @@
         {
           "width": 320,
           "textCount": 18,
-          "minimumContrast": 6.479354609526834,
+          "minimumContrast": 7.489781079568097,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -73,13 +73,13 @@
             "p.case-eyebrow",
             "h3.",
             "strong.case-kit-name",
+            "button.kit-button.",
             "dt.",
             "dd.",
             "li.",
             "h4.",
             "p.",
             "small.",
-            "button.kit-button.",
             "p.case-caption"
           ],
           "overflow": false,
@@ -701,7 +701,7 @@
       "sizes": [
         {
           "width": 1280,
-          "textCount": 17,
+          "textCount": 22,
           "minimumContrast": 6.432703277709889,
           "missingNames": [],
           "duplicates": [],
@@ -712,11 +712,14 @@
             "h2.kit-heading",
             "button.kit-button.kit-quiet",
             "p.case-clock",
-            "h3.",
+            "h3.case-inspect-title",
+            "span.",
             "h4.",
             "p.",
-            "p.case-caption",
-            "p.case-route-status"
+            "span.kit-badge",
+            "p.case-route-status",
+            "h3.",
+            "p.inspection-empty"
           ],
           "overflow": false,
           "documentOverflow": false,
@@ -724,8 +727,8 @@
         },
         {
           "width": 375,
-          "textCount": 14,
-          "minimumContrast": 7.074473862992005,
+          "textCount": 19,
+          "minimumContrast": 7.323625366458914,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -734,11 +737,14 @@
           "imageBackgrounds": [
             "h2.kit-heading",
             "p.case-clock",
-            "h3.",
+            "h3.case-inspect-title",
+            "span.",
             "h4.",
             "p.",
-            "p.case-caption",
-            "p.case-route-status"
+            "span.kit-badge",
+            "p.case-route-status",
+            "h3.",
+            "p.inspection-empty"
           ],
           "overflow": false,
           "documentOverflow": false,
@@ -746,8 +752,8 @@
         },
         {
           "width": 320,
-          "textCount": 14,
-          "minimumContrast": 7.074473862992005,
+          "textCount": 19,
+          "minimumContrast": 7.323625366458914,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -756,11 +762,14 @@
           "imageBackgrounds": [
             "h2.kit-heading",
             "p.case-clock",
-            "h3.",
+            "h3.case-inspect-title",
+            "span.",
             "h4.",
             "p.",
-            "p.case-caption",
-            "p.case-route-status"
+            "span.kit-badge",
+            "p.case-route-status",
+            "h3.",
+            "p.inspection-empty"
           ],
           "overflow": false,
           "documentOverflow": false,
@@ -768,7 +777,7 @@
         }
       ],
       "focus": {
-        "count": 5,
+        "count": 6,
         "positiveTabindex": false,
         "order": [
           {
@@ -800,6 +809,12 @@
             "class": "case-page-picker",
             "dataFocus": null,
             "order": "4"
+          },
+          {
+            "tag": "SELECT",
+            "class": "",
+            "dataFocus": "search-spot",
+            "order": "5"
           }
         ],
         "steps": [
@@ -849,6 +864,18 @@
               "class": "case-page-picker",
               "dataFocus": null,
               "order": "4"
+            }
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true,
+            "expectedOrder": "5",
+            "actual": {
+              "tag": "SELECT",
+              "class": "",
+              "dataFocus": "search-spot",
+              "order": "5"
             }
           }
         ],
@@ -2089,7 +2116,7 @@
       "sizes": [
         {
           "width": 1280,
-          "textCount": 52,
+          "textCount": 51,
           "minimumContrast": 6.432703277709889,
           "missingNames": [],
           "duplicates": [],
@@ -2112,8 +2139,8 @@
         },
         {
           "width": 375,
-          "textCount": 49,
-          "minimumContrast": 8.811972559817152,
+          "textCount": 48,
+          "minimumContrast": 8.32100064056099,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -2134,8 +2161,8 @@
         },
         {
           "width": 320,
-          "textCount": 49,
-          "minimumContrast": 8.811972559817152,
+          "textCount": 48,
+          "minimumContrast": 8.32100064056099,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -2255,7 +2282,7 @@
       "sizes": [
         {
           "width": 1280,
-          "textCount": 40,
+          "textCount": 77,
           "minimumContrast": 6.432703277709889,
           "missingNames": [],
           "duplicates": [],
@@ -2268,7 +2295,10 @@
             "h3.",
             "h4.",
             "p.",
-            "p.captains-log-muted"
+            "p.captains-log-muted",
+            "strong.captains-log-entry-title",
+            "span.captains-log-entry-meta",
+            "span.captains-log-entry-text"
           ],
           "overflow": false,
           "documentOverflow": false,
@@ -2276,8 +2306,8 @@
         },
         {
           "width": 375,
-          "textCount": 37,
-          "minimumContrast": 7.826368973039406,
+          "textCount": 74,
+          "minimumContrast": 8.137528197520414,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -2288,7 +2318,10 @@
             "h3.",
             "h4.",
             "p.",
-            "p.captains-log-muted"
+            "p.captains-log-muted",
+            "strong.captains-log-entry-title",
+            "span.captains-log-entry-meta",
+            "span.captains-log-entry-text"
           ],
           "overflow": false,
           "documentOverflow": false,
@@ -2296,8 +2329,8 @@
         },
         {
           "width": 320,
-          "textCount": 37,
-          "minimumContrast": 7.826368973039406,
+          "textCount": 74,
+          "minimumContrast": 8.137528197520414,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -2308,7 +2341,10 @@
             "h3.",
             "h4.",
             "p.",
-            "p.captains-log-muted"
+            "p.captains-log-muted",
+            "strong.captains-log-entry-title",
+            "span.captains-log-entry-meta",
+            "span.captains-log-entry-text"
           ],
           "overflow": false,
           "documentOverflow": false,
@@ -3212,7 +3248,7 @@
       "sizes": [
         {
           "width": 1280,
-          "textCount": 21,
+          "textCount": 25,
           "minimumContrast": 9.72283451842571,
           "missingNames": [],
           "duplicates": [],
@@ -3222,11 +3258,12 @@
           "imageBackgrounds": [
             "h2.kit-heading",
             "span.",
+            "span.preference-title",
             "h3.",
             "p.",
+            "strong.",
             "a.kit-button.kit-quiet.problem-report",
             "p.problem-report-description",
-            "strong.",
             "button.kit-button.kit-quiet",
             "a.kit-button.kit-quiet"
           ],
@@ -3236,7 +3273,7 @@
         },
         {
           "width": 375,
-          "textCount": 21,
+          "textCount": 25,
           "minimumContrast": 9.72283451842571,
           "missingNames": [],
           "duplicates": [],
@@ -3246,11 +3283,12 @@
           "imageBackgrounds": [
             "h2.kit-heading",
             "span.",
+            "span.preference-title",
             "h3.",
             "p.",
+            "strong.",
             "a.kit-button.kit-quiet.problem-report",
             "p.problem-report-description",
-            "strong.",
             "button.kit-button.kit-quiet",
             "a.kit-button.kit-quiet"
           ],
@@ -3260,7 +3298,7 @@
         },
         {
           "width": 320,
-          "textCount": 21,
+          "textCount": 25,
           "minimumContrast": 9.72283451842571,
           "missingNames": [],
           "duplicates": [],
@@ -3270,11 +3308,12 @@
           "imageBackgrounds": [
             "h2.kit-heading",
             "span.",
+            "span.preference-title",
             "h3.",
             "p.",
+            "strong.",
             "a.kit-button.kit-quiet.problem-report",
             "p.problem-report-description",
-            "strong.",
             "button.kit-button.kit-quiet",
             "a.kit-button.kit-quiet"
           ],
@@ -3284,12 +3323,12 @@
         }
       ],
       "focus": {
-        "count": 14,
+        "count": 15,
         "positiveTabindex": false,
         "order": [
           {
-            "tag": "SELECT",
-            "class": "",
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
             "dataFocus": null,
             "order": "0"
           },
@@ -3306,7 +3345,7 @@
             "order": "2"
           },
           {
-            "tag": "INPUT",
+            "tag": "SELECT",
             "class": "",
             "dataFocus": null,
             "order": "3"
@@ -3324,7 +3363,7 @@
             "order": "5"
           },
           {
-            "tag": "SELECT",
+            "tag": "INPUT",
             "class": "",
             "dataFocus": null,
             "order": "6"
@@ -3336,25 +3375,25 @@
             "order": "7"
           },
           {
-            "tag": "INPUT",
+            "tag": "SELECT",
             "class": "",
             "dataFocus": null,
             "order": "8"
           },
           {
-            "tag": "A",
-            "class": "kit-button kit-quiet problem-report",
+            "tag": "INPUT",
+            "class": "",
             "dataFocus": null,
             "order": "9"
           },
           {
-            "tag": "BUTTON",
-            "class": "kit-button kit-quiet",
+            "tag": "A",
+            "class": "kit-button kit-quiet problem-report",
             "dataFocus": null,
             "order": "10"
           },
           {
-            "tag": "A",
+            "tag": "BUTTON",
             "class": "kit-button kit-quiet",
             "dataFocus": null,
             "order": "11"
@@ -3366,10 +3405,16 @@
             "order": "12"
           },
           {
-            "tag": "BUTTON",
+            "tag": "A",
             "class": "kit-button kit-quiet",
             "dataFocus": null,
             "order": "13"
+          },
+          {
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet",
+            "dataFocus": null,
+            "order": "14"
           }
         ],
         "steps": [
@@ -3403,7 +3448,7 @@
             "visible": true,
             "expectedOrder": "3",
             "actual": {
-              "tag": "INPUT",
+              "tag": "SELECT",
               "class": "",
               "dataFocus": null,
               "order": "3"
@@ -3439,7 +3484,7 @@
             "visible": true,
             "expectedOrder": "6",
             "actual": {
-              "tag": "SELECT",
+              "tag": "INPUT",
               "class": "",
               "dataFocus": null,
               "order": "6"
@@ -3463,7 +3508,7 @@
             "visible": true,
             "expectedOrder": "8",
             "actual": {
-              "tag": "INPUT",
+              "tag": "SELECT",
               "class": "",
               "dataFocus": null,
               "order": "8"
@@ -3475,8 +3520,8 @@
             "visible": true,
             "expectedOrder": "9",
             "actual": {
-              "tag": "A",
-              "class": "kit-button kit-quiet problem-report",
+              "tag": "INPUT",
+              "class": "",
               "dataFocus": null,
               "order": "9"
             }
@@ -3487,8 +3532,8 @@
             "visible": true,
             "expectedOrder": "10",
             "actual": {
-              "tag": "BUTTON",
-              "class": "kit-button kit-quiet",
+              "tag": "A",
+              "class": "kit-button kit-quiet problem-report",
               "dataFocus": null,
               "order": "10"
             }
@@ -3499,7 +3544,7 @@
             "visible": true,
             "expectedOrder": "11",
             "actual": {
-              "tag": "A",
+              "tag": "BUTTON",
               "class": "kit-button kit-quiet",
               "dataFocus": null,
               "order": "11"
@@ -3523,17 +3568,29 @@
             "visible": true,
             "expectedOrder": "13",
             "actual": {
-              "tag": "BUTTON",
+              "tag": "A",
               "class": "kit-button kit-quiet",
               "dataFocus": null,
               "order": "13"
+            }
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true,
+            "expectedOrder": "14",
+            "actual": {
+              "tag": "BUTTON",
+              "class": "kit-button kit-quiet",
+              "dataFocus": null,
+              "order": "14"
             }
           }
         ],
         "trapped": true,
         "trapTarget": {
-          "tag": "SELECT",
-          "class": "",
+          "tag": "BUTTON",
+          "class": "kit-button kit-quiet kit-icon-button",
           "dataFocus": null,
           "order": "0"
         }
@@ -3545,13 +3602,21 @@
         {
           "width": 1280,
           "textCount": 23,
-          "minimumContrast": 6.432703277709889,
+          "minimumContrast": 9.139613605055379,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
           "fonts": [],
           "contrast": [],
-          "imageBackgrounds": [],
+          "imageBackgrounds": [
+            "h2.kit-heading",
+            "p.",
+            "h3.",
+            "li.",
+            "a.",
+            "strong.",
+            "button.kit-button.kit-quiet"
+          ],
           "overflow": false,
           "documentOverflow": false,
           "fitsViewport": true
@@ -3559,13 +3624,21 @@
         {
           "width": 375,
           "textCount": 23,
-          "minimumContrast": 6.432703277709889,
+          "minimumContrast": 9.139613605055379,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
           "fonts": [],
           "contrast": [],
-          "imageBackgrounds": [],
+          "imageBackgrounds": [
+            "h2.kit-heading",
+            "p.",
+            "h3.",
+            "li.",
+            "a.",
+            "strong.",
+            "button.kit-button.kit-quiet"
+          ],
           "overflow": false,
           "documentOverflow": false,
           "fitsViewport": true
@@ -3573,25 +3646,33 @@
         {
           "width": 320,
           "textCount": 23,
-          "minimumContrast": 6.432703277709889,
+          "minimumContrast": 9.139613605055379,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
           "fonts": [],
           "contrast": [],
-          "imageBackgrounds": [],
+          "imageBackgrounds": [
+            "h2.kit-heading",
+            "p.",
+            "h3.",
+            "li.",
+            "a.",
+            "strong.",
+            "button.kit-button.kit-quiet"
+          ],
           "overflow": false,
           "documentOverflow": false,
           "fitsViewport": true
         }
       ],
       "focus": {
-        "count": 5,
+        "count": 6,
         "positiveTabindex": false,
         "order": [
           {
-            "tag": "A",
-            "class": "",
+            "tag": "BUTTON",
+            "class": "kit-button kit-quiet kit-icon-button",
             "dataFocus": null,
             "order": "0"
           },
@@ -3614,10 +3695,16 @@
             "order": "3"
           },
           {
+            "tag": "A",
+            "class": "",
+            "dataFocus": null,
+            "order": "4"
+          },
+          {
             "tag": "BUTTON",
             "class": "kit-button kit-quiet",
             "dataFocus": null,
-            "order": "4"
+            "order": "5"
           }
         ],
         "steps": [
@@ -3663,17 +3750,29 @@
             "visible": true,
             "expectedOrder": "4",
             "actual": {
+              "tag": "A",
+              "class": "",
+              "dataFocus": null,
+              "order": "4"
+            }
+          },
+          {
+            "domOrder": true,
+            "inside": true,
+            "visible": true,
+            "expectedOrder": "5",
+            "actual": {
               "tag": "BUTTON",
               "class": "kit-button kit-quiet",
               "dataFocus": null,
-              "order": "4"
+              "order": "5"
             }
           }
         ],
         "trapped": true,
         "trapTarget": {
-          "tag": "A",
-          "class": "",
+          "tag": "BUTTON",
+          "class": "kit-button kit-quiet kit-icon-button",
           "dataFocus": null,
           "order": "0"
         }
@@ -3712,8 +3811,8 @@
         },
         {
           "width": 320,
-          "textCount": 8,
-          "minimumContrast": 6.432703277709889,
+          "textCount": 7,
+          "minimumContrast": 5.591468056728808,
           "missingNames": [],
           "duplicates": [],
           "smallTargets": [],
@@ -3737,7 +3836,7 @@
           },
           {
             "tag": "BUTTON",
-            "class": "kit-button kit-quiet",
+            "class": "kit-choice",
             "dataFocus": null,
             "order": "1"
           },
@@ -3762,7 +3861,7 @@
             "expectedOrder": "1",
             "actual": {
               "tag": "BUTTON",
-              "class": "kit-button kit-quiet",
+              "class": "kit-choice",
               "dataFocus": null,
               "order": "1"
             }
@@ -4065,7 +4164,7 @@
         },
         {
           "width": 375,
-          "textCount": 20,
+          "textCount": 19,
           "minimumContrast": 8.287371643388186,
           "missingNames": [],
           "duplicates": [],
@@ -4074,7 +4173,6 @@
           "contrast": [],
           "imageBackgrounds": [
             "h2.kit-heading",
-            "p.sound-caption.in-dialog",
             "span.",
             "p.case-caption",
             "p.case-eyebrow",
@@ -4088,7 +4186,7 @@
         },
         {
           "width": 320,
-          "textCount": 20,
+          "textCount": 19,
           "minimumContrast": 8.287371643388186,
           "missingNames": [],
           "duplicates": [],
@@ -4097,7 +4195,6 @@
           "contrast": [],
           "imageBackgrounds": [
             "h2.kit-heading",
-            "p.sound-caption.in-dialog",
             "span.",
             "p.case-caption",
             "p.case-eyebrow",
