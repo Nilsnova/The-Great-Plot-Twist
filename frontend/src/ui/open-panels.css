@@ -170,6 +170,15 @@
 .case-modal .case-cards { border-radius:10px; }
 .case-modal :is(.case-pair-controls,.case-empty,.case-reveal-line) { border-radius:8px; }
 .case-modal .case-screen-content { padding-top:2px; }
+.kit-modal.case-modal .case-hints { font-family:system-ui,sans-serif; }
+.kit-modal.case-modal .case-hint {
+  padding:16px;
+  border:1px solid #849d91;
+  border-radius:10px;
+  background:#1c3c3f;
+}
+.kit-modal.case-modal .case-hints :is(h3,h4) { color:#ffe7b2; }
+.kit-modal.case-modal .case-hint p { color:#d0ddd4; line-height:1.55; }
 
 /* Forms and settings use the same surfaces; radio and checkbox hit areas stay native. */
 .kit-modal:is(.account-modal,.case-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings]) :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea) {

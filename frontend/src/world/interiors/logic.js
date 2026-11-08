@@ -8,6 +8,11 @@ function blocked(x, y, objects) {
     y + radius > object.y && y - radius < object.y + object.h);
 }
 
+export function canStandInRoom(x, y, objects = []) {
+  return finite(x)&&finite(y)&&x>=floor.left+radius&&x<=floor.right-radius
+    &&y>=floor.top+radius&&y<=floor.bottom-radius&&!blocked(x,y,objects);
+}
+
 export function moveInRoom(position, vector, delta, objects = [], aspect = 1) {
   if (![position?.x, position?.y, vector?.x, vector?.y, delta, aspect].every(finite)) return {...position};
   const length = Math.hypot(vector.x, vector.y);

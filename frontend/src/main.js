@@ -39,7 +39,7 @@ summary.update(adapter.read());
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
   await ensureMotion();loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
-  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
+  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,openAccount:()=>accountHost.open(),isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
     runtime.setFestivalAvailable?.(festivalEntry?.available===true);runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;

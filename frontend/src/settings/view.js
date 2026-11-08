@@ -1,3 +1,4 @@
+import '../ui/open-panels.css';
 // Readable native settings controls. Used by both the title and pause menu.
 import '../shell/preferences.css';
 import {node,uniqueId} from '../ui/kit/dom.js';
