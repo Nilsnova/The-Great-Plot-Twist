@@ -24,3 +24,19 @@ Recorded native journeys passed predictions (41), Arena (20), bulletin (35) and 
 The compact [verification manifest](../../frontend/captures/20261108-overflow-release/verification.json) links the release results and their limits; supporting JSON reports are alongside it. These are pre-deployment gates. The production release must separately verify its exact pushed main SHA, public routes, flags and asset fingerprints.
 
 No backend, migration, provider, feature-flag or workflow changes. Recorded/synthetic tests do not prove live OAuth, real private crews, physical phones or screen readers. Existing hardware frame proofs remain separately filed. Full reports and selected screenshots are under the dated captures folders; redundant generated older checkpoint images are not part of this release.
+
+## Production and stock-label follow-up
+
+Main `7486bac` deployed READY; public health/config, all 174 stamped JS/CSS assets, 12 art hashes,
+12 spoiler fingerprints, private-route refusal and the live football feed passed. Public cold title
+was 21,066 JavaScript / 11,886 CSS bytes. See [initial live proof](../../frontend/captures/20261108-overflow-release/production-7486bac.json).
+
+That check found an existing clarity issue: a closed US stock without a cached quote said only
+“No price yet.” Follow-up `df4931e` uses the server-supplied reopening time to say “Closed, opens
+Monday 14:30 Lisbon time. No price yet.” It does not invent prices or change backend statuses,
+provider, calendars or trading permissions. Independent review, **392 tests across all 23 market
+files**, build/spoiler guard and text lint pass. The actual production panel at 320×568, 375×667
+and 844×390 shows the full message, no horizontal overflow and no position opener, with zero
+browser errors. [Follow-up proof](../../frontend/captures/20261108-overflow-release/stock-closure-followup.json).
+The earlier 3,719-test full-suite run is the baseline before this isolated display-copy follow-up;
+it was not rerun. Its final main SHA and public assets are checked again after the follow-up push.

@@ -51,5 +51,7 @@
     "Prediction and duel fixture clock startup uses deterministic time before mounting; expiry assertions and timeouts retained.",
     "Development browser servers isolate optimizer caches; DOM tests share a temporary cache only within one Vitest run.",
     "The earlier native prediction-flag timeout did not reproduce; the exact-artifact rerun and final full prediction journey passed with original keyboard path and timeout."
-  ]
+  ],
+  "initialProductionProof": "production-7486bac.json",
+  "laterStockWordingProof": "stock-closure-followup.json"
 }

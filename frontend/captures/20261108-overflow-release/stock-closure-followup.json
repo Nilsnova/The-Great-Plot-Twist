@@ -1,0 +1,55 @@
+{
+  "reviewedSourceCommit": "df4931e4722b0b5b081463573a7654f2f2b9513c",
+  "focusedMarketTests": 152,
+  "fullMarketTests": 392,
+  "marketFiles": 23,
+  "build": "passed",
+  "spoilerGuard": {
+    "textFiles": 194,
+    "protectedLines": 12
+  },
+  "textLint": {
+    "errors": 0,
+    "reportOnly": 47
+  },
+  "layout": {
+    "checks": [
+      "Supplied closure and missing price visible, no opener, contained panel.",
+      "Supplied closure and missing price visible, no opener, contained panel.",
+      "Supplied closure and missing price visible, no opener, contained panel."
+    ],
+    "screens": [
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "fits": true,
+        "overflow": false,
+        "path": "closed-stock-320.png"
+      },
+      {
+        "viewport": {
+          "width": 375,
+          "height": 667
+        },
+        "fits": true,
+        "overflow": false,
+        "path": "closed-stock-375.png"
+      },
+      {
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "fits": true,
+        "overflow": false,
+        "path": "closed-stock-844.png"
+      }
+    ],
+    "reads": 1,
+    "browserErrors": 0
+  },
+  "scope": "Display words only: server-supplied stock reopening plus No price yet. Backend status, data, provider and trading capabilities unchanged.",
+  "fullFrontendBaseline": "The 3719/252 run predates this isolated wording follow-up; it was not rerun."
+}
