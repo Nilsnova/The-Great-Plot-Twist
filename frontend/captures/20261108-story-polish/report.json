@@ -1,0 +1,1949 @@
+{
+  "source": "actual intro controller, public story and production styles; DOM-only fixture",
+  "checks": [
+    "passage fits 320x568",
+    "passage controls stay visible and at least 44px at 320",
+    "passage shows its complete current passage at 320x568",
+    "Story surface is opaque at 320",
+    "Continue stays beside the footer at 320",
+    "choices fits 320x568",
+    "choices controls stay visible and at least 44px at 320",
+    "choices shows its complete current passage at 320x568",
+    "Outer passage and choices frame stays stable at 320",
+    "Compact story frame remains bounded at 320",
+    "journal fits 320x568",
+    "journal controls stay visible and at least 44px at 320",
+    "Journal clears the footer at 320x568",
+    "Journal has no old passage controls underneath at 320",
+    "Journal keyboard focus remains visible at 320",
+    "Complete journal remains keyboard readable at 320",
+    "Journal Escape returns to the passage at 320",
+    "desk fits 320x568",
+    "desk controls stay visible and at least 44px at 320",
+    "desk shows its complete current passage at 320x568",
+    "Scene change keeps the fixed story frame at 320",
+    "No browser errors at 320",
+    "passage fits 375x667",
+    "passage controls stay visible and at least 44px at 375",
+    "passage shows its complete current passage at 375x667",
+    "Story surface is opaque at 375",
+    "Continue stays beside the footer at 375",
+    "choices fits 375x667",
+    "choices controls stay visible and at least 44px at 375",
+    "choices shows its complete current passage at 375x667",
+    "Outer passage and choices frame stays stable at 375",
+    "Compact story frame remains bounded at 375",
+    "journal fits 375x667",
+    "journal controls stay visible and at least 44px at 375",
+    "Journal clears the footer at 375x667",
+    "Journal has no old passage controls underneath at 375",
+    "Journal keyboard focus remains visible at 375",
+    "Complete journal remains keyboard readable at 375",
+    "Journal Escape returns to the passage at 375",
+    "desk fits 375x667",
+    "desk controls stay visible and at least 44px at 375",
+    "desk shows its complete current passage at 375x667",
+    "Scene change keeps the fixed story frame at 375",
+    "No browser errors at 375",
+    "passage fits 844x390",
+    "passage controls stay visible and at least 44px at 844",
+    "passage shows its complete current passage at 844x390",
+    "Story surface is opaque at 844",
+    "Continue stays beside the footer at 844",
+    "choices fits 844x390",
+    "choices controls stay visible and at least 44px at 844",
+    "choices shows its complete current passage at 844x390",
+    "Outer passage and choices frame stays stable at 844",
+    "Compact story frame remains bounded at 844",
+    "journal fits 844x390",
+    "journal controls stay visible and at least 44px at 844",
+    "Journal clears the footer at 844x390",
+    "Journal has no old passage controls underneath at 844",
+    "Journal keyboard focus remains visible at 844",
+    "Complete journal remains keyboard readable at 844",
+    "Journal Escape returns to the passage at 844",
+    "desk fits 844x390",
+    "desk controls stay visible and at least 44px at 844",
+    "desk shows its complete current passage at 844x390",
+    "Scene change keeps the fixed story frame at 844",
+    "No browser errors at 844",
+    "passage fits 1280x720",
+    "passage controls stay visible and at least 44px at 1280",
+    "passage shows its complete current passage at 1280x720",
+    "Story surface is opaque at 1280",
+    "Continue stays beside the footer at 1280",
+    "choices fits 1280x720",
+    "choices controls stay visible and at least 44px at 1280",
+    "choices shows its complete current passage at 1280x720",
+    "Outer passage and choices frame stays stable at 1280",
+    "Compact story frame remains bounded at 1280",
+    "journal fits 1280x720",
+    "journal controls stay visible and at least 44px at 1280",
+    "Journal clears the footer at 1280x720",
+    "Journal has no old passage controls underneath at 1280",
+    "Journal keyboard focus remains visible at 1280",
+    "Complete journal remains keyboard readable at 1280",
+    "Journal Escape returns to the passage at 1280",
+    "desk fits 1280x720",
+    "desk controls stay visible and at least 44px at 1280",
+    "desk shows its complete current passage at 1280x720",
+    "Scene change keeps the fixed story frame at 1280",
+    "No browser errors at 1280",
+    "passage fits 320x400",
+    "passage controls stay visible and at least 44px at 320",
+    "passage shows its complete current passage at 320x400",
+    "Story surface is opaque at 320",
+    "Continue stays beside the footer at 320",
+    "choices fits 320x400",
+    "choices controls stay visible and at least 44px at 320",
+    "choices shows its complete current passage at 320x400",
+    "Outer passage and choices frame stays stable at 320",
+    "Compact story frame remains bounded at 320",
+    "journal fits 320x400",
+    "journal controls stay visible and at least 44px at 320",
+    "Journal clears the footer at 320x400",
+    "Journal has no old passage controls underneath at 320",
+    "Journal keyboard focus remains visible at 320",
+    "Complete journal remains keyboard readable at 320",
+    "Journal Escape returns to the passage at 320",
+    "desk fits 320x400",
+    "desk controls stay visible and at least 44px at 320",
+    "desk shows its complete current passage at 320x400",
+    "Scene change keeps the fixed story frame at 320",
+    "No browser errors at 320",
+    "Show full text reveals the whole current passage",
+    "Revealing full text never advances the passage"
+  ],
+  "views": [
+    {
+      "label": "passage",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 140,
+          "right": 299,
+          "bottom": 560,
+          "width": 278,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 504,
+          "right": 285,
+          "bottom": 548,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 548,
+          "right": 125.484375,
+          "bottom": 2048.171875,
+          "width": 90.484375,
+          "height": 1500.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 202,
+          "scroll": 202
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 152,
+            "right": 285,
+            "bottom": 196,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Continue",
+            "x": 37,
+            "y": 456,
+            "right": 283,
+            "bottom": 500,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 504,
+            "right": 125.484375,
+            "bottom": 548,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 504,
+            "right": 285,
+            "bottom": 548,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "choices",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 140,
+          "right": 299,
+          "bottom": 560,
+          "width": 278,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 504,
+          "right": 285,
+          "bottom": 548,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 548,
+          "right": 125.484375,
+          "bottom": 2048.171875,
+          "width": 90.484375,
+          "height": 1500.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 104,
+          "scroll": 104
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 152,
+            "right": 285,
+            "bottom": 196,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 37,
+            "y": 358,
+            "right": 283,
+            "bottom": 402,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 37,
+            "y": 407,
+            "right": 283,
+            "bottom": 451,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 456,
+            "right": 283,
+            "bottom": 500,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 504,
+            "right": 125.484375,
+            "bottom": 548,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 504,
+            "right": 285,
+            "bottom": 548,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "journal",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 140,
+          "right": 299,
+          "bottom": 560,
+          "width": 278,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 504,
+          "right": 285,
+          "bottom": 548,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 196,
+          "right": 285,
+          "bottom": 496,
+          "width": 250,
+          "height": 300
+        },
+        "dialogueVisibility": "hidden",
+        "text": {
+          "height": 104,
+          "scroll": 104
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 152,
+            "right": 285,
+            "bottom": 196,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 37,
+            "y": 358,
+            "right": 283,
+            "bottom": 402,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 37,
+            "y": 407,
+            "right": 283,
+            "bottom": 451,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 456,
+            "right": 283,
+            "bottom": 500,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 504,
+            "right": 125.484375,
+            "bottom": 548,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 504,
+            "right": 285,
+            "bottom": 548,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "desk",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 140,
+          "right": 299,
+          "bottom": 560,
+          "width": 278,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 504,
+          "right": 285,
+          "bottom": 548,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 548,
+          "right": 125.484375,
+          "bottom": 1937.171875,
+          "width": 90.484375,
+          "height": 1389.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 104,
+          "scroll": 104
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 152,
+            "right": 285,
+            "bottom": 196,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Take the key",
+            "x": 37,
+            "y": 358,
+            "right": 283,
+            "bottom": 402,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "2. Read the logbook",
+            "x": 37,
+            "y": 407,
+            "right": 283,
+            "bottom": 451,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 456,
+            "right": 283,
+            "bottom": 500,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 504,
+            "right": 125.484375,
+            "bottom": 548,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 504,
+            "right": 285,
+            "bottom": 548,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "passage",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 239,
+          "right": 354,
+          "bottom": 659,
+          "width": 333,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 603,
+          "right": 340,
+          "bottom": 647,
+          "width": 305,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 647,
+          "right": 125.484375,
+          "bottom": 2147.171875,
+          "width": 90.484375,
+          "height": 1500.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 202,
+          "scroll": 202
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 296,
+            "y": 251,
+            "right": 340,
+            "bottom": 295,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Continue",
+            "x": 37,
+            "y": 555,
+            "right": 338,
+            "bottom": 599,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 603,
+            "right": 125.484375,
+            "bottom": 647,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 213.984375,
+            "y": 603,
+            "right": 340,
+            "bottom": 647,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "choices",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 239,
+          "right": 354,
+          "bottom": 659,
+          "width": 333,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 603,
+          "right": 340,
+          "bottom": 647,
+          "width": 305,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 647,
+          "right": 125.484375,
+          "bottom": 2147.171875,
+          "width": 90.484375,
+          "height": 1500.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 104,
+          "scroll": 104
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 296,
+            "y": 251,
+            "right": 340,
+            "bottom": 295,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 37,
+            "y": 457,
+            "right": 338,
+            "bottom": 501,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 37,
+            "y": 506,
+            "right": 338,
+            "bottom": 550,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 555,
+            "right": 338,
+            "bottom": 599,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 603,
+            "right": 125.484375,
+            "bottom": 647,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 213.984375,
+            "y": 603,
+            "right": 340,
+            "bottom": 647,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "journal",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 239,
+          "right": 354,
+          "bottom": 659,
+          "width": 333,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 603,
+          "right": 340,
+          "bottom": 647,
+          "width": 305,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 295,
+          "right": 340,
+          "bottom": 595,
+          "width": 305,
+          "height": 300
+        },
+        "dialogueVisibility": "hidden",
+        "text": {
+          "height": 104,
+          "scroll": 104
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 296,
+            "y": 251,
+            "right": 340,
+            "bottom": 295,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 37,
+            "y": 457,
+            "right": 338,
+            "bottom": 501,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 37,
+            "y": 506,
+            "right": 338,
+            "bottom": 550,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 555,
+            "right": 338,
+            "bottom": 599,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 603,
+            "right": 125.484375,
+            "bottom": 647,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 213.984375,
+            "y": 603,
+            "right": 340,
+            "bottom": 647,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "desk",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 239,
+          "right": 354,
+          "bottom": 659,
+          "width": 333,
+          "height": 420
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 603,
+          "right": 340,
+          "bottom": 647,
+          "width": 305,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 647,
+          "right": 125.484375,
+          "bottom": 2036.171875,
+          "width": 90.484375,
+          "height": 1389.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 104,
+          "scroll": 104
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 296,
+            "y": 251,
+            "right": 340,
+            "bottom": 295,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Take the key",
+            "x": 37,
+            "y": 457,
+            "right": 338,
+            "bottom": 501,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "2. Read the logbook",
+            "x": 37,
+            "y": 506,
+            "right": 338,
+            "bottom": 550,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 555,
+            "right": 338,
+            "bottom": 599,
+            "width": 301,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 603,
+            "right": 125.484375,
+            "bottom": 647,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 213.984375,
+            "y": 603,
+            "right": 340,
+            "bottom": 647,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "passage",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 50,
+          "right": 823,
+          "bottom": 380,
+          "width": 802,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 39,
+          "y": 324,
+          "right": 805,
+          "bottom": 368,
+          "width": 766,
+          "height": 44
+        },
+        "journal": {
+          "x": 39,
+          "y": 368,
+          "right": 129.484375,
+          "bottom": 2033.390625,
+          "width": 90.484375,
+          "height": 1665.390625
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 112,
+          "scroll": 112
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 761,
+            "y": 62,
+            "right": 805,
+            "bottom": 106,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Continue",
+            "x": 41,
+            "y": 276,
+            "right": 803,
+            "bottom": 320,
+            "width": 762,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 39,
+            "y": 324,
+            "right": 129.484375,
+            "bottom": 368,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 678.984375,
+            "y": 324,
+            "right": 805,
+            "bottom": 368,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "choices",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 50,
+          "right": 823,
+          "bottom": 380,
+          "width": 802,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 39,
+          "y": 324,
+          "right": 805,
+          "bottom": 368,
+          "width": 766,
+          "height": 44
+        },
+        "journal": {
+          "x": 39,
+          "y": 368,
+          "right": 129.484375,
+          "bottom": 2033.390625,
+          "width": 90.484375,
+          "height": 1665.390625
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 62,
+          "scroll": 62
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 761,
+            "y": 62,
+            "right": 805,
+            "bottom": 106,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 41,
+            "y": 226,
+            "right": 419,
+            "bottom": 270,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 425,
+            "y": 226,
+            "right": 803,
+            "bottom": 270,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 41,
+            "y": 276,
+            "right": 419,
+            "bottom": 320,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 39,
+            "y": 324,
+            "right": 129.484375,
+            "bottom": 368,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 678.984375,
+            "y": 324,
+            "right": 805,
+            "bottom": 368,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "journal",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 50,
+          "right": 823,
+          "bottom": 380,
+          "width": 802,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 39,
+          "y": 324,
+          "right": 805,
+          "bottom": 368,
+          "width": 766,
+          "height": 44
+        },
+        "journal": {
+          "x": 39,
+          "y": 106,
+          "right": 805,
+          "bottom": 316,
+          "width": 766,
+          "height": 210
+        },
+        "dialogueVisibility": "hidden",
+        "text": {
+          "height": 62,
+          "scroll": 62
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 761,
+            "y": 62,
+            "right": 805,
+            "bottom": 106,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 41,
+            "y": 226,
+            "right": 419,
+            "bottom": 270,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 425,
+            "y": 226,
+            "right": 803,
+            "bottom": 270,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 41,
+            "y": 276,
+            "right": 419,
+            "bottom": 320,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 39,
+            "y": 324,
+            "right": 129.484375,
+            "bottom": 368,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 678.984375,
+            "y": 324,
+            "right": 805,
+            "bottom": 368,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "desk",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 50,
+          "right": 823,
+          "bottom": 380,
+          "width": 802,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 39,
+          "y": 324,
+          "right": 805,
+          "bottom": 368,
+          "width": 766,
+          "height": 44
+        },
+        "journal": {
+          "x": 39,
+          "y": 368,
+          "right": 129.484375,
+          "bottom": 1874.390625,
+          "width": 90.484375,
+          "height": 1506.390625
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 62,
+          "scroll": 62
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 761,
+            "y": 62,
+            "right": 805,
+            "bottom": 106,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Take the key",
+            "x": 41,
+            "y": 226,
+            "right": 419,
+            "bottom": 270,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "2. Read the logbook",
+            "x": 425,
+            "y": 226,
+            "right": 803,
+            "bottom": 270,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 41,
+            "y": 276,
+            "right": 419,
+            "bottom": 320,
+            "width": 378,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 39,
+            "y": 324,
+            "right": 129.484375,
+            "bottom": 368,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 678.984375,
+            "y": 324,
+            "right": 805,
+            "bottom": 368,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "passage",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "modal": {
+          "x": 210,
+          "y": 372,
+          "right": 1070,
+          "bottom": 702,
+          "width": 860,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 228,
+          "y": 646,
+          "right": 1052,
+          "bottom": 690,
+          "width": 824,
+          "height": 44
+        },
+        "journal": {
+          "x": 228,
+          "y": 690,
+          "right": 318.484375,
+          "bottom": 2355.390625,
+          "width": 90.484375,
+          "height": 1665.390625
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 112,
+          "scroll": 112
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 1008,
+            "y": 384,
+            "right": 1052,
+            "bottom": 428,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Continue",
+            "x": 230,
+            "y": 598,
+            "right": 1050,
+            "bottom": 642,
+            "width": 820,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 228,
+            "y": 646,
+            "right": 318.484375,
+            "bottom": 690,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 925.984375,
+            "y": 646,
+            "right": 1052,
+            "bottom": 690,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "choices",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "modal": {
+          "x": 210,
+          "y": 372,
+          "right": 1070,
+          "bottom": 702,
+          "width": 860,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 228,
+          "y": 646,
+          "right": 1052,
+          "bottom": 690,
+          "width": 824,
+          "height": 44
+        },
+        "journal": {
+          "x": 228,
+          "y": 690,
+          "right": 318.484375,
+          "bottom": 2355.390625,
+          "width": 90.484375,
+          "height": 1665.390625
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 62,
+          "scroll": 62
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 1008,
+            "y": 384,
+            "right": 1052,
+            "bottom": 428,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 230,
+            "y": 548,
+            "right": 637,
+            "bottom": 592,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 643,
+            "y": 548,
+            "right": 1050,
+            "bottom": 592,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 230,
+            "y": 598,
+            "right": 637,
+            "bottom": 642,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 228,
+            "y": 646,
+            "right": 318.484375,
+            "bottom": 690,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 925.984375,
+            "y": 646,
+            "right": 1052,
+            "bottom": 690,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "journal",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "modal": {
+          "x": 210,
+          "y": 372,
+          "right": 1070,
+          "bottom": 702,
+          "width": 860,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 228,
+          "y": 646,
+          "right": 1052,
+          "bottom": 690,
+          "width": 824,
+          "height": 44
+        },
+        "journal": {
+          "x": 228,
+          "y": 428,
+          "right": 1052,
+          "bottom": 638,
+          "width": 824,
+          "height": 210
+        },
+        "dialogueVisibility": "hidden",
+        "text": {
+          "height": 62,
+          "scroll": 62
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 1008,
+            "y": 384,
+            "right": 1052,
+            "bottom": 428,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 230,
+            "y": 548,
+            "right": 637,
+            "bottom": 592,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 643,
+            "y": 548,
+            "right": 1050,
+            "bottom": 592,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 230,
+            "y": 598,
+            "right": 637,
+            "bottom": 642,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 228,
+            "y": 646,
+            "right": 318.484375,
+            "bottom": 690,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 925.984375,
+            "y": 646,
+            "right": 1052,
+            "bottom": 690,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "desk",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "metrics": {
+        "modal": {
+          "x": 210,
+          "y": 372,
+          "right": 1070,
+          "bottom": 702,
+          "width": 860,
+          "height": 330
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 228,
+          "y": 646,
+          "right": 1052,
+          "bottom": 690,
+          "width": 824,
+          "height": 44
+        },
+        "journal": {
+          "x": 228,
+          "y": 690,
+          "right": 318.484375,
+          "bottom": 2196.390625,
+          "width": 90.484375,
+          "height": 1506.390625
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 62,
+          "scroll": 62
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 1008,
+            "y": 384,
+            "right": 1052,
+            "bottom": 428,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Take the key",
+            "x": 230,
+            "y": 548,
+            "right": 637,
+            "bottom": 592,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "2. Read the logbook",
+            "x": 643,
+            "y": 548,
+            "right": 1050,
+            "bottom": 592,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 230,
+            "y": 598,
+            "right": 637,
+            "bottom": 642,
+            "width": 407,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 228,
+            "y": 646,
+            "right": 318.484375,
+            "bottom": 690,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 925.984375,
+            "y": 646,
+            "right": 1052,
+            "bottom": 690,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "passage",
+      "viewport": {
+        "width": 320,
+        "height": 400
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 8,
+          "right": 299,
+          "bottom": 392,
+          "width": 278,
+          "height": 384
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 336,
+          "right": 285,
+          "bottom": 380,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 380,
+          "right": 125.484375,
+          "bottom": 1880.171875,
+          "width": 90.484375,
+          "height": 1500.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 170,
+          "scroll": 170
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 20,
+            "right": 285,
+            "bottom": 64,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Continue",
+            "x": 37,
+            "y": 290,
+            "right": 283,
+            "bottom": 334,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 336,
+            "right": 125.484375,
+            "bottom": 380,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 336,
+            "right": 285,
+            "bottom": 380,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "choices",
+      "viewport": {
+        "width": 320,
+        "height": 400
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 8,
+          "right": 299,
+          "bottom": 392,
+          "width": 278,
+          "height": 384
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 336,
+          "right": 285,
+          "bottom": 380,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 380,
+          "right": 125.484375,
+          "bottom": 1880.171875,
+          "width": 90.484375,
+          "height": 1500.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 78,
+          "scroll": 78
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 20,
+            "right": 285,
+            "bottom": 64,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 37,
+            "y": 198,
+            "right": 283,
+            "bottom": 242,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 37,
+            "y": 244,
+            "right": 283,
+            "bottom": 288,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 290,
+            "right": 283,
+            "bottom": 334,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 336,
+            "right": 125.484375,
+            "bottom": 380,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 336,
+            "right": 285,
+            "bottom": 380,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "journal",
+      "viewport": {
+        "width": 320,
+        "height": 400
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 8,
+          "right": 299,
+          "bottom": 392,
+          "width": 278,
+          "height": 384
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 336,
+          "right": 285,
+          "bottom": 380,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 64,
+          "right": 285,
+          "bottom": 328,
+          "width": 250,
+          "height": 264
+        },
+        "dialogueVisibility": "hidden",
+        "text": {
+          "height": 78,
+          "scroll": 78
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 20,
+            "right": 285,
+            "bottom": 64,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Search the desk",
+            "x": 37,
+            "y": 198,
+            "right": 283,
+            "bottom": 242,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "2. Visit the shore",
+            "x": 37,
+            "y": 244,
+            "right": 283,
+            "bottom": 288,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 290,
+            "right": 283,
+            "bottom": 334,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 336,
+            "right": 125.484375,
+            "bottom": 380,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 336,
+            "right": 285,
+            "bottom": 380,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "label": "desk",
+      "viewport": {
+        "width": 320,
+        "height": 400
+      },
+      "metrics": {
+        "modal": {
+          "x": 21,
+          "y": 8,
+          "right": 299,
+          "bottom": 392,
+          "width": 278,
+          "height": 384
+        },
+        "background": "rgb(24, 60, 54)",
+        "footer": {
+          "x": 35,
+          "y": 336,
+          "right": 285,
+          "bottom": 380,
+          "width": 250,
+          "height": 44
+        },
+        "journal": {
+          "x": 35,
+          "y": 380,
+          "right": 125.484375,
+          "bottom": 1769.171875,
+          "width": 90.484375,
+          "height": 1389.171875
+        },
+        "dialogueVisibility": "visible",
+        "text": {
+          "height": 78,
+          "scroll": 78
+        },
+        "horizontal": false,
+        "controls": [
+          {
+            "label": "×",
+            "x": 241,
+            "y": 20,
+            "right": 285,
+            "bottom": 64,
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "1. Take the key",
+            "x": 37,
+            "y": 198,
+            "right": 283,
+            "bottom": 242,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "2. Read the logbook",
+            "x": 37,
+            "y": 244,
+            "right": 283,
+            "bottom": 288,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "3. More actions",
+            "x": 37,
+            "y": 290,
+            "right": 283,
+            "bottom": 334,
+            "width": 246,
+            "height": 44
+          },
+          {
+            "label": "Journal",
+            "x": 35,
+            "y": 336,
+            "right": 125.484375,
+            "bottom": 380,
+            "width": 90.484375,
+            "height": 44
+          },
+          {
+            "label": "Back to island",
+            "x": 158.984375,
+            "y": 336,
+            "right": 285,
+            "bottom": 380,
+            "width": 126.015625,
+            "height": 44
+          }
+        ]
+      }
+    }
+  ]
+}

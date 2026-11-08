@@ -1,4 +1,5 @@
 // One short passage at a time. Original prose, pockets and accepted moves live in the journal.
+import '../ui/story-polish.css';
 import {createDialogue,createPanel,createButton} from '../ui/kit/index.js';
 import {node} from '../ui/kit/dom.js';
 import {choiceCopy,passageCopy} from './intro-pages.js';
@@ -19,7 +20,7 @@ export function createIntroView({onAction,onRestart,onClose}) {
   journalBody.append(original,notes,journalEndingNotes,columns);journal.append(journalTitle,journalBody);
   const ending=createPanel({title:'Chapter complete',body:''}),endingSummary=node('div','intro-ending-summary');
   const endingText=node('p'),endingNotes=node('ul','intro-notes intro-ending-notes'),arrivalSlot=node('div','intro-arrival-slot');
-  const restart=createButton({label:'Start a new intro',onClick:onRestart,variant:'quiet'}),close=createButton({label:'Return to the island',onClick:onClose,variant:'quiet'});
+  const restart=createButton({label:'Start a new intro',onClick:onRestart,variant:'quiet'}),close=createButton({label:'Back to island',onClick:onClose,variant:'quiet'});
   ending.element.classList.add('intro-ending');endingSummary.append(endingText,endingNotes);ending.body.append(endingSummary,arrivalSlot,restart.element);
   const footer=node('div','intro-footer');footer.append(journal,close.element);
   element.append(goal,progress,dialogue.element,ending.element,message,footer);
