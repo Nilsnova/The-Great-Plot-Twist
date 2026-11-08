@@ -87,6 +87,14 @@ describe('standalone player help', () => {
 
   it('ships the current privacy notice without obsolete provider or deletion claims', async () => {
     const privacy = await readFile(join(output, 'privacy.html'), 'utf8');
+    const canonical = await readFile('../docs/PRIVACY.md', 'utf8');
+    expect(privacy).toBe(await readFile('privacy.html', 'utf8'));
+    for (const notice of [canonical, privacy]) {
+      expect(notice).toContain('sessionStorage');
+      expect(notice).toContain('Reloading can restore sign-in');
+      expect(notice).not.toContain('Login tokens stay in memory, not application cookies or persistent storage');
+      expect(notice).not.toContain('ordinary browser game is still waiting');
+    }
     for (const words of ['all of your ledger history', 'lowest occupied seat', 'security audit',
       'Finnhub', 'Manifold', 'BALLDONTLIE']) expect(privacy).toContain(words);
     expect(privacy).not.toMatch(/AI companion|companion_llm|OpenAI|Anthropic/);
