@@ -20,25 +20,30 @@ export async function initializeAccountName(ctx) {
 
 export function createProfileHandlers(ctx) {
   const {store, state, transport} = ctx;
+  const current=scope=>store.isCurrent(scope)&&ctx.session.isSignedIn();
+  const expired=()=>ctx.refuse(store.isClosed()?'disposed':'session_expired');
   async function completeIntro(receipt) {
     const scope=store.scope();
     const result = await transport.change({route: '/api/intro/complete',
       body: {actions: [...receipt.actions]}, kind: 'me'});
+    if(!current(scope))return expired();
     if (result.reply?.ok && result.mapped.accepted) {
       if (!validIntroReply(result.reply.data)) return ctx.refuse('invalid_request');
       store.commit({profile: result.reply.data});
       await transport.read('me');
-      if(!store.isCurrent(scope))return ctx.refuse('session_expired');
+      if(!current(scope))return expired();
       await ctx.saves?.stageReplay({kind:'world',actions:[...receipt.actions],
         place:result.reply.data.kit.startPlace},{immediate:true});
+      if(!current(scope))return expired();
       await refreshAccountRewards(ctx);
     }
-    return result.mapped;
+    return current(scope)?result.mapped:expired();
   }
   async function rerollName() {
     const scope=store.scope();
     const result = await transport.change({route: '/api/me/name/reroll',
       body: {}, kind: 'me', actionUid: true});
+    if(!current(scope))return expired();
     if (result.reply?.ok && result.mapped.accepted) {
       const nameReply = result.reply.data;
       if (!validNameReply(nameReply)) return ctx.refuse('invalid_request');
@@ -46,12 +51,12 @@ export function createProfileHandlers(ctx) {
     }
     if (result.mapped.accepted) {
       await transport.read('me');
-      if(!store.isCurrent(scope))return ctx.refuse('session_expired');
+      if(!current(scope))return expired();
       if(result.reply?.ok!==true)await initializeAccountName(ctx);
     } else if(result.mapped.reason==='name_reroll_used'&&state.nameReply){
       store.commit({nameReply:{...state.nameReply,rerollsLeft:0}});
     }
-    return result.mapped;
+    return current(scope)?result.mapped:expired();
   }
   async function continueGame() {
     if (!ctx.session.isSignedIn()) {
@@ -88,8 +93,10 @@ export function createProfileHandlers(ctx) {
   }
   async function deleteMyData(confirmation) {
     if(confirmation?.confirm!==true)return ctx.refuse('confirmation_required');
+    const scope=store.scope();
     const result = await transport.change({route: '/api/me', method: 'del',
       body: {confirm: true}, kind: 'me'});
+    if(!current(scope))return expired();
     if (result.reply?.ok && result.mapped.accepted) {
       if (result.reply.data?.deleted !== true) return ctx.refuse('invalid_request');
       ctx.onDeleted?.();
