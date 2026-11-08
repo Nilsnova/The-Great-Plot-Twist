@@ -1,4 +1,5 @@
 import '../../ui/open-panels.css';
+import '../../ui/settings-polish.css';
 // Account and save presentation. All state and decisions arrive through supplied view data.
 import './account.css';
 import './screen.css';

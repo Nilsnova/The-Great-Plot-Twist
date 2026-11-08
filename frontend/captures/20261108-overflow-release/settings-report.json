@@ -1,0 +1,1029 @@
+{
+  "polish": true,
+  "screens": [
+    {
+      "name": "settings-top",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-range-focus",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-controls",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 454
+    },
+    {
+      "name": "settings-footer",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1011
+    },
+    {
+      "name": "credits-top",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "credits-footer",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 506
+    },
+    {
+      "name": "account-long-name",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "account-deletion",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 250
+    },
+    {
+      "name": "shortcuts-top",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "shortcuts-footer",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "help-top",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "help-no-results",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 242
+    },
+    {
+      "name": "help-footer",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 6086
+    },
+    {
+      "name": "privacy-top",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "privacy-footer",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 4400
+    },
+    {
+      "name": "settings-top",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-range-focus",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-controls",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1210
+    },
+    {
+      "name": "settings-footer",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1880
+    },
+    {
+      "name": "credits-top",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 23
+    },
+    {
+      "name": "credits-footer",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1176
+    },
+    {
+      "name": "account-long-name",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 496
+    },
+    {
+      "name": "account-deletion",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1165
+    },
+    {
+      "name": "shortcuts-top",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "shortcuts-footer",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 368
+    },
+    {
+      "name": "help-top",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "help-no-results",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 686
+    },
+    {
+      "name": "help-footer",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 11297
+    },
+    {
+      "name": "privacy-top",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "privacy-footer",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 7922
+    },
+    {
+      "name": "settings-top",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-range-focus",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 27
+    },
+    {
+      "name": "settings-controls",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1305
+    },
+    {
+      "name": "settings-footer",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 2122
+    },
+    {
+      "name": "credits-top",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 381
+    },
+    {
+      "name": "credits-footer",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1500
+    },
+    {
+      "name": "account-long-name",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 657
+    },
+    {
+      "name": "account-deletion",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1276
+    },
+    {
+      "name": "shortcuts-top",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "shortcuts-footer",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 494
+    },
+    {
+      "name": "help-top",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "help-no-results",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 977
+    },
+    {
+      "name": "help-footer",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 13377
+    },
+    {
+      "name": "privacy-top",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "privacy-footer",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 9360
+    },
+    {
+      "name": "settings-top",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-range-focus",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-controls",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 718
+    },
+    {
+      "name": "settings-footer",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1322
+    },
+    {
+      "name": "credits-top",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 235
+    },
+    {
+      "name": "credits-footer",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 859
+    },
+    {
+      "name": "account-long-name",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 308
+    },
+    {
+      "name": "account-deletion",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 610
+    },
+    {
+      "name": "shortcuts-top",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "shortcuts-footer",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 175
+    },
+    {
+      "name": "help-top",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "help-no-results",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 681
+    },
+    {
+      "name": "help-footer",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 6852
+    },
+    {
+      "name": "privacy-top",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "privacy-footer",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 4870
+    },
+    {
+      "name": "settings-top",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "settings-range-focus",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 304
+    },
+    {
+      "name": "settings-controls",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1335
+    },
+    {
+      "name": "settings-footer",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 2082
+    },
+    {
+      "name": "credits-top",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 399
+    },
+    {
+      "name": "credits-footer",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1427
+    },
+    {
+      "name": "account-long-name",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 624
+    },
+    {
+      "name": "account-deletion",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 1165
+    },
+    {
+      "name": "shortcuts-top",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "shortcuts-footer",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 619
+    },
+    {
+      "name": "help-top",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "help-no-results",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 953
+    },
+    {
+      "name": "help-footer",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 11564
+    },
+    {
+      "name": "privacy-top",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 0
+    },
+    {
+      "name": "privacy-footer",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "fits": true,
+      "overflow": false,
+      "smallText": [],
+      "smallTargets": [],
+      "lowContrast": [],
+      "scrollTop": 8189
+    }
+  ],
+  "navigation": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "creditsEscape": "settings",
+      "settingsEscape": "title",
+      "settingsCloseFromPause": "pause"
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "creditsEscape": "settings",
+      "settingsEscape": "title",
+      "settingsCloseFromPause": "pause"
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "creditsEscape": "settings",
+      "settingsEscape": "title",
+      "settingsCloseFromPause": "pause"
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "creditsEscape": "settings",
+      "settingsEscape": "title",
+      "settingsCloseFromPause": "pause"
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "creditsEscape": "settings",
+      "settingsEscape": "title",
+      "settingsCloseFromPause": "pause"
+    }
+  ],
+  "errors": [],
+  "external": []
+}

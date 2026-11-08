@@ -3,7 +3,9 @@ import {stubWeather} from './weather-browser-fixture.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import { chromium } from 'playwright-core';
 import {createServer,preview as createPreview} from 'vite';
-import { access, mkdir } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 export async function openWorldBrowser({ preview = false, hmr = true, outDir, headers,apiTarget,
   headless = process.env.G9_BROWSER_HEADLESS !== '0' } = {}) {
   let proxy={};
@@ -19,16 +21,17 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
   let executablePath;
   for (const path of candidates) { try { await access(path); executablePath = path; break; } catch { /* Installed browsers only. */ } }
   if (!executablePath) throw new Error('Install Chrome or set CHROME_PATH.');
-  let url=process.env.TEST_URL,server=null,browser=null,closing;
+  let url=process.env.TEST_URL,server=null,browser=null,closing,serverCache=null;
   const ownsServer=!url,previousNodeEnv=process.env.NODE_ENV;
   function close(){
     if(!closing)closing=Promise.resolve().then(async()=>{
       try{await browser?.close();}finally{
         try{await server?.close();}finally{
-          if(ownsServer){
-            if(previousNodeEnv===undefined)delete process.env.NODE_ENV;
-            else process.env.NODE_ENV=previousNodeEnv;
-          }
+          try{if(serverCache)await rm(serverCache,{recursive:true,force:true});}
+          finally{if(ownsServer){
+              if(previousNodeEnv===undefined)delete process.env.NODE_ENV;
+              else process.env.NODE_ENV=previousNodeEnv;
+          }}
         }
       }
     });
@@ -39,8 +42,10 @@ export async function openWorldBrowser({ preview = false, hmr = true, outDir, he
     if(!url){
       process.env.NODE_ENV=preview?'production':'development';
       const network={host:'127.0.0.1',port:0,strictPort:true};
+      // Other QA servers may use the same checkout. Never replace their optimizer cache.
+      if(!preview)serverCache=await mkdtemp(join(tmpdir(),'plot-world-cache-'));
       server=preview?await createPreview({logLevel:'error',...(outDir?{build:{outDir}}:{}),
-        preview:{...network,...(headers?{headers}:{}),...proxy}}):await createServer({logLevel:'error',server:{...network,hmr,...proxy}});
+        preview:{...network,...(headers?{headers}:{}),...proxy}}):await createServer({logLevel:'error',cacheDir:serverCache,server:{...network,hmr,...proxy}});
       if(!preview){await server.listen();await server.warmupRequest('/src/game.js');}
       url=server.resolvedUrls.local[0].replace(/\/$/,'');
     }

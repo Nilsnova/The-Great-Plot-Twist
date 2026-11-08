@@ -32,14 +32,18 @@ async function verifyPage(path) {
   if (path.startsWith('/asset-library')) await page.locator('#gallery').waitFor();
   else if (path.startsWith('/ui-kit')) await page.locator('#kit-gallery').waitFor();
   else if (path.startsWith('/auth-check')) await page.locator('main.panel').waitFor();
+  else if (path.startsWith('/help') || path.startsWith('/privacy')) await page.locator('main').waitFor();
   else await page.locator('.shell-screen[open]').waitFor();
 
   await page.waitForFunction(() => document.styleSheets.length > 0);
   const style = await page.evaluate(() => {
-    const target = document.querySelector('.panel, .shell-screen, #kit-gallery, #gallery') ?? document.body;
-    return { fontFamily: getComputedStyle(target).fontFamily, sheetCount: document.styleSheets.length };
+    const target = document.querySelector('.panel, .shell-screen, #kit-gallery, #gallery, main') ?? document.body;
+    return { fontFamily: getComputedStyle(target).fontFamily, fontSize:parseFloat(getComputedStyle(target).fontSize),sheetCount: document.styleSheets.length };
   });
-  assert.match(style.fontFamily, /Courier/i, `${path} applies the local interface font`);
+  if(path.startsWith('/help')||path.startsWith('/privacy')){
+    assert.match(style.fontFamily,/Courier|system-ui|sans-serif/i,`${path} applies a local readable font`);
+    assert.ok(style.fontSize>=16,`${path} keeps supporting-page text readable`);
+  }else assert.match(style.fontFamily, /Courier/i, `${path} applies the local interface font`);
   assert.ok(style.sheetCount > 0, `${path} loads same-origin stylesheets`);
   const violations = await page.evaluate(() => window.__cspViolations ?? []);
   assert.deepEqual(violations, [], `${path} produces no CSP violations`);
@@ -89,6 +93,8 @@ try {
   await verifyPage('/asset-library.html');
   await verifyPage('/ui-kit.html');
   await verifyPage('/auth-check.html');
+  await verifyPage('/help.html');
+  await verifyPage('/privacy.html');
 
   await page.goto(`${env.url}/?demo=1`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Highlights tour', exact: true }).click();

@@ -1026,3 +1026,8 @@ Run `npm run test:mobile` for complete Chromium/CDP touch checks at 320px, 375px
 Run `npm run test:panels` for the 12-panel / four-viewport layout proof, and `npm run test:a11y`
 for the complete keyboard, contrast, target-size and reduced-motion audit.
 These use local fixtures; physical devices, screen readers and real OAuth/crews remain separate checks.
+
+The deeper player-experience pass adds `test:friends`, `test:settings:visuals`,
+`test:inspections` and `test:story:polish`. These cover staged multiplayer entry, initial
+focus, readable supporting pages, earned inspection results and compact story controls.
+Each visual report records fixture-only scope and physical-device limits.
