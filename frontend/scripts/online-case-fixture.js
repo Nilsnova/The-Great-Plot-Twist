@@ -5,7 +5,7 @@ import {openCrewPresenceFixture} from './online-crew-presence-fixture.js';
 const world=()=>({stage:'dark',lightsOn:false,fogBankGone:false,gullsRestOpen:false,extraLights:0,solves:0,relitAt:null,wall:[],line:null});
 const title=id=>`Recorded earned card ${id}`;
 const holder=seat=>({seat:seat.seatNo,label:seat.name});
-export function recordedCaseSnapshot(crew,{stage='earned',progress={}}={}){
+export function recordedCaseSnapshot(crew,{stage='earned',progress={},worldLocked=false}={}){
   if(!crew||crew.status!=='active')return null;
   const own=crew.seats.find(seat=>seat.isMe),paired=stage==='paired',searched=progress.search==='done';
   const cards=(searched?['C1','C2','C3']:['C1','C2']).map(id=>({id,title:title(id),text:`Supplied earned text for ${id}.`,
@@ -31,7 +31,7 @@ export function recordedCaseSnapshot(crew,{stage='earned',progress={}}={}){
       jobs:progress.search?[{routeId:'C3.recorded',cardId:'C3',title:title('C3'),total:60,remaining:searched?0:1,done:searched,foundLine:searched?'Supplied completed search report.':null}]:[]},
     accusation:{schoonerFound:success,allowed:success&&!solved,cooldown:0,status:'Supplied accusation status.',suspects:[{id:'recorded_suspect',title:'Recorded suspect',cleared:false}],
       evidence:paired?[{id:'D1',name:'Recorded server deduction'}]:[],lastWrong:progress.refused?{suspect:'recorded_suspect',title:'Recorded suspect',line:'Supplied refusal line.',second:60}:null},
-    reveal:solved?{available:true,solvedSecond:60,world:'unchanged',lines,credits:[{seat:1,name:'Recorded Captain',share:0,paid:0}]}:{available:false},credits:[],
+    reveal:solved?{available:true,solvedSecond:60,world:worldLocked?'locked':'unchanged',lines,credits:[{seat:1,name:'Recorded Captain',share:0,paid:0}]}:{available:false},credits:[],
     finale:{phase:success?'success':night?'night':'waiting',nightNo:night||success?1:0,canCall:progress.night==='ready',remaining:night?60:0,dawnRemaining:0,
       status:'Supplied night status.',glow:night?{x:120,y:130}:null,parted:success?{second:60,lights:lights.map(light=>light.id),target:{x:120,y:130}}:null,lights},
     partners:crew.seats.filter(seat=>seat.holder==='partner').map((seat,index)=>({seat:seat.seatNo,name:seat.name,partnerId:seat.partnerId,kit:seat.kit,kitName:'Recorded kit',
@@ -40,14 +40,14 @@ export function recordedCaseSnapshot(crew,{stage='earned',progress={}}={}){
       job:index===0&&progress.partner?{orderNo:1,order:'fetch',target:'C3',total:60,remaining:progress.partner==='done'?0:1,done:progress.partner==='done',arrived:progress.partner==='done',line:progress.partner==='done'?'Supplied partner completion.':'Supplied partner departure.'}:null}))};
 }
 // Pure factory is usable by injected unit tests; credentials and sealed case content are absent.
-export function createCaseFixture({crew,stage='earned',progress={}}={}){
+export function createCaseFixture({crew,stage='earned',progress={},worldLocked=false}={}){
   const activeCrew=crew??{id:randomUUID(),status:'active',mode:'crew',mySeat:1,startedAt:'2026-11-08T00:00:00Z',
     seats:[1,2,3,4].map(seatNo=>({seatNo,holder:seatNo<3?'player':'partner',isMe:seatNo===1,
       name:`Recorded seat ${seatNo}`,kit:seatNo===1?'stranger':seatNo===2?'witness':'informant',
       partnerId:seatNo<3?null:randomUUID()}))};
-  return recordedCaseSnapshot(activeCrew,{stage,progress});
+  return recordedCaseSnapshot(activeCrew,{stage,progress,worldLocked});
 }
-export async function openCaseFixture(){
+export async function openCaseFixture({worldLocked=false}={}){
   const env=await openCrewPresenceFixture({startPlace:'saltreach_harbor'}),requests=[],previous=new Map();
   let stage='earned',sequence=0,nextPinAbort=false,progress={},accusations=0;
   const security={enforcingDocuments:0,missingEnforcingPolicy:0,violations:0};
@@ -74,9 +74,9 @@ export async function openCaseFixture(){
         assert.equal(request.postData(),null,'Case and world reads carry no body');
         if(path==='/api/case'&&progress.search==='working')progress={...progress,search:'done',revision:6};
         if(path==='/api/case'&&progress.partner==='working')progress={...progress,partner:'done',night:'ready',revision:8};
-        const coast=progress.reveal?{...world(),stage:'relit',lightsOn:true,fogBankGone:true,gullsRestOpen:true,solves:1,
+        const coast=progress.reveal&&!worldLocked?{...world(),stage:'relit',lightsOn:true,fogBankGone:true,gullsRestOpen:true,solves:1,
           relitAt:'2026-11-08T00:01:00Z',wall:[{name:'Recorded Captain',order:1}],line:'Supplied public coast line.'}:world();
-        return route.fulfill({json:path==='/api/world'?coast:{case:recordedCaseSnapshot(env.crewSnapshot(),{stage,progress})}});
+        return route.fulfill({json:path==='/api/world'?coast:{case:recordedCaseSnapshot(env.crewSnapshot(),{stage,progress,worldLocked})}});
       }
       assert.equal(method,'POST');assert.match(uid,/^[A-Za-z0-9_-]{8,64}$/);
       previous.set(key,{uid,serialized});
@@ -108,7 +108,7 @@ export async function openCaseFixture(){
         else if(accusations===2)return route.abort('failed');
         else progress={...progress,reveal:true,revision:13};
       }
-      return route.fulfill({json:{accepted,reason,message,case:recordedCaseSnapshot(env.crewSnapshot(),{stage,progress})}});
+      return route.fulfill({json:{accepted,reason,message,case:recordedCaseSnapshot(env.crewSnapshot(),{stage,progress,worldLocked})}});
     });
     return {...env,caseRequests:requests,caseSecurity:()=>({...security}),abortNextPin(){nextPinAbort=true;},resetCase(){stage='earned';progress={};accusations=0;previous.clear();}};
   }catch(error){await env.close();throw error;}

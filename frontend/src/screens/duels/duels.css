@@ -35,7 +35,7 @@
 .duel-choices, .duel-options { display: flex; flex-wrap: wrap; gap: 10px; }
 .duel-choice, .duel-option { position: relative; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border: 2px solid #b4a372; background: #344e3c; color: #fff0c5; cursor: pointer; }
 .duel-choice input, .duel-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.duel-choice:has(input:checked), .duel-option:has(input:checked) { background: #5d7646; border-color: #f3d58c; box-shadow: inset 0 0 0 2px #f3d58c; }
+.duel-choice:has(input:checked), .duel-option:has(input:checked) { background: #5c7545; border-color: #f3d58c; box-shadow: inset 0 0 0 2px #f3d58c; }
 .duel-choice:has(input:focus-visible), .duel-option:has(input:focus-visible) { outline: 3px solid #f3d58c; outline-offset: 4px; }
 .duel-choice:has(input:disabled), .duel-option:has(input:disabled) { opacity: 0.6; cursor: default; }
 .duel-field { display: grid; gap: 6px; }

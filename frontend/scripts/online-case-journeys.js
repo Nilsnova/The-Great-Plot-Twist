@@ -53,7 +53,7 @@ async function visitPier(env){
   if(await interact.isVisible())await interact.click();else await page.keyboard.press('KeyE');
   await modal(page).locator('.case-search .case-route').waitFor();
 }
-export async function recordedCaseGolden(env,{width=375,capture}={}){
+export async function recordedCaseGolden(env,{width=375,capture,worldLocked=false}={}){
   const {page}=env,checks=[];await enterRecordedCase(env,{width});
   const beforeReplay=await assertEngineReplay(page);
   assert.equal(await board(page).locator('[data-card]').count(),2);checks.push('Only the two server-earned cards are displayed');
@@ -115,10 +115,15 @@ export async function recordedCaseGolden(env,{width=375,capture}={}){
   const beforePages=writes(env).length;await modal(page).getByRole('button',{name:'Next line',exact:true}).click();
   await modal(page).getByRole('button',{name:'Finish the reveal',exact:true}).click();
   assert.equal(writes(env).length,beforePages,'Reveal paging remains presentation-only');
+  const completion=worldLocked?'Your case is complete.':'The coast is relit.';
+  await modal(page).locator('.case-reveal > p').filter({hasText:completion}).waitFor();
+  assert.equal((await modal(page).locator('.case-reveal > p').textContent()).trim(),completion,
+    'Completing a case reports only the authoritative public coast state');
   await modal(page).getByRole('button',{name:'See the coast',exact:true}).click();
-  await modal(page).locator('.case-relighting').getByRole('heading',{name:'The Relighting',exact:true}).waitFor({timeout:35000});
-  assert.ok(env.caseRequests.some(row=>row.path==='/api/world'&&!row.authorized),'The relit coast is read through the anonymous world boundary');
-  checks.push('Refused and unknown accusations retain authority; accepted reveal paging and the public relit coast stay server-backed');
+  await modal(page).locator('.case-relighting').getByRole('heading',{name:worldLocked?'The Wall of Lights':'The Relighting',exact:true}).waitFor({timeout:35000});
+  assert.ok(env.caseRequests.some(row=>row.path==='/api/world'&&!row.authorized),'The coast is read through the anonymous world boundary');
+  checks.push(worldLocked?'A completed case with a locked world keeps the public coast dark':'A completed case displays the independently confirmed relit coast');
+  checks.push('Refused and unknown accusations retain authority; accepted reveal paging and the public coast stay server-backed');
   for(const path of ['/api/board/pin','/api/board/pair','/api/case/search','/api/crews/me/orders','/api/finale/nightfall','/api/finale/post','/api/finale/signal','/api/case/accuse'])
     assert.ok(env.caseRequests.some(row=>row.path===path&&row.method==='POST'),'Every core case route is exercised');
   assert.deepEqual(await assertEngineReplay(page),beforeReplay,'Case pages preserve the original engine replay');
