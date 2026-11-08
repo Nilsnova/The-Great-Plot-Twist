@@ -82,7 +82,10 @@ function otherPrices(state) {
   return 'Opened on the other kind of prices (live market or demo recording): it can be closed only there.';
 }
 const UNAVAILABLE = {
-  no_price: () => 'No price yet.',
+  no_price(state, options) {
+    const next = state.kind === 'stock' ? opening(state, options, true) : '';
+    return next ? `Closed${next}. No price yet.` : 'No price yet.';
+  },
   source_off: () => 'Prices not connected yet.',
   not_in_recording: () => 'Not part of the demo recording.',
   wrong_price_mode: otherPrices,
