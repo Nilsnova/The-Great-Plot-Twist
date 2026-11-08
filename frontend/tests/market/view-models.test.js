@@ -56,6 +56,18 @@ describe('boardRows', () => {
     expect(rows[1].priceAtText).toBe('');
   });
 
+  it('labels an unquoted closed stock without changing its unavailable status or open capability', () => {
+    const stock = company({id:'apple',kind:'stock',market:'us',status:'unavailable',reason:'no_price',price:null,
+      priceAt:null,opensAt:'2026-11-09T14:30:00Z',canOpen:false,canClose:false,zeroPrices:null});
+    const original = structuredClone(stock), snapshot = board([stock],{generatedAt:'2026-11-08T12:00:00Z'});
+    const [row] = boardRows(snapshot,{timeZone:'America/New_York'});
+    expect(row).toMatchObject({status:'unavailable',canOpen:false,zeroPrices:null,priceText:'Not available',
+      statusText:'Closed, opens Monday 14:30 Lisbon time. No price yet.',
+      blockedText:'Closed, opens Monday 14:30 Lisbon time. No price yet.'});
+    expect(boardRows({...snapshot,tradingEnabled:false})[0].blockedText).toBe('Trading opens later.');
+    expect(stock).toEqual(original);
+  });
+
   it('explains a delisted company and a board with trading switched off', () => {
     const delisted = company({ delisted: true, canOpen: false });
     expect(boardRows(board([delisted]), at)[0].blockedText).toBe('Delisted after the Relighting: you can only close positions.');
@@ -196,6 +208,16 @@ describe('positionRows', () => {
       { timeZone: 'America/New_York' }).open;
     expect(row.blockedText).toBe('Closed, opens 14:30 Lisbon time');
     expect(row.priceAtText).toBe('07:59'); expect(row.canClose).toBe(false);
+  });
+
+  it.each([false,true])('keeps an unquoted stock position\'s supplied canClose=%s while improving its blocked words', canClose => {
+    const waiting = {...PORTFOLIO.positions[0],companyStatus:'unavailable',companyReason:'no_price',
+      opensAt:'2026-11-09T14:30:00Z',price:null,priceAt:null,canClose};
+    const stock = company({kind:'stock',market:'us',canOpen:false,canClose:false});
+    const [row] = positionRows({...PORTFOLIO,generatedAt:'2026-11-08T12:00:00Z',positions:[waiting]},board([stock]),at).open;
+    expect(row.canClose).toBe(canClose);
+    expect(row.blockedText).toBe(canClose?null:'Closed, opens Monday 14:30 Lisbon time. No price yet.');
+    expect(waiting.companyStatus).toBe('unavailable');expect(waiting.companyReason).toBe('no_price');
   });
 
   it('names the holiday from the board when the position row has only the reason', () => {

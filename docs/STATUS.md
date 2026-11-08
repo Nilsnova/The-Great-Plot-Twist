@@ -20,8 +20,11 @@ and case guidance, polished inspection/Settings/support pages and caption-safe s
 The final clean frontend run passes **3,719 tests in 252 files**; combined phone/accessibility checks
 pass **36 checks / 61 screens**, with cold-title and strict-CSP budgets unchanged. Recorded native
 journeys and fault proofs pass. See the [final visual evidence](handoff/player-experience-visual-pass.md)
-and [overflow release](handoff/overflow-1-3-release.md). Main merge, deployment identity and public-route
-verification are the release steps; private OAuth/crew and physical-device checks remain distinct.
+and [overflow release](handoff/overflow-1-3-release.md). Main `7486bac` is deployed READY, with exact
+identity, public routes, flags and all 174 stamped assets verified. A separately reviewed stock-label
+follow-up clarifies closed hours before a first quote; 392 market tests and three native panel layouts
+pass. Its final deployment identity is checked after push. Private OAuth/crew and physical-device
+checks remain distinct.
 No new key or configuration is needed from Nils. No backend, SQL, feature flag or provider was changed.
 
 **Historical checkpoints follow.** Their statements about G9 being unfinished or sign-in being off

@@ -95,6 +95,29 @@ describe('status words', () => {
     expect(statusWords({ status: 'unavailable', reason: 'not_in_recording' }, at)).toBe('Not part of the demo recording.');
   });
 
+  it('shows a closed stock and its supplied Lisbon opening even before the first quote', () => {
+    const state = {kind:'stock',market:'us',status:'unavailable',reason:'no_price',opensAt:'2026-11-09T14:30:00Z'};
+    expect(statusWords(state, {now:'2026-11-08T12:00:00Z',timeZone:'America/New_York'}))
+      .toBe('Closed, opens Monday 14:30 Lisbon time. No price yet.');
+    expect(statusWords({...state,opensAt:'2026-07-13T13:30:00Z'}, {now:'2026-07-12T12:00:00Z'}))
+      .toBe('Closed, opens Monday 14:30 Lisbon time. No price yet.');
+  });
+
+  it.each([null,undefined,'','not a date',55,{}])('keeps no-price wording without a usable supplied opening: %j', opensAt => {
+    expect(statusWords({kind:'stock',market:'us',status:'unavailable',reason:'no_price',opensAt},
+      {now:'2026-11-08T12:00:00Z'})).toBe('No price yet.');
+  });
+
+  it('does not infer closure for non-stocks, open stocks or other unavailable reasons', () => {
+    const stock = {kind:'stock',market:'us',status:'unavailable',reason:'no_price',opensAt:'2026-11-09T14:30:00Z'};
+    for (const kind of ['island',undefined])expect(statusWords({...stock,kind},at)).toBe('No price yet.');
+    expect(statusWords({...stock,status:'open'},at)).toBe('Open now');
+    expect(statusWords({...stock,reason:'source_off'},at)).toBe('Prices not connected yet.');
+    expect(statusWords({...stock,reason:'not_in_recording'},at)).toBe('Not part of the demo recording.');
+    expect(statusWords({...stock,reason:'wrong_price_mode',mode:'live'},at))
+      .toBe('Opened on the live market: it can be closed only there.');
+  });
+
   it('explains a position that was opened on the other kind of prices, saying which kind', () => {
     const state = { status: 'unavailable', reason: 'wrong_price_mode' };
     expect(statusWords({ ...state, mode: 'live' }, at)).toBe('Opened on the live market: it can be closed only there.');

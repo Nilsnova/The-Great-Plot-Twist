@@ -1,0 +1,124 @@
+{
+  "at": "2026-11-08T20:02:24.522Z",
+  "origin": "https://the-great-plot-twist.vercel.app",
+  "expectedCommit": "7486bacb0326d010c61096b1a7a8b92dbac13bc0",
+  "health": {
+    "status": "ok",
+    "cache": "private, no-store"
+  },
+  "flags": {
+    "market": true,
+    "predictions": true,
+    "sports": true,
+    "arena": true,
+    "raid": false,
+    "live_presence": true,
+    "case": true,
+    "sign_in": true,
+    "bulletin": true,
+    "festival": true
+  },
+  "build": {
+    "commit": "7486bacb0326d010c61096b1a7a8b92dbac13bc0",
+    "builtAt": "2026-11-08T20:01:06.988Z",
+    "assets": 174
+  },
+  "releaseMarkers": [
+    "onboarding-tip",
+    "tap-destination",
+    "touch-move-help",
+    "Drag to walk",
+    "onboarding-sign-in"
+  ],
+  "spoilerScan": {
+    "fingerprints": 12,
+    "bundleAssets": 174,
+    "clean": true
+  },
+  "ok": true,
+  "checkCount": 960,
+  "failed": [],
+  "sports": {
+    "source": "live",
+    "provider": "football-data.org",
+    "fixtures": 5,
+    "cache": "public, max-age=30"
+  },
+  "market": {
+    "companies": 12,
+    "stocks": [
+      {
+        "ticker": "AAPL",
+        "status": "unavailable",
+        "reason": "no_price",
+        "canOpen": false
+      },
+      {
+        "ticker": "NVDA",
+        "status": "unavailable",
+        "reason": "no_price",
+        "canOpen": false
+      },
+      {
+        "ticker": "TSLA",
+        "status": "unavailable",
+        "reason": "no_price",
+        "canOpen": false
+      },
+      {
+        "ticker": "KO",
+        "status": "unavailable",
+        "reason": "no_price",
+        "canOpen": false
+      },
+      {
+        "ticker": "SPOT",
+        "status": "unavailable",
+        "reason": "no_price",
+        "canOpen": false
+      }
+    ],
+    "cache": "public, max-age=30"
+  },
+  "coldTitle": {
+    "javaScript": 21066,
+    "css": 11886,
+    "jsAssets": [
+      "/assets/game-CgMKs_bL.js",
+      "/assets/modal-CjmhzmjH.js",
+      "/assets/dom-BE8XS1OM.js",
+      "/assets/button-BTb4MpEB.js",
+      "/assets/logic-Br6LZ7Sf.js",
+      "/assets/screens-D18ve9zg.js",
+      "/assets/preload-helper-BQUUbbNx.js",
+      "/assets/unavailable-Cs2Q2AhI.js",
+      "/assets/extensions-CdpB2987.js",
+      "/assets/contract-CZypeDED.js",
+      "/assets/intro-journal-DJj67nNK.js",
+      "/assets/events-C31BJoij.js"
+    ]
+  },
+  "coldMeasurement": "Public entry and recursively traversed static imports; dynamic imports remain deferred.",
+  "deployment": {
+    "id": "dpl_8yZDec6T6H9AoB6ATGPBpdgpEmMf",
+    "state": "READY",
+    "target": "production",
+    "creation": "Existing Git auto-deployment; no duplicate created.",
+    "createdAt": 1794168048221,
+    "buildingAt": 1794168059212,
+    "ready": 1794168078996,
+    "rollbackTarget": "dpl_JC6WUy1pdVvxf7jybFg7Vapay6u1"
+  },
+  "runtimeErrors": {
+    "since": "2026-11-08T20:01:19.000Z",
+    "result": "No runtime errors found in selected time range."
+  },
+  "limits": [
+    "Signed-out public GET checks only; no private OAuth, player writes or actual phone/browser interaction."
+  ],
+  "stockClosedProof": false,
+  "limitations": [
+    "All five stocks currently unavailable/no_price, rather than Closed. Unchanged backend prioritizes no_price before market hours; no current/last stock quote is present."
+  ],
+  "note": "Initial production release, before the separately tested stock-closure wording follow-up. Its stock data limitation is retained; no quote was invented."
+}
