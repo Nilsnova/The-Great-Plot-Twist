@@ -1,0 +1,105 @@
+{
+  "checked": "2026-11-08T15:52:08.282Z",
+  "browser": "156.0.8078.79",
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "styles": {
+        "fontFamily": "\"Courier New\", monospace",
+        "sheetCount": 6
+      },
+      "violations": []
+    },
+    {
+      "path": "/?demo=1",
+      "status": 200,
+      "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "styles": {
+        "fontFamily": "\"Courier New\", monospace",
+        "sheetCount": 6
+      },
+      "violations": []
+    },
+    {
+      "path": "/asset-library.html",
+      "status": 200,
+      "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "styles": {
+        "fontFamily": "\"Courier New\", monospace",
+        "sheetCount": 1
+      },
+      "violations": []
+    },
+    {
+      "path": "/ui-kit.html",
+      "status": 200,
+      "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "styles": {
+        "fontFamily": "\"Courier New\", monospace",
+        "sheetCount": 4
+      },
+      "violations": []
+    },
+    {
+      "path": "/auth-check.html",
+      "status": 200,
+      "policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://uqcjihigqjgyuafrfbnp.supabase.co wss://uqcjihigqjgyuafrfbnp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "styles": {
+        "fontFamily": "\"Courier New\", monospace",
+        "sheetCount": 1
+      },
+      "violations": []
+    }
+  ],
+  "tour": [
+    "Production tour reached A page from the intro",
+    "Production tour reached Arrival on Lighthouse Isle",
+    "Production tour reached Build the signal station",
+    "Production tour reached Set a coastal course",
+    "Production tour reached Harbor bulletin and live captains",
+    "Production tour reached At the Captain’s Table",
+    "Production tour reached Weather · almanac fog and storm",
+    "Production tour reached The Night of Three Lights",
+    "Production tour reached The Relighting",
+    "Production demo shows no reveal text",
+    "Production tour uses no development inspection hooks",
+    "API requests occur only as expected 503 responses during the production tour",
+    "Production pages request no external assets"
+  ],
+  "errors": {
+    "javascript": [],
+    "console": []
+  },
+  "external": [],
+  "apiResponses": [
+    {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
+      "path": "/api/config",
+      "status": 503
+    },
+    {
+      "path": "/api/weather",
+      "status": 503
+    }
+  ],
+  "expected503Diagnostics": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ]
+}

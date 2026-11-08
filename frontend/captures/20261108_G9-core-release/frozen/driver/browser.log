@@ -1,0 +1,236 @@
+{
+  "checked": "2026-11-08T15:43:26.791Z",
+  "browser": "156.0.8078.79",
+  "viewport": "1440 × 900, DPR 1",
+  "modes": {
+    "arrival-high": {
+      "fps": 28,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        720,
+        450
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.5,
+      "shadows": false
+    },
+    "midnight-high": {
+      "fps": 37,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        720,
+        450
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.5,
+      "shadows": false
+    },
+    "storm-high": {
+      "fps": 36,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        720,
+        450
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.5,
+      "shadows": false
+    },
+    "fog-high": {
+      "fps": 36,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        720,
+        450
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.5,
+      "shadows": false
+    },
+    "noon-high": {
+      "fps": 38,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        720,
+        450
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.5,
+      "shadows": false
+    },
+    "dusk-high": {
+      "fps": 36,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        720,
+        450
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.5,
+      "shadows": false
+    },
+    "fog-low": {
+      "fps": 15,
+      "calls": 99,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        1214,
+        758
+      ],
+      "integerUpscale": 1,
+      "densityScale": 1,
+      "quality": "low",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.8432740427115678,
+      "shadows": false
+    },
+    "storm-low": {
+      "fps": 15,
+      "calls": 100,
+      "triangles": 195,
+      "points": 0,
+      "nativeFramebuffer": [
+        1214,
+        758
+      ],
+      "integerUpscale": 1,
+      "densityScale": 1,
+      "quality": "low",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 1,
+      "pixelRatio": 0.8432740427115678,
+      "shadows": false
+    },
+    "retina-high": {
+      "fps": 13,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        910,
+        569
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.5,
+      "quality": "high",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 2,
+      "pixelRatio": 0.6324555320336759,
+      "shadows": false
+    },
+    "retina-low": {
+      "fps": 19,
+      "calls": 97,
+      "triangles": 192,
+      "points": 0,
+      "nativeFramebuffer": [
+        789,
+        493
+      ],
+      "integerUpscale": 1,
+      "densityScale": 0.65,
+      "quality": "low",
+      "cssSize": [
+        1440,
+        900
+      ],
+      "devicePixelRatio": 2,
+      "pixelRatio": 0.5481281277625191,
+      "shadows": false
+    }
+  },
+  "checks": [
+    "arrival-high stays within rendering budgets",
+    "Escape opens the pause menu",
+    "W walks the explorer",
+    "Wheel zoom works while the pixel camera keeps its fixed angle",
+    "All four hooks emit exactly once per held E press: [{\"type\":\"interact\",\"id\":\"desk\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"cottage\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"shore\",\"place\":\"lighthouse_isle\"},{\"type\":\"interact\",\"id\":\"tower_door\",\"place\":\"lighthouse_isle\"}]",
+    "midnight-high stays within rendering budgets",
+    "storm-high stays within rendering budgets",
+    "fog-high stays within rendering budgets",
+    "noon-high stays within rendering budgets",
+    "dusk-high stays within rendering budgets",
+    "fog-low stays within rendering budgets",
+    "storm-low stays within rendering budgets",
+    "Low quality keeps its approved pixel-ratio cap and reduces effect density",
+    "Escape closes settings while a form control has focus",
+    "The game makes no external network requests",
+    "No browser or WebGL errors ()",
+    "retina-high stays within rendering budgets",
+    "retina-low stays within rendering budgets",
+    "Retina high records its DPR, quality and approved adaptive density",
+    "Retina high ratio and native buffer exactly match pixelViewport",
+    "Retina high uses exact floor-sized pixels within its approved buffer and ratio caps",
+    "Retina high keeps the full 1440 by 900 CSS viewport",
+    "Retina low records its DPR, quality and approved adaptive density",
+    "Retina low ratio and native buffer exactly match pixelViewport",
+    "Retina low uses exact floor-sized pixels within its approved buffer and ratio caps",
+    "Retina low keeps the full 1440 by 900 CSS viewport",
+    "Retina quality changes preserve CSS dimensions while adapting backing pixels"
+  ]
+}

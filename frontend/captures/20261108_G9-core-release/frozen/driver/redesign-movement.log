@@ -1,0 +1,106 @@
+{
+  "checks": [
+    "1280px high quality bounds framebuffer pixels",
+    "Desktop renders over nine times the old native pixel area",
+    "1280px release has no drifting momentum",
+    "1280px quality changes preserve world framing",
+    "1280px low quality bounds framebuffer pixels",
+    "1280px world has no page errors or external requests",
+    "375px high quality bounds framebuffer pixels",
+    "375px release has no drifting momentum",
+    "375px quality changes preserve world framing",
+    "375px low quality bounds framebuffer pixels",
+    "375px world has no page errors or external requests",
+    "320px high quality bounds framebuffer pixels",
+    "320px release has no drifting momentum",
+    "320px quality changes preserve world framing",
+    "320px low quality bounds framebuffer pixels",
+    "320px world has no page errors or external requests"
+  ],
+  "modes": [
+    {
+      "width": 1280,
+      "height": 720,
+      "dpr": 1,
+      "high": {
+        "width": 704,
+        "height": 396,
+        "pixelRatio": 0.55
+      },
+      "low": {
+        "width": 1280,
+        "height": 720
+      },
+      "camera": [
+        -17.77777777777778,
+        17.77777777777778,
+        10,
+        -10
+      ],
+      "lowCamera": [
+        -17.77777777777778,
+        17.77777777777778,
+        10,
+        -10
+      ],
+      "fps": 12,
+      "calls": 97
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "dpr": 2,
+      "high": {
+        "width": 562,
+        "height": 1218,
+        "pixelRatio": 1.5
+      },
+      "low": {
+        "width": 375,
+        "height": 812
+      },
+      "camera": [
+        -8,
+        8,
+        17.322666666666667,
+        -17.322666666666667
+      ],
+      "lowCamera": [
+        -8,
+        8,
+        17.322666666666667,
+        -17.322666666666667
+      ],
+      "fps": 21,
+      "calls": 97
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "dpr": 2,
+      "high": {
+        "width": 480,
+        "height": 960,
+        "pixelRatio": 1.5
+      },
+      "low": {
+        "width": 320,
+        "height": 640
+      },
+      "camera": [
+        -8,
+        8,
+        16,
+        -16
+      ],
+      "lowCamera": [
+        -8,
+        8,
+        16,
+        -16
+      ],
+      "fps": 24,
+      "calls": 97
+    }
+  ]
+}

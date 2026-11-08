@@ -1,0 +1,27 @@
+
+ RUN  v5.1.0 <frontend>
+
+ ❯ tests/case-controls-stability.test.js (2 tests | 1 failed) 21165ms
+   × retains the exact native pair controls, selections and focus through clock and unrelated live updates 20181ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/case-controls-stability.test.js > retains the exact native pair controls, selections and focus through clock and unrelated live updates
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/case-controls-stability.test.js:18:1
+     16| }});
+     17|
+     18| it('retains the exact native pair controls, selections and focus throu…
+       | ^
+     19|   await native.withPage(async page=>{
+     20|     await page.evaluate(async view=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  17:07:35
+   Duration  22.34s (tests 96%, import 4%, transform 1%)
+

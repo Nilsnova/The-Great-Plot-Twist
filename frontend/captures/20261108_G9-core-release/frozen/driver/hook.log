@@ -1,0 +1,21 @@
+{
+  "checked": "2026-11-08T15:52:58.129Z",
+  "checks": [
+    "Hook notice uses placeholder-only fake text",
+    "Hook pattern announcements do not start automatically",
+    "Announcement opt-in reads each flash as it happens",
+    "Closing the modal stops the opt-in announcement timer",
+    "Sea chart marker exposes the supplied pattern in words",
+    "Sea chart marker follows the supplied flash and gap timings",
+    "Distant signal layer sits offshore at its chart bearing at night",
+    "Reduced motion retains a still signal marker",
+    "Browser has no console or page errors",
+    "Browser makes no external requests"
+  ],
+  "screenshots": [
+    "captures/20261106_G8-Hook-Notice.png",
+    "captures/20261106_G8-Hook-Chart.png"
+  ],
+  "errors": [],
+  "external": []
+}

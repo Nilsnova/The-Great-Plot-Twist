@@ -1,0 +1,12 @@
+
+ RUN  v5.1.0 <frontend>
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  17:08:32
+   Duration  9.52s (tests 64%, import 28%, transform 8%)
+
+    Isolate  2 workers spawned · ~1.50s startup each (spawn + environment, per file)
+             at least ~1.50s faster with isolate: false — reuses workers across files instead of one per file
+

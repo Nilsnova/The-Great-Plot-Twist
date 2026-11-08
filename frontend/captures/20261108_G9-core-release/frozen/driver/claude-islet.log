@@ -1,0 +1,38 @@
+ok  Arriving at the home islet tells the world that only the cabin stands
+ok  Control: the keyboard walks the explorer while no panel is open
+ok  Control: the gamepad stick walks the explorer while no panel is open
+ok  E at the workshop plot opens the panel with five cards in file order
+ok  A new player sees 1,000 coins and 20 timber
+ok  Focus lands on the Build button of the plot that was used
+ok  Keys do not walk the explorer while a button has focus
+ok  Keys do not walk the explorer while a heading has focus
+ok  The gamepad stick does not walk the explorer
+ok  E does not open the finale behind the panel
+ok  M does not open the sea chart behind the panel
+ok  A does not open the finale behind the panel
+ok  Y does not open the sea chart behind the panel
+ok  The panel is still open after E, M, A and Y
+ok  The windmill and greenhouse buttons are off
+ok  The windmill says Coming later
+ok  The cabin has no button
+ok  With 100 coins the Build buttons are off
+ok  The station card says it needs 200 more coins
+ok  With 1,000 coins the Build buttons are on again
+ok  Each Build button names its building
+ok  Building the station leaves 700 coins and 10 timber
+ok  The station card shows Standing and has no button
+ok  The world is told that the station stands
+ok  The D-pad moves focus to the workshop button
+ok  A builds the workshop: 400 coins and 0 timber are left
+ok  B closes the panel and opens no Pause menu
+ok  After B, focus is back on the canvas
+ok  A click on the cabin plot opens the panel with focus on the cabin heading
+ok  Escape closes the panel without opening Pause
+ok  After Escape, focus is back on the canvas
+ok  Travelling closes the panel
+ok  Without a transport the panel says the islet will be saved once sign-in is connected
+ok  It shows no cards and tells the world nothing
+ok  Escape closes the panel in unavailable mode too
+ok  Neither mode sent a request to /api/islet
+ok  No browser errors
+ok  No external requests

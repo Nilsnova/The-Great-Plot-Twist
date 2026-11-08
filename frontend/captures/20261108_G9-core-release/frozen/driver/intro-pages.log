@@ -1,0 +1,110 @@
+(!) Failed to run dependency scan. Skipping dependency pre-bundling. Error: The following dependencies are imported but could not be resolved:
+
+  virtual:build-identity.css (imported by ./src/main.js)
+
+Are they installed?
+    at file://./node_modules/vite/dist/node/chunks/node.js:28527:33
+    at async file://./node_modules/vite/dist/node/chunks/node.js:35879:15
+{
+  "checks": [
+    "Only the current passage remains at 1280",
+    "Only initial scene callback while paging at 1280",
+    "Opening 1280 fits without clipped text or controls",
+    "Story box keeps its compact height at 1280",
+    "Shore 1280 fits without clipped text or controls",
+    "Panel height stays stable at 1280",
+    "Actual scene change callback at 1280",
+    "More actions never records an engine move at 1280",
+    "More choices 1280 fits without clipped text or controls",
+    "Journal is opt-in at 1280",
+    "Original prose retained at 1280",
+    "Journal Escape returns to the passage at 1280",
+    "No browser errors at 1280",
+    "Only the current passage remains at 375",
+    "Only initial scene callback while paging at 375",
+    "Opening 375 fits without clipped text or controls",
+    "Story box keeps its compact height at 375",
+    "Shore 375 fits without clipped text or controls",
+    "Panel height stays stable at 375",
+    "Actual scene change callback at 375",
+    "More actions never records an engine move at 375",
+    "More choices 375 fits without clipped text or controls",
+    "Journal is opt-in at 375",
+    "Original prose retained at 375",
+    "Journal Escape returns to the passage at 375",
+    "No browser errors at 375",
+    "Only the current passage remains at 320",
+    "Only initial scene callback while paging at 320",
+    "Opening 320 fits without clipped text or controls",
+    "Story box keeps its compact height at 320",
+    "Shore 320 fits without clipped text or controls",
+    "Panel height stays stable at 320",
+    "Actual scene change callback at 320",
+    "More actions never records an engine move at 320",
+    "More choices 320 fits without clipped text or controls",
+    "Journal is opt-in at 320",
+    "Original prose retained at 320",
+    "Journal Escape returns to the passage at 320",
+    "No browser errors at 320",
+    "Only the current passage remains at 844",
+    "Only initial scene callback while paging at 844",
+    "Opening 844 fits without clipped text or controls",
+    "Story box keeps its compact height at 844",
+    "Shore 844 fits without clipped text or controls",
+    "Panel height stays stable at 844",
+    "Actual scene change callback at 844",
+    "More actions never records an engine move at 844",
+    "More choices 844 fits without clipped text or controls",
+    "Journal is opt-in at 844",
+    "Original prose retained at 844",
+    "Journal Escape returns to the passage at 844",
+    "No browser errors at 844",
+    "Enter reveals the full current passage before advancing",
+    "Held confirm cannot skip a passage",
+    "Keyboard Continue advances only presentation",
+    "Instant text preference completes the current passage",
+    "Keyboard choice records the exact original action ID",
+    "Same-scene actions do not repeat the scene callback",
+    "More actions keeps the completed passage visible",
+    "Reduced motion reveals each whole passage immediately",
+    "Actual engine reaches ending_rescue",
+    "ending_rescue fits without clipped text or controls",
+    "Ending continuation is visible for ending_rescue",
+    "Exactly one ending event for ending_rescue",
+    "Local journal restores ending_rescue",
+    "Long arrival content scrolls inside the compact ending after ending_rescue",
+    "Restart clears the exact intro move journal after ending_rescue",
+    "Actual engine reaches ending_trapped",
+    "ending_trapped fits without clipped text or controls",
+    "Ending continuation is visible for ending_trapped",
+    "Exactly one ending event for ending_trapped",
+    "Local journal restores ending_trapped",
+    "Long arrival content scrolls inside the compact ending after ending_trapped",
+    "Restart clears the exact intro move journal after ending_trapped",
+    "Blocked story choice remains disabled",
+    "Disabled pointer and keyboard choices cannot change engine moves",
+    "Retry reuses the controller and performs one fresh read"
+  ],
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "panelHeight": 330
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "panelHeight": 420
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "panelHeight": 420
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "panelHeight": 330
+    }
+  ]
+}
