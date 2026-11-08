@@ -1,0 +1,83 @@
+/* Inspection, reports and earned records share the open panel's readable coastal surfaces. */
+.case-modal :is(.case-search,.captains-log,.rewards-screen,.partner-life-screen){font-family:system-ui,sans-serif;line-height:1.55}
+.case-modal .case-search{display:grid;gap:16px}
+.case-modal .case-search>h3,.case-modal .case-search-jobs>h3{margin:0;color:#ffe7b2;font:600 24px/1.25 Georgia,serif}
+.case-modal .case-search .case-clock{margin:0;color:#d7d9ad}
+.case-modal .case-search-guide{margin:0;max-width:68ch;color:#d0ddd4}
+.case-modal .case-inspect-observation{margin:0;max-width:70ch;padding:16px;border-left:3px solid #edcf8c;border-radius:0 8px 8px 0;background:#234549;line-height:1.65;white-space:pre-line}
+.case-modal .case-search-picker{min-width:0;padding:14px;border:1px solid #849d91;border-radius:10px;background:#153438;font-weight:600}
+.case-modal .case-search-picker select{width:100%}
+.case-modal .case-search-routes{grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:14px}
+.case-modal .case-route{display:flex;flex-direction:column;gap:12px}
+.case-modal .case-route :is(h4,p){margin:0}
+.case-modal .case-route h4{font-size:21px;line-height:1.3;color:#ffe7b2}
+.case-modal .case-route[data-available=true]{border-left:4px solid #dfc88f}
+.case-modal .case-route-meta{display:flex;flex-wrap:wrap;gap:8px}
+.case-modal .case-route-meta .kit-badge{background:#173539;color:#e6e9d5;border-color:#819b8f}
+.case-modal .case-route-status{border-top:1px solid #819b8f66;padding-top:12px;color:#d0ddd4}
+.case-modal .case-route>.kit-button{align-self:start;margin-top:auto}
+.case-modal .case-search-jobs{gap:12px;margin:0}
+.case-modal .case-job{display:grid;gap:12px}
+.case-modal .case-job[data-complete=true]{border-left:4px solid #f3d58c}
+.case-modal .case-job-state{justify-self:start;color:#fff0cd;background:#30554e}
+.case-modal .case-job[data-complete=true] :is(progress,.kit-progress-value){display:none}
+.case-modal .case-job-report{margin:0;max-width:68ch;line-height:1.65;white-space:pre-line}
+.case-modal .case-search-jobs>[data-focus=search-board]{justify-self:start;background:#f0d493;color:#17363a;border-color:#fff0c5}
+.case-modal .inspection-empty,.case-modal .partner-life-empty-state{margin:0;padding:16px;border:1px dashed #819b8f;border-radius:10px;background:#163438;color:#d0ddd4}
+
+/* A supplied report is the focus; no route/location is drawn when the server omits it. */
+.case-modal .partner-life-screen{padding:0;border:0;background:transparent;color:#f4ecd7}
+.case-modal .partner-life-intro{max-width:68ch;margin:0 0 16px;line-height:1.55}
+.case-modal .partner-life-list{grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:16px;align-items:start}
+.case-modal .partner-life-card{min-width:0;padding:18px;border:1px solid #849d91;border-radius:12px;background:#1c3c3f;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.case-modal .partner-life-head{grid-template-columns:52px minmax(0,1fr);gap:8px 12px}
+.case-modal .partner-life-portrait{grid-row:1/span 2;width:52px;height:65px}
+.case-modal .partner-life-head h3{color:#ffe7b2;font:600 21px/1.3 Georgia,serif}
+.case-modal .partner-life-status{grid-column:2;justify-self:start;padding:4px 9px;border:1px solid #99ac95;border-radius:6px;background:#173539;font:600 16px/1.4 system-ui,sans-serif;white-space:normal}
+.case-modal .partner-life-report{padding:12px 14px;border-left:3px solid #d9c58e;border-radius:0 8px 8px 0;background:#234549;line-height:1.6}
+.case-modal .partner-chart-caption{font-family:inherit;line-height:1.5;color:#d0ddd4}
+.case-modal .partner-field{font:600 16px/1.4 system-ui,sans-serif;gap:8px}
+.case-modal .partner-life-card>button{grid-column:1/-1;font-family:inherit;border-radius:8px}
+.case-modal .partner-life-feedback:empty{display:none}
+.case-modal .partner-life-empty{margin:0 0 12px}
+.case-modal .partner-paid-offer{border:1px solid #d9c58e;border-radius:8px;background:#163438;padding:14px}
+.case-modal .partner-paid-consent{line-height:1.5}
+
+/* Titles, supplied text and metadata remain separate so a narrow screen can scan each record. */
+.case-modal .captains-log :is(h3,h4){color:#ffe7b2}
+.case-modal :is(.captains-log-section,.captains-log-intro){padding:16px;border:1px solid #849d91;border-radius:10px;background:#1c3c3f}
+.case-modal .captains-log-list li{padding:14px;border-left:3px solid #aebf9a;border-radius:0 7px 7px 0;background:#163438}
+.case-modal .captains-log-entry{display:grid;gap:8px;margin:0;line-height:1.55}
+.case-modal .captains-log-entry-title{color:#fff0cd;font-weight:650}
+.case-modal .captains-log-entry-meta{display:block;color:#c5d7ce}
+.case-modal .captains-log-section:has(>.captains-log-empty){border-style:dashed;background:transparent}
+.case-modal .captains-log>h3,.case-modal .rewards-screen>h3{margin:0;color:#ffe7b2;font:600 24px/1.25 Georgia,serif}
+.case-modal .captains-log>p{margin:0}
+.case-modal .rewards-screen{display:grid;gap:16px}
+.case-modal .rewards-screen .rewards-balance{margin:0;padding:18px 22px;border:1px solid #cfbc88;border-radius:12px;background:#21464a;color:#ffe7b2;font-size:30px;line-height:1.3;font-variant-numeric:tabular-nums}
+.case-modal .rewards-ledger{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.case-modal .rewards-ledger li{display:grid;grid-template-columns:minmax(130px,auto) minmax(0,1fr);gap:14px;padding:14px 16px;border:1px solid #6f9187;border-radius:8px;background:#1c3c3f}
+.case-modal .rewards-ledger strong{color:#f3d58c;font-variant-numeric:tabular-nums}
+.case-modal .rewards-cabinet{grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr))}
+.case-modal .keepsake{display:grid;gap:12px;align-content:start;border:1px solid #849d91;border-radius:10px;background:#1c3c3f}
+.case-modal .keepsake :is(h4,p){margin:0}
+.case-modal .keepsake h4{color:#ffe7b2;font-size:21px;line-height:1.3}
+.case-modal .keepsake:not(.owned) img{opacity:.65}
+.case-modal .case-arrival>h3,.case-modal .case-arrival>ul,.case-modal .case-arrival>.case-facts{margin:0}
+.case-modal .case-arrival>.case-facts{padding:14px;border:1px solid #6f9187;border-radius:8px;background:#163438}
+.case-modal .case-arrival>[data-focus=arrival-crew]{justify-self:start;background:#f0d493;color:#17363a;border-color:#fff0c5}
+.case-modal .case-arrival .case-log-card{display:grid;gap:10px}
+.case-modal .case-arrival .case-log-card :is(h4,p){margin:0}
+.kit-modal.case-modal .server-call>.case-notice{padding:0;border:0;background:transparent}
+.case-modal .server-call{font-family:system-ui,sans-serif;flex-shrink:0}
+
+@media(max-width:600px){
+  .case-modal .partner-life-card{padding:14px;grid-template-columns:minmax(0,1fr)}
+  .case-modal .rewards-ledger li{grid-template-columns:minmax(0,1fr);gap:6px}
+  .case-modal .case-search-picker{padding:12px}
+}
+@media(max-height:450px){
+  /* A refusal must scroll with its page when a fixed notice would consume the short viewport. */
+  .case-modal:has(.server-call:not([hidden])) .case-screen-body{overflow:auto;overscroll-behavior:contain}
+  .case-modal:has(.server-call:not([hidden])) .case-screen-content{flex-shrink:0;overflow:visible;min-height:140px}
+}

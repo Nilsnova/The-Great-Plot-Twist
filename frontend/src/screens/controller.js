@@ -1,5 +1,6 @@
 // One case modal. Views receive snapshots and intent callbacks, never a transport or game rules.
 import './screens.css';
+import './inspection-polish.css';
 import {emit} from '../core/events.js';
 import {getPreferences,setPreferences} from '../settings/preferences.js';
 import {sendCaseIntent} from '../adapter/intent.js';

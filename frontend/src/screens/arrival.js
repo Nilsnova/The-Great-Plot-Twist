@@ -11,7 +11,7 @@ export function createArrivalScreen({navigate,onRetry,onSignIn}) {
   const logTitle=node('h4'),logText=node('p');log.append(logTitle,logText,node('small','','Lead only · cannot be pinned'));
   const crew=button('Find your crew',()=>navigate('crew'),{focus:'arrival-crew'}),caption=node('p','case-caption');
   for(const part of [kitName,details,inventory,log,crew])part.hidden=true;
-  element.append(eyebrow,heading,kitName,details,inventory,log,crew,caption,call.element);
+  element.append(eyebrow,heading,kitName,crew,details,inventory,log,caption,call.element);
   let focusFrame=null,signature=null,itemsSignature=null,owner=null,rendered=false,disposed=false;
   const text=value=>String(value??'');
   const setText=(part,value)=>{if(part.textContent!==value)part.textContent=value;};

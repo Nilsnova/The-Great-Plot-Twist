@@ -61,7 +61,7 @@ export function createFinaleScreen({send,navigate,openIslet}){
       figure.append(map,node('figcaption','',model.glow?'Find the glow. North is up.':'Light posts · north is up.'));
       const connected=view.mode!=='unavailable'&&view.crew?.status==='active'&&(model.lights?.length??0)>0;
       if(!connected){
-        const empty=node('div','case-night-empty');empty.append(node('h3','','Three lights. One crew.'),node('p','',view.mode==='unavailable'?'Online play is still being connected. Your local intro stays on this device.':view.crew?.status==='active'?'Prepare your signal station on your home islet.':'Start or join a crew to prepare the lights together.'),button('Open crew',()=>navigate('crew'),{focus:'night-crew'}));
+        const empty=node('div','case-night-empty');empty.append(node('h3','','Three lights. One crew.'),node('p','',view.mode==='unavailable'?'Online play is unavailable right now. Your local intro stays on this device.':view.crew?.status==='active'?'Prepare your signal station on your home islet.':'Start or join a crew to prepare the lights together.'),button('Open crew',()=>navigate('crew'),{focus:'night-crew'}));
         if(model.islet){
           const station=model.islet,card=node('article','case-light case-islet-light');
           card.append(node('h3','',station.name),node('p','case-caption',station.caption));

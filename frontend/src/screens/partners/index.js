@@ -58,13 +58,13 @@ function createCard(partner,send,navigate){
     const life=model.life??{},archetype=valid.includes(model.archetype)?model.archetype:'deckhand';
     const base=import.meta.env.BASE_URL??'/';portrait.src=`${base}pixel/${portraits.has(life.portraitId)?life.portraitId:`crew-${archetype}-portrait`}.png`;
     setText(title,`${model.name} · Seat ${seat}`);setText(report,life.event?.text??model.job?.report??'Ready for an order.');
-    boardButton.hidden=life.event?.type!=='pinned_card';
-    const line=life.chartLine;svg.hidden=!line?.active;svg.style.display=line?.active?'block':'none';svg.replaceChildren();marker=null;
+    boardButton.hidden=life.event?.type!=='pinned_card'&&model.job?.done!==true;
+    const line=life.chartLine;chart.hidden=!line;svg.hidden=!line?.active;svg.style.display=line?.active?'block':'none';svg.replaceChildren();marker=null;
     if(line){
       const segment=svgNode('line');segment.setAttribute('x1',line.from.x);segment.setAttribute('y1',line.from.y);segment.setAttribute('x2',line.to.x);segment.setAttribute('y2',line.to.y);segment.setAttribute('class',line.active?'partner-chart-line active':'partner-chart-line');svg.append(segment);
       marker=svgNode('circle');marker.setAttribute('r','5');marker.setAttribute('class','partner-chart-marker');svg.append(marker);
       setText(chartCaption,line.label??'Partner route');
-    }else setText(chartCaption,'At the harbor berth');
+    }else setText(chartCaption,'');
     fill(orderSelect,model.orders??[],local.order);local.order=orderSelect.value;
     const choices=targets(model);fill(targetSelect,choices,local.target);local.target=targetSelect.value;
     orderLabel.hidden=!(model.orders?.length);targetLabel.hidden=!choices.length;
@@ -84,11 +84,11 @@ function createCard(partner,send,navigate){
 }
 
 export function createPartnerLifeScreen({send=()=>{},navigate=()=>{}}={}){
-  const element=node('section','partner-life-screen'),intro=node('p','partner-life-intro','Partners follow orders and report back. They do not pair cards, accuse or give hints.');
-  const list=node('div','partner-life-list');element.append(intro,list);let cards=new Map(),signature='';
+  const element=node('section','partner-life-screen'),intro=node('p','partner-life-intro','Partners follow orders and report back. Choose an order and a target below.');
+  const list=node('div','partner-life-list');element.append(intro,list);let cards=new Map(),signature=null;
   function update(view={}){
     const partners=view.partners??[],next=partners.map(partner=>`${partner.seat}:${partner.archetype}`).join('|');
-    if(next!==signature){signature=next;cards=new Map();list.replaceChildren();for(const partner of partners){const card=createCard(partner,send,navigate);cards.set(partner.seat,card);list.append(card.article);}if(!partners.length)list.append(node('p','partner-life-empty','No partner seats are active.'));}
+    if(next!==signature){signature=next;cards=new Map();list.replaceChildren();for(const partner of partners){const card=createCard(partner,send,navigate);cards.set(partner.seat,card);list.append(card.article);}if(!partners.length){const empty=node('div','partner-life-empty-state');empty.append(node('p','partner-life-empty','No partner seats are active.'),button('Open crew',()=>navigate('crew'),{focus:'partners-open-crew'}));list.append(empty);}}
     for(const partner of partners)cards.get(partner.seat)?.update(partner,view);
   }
   function tick(view={}){
