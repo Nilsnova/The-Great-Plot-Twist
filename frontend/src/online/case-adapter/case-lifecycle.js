@@ -178,7 +178,8 @@ export function createCaseLifecycle(ctx,deps={}) {
   tick(){
     if(disposed||document?.hidden||!state.case)return;
     const elapsed=Math.max(0,Math.floor((ctx.now()-state.caseReceivedAt)/1000));
-    if(elapsed!==lastTick){lastTick=elapsed;store.commit({caseElapsed:elapsed});}
+    // Clock projections publish fresh views without replacing active native controls.
+    if(elapsed!==lastTick){lastTick=elapsed;store.commit({caseElapsed:elapsed},{advanceRevision:false});}
   },dispose(){disposed=true;generation+=1;worldGeneration+=1;clearTimerOwner();intents.dispose();effects.dispose();
     document?.removeEventListener?.('visibilitychange',visibility);ctx.onCrewRead=previousCrewRead;ctx.refreshCase=null;}};
 }

@@ -3,7 +3,7 @@ import {reducedMotion} from '../settings/preferences.js';
 import {node,button,labelledSelect,restoreFocus,secondsLabel} from './helpers.js';
 const frames={new:'clue-frame-new',pinned:'clue-frame-pinned',used:'clue-frame-used'};
 export function createBoardScreen({send}) {
-  const element=node('section','case-board');let first='',second='';const seenPins=new Set(),timers=[];
+  const element=node('section','case-board');let first='',second='',rendered=null;const seenPins=new Set(),timers=[];
   function pinCredits(card){const line=node('p','case-card-credit','Pinned: ');if(!card.pinnedBy.length)line.append(document.createTextNode('Not pinned'));for(const pin of card.pinnedBy){const badge=node('span','case-seat-credit',pin.label);badge.dataset.seat=pin.seat;line.append(badge);}return line;}
   function cardView(card) {
     const item=node('article','case-clue');item.dataset.state=card.state;item.dataset.card=card.id;item.style.borderImageSource=`url("${import.meta.env.BASE_URL}pixel/${frames[card.state]??frames.new}.png")`;
@@ -14,7 +14,10 @@ export function createBoardScreen({send}) {
     item.draggable=card.canPair;item.ondragstart=event=>event.dataTransfer.setData('text/plain',card.id);item.ondragover=event=>event.preventDefault();item.ondrop=event=>{event.preventDefault();send('pair',event.dataTransfer.getData('text/plain'),card.id);};
     return item;
   }
-  return {element,update(view){restoreFocus(element,()=>{
+  return {element,update(view){
+    const {pairWait,...layout}=view.board,stamp=JSON.stringify(layout);
+    if(stamp===rendered){this.tick(view);return;}rendered=stamp;
+    restoreFocus(element,()=>{
     const board=view.board;element.replaceChildren(node('p','',board.pairHelp??'The adapter will supply your crew’s cards.'));
     const cards=node('div','case-cards');cards.setAttribute('aria-label','Crew cards');for(const card of board.cards)cards.append(cardView(card));
     if(!board.cards.length)cards.append(node('p','case-empty','No cards yet. Search the coast or inspect your satchel.'));element.append(cards);for(const pin of board.pinHighlights??[]){if(seenPins.has(pin.id))continue;seenPins.add(pin.id);const card=[...cards.querySelectorAll('[data-card]')].find(node=>node.dataset.card===pin.cardId);if(card&&Date.now()-pin.at<2200){card.dataset.pinSeat=pin.seat;if(!reducedMotion()){card.classList.add('case-live-pin');timers.push(setTimeout(()=>card.classList.remove('case-live-pin'),1800));}}}

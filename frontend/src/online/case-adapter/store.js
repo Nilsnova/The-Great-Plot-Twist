@@ -24,10 +24,10 @@ export function createAdapterStore({session, readLocalSave} = {}) {
   let view = composeRealView(state);
   const read = () => structuredClone(view);
 
-  function commit(patch = {}) {
+  function commit(patch = {}, {advanceRevision = true} = {}) {
     if (closed) return;
     Object.assign(state, patch);
-    state.revision += 1;
+    if (advanceRevision) state.revision += 1;
     view = composeRealView(state);
     for (const listener of listeners) {
       try { listener({type: 'case_updated', view: read()}); } catch { /* Isolate broken listeners. */ }
