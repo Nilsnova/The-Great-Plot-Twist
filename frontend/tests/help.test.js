@@ -56,7 +56,9 @@ describe('standalone player help', () => {
     expect(html).toContain('not connected');
     expect(html).toContain('Your positions');
     expect(html).toContain('first Relighting');
-    expect(html).toContain('not available yet');
+    expect(html).toContain('Live crews');
+    expect(html).toContain('source freshness');
+    expect(html).not.toContain('optional spoiler-safe hint assistant');
     expect(html).not.toContain('older market service');
   });
 
