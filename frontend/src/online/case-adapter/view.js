@@ -7,6 +7,7 @@ import {projectIsletDisplay} from './islet-view.js';
 import {caseReasons} from '../../adapter/reasons.js';
 import {bulletinObservations} from './bulletin-view.js';
 import {projectCase} from './case-view.js';
+import {projectCaseGuidance} from './guidance.js';
 
 function emptyView(){
   const adapter=createUnavailableCaseAdapter();
@@ -57,7 +58,7 @@ export function composeRealView(state={}){
     {...state.casePresentation,world:state.worldSnapshot,elapsed:state.caseElapsed??0}):
     {now:state.now??0,board:view.board,search:view.search,partners:view.partners,finale:view.finale,
       accusation:view.accusation,reveal:view.reveal,world:view.world,rewards:{},log:{}};
-  return {...view,schema:1,mode:'online',revision:state.revision??0,account,
+  const projected={...view,schema:1,mode:'online',revision:state.revision??0,account,
     now:earned.now,board:earned.board,search:earned.search,partners:earned.partners,
     accusation:earned.accusation,reveal:earned.reveal,world:earned.world,effects:connected&&account.state==='signed_in'?state.effects??[]:[],
     crew:{...crew,isletReminder:islet.reminder,...(connected&&account.state==='signed_in'
@@ -68,6 +69,8 @@ export function composeRealView(state={}){
     rewards:{...walletView(state.rewardsRows,coins,view.rewards,state.rewardsStatus),...earned.rewards},
     bulletin,log:{...view.log,...earned.log,observations:bulletinObservations(bulletin)},
     notice:state.notice?{reason:state.notice.reason??null,message:state.notice.message??''}:null};
+  projected.hints=projectCaseGuidance(projected,{spots:state.case?.search.spots??[]});
+  return projected;
 }
 
 export {mapAccount,mapArrival,mapCrew};
