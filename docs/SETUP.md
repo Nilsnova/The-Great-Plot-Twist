@@ -53,8 +53,38 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 4. Supabase: **Authentication > URL Configuration**.
    - Site URL: the production address, e.g. `https://<project>.vercel.app`.
    - Redirect URLs: `http://localhost:5173/**` and the production address `https://<project>.vercel.app/**`. Do **not** add a wildcard for preview addresses (`https://*-<vercel-account-slug>.vercel.app/**`). Anyone can create a Vercel project, and a stranger who can register an address that fits the wildcard (we have not tested whether Vercel allows it) could start a sign-in from their own site and receive a session for any teammate who follows their link. If you need a sign-in on one preview, add that preview's exact address for the test and remove it afterwards. If the wildcard is already in the list, remove it.
-5. Switch the **Email** provider **off** (a new project has it on) and keep magic links, phone and anonymous sign-ins off. The built-in mailer sends 2 emails per hour and only to team members.
+5. Switch the **Email** provider **off** (a new project has it on) and keep magic links and phone off. Anonymous sign-ins stay off except during the class demo (Step 3c). The built-in mailer sends 2 emails per hour and only to team members.
 6. **Test:** open **Authentication > Rate Limits** and note whether the free plan lets you raise them. The whole class shares one Wi-Fi address, and sign-in limits are counted per address (for example 30 sign-ins per 5 minutes).
+
+### Step 3b. Google sign-in, the second provider (optional, 15 minutes)
+
+GitHub stays the default. Google users are ordinary players, with no demo gating. The browser offers
+Google only when the Vercel setting `AUTH_PROVIDERS` lists it (`github,google`; an unknown name stops
+the server), and `GET /api/config` then answers `"auth": {"provider": "github", "providers":
+["github", "google"], ...}`. The sign-in uses the same PKCE flow and callback as GitHub.
+
+1. Google Cloud console, signed in as the project owner: **APIs & Services > OAuth consent screen**
+   (External, app name The Great Plot Twist, only the default scopes), then **Credentials > Create
+   credentials > OAuth client ID > Web application**. Authorized redirect URI: the Supabase callback
+   from Step 3, point 1. Copy the client ID and secret into the Supabase dashboard only.
+2. Supabase: **Authentication > Sign In / Providers > Google**: paste both, switch it on, save.
+3. Vercel: set `AUTH_PROVIDERS=github,google` for Production (and Preview if wanted), then redeploy.
+4. To take Google away again, remove it from `AUTH_PROVIDERS` first, then switch it off in Supabase.
+
+### Step 3c. Guest play for the class demo (on the day, 5 minutes)
+
+Guests sign in with Supabase's anonymous sign-in and may use the API only while the feature flag
+`demo` is on and a host has opened the demo window (`POST /api/host/demo`, decision D029). Apply
+migration `20261109010000_demo_window.sql` before the flag goes on.
+
+1. Supabase: **Authentication > Sign In / Providers**: switch **Allow anonymous sign-ins** on.
+2. Supabase: **Authentication > Rate Limits**: raise **anonymous sign-ins per hour** (for example to
+   300). The whole class shares one Wi-Fi address, and the limit counts per address.
+3. Vercel: add `demo` to `FEATURE_FLAGS`, redeploy, then open the window from the host console.
+4. Afterwards: close the window, press "Clean up guests" (anonymous users older than 24 hours), and
+   switch anonymous sign-ins off again. While anonymous sign-in is on, guests hold Supabase's
+   `authenticated` role, so the read policies and Realtime rooms admit them even with the window
+   closed; only this API is gated.
 
 ## Step 4. Vercel: hosting (15 minutes)
 

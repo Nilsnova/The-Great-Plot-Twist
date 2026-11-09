@@ -25,7 +25,8 @@ profiles.display_name in the database, not a value from the token.
 Guests (decision D029): a guest is let in only while the host's demo window is open and the feature
 flag demo is on. get_current_player asks the demo gate (server/demo/gate.py) about every guest, and
 the gate answers 403 demo_closed otherwise. The gate also gives a guest a captain name and the
-default kit on the first call it lets through. GitHub and Google users never reach the gate.
+default kit on the first call it lets through. GitHub and Google users never reach the gate. One
+route is never gated: DELETE /api/me, so a guest can always delete their own data.
 
 Used by: every route that needs a signed-in player. Write `player: PlayerDep` in the route.
 """
@@ -238,9 +239,14 @@ async def admit_guest(request: Request, player: Player) -> Player:
     The gate lives on the app (create_app stores it as app.state.demo_gate). Routes that verify a
     token themselves instead of using PlayerDep call this too.
     """
-    if player.is_anonymous:
+    if player.is_anonymous and not is_own_deletion(request):
         await request.app.state.demo_gate.admit(player)
     return player
+
+
+def is_own_deletion(request: Request) -> bool:
+    """DELETE /api/me ("Delete my data") stays open to a guest even while the demo is closed."""
+    return request.method == "DELETE" and request.url.path == "/api/me"
 
 
 async def get_current_player(request: Request, verifier: VerifierDep) -> Player:

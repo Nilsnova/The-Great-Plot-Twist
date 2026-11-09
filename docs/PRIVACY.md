@@ -8,7 +8,7 @@ Reviewed on 8 November 2026 against the current repository, including browser si
 
 You can explore and play the opening story without signing in. The connected game uses GitHub sign-in for cloud saves, crews and the shared mystery. A local rehearsal does not create a live account, crew, cloud save or reward.
 
-Connected account features use GitHub sign-in through Supabase. The game identifies you by a player ID and a generated captain name, rather than displaying your GitHub name or email. Supabase's own login records can contain account details.
+Connected account features use GitHub (or, when switched on, Google) sign-in through Supabase. During the class demo only, a guest can join without an account through Supabase's anonymous sign-in, while the host has guest play switched on. A guest gets a generated captain name and a starter kit like any player; the host deletes guest accounts that are older than 24 hours, and "Delete my data" works for guests at any time, also after guest play is switched off. The game identifies you by a player ID and a generated captain name, rather than displaying your GitHub name or email. Supabase's own login records can contain account details.
 
 The database can keep your profile, save, kit, play-coin balance and ledger, Exchange positions/events, prediction and sports stakes, duel signals/results, islet buildings, crew membership, case actions and contributions, and festival reservations/queue history. Retry IDs prevent one request being applied twice. Failed crew-code lookups record player ID and time, not the guessed code or IP address. Host actions also have a private audit record. Do not put personal messages or secrets in a cloud save.
 
@@ -55,6 +55,7 @@ GitHub and Supabase handle sign-in, which includes browser visits to those servi
 Outside data-feed requests run on the server:
 
 - **Open-Meteo** receives configured game-place coordinates and weather fields, not your device location or player token.
+- **The Keeper's Lock** (class demo) asks about the real sky where you are. The server takes your city from Vercel's IP geolocation headers (city name and approximate coordinates, no browser location permission), or from a place you pick yourself. It sends the coordinates, rounded to about 11 km, to Open-Meteo, and a typed place search to Open-Meteo's geocoding service. The place is used for that one answer and is **never stored or logged**; the database keeps only which sky you picked and whether the lock opened. Server memory caches the weather of a rounded place for 10 minutes and a search text for 24 hours.
 - **Binance** receives public instrument symbols for prices, not your game holdings or identity.
 - **Finnhub** is the integrated stock-price provider and receives public stock symbols, not your player ID, positions or token.
 - **Manifold** supplies public prediction questions/results. Requests do not include your stakes or identity.

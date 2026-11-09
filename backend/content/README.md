@@ -19,6 +19,7 @@
 | `weather_states.json` | The numbers behind the weather states (storm, fog, rain, calm), the hours of a night and the start of the harbor's almanac. | Server only. It is not on the public list. The browser sees the result in `GET /api/weather` (`state`, `tonight`) and `GET /api/bulletin`. |
 | `bulletin.json` | Every word of the harbor bulletin, the dated notices and the list of what resets when. | Server only. The browser sees it in `GET /api/bulletin`. |
 | `chapter_two_hook.json` | The Board notice and the beam of the Chapter 2 hook, "A light where no light was". | Server only. The browser gets it from `GET /api/bulletin` only after the hook has fired. |
+| `keeper_lock.json` | Every word of the Keeper's Lock (the class demo's weather puzzle, D029): the question, the five skies, the riddle used when the weather cannot be read (its answer is not secret) and the messages. | Server only. It is not on the public list; the browser gets it through `GET /api/lock` and `POST /api/lock/answer`. |
 
 Content is data, not code. The story engine reads it and never contains story text. You can change `story.json` without touching any Python or JavaScript.
 

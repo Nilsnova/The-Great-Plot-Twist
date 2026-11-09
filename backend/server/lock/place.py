@@ -52,10 +52,10 @@ class Place:
 
 def clean_name(text: str | None) -> str | None:
     """A place name fit for the screen, or None. No control characters, at most 60 characters."""
-    if text is None:
+    if text is None or not text.isprintable():  # line breaks, tabs and other control characters
         return None
     name = " ".join(text.split())
-    if not name or len(name) > MAX_NAME_LENGTH or not name.isprintable():
+    if not name or len(name) > MAX_NAME_LENGTH:
         return None
     return name
 

@@ -224,3 +224,15 @@ def test_config_shows_closed_when_the_window_cannot_be_read():
 
     assert response.status_code == 200
     assert response.json()["demo"] == {"open": False, "openUntil": None}
+
+
+def test_a_guest_may_always_delete_their_own_data():
+    client, database, _ = client_with_route()
+    database.delete_player = lambda body: {"status": "deleted"}
+
+    response = client.request("DELETE", "/api/me", headers=GUEST, json={"confirm": True})
+
+    assert response.status_code == 200
+    assert response.json() == {"deleted": True}
+    assert database.calls("demo_window_read") == []
+    assert database.calls("delete_player") == [{"p_player_id": GUEST_ID}]

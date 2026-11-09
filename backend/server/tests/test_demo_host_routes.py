@@ -193,9 +193,7 @@ def test_cleanup_deletes_only_old_guests_through_delete_player():
     keep_github = guest_user(3, is_anonymous=False, identities=[{"provider": "github"}])
     database.auth_users = [guest_user(1), keep_young, keep_github, guest_user(4)]
 
-    response = TestClient(app).post(
-        "/api/host/demo/cleanup", headers=HOST, json={"actionUid": UID}
-    )
+    response = TestClient(app).post("/api/host/demo/cleanup", headers=HOST, json={"actionUid": UID})
 
     assert response.status_code == 200
     assert response.json() == {"checked": 4, "deleted": 2, "more": False}
@@ -208,9 +206,9 @@ def test_cleanup_reads_every_page_and_stops_at_the_deletion_limit():
     clock.now = NOW
     database.auth_users = [guest_user(number) for number in range(PAGE_SIZE + 5)]
 
-    body = TestClient(app).post(
-        "/api/host/demo/cleanup", headers=HOST, json={"actionUid": UID}
-    ).json()
+    body = (
+        TestClient(app).post("/api/host/demo/cleanup", headers=HOST, json={"actionUid": UID}).json()
+    )
 
     assert body == {"checked": PAGE_SIZE + 5, "deleted": MAX_DELETIONS, "more": True}
     pages = [r.url.params["page"] for r in database.requests if r.url.path.endswith("/users")]

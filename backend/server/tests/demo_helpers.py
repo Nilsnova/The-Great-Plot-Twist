@@ -184,7 +184,10 @@ class FakeDemoDatabase:
         player, uid = body["p_player_id"], body["p_action_uid"]
         for row in self.attempts:
             if row["player_id"] == player and row["action_uid"] == uid:
-                return {"status": "repeat", **{k: row[k] for k in ("answer", "outcome", "accepted")}}
+                return {
+                    "status": "repeat",
+                    **{k: row[k] for k in ("answer", "outcome", "accepted")},
+                }
         if sum(1 for row in self.attempts if row["player_id"] == player) >= 40:
             return {"status": "full"}
         row = {
@@ -225,7 +228,9 @@ def make_demo_app(
         raise AssertionError("This test did not expect a weather call.")
 
     weather = PlaceWeather(
-        transport=httpx.MockTransport(weather_reply or no_weather), clock=clock
+        enabled=not settings.demo_mode,
+        transport=httpx.MockTransport(weather_reply or no_weather),
+        clock=clock,
     )
     search = PlaceSearch(transport=httpx.MockTransport(places_reply or no_weather), clock=clock)
     app = create_app(
