@@ -34,7 +34,10 @@ const privateValues=page=>page.evaluate(()=>({
   walletLabel:document.querySelector('.captain-status .coin-counter')?.getAttribute('aria-label')??null,
   save:document.querySelector('.captain-status > [role="status"][data-state]')?.textContent??null,
   saved:document.querySelector('.captain-status > [role="status"][data-state]')?.dataset.state??null,
-  signedIn:document.querySelector('.account-summary-state')?.textContent??null,
+  // Since G29 the account summary lives in Settings; during play the top-bar captain box shows only
+  // for a signed-in (or expired) captain and names its account state.
+  signedIn:(()=>{const box=document.querySelector('.captain-status');
+    return box?.getClientRects().length&&box.dataset.account?box.dataset.account.replace('_',' '):null;})(),
   journal:localStorage.getItem('plot_twist_intro_moves_v1'),
 }));
 

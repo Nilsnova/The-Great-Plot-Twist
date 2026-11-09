@@ -85,7 +85,7 @@ it('keeps supplied captain data literal and its save state honest',async()=>{
 it('shows no captain or save text in the top bar for a player who is not signed in',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});
-    const read=()=>{const box=document.querySelector('.captain-status');return {text:box.textContent,shown:!!box.getClientRects().length};};
+    const read=()=>{const box=document.querySelector('.captain-status');return {text:box.textContent,shown:!!box.getClientRects().length,...(box.dataset.account?{account:box.dataset.account}:{})};};
     const before=read();
     hud.setCaptain({account:{state:'signed_out',save:{state:'idle',label:'No saved progress'}},captain:{name:'Captain pending',save:{state:'idle',label:'No saved progress'}},rewards:{keepsakes:[]}});
     const signedOut=read();
@@ -94,7 +94,10 @@ it('shows no captain or save text in the top bar for a player who is not signed 
     hud.setCaptain({account:{state:'expired',save:{state:'saved',label:'Saved on this device'}},captain:{name:'Captain Fern',save:{state:'saved',label:'Saved'}},rewards:{keepsakes:[]}});
     const expired=read();hud.dispose();return {before,signedOut,noAccount,expired};
   });
-  for(const view of [result.before,result.signedOut,result.noAccount])expect(view).toEqual({text:'',shown:false});
+  expect(result.before).toEqual({text:'',shown:false});
+  expect(result.signedOut).toEqual({text:'',shown:false,account:'signed_out'});
+  expect(result.noAccount).toEqual({text:'',shown:false,account:'none'});
+  expect(result.expired.account).toBe('expired');
   expect(result.expired.shown).toBe(true);expect(result.expired.text).toContain('Captain Fern');expect(result.expired.text).toContain('Sign in again');
 });
 
