@@ -3,7 +3,8 @@
 FakeDemoDatabase answers exactly the calls the demo gate, the host routes and the Keeper's Lock
 make, and fails loudly for anything else:
 
-  * POST rpc/demo_window_read, rpc/demo_window_set     the window, kept in memory
+  * POST rpc/demo_class_code_read, rpc/demo_class_code_set   the class code, kept in memory
+  * POST rpc/demo_guest_admit, GET demo_guests          the admitted guests (the gate's lookup)
   * GET entry_profiles, POST rpc/assign_captain_name, rpc/grant_entry_kit   getting a guest ready
   * GET demo_lock_attempts, POST rpc/demo_lock_record  the lock answers, kept in memory
   * GET /auth/v1/admin/users, POST rpc/delete_player    "Clean up guests"
@@ -16,7 +17,7 @@ Used by: test_demo_gate.py, test_demo_host_routes.py, test_lock_routes.py.
 
 import json
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -78,8 +79,11 @@ def utc_text(moment: datetime) -> str:
 class FakeDemoDatabase:
     def __init__(self, clock: FakeClock) -> None:
         self.clock = clock
-        self.open_until: datetime | None = None
-        self.window_actions: dict[tuple[str, str], datetime | None] = {}
+        self.code: str | None = None
+        self.code_set_at: datetime | None = None
+        self.code_actions: dict[tuple[str, str], str] = {}
+        self.guests: dict[str, datetime] = {}
+        self.known_users: set[str] | None = None  # None: every user exists
         self.entry_profiles: dict[str, str] = {}
         self.names: dict[str, str] = {}
         self.attempts: list[dict[str, Any]] = []
@@ -89,8 +93,11 @@ class FakeDemoDatabase:
 
     # --- helpers for the tests ---
 
-    def open_for(self, hours: float) -> None:
-        self.open_until = self.clock() + timedelta(hours=hours)
+    def set_code(self, code: str) -> None:
+        self.code, self.code_set_at = code, self.clock()
+
+    def admit(self, player_id: str) -> None:
+        self.guests.setdefault(player_id, self.clock())
 
     def calls(self, name: str) -> list[dict[str, Any]]:
         return [
@@ -112,8 +119,10 @@ class FakeDemoDatabase:
         route = f"{request.method} {path.removeprefix('/rest/v1/')}"
         body = json.loads(request.content) if request.content else {}
         handlers = {
-            "POST rpc/demo_window_read": lambda: self.window_read(),
-            "POST rpc/demo_window_set": lambda: self.window_set(body),
+            "POST rpc/demo_class_code_read": lambda: self.code_read(),
+            "POST rpc/demo_class_code_set": lambda: self.code_write(body),
+            "POST rpc/demo_guest_admit": lambda: self.guest_admit(body),
+            "GET demo_guests": lambda: self.read_guests(request),
             "GET entry_profiles": lambda: self.read_profiles(request),
             "POST rpc/assign_captain_name": lambda: self.assign_name(body),
             "POST rpc/grant_entry_kit": lambda: self.grant_kit(body),
@@ -126,24 +135,30 @@ class FakeDemoDatabase:
             raise AssertionError(f"The demo code made a request nobody expected: {route}")
         return httpx.Response(200, json=handler())
 
-    def window_open(self) -> bool:
-        return self.open_until is not None and self.open_until > self.clock()
+    def code_read(self) -> dict[str, Any]:
+        at = self.code_set_at
+        return {"code": self.code, "setAt": at and utc_text(at), "guests": len(self.guests)}
 
-    def window_read(self) -> dict[str, Any]:
-        is_open = self.window_open()
-        until = utc_text(self.open_until) if is_open else None
-        return {"open": is_open, "openUntil": until}
-
-    def window_set(self, body: dict[str, Any]) -> dict[str, Any]:
+    def code_write(self, body: dict[str, Any]) -> dict[str, Any]:
         key = (body["p_host_id"], body["p_action_uid"])
-        if key in self.window_actions:
-            until = self.open_until
-            return {"status": "set", "openUntil": until and utc_text(until), "repeat": True}
-        hours = body["p_hours"]
-        self.open_until = None if hours == 0 else self.clock() + timedelta(hours=hours)
-        self.window_actions[key] = self.open_until
-        until = self.open_until
-        return {"status": "set", "openUntil": until and utc_text(until), "repeat": False}
+        repeat = key in self.code_actions
+        if not repeat:
+            self.set_code(body["p_code"])
+            self.code_actions[key] = body["p_code"]
+        return {"status": "set", **self.code_read(), "repeat": repeat}
+
+    def guest_admit(self, body: dict[str, Any]) -> dict[str, Any]:
+        player = body["p_player_id"]
+        if self.known_users is not None and player not in self.known_users:
+            return {"status": "missing"}
+        if player in self.guests:
+            return {"status": "already"}
+        self.admit(player)
+        return {"status": "admitted"}
+
+    def read_guests(self, request: httpx.Request) -> list[dict[str, Any]]:
+        player = request.url.params["player_id"].removeprefix("eq.")
+        return [{"player_id": player}] if player in self.guests else []
 
     def read_profiles(self, request: httpx.Request) -> list[dict[str, Any]]:
         player = request.url.params["player_id"].removeprefix("eq.")
@@ -207,7 +222,11 @@ class FakeDemoDatabase:
         return httpx.Response(200, json={"users": users, "aud": "authenticated"})
 
     def delete_player(self, body: dict[str, Any]) -> dict[str, Any]:
-        self.deleted.append(body["p_player_id"])
+        player = body["p_player_id"]
+        self.deleted.append(player)
+        # The user and their admission go, as with the real cascade.
+        self.auth_users = [user for user in self.auth_users if user.get("id") != player]
+        self.guests.pop(player, None)
         return {"status": "deleted"}
 
 

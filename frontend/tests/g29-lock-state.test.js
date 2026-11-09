@@ -40,7 +40,7 @@ describe('lock state',()=>{
     expect(state.uid).toBeNull();
   });
   it('says demo_closed, too_many_tries and 429 plainly',()=>{
-    expect(lockFailure({status:403,code:'demo_closed'})).toMatchObject({fatal:true,message:expect.stringMatching(/demo is closed/)});
+    expect(lockFailure({status:403,code:'demo_closed'})).toMatchObject({fatal:true,message:expect.stringMatching(/needs the class code\. Ask the presenter for the current code/)});
     expect(lockFailure({status:409,code:'too_many_tries'})).toMatchObject({fatal:true,message:expect.stringMatching(/enough answers/)});
     expect(lockFailure({status:429,code:'too_many_requests',retryAfterSeconds:7})).toMatchObject({fatal:false,retryAfter:7,message:'Too many tries at once. Wait 7 seconds, then try again.'});
     expect(lockFailure({status:429})).toMatchObject({message:'Too many tries at once. Wait a moment, then try again.'});

@@ -55,7 +55,7 @@ describe('duel shortcut',()=>{
     expect(duelStep(waiting,{type:'timeout'}).message).toMatch(/can still answer from the ring/);
   });
   it('words server refusals plainly',()=>{
-    expect(duelMessage({status:403,code:'demo_closed'})).toMatch(/demo is closed/);
+    expect(duelMessage({status:403,code:'demo_closed'})).toMatch(/needs the class code\. Ask the presenter for the current code/);
     expect(duelMessage({status:404,code:'feature_off'})).toMatch(/switched off/);
     expect(duelMessage({status:429,message:'Too many tries. Wait 3 seconds, then try again.'})).toMatch(/Wait 3 seconds/);
     expect(duelMessage({status:0})).toMatch(/No connection/);

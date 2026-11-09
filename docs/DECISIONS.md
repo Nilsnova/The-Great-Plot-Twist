@@ -523,6 +523,44 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
+## D030 · Class code instead of the demo window · 2026-11-09
+
+**Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the
+demo window of D029. Migration `20261109020000_class_code.sql`.
+
+**Decision:** Supabase anonymous sign-ins stay switched on permanently; nobody toggles anything per
+lecture. A guest (anonymous user) plays only after presenting the current **class code**: 5 symbols
+of `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, shown as `HARBOR-K7QXM`, carried in the projector QR as
+`?join=K7QXM` and accepted under Join with or without `HARBOR-`, in any case, spaces and dashes
+ignored. `POST /api/demo/join` compares it in constant time (10 tries per 10 minutes per player and
+per network address, per server instance) and records the guest in `demo_guests` (player id and
+time). The guest gate admits an anonymous player only with that row; every browser policy (tables and
+the five Realtime room policies) adds `(not jwt_is_anonymous() or is_admitted_guest())`, so a token
+not explicitly `is_anonymous: false` needs the admission. There is one current code; the host's **New
+class code** (`POST /api/host/demo/code`) replaces it and the old one stops working for new joins at
+once; admitted guests stay admitted. No expiry. The code is stored as plain text, readable only with
+the secret key, so the host can show it again; it is never logged and never in `/api/config`, which
+now says only `demo.guestsByCode`. Each host read of `GET /api/host/demo` starts a bounded background
+clean-up of anonymous users older than 24 hours (at most every 10 minutes, 25 per run); **Clean up
+guests** stays as the manual run. The window routes are gone; the window table and functions stay in
+the database unused (no destructive migration). Admitted guests keep every Realtime room they had,
+because a guest can leave the class harbor ("Full mystery", the map).
+
+**Why:** Opening and closing a window before and after every lecture, and switching anonymous
+sign-ins on and off in the dashboard, is easy to forget, and while sign-ins were on the database
+policies admitted any anonymous user anyway. Anyone can create an anonymous user with the public
+publishable key, so the QR cannot be the lock; the server gate and row-level security are. A short,
+unambiguous code is easy to read off a projector and to type; 31^5 (about 28.6 million) codes with a
+per-player and per-address budget make guessing impractical, and a new code per lecture makes an old
+photo of the QR useless.
+
+**Limits:** The join budget is per server instance (Vercel may run several) and the address is
+`X-Forwarded-For` as Vercel writes it. An anonymous user without the code can still create the
+Supabase user (Supabase's own per-address limit applies), read the public routes, try codes within the
+budget and delete their own data. The policies trust Supabase's `is_anonymous` claim; a token without
+it is treated as a guest (fail closed). Re-applying an older migration on its own (for example
+`20261106000000_foundation.sql`) would restore an unguarded policy: apply the chain in order.
+
 ## D029 · Class demo: guest play, demo window, Keeper's Lock · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026 (the G29 demo journey); server part (C0) recorded by the
@@ -552,7 +590,10 @@ never block the demo, hence the cache, the riddle and the hint.
 `authenticated` role, so the existing read policies and Realtime rooms admit them even with the
 window closed: switch anonymous sign-in off after the demo. The window is cached 10 seconds per server
 instance. Cleanup reads Supabase Auth's admin user list (up to 5,000 users) and deletes at most 100
-per call. See [INTERFACES.md](INTERFACES.md#class-demo-guest-play-demo-window-and-the-keepers-lock-g29-c0).
+per call. See [INTERFACES.md](INTERFACES.md#class-demo-guest-play-the-class-code-and-the-keepers-lock-g29-d030).
+
+**Superseded in part by D030:** the demo window is replaced by the class code; the guest kit, the
+Keeper's Lock and the clean-up stay as decided here.
 
 ## Next entry
 

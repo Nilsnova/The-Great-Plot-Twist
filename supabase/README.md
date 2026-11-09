@@ -19,6 +19,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
 | [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 | [migrations/20261109010000_demo_window.sql](migrations/20261109010000_demo_window.sql) | The class demo (G29 C0, D029): the host's demo window for guest play and the answers of the Keeper's Lock. Three tables and three functions, no wallet reason. Run it after the whole 20261106 chain, before the flag `demo` goes on. See [Class demo migration](#class-demo-migration-20261109010000). |
+| [migrations/20261109020000_class_code.sql](migrations/20261109020000_class_code.sql) | The class code (G29, D030): the current class code, its audit and the admitted guests (three tables, five functions), and the guest condition `(not jwt_is_anonymous() or is_admitted_guest())` on every browser policy (16 tables and the five Realtime policies). Run it after every earlier file. See [Class code migration](#class-code-migration-20261109020000). |
 
 ## G10 follow-up migration (140000)
 
@@ -277,7 +278,7 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 1. In the dashboard open **Authentication > Sign In / Providers**.
 2. Switch **GitHub** on. A teammate sets up the GitHub app and pastes its keys into the dashboard only, never into this repository.
 3. Switch **Email** off.
-4. Keep **Anonymous sign-ins** off, except during the class demo ([Class demo migration](#class-demo-migration-20261109010000)). An anonymous user counts as a signed-in player too.
+4. **Anonymous sign-ins** are on for the class demo and stay on ([Class code migration](#class-code-migration-20261109020000)). An anonymous user has the `authenticated` role too, so every browser policy lets one in only after the server admitted them with the class code.
 
 ### Option A: SQL editor (quickest)
 
@@ -3055,11 +3056,11 @@ The host's "Clean up guests" deletes guests through the existing `delete_player(
 Supabase Auth's admin user list (`GET /auth/v1/admin/users` with the secret key); no SQL here reads
 `auth.users`.
 
-**Dashboard switches for the demo** (the owner, on the day): Authentication > Sign In / Providers >
-**Allow anonymous sign-ins** on; Authentication > Rate Limits > **anonymous sign-ins per hour**
-raised (for example 300, one shared class IP). Switch anonymous sign-ins off afterwards: while it is
-on, guests hold the `authenticated` role and the existing read policies and Realtime rooms admit
-them even with the demo window closed. For Google sign-in, see [SETUP.md, Step 3b](../docs/SETUP.md).
+**Dashboard switches for the demo** (the owner, once): Authentication > Sign In / Providers >
+**Allow anonymous sign-ins** on, and it stays on; Authentication > Rate Limits > **anonymous sign-ins
+per hour** raised (for example 300, one shared class IP). Since `20261109020000_class_code.sql` the
+window above is unused and the read policies and Realtime rooms admit an anonymous user only once
+admitted with the class code. For Google sign-in, see [SETUP.md, Step 3b](../docs/SETUP.md).
 
 Scratch validation from `backend/` (all migrations applied twice on a disposable local PostgreSQL;
 neither package is added to the project):
@@ -3067,3 +3068,33 @@ neither package is added to the project):
 ```bash
 CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/demo_sql
 ```
+
+## Class code migration (20261109020000)
+
+[`20261109020000_class_code.sql`](migrations/20261109020000_class_code.sql) (decision D030) replaces
+the demo window with a class code. It drops nothing: the window table and functions stay unused. It
+adds no wallet reason and writes no ledger row. Supabase anonymous sign-ins stay on; the QR code is
+not a lock, the server's guest gate and these policies are.
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `demo_class_code` | No access; RLS on, no policy | Select, update. One row (`class_demo`): `code` (5 symbols, or null; plain text so the host can show it again), `set_by` (set null with the host), `set_at`. |
+| `demo_class_code_actions` | No access; RLS on, no policy | Select, insert. One row per "New class code", primary key (host, actionUid), with the code it set: the audit. Cascades with the host. |
+| `demo_guests` | No access; RLS on, no policy | Select, insert. One row per admitted guest: `player_id` (references `auth.users`, cascade) and `admitted_at`. |
+| `demo_class_code_set(uuid, uuid, text)` | No execute | Execute: stores a new code (made by the server) once per host and actionUid; a repeat answers the current code with `repeat: true`; raises `bad_class_code` for a code outside the format. Returns `{status, code, setAt, guests, repeat}`. |
+| `demo_class_code_read()` | No execute | Execute: `{code, setAt, guests}`. |
+| `demo_guest_admit(uuid)` | No execute | Execute: `admitted`, `already` (first time kept) or `missing` (no such user). |
+| `jwt_is_anonymous()` | `authenticated` executes; `anon` no | No execute. Invoker, `search_path = ''`: true unless the token's `is_anonymous` claim is exactly `false` (a missing claim counts as anonymous). |
+| `is_admitted_guest()` | `authenticated` executes; `anon` no | No execute. `SECURITY DEFINER`, `search_path = ''`: whether `auth.uid()` has a row in `demo_guests`; answers only for the caller. |
+
+The 21 rewritten policies keep their names, tables, commands and roles; each adds
+`(not (select public.jwt_is_anonymous()) or (select public.is_admitted_guest()))`. A GitHub or Google
+player (`is_anonymous: false`) is unchanged. An anonymous user who never presented the code reads no
+row (profiles, wallet reasons, own save and wallet, crews, duels, ...) and joins no Realtime room
+(`live:world`, `live:place:*`, `live:crew:*`). Admitted guests keep every room they had: they can
+leave the class harbor. The header of the file ends with read-only HOW TO VERIFY queries. Re-applying
+an older policy file on its own would restore its unguarded policy: apply the chain in order.
+
+The scratch tests in `server/tests/demo_sql/test_class_code_sql.py` act as `authenticated` with a
+non-anonymous token, an anonymous token without admission, a token without the claim and an admitted
+guest, for tables and Realtime rooms (the test stub adds Supabase's `auth.jwt()`).

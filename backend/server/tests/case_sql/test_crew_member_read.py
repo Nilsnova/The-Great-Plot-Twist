@@ -16,9 +16,9 @@ pytestmark = [
 
 def authenticate(database, player):
     database.execute("set local role authenticated")
-    database.execute(
-        "select set_config('request.jwt.claims', %s, true)", (json.dumps({"sub": str(player)}),)
-    )
+    # A real Supabase token of a GitHub or Google player says is_anonymous false.
+    claims = json.dumps({"sub": str(player), "is_anonymous": False})
+    database.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
 
 
 def test_a_member_can_read_player_ids_of_only_their_own_crew(database):

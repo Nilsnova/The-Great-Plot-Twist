@@ -1,6 +1,6 @@
 // G29 C2: the class harbor rules (presence place, joined toast, spots, demo path) and the projector's words.
 import {describe,expect,it} from 'vitest';
-import {JOIN_CODE,JOIN_URL,LAMP_SPOTS,LOCK_SPOT,arrivals,joinedText,nearestSpot,openDemoBody,presencePlace,projectorModel,readInvite,readPath,rememberInvite,writePath} from '../src/class-demo/harbor.js';
+import {GAME_URL,LAMP_SPOTS,LOCK_SPOT,REHEARSAL_CODE,arrivals,joinUrl,joinedText,nearestSpot,newCodeBody,presencePlace,projectorModel,readInvite,readPath,rememberInvite,writePath} from '../src/class-demo/harbor.js';
 import {CLASS_ROOM_SIZE,MAX_SHOWN,chooseRoom,placeTopic,readExtra,shownLimit,startDelayMs,trackJitterMs} from '../src/net/live-rules.js';
 
 function memory(){const data=new Map();return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,String(value)),removeItem:key=>data.delete(key)};}
@@ -32,6 +32,12 @@ describe('class harbor',()=>{
   it('remembers the invitation and the chosen path',()=>{
     const session=memory(),local=memory();
     expect(readInvite(session)).toBe(false);rememberInvite(session);expect(readInvite(session)).toBe(true);
+    expect(session.getItem('plot_twist_join_v1')).toBe('harbor');
+    // A class code from the QR or the Join page also means "in the class harbor", and the in-game
+    // button keeps that code instead of overwriting it.
+    const coded=memory();coded.setItem('plot_twist_join_v1','K7QXM');
+    expect(readInvite(coded)).toBe(true);rememberInvite(coded);expect(coded.getItem('plot_twist_join_v1')).toBe('K7QXM');
+    const odd=memory();odd.setItem('plot_twist_join_v1','<b>');expect(readInvite(odd)).toBe(false);
     expect(readPath(local)).toBe('demo');writePath(local,'full');expect(readPath(local)).toBe('full');writePath(local,'demo');expect(readPath(local)).toBe('demo');
   });
   it('toasts new named captains in one short line',()=>{
@@ -48,21 +54,30 @@ describe('class harbor',()=>{
 });
 
 describe('projector panel words',()=>{
-  const now=Date.parse('2026-11-09T13:00:00Z');
-  it('shows the join address, the code and a live count',()=>{
-    const model=projectorModel({count:12,now});
-    expect(model).toMatchObject({url:'https://the-great-plot-twist.vercel.app/?join=harbor',code:'HARBOR',countText:'12 captains in the harbor',canOpen:false});
-    expect(JOIN_URL).toBe(model.url);expect(JOIN_CODE).toBe('HARBOR');
-    expect(projectorModel({count:1,now}).countText).toBe('1 captain in the harbor');
+  const demo={flagOn:true,code:'K7QXM',codeSetAt:'2026-11-09T14:00:00Z',guests:12};
+  it('shows the QR address with the current code, the code in big letters and a live count',()=>{
+    const model=projectorModel({demo,count:12});
+    expect(model).toMatchObject({url:'https://the-great-plot-twist.vercel.app/?join=K7QXM',code:'HARBOR-K7QXM',hasCode:true,
+      countText:'12 captains in the harbor',statusText:'12 guests joined with a code',canRenew:false});
+    expect(model.steps.join(' ')).toContain('HARBOR-K7QXM');
+    expect(joinUrl('k7qxm')).toBe(`${GAME_URL}?join=K7QXM`);expect(joinUrl('nope')).toBe('');
+    expect(projectorModel({demo:{...demo,guests:1},count:1})).toMatchObject({countText:'1 captain in the harbor',statusText:'1 guest joined with a code'});
   });
-  it('states the demo window and lets only the host open it',()=>{
-    expect(projectorModel({demo:{flagOn:true,open:false,openUntil:null},host:true,now})).toMatchObject({windowText:'Demo closed: guests cannot join yet.',canOpen:true,buttonLabel:'Open demo for 2 hours'});
-    expect(projectorModel({demo:{flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z'},host:true,now})).toMatchObject({open:true,buttonLabel:'Keep open for 2 more hours'});
-    expect(projectorModel({demo:{flagOn:true,open:true,openUntil:'2026-11-09T12:00:00Z'},host:true,now}).open).toBe(false);
-    expect(projectorModel({demo:{flagOn:false},host:true,now})).toMatchObject({canOpen:false,windowText:'The demo flag is off on the server.'});
-    expect(projectorModel({host:false,now}).canOpen).toBe(false);
-    expect(projectorModel({host:true,pending:true,now})).toMatchObject({canOpen:false,buttonLabel:'Opening…'});
-    expect(projectorModel({rehearsal:true,now}).windowText).toMatch(/Rehearsal/);
-    expect(openDemoBody('uid-1')).toEqual({hours:2,actionUid:'uid-1'});
+  it('lets only a host make a new code, with a confirm text, and says when there is none yet',()=>{
+    expect(projectorModel({demo,host:true})).toMatchObject({canRenew:true,buttonLabel:'New class code'});
+    expect(projectorModel({demo,host:true}).confirmText).toMatch(/old code stops working for new joins/);
+    expect(projectorModel({demo,host:false}).canRenew).toBe(false);
+    expect(projectorModel({demo,host:true,pending:true})).toMatchObject({canRenew:false,buttonLabel:'Making a new code…'});
+    expect(projectorModel({demo:{...demo,code:null},host:true})).toMatchObject({hasCode:false,url:'',code:'No code yet',canRenew:true,
+      statusText:'No class code yet. Make one to let guests in.'});
+    expect(projectorModel({demo:{...demo,code:'<img>'}})).toMatchObject({hasCode:false,url:''});
+    expect(projectorModel({demo:{flagOn:false,code:'K7QXM',guests:0},host:true}).statusText).toMatch(/flag is off/);
+    expect(projectorModel({host:true}).canRenew).toBe(false);
+    expect(newCodeBody('uid-1')).toEqual({actionUid:'uid-1'});
+  });
+  it('shows a made-up practice code in a rehearsal without a host',()=>{
+    expect(REHEARSAL_CODE).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/);
+    expect(projectorModel({rehearsal:true})).toMatchObject({code:`HARBOR-${REHEARSAL_CODE}`,url:`${GAME_URL}?join=${REHEARSAL_CODE}`,canRenew:false});
+    expect(projectorModel({rehearsal:true}).statusText).toMatch(/Rehearsal/);
   });
 });

@@ -17,14 +17,34 @@ export function writeFlag(storage, key, value = true) {
   try { if (value) storage?.setItem(key, '1'); else storage?.removeItem(key); return true; } catch { return false; }
 }
 
-// "?join=harbor" (from the projector QR) or a typed code. Codes are letters and digits only.
+// The class code (G29, D030): 5 symbols without 0, O, 1, I or L, shown as HARBOR-K7QXM. The server
+// keeps the current one and compares it (POST /api/demo/join); the browser only reads its shape.
+export const CLASS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export const CLASS_CODE_PREFIX = 'HARBOR';
+const CLASS_CODE = new RegExp(`^[${CLASS_CODE_ALPHABET}]{5}$`);
+// The value the in-game "Join the class harbor" button stores: in the class room, no code sent.
+export const JOINED_WITHOUT_CODE = 'harbor';
+
+// The 5-symbol code in what a player typed ("harbor-k7qxm", "K7Q XM", "HARBORK7QXM"), or null.
+export function classCode(value) {
+  if (typeof value !== 'string' || value.length > 32) return null;
+  let code = value.replace(/[\s-]/g, '').toUpperCase();
+  if (code.length === CLASS_CODE_PREFIX.length + 5 && code.startsWith(CLASS_CODE_PREFIX)) code = code.slice(CLASS_CODE_PREFIX.length);
+  return CLASS_CODE.test(code) ? code : null;
+}
+export const displayCode = code => (classCode(code) ? `${CLASS_CODE_PREFIX}-${classCode(code)}` : '');
+
+// A typed code: the class code (with or without HARBOR-), the word HARBOR alone (the class code is
+// missing: code null), or a crew code. Codes are letters and digits only; spaces and dashes are ignored.
 export function joinTarget(value) {
   if (typeof value !== 'string') return null;
   const code = value.replace(/[\s-]/g, '').toUpperCase();
   if (!/^[A-Z0-9]{1,20}$/.test(code)) return null;
-  return code === 'HARBOR' ? {kind: 'harbor', code: 'HARBOR'} : {kind: 'crew', code};
+  const klass = classCode(code);
+  if (klass) return {kind: 'class', code: klass};
+  if (code === CLASS_CODE_PREFIX || code.startsWith(CLASS_CODE_PREFIX) && code.length > 6) return {kind: 'class', code: null};
+  return {kind: 'crew', code};
 }
-
 export function goalCopy() {
   return {
     title: 'Your goal',
@@ -37,13 +57,25 @@ export function goalCopy() {
   };
 }
 
-// Remember a projector invitation (?join=harbor) for the class harbor; the next stage reads it.
+// Remember the class code of a projector invitation (?join=K7QXM) for the Join page and the class
+// harbor; sessionStorage only, so it ends with the tab. Anything that is not a class code is ignored.
 export function rememberJoin(search = globalThis.location?.search ?? '', storage = safeSession()) {
   try {
-    const join = new URLSearchParams(search).get('join');
-    if (!/^[a-z0-9]{1,20}$/i.test(join ?? '')) return null;
-    storage?.setItem(JOIN_KEY, join.toLowerCase());
-    return join.toLowerCase();
+    const code = classCode(new URLSearchParams(search).get('join') ?? '');
+    if (!code) return null;
+    storage?.setItem(JOIN_KEY, code);
+    return code;
   } catch { return null; }
+}
+// The remembered class code, or null (also for the in-game "Join the class harbor", which has none).
+export function readJoinCode(storage = safeSession()) {
+  try { return classCode(storage?.getItem(JOIN_KEY) ?? ''); } catch { return null; }
+}
+export function forgetJoinCode(storage = safeSession()) {
+  try { if (readJoinCode(storage)) storage?.removeItem(JOIN_KEY); return true; } catch { return false; }
+}
+// In the class harbor: a remembered class code, or the in-game button's mark.
+export function joinedHarbor(storage = safeSession()) {
+  try { const value = storage?.getItem(JOIN_KEY); return value === JOINED_WITHOUT_CODE || !!classCode(value ?? ''); } catch { return false; }
 }
 function safeSession() { try { return globalThis.sessionStorage ?? null; } catch { return null; } }

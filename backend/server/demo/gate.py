@@ -1,32 +1,38 @@
-"""The demo gate: lets guests (anonymous users) use the API only while the demo is open.
+"""The guest gate: a guest (anonymous user) may use the API only after presenting the class code.
 
 auth.get_current_player calls admit() for every guest, after Supabase has verified the token.
 GitHub and Google users never reach this file.
 
     feature flag demo off                     ->  403 demo_closed (no database read at all)
-    flag on, window closed or ended           ->  403 demo_closed
-    flag on, window open                      ->  the guest passes; on their first call on this
+    flag on, the guest is not in demo_guests  ->  403 demo_closed (they have not presented the
+                                                  current class code yet: POST /api/demo/join)
+    flag on, the guest is admitted            ->  the guest passes; on their first call on this
                                                   server instance they get a captain name and the
                                                   default kit (demo/guests.py)
-    the window cannot be read                 ->  the database error (502/503), never a pass
+    the admission cannot be read              ->  the database error (502/503), never a pass
 
-The window is read through the database function demo_window_read and remembered for
-CACHE_SECONDS, so a full class of phones causes about one read per 10 seconds per server
-instance. After a host closes the window, a guest may therefore still pass for up to 10 seconds on
-another instance. The host's own instance learns the new window at once (remember()).
+Anyone can create an anonymous user with the public publishable key, so the projector QR is not
+a lock: this gate is (with the browser policies of 20261109020000_class_code.sql). There is no
+time window any more (decision D030): anonymous sign-ins stay on, and only an admitted guest
+plays.
 
-Which guests are ready is remembered per server instance (at most MAX_READY ids). A new instance
-asks the database once more: provision_guest is safe to repeat and then only reads.
+An admission is remembered for CACHE_SECONDS per server instance, so a busy guest causes about one
+read per 10 seconds per instance. A refusal is not remembered, so a guest who just joined passes at
+once on every instance. The join route tells the gate of its own instance at once (remember()).
+A new class code removes nobody: an admitted guest stays admitted until their account is deleted.
 
-Used by: auth.py (admit), routes/config.py (public_window) and routes/demo.py (the host routes).
+Which guests are ready (name and kit) is remembered per server instance (at most MAX_READY ids). A
+new instance asks the database once more: provision_guest is safe to repeat and then only reads.
+
+Used by: auth.py (admit), routes/config.py (flag_on) and routes/demo.py (the routes).
 """
 
 from datetime import datetime, timedelta
 
 from server.auth import Player
 from server.clock import Clock
+from server.demo.code import is_admitted
 from server.demo.guests import provision_guest
-from server.demo.window import CLOSED, Window, read_window
 from server.errors import ApiError
 from server.flags import is_enabled
 from server.settings import Settings
@@ -40,60 +46,56 @@ def demo_closed() -> ApiError:
     return ApiError(
         403,
         "demo_closed",
-        "Guest play is closed right now. Ask the host to open the demo, or sign in with GitHub.",
+        "Guest play needs the current class code. Ask the presenter for it, "
+        "or sign in with GitHub.",
     )
 
 
 class DemoGate:
-    """The demo gate of one server instance. create_app() makes one and stores it."""
+    """The guest gate of one server instance. create_app() makes one and stores it."""
 
     def __init__(
-        self, settings: Settings, admin: SupabaseAdmin, clock: Clock, provision=provision_guest
+        self,
+        settings: Settings,
+        admin: SupabaseAdmin,
+        clock: Clock,
+        provision=provision_guest,
+        lookup=is_admitted,
     ) -> None:
         self.settings = settings
         self.admin = admin
         self.clock = clock
         self.provision = provision  # tests pass a fake here
-        self.cached: tuple[datetime, Window] | None = None
-        self.ready: dict[str, None] = {}  # ordered, so the oldest id is dropped first
+        self.lookup = lookup
+        # Ordered, so the oldest id is dropped first. Values: when the admission was read.
+        self.admitted: dict[str, datetime] = {}
+        self.ready: dict[str, None] = {}
 
     @property
     def flag_on(self) -> bool:
         return is_enabled("demo", self.settings.flags)
 
-    async def window(self) -> Window:
-        """The window now: from memory if it was read less than CACHE_SECONDS ago."""
-        if not self.flag_on:
-            return CLOSED
-        now = self.clock()
-        if self.cached is not None and now - self.cached[0] < timedelta(seconds=CACHE_SECONDS):
-            return self.still_open(self.cached[1], now)
-        window = await read_window(self.admin)
-        self.cached = (now, window)
-        return window
+    def remember(self, player_id: str) -> None:
+        """This guest was just admitted (or read as admitted): pass them for CACHE_SECONDS."""
+        self.admitted.pop(player_id, None)
+        self.admitted[player_id] = self.clock()
+        while len(self.admitted) > MAX_READY:
+            del self.admitted[next(iter(self.admitted))]
 
-    @staticmethod
-    def still_open(window: Window, now: datetime) -> Window:
-        """A remembered window that ended in the meantime counts as closed."""
-        if window.open_until is None or window.open_until <= now:
-            return CLOSED
-        return window
-
-    def remember(self, window: Window) -> None:
-        """The host just switched the window: use the new one at once on this instance."""
-        self.cached = (self.clock(), window)
-
-    async def public_window(self) -> Window:
-        """For GET /api/config: a window that cannot be read shows as closed, never as an error."""
-        try:
-            return await self.window()
-        except ApiError:
-            return CLOSED
+    async def is_admitted(self, player_id: str) -> bool:
+        """True if the guest presented a valid class code once. Remembered for CACHE_SECONDS."""
+        seen = self.admitted.get(player_id)
+        if seen is not None and self.clock() - seen < timedelta(seconds=CACHE_SECONDS):
+            return True
+        self.admitted.pop(player_id, None)
+        if not await self.lookup(self.admin, player_id):
+            return False
+        self.remember(player_id)
+        return True
 
     async def admit(self, player: Player) -> None:
         """Let the guest pass, or raise 403 demo_closed (or a database error)."""
-        window = await self.window()
-        if not window.open:
+        if not self.flag_on or not await self.is_admitted(player.id):
             raise demo_closed()
         if player.id in self.ready:
             return

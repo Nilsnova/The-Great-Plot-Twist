@@ -21,6 +21,7 @@ import {createPanelWallet} from './panel-wallet.js';
 import {createLazyBulletin} from './lazy-bulletin.js';
 import {registerPanelServices} from '../panel-services.js';
 import {validateIntent} from './validate.js';
+import {newActionUid} from '../../screens/duels/logic.js';
 import {introJournal} from '../../story/intro-journal.js';
 
 const messages = {
@@ -32,7 +33,9 @@ const messages = {
   festival_closed: 'The lantern festival is not open.',
   not_connected: 'Service unavailable. Try again in a moment.',
   not_ready: 'This part is not ready yet. You can keep exploring.',
-  demo_closed: 'Guest play is closed right now. You can keep playing on this device.',
+  demo_closed: 'Guest play needs the class code from the presenter. You can keep playing on this device.',
+  class_code_invalid: 'This class code is not valid. Ask the presenter for the current code.',
+  class_code_needed: 'Type the class code from the projector, for example HARBOR-K7QXM.',
 };
 
 export function createRealCaseAdapter(deps = {}) {
@@ -101,6 +104,8 @@ export function createRealCaseAdapter(deps = {}) {
   let hydratedScope = null;
   let signingOut = false;
   let authIntentGeneration = 0;
+  // While a new guest presents the class code, the gated reads wait: guestSignIn reads after the join.
+  let guestJoining = false;
   const deviceSaveState = () => replaySaveData(ctx.state.deviceSave?.data) ? 'saved' : 'idle';
   async function hydrate({automatic = false, meAlreadyRead = false} = {}) {
     if (!session.isSignedIn() || store.isClosed() || ctx.document?.hidden) return;
@@ -179,7 +184,7 @@ export function createRealCaseAdapter(deps = {}) {
       store.commit({accountState:'signed_in',me:null,profile:null,crew:null,joinPreview:null,
         saveState:deviceSaveState(),nameReply:null,nameStatus:null,
         cloudSave:null,rewardsRows:[],rewardsStatus:null,continuation:null});
-      void hydrate();
+      if (!guestJoining) void hydrate();
     } else {
       authIntentGeneration += 1;
       ctx.transport.clearPending();
@@ -209,8 +214,8 @@ export function createRealCaseAdapter(deps = {}) {
     live.refresh();
     const enabled = import.meta.env.DEV || ctx.state.config?.flags?.sign_in === true;
     store.commit({signInAllowed: enabled});
-    // An open demo window also restores a guest's session after a reload.
-    if ((enabled || ctx.state.config?.demo?.open === true) && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
+    // Guest play by class code also restores a guest's session after a reload.
+    if ((enabled || ctx.state.config?.demo?.guestsByCode === true) && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
     if (restoreTask) await restoreTask;
     if (!ctx.state.me) await hydrate();
     crewLife.refresh();
@@ -232,10 +237,11 @@ export function createRealCaseAdapter(deps = {}) {
       return result;
     }};
   // signIn() and signIn({provider}) start OAuth; {upgrade: true} links a provider to a guest;
-  // {guest: true} is the title's silent guest start, allowed only while /api/config says demo.open.
+  // {guest: true, code} is the guest start with a class code (Join page, projector QR), allowed only
+  // while /api/config says demo.guestsByCode; the server checks the code (POST /api/demo/join).
   handlers.signIn = async (options = {}) => {
     const provider = options.provider ?? 'github';
-    if (options.guest === true) return guestSignIn();
+    if (options.guest === true) return guestSignIn(options.code);
     if (options.upgrade === true) return upgradeGuest(provider);
     if (session.isSignedIn()) {
       const scope=store.scope();
@@ -267,21 +273,37 @@ export function createRealCaseAdapter(deps = {}) {
     const known = Array.isArray(list) ? list.filter(name => ['github', 'google'].includes(name)) : [];
     return known.length ? known : ['github'];
   }
-  async function guestSignIn() {
-    if (session.isSignedIn()) return ctx.accept('Your account is ready.');
-    if (ctx.state.config?.demo?.open !== true) return ctx.refuse('demo_closed');
-    if (!ctx.auth.signInAnonymously) return ctx.refuse('not_connected');
+  // A guest needs the class code: sign in anonymously (or keep the guest session), then present the
+  // code. A wrong code keeps the anonymous session, so the player can type the code again.
+  async function guestSignIn(code) {
+    if (typeof code !== 'string' || !code.trim()) {
+      return session.isSignedIn() ? ctx.accept('Your account is ready.') : ctx.refuse('class_code_needed');
+    }
+    if (ctx.state.config?.demo?.guestsByCode !== true) return ctx.refuse('demo_closed');
     const intent = ++authIntentGeneration;
     const current = () => !store.isClosed() && intent === authIntentGeneration;
-    const result = await ctx.auth.signInAnonymously();
+    if (!session.isSignedIn()) {
+      if (!ctx.auth.signInAnonymously) return ctx.refuse('not_connected');
+      guestJoining = true;
+      let result;
+      try { result = await ctx.auth.signInAnonymously(); } catch { result = null; } finally { guestJoining = false; }
+      if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+      if (!result?.ok) {
+        store.commit({accountState: 'signed_out', auth: ctx.auth.read?.() ?? null});
+        return ctx.refuse('not_connected');
+      }
+    }
+    const reply = await ctx.api.post('/api/demo/join', {code, actionUid: newActionUid()});
     if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
-    if (!result?.ok) {
-      store.commit({accountState: 'signed_out', auth: ctx.auth.read?.() ?? null});
+    if (!reply.ok || reply.data?.admitted !== true) {
+      if (reply.status === 403 && reply.code === 'class_code_invalid') return ctx.refuse('class_code_invalid');
+      if (reply.status === 403 && reply.code === 'demo_closed') return ctx.refuse('demo_closed');
+      if (reply.status === 429) return {...ctx.refuse('rate_limited'), message: reply.message || 'Too many tries. Wait a few minutes, then try again.'};
       return ctx.refuse('not_connected');
     }
     await hydrate();
     if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
-    return ctx.accept('You are playing as a guest.');
+    return ctx.accept(ctx.auth.read?.()?.guest === true ? 'You are playing as a guest.' : 'You joined the class harbor.');
   }
   async function upgradeGuest(provider) {
     if (!session.isSignedIn() || ctx.auth.read?.()?.guest !== true) return ctx.refuse('invalid_request');

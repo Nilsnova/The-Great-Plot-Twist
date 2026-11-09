@@ -36,6 +36,8 @@ address
 addresses
 adds
 adjusts
+admission
+admitted
 advance
 advertising
 advice
@@ -489,6 +491,7 @@ delayed
 delete
 deleted
 deletes
+deleting
 deletion
 delisted
 delivery
@@ -590,6 +593,7 @@ engines
 english
 enough
 enter
+entering
 entries
 entry
 envelopes
@@ -976,6 +980,7 @@ job
 join
 joined
 joining
+joins
 jolly
 journal
 journey
@@ -1046,6 +1051,7 @@ lens
 lenses
 less
 let
+lets
 letters
 leverage
 library
@@ -1717,6 +1723,8 @@ say
 says
 scaling
 scan
+scanned
+scanning
 scene
 scenery
 schema
@@ -2028,6 +2036,7 @@ ten
 tern
 tesla
 test
+tests
 text
 textcontent
 textures
@@ -2129,6 +2138,7 @@ twist
 two
 tying
 type
+typed
 typing
 u
 ui

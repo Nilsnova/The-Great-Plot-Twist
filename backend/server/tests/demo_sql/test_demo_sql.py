@@ -159,7 +159,8 @@ def test_objects_have_rls_comments_and_safe_function_settings(database):
     tables = database.execute(
         "select c.relname, c.relrowsecurity, obj_description(c.oid, 'pg_class') is not null "
         "from pg_class c join pg_namespace n on n.oid = c.relnamespace "
-        "where n.nspname = 'public' and c.relname like 'demo_%' and c.relkind = 'r' "
+        "where n.nspname = 'public' and c.relkind = 'r' "
+        "and c.relname in ('demo_lock_attempts', 'demo_window', 'demo_window_actions') "
         "order by 1"
     ).fetchall()
     assert tables == [
@@ -180,7 +181,8 @@ def test_objects_have_rls_comments_and_safe_function_settings(database):
     functions = database.execute(
         "select p.proname, p.prosecdef, p.proconfig, obj_description(p.oid, 'pg_proc') is not null "
         "from pg_proc p join pg_namespace n on n.oid = p.pronamespace "
-        "where n.nspname = 'public' and p.proname like 'demo_%' order by 1"
+        "where n.nspname = 'public' "
+        "and p.proname in ('demo_lock_record', 'demo_window_read', 'demo_window_set') order by 1"
     ).fetchall()
     assert [name for name, *_ in functions] == [
         "demo_lock_record",

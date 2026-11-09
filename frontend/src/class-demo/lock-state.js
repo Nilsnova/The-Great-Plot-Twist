@@ -10,7 +10,7 @@ export const initialLock = () => ({status: 'loading', view: null, message: '', t
 // Plain words for every refusal of the HTTP layer. failure: {status, code, message, retryAfterSeconds}.
 export function lockFailure(failure) {
   const code = failure?.code, status = failure?.status ?? 0;
-  if (code === 'demo_closed') return {message: 'The class demo is closed right now. Ask the presenter to open it, or sign in with GitHub or Google in Settings.', fatal: true};
+  if (code === 'demo_closed') return {message: 'Guest play needs the class code. Ask the presenter for the current code, or sign in with GitHub or Google in Settings.', fatal: true};
   if (code === 'too_many_tries') return {message: 'The lock has heard enough answers for today. Ask the presenter for help, or try again tomorrow.', fatal: true};
   if (status === 429) {
     const seconds = failure?.retryAfterSeconds;

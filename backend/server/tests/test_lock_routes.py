@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from server.tests.demo_helpers import (
     DEMO_SETTINGS,
     GUEST,
+    GUEST_ID,
     PLAYER,
     PLAYER_ID,
     make_demo_app,
@@ -182,12 +183,11 @@ def test_demo_mode_never_calls_open_meteo():
     assert meteo.requests == []
 
 
-def test_a_guest_needs_the_demo_open():
+def test_a_guest_needs_the_class_code():
     client, database, _, clock = lock_client()
 
     assert_error(client.get("/api/lock", headers=GUEST), 403, "demo_closed")
-    database.open_for(1)
-    clock.advance(11)  # the gate remembers the closed window for 10 seconds
+    database.admit(GUEST_ID)  # the guest presented the class code (on any instance)
     assert client.get("/api/lock", headers=GUEST).status_code == 200
 
 

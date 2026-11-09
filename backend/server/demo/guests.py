@@ -24,22 +24,29 @@ profile is stored with:
 A GitHub or Google user who did not play Act 1 is never given a kit: POST /api/crews still answers
 409 kit_needed for them.
 
-Cleaning up (cleanup_guests). The host's "Clean up guests" button deletes every anonymous user whose
-account is older than 24 hours, through the database function delete_player (the same as "Delete my
-data", so a shared crew is handed over and nothing is left half-deleted). The list of users comes
-from Supabase Auth's admin list, because only it knows today whether a user is still anonymous. A
-user counts as a guest only if ALL of these hold, so a GitHub or Google user is never deleted:
+Cleaning up (cleanup_guests). The host's "Clean up guests" button, and the automatic clean-up that
+runs after the host reads GET /api/host/demo (AutoCleanup, at most once every 10 minutes per server
+instance and 25 deletions per run), delete every anonymous user whose account is older than 24
+hours, through the database function delete_player (the same as "Delete my data", so a shared
+crew is handed over and nothing is left half-deleted). The list of users comes from Supabase Auth's
+admin list, because only it knows today whether a user is still anonymous. A user counts as a
+guest only if ALL of these hold, so a GitHub or Google user is never deleted:
 
     is_anonymous is true, there is no e-mail address and no phone number, every linked identity
     and every provider in app_metadata is "anonymous", and the id is not a host.
 
 A guest who linked GitHub is no longer anonymous and is kept. At most 100 guests are deleted per
 call (a Vercel function has limited time); the answer says "more": true when the host should press
-the button again.
+the button again. Deleting a guest also deletes their admission (demo_guests, by cascade).
 
-Used by: demo/gate.py (provision_guest) and routes/demo.py (cleanup_guests).
+The automatic run happens after the answer was sent (a FastAPI background task) and is bounded by
+AUTO_TIMEOUT_SECONDS. A failure is logged as one line with the kind of error, never fatal, and never
+names a player.
+
+Used by: demo/gate.py (provision_guest) and routes/demo.py (cleanup_guests, AutoCleanup).
 """
 
+import asyncio
 import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -50,6 +57,7 @@ from plot_twist.engine import STORY_PATH
 from server.account.deletion import delete_player
 from server.account.name_store import assign_name
 from server.account.names import load_word_lists, pick_name, placeholder_name
+from server.clock import Clock
 from server.errors import ApiError
 from server.game.entry_kits import ENTRY_KITS_PATH, kit_by_id, load_entry_kits
 from server.game.entry_profile_store import KIT_REASON, KIT_REF, grant_entry_kit
@@ -71,6 +79,11 @@ PAGE_SIZE = 200
 MAX_PAGES = 25
 # At most this many deletions per call, so one call stays well inside a function's time limit.
 MAX_DELETIONS = 100
+# The automatic clean-up: at most once per this long per server instance, fewer deletions, and a
+# hard time limit, so the host's reads never wait for it and a slow Auth list cannot pile up.
+AUTO_EVERY = timedelta(minutes=10)
+AUTO_MAX_DELETIONS = 25
+AUTO_TIMEOUT_SECONDS = 20
 
 
 def player_not_set_up() -> ApiError:
@@ -173,15 +186,53 @@ async def find_old_guests(
 
 
 async def cleanup_guests(
-    admin: SupabaseAdmin, now: datetime, hosts: frozenset[str]
+    admin: SupabaseAdmin,
+    now: datetime,
+    hosts: frozenset[str],
+    max_deletions: int = MAX_DELETIONS,
 ) -> CleanupResult:
-    """Delete anonymous users older than 24 hours, at most MAX_DELETIONS per call."""
+    """Delete anonymous users older than 24 hours, at most `max_deletions` per call."""
     guests, checked, listing_went_on = await find_old_guests(admin, now - GUEST_MAX_AGE, hosts)
     deleted = 0
-    for player_id in guests[:MAX_DELETIONS]:
+    for player_id in guests[:max_deletions]:
         if await delete_player(admin, player_id) == "deleted":
             deleted += 1
     # A count only: the log never names a player.
     logger.info("Demo cleanup deleted %s guest(s).", deleted)
-    more = listing_went_on or len(guests) > MAX_DELETIONS
+    more = listing_went_on or len(guests) > max_deletions
     return CleanupResult(checked=checked, deleted=deleted, more=more)
+
+
+class AutoCleanup:
+    """The automatic guest clean-up of one server instance, started by the host's reads.
+
+    claim() says whether a run is due (and books it); run() does it in the background. The route
+    calls claim() while it answers and hands run() to FastAPI's background tasks.
+    """
+
+    def __init__(self, admin: SupabaseAdmin, clock: Clock, hosts: frozenset[str]) -> None:
+        self.admin = admin
+        self.clock = clock
+        self.hosts = hosts
+        self.last: datetime | None = None
+        self.running = False
+
+    def claim(self) -> bool:
+        now = self.clock()
+        if self.running or (self.last is not None and now - self.last < AUTO_EVERY):
+            return False
+        self.last = now
+        self.running = True
+        return True
+
+    async def run(self) -> CleanupResult | None:
+        try:
+            return await asyncio.wait_for(
+                cleanup_guests(self.admin, self.clock(), self.hosts, AUTO_MAX_DELETIONS),
+                AUTO_TIMEOUT_SECONDS,
+            )
+        except Exception as error:  # noqa: BLE001 - a failed clean-up must never break a host read
+            logger.warning("Automatic guest clean-up failed: %s", type(error).__name__)
+            return None
+        finally:
+            self.running = False

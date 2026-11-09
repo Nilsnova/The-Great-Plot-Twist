@@ -9,7 +9,9 @@ import {claimPanelEntry,releasePanelEntry} from '../online/panel-services.js';
 
 export function startAfterPaint(ctx) {
   let disposed=false,entry=null,closed=false;
-  rememberJoin();
+  // A projector QR (?join=K7QXM) opens the Join page with the code filled in, so a wrong or old
+  // code gets its message and the player can type it again before the game starts.
+  if(rememberJoin()&&ctx.shell?.()?.mode==='title')ctx.shell().show('join');
   const session=ctx.session??defaultSession;
   const arena=claimPanelEntry(session,'arena',()=>createArenaEntry({session,container:ctx.container,
     focus:ctx.focus,resetInput:()=>ctx.runtime?.()?.resetInput?.(),notify:ctx.caption,

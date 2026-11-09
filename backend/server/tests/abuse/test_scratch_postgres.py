@@ -564,7 +564,7 @@ def test_rls_blocks_other_players_and_privileged_money_calls(db):
         connection.execute("set role authenticated")
         connection.execute(
             "select set_config('request.jwt.claims',%s,false)",
-            (f'{{"sub":"{player}"}}',),
+            (f'{{"sub":"{player}","is_anonymous":false}}',),
         )
         for table in (
             "wallets",

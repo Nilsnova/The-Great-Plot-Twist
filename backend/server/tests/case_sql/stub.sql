@@ -6,6 +6,10 @@ create schema auth;
 create table auth.users (id uuid primary key);
 create function auth.uid() returns uuid language sql stable as
   $$ select nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', '')::uuid $$;
+-- auth.jwt() as Supabase defines it: the claims of the caller's login token, or null.
+create function auth.jwt() returns jsonb language sql stable as
+  $$ select coalesce(nullif(current_setting('request.jwt.claim', true), ''),
+                     nullif(current_setting('request.jwt.claims', true), ''))::jsonb $$;
 grant usage on schema auth to anon, authenticated, service_role;
 
 -- A4 policy dependencies join the migration chain when that package reaches main.

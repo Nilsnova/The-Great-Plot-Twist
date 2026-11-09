@@ -2,11 +2,14 @@
 // place they announce, the "joined" toast, the projector's words, and where the demo's objects stand
 // in Saltreach Harbor. No DOM here.
 import {CLASS_HARBOR_PLACE} from '../net/live-rules.js';
-import {JOIN_KEY} from '../front-door/logic.js';
+import {JOIN_KEY, JOINED_WITHOUT_CODE, classCode, displayCode, joinedHarbor} from '../front-door/logic.js';
 
 export const HARBOR_PLACE = 'saltreach_harbor';
-export const JOIN_URL = 'https://the-great-plot-twist.vercel.app/?join=harbor';
-export const JOIN_CODE = 'HARBOR';
+export const GAME_URL = 'https://the-great-plot-twist.vercel.app/';
+// The projector QR carries the current class code: https://the-great-plot-twist.vercel.app/?join=K7QXM.
+export const joinUrl = code => (classCode(code) ? `${GAME_URL}?join=${classCode(code)}` : '');
+// Rehearsal (?demo=1) shows this made-up code; nothing is sent to the server with it.
+export const REHEARSAL_CODE = 'TESTS';
 export const PATH_KEY = 'plot_twist_path_v1'; // 'full' after "Full mystery"; otherwise the demo path
 
 // The lock by the lighthouse path, and the three lamp posts along it (x, z in Saltreach Harbor).
@@ -17,11 +20,11 @@ export const LAMP_SPOTS = Object.freeze([
   Object.freeze({id: 'class_lamp_3', index: 2, x: 2.4, z: 14.6, radius: 1.6}),
 ]);
 
-export function readInvite(storage) {
-  try { return storage?.getItem(JOIN_KEY) === 'harbor'; } catch { return false; }
-}
+// In the class harbor: a class code from the QR or the Join page, or the in-game button.
+export function readInvite(storage) { return joinedHarbor(storage); }
+// The in-game "Join the class harbor" keeps a remembered class code and otherwise marks the tab.
 export function rememberInvite(storage) {
-  try { storage?.setItem(JOIN_KEY, 'harbor'); return true; } catch { return false; }
+  try { if (!readInvite(storage)) storage?.setItem(JOIN_KEY, JOINED_WITHOUT_CODE); return true; } catch { return false; }
 }
 
 // While in the class harbor, a player in Saltreach Harbor announces the class place instead.
@@ -49,29 +52,29 @@ export function nearestSpot(spots, player) {
   return best;
 }
 
-// The projector's words. demo: {flagOn, open, openUntil} from GET /api/host/demo, or null when unknown.
-export function projectorModel({demo = null, count = 1, host = false, rehearsal = false, pending = false, error = '', now = Date.now()} = {}) {
+// The projector's words. demo: {flagOn, code, codeSetAt, guests} from GET /api/host/demo, or null
+// when unknown. In a rehearsal without a host the made-up REHEARSAL_CODE is shown.
+export function projectorModel({demo = null, count = 1, host = false, rehearsal = false, pending = false, error = ''} = {}) {
   const captains = Math.max(1, Math.floor(Number.isFinite(count) ? count : 1));
-  let windowText = 'Demo window: unknown', open = false;
-  if (demo?.flagOn === false) windowText = 'The demo flag is off on the server.';
-  else if (demo?.open === true && demo.openUntil && Date.parse(demo.openUntil) > now) {
-    open = true;
-    windowText = `Demo open until ${clock(demo.openUntil)}`;
-  } else if (demo) windowText = 'Demo closed: guests cannot join yet.';
-  if (rehearsal && !demo) windowText = 'Rehearsal: the demo window is not checked.';
-  return {url: JOIN_URL, code: JOIN_CODE, open,
+  const code = classCode(demo?.code ?? '') ?? (rehearsal && !demo ? REHEARSAL_CODE : null);
+  let statusText = 'Class code: unknown';
+  if (demo?.flagOn === false) statusText = 'The demo flag is off on the server: no guest can join.';
+  else if (rehearsal && !demo) statusText = 'Rehearsal: a practice code, not checked by the server.';
+  else if (demo && !code) statusText = 'No class code yet. Make one to let guests in.';
+  else if (demo) {
+    const guests = Number.isInteger(demo.guests) && demo.guests >= 0 ? demo.guests : null;
+    statusText = guests === null ? 'Guests join with this code.' : `${guests} ${guests === 1 ? 'guest' : 'guests'} joined with a code`;
+  }
+  return {url: joinUrl(code), code: displayCode(code) || 'No code yet', hasCode: !!code,
     countText: `${captains} ${captains === 1 ? 'captain' : 'captains'} in the harbor`,
-    windowText, error,
-    canOpen: host === true && !pending && demo?.flagOn !== false,
-    buttonLabel: pending ? 'Opening…' : open ? 'Keep open for 2 more hours' : 'Open demo for 2 hours',
-    steps: ['Scan the code with your phone camera', `Or open the game and choose Join, code ${JOIN_CODE}`]};
+    statusText, error,
+    canRenew: host === true && !pending && !!demo,
+    buttonLabel: pending ? 'Making a new code…' : 'New class code',
+    confirmText: 'Make a new class code? The old code stops working for new joins at once. Captains already here stay.',
+    steps: code ? ['Scan the code with your phone camera', `Or open the game, choose Join and type ${displayCode(code)}`]
+      : ['The presenter makes a class code first']};
 }
-export const openDemoBody = actionUid => ({hours: 2, actionUid});
-
-function clock(iso) {
-  const date = new Date(iso);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
+export const newCodeBody = actionUid => ({actionUid});
 
 // Demo path or full mystery. The front door (Play, Join HARBOR) is the demo path unless the player chose
 // "Full mystery" on this device; the Lighthouse prologue and a saved story are the full mystery.
