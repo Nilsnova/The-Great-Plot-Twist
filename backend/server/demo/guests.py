@@ -21,21 +21,22 @@ profile is stored with:
                                is the closest allowed value (documented in D029)
     story_sha256 the SHA-256 of the story file, as for every profile
 
-A GitHub or Google user who did not play Act 1 is never given a kit: POST /api/crews still answers
+A GitHub or email user who did not play Act 1 is never given a kit: POST /api/crews still answers
 409 kit_needed for them.
 
 Cleaning up (cleanup_guests). The host's "Clean up guests" button deletes every anonymous user whose
 account is older than 24 hours, through the database function delete_player (the same as "Delete my
 data", so a shared crew is handed over and nothing is left half-deleted). The list of users comes
 from Supabase Auth's admin list, because only it knows today whether a user is still anonymous. A
-user counts as a guest only if ALL of these hold, so a GitHub or Google user is never deleted:
+user counts as a guest only if ALL of these hold, so a GitHub or email user is never deleted:
 
     is_anonymous is true, there is no e-mail address and no phone number, every linked identity
     and every provider in app_metadata is "anonymous", and the id is not a host.
 
-A guest who linked GitHub is no longer anonymous and is kept. At most 100 guests are deleted per
-call (a Vercel function has limited time); the answer says "more": true when the host should press
-the button again.
+A guest who linked GitHub or confirmed an email address is no longer anonymous and is kept. A guest
+whose email confirmation is still open has no e-mail address yet and still counts as a guest. At
+most 100 guests are deleted per call (a Vercel function has limited time); the answer says
+"more": true when the host should press the button again.
 
 Used by: demo/gate.py (provision_guest) and routes/demo.py (cleanup_guests).
 """

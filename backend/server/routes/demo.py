@@ -22,7 +22,7 @@ is not in HOST_PLAYER_IDS. A guest is never a host. Every answer carries
       200  {"checked": 57, "deleted": 41, "more": false}
       Deletes every anonymous guest whose account is older than 24 hours, through the database
       function delete_player (demo/guests.py says exactly who counts as a guest: never a GitHub or
-      Google user, never a host). At most 100 per call; "more": true means press again. Deleting
+      email user, never a host). At most 100 per call; "more": true means press again. Deleting
       is safe to repeat, so the actionUid only follows the house rule for retries and is not
       stored. A 503 means the outcome is unknown: press again.
 

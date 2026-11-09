@@ -1,7 +1,7 @@
 """The demo gate: lets guests (anonymous users) use the API only while the demo is open.
 
 auth.get_current_player calls admit() for every guest, after Supabase has verified the token.
-GitHub and Google users never reach this file.
+GitHub and email users never reach this file.
 
     feature flag demo off                     ->  403 demo_closed (no database read at all)
     flag on, window closed or ended           ->  403 demo_closed

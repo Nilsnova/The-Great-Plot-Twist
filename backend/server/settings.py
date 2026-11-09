@@ -30,9 +30,11 @@ so this file is the full list of what can be configured:
     SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty disables live sports.
     SPORTS_API_KEY            server-only provider key; empty keeps live sports unavailable.
     AUTH_PROVIDERS            the sign-in providers the browser may offer, comma separated:
-                              github and google (default: github). An unknown name stops the
-                              server, like a misspelled FEATURE_FLAGS name. Not secret: each
-                              provider is also switched on in the Supabase dashboard.
+                              github and email (default: github). email is the 6-digit code
+                              sign-in (Supabase email OTP). An unknown name, google included
+                              since it was dropped, stops the server, like a misspelled
+                              FEATURE_FLAGS name. Not secret: each provider is also switched on
+                              in the Supabase dashboard.
 
 Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and
 crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence),
@@ -60,9 +62,11 @@ APP_ENVS = ("local", "preview", "production")
 # market/stocks.py (a test checks that): this file stays free of imports from the market package.
 STOCK_PROVIDER_NAMES = ("finnhub",)
 
-# The sign-in providers AUTH_PROVIDERS may name, in the order the browser shows them. Anonymous
-# guest sign-in is not one of them: it depends on the demo window (server/demo/), not a setting.
-AUTH_PROVIDER_NAMES = ("github", "google")
+# The sign-in providers AUTH_PROVIDERS may name, in the order the browser shows them. "email" is
+# the 6-digit email code (Supabase email OTP). Google was dropped (G29) and is now an unknown name.
+# Anonymous guest sign-in is not one of them: it depends on the demo window (server/demo/), not a
+# setting.
+AUTH_PROVIDER_NAMES = ("github", "email")
 DEFAULT_AUTH_PROVIDERS = ("github",)
 
 # The place whose real weather the game shows. The Faroe Islands are the team's proposal, because
@@ -252,10 +256,10 @@ def read_sports_provider(env: Mapping[str, str]) -> str:
 
 
 def read_auth_providers(env: Mapping[str, str]) -> tuple[str, ...]:
-    """AUTH_PROVIDERS: github and/or google, comma separated. Empty means github only.
+    """AUTH_PROVIDERS: github and/or email, comma separated. Empty means github only.
 
     Repeats and empty pieces are ignored; the order of first mention is kept. An unknown name stops
-    the server, so a typo such as "gogle" cannot hide.
+    the server, so a typo such as "emial", or the dropped "google", cannot hide.
     """
     pieces = [piece.strip().lower() for piece in read_text(env, "AUTH_PROVIDERS").split(",")]
     names = [piece for piece in pieces if piece]

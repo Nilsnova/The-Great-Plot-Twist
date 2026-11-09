@@ -42,7 +42,7 @@ VARIABLES = {
     "SPORTS_API_KEY": " fake-d ",
     "VERCEL_GIT_COMMIT_SHA": " g21-synthetic-commit ",
     "HOST_PLAYER_IDS": " 00000000-0000-4000-8000-000000000021, ",
-    "AUTH_PROVIDERS": " Google, github,google, ",
+    "AUTH_PROVIDERS": " Email, github,email, ",
 }
 
 
@@ -85,7 +85,7 @@ def test_all_variables_are_parsed_together_and_the_input_is_not_mutated():
     assert settings.sports_api_key.get_secret_value() == "fake-d"
     assert settings.build_commit == "g21-synthetic-commit"
     assert settings.host_player_ids == frozenset({"00000000-0000-4000-8000-000000000021"})
-    assert settings.auth_providers == ("google", "github")
+    assert settings.auth_providers == ("email", "github")
     assert environment == VARIABLES
 
 

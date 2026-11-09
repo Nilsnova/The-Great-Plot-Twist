@@ -25,7 +25,7 @@ profiles.display_name in the database, not a value from the token.
 Guests (decision D029): a guest is let in only while the host's demo window is open and the feature
 flag demo is on. get_current_player asks the demo gate (server/demo/gate.py) about every guest, and
 the gate answers 403 demo_closed otherwise. The gate also gives a guest a captain name and the
-default kit on the first call it lets through. GitHub and Google users never reach the gate. One
+default kit on the first call it lets through. GitHub and email users never reach the gate. One
 route is never gated: DELETE /api/me, so a guest can always delete their own data.
 
 Used by: every route that needs a signed-in player. Write `player: PlayerDep` in the route.
@@ -141,8 +141,8 @@ def is_anonymous_user(user: dict) -> bool:
 
     Supabase sets "is_anonymous": true on such users, and their app_metadata names the provider
     "anonymous". When the answer has the "is_anonymous" field, it alone decides: a guest who linked
-    GitHub or Google gets false there, even if an older provider name is still in app_metadata.
-    Only an answer without that field falls back to the provider name.
+    GitHub or confirmed an email gets false there, even if an older provider name is still in
+    app_metadata. Only an answer without that field falls back to the provider name.
     """
     flag = user.get("is_anonymous")
     if isinstance(flag, bool):

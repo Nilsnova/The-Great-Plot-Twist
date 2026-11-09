@@ -2,7 +2,7 @@
 
 During the class demo, phones join by QR code and sign in as Supabase anonymous users ("guests"),
 with no GitHub account. Guests may use the API only while the host's demo window is open and the
-feature flag demo is on. GitHub and Google users are never affected.
+feature flag demo is on. GitHub and email users are never affected.
 
 Where things are (one job per file):
     gate.py     the demo gate: reads the window (cached for 10 seconds), refuses guests with

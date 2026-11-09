@@ -164,7 +164,8 @@ def test_an_old_anonymous_user_is_an_old_guest():
         {"phone": "+351000000000"},
         {"identities": [{"provider": "github"}]},
         {"app_metadata": {"provider": "anonymous", "providers": ["anonymous", "github"]}},
-        {"app_metadata": {"provider": "google"}},
+        {"app_metadata": {"provider": "email"}},
+        {"identities": [{"provider": "email"}]},
         {"created_at": None},
         {"created_at": "yesterday"},
         {"created_at": "2026-11-01T10:00:00"},  # no timezone: in doubt, keep

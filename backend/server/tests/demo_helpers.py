@@ -8,8 +8,8 @@ make, and fails loudly for anything else:
   * GET demo_lock_attempts, POST rpc/demo_lock_record  the lock answers, kept in memory
   * GET /auth/v1/admin/users, POST rpc/delete_player    "Clean up guests"
 
-The login check knows four tokens: a guest (anonymous), a GitHub player, a Google player and a
-host. Nothing uses the network.
+The login check knows four tokens: a guest (anonymous), a GitHub player, an email player
+(6-digit code sign-in) and a host. Nothing uses the network.
 
 Used by: test_demo_gate.py, test_demo_host_routes.py, test_lock_routes.py.
 """
@@ -32,12 +32,12 @@ from server.tests.helpers import CONFIGURED_SETTINGS, FAKE_SECRET_KEY, FAKE_URL,
 
 GUEST_ID = "aaaaaaaa-0000-4000-8000-000000000001"
 PLAYER_ID = "bbbbbbbb-0000-4000-8000-000000000002"
-GOOGLE_ID = "cccccccc-0000-4000-8000-000000000003"
+EMAIL_PLAYER_ID = "cccccccc-0000-4000-8000-000000000003"
 HOST_ID = "dddddddd-0000-4000-8000-000000000004"
 
 GUEST = {"Authorization": "Bearer test.guest.signature"}
 PLAYER = {"Authorization": "Bearer test.github.signature"}
-GOOGLE = {"Authorization": "Bearer test.google.signature"}
+EMAIL_PLAYER = {"Authorization": "Bearer test.email.signature"}
 HOST = {"Authorization": "Bearer test.host.signature"}
 
 USERS = {
@@ -51,10 +51,11 @@ USERS = {
         "is_anonymous": False,
         "app_metadata": {"provider": "github", "providers": ["github"]},
     },
-    "Bearer test.google.signature": {
-        "id": GOOGLE_ID,
+    "Bearer test.email.signature": {
+        "id": EMAIL_PLAYER_ID,
         "is_anonymous": False,
-        "app_metadata": {"provider": "google", "providers": ["google"]},
+        "email": "captain@example.org",
+        "app_metadata": {"provider": "email", "providers": ["email"]},
     },
     "Bearer test.host.signature": {"id": HOST_ID, "app_metadata": {"provider": "github"}},
 }
