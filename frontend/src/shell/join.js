@@ -1,4 +1,5 @@
 // Join: enter a crew code, or scan the QR on the projector. Loaded only when opened.
+import './join.css';
 import {node,uniqueId} from '../ui/kit/dom.js';
 import {menuButton} from './screens.js';
 import {joinTarget,JOIN_KEY} from '../front-door/logic.js';

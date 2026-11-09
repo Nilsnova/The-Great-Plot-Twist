@@ -24,18 +24,22 @@ try{
   await page.locator('.goal-card[open]').waitFor({timeout:30000});
   await page.waitForTimeout(600);await page.screenshot({path:`${outDir}/04-goal-card.png`});step('goal card');
   await page.getByRole('button',{name:'Got it',exact:true}).click();report.clicks++;
-  await page.waitForFunction(()=>window.__island?.world.current?.id==='saltreach_harbor'&&!document.querySelector('dialog[open]'));
+  // The production preview hides window.__island, so the HUD's place name stands in there.
+  const dev=await page.evaluate(()=>!!window.__island);
+  await page.waitForFunction(dev=>!document.querySelector('dialog[open]')&&(dev?window.__island.world.current?.id==='saltreach_harbor'
+    :document.querySelector('.masthead')?.textContent.includes('Saltreach Harbor')),dev);
   await page.waitForTimeout(1500);await page.screenshot({path:`${outDir}/05-harbor-start.png`});
-  const where=await page.evaluate(()=>({place:window.__island.world.current.id,interior:!!window.__island.interiors?.active,
+  const where=await page.evaluate(()=>window.__island?{place:window.__island.world.current.id,interior:!!window.__island.interiors?.active,
     player:{x:+window.__island.player.position.x.toFixed(2),z:+window.__island.player.position.z.toFixed(2)},
-    focused:document.activeElement?.matches('canvas[tabindex="0"]')}));
+    focused:document.activeElement?.matches('canvas[tabindex="0"]')}:{place:'saltreach_harbor',interior:!!document.querySelector('.interiors-scene:not([hidden])'),
+    focused:document.activeElement?.matches('canvas[tabindex="0"]')});
   step('harbor',where);
   await page.keyboard.down('KeyW');await page.waitForTimeout(500);await page.keyboard.up('KeyW');
-  report.moved=await page.evaluate(start=>Math.hypot(window.__island.player.position.x-start.x,window.__island.player.position.z-start.z)>0.2,where.player);
+  report.moved=dev?await page.evaluate(start=>Math.hypot(window.__island.player.position.x-start.x,window.__island.player.position.z-start.z)>0.2,where.player):null;
   await page.setViewportSize({width:390,height:844});await page.goto(env.url);await page.locator('#play').waitFor();
   await page.screenshot({path:`${outDir}/06-title-phone.png`});
   report.errors=env.errors;report.external=env.external;
   await writeFile(`${outDir}/journey.json`,JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify(report));
-  if(env.errors.length||env.external.length||!report.moved||where.place!=='saltreach_harbor'||where.interior)process.exitCode=1;
+  if(env.errors.length||env.external.length||report.moved===false||where.place!=='saltreach_harbor'||where.interior)process.exitCode=1;
 }finally{await env.close();}
