@@ -1,11 +1,10 @@
-"""Tests for guest play: who counts as a guest, the demo gate, getting a guest ready, /api/config.
+"""Tests for guest play: who counts as a guest, the guest gate, getting a guest ready, /api/config.
 
 A small route that needs a signed-in player is mounted on the real app (as test_hosts.py does), so
 the gate is tested exactly as every PlayerDep route uses it. Nothing uses the network.
 """
 
 from dataclasses import replace
-from datetime import timedelta
 
 import httpx
 import pytest
@@ -90,7 +89,7 @@ def test_a_google_player_is_a_normal_player_too():
 
 def test_a_guest_is_refused_while_the_flag_is_off_and_nothing_is_read():
     client, database, _ = client_with_route(replace(DEMO_SETTINGS, flags=parse_flags("")))
-    database.open_for(2)
+    database.admit(GUEST_ID)
 
     response = client.get(URL, headers=GUEST)
 
@@ -98,16 +97,18 @@ def test_a_guest_is_refused_while_the_flag_is_off_and_nothing_is_read():
     assert database.requests == []
 
 
-def test_a_guest_is_refused_while_the_window_is_closed():
+def test_a_guest_who_never_presented_the_code_is_refused():
     client, database, _ = client_with_route()
+    database.set_code("K7QXM")  # a code exists, but this guest never sent it
 
     assert_error(client.get(URL, headers=GUEST), 403, "demo_closed")
-    assert database.paths() == ["POST /rest/v1/rpc/demo_window_read"]
+    assert database.paths() == ["GET /rest/v1/demo_guests"]
+    assert database.calls("grant_entry_kit") == []
 
 
-def test_a_guest_passes_while_the_window_is_open_and_gets_a_name_and_the_default_kit():
+def test_an_admitted_guest_passes_and_gets_a_name_and_the_default_kit():
     client, database, _ = client_with_route()
-    database.open_for(2)
+    database.admit(GUEST_ID)
 
     response = client.get(URL, headers=GUEST)
 
@@ -127,21 +128,21 @@ def test_a_guest_passes_while_the_window_is_open_and_gets_a_name_and_the_default
     assert len(granted["p_story_sha256"]) == 64
 
 
-def test_a_ready_guest_is_not_set_up_twice_on_the_same_instance():
+def test_a_ready_guest_is_not_set_up_twice_and_the_admission_is_remembered():
     client, database, _ = client_with_route()
-    database.open_for(2)
+    database.admit(GUEST_ID)
 
     client.get(URL, headers=GUEST)
     client.get(URL, headers=GUEST)
 
     assert len(database.calls("grant_entry_kit")) == 1
-    # The window was read once: the gate remembers it for 10 seconds.
-    assert len(database.calls("demo_window_read")) == 1
+    # The admission was read once: the gate remembers it for 10 seconds.
+    assert database.paths().count("GET /rest/v1/demo_guests") == 1
 
 
 def test_a_guest_with_a_kit_already_is_only_looked_up():
     client, database, _ = client_with_route()
-    database.open_for(2)
+    database.admit(GUEST_ID)
     database.entry_profiles[GUEST_ID] = "stranger"
 
     assert client.get(URL, headers=GUEST).status_code == 200
@@ -150,31 +151,42 @@ def test_a_guest_with_a_kit_already_is_only_looked_up():
     assert database.calls("grant_entry_kit") == []
 
 
-def test_the_window_is_read_again_after_ten_seconds_and_a_closed_window_refuses():
+def test_the_admission_is_read_again_after_ten_seconds():
     client, database, clock = client_with_route()
-    database.open_for(2)
+    database.admit(GUEST_ID)
     assert client.get(URL, headers=GUEST).status_code == 200
 
-    database.open_until = None  # the host closed it on another server instance
+    del database.guests[GUEST_ID]  # the guest was cleaned up on another instance
     clock.advance(5)
     assert client.get(URL, headers=GUEST).status_code == 200  # still remembered
     clock.advance(6)
     assert_error(client.get(URL, headers=GUEST), 403, "demo_closed")
 
 
-def test_a_remembered_window_that_ended_refuses_at_once():
-    client, database, clock = client_with_route()
-    database.open_until = clock() + timedelta(seconds=5)
+def test_a_refusal_is_not_remembered_so_a_fresh_admission_passes_at_once():
+    client, database, _ = client_with_route()
+    assert_error(client.get(URL, headers=GUEST), 403, "demo_closed")
+
+    database.admit(GUEST_ID)  # joined through another server instance
+
     assert client.get(URL, headers=GUEST).status_code == 200
 
-    clock.advance(6)
 
-    assert_error(client.get(URL, headers=GUEST), 403, "demo_closed")
+def test_a_new_code_does_not_remove_an_admitted_guest():
+    client, database, clock = client_with_route()
+    database.set_code("K7QXM")
+    database.admit(GUEST_ID)
+    assert client.get(URL, headers=GUEST).status_code == 200
+
+    database.set_code("ZZ234")
+    clock.advance(60)
+
+    assert client.get(URL, headers=GUEST).status_code == 200
 
 
 def test_a_guest_whose_profile_is_missing_gets_404():
     client, database, _ = client_with_route()
-    database.open_for(1)
+    database.admit(GUEST_ID)
     database.assign_name = lambda body: {"status": "missing"}
 
     assert_error(client.get(URL, headers=GUEST), 404, "player_not_set_up")
@@ -192,38 +204,18 @@ def test_the_gate_also_guards_the_festival_read_with_an_optional_login():
 # --- what GET /api/config says ---
 
 
-def test_config_says_closed_while_the_flag_is_off_without_reading():
-    app, database, _ = make_demo_app(replace(DEMO_SETTINGS, flags=parse_flags("")))
-    database.open_for(2)
-
-    body = TestClient(app).get("/api/config").json()
-
-    assert body["demo"] == {"open": False, "openUntil": None}
-    assert database.requests == []
-
-
-def test_config_shows_an_open_window_with_its_end_in_utc():
-    app, database, clock = make_demo_app()
-    database.open_for(2)
-
-    body = TestClient(app).get("/api/config").json()
-
-    assert body["demo"] == {"open": True, "openUntil": "2026-11-05T14:00:00Z"}
-    assert body["flags"]["demo"] is True
-
-
-def test_config_shows_closed_when_the_window_cannot_be_read():
-    app, database, _ = make_demo_app()
-
-    def broken(*_args):
-        raise httpx.ConnectError("down")
-
-    database.window_read = broken
+@pytest.mark.parametrize(("flags", "expected"), [("demo", True), ("", False)])
+def test_config_says_only_whether_guests_may_join_by_code_and_reads_nothing(flags, expected):
+    app, database, _ = make_demo_app(replace(DEMO_SETTINGS, flags=parse_flags(flags)))
+    database.set_code("K7QXM")
+    database.admit(GUEST_ID)
 
     response = TestClient(app).get("/api/config")
 
-    assert response.status_code == 200
-    assert response.json()["demo"] == {"open": False, "openUntil": None}
+    assert response.json()["demo"] == {"guestsByCode": expected}
+    # The code never leaves the database through this public route.
+    assert "K7QXM" not in response.text
+    assert database.requests == []
 
 
 def test_a_guest_may_always_delete_their_own_data():
@@ -234,5 +226,5 @@ def test_a_guest_may_always_delete_their_own_data():
 
     assert response.status_code == 200
     assert response.json() == {"deleted": True}
-    assert database.calls("demo_window_read") == []
+    assert database.paths() == ["POST /rest/v1/rpc/delete_player"]
     assert database.calls("delete_player") == [{"p_player_id": GUEST_ID}]

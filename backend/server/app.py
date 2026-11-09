@@ -21,6 +21,7 @@ from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
 from server.demo.gate import DemoGate
+from server.demo.guests import AutoCleanup
 from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.festival.cache import FestivalCacheControl
@@ -206,6 +207,14 @@ def create_app(
     app.state.case = case_service
     # The class demo (D029): the guest gate, and the Keeper's Lock with its two budgets.
     app.state.demo_gate = DemoGate(settings, admin, clock)
+    # The class code (D030): the join budget and the automatic guest clean-up.
+    app.state.join_budget = PlayerBudget(
+        demo.JOIN_TRIES,
+        demo.JOIN_SECONDS,
+        clock=clock,
+        message="Too many tries with a class code. Wait a few minutes, then try again.",
+    )
+    app.state.auto_cleanup = AutoCleanup(admin, clock, settings.host_player_ids)
     app.state.lock_weather = lock_weather
     app.state.place_search = place_search
     app.state.lock_budget = PlayerBudget(30, 60, clock=clock)

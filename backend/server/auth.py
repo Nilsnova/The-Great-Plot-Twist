@@ -22,11 +22,13 @@ The Player is the verified user id and whether Supabase calls the user anonymous
 class demo, signed in with Supabase's anonymous sign-in). The name that other players see is
 profiles.display_name in the database, not a value from the token.
 
-Guests (decision D029): a guest is let in only while the host's demo window is open and the feature
-flag demo is on. get_current_player asks the demo gate (server/demo/gate.py) about every guest, and
-the gate answers 403 demo_closed otherwise. The gate also gives a guest a captain name and the
-default kit on the first call it lets through. GitHub and Google users never reach the gate. One
-route is never gated: DELETE /api/me, so a guest can always delete their own data.
+Guests (decisions D029, D030): a guest is let in only once they presented the current class code
+(POST /api/demo/join records them in demo_guests) and while the feature flag demo is on.
+get_current_player asks the guest gate (server/demo/gate.py) about every guest, and the gate
+answers 403 demo_closed otherwise. The gate also gives a guest a captain name and the default kit
+on the first call it lets through. GitHub and Google users never reach the gate. Two routes are
+never gated: DELETE /api/me, so a guest can always delete their own data, and POST /api/demo/join,
+which verifies the token itself because a guest calls it to get through the gate.
 
 Used by: every route that needs a signed-in player. Write `player: PlayerDep` in the route.
 """
@@ -234,7 +236,9 @@ VerifierDep = Annotated[PlayerVerifier, Depends(get_verifier)]
 
 
 async def admit_guest(request: Request, player: Player) -> Player:
-    """Let a guest through only while the demo is open (403 demo_closed). Others pass untouched.
+    """Let a guest through only once admitted with the class code (403 demo_closed).
+
+    Others pass untouched.
 
     The gate lives on the app (create_app stores it as app.state.demo_gate). Routes that verify a
     token themselves instead of using PlayerDep call this too.
@@ -245,7 +249,7 @@ async def admit_guest(request: Request, player: Player) -> Player:
 
 
 def is_own_deletion(request: Request) -> bool:
-    """DELETE /api/me ("Delete my data") stays open to a guest even while the demo is closed."""
+    """DELETE /api/me ("Delete my data") stays open to a guest who was never admitted, too."""
     return request.method == "DELETE" and request.url.path == "/api/me"
 
 

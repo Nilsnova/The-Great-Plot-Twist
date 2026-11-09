@@ -1,19 +1,18 @@
 """Config route: GET /api/config tells the browser how the server is set up.
 
 It returns the environment, whether demo mode is on, which feature flags are on, how to sign in
-(the sign-in providers and the address of our Supabase project) and whether the class demo is open
-for guests.
+(the sign-in providers and the address of our Supabase project) and whether guests may join the
+class demo with a class code.
 
     "auth": {"provider": "github", "providers": ["github", "google"], "supabaseUrl": "https://..."}
         providers   the setting AUTH_PROVIDERS (github and/or google; default github), in order
         provider    the old single field, kept for older pages: "github" while GitHub is listed,
                     otherwise the first provider
-    "demo": {"open": true, "openUntil": "2026-11-09T15:00:00Z"}
-        open        guests (Supabase anonymous sign-in) may play now: the feature flag demo is on
-                    and the host's demo window is open. The browser shows guest play only then.
-        openUntil   the end of the window, or null while closed
-        Read through the demo gate (10-second memory); a window that cannot be read shows as
-        closed here and never makes this route fail. With the flag off nothing is read.
+    "demo": {"guestsByCode": true}
+        guestsByCode  guests (Supabase anonymous sign-in) may join with the class code: the feature
+                      flag demo is on. The browser offers guest play only then, and only to a
+                      player who has a class code (decision D030). It says nothing about the code
+                      itself: the code never appears here, and nothing is read from the database.
 
 Everything in it is public. The Supabase address is not a secret: the browser needs it to start
 the GitHub sign-in, and it is visible in the browser's address bar during sign-in anyway. This
@@ -29,7 +28,6 @@ from pydantic import BaseModel
 
 from server.host_console import case_clock_available
 from server.settings import Settings, SettingsDep
-from server.weather.mapping import format_utc_time
 
 router = APIRouter()
 
@@ -46,10 +44,9 @@ class AuthConfig(BaseModel):
 
 
 class DemoConfig(BaseModel):
-    """Whether guests may play now. Public: an end time, nothing else."""
+    """Whether guests may join with a class code. Public: one yes or no, never the code."""
 
-    open: bool
-    openUntil: str | None
+    guestsByCode: bool
 
 
 class ConfigResponse(BaseModel):
@@ -71,13 +68,11 @@ def auth_config(settings: Settings) -> AuthConfig:
 
 @router.get("/config")
 async def get_config(settings: SettingsDep, request: Request) -> ConfigResponse:
-    window = await request.app.state.demo_gate.public_window()
-    until = format_utc_time(window.open_until) if window.open and window.open_until else None
     return ConfigResponse(
         env=settings.app_env,
         demoMode=settings.demo_mode,
         flags=settings.flags,
         auth=auth_config(settings),
         capabilities={"hostCaseClock": case_clock_available(request.app.openapi(), settings.flags)},
-        demo=DemoConfig(open=window.open, openUntil=until),
+        demo=DemoConfig(guestsByCode=request.app.state.demo_gate.flag_on),
     )

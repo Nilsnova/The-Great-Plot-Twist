@@ -56,8 +56,9 @@ and never logged.
       At most 5 places. 503 places_unavailable when the search fails (nothing is cached then).
 
 Budgets per player and server instance: 30 lock requests and 10 searches a minute (429
-too_many_requests with Retry-After). Common errors: 401 unauthorized, 403 demo_closed (a guest while
-the demo is closed), 502/503 database_* and auth_*, 503 lock_unavailable (the words file is broken).
+too_many_requests with Retry-After). Common errors: 401 unauthorized, 403 demo_closed (a guest not
+admitted with the class code), 502/503 database_* and auth_*, 503 lock_unavailable (the words file
+is broken).
 
 Used by: the game client (the Keeper's Lock screen, checkpoint C3).
 """

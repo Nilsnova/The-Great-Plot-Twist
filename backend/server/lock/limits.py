@@ -2,12 +2,13 @@
 
     lock reads and answers     30 requests per minute per player
     place searches             10 searches per minute per player
+    class code joins           10 tries per 10 minutes per player and per address (routes/demo.py)
 
 Over budget: 429 too_many_requests with a Retry-After header. The budgets protect Open-Meteo's
 free limits (a chosen place or a search can cause an outside call); the database still guards the
 answers themselves. Vercel may run several instances, so the budgets hold per instance only.
 
-Used by: app.py (one limiter per budget) and routes/lock.py.
+Used by: app.py (one limiter per budget), routes/lock.py and routes/demo.py.
 """
 
 import math
@@ -20,8 +21,16 @@ MAX_KEYS = 10000
 
 
 class PlayerBudget:
-    def __init__(self, limit: int, seconds: int, *, clock: Clock = utc_now) -> None:
+    def __init__(
+        self,
+        limit: int,
+        seconds: int,
+        *,
+        clock: Clock = utc_now,
+        message: str = "Wait a moment before you try that again.",
+    ) -> None:
         self.limit = limit
+        self.message = message
         self.window = timedelta(seconds=seconds)
         self.clock = clock
         self.recent: dict[str, list[datetime]] = {}
@@ -37,7 +46,7 @@ class PlayerBudget:
             raise ApiError(
                 429,
                 "too_many_requests",
-                "Wait a moment before you try that again.",
+                self.message,
                 headers={"Retry-After": str(wait)},
             )
         self.recent[player_id] = [*recent, now]
