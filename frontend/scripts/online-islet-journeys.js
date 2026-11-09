@@ -18,8 +18,13 @@ async function savedCaptain(page){
   assert.ok(saved.state==='saved'&&saved.healthy,'The native captain status confirms cloud save readiness');
 }
 async function chartLanding(page,place,label){
-  await page.locator('canvas[tabindex="0"]').focus();await page.keyboard.press('KeyM');
-  const chart=page.locator('.sea-chart[open]');await chart.waitFor();
+  // M is ignored while the world is still arriving (a cloud save can land on the Home islet): press it
+  // again, as a player would, until the chart opens.
+  const chart=page.locator('.sea-chart[open]');
+  for(let attempt=0;;attempt+=1){
+    await page.locator('canvas[tabindex="0"]').focus();await page.keyboard.press('KeyM');
+    try{await chart.waitFor({timeout:5000});break;}catch(error){if(attempt>=3)throw error;}
+  }
   await chart.getByRole('img',{name:'Built signal station',exact:true}).waitFor({state:'visible'});
   const landing=chart.locator(`[data-place="${place}"]`);
   assert.equal(await landing.getAttribute('aria-disabled'),'false','The public chart enables this recorded landing');
