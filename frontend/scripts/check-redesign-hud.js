@@ -22,8 +22,8 @@ try{
     await page.screenshot({path:join(output,`title-${width}.png`)});
   }
   await openFriendsThroughJoin(page);
-  await page.getByText('Online crews are not connected in this build.',{exact:true}).waitFor();
-  check(await page.getByText('Online crews are not connected in this build.',{exact:true}).isVisible(),'Unavailable online play has a short truthful explanation');
+  await page.getByText('Online crews are unavailable. You can explore solo.',{exact:true}).waitFor();
+  check(await page.getByText('Online crews are unavailable. You can explore solo.',{exact:true}).isVisible(),'Unavailable online play has a short truthful explanation');
   await page.getByRole('button',{name:'Back',exact:true}).click();await startPrologue(page);
   await page.locator('.intro-modal[open]').waitFor();
   await page.locator('.intro-modal[open] .intro-view').waitFor();

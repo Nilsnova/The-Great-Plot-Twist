@@ -12,13 +12,15 @@ const shot=name=>page.screenshot({path:`${out}/${name}.jpg`,type:'jpeg',quality:
 const position=()=>page.evaluate(()=>window.__island.player.position.toArray());
 const frames=()=>page.evaluate(async()=>{for(let i=0;i<5;i++)await new Promise(requestAnimationFrame);});
 try{
+ // The dev server serves each module separately; keep every resource entry past the default 250.
+ await page.addInitScript(()=>performance.setResourceTimingBufferSize(5000));
  await stubIntro(page);await page.setViewportSize({width:1280,height:720});await page.goto(env.url);
  await page.locator('.shell-screen[open]').waitFor();await page.locator('.title-backdrop').evaluate(img=>img.decode());
  check(await page.locator('.title-backdrop').evaluate(img=>img.naturalWidth===1672&&img.currentSrc.endsWith('places/title.webp')),'The title uses original detailed artwork, not a scaled thumbnail');
  check(await page.locator('canvas[tabindex]').count()===0,'Title starts without a WebGL renderer');await shot('after-title');
  await openFriendsThroughJoin(page);
- await page.getByText('Online crews are not connected in this build.',{exact:true}).waitFor();
- check(await page.getByText('Online crews are not connected in this build.',{exact:true}).isVisible(),'Friends opens straight from a Join code and honestly describes the pending G9 connection');
+ await page.getByText('Online crews are unavailable. You can explore solo.',{exact:true}).waitFor();
+ check(await page.getByText('Online crews are unavailable. You can explore solo.',{exact:true}).isVisible(),'Friends opens straight from a Join code and honestly says online crews are unavailable here');
  await page.getByRole('button',{name:'Back',exact:true}).click();await startPrologue(page);
  await page.locator('.intro-view').waitFor();await page.waitForFunction(()=>window.__island?.interiors?.roomId==='cottage'&&document.querySelector('.interiors-scene')?.dataset.state==='ready');
  await revealIntroText(page);
