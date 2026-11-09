@@ -203,8 +203,8 @@ export function createClassDemo(ctx) {
     } : null,
     onLit: () => audio?.cue?.('festival-claim'),
     onRelit: ({celebrate}) => {
-      objects.setRelit(true);audio?.cue?.('foghorn');audio?.cue?.('beam');
-      say('The lighthouse burns again!', 5000);
+      // One caption for the moment: the lamp status line says it; the voiced cutscene follows.
+      objects.setRelit(true);
       void playCutscene('lamps_relit').then(() => { if (!disposed && celebrate) objects.celebrate(); });
     }});
 

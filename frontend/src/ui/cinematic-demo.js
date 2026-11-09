@@ -23,6 +23,11 @@ export function createCinematicDemo(container,world,ctx={}) {
   const progress=createProgress({label:'Highlight'}),details=node('details'),summary=node('summary','','Individual shots');details.append(summary,label,play.element);
   body.append(copy,start.element,progress.element,next.element,stop.element,details);
   const panel=createPanel({title:'Presenter · local rehearsal',body});panel.element.classList.add('cinematic-demo','presenter-panel');container.append(panel.element);copy.setAttribute('role','status');
+  // In the class harbor the panel would cover the players: it folds into one small button (once; the presenter can reopen it).
+  const reopen=createButton({label:'Presenter',variant:'quiet',onClick:()=>fold(false)});
+  reopen.element.classList.add('presenter-reopen');reopen.element.hidden=true;container.append(reopen.element);
+  let folded=false,autoFolded=false;
+  function fold(value){folded=value;panel.element.hidden=value;reopen.element.hidden=!value;}
   let currentProgress=0;
   const presenter=createPresenter({steps:tourSteps,notes:speakerNotes,onAction(action,value){if(action==='next')tour.advance();else if(action==='back')tour.back();else if(action==='pause')tour.pause();else if(action==='restart')tour.restart();else if(action==='jump')tour.jump(value);}});
   body.append(presenter.element);
@@ -30,7 +35,7 @@ export function createCinematicDemo(container,world,ctx={}) {
   progress.element.hidden=true;next.element.hidden=true;stop.element.hidden=true;
   let lastChanging=null,lastProgressPercent=-1,lastShellHidden=null;
   return {get active(){return tour.active;},get paused(){return tour.paused;},get changing(){return tour.changing;},get step(){return tour.step;},start:tour.start,stop:tour.stop,
-    update(dt){tour.update(dt);performancePanel?.update();placePerformancePanel();if(lastChanging!==tour.changing){next.element.disabled=tour.changing;stop.element.disabled=tour.changing;lastChanging=tour.changing;}const percent=Math.round(currentProgress*100);if(percent!==lastProgressPercent){progress.update({value:currentProgress,max:1});lastProgressPercent=percent;}presenter.update({active:tour.active,index:tour.index,step:tour.active?tourSteps[tour.index]:null,paused:tour.paused,changing:tour.changing});const dialog=[...document.querySelectorAll('dialog[open]:not(.presenter-blank)')].at(-1),parent=tour.active&&dialog?dialog:container;if(panel.element.parentElement!==parent){parent.append(panel.element);panel.element.classList.toggle('in-dialog',parent!==container);}const shellHidden=!!document.querySelector('.shell-screen[open]');if(shellHidden!==lastShellHidden){panel.element.hidden=shellHidden;lastShellHidden=shellHidden;}},
-    dispose(){tour.dispose();presenter.dispose();performancePanel?.dispose();container.classList.remove('recording-frame');for(const button of [play,start,next,stop])button.dispose();progress.dispose();panel.dispose();},
+    update(dt){tour.update(dt);if(tour.active&&folded)fold(false);else if(!autoFolded&&!tour.active&&ctx.classHarborActive?.()){autoFolded=true;fold(true);}performancePanel?.update();placePerformancePanel();if(lastChanging!==tour.changing){next.element.disabled=tour.changing;stop.element.disabled=tour.changing;lastChanging=tour.changing;}const percent=Math.round(currentProgress*100);if(percent!==lastProgressPercent){progress.update({value:currentProgress,max:1});lastProgressPercent=percent;}presenter.update({active:tour.active,index:tour.index,step:tour.active?tourSteps[tour.index]:null,paused:tour.paused,changing:tour.changing});const dialog=[...document.querySelectorAll('dialog[open]:not(.presenter-blank)')].at(-1),parent=tour.active&&dialog?dialog:container;if(panel.element.parentElement!==parent){parent.append(panel.element);panel.element.classList.toggle('in-dialog',parent!==container);}const shellHidden=!!document.querySelector('.shell-screen[open]');if(shellHidden!==lastShellHidden){panel.element.hidden=shellHidden;lastShellHidden=shellHidden;}},
+    dispose(){tour.dispose();presenter.dispose();performancePanel?.dispose();container.classList.remove('recording-frame');for(const button of [play,start,next,stop,reopen])button.dispose();progress.dispose();panel.dispose();},
   };
 }

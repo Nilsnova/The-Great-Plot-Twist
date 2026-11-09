@@ -81,6 +81,8 @@ try{
   await page.waitForFunction(()=>window.__island.classDemo.debug.others.length>=10,null,{timeout:15000});
   await page.waitForTimeout(1200);await shot('21-rehearsal-harbor');
   check(await page.evaluate(()=>window.__island.experience.stats.drawn>=10),'Simulated captains are drawn in the harbor');
+  await page.locator('.presenter-reopen').waitFor();
+  check(await page.locator('.presenter-panel').isHidden(),'In the class harbor the presenter panel folds into one small button');
   // A simulated captain away from the lock and the lamps (those spots win the E key there).
   const nearBot=async()=>{const bot=await page.evaluate(()=>{const spots=[[6.2,14.2],[-5,16.4],[-2,14.6],[2.4,14.6]];const others=window.__island.classDemo.debug.others;
     return others.find(other=>spots.every(([x,z])=>Math.hypot(other.x+.8-x,other.y-z)>2.6))??others[0];});await teleport(bot.x+.8,bot.y);};
@@ -103,9 +105,11 @@ try{
   await page.locator('dialog.cutscene[open]').waitFor({timeout:12000});await page.waitForTimeout(1500);await shot('26-lamps-relight-cutscene');
   check(await cutsceneTitle()==='The three lamps','All three lamps within 20 s relight the lighthouse with the cutscene');
   await page.getByRole('button',{name:'Skip',exact:true}).click();await page.waitForTimeout(800);await shot('27-lighthouse-relit');
+  check(await page.evaluate(()=>[...document.querySelectorAll('.demo-toast,.lamp-status,.sound-caption')].filter(node=>!node.hidden&&node.getClientRects().length&&node.textContent.trim()).length)===1,'The relit lighthouse shows one caption, not three');
   await page.keyboard.press('KeyJ');await page.locator('.projector:not([hidden]) canvas').waitFor();await page.waitForTimeout(300);await shot('28-projector');
   check(await page.evaluate(()=>{const canvas=document.querySelector('.projector canvas');return canvas.width>200&&document.querySelector('.projector-code').textContent==='HARBOR';}),'J shows the projector panel with the QR canvas and HARBOR');
   await page.keyboard.press('KeyJ');
+  await page.locator('.presenter-reopen').click();check(await page.locator('.presenter-panel').isVisible()&&await page.locator('.presenter-reopen').isHidden(),'The Presenter button opens the panel again');
   check(writes.length===0,'The rehearsal sends no server writes');
   await page.keyboard.press('Escape');await page.locator('.shell-screen[open] .shell-menu').waitFor();
   check((await page.locator('.shell-menu button').allTextContents()).includes('Full mystery'),'The pause menu offers Full mystery');
