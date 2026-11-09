@@ -21,8 +21,8 @@
 //
 // Used by: src/net/live-places.js, src/online/realtime.js and tests/realtime.test.js.
 import {
-  MIN_EMOTE_GAP_MS, MIN_POSITION_GAP_MS, NAME_BATCH, NAME_RETRY_MS, describeError, isPrivatePlace, pickShown,
-  readCrewEvent, readEmote, readPosition,
+  MIN_EMOTE_GAP_MS, MIN_EXTRA_GAP_MS, MIN_POSITION_GAP_MS, NAME_BATCH, NAME_RETRY_MS, describeError, isClassPlace,
+  isPrivatePlace, pickShown, readCrewEvent, readEmote, readExtra, readPosition, shownLimit,
 } from './live-rules.js';
 
 export function createView({ getFacts, getClient, isStopped, notify, onHeard, now }) {
@@ -37,7 +37,7 @@ export function createView({ getFacts, getClient, isStopped, notify, onHeard, no
     const inPlace = [];
     for (const [id, peer] of peers) if (here.place && !isPrivatePlace(here.place) && peer.place === here.place) inPlace.push(id);
     const inRoom = here.room === null ? [] : inPlace.filter(id => peers.get(id).room === here.room);
-    const picked = pickShown({ peerIds: inRoom, placeCount: inPlace.length, crewIds: [...crewIds] });
+    const picked = pickShown({ peerIds: inRoom, placeCount: inPlace.length, crewIds: [...crewIds], max: shownLimit(here.place) });
     const nameOf = id => names.get(id) ?? null;
     const shown = picked.shownIds.map(id => ({ id, name: nameOf(id), kit: peers.get(id).kit, crewmate: crewIds.has(id) }));
     const crewOnline = [...crewIds].filter(id => peers.has(id)).sort().map(id => ({ id, name: nameOf(id), place: peers.get(id).place }));
@@ -84,6 +84,7 @@ export function createView({ getFacts, getClient, isStopped, notify, onHeard, no
 
   function accept(id, seq, kind, minGapMs) {
     const record = lastSeen.get(id) ?? { seq: -1, position: -Infinity, emote: -Infinity };
+    record[kind] ??= -Infinity;
     if (seq <= record.seq || now() - record[kind] < minGapMs) return false;
     record.seq = seq;
     record[kind] = now();
@@ -105,6 +106,19 @@ export function createView({ getFacts, getClient, isStopped, notify, onHeard, no
     notify({ type: 'live_peer_emoted', id: data.id, emote: data.emote });
   }
 
+  // An extra of the class harbor (a lamp state or a duel invitation). The sender must be in our room by
+  // the world's presence (shown or not), and is limited to one of each kind every 0.8 seconds.
+  function extra(event, payload) {
+    onHeard();
+    const { peers, here } = getFacts();
+    const data = readExtra(event, payload);
+    if (!data || !isClassPlace(here.place) || here.room === null) return;
+    const peer = peers.get(data.id);
+    if (!peer || peer.place !== here.place || peer.room !== here.room) return;
+    if (!accept(data.id, data.seq, `extra_${event}`, MIN_EXTRA_GAP_MS)) return;
+    notify({ type: 'live_peer_extra', id: data.id, event, data: data.data });
+  }
+
   function crewEvent(payload) {
     const event = readCrewEvent(payload);
     if (event) notify({ type: 'live_crew_updated', kind: event.kind, data: event.data });
@@ -115,5 +129,5 @@ export function createView({ getFacts, getClient, isStopped, notify, onHeard, no
     for (const id of lastSeen.keys()) if (!peers.has(id)) lastSeen.delete(id);
   }
 
-  return { refresh, position, emote, crewEvent, forgetGone };
+  return { refresh, position, emote, extra, crewEvent, forgetGone };
 }

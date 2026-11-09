@@ -11,7 +11,11 @@
 // over HTTPS (with a console warning), which is a different path with other limits. And only once the
 // world knows our place and room (the others ignore a captain they do not know).
 //
+// In the class harbor (G29) a second, small lane carries preset emotes, lamp states and duel
+// invitations at once, one message a second at most, instead of waiting for the next move slot.
+//
 //   update(sample)       every frame: { x, z, facing, moving }
+//   extra(event, data)   class harbor only: true if the lamp state or invitation will be sent
 //   emote(id)            true if the emote will be sent (preset only, one every 3 seconds)
 //   joined(ids)          our place room is joined; `ids` are the others in it
 //   noteMembers(ids)     the world changed; `ids` are the others in our room now
@@ -22,14 +26,15 @@
 //
 // Used by: src/net/live-places.js, src/online/realtime.js and tests/realtime.test.js.
 import {
-  EMOTES, EMOTE_COOLDOWN_MS, FACINGS, GUARD_EVERY_MS, GUARD_WINDOW_MS, LOAD_LIMIT, PROTOCOL_VERSION,
-  REPLY_DELAY_MAX_MS, REPLY_DELAY_MIN_MS, SLOW_MS, estimatedLoad, sendGapMs,
+  EMOTES, EMOTE_COOLDOWN_MS, EXTRA_EVENTS, EXTRA_GAP_MS, FACINGS, GUARD_EVERY_MS, GUARD_WINDOW_MS, LOAD_LIMIT,
+  PROTOCOL_VERSION, REPLY_DELAY_MAX_MS, REPLY_DELAY_MIN_MS, SLOW_MS, estimatedLoad, isClassPlace, sendGapMs,
 } from './live-rules.js';
 
 const round2 = value => Math.round(value * 100) / 100;
 
 export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounced, isSocketOpen, onSlowChange, later, cancel, random, now }) {
   const out = { sample: null, moving: false, stop: false, reply: false, replyTimer: null, emote: null, emoteAt: -Infinity, sentAt: -Infinity, timer: null, seq: Date.now() };
+  const lane = { queue: new Map(), sentAt: -Infinity, timer: null }; // the class harbor's extras lane
   const heard = [], sent = []; // when we heard or sent a message in the last 10 seconds (the guard)
   let members = new Set(); // the others in our room (the ones we could hear)
   let slowUntil = 0, slowTimer = null, guardTimer = null;
@@ -113,10 +118,39 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
   function emote(id) {
     if (!EMOTES.includes(id) || !roomIsOpen() || currentGap() === null) return false;
     if (now() - out.emoteAt < EMOTE_COOLDOWN_MS) return false;
-    out.emote = id;
     out.emoteAt = now();
+    if (isClassPlace(getPlace())) { // the class harbor: the wave shows at once
+      lane.queue.set('emote', id);
+      pumpLane();
+      return true;
+    }
+    out.emote = id;
     pump();
     return true;
+  }
+
+  // ---- the extras lane (class harbor only) ----
+  function extra(event, data) {
+    if (!EXTRA_EVENTS.includes(event) || !isClassPlace(getPlace()) || !roomIsOpen() || currentGap() === null) return false;
+    lane.queue.set(event, data); // a newer state of the same kind replaces the waiting one
+    pumpLane();
+    return true;
+  }
+
+  function pumpLane() {
+    if (lane.timer || !lane.queue.size || !roomIsOpen()) return;
+    const wait = lane.sentAt + EXTRA_GAP_MS * (isSlow() ? 2 : 1) - now();
+    if (wait > 0) {
+      lane.timer = later(() => { lane.timer = null; pumpLane(); }, wait);
+      return;
+    }
+    const [event, data] = lane.queue.entries().next().value;
+    lane.queue.delete(event);
+    out.seq += 1;
+    if (event === 'emote') broadcast('emote', { v: PROTOCOL_VERSION, id: playerId, emote: data, seq: out.seq });
+    else broadcast(event, { v: PROTOCOL_VERSION, id: playerId, seq: out.seq, data });
+    lane.sentAt = now();
+    if (lane.queue.size) lane.timer = later(() => { lane.timer = null; pumpLane(); }, EXTRA_GAP_MS);
   }
 
   // ---- the others in our room ----
@@ -144,6 +178,9 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
   function reset() {
     cancel(out.timer);
     cancel(out.replyTimer);
+    cancel(lane.timer);
+    lane.timer = null;
+    lane.queue.clear();
     out.timer = null;
     out.replyTimer = null;
     out.reply = false;
@@ -186,5 +223,5 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
     heard.push(now());
   }
 
-  return { update, emote, joined, noteMembers, pump, reset, hear, turnOnSlow, isSlow };
+  return { update, emote, extra, joined, noteMembers, pump, reset, hear, turnOnSlow, isSlow };
 }

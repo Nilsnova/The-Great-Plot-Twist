@@ -16,6 +16,8 @@
 //                                            we are, so that the first announcement already holds the room
 //   live.update({ x, z, facing, moving })    every frame. The module slows itself down.
 //   live.emote('wave')                       true if the emote will be sent
+//   live.extra('lamp', data)                 class harbor only (G29): a lamp state or a duel invitation
+//                                            in the extras lane; true if it will be sent
 //   live.setCrew({ id, memberIds } | null)   live.setKit(kit | null)   when they change
 //   live.stop()                              in dispose(), and when the player signs out
 // Import this file only from the lazily loaded game code (src/game.js) or with `await import()`, never
@@ -40,21 +42,23 @@
 //   live_peer_moved       { id, x, z, facing, moving, everyMs }   a shown captain sent a valid position
 //   live_peer_emoted      { id, emote }                           a shown captain sent a valid emote
 //   live_crew_updated     { kind, data }                          the server sent a crew event
+//   live_peer_extra       { id, event, data }                     class harbor: a lamp state or a duel
+//                                                                 invitation of a captain in our room
 //
 // Used by: the game (once it is wired in), the screens adapter that listens to the events, and
 // tests/realtime.test.js.
 import { emit as busEmit } from '../core/events.js';
-import { START_DELAY_MS, crewTopic, describeError, isPlayerId } from '../net/live-rules.js';
+import { crewTopic, describeError, isPlayerId, startDelayMs } from '../net/live-rules.js';
 import { createPlaces } from '../net/live-places.js';
 import { createRooms } from '../net/live-rooms.js';
 import { createSender } from '../net/live-sender.js';
 import { createView } from '../net/live-view.js';
 
 // What the module hands back when it is switched off: every method does nothing.
-const idleController = () => ({ setPlace() {}, update() {}, emote: () => false, setCrew() {}, setKit() {}, stop() {} });
+const idleController = () => ({ setPlace() {}, update() {}, emote: () => false, extra: () => false, setCrew() {}, setKit() {}, stop() {} });
 
 export function startRealtime({
-  enabled, playerId, getAccessToken, kit = null, crew = null,
+  enabled, playerId, getAccessToken, kit = null, crew = null, classHarbor = false,
   supabaseUrl = import.meta.env.VITE_SUPABASE_URL,
   publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   emit = busEmit, createClient = null, random = Math.random, now = () => performance.now(),
@@ -112,7 +116,7 @@ export function startRealtime({
     getFacts: () => ({ peers: places.peers(), here: places.here(), crewIds }),
     getClient: () => client, isStopped: () => stopped, notify, onHeard: () => sender.hear(), now,
   });
-  const places = createPlaces({ playerId, kit, rooms, sender, view, getCrewIds: () => crewIds, setState, later, random, now });
+  const places = createPlaces({ playerId, kit, rooms, sender, view, getCrewIds: () => crewIds, setState, later, random, now, classHarbor });
 
   // ---- the login token ----
   // The library asks for the token on connect, when a room is joined and every 25 seconds. It always
@@ -198,12 +202,13 @@ export function startRealtime({
 
   applyCrew(crew);
   setState('connecting');
-  later(boot, Math.floor(random() * START_DELAY_MS));
+  later(boot, startDelayMs(classHarbor, random)); // the class harbor (G29) starts at once
 
   return {
     setPlace(place) { if (!stopped) places.setPlace(place); },
     update(sample) { if (!stopped) sender.update(sample); },
     emote: id => !stopped && sender.emote(id),
+    extra: (event, data) => !stopped && sender.extra(event, data),
     setCrew(next) { if (!stopped) applyCrew(next); },
     setKit(next) { if (!stopped) places.setKit(next); },
     stop: shutDown,

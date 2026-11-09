@@ -49,6 +49,24 @@ const SNAP_FACTOR = 1.5; // a jump longer than this many gaps of sprinting is no
 export const MAX_CREW_DATA_BYTES = 1024;
 
 export const START_DELAY_MS = 5000; // the first join waits a random time up to this
+
+// The class harbor (G29): one shared room for a class demo, live:place:class_harbor:1. Everybody who
+// joins by the projector QR stands in Saltreach Harbor but announces this place, so ~30 phones and the
+// presenter share one room. Its numbers differ from the normal rooms on purpose:
+//   * up to 40 other captains in the room and all of them drawn (the normal rooms: 4 to 9, 8 drawn);
+//   * no random start delay, and a shorter announcement jitter (phones arrive one by one from the QR,
+//     so they do not announce together the way a whole class opening the game at once would);
+//   * moves keep the same budget (sendGapMs): with 30 captains a captain sends about every 15 s;
+//   * a small "extras" lane for preset emotes, lamp states and duel invitations, one message a second
+//     at most per captain, so a wave shows at once instead of waiting for the next move slot.
+export const CLASS_HARBOR_PLACE = 'class_harbor';
+export const CLASS_HARBOR_ROOM = 1;
+export const CLASS_ROOM_SIZE = 40; // other captains in the class room, all drawn
+export const CLASS_TRACK_JITTER_MS = 4000;
+export const EXTRA_EVENTS = ['lamp', 'duel'];
+export const EXTRA_GAP_MS = 1000; // we send at most one extra this often
+export const MIN_EXTRA_GAP_MS = 800; // and accept one per captain and kind this often
+export const MAX_EXTRA_DATA_BYTES = 512;
 // Every announcement of ours is delivered to everyone online, so a class that opens the game together
 // (or a Realtime blip that drops everybody) would announce itself all at once. After every join of the
 // world room, the first announcement waits a random time up to this, on top of the start delay.
@@ -71,6 +89,14 @@ const RETRY_SPREAD_MS = 2000;
 const RETRY_SPREAD_CAP_MS = 30000;
 const MESSAGE_RATE_WAIT_MS = 10000; // the server said "Too many messages per second"
 const PRESENCE_RATE_WAIT_MS = 30000; // the server said something about presence rates
+
+// --- the class harbor ---
+
+export const isClassPlace = place => place === CLASS_HARBOR_PLACE;
+// The most other captains drawn in a room of this place.
+export const shownLimit = place => (isClassPlace(place) ? CLASS_ROOM_SIZE : MAX_SHOWN);
+export const startDelayMs = (classHarbor, random = Math.random) => (classHarbor === true ? 0 : Math.floor(random() * START_DELAY_MS));
+export const trackJitterMs = (classHarbor, random = Math.random) => random() * (classHarbor === true ? CLASS_TRACK_JITTER_MS : TRACK_JITTER_MS);
 
 // --- small checks ---
 
@@ -160,9 +186,10 @@ export function roomsOf(peers, place, crewIds) {
 // Which room to join. `roomCounts` is {room number: captains there now}, without us.
 // A room where a crewmate already is wins, even if it is full. Otherwise the first room with space.
 // null only if all 99 rooms are full.
-export function chooseRoom({ roomCounts = {}, crewmateRooms = [], online = 1 } = {}) {
-  if (crewmateRooms.length > 0) return Math.min(...crewmateRooms);
-  const limit = roomLimit(online);
+// The class harbor (place class_harbor) holds 40 others in room 1 before it opens room 2.
+export function chooseRoom({ roomCounts = {}, crewmateRooms = [], online = 1, place = null } = {}) {
+  if (crewmateRooms.length > 0 && !isClassPlace(place)) return Math.min(...crewmateRooms);
+  const limit = isClassPlace(place) ? CLASS_ROOM_SIZE : roomLimit(online);
   for (let room = 1; room <= MAX_ROOM_NUMBER; room += 1) {
     if ((roomCounts[room] ?? 0) < limit) return room;
   }
@@ -254,6 +281,15 @@ export function readCrewEvent(payload) {
   return { kind: payload.kind, data };
 }
 
+// An extra of the class harbor: a lamp state or a duel invitation, {v, id, seq, data}. Only the kinds
+// in EXTRA_EVENTS, and data a small object. null if it is not valid.
+export function readExtra(event, payload) {
+  if (!EXTRA_EVENTS.includes(event) || !isRecord(payload) || payload.v !== PROTOCOL_VERSION) return null;
+  if (!isPlayerId(payload.id) || !isSequence(payload.seq)) return null;
+  if (!isRecord(payload.data) || jsonBytes(payload.data) > MAX_EXTRA_DATA_BYTES) return null;
+  return { id: payload.id, event, seq: payload.seq, data: payload.data };
+}
+
 // A "system" message of Supabase. Only the two warnings about rates matter: they say how long to
 // wait before we join again, and whether to slow down. Everything else gives null.
 export function readSystemNotice(payload) {
@@ -272,6 +308,7 @@ export function readSystemNotice(payload) {
 // Which captains of our room to draw: at most `max`, crewmates first, then the rest by id.
 // `placeCount` is all the other captains in our place, in every room, so the rest can be counted.
 export function pickShown({ peerIds, placeCount, crewIds = [], max = MAX_SHOWN }) {
+  // max: shownLimit(place), so 40 in the class harbor.
   const crew = new Set(crewIds);
   const byId = [...peerIds].sort();
   const ordered = [...byId.filter(id => crew.has(id)), ...byId.filter(id => !crew.has(id))];

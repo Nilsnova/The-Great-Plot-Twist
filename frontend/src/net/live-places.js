@@ -23,11 +23,13 @@
 //
 // Used by: src/online/realtime.js and tests/realtime.test.js.
 import {
-  PROTOCOL_VERSION, TRACK_GAP_MS, TRACK_JITTER_MS, WORLD_TOPIC,
-  chooseRoom, isKit, isPlaceId, isPrivatePlace, placeTopic, readWorld, roomsOf, roomToMoveTo,
+  EXTRA_EVENTS, PROTOCOL_VERSION, TRACK_GAP_MS, WORLD_TOPIC,
+  chooseRoom, isClassPlace, isKit, isPlaceId, isPrivatePlace, placeTopic, readWorld, roomsOf, roomToMoveTo, trackJitterMs,
 } from './live-rules.js';
 
-export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, setState, later, random, now }) {
+// classHarbor: true when the player came for the class harbor (G29); the first announcement then waits
+// a shorter random time (CLASS_TRACK_JITTER_MS instead of TRACK_JITTER_MS).
+export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, setState, later, random, now, classHarbor = false }) {
   let world = null, placeRoom = null; // the rooms, made by rooms.open()
   let worldReady = false; // the first presence sync of the world room has come
   let wantedPlace; // the place the game asked for (undefined until it first says where we are)
@@ -49,7 +51,7 @@ export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, s
       subscribed: () => {
         trackedJson = null; // a new room does not know us yet
         announcedAs = null;
-        trackNotBefore = now() + random() * TRACK_JITTER_MS;
+        trackNotBefore = now() + trackJitterMs(classHarbor, random);
         setState(sender.isSlow() ? 'slow' : 'live');
         scheduleTrack();
       },
@@ -130,7 +132,7 @@ export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, s
       return;
     }
     here = { place, room: null, settled: false };
-    enterRoom(chooseRoom({ ...roomsOf(peers, place, getCrewIds()), online }));
+    enterRoom(chooseRoom({ ...roomsOf(peers, place, getCrewIds()), online, place }));
   }
 
   function enterRoom(number) {
@@ -144,6 +146,10 @@ export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, s
       wire: channel => {
         channel.on('broadcast', { event: 'position' }, message => channel === placeRoom?.channel && view.position(message?.payload));
         channel.on('broadcast', { event: 'emote' }, message => channel === placeRoom?.channel && view.emote(message?.payload));
+        // The class harbor's extras (lamp states, duel invitations) exist only in that room.
+        if (isClassPlace(here.place)) for (const event of EXTRA_EVENTS) {
+          channel.on('broadcast', { event }, message => channel === placeRoom?.channel && view.extra(event, message?.payload));
+        }
       },
       subscribed: () => placeJoined(number),
       refused: () => { // we may not join: say the place only
@@ -177,7 +183,7 @@ export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, s
 
   // Two crewmates who arrived at the same moment may sit in different rooms. The one in the higher room moves down.
   function followCrewmate() {
-    if (!placeRoom || here.room === null || !here.settled) return;
+    if (!placeRoom || here.room === null || !here.settled || isClassPlace(here.place)) return;
     const lower = roomToMoveTo(here.room, roomsOf(peers, here.place, getCrewIds()).crewmateRooms);
     if (lower !== null) enterRoom(lower);
   }

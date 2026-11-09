@@ -1,6 +1,7 @@
 // A4 owns connections and rate limits; this adapter holds only cosmetic peer data and safe display IDs.
 import {emit as busEmit} from '../../core/events.js';
 import {EMOTE_COOLDOWN_MS, MAX_COORD, MIN_GAP_MS, isPlaceId, isPlayerId} from '../../net/live-rules.js';
+import {attachExtraSender, wantsClassHarbor} from '../../net/live-extras.js';
 import {ONLINE_EMOTES, wireFacing, presenceStatus, projectOnlinePresence} from './presence-view.js';
 
 const BUBBLE_MS = 1800;
@@ -13,7 +14,7 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
   let status = 'off', place = null, shown = [], onlineCrew = [], memberSeats = [], hiddenCount = 0;
   let localEmote = null, cooldownUntil = 0, nextTick = Infinity;
   let hidden = Boolean(ctx.document?.hidden), restartAt = 0, lastForwardAt = -Infinity, restartWait = null, pendingPosition = null;
-  let positionSequence = 0;
+  let positionSequence = 0, detachExtras = null;
   const opaqueId = id => {
     if (!opaqueIds.has(id)) opaqueIds.set(id, `live-captain-${++serial}`);
     return opaqueIds.get(id);
@@ -43,6 +44,7 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
     const waiting = restartWait; restartWait = null;
     if (waiting) { clearTimeout(waiting.timer); waiting.resolve(); }
     const previous = record; record = null;
+    detachExtras?.(); detachExtras = null;
     stopping = true;
     try { previous?.live.stop(); } catch { /* Always clear the held peer data. */ }
     finally { stopping = false; }
@@ -149,10 +151,13 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
         const live = module.startRealtime({enabled: true, playerId: state.me.id, kit: state.me.kit?.id ?? state.me.kit,
           crew: state.crew?.id ? {id: state.crew.id, memberIds: []} : null,
           getAccessToken: () => current(token) ? ctx.auth.getAccessToken() : Promise.resolve(null),
-          supabaseUrl, publishableKey, random: ctx.random, now: ctx.now,
+          supabaseUrl, publishableKey, random: ctx.random, now: ctx.now, classHarbor: wantsClassHarbor(),
           emit: event => receive(event, token)});
         if (!current(token)) { live.stop(); return; }
         const active = {live, crewTask: null, localPlace: null}; record = active;
+        detachExtras?.();
+        detachExtras = attachExtraSender((event, data) => record === active && current(token) && !hidden
+          && active.live.extra?.(event, data) === true);
         if (place) { active.localPlace = place; live.setPlace(place); }
         if (hidden || !current(token) || record !== active) { if (record === active) stop(); return; }
         const queued = pendingPosition; pendingPosition = null;
