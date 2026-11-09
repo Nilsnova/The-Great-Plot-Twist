@@ -1,10 +1,11 @@
 // Host-only presentation flow. The API remains authoritative; retry UUIDs survive unknown outcomes.
 export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) {
-  let epoch=0, authorized=false, overview=null, records=[],clockIntent=null,clockUncertain=false;
+  let epoch=0, authorized=false, overview=null, records=[],clockIntent=null,clockUncertain=false,demo=null,demoIntent=null,cleanupIntent=null;
   const actions=new Map(), pending=new Set();
   function lock(message='Not a host',discardIntent=true) {
     epoch++;authorized=false;records=[];overview=null;
-    if(discardIntent){clockIntent=null;clockUncertain=false;actions.clear();}
+    if(discardIntent){clockIntent=null;clockUncertain=false;demoIntent=null;cleanupIntent=null;actions.clear();}
+    demo=null;
     view.hide();view.say(message);
   }
   function failure(answer) {
@@ -23,9 +24,13 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
     if(!crews.ok){lock(failure(crews),crews.status===401||crews.status===403);return;}
     const config=await api.get('/api/config');
     if(turn!==epoch)return;
+    // The class demo status is a separate read: if it fails the panel says Unknown, the rest still works.
+    const demoRead=await api.get('/api/host/demo');
+    if(turn!==epoch)return;
+    demo=demoRead.ok&&typeof demoRead.data?.open==='boolean'?demoRead.data:null;
     authorized=true;overview={...summary.data,caseClockAvailable:config.ok&&config.data?.capabilities?.hostCaseClock===true};
     records=crews.data.crews;
-    view.show(overview,crews.data,api.headerChecks());
+    view.show(overview,crews.data,api.headerChecks(),demo);
     view.say(`Host access confirmed · checked ${new Date().toLocaleTimeString()}`);
   }
   async function closeCrew(id,confirmed) {
@@ -78,5 +83,44 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
       }
     } finally {pending.delete('clock');view.clockBusy?.(false);}
   }
-  return {refresh,closeCrew,setClock,lock};
+  const uncertain=answer=>answer.status===0||answer.status>=500;
+  async function setDemo(hours) {
+    if(!authorized||pending.has('demo'))return;
+    if(!Number.isInteger(hours)||hours<0||hours>6)return;
+    if(demoIntent&&demoIntent.hours!==hours){view.say('Retry the unconfirmed demo change first (same button), then change it again.');return;}
+    demoIntent??={hours,actionUid:newUid()};
+    const turn=epoch;pending.add('demo');view.demoBusy?.(true);
+    try {
+      const answer=await api.post('/api/host/demo',demoIntent);
+      if(turn!==epoch)return;
+      if(answer.ok) {
+        const data=answer.data;
+        if(typeof data?.flagOn!=='boolean'||typeof data.open!=='boolean'){view.say('Demo outcome unknown. Press the same button again; the action ID is retained.');return;}
+        demoIntent=null;demo={flagOn:data.flagOn,open:data.open,openUntil:data.openUntil??null};
+        view.demoUpdate?.(demo);
+        view.say(hours===0?'Demo window closed. Guests are refused now.':
+          data.flagOn?'Demo window opened for 2 hours.':'Window opened, but the demo flag is off, so guests are still refused.');
+      } else if(answer.status===401||answer.status===403)lock();
+      else if(uncertain(answer))view.say('Demo outcome unknown. Press the same button again; the action ID is retained.');
+      else {demoIntent=null;view.say(answer.message||'The demo window was not changed.');}
+    } finally {pending.delete('demo');if(turn===epoch)view.demoBusy?.(false);}
+  }
+  async function cleanupGuests(confirmed) {
+    if(!authorized||!confirmed||pending.has('cleanup'))return;
+    cleanupIntent??={actionUid:newUid()};
+    const turn=epoch;pending.add('cleanup');view.demoBusy?.(true);
+    try {
+      const answer=await api.post('/api/host/demo/cleanup',cleanupIntent);
+      if(turn!==epoch)return;
+      if(answer.ok) {
+        const {checked,deleted,more}=answer.data??{};
+        if(!Number.isInteger(checked)||!Number.isInteger(deleted)||typeof more!=='boolean'){view.say('Clean-up outcome unknown. Press it again; the action ID is retained.');return;}
+        cleanupIntent=null;view.demoUpdate?.(demo,true);
+        view.say(`Removed ${deleted} guest ${deleted===1?'account':'accounts'} (checked ${checked}).${more?' More old guests remain. Run it again.':''}`);
+      } else if(answer.status===401||answer.status===403)lock();
+      else if(uncertain(answer))view.say('Clean-up outcome unknown. Press it again; the action ID is retained.');
+      else {cleanupIntent=null;view.say(answer.message||'Clean-up failed.');}
+    } finally {pending.delete('cleanup');if(turn===epoch)view.demoBusy?.(false);}
+  }
+  return {refresh,closeCrew,setClock,setDemo,cleanupGuests,lock};
 }

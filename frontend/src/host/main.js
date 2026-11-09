@@ -10,7 +10,8 @@ const api=createHostApi({session});
 const view=createHostView();
 const controller=createHostController({api,view});
 view.bind({refresh:()=>controller.refresh(),closeCrew:(id,confirmed)=>controller.closeCrew(id,confirmed),
-  setClock:seconds=>controller.setClock(seconds),signIn:async()=>{
+  setClock:seconds=>controller.setClock(seconds),setDemo:hours=>controller.setDemo(hours),
+  cleanup:confirmed=>controller.cleanupGuests(confirmed),signIn:async()=>{
     try {await startHostLogin();} catch {view.say('Sign-in unavailable. Check the project and callback settings.');}
   },forget:()=>{session.clearToken();api.resetHeaders();controller.lock();view.signedIn(false);}});
 try {
