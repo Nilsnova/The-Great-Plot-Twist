@@ -17,3 +17,14 @@ export function menuExtras() {
   }
   return entries;
 }
+
+// The Lighthouse prologue is the full mystery (G29): whoever starts it (pause menu or Settings > Story)
+// tells the running class demo, which leaves the demo path. A demo loaded later reads the saved path.
+const prologueListeners = new Set();
+export function onPrologue(listener) {
+  prologueListeners.add(listener);
+  return () => prologueListeners.delete(listener);
+}
+export function notePrologue() {
+  for (const listener of prologueListeners) { try { listener(); } catch { /* Never blocks the prologue. */ } }
+}

@@ -3,6 +3,8 @@
 import {hasLocalIntro} from './logic.js';
 import {introJournal} from '../story/intro-journal.js';
 import {playChoice,HARBOR_START} from '../front-door/logic.js';
+import {notePrologue} from './menu-extras.js';
+import {PATH_KEY} from '../class-demo/harbor.js';
 
 // Title Play: continue a saved story, otherwise the front door (lore, goal card, harbor).
 export async function start(flow,replay=false){
@@ -16,6 +18,8 @@ export async function start(flow,replay=false){
 }
 // The original Act 1, now the optional Lighthouse prologue: resume a local intro or start one.
 export async function prologue(flow){
+  try{localStorage.setItem(PATH_KEY,'full');}catch{/* The running demo still hears it below. */}
+  notePrologue();
   const current=flow.claim();const game=await flow.loadGame();
   if(current())await game?.begin(hasLocalIntro(introJournal().read()));
 }

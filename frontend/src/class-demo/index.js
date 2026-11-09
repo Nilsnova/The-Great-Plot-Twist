@@ -9,7 +9,7 @@ import {node} from '../ui/kit/dom.js';
 import {api as defaultApi} from '../online/api.js';
 import {isMe, resolvePeer, sendExtra, setClassHarbor} from '../net/live-extras.js';
 import {CLASS_HARBOR_PLACE} from '../net/live-rules.js';
-import {addMenuExtras} from '../shell/menu-extras.js';
+import {addMenuExtras, onPrologue} from '../shell/menu-extras.js';
 import {readQuests, writeQuests, completeQuest, playerKey, questView} from './quests.js';
 import {HARBOR_PLACE, LOCK_SPOT, LAMP_SPOTS, arrivals, joinedText, nearestSpot, presencePlace, readInvite, rememberInvite, readPath, writePath} from './harbor.js';
 import {nearestCaptain} from './duel-shortcut.js';
@@ -109,6 +109,7 @@ export function createClassDemo(ctx) {
     if (!joined && path === 'demo') entries.push({label: 'Join the class harbor', onSelect: joinHarbor});
     return entries;
   });
+  const stopPrologue = onPrologue(() => { if (path !== 'full') setPath('full'); });
   function setPath(next) {
     path = next;writePath(storage, next);applyPath();
   }
@@ -317,7 +318,7 @@ export function createClassDemo(ctx) {
     },
     dispose() {
       if (disposed) return;
-      disposed = true;clearTimeout(toastTimer);stopMenu();for (const stop of stops) stop();
+      disposed = true;clearTimeout(toastTimer);stopMenu();stopPrologue();for (const stop of stops) stop();
       canvas?.removeEventListener('click', tapCaptain);
       lock?.dispose();duel?.dispose();projector?.dispose();finale.dispose();objects.dispose();cutscene?.dispose?.();
       ctx.simulate?.(null);container.classList.remove('demo-path');layer.remove();
