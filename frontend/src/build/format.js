@@ -1,4 +1,4 @@
-// One public label for title HTML, Settings, the world badge and performance copies.
+// One public label for title HTML, Settings > About, Credits and performance copies.
 export function formatBuildStamp(stamp) {
   return `Build ${stamp.sha}${stamp.environment ? ` · ${stamp.environment}` : ''}`;
 }

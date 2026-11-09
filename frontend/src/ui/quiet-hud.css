@@ -16,3 +16,5 @@
 .presenter-panel .tour-copy{font-size:16px;line-height:1.6;margin:0}.presenter-panel details{font-size:16px;line-height:1.5}.presenter-panel summary{cursor:pointer;min-height:44px}.presenter-panel.in-dialog{position:static;width:auto;max-width:none;margin-top:18px;padding:16px}.presenter-panel.in-dialog .kit-heading{font-size:18px}.presenter-panel.in-dialog .cinematic-demo-body{gap:10px}.presenter-panel{max-height:calc(100dvh - 180px);overflow:auto}
 
 .hud-quiet .case-toolbar .bulletin-toggle{grid-column:1 / -1;min-width:0;white-space:normal}
+/* Signed-out players: the captain box holds nothing, so it takes no space in the top bar. */
+.hud .captain-status:not(:has(>:not([hidden]))){display:none}

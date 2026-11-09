@@ -7,7 +7,7 @@ export default function createCaptionsView(container) {
     const inDialog=!!element.closest('dialog');element.classList.toggle('in-dialog',inDialog);
     if(inDialog){element.style.removeProperty('bottom');return;}
     // Keep the caption over the scenery, above readable HUD controls and prompts.
-    const controls=[...container.querySelectorAll('.bottom-bar,.interact:not([hidden]),.build-badge')].filter(node=>node.getClientRects().length);
+    const controls=[...container.querySelectorAll('.bottom-bar,.interact:not([hidden])')].filter(node=>node.getClientRects().length);
     const top=Math.min(innerHeight,...controls.map(node=>node.getBoundingClientRect().top));
     element.style.bottom=`${Math.max(18,innerHeight-top+12)}px`;
   }

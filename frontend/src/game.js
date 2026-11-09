@@ -53,7 +53,6 @@ import { createCharacter } from './player/character.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
-import {createBuildBadge} from './build/badge.js';
 import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 
 export async function startGame({container,shell,audio,captions,caseAdapter,isAppBlocked,festivalEntry,openAccount,session=defaultSession}) {
@@ -61,7 +60,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const shortcuts=createShortcutsHost(container);
   const scene = new THREE.Scene();
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
-  const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement),buildBadge=createBuildBadge(container);
+  const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
@@ -177,7 +176,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   try { await world.goTo('lighthouse_isle'); }
   catch (error) {
     disposed=true;container.removeEventListener('close',panelClosed,true);stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
-    buildBadge.dispose();createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
+    createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   const createCinematicDemo=['demo','perf'].some(key=>new URLSearchParams(location.search).get(key)==='1')?(await import('./ui/cinematic-demo.js')).createCinematicDemo:()=>({active:false,start(){},update(){},dispose(){}});
   demo=createCinematicDemo(container,world,{chart,sailing,player:controller.player,view,hud,isletState,quality:setUserQuality,readStats(){const info=graphics.renderer.info;return {fps,calls:info.render.calls,triangles:info.render.triangles,geometries:info.memory.geometries,textures:info.memory.textures,quality:settings.quality};},
@@ -259,7 +258,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);
     mapTouch?.dispose();onboarding?.dispose();roomRequest++;interiors?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
-    disposeDiagnostics();buildBadge.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
+    disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {

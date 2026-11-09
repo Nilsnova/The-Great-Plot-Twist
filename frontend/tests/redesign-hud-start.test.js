@@ -75,11 +75,27 @@ it('keeps a ready Tonight caption inside Journal with readable wrapping and phon
 it('keeps supplied captain data literal and its save state honest',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});
-    hud.setCaptain({captain:{name:'<img src=x onerror=alert(1)>',save:{state:'saving',label:'Waiting for the server'}},rewards:{keepsakes:[]}});
+    hud.setCaptain({account:{state:'signed_in'},captain:{name:'<img src=x onerror=alert(1)>',save:{state:'saving',label:'Waiting for the server'}},rewards:{keepsakes:[]}});
     const name=document.querySelector('.captain-status strong'),save=document.querySelector('.captain-status span');
-    const result={literal:name.textContent,children:name.children.length,state:save.dataset.state,status:save.textContent};hud.dispose();return result;
+    const result={literal:name.textContent,children:name.children.length,state:save.dataset.state,status:save.textContent,shown:!!name.getClientRects().length&&!!save.getClientRects().length};hud.dispose();return result;
   });
-  expect(result).toEqual({literal:'<img src=x onerror=alert(1)>',children:0,state:'saving',status:'Saving · Waiting for the server'});
+  expect(result).toEqual({literal:'<img src=x onerror=alert(1)>',children:0,state:'saving',status:'Saving · Waiting for the server',shown:true});
+});
+
+it('shows no captain or save text in the top bar for a player who is not signed in',async()=>{
+  const result=await evaluate(async()=>{
+    const {createHud}=await window.g20Import('/src/ui/hud.js');const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});
+    const read=()=>{const box=document.querySelector('.captain-status');return {text:box.textContent,shown:!!box.getClientRects().length};};
+    const before=read();
+    hud.setCaptain({account:{state:'signed_out',save:{state:'idle',label:'No saved progress'}},captain:{name:'Captain pending',save:{state:'idle',label:'No saved progress'}},rewards:{keepsakes:[]}});
+    const signedOut=read();
+    hud.setCaptain({captain:{name:'Captain pending',save:{state:'idle',label:'Local intro only'}},rewards:{keepsakes:[]}});
+    const noAccount=read();
+    hud.setCaptain({account:{state:'expired',save:{state:'saved',label:'Saved on this device'}},captain:{name:'Captain Fern',save:{state:'saved',label:'Saved'}},rewards:{keepsakes:[]}});
+    const expired=read();hud.dispose();return {before,signedOut,noAccount,expired};
+  });
+  for(const view of [result.before,result.signedOut,result.noAccount])expect(view).toEqual({text:'',shown:false});
+  expect(result.expired.shown).toBe(true);expect(result.expired.text).toContain('Captain Fern');expect(result.expired.text).toContain('Sign in again');
 });
 
 it('offers exactly Play and Join on the title, and reaches the friends flow through a Join code',async()=>{
@@ -142,6 +158,27 @@ it('keeps account, sign-in providers, the prologue and the build stamp in Settin
     await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
     expect(await page.evaluate(()=>({prologues:window.prologues,mode:window.settingsShell.mode}))).toEqual({prologues:1,mode:'playing'});
     await page.evaluate(()=>window.settingsShell.dispose());
+  });
+});
+
+it('keeps the focused Settings account control in place while only the case changes',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createShell}=await window.g20Import('/src/shell/controller.js');
+      const account={state:'signed_out',captainName:null,canSignIn:true,providers:['github'],save:{state:'idle',label:'No saved progress'}};
+      window.accountView={account,revision:0};window.accountListeners=new Set();
+      window.tickShell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,
+        adapter:{read:()=>window.accountView,subscribe:listener=>{window.accountListeners.add(listener);return ()=>window.accountListeners.delete(listener);}},
+        send:async()=>({accepted:true}),openAccount(){},onPrologue(){},settingsView:async()=>document.createElement('div')});
+      window.emitAccount=view=>{window.accountView=view;for(const listener of [...window.accountListeners])listener({type:'case_updated',view});};
+    });
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
+    const signIn=page.getByRole('button',{name:'Sign in with GitHub',exact:true});await signIn.waitFor();await signIn.focus();
+    const same=await page.evaluate(()=>{const before=document.activeElement;for(let tick=1;tick<=3;tick++)window.emitAccount({...window.accountView,revision:tick});return document.activeElement===before&&before.isConnected;});
+    expect(same).toBe(true);
+    await page.evaluate(()=>window.emitAccount({...window.accountView,account:{...window.accountView.account,state:'signed_in',captainName:'Captain Fern'}}));
+    await page.locator('.account-summary').getByText('Captain Fern',{exact:true}).waitFor();
+    await page.evaluate(()=>window.tickShell.dispose());
   });
 });
 

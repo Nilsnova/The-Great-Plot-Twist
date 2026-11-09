@@ -1,4 +1,4 @@
-// Verify the injected identity in built files, menus and the presenter-safe world badge.
+// Verify the injected identity in built files and Settings > About, and that play shows no build badge.
 import assert from 'node:assert/strict';
 import {readFile,readdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
@@ -22,9 +22,9 @@ try{
   check(await page.locator('.build-info').getAttribute('data-sha')===stamp.sha,'Credits uses the same build identity');
   await page.screenshot({path:'captures/20261106_G9-Build-Stamp-Credits.png'});
   await page.keyboard.press('Escape');await page.locator('.preferences').waitFor();await page.keyboard.press('Escape');await startFromTitle(page);
-  check(await page.locator('.build-badge').isVisible()&&(await page.locator('.build-badge').textContent()).includes(stamp.sha),'Normal gameplay has a small version badge');
+  check(await page.locator('.build-badge').count()===0&&await page.evaluate(sha=>[...document.querySelectorAll('.hud')].every(el=>!el.textContent.includes(sha)),stamp.sha),'Normal gameplay shows no build badge; the stamp lives in Settings > About');
   await page.setViewportSize({width:375,height:667});
-  check(await page.locator('.build-badge').evaluate(el=>{const r=el.getBoundingClientRect(),footer=document.querySelector('.conditions').getBoundingClientRect();return parseFloat(getComputedStyle(el).fontSize)>=16&&r.left>=0&&r.right<=innerWidth&&r.bottom<=footer.top;}),'Phone badge remains readable and above the weather controls');
+  check(await page.locator('.build-badge').count()===0,'The phone play area carries no build label');
   await page.screenshot({path:'captures/20261106_G9-Build-Stamp-World-375.png'});
   await page.goto(env.url+'/?demo=1');await page.getByRole('button',{name:'Highlights tour',exact:true}).click();await page.locator('.intro-modal[open]').waitFor();
   check(await page.locator('.build-badge').count()===0,'Presenter mode contains no corner build label');

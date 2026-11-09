@@ -46,7 +46,7 @@ try{
     const layout=await page.evaluate(()=>{
       const tip=document.querySelector('.onboarding-tip').getBoundingClientRect(),overlap=r=>tip.left<r.right&&tip.right>r.left&&tip.top<r.bottom&&tip.bottom>r.top;
       return {inside:tip.left>=0&&tip.top>=0&&tip.right<=innerWidth&&tip.bottom<=innerHeight,
-        covered:[...document.querySelectorAll('.touch-stick-group,.touch-actions,.hud-actions,.masthead,.bottom-bar')].filter(e=>overlap(e.getBoundingClientRect())).map(e=>e.className),badgeHidden:!document.querySelector('.build-badge').getClientRects().length};
+        covered:[...document.querySelectorAll('.touch-stick-group,.touch-actions,.hud-actions,.masthead,.bottom-bar')].filter(e=>overlap(e.getBoundingClientRect())).map(e=>e.className),badgeHidden:!document.querySelector('.build-badge')};
     });
     check(layout.inside&&!layout.covered.length&&layout.badgeHidden,'fixture hint and touch HUD do not overlap '+viewport.width);
     await page.screenshot({path:`${folder}/world-${viewport.width}.png`});

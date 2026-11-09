@@ -5,9 +5,12 @@ import {menuButton} from './screens.js';
 async function accountSummary(ctx,section){
   try{
     const {createAccountSummary}=await import('../screens/account/summary.js');
-    const summary=createAccountSummary({send:ctx.send,openAccount:ctx.openAccount});summary.update(ctx.adapter.read());
+    const summary=createAccountSummary({send:ctx.send,openAccount:ctx.openAccount}),first=ctx.adapter.read();summary.update(first);
     section.append(summary.element);
-    const stop=ctx.adapter.subscribe(event=>{if(!summary.element.isConnected){stop();summary.dispose();return;}summary.update(event.view);});
+    // Repaint only when the account changes: case ticks must not replace the button a keyboard user is on.
+    let last=JSON.stringify(first.account);
+    const stop=ctx.adapter.subscribe(event=>{if(!summary.element.isConnected){stop();summary.dispose();return;}
+      const key=JSON.stringify(event.view.account);if(key===last)return;last=key;summary.update(event.view);});
   }catch{if(ctx.openAccount)section.append(menuButton('Account and saves',ctx.openAccount,true));}
 }
 export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back}){
