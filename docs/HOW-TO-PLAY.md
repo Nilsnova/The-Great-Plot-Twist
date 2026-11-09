@@ -2,20 +2,38 @@
 
 A spoiler-free field guide for players. It explains the controls and systems without naming the culprit, solving a deduction or interpreting a clue.
 
-## What you can play now
+## The short path: the class demo
 
-You can explore the islands, play Act 1 and change your settings. **Continue** restores the intro saved in this browser. Account and case screens exist, but the complete online mystery is still being connected. **Captain pending**, **Local intro only** and **The case is offline** mean that online progress has not been confirmed.
+This is the quickest way in. It takes about five minutes and needs no earlier story.
+
+1. **Play.** On the title screen, press **Play**. If you have no saved story, you see a short intro cutscene. Subtitles are always on. Voice lines play only when voice files are installed in your copy of the game. You can skip the intro with the Skip button, Escape or a tap.
+2. **Goal card.** One card, **Your goal**, says what to do: find out why the lighthouse went dark, and bring its light back. It lists the controls. Press **Got it**.
+3. **Harbor.** You stand in Saltreach Harbor. If the host has opened the demo, Play signs you in as a guest: you get an automatic captain name and the Stranger kit, with no account. If the demo is closed, Play stays local and you can sign in from **Settings**.
+4. **Join the class.** Scan the QR code on the projector with your phone camera. Or press **Join** on the title screen, type **HARBOR** and press **Join**. Any other code goes to the crew flow instead. Everyone who joins this way shares one live room, the class harbor. It shows up to 40 other captains. Positions and emotes are for show only.
+5. **The quest strip.** The **Class demo goals** strip shows three small goals. Tap one to see a hint. Done goals stay ticked in this browser.
+   - **Wave to a captain.** Walk up to another captain, then tap them or press E and choose **Wave**.
+   - **Duel a captain.** Tap a captain or press E next to them and choose **Friendly duel (3 rounds)**. No coins are staked. The other captain sees **Accept** and **Not now**.
+   - **Open the Keeper's Lock.** The lock stands on the lighthouse path, right of the ferry pier. Press E next to it. It asks what the sky over your place looks like right now, and checks your answer against the real weather. The server finds your approximate city from your network address, or you can press **Change place** and search for a city. If you answer wrongly, you can tap **That's not what I see outside**, then **I looked outside**. If the weather cannot be read, the lock asks a riddle instead.
+6. **The finale: three lamps.** Three lamp posts stand along the path. Hold the button, or hold E, for 2 seconds to light a lamp. A lamp burns for 20 seconds, and each lamp needs one captain. When all three burn at once, the lighthouse is relit for everyone in the class harbor.
+
+**Keep your progress.** A guest account is temporary: the host deletes guest accounts older than 24 hours. To keep your progress, open **Settings**, then **Account**, and choose **Keep progress with GitHub** (Google appears too when it is switched on).
+
+**Full mystery.** The class demo is the short path. For the longer one, open the pause menu and choose **Full mystery**. It brings back the full screen layout and starts the Lighthouse prologue. Choose **Class demo** in the same menu to go back. The rest of this guide covers the full mystery.
+
+## The full mystery: what you can play now
+
+You can explore the islands, play the Lighthouse prologue (Act 1) and change your settings. **Play** continues the intro saved in this browser. Account and case screens exist, but the complete online mystery is still being connected. **Captain pending**, **Local intro only** and **The case is offline** mean that online progress has not been confirmed.
 
 Crew and case screens can be rehearsed locally. They show the intended workflow, not a live crew, cloud save or real reward. The market, prediction and duel screens have their own availability messages. Read those messages before acting; a building on the map does not mean its service is open.
 
 ## Getting started: sign-in, Act 1 and your kit
 
-1. Choose **New game** on the title screen to open Act 1. Use **Continue** to resume an existing local intro instead. **New game** replaces that browser's previous intro progress. On a shared computer, remember that this save belongs to the browser, not a signed-in account.
+1. Open the **Lighthouse prologue** from the pause menu or **Settings** to start Act 1. **Play** resumes an existing local intro instead. Starting the prologue again replaces that browser's previous intro progress. On a shared computer, remember that this save belongs to the browser, not a signed-in account.
 2. Read the opening story, choose an offered action and check your inventory and notes. **Show full text** reveals the current dialogue immediately; it does not choose for you. **Return to the island** closes the story so you can explore Lighthouse Isle and revisit interaction prompts.
 3. Play *The Keeper's Last Log*, the solo first act. Your choices matter. There is no required answer sequence in this guide. **Start a new intro** replaces your existing intro progress and starts it again.
 4. A connected case service must confirm your ending before it awards a kit. The arrival screen will show your kit, starting place, items and coins. The four kit names are True Keeper, Witness, Informant and Stranger. Different kits offer different ways into the case; none is a reason to restart for a supposed best ending.
 
-**Account and saves:** the title and pause menus offer an account screen with GitHub sign-in and save controls. The ordinary game is still waiting for its online account/case connection, so a visible button does not prove you are signed in. You can play the local intro without signing in. Read the confirmed account and save status before changing devices; completing the intro alone does not create a cloud save or award a confirmed kit.
+**Account and saves:** the title and pause menus offer an account screen with sign-in (GitHub, and Google when switched on) and save controls. The ordinary game is still waiting for its online account/case connection, so a visible button does not prove you are signed in. You can play the local intro without signing in. Read the confirmed account and save status before changing devices; completing the intro alone does not create a cloud save or award a confirmed kit.
 
 ## Crews and partners
 
@@ -88,7 +106,7 @@ Include the page name, device/browser, keyboard/touch/gamepad, what you expected
 
 ## Privacy in short
 
-The intro and preferences use local browser storage. Clearing site data or switching browsers can lose that local progress; private browsing may not retain it. **Local intro only** does not mean cloud backup. Use your own browser profile on a shared device.
+The intro, quest ticks and preferences use local browser storage. A place you pick at the Keeper's Lock stays in this tab's session storage until the tab session ends. The game does not save that place in its database. Guest play uses Supabase's anonymous sign-in and works only while the host has the demo open. Clearing site data or switching browsers can lose that local progress; private browsing may not retain it. **Local intro only** does not mean cloud backup. Use your own browser profile on a shared device.
 
 Connected account features use a temporary sign-in session. The account screen offers **Delete my data** followed by **Confirm deletion** when your account is connected. Deletion removes your own game data, including coins and ledger history; other crew members keep their progress and leadership passes to another player if needed. While this build cannot confirm your account, contact Nils through the course page for help. Clearing local site data is a separate action. Provider security logs and backups follow their own retention rules. Read the [privacy notice](PRIVACY.md).
 
