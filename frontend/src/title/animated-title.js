@@ -110,8 +110,8 @@ export async function startAnimatedTitle({container, backdrop, reducedMotion = (
     // Moonlight and beam glints on the water.
     if (!still) for (let i = 0; i < glints.length; i += 3) {
       const [x, y] = glints[i], sx = x + seaX, under = lit.dir < 0 && sx < lampX && sx > lampX - lit.length;
-      const blink = Math.sin(t * (1.6 + (i * 7 % 11) * .21) + (i * 2654435761 % 1000));
-      if (blink > (under ? .55 : .88)) { context.fillStyle = under ? '#f2dc9c' : '#c9d4ff'; context.fillRect(sx, y + dy, 1, 1); }
+      const seed = (Math.sin(i * 12.9898) * 43758.5453) % 1, blink = Math.sin(t * (1.2 + Math.abs(seed) * 1.6) + seed * 40);
+      if (blink > (under ? .78 : .9)) { context.fillStyle = under ? '#f2dc9c' : '#c9d4ff'; context.fillRect(sx, y + dy, 1, 1); }
     }
     context.drawImage(planes.lighthouse.canvas, offset(planes.lighthouse), dy);
     context.drawImage(beam, offset(planes.lighthouse), dy);
