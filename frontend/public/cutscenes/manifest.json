@@ -1,0 +1,70 @@
+{
+  "source": "scripts/cutscene_art/generate.py",
+  "scale": 4,
+  "totalBytes": 85824,
+  "files": {
+    "lore-intro": {
+      "file": "cutscenes/lore-intro.webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 25986,
+      "sha256": "1df2d41812b0d679119bfbebd3c3aaf61812a2c62592a7170c30de37679b1fe1"
+    },
+    "arrival": {
+      "file": "cutscenes/arrival.webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 10082,
+      "sha256": "75417636d85db4a030ab05738f744a87e45e964016204e6015dcbce68a27fb38"
+    },
+    "keepers-lock": {
+      "file": "cutscenes/keepers-lock.webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 16084,
+      "sha256": "91fc9d8de7ddc835f3d9f0c1d5c1085e920b34c88e79d8a595adceaaa1fbf8ee"
+    },
+    "lamps-relight": {
+      "file": "cutscenes/lamps-relight.webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 19868,
+      "sha256": "6a05ad000181588f4ebef1ab1416194d2fa9605b3e1624fd33490dc3ee437219"
+    },
+    "title-sky": {
+      "file": "cutscenes/title-sky.webp",
+      "width": 1408,
+      "height": 720,
+      "bytes": 6240,
+      "sha256": "75360b9291644f955c498e641dd53ce89b8e7703de6dbad2c2cfd93f0dd039f0"
+    },
+    "title-far-cliffs": {
+      "file": "cutscenes/title-far-cliffs.webp",
+      "width": 1408,
+      "height": 720,
+      "bytes": 564,
+      "sha256": "a1faeda325342f81abdd4ffd7eaa798daab0b53f165ac87ebc600108e1f8c4bf"
+    },
+    "title-sea": {
+      "file": "cutscenes/title-sea.webp",
+      "width": 1408,
+      "height": 720,
+      "bytes": 3668,
+      "sha256": "d9971ac147ec51bfa5724e3064f0e6b73a94d47cb0b01a1aa5b91f95c36ef3dd"
+    },
+    "title-lighthouse": {
+      "file": "cutscenes/title-lighthouse.webp",
+      "width": 1408,
+      "height": 720,
+      "bytes": 2452,
+      "sha256": "2cf066c8e3062bf91f9b0855cd815e58787b91f24c45e2d1c8b7c095ec2cfd9e"
+    },
+    "title-foreground": {
+      "file": "cutscenes/title-foreground.webp",
+      "width": 1408,
+      "height": 720,
+      "bytes": 880,
+      "sha256": "2f0077edb2e22388209a3e46e83dcc8a81d8318a4c896b0309f4980da0b721f2"
+    }
+  }
+}
