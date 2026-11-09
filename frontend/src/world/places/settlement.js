@@ -4,6 +4,7 @@ import { createFrameState } from './frame-state.js';
 import {createHarborLife} from '../ambient/harbor-life.js';
 import { loadArt, placeArt } from '../art.js';
 import { paintedBlob } from '../primitives.js';
+import { swayMaterial, updateSway } from '../wind.js';
 import { createBeam } from '../beam.js';
 import { places } from './registry.js';
 import { layouts, edgeTrees } from './layouts.js';
@@ -48,7 +49,7 @@ export async function createSettlement(ctx) {
     });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
-      mesh.material = mesh.material.clone(); return mesh;
+      mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
     });
     trees.forEach(([x, z], i) => {
       placeArt(group, art, 'grass-tuft', x + 2, z + 1);
@@ -102,6 +103,7 @@ export async function createSettlement(ctx) {
         foliage.forEach(mesh => {
           const p = mesh.userData.ground;
           mesh.material.opacity = state.player.z < p.z && Math.abs(state.player.x - p.x) < 2.2 && p.z - state.player.z < 6 ? .3 : 1;
+          updateSway(mesh.material, state.time, state.weather?.wind ?? 0);
         });
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
         const brightness = state.relit ? Math.max(.65, state.night) : state.night;
