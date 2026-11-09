@@ -28,7 +28,7 @@ it('asks the server before displaying any host panels', async () => {
 it('displays overview and crews only after both checks pass', async () => {
   const {view,controller} = setup();
   await controller.refresh();
-  expect(view.show).toHaveBeenCalledWith(overview,crews,{noStore:true});
+  expect(view.show).toHaveBeenCalledWith(overview,crews,{noStore:true},null);
 });
 it('does not close without confirmation or when the server marks a crew ineligible', async () => {
   const {api,controller} = setup();
@@ -175,5 +175,122 @@ it('removes OAuth query and fragment before exchanging the one-time code', async
     expect(storage.removeItem).toHaveBeenCalledWith('host-console-pkce');
     expect(session.isSignedIn()).toBe(true);
     expect(storage).not.toHaveProperty('setItem');
+  } finally {vi.unstubAllGlobals();}
+});
+
+// Class demo panel (G29): window status, open/close, guest clean-up.
+import { demoSummary, demoPanel } from '../src/host/panels.js';
+function enableDemo(api,demo={flagOn:true,open:false,openUntil:null}) {
+  api.get.mockImplementation(path=>Promise.resolve(ok(path.endsWith('overview')?overview:
+    path.endsWith('/demo')?demo:path.endsWith('config')?{capabilities:{}}:crews)));
+}
+it('reads the demo window on refresh and passes it to the view; an unreadable one shows as unknown', async () => {
+  const {api,view,controller}=setup();enableDemo(api);
+  await controller.refresh();
+  expect(api.get).toHaveBeenCalledWith('/api/host/demo');
+  expect(view.show.mock.calls.at(-1)[3]).toEqual({flagOn:true,open:false,openUntil:null});
+  api.get.mockImplementation(path=>Promise.resolve(path.endsWith('/demo')?{ok:false,status:503}:ok(path.endsWith('overview')?overview:crews)));
+  await controller.refresh();
+  expect(view.show.mock.calls.at(-1)[3]).toBeNull();
+});
+it('opens for 2 hours and closes with hours 0, one action id per attempt', async () => {
+  const {api,view,controller}=setup();enableDemo(api);view.demoBusy=vi.fn();view.demoUpdate=vi.fn();
+  await controller.refresh();
+  api.post.mockResolvedValueOnce(ok({flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z',repeat:false}));
+  await controller.setDemo(2);
+  expect(api.post).toHaveBeenLastCalledWith('/api/host/demo',{hours:2,actionUid:'action-1'});
+  expect(view.demoUpdate).toHaveBeenLastCalledWith({flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z'});
+  expect(view.demoBusy.mock.calls).toEqual([[true],[false]]);
+  api.post.mockResolvedValueOnce(ok({flagOn:true,open:false,openUntil:null,repeat:false}));
+  await controller.setDemo(0);
+  expect(api.post).toHaveBeenLastCalledWith('/api/host/demo',{hours:0,actionUid:'action-2'});
+  expect(view.say).toHaveBeenLastCalledWith('Demo window closed. Guests are refused now.');
+  for(const bad of [-1,7,1.5,'2'])await controller.setDemo(bad);
+  expect(api.post).toHaveBeenCalledTimes(2);
+});
+it('keeps the demo action id after an unknown outcome and refuses a different change meanwhile', async () => {
+  const {api,view,controller}=setup();enableDemo(api);
+  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z',repeat:true}));
+  await controller.refresh();
+  await controller.setDemo(2);
+  expect(view.say).toHaveBeenLastCalledWith('Demo outcome unknown. Press the same button again; the action ID is retained.');
+  await controller.setDemo(0);
+  expect(api.post).toHaveBeenCalledTimes(1);
+  await controller.setDemo(2);
+  expect(api.post.mock.calls[1]).toEqual(api.post.mock.calls[0]);
+});
+it('shows the server message for a refused demo change and locks on 403', async () => {
+  const {api,view,controller}=setup();enableDemo(api);await controller.refresh();
+  api.post.mockResolvedValueOnce({ok:false,status:422,message:'Hours must be 0 to 6.'});
+  await controller.setDemo(2);
+  expect(view.say).toHaveBeenLastCalledWith('Hours must be 0 to 6.');
+  api.post.mockResolvedValueOnce({ok:false,status:403});
+  await controller.setDemo(2);
+  expect(view.say).toHaveBeenLastCalledWith('Not a host');
+});
+it('cleans up guests only after confirmation and reports the count', async () => {
+  const {api,view,controller}=setup();enableDemo(api);view.demoUpdate=vi.fn();
+  await controller.refresh();
+  await controller.cleanupGuests(false);
+  expect(api.post).not.toHaveBeenCalled();
+  api.post.mockResolvedValueOnce(ok({checked:57,deleted:41,more:true}));
+  await controller.cleanupGuests(true);
+  expect(api.post).toHaveBeenCalledWith('/api/host/demo/cleanup',{actionUid:'action-1'});
+  expect(view.say).toHaveBeenLastCalledWith('Removed 41 guest accounts (checked 57). More old guests remain. Run it again.');
+  api.post.mockResolvedValueOnce(ok({checked:3,deleted:1,more:false}));
+  await controller.cleanupGuests(true);
+  expect(view.say).toHaveBeenLastCalledWith('Removed 1 guest account (checked 3).');
+  expect(api.post.mock.calls[1][1].actionUid).toBe('action-2');
+});
+it('repeats an uncertain clean-up with the same id and shows server errors', async () => {
+  const {api,view,controller}=setup();enableDemo(api);await controller.refresh();
+  api.post.mockResolvedValueOnce({ok:false,status:503}).mockResolvedValueOnce({ok:false,status:502,message:'The database could not be reached.'});
+  await controller.cleanupGuests(true);
+  expect(view.say).toHaveBeenLastCalledWith('Clean-up outcome unknown. Press it again; the action ID is retained.');
+  await controller.cleanupGuests(true);
+  expect(api.post.mock.calls[1]).toEqual(api.post.mock.calls[0]);
+});
+// A very small injected DOM: enough for the kit panel, buttons, a checkbox and text.
+class FakeNode {
+  constructor(tag){this.tagName=tag;this.children=[];this.attributes={};this.dataset={};this.listeners={};this.own='';this.disabled=false;this.checked=false;
+    this.classList={add:()=>{}};}
+  append(...items){this.children.push(...items);}
+  replaceChildren(...items){this.children=items;}
+  setAttribute(name,value){this.attributes[name]=String(value);}
+  addEventListener(type,fn){(this.listeners[type]??=[]).push(fn);}
+  removeEventListener(){}
+  remove(){}
+  fire(type){for(const fn of this.listeners[type]??[])fn({});}
+  click(){if(!this.disabled)this.fire('click');}
+  set textContent(value){this.own=String(value);this.children=[];}
+  get textContent(){return this.own+this.children.map(c=>c.textContent).join('');}
+  find(tag,out=[]){if(this.tagName===tag)out.push(this);for(const c of this.children)c.find?.(tag,out);return out;}
+}
+it('summarises the demo window and builds an accessible panel with disabled-while-busy buttons', () => {
+  vi.stubGlobal('document',{createElement:tag=>new FakeNode(tag),createTextNode:text=>{const n=new FakeNode('#text');n.own=text;return n;}});
+  vi.stubGlobal('Node',FakeNode);
+  try {
+    expect(demoSummary(null).flag).toBe('Unknown');
+    expect(demoSummary({flagOn:true,open:false,openUntil:null})).toEqual({flag:'On',window:'Closed'});
+    expect(demoSummary({flagOn:false,open:false,openUntil:null}).flag).toContain('Off');
+    expect(demoSummary({flagOn:true,open:true,openUntil:'2026-11-09T15:05:00Z'},'en-GB').window).toMatch(/^Open until \d\d:\d\d$/);
+    const handlers={setDemo:vi.fn(),cleanup:vi.fn()};
+    const ui=demoPanel({flagOn:true,open:false,openUntil:null},handlers);
+    const buttons=ui.element.find('button');
+    expect(buttons.map(b=>b.textContent)).toEqual(['Open for 2 hours','Close now','Clean up guests']);
+    expect(ui.element.attributes['aria-labelledby']).toBeTruthy();
+    expect(buttons[2].disabled).toBe(true);
+    buttons[0].click();buttons[1].click();
+    expect(handlers.setDemo.mock.calls).toEqual([[2],[0]]);
+    const [box]=ui.element.find('input');
+    box.checked=true;box.fire('change');
+    expect(buttons[2].disabled).toBe(false);
+    buttons[2].click();expect(handlers.cleanup).toHaveBeenCalledWith(true);
+    ui.busy(true);expect(buttons.every(b=>b.disabled)).toBe(true);
+    buttons[0].click();expect(handlers.setDemo).toHaveBeenCalledTimes(2);
+    ui.busy(false);expect(buttons[0].disabled).toBe(false);expect(buttons[2].disabled).toBe(false);
+    ui.update({flagOn:true,open:true,openUntil:'2026-11-09T15:05:00Z'});
+    expect(ui.element.textContent).toContain('Open until');
+    ui.reset();expect(box.checked).toBe(false);expect(buttons[2].disabled).toBe(true);
   } finally {vi.unstubAllGlobals();}
 });
