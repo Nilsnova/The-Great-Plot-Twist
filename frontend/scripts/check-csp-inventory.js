@@ -8,7 +8,8 @@ const proposedCsp=previewSecurityHeaders['Content-Security-Policy']??previewSecu
 async function files(root){const result=[];for(const item of await readdir(root,{withFileTypes:true})){const path=join(root,item.name);if(item.isDirectory())result.push(...await files(path));else result.push(path);}return result;}
 // accounts.google.com: top-level navigation only (location.assign) to Google's own consent page for a
 // guest upgrade (Supabase linkIdentity, D029); never fetched, so the CSP needs no change.
-const allowedOrigins=new Set(['http://www.w3.org','https://accounts.google.com','https://creativecommons.org','https://data.binance.vision','https://github.com','https://open-meteo.com','https://uqcjihigqjgyuafrfbnp.supabase.co','wss://uqcjihigqjgyuafrfbnp.supabase.co']);
+// elevenlabs.io: the Credits voice attribution link (a user-followed link, like Open-Meteo's); never fetched.
+const allowedOrigins=new Set(['http://www.w3.org','https://accounts.google.com','https://creativecommons.org','https://elevenlabs.io','https://data.binance.vision','https://github.com','https://open-meteo.com','https://uqcjihigqjgyuafrfbnp.supabase.co','wss://uqcjihigqjgyuafrfbnp.supabase.co']);
 const report={checked:new Date().toISOString(),policy:proposedCsp,html:[],literalOrigins:{},sdkLiteralOrigins:[],libraryCapabilities:[],checks:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try{
