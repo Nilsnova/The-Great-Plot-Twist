@@ -10,7 +10,7 @@
 
 ### 1a. Guest sign-in for the class code (about 3 minutes, once)
 
-Wait until the class-code release is live (see section 3). Then guests can only play with the current class code from the projector QR, so this setting stays on for good. There is no switching on and off per lecture.
+Wait until the class-code release (section 3) is live on main. Then guests can only play with the current class code from the projector QR, so this setting stays on for good. There is no switching on and off per lecture.
 
 1. supabase.com/dashboard > project **great-plot-twist** > **Authentication** > **Sign In / Providers** > under "User Signups" switch on **Allow anonymous sign-ins** > **Save**.
 2. **Authentication** > **Rate Limits** > **anonymous sign-ins per hour**: set **100** > **Save**. A whole class shares one Wi-Fi address, and the default of 30 is too low.
@@ -45,10 +45,10 @@ Note: mail sent from a free-mail address (for example Gmail) through Brevo can l
 - [ ] **On the day:** host console (`/host.html`) > **Class demo** > **New class code** (or the J projector panel), then show the QR.
 - [ ] **After the demo:** **New class code** again, so the projector code stops working for new guests. Old guest accounts are removed after 24 hours whenever the host console is opened.
 
-## 3. In progress (being built now, then reviewed and released)
+## 3. In this release (merged on `integrate/g29`, waiting for review and release to main)
 
-- **Class-code gate** (branch `feat/g29-classcode`): replaces the on/off demo window. Guests need the current class code from the QR; the database rules let an anonymous user without a code do nothing. Includes one migration, applied after review.
-- **Email sign-in** (branch `feat/g29-email`): "Email me a sign-in code" next to GitHub in Settings > Account; the Google option is removed. It is switched on in the game (Vercel `AUTH_PROVIDERS=github,email`) only after section 1b is done and one test code arrived.
+- **Class-code gate** (was `feat/g29-classcode`): replaces the on/off demo window. Guests need the current class code from the QR; the database rules let an anonymous user without a code do nothing. Its migration `20261109020000_class_code.sql` is already applied to the live database. The account setup in section 1a is still needed once the release is live.
+- **Email sign-in** (was `feat/g29-email`): "Email me a sign-in code" next to GitHub in Settings > Account; the Google option is removed. A guest who joined with the class code can keep their progress with GitHub or an email code. It is switched on in the game (Vercel `AUTH_PROVIDERS=github,email`) only after section 1b is done and one test code arrived.
 
 ## 4. Smaller follow-ups (good first tasks)
 
