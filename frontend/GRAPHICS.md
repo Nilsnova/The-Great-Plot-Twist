@@ -1031,3 +1031,45 @@ The deeper player-experience pass adds `test:friends`, `test:settings:visuals`,
 `test:inspections` and `test:story:polish`. These cover staged multiplayer entry, initial
 focus, readable supporting pages, earned inspection results and compact story controls.
 Each visual report records fixture-only scope and physical-device limits.
+
+## G29 C4: world lighting, sea, weather and moments
+
+Everything here is code-drawn on the native pixel grid (credits in ASSETS.md); the binding art rules
+are unchanged. One full-screen shader plane replaces each old flat layer, so the draw-call count stays
+about where it was.
+
+- **Sea** (`world/water.js`): an app-owned shader plane under every place. `water.setCoast(group)` runs
+  on every arrival and turns the place backdrop's alpha into a 256 × 192 distance field (cached per
+  image), so foam, shallows and the moving surf line follow each coast. `seaUniforms` and `seaGlsl`
+  share that field and the sea clock with beams and rain.
+- **Day and night** (`world/sky.js`): the clock now starts at the player's local time and runs in real
+  time (T still runs the fast clock; automated browsers keep the old 10:24 start and pace so checks stay
+  deterministic). Dusk tints rose, night blue with a dithered vignette.
+  `world/light-pools.js` reads lanterns, lit windows and beacons from the placed sprites and draws warm
+  pools above the night wash; `extra(key, pools)` adds owned pools such as lit class lamps.
+- **Beam** (`world/beam.js`): four dithered steps; over the sea it lights wave crests.
+- **Weather** (`world/weather.js`, `world/wind.js`): pixel rain streaks leaning with the wind, splashes on
+  land and rings on the sea, fog banks drifting with the wind, tree crowns sliding whole pixels.
+- **Moments** (`world/fx.js`, `scene.userData.pixelFx`): one geometry for sparks, rings, rays and bloom.
+  Captains arriving in a room after the first snapshot get a ring and a few sparks (at most six a
+  second); emote bubbles pop in by whole-number scale steps (2× in the class harbor); lamps ignite with
+  sparks and a ring; the Keeper's Lock pulses after its cutscene; the relit lighthouse blooms, throws
+  slow rays and sparks after its cutscene, and keeps faint rays while relit.
+- **Title** (`title/animated-title.js`): imported after the first title paint. It animates the G29 title
+  planes on one native canvas over the painted title, which stays as the instant first frame.
+
+**Quality and motion.** The existing Settings quality (high/low) is reused: low quality draws no sea
+glints, strokes, rings or moving foam, halves rain and every spark burst and skips splashes and beam
+sparkles. Reduced motion freezes the sea, rain, fog and trees, holds the beam pointing out to sea,
+replaces sparks, rings and rays with a single fading bloom and draws one still title frame.
+
+**Evidence.** `npm run capture:wow -- <label>` writes 1280 × 720 shots and frame numbers at 40
+simulated captains (also 1440 × 900 at 2×) to the fri6-integration evidence folder.
+
+**Measured (9 November 2026, headless Chrome 157, Intel Iris Plus 655, `?demo=1&captains=40`, 240
+frames).** Before (f9acee7) / after: 1280 × 720 clear day 60 / 60 fps, 95 / 94 draw calls, 266 / 266
+triangles; storm at night 60 / 60 fps, 97 / 98 calls. 1440 × 900 at 2×: clear day 60 / 60 fps,
+storm at night 60 / 59 fps, at most 99 calls and 285 triangles. During the relight (rays, bloom and
+200 sparks) about 101 calls and 1,581 triangles. Cold title JavaScript 20,606 bytes (limit 21,080),
+CSS 11,404 bytes (limit 12,000). Numbers taken while another agent ran browser suites were noisy
+(as low as 31 fps before and after) and are not used.

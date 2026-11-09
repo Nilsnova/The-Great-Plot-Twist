@@ -342,3 +342,23 @@ voice file is committed until the generator has been run with the team's key.
 Saltreach Harbor are drawn in code onto small canvases (`src/class-demo/world-objects.js`), and the sky
 icons of the lock screen are SVG rectangles (`src/class-demo/lock-screen.js`). Original, no outside asset.
 Sounds reuse the existing cues (beam, foghorn, festival claim and ring bell).
+
+## G29 C4 code-drawn world effects and animated title
+
+All original, written as code in this repository; no image, font, model, audio or shader from
+anywhere else. Every effect draws on the native pixel grid (16 pixels per world unit) with small
+fixed palettes and ordered 4 × 4 (Bayer) dithering instead of smooth gradients. Gold stays for lights.
+
+| Effect | File | What it draws |
+| --- | --- | --- |
+| Sea | `src/world/water.js` | Wave bands in three teals, crest strokes, shallows, foam that follows each place's coast (a distance field read once from the place backdrop's alpha), glints, rain rings, storm whitecaps |
+| Sky and fog | `src/world/sky.js` | Rose dusk and blue night wash with a dithered night vignette; drifting fog banks in stepped densities |
+| Light pools | `src/world/light-pools.js` | Warm dithered pools under lanterns, lit windows, the beacons and lit class lamps, one instanced mesh |
+| Beam | `src/world/beam.js` | The sweeping beam in four dithered steps; sparkles on wave crests where it crosses the sea |
+| Rain | `src/world/weather.js` | Whole-pixel slanted streaks that lean with the wind and three-frame splashes on land |
+| Wind | `src/world/wind.js` | Tree crowns slide one or two whole pixels with the wind (no rotation or skew) |
+| Moments | `src/world/fx.js` | Sparks, rings, rays and stepped bloom in one geometry: captain arrivals, lamp ignition, the Keeper's Lock pulse, the lighthouse relight |
+| Class-demo glows | `src/class-demo/world-objects.js` | Lamp and beacon glow textures painted per pixel with four light levels and a dithered seam |
+| Animated title | `src/title/animated-title.js` | Brings the existing G29 title planes (`cutscenes/title-*.webp`, credited above) to life on one native-size canvas: parallax drift, a rolling sea, twinkling stars, moon and beam glints, and the sweeping lighthouse beam |
+
+Shared GLSL helpers (hash, value noise, Bayer dithering, banding) live in `src/world/pixel-glsl.js`.

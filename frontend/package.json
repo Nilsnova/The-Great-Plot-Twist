@@ -23,6 +23,7 @@
     "test:experience": "node scripts/check-experience.js",
     "test:demo": "node scripts/check-demo-journey.js",
     "test:demo:tour": "node scripts/check-demo.js",
+    "capture:wow": "node scripts/capture-wow.js",
     "test:loading": "npm run build && node scripts/check-loading.js",
     "test:spoilers": "npm run build",
     "test:case": "node scripts/check-case.js",
