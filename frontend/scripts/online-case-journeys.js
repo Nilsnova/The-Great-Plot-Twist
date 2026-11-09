@@ -1,7 +1,7 @@
 // Native case pages over schematic server responses. No app hooks or synthetic engine actions.
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {openCrewFromHud,assertEngineReplay} from './online-browser-actions.js';
+import {openCrewFromHud,assertEngineReplay, playFromTitle} from './online-browser-actions.js';
 import {assertPanelReadable} from './online-panel-actions.js';
 import {assertCasePrivacy} from './online-case-fixture.js';
 const modal=page=>page.locator('.case-modal[open]');
@@ -19,7 +19,7 @@ export async function enterRecordedCase(env,{width=375}={}){
   await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
   await signInFromTitle(env);
   if(await page.locator('.account-modal[open]').isVisible()){await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});}
-  await page.locator('#play').click();
+  await playFromTitle(page);
   await page.locator('.hud.exploring').waitFor();await closeNativePanels(page);await openCrewFromHud(page);
   await page.waitForFunction(()=>document.querySelectorAll('.case-modal[open] .crew-seat[data-kind="player"]').length===2);
   await modal(page).getByRole('button',{name:'Muster with NPC partners',exact:true}).click();

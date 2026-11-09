@@ -1,7 +1,7 @@
 // These exports extend test:online/check-online-chaos; they never inspect production internals.
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {openAccountControls, openCrewFromHud, assertEngineReplay} from './online-browser-actions.js';
+import {openAccountControls, openCrewFromHud, assertEngineReplay, playFromTitle} from './online-browser-actions.js';
 import {dismissIntro} from './intro-browser-fixture.js';
 
 const crewScreen = page => page.locator('.case-modal[open] .case-crew');
@@ -16,7 +16,7 @@ export async function enterRecordedCrew(env, scenario = 'none') {
   await env.page.getByRole('button', {name: 'Change captain name once', exact: true}).waitFor();
   await env.page.keyboard.press('Escape');
   await env.page.locator('.account-modal').waitFor({state: 'hidden'});
-  await env.page.locator('#play').click();
+  await playFromTitle(env.page);
   await env.page.locator('.hud.exploring').waitFor();
   await dismissIntro(env.page);
   await openCrewFromHud(env.page);

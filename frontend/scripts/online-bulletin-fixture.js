@@ -5,6 +5,7 @@ import {openAuthFixture} from './online-auth-fixture.js';
 import {signInFromTitle} from './online-chaos-signin.js';
 import {recordedBulletin} from '../tests/fixtures/server/bulletin.js';
 import {DEFAULT_ATTRIBUTION} from '../src/net/weather.js';
+import {playFromTitle} from './online-browser-actions.js';
 
 export const PUBLIC_BULLETIN_TEXT='Recorded public weather bulletin.';
 const paths=new Set(['/api/config','/api/me','/api/me/name','/api/save','/api/crews/me','/api/bulletin','/api/weather']);
@@ -94,7 +95,7 @@ export async function openBulletinFixture({clock=false}={}){
       runtimeImports:()=>modules.filter(item=>resources.has(item.path)).map(item=>item.key),
       saveStats:()=>({...saveStats,version:save.version,entryPuts,security:{...security}}),
       async enterWorld(){await signInFromTitle(env);
-        await page.locator('#play').click();
+        await playFromTitle(page);
         await page.locator('.hud.exploring').waitFor();
         await page.locator('.intro-modal[open]').waitFor({state:'hidden'});
         await assertBulletinSaveReady(page);

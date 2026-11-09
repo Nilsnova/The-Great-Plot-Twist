@@ -27,6 +27,12 @@ export async function returnToTitle(page) {
   await page.locator('.shell-screen[open][data-mode="title"]').waitFor();
 }
 
+// Play is on the title: leave Settings first when an account step left it open.
+export async function playFromTitle(page) {
+  await returnToTitle(page);
+  await page.locator('#play').click();
+}
+
 export async function openAccountControls(page) {
   if (await page.locator('.account-modal[open]').isVisible()) return;
   const shell = page.locator('.shell-screen[open]');

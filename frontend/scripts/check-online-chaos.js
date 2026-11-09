@@ -8,7 +8,7 @@ import {openAuthFixture} from './online-auth-fixture.js';
 import {createOnlineChaosFaults, onlineChaosFaults, onlineChaosRouteGroups} from './online-chaos-fixtures.js';
 import {introChaosJourney,saveChaosJourney} from './online-chaos-account-journeys.js';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {openAccountControls, openCrewFromHud} from './online-browser-actions.js';
+import {openAccountControls, openCrewFromHud, playFromTitle} from './online-browser-actions.js';
 
 async function openSignedInAccount({page, url}) {
   await signInFromTitle({page,url});
@@ -63,7 +63,7 @@ export function createCrewChaosJourney() {
       await openSignedInAccount(env);
       await page.keyboard.press('Escape');
       await page.locator('.account-modal').waitFor({state: 'hidden'});
-      await page.locator('#play').click();
+      await playFromTitle(page);
       await page.locator('.hud.exploring').waitFor();
       await openCrewFromHud(page);
       await page.locator('.case-modal[open] .case-crew').waitFor();

@@ -1,7 +1,7 @@
 // Public production islet controls with intercepted answers; no development inspection or event injection.
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {openAccountControls,assertEngineReplay} from './online-browser-actions.js';
+import {openAccountControls,assertEngineReplay, playFromTitle} from './online-browser-actions.js';
 import {dismissIntro} from './intro-browser-fixture.js';
 import {onlineChaosFaults} from './online-chaos-fixtures.js';
 
@@ -47,7 +47,7 @@ export async function enterRecordedIslet(env){
   await signInFromTitle(env);await openAccountControls(page);
   await page.getByRole('button',{name:'Change captain name once',exact:true}).waitFor();
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await page.locator('#play').click();
+  await playFromTitle(page);
   await page.locator('.hud.exploring').waitFor();
   await page.waitForFunction(()=>document.querySelector('.chapter')?.textContent.includes('Home islet'));
   await dismissIntro(page); // This public helper already closes case/islet/intro overlays; no extra Escape.

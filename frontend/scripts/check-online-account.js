@@ -5,7 +5,7 @@ import {openAccountFixture, ACCOUNT_INTRO_ACTIONS} from './online-account-fixtur
 import {startFromTitle} from './shell-browser-tools.js';
 import {signInFromTitle} from './online-chaos-signin.js';
 import {openSettingsAccount, openAccountControls, openCrewFromHud,
-  chooseIntroAction, finishIntroPassages, assertEngineReplay} from './online-browser-actions.js';
+  chooseIntroAction, finishIntroPassages, assertEngineReplay, playFromTitle} from './online-browser-actions.js';
 
 async function playIntro(page,{expectKit=true}={}) {
   for (const id of ACCOUNT_INTRO_ACTIONS) await chooseIntroAction(page, id);
@@ -148,10 +148,11 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     await claim.waitFor();
     check(env.accountStats().kitGrants===0,'An anonymous ending keeps its accepted replay and grants no kit');
     await claim.click();
-    await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor({state:'attached'});
+    // The sign-in round trip reloads the app on its title; the account summary lives in Settings.
+    await page.locator('.shell-screen[open][data-mode="title"]').waitFor();
     await openSettingsAccount(page);
     await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor();
-    await page.locator('#play').click();
+    await playFromTitle(page);
     await finishIntroPassages(page);
     await assertEngineReplay(page);
     await page.locator('.case-arrival .case-kit-name').filter({hasText:'Recorded Kit'}).waitFor();

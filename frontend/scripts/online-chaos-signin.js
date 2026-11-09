@@ -8,10 +8,12 @@ export async function signInFromTitle({page,url}){
   await page.waitForFunction(()=>document.querySelector('.account-summary-state')?.textContent==='Signed in'
     || [...document.querySelectorAll('.account-summary button')].some(button=>/^Sign in(?: again)? with GitHub$/.test(button.textContent)));
   if(!await signedIn.isVisible()){
-    try{await summary.getByRole('button',{name:/^Sign in(?: again)? with GitHub$/}).click({timeout:1000});}
+    let left=false;
+    try{await summary.getByRole('button',{name:/^Sign in(?: again)? with GitHub$/}).click({timeout:1000});left=true;}
     catch{await signedIn.waitFor({state:'attached'});}
+    // The sign-in round trip reloads the app on its title; the account summary lives in Settings.
+    if(left)await page.locator('.shell-screen[open][data-mode="title"]').waitFor();
   }
-  await signedIn.waitFor({state:'attached'});
   await openSettingsAccount(page);
   await signedIn.waitFor();
 }

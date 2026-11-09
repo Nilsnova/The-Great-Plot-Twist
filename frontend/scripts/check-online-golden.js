@@ -26,7 +26,8 @@ try{
     await page.setViewportSize({width,height:800});await page.goto(env.url);
     const accountSummary = await openSettingsAccount(page);
     await accountSummary.getByRole('button',{name:'Account and saves',exact:true}).waitFor();
-    await page.getByRole('button',{name:'Settings',exact:true}).click();
+    // The account summary is already inside Settings, where the problem report link lives too.
+    await page.locator('.shell-screen[open][data-mode="settings"]').waitFor();
     const link=page.getByRole('link',{name:'Report a problem',exact:true});
     await link.dispatchEvent('pointerdown',{pointerType:'mouse'});
     const body=new URL(await link.getAttribute('href')).searchParams.get('body');

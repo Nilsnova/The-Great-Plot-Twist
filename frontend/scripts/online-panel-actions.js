@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
 import {dismissIntro} from './intro-browser-fixture.js';
+import {playFromTitle} from './online-browser-actions.js';
 
 export async function enterPanelWorld(env,{area}={}){
   const {page}=env;await page.emulateMedia({reducedMotion:'reduce'});await signInFromTitle(env);
   if(await page.locator('.account-modal[open]').isVisible())await page.keyboard.press('Escape');
-  await page.locator('#play').click();
+  await playFromTitle(page);
   await page.locator('.hud.exploring').waitFor();await dismissIntro(page);
   const expected=area==='predictions'?'Saltreach Harbor':'Smugglers’ Cove';
   await page.waitForFunction(expected=>document.querySelector('.hud .chapter')?.textContent.includes(expected),expected);

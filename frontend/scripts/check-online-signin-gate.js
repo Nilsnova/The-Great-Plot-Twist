@@ -4,7 +4,7 @@ import {writeFile} from 'node:fs/promises';
 import {openAuthFixture} from './online-auth-fixture.js';
 import {signInFromTitle} from './online-chaos-signin.js';
 import {settle} from './world-browser-tools.js';
-import {openAccountControls} from './online-browser-actions.js';
+import {openAccountControls,returnToTitle} from './online-browser-actions.js';
 
 export async function checkOnlineSignInGate(){
   const env=await openAuthFixture(),{page}=env,report={checks:[]};
@@ -24,12 +24,15 @@ export async function checkOnlineSignInGate(){
     await page.locator('.account-modal[open] .account-screen').waitFor();
     await page.keyboard.press('Escape');
     await page.locator('.account-modal').waitFor({state:'hidden'});
-    const resume=page.locator('#play');
-    await resume.waitFor();
+    // Settings > Account shows the sign-in message; Play (Continue for a saved game) is on the title.
+    await page.locator('.shell-screen[open][data-mode="settings"] .account-summary').waitFor();
     enabled=false;
     const config=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/config');
     await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await config;
     await page.getByText('Sign-in opens later. Your progress on this device is kept.',{exact:true}).first().waitFor();
+    await returnToTitle(page);
+    const resume=page.locator('#play');
+    await resume.waitFor();
     denied=true;await resume.click();
     const modal=page.locator('.account-modal[open]');await modal.waitFor();
     const external=modal.locator('.account-screen > .server-call');
