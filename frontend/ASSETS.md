@@ -299,3 +299,41 @@ screen now plays these recordings through the existing trusted-gesture audio
 owner, shared music/effects preferences and captions. Its loop starts only after
 Play and stops when the panel closes. Live interaction requires the server's
 `festival` flag; explicit local rehearsal creates no server writes.
+
+## G29 cutscene art, join QR and voices
+
+**Cutscene art.** Nine original, code-drawn images in `public/cutscenes/`, painted
+at native pixel size by `scripts/cutscene_art/` (paint.py primitives, scenes.py
+compositions, generate.py output) with ordered dithering, a small adaptive
+palette per image and 4× nearest enlargement. No reference image, texture pack or
+model output is used. All are lossless WebP; the set totals **85,824 bytes**
+against a 1.5 MB budget and is lazy-loaded: nothing here belongs to the cold
+title load. `src/cutscenes/art.js` (generated) maps ids to paths, sizes and the
+title lantern origin; `public/cutscenes/manifest.json` records CRC-32 checksums
+checked by `tests/cutscene-art.test.js`. Rebuild from `frontend/` with
+`python3 scripts/cutscene_art/generate.py [--contact-sheet PATH]` (Pillow and
+NumPy, authoring only).
+
+| File in public/ | Pixels (native) | Scene |
+| --- | --- | --- |
+| `cutscenes/lore-intro.webp` | 1280 × 720 (320 × 180) | Dark lighthouse over a stormy sea, faint beam, rain |
+| `cutscenes/arrival.webp` | 1280 × 720 (320 × 180) | Saltreach Harbor at dusk: lanterns, string lights, moored boats |
+| `cutscenes/keepers-lock.webp` | 1280 × 720 (320 × 180) | The Keeper's Lock (sun/cloud/rain/fog dial) opening, light spilling out |
+| `cutscenes/lamps-relight.webp` | 1280 × 720 (320 × 180) | Three lamps igniting, threads of light, the beam sweeping again |
+| `cutscenes/title-sky.webp` | 1408 × 720 (352 × 180) | Title plane 1, opaque: night sky, moon, stars, clouds |
+| `cutscenes/title-far-cliffs.webp` | 1408 × 720 (352 × 180) | Title plane 2, transparent: distant islands and mist |
+| `cutscenes/title-sea.webp` | 1408 × 720 (352 × 180) | Title plane 3, transparent: sea and moonlight |
+| `cutscenes/title-lighthouse.webp` | 1408 × 720 (352 × 180) | Title plane 4, transparent: lighthouse, cottage and cliff (beam left to code) |
+| `cutscenes/title-foreground.webp` | 1408 × 720 (352 × 180) | Title plane 5, transparent: foreground rocks and grass |
+
+**Join QR code.** `src/lib/qr/` is an in-house QR Code encoder (ISO/IEC 18004
+byte mode, versions 1–10, levels L/M/Q/H) and `drawQr`, which paints onto a
+canvas because the CSP forbids `data:` images. No third-party code or package;
+tests in `tests/qr/` include an independent test-only reader.
+
+**Voices.** `scripts/voice/generate.py` turns the cutscene scripts into MP3 lines
+in `public/audio/voice/` with the ElevenLabs text-to-speech API, plus a manifest
+with durations. Credit line for Settings > Credits: **Voices by ElevenLabs.** The
+scripts are our own writing; until `src/cutscenes/scripts.json` exists the tool
+uses `scripts/voice/sample_scripts.json` (five short, spoiler-free scenes). No
+voice file is committed until the generator has been run with the team's key.
