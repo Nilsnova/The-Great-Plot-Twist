@@ -99,8 +99,14 @@ def bootstrap(conn: psycopg.Connection) -> None:
             nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub', ''
           )::uuid
         $$;
+        create function auth.jwt() returns jsonb language sql stable as $$
+          select coalesce(
+            nullif(current_setting('request.jwt.claim', true), ''),
+            nullif(current_setting('request.jwt.claims', true), '')
+          )::jsonb
+        $$;
         grant usage on schema auth, public to anon, authenticated, service_role;
-        grant execute on function auth.uid() to anon, authenticated, service_role;
+        grant execute on function auth.uid(), auth.jwt() to anon, authenticated, service_role;
         create schema realtime;
         create table realtime.messages (
           topic text not null, extension text not null, payload jsonb, event text,
