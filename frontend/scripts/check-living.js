@@ -19,7 +19,7 @@ try{
   await page.getByRole('button',{name:'Change captain name once'}).click();
   check(await page.evaluate(()=>!window.__plotTwist.adapter.read().account.canReroll),'Name can be changed once');
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await page.locator('#new-game').click();await page.waitForFunction(()=>window.__island);
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await page.waitForFunction(()=>window.__island);
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   await page.locator('.interiors-scene:not([hidden])').waitFor();
   check(true,'The unchanged bundled intro opens without the intro API');await dismissIntro(page);

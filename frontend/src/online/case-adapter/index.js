@@ -32,6 +32,7 @@ const messages = {
   festival_closed: 'The lantern festival is not open.',
   not_connected: 'Service unavailable. Try again in a moment.',
   not_ready: 'This part is not ready yet. You can keep exploring.',
+  demo_closed: 'Guest play is closed right now. You can keep playing on this device.',
 };
 
 export function createRealCaseAdapter(deps = {}) {
@@ -208,7 +209,8 @@ export function createRealCaseAdapter(deps = {}) {
     live.refresh();
     const enabled = import.meta.env.DEV || ctx.state.config?.flags?.sign_in === true;
     store.commit({signInAllowed: enabled});
-    if (enabled && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
+    // An open demo window also restores a guest's session after a reload.
+    if ((enabled || ctx.state.config?.demo?.open === true) && !restoreTask) restoreTask = Promise.resolve(ctx.auth.restore?.()).catch(() => {});
     if (restoreTask) await restoreTask;
     if (!ctx.state.me) await hydrate();
     crewLife.refresh();
@@ -229,7 +231,12 @@ export function createRealCaseAdapter(deps = {}) {
       if (store.isCurrent(scope) && result.accepted) store.commit({isletFailure: null});
       return result;
     }};
-  handlers.signIn = async () => {
+  // signIn() and signIn({provider}) start OAuth; {upgrade: true} links a provider to a guest;
+  // {guest: true} is the title's silent guest start, allowed only while /api/config says demo.open.
+  handlers.signIn = async (options = {}) => {
+    const provider = options.provider ?? 'github';
+    if (options.guest === true) return guestSignIn();
+    if (options.upgrade === true) return upgradeGuest(provider);
     if (session.isSignedIn()) {
       const scope=store.scope();
       await hydrate();
@@ -238,10 +245,14 @@ export function createRealCaseAdapter(deps = {}) {
     }
     if (!import.meta.env.DEV && ctx.state.config?.flags?.sign_in !== true) return ctx.refuse('feature_off');
     if (!ctx.auth.signIn) return ctx.refuse('not_connected');
+    if (!configProviders().includes(provider)) return ctx.refuse('invalid_request');
+    return startAuth(() => ctx.auth.signIn(provider), 'Sign-in is ready.');
+  };
+  async function startAuth(begin, done) {
     const intent = ++authIntentGeneration;
     const current = () => !store.isClosed() && intent === authIntentGeneration;
     store.commit({accountState: 'signing_in'});
-    const result = await ctx.auth.signIn();
+    const result = await begin();
     if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
     if (!result?.ok) {
       store.commit({accountState: 'error', auth: ctx.auth.read?.() ?? null});
@@ -249,8 +260,34 @@ export function createRealCaseAdapter(deps = {}) {
     }
     await hydrate();
     if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
-    return ctx.accept('Sign-in is ready.');
-  };
+    return ctx.accept(done);
+  }
+  function configProviders() {
+    const list = ctx.state.config?.auth?.providers;
+    const known = Array.isArray(list) ? list.filter(name => ['github', 'google'].includes(name)) : [];
+    return known.length ? known : ['github'];
+  }
+  async function guestSignIn() {
+    if (session.isSignedIn()) return ctx.accept('Your account is ready.');
+    if (ctx.state.config?.demo?.open !== true) return ctx.refuse('demo_closed');
+    if (!ctx.auth.signInAnonymously) return ctx.refuse('not_connected');
+    const intent = ++authIntentGeneration;
+    const current = () => !store.isClosed() && intent === authIntentGeneration;
+    const result = await ctx.auth.signInAnonymously();
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+    if (!result?.ok) {
+      store.commit({accountState: 'signed_out', auth: ctx.auth.read?.() ?? null});
+      return ctx.refuse('not_connected');
+    }
+    await hydrate();
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+    return ctx.accept('You are playing as a guest.');
+  }
+  async function upgradeGuest(provider) {
+    if (!session.isSignedIn() || ctx.auth.read?.()?.guest !== true) return ctx.refuse('invalid_request');
+    if (!ctx.auth.upgrade || !configProviders().includes(provider)) return ctx.refuse('invalid_request');
+    return startAuth(() => ctx.auth.upgrade(provider), 'Your progress is kept.');
+  }
   function cosmeticReceipt(result) {
     const {recovery, ...publicResult} = result;
     return {...publicResult, view: store.read()};

@@ -1,10 +1,12 @@
-// Lazy GitHub PKCE and tab-scoped SDK sessions feed only the access token into A2's memory session.
+// Lazy OAuth PKCE (GitHub, Google), guest (anonymous) sign-in and tab-scoped SDK sessions feed only
+// the access token into A2's memory session. A guest upgrade links a provider to the same user.
 import {session as defaultSession} from './session.js';
 import {AUTH_STORAGE_KEY, createAuthStorage} from './auth-storage.js';
 import {AUTH_MESSAGES, authConfiguration, signInAddress, ownReturnAddress,
   validAuthCode, guardAuthStorage} from './auth-state.js';
 
 const SIGN_OUT_TIMEOUT_MS = 10000;
+export const AUTH_PROVIDERS = ['github', 'google'];
 async function finishSdkSignOut(record) {
   if (!record) return;
   let timer;
@@ -27,8 +29,8 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
   randomId = () => crypto.randomUUID()} = {}) {
   const configuration = authConfiguration(supabaseUrl, publishableKey);
   let state = session.isSignedIn() ? 'signed_in' : 'signed_out';
-  let message = AUTH_MESSAGES[state], closed = false, epoch = 0, expiresAt = null, playerId = null;
-  let current = null, loading = null, signInTask = null, returnTask = null, refreshTask = null, signOutTask = null;
+  let message = AUTH_MESSAGES[state], closed = false, epoch = 0, expiresAt = null, playerId = null, guest = false;
+  let current = null, loading = null, signInTask = null, returnTask = null, refreshTask = null, signOutTask = null, guestTask = null;
   let leaving = null;
   let clearing = false, returnEpoch = null;
   const subscribers = new Set();
@@ -36,7 +38,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
   const stopSession = session.onChange(({signedIn}) => {
     if (!signedIn && !clearing && !closed) expire();
   });
-  const read = () => ({state, message, configured: !!configuration});
+  const read = () => ({state, message, configured: !!configuration, ...(guest && state === 'signed_in' ? {guest: true} : {})});
   const answer = ok => ({ok, ...read()});
   const isCurrent = token => !closed && token === epoch;
 
@@ -63,13 +65,14 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     epoch += 1;
     release(current); current = null; loading = null;
     signInTask = null; refreshTask = null;
-    storage.clearSession(); expiresAt = null; playerId = null;
+    storage.clearSession(); expiresAt = null; playerId = null; guest = false;
     clearMemory(); publish('expired');
   }
   function applySession(value, token) {
     if (!isCurrent(token) || typeof value?.access_token !== 'string' || !value.access_token.trim()) return false;
     expiresAt = Number.isFinite(value.expires_at) ? value.expires_at * 1000 : null;
     playerId = typeof value.user?.id === 'string' ? value.user.id : null;
+    guest = value.user?.is_anonymous === true;
     session.setToken(value.access_token);
     publish('signed_in');
     return true;
@@ -127,7 +130,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
       return answer(false);
     }
   }
-  async function beginSignIn() {
+  async function beginSignIn(provider = 'github', upgrade = false) {
     if (signOutTask) await signOutTask;
     const missing = unavailable(); if (missing) return missing;
     if (!storage.canKeepVerifier()) { publish('error', AUTH_MESSAGES.storage); return answer(false); }
@@ -136,9 +139,11 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     const token = epoch; publish('signing_in');
     try {
       const client = await clientFor(token); if (!client) return answer(false);
-      const result = await client.auth.signInWithOAuth({provider: 'github', options: {redirectTo, skipBrowserRedirect: true}});
+      const options = {provider, options: {redirectTo, skipBrowserRedirect: true}};
+      // A guest keeps the same user id: linkIdentity attaches the provider through the same PKCE return.
+      const result = upgrade ? await client.auth.linkIdentity(options) : await client.auth.signInWithOAuth(options);
       if (!isCurrent(token)) return answer(false);
-      const address = !result.error && signInAddress(result.data?.url, configuration);
+      const address = !result.error && signInAddress(result.data?.url, configuration, {provider, upgrade});
       if (!address || !storage.canKeepVerifier()) {
         storage.clearVerifiers(); publish('error', address ? AUTH_MESSAGES.storage : AUTH_MESSAGES.error);
         return answer(false);
@@ -150,13 +155,47 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
       return answer(false);
     }
   }
-  function signIn() {
+  function signIn(provider = 'github') {
+    if (!AUTH_PROVIDERS.includes(provider)) return Promise.resolve({...answer(false), message: AUTH_MESSAGES.error});
     if (session.isSignedIn() && !closed) return Promise.resolve(answer(true));
     if (!signInTask) {
-      const task = beginSignIn().finally(() => { if (signInTask === task) signInTask = null; });
+      const task = beginSignIn(provider).finally(() => { if (signInTask === task) signInTask = null; });
       signInTask = task;
     }
     return signInTask;
+  }
+  // Keep a guest's progress: link a provider to the anonymous user. Refused for any other session.
+  function upgrade(provider = 'github') {
+    if (!AUTH_PROVIDERS.includes(provider) || closed || !guest || !session.isSignedIn()) {
+      return Promise.resolve(answer(false));
+    }
+    if (!signInTask) {
+      const task = beginSignIn(provider, true).finally(() => { if (signInTask === task) signInTask = null; });
+      signInTask = task;
+    }
+    return signInTask;
+  }
+  async function beginGuest() {
+    if (signOutTask) await signOutTask;
+    const missing = unavailable(); if (missing) return missing;
+    if (session.isSignedIn()) return answer(true);
+    const token = epoch; publish('signing_in');
+    try {
+      const client = await clientFor(token); if (!client) return answer(false);
+      const result = await client.auth.signInAnonymously();
+      if (!isCurrent(token)) return answer(false);
+      if (!result?.error && applySession(result.data?.session, token)) return answer(true);
+      publish('signed_out', AUTH_MESSAGES.signed_out); return answer(false);
+    } catch {
+      if (isCurrent(token)) publish('signed_out', AUTH_MESSAGES.signed_out);
+      return answer(false);
+    }
+  }
+  // Guest play: an anonymous Supabase user. The server decides whether guests may play right now.
+  function signInAnonymously() {
+    if (session.isSignedIn() && !closed) return Promise.resolve(answer(true));
+    guestTask ??= beginGuest().finally(() => { guestTask = null; });
+    return guestTask;
   }
   async function exchange(result) {
     const missing = unavailable(); if (missing) { storage.clearVerifiers(); return missing; }
@@ -205,7 +244,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
   async function leave() {
     if (closed) return unavailable();
     epoch += 1; const record = current;
-    current = null; loading = null; expiresAt = null; playerId = null;
+    current = null; loading = null; expiresAt = null; playerId = null; guest = false;
     signInTask = null; refreshTask = null;
     try { record?.subscription?.unsubscribe(); } catch { /* Local sign-out still completes. */ }
     record?.storage.detach();
@@ -289,6 +328,6 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     stopRenewal?.(); stopSession(); subscribers.clear();
     storage.close({clear: false}); clearMemory();
   }
-  return {read, subscribe, signIn, handleReturn, restore, renew, getAccessToken,
+  return {read, subscribe, signIn, upgrade, signInAnonymously, handleReturn, restore, renew, getAccessToken,
     signOut, readOwnLedger, readCrewMemberIds, readCrewSeats, dispose};
 }

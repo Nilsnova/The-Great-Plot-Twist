@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "note": "Voice lines by id. Empty until the voices are generated; cutscenes stay silent and keep their subtitles.",
+  "lines": {}
+}

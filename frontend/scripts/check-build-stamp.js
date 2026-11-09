@@ -13,11 +13,11 @@ const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try{
   await stubIntro(page);await page.goto(env.url);await page.locator('#title-build-stamp').waitFor({state:'visible'});
   check((await page.locator('#title-build-stamp').textContent()).includes(stamp.sha),'Built title HTML contains the release identity');
-  check(await page.locator('.shell-screen .kit-modal-header').evaluate((el,sha)=>{const style=getComputedStyle(el,'::after');return style.content.includes(sha)&&parseFloat(style.fontSize)>=16;},stamp.sha),'Title renders the stamp inside its header at 16 px');
+  check(await page.locator('.shell-screen').evaluate((el,sha)=>!el.textContent.includes(sha)&&getComputedStyle(el.querySelector('.kit-modal-header'),'::after').content==='none',stamp.sha),'The title shows no build badge; the stamp lives in Settings > About');
   await page.setViewportSize({width:375,height:812});await page.screenshot({path:'captures/20261106_G9-C0/title-stamp-375.png'});await page.setViewportSize({width:1440,height:900});
   await page.getByRole('button',{name:'Settings',exact:true}).click();
   await page.locator('.build-info').waitFor();
-  check(await page.locator('.build-info').evaluate((el,stamp)=>el.dataset.sha===stamp.sha&&el.dataset.builtAt===stamp.builtAt,stamp),'Settings displays the injected commit and build time');
+  check(await page.locator('.build-info').evaluate((el,stamp)=>el.dataset.sha===stamp.sha&&el.dataset.builtAt===stamp.builtAt&&el.closest('.shell-section')?.querySelector('h3')?.textContent==='About',stamp),'Settings > About displays the injected commit and build time');
   await page.getByRole('button',{name:'Credits',exact:true}).click();await page.locator('.shell-credits .build-info').waitFor();
   check(await page.locator('.build-info').getAttribute('data-sha')===stamp.sha,'Credits uses the same build identity');
   await page.screenshot({path:'captures/20261106_G9-Build-Stamp-Credits.png'});

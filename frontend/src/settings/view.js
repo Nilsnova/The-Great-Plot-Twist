@@ -25,7 +25,7 @@ export function createSettingsView(view) {
   select('Show other captains','showCaptains',[['everyone','Everyone · up to 8'],['crew','Crew only'],['off','Off']]);
   select('First-time hints','hintsEnabled',[['true','On'],['false','Off']],value=>value==='true');
   select('Quality','quality',[['high','High · full weather'],['low','Low · lighter weather']]);
-  for(const key of ['master','music','effects']) {
+  for(const key of ['master','music','effects','voice']) {
     const input=node('input');input.type='range';input.min='0';input.max='100';input.step='1';input.value=String(Math.round(values[key]*100));input.dataset.preference=key;
     const output=node('output','preference-value',`${input.value}%`);output.setAttribute('aria-hidden','true');
     input.setAttribute('aria-valuetext',`${input.value} percent`);
@@ -34,6 +34,7 @@ export function createSettingsView(view) {
     const title=label.firstElementChild;title.classList.add('preference-title');title.append(output);output.htmlFor=input.id;
   }
   select('Reduced motion','reducedMotion',[['null','Follow device preference'],['true','On · still transitions'],['false','Off · full animation']],value=>value==='null'?null:value==='true');
+  select('Cutscene subtitles','subtitleSize',[['normal','Always on · normal size'],['large','Always on · large']]);
   select('Text speed','textSpeed',[['24','Relaxed'],['36','Steady'],['60','Quick'],['0','Instant']],Number);
   const colour=node('input');colour.type='checkbox';colour.checked=values.colourblind;colour.dataset.preference='colourblind';field('Color-blind-safe highlights',colour,'colourblind',element=>element.checked);
   const controls=node('section','controls-overview');controls.append(node('h3','','Controls'));

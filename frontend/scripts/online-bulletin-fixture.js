@@ -94,7 +94,7 @@ export async function openBulletinFixture({clock=false}={}){
       runtimeImports:()=>modules.filter(item=>resources.has(item.path)).map(item=>item.key),
       saveStats:()=>({...saveStats,version:save.version,entryPuts,security:{...security}}),
       async enterWorld(){await signInFromTitle(env);
-        await page.locator('.shell-screen[open] .shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+        await page.locator('#play').click();
         await page.locator('.hud.exploring').waitFor();
         await page.locator('.intro-modal[open]').waitFor({state:'hidden'});
         await assertBulletinSaveReady(page);

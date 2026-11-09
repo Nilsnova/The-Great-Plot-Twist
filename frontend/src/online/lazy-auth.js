@@ -91,7 +91,8 @@ export function createLazyAuth({loadAuth = () => import('./auth.js'), ...options
       if (disposed || typeof listener !== 'function') return () => {};
       listeners.add(listener); return () => listeners.delete(listener);
     },
-    signIn: () => invoke('signIn'), restore: () => invoke('restore'), renew: () => invoke('renew'),
+    signIn: (...args) => invoke('signIn', ...args), upgrade: provider => invoke('upgrade', provider),
+    signInAnonymously: () => invoke('signInAnonymously'), restore: () => invoke('restore'), renew: () => invoke('renew'),
     getAccessToken: () => invoke('getAccessToken'),
     readOwnLedger: () => invoke('readOwnLedger'), readCrewMemberIds: id => invoke('readCrewMemberIds', id),
     readCrewSeats: id => invoke('readCrewSeats', id),

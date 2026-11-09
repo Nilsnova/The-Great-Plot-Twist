@@ -63,7 +63,7 @@ export function createCrewChaosJourney() {
       await openSignedInAccount(env);
       await page.keyboard.press('Escape');
       await page.locator('.account-modal').waitFor({state: 'hidden'});
-      await page.locator('.shell-menu').getByRole('button', {name: 'Continue', exact: true}).click();
+      await page.locator('#play').click();
       await page.locator('.hud.exploring').waitFor();
       await openCrewFromHud(page);
       await page.locator('.case-modal[open] .case-crew').waitFor();

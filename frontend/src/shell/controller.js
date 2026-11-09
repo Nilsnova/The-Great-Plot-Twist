@@ -1,10 +1,10 @@
-// Owns title/pause focus and delegates play/continue. A2 can replace resume through the supplied hook.
+// Owns title/pause focus. Play and Join are the title's two actions; main.js decides what Play starts. A2 can replace resume through the supplied hook.
 import {createModal} from '../ui/kit/modal.js';
 import {node} from '../ui/kit/dom.js';
-import {hasLocalIntro,shellTransition} from './logic.js';
+import {shellTransition} from './logic.js';
 import {menuButton,pixelLogo} from './screens.js';
 export function createShell(ctx) {
-  let mode='title',returnTo='title',disposed=false,request=0,resumeControl=null;
+  let mode='title',returnTo='title',disposed=false,request=0;
   const modal=createModal({title:'The Great Plot Twist',onClose(){if(mode==='playing'&&!ctx.hasOverlay())ctx.focus();},onCancel(){if(mode==='pause')play();else if(mode!=='title')back();}});
   modal.element.classList.add('shell-screen');
   function play() {request++;mode='playing';modal.close();ctx.resetInput();ctx.onState(mode);ctx.focus();}
@@ -17,12 +17,11 @@ export function createShell(ctx) {
     const body=node('div','shell-body'),nav=node('nav','shell-menu');nav.setAttribute('aria-label','Game menu');
     if(mode==='title') {
       modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','AN ISLAND MYSTERY'),node('p','shell-copy','The lighthouse is dark. Find the missing keeper.'));
-      const fresh=menuButton('New game',()=>start(false)),resume=menuButton('Continue',()=>start(true));fresh.id='new-game';
-      resumeControl=resume;resume.disabled=!(hasLocalIntro(ctx.readSave())||ctx.readAccount?.().canContinue);nav.append(fresh,menuButton('Play with friends',()=>ctx.onPlayFriends?ctx.onPlayFriends():page('friends')),resume,menuButton('Settings',()=>page('settings'),true));
+      const go=menuButton('Play',()=>{play();ctx.onStart?.();});go.id='play';nav.append(go,menuButton('Join',()=>page('join'),true));
       if(ctx.demo)nav.append(menuButton('Highlights tour',()=>{play();ctx.onDemo();},true));
-      body.append(nav);if(ctx.accountSummary){const details=node('details','shell-account'),summary=node('summary','','Account and saves');details.append(summary,ctx.accountSummary);body.append(details);}
+      const more=menuButton('Settings',()=>page('settings'),true);more.classList.add('shell-more');body.append(nav,more);
     } else {
-      modal.setTitle(({pause:'A moment ashore',credits:'Made together',friends:'Play with friends'})[mode]??'Settings');
+      modal.setTitle(({pause:'A moment ashore',credits:'Made together',friends:'Play with friends',join:'Join'})[mode]??'Settings');
       const loading=node('p','','Loading…');loading.setAttribute('role','status');body.append(loading);
       const isCurrent=()=>!disposed&&token===request;
       import('./subpages.js').then(({fillSubpage})=>{if(isCurrent())return fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back});})
@@ -37,7 +36,7 @@ export function createShell(ctx) {
     event.preventDefault();event.stopImmediatePropagation();show('pause');
   };
   window.addEventListener('keydown',key,true);show('title');
-  return {setAccount(account){if(mode==='title'){if(resumeControl)resumeControl.disabled=!(hasLocalIntro(ctx.readSave())||account.canContinue);}},notice(text){const message=node('p','shell-note',text);message.setAttribute('role','alert');modal.body.append(message);},get mode(){return mode;},get blocked(){return mode!=='playing';},show,play,
+  return {notice(text){const message=node('p','shell-note',text);message.setAttribute('role','alert');modal.body.append(message);},get mode(){return mode;},get blocked(){return mode!=='playing';},show,play,
     openSettings(){returnTo=mode==='playing'?'pause':mode;show('settings');},
     dispose(){disposed=true;window.removeEventListener('keydown',key,true);modal.dispose();}};
 }

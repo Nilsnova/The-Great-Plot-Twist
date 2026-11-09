@@ -6,7 +6,7 @@ import {dismissIntro} from './intro-browser-fixture.js';
 export async function enterPanelWorld(env,{area}={}){
   const {page}=env;await page.emulateMedia({reducedMotion:'reduce'});await signInFromTitle(env);
   if(await page.locator('.account-modal[open]').isVisible())await page.keyboard.press('Escape');
-  await page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+  await page.locator('#play').click();
   await page.locator('.hud.exploring').waitFor();await dismissIntro(page);
   const expected=area==='predictions'?'Saltreach Harbor':'Smugglers’ Cove';
   await page.waitForFunction(expected=>document.querySelector('.hud .chapter')?.textContent.includes(expected),expected);

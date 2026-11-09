@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "note": "Cutscene scripts. Each line id is also its voice file name: public/audio/voice/<id>.<ext>, listed in public/audio/voice/manifest.json. seconds is the target time on screen; a longer voice recording stretches its line. No spoilers: these lines never name a suspect or a solution.",
+  "scripts": [
+    {
+      "id": "lore_intro",
+      "title": "The dark lighthouse",
+      "music": "dusk",
+      "lines": [
+        {"id": "lore_intro_01", "text": "On a stormy coast lies Saltreach, a small harbor town.", "seconds": 4},
+        {"id": "lore_intro_02", "text": "For years, Keeper Elena Vos lit the lighthouse every night.", "seconds": 4.2},
+        {"id": "lore_intro_03", "text": "Three nights ago, the light went dark. No one has seen Elena since.", "seconds": 4.6},
+        {"id": "lore_intro_04", "text": "Ships now sail by guesswork, and the harbor is full of rumors.", "seconds": 4.2},
+        {"id": "lore_intro_05", "text": "Captains are arriving from every island to help.", "seconds": 3.8},
+        {"id": "lore_intro_06", "text": "You are one of them. Find out what happened, and bring the light back.", "seconds": 4.6}
+      ]
+    },
+    {
+      "id": "harbor_arrival",
+      "title": "Saltreach Harbor",
+      "music": "harbor",
+      "lines": [
+        {"id": "harbor_arrival_01", "text": "Welcome to Saltreach Harbor.", "seconds": 2.6},
+        {"id": "harbor_arrival_02", "text": "Look around, and say hello to the other captains.", "seconds": 3.6}
+      ]
+    },
+    {
+      "id": "lock_opens",
+      "title": "The Keeper's Lock",
+      "music": "dusk",
+      "lines": [
+        {"id": "lock_opens_01", "text": "Click. The Keeper's Lock turns.", "seconds": 3.4},
+        {"id": "lock_opens_02", "text": "The sky outside your window was the right answer.", "seconds": 4},
+        {"id": "lock_opens_03", "text": "Inside lies a small brass key for the lighthouse lamps.", "seconds": 4.4},
+        {"id": "lock_opens_04", "text": "Three lamps need three captains. Find two more.", "seconds": 4.2}
+      ]
+    },
+    {
+      "id": "lamps_relit",
+      "title": "The three lamps",
+      "music": "dawn",
+      "lines": [
+        {"id": "lamps_relit_01", "text": "One lamp. Two lamps. Three.", "seconds": 3.2},
+        {"id": "lamps_relit_02", "text": "The beam sweeps across the water again.", "seconds": 3.6},
+        {"id": "lamps_relit_03", "text": "Ships turn toward the harbor, and Saltreach cheers.", "seconds": 4},
+        {"id": "lamps_relit_04", "text": "The light is back. Elena's story is not over yet.", "seconds": 4.2}
+      ]
+    },
+    {
+      "id": "reveal",
+      "title": "The reveal",
+      "source": "server",
+      "note": "The full mystery's reveal keeps its existing lines. They arrive from the server only after a solve and never ship in this file. Voice, if any, may play only after a solve.",
+      "lines": []
+    }
+  ]
+}

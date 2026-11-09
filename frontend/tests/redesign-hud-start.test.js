@@ -82,49 +82,67 @@ it('keeps supplied captain data literal and its save state honest',async()=>{
   expect(result).toEqual({literal:'<img src=x onerror=alert(1)>',children:0,state:'saving',status:'Saving · Waiting for the server'});
 });
 
-it('shows friends from the title without pretending a disconnected build has online crews',async()=>{
+it('offers exactly Play and Join on the title, and reaches the friends flow through a Join code',async()=>{
   await evaluate.withPage(async page=>{
     await page.evaluate(async()=>{
-      const {createShell}=await window.g20Import('/src/shell/controller.js');window.friendPlays=[];window.friendAccounts=0;
+      const {createShell}=await window.g20Import('/src/shell/controller.js');window.friendPlays=[];window.friendAccounts=0;window.friendStarts=0;
       window.friendShell=createShell({container:document.body,readSave:()=>null,readAccount:()=>({state:'signed_out',canSignIn:false,hasKit:false}),resetInput(){},onState(){},
-        focus(){},hasOverlay:()=>false,openAccount(){window.friendAccounts++;},onPlay:value=>window.friendPlays.push(value)});
+        focus(){},hasOverlay:()=>false,openAccount(){window.friendAccounts++;},onPlay:value=>window.friendPlays.push(value),onStart(){window.friendStarts++;}});
     });
-    expect(await page.locator('.shell-menu button').allTextContents())
-      .toEqual(['New game','Play with friends','Continue','Settings']);
-    await page.getByRole('button',{name:'Play with friends',exact:true}).click();
+    expect(await page.locator('.shell-menu button').allTextContents()).toEqual(['Play','Join']);
+    expect(await page.locator('.shell-screen button').allTextContents()).not.toContain('Continue');
+    expect(await page.locator('.shell-screen details').count()).toBe(0);
+    expect(await page.locator('.shell-screen').textContent()).not.toMatch(/Build|Lantern festival|Account and saves/);
+    await page.getByRole('button',{name:'Join',exact:true}).click();
+    const code=page.getByRole('textbox',{name:'Code'});await code.waitFor();
+    expect(await page.locator('.shell-screen h2').textContent()).toBe('Join');
+    expect(await page.locator('.shell-screen').textContent()).toContain('Scan the QR on the projector');
+    await code.fill('<x>');await page.locator('.join-form').getByRole('button',{name:'Join',exact:true}).click();
+    expect(await page.locator('.join-form [role=status]').textContent()).toContain('letters and numbers');
+    await code.fill('ab-12');await page.locator('.join-form').getByRole('button',{name:'Join',exact:true}).click();
     const solo=page.getByRole('button',{name:'Start a new story',exact:true});await solo.waitFor();
     expect(await page.locator('.shell-screen h2').textContent()).toBe('Play with friends');
+    expect(await page.evaluate(()=>sessionStorage.getItem('plot_twist_crew_code_v1'))).toBe('AB12');
     expect(await page.locator('.friends-guide h3').textContent()).toBe('Explore the island');
-    expect(await page.locator('.friends-guide .shell-copy').textContent()).toContain('Online crews are unavailable');
-    expect(await page.locator('.friends-help').getAttribute('open')).toBeNull();
-    expect(await page.getByRole('button',{name:'Account and saves',exact:true}).count()).toBe(0);
     expect(await page.evaluate(()=>window.friendAccounts)).toBe(0);
-    expect(await page.evaluate(()=>window.friendPlays.length)).toBe(0);
     await solo.click();
-    expect(await page.evaluate(()=>({plays:window.friendPlays,mode:window.friendShell.mode})))
-      .toEqual({plays:[false],mode:'playing'});
+    expect(await page.evaluate(()=>({plays:window.friendPlays,starts:window.friendStarts,mode:window.friendShell.mode})))
+      .toEqual({plays:[false],starts:0,mode:'playing'});
     await page.evaluate(()=>window.friendShell.dispose());
   });
 });
 
-it('delegates to an explicit online entry without inventing a local multiplayer session',async()=>{
+it('hands Play to the front door without choosing a story itself',async()=>{
   const result=await evaluate(async()=>{
-    const {createShell}=await window.g20Import('/src/shell/controller.js');let friends=0,plays=0;
-    const shell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,onPlay(){plays++;},onPlayFriends(){friends++;}});
-    [...document.querySelectorAll('.shell-menu button')].find(button=>button.textContent==='Play with friends').click();
-    const result={friends,plays,mode:shell.mode};shell.dispose();return result;
+    const {createShell}=await window.g20Import('/src/shell/controller.js');let starts=0,plays=0;
+    const shell=createShell({container:document.body,readSave:()=>JSON.stringify({version:1,actions:['to_desk']}),resetInput(){},onState(){},focus(){},hasOverlay:()=>false,onPlay(){plays++;},onStart(){starts++;}});
+    document.querySelector('#play').click();
+    const result={starts,plays,mode:shell.mode};shell.dispose();return result;
   });
-  expect(result).toEqual({friends:1,plays:0,mode:'title'});
+  expect(result).toEqual({starts:1,plays:0,mode:'playing'});
 });
 
-it('collapses account details while preserving continuation from a real journal',async()=>{
-  const result=await evaluate(async()=>{
-    const {createShell}=await window.g20Import('/src/shell/controller.js');const plays=[],summary=document.createElement('section');summary.textContent='Account details';
-    const shell=createShell({container:document.body,readSave:()=>JSON.stringify({version:1,actions:['to_desk']}),readAccount:()=>({canContinue:false}),accountSummary:summary,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,onPlay:value=>plays.push(value)});
-    const details=document.querySelector('.shell-account'),resume=[...document.querySelectorAll('.shell-menu button')].find(button=>button.textContent==='Continue');
-    const result={collapsed:!details.open,attached:details.contains(summary),canContinue:!resume.disabled};resume.click();result.plays=plays;shell.dispose();return result;
+it('keeps account, sign-in providers, the prologue and the build stamp in Settings',async()=>{
+  await evaluate.withPage(async page=>{
+    await page.evaluate(async()=>{
+      const {createShell}=await window.g20Import('/src/shell/controller.js');const createBuildInfo=()=>{const info=document.createElement('section');info.className='build-info';info.textContent='Build fixture';return info;};
+      const view={account:{state:'signed_out',captainName:null,canSignIn:true,providers:['github','google'],save:{state:'idle',label:'No saved progress'}}};
+      window.sent=[];window.prologues=0;
+      window.settingsShell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,
+        adapter:{read:()=>view,subscribe:()=>()=>{}},send:async(...args)=>{window.sent.push(args);return {accepted:true};},openAccount(){},
+        onPrologue(){window.prologues++;},onReplay(){},settingsView:async()=>{const form=document.createElement('div');form.append(createBuildInfo());return form;}});
+    });
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
+    await page.getByRole('button',{name:'Sign in with Google',exact:true}).waitFor();
+    expect(await page.locator('.shell-section h3').allTextContents()).toEqual(['Account','Story','About']);
+    expect(await page.locator('.shell-section').last().locator('.build-info').count()).toBe(1);
+    await page.getByRole('button',{name:'Sign in with Google',exact:true}).click();
+    await page.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();
+    expect(await page.evaluate(()=>window.sent)).toEqual([['signIn',{provider:'google'}],['signIn']]);
+    await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
+    expect(await page.evaluate(()=>({prologues:window.prologues,mode:window.settingsShell.mode}))).toEqual({prologues:1,mode:'playing'});
+    await page.evaluate(()=>window.settingsShell.dispose());
   });
-  expect(result).toEqual({collapsed:true,attached:true,canContinue:true,plays:[true]});
 });
 
 it('separates status/actions inside narrow phone and desktop viewports',async()=>{

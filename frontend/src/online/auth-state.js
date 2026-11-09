@@ -20,11 +20,16 @@ export function authConfiguration(url, key) {
   } catch { return null; }
 }
 
-export function signInAddress(value, configuration) {
+// Provider consent pages a guest upgrade (linkIdentity) may send the browser to, after Supabase
+// answered with the provider's own address. Ordinary sign-in always starts on our Supabase origin.
+const linkPages = {github: ['https://github.com/login/oauth/authorize'],
+  google: ['https://accounts.google.com/o/oauth2/v2/auth', 'https://accounts.google.com/o/oauth2/auth']};
+export function signInAddress(value, configuration, {provider = 'github', upgrade = false} = {}) {
   try {
     const url = new URL(value);
+    if (upgrade) return (linkPages[provider] ?? []).includes(url.origin + url.pathname) ? url.href : null;
     return url.origin === configuration.url && url.pathname === '/auth/v1/authorize'
-      && url.searchParams.get('provider') === 'github'
+      && url.searchParams.get('provider') === provider
       && url.searchParams.get('code_challenge_method') === 's256' ? url.href : null;
   } catch { return null; }
 }

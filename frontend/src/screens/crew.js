@@ -7,10 +7,12 @@ function normalizedCode(value){
   return /^[A-Z0-9]{1,20}$/.test(code)?code:null;
 }
 
+// A code typed on the title's Join page is offered once here; it still needs the player's confirm.
+function takeJoinCode(){try{const value=sessionStorage.getItem('plot_twist_crew_code_v1');sessionStorage.removeItem('plot_twist_crew_code_v1');return /^[A-Z0-9]{1,20}$/.test(value??'')?value:null;}catch{return null;}}
 export function createCrewScreen({send,navigate,openIslet}) {
   const element=node('section','case-crew'),status=node('p','case-caption');
   status.setAttribute('role','status');
-  let view={},code=null,pending=false,disposed=false,generation=0,identityPaused=false;
+  let view={},code=takeJoinCode(),pending=false,disposed=false,generation=0,identityPaused=false;
   let input=null,check=null,confirm=null,create=null,muster=null,previewHint=null;
   const permissions=()=>view.permissions??{};
   const ready=()=>view.mode==='local'||(view.account?.state==='signed_in'&&view.account?.hasKit===true);

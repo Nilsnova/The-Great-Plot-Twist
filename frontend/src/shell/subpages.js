@@ -1,23 +1,43 @@
 // Compose menus only when opened, keeping pause/settings/report code out of the cold title.
 import {node} from '../ui/kit/dom.js';
 import {menuButton} from './screens.js';
+// Account, saves and sign-in live in Settings. The summary follows account changes while shown.
+async function accountSummary(ctx,section){
+  try{
+    const {createAccountSummary}=await import('../screens/account/summary.js');
+    const summary=createAccountSummary({send:ctx.send,openAccount:ctx.openAccount});summary.update(ctx.adapter.read());
+    section.append(summary.element);
+    const stop=ctx.adapter.subscribe(event=>{if(!summary.element.isConnected){stop();summary.dispose();return;}summary.update(event.view);});
+  }catch{if(ctx.openAccount)section.append(menuButton('Account and saves',ctx.openAccount,true));}
+}
 export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back}){
   if(mode==='friends'){
     const {fillFriendsPage}=await import('./friends.js');if(!isCurrent())return;
     fillFriendsPage({body,nav,ctx,isCurrent,play,back});
   }else if(mode==='pause'){
     const {fillPauseMenu}=await import('./pause.js');if(!isCurrent())return;
-    fillPauseMenu(nav,{play,page,show,openAccount:ctx.openAccount});body.replaceChildren(nav);
+    fillPauseMenu(nav,{play,page,show,openAccount:ctx.openAccount,prologue:ctx.onPrologue});body.replaceChildren(nav);
   }else if(mode==='credits'){
     const {credits}=await import('./credits.js');if(!isCurrent())return;
     body.replaceChildren(credits(),menuButton('Back',back,true));
+  }else if(mode==='join'){
+    const {fillJoinPage}=await import('./join.js');if(!isCurrent())return;
+    fillJoinPage({body,nav,ctx,isCurrent,play,page,back});
   }else{
     const settings=await ctx.settingsView?.();if(!isCurrent())return;
-    body.replaceChildren(...(settings?[settings]:[]),menuButton('Credits',()=>show('credits'),true));
+    const story=node('section','shell-section');story.append(node('h3','','Story'));
+    if(ctx.onPrologue)story.append(menuButton('Lighthouse prologue',()=>{play();ctx.onPrologue();},true));
+    if(ctx.onReplay)story.append(menuButton('Replay the intro',()=>{play();ctx.onReplay();},true));
+    const account=node('section','shell-section');account.append(node('h3','','Account'));
+    if(ctx.adapter)await accountSummary(ctx,account);
+    else if(ctx.openAccount)account.append(menuButton('Account and saves',ctx.openAccount,true));
+    if(!isCurrent())return;
+    body.replaceChildren(account,story,...(settings?[settings]:[]),menuButton('Credits',()=>show('credits'),true));
     for(const [label,path] of [['How to play','help.html'],['Privacy','privacy.html']]){
       const link=document.createElement('a');link.className='kit-button kit-quiet';link.textContent=label;
       link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';body.append(link);
     }
+    const about=settings?.querySelector('.build-info');if(about){const section=node('section','shell-section');section.append(node('h3','','About'),about);body.append(section);}
     body.append(menuButton('Back',back,true));
   }
   if(mode==='credits'||mode==='friends'){

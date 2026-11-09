@@ -13,12 +13,12 @@ it('startup forwards API weather metadata and keeps attribution in Settings cred
     await page.goto(base);
     await page.addScriptTag({ type: 'module', content: 'window.g20Import = path => import(path);' });
     await page.waitForFunction(() => typeof window.g20Import === 'function');
-    // Subscribe before New game loads game.js and begins the initial weather refresh.
+    // Subscribe before Play loads game.js and begins the initial weather refresh.
     await page.evaluate(async () => {
       const { on } = await window.g20Import('/src/core/events.js'); window.g20WeatherEvents = [];
       window.g20StopWeather = on('weather_updated', event => window.g20WeatherEvents.push(event));
     });
-    await page.getByRole('button', { name: 'New game', exact: true }).click();
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
     await page.waitForFunction(() => window.g20WeatherEvents.length > 0);
     const state = await page.evaluate(async () => {
       const { getWeather } = await window.g20Import('/src/world/weather.js');

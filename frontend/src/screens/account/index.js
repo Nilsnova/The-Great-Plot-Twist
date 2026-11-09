@@ -9,6 +9,7 @@ import {intentFailure} from '../../adapter/intent.js';
 import {createButton} from '../../ui/kit/button.js';
 import {syncIntentCooldown} from '../../ui/kit/intent-cooldown.js';
 import {createConnectionBanner} from '../../ui/connection-banner.js';
+import {providerActions} from './providers.js';
 
 const accountStates={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account error'};
 const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline copy',conflict:'Conflict'};
@@ -58,9 +59,13 @@ export function createAccountScreen({send,navigate}){
     }
 
     const actions=node('div','account-actions');
-    if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))action(actions,state==='expired'?'Sign in again with GitHub':'Sign in with GitHub','signIn',[],'account-sign-in',busy);
+    if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))for(const item of providerActions(account,{prefix:state==='expired'?'Sign in again with':'Sign in with'}))action(actions,item.label,'signIn',item.args,item.focus,busy);
     if(state==='signing_in')action(actions,'Signing in…','signIn',[],'account-sign-in',true);
     if(state==='signed_in'){
+      if(account.guest===true){
+        actions.append(node('p','account-muted','You are playing as a guest. Sign in to keep your progress on any device.'));
+        if(account.canSignIn!==false)for(const item of providerActions(account,{prefix:'Keep progress with',upgrade:true,focus:'account-upgrade'}))action(actions,item.label,'signIn',item.args,item.focus,busy);
+      }
       action(actions,'Sign out','signOut',[],'account-sign-out',busy);
       if(account.canReroll)action(actions,'Change captain name once','rerollName',[],'account-reroll',busy);
       else if(account.namePending){actions.append(node('p','account-muted','Captain setup is not ready. Your progress on this device is kept.'));if(account.canRetryName)action(actions,'Retry captain setup','signIn',[],'account-name-setup',busy);}
@@ -68,7 +73,7 @@ export function createAccountScreen({send,navigate}){
     }
     action(actions,account.canContinue?(save.source==='cloud'?'Continue from cloud':'Continue from this device'):'No game to continue','continueGame',[],'account-continue',busy||!account.canContinue);
     element.append(actions);
-    if(account.hasKit)element.append(node('p','account-muted','Your confirmed kit is available for the next crew. New Game does not remove it.'));
+    if(account.hasKit)element.append(node('p','account-muted','Your confirmed kit is available for the next crew. Replaying the Lighthouse prologue does not remove it.'));
     if(state==='signed_in'||state==='expired'){
       if(deleteArmed){
         const confirm=node('section','account-delete-confirm');confirm.setAttribute('aria-labelledby','account-delete-title');

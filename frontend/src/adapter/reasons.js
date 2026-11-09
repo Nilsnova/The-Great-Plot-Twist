@@ -17,6 +17,7 @@ export const caseReasons = [
   'crew_required',
   'dawn_wait',
   'deduction_required',
+  'demo_closed',
   'different_seats_required',
   'disposed',
   'emote_cooldown',

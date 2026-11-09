@@ -23,7 +23,7 @@ try{
   await page.getByRole('button',{name:'Play with friends',exact:true}).click();
   await page.getByText('Online crews are not connected in this build.',{exact:true}).waitFor();
   check(await page.getByText('Online crews are not connected in this build.',{exact:true}).isVisible(),'Unavailable online play has a short truthful explanation');
-  await page.getByRole('button',{name:'Back',exact:true}).click();await page.locator('#new-game').click();
+  await page.getByRole('button',{name:'Back',exact:true}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
   await page.locator('.intro-modal[open]').waitFor();
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   const room=page.locator('.interiors-scene:not([hidden])');await room.waitFor();

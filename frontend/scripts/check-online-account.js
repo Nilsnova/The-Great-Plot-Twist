@@ -151,7 +151,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor({state:'attached'});
     await expandTitleAccount(page);
     await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor();
-    await page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+    await page.locator('#play').click();
     await finishIntroPassages(page);
     await assertEngineReplay(page);
     await page.locator('.case-arrival .case-kit-name').filter({hasText:'Recorded Kit'}).waitFor();
