@@ -67,9 +67,10 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on}),hookWorld=createHookWorld({scene,reducedMotion});
   let interiors=null,interiorLoad=null,roomRequest=0,mapTouch=null,onboarding=null,guidedIntroComplete=false;
+  let classDemo=null,classDemoLoad=null;
   let active = false, disposed=false, hud, chart, cinematics, demo, intro, caseUi, marketUi=null, marketLoad=null, experience,entryDestination=null,introPassage=false,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,caseWorld=null,festival=null,festivalPending=null,bulletin=null,weatherAnswer=null;
-  const externalOverlay=()=>!!(shortcuts.active||shell?.blocked||isAppBlocked?.()||demo?.active||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen()||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(shortcuts.active||shell?.blocked||isAppBlocked?.()||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen());
+  const externalOverlay=()=>!!(classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||demo?.active||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen()||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||cinematics?.active||intro?.active||caseUi?.active||marketUi?.active||sportsUi.active||desk?.active||arenaOpen());
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy||!!interiors?.active||!!interiorLoad;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus()});
@@ -134,9 +135,9 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   hud.setFestivalAvailable(festivalEntry?.available===true);
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendCaseIntent(caseUi.adapter,name,...args),openCrew:()=>caseUi.open('crew'),isDemo:()=>!!demo?.active,isIntro:()=>intro.active||introPassage,
-    isBlocked:outsideBlocked});
+    isBlocked:outsideBlocked,presencePlace:place=>classDemo?.presencePlace(place)??place});
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>caseAdapter?.dev?.setIsletBuilt?.(built));
-  const applyCaseView=view=>{guidedIntroComplete=intro.state?.ended===true;onboarding?.update(view,{introComplete:guidedIntroComplete});bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
+  const applyCaseView=view=>{classDemo?.apply(view);guidedIntroComplete=intro.state?.ended===true;onboarding?.update(view,{introComplete:guidedIntroComplete});bulletin=view.bulletin;hookWorld.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);chart.setHook(bulletin?.status==='ready'?bulletin.chapterTwoHook:null);hud.setBulletin(view);hud.setCaptain(view);experience.apply(view);chart.setPartners(view.partners);chart.setKeepsakes(view.rewards.keepsakes);caseWorld=view.world;world.setRelightingComplete(view.world.lightsOn===true);if(view.world.festivalRemaining>0&&!festival&&!festivalPending){festivalPending=import('./world/festival.js').then(module=>{if(!disposed){festival=module.createFestival(scene);captions.show('Lantern festival · lights across the coast');}}).catch(()=>{}).finally(()=>{festivalPending=null;});}};
   caseUi=createCaseBridge({container,adapter:caseAdapter,world,onboardingAction:guideAction,readIntroComplete:()=>intro.state?.ended===true,canPlayCaseEffect:()=>!cinematics.active&&!world.busy,cancelCaseEffects:()=>cinematics.skip(),retryBulletin:()=>findPanelServices(session)?.retryBulletin?.()??Promise.resolve({ok:false}),resetInput:resetControls,focus:()=>graphics.renderer.domElement.focus(),beforeOpen:()=>intro.close(),hasOtherOverlay:()=>intro.active||cinematics.active,openIslet:()=>{caseUi.close();void stopPlots.open('islet_signal_station');},onView:view=>{noteAdapterView(view);if(!demo?.active)applyCaseView(view);},onArrival:(node,snapshot)=>{intro.setArrival(node);entryDestination=snapshot.arrival.destination??null;}});
   // Public prices and private trading share the factory's explicit-session capabilities.
   marketUi=createMarketHost({session,container,resetInput:resetControls,
@@ -184,6 +185,22 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     skipCinematic:()=>cinematics.skip(),resetInput:resetControls,focus:()=>graphics.renderer.domElement.focus(),
     captureCase:()=>({view:caseUi.adapter?.read()??null,world:caseWorld,relit:world.relit}),presentCase:applyCaseView,restoreCase(snapshot){if(caseUi.adapter)applyCaseView(caseUi.adapter.read());else if(snapshot?.view)applyCaseView(snapshot.view);else{caseWorld=snapshot?.world??null;world.setRelightingComplete(!!snapshot?.relit);hud.setCaptain({captain:{name:'Captain pending',coins:null,save:{state:'local',label:'Local intro only'}}});}},
     begin(){roomRequest++;interiors?.close('demo',{immediate:true});caseUi.close();intro.close();shell.play();hud.start();},caption:captions.show,cue:audio.cue});
+  // G29: the class demo (quest strip, class harbor, duel shortcut, Keeper's Lock, lamps) loads after the
+  // front door, or with ?demo=1 (rehearsal) or ?present=1 (a projector rehearsal). Its own chunk.
+  function classDemoQuery(){const query=new URLSearchParams(location.search);return query.get('demo')==='1'||query.get('present')==='1';}
+  function loadClassDemo(){
+    classDemoLoad??=import('./class-demo/index.js').then(module=>{
+      if(disposed)return null;const query=new URLSearchParams(location.search);
+      classDemo=module.createClassDemo({container,scene,world,player:controller.player,input,audio,reducedMotion,on,canvas:graphics.renderer.domElement,
+        rehearsal:query.get('demo')==='1',present:query.get('present')==='1',send:(name,...args)=>sendCaseIntent(caseUi.adapter,name,...args),
+        canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),resetInput:resetControls,cancelWalk:()=>mapTouch?.cancel(),
+        isBlocked:()=>!active||outsideBlocked(),project:(x,z)=>{const rect=graphics.renderer.domElement.getBoundingClientRect();projected.set(x,-z*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}});
+      const current=caseUi.adapter?.read?.();if(current)classDemo.apply(current);
+      return classDemo;
+    }).catch(error=>{console.error(error);classDemoLoad=null;return null;});
+    return classDemoLoad;
+  }
   function guideAction(action){
     mapTouch?.cancel();caseUi.close();
     if(action==='account'){openAccount?.();return;}
@@ -238,6 +255,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
     touch.update(doorway?({cottage:'cottage',boathouse:'shore',lighthouse:'tower_door'})[doorway.roomId]:zone,active&&!outsideBlocked());
     if(guidedIntroComplete!==(intro.state?.ended===true)){guidedIntroComplete=intro.state?.ended===true;onboarding.update(caseUi.adapter?.read(),{introComplete:guidedIntroComplete});}
     onboarding.tick(delta,{blocked:!active||outsideBlocked()||!!zone||!!doorway||hud.quickPanelsOpen||speed>0||touch.active||mapTouch.active||!!input.axis(['KeyD'],['KeyA'])||!!input.axis(['KeyW'],['KeyS'])});
+    classDemo?.update(delta,{blocked:!active||outsideBlocked()||intro.active,zoneActive:!!zone||!!doorway});
     const entering=doorway&&canEnterRoom(doorway.roomId,intro.state);
     if(entering)void enterRoom(doorway.roomId);
     if(input.consume('KeyE')&&!entering&&zone)world.interact(zone);
@@ -254,9 +272,9 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},get interiors(){return interiors;},mapTouch,onboarding, experience,isletState,hookWorld };
+    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, demo, caseUi, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},get interiors(){return interiors;},mapTouch,onboarding, experience,isletState,hookWorld,get classDemo(){return classDemo;} };
   function dispose() {
-    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);
+    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;
     mapTouch?.dispose();onboarding?.dispose();roomRequest++;interiors?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop(); stopListening();stopArena(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     disposeDiagnostics();buildBadge.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
@@ -265,10 +283,11 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
-  }, { once: true });  return {dispose,resetInput:resetControls,openCrew:()=>caseUi.open('crew'),setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
+  }, { once: true });  return {dispose,resetInput:resetControls,openCrew:()=>caseUi.open('crew'),setFestivalAvailable:value=>hud.setFestivalAvailable(value),hasOverlay:()=>!!classDemo?.active||!!interiors?.active||!!interiorLoad||shortcuts.active||intro.active||cinematics.active||chart.open||sailing.active||demo.active||caseUi.active||(marketUi?.active||sportsUi.active)||desk?.active||arenaOpen()||stopPlots.active,
     setMode(mode){mapTouch?.cancel();if(mode==='title'){roomRequest++;interiors?.close('title',{immediate:true});}if(mode!=='playing'){marketUi?.close();desk.close();arenaEntry?.close();sportsUi.close();beginRequest++;introPassage=false;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
+      if(classDemo?.handleEscape())return true;
       if(arenaEntry?.pending&&!container.querySelector('.duel-modal[open]')){arenaEntry.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(desk.pending&&!container.querySelector('.desk-modal[open]')){desk.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
@@ -299,6 +318,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
         if(world.current?.id!==destination)await travel(destination,{fast:true});
         if(disposed||token!==beginRequest||shell.blocked||isAppBlocked?.()||world.current?.id!==destination)return;
         hud.start();if(continuation?.kind!=='world'){intro.begin(resume);if(intro.state)followStoryScene(intro.state.scene);}
+        if(continuation?.demo===true||classDemoQuery())void loadClassDemo();
       }finally{if(token===beginRequest)introPassage=false;}
     },
     startDemo(){return demo.start();}};

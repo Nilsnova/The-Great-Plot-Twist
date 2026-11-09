@@ -13,7 +13,7 @@ describe('front door rules',()=>{
     expect(playChoice({account:{canContinue:false},localIntro:false})).toBe('front_door');
   });
   it('starts outside in Saltreach Harbor through the world continuation',()=>{
-    expect(HARBOR_START).toEqual({kind:'world',place:'saltreach_harbor'});
+    expect(HARBOR_START).toEqual({kind:'world',place:'saltreach_harbor',demo:true});
     expect(Object.isFrozen(HARBOR_START)).toBe(true);
   });
   it('reads Join codes and the class harbor code',()=>{
