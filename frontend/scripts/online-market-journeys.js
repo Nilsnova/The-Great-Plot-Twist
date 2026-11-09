@@ -118,7 +118,7 @@ export async function enterRecordedMarket(env, {open = true} = {}) {
   await env.page.getByRole('button', {name: 'Change captain name once', exact: true}).waitFor();
   await env.page.keyboard.press('Escape');
   await env.page.locator('.account-modal').waitFor({state: 'hidden'});
-  await env.page.locator('.shell-menu').getByRole('button', {name: 'Continue', exact: true}).click();
+  await env.page.locator('#play').click();
   await env.page.locator('.hud.exploring').waitFor();
   await savedCaptain(env.page);
   await walkToExchange(env.page, open);

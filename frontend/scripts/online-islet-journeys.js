@@ -47,7 +47,7 @@ export async function enterRecordedIslet(env){
   await signInFromTitle(env);await openAccountControls(page);
   await page.getByRole('button',{name:'Change captain name once',exact:true}).waitFor();
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+  await page.locator('#play').click();
   await page.locator('.hud.exploring').waitFor();
   await page.waitForFunction(()=>document.querySelector('.chapter')?.textContent.includes('Home islet'));
   await dismissIntro(page); // This public helper already closes case/islet/intro overlays; no extra Escape.

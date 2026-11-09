@@ -112,16 +112,20 @@ export function playCutscene({container = document.body, id, data = scriptData, 
     audio.stop(status === 'completed' ? .8 : .3);
     document.removeEventListener('visibilitychange', visibility);
     dialog.removeEventListener('cancel', cancel);
+    dialog.removeEventListener('keydown', trap);
     stage.removeEventListener('click', skipFromTap);
     if (dialog.open) dialog.close();
     dialog.remove();
     settle({status});
   }
   function cancel(event) { event.preventDefault(); finish('skipped'); }
+  // Skip is the only control, so Tab keeps focus on it inside the modal.
+  function trap(event) { if (event.key === 'Tab') { event.preventDefault(); skipButton.focus({preventScroll: true}); } }
   function skipFromTap() { finish('skipped'); }
   skipButton.addEventListener('click', () => finish('skipped'));
   stage.addEventListener('click', skipFromTap);
   dialog.addEventListener('cancel', cancel);
+  dialog.addEventListener('keydown', trap);
   document.addEventListener('visibilitychange', visibility);
 
   container.append(dialog);

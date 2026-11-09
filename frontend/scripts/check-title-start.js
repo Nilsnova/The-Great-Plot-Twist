@@ -7,13 +7,13 @@ const env=await openWorldBrowser({preview:true});
 try{
   await env.page.addInitScript(()=>{
     const observer=new MutationObserver(()=>{
-      if(!document.querySelector('#new-game'))return;
+      if(!document.querySelector('#play'))return;
       performance.mark('title-ready');observer.disconnect();
     });
     observer.observe(document,{childList:true,subtree:true});
   });
   await env.page.goto(env.url);
-  await env.page.locator('#new-game').waitFor();
+  await env.page.locator('#play').waitFor();
   await env.page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const result=await env.page.evaluate(()=>({
     titleReadyMs:performance.getEntriesByName('title-ready')[0]?.startTime??null,

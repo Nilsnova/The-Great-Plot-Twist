@@ -27,7 +27,7 @@ try {
   check(realChunk?.isDynamicEntry,'Real adapter is a separate dynamic entry');
   await page.addInitScript(()=>{
     const observer=new MutationObserver(()=>{
-      if(!document.querySelector('#new-game'))return;
+      if(!document.querySelector('#play'))return;
       observer.disconnect();requestAnimationFrame(()=>{
         window.__titleFrame={at:performance.now(),resources:performance.getEntriesByType('resource').map(r=>r.name)};
       });
@@ -43,7 +43,7 @@ try {
   check(realStart>=report.titleFrame.at,'Real adapter loading starts after the first title frame');
   const loaded=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));check(!loaded.some(url=>url.includes('controller-')||url.includes('settlement-')||url.includes('cinematic-demo-')||url.includes('kit-gallery-')),'Cold title requests no finale, destination, demo or gallery chunk');
   check(await page.locator('canvas[tabindex]').count()===0,'Cold production title allocates no WebGL renderer');
-  report.contrast=await page.locator('#new-game').evaluate(button=>{
+  report.contrast=await page.locator('#play').evaluate(button=>{
     function luminance(color){const channels=color.match(/[\d.]+/g).slice(0,3).map(Number).map(value=>{value/=255;return value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4;});return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;}
     const style=getComputedStyle(button),a=luminance(style.color),b=luminance(style.backgroundColor);return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
   });check(report.contrast>=4.5,'Primary pixel buttons exceed WCAG AA normal-text contrast');await page.screenshot({path:capture('Title.png')});

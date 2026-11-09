@@ -24,9 +24,8 @@ export async function checkOnlineSignInGate(){
     await page.locator('.account-modal[open] .account-screen').waitFor();
     await page.keyboard.press('Escape');
     await page.locator('.account-modal').waitFor({state:'hidden'});
-    const resume=page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true});
-    await page.waitForFunction(()=>[...document.querySelectorAll('.shell-menu button')]
-      .some(button=>button.textContent==='Continue'&&!button.disabled));
+    const resume=page.locator('#play');
+    await resume.waitFor();
     enabled=false;
     const config=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/config');
     await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await config;

@@ -18,7 +18,7 @@ try{
  await page.getByRole('button',{name:'Play with friends',exact:true}).click();
  await page.getByText('Online crews are not connected in this build.',{exact:true}).waitFor();
  check(await page.getByText('Online crews are not connected in this build.',{exact:true}).isVisible(),'Friends is visible immediately and honestly describes the pending G9 connection');
- await page.getByRole('button',{name:'Back',exact:true}).click();await page.getByRole('button',{name:'New game',exact:true}).click();
+ await page.getByRole('button',{name:'Back',exact:true}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
  await page.locator('.intro-view').waitFor();await page.waitForFunction(()=>window.__island?.interiors?.roomId==='cottage'&&document.querySelector('.interiors-scene')?.dataset.state==='ready');
  await revealIntroText(page);
  check(await page.locator('.intro-modal').evaluate(el=>el.getBoundingClientRect().height===330),'Desktop dialogue stays compact at 330px');

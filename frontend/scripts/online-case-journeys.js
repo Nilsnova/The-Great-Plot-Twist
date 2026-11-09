@@ -19,7 +19,7 @@ export async function enterRecordedCase(env,{width=375}={}){
   await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
   await signInFromTitle(env);
   if(await page.locator('.account-modal[open]').isVisible()){await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});}
-  await page.locator('.shell-menu').getByRole('button',{name:'Continue',exact:true}).click();
+  await page.locator('#play').click();
   await page.locator('.hud.exploring').waitFor();await closeNativePanels(page);await openCrewFromHud(page);
   await page.waitForFunction(()=>document.querySelectorAll('.case-modal[open] .crew-seat[data-kind="player"]').length===2);
   await modal(page).getByRole('button',{name:'Muster with NPC partners',exact:true}).click();

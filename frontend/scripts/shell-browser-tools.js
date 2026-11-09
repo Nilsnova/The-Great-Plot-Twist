@@ -1,7 +1,13 @@
+// Starts the Lighthouse prologue (the original Act 1) from Settings, or continues with Play.
+export async function startPrologue(page){
+  await page.locator('.shell-screen[open]').waitFor();
+  await page.getByRole('button',{name:'Settings',exact:true}).click();
+  await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
+}
 // Starts through the actual title menu. Shared graphics checks can then exercise the world.
 export async function startFromTitle(page,{resume=false,closeIntro=true,closeInterior=closeIntro}={}) {
   await page.locator('.shell-screen[open]').waitFor();
-  await page.getByRole('button',{name:resume?'Continue':'New game',exact:true}).click();
+  if(resume)await page.locator('#play').click();else await startPrologue(page);
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   if(closeIntro){
     const roomScene=await page.locator('.intro-view').getAttribute('data-scene');
