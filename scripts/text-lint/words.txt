@@ -91,6 +91,7 @@ approval
 approved
 arch
 are
+area
 aren't
 arena
 around
@@ -169,6 +170,7 @@ begins
 begun
 behind
 being
+believes
 bell
 belong
 below
@@ -300,6 +302,7 @@ choice
 choices
 choose
 choosing
+chose
 chosen
 christmas
 chrome
@@ -563,6 +566,7 @@ electric
 elena
 elena's
 ellipsis
+else
 email
 emblem
 emote
@@ -755,6 +759,7 @@ general
 generated
 gentle
 geometries
+geonames
 get
 gets
 getting
@@ -769,11 +774,13 @@ glow
 glows
 go
 goal
+goals
 goes
 gold
 golden
 gone
 good
+google
 got
 graphics
 gray
@@ -791,6 +798,7 @@ guess
 guessed
 guessing
 guesswork
+guests
 guidance
 guide
 guild
@@ -994,6 +1002,7 @@ lamp
 lamps
 landfall
 landing
+lands
 lantern
 lanterns
 laptops
@@ -1072,6 +1081,7 @@ logs
 long
 longer
 look
+looked
 lookout
 looks
 lookup
@@ -1284,6 +1294,7 @@ org
 origin
 original
 other
+others
 otherwise
 otter
 ounce
@@ -1411,6 +1422,7 @@ policy
 pool
 pools
 portfolio
+portugal
 position
 positions
 possible
@@ -1437,6 +1449,7 @@ presenter
 press
 pressed
 presses
+pretends
 prevent
 preview
 previewed
@@ -1498,6 +1511,7 @@ queued
 quick
 quickly
 quiet
+quite
 quoted
 r
 rack
@@ -1519,6 +1533,7 @@ reading
 reads
 ready
 real
+really
 realtime
 reason
 receive
@@ -1573,6 +1588,7 @@ removed
 removes
 rendering
 repeat
+repeated
 repeating
 repeats
 replace
@@ -1625,6 +1641,7 @@ reviewed
 revisit
 reward
 rewards
+riddle
 right
 ring
 rises
@@ -1655,6 +1672,7 @@ sa
 safari
 safe
 safely
+said
 sail
 sailed
 sailing
@@ -1693,6 +1711,7 @@ sdk's
 sea
 seal
 sealed
+sealing
 search
 searched
 searches
@@ -1710,6 +1729,7 @@ sections
 security
 see
 seen
+sees
 select
 selected
 selection
@@ -1785,6 +1805,7 @@ signing
 signs
 signup
 silver
+simulated
 simulation
 since
 siren
@@ -1807,6 +1828,7 @@ slightly
 slip
 slippery
 slips
+slow
 small
 smells
 smile
@@ -1827,6 +1849,7 @@ solution
 solutions
 solve
 solved
+somebody
 someone
 something
 somewhere
@@ -1909,6 +1932,7 @@ stranger
 streamed
 strict
 strong
+stuck
 student
 sturdy
 styles
@@ -1983,6 +2007,7 @@ than
 thanks
 thanksgiving
 that
+that's
 the
 their
 them
@@ -2144,6 +2169,7 @@ w
 wait
 waiting
 waits
+waking
 walk
 walkable
 walked
@@ -2177,6 +2203,7 @@ website
 week
 weekend
 welcome
+well
 went
 were
 whale

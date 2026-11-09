@@ -1,5 +1,6 @@
 // Pure live-presence display data. Identity translation is supplied by the private controller.
 import {kitDisplay, kitArchetype} from '../../adapter/shared/kits.js';
+import {shownLimit} from '../../net/live-rules.js';
 
 export const ONLINE_EMOTES = ['wave', 'cheer', 'point', 'lantern', 'shrug'];
 export const peerFacing = value => ({up: 'back', down: 'front', left: 'left', right: 'right'})[value] ?? 'front';
@@ -33,7 +34,7 @@ export function projectOnlinePresence({status = 'off', place = null, shown = [],
   const visible = unique.filter(peer => {
     const sample = positions.get(peer.id);
     return sample && Number.isFinite(sample.x) && Number.isFinite(sample.y);
-  }).slice(0, 8);
+  }).slice(0, shownLimit(place));
   const others = visible.map(peer => {
     const sample = positions.get(peer.id), kit = displayKit(peer.kit);
     return {id: opaqueId(peer.id), name: captainName(peer.name), kit, archetype: kitArchetype(kit),

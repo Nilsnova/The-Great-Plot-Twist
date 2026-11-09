@@ -62,9 +62,10 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
     }
     for(const record of records.values())if(!seen.has(record.id)&&record.leavingAt===null)record.leavingAt=time;
   }
-  function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false}={}){
+  // max: how many captains are drawn (40 in the class harbor); emoteScale: bigger emote bubbles there.
+  function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false,max=PRESENCE_LIMITS.visible,emoteScale=1}={}){
     if(disposed)return stats;clock=Number.isFinite(now)?now:clock+Math.max(0,dt||0)*1000;
-    const {selected,hidden}=selectNearby([...records.values()],{place,player:{x:player?.x??0,y:player?.y??0},now:clock,filter,blocked});
+    const {selected,hidden}=selectNearby([...records.values()],{place,player:{x:player?.x??0,y:player?.y??0},now:clock,filter,blocked,max});
     const chosen=new Set(selected.map(record=>record.id));
     const motionOff=typeof reducedMotion==='function'?reducedMotion():reducedMotion;
     const assets=new Map(selected.map(record=>[record.id,resolveActorAsset(record.peer,{facing:record.peer.facing,moving:!motionOff&&record.peer.moving,frame:Math.floor(clock/180)%2+1,hasAsset:id=>Boolean(art[id])})]));
@@ -80,7 +81,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
       if(record.peer.emote&&art[`emote-${record.peer.emote}`]){
         if(record.emoteId!==record.peer.emote){if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;}
           record.emoteId=record.peer.emote;record.emoteMesh=makeMesh(`emote-${record.emoteId}`,materialFor(art,`emote-${record.emoteId}`),`emote-${record.emoteId}`);record.group.add(record.emoteMesh);}
-        record.emoteMesh.position.y=1.35;setMaterial(record,record.emoteMesh,materialFor(art,`emote-${record.emoteId}`),'emote',alpha);
+        record.emoteMesh.position.y=1.35+(emoteScale-1)*.75;record.emoteMesh.scale.setScalar(emoteScale);setMaterial(record,record.emoteMesh,materialFor(art,`emote-${record.emoteId}`),'emote',alpha);
       }else if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;record.emoteMesh=null;record.emoteId=null;}
       record.label.textContent=record.peer.name;record.label.title=record.peer.kit?.name??'Captain';record.label.hidden=true;
       record.label.style.opacity=String(alpha);record.label.style.fontSize='16px';record.label.style.display='none';

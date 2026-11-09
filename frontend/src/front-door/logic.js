@@ -2,7 +2,8 @@
 export const FRONT_DOOR_KEY = 'plot_twist_front_door_v1';
 export const JOIN_KEY = 'plot_twist_join_v1';
 // The demo starts outside, in Saltreach Harbor, through the game's existing world continuation.
-export const HARBOR_START = Object.freeze({kind: 'world', place: 'saltreach_harbor'});
+// demo: true starts the class demo path (quest strip, class harbor, lock, lamps; src/class-demo/).
+export const HARBOR_START = Object.freeze({kind: 'world', place: 'saltreach_harbor', demo: true});
 
 // A saved story (local intro or a cloud continuation) means Play continues; otherwise the front door.
 export function playChoice({localIntro = false, account = {}} = {}) {
