@@ -80,6 +80,7 @@ varying vec2 vWorld;
 void main(){
   vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;float t=uSeaTime,b=bayer4(px);
   float d=coastDistance(p);
+  if(d < .5)discard; // land: the place backdrop covers it, so skip the work
   // Wave bands drift towards the shore; wind makes them quicker and sharper.
   float swell=sin(p.y*1.9+sin(p.x*.31+t*.35)*1.3-t*(.55+uWind*1.3));
   float chop=sin(p.y*4.7-p.x*.62+t*(1.0+uWind*1.6))*sin(p.x*.23+p.y*.4-t*.3);

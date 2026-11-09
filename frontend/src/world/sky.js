@@ -54,7 +54,7 @@ export function createSky(scene) {
     const dusk = 1 - smoothstep(0, .38, Math.abs(sun.y));
     const u = washMaterial.uniforms;
     u.uNight.value = night; u.uDusk.value = dusk; u.uCloud.value = weather.cloudCover;
-    wash.visible = night > .005 || dusk > .005 || weather.cloudCover > .01;
+    wash.visible = night * .5 + dusk * .16 + weather.cloudCover * .13 > .012; // skip a full-screen pass that would not show
     const m = mistMaterial.uniforms;
     m.uFog.value = weather.fog; m.uNight.value = night; m.uTime.value = time; m.uWind.value = weather.wind;
     mist.visible = weather.fog > .06;
