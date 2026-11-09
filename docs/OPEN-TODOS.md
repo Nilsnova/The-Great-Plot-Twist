@@ -27,12 +27,12 @@ Supabase's built-in mailer only delivers to the project team's own addresses, ab
    - host `smtp-relay.brevo.com`, port `587`
    - username: the Brevo SMTP login; password: the SMTP key
    - **Save**.
-4. Supabase > **Authentication** > **Emails** > **Templates** > **Magic Link**:
-   - subject: `Your Great Plot Twist sign-in code`
-   - body: `<p>Your sign-in code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
-   - **Save**. The game asks for this 6-digit code; a code works better on phones than a link.
-5. Supabase > **Authentication** > **Sign In / Providers** > **Email**: enabled, "Confirm email" stays on. **Rate Limits** > emails sent per hour: **100**.
-6. Send one test code to your own address from the live site once the email option is switched on (section 3), then report it here.
+4. Supabase > **Authentication** > **Emails** > **Templates**: put the code `{{ .Token }}` into **three** templates, then **Save** each. The game asks for this 6-digit code; a code works better on phones than a link.
+   - **Magic Link** (returning players): subject `Your Great Plot Twist sign-in code`, body `<p>Your sign-in code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
+   - **Confirm signup** (a new email address gets this one): subject `Your Great Plot Twist sign-in code`, same body.
+   - **Change Email Address** (a guest who adds an email to keep their progress): subject `Confirm your email for The Great Plot Twist`, body `<p>Your confirmation code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
+5. Supabase > **Authentication** > **Sign In / Providers** > **Email**: enabled; **Confirm email** stays on (without it a guest could claim someone else's address); **Email OTP length** 6; **Email OTP expiration** 3600 seconds or less. If Google is still switched on there, switch it off. Then **Rate Limits** > emails sent per hour: **100**.
+6. Once the game's email option is switched on (Vercel `AUTH_PROVIDERS=github,email`, section 3), send one test code to your own address from the live site and report it here.
 
 Note: mail sent from a free-mail address (for example Gmail) through Brevo can land in spam. Tell players to check their spam folder. Owning a domain fixes this but costs money, so it needs the project owner's decision.
 
