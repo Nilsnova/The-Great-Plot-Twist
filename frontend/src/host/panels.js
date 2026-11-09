@@ -1,6 +1,7 @@
 // Read-only host overview and checklist. Only explicit, safe API fields become screen text.
 import { createPanel } from '../ui/kit/panel.js';
 import { createTable } from '../ui/kit/table.js';
+import { createButton } from '../ui/kit/button.js';
 import { node } from '../ui/kit/dom.js';
 
 export function tablePanel(title,columns,rows,note='') {
@@ -32,6 +33,36 @@ export function overviewPanels(data) {
   ],data.expectedMigrations.map(m=>({...m,state:m.objectPresent?'Present':m.enabled?'MISSING':'Not enabled'})),
   'Object presence is a readiness probe, not proof of the exact applied migration version.'));
   return result;
+}
+// The class demo window as two plain lines. demo is {flagOn, open, openUntil} from GET /api/host/demo.
+export function demoSummary(demo,locale) {
+  if(!demo||typeof demo.flagOn!=='boolean'||typeof demo.open!=='boolean')
+    return {flag:'Unknown',window:'Unknown: the demo status could not be read'};
+  const until=demo.open&&typeof demo.openUntil==='string'?new Date(demo.openUntil):null;
+  const time=until&&!Number.isNaN(until.getTime())?until.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'}):null;
+  return {flag:demo.flagOn?'On':'Off (guests are refused)',window:demo.open?`Open until ${time??'an unknown time'}`:'Closed'};
+}
+export function demoPanel(demo,handlers) {
+  const panel=createPanel({title:'Class demo'});panel.element.dataset.panel='demo';
+  const list=node('dl','host-counts'),flag=node('dd'),open=node('dd');
+  list.append(node('dt','','Demo feature flag'),flag,node('dt','','Guest play window'),open);
+  panel.body.append(list,node('p','host-note','Guests are anonymous sign-ins. They can play only while the flag is on and the window is open. Closing it does not turn off anonymous sign-ins in Supabase.'));
+  const openBtn=createButton({label:'Open for 2 hours',onClick:()=>handlers.setDemo(2)}).element;
+  const closeBtn=createButton({label:'Close now',onClick:()=>handlers.setDemo(0)}).element;
+  const actions=node('div','host-clock-actions');actions.append(openBtn,closeBtn);panel.body.append(actions);
+  const label=node('label','host-confirm'),box=node('input');box.type='checkbox';
+  label.append(box,document.createTextNode(' Delete guest accounts older than 24 hours. This cannot be undone.'));
+  const clean=createButton({label:'Clean up guests',onClick:()=>handlers.cleanup(box.checked)}).element;
+  clean.disabled=true;box.addEventListener('change',()=>{clean.disabled=!box.checked;});
+  panel.body.append(label,clean);
+  let busy=false;
+  function update(next) {
+    const lines=demoSummary(next);flag.textContent=lines.flag;open.textContent=lines.window;
+  }
+  update(demo);
+  return {element:panel.element,update,
+    busy(value) {busy=value;openBtn.disabled=value;closeBtn.disabled=value;clean.disabled=value||!box.checked;},
+    reset() {box.checked=false;clean.disabled=true;},get isBusy() {return busy;}};
 }
 export function checklistPanel(data,headers) {
   const panel=createPanel({title:'Before the class demo'}),items=node('ul','host-checklist');

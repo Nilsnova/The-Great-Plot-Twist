@@ -33,6 +33,8 @@ adapter
 add
 added
 address
+addresses
+adds
 adjusts
 advance
 advertising
@@ -89,6 +91,7 @@ applied
 apply
 approval
 approved
+approximate
 arch
 are
 area
@@ -309,6 +312,7 @@ chrome
 cinematic
 circled
 cited
+city
 claim
 claims
 clashes
@@ -479,10 +483,12 @@ decline
 declined
 deduction
 deductions
+degree
 degrees
 delayed
 delete
 deleted
+deletes
 deletion
 delisted
 delivery
@@ -565,6 +571,7 @@ either
 electric
 elena
 elena's
+elevenlabs
 ellipsis
 else
 email
@@ -669,6 +676,7 @@ fictional
 field
 fields
 file
+files
 fill
 filled
 fills
@@ -758,8 +766,11 @@ gathers
 general
 generated
 gentle
+geocoding
+geolocation
 geometries
 geonames
+george
 get
 gets
 getting
@@ -798,6 +809,7 @@ guess
 guessed
 guessing
 guesswork
+guest
 guests
 guidance
 guide
@@ -910,6 +922,7 @@ information
 ink
 inline
 input
+ins
 inside
 inspect
 inspects
@@ -936,6 +949,7 @@ inventory
 investigate
 investment
 invitation
+invitations
 invited
 inviting
 ip
@@ -991,6 +1005,7 @@ kiosk
 kit
 kits
 kittiwake
+km
 know
 known
 knows
@@ -1052,6 +1067,7 @@ line
 lines
 link
 linked
+linking
 links
 lisbon
 list
@@ -1144,6 +1160,7 @@ messages
 metadata
 metal
 meteo
+meteo's
 method
 middle
 midnight
@@ -1195,6 +1212,7 @@ n
 name
 named
 names
+narration
 narwhal
 nasdaq
 native
@@ -1373,6 +1391,7 @@ perf
 performance
 periodically
 permanently
+permission
 permit
 permits
 persistent
@@ -1412,6 +1431,7 @@ please
 plot
 plots
 plucky
+plus
 png
 pocket
 pockets
@@ -1446,6 +1466,7 @@ presence
 present
 presentation
 presenter
+preset
 press
 pressed
 presses
@@ -1504,6 +1525,7 @@ q
 qr
 quality
 query
+quest
 question
 questions
 queue
@@ -1653,6 +1675,7 @@ room
 rope
 rose
 round
+rounded
 rounds
 route
 route's
@@ -1705,6 +1728,7 @@ scores
 screen
 screens
 screenshots
+script
 scripts
 scroll
 sdk's
@@ -1737,12 +1761,14 @@ selectors
 selects
 send
 sending
+sends
 sensitive
 sent
 separate
 separately
 sequence
 server
+server's
 servers
 serves
 service
@@ -1773,6 +1799,7 @@ she's
 shell
 shells
 shift
+shipped
 ships
 shoal
 shop
@@ -1863,6 +1890,7 @@ space
 spaces
 speak
 speaker
+speech
 speed
 spelling
 spends
@@ -1898,6 +1926,7 @@ star
 starfish
 start
 started
+starter
 starting
 starts
 startup
@@ -2026,6 +2055,7 @@ throw
 throws
 thumping
 thumps
+ticks
 tide
 tidewright
 tidy
@@ -2147,6 +2177,8 @@ value
 values
 vanish
 vercel
+vercel's
+verdict
 verified
 version
 very
@@ -2158,6 +2190,8 @@ visit
 visitors
 visits
 visual
+voice
+voices
 void
 voided
 volume

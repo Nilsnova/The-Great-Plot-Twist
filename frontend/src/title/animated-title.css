@@ -1,0 +1,5 @@
+/* The animated title canvas: native pixels enlarged by whole numbers, faded in over the painted title. */
+.title-scene{position:fixed;z-index:1;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none;opacity:0;transition:opacity .9s ease}
+.title-scene.title-scene-ready{opacity:1}
+.title-scene[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.title-scene{transition:none}}

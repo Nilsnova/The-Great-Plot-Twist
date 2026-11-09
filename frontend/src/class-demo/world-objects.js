@@ -1,5 +1,5 @@
 // The demo's objects in Saltreach Harbor: the Keeper's Lock on the lighthouse path, three lamp posts,
-// and the relight burst at the harbor light. Original pixel shapes drawn in code onto small canvases
+// and the relight at the harbor light. Original pixel shapes drawn in code onto small canvases
 // (no outside asset, no data: URL). Shown only while the player stands in the harbor on the demo path.
 // Every texture, material and geometry is owned here and released by dispose().
 import * as THREE from 'three';
@@ -38,10 +38,19 @@ function paintLamp(lit) {
     [2, 2, 12, 2, '#2f3633'], [6, 0, 4, 2, '#2f3633'],
   ]);
 }
-function paintGlow(context) {
-  const gradient = context.createRadialGradient(32, 32, 2, 32, 32, 32);
-  gradient.addColorStop(0, 'rgba(255,236,160,0.95)');gradient.addColorStop(0.4, 'rgba(255,214,110,0.45)');gradient.addColorStop(1, 'rgba(255,200,90,0)');
-  context.fillStyle = gradient;context.fillRect(0, 0, 64, 64);
+// A stepped, dithered glow (no smooth gradient): four light levels with an ordered-dither seam.
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+function paintGlow(size) {
+  return context => {
+    const half = size / 2, tones = ['', 'rgba(232,160,66,0.42)', 'rgba(246,198,104,0.62)', 'rgba(255,224,150,0.8)', 'rgba(255,240,200,0.95)'];
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const r = Math.hypot(x + .5 - half, (y + .5 - half) * 1.08) / half;
+      if (r >= 1) continue;
+      const level = Math.floor((1 - r) ** 1.5 * 4 + (BAYER[(y % 4) * 4 + (x % 4)] + .5) / 16 - .2);
+      if (level <= 0) continue;
+      context.fillStyle = tones[Math.min(4, level)]; context.fillRect(x, y, 1, 1);
+    }
+  };
 }
 
 export function createDemoObjects({scene, reducedMotion = () => false}) {
@@ -60,60 +69,85 @@ export function createDemoObjects({scene, reducedMotion = () => false}) {
   const lockTextures = {closed: own(canvasTexture(24, 24, paintLock)), open: own(canvasTexture(24, 24, paintLockOpen))};
   const lock = sprite(lockTextures.closed, 24, 24, LOCK_SPOT.x, LOCK_SPOT.z, 0.05);lock.name = 'keepers-lock';
   const lampTextures = {dark: own(canvasTexture(16, 42, paintLamp(false))), lit: own(canvasTexture(16, 42, paintLamp(true)))};
-  const glowTexture = own(canvasTexture(64, 64, paintGlow));
+  const glowTexture = own(canvasTexture(48, 48, paintGlow(48))), beaconTexture = own(canvasTexture(96, 96, paintGlow(96)));
   const lamps = LAMP_SPOTS.map(spot => {
     const post = sprite(lampTextures.dark, 16, 42, spot.x, spot.z, 0.03);post.name = spot.id;
-    const glow = sprite(glowTexture, 64, 64, spot.x, spot.z, 0.5);glow.position.y += 2.2;glow.material.blending = THREE.AdditiveBlending;
+    const glow = sprite(glowTexture, 48, 48, spot.x, spot.z, 0.5);glow.position.y += 2.2;glow.material.blending = THREE.AdditiveBlending;
     glow.visible = false;glow.renderOrder = post.renderOrder + 0.1;
-    return {post, glow, lit: false};
+    return {post, glow, lit: false, spot};
   });
-  const beacon = sprite(glowTexture, 64, 64, 0, 0, 0.5);beacon.position.set(BEAM.x, BEAM.y, 0);beacon.scale.setScalar(3);
+  const beacon = sprite(beaconTexture, 96, 96, 0, 0, 0.5);beacon.position.set(BEAM.x, BEAM.y, 0);
   beacon.material.blending = THREE.AdditiveBlending;beacon.visible = false;beacon.renderOrder = 960;
 
-  // The relight burst: a few hundred sparks that rise from the harbor light and fall away in 3 s.
-  const SPARKS = 180, positions = new Float32Array(SPARKS * 3), velocities = new Float32Array(SPARKS * 2);
-  const sparkGeometry = own(new THREE.BufferGeometry());sparkGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  const sparkMaterial = own(new THREE.PointsMaterial({color: 0xffe08a, size: 3, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending}));
-  const sparks = new THREE.Points(sparkGeometry, sparkMaterial);sparks.visible = false;sparks.frustumCulled = false;sparks.renderOrder = 961;root.add(sparks);
-  let burstLeft = 0, time = 0, relit = false;
-
-  function burst() {
-    if (reducedMotion()) return;
-    for (let i = 0; i < SPARKS; i++) {
-      positions[i * 3] = BEAM.x;positions[i * 3 + 1] = BEAM.y;positions[i * 3 + 2] = 0;
-      const angle = Math.random() * Math.PI * 2, speed = 2 + Math.random() * 6;
-      velocities[i * 2] = Math.cos(angle) * speed;velocities[i * 2 + 1] = Math.abs(Math.sin(angle)) * speed + 2;
+  // Moments: lamp ignition, the lock's pulse and the relight, drawn by the shared pixel effects.
+  const fx = () => scene.userData?.pixelFx ?? null, pools = () => scene.userData?.lightPools ?? null;
+  let time = 0, relit = false, raysAt = 0, shown = false, lockOpen = false;
+  const head = lamp => ({x: lamp.post.position.x, y: lamp.post.position.y + 2.2});
+  function syncPools() {
+    const list = [];
+    if (shown) {
+      for (const lamp of lamps) if (lamp.lit) { const at = head(lamp); list.push({x: at.x, y: lamp.post.position.y, r: 2.6, kind: 0, min: .55}, {x: at.x, y: at.y, r: 1.2, kind: 1, min: .7}); }
+      if (lockOpen) list.push({x: lock.position.x, y: lock.position.y + .7, r: 1.6, kind: 1, min: .45});
+      if (relit) list.push({x: BEAM.x, y: BEAM.y, r: 2.4, kind: 1, min: .8});
     }
-    sparkGeometry.attributes.position.needsUpdate = true;sparks.visible = true;burstLeft = 3;sparkMaterial.opacity = 1;
+    pools()?.extra('class-demo', list);
+  }
+  function ignite(lamp) {
+    const effects = fx(), at = head(lamp);
+    if (!effects) return;
+    effects.bloom(at.x, at.y, {radius: 1.8, life: 1.3});
+    if (reducedMotion()) return;
+    effects.burst(at.x, at.y, {count: 28, speed: [1.2, 3.6], angle: Math.PI / 2, spread: 1.9, gravity: 4.5, life: [.6, 1.3], colour: '#ffd77a'});
+    effects.burst(at.x, at.y, {count: 10, speed: [.4, 1.2], angle: Math.PI / 2, spread: .8, gravity: -.6, life: [1.2, 2], colour: '#fff3c8', size: [1, 1]});
+    effects.ring(at.x, lamp.post.position.y + .1, {radius: 2.4, life: .8, colour: '#f6d27a'});
+  }
+  // The Keeper's Lock opens: a cinematic pulse, three rings and a shockwave across the harbor.
+  function pulseLock() {
+    const effects = fx(), x = lock.position.x, y = lock.position.y + .75;
+    if (!effects) return;
+    effects.bloom(x, y, {radius: 3, life: 2.6});
+    if (reducedMotion()) return;
+    effects.rays(x, y, {radius: 5.5, life: 3.2});
+    [0, .18, .36].forEach((delay, i) => effects.ring(x, y, {radius: 2.2 + i * 2.4, life: .9, delay, colour: i ? '#f3e4b0' : '#ffe08a'}));
+    effects.ring(x, y, {radius: 19, life: 1.5, delay: .25, colour: '#e9d39a'});
+    effects.burst(x, y, {count: 60, speed: [2, 6.5], angle: Math.PI / 2, spread: Math.PI * 1.6, gravity: 7, life: [.8, 1.6]});
+  }
+  // The lighthouse burns again: bloom, slow rays, sparks and a ring at the harbor light.
+  function celebrate() {
+    const effects = fx();
+    if (!effects) return;
+    effects.bloom(BEAM.x, BEAM.y, {radius: 2.8, life: 3.2});
+    if (reducedMotion()) return;
+    effects.rays(BEAM.x, BEAM.y, {radius: 9, life: 6.5}); raysAt = time;
+    effects.ring(BEAM.x, BEAM.y, {radius: 6, life: 1.1}); effects.ring(BEAM.x, BEAM.y, {radius: 14, life: 1.6, delay: .2, colour: '#e9d39a'});
+    effects.burst(BEAM.x, BEAM.y, {count: 150, speed: [2, 7.5], angle: Math.PI / 2, spread: Math.PI * 2, gravity: 6, life: [1, 2.6]});
+    effects.burst(BEAM.x, BEAM.y, {count: 40, speed: [.5, 1.6], angle: Math.PI / 2, spread: Math.PI, gravity: -.4, life: [2, 3.2], colour: '#fff3c8', size: [1, 1]});
   }
 
   return {
-    setVisible(value) { root.visible = value === true; },
-    setLockOpen(open) { lock.material.map = open ? lockTextures.open : lockTextures.closed; lock.material.needsUpdate = true; },
+    setVisible(value) { const next = value === true; root.visible = next; if (next !== shown) { shown = next; syncPools(); } },
+    setLockOpen(open) { lock.material.map = open ? lockTextures.open : lockTextures.closed; lock.material.needsUpdate = true; lockOpen = open === true; syncPools(); },
+    pulseLock,celebrate,
     setLamps(litList) {
+      let changed = false;
       lamps.forEach((lamp, index) => {
         const lit = litList[index] === true;
         if (lamp.lit === lit) return;
         lamp.lit = lit;lamp.post.material.map = lit ? lampTextures.lit : lampTextures.dark;lamp.post.material.needsUpdate = true;lamp.glow.visible = lit;
+        changed = true; if (lit && root.visible) ignite(lamp);
       });
+      if (changed) syncPools();
     },
-    setRelit(value, {celebrate = false} = {}) { relit = value === true; beacon.visible = relit; if (relit && celebrate) burst(); },
+    setRelit(value, {celebrate: party = false} = {}) { const next = value === true; if (next === relit) return; relit = next; beacon.visible = relit; syncPools(); if (relit && party) celebrate(); },
     update(delta) {
       if (!root.visible) return;
       time += delta;
       const still = reducedMotion();
       for (const lamp of lamps) if (lamp.lit) lamp.glow.material.opacity = still ? 0.9 : 0.75 + Math.sin(time * 5 + lamp.post.position.x) * 0.2;
       if (relit) beacon.material.opacity = still ? 0.9 : 0.7 + Math.sin(time * 2) * 0.25;
-      if (burstLeft > 0) {
-        burstLeft -= delta;
-        for (let i = 0; i < SPARKS; i++) {
-          velocities[i * 2 + 1] -= 6 * delta;
-          positions[i * 3] += velocities[i * 2] * delta;positions[i * 3 + 1] += velocities[i * 2 + 1] * delta;
-        }
-        sparkGeometry.attributes.position.needsUpdate = true;sparkMaterial.opacity = Math.max(0, burstLeft / 3);
-        if (burstLeft <= 0) sparks.visible = false;
-      }
+      // While relit, the slow rays come back every few seconds.
+      if (relit && !still && time - raysAt > 6) { raysAt = time; fx()?.rays(BEAM.x, BEAM.y, {radius: 6.5, life: 6.8, colour: '#a87f3c'}); }
     },
-    dispose() { root.removeFromParent(); for (const item of owned) item.dispose(); owned.length = 0; },
+    dispose() { pools()?.extra('class-demo', []); root.removeFromParent(); for (const item of owned) item.dispose(); owned.length = 0; },
   };
 }

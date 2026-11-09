@@ -1,5 +1,70 @@
 {
   "version": 1,
-  "note": "Voice lines by id. Empty until the voices are generated; cutscenes stay silent and keep their subtitles.",
-  "lines": {}
+  "note": "Voice lines by id, generated with ElevenLabs text-to-speech (voice George, model eleven_multilingual_v2) by scripts/voice/generate.py. Voices by ElevenLabs.",
+  "lines": {
+    "lore_intro_01": {
+      "file": "lore_intro_01.mp3",
+      "seconds": 3.68
+    },
+    "lore_intro_02": {
+      "file": "lore_intro_02.mp3",
+      "seconds": 3.6
+    },
+    "lore_intro_03": {
+      "file": "lore_intro_03.mp3",
+      "seconds": 4.23
+    },
+    "lore_intro_04": {
+      "file": "lore_intro_04.mp3",
+      "seconds": 3.79
+    },
+    "lore_intro_05": {
+      "file": "lore_intro_05.mp3",
+      "seconds": 2.98
+    },
+    "lore_intro_06": {
+      "file": "lore_intro_06.mp3",
+      "seconds": 3.87
+    },
+    "harbor_arrival_01": {
+      "file": "harbor_arrival_01.mp3",
+      "seconds": 1.83
+    },
+    "harbor_arrival_02": {
+      "file": "harbor_arrival_02.mp3",
+      "seconds": 2.85
+    },
+    "lock_opens_01": {
+      "file": "lock_opens_01.mp3",
+      "seconds": 2.12
+    },
+    "lock_opens_02": {
+      "file": "lock_opens_02.mp3",
+      "seconds": 2.85
+    },
+    "lock_opens_03": {
+      "file": "lock_opens_03.mp3",
+      "seconds": 3.4
+    },
+    "lock_opens_04": {
+      "file": "lock_opens_04.mp3",
+      "seconds": 3.08
+    },
+    "lamps_relit_01": {
+      "file": "lamps_relit_01.mp3",
+      "seconds": 2.38
+    },
+    "lamps_relit_02": {
+      "file": "lamps_relit_02.mp3",
+      "seconds": 2.43
+    },
+    "lamps_relit_03": {
+      "file": "lamps_relit_03.mp3",
+      "seconds": 3.21
+    },
+    "lamps_relit_04": {
+      "file": "lamps_relit_04.mp3",
+      "seconds": 3.4
+    }
+  }
 }

@@ -94,7 +94,8 @@ export function isDisplayCandidate(record) {
 const displayKeys = new Set(['title','text','name','label','message','blocked_message','description',
   'body','hint','tagline','adjectives','nouns','lines','closed_line','found_line']);
 export function jsonStrings(data, source = '', path = [], displayed = false) {
-  if (typeof data === 'string') return displayed ? [{text:data, key:path.join('.'),
+  // A "file" field holds a file name (a machine identifier), never display copy.
+  if (typeof data === 'string') return displayed && path.at(-1) !== 'file' ? [{text:data, key:path.join('.'),
     line:source.slice(0,Math.max(0,source.indexOf(JSON.stringify(data)))).split('\n').length}] : [];
   if (!data || typeof data !== 'object') return [];
   return Object.entries(data).flatMap(([key,value])=>jsonStrings(value,source,[...path,key],

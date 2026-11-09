@@ -99,6 +99,8 @@ describe('G24 player-facing text',()=>{
   it('extracts JSON display fields and keeps ids and author notes out of spelling checks',()=>{
     expect(jsonStrings({about:'Technical note',id:'bad_identifier',item:{name:'Brass key',text:'A key.'}}).map(record=>record.text))
       .toEqual(['Brass key','A key.']);
+    expect(jsonStrings({lines:{intro_01:{file:'intro_01.mp3',seconds:3},intro_02:{text:'Mind the tide.'}}}).map(record=>record.text))
+      .toEqual(['Mind the tide.']);
   });
   it('keeps explicit named and lowercase-role identity claims out of public copy',()=>{
     expect(revealsIdentity('The culprit is Captain Example.')).toBe(true);

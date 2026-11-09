@@ -80,8 +80,8 @@ migration `20261109010000_demo_window.sql` before the flag goes on.
 1. Supabase: **Authentication > Sign In / Providers**: switch **Allow anonymous sign-ins** on.
 2. Supabase: **Authentication > Rate Limits**: raise **anonymous sign-ins per hour** (for example to
    300). The whole class shares one Wi-Fi address, and the limit counts per address.
-3. Vercel: add `demo` to `FEATURE_FLAGS`, redeploy, then open the window from the host console.
-4. Afterwards: close the window, press "Clean up guests" (anonymous users older than 24 hours), and
+3. Vercel: add `demo` to `FEATURE_FLAGS`, redeploy, then open the window: in `/host.html`, the **Class demo** panel, **Open for 2 hours**; or in the game, the host's J projector button **Open demo for 2 hours**.
+4. Afterwards: in the **Class demo** panel of `/host.html`, press **Close now**, then **Clean up guests** (tick the confirm box first; it deletes anonymous users older than 24 hours, at most 100 per press), and
    switch anonymous sign-ins off again. While anonymous sign-in is on, guests hold Supabase's
    `authenticated` role, so the read policies and Realtime rooms admit them even with the window
    closed; only this API is gated.

@@ -24,6 +24,8 @@ let festivalEntry=null,background=null;
 const loadWorld=()=>import('./shell/world-loader.js');
 const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 const festivalReady=afterPaint.then(loadWorld).then(module=>module.loadAfterPaintModule()).then(module=>{if(disposed)return null;background=module.startAfterPaint({container,audio,caption:captions.show,focus,adapter,send,runtime:()=>runtime,shell:()=>shell,openAccount,isLoading:()=>loading,isDisposed:()=>disposed});return background.festivalReady;}).then(entry=>(festivalEntry=entry)).catch(()=>null);
+// The animated pixel title (G29 C4) loads after the first paint; the painted backdrop stays underneath.
+const titleScene=afterPaint.then(()=>import('./title/animated-title.js')).then(m=>m.startAnimatedTitle({container,backdrop})).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus,onContinue:result=>play(true,result)});
 function openAccount(){return accountHost.open();}
 async function send(name,...args){
@@ -85,7 +87,7 @@ function updateAccount(view){
 const stopAccount=adapter.subscribe(event=>updateAccount(event.view));updateAccount(adapter.read());
 function dispose(){
   if(disposed)return;disposed=true;emit({type:'app_disposed'});background?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();
-  door?.dispose();shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
+  door?.dispose();shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();void titleScene.then(scene=>scene?.dispose());
   if(import.meta.env.DEV)delete window.__plotTwist;
 }
 if(import.meta.env.DEV)window.__plotTwist={adapter,shell,accountHost,dispose};

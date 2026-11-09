@@ -334,11 +334,35 @@ tests in `tests/qr/` include an independent test-only reader.
 **Voices.** `scripts/voice/generate.py` turns the cutscene scripts into MP3 lines
 in `public/audio/voice/` with the ElevenLabs text-to-speech API, plus a manifest
 with durations. Credit line for Settings > Credits: **Voices by ElevenLabs.** The
-scripts are our own writing; until `src/cutscenes/scripts.json` exists the tool
-uses `scripts/voice/sample_scripts.json` (five short, spoiler-free scenes). No
-voice file is committed until the generator has been run with the team's key.
+scripts are our own writing (`src/cutscenes/scripts.json`). Generated on 9 Nov 2026
+with the team's own ElevenLabs account: 16 lines in four scenes (lore_intro,
+harbor_arrival, lock_opens, lamps_relit), premade voice George, model
+eleven_multilingual_v2, MP3 22,050 Hz 32 kbit/s, 232 KB in total, files named
+`<line id>.mp3` with durations in `public/audio/voice/manifest.json`. The key never
+enters the repository; it is read from a file outside it. Attribution as the free
+plan requires: **Voices by ElevenLabs**, shown in Settings > Credits.
 
 **Class demo objects (G29).** The Keeper's Lock, the three lamp posts, their glow and the relight sparks in
 Saltreach Harbor are drawn in code onto small canvases (`src/class-demo/world-objects.js`), and the sky
 icons of the lock screen are SVG rectangles (`src/class-demo/lock-screen.js`). Original, no outside asset.
 Sounds reuse the existing cues (beam, foghorn, festival claim and ring bell).
+
+## G29 C4 code-drawn world effects and animated title
+
+All original, written as code in this repository; no image, font, model, audio or shader from
+anywhere else. Every effect draws on the native pixel grid (16 pixels per world unit) with small
+fixed palettes and ordered 4 × 4 (Bayer) dithering instead of smooth gradients. Gold stays for lights.
+
+| Effect | File | What it draws |
+| --- | --- | --- |
+| Sea | `src/world/water.js` | Wave bands in three teals, crest strokes, shallows, foam that follows each place's coast (a distance field read once from the place backdrop's alpha), glints, rain rings, storm whitecaps |
+| Sky and fog | `src/world/sky.js` | Rose dusk and blue night wash with a dithered night vignette; drifting fog banks in stepped densities |
+| Light pools | `src/world/light-pools.js` | Warm dithered pools under lanterns, lit windows, the beacons and lit class lamps, one instanced mesh |
+| Beam | `src/world/beam.js` | The sweeping beam in four dithered steps; sparkles on wave crests where it crosses the sea |
+| Rain | `src/world/weather.js` | Whole-pixel slanted streaks that lean with the wind and three-frame splashes on land |
+| Wind | `src/world/wind.js` | Tree crowns slide one or two whole pixels with the wind (no rotation or skew) |
+| Moments | `src/world/fx.js` | Sparks, rings, rays and stepped bloom in one geometry: captain arrivals, lamp ignition, the Keeper's Lock pulse, the lighthouse relight |
+| Class-demo glows | `src/class-demo/world-objects.js` | Lamp and beacon glow textures painted per pixel with four light levels and a dithered seam |
+| Animated title | `src/title/animated-title.js` | Brings the existing G29 title planes (`cutscenes/title-*.webp`, credited above) to life on one native-size canvas: parallax drift, a rolling sea, twinkling stars, moon and beam glints, and the sweeping lighthouse beam |
+
+Shared GLSL helpers (hash, value noise, Bayer dithering, banding) live in `src/world/pixel-glsl.js`.

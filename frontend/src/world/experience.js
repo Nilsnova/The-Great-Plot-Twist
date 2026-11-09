@@ -46,11 +46,11 @@ export function createWorldExperience(ctx){
     if(place)reporter.update({place,...previous,facing,moving:speed>.05},performance.now(),{
       enabled:!simulated&&!ctx.isDemo()&&!ctx.isIntro()&&['live','reconnecting'].includes(presence.status),
     });
-    const emote=presence.localEmote;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z),scale=classRoom?1.8:1;localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.scale.setScalar(scale);localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05+(scale-1)*.75)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
+    const emote=presence.localEmote;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z),scale=classRoom?2:1;localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.scale.setScalar(scale);localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05+(scale-1)*.75)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
     partners?.update(dt,{place:worldPlace,now:Date.now()});
     if(!others)return;
     const stats=others.update(dt,{place,player:previous,camera:ctx.camera,canvas:ctx.canvas,now:Date.now(),
-      filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),...(classRoom?{max:40,emoteScale:1.8}:{})});
+      filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),...(classRoom?{max:40,emoteScale:2}:{})});
     hud?.setCounts(stats);
     if(hud)hud.element.hidden=!!simulated||presence.status==='off'||ctx.isBlocked();
   }

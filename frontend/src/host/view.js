@@ -2,13 +2,13 @@
 import { node } from '../ui/kit/dom.js';
 import { createPanel } from '../ui/kit/panel.js';
 import { createButton } from '../ui/kit/button.js';
-import { overviewPanels, checklistPanel } from './panels.js';
+import { overviewPanels, checklistPanel, demoPanel } from './panels.js';
 
 export function createHostView() {
   const panels=document.getElementById('host-panels'),status=document.getElementById('host-status');
   const actions=document.getElementById('host-actions'),closeButtons=new Map();
   let handlers={},signIn,forget;
-  const clockButtons=[];
+  const clockButtons=[];let demoUi=null;
   function button(label,onClick) {return createButton({label,onClick}).element;}
   function crewsPanel(data) {
     const panel=createPanel({title:'Recent crews'});
@@ -58,12 +58,15 @@ export function createHostView() {
       actions.append(signIn,forget,button('Refresh console',()=>handlers.refresh()));
     },
     signedIn(value) {signIn.hidden=value;forget.hidden=!value;},
-    hide() {panels.hidden=true;panels.replaceChildren();closeButtons.clear();clockButtons.length=0;},
+    hide() {panels.hidden=true;panels.replaceChildren();closeButtons.clear();clockButtons.length=0;demoUi=null;},
     say(text) {status.textContent=text;},
     busy(id,value) {const row=closeButtons.get(id);if(row)row.close.disabled=value||!row.checkbox.checked;},
+    demoBusy(value) {demoUi?.busy(value);},
+    demoUpdate(demo,done) {demoUi?.update(demo);if(done)demoUi?.reset();},
     clockBusy(value) {clockButtons.forEach(b=>{b.disabled=value;});},
-    show(data,crews,headers) {
-      closeButtons.clear();panels.replaceChildren(...overviewPanels(data),crewsPanel(crews),checklistPanel(data,headers));
+    show(data,crews,headers,demo=null) {
+      closeButtons.clear();demoUi=demoPanel(demo,handlers);
+      panels.replaceChildren(...overviewPanels(data),demoUi.element,crewsPanel(crews),checklistPanel(data,headers));
       if(data.caseClockAvailable)panels.append(clockPanel(data));
       panels.hidden=false;
     },
