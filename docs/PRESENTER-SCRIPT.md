@@ -49,7 +49,7 @@ Notes for the table above:
 
 1. Switch **Allow anonymous sign-ins** off in Supabase. This is the real stop: while it is on, guests keep Supabase's signed-in role even when the demo window is closed, and only the game server's API is gated.
 2. In the **Class demo** panel of `/host.html`, press **Close now** (or let the window end by itself two hours after you opened it).
-3. Press **Clean up guests** in the same panel and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or Google are kept.
+3. Press **Clean up guests** in the same panel and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or confirmed an email are kept.
 4. Optional: take `demo` out of `FEATURE_FLAGS` and redeploy.
 
 ## The coast and the schooner (older scripts)

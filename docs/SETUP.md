@@ -53,23 +53,41 @@ The Supabase owner (or an Administrator) does this; Developers cannot change log
 4. Supabase: **Authentication > URL Configuration**.
    - Site URL: the production address, e.g. `https://<project>.vercel.app`.
    - Redirect URLs: `http://localhost:5173/**` and the production address `https://<project>.vercel.app/**`. Do **not** add a wildcard for preview addresses (`https://*-<vercel-account-slug>.vercel.app/**`). Anyone can create a Vercel project, and a stranger who can register an address that fits the wildcard (we have not tested whether Vercel allows it) could start a sign-in from their own site and receive a session for any teammate who follows their link. If you need a sign-in on one preview, add that preview's exact address for the test and remove it afterwards. If the wildcard is already in the list, remove it.
-5. Switch the **Email** provider **off** (a new project has it on) and keep magic links and phone off. Anonymous sign-ins stay off except during the class demo (Step 3c). The built-in mailer sends 2 emails per hour and only to team members.
+5. Keep the **Email** provider **off** (a new project has it on) until Step 3b, and keep phone off. Anonymous sign-ins stay off except during the class demo (Step 3c). The built-in mailer sends 2 emails per hour and only to team members, so email sign-in needs your own SMTP first (Step 3b).
 6. **Test:** open **Authentication > Rate Limits** and note whether the free plan lets you raise them. The whole class shares one Wi-Fi address, and sign-in limits are counted per address (for example 30 sign-ins per 5 minutes).
 
-### Step 3b. Google sign-in, the second provider (optional, 15 minutes)
+### Step 3b. Email sign-in with a 6-digit code, the second provider (optional, 20 minutes)
 
-GitHub stays the default. Google users are ordinary players, with no demo gating. The browser offers
-Google only when the Vercel setting `AUTH_PROVIDERS` lists it (`github,google`; an unknown name stops
-the server), and `GET /api/config` then answers `"auth": {"provider": "github", "providers":
-["github", "google"], ...}`. The sign-in uses the same PKCE flow and callback as GitHub.
+GitHub stays the default. Email users are ordinary players, with no demo gating. The browser offers
+**Email me a sign-in code** in Settings > Account only when the Vercel setting `AUTH_PROVIDERS`
+lists it (`github,email`; an unknown name stops the server, `google` included since it was dropped),
+and `GET /api/config` then answers `"auth": {"provider": "github", "providers": ["github",
+"email"], ...}`. The player types the code into the same tab (`signInWithOtp`, then `verifyOtp`
+with type `email`); no link or redirect is used, so the CSP needs nothing new. A guest who enters
+an email gets a confirmation code instead (`updateUser({email})`, then `verifyOtp` with type
+`email_change`), and the same player id keeps its progress.
 
-1. Google Cloud console, signed in as the project owner: **APIs & Services > OAuth consent screen**
-   (External, app name The Great Plot Twist, only the default scopes), then **Credentials > Create
-   credentials > OAuth client ID > Web application**. Authorized redirect URI: the Supabase callback
-   from Step 3, point 1. Copy the client ID and secret into the Supabase dashboard only.
-2. Supabase: **Authentication > Sign In / Providers > Google**: paste both, switch it on, save.
-3. Vercel: set `AUTH_PROVIDERS=github,google` for Production (and Preview if wanted), then redeploy.
-4. To take Google away again, remove it from `AUTH_PROVIDERS` first, then switch it off in Supabase.
+1. Supabase: **Authentication > Emails > SMTP Settings**: switch on custom SMTP with the project's
+   mail provider (sender address, host, port, user, password stay in the dashboard only). The
+   built-in mailer is not enough for players.
+2. Supabase: **Authentication > Emails > Templates**: put the code `{{ .Token }}` into the
+   **Magic Link** template (players who already have an account), the **Confirm signup** template
+   (first sign-in of a new address) and the **Change Email Address** template (a guest keeping
+   progress). The game never follows `{{ .ConfirmationURL }}`; leave it out or keep it as a
+   second way, but the code is what the screen asks for. Suggested text: "Your code for The Great
+   Plot Twist is {{ .Token }}. It expires in one hour. If you did not ask for it, ignore this email."
+3. Supabase: **Authentication > Sign In / Providers > Email**: switch **Email** on, keep **Confirm
+   email** on (otherwise a guest could claim an address without the code), set **Email OTP
+   Length** to 6 and **Email OTP Expiration** to 3600 seconds or less. Leave password sign-up
+   unused: the game has no password field.
+4. Supabase: **Authentication > Rate Limits**: set **Rate limit for sending emails** to what the
+   mail provider allows for the class (for example 60 per hour). Supabase also allows one code per
+   address every 60 seconds; the screen offers **Send a new code** only after 60 seconds and
+   answers a 429 with "Too many requests. Wait a minute, then try again."
+5. Test with your own address on a preview (receive, wrong code, right code, resend after 60 s).
+6. Vercel: set `AUTH_PROVIDERS=github,email` for Production (and Preview if wanted), then redeploy.
+7. To take email away again, remove it from `AUTH_PROVIDERS` first, then switch it off in Supabase.
+   Google is no longer offered: if it is still switched on in Supabase, switch it off there.
 
 ### Step 3c. Guest play for the class demo (on the day, 5 minutes)
 

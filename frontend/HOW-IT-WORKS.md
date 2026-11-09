@@ -348,8 +348,13 @@ keeps `media-src 'none'`. Skip with the button, Escape or a tap. The reveal's li
 
 Guest play: when `/api/config` answers `demo.open: true`, Play calls the `signIn({guest: true})` intent,
 which signs in anonymously with supabase-js. Otherwise Play stays local and Settings offers one sign-in
-button per provider in `auth.providers` (GitHub when missing; Google uses the same PKCE flow). A guest can
-keep their progress with `signIn({provider, upgrade: true})` (Supabase `linkIdentity`). A `403 demo_closed`
+button per OAuth provider in `auth.providers` (GitHub, also when the list is missing). When the list has
+`email`, Settings > Account and the account screen show the email code form (`screens/account/email-code.js`):
+`signIn({provider: 'email', email})` sends a 6-digit code (`signInWithOtp`), and
+`signIn({provider: 'email', email, code})` checks it (`verifyOtp`, type `email`). A guest can keep their
+progress with `signIn({provider: 'github', upgrade: true})` (Supabase `linkIdentity`) or with the same email
+steps plus `upgrade: true` (`updateUser({email})`, then `verifyOtp` with type `email_change`, same user id).
+Wrong or expired codes, 429s and resend after 60 s have fixed messages; no SDK text reaches the screen. A `403 demo_closed`
 answer becomes the `demo_closed` reason with a plain message.
 
 ## G29: the class demo (class harbor, quest strip, duel shortcut, Keeper's Lock, three lamps)

@@ -626,7 +626,7 @@ Not before submission, or only if everything above is green:
 - Storm raids, boarding rounds, the Light Network, harbor orders and Elena's radio bulletin.
 - Chapter 2, *The Unmarked Light*.
 - Hints that cost coins, for solo players who get stuck.
-- Touch controls, Google sign-in, and continuous integration on GitHub Actions (only with Nils' OK).
+- Touch controls and continuous integration on GitHub Actions (only with Nils' OK). Google sign-in was dropped; email code sign-in replaced it (G29).
 
 ## Weekly rhythm
 

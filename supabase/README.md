@@ -3059,7 +3059,7 @@ Supabase Auth's admin user list (`GET /auth/v1/admin/users` with the secret key)
 **Allow anonymous sign-ins** on; Authentication > Rate Limits > **anonymous sign-ins per hour**
 raised (for example 300, one shared class IP). Switch anonymous sign-ins off afterwards: while it is
 on, guests hold the `authenticated` role and the existing read policies and Realtime rooms admit
-them even with the demo window closed. For Google sign-in, see [SETUP.md, Step 3b](../docs/SETUP.md).
+them even with the demo window closed. For email code sign-in (SMTP, templates with `{{ .Token }}`, rate limits), see [SETUP.md, Step 3b](../docs/SETUP.md).
 
 Scratch validation from `backend/` (all migrations applied twice on a disposable local PostgreSQL;
 neither package is added to the project):

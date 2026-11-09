@@ -16,7 +16,7 @@ This is the quickest way in. It takes about five minutes and needs no earlier st
    - **Open the Keeper's Lock.** The lock stands on the lighthouse path, right of the ferry pier. Press E next to it. It asks what the sky over your place looks like right now, and checks your answer against the real weather. The server finds your approximate city from your network address, or you can press **Change place** and search for a city. If you answer wrongly, you can tap **That's not what I see outside**, then **I looked outside**. If the weather cannot be read, the lock asks a riddle instead.
 6. **The finale: three lamps.** Three lamp posts stand along the path. Hold the button, or hold E, for 2 seconds to light a lamp. A lamp burns for 20 seconds, and each lamp needs one captain. When all three burn at once, the lighthouse is relit for everyone in the class harbor.
 
-**Keep your progress.** A guest account is temporary: the host deletes guest accounts older than 24 hours. To keep your progress, open **Settings**, then **Account**, and choose **Keep progress with GitHub** (Google appears too when it is switched on).
+**Keep your progress.** A guest account is temporary: the host deletes guest accounts older than 24 hours. To keep your progress, open **Settings**, then **Account**, and choose **Keep progress with GitHub**, or, when email sign-in is switched on, enter your email under **Keep progress with email** and type the 6-digit code you receive. Your captain and progress stay the same.
 
 **Full mystery.** The class demo is the short path. For the longer one, open the pause menu and choose **Full mystery**. It brings back the full screen layout and starts the Lighthouse prologue. Choose **Class demo** in the same menu to go back. The rest of this guide covers the full mystery.
 
@@ -33,7 +33,7 @@ Crew and case screens can be rehearsed locally. They show the intended workflow,
 3. Play *The Keeper's Last Log*, the solo first act. Your choices matter. There is no required answer sequence in this guide. **Start a new intro** replaces your existing intro progress and starts it again.
 4. A connected case service must confirm your ending before it awards a kit. The arrival screen will show your kit, starting place, items and coins. The four kit names are True Keeper, Witness, Informant and Stranger. Different kits offer different ways into the case; none is a reason to restart for a supposed best ending.
 
-**Account and saves:** the title and pause menus offer an account screen with sign-in (GitHub, and Google when switched on) and save controls. The ordinary game is still waiting for its online account/case connection, so a visible button does not prove you are signed in. You can play the local intro without signing in. Read the confirmed account and save status before changing devices; completing the intro alone does not create a cloud save or award a confirmed kit.
+**Account and saves:** the title and pause menus offer an account screen with sign-in (GitHub, and a 6-digit email code when switched on) and save controls. The ordinary game is still waiting for its online account/case connection, so a visible button does not prove you are signed in. You can play the local intro without signing in. Read the confirmed account and save status before changing devices; completing the intro alone does not create a cloud save or award a confirmed kit.
 
 ## Crews and partners
 
