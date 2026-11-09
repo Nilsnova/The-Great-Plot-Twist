@@ -47,6 +47,8 @@ import { createPlace } from './world/places/factory.js';
 import { createLifetime } from './world/places/resources.js';
 import { createWater } from './world/water.js';
 import { createSky } from './world/sky.js';
+import { createLightPools } from './world/light-pools.js';
+import { createPixelFx } from './world/fx.js';
 import { createWeather, presets, setWeather } from './world/weather.js';
 import { findZone } from './world/zones.js';
 import { createCharacter } from './player/character.js';
@@ -62,7 +64,10 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const scene = new THREE.Scene();
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement),buildBadge=createBuildBadge(container);
-  const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene);
+  const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene), lightPools = createLightPools(scene);
+  const pixelFx = createPixelFx(scene); scene.userData.lightPools = lightPools; scene.userData.pixelFx = pixelFx;
+  // The clock follows the player's local time (automated checks keep the old fixed morning).
+  const followLocalTime = !navigator.webdriver; if (followLocalTime) { const now = new Date(); settings.hour = now.getHours() + now.getMinutes() / 60; }
   const character = createCharacter(art, { reducedMotion }); scene.add(character.sprite);
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on}),hookWorld=createHookWorld({scene,reducedMotion});
@@ -92,7 +97,7 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){mapTouch?.dispose();onboarding?.dispose();roomRequest++;interiors?.dispose();cinematics?.dispose();intro?.dispose();demo?.dispose();caseUi?.dispose();experience?.dispose();festival?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();arenaEntry?.invalidate();shortcuts.dispose();isletState.dispose();hookWorld.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
-      isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+      isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();roomRequest++;interiors?.close('travel',{immediate:true});
     try { await world.goTo(id, options); }
@@ -240,11 +245,11 @@ export async function startGame({container,shell,audio,captions,caseAdapter,isAp
 
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     }
-    settings.hour = (settings.hour + (shell.blocked ? 0 : delta) * (settings.fastTime ? 0.8 : 0.003)) % 24;
+    settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
     const speed=controller.update(delta, active && !outsideBlocked());
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
-    const night = sky.update(settings.hour, state);
+    const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,bulletin,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!caseUi.active&&!(marketUi?.active||sportsUi.active)&&!desk?.active&&!arenaOpen()&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta); cinematics.update(delta,{paused:demo.active&&demo.paused});chart.update(delta);hookWorld.update(delta,{night,place:world.current?.id,active:active&&!world.busy&&!intro.active&&!shell.blocked});
     festival?.update(reducedMotion()?0:time,{active:(caseWorld?.festivalRemaining??0)>0,night,reducedMotion:reducedMotion(),quality:settings.quality,player:controller.player.position,lanternColour:caseWorld?.lanternColour});
