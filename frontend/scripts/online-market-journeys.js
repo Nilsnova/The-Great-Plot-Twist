@@ -349,6 +349,8 @@ export async function recordedMarketUnapplied(env, {width = 375, capture} = {}) 
   await page.keyboard.press('Escape'); await market(page).waitFor({state: 'hidden'});
   check(await page.locator('canvas[tabindex="0"]').first().evaluate(element => document.activeElement === element),
     'Closing an unknown market trade returns focus to the public canvas');
+  // The hall prompt returns a moment after the panel closes; a player presses E once it shows.
+  await page.locator('.interact:not([hidden])[data-zone="market_hall"]').waitFor();
   await page.keyboard.press('KeyE'); await market(page).waitFor(); await waitStatus(page, 'unknown');
   await market(page).getByRole('tab', {name: 'Your positions', exact: true}).click(); await waitPositions(page, 0, 0);
   check(writes(env).length === beforeCheck, 'Ordinary close and public reopening preserve the unknown trade without resending it');
