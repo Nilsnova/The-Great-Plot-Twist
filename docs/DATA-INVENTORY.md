@@ -27,8 +27,9 @@ Schema sources, in timestamp order:
 - [host console](../supabase/migrations/20261106170000_host_console.sql).
 - [sports desk](../supabase/migrations/20261106180000_sports_desk.sql).
 - [demo window](../supabase/migrations/20261109010000_demo_window.sql).
+- [class code](../supabase/migrations/20261109020000_class_code.sql).
 
-The sections below cover **all 42 current application tables and all 323 current columns**. The three old `market_*` tables were dropped by Exchange v2 (`090000`); their replacements are `exchange_positions` and `exchange_events`. Derived views such as `prediction_pool_sides` contain no separate stored rows.
+The sections below cover **all 45 current application tables and all 333 current columns**. The three old `market_*` tables were dropped by Exchange v2 (`090000`); their replacements are `exchange_positions` and `exchange_events`. Derived views such as `prediction_pool_sides` contain no separate stored rows.
 
 Each table has RLS enabled. Visitors have no direct application-table access. Signed-in players receive only the read grants and row filters stated below; all game writes go through server-authorised operations. New case/world/festival/host/sports/demo tables are server-only, with purpose-built API views rather than browser table grants. Authorised database operators can inspect data beyond these player views.
 
@@ -623,7 +624,7 @@ Purpose: Player fixture choice, play-coin amount, payout and repeat identity. Re
 
 ### public.demo_window
 
-Purpose: The class demo's single guest-play window (D029). Readers: Server only; the browser sees only `demo.open` and `demo.openUntil` in `GET /api/config`. Lifetime: One shared operational row; the last host's ID is cleared when that host deletes their account.
+Purpose: The class demo's single guest-play window (D029), unused since the class code (D030) and kept in place. Readers: Server only (no route reads it any more). Lifetime: One shared operational row; the last host's ID is cleared when that host deletes their account.
 
 | Column | What it holds and why |
 |---|---|
@@ -643,6 +644,37 @@ Purpose: Host-scoped once-only switches of the demo window. Readers: Server only
 | `host_id` | Verified host who switched the window. |
 | `hours` | Hours asked for: 0 closes, 1 to 6 opens. |
 | `open_until` | End time this switch set, or null for a close. |
+
+### public.demo_class_code
+
+Purpose: The current class code that lets an anonymous guest in (D030). Readers: Server only; the host sees it through `GET /api/host/demo`; it is never in `GET /api/config` or a log. Stored as plain text so the host can show it again. Lifetime: One shared operational row; replaced by each new code; the host's ID is cleared when that host deletes their account.
+
+| Column | What it holds and why |
+|---|---|
+| `code` | The current 5-symbol class code, or null before the first one. |
+| `name` | Always `class_demo`. |
+| `set_at` | Database time the current code was made. |
+| `set_by` | Verified host who made the current code, cleared on account deletion. |
+
+### public.demo_class_code_actions
+
+Purpose: Host-scoped once-only "New class code" clicks, and the audit of code changes. Readers: Server only. Lifetime: Removed with the host account. Old codes here let nobody in.
+
+| Column | What it holds and why |
+|---|---|
+| `action_uid` | Retry identity scoped to this host. |
+| `code` | The code this click set. |
+| `created_at` | Database time of the click. |
+| `host_id` | Verified host who made the code. |
+
+### public.demo_guests
+
+Purpose: The anonymous guests who presented a valid class code; read by the guest gate and by the browser policies through `is_admitted_guest()`. Readers: Server only (the policy helper answers only yes or no for the caller). Lifetime: Removed with the player account (cascade from `auth.users`), so the automatic and manual guest clean-up and **Delete my data** remove it. A new code removes nobody.
+
+| Column | What it holds and why |
+|---|---|
+| `admitted_at` | Database time of the first admission. |
+| `player_id` | The admitted guest's player UUID. |
 
 ### public.demo_lock_attempts
 
@@ -675,13 +707,13 @@ These are outside the application tables:
 | Application server logs | Ordinary auth/code/database warnings use status/error type or code; HTTP client INFO URLs are suppressed because database URLs may include player IDs. Unexpected errors log method, path and an exception traceback, so logs must not be described as anonymous. | Provider/runtime retention, outside account-row deletion. Successful deletion logs a generic message without the player ID. |
 | Auth verification memory cache | SHA-256 token fingerprint, player UUID and expiry; recognises a verified token for up to 60 seconds. Raw tokens are not stored in this cache. | Removed lazily or on process exit, not explicitly purged by deletion. A deleted player's token may pass the same instance's check briefly. A validity window is not a guaranteed memory-erasure time. |
 | Market rate-limit memory | Player UUID and recent trade timestamps; limits requests in a 30-second window. | Cleaned on reuse, when the map grows beyond 5,000 players, or process exit; deletion does not explicitly purge it. The counting window is not a maximum retention time. |
-| Demo gate and Keeper's Lock memory | Player UUIDs of guests already given a name and kit (at most 5,000), the demo window for 10 seconds, per-player lock/search request times, the weather of rounded places (0.1 degree) for 10 minutes and place-search texts with their results for 24 hours. The player's own place (from Vercel's IP geolocation headers or chosen by them) is used for one request and never stored or logged. | Process memory only; dropped oldest-first, lazily, or on process exit; deletion does not explicitly purge it. |
+| Demo gate and Keeper's Lock memory | Player UUIDs of guests already given a name and kit (at most 5,000), player UUIDs of admitted guests for 10 seconds (at most 5,000), the class-code join budget (per-player UUIDs and SHA-256 fingerprints of network addresses with try times, 10 minutes), per-player lock/search request times, the weather of rounded places (0.1 degree) for 10 minutes and place-search texts with their results for 24 hours. The player's own place (from Vercel's IP geolocation headers or chosen by them) is used for one request and never stored or logged. | Process memory only; dropped oldest-first, lazily, or on process exit; deletion does not explicitly purge it. |
 | `HOST_PLAYER_IDS` configuration | Host player UUIDs, used by the server to restrict presenter routes. | Kept in server settings until an operator changes them; account deletion does not edit configuration. |
 | Browser `plot_twist_preferences_v1` (local storage) | Version, graphics quality, master/music/effects volume, reduced motion, text speed, colourblind setting, captain visibility (`showCaptains`: everyone/crew/off), guidance toggle (`hintsEnabled`) and up to 100 dismissed hint IDs (`dismissedHints`). Same-origin browser code can read it. | No expiry; overwritten by preference changes, removed when site data is cleared. Not cleared by account deletion. |
 | Browser `plot_twist_intro_moves_v1` (local storage) | Version and intro action IDs; replays the local story on reload. | No expiry; a new/restarted intro replaces the action list. Clear site data to remove it. Not cleared by account deletion. |
 | Browser `plot_twist_quests_v1` (local storage) | Class demo quest ticks (Wave, Duel, Keeper's Lock) for up to 12 players, each under `captain:<captain name>` or `device`. | No expiry; the oldest player is dropped beyond 12. Clear site data to remove it. Not cleared by account deletion. |
 | Browser `plot_twist_path_v1` and `plot_twist_front_door_v1` (local storage) | `full` or `demo`, the path the player chose; `1` once the front-door intro has been seen. | No expiry. Clear site data to remove them. Not cleared by account deletion. |
-| Browser `plot_twist_join_v1` (tab session storage) | `harbor` (or the lowercase join code from `?join=`) so the tab joins the class harbor. | Removed when the tab session ends or site data is cleared. |
+| Browser `plot_twist_join_v1` (tab session storage) | The class code from `?join=` or the Join page (5 symbols), or `harbor` from the in-game button, so the tab joins the class harbor. A refused code is removed. | Removed when the tab session ends or site data is cleared. |
 | Browser `plot_twist_lock_place_v1` (tab session storage) | The place a player picked with "Change place" at the Keeper's Lock: name, latitude, longitude. Sent to the game server with lock requests; never stored by the server. | Removed by "Use my area again", when the tab session ends or site data is cleared. |
 | Browser `plot-twist-save-v1` (legacy/helper local storage) | Scene, inventory, flags, ending state and message. Present in the helper, not wired to the current game's intro, which uses memory storage. | Old/helper values can remain until cleared; do not assume every player has this key. |
 | Browser `auth-check-verifier` (session storage) | Temporary random PKCE secret used by the team sign-in check page. | Removed on exchange or “Forget me”; otherwise the tab session. It is not the login token. |

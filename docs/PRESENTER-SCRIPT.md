@@ -10,19 +10,19 @@ Everything here was checked against the code at the G29 checkpoint. It was not r
 
 Setup details are in [SETUP.md](SETUP.md), step 3c.
 
-1. **Database and flags.** Migration `20261109010000_demo_window.sql` is applied. The Vercel setting `FEATURE_FLAGS` includes `demo`, `live_presence` and `arena`, and the site is redeployed. Check them in `/host.html` ([host console](HOST-CONSOLE.md)).
-2. **Anonymous sign-ins (Nils).** In Supabase, switch **Allow anonymous sign-ins** on. Raise the **anonymous sign-ins per hour** limit: the whole class shares one Wi-Fi address, and the limit counts per address.
+1. **Database and flags.** Migrations `20261109010000_demo_window.sql` and `20261109020000_class_code.sql` are applied. The Vercel setting `FEATURE_FLAGS` includes `demo`, `live_presence` and `arena`, and the site is redeployed. Check them in `/host.html` ([host console](HOST-CONSOLE.md)).
+2. **Anonymous sign-ins (Nils, once).** In Supabase, **Allow anonymous sign-ins** stays on for good. Raise the **anonymous sign-ins per hour** limit: the whole class shares one Wi-Fi address, and the limit counts per address. Only a phone with the current class code can play.
 3. **Host sign-in.** On the projector laptop, open the game and sign in with GitHub under **Settings**, then **Account**. The account must be listed in `HOST_PLAYER_IDS`. A guest is never a host.
-4. **Open the demo.** Press **Play**, walk in the harbor, then press **J** to show the projector panel. Press **Open demo for 2 hours**. The panel then reads "Demo open until" with a time. The same switch is in `/host.html`, in the **Class demo** panel (**Open for 2 hours**, **Close now**). The panel shows the flag and "Open until" or "Closed". In the projector panel, pressing again reads **Keep open for 2 more hours**.
-5. **Projector overlay.** J shows or hides the panel. A signed-in host gets J automatically. Without host sign-in, `?present=1` also enables J, but the server refuses the open button for anyone who is not a host.
-6. **Test one phone.** Scan the QR code, play as a guest, and wave once. If a phone says guest play is closed, the window or the Supabase switch is not on yet.
+4. **Make today's class code.** Press **Play**, walk in the harbor, then press **J** to show the projector panel. Press **New class code** and confirm. The panel shows the QR for the new code, the code in big letters (for example **HARBOR-K7QXM**) and how many guests joined with a code. The same button is in `/host.html`, in the **Class demo** panel (tick the confirm box first). A new code stops last lecture's code at once, so a photo of an old QR lets nobody in.
+5. **Projector overlay.** J shows or hides the panel. A signed-in host gets J automatically. Without host sign-in, `?present=1` also enables J, but only a host sees the code and the **New class code** button.
+6. **Test one phone.** Scan the QR code, press **Join** on the page that opens, and wave once. If the phone says the class code is not valid, the QR on screen is older than the current code: press J twice to reload it.
 7. **Safety net.** Open a second tab with `/?demo=1&captains=40` and leave it loaded (see "If something fails").
 
 ### The five minutes
 
 | Time | Do | Say |
 | --- | --- | --- |
-| 0:00 to 0:40 | Press J. The panel shows the QR code, the code **HARBOR** and a live count of captains. | "Scan the QR code and press Play. Or press Join and type HARBOR. You get a captain name; no account." |
+| 0:00 to 0:40 | Press J. The panel shows the QR code, the class code (for example **HARBOR-K7QXM**) and a live count of captains. | "Scan the QR code and press Join. Or open the game, press Join and type the code on the screen. You get a captain name; no account." |
 | 0:40 to 1:20 | Phones arrive. Wait for the count to grow. Point at the harbor. | "Every captain you see is a phone. Up to 40 captains show at once." |
 | 1:20 to 2:00 | Ask the class to wave in turns, a few at a time. Wave yourself: tap a captain or press E, then **Wave**. | "Tap a captain, choose Wave. First goal done." |
 | 2:00 to 2:40 | Pick a volunteer. Tap their captain, then **Friendly duel (3 rounds)**. The volunteer taps **Accept**. Both seal three signals. | "Two taps to challenge. No coins. The signals stay sealed until both have answered." |
@@ -41,16 +41,15 @@ Notes for the table above:
 ### If something fails
 
 - **The network fails or the site is slow.** Switch to the tab you loaded earlier with `/?demo=1&captains=40`. This is rehearsal mode. It runs on the laptop alone: 40 simulated captains walk around, a practice rival answers a friendly duel (and challenges you after 25 seconds), two simulated captains help with the lamps, and the lock uses a fixed question whose answer is "cloudy". It sends nothing to a server. Say so: "This is our offline rehearsal of the same demo." The default is 14 captains; `captains` accepts 0 to 40. Load the page before class, because a dead network cannot load it.
-- **A phone says guest play is closed.** The demo window is shut or Supabase anonymous sign-ins are off. Press **Open demo for 2 hours** again, or check the Supabase switch. Phones can sign in with GitHub meanwhile.
+- **A phone says the class code is not valid.** It typed an old or mistyped code. Point at the code on the projector; the phone can type it again at once. After 10 tries in 10 minutes a phone (or the whole Wi-Fi address) waits a few minutes. If every phone fails, check that the `demo` flag is on and that Supabase anonymous sign-ins are still on. Phones can sign in with GitHub meanwhile.
 - **The weather looks wrong.** Tell the student to look out the window and answer what they see. If the lock says "Not quite", tap **That's not what I see outside**. The lock then says "Readings can miss a passing shower. Step to a window, look up, and then confirm." The student taps **I looked outside** and the lock opens. If the city is wrong, press **Change place** and search for the real city. Use **Use my area again** to go back. If the weather cannot be read at all, the lock asks a riddle instead (what a lighthouse sends across the sea at night; the answer is the beam of light).
 - **A volunteer cannot find the lock or a lamp.** Tap the goal in the quest strip for its hint.
 
 ### After class
 
-1. Switch **Allow anonymous sign-ins** off in Supabase. This is the real stop: while it is on, guests keep Supabase's signed-in role even when the demo window is closed, and only the game server's API is gated.
-2. In the **Class demo** panel of `/host.html`, press **Close now** (or let the window end by itself two hours after you opened it).
-3. Press **Clean up guests** in the same panel and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or Google are kept.
-4. Optional: take `demo` out of `FEATURE_FLAGS` and redeploy.
+1. Nothing has to be switched off. Anonymous sign-ins stay on; a new phone can only play with the current class code, and the next lecture starts with **New class code**, which stops today's code. If the code leaked during class (for example a photo of the QR in a group chat), press **New class code** now.
+2. Old guests are removed automatically, a few at a time, whenever a host opens the console or the projector panel. To do it at once, press **Clean up guests** in the **Class demo** panel of `/host.html` and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or Google are kept.
+3. Optional: take `demo` out of `FEATURE_FLAGS` and redeploy. Then no guest plays at all, with or without a code.
 
 ## The coast and the schooner (older scripts)
 
