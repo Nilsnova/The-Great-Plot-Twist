@@ -42,9 +42,19 @@ describe('cutscene scripts',()=>{
       }
     }
   });
-  it('ships an empty, valid voice manifest until voices are generated',()=>{
+  it('ships a valid voice manifest that voices every scripted line, and nothing else',()=>{
     const manifest=JSON.parse(readFileSync(publicFile('audio/voice/manifest.json'),'utf8'));
-    expect(manifest.version).toBe(1);expect(normalizeManifest(manifest)).toEqual({});
+    expect(manifest.version).toBe(1);
+    const voiced=normalizeManifest(manifest);
+    const scripted=data.scripts.flatMap(script=>script.lines.map(line=>line.id)).sort();
+    expect(Object.keys(voiced).sort()).toEqual(scripted);
+    for(const id of scripted){
+      const {file,seconds}=voiced[id];
+      expect(file).toBe(`${id}.mp3`);expect(existsSync(publicFile(`audio/voice/${file}`))).toBe(true);
+      const bytes=readFileSync(publicFile(`audio/voice/${file}`));
+      expect(bytes.length).toBeGreaterThan(1000);expect(bytes.length).toBeLessThan(40_000);
+      expect(seconds).toBeGreaterThan(1);expect(seconds).toBeLessThan(8);
+    }
   });
 });
 

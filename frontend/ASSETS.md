@@ -334,9 +334,13 @@ tests in `tests/qr/` include an independent test-only reader.
 **Voices.** `scripts/voice/generate.py` turns the cutscene scripts into MP3 lines
 in `public/audio/voice/` with the ElevenLabs text-to-speech API, plus a manifest
 with durations. Credit line for Settings > Credits: **Voices by ElevenLabs.** The
-scripts are our own writing; until `src/cutscenes/scripts.json` exists the tool
-uses `scripts/voice/sample_scripts.json` (five short, spoiler-free scenes). No
-voice file is committed until the generator has been run with the team's key.
+scripts are our own writing (`src/cutscenes/scripts.json`). Generated on 9 Nov 2026
+with the team's own ElevenLabs account: 16 lines in four scenes (lore_intro,
+harbor_arrival, lock_opens, lamps_relit), premade voice George, model
+eleven_multilingual_v2, MP3 22,050 Hz 32 kbit/s, 232 KB in total, files named
+`<line id>.mp3` with durations in `public/audio/voice/manifest.json`. The key never
+enters the repository; it is read from a file outside it. Attribution as the free
+plan requires: **Voices by ElevenLabs**, shown in Settings > Credits.
 
 **Class demo objects (G29).** The Keeper's Lock, the three lamp posts, their glow and the relight sparks in
 Saltreach Harbor are drawn in code onto small canvases (`src/class-demo/world-objects.js`), and the sky

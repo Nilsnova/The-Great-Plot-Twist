@@ -565,6 +565,7 @@ either
 electric
 elena
 elena's
+elevenlabs
 ellipsis
 else
 email
@@ -669,6 +670,7 @@ fictional
 field
 fields
 file
+files
 fill
 filled
 fills
@@ -760,6 +762,7 @@ generated
 gentle
 geometries
 geonames
+george
 get
 gets
 getting
@@ -1195,6 +1198,7 @@ n
 name
 named
 names
+narration
 narwhal
 nasdaq
 native
@@ -1705,6 +1709,7 @@ scores
 screen
 screens
 screenshots
+script
 scripts
 scroll
 sdk's
@@ -1863,6 +1868,7 @@ space
 spaces
 speak
 speaker
+speech
 speed
 spelling
 spends
@@ -2158,6 +2164,8 @@ visit
 visitors
 visits
 visual
+voice
+voices
 void
 voided
 volume
