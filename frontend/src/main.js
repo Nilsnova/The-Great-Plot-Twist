@@ -32,7 +32,9 @@ async function send(name,...args){
   const result=await sendCaseIntent(adapter,name,...args);
   if(disposed)return result;
   updateAccount(result.view);
-  if(!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
+  // The email code form shows its own answers in place (a wrong code must not open a modal).
+  const inline=name==='signIn'&&args[0]?.provider==='email';
+  if(!result.accepted&&!inline){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
   return result;
 }
 async function loadGame(){

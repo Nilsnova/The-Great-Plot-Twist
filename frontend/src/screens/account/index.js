@@ -10,6 +10,7 @@ import {createButton} from '../../ui/kit/button.js';
 import {syncIntentCooldown} from '../../ui/kit/intent-cooldown.js';
 import {createConnectionBanner} from '../../ui/connection-banner.js';
 import {providerActions} from './providers.js';
+import {createEmailCodeForm} from './email-code.js';
 
 const accountStates={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account error'};
 const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline copy',conflict:'Conflict'};
@@ -22,6 +23,8 @@ export function createAccountScreen({send,navigate}){
   const element=node('section','account-screen');element.setAttribute('aria-label','Account and saved games');
   let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0,expiryAttention=false;
   const connection=createConnectionBanner({inline:true,send:(...args)=>send?.(...args)});
+  // Made once: each render moves the same form, so a typed address or code is kept.
+  const email=createEmailCodeForm({send,focusPrefix:'account-email'});
   let refusedFocus=null;
   const syncCooldown=()=>syncIntentCooldown(element,refusedFocus,call.read().remaining);
   const call=createServerCallState({messageElement:node('p','account-feedback'),label:'account action',onRetry:()=>lastIntent&&invoke(...lastIntent),onChange:()=>syncCooldown()});
@@ -72,7 +75,7 @@ export function createAccountScreen({send,navigate}){
       else actions.append(node('p','account-muted','Your captain name change has been used.'));
     }
     action(actions,account.canContinue?(save.source==='cloud'?'Continue from cloud':'Continue from this device'):'No game to continue','continueGame',[],'account-continue',busy||!account.canContinue);
-    element.append(actions);
+    element.append(actions);email.update(account);element.append(email.element);
     if(account.hasKit)element.append(node('p','account-muted','Your confirmed kit is available for the next crew. Replaying the Lighthouse prologue does not remove it.'));
     if(state==='signed_in'||state==='expired'){
       if(deleteArmed){
@@ -125,5 +128,5 @@ export function createAccountScreen({send,navigate}){
     refresh();
   }
   refresh();
-  return {element,update,signIn:()=>invoke('signIn'),showExpiry(){showExpiry();refresh();},tick(){},close(){request++;expiryAttention=false;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();element.remove();}};
+  return {element,update,signIn:()=>invoke('signIn'),showExpiry(){showExpiry();refresh();},tick(){},close(){request++;expiryAttention=false;call.clear();},dispose(){disposed=true;call.dispose();connection.dispose();clearButtons();email.dispose();element.remove();}};
 }

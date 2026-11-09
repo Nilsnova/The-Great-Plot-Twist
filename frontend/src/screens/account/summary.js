@@ -3,6 +3,7 @@ import './account.css';
 import {node} from '../../ui/kit/dom.js';
 import {createButton} from '../../ui/kit/button.js';
 import {providerActions} from './providers.js';
+import {createEmailCodeForm} from './email-code.js';
 
 const accountOf=view=>view?.account??view??{};
 const labels={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account unavailable'};
@@ -10,7 +11,9 @@ const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline 
 export function createAccountSummary({send,openAccount,onContinue}){
   const element=node('section','account-summary');element.setAttribute('aria-label','Account and saved game');
   const replayNote=node('p','shell-note');
-  const status=node('p','account-summary-status'),saveStatus=node('p','account-summary-note'),name=node('strong'),actions=node('div','account-summary-actions');status.append(name);element.append(status,saveStatus,actions,replayNote);
+  const status=node('p','account-summary-status'),saveStatus=node('p','account-summary-note'),name=node('strong'),actions=node('div','account-summary-actions');status.append(name);
+  // The email code form lives outside the repainted actions, so typing and focus survive updates.
+  const email=createEmailCodeForm({send,focusPrefix:'email'});element.append(status,saveStatus,actions,email.element,replayNote);
   let buttons=[];
   function button(label,onClick,focusKey,disabled=false){const component=createButton({label,onClick,disabled,variant:'quiet'});component.element.dataset.focus=focusKey;buttons.push(component);actions.append(component.element);}
   function update(view){
@@ -25,6 +28,7 @@ export function createAccountSummary({send,openAccount,onContinue}){
     button('Account and saves',()=>openAccount?.(),'account');
     if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))for(const item of providerActions(account,{prefix:state==='expired'?'Sign in again with':'Sign in with',focus:'sign-in'}))button(item.label,()=>send?.('signIn',...item.args),item.focus);
     if(account.canSignIn!==false&&state==='signed_in'&&account.guest===true)for(const item of providerActions(account,{prefix:'Keep progress with',upgrade:true,focus:'upgrade'}))button(item.label,()=>send?.('signIn',...item.args),item.focus);
+    email.update(account);
     if(account.signInMessage)actions.append(node('span','account-summary-note',account.signInMessage));
     if(account.canContinue){
       if(onContinue)button(account.save?.source==='cloud'?'Continue from cloud':'Continue',async()=>{const result=await send?.('continueGame');if(result?.accepted)onContinue(result);},'continue');
@@ -33,6 +37,6 @@ export function createAccountSummary({send,openAccount,onContinue}){
     if(focusKey){const replacement=[...actions.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey&&!item.disabled);
       (replacement??actions.querySelector('button:not(:disabled)'))?.focus({preventScroll:true});}
   }
-  function dispose(){buttons.forEach(item=>item.dispose());buttons=[];element.remove();}
+  function dispose(){buttons.forEach(item=>item.dispose());buttons=[];email.dispose();element.remove();}
   return {element,update,dispose};
 }

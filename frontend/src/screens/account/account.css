@@ -3,3 +3,12 @@
 .account-summary strong{color:#f3d58c}.account-summary-note{font-size:18px;line-height:1.5;margin:0;color:#d2d9bb}.account-summary-state{font-weight:bold;color:#f3d58c}
 .account-summary-actions,.account-actions,.account-save-choices{display:flex;gap:10px;flex-wrap:wrap}
 .account-summary button,.account-screen button{font:16px/1.4 'Courier New',monospace;min-height:44px}
+.account-email{display:grid;gap:10px;min-width:0;max-width:34rem;padding:12px;border:1px solid #6f7d5c;border-radius:6px}
+.account-email[hidden],.account-email [hidden]{display:none}
+.account-email button{font:16px/1.4 'Courier New',monospace;min-height:44px}
+.account-email-title{margin:0;font-size:18px;color:#f3d58c}.account-email p{margin:0;overflow-wrap:anywhere}
+.account-email-form{display:grid;gap:10px;min-width:0}.account-email-field{display:grid;gap:6px;min-width:0}
+.account-email input{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:18px/1.2 'Courier New',monospace;color:#15382f;background:#fff7dc;border:2px solid #a7b58c;border-radius:6px}
+.account-email input:focus-visible{outline:3px solid #f3d58c;outline-offset:2px}.account-email input:disabled{opacity:.7}
+.account-email input[name=code]{letter-spacing:4px;max-width:12rem}
+.account-email-status:empty,.account-email-alert:empty{display:none}.account-email-status{color:#d2d9bb}.account-email-alert{color:#ffd0b5;font-weight:bold}

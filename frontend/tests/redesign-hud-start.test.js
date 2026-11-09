@@ -145,19 +145,22 @@ it('keeps account, sign-in providers, the prologue and the build stamp in Settin
   await evaluate.withPage(async page=>{
     await page.evaluate(async()=>{
       const {createShell}=await window.g20Import('/src/shell/controller.js');const createBuildInfo=()=>{const info=document.createElement('section');info.className='build-info';info.textContent='Build fixture';return info;};
-      const view={account:{state:'signed_out',captainName:null,canSignIn:true,providers:['github','google'],save:{state:'idle',label:'No saved progress'}}};
+      const view={account:{state:'signed_out',captainName:null,canSignIn:true,providers:['github','email'],save:{state:'idle',label:'No saved progress'}}};
       window.sent=[];window.prologues=0;
       window.settingsShell=createShell({container:document.body,readSave:()=>null,resetInput(){},onState(){},focus(){},hasOverlay:()=>false,
         adapter:{read:()=>view,subscribe:()=>()=>{}},send:async(...args)=>{window.sent.push(args);return {accepted:true};},openAccount(){},
         onPrologue(){window.prologues++;},onReplay(){},settingsView:async()=>{const form=document.createElement('div');form.append(createBuildInfo());return form;}});
     });
     await page.getByRole('button',{name:'Settings',exact:true}).click();
-    await page.getByRole('button',{name:'Sign in with Google',exact:true}).waitFor();
+    await page.getByRole('textbox',{name:'Email address',exact:true}).waitFor();
     expect(await page.locator('.shell-section h3').allTextContents()).toEqual(['Account','Story','About']);
     expect(await page.locator('.shell-section').last().locator('.build-info').count()).toBe(1);
-    await page.getByRole('button',{name:'Sign in with Google',exact:true}).click();
+    expect(await page.getByRole('button',{name:/Google/}).count()).toBe(0);
+    await page.getByRole('textbox',{name:'Email address',exact:true}).fill('captain@example.org');
+    await page.getByRole('button',{name:'Send code',exact:true}).click();
+    await page.getByRole('textbox',{name:'6-digit code',exact:true}).waitFor();
     await page.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();
-    expect(await page.evaluate(()=>window.sent)).toEqual([['signIn',{provider:'google'}],['signIn']]);
+    expect(await page.evaluate(()=>window.sent)).toEqual([['signIn',{provider:'email',email:'captain@example.org'}],['signIn']]);
     await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
     expect(await page.evaluate(()=>({prologues:window.prologues,mode:window.settingsShell.mode}))).toEqual({prologues:1,mode:'playing'});
     await page.evaluate(()=>window.settingsShell.dispose());
