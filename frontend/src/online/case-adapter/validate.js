@@ -14,7 +14,10 @@ export function normalizeCrewCode(value) {
 function validSignIn(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const keys = Object.keys(value);
-  if (!keys.every(key => ['provider', 'guest', 'upgrade'].includes(key))) return false;
+  if (!keys.every(key => ['provider', 'guest', 'upgrade', 'code'].includes(key))) return false;
+  // A class code travels only with a guest start; the server decides whether it is the current one.
+  if (value.code !== undefined && (value.guest !== true || typeof value.code !== 'string'
+    || !/^[A-Za-z0-9\s-]{1,32}$/.test(value.code))) return false;
   if (value.provider !== undefined && !['github', 'google'].includes(value.provider)) return false;
   if (value.guest !== undefined && value.guest !== true) return false;
   if (value.upgrade !== undefined && value.upgrade !== true) return false;

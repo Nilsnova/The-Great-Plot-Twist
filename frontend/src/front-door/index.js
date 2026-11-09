@@ -1,14 +1,15 @@
 // The demo front door after Play: lore cutscene, one goal-and-controls card, then the player stands
 // outside in Saltreach Harbor. Loaded only after Play, so the cold title stays within its budget.
-// Guest sign-in starts here too, silently, and only when /api/config says the demo is open.
+// Guest sign-in starts here too, silently, and only for a player who brought a class code (?join= or
+// the Join page) while /api/config says demo.guestsByCode. A refused code is forgotten.
 import './front-door.css';
 import {createModal} from '../ui/kit/modal.js';
 import {createButton} from '../ui/kit/button.js';
 import {node} from '../ui/kit/dom.js';
 import {getPreferences, reducedMotion as defaultReducedMotion} from '../settings/preferences.js';
-import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy} from './logic.js';
+import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy, readJoinCode, forgetJoinCode} from './logic.js';
 
-export function createFrontDoor({container, focus, storage = safeStorage(),
+export function createFrontDoor({container, focus, storage = safeStorage(), session = safeSession(),
   preferences = getPreferences, reducedMotion = defaultReducedMotion,
   loadPlayer = () => import('../cutscenes/player.js')} = {}) {
   let player = null, card = null, finishCard = null, disposed = false, request = 0;
@@ -40,10 +41,14 @@ export function createFrontDoor({container, focus, storage = safeStorage(),
     player = null;
   }
 
-  // Ask once for a guest session; a closed demo or an offline server leaves local play unchanged.
+  // Ask once for a guest session with the remembered class code; no code, guests off or an offline
+  // server leave local play unchanged. A code the server refuses is forgotten (Join asks again).
   function startGuest(adapter) {
-    if (adapter?.read?.().mode !== 'online' || adapter.read().account?.state === 'signed_in') return;
-    void Promise.resolve(adapter.signIn({guest: true})).catch(() => {});
+    const code = readJoinCode(session);
+    if (!code || adapter?.read?.().mode !== 'online' || adapter.read().account?.state === 'signed_in') return;
+    void Promise.resolve(adapter.signIn({guest: true, code})).then(result => {
+      if (result?.reason === 'class_code_invalid') forgetJoinCode(session);
+    }).catch(() => {});
   }
 
   return {
@@ -82,4 +87,7 @@ export function createFrontDoor({container, focus, storage = safeStorage(),
 
 function safeStorage() {
   try { return window.localStorage; } catch { return null; }
+}
+function safeSession() {
+  try { return window.sessionStorage; } catch { return null; }
 }

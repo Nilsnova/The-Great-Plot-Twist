@@ -178,54 +178,61 @@ it('removes OAuth query and fragment before exchanging the one-time code', async
   } finally {vi.unstubAllGlobals();}
 });
 
-// Class demo panel (G29): window status, open/close, guest clean-up.
+// Class demo panel (G29, D030): the class code, the join link, "New class code" and guest clean-up.
 import { demoSummary, demoPanel } from '../src/host/panels.js';
-function enableDemo(api,demo={flagOn:true,open:false,openUntil:null}) {
+const DEMO={flagOn:true,code:'K7QXM',codeSetAt:'2026-11-09T14:00:00Z',guests:3};
+function enableDemo(api,demo=DEMO) {
   api.get.mockImplementation(path=>Promise.resolve(ok(path.endsWith('overview')?overview:
     path.endsWith('/demo')?demo:path.endsWith('config')?{capabilities:{}}:crews)));
 }
-it('reads the demo window on refresh and passes it to the view; an unreadable one shows as unknown', async () => {
+it('reads the class code on refresh and passes it to the view; an unreadable one shows as unknown', async () => {
   const {api,view,controller}=setup();enableDemo(api);
   await controller.refresh();
   expect(api.get).toHaveBeenCalledWith('/api/host/demo');
-  expect(view.show.mock.calls.at(-1)[3]).toEqual({flagOn:true,open:false,openUntil:null});
-  api.get.mockImplementation(path=>Promise.resolve(path.endsWith('/demo')?{ok:false,status:503}:ok(path.endsWith('overview')?overview:crews)));
-  await controller.refresh();
-  expect(view.show.mock.calls.at(-1)[3]).toBeNull();
+  expect(view.show.mock.calls.at(-1)[3]).toEqual(DEMO);
+  for(const bad of [{ok:false,status:503},ok({flagOn:true,open:false,openUntil:null}),ok({flagOn:true,code:7,guests:1}),ok({flagOn:true,code:null,guests:-1})]){
+    api.get.mockImplementation(path=>Promise.resolve(path.endsWith('/demo')?bad:ok(path.endsWith('overview')?overview:crews)));
+    await controller.refresh();
+    expect(view.show.mock.calls.at(-1)[3]).toBeNull();
+  }
 });
-it('opens for 2 hours and closes with hours 0, one action id per attempt', async () => {
+it('makes a new class code only after confirmation, one action id per attempt', async () => {
   const {api,view,controller}=setup();enableDemo(api);view.demoBusy=vi.fn();view.demoUpdate=vi.fn();
   await controller.refresh();
-  api.post.mockResolvedValueOnce(ok({flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z',repeat:false}));
-  await controller.setDemo(2);
-  expect(api.post).toHaveBeenLastCalledWith('/api/host/demo',{hours:2,actionUid:'action-1'});
-  expect(view.demoUpdate).toHaveBeenLastCalledWith({flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z'});
+  await controller.newCode(false);
+  expect(api.post).not.toHaveBeenCalled();
+  api.post.mockResolvedValueOnce(ok({flagOn:true,code:'ZZ234',codeSetAt:'2026-11-09T15:00:00Z',guests:3,repeat:false}));
+  await controller.newCode(true);
+  expect(api.post).toHaveBeenLastCalledWith('/api/host/demo/code',{actionUid:'action-1'});
+  expect(view.demoUpdate).toHaveBeenLastCalledWith({flagOn:true,code:'ZZ234',codeSetAt:'2026-11-09T15:00:00Z',guests:3},true);
   expect(view.demoBusy.mock.calls).toEqual([[true],[false]]);
-  api.post.mockResolvedValueOnce(ok({flagOn:true,open:false,openUntil:null,repeat:false}));
-  await controller.setDemo(0);
-  expect(api.post).toHaveBeenLastCalledWith('/api/host/demo',{hours:0,actionUid:'action-2'});
-  expect(view.say).toHaveBeenLastCalledWith('Demo window closed. Guests are refused now.');
-  for(const bad of [-1,7,1.5,'2'])await controller.setDemo(bad);
-  expect(api.post).toHaveBeenCalledTimes(2);
+  expect(view.say).toHaveBeenLastCalledWith('New class code made. The old code no longer lets anyone new in.');
+  api.post.mockResolvedValueOnce(ok({flagOn:false,code:'PQ234',codeSetAt:'2026-11-09T15:01:00Z',guests:3,repeat:false}));
+  await controller.newCode(true);
+  expect(api.post.mock.calls[1][1]).toEqual({actionUid:'action-2'});
+  expect(view.say).toHaveBeenLastCalledWith('New class code made, but the demo flag is off, so guests are still refused.');
 });
-it('keeps the demo action id after an unknown outcome and refuses a different change meanwhile', async () => {
+it('keeps the new-code action id after an unknown outcome or an unreadable answer', async () => {
   const {api,view,controller}=setup();enableDemo(api);
-  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({flagOn:true,open:true,openUntil:'2026-11-09T15:00:00Z',repeat:true}));
+  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({flagOn:true}))
+    .mockResolvedValueOnce(ok({flagOn:true,code:'ZZ234',codeSetAt:'2026-11-09T15:00:00Z',guests:0,repeat:true}));
   await controller.refresh();
-  await controller.setDemo(2);
-  expect(view.say).toHaveBeenLastCalledWith('Demo outcome unknown. Press the same button again; the action ID is retained.');
-  await controller.setDemo(0);
-  expect(api.post).toHaveBeenCalledTimes(1);
-  await controller.setDemo(2);
-  expect(api.post.mock.calls[1]).toEqual(api.post.mock.calls[0]);
+  await controller.newCode(true);
+  expect(view.say).toHaveBeenLastCalledWith('New code outcome unknown. Press the same button again; the action ID is retained.');
+  await controller.newCode(true);
+  expect(view.say).toHaveBeenLastCalledWith('New code outcome unknown. Press the same button again; the action ID is retained.');
+  await controller.newCode(true);
+  expect(api.post.mock.calls.map(call=>call[1])).toEqual([{actionUid:'action-1'},{actionUid:'action-1'},{actionUid:'action-1'}]);
+  await controller.newCode(true);
+  expect(api.post.mock.calls[3][1]).toEqual({actionUid:'action-2'});
 });
-it('shows the server message for a refused demo change and locks on 403', async () => {
+it('shows the server message for a refused new code and locks on 403', async () => {
   const {api,view,controller}=setup();enableDemo(api);await controller.refresh();
-  api.post.mockResolvedValueOnce({ok:false,status:422,message:'Hours must be 0 to 6.'});
-  await controller.setDemo(2);
-  expect(view.say).toHaveBeenLastCalledWith('Hours must be 0 to 6.');
+  api.post.mockResolvedValueOnce({ok:false,status:422,message:'Check the request.'});
+  await controller.newCode(true);
+  expect(view.say).toHaveBeenLastCalledWith('Check the request.');
   api.post.mockResolvedValueOnce({ok:false,status:403});
-  await controller.setDemo(2);
+  await controller.newCode(true);
   expect(view.say).toHaveBeenLastCalledWith('Not a host');
 });
 it('cleans up guests only after confirmation and reports the count', async () => {
@@ -266,31 +273,38 @@ class FakeNode {
   get textContent(){return this.own+this.children.map(c=>c.textContent).join('');}
   find(tag,out=[]){if(this.tagName===tag)out.push(this);for(const c of this.children)c.find?.(tag,out);return out;}
 }
-it('summarises the demo window and builds an accessible panel with disabled-while-busy buttons', () => {
+it('summarises the class code and builds an accessible panel with confirm-first, disabled-while-busy buttons', () => {
   vi.stubGlobal('document',{createElement:tag=>new FakeNode(tag),createTextNode:text=>{const n=new FakeNode('#text');n.own=text;return n;}});
   vi.stubGlobal('Node',FakeNode);
   try {
     expect(demoSummary(null).flag).toBe('Unknown');
-    expect(demoSummary({flagOn:true,open:false,openUntil:null})).toEqual({flag:'On',window:'Closed'});
-    expect(demoSummary({flagOn:false,open:false,openUntil:null}).flag).toContain('Off');
-    expect(demoSummary({flagOn:true,open:true,openUntil:'2026-11-09T15:05:00Z'},'en-GB').window).toMatch(/^Open until \d\d:\d\d$/);
-    const handlers={setDemo:vi.fn(),cleanup:vi.fn()};
-    const ui=demoPanel({flagOn:true,open:false,openUntil:null},handlers);
+    expect(demoSummary({flagOn:true,open:false,openUntil:null}).code).toMatch(/^Unknown/);
+    expect(demoSummary(DEMO)).toEqual({flag:'On',code:'HARBOR-K7QXM',link:'https://the-great-plot-twist.vercel.app/?join=K7QXM',guests:'3'});
+    expect(demoSummary({...DEMO,code:null})).toMatchObject({code:'None yet: make one before class',link:''});
+    expect(demoSummary({...DEMO,code:'<b>'})).toMatchObject({code:'None yet: make one before class',link:''});
+    expect(demoSummary({...DEMO,flagOn:false}).flag).toContain('Off');
+    const handlers={newCode:vi.fn(),cleanup:vi.fn()};
+    const ui=demoPanel(DEMO,handlers);
     const buttons=ui.element.find('button');
-    expect(buttons.map(b=>b.textContent)).toEqual(['Open for 2 hours','Close now','Clean up guests']);
+    expect(buttons.map(b=>b.textContent)).toEqual(['New class code','Clean up guests']);
+    expect(ui.element.textContent).not.toMatch(/Open for 2 hours|Close now/);
+    expect(ui.element.textContent).toContain('HARBOR-K7QXM');
+    expect(ui.element.textContent).toContain('https://the-great-plot-twist.vercel.app/?join=K7QXM');
+    expect(ui.element.textContent).toContain('removed automatically');
     expect(ui.element.attributes['aria-labelledby']).toBeTruthy();
-    expect(buttons[2].disabled).toBe(true);
-    buttons[0].click();buttons[1].click();
-    expect(handlers.setDemo.mock.calls).toEqual([[2],[0]]);
-    const [box]=ui.element.find('input');
+    expect(buttons.every(b=>b.disabled)).toBe(true);
+    const [renewBox,box]=ui.element.find('input');
+    renewBox.checked=true;renewBox.fire('change');
+    expect(buttons[0].disabled).toBe(false);expect(buttons[1].disabled).toBe(true);
+    buttons[0].click();expect(handlers.newCode).toHaveBeenCalledWith(true);
     box.checked=true;box.fire('change');
-    expect(buttons[2].disabled).toBe(false);
-    buttons[2].click();expect(handlers.cleanup).toHaveBeenCalledWith(true);
+    expect(buttons[1].disabled).toBe(false);
+    buttons[1].click();expect(handlers.cleanup).toHaveBeenCalledWith(true);
     ui.busy(true);expect(buttons.every(b=>b.disabled)).toBe(true);
-    buttons[0].click();expect(handlers.setDemo).toHaveBeenCalledTimes(2);
-    ui.busy(false);expect(buttons[0].disabled).toBe(false);expect(buttons[2].disabled).toBe(false);
-    ui.update({flagOn:true,open:true,openUntil:'2026-11-09T15:05:00Z'});
-    expect(ui.element.textContent).toContain('Open until');
-    ui.reset();expect(box.checked).toBe(false);expect(buttons[2].disabled).toBe(true);
+    buttons[0].click();expect(handlers.newCode).toHaveBeenCalledTimes(1);
+    ui.busy(false);expect(buttons[0].disabled).toBe(false);expect(buttons[1].disabled).toBe(false);
+    ui.update({...DEMO,code:'ZZ234',guests:5});
+    expect(ui.element.textContent).toContain('HARBOR-ZZ234');
+    ui.reset();expect(box.checked).toBe(false);expect(renewBox.checked).toBe(false);expect(buttons.every(b=>b.disabled)).toBe(true);
   } finally {vi.unstubAllGlobals();}
 });

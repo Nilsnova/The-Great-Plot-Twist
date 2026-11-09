@@ -61,6 +61,10 @@
 .projector ol{margin:0 0 14px;padding-left:1.3em;font-size:20px}
 .projector .projector-url{font-size:16px;color:#cfd6b6;word-break:break-all}
 .projector .projector-actions{display:flex;flex-wrap:wrap;gap:10px}
+.projector .projector-confirm{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 0;padding:12px;border:3px solid #f0b77a}
+.projector .projector-confirm[hidden]{display:none}
+.projector .projector-confirm-text{flex:1 1 100%;margin:0;font-size:18px}
+.projector canvas[hidden]{display:none}
 .projector .projector-error{color:#f0b77a;min-height:1.4em;margin:0 0 8px;font-size:18px}
 @media(max-width:760px){.projector{grid-template-columns:1fr;font-size:18px}.projector h2{font-size:30px}.projector .projector-code{font-size:48px}.quest-strip{top:auto;bottom:88px;max-width:230px}.quest-item{min-height:36px;padding:4px 8px;font-size:14px}.quest-strip h2{display:none}.demo-prompt{bottom:250px}.duel-invite{bottom:250px}.demo-toast{top:130px}}
 @media(prefers-reduced-motion:reduce){.demo-splash div,.duel-spotlight .spotlight-beam,.duel-spotlight .duel-reveal{animation:none}}

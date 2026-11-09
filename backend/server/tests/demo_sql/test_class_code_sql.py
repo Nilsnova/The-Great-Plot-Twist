@@ -128,7 +128,7 @@ def test_a_new_code_replaces_the_old_one_and_a_repeat_changes_nothing(database):
     first = code_set(database, "K7QXM", uid)
     assert first["status"] == "set" and first["code"] == "K7QXM" and first["repeat"] is False
     assert first["setAt"] is not None
-    repeat = code_set(database, "PRACT", uid)
+    repeat = code_set(database, "TESTS", uid)
     assert repeat == {**first, "repeat": True}
 
     second = code_set(database, "ZZ234")

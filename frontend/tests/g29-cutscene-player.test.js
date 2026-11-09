@@ -82,8 +82,11 @@ it('runs lore, harbor and one goal card once, then goes straight to the harbor',
       const {createFrontDoor}=await window.g20Import('/src/front-door/index.js');window.log=[];
       const values=new Map(),storage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};
       window.game={begin:async(...args)=>window.log.push(['begin',...args])};
-      window.adapter={read:()=>({mode:'online',account:{state:'signed_out'}}),signIn:async options=>{window.log.push(['signIn',options]);return {accepted:false,reason:'demo_closed'};}};
-      window.door=createFrontDoor({container:document.body,storage,focus:()=>window.log.push(['focus']),
+      // The tab holds an old class code from the projector QR: the server refuses it, so it is forgotten.
+      const tab=new Map([['plot_twist_join_v1','K7QXM']]);window.tab=tab;
+      const session={getItem:key=>tab.get(key)??null,setItem:(key,value)=>tab.set(key,value),removeItem:key=>tab.delete(key)};
+      window.adapter={read:()=>({mode:'online',account:{state:'signed_out'}}),signIn:async options=>{window.log.push(['signIn',options]);return {accepted:false,reason:'class_code_invalid'};}};
+      window.door=createFrontDoor({container:document.body,storage,session,focus:()=>window.log.push(['focus']),
         loadPlayer:async()=>({playCutscene:({id})=>{window.log.push(['cutscene',id]);let done;const promise=new Promise(resolve=>{done=resolve;});window.finishCutscene=()=>done({status:'completed'});return {done:promise,skip(){done({status:'skipped'});},dispose(){}};}})});
       window.first=window.door.run({loadGame:async()=>window.game,adapter:window.adapter});
     });
@@ -96,10 +99,12 @@ it('runs lore, harbor and one goal card once, then goes straight to the harbor',
     expect(await page.evaluate(()=>document.activeElement.textContent)).toBe('Got it');
     expect(await page.evaluate(()=>window.door.handleEscape())).toBe(true);
     expect(await page.evaluate(async()=>{await window.first;return window.log;})).toEqual([
-      ['signIn',{guest:true}],['cutscene','lore_intro'],['begin',false,{kind:'world',place:'saltreach_harbor',demo:true}],['focus']]);
+      ['signIn',{guest:true,code:'K7QXM'}],['cutscene','lore_intro'],['begin',false,{kind:'world',place:'saltreach_harbor',demo:true}],['focus']]);
+    expect(await page.evaluate(()=>window.tab.has('plot_twist_join_v1'))).toBe(false);
     expect(await page.locator('.goal-card').count()).toBe(0);
     const second=await page.evaluate(async()=>{window.log=[];await window.door.run({loadGame:async()=>window.game,adapter:window.adapter});return window.log;});
-    expect(second).toEqual([['signIn',{guest:true}],['begin',false,{kind:'world',place:'saltreach_harbor',demo:true}],['focus']]);
+    // Without a class code no guest is started at all.
+    expect(second).toEqual([['begin',false,{kind:'world',place:'saltreach_harbor',demo:true}],['focus']]);
     expect(await page.evaluate(()=>window.door.active)).toBe(false);
   });
 });

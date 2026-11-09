@@ -107,7 +107,8 @@ try{
   await page.getByRole('button',{name:'Skip',exact:true}).click();await page.waitForTimeout(800);await shot('27-lighthouse-relit');
   check(await page.evaluate(()=>[...document.querySelectorAll('.demo-toast,.lamp-status,.sound-caption')].filter(node=>!node.hidden&&node.getClientRects().length&&node.textContent.trim()).length)===1,'The relit lighthouse shows one caption, not three');
   await page.keyboard.press('KeyJ');await page.locator('.projector:not([hidden]) canvas').waitFor();await page.waitForTimeout(300);await shot('28-projector');
-  check(await page.evaluate(()=>{const canvas=document.querySelector('.projector canvas');return canvas.width>200&&document.querySelector('.projector-code').textContent==='HARBOR';}),'J shows the projector panel with the QR canvas and HARBOR');
+  check(await page.evaluate(()=>{const canvas=document.querySelector('.projector canvas');return canvas.width>200&&!canvas.hidden&&document.querySelector('.projector-code').textContent==='HARBOR-TESTS'
+    &&canvas.getAttribute('aria-label')==='QR code for https://the-great-plot-twist.vercel.app/?join=TESTS';}),'J shows the projector panel with the QR canvas for the practice class code HARBOR-TESTS');
   await page.keyboard.press('KeyJ');
   await page.locator('.presenter-reopen').click();check(await page.locator('.presenter-panel').isVisible()&&await page.locator('.presenter-reopen').isHidden(),'The Presenter button opens the panel again');
   check(writes.length===0,'The rehearsal sends no server writes');

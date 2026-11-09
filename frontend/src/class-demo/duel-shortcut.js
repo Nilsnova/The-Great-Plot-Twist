@@ -36,7 +36,7 @@ const DUEL_MESSAGES = {
   duel_expired: 'This challenge has expired.',
   already_sealed: 'This duel already has both answers.',
   not_your_duel: 'This challenge is for another captain.',
-  demo_closed: 'The class demo is closed right now. Ask the presenter to open it.',
+  demo_closed: 'Guest play needs the class code. Ask the presenter for the current code.',
   unauthorized: 'Sign in to duel. Guests can play while the class demo is open.',
   network: 'No connection to the server. Your choice is kept: try again.',
   unknown: 'Something went wrong. Your choice is kept: try again.',

@@ -87,6 +87,12 @@ describe('round trip through the independent reader', () => {
     expect(decoded).toMatchObject({version: 4, level: 'M', mask: code.mask, text: JOIN_URL});
     expect(decoded.formatWord).toBe(FORMAT_WORDS.M[code.mask]);
   });
+  it('encodes the projector URL with a class code (D030) as a valid 4-M code that reads back exactly', () => {
+    const url = 'https://the-great-plot-twist.vercel.app/?join=K7QXM';
+    const code = encodeQr(url, {ecc: 'M'});
+    expect(code).toMatchObject({version: 4, ecc: 'M'});
+    expect(decodeMatrix(code.modules)).toMatchObject({level: 'M', text: url});
+  });
   it('encodes the join URL at level Q (version 5, two block sizes)', () => {
     const code = encodeQr(JOIN_URL, {ecc: 'Q'});
     expect(code.version).toBe(5);

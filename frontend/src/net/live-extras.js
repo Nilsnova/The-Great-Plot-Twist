@@ -29,6 +29,10 @@ export const canSendExtra = () => sender !== null;
 export function setClassHarbor(value) { classHarbor = value === true; }
 export const wantsClassHarbor = () => classHarbor || readInvite();
 
+// The tab holds a class code (?join= or the Join page) or the in-game button's mark 'harbor' (D030).
 function readInvite() {
-  try { return globalThis.sessionStorage?.getItem('plot_twist_join_v1') === 'harbor'; } catch { return false; }
+  try {
+    const value = globalThis.sessionStorage?.getItem('plot_twist_join_v1') ?? '';
+    return value === 'harbor' || /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/.test(value);
+  } catch { return false; }
 }

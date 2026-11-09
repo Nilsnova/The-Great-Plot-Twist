@@ -34,35 +34,42 @@ export function overviewPanels(data) {
   'Object presence is a readiness probe, not proof of the exact applied migration version.'));
   return result;
 }
-// The class demo window as two plain lines. demo is {flagOn, open, openUntil} from GET /api/host/demo.
-export function demoSummary(demo,locale) {
-  if(!demo||typeof demo.flagOn!=='boolean'||typeof demo.open!=='boolean')
-    return {flag:'Unknown',window:'Unknown: the demo status could not be read'};
-  const until=demo.open&&typeof demo.openUntil==='string'?new Date(demo.openUntil):null;
-  const time=until&&!Number.isNaN(until.getTime())?until.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'}):null;
-  return {flag:demo.flagOn?'On':'Off (guests are refused)',window:demo.open?`Open until ${time??'an unknown time'}`:'Closed'};
+// The class demo as plain lines. demo is {flagOn, code, codeSetAt, guests} from GET /api/host/demo.
+const JOIN_BASE='https://the-great-plot-twist.vercel.app/?join=';
+const CODE_SHAPE=/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/;
+export function demoSummary(demo) {
+  if(!demo||typeof demo.flagOn!=='boolean'||!Number.isInteger(demo.guests))
+    return {flag:'Unknown',code:'Unknown: the demo status could not be read',link:'',guests:'Unknown'};
+  const code=typeof demo.code==='string'&&CODE_SHAPE.test(demo.code)?demo.code:null;
+  return {flag:demo.flagOn?'On':'Off (guests are refused)',
+    code:code?`HARBOR-${code}`:'None yet: make one before class',link:code?`${JOIN_BASE}${code}`:'',
+    guests:String(demo.guests)};
 }
 export function demoPanel(demo,handlers) {
   const panel=createPanel({title:'Class demo'});panel.element.dataset.panel='demo';
-  const list=node('dl','host-counts'),flag=node('dd'),open=node('dd');
-  list.append(node('dt','','Demo feature flag'),flag,node('dt','','Guest play window'),open);
-  panel.body.append(list,node('p','host-note','Guests are anonymous sign-ins. They can play only while the flag is on and the window is open. Closing it does not turn off anonymous sign-ins in Supabase.'));
-  const openBtn=createButton({label:'Open for 2 hours',onClick:()=>handlers.setDemo(2)}).element;
-  const closeBtn=createButton({label:'Close now',onClick:()=>handlers.setDemo(0)}).element;
-  const actions=node('div','host-clock-actions');actions.append(openBtn,closeBtn);panel.body.append(actions);
+  const list=node('dl','host-counts'),flag=node('dd'),code=node('dd'),link=node('dd'),guests=node('dd');
+  list.append(node('dt','','Demo feature flag'),flag,node('dt','','Class code'),code,node('dt','','Join link (the projector QR)'),link,
+    node('dt','','Guests who joined with a code'),guests);
+  panel.body.append(list,node('p','host-note','Anonymous sign-ins stay on in Supabase. A guest plays only after typing or scanning the current class code. A new code stops the old one at once for new joins; guests already in stay.'));
+  const renewLabel=node('label','host-confirm'),renewBox=node('input');renewBox.type='checkbox';
+  renewLabel.append(renewBox,document.createTextNode(' Replace the class code. The old code stops working for new joins.'));
+  const renew=createButton({label:'New class code',onClick:()=>handlers.newCode(renewBox.checked)}).element;
+  renew.disabled=true;renewBox.addEventListener('change',()=>{renew.disabled=busy||!renewBox.checked;});
+  panel.body.append(renewLabel,renew);
   const label=node('label','host-confirm'),box=node('input');box.type='checkbox';
   label.append(box,document.createTextNode(' Delete guest accounts older than 24 hours. This cannot be undone.'));
   const clean=createButton({label:'Clean up guests',onClick:()=>handlers.cleanup(box.checked)}).element;
-  clean.disabled=true;box.addEventListener('change',()=>{clean.disabled=!box.checked;});
-  panel.body.append(label,clean);
+  clean.disabled=true;box.addEventListener('change',()=>{clean.disabled=busy||!box.checked;});
+  panel.body.append(label,clean,node('p','host-note','Old guests are also removed automatically: each time this console or the projector reads the class code, at most every 10 minutes.'));
   let busy=false;
   function update(next) {
-    const lines=demoSummary(next);flag.textContent=lines.flag;open.textContent=lines.window;
+    const lines=demoSummary(next);flag.textContent=lines.flag;code.textContent=lines.code;link.textContent=lines.link||'None yet';
+    guests.textContent=lines.guests;
   }
   update(demo);
   return {element:panel.element,update,
-    busy(value) {busy=value;openBtn.disabled=value;closeBtn.disabled=value;clean.disabled=value||!box.checked;},
-    reset() {box.checked=false;clean.disabled=true;},get isBusy() {return busy;}};
+    busy(value) {busy=value;renew.disabled=value||!renewBox.checked;clean.disabled=value||!box.checked;},
+    reset() {box.checked=false;clean.disabled=true;renewBox.checked=false;renew.disabled=true;},get isBusy() {return busy;}};
 }
 export function checklistPanel(data,headers) {
   const panel=createPanel({title:'Before the class demo'}),items=node('ul','host-checklist');

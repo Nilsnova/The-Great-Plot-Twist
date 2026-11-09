@@ -1,4 +1,6 @@
 // Host-only presentation flow. The API remains authoritative; retry UUIDs survive unknown outcomes.
+// The class demo status: {flagOn, code, codeSetAt, guests} from GET /api/host/demo (D030).
+const validDemo=data=>typeof data?.flagOn==='boolean'&&(data.code===null||typeof data.code==='string')&&Number.isInteger(data.guests)&&data.guests>=0;
 export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) {
   let epoch=0, authorized=false, overview=null, records=[],clockIntent=null,clockUncertain=false,demo=null,demoIntent=null,cleanupIntent=null;
   const actions=new Map(), pending=new Set();
@@ -27,7 +29,7 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
     // The class demo status is a separate read: if it fails the panel says Unknown, the rest still works.
     const demoRead=await api.get('/api/host/demo');
     if(turn!==epoch)return;
-    demo=demoRead.ok&&typeof demoRead.data?.open==='boolean'?demoRead.data:null;
+    demo=demoRead.ok&&validDemo(demoRead.data)?demoRead.data:null;
     authorized=true;overview={...summary.data,caseClockAvailable:config.ok&&config.data?.capabilities?.hostCaseClock===true};
     records=crews.data.crews;
     view.show(overview,crews.data,api.headerChecks(),demo);
@@ -84,25 +86,25 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
     } finally {pending.delete('clock');view.clockBusy?.(false);}
   }
   const uncertain=answer=>answer.status===0||answer.status>=500;
-  async function setDemo(hours) {
-    if(!authorized||pending.has('demo'))return;
-    if(!Number.isInteger(hours)||hours<0||hours>6)return;
-    if(demoIntent&&demoIntent.hours!==hours){view.say('Retry the unconfirmed demo change first (same button), then change it again.');return;}
-    demoIntent??={hours,actionUid:newUid()};
+  // "New class code" (D030): one action id per attempt, kept after an unknown outcome so a retry is
+  // the same request. The old code stops working for new joins at once; admitted guests stay.
+  async function newCode(confirmed) {
+    if(!authorized||!confirmed||pending.has('demo'))return;
+    demoIntent??={actionUid:newUid()};
     const turn=epoch;pending.add('demo');view.demoBusy?.(true);
     try {
-      const answer=await api.post('/api/host/demo',demoIntent);
+      const answer=await api.post('/api/host/demo/code',demoIntent);
       if(turn!==epoch)return;
       if(answer.ok) {
         const data=answer.data;
-        if(typeof data?.flagOn!=='boolean'||typeof data.open!=='boolean'){view.say('Demo outcome unknown. Press the same button again; the action ID is retained.');return;}
-        demoIntent=null;demo={flagOn:data.flagOn,open:data.open,openUntil:data.openUntil??null};
-        view.demoUpdate?.(demo);
-        view.say(hours===0?'Demo window closed. Guests are refused now.':
-          data.flagOn?'Demo window opened for 2 hours.':'Window opened, but the demo flag is off, so guests are still refused.');
+        if(!validDemo(data)||typeof data.code!=='string'){view.say('New code outcome unknown. Press the same button again; the action ID is retained.');return;}
+        demoIntent=null;demo={flagOn:data.flagOn,code:data.code,codeSetAt:data.codeSetAt??null,guests:data.guests};
+        view.demoUpdate?.(demo,true);
+        view.say(data.flagOn?'New class code made. The old code no longer lets anyone new in.':
+          'New class code made, but the demo flag is off, so guests are still refused.');
       } else if(answer.status===401||answer.status===403)lock();
-      else if(uncertain(answer))view.say('Demo outcome unknown. Press the same button again; the action ID is retained.');
-      else {demoIntent=null;view.say(answer.message||'The demo window was not changed.');}
+      else if(uncertain(answer))view.say('New code outcome unknown. Press the same button again; the action ID is retained.');
+      else {demoIntent=null;view.say(answer.message||'No new class code was made.');}
     } finally {pending.delete('demo');if(turn===epoch)view.demoBusy?.(false);}
   }
   async function cleanupGuests(confirmed) {
@@ -115,12 +117,12 @@ export function createHostController({api,view,newUid=()=>crypto.randomUUID()}) 
       if(answer.ok) {
         const {checked,deleted,more}=answer.data??{};
         if(!Number.isInteger(checked)||!Number.isInteger(deleted)||typeof more!=='boolean'){view.say('Clean-up outcome unknown. Press it again; the action ID is retained.');return;}
-        cleanupIntent=null;view.demoUpdate?.(demo,true);
+        cleanupIntent=null;view.demoUpdate?.(demo?{...demo,guests:Math.max(0,demo.guests-deleted)}:demo,true);
         view.say(`Removed ${deleted} guest ${deleted===1?'account':'accounts'} (checked ${checked}).${more?' More old guests remain. Run it again.':''}`);
       } else if(answer.status===401||answer.status===403)lock();
       else if(uncertain(answer))view.say('Clean-up outcome unknown. Press it again; the action ID is retained.');
       else {cleanupIntent=null;view.say(answer.message||'Clean-up failed.');}
     } finally {pending.delete('cleanup');if(turn===epoch)view.demoBusy?.(false);}
   }
-  return {refresh,closeCrew,setClock,setDemo,cleanupGuests,lock};
+  return {refresh,closeCrew,setClock,newCode,cleanupGuests,lock};
 }

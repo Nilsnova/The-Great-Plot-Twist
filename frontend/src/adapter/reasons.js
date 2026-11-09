@@ -13,6 +13,8 @@ export const caseReasons = [
   'already_solved',
   'busy',
   'card_not_held',
+  'class_code_invalid',
+  'class_code_needed',
   'confirmation_required',
   'crew_required',
   'dawn_wait',
