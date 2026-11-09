@@ -19,7 +19,8 @@ export function writeFlag(storage, key, value = true) {
 
 // The class code (G29, D030): 5 symbols without 0, O, 1, I or L, shown as HARBOR-K7QXM. The server
 // keeps the current one and compares it (POST /api/demo/join); the browser only reads its shape.
-export const CLASS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+// The public symbols a class code is drawn from (not a secret; the scanner sees high entropy).
+export const CLASS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // pragma: allowlist secret
 export const CLASS_CODE_PREFIX = 'HARBOR';
 const CLASS_CODE = new RegExp(`^[${CLASS_CODE_ALPHABET}]{5}$`);
 // The value the in-game "Join the class harbor" button stores: in the class room, no code sent.

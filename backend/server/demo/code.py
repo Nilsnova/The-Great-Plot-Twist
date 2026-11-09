@@ -35,7 +35,8 @@ from pydantic import BaseModel, StrictBool, StrictInt, ValidationError
 
 from server.supabase_admin import AlreadyApplied, SupabaseAdmin, SupabaseRejected
 
-CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+# The public symbols a class code is drawn from (not a secret; the scanner sees high entropy).
+CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret
 CODE_LENGTH = 5
 CODE_PREFIX = "HARBOR"
 CODE_FORMAT = re.compile(f"[{CODE_ALPHABET}]{{{CODE_LENGTH}}}")
