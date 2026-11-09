@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { placeArt } from './art.js';
 import { terrainHeight } from './terrain.js';
 import { seededRandom } from '../core/math.js';
+import { swayMaterial, updateSway } from './wind.js';
 
 export function createScenery(art) {
   const group = new THREE.Group(), colliders = [], trees = [], random = seededRandom(71);
@@ -14,7 +15,7 @@ export function createScenery(art) {
     [-13, 14], [-10, 14], [-16, -4], [-19, 1], [19, -1], [17, -5]];
   spots.forEach(([x, z], index) => {
     const tree = placeArt(group, art, ['birch', 'oak', 'pine', 'birch-tall'][index % 4], x, z, 1);
-    tree.material = tree.material.clone(); trees.push(tree); colliders.push({ x, z, radius: 0.48 });
+    tree.material = swayMaterial(tree.material.clone(), tree.userData.asset); trees.push(tree); colliders.push({ x, z, radius: 0.48 });
   });
   const clusters = [[-16, 0], [-15, 2], [-10, -5], [5, -13], [14, -8], [17, 7], [9, 11], [-10, 13]];
   clusters.forEach(([x, z], index) => placeArt(group, art, index % 3 ? 'shrub' : 'rock', x, z, 0.65 + random() * 0.4));
@@ -36,6 +37,7 @@ export function createScenery(art) {
       const base = tree.userData.ground;
       const hidesPlayer = Math.abs(player.x - base.x) < 1.8 && player.z < base.z && player.z > base.z - 7;
       tree.material.opacity = hidesPlayer ? 0.42 : 1;
+      updateSway(tree.material, time, wind);
     });
   } };
 }
