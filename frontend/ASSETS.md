@@ -337,3 +337,8 @@ with durations. Credit line for Settings > Credits: **Voices by ElevenLabs.** Th
 scripts are our own writing; until `src/cutscenes/scripts.json` exists the tool
 uses `scripts/voice/sample_scripts.json` (five short, spoiler-free scenes). No
 voice file is committed until the generator has been run with the team's key.
+
+**Class demo objects (G29).** The Keeper's Lock, the three lamp posts, their glow and the relight sparks in
+Saltreach Harbor are drawn in code onto small canvases (`src/class-demo/world-objects.js`), and the sky
+icons of the lock screen are SVG rectangles (`src/class-demo/lock-screen.js`). Original, no outside asset.
+Sounds reuse the existing cues (beam, foghorn, festival claim and ring bell).

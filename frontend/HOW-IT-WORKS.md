@@ -118,6 +118,7 @@ npm run test:intro
 npm run test:weather:wiring
 npm run test:experience
 npm run test:demo
+npm run test:demo:tour
 npm run test:loading
 npm run test:spoilers
 npm run test:case
@@ -350,3 +351,26 @@ which signs in anonymously with supabase-js. Otherwise Play stays local and Sett
 button per provider in `auth.providers` (GitHub when missing; Google uses the same PKCE flow). A guest can
 keep their progress with `signIn({provider, upgrade: true})` (Supabase `linkIdentity`). A `403 demo_closed`
 answer becomes the `demo_closed` reason with a plain message.
+
+## G29: the class demo (class harbor, quest strip, duel shortcut, Keeper's Lock, three lamps)
+
+After the front door (`HARBOR_START` carries `demo: true`), `game.js` loads `src/class-demo/index.js` in its
+own chunk. Pure rules, each with a Vitest file: `quests.js` (three goals, done state per player in local
+storage), `lamp-sync.js` (20 s window, ages instead of clocks, idempotent merges, suppressed ticks, NPC
+fill), `duel-shortcut.js` (menu, invitation and reveal as a state machine), `lock-state.js` (the lock
+screen, one action id per answer, plain messages for `demo_closed`, `too_many_tries` and 429) and
+`harbor.js` (presence place, joined toast, spots, projector words). The DOM parts are `quest-strip.js`,
+`lock-screen.js`, `duel-overlay.js` (the arena's own picker and reveal in a spotlight dialog), `lamps.js`,
+`projector.js` and `world-objects.js` (lock, lamp posts and sparks drawn in code). Calls go through
+`api.js`: `lock-api.js` and `duel-api.js`.
+
+A player who came with `?join=harbor`, typed `HARBOR` or pressed "Join the class harbor" announces the
+presence place `class_harbor` while standing in Saltreach Harbor, so ~30 phones share
+`live:place:class_harbor:1` with 40 drawn captains and bigger emote bubbles. Lamp states and duel
+invitations travel in that room only (`src/net/live-extras.js`, docs/INTERFACES.md section 7); no table,
+no `world_state`. The host (GET `/api/host/demo` answers 200) or `?present=1` gets J and a pause-menu
+entry for the projector panel. The pause menu offers "Full mystery" (back to the unchanged HUD and the
+Lighthouse prologue) and "Class demo". `?demo=1` rehearses all of it alone: simulated captains
+(`&captains=40` for a load check), a practice rival and a fixture lock; nothing is sent to a server.
+`npm run test:demo` walks the journey in Chrome (`-- --perf` adds frame numbers); the old highlights
+tour check is `npm run test:demo:tour`.

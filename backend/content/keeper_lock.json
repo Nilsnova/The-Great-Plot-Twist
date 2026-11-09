@@ -16,7 +16,7 @@
       {"id": "beam", "label": "A beam of light"},
       {"id": "smoke", "label": "A trail of smoke"},
       {"id": "song", "label": "A song"},
-      {"id": "flags", "label": "Coloured flags"}
+      {"id": "flags", "label": "Colored flags"}
     ],
     "answer": "beam"
   },
