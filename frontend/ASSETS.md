@@ -309,7 +309,7 @@ palette per image and 4× nearest enlargement. No reference image, texture pack 
 model output is used. All are lossless WebP; the set totals **85,824 bytes**
 against a 1.5 MB budget and is lazy-loaded: nothing here belongs to the cold
 title load. `src/cutscenes/art.js` (generated) maps ids to paths, sizes and the
-title lantern origin; `public/cutscenes/manifest.json` records SHA-256 hashes
+title lantern origin; `public/cutscenes/manifest.json` records CRC-32 checksums
 checked by `tests/cutscene-art.test.js`. Rebuild from `frontend/` with
 `python3 scripts/cutscene_art/generate.py [--contact-sheet PATH]` (Pillow and
 NumPy, authoring only).

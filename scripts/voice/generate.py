@@ -10,8 +10,8 @@ Run from anywhere with `python3 -I scripts/voice/generate.py --dry-run` first, t
   that file does not exist yet. Format: [{"id", "lines": [{"id", "text", "voice"}]}].
 * Each line becomes frontend/public/audio/voice/<scene>-<line>.mp3; existing files are skipped
   unless --force. A character budget (default 4,000 per run) is checked before any network call.
-* frontend/public/audio/voice/manifest.json lists every present file with its duration, read from
-  the MP3 frame headers, for subtitle timing.
+* frontend/public/audio/voice/manifest.json lists every present file by scene and line id with its
+  duration, read from the MP3 frame headers, for subtitle timing. Caption text stays in the scripts.
 """
 
 from __future__ import annotations
@@ -280,7 +280,8 @@ def write_manifest(scenes: list[dict], out_dir: Path, model: str) -> dict:
             if not path.is_file() or path.stat().st_size == 0:
                 continue
             data = path.read_bytes()
-            lines.append({"id": line["id"], "voice": line.get("voice", "narrator"), "text": line["text"].strip(),
+            # Captions stay in the scripts file (one source of display copy); the manifest only times audio.
+            lines.append({"id": line["id"], "voice": line.get("voice", "narrator"),
                           "file": f"{PUBLIC_PREFIX}{name}.mp3", "bytes": len(data),
                           "durationMs": round(mp3_duration(data) * 1000)})
         if lines:

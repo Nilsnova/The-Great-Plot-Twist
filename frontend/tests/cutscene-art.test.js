@@ -1,6 +1,6 @@
-// G29 cutscene art: every registered file exists, matches its header and hash, and the set stays in budget.
-import {createHash} from 'node:crypto';
+// G29 cutscene art: every registered file exists, matches its header and checksum, and the set stays in budget.
 import {readFileSync, readdirSync} from 'node:fs';
+import {crc32} from 'node:zlib';
 import {describe, expect, it} from 'vitest';
 import {CUTSCENE_PIXEL_SCALE, cutsceneArt, cutscenePath, titleLampOrigin, titleLayers} from '../src/cutscenes/art.js';
 
@@ -30,11 +30,11 @@ describe('cutscene art registry', () => {
     expect(shipped).toEqual(entries.map(([, item]) => item.file.replace('cutscenes/', '')).sort());
   });
 
-  it('matches every file header, size and recorded hash', () => {
+  it('matches every file header, size and recorded CRC-32', () => {
     for (const [id, item] of entries) {
       const bytes = readFileSync(`public/${item.file}`);
       expect(bytes.length, id).toBe(item.bytes);
-      expect(createHash('sha256').update(bytes).digest('hex'), id).toBe(manifest.files[id].sha256);
+      expect(crc32(bytes), id).toBe(manifest.files[id].crc32);
       const info = webpInfo(bytes);
       expect([info.width, info.height], id).toEqual([item.width, item.height]);
       expect(info.lossless, id).toBe(true);

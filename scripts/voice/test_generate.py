@@ -231,6 +231,7 @@ class GenerationTests(Fixture):
         self.assertEqual(intro["lines"][0]["durationMs"], round(50 * 576 / 22050 * 1000))
         self.assertEqual(intro["durationMs"], 2 * round(50 * 576 / 22050 * 1000))
         self.assertTrue(intro["complete"])
+        self.assertNotIn("text", intro["lines"][0])  # captions live in the scripts file only
         self.assertNotIn(FAKE_KEY, (self.out / "manifest.json").read_text())
 
     def test_skips_existing_files_and_force_regenerates(self):

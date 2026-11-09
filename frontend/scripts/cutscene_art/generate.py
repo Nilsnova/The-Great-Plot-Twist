@@ -9,9 +9,9 @@ id -> path registry in src/cutscenes/art.js. Every image is original and code-dr
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
+import zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -33,7 +33,7 @@ def save(image: Image.Image, name: str) -> dict:
     image.save(path, "WEBP", lossless=True, quality=100, method=6, exact=image.mode == "RGBA")
     data = path.read_bytes()
     return {"file": f"cutscenes/{name}.webp", "width": image.width, "height": image.height,
-            "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+            "bytes": len(data), "crc32": zlib.crc32(data)}
 
 
 def contact_sheet(images: dict, layers: list, records: dict, path: Path) -> None:
