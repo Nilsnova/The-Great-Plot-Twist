@@ -333,6 +333,7 @@ closer
 closes
 closing
 cloud
+cloudy
 clue
 clues
 coast
@@ -350,6 +351,7 @@ cola
 cold
 color
 colorblind
+colored
 colors
 colour
 colours
@@ -1808,10 +1810,12 @@ slips
 small
 smells
 smile
+smoke
 smuggler
 smugglers
 snaps
 snapshots
+snow
 so
 soft
 software
@@ -2057,6 +2061,7 @@ true
 trust
 trusted
 trusting
+trusts
 trusty
 try
 trying
