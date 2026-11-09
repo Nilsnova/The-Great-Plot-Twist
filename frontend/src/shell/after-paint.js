@@ -1,5 +1,6 @@
 // Background title services and the shared ring owner start after the title's first paint.
 import {startTitleInput} from './title-input.js';
+import {rememberJoin} from '../front-door/logic.js';
 import {loadFestivalModule} from './world-loader.js';
 import {createConnectionBanner} from '../ui/connection-banner.js';
 import {session as defaultSession} from '../online/session.js';
@@ -8,6 +9,7 @@ import {claimPanelEntry,releasePanelEntry} from '../online/panel-services.js';
 
 export function startAfterPaint(ctx) {
   let disposed=false,entry=null,closed=false;
+  rememberJoin();
   const session=ctx.session??defaultSession;
   const arena=claimPanelEntry(session,'arena',()=>createArenaEntry({session,container:ctx.container,
     focus:ctx.focus,resetInput:()=>ctx.runtime?.()?.resetInput?.(),notify:ctx.caption,

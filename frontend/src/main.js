@@ -1,11 +1,9 @@
 // Fast title entry. One adapter is shared by title, account and the lazily loaded world.
 import './ui/base.css';
-import 'virtual:build-identity.css';
 import './ui/kit/kit.css';
 import './ui/shell.css';
 import {createShell} from './shell/controller.js';
 import {createLazyAccountHost} from './shell/lazy-account.js';
-import {createLazyAccountSummary} from './shell/lazy-summary.js';
 import {createClientAdapter} from './adapter/select.js';
 async function sendCaseIntent(...args){return (await (await loadWorld()).loadIntentModule()).sendCaseIntent(...args);}
 import {introJournal} from './story/intro-journal.js';
@@ -20,7 +18,7 @@ const captions=createCaptions(container),audio=createLazyAudio({container,on,cap
 let stopMotion=null;
 const adapter=await createClientAdapter();
 async function ensureMotion(){if(!stopMotion)stopMotion=(await import('./settings/preferences.js')).watchSystemMotion();}
-let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='';
+let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='',door=null;
 const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
 let festivalEntry=null,background=null;
 const loadWorld=()=>import('./shell/world-loader.js');
@@ -35,12 +33,10 @@ async function send(name,...args){
   if(!result.accepted){await accountHost.open();accountHost.notice?.(result,()=>send(name,...args));}
   return result;
 }
-const summary=createLazyAccountSummary({send,openAccount});
-summary.update(adapter.read());
 async function loadGame(){
   if(runtime)return runtime;if(pending)return pending;
   await ensureMotion();loading=true;const status=node('p','shell-loading','Preparing the coast…');status.setAttribute('role','status');container.append(status);
-  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,openAccount,isAppBlocked:()=>accountHost.active||festivalEntry?.active,festivalEntry:await festivalReady}));
+  pending=loadWorld().then(module=>module.loadGameModule()).then(async module=>module.startGame({container,shell,audio,captions,caseAdapter:adapter,openAccount,isAppBlocked:()=>accountHost.active||festivalEntry?.active||!!door?.active,festivalEntry:await festivalReady}));
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
     runtime.setFestivalAvailable?.(festivalEntry?.available===true);runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
@@ -62,29 +58,34 @@ async function play(resume,ready,crew=false){
     }
   }
 }
+// Play, the Lighthouse prologue and the intro replay load their routes only when chosen.
+const routes=()=>import('./shell/routes.js'),flow={adapter,container,focus,loadGame,play,
+  claim(){const token=++playRequest;return ()=>!disposed&&token===playRequest&&shell.mode==='playing';},
+  get door(){return door;},set door(value){door=value;}};
 function onEscape(){
+  if(door?.handleEscape())return true;
   if(accountHost.active){accountHost.close();return true;}
   if(loading){playRequest++;shell.show('title');return true;}
   return runtime?.handleEscape?.()??false;
 }
-shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>adapter.read().account,accountSummary:summary.element,
+shell=createShell({container,readSave:()=>introJournal().read(),readAccount:()=>adapter.read().account,adapter,send,
   resetInput(){},focus,openAccount,onEscape,
   demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();const loader=await loadWorld();return (await loader.loadSettingsModule()).createSettingsView(adapter.read());},
-  hasOverlay:()=>loading||accountHost.active||festivalEntry?.active||!!runtime?.hasOverlay(),
-  onState(mode){if(mode==='title'){playRequest++;summary.start();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
-  onPlay:play,async onDemo(){const game=await loadGame();game?.startDemo();},
+  hasOverlay:()=>loading||!!door?.active||accountHost.active||festivalEntry?.active||!!runtime?.hasOverlay(),
+  onState(mode){if(mode==='title'){playRequest++;door?.cancel();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
+  onPlay:play,onStart:()=>routes().then(m=>m.start(flow)),onPrologue:()=>routes().then(m=>m.prologue(flow)),onReplay:()=>routes().then(m=>m.start(flow,true)),async onDemo(){const game=await loadGame();game?.startDemo();},
 });
 function updateAccount(view){
   const key=JSON.stringify(view.account);if(key===lastAccount)return;lastAccount=key;
-  summary.update(view);accountHost.update(view);shell?.setAccount(view.account);
+  accountHost.update(view);
   const attention=view.account.state==='expired'||view.account.save.state==='conflict';
   if(!attention)noticedAccount='';
   if(attention&&noticedAccount!==key){noticedAccount=key;void accountHost.open();}
 }
 const stopAccount=adapter.subscribe(event=>updateAccount(event.view));updateAccount(adapter.read());
 function dispose(){
-  if(disposed)return;disposed=true;emit({type:'app_disposed'});background?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();summary.dispose();
-  shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
+  if(disposed)return;disposed=true;emit({type:'app_disposed'});background?.dispose();stopAccount();runtime?.dispose();festivalEntry?.dispose();accountHost.dispose();
+  door?.dispose();shell.dispose();audio.dispose();captions.dispose();stopMotion?.();adapter.dispose();backdrop.remove();
   if(import.meta.env.DEV)delete window.__plotTwist;
 }
 if(import.meta.env.DEV)window.__plotTwist={adapter,shell,accountHost,dispose};

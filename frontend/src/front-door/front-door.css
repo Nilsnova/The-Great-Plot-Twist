@@ -1,0 +1,6 @@
+/* The goal-and-controls card after the lore intro. Loaded with the front door, never on the title. */
+.goal-card{width:min(560px,calc(100vw - 28px))}
+.goal-card-body{display:grid;gap:16px}.goal-card .goal-lead{font-size:20px;line-height:1.45;margin:0}
+.goal-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;margin:0;font-size:18px;line-height:1.45}.goal-card dt{font-weight:bold;color:#f3d58c}.goal-card dd{margin:0}
+.goal-card-body .kit-button{justify-self:start;min-width:160px;min-height:48px;font-size:18px}
+@media(max-width:420px){.goal-card dl{grid-template-columns:1fr;gap:4px}.goal-card dd{margin-bottom:8px}.goal-card-body .kit-button{justify-self:stretch}}
