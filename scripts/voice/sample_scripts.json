@@ -1,0 +1,47 @@
+[
+  {
+    "id": "lore_intro",
+    "title": "The light goes dark",
+    "lines": [
+      {"id": "01", "voice": "narrator", "text": "The Saltreach Isles have always trusted one light."},
+      {"id": "02", "voice": "narrator", "text": "For a hundred years, the great lighthouse guided every boat safely home."},
+      {"id": "03", "voice": "narrator", "text": "Three nights ago, the light went dark. Its keeper, Elena Vos, is missing."},
+      {"id": "04", "voice": "narrator", "text": "Fog is rolling in. The harbor is uneasy, and nobody agrees on what happened."},
+      {"id": "05", "voice": "narrator", "text": "Tonight, captains gather at the harbor. Meet the others, and help bring the light back."}
+    ]
+  },
+  {
+    "id": "arrival",
+    "title": "Arrival in the harbor",
+    "lines": [
+      {"id": "01", "voice": "narrator", "text": "Welcome to Saltreach Harbor, captain. Look around. You are not alone tonight."}
+    ]
+  },
+  {
+    "id": "goal_card",
+    "title": "Your goal",
+    "lines": [
+      {"id": "01", "voice": "narrator", "text": "Wave to a captain, win a friendly duel, and open the Keeper's Lock."},
+      {"id": "02", "voice": "narrator", "text": "Then light the three lamps together."}
+    ]
+  },
+  {
+    "id": "keepers_lock",
+    "title": "The Keeper's Lock opens",
+    "lines": [
+      {"id": "01", "voice": "narrator", "text": "The old lock answers to the sky, just as the keeper built it."},
+      {"id": "02", "voice": "narrator", "text": "Gears turn. The door swings open, and warm light spills across the stones."},
+      {"id": "03", "voice": "narrator", "text": "Inside wait three lamps, cold and quiet. No captain can light them alone."}
+    ]
+  },
+  {
+    "id": "lamps_relight",
+    "title": "The three lamps relight",
+    "lines": [
+      {"id": "01", "voice": "narrator", "text": "Three captains. Three lamps. One breath."},
+      {"id": "02", "voice": "narrator", "text": "The flames catch, and the old tower wakes."},
+      {"id": "03", "voice": "narrator", "text": "Its beam sweeps across the water. Every boat in the harbor can see the way home."},
+      {"id": "04", "voice": "narrator", "text": "The light is back. Where it went is still a mystery, if you dare to find out."}
+    ]
+  }
+]
