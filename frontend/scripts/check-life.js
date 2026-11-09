@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
 import {dismissIntro} from './intro-browser-fixture.js';
+import {startPrologue} from './shell-browser-tools.js';
 const env=await openWorldBrowser(),{page}=env,report={checks:[]};page.setDefaultTimeout(12000);
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);console.log(`PASS ${label}`);};
 const open=name=>page.evaluate(name=>window.__island.caseUi.open(name),name);
 const snap=name=>page.screenshot({path:`captures/20261105_G7-C2-${name}.png`});
 try{
  await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{}'}));
- await page.goto(env.url+'/?case=local');await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await page.waitForFunction(()=>window.__island);await page.locator('.intro-modal[open] .intro-view').waitFor();await page.locator('.interiors-scene:not([hidden])').waitFor();await dismissIntro(page);
+ await page.goto(env.url+'/?case=local');await startPrologue(page);await page.waitForFunction(()=>window.__island);await page.locator('.intro-modal[open] .intro-view').waitFor();await page.locator('.interiors-scene:not([hidden])').waitFor();await dismissIntro(page);
  await page.evaluate(()=>window.__plotTwist.adapter.dev.rehearse('board'));
  await open('rewards');check((await page.locator('.rewards-ledger').textContent()).includes('50 coins'),'Ledger shows supplied card and deduction rewards');check(await page.locator('.keepsake.owned').count()===0,'Keepsakes remain unearned before the solve');await snap('Ledger');
  await open('log');check((await page.locator('.captains-log').textContent()).includes('Rescue ending'),'Log records the intro ending and kit');check(await page.locator('.captains-log-sealed').count()===1,'Log reveal remains sealed before solve');

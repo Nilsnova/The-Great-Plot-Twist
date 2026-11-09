@@ -15,8 +15,8 @@ try {
   await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
   check(await page.evaluate(()=>!window.__island&&window.__audioCreated===0),'Cold title allocates neither WebGL nor an AudioContext');
   check(await page.locator('.shell-menu button').allTextContents().then(names=>names.join()==='Play,Join'),'The title offers exactly Play and Join');
-  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};window.__padPolls=0;Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPolls++;return [window.__pad];}});});await page.waitForFunction(()=>window.__padPolls>=3);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForFunction(()=>document.activeElement?.textContent==='Play with friends');
-  check(await page.evaluate(()=>document.activeElement.textContent==='Play with friends'),'Gamepad follows the approved title order through Friends');
+  await page.evaluate(()=>{window.__pad={id:'Title pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};window.__padPolls=0;Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{window.__padPolls++;return [window.__pad];}});});await page.waitForFunction(()=>window.__padPolls>=3);await page.evaluate(()=>window.__pad.buttons[13].pressed=true);await page.waitForFunction(()=>document.activeElement?.textContent==='Join');
+  check(await page.evaluate(()=>document.activeElement.textContent==='Join'),'Gamepad follows the approved title order through Join');
   const releasedAt=await page.evaluate(()=>{window.__pad.buttons[13].pressed=false;return window.__padPolls;});
   await page.waitForFunction(previous=>window.__padPolls>previous+1,releasedAt);
   await page.evaluate(()=>window.__pad.buttons[13].pressed=true);

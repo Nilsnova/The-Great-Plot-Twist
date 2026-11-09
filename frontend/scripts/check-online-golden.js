@@ -4,7 +4,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
-import {expandTitleAccount, chooseIntroAction, finishIntroPassages, assertEngineReplay} from './online-browser-actions.js';
+import {openSettingsAccount, chooseIntroAction, finishIntroPassages, assertEngineReplay} from './online-browser-actions.js';
 
 const env=await openWorldBrowser({preview:true}),{page}=env;
 const folder='captures/20261106_G9-C1';
@@ -24,7 +24,7 @@ try{
   });
   for(const width of [1280,375]){
     await page.setViewportSize({width,height:800});await page.goto(env.url);
-    const accountSummary = await expandTitleAccount(page);
+    const accountSummary = await openSettingsAccount(page);
     await accountSummary.getByRole('button',{name:'Account and saves',exact:true}).waitFor();
     await page.getByRole('button',{name:'Settings',exact:true}).click();
     const link=page.getByRole('link',{name:'Report a problem',exact:true});

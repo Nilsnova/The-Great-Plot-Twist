@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdir, writeFile} from 'node:fs/promises';
 import {openAuthFixture} from './online-auth-fixture.js';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {expandTitleAccount, openAccountControls} from './online-browser-actions.js';
+import {openSettingsAccount, openAccountControls} from './online-browser-actions.js';
 
 export async function checkOnlineAuth() {
   const env = await openAuthFixture();
@@ -23,7 +23,7 @@ export async function checkOnlineAuth() {
       'The default session persists only in this tab');
       check(await page.evaluate(() => !window.__plotTwist && !window.__island), 'Auth needs no production hooks');
       await page.reload();
-      await expandTitleAccount(page);
+      await openSettingsAccount(page);
       await page.locator('.account-summary-state').filter({hasText: 'Signed in'}).waitFor();
       check(true, 'This tab restores its session after reload at ' + width);
       await openAccountControls(page);

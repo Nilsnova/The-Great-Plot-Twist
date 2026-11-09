@@ -1,8 +1,8 @@
 // A restored SDK session can remove the sign-in control between a snapshot and a gesture.
-import {expandTitleAccount} from './online-browser-actions.js';
+import {openSettingsAccount} from './online-browser-actions.js';
 export async function signInFromTitle({page,url}){
   await page.goto(url);
-  const summary = await expandTitleAccount(page);
+  const summary = await openSettingsAccount(page);
   await summary.getByRole('button',{name:'Account and saves',exact:true}).waitFor();
   const signedIn=page.locator('.account-summary-state').filter({hasText:'Signed in'});
   await page.waitForFunction(()=>document.querySelector('.account-summary-state')?.textContent==='Signed in'
@@ -12,6 +12,6 @@ export async function signInFromTitle({page,url}){
     catch{await signedIn.waitFor({state:'attached'});}
   }
   await signedIn.waitFor({state:'attached'});
-  await expandTitleAccount(page);
+  await openSettingsAccount(page);
   await signedIn.waitFor();
 }

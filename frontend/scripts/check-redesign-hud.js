@@ -4,6 +4,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {stubIntro} from './intro-browser-fixture.js';
+import {openFriendsThroughJoin,startPrologue} from './shell-browser-tools.js';
 const output=process.env.CAPTURE_DIR||'/tmp/plot-twist-quiet-hud';
 await mkdir(output,{recursive:true});
 const env=await openWorldBrowser({preview:true}),{page}=env,report={checks:[]};
@@ -16,14 +17,14 @@ try{
       const r=element.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,overflow:element.scrollWidth>element.clientWidth};
     });
     check(layout.left>=0&&layout.right<=width&&layout.top>=0&&layout.bottom<=height&&!layout.overflow,`Title stays inside ${width}×${height}`);
-    check(await page.getByRole('button',{name:'Play with friends',exact:true}).isVisible(),`Friends is visible from the ${width}px title`);
-    check(await page.locator('.shell-account').evaluate(element=>!element.open),`Account details start collapsed at ${width}px`);
+    check(await page.locator('.shell-menu').getByRole('button',{name:'Join',exact:true}).isVisible(),`Join (the way to friends and crews) is visible from the ${width}px title`);
+    check(await page.locator('.shell-screen[open] .shell-account, .shell-screen[open] .account-summary').count()===0,`Account details stay off the ${width}px title (they live in Settings > Account)`);
     await page.screenshot({path:join(output,`title-${width}.png`)});
   }
-  await page.getByRole('button',{name:'Play with friends',exact:true}).click();
+  await openFriendsThroughJoin(page);
   await page.getByText('Online crews are not connected in this build.',{exact:true}).waitFor();
   check(await page.getByText('Online crews are not connected in this build.',{exact:true}).isVisible(),'Unavailable online play has a short truthful explanation');
-  await page.getByRole('button',{name:'Back',exact:true}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
+  await page.getByRole('button',{name:'Back',exact:true}).click();await startPrologue(page);
   await page.locator('.intro-modal[open]').waitFor();
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   const room=page.locator('.interiors-scene:not([hidden])');await room.waitFor();

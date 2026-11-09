@@ -5,6 +5,7 @@ import {openWorldBrowser,measure} from './world-browser-tools.js';
 import {places} from '../src/world/places/registry.js';
 import {dismissIntro} from './intro-browser-fixture.js';
 import {openCrewFromHud,chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
+import {startPrologue,startFreshPrologue} from './shell-browser-tools.js';
 
 const env=await openWorldBrowser(),{page}=env,report={checked:new Date().toISOString(),scenarios:[],checks:[],timings:{}};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
@@ -81,12 +82,12 @@ async function verifyIsletStationPanel(){
 async function newOriginalIntro(){
   // Exercise New game from the solved runtime before isolating the second crew scenario.
   await page.evaluate(()=>{window.__island.caseUi.close();window.__plotTwist.adapter.dev.reset();window.__island.shell.show('title');});
-  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
+  await startPrologue(page);
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   check(await page.evaluate(()=>window.__island.world.current?.id==='lighthouse_isle'),'New game returns the solved Gull’s Rest runtime to the original intro');
   // A new page gives the four-human scenario an independent adapter and move journal.
   await page.goto(env.url+'/?case=local&islet=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
-  await page.locator('.shell-screen[open] #play').waitFor();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();
+  await page.locator('.shell-screen[open] #play').waitFor();await startFreshPrologue(page);
   await waitForRuntime();await finishOriginalIntro();await verifyIsletStationPanel();
 }
 async function makeCrew({humans=false}={}){
@@ -270,7 +271,7 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local&islet=local');
   await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   check(await page.evaluate(()=>window.__plotTwist?.adapter.read().mode==='local'),'Browser uses the explicit local fake while all API routes return 503');
-  let t=started();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await waitForRuntime();await finishOriginalIntro();await verifyIsletStationPanel();report.timings.introMs=Math.round(started()-t);
+  let t=started();await startFreshPrologue(page);await waitForRuntime();await finishOriginalIntro();await verifyIsletStationPanel();report.timings.introMs=Math.round(started()-t);
   t=started();await soloCase();await solveNightSolo();await accuseRevealAndFestival();report.timings.soloScenarioMs=Math.round(started()-t);
   let solo=await apiView();check(solo.board.cards.length===8&&solo.board.deductions.filter(item=>item.complete).length===4,'Solo player plus three NPCs recorded all eight cards and D1–D4');await rewardMilestones({humans:false});await captureGullsRest();
   report.scenarios.push({name:'solo + three NPC partners',cards:solo.board.cards.length,deductions:solo.board.deductions.filter(item=>item.complete).map(item=>item.id)});

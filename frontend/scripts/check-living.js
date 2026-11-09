@@ -2,16 +2,16 @@
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
-import {closeSettings} from './shell-browser-tools.js';
+import {startPrologue,closeSettings} from './shell-browser-tools.js';
 import {dismissIntro} from './intro-browser-fixture.js';
-import {expandTitleAccount,openAccountControls} from './online-browser-actions.js';
+import {openSettingsAccount,openAccountControls} from './online-browser-actions.js';
 const env=await openWorldBrowser(),{page}=env,report={checks:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);console.log(`PASS ${label}`);};
 const capture=name=>page.screenshot({path:`captures/20261105_G7-C1-${name}.png`});
 try{
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline rehearsal"}'}));
   await page.goto(env.url+'/?case=local');await page.locator('.shell-screen[open]').waitFor();
-  const summary=await expandTitleAccount(page);await summary.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();
+  const summary=await openSettingsAccount(page);await summary.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();
   await page.waitForFunction(()=>window.__plotTwist?.adapter.read().account.state==='signed_in');
   check(true,'Title sign-in uses the local adapter while APIs are down');
   await openAccountControls(page);
@@ -19,7 +19,7 @@ try{
   await page.getByRole('button',{name:'Change captain name once'}).click();
   check(await page.evaluate(()=>!window.__plotTwist.adapter.read().account.canReroll),'Name can be changed once');
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await page.waitForFunction(()=>window.__island);
+  await startPrologue(page);await page.waitForFunction(()=>window.__island);
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   await page.locator('.interiors-scene:not([hidden])').waitFor();
   check(true,'The unchanged bundled intro opens without the intro API');await dismissIntro(page);

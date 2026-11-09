@@ -4,6 +4,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
 import {dismissIntro} from './intro-browser-fixture.js';
 import {openAccountControls,openCrewFromHud,chooseIntroAction,finishIntroPassages} from './online-browser-actions.js';
+import {startFreshPrologue} from './shell-browser-tools.js';
 
 const env=await openWorldBrowser(),{page}=env,report={checked:new Date().toISOString(),checks:[],faults:[],timings:{}};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
@@ -102,7 +103,7 @@ async function playIntro({failEnd=false}={}){
   await page.locator('.intro-modal[open] .intro-view').waitFor();
   for(const id of ['to_desk','take_key','read_log','desk_back','to_shore','take_lantern','warn_harbor','shore_back','to_tower','unlock_door','climb'])await chooseIntro(id);
   if(failEnd)await setFault('offline');await chooseIntro('untie');await finishIntroPassages(page);await page.locator('.intro-modal .intro-ending').waitFor();
-  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await waitForRuntime();await playIntro();return;}
+  if(failEnd){await waitFor(()=>window.__plotTwist.adapter.read().notice?.reason==='offline');check((await read()).arrival.status==='pending','Failed arrival completion does not create a kit');await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await startFreshPrologue(page);await waitForRuntime();await playIntro();return;}
   await waitFor(()=>window.__plotTwist.adapter.read().arrival.status==='ready');
 }
 async function searchAndPinPreparation(){
@@ -155,8 +156,8 @@ try{
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline chaos rehearsal"}'}));await page.emulateMedia({reducedMotion:'reduce'});await page.goto(env.url+'/?case=local');await waitFor(()=>window.__plotTwist?.adapter?.read().mode==='local');
   await page.evaluate(async()=>window.__plotTwist.adapter.signIn());await waitFor(()=>window.__plotTwist.adapter.read().account.state==='signed_in');await openAccountControls(page);await page.locator('.account-modal[open]').waitFor();
   const reroll=page.getByRole('button',{name:'Change captain name once'});await faultMatrix('account.rerollName',()=>reroll.click(),{notice:'.account-modal[open] .account-feedback',keepAccount:true});await reroll.click();await waitFor(()=>window.__plotTwist.adapter.read().account.canReroll===false);await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await waitForRuntime();await playIntro({failEnd:true});
-  await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Lighthouse prologue',exact:true}).click();await waitForRuntime();await playIntro();
+  await startFreshPrologue(page);await waitForRuntime();await playIntro({failEnd:true});
+  await dismissIntro(page);await page.evaluate(()=>window.__island.shell.show('title'));await startFreshPrologue(page);await waitForRuntime();await playIntro();
   await dismissIntro(page);await openCrewFromHud(page);const create=page.getByRole('button',{name:'Start a crew',exact:true});await faultMatrix('crew.createCrew',()=>create.click());await create.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='forming');
   const muster=page.getByRole('button',{name:/Muster/});await faultMatrix('crew.muster',()=>muster.click());await muster.click();await waitFor(()=>window.__plotTwist.adapter.read().crew.status==='active');
   await checkBulletinFailureStates();await checkIsletEventNeverArrives();

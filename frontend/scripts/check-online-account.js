@@ -4,7 +4,7 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import {openAccountFixture, ACCOUNT_INTRO_ACTIONS} from './online-account-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {expandTitleAccount, openAccountControls, openCrewFromHud,
+import {openSettingsAccount, openAccountControls, openCrewFromHud,
   chooseIntroAction, finishIntroPassages, assertEngineReplay} from './online-browser-actions.js';
 
 async function playIntro(page,{expectKit=true}={}) {
@@ -72,7 +72,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
       env.showStaleRerollOnce();
       env.setCloudReplay('intro', ACCOUNT_INTRO_ACTIONS);
       await page.reload();
-      await expandTitleAccount(page);
+      await openSettingsAccount(page);
       await page.locator('.account-summary-state').filter({hasText: 'Signed in'}).waitFor();
       await openAccount(page);
       await page.getByRole('button', {name: 'Change captain name once', exact: true}).click();
@@ -85,7 +85,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
 
       env.setCloudReplay('intro', ACCOUNT_INTRO_ACTIONS.slice(0, 2));
       await page.reload();
-      await expandTitleAccount(page);
+      await openSettingsAccount(page);
       await page.locator('.account-conflict').waitFor();
       const writesBeforeKeep = env.accountStats().saveWrites;
       await page.getByRole('button', {name: 'Keep this device', exact: true}).click();
@@ -95,7 +95,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
 
       env.setCloudReplay('world', ACCOUNT_INTRO_ACTIONS.slice(0, 3));
       await page.reload();
-      await expandTitleAccount(page);
+      await openSettingsAccount(page);
       await page.locator('.account-conflict').waitFor();
       const writesBeforeCloud = env.accountStats().saveWrites;
       await page.getByRole('button', {name: 'Use the cloud save', exact: true}).click();
@@ -140,7 +140,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     env.resetAccount();
     await page.setViewportSize({width:375,height:812});
     await page.goto(env.url);
-    await expandTitleAccount(page);
+    await openSettingsAccount(page);
     await page.locator('.account-summary-state').filter({hasText:'Signed out'}).waitFor();
     await startFromTitle(page,{closeIntro:false});
     await playIntro(page,{expectKit:false});
@@ -149,7 +149,7 @@ export async function checkOnlineAccount({widths = [1280, 375]} = {}) {
     check(env.accountStats().kitGrants===0,'An anonymous ending keeps its accepted replay and grants no kit');
     await claim.click();
     await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor({state:'attached'});
-    await expandTitleAccount(page);
+    await openSettingsAccount(page);
     await page.locator('.account-summary-state').filter({hasText:'Signed in'}).waitFor();
     await page.locator('#play').click();
     await finishIntroPassages(page);

@@ -1,7 +1,7 @@
 // Public-control production journeys. The fake server owns all HTTP and WebSocket answers.
 import assert from 'node:assert/strict';
 import {enterRecordedCrew} from './online-crew-journeys.js';
-import {expandTitleAccount, openAccountControls, assertEngineReplay} from './online-browser-actions.js';
+import {openSettingsAccount, openAccountControls, assertEngineReplay} from './online-browser-actions.js';
 import {dismissIntro} from './intro-browser-fixture.js';
 import {assertPresenceSendTiming} from './online-presence-send-observer.js';
 
@@ -26,7 +26,7 @@ export async function recordedPresenceGate(env, {flag = false, named = true, sig
   page.on('request', listener);
   try {
     await page.goto(env.url);
-    const summary = await expandTitleAccount(page);
+    const summary = await openSettingsAccount(page);
     if (signedIn) {
       await summary.getByRole('button', {name: /^Sign in(?: again)? with GitHub$/}).click();
       await until(() => env.checks.exchanged && env.crewRequests.some(request => request.path === '/api/me'),
