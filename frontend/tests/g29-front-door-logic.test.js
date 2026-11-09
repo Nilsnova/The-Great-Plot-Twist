@@ -18,7 +18,6 @@ describe('front door rules',()=>{
   });
   it('reads Join codes and the class harbor code',()=>{
     expect(joinTarget(' harbor ')).toEqual({kind:'harbor',code:'HARBOR'});
-    expect(joinTarget('Harbour')).toEqual({kind:'harbor',code:'HARBOR'});
     expect(joinTarget('ab-12 cd')).toEqual({kind:'crew',code:'AB12CD'});
     for(const value of ['',' - ','<img>','x'.repeat(21),null,7])expect(joinTarget(value)).toBeNull();
   });

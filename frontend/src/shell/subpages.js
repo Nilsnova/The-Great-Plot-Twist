@@ -25,7 +25,6 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
     fillJoinPage({body,nav,ctx,isCurrent,play,page,back});
   }else{
     const settings=await ctx.settingsView?.();if(!isCurrent())return;
-    body.replaceChildren(...(settings?[settings]:[]));
     const story=node('section','shell-section');story.append(node('h3','','Story'));
     if(ctx.onPrologue)story.append(menuButton('Lighthouse prologue',()=>{play();ctx.onPrologue();},true));
     if(ctx.onReplay)story.append(menuButton('Replay the intro',()=>{play();ctx.onReplay();},true));
@@ -33,7 +32,7 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
     if(ctx.adapter)await accountSummary(ctx,account);
     else if(ctx.openAccount)account.append(menuButton('Account and saves',ctx.openAccount,true));
     if(!isCurrent())return;
-    body.append(story,account,menuButton('Credits',()=>show('credits'),true));
+    body.replaceChildren(account,story,...(settings?[settings]:[]),menuButton('Credits',()=>show('credits'),true));
     for(const [label,path] of [['How to play','help.html'],['Privacy','privacy.html']]){
       const link=document.createElement('a');link.className='kit-button kit-quiet';link.textContent=label;
       link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';body.append(link);

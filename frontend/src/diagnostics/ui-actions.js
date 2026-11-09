@@ -6,7 +6,7 @@ export const UI_ACTIONS=Object.freeze([
 ]);
 export const allowedUiActions=new Set(UI_ACTIONS);
 const labels=new Map([
-  ['New game','new_game'],['Continue','continue'],['Resume','resume'],['Settings','settings_open'],
+  ['New game','new_game'],['Play','new_game'],['Lighthouse prologue','new_game'],['Continue','continue'],['Resume','resume'],['Settings','settings_open'],
   ['Open visual settings','settings_open'],['Credits','credits_open'],['Return to title','title_open'],
   ['Report a problem','report_problem'],['Open sea chart','chart_open'],['Chart','chart_open'],
   ['Menu','pause'],['Interact','interact'],['Pair cards','pair_cards'],['Call nightfall','call_nightfall'],

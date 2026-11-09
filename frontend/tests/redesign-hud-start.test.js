@@ -134,7 +134,7 @@ it('keeps account, sign-in providers, the prologue and the build stamp in Settin
     });
     await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.getByRole('button',{name:'Sign in with Google',exact:true}).waitFor();
-    expect(await page.locator('.shell-section h3').allTextContents()).toEqual(['Story','Account','About']);
+    expect(await page.locator('.shell-section h3').allTextContents()).toEqual(['Account','Story','About']);
     expect(await page.locator('.shell-section').last().locator('.build-info').count()).toBe(1);
     await page.getByRole('button',{name:'Sign in with Google',exact:true}).click();
     await page.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();

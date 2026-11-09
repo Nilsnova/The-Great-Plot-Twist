@@ -21,7 +21,7 @@ export function joinTarget(value) {
   if (typeof value !== 'string') return null;
   const code = value.replace(/[\s-]/g, '').toUpperCase();
   if (!/^[A-Z0-9]{1,20}$/.test(code)) return null;
-  return code === 'HARBOR' || code === 'HARBOUR' ? {kind: 'harbor', code: 'HARBOR'} : {kind: 'crew', code};
+  return code === 'HARBOR' ? {kind: 'harbor', code: 'HARBOR'} : {kind: 'crew', code};
 }
 
 export function goalCopy() {

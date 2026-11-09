@@ -5,26 +5,26 @@
 .cutscene-stage{position:absolute;inset:0;overflow:hidden;cursor:pointer}
 .cutscene-shot{position:absolute;inset:0;transition:none}
 .cutscene-layer{position:absolute;image-rendering:pixelated;will-change:transform;user-select:none;pointer-events:none}
-.cs-sky-dusk{background:linear-gradient(#27344f,#8c5a62 55%,#e2a36b)}
-.cs-sky-night{background:radial-gradient(ellipse at 50% 30%,#1b3550,#081a26 70%)}
-.cs-sky-harbor{background:linear-gradient(#173246,#2c5160 60%,#3c6a5c)}
-.cs-sky-dawn{background:linear-gradient(#3d5a7a,#d99a72 60%,#f3d58c)}
-.cs-backdrop{inset:-4% -6%;width:112%;height:108%;object-fit:cover;image-rendering:auto}
-.cs-sky-dusk .cs-backdrop{filter:brightness(.62) saturate(.8)}
-.cs-fog{width:min(120vw,1400px);bottom:6%;left:-10%;opacity:.55}.cs-fog-front{bottom:-4%;left:0;opacity:.75}
-.cs-lighthouse{height:min(72dvh,620px);bottom:6%;left:50%;margin-left:calc(min(72dvh,620px)*-.23);filter:brightness(.55) saturate(.7)}
-.cs-portrait{height:min(30dvh,240px);bottom:calc(150px + 4dvh);left:8%;border:3px solid #f3d58c99;background:#0f2a33;filter:sepia(.25)}
-.cs-chart{inset:6% 6% 16%;width:88%;height:78%;object-fit:contain;filter:brightness(.82)}
-.cs-boat{height:min(22dvh,190px);bottom:22%;left:52%}
-.cs-office{height:min(52dvh,460px);bottom:calc(150px + 6dvh);left:50%;margin-left:calc(min(52dvh,460px)*-.4)}
-.cs-lantern{height:min(14dvh,110px);bottom:calc(140px + 3dvh);left:30%}
-.cs-captain{height:min(18dvh,150px);bottom:calc(140px + 2dvh)}.cs-captain-a{left:20%}.cs-captain-b{right:22%}
-.cs-hero{height:min(22dvh,180px);bottom:calc(136px + 1dvh);left:50%;margin-left:calc(min(22dvh,180px)*-.37)}
-.cs-centre{inset:0;margin:auto;height:min(40dvh,320px)}
-.cs-lamp{height:min(42dvh,360px);bottom:16%}.cs-lamp-a{left:16%}.cs-lamp-b{left:50%;margin-left:calc(min(42dvh,360px)*-.3)}.cs-lamp-c{right:16%}
+.shot-sky-dusk{background:linear-gradient(#27344f,#8c5a62 55%,#e2a36b)}
+.shot-sky-night{background:radial-gradient(ellipse at 50% 30%,#1b3550,#081a26 70%)}
+.shot-sky-harbor{background:linear-gradient(#173246,#2c5160 60%,#3c6a5c)}
+.shot-sky-dawn{background:linear-gradient(#3d5a7a,#d99a72 60%,#f3d58c)}
+.shot-backdrop{inset:-4% -6%;width:112%;height:108%;object-fit:cover;image-rendering:auto}
+.shot-sky-dusk .shot-backdrop{filter:brightness(.62) saturate(.8)}
+.shot-fog{width:min(120vw,1400px);bottom:6%;left:-10%;opacity:.55}.shot-fog-front{bottom:-4%;left:0;opacity:.75}
+.shot-lighthouse{height:min(72dvh,620px);bottom:6%;left:50%;margin-left:calc(min(72dvh,620px)*-.23);filter:brightness(.55) saturate(.7)}
+.shot-portrait{height:min(30dvh,240px);bottom:calc(150px + 4dvh);left:8%;border:3px solid #f3d58c99;background:#0f2a33;filter:sepia(.25)}
+.shot-chart{inset:6% 6% 16%;width:88%;height:78%;object-fit:contain;filter:brightness(.82)}
+.shot-boat{height:min(22dvh,190px);bottom:22%;left:52%}
+.shot-office{height:min(52dvh,460px);bottom:calc(150px + 6dvh);left:50%;margin-left:calc(min(52dvh,460px)*-.4)}
+.shot-lantern{height:min(14dvh,110px);bottom:calc(140px + 3dvh);left:30%}
+.shot-captain{height:min(18dvh,150px);bottom:calc(140px + 2dvh)}.shot-captain-a{left:20%}.shot-captain-b{right:22%}
+.shot-hero{height:min(22dvh,180px);bottom:calc(136px + 1dvh);left:50%;margin-left:calc(min(22dvh,180px)*-.37)}
+.shot-centre{inset:0;margin:auto;height:min(40dvh,320px)}
+.shot-lamp{height:min(42dvh,360px);bottom:16%}.shot-lamp-a{left:16%}.shot-lamp-b{left:50%;margin-left:calc(min(42dvh,360px)*-.3)}.shot-lamp-c{right:16%}
 .cutscene-subtitle{position:absolute;left:50%;bottom:max(24px,4dvh);transform:translateX(-50%);width:min(860px,calc(100vw - 32px));margin:0;padding:14px 20px;background:#04141ae0;border:2px solid #a7b58c;border-radius:8px;font-size:clamp(18px,2.4vw,24px);line-height:1.45;text-align:center;pointer-events:none}
 .cutscene-large .cutscene-subtitle{font-size:clamp(22px,3.2vw,32px)}
 .cutscene-skip{position:absolute;top:16px;right:16px;min-width:88px;min-height:44px;font-size:18px}
 .cutscene-hint{position:absolute;top:22px;left:16px;margin:0;font-size:16px;color:#d9ddba;pointer-events:none}
-@media(max-width:600px){.cutscene-hint{display:none}.cs-portrait{left:4%}.cs-captain-a{left:6%}.cs-captain-b{right:6%}}
+@media(max-width:600px){.cutscene-hint{display:none}.shot-portrait{left:4%}.shot-captain-a{left:6%}.shot-captain-b{right:6%}}
 .cutscene[data-reduced-motion=true] .cutscene-layer{will-change:auto}

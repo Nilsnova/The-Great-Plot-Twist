@@ -10,7 +10,7 @@
         {"id": "lore_intro_01", "text": "On a stormy coast lies Saltreach, a small harbor town.", "seconds": 4},
         {"id": "lore_intro_02", "text": "For years, Keeper Elena Vos lit the lighthouse every night.", "seconds": 4.2},
         {"id": "lore_intro_03", "text": "Three nights ago, the light went dark. No one has seen Elena since.", "seconds": 4.6},
-        {"id": "lore_intro_04", "text": "Ships now sail by guesswork, and the harbor is full of rumours.", "seconds": 4.2},
+        {"id": "lore_intro_04", "text": "Ships now sail by guesswork, and the harbor is full of rumors.", "seconds": 4.2},
         {"id": "lore_intro_05", "text": "Captains are arriving from every island to help.", "seconds": 3.8},
         {"id": "lore_intro_06", "text": "You are one of them. Find out what happened, and bring the light back.", "seconds": 4.6}
       ]

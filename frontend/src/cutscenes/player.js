@@ -56,7 +56,7 @@ export function playCutscene({container = document.body, id, data = scriptData, 
   const shots = (scenes[script.id] ?? [{from: 0, to: script.lines.length - 1, sky: 'night', layers: []}]);
   let timeline = buildTimeline(script, {}, shots);
   const shotNodes = shots.map(shot => {
-    const node = element('div', `cutscene-shot cs-sky-${shot.sky ?? 'night'}`);
+    const node = element('div', `cutscene-shot shot-sky-${shot.sky ?? 'night'}`);
     node.setAttribute('aria-hidden', 'true');
     for (const layer of shot.layers ?? []) {
       const image = element('img', `cutscene-layer ${layer.className ?? ''}`);

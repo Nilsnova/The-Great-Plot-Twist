@@ -324,3 +324,29 @@ Both use production UI, generated credential placeholders and intercepted endpoi
 wait for native cloud-save acknowledgement and physically walk to the confirmed station before
 capturing it. See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json). Real services,
 physical hardware and the full online case remain outside that proof.
+
+## G29: the front door (Play, Join, lore intro, harbor start)
+
+The title has two actions. **Play** continues a saved story (local intro or cloud continuation); otherwise it
+runs the front door: the lore cutscene, one goal-and-controls card, then the player stands outside in
+Saltreach Harbor (`begin(false, {kind: 'world', place: 'saltreach_harbor'})`). **Join** opens a small page:
+a code (`HARBOR` is the class harbor; any other code goes to the friends and crew flow and is offered once
+in the crew screen) and a hint to scan the projector QR. `?join=harbor` is remembered in session storage
+for the class-harbor stage. The original Act 1 is the **Lighthouse prologue** in the pause menu and Settings.
+Settings holds Story (prologue, replay the intro), Account (sign-in buttons, saves) and About (build stamp).
+
+Everything new loads after a click: `shell/routes.js`, `front-door/` and `cutscenes/`. The cold title is
+20,364 of its 21,080 JavaScript bytes (was 21,066) and 11,404 of 12,000 CSS bytes.
+
+`cutscenes/player.js` plays a script from `cutscenes/scripts.json` with shots from `cutscenes/scenes.js`
+(local art only, simple parallax and fades, cuts with reduced motion). Subtitles are always shown; the
+music bed is procedural Web Audio; a voice line plays `public/audio/voice/<id>.<ext>` only when
+`public/audio/voice/manifest.json` lists it (`{version: 1, lines: {id: {file, seconds}}}`), so the
+cutscenes stay silent until voices exist. Voices are fetched and decoded with Web Audio because the CSP
+keeps `media-src 'none'`. Skip with the button, Escape or a tap. The reveal's lines never ship here.
+
+Guest play: when `/api/config` answers `demo.open: true`, Play calls the `signIn({guest: true})` intent,
+which signs in anonymously with supabase-js. Otherwise Play stays local and Settings offers one sign-in
+button per provider in `auth.providers` (GitHub when missing; Google uses the same PKCE flow). A guest can
+keep their progress with `signIn({provider, upgrade: true})` (Supabase `linkIdentity`). A `403 demo_closed`
+answer becomes the `demo_closed` reason with a plain message.

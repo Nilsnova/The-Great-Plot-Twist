@@ -4,7 +4,7 @@ import {browserHarness} from './g20-browser.js';
 const evaluate=browserHarness();
 
 const script={version:1,scripts:[{id:'demo',title:'Demo scene',lines:[{id:'demo_01',text:'First line.',seconds:.35},{id:'demo_02',text:'Second line.',seconds:.35}]}]};
-const shots={demo:[{from:0,to:0,sky:'night',layers:[{art:'pixel/lighthouse.png',className:'cs-lighthouse',depth:20}]},{from:1,to:1,sky:'dusk',layers:[]}]};
+const shots={demo:[{from:0,to:0,sky:'night',layers:[{art:'pixel/lighthouse.png',className:'shot-lighthouse',depth:20}]},{from:1,to:1,sky:'dusk',layers:[]}]};
 
 it('plays timed subtitles to the end and leaves no dialog behind',async()=>{
   const result=await evaluate(async({script,shots})=>{
