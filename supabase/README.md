@@ -3060,7 +3060,7 @@ Supabase Auth's admin user list (`GET /auth/v1/admin/users` with the secret key)
 **Allow anonymous sign-ins** on, and it stays on; Authentication > Rate Limits > **anonymous sign-ins
 per hour** raised (for example 300, one shared class IP). Since `20261109020000_class_code.sql` the
 window above is unused and the read policies and Realtime rooms admit an anonymous user only once
-admitted with the class code. For Google sign-in, see [SETUP.md, Step 3b](../docs/SETUP.md).
+admitted with the class code. For email code sign-in (SMTP, templates with `{{ .Token }}`, rate limits), see [SETUP.md, Step 3b](../docs/SETUP.md).
 
 Scratch validation from `backend/` (all migrations applied twice on a disposable local PostgreSQL;
 neither package is added to the project):
@@ -3088,7 +3088,7 @@ not a lock, the server's guest gate and these policies are.
 | `is_admitted_guest()` | `authenticated` executes; `anon` no | No execute. `SECURITY DEFINER`, `search_path = ''`: whether `auth.uid()` has a row in `demo_guests`; answers only for the caller. |
 
 The 21 rewritten policies keep their names, tables, commands and roles; each adds
-`(not (select public.jwt_is_anonymous()) or (select public.is_admitted_guest()))`. A GitHub or Google
+`(not (select public.jwt_is_anonymous()) or (select public.is_admitted_guest()))`. A GitHub or email
 player (`is_anonymous: false`) is unchanged. An anonymous user who never presented the code reads no
 row (profiles, wallet reasons, own save and wallet, crews, duels, ...) and joins no Realtime room
 (`live:world`, `live:place:*`, `live:crew:*`). Admitted guests keep every room they had: they can

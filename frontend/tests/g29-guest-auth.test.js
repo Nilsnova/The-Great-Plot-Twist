@@ -1,4 +1,5 @@
-// G29 C1: guest (anonymous) sign-in, Google next to GitHub, and the guest upgrade, with fake SDKs only.
+// G29 C1: guest (anonymous) sign-in, GitHub as the only OAuth provider (Google was dropped), and the
+// guest upgrade, with fake SDKs only. Email codes are covered in g29-email-auth.test.js.
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {createAuth} from '../src/online/auth.js';
 import {createSession} from '../src/online/session.js';
@@ -25,8 +26,7 @@ function setup(overrides = {}) {
     signInAnonymously: vi.fn(async () => ({data: {session: sdkSession(true)}, error: null})),
     signInWithOAuth: vi.fn(async ({provider}) => ({error: null, data: {url:
       `${origin}/auth/v1/authorize?provider=${provider}&code_challenge_method=s256&code_challenge=${placeholder()}`}})),
-    linkIdentity: vi.fn(async ({provider}) => ({error: null, data: {url: provider === 'google'
-      ? `https://accounts.google.com/o/oauth2/v2/auth?state=${placeholder()}` : `https://github.com/login/oauth/authorize?state=${placeholder()}`}})),
+    linkIdentity: vi.fn(async () => ({error: null, data: {url: `https://github.com/login/oauth/authorize?state=${placeholder()}`}})),
     signOut: vi.fn(async () => ({error: null})), dispose: vi.fn(async () => {}),
     onAuthStateChange: vi.fn(() => ({data: {subscription: {unsubscribe() {}}}})),
     ...overrides.sdk,
@@ -67,12 +67,15 @@ describe('guest sign-in', () => {
 });
 
 describe('providers and the guest upgrade', () => {
-  it('starts Google through the same PKCE redirect as GitHub', async () => {
+  it('starts GitHub through the PKCE redirect and refuses the dropped Google and the non-OAuth email', async () => {
     const f = setup();
-    expect(await f.auth.signIn('google')).toMatchObject({ok: true});
-    expect(f.sdk.signInWithOAuth).toHaveBeenCalledWith(expect.objectContaining({provider: 'google',
+    expect(await f.auth.signIn('google')).toMatchObject({ok: false});
+    expect(await f.auth.signIn('email')).toMatchObject({ok: false});
+    expect(f.sdk.signInWithOAuth).not.toHaveBeenCalled();
+    expect(await f.auth.signIn('github')).toMatchObject({ok: true});
+    expect(f.sdk.signInWithOAuth).toHaveBeenCalledWith(expect.objectContaining({provider: 'github',
       options: expect.objectContaining({skipBrowserRedirect: true})}));
-    expect(new URL(f.redirect.mock.calls[0][0]).searchParams.get('provider')).toBe('google');
+    expect(new URL(f.redirect.mock.calls[0][0]).searchParams.get('provider')).toBe('github');
   });
   it('refuses unknown providers without loading the SDK', async () => {
     const f = setup();
@@ -83,31 +86,39 @@ describe('providers and the guest upgrade', () => {
     const f = setup();
     expect(await f.auth.upgrade('github')).toMatchObject({ok: false});
     await f.auth.signInAnonymously();
-    expect(await f.auth.upgrade('google')).toMatchObject({ok: true});
-    expect(f.sdk.linkIdentity).toHaveBeenCalledWith(expect.objectContaining({provider: 'google'}));
+    expect(await f.auth.upgrade('google')).toMatchObject({ok: false});
+    expect(f.sdk.linkIdentity).not.toHaveBeenCalled();
+    expect(await f.auth.upgrade('github')).toMatchObject({ok: true});
+    expect(f.sdk.linkIdentity).toHaveBeenCalledWith(expect.objectContaining({provider: 'github'}));
     expect(f.sdk.signInWithOAuth).not.toHaveBeenCalled();
-    expect(new URL(f.redirect.mock.calls[0][0]).origin).toBe('https://accounts.google.com');
+    expect(new URL(f.redirect.mock.calls[0][0]).origin).toBe('https://github.com');
   });
   it('accepts only our Supabase start page or the provider consent page for an upgrade', () => {
     const configuration = {url: origin};
-    const start = `${origin}/auth/v1/authorize?provider=google&code_challenge_method=s256`;
-    expect(signInAddress(start, configuration, {provider: 'google'})).toBe(start);
-    expect(signInAddress(start, configuration, {provider: 'github'})).toBeNull();
+    const start = `${origin}/auth/v1/authorize?provider=github&code_challenge_method=s256`;
+    expect(signInAddress(start, configuration, {provider: 'github'})).toBe(start);
+    expect(signInAddress(start, configuration, {provider: 'email'})).toBeNull();
     expect(signInAddress(start)).toBeNull();
     expect(signInAddress('https://github.com/login/oauth/authorize?x=1', configuration, {provider: 'github', upgrade: true})).not.toBeNull();
     expect(signInAddress('https://evil.example/login/oauth/authorize', configuration, {provider: 'github', upgrade: true})).toBeNull();
     expect(signInAddress('https://github.com/login/oauth/authorize', configuration, {provider: 'google', upgrade: true})).toBeNull();
+    // Google's consent page is no longer a reviewed upgrade target.
+    expect(signInAddress('https://accounts.google.com/o/oauth2/v2/auth?x=1', configuration, {provider: 'google', upgrade: true})).toBeNull();
   });
   it('passes provider and guest calls through the lazy wrapper', async () => {
     const calls = [];
     const fake = {read: () => ({state: 'signed_out'}), dispose() {},
       signIn: async provider => { calls.push(['signIn', provider]); return {ok: true}; },
       upgrade: async provider => { calls.push(['upgrade', provider]); return {ok: true}; },
-      signInAnonymously: async () => { calls.push(['guest']); return {ok: true}; }};
+      signInAnonymously: async () => { calls.push(['guest']); return {ok: true}; },
+      sendEmailCode: async (email, options) => { calls.push(['send', email, options]); return {ok: true}; },
+      verifyEmailCode: async (email, code) => { calls.push(['verify', email, code]); return {ok: true}; }};
     const lazy = createLazyAuth({supabaseUrl: origin, publishableKey: 'placeholder', storage: {close() {}, clearSession() {}},
       loadAuth: async () => ({createAuth: () => fake})});
-    await lazy.signIn('google'); await lazy.upgrade('github'); await lazy.signInAnonymously();
-    expect(calls).toEqual([['signIn', 'google'], ['upgrade', 'github'], ['guest']]);
+    await lazy.signIn('github'); await lazy.upgrade('github'); await lazy.signInAnonymously();
+    await lazy.sendEmailCode('captain@example.org', {upgrade: true}); await lazy.verifyEmailCode('captain@example.org', '123456');
+    expect(calls).toEqual([['signIn', 'github'], ['upgrade', 'github'], ['guest'],
+      ['send', 'captain@example.org', {upgrade: true}], ['verify', 'captain@example.org', '123456']]);
     lazy.dispose();
   });
 });

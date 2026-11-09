@@ -1,7 +1,7 @@
 """The guest gate: a guest (anonymous user) may use the API only after presenting the class code.
 
 auth.get_current_player calls admit() for every guest, after Supabase has verified the token.
-GitHub and Google users never reach this file.
+GitHub and email users never reach this file.
 
     feature flag demo off                     ->  403 demo_closed (no database read at all)
     flag on, the guest is not in demo_guests  ->  403 demo_closed (they have not presented the

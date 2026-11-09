@@ -4,7 +4,7 @@ The lock asks what the sky over the player's own place looks like right now, and
 the answer against the real weather there (decision D029). The rules are in lock/sky.py, the place
 in lock/place.py, the words in backend/content/keeper_lock.json.
 
-Who may call: signed-in players (GitHub, Google, or a guest while the demo is open, see
+Who may call: signed-in players (GitHub, email, or a guest while the demo is open, see
 demo/gate.py). The player id comes from the verified login, never from the request. Every answer
 carries "Cache-Control: private, no-store": it holds the player's place. The place is never stored
 and never logged.

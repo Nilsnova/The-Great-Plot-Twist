@@ -3,7 +3,7 @@
 During the class demo, phones join by QR code and sign in as Supabase anonymous users ("guests"),
 with no GitHub account. Anonymous sign-ins stay switched on in Supabase for good. A guest may use
 the API only after presenting the current class code (POST /api/demo/join) while the feature flag
-demo is on. GitHub and Google users are never affected.
+demo is on. GitHub and email users are never affected.
 
 Where things are (one job per file):
     code.py     the class code: make it, read it, compare a typed one in constant time, record an

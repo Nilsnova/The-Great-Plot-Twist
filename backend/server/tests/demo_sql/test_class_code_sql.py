@@ -18,7 +18,7 @@ from uuid import UUID, uuid4
 import pytest
 
 HOST = UUID(int=911)
-PLAYER = UUID(int=912)  # a GitHub or Google player
+PLAYER = UUID(int=912)  # a GitHub or email player
 GUEST = UUID(int=913)  # an anonymous user who never presented the code
 ADMITTED = UUID(int=914)  # an anonymous user the server admitted
 

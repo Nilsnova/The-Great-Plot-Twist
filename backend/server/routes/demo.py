@@ -29,7 +29,7 @@ a player who is not in HOST_PLAYER_IDS. A guest is never a host.
       200  {"checked": 57, "deleted": 41, "more": false}
       Deletes every anonymous guest whose account is older than 24 hours, through the database
       function delete_player (demo/guests.py says exactly who counts as a guest: never a GitHub or
-      Google user, never a host). At most 100 per call; "more": true means press again. Deleting
+      email user, never a host). At most 100 per call; "more": true means press again. Deleting
       is safe to repeat, so the actionUid only follows the house rule for retries and is not
       stored. A 503 means the outcome is unknown: press again.
 
@@ -42,7 +42,7 @@ guest calls it exactly to get through the gate.
       200  {"admitted": true}
       A guest who presented the current code is recorded in demo_guests and passes the gate from
       now on (also after a new code). A guest who was admitted before gets 200 even with an old
-      code. A GitHub or Google player needs no admission and is not recorded; a valid code answers
+      code. A GitHub or email player needs no admission and is not recorded; a valid code answers
       200 for them too. Safe to repeat: the actionUid is not stored.
       403  demo_closed          the feature flag demo is off
       403  class_code_invalid   not the current code (or no code yet)

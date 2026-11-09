@@ -4,10 +4,11 @@ It returns the environment, whether demo mode is on, which feature flags are on,
 (the sign-in providers and the address of our Supabase project) and whether guests may join the
 class demo with a class code.
 
-    "auth": {"provider": "github", "providers": ["github", "google"], "supabaseUrl": "https://..."}
-        providers   the setting AUTH_PROVIDERS (github and/or google; default github), in order
-        provider    the old single field, kept for older pages: "github" while GitHub is listed,
-                    otherwise the first provider
+    "auth": {"provider": "github", "providers": ["github", "email"], "supabaseUrl": "https://..."}
+        providers   the setting AUTH_PROVIDERS (github and/or email; default github), in order.
+                    "email" is the 6-digit email code sign-in.
+        provider    the old single field, kept for older pages such as the sign-in check, which
+                    start an OAuth redirect with it: always "github", the only OAuth provider
     "demo": {"guestsByCode": true}
         guestsByCode  guests (Supabase anonymous sign-in) may join with the class code: the feature
                       flag demo is on. The browser offers guest play only then, and only to a
@@ -31,7 +32,8 @@ from server.settings import Settings, SettingsDep
 
 router = APIRouter()
 
-# The provider older pages start the sign-in with. Email sign-in stays off in Supabase.
+# The provider older pages start an OAuth sign-in with. Email codes are not an OAuth redirect, so
+# this field never names "email", even when it is the only provider listed.
 AUTH_PROVIDER = "github"
 
 
@@ -62,8 +64,9 @@ class ConfigResponse(BaseModel):
 
 def auth_config(settings: Settings) -> AuthConfig:
     providers = list(settings.auth_providers)
-    provider = AUTH_PROVIDER if AUTH_PROVIDER in providers else providers[0]
-    return AuthConfig(provider=provider, providers=providers, supabaseUrl=settings.supabase_url)
+    return AuthConfig(
+        provider=AUTH_PROVIDER, providers=providers, supabaseUrl=settings.supabase_url
+    )
 
 
 @router.get("/config")

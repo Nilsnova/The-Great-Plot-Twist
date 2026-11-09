@@ -579,6 +579,11 @@ back to the last good reading (at most 6 hours) and then to a riddle, and offers
 one wrong answer. It stores only the answer id and verdict, never the place, and pays no coins.
 `AUTH_PROVIDERS` adds Google as a second ordinary sign-in.
 
+**Amended 9 Nov 2026 (G29 email):** Nils dropped Google. `AUTH_PROVIDERS` now names `github` and
+`email` (a 6-digit email code, Supabase email OTP); `google` is an unknown name and stops the
+server. A guest keeps progress by linking GitHub or by confirming an email with a code on the same
+user. Email users are ordinary players, never gated.
+
 **Why:** Two players needed 45 to 50 clicks and a GitHub account; a QR join must take seconds. A
 time-boxed window keeps anonymous accounts out of the game outside the class. The Stranger ("took no
 side") is the kit that fits a player who never played Act 1, and reusing the two existing functions

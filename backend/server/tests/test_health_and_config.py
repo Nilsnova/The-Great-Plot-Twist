@@ -94,21 +94,30 @@ def test_config_tells_the_browser_how_to_sign_in():
 
 
 def test_config_lists_the_sign_in_providers_in_the_order_of_the_setting():
-    settings = replace(CONFIGURED_SETTINGS, auth_providers=("google", "github"))
+    settings = replace(CONFIGURED_SETTINGS, auth_providers=("email", "github"))
 
     auth = make_client(settings).get("/api/config").json()["auth"]
 
-    assert auth["providers"] == ["google", "github"]
-    # The old single field keeps naming GitHub while it is offered, for older pages.
+    assert auth["providers"] == ["email", "github"]
+    # The old single field keeps naming GitHub, for older pages.
     assert auth["provider"] == "github"
 
 
-def test_config_names_google_as_the_old_provider_field_when_it_is_the_only_one():
-    settings = replace(CONFIGURED_SETTINGS, auth_providers=("google",))
+def test_config_lists_github_and_email_for_the_vercel_value():
+    settings = replace(CONFIGURED_SETTINGS, auth_providers=("github", "email"))
 
     auth = make_client(settings).get("/api/config").json()["auth"]
 
-    assert auth == {"provider": "google", "providers": ["google"], "supabaseUrl": FAKE_URL}
+    assert auth == {"provider": "github", "providers": ["github", "email"], "supabaseUrl": FAKE_URL}
+
+
+def test_config_never_names_email_in_the_old_oauth_provider_field():
+    # Older pages (the sign-in check) start an OAuth redirect with "provider"; email is no OAuth.
+    settings = replace(CONFIGURED_SETTINGS, auth_providers=("email",))
+
+    auth = make_client(settings).get("/api/config").json()["auth"]
+
+    assert auth == {"provider": "github", "providers": ["email"], "supabaseUrl": FAKE_URL}
 
 
 def test_config_has_an_empty_sign_in_address_while_supabase_is_not_set_up():
@@ -119,7 +128,7 @@ def test_config_has_an_empty_sign_in_address_while_supabase_is_not_set_up():
 
 def test_config_auth_has_exactly_three_public_fields():
     # A fourth field would be a new thing to share with every visitor. Decide that on purpose.
-    # "providers" was added on purpose for Google sign-in (G29); it lists public names only.
+    # "providers" was added on purpose for a second sign-in (G29); it lists public names only.
     auth = make_client(CONFIGURED_SETTINGS).get("/api/config").json()["auth"]
 
     assert list(auth) == ["provider", "providers", "supabaseUrl"]

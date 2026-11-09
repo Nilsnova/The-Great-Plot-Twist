@@ -48,7 +48,7 @@ Notes for the table above:
 ### After class
 
 1. Nothing has to be switched off. Anonymous sign-ins stay on; a new phone can only play with the current class code, and the next lecture starts with **New class code**, which stops today's code. If the code leaked during class (for example a photo of the QR in a group chat), press **New class code** now.
-2. Old guests are removed automatically, a few at a time, whenever a host opens the console or the projector panel. To do it at once, press **Clean up guests** in the **Class demo** panel of `/host.html` and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or Google are kept.
+2. Old guests are removed automatically, a few at a time, whenever a host opens the console or the projector panel. To do it at once, press **Clean up guests** in the **Class demo** panel of `/host.html` and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or confirmed an email are kept.
 3. Optional: take `demo` out of `FEATURE_FLAGS` and redeploy. Then no guest plays at all, with or without a code.
 
 ## The coast and the schooner (older scripts)

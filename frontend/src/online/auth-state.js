@@ -22,8 +22,7 @@ export function authConfiguration(url, key) {
 
 // Provider consent pages a guest upgrade (linkIdentity) may send the browser to, after Supabase
 // answered with the provider's own address. Ordinary sign-in always starts on our Supabase origin.
-const linkPages = {github: ['https://github.com/login/oauth/authorize'],
-  google: ['https://accounts.google.com/o/oauth2/v2/auth', 'https://accounts.google.com/o/oauth2/auth']};
+const linkPages = {github: ['https://github.com/login/oauth/authorize']};
 export function signInAddress(value, configuration, {provider = 'github', upgrade = false} = {}) {
   try {
     const url = new URL(value);
@@ -32,6 +31,27 @@ export function signInAddress(value, configuration, {provider = 'github', upgrad
       && url.searchParams.get('provider') === provider
       && url.searchParams.get('code_challenge_method') === 's256' ? url.href : null;
   } catch { return null; }
+}
+
+// Email code sign-in (Supabase email OTP). The address goes only to our Supabase project.
+export function normalEmail(value) {
+  if (typeof value !== 'string') return null;
+  const email = value.trim();
+  return email.length >= 3 && email.length <= 254 && !/[\s\x00-\x1f\x7f]/.test(email)
+    && /^[^@]+@[^@]+\.[^@.]+$/.test(email) ? email : null;
+}
+export const validEmailCode = value => typeof value === 'string' && /^\d{6}$/.test(value);
+
+// Sorts an SDK error into a fixed reason, so no SDK text or address reaches a screen.
+// rate_limited: Supabase answered 429 (one code per address a minute, or the project limit).
+export function emailFailure(error, step) {
+  const status = Number(error?.status), code = typeof error?.code === 'string' ? error.code : '';
+  if (status === 429 || /rate_limit/.test(code)) return 'rate_limited';
+  if (['email_provider_disabled', 'signup_disabled', 'otp_disabled'].includes(code)) return 'email_off';
+  if (['email_exists', 'user_already_exists', 'identity_already_exists'].includes(code)) return 'email_taken';
+  if (step === 'verify' && (code === 'otp_expired' || [400, 401, 403, 404, 422].includes(status))) return 'wrong_code';
+  if (step === 'send' && (/email_address|validation_failed/.test(code) || [400, 422].includes(status))) return 'invalid_email';
+  return 'error';
 }
 
 export function ownReturnAddress(href) {

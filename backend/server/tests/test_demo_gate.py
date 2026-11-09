@@ -15,8 +15,8 @@ from server.demo.guests import GUEST_ENDING, GUEST_KIT
 from server.flags import parse_flags
 from server.tests.demo_helpers import (
     DEMO_SETTINGS,
-    GOOGLE,
-    GOOGLE_ID,
+    EMAIL_PLAYER,
+    EMAIL_PLAYER_ID,
     GUEST,
     GUEST_ID,
     PLAYER,
@@ -48,9 +48,21 @@ def client_with_route(settings=DEMO_SETTINGS):
         ({"id": "x", "is_anonymous": False}, False),
         ({"id": "x", "app_metadata": {"provider": "anonymous"}}, True),
         ({"id": "x", "app_metadata": {"provider": "github"}}, False),
+        ({"id": "x", "app_metadata": {"provider": "email"}}, False),
+        ({"id": "x", "is_anonymous": False, "email": "a@example.org"}, False),
         ({"id": "x"}, False),
         # A guest who linked GitHub: is_anonymous decides, even with an old provider name.
         ({"id": "x", "is_anonymous": False, "app_metadata": {"provider": "anonymous"}}, False),
+        # A guest who confirmed an email (the same user id keeps its progress) is a player now.
+        (
+            {
+                "id": "x",
+                "is_anonymous": False,
+                "email": "a@example.org",
+                "app_metadata": {"provider": "anonymous", "providers": ["anonymous", "email"]},
+            },
+            False,
+        ),
         # Text is not a yes.
         ({"id": "x", "is_anonymous": "true"}, False),
     ],
@@ -63,6 +75,20 @@ def test_the_player_carries_the_guest_flag_from_supabase():
     response = httpx.Response(200, json={"id": "abc", "is_anonymous": True})
 
     assert player_from_response(response).is_anonymous is True
+
+
+def test_an_email_code_user_is_a_normal_verified_player():
+    user = {
+        "id": "eeeeeeee-0000-4000-8000-000000000005",
+        "is_anonymous": False,
+        "email": "captain@example.org",
+        "app_metadata": {"provider": "email", "providers": ["email"]},
+    }
+
+    player = player_from_response(httpx.Response(200, json=user))
+
+    assert player.id == user["id"]
+    assert player.is_anonymous is False
 
 
 # --- the gate ---
@@ -78,12 +104,13 @@ def test_a_github_player_passes_without_any_demo_read():
     assert database.requests == []
 
 
-def test_a_google_player_is_a_normal_player_too():
+def test_an_email_player_is_a_normal_player_too():
+    # A 6-digit email code sign-in gives an ordinary Supabase token: no gate, no guest kit.
     client, database, _ = client_with_route()
 
-    response = client.get(URL, headers=GOOGLE)
+    response = client.get(URL, headers=EMAIL_PLAYER)
 
-    assert response.json() == {"id": GOOGLE_ID, "guest": False}
+    assert response.json() == {"id": EMAIL_PLAYER_ID, "guest": False}
     assert database.requests == []
 
 
