@@ -18,7 +18,7 @@ function screenPoint(x,z,camera,canvas,container){
 }
 export function createOtherCaptains(scene,container,art,reducedMotion=false){
   const root=new THREE.Group();root.name='other-captains';scene.add(root);
-  const records=new Map();let input={status:'off',place:null,others:[],hiddenCount:0,sampledAt:0},clock=0,stats={drawn:0,hidden:0,ids:[]};let disposed=false;
+  const records=new Map();let input={status:'off',place:null,others:[],hiddenCount:0,sampledAt:0},clock=0,stats={drawn:0,hidden:0,ids:[]};let disposed=false,ingested=0,ripples=0;
   function releaseRenderable(record){
     if(!record.group)return;
     root.remove(record.group);record.body.geometry.dispose();record.emoteMesh?.geometry.dispose();
@@ -46,10 +46,20 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
   }
   function createRecord(peer,time){
     const record={id:peer.id,group:null,body:null,emoteMesh:null,label:null,asset:null,peer:{...peer},from:{x:peer.x,y:peer.y},to:{x:peer.x,y:peer.y},fromAt:time,toAt:time,
-      place:peer.place,receivedAt:time,joinedAt:time,leavingAt:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null};
+      place:peer.place,receivedAt:time,joinedAt:time,leavingAt:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null,quiet:ingested===0,announced:false,emoteAt:0};
     records.set(peer.id,record);return record;
   }
   const positionAt=(record,time)=>samplePosition({...record,time,moving:record.peer.moving});
+  // A captain lands: a ring of light opens on the ground and a few pale sparks rise (at most a few at once).
+  let rippleClock=0;
+  function arrive(point,still){
+    const fx=scene.userData?.pixelFx;if(!fx)return;
+    if(clock-rippleClock>1000){rippleClock=clock;ripples=0;}if(++ripples>6)return;
+    fx.bloom(point.x,point.y+.6,{radius:1.4,life:.9,colour:'#bfe6dc'});
+    if(still)return;
+    fx.ring(point.x,point.y,{radius:1.8,life:.75,colour:'#d8f0e6'});fx.ring(point.x,point.y,{radius:3.2,life:1,delay:.12,colour:'#9fd0c4'});
+    fx.burst(point.x,point.y+.2,{count:14,speed:[1.2,3],angle:Math.PI/2,spread:1.2,gravity:2.5,life:[.5,1],colour:'#e3f6ee',size:[1,1]});
+  }
   function ingest(presence){
     if(disposed)return;input=presence??input;const time=Number.isFinite(input.sampledAt)?input.sampledAt:clock,seen=new Set();
     for(const sample of input.others??[]){
@@ -61,6 +71,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
       record.peer={...peer};record.receivedAt=time;record.leavingAt=null;
     }
     for(const record of records.values())if(!seen.has(record.id)&&record.leavingAt===null)record.leavingAt=time;
+    ingested++;
   }
   // max: how many captains are drawn (40 in the class harbor); emoteScale: bigger emote bubbles there.
   function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false,max=PRESENCE_LIMITS.visible,emoteScale=1}={}){
@@ -76,12 +87,15 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
     for(const record of selected){
       record.group.visible=true;
       const point=positionAt(record,clock),placePoint=projectPoint(point.x,point.y);record.group.position.set(placePoint.x,placePoint.y,0);record.body.userData.logical=point;
+      if(!record.announced){record.announced=true;if(!record.quiet&&clock-record.joinedAt<1500)arrive(placePoint,motionOff);}
       const bodyAsset=assets.get(record.id);record.asset=bodyAsset;record.body.userData.asset=bodyAsset;const fadeIn=clamp((clock-record.joinedAt)/260,0,1),fadeOut=record.leavingAt===null?1:clamp(1-(clock-record.leavingAt)/PRESENCE_LIMITS.fadeMs,0,1),alpha=fadeIn*fadeOut;
       setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);record.body.scale.x=record.peer.facing==='left'?-1:1;record.body.renderOrder=100+record.peer.y+.15;
       if(record.peer.emote&&art[`emote-${record.peer.emote}`]){
         if(record.emoteId!==record.peer.emote){if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;}
-          record.emoteId=record.peer.emote;record.emoteMesh=makeMesh(`emote-${record.emoteId}`,materialFor(art,`emote-${record.emoteId}`),`emote-${record.emoteId}`);record.group.add(record.emoteMesh);}
-        record.emoteMesh.position.y=1.35+(emoteScale-1)*.75;record.emoteMesh.scale.setScalar(emoteScale);setMaterial(record,record.emoteMesh,materialFor(art,`emote-${record.emoteId}`),'emote',alpha);
+          record.emoteId=record.peer.emote;record.emoteMesh=makeMesh(`emote-${record.emoteId}`,materialFor(art,`emote-${record.emoteId}`),`emote-${record.emoteId}`);record.emoteMesh.renderOrder=942;record.group.add(record.emoteMesh);record.emoteAt=clock;}
+        // Pop in: whole-pixel scale steps (small, overshoot, settle) and a short hop, never fractional.
+        const pop=motionOff?1:clamp((clock-record.emoteAt)/240,0,1),scale=pop<.3?Math.max(1,emoteScale-1):pop<.65?emoteScale+1:emoteScale;
+        record.emoteMesh.position.y=Math.round((1.35+(scale-1)*.75+(pop<1?(1-pop)*.5:0))*16)/16;record.emoteMesh.scale.setScalar(scale);setMaterial(record,record.emoteMesh,materialFor(art,`emote-${record.emoteId}`),'emote',alpha);
       }else if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;record.emoteMesh=null;record.emoteId=null;}
       record.label.textContent=record.peer.name;record.label.title=record.peer.kit?.name??'Captain';record.label.hidden=true;
       record.label.style.opacity=String(alpha);record.label.style.fontSize='16px';record.label.style.display='none';

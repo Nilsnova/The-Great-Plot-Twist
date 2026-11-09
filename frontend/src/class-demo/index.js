@@ -178,7 +178,7 @@ export function createClassDemo(ctx) {
       lock ??= module.createLockScreen({container: layer, lock: transport, onClose: () => ctx.focus?.(),
         onOpened: () => {
           lockOpened = true; objects.setLockOpen(true); tick('lock');
-          void playCutscene('lock_opens').then(() => { if (!disposed) say(REWARD_LINE, 8000); });
+          void playCutscene('lock_opens').then(() => { if (!disposed) { objects.pulseLock(); say(REWARD_LINE, 8000); } });
         }});
     }
     lock.open();
@@ -203,8 +203,9 @@ export function createClassDemo(ctx) {
     } : null,
     onLit: () => audio?.cue?.('festival-claim'),
     onRelit: ({celebrate}) => {
-      objects.setRelit(true, {celebrate});audio?.cue?.('foghorn');audio?.cue?.('beam');
-      say('The lighthouse burns again!', 5000);void playCutscene('lamps_relit');
+      objects.setRelit(true);audio?.cue?.('foghorn');audio?.cue?.('beam');
+      say('The lighthouse burns again!', 5000);
+      void playCutscene('lamps_relit').then(() => { if (!disposed && celebrate) objects.celebrate(); });
     }});
 
   // ---- the prompt next to the player ----
@@ -257,7 +258,7 @@ export function createClassDemo(ctx) {
     get active() { return !!(lock?.active || duel?.active || cutscene); },
     get joined() { return joined; },
     // For the browser checks and the presenter's console: what the demo knows right now.
-    get debug() { return {others: currentOthers(), quests: {...quests}, lamps: finale.state, target, path, host: isHostLike(), count: lastCount}; },
+    get debug() { return {others: currentOthers(), quests: {...quests}, lamps: finale.state, target, path, host: isHostLike(), count: lastCount, rehearsalCaptains: captains}; },
     presencePlace: place => presencePlace(place, joined),
     apply(next) {
       view = next;
