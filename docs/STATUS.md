@@ -14,6 +14,10 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**Open to-dos:** the one team list of open work is [OPEN-TODOS.md](OPEN-TODOS.md) (account setup, pre-demo checks, follow-ups, the Moodle deadline). No task there is assigned to a person.
+
+**Current release, 9 Nov 2026 (G29, the class demo):** main `c7f8c95` is live. The title has Play, Join and Settings; a short voiced intro (ElevenLabs) leads to the harbor in two clicks; one class harbor holds up to 40 captains; a quest strip (wave, duel, Keeper's Lock), a two-tap friendly duel, the Keeper's Lock with the player's real weather and the three-lamps finale; a projector QR (J); wow graphics (animated title, pixel sea, dusk and night light, rain and fog); a host-console Class demo panel. All gates passed; the live smoke check has 0 failures. The flag `demo` is on. Guests stay locked out until anonymous sign-ins are allowed in Supabase (OPEN-TODOS.md, 1a). Being built: the class-code gate and email sign-in.
+
 **Current integration, 8 Nov 2026, Codex for Nils:** G9 is published and its live runtime is preserved
 in `integrate/overflow-1-3`. The first three overflow items, native phone tap-to-walk, clearer Friends
 and case guidance, polished inspection/Settings/support pages and caption-safe story frames are reviewed.
