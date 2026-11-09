@@ -7,7 +7,7 @@
 import './class-demo.css';
 import {node} from '../ui/kit/dom.js';
 import {api as defaultApi} from '../online/api.js';
-import {sendExtra, setClassHarbor} from '../net/live-extras.js';
+import {isMe, resolvePeer, sendExtra, setClassHarbor} from '../net/live-extras.js';
 import {CLASS_HARBOR_PLACE} from '../net/live-rules.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 import {readQuests, writeQuests, completeQuest, playerKey, questView} from './quests.js';
@@ -18,6 +18,7 @@ import {createQuestStrip} from './quest-strip.js';
 import {createLampFinale} from './lamps.js';
 import {createDemoObjects} from './world-objects.js';
 import {createLockApi} from './lock-api.js';
+import {REWARD_LINE} from './lock-state.js';
 import {createDuelApi, pendingInvite} from './duel-api.js';
 
 const INVITE_POLL_MS = 20000;
@@ -35,10 +36,10 @@ export function createClassDemo(ctx) {
   if (joined) setClassHarbor(true);
 
   const layer = node('div', 'class-demo-layer');container.append(layer);
-  const strip = createQuestStrip({parent: layer});
+  const strip = createQuestStrip({parent: layer, focusGame: () => ctx.focus?.()});
   const prompt = node('div', 'demo-prompt');prompt.hidden = true;prompt.setAttribute('role', 'group');prompt.setAttribute('aria-label', 'Nearby');
   const joinButton = node('button', 'kit-button demo-join', 'Join the class harbor');joinButton.type = 'button';joinButton.hidden = true;
-  joinButton.addEventListener('click', () => joinHarbor());
+  joinButton.addEventListener('click', event => { joinHarbor(); if (event.detail > 0) ctx.focus?.(); });
   const toast = node('p', 'demo-toast');toast.setAttribute('role', 'status');toast.hidden = true;
   layer.append(prompt, joinButton, toast);
   const objects = createDemoObjects({scene, reducedMotion});
@@ -51,7 +52,7 @@ export function createClassDemo(ctx) {
   // ---- rehearsal: simulated captains, duel and lock (no server writes) ----
   const rehearsalTools = rehearsal ? import('./rehearsal.js').then(module => {
     if (disposed) return null;
-    const count = Number(new URLSearchParams(globalThis.location?.search ?? '').get('captains')) || 14;
+    const asked = new URLSearchParams(globalThis.location?.search ?? '').get('captains'), count = asked === null || !Number.isFinite(Number(asked)) ? 14 : Number(asked);
     captains = module.createRehearsalCaptains({count, canStand: ctx.canStand});
     return {duels: module.createRehearsalDuels(), lock: module.createRehearsalLock(), captains};
   }) : null;
@@ -130,7 +131,7 @@ export function createClassDemo(ctx) {
   }));
   stops.push(on('live_peer_extra', event => {
     if (event.event === 'lamp') finale.receive(event.data);
-    if (event.event === 'duel' && event.data?.to === myName() && typeof event.data.duel === 'string') void lookForInvite(event.data.duel);
+    if (event.event === 'duel' && isMe(event.data?.to) && typeof event.data.duel === 'string' && event.data.duel.length <= 64) void lookForInvite(event.data.duel);
   }));
   const myName = () => (rehearsal ? 'You' : view?.captain?.name ?? 'Captain');
 
@@ -141,7 +142,10 @@ export function createClassDemo(ctx) {
     if (disposed || !duels) return null;
     duel ??= module.createDuelOverlay({container: layer, duels, reducedMotion, cue: name => audio?.cue?.(name),
       onWave: () => void wave(),
-      onInviteSent: ({duel: sent, opponentName}) => { if (sent?.id && !rehearsal) sendExtra('duel', {v: 1, to: opponentName, duel: sent.id}); },
+      onInviteSent: ({duel: sent, target: invited}) => {
+        const to = rehearsal ? null : resolvePeer(invited?.id);
+        if (sent?.id && to) sendExtra('duel', {v: 1, to, duel: sent.id});
+      },
       onChange: state => { if (state.screen === 'reveal') tick('duel'); },
       onFinished: finished => { if (finished) say(duel.resultLine(finished)); ctx.focus?.(); }});
     return duel;
@@ -172,7 +176,10 @@ export function createClassDemo(ctx) {
       const [module, transport] = await Promise.all([import('./lock-screen.js'), lockApi()]);
       if (disposed || !transport) return;
       lock ??= module.createLockScreen({container: layer, lock: transport, onClose: () => ctx.focus?.(),
-        onOpened: () => { lockOpened = true; objects.setLockOpen(true); tick('lock'); void playCutscene('lock_opens'); }});
+        onOpened: () => {
+          lockOpened = true; objects.setLockOpen(true); tick('lock');
+          void playCutscene('lock_opens').then(() => { if (!disposed) say(REWARD_LINE, 8000); });
+        }});
     }
     lock.open();
   }
@@ -196,7 +203,7 @@ export function createClassDemo(ctx) {
     } : null,
     onLit: () => audio?.cue?.('festival-claim'),
     onRelit: ({celebrate}) => {
-      objects.setRelit(true, {celebrate});audio?.cue?.('beam');audio?.cue?.('festival-ring-bell');
+      objects.setRelit(true, {celebrate});audio?.cue?.('foghorn');audio?.cue?.('beam');
       say('The lighthouse burns again!', 5000);void playCutscene('lamps_relit');
     }});
 
@@ -204,7 +211,7 @@ export function createClassDemo(ctx) {
   function renderPrompt(next, progress = 0) {
     const nextKey = next ? `${next.kind}:${next.id}:${next.lit ? 1 : 0}` : '';
     if (nextKey !== promptKey) {
-      promptKey = nextKey;target = next;prompt.replaceChildren();prompt.hidden = !next;
+      promptKey = nextKey;target = next;prompt.replaceChildren();prompt.hidden = !next;prompt.holdBar = null;
       if (!next) return;
       if (next.kind === 'lamp') {
         const lit = next.lit;
@@ -266,7 +273,7 @@ export function createClassDemo(ctx) {
       joinButton.hidden = !shown || joined || blocked;
       if (shown && joined && !splashShown && !blocked) splash();
       if (rehearsal && captains && inHarbor) {
-        captains.step(delta, now);
+        captains.step(delta, now, {x: player.position.x, z: player.position.z});
         if (now >= simulateAt) {
           simulateAt = now + 200;
           ctx.simulate?.({...captains.presence(now, CLASS_HARBOR_PLACE), localEmote: localEmote?.until > now ? localEmote : null, canEmote: true});

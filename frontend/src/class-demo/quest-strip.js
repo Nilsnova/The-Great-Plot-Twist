@@ -3,7 +3,8 @@
 import {node} from '../ui/kit/dom.js';
 import {questView, FINALE_HINT} from './quests.js';
 
-export function createQuestStrip({parent}) {
+// focusGame: after a pointer tap the keyboard goes back to the game, so E and WASD keep working.
+export function createQuestStrip({parent, focusGame}) {
   const element = node('section', 'quest-strip'), heading = node('h2', '', 'Class demo goals');
   const list = node('ol'), hint = node('p', 'quest-hint'), next = node('p', 'quest-next', FINALE_HINT);
   heading.id = 'quest-strip-heading';
@@ -32,7 +33,7 @@ export function createQuestStrip({parent}) {
       button.setAttribute('aria-label', `${item.label}: ${item.done ? 'done' : 'not done yet'}. Show a hint.`);
       check.setAttribute('aria-hidden', 'true');
       button.append(check, node('span', 'quest-label', item.label));
-      button.addEventListener('click', () => toggleHint(item));
+      button.addEventListener('click', event => { toggleHint(item); if (event.detail > 0) focusGame?.(); });
       rows.set(item.id, button);li.append(button);list.append(li);
     }
     next.hidden = !view.allDone;

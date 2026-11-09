@@ -25,16 +25,16 @@ describe('lamp rules',()=>{
   });
   it('turns a message into ages, never clock times, and reads only valid messages',()=>{
     const state=lightLamp(createLamps(),2,'Ana',10000).state;
-    expect(encodeLamps(state,12500)).toEqual({v:1,lamps:[null,null,2500],by:[null,null,'Ana'],relit:null,started:2500});
+    expect(encodeLamps(state,12500)).toEqual({v:1,lamps:[null,null,2500],relit:null,started:2500});
     expect(readLamps(encodeLamps(state,12500))).not.toBeNull();
-    for(const bad of [null,{v:2},{v:1,lamps:[1,2],by:[null,null],relit:null},{v:1,lamps:[null,null,-5],by:[null,null,null],relit:null},
-      {v:1,lamps:[null,null,LAMP_WINDOW_MS],by:[null,null,null],relit:null},{v:1,lamps:[null,null,null],by:[null,null,'<b>'],relit:null},
-      {v:1,lamps:[null,null,null],by:[null,null,null],relit:1.5}])expect(readLamps(bad)).toBeNull();
+    for(const bad of [null,{v:2},{v:1,lamps:[1,2],relit:null},{v:1,lamps:[null,null,-5],relit:null},
+      {v:1,lamps:[null,null,LAMP_WINDOW_MS],relit:null},{v:1,lamps:[null,null,null],relit:1.5},{v:1,lamps:[null,null,null],relit:null,started:-1}])expect(readLamps(bad)).toBeNull();
+    expect(JSON.stringify(encodeLamps(state,12500))).not.toContain('Ana');
   });
   it('merges another phone’s state on our own clock and is idempotent for duplicates',()=>{
     const theirs=lightLamp(createLamps(),0,'Ana',500000).state,message=encodeLamps(theirs,503000);
     const once=mergeLamps(createLamps(),message,9000);
-    expect(once.changed).toBe(true);expect(once.state.lamps[0]).toEqual({litAt:6000,by:'Ana'});
+    expect(once.changed).toBe(true);expect(once.state.lamps[0]).toEqual({litAt:6000,by:null});
     const twice=mergeLamps(once.state,message,9200);
     expect(twice.changed).toBe(false);expect(twice.state.lamps[0].litAt).toBe(6000);
   });

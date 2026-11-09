@@ -41,7 +41,7 @@ export function createDuelOverlay({container, duels, reducedMotion = () => false
     if (!reply.ok && reply.code !== 'already_applied') { dispatch({type: 'failed', failure: reply, signals}); return; }
     const duel = reply.data?.duel ?? null;
     dispatch({type: 'sent', duel, now: Date.now()});
-    onInviteSent?.({duel, opponentName: state.target.name});
+    onInviteSent?.({duel, target: state.target});
     if (duel?.reveal) { dispatch({type: 'finished', duel}); return; }
     poll();
   }

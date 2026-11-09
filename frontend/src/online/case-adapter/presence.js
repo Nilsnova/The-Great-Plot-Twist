@@ -157,7 +157,9 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
         const active = {live, crewTask: null, localPlace: null}; record = active;
         detachExtras?.();
         detachExtras = attachExtraSender((event, data) => record === active && current(token) && !hidden
-          && active.live.extra?.(event, data) === true);
+          && active.live.extra?.(event, data) === true, {
+          resolve: displayId => [...opaqueIds].find(([, value]) => value === displayId)?.[0] ?? null,
+          isMe: id => isPlayerId(id) && id === state.me?.id});
         if (place) { active.localPlace = place; live.setPlace(place); }
         if (hidden || !current(token) || record !== active) { if (record === active) stop(); return; }
         const queued = pendingPosition; pendingPosition = null;

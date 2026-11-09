@@ -96,10 +96,10 @@ it('runs lore, harbor and one goal card once, then goes straight to the harbor',
     expect(await page.evaluate(()=>document.activeElement.textContent)).toBe('Got it');
     expect(await page.evaluate(()=>window.door.handleEscape())).toBe(true);
     expect(await page.evaluate(async()=>{await window.first;return window.log;})).toEqual([
-      ['signIn',{guest:true}],['cutscene','lore_intro'],['begin',false,{kind:'world',place:'saltreach_harbor'}],['focus']]);
+      ['signIn',{guest:true}],['cutscene','lore_intro'],['begin',false,{kind:'world',place:'saltreach_harbor',demo:true}],['focus']]);
     expect(await page.locator('.goal-card').count()).toBe(0);
     const second=await page.evaluate(async()=>{window.log=[];await window.door.run({loadGame:async()=>window.game,adapter:window.adapter});return window.log;});
-    expect(second).toEqual([['signIn',{guest:true}],['begin',false,{kind:'world',place:'saltreach_harbor'}],['focus']]);
+    expect(second).toEqual([['signIn',{guest:true}],['begin',false,{kind:'world',place:'saltreach_harbor',demo:true}],['focus']]);
     expect(await page.evaluate(()=>window.door.active)).toBe(false);
   });
 });

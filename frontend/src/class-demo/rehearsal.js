@@ -5,9 +5,10 @@
 import {kits} from '../adapter/shared/kits.js';
 import {allValidSequences, resolve} from '../screens/duels/logic.js';
 
-const NAMES = ['Ana', 'Ben', 'Chiara', 'Duarte', 'Emma', 'Farid', 'Greta', 'Hugo', 'Ines', 'Jonas', 'Kaya', 'Luis',
-  'Mara', 'Nils', 'Olga', 'Pedro', 'Quinn', 'Rita', 'Sami', 'Tomas', 'Uma', 'Vera', 'Wen', 'Xavi', 'Yara', 'Zoe',
-  'Alma', 'Bruno', 'Clara', 'Dina', 'Elio', 'Filipa', 'Gil', 'Hana', 'Ivo', 'Joana', 'Kiko', 'Lea', 'Mateo', 'Nora'];
+// Names in the style of the server's captain names (backend/content/names.json).
+const ADJECTIVES = ['Bold', 'Brave', 'Bright', 'Calm', 'Clever', 'Gentle', 'Jolly', 'Keen', 'Lucky', 'Merry'];
+const NOUNS = ['Puffin', 'Gull', 'Otter', 'Heron', 'Crab', 'Dolphin', 'Gannet', 'Wren', 'Seal', 'Tern'];
+const nameOf = index => `${ADJECTIVES[index % 10]} ${NOUNS[(index * 3 + Math.floor(index / 10)) % 10]} ${11 + index}`;
 const KITS = Object.values(kits);
 const AREA = {minX: -10, maxX: 11, minZ: 12, maxZ: 20};
 const SPEED = 2.2;
@@ -20,12 +21,14 @@ export function createRehearsalCaptains({count = 14, canStand = () => true, rand
   }
   const bots = Array.from({length: Math.max(0, Math.min(40, count))}, (_, index) => {
     const start = spot(), kit = KITS[index % KITS.length];
-    return {id: `rehearsal-captain-${index + 1}`, name: `${NAMES[index % NAMES.length]}${index >= NAMES.length ? ` ${index + 1}` : ''}`,
+    return {id: `rehearsal-captain-${index + 1}`, name: nameOf(index),
       kit: {id: kit.id, name: kit.name}, archetype: kit.archetype, x: start.x, z: start.z, target: spot(), wait: pick(0, 3),
       facing: 'front', moving: false, emote: null, emoteUntil: 0};
   });
-  function step(delta, now) {
+  // A simulated captain stops and waits while the presenter stands next to it, like a person would.
+  function step(delta, now, player = null) {
     for (const bot of bots) {
+      if (player && Math.hypot(bot.x - player.x, bot.z - player.z) < 3) { bot.moving = false; bot.wait = Math.max(bot.wait, 1); continue; }
       if (bot.wait > 0) { bot.wait -= delta; bot.moving = false; continue; }
       const dx = bot.target.x - bot.x, dz = bot.target.z - bot.z, distance = Math.hypot(dx, dz);
       if (distance < 0.2) { bot.target = spot(); bot.wait = pick(1, 6); bot.moving = false; continue; }

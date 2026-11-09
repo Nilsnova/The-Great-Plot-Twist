@@ -3,14 +3,20 @@
 // The presence attaches its sender here while it is connected, and the demo calls sendExtra(). Arriving
 // extras reach the game as the bus event live_peer_extra, like every other live event. Display only:
 // nothing sent here decides anything on the server.
-let sender = null;
+let sender = null, peers = null;
 let classHarbor = false;
 
-export function attachExtraSender(send) {
+// send(event, data) sends into the class room; ids: {resolve(displayId) -> player id or null,
+// isMe(playerId) -> boolean}. The screens only know display ids (live-captain-N); a duel invitation
+// names its captain by player id, never by name (a browser never sends a name to another, D003).
+export function attachExtraSender(send, ids = null) {
   sender = typeof send === 'function' ? send : null;
+  peers = sender ? ids : null;
   const mine = sender;
-  return () => { if (sender === mine) sender = null; };
+  return () => { if (sender === mine) { sender = null; peers = null; } };
 }
+export function resolvePeer(displayId) { try { return peers?.resolve?.(displayId) ?? null; } catch { return null; } }
+export function isMe(playerId) { try { return peers?.isMe?.(playerId) === true; } catch { return false; } }
 
 // True if the extra will be sent (connected, in the class room, inside the lane's allowance).
 export function sendExtra(event, data) {

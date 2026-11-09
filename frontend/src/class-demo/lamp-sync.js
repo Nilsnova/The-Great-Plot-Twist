@@ -66,11 +66,11 @@ export function npcFill(state, now) {
 
 const age = (time, now, keep) => (Number.isFinite(time) && now - time >= 0 && now - time < keep ? Math.round(now - time) : null);
 
-// The message: ages in milliseconds (null for a dark lamp), the lighters' names and the relight's age.
+// The message: ages in milliseconds (null for a dark lamp) and the relight's age. No names: a browser
+// never sends a name to another (D003), so the lighters stay on their own phones.
 export function encodeLamps(state, now) {
   return {v: 1,
     lamps: state.lamps.map(lamp => (isLampLit(lamp, now) ? age(lamp.litAt, now, LAMP_WINDOW_MS) : null)),
-    by: state.lamps.map(lamp => (isLampLit(lamp, now) ? lamp.by : null)),
     relit: age(state.relitAt, now, RELIT_KEEP_MS),
     started: age(state.startedAt, now, RELIT_KEEP_MS)};
 }
@@ -80,11 +80,10 @@ const isAge = (value, keep) => value === null || (Number.isInteger(value) && val
 // A lamp message from another phone, checked field by field. null if anything is off.
 export function readLamps(data) {
   if (!data || typeof data !== 'object' || data.v !== 1) return null;
-  const {lamps, by, relit, started = null} = data;
+  const {lamps, relit, started = null} = data;
   if (!Array.isArray(lamps) || lamps.length !== LAMP_COUNT || !lamps.every(value => isAge(value, LAMP_WINDOW_MS))) return null;
-  if (!Array.isArray(by) || by.length !== LAMP_COUNT || !by.every(name => name === null || cleanName(name))) return null;
   if (!isAge(relit, RELIT_KEEP_MS) || !isAge(started, RELIT_KEEP_MS)) return null;
-  return {lamps: [...lamps], by: [...by], relit, started};
+  return {lamps: [...lamps], relit, started};
 }
 
 export const hasNews = (state, now) => litCount(state, now) > 0 || isRelit(state, now);
@@ -106,7 +105,7 @@ export function mergeLamps(state, data, now) {
     const litAt = now - ageMs;
     if (Number.isFinite(lamp.litAt) && litAt <= lamp.litAt + RELIGHT_MARGIN_MS) return lamp;
     changed = true;
-    return {litAt, by: message.by[index]};
+    return {litAt, by: null};
   });
   const startedAt = message.started === null ? current.startedAt
     : Math.min(current.startedAt ?? Infinity, now - message.started);

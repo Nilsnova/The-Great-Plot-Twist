@@ -57,6 +57,10 @@ export function createProjector({container, host, isHost = () => false, rehearsa
   }
   openButton.addEventListener('click', () => void openDemo());
   closeButton.addEventListener('click', () => hide());
+  // J and Escape also work while a button of the panel has the focus (the game ignores keys there).
+  element.addEventListener('keydown', event => {
+    if ((event.code === 'KeyJ' || event.key === 'Escape') && !event.repeat) { event.preventDefault(); event.stopPropagation(); hide(); }
+  });
 
   function show() {
     if (disposed) return;
