@@ -1,6 +1,60 @@
-# Class demo: the coast, then the schooner
+# Class demo: the harbor, then (optionally) the coast and the schooner
 
-Used by Nils and the presenter. Two timed scripts use the live site and stop at the schooner: **no twist, accusation, identity reveal or later celebration is shown**. Explain only capabilities present in the deployed build. Keep the [release checklist](RELEASE-CHECKLIST.md) beside this script.
+Used by Nils and the presenter. The first script below is the five-minute **class harbor demo** (G29). The older **coast and schooner** scripts follow it. None of them shows a twist, accusation, identity reveal or later celebration. Explain only capabilities present in the deployed build. Keep the [release checklist](RELEASE-CHECKLIST.md) beside this script.
+
+## Class harbor demo: five minutes
+
+Everything here was checked against the code at the G29 checkpoint. It was not run in front of a real class from this document.
+
+### Before class
+
+Setup details are in [SETUP.md](SETUP.md), step 3c.
+
+1. **Database and flags.** Migration `20261109010000_demo_window.sql` is applied. The Vercel setting `FEATURE_FLAGS` includes `demo`, `live_presence` and `arena`, and the site is redeployed. Check them in `/host.html` ([host console](HOST-CONSOLE.md)).
+2. **Anonymous sign-ins (Nils).** In Supabase, switch **Allow anonymous sign-ins** on. Raise the **anonymous sign-ins per hour** limit: the whole class shares one Wi-Fi address, and the limit counts per address.
+3. **Host sign-in.** On the projector laptop, open the game and sign in with GitHub under **Settings**, then **Account**. The account must be listed in `HOST_PLAYER_IDS`. A guest is never a host.
+4. **Open the demo.** Press **Play**, walk in the harbor, then press **J** to show the projector panel. Press **Open demo for 2 hours**. The panel then reads "Demo open until" with a time. The panel button is the only switch in the shipped game; the host console has none. If you press it again it reads **Keep open for 2 more hours**.
+5. **Projector overlay.** J shows or hides the panel. A signed-in host gets J automatically. Without host sign-in, `?present=1` also enables J, but the server refuses the open button for anyone who is not a host.
+6. **Test one phone.** Scan the QR code, play as a guest, and wave once. If a phone says guest play is closed, the window or the Supabase switch is not on yet.
+7. **Safety net.** Open a second tab with `/?demo=1&captains=40` and leave it loaded (see "If something fails").
+
+### The five minutes
+
+| Time | Do | Say |
+| --- | --- | --- |
+| 0:00 to 0:40 | Press J. The panel shows the QR code, the code **HARBOR** and a live count of captains. | "Scan the QR code and press Play. Or press Join and type HARBOR. You get a captain name; no account." |
+| 0:40 to 1:20 | Phones arrive. Wait for the count to grow. Point at the harbor. | "Every captain you see is a phone. Up to 40 captains show at once." |
+| 1:20 to 2:00 | Ask the class to wave in turns, a few at a time. Wave yourself: tap a captain or press E, then **Wave**. | "Tap a captain, choose Wave. First goal done." |
+| 2:00 to 2:40 | Pick a volunteer. Tap their captain, then **Friendly duel (3 rounds)**. The volunteer taps **Accept**. Both seal three signals. | "Two taps to challenge. No coins. The signals stay sealed until both have answered." |
+| 2:40 to 3:50 | Walk to the Keeper's Lock, right of the ferry pier, and press E. Read the question aloud. Ask the class to look out the window and answer. | "The lock asks what the sky looks like over you right now. The server checks the real weather for your area. Look out the window." |
+| 3:50 to 4:40 | Three volunteers stand at the three lamp posts. Each holds the button (or E) for 2 seconds. All three must burn at once; a lamp burns 20 seconds. | "One captain per lamp. Light them together and the lighthouse relights for everyone." |
+| 4:40 to 5:00 | Show the **Full mystery** entry in the pause menu. | "This was the short path. The full mystery, with crews, the case and the Exchange, is the longer path in the same game." |
+
+Notes for the table above:
+
+- The **quest strip** ("Class demo goals") ticks Wave, Duel and the Keeper's Lock for each phone. Tap a goal for a hint.
+- **Wave in turns.** About 30 waves at the same moment briefly trip the Realtime guard. Spread them out.
+- **Lamps fallback.** If volunteers hold back, press **Fill missing lamps (NPC partners)**. The button is for the host only. It appears 20 seconds after the first lamp is lit.
+- **Lock outcomes.** Exact or one step away from the real reading opens the lock. A wrong answer shows "Not quite" and the hint path.
+- **What the audience sees of themselves.** The lock uses the approximate city that Vercel finds from the phone's network address. The city is a guess from the network address, so it can be wrong. Anyone can press **Change place**.
+
+### If something fails
+
+- **The network fails or the site is slow.** Switch to the tab you loaded earlier with `/?demo=1&captains=40`. This is rehearsal mode. It runs on the laptop alone: 40 simulated captains walk around, a practice rival answers a friendly duel (and challenges you after 25 seconds), two simulated captains help with the lamps, and the lock uses a fixed question whose answer is "cloudy". It sends nothing to a server. Say so: "This is our offline rehearsal of the same demo." The default is 14 captains; `captains` accepts 0 to 40. Load the page before class, because a dead network cannot load it.
+- **A phone says guest play is closed.** The demo window is shut or Supabase anonymous sign-ins are off. Press **Open demo for 2 hours** again, or check the Supabase switch. Phones can sign in with GitHub meanwhile.
+- **The weather looks wrong.** Tell the student to look out the window and answer what they see. If the lock says "Not quite", tap **That's not what I see outside**. The lock then says "Readings can miss a passing shower. Step to a window, look up, and then confirm." The student taps **I looked outside** and the lock opens. If the city is wrong, press **Change place** and search for the real city. Use **Use my area again** to go back. If the weather cannot be read at all, the lock asks a riddle instead (what a lighthouse sends across the sea at night; the answer is the beam of light).
+- **A volunteer cannot find the lock or a lamp.** Tap the goal in the quest strip for its hint.
+
+### After class
+
+1. Switch **Allow anonymous sign-ins** off in Supabase. This is the real stop: while it is on, guests keep Supabase's signed-in role even when the demo window is closed, and only the game server's API is gated.
+2. The demo window ends by itself two hours after you opened it.
+3. Run **Clean up guests**. The server route `POST /api/host/demo/cleanup` deletes anonymous guests whose account is older than 24 hours, at most 100 per call. It answers `more: true` when you should run it again. No screen in the game or the host console calls it yet (checked in `frontend/src`). Until a button exists, it has to be called with a signed-in host's login. Guests who linked GitHub or Google are kept.
+4. Optional: take `demo` out of `FEATURE_FLAGS` and redeploy.
+
+## The coast and the schooner (older scripts)
+
+> **Written before G29.** The title screen no longer has **New game**. **Play** now starts the class harbor demo, and the Lighthouse prologue (Act 1) is in the pause menu and **Settings**. Where the two scripts below say "Click **New game**", open the Lighthouse prologue instead. The `?demo=1` title still offers **Highlights tour** and the presenter panel. The steps below were not re-run after G29: rehearse them first.
 
 ## Current scope, 6 November 2026
 
