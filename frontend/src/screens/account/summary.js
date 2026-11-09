@@ -2,6 +2,7 @@
 import './account.css';
 import {node} from '../../ui/kit/dom.js';
 import {createButton} from '../../ui/kit/button.js';
+import {providerActions} from './providers.js';
 
 const accountOf=view=>view?.account??view??{};
 const labels={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account unavailable'};
@@ -17,12 +18,13 @@ export function createAccountSummary({send,openAccount,onContinue}){
     const account=accountOf(view),state=account.state??'signed_out';name.textContent=String(account.captainName??'Captain pending');
     status.setAttribute('role','status');status.setAttribute('aria-label',`${labels[state]??state} · ${name.textContent}`);
     status.replaceChildren(node('span','account-summary-state',labels[state]??state),document.createTextNode(' · '),name);
-    replayNote.textContent=account.hasKit?'New game restarts the local intro. Captain and kit stay.'
-      :'Continue uses cloud when signed in, or the local intro.';
+    replayNote.textContent=account.guest?'You are playing as a guest. Sign in to keep your progress.'
+      :'Play continues your saved game. The Lighthouse prologue is in Settings.';
     const save=account.save??{};saveStatus.textContent=`${saveStates[save.state]??'Save status'} · ${save.label??'No saved progress'}`;
     buttons.forEach(item=>item.dispose());buttons=[];actions.replaceChildren();
     button('Account and saves',()=>openAccount?.(),'account');
-    if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))button(state==='expired'?'Sign in again with GitHub':'Sign in with GitHub',()=>send?.('signIn'),'sign-in');
+    if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))for(const item of providerActions(account,{prefix:state==='expired'?'Sign in again with':'Sign in with',focus:'sign-in'}))button(item.label,()=>send?.('signIn',...item.args),item.focus);
+    if(account.canSignIn!==false&&state==='signed_in'&&account.guest===true)for(const item of providerActions(account,{prefix:'Keep progress with',upgrade:true,focus:'upgrade'}))button(item.label,()=>send?.('signIn',...item.args),item.focus);
     if(account.signInMessage)actions.append(node('span','account-summary-note',account.signInMessage));
     if(account.canContinue){
       if(onContinue)button(account.save?.source==='cloud'?'Continue from cloud':'Continue',async()=>{const result=await send?.('continueGame');if(result?.accepted)onContinue(result);},'continue');

@@ -20,6 +20,7 @@ const messages = {
   too_many_tries: 'Too many crew codes. Wait a moment, then try again.',
   rate_limited: 'Too many attempts. Wait a moment, then try again.',
   not_connected: 'Service unavailable. Try again in a moment.',
+  demo_closed: 'Guest play is closed right now. Sign in in Settings, or keep playing on this device.',
 };
 const statusCodes = {
   404: {feature_off: 'feature_off', player_not_set_up: 'not_ready', wrong_code: 'wrong_code', no_crew: 'crew_required'},
@@ -51,7 +52,7 @@ function success(data) {
 function reasonFor(status, code, route) {
   if (status === 0) return 'offline';
   if (status === 401) return 'session_expired';
-  if (status === 403) return 'forbidden';
+  if (status === 403) return code === 'demo_closed' ? 'demo_closed' : 'forbidden';
   if (status === 503) return 'not_connected';
   if (status === 429) return route === '/api/crews/join' ? 'too_many_tries' : 'rate_limited';
   const codes = Object.hasOwn(statusCodes, status) ? statusCodes[status] : null;

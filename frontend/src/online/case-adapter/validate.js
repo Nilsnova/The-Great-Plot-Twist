@@ -11,12 +11,22 @@ export function normalizeCrewCode(value) {
   const code = value.replace(/[\s-]/g, '').toUpperCase();
   return /^[A-Z0-9]{1,20}$/.test(code) ? code : null;
 }
+function validSignIn(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const keys = Object.keys(value);
+  if (!keys.every(key => ['provider', 'guest', 'upgrade'].includes(key))) return false;
+  if (value.provider !== undefined && !['github', 'google'].includes(value.provider)) return false;
+  if (value.guest !== undefined && value.guest !== true) return false;
+  if (value.upgrade !== undefined && value.upgrade !== true) return false;
+  return !(value.guest && (value.upgrade || value.provider));
+}
 export function validateIntent(name, args) {
   const [first, second, third] = args;
   if (name === 'completeIntro' && !validActions(first?.actions)) return invalid('intro_incomplete');
   if (name === 'joinCrew' && !normalizeCrewCode(first)) return invalid('invalid_request');
   if (name === 'joinCrew' && second !== undefined && (!second || typeof second !== 'object'
     || (second.confirm !== undefined && typeof second.confirm !== 'boolean'))) return invalid('invalid_request');
+  if (name === 'signIn' && first !== undefined && !validSignIn(first)) return invalid('invalid_request');
   if (name === 'deleteMyData' && first?.confirm !== true) return invalid('confirmation_required');
   if (name === 'resolveSaveConflict' && !['keep_this_device', 'use_cloud'].includes(first)) {
     return invalid('unsupported_choice');

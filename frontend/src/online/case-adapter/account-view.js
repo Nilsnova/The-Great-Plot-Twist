@@ -34,6 +34,12 @@ function accountSave(state){
     updatedAt:chosen?.updatedAt??null,device,cloud};
 }
 
+// /api/config auth.providers names the sign-in buttons; GitHub alone when the list is missing.
+function providerList(config){
+  const list=Array.isArray(config?.auth?.providers)?config.auth.providers.filter(name=>['github','google'].includes(name)):[];
+  return list.length?[...new Set(list)]:['github'];
+}
+
 export function mapAccount(state={}){
   const save=accountSave(state);
   const accountState=accountStates.has(state.accountState)?state.accountState:'signed_out';
@@ -47,7 +53,8 @@ export function mapAccount(state={}){
     namePending:accountState==='signed_in'&&!state.nameReply,
     canRetryName:accountState==='signed_in'&&state.nameStatus==='unavailable',
     hasKit:!!(state.me?.kit||state.profile?.kit),
-    canContinue:save.state!=='conflict'&&(!!save.source||canResumeWorld),save};
+    canContinue:save.state!=='conflict'&&(!!save.source||canResumeWorld),save,
+    guest:accountState==='signed_in'&&state.auth?.guest===true,providers:providerList(state.config)};
 }
 
 function arrivalKit(state){
