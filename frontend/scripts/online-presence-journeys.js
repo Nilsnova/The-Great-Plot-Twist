@@ -103,6 +103,9 @@ export async function recordedPresenceGolden(env, {width = 375, capture, nativeP
   const origin = wire.lastPosition;
   for (let index = 0; index < 2; index += 1) wire.move(index, {x: origin.x + index + .5, z: origin.z + .5, moving: false});
   await page.waitForFunction(() => /2 shown/.test(document.querySelector('.presence-count')?.textContent ?? ''));
+  // The polite status names drawn captains once their profiles arrive; give it the HUD's own update time.
+  await page.waitForFunction(() => document.querySelector('.presence-hud .presence-sr-only')?.textContent.includes('Captain'),
+    null, {timeout: 10000}).catch(() => {});
   check(await page.locator('.presence-hud .presence-sr-only').textContent().then(text => text.includes('Captain')),
     'A null server profile name is displayed as Captain');
   const captain = page.locator('.other-captain-label').filter({hasText: /^Captain$/});
