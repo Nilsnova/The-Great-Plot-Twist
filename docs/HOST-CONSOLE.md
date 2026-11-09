@@ -47,6 +47,10 @@ When available, enter an integer from **1 to 3600 seconds**, or use **+1 min / +
 
 A game-rule refusal (`accepted: false`) is displayed as “Clock not moved”. A 404 means no open case crew or the feature is off; 409 asks the host to start their forming crew; 429 asks them to wait. A 401/403 removes host panels. After a network, server or unreadable-response outcome, retry the **same number of seconds**: its action UUID is retained. A different amount is blocked until that outcome is resolved. Do not reload mid-retry.
 
+## Class demo panel
+
+The **Class demo** panel shows whether the `demo` feature flag is on and whether guest play is **Open until** a time or **Closed**. **Open for 2 hours** and **Close now** call `POST /api/host/demo` (hours 2 or 0). **Clean up guests** needs a ticked confirm box, then calls `POST /api/host/demo/cleanup` and reports how many guest accounts were removed and whether more remain. A change or clean-up with an unknown outcome is repeated with the same action ID. The buttons are disabled while a request runs. If the window cannot be read, the panel says Unknown; the rest of the console still works.
+
 ## Before every class demo
 
 1. Confirm the reviewed migration is applied and this deployment has Nils in `HOST_PLAYER_IDS`. Sign in on the actual class-demo origin.

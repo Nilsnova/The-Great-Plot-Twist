@@ -13,7 +13,7 @@ Setup details are in [SETUP.md](SETUP.md), step 3c.
 1. **Database and flags.** Migration `20261109010000_demo_window.sql` is applied. The Vercel setting `FEATURE_FLAGS` includes `demo`, `live_presence` and `arena`, and the site is redeployed. Check them in `/host.html` ([host console](HOST-CONSOLE.md)).
 2. **Anonymous sign-ins (Nils).** In Supabase, switch **Allow anonymous sign-ins** on. Raise the **anonymous sign-ins per hour** limit: the whole class shares one Wi-Fi address, and the limit counts per address.
 3. **Host sign-in.** On the projector laptop, open the game and sign in with GitHub under **Settings**, then **Account**. The account must be listed in `HOST_PLAYER_IDS`. A guest is never a host.
-4. **Open the demo.** Press **Play**, walk in the harbor, then press **J** to show the projector panel. Press **Open demo for 2 hours**. The panel then reads "Demo open until" with a time. The panel button is the only switch in the shipped game; the host console has none. If you press it again it reads **Keep open for 2 more hours**.
+4. **Open the demo.** Press **Play**, walk in the harbor, then press **J** to show the projector panel. Press **Open demo for 2 hours**. The panel then reads "Demo open until" with a time. The same switch is in `/host.html`, in the **Class demo** panel (**Open for 2 hours**, **Close now**). The panel shows the flag and "Open until" or "Closed". In the projector panel, pressing again reads **Keep open for 2 more hours**.
 5. **Projector overlay.** J shows or hides the panel. A signed-in host gets J automatically. Without host sign-in, `?present=1` also enables J, but the server refuses the open button for anyone who is not a host.
 6. **Test one phone.** Scan the QR code, play as a guest, and wave once. If a phone says guest play is closed, the window or the Supabase switch is not on yet.
 7. **Safety net.** Open a second tab with `/?demo=1&captains=40` and leave it loaded (see "If something fails").
@@ -48,8 +48,8 @@ Notes for the table above:
 ### After class
 
 1. Switch **Allow anonymous sign-ins** off in Supabase. This is the real stop: while it is on, guests keep Supabase's signed-in role even when the demo window is closed, and only the game server's API is gated.
-2. The demo window ends by itself two hours after you opened it.
-3. Run **Clean up guests**. The server route `POST /api/host/demo/cleanup` deletes anonymous guests whose account is older than 24 hours, at most 100 per call. It answers `more: true` when you should run it again. No screen in the game or the host console calls it yet (checked in `frontend/src`). Until a button exists, it has to be called with a signed-in host's login. Guests who linked GitHub or Google are kept.
+2. In the **Class demo** panel of `/host.html`, press **Close now** (or let the window end by itself two hours after you opened it).
+3. Press **Clean up guests** in the same panel and tick the confirm box. It deletes anonymous guests whose account is older than 24 hours, at most 100 per press, and says how many it removed. If it says more old guests remain, press it again. Guests who linked GitHub or Google are kept.
 4. Optional: take `demo` out of `FEATURE_FLAGS` and redeploy.
 
 ## The coast and the schooner (older scripts)
