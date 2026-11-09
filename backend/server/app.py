@@ -20,6 +20,7 @@ from server.auth import PlayerVerifier
 from server.clock import Clock, utc_now
 from server.crew_broadcast import CrewBroadcaster, broadcaster_from_settings
 from server.daily.content import load_daily_content
+from server.demo.gate import DemoGate
 from server.duels.service import DuelService
 from server.errors import register_error_handlers
 from server.festival.cache import FestivalCacheControl
@@ -29,6 +30,9 @@ from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
 from server.game.world_state import DatabaseWorldStage, relit_check
 from server.host_console_cache import HostConsoleHeaders
+from server.lock.limits import PlayerBudget
+from server.lock.places import PlaceSearch
+from server.lock.weather import PlaceWeather
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
 from server.request_policy import RequestPolicy
@@ -43,6 +47,7 @@ from server.routes import (
     crew_orders,
     crews,
     delete_me,
+    demo,
     duels,
     festival,
     finale,
@@ -52,6 +57,7 @@ from server.routes import (
     intro,
     islet,
     keepalive,
+    lock,
     market,
     me,
     predictions,
@@ -112,6 +118,8 @@ def create_app(
     duel_service: DuelService | None = None,
     case_service: CaseService | None = None,
     sports_service: SportsService | None = None,
+    lock_weather: PlaceWeather | None = None,
+    place_search: PlaceSearch | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -120,6 +128,7 @@ def create_app(
     and clock are fakes, and a catalogue of home islet buildings (the real one is read from
     buildings.json). They also pass a reader for the world stage (dark or relit) and the clock
     that the routes use to say what day it is. Every service after `admin` is keyword-only.
+    The Keeper's Lock gets its weather and place search with fake transports too.
     """
     if settings is None:
         settings = settings_from_environment()
@@ -147,6 +156,11 @@ def create_app(
         duel_service = DuelService()  # it has no data files, so it always starts
     if sports_service is None:
         sports_service = sports_from_settings(settings, clock=clock)
+    if lock_weather is None:
+        # Demo mode never calls outside services: the lock then asks its riddle.
+        lock_weather = PlaceWeather(enabled=not settings.demo_mode, clock=clock)
+    if place_search is None:
+        place_search = PlaceSearch(clock=clock)
 
     if case_service is None:
         stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()
@@ -190,6 +204,12 @@ def create_app(
     app.state.sports = sports_service
 
     app.state.case = case_service
+    # The class demo (D029): the guest gate, and the Keeper's Lock with its two budgets.
+    app.state.demo_gate = DemoGate(settings, admin, clock)
+    app.state.lock_weather = lock_weather
+    app.state.place_search = place_search
+    app.state.lock_budget = PlayerBudget(30, 60, clock=clock)
+    app.state.search_budget = PlayerBudget(10, 60, clock=clock)
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -219,4 +239,6 @@ def create_app(
     app.include_router(world.router, prefix="/api")
     app.include_router(host_case.router, prefix="/api")
     app.include_router(host_console.router, prefix="/api")
+    app.include_router(demo.router, prefix="/api")
+    app.include_router(lock.router, prefix="/api")
     return app

@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.auth import PlayerDep, VerifierDep, read_bearer_token
+from server.auth import PlayerDep, VerifierDep, admit_guest, read_bearer_token
 from server.clock import ClockDep
 from server.errors import ApiError
 from server.festival.content import FestivalContentError, festival_content
@@ -67,7 +67,8 @@ async def get_festival(
         raise ApiError(422, "validation_error", "This address takes no query parameters.")
     player_id = None
     if "authorization" in request.headers:
-        player_id = (await verifier.verify(read_bearer_token(request.headers["authorization"]))).id
+        player = await verifier.verify(read_bearer_token(request.headers["authorization"]))
+        player_id = (await admit_guest(request, player)).id
     return await service(clock).view(admin, player_id, arena=is_enabled("arena", settings.flags))
 
 

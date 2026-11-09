@@ -52,7 +52,11 @@ The facts we rely on:
     is shown), provide a link to the licence, and indicate if changes were made. The credit link
     alone is not enough. ATTRIBUTION in source.py says how we meet all three.
 
-Used by: weather/source.py (the cached source) and the tests.
+fetch_current() asks for the "current" block only (the same six variables, no hours). The Keeper's
+Lock of the class demo (server/lock/) uses it for the player's own place: one light request per
+place and 10 minutes, cached by rounded coordinates in lock/weather.py.
+
+Used by: weather/source.py (the cached source), lock/weather.py and the tests.
 """
 
 import math
@@ -293,3 +297,27 @@ async def fetch_forecast(
         response = await client.get(OPEN_METEO_URL, params=params)
     response.raise_for_status()
     return parse_forecast(response.json())
+
+
+async def fetch_current(
+    latitude: float,
+    longitude: float,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> WeatherReading:
+    """Ask Open-Meteo for the weather now only, without hours. Raises an error if anything fails.
+
+    Counts as one call against Open-Meteo's limits (6 variables, 1 day).
+    """
+    params = {
+        "latitude": str(latitude),
+        "longitude": str(longitude),
+        "current": ",".join(CURRENT_VARIABLES),
+        "forecast_days": "1",
+        "timezone": "GMT",
+        "wind_speed_unit": "kmh",
+        "precipitation_unit": "mm",
+    }
+    async with httpx.AsyncClient(transport=transport, timeout=TIMEOUT_SECONDS) as client:
+        response = await client.get(OPEN_METEO_URL, params=params)
+    response.raise_for_status()
+    return parse_open_meteo_answer(response.json())

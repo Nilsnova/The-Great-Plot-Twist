@@ -25,6 +25,7 @@ FLAG_NAMES = (
     "sign_in",
     "bulletin",
     "festival",
+    "demo",
 )
 
 

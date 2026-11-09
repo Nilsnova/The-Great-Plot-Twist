@@ -1,0 +1,35 @@
+{
+  "about": "Every word of the Keeper's Lock, the weather puzzle of the class demo (G29, decision D029). Server only: the browser gets the question and the choices through GET /api/lock and the verdict through POST /api/lock/answer. {place} is the player's place name and {sky} the label of the sky the reading shows. The clue answer is not secret: it is a riddle for the case where the weather cannot be read.",
+  "weatherQuestion": "What does the sky over {place} look like right now?",
+  "weatherNote": "This lock uses the real weather of your place right now (Open-Meteo). Your place is used for this question only and is never stored.",
+  "skies": [
+    {"id": "clear", "label": "Sunny or clear"},
+    {"id": "cloudy", "label": "Cloudy"},
+    {"id": "rain", "label": "Rain"},
+    {"id": "fog", "label": "Fog or mist"},
+    {"id": "snow", "label": "Snow"}
+  ],
+  "clue": {
+    "question": "The sky cannot be read right now, so the keeper asks a riddle: what does a lighthouse send across the sea at night?",
+    "note": "The weather of your place cannot be read right now, so the lock asks a riddle instead.",
+    "choices": [
+      {"id": "beam", "label": "A beam of light"},
+      {"id": "smoke", "label": "A trail of smoke"},
+      {"id": "song", "label": "A song"},
+      {"id": "flags", "label": "Coloured flags"}
+    ],
+    "answer": "beam"
+  },
+  "messages": {
+    "exact": "The lock clicks open. The sky over {place} really looks like that right now.",
+    "close": "Close enough: the reading says {sky}, one step from your answer. The lock opens.",
+    "hint": "The keeper trusts your eyes. The lock opens.",
+    "clue": "Right: a lighthouse sends its beam. The lock opens.",
+    "wrong": "Not quite. Look again, or tap \"That's not what I see outside\".",
+    "hintTooEarly": "Give it one honest try first: look outside and pick what you see.",
+    "hintOffered": "Readings can miss a passing shower. Step to a window, look up, and then confirm.",
+    "hintPrompt": "I looked outside",
+    "questionChanged": "The question changed. Look at the lock again.",
+    "alreadyOpen": "The lock is open already."
+  }
+}

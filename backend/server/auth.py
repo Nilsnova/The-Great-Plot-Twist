@@ -18,8 +18,14 @@ Every refused token leaves one log line with Supabase's HTTP status (never the t
 publishable key is wrong or was rotated, Supabase refuses EVERY token, and that line is the
 only trace the team gets.
 
-The Player is only the verified user id. The name that other players see is
+The Player is the verified user id and whether Supabase calls the user anonymous (a guest of the
+class demo, signed in with Supabase's anonymous sign-in). The name that other players see is
 profiles.display_name in the database, not a value from the token.
+
+Guests (decision D029): a guest is let in only while the host's demo window is open and the feature
+flag demo is on. get_current_player asks the demo gate (server/demo/gate.py) about every guest, and
+the gate answers 403 demo_closed otherwise. The gate also gives a guest a captain name and the
+default kit on the first call it lets through. GitHub and Google users never reach the gate.
 
 Used by: every route that needs a signed-in player. Write `player: PlayerDep` in the route.
 """
@@ -58,6 +64,9 @@ class Player:
     """
 
     id: str
+    # True for a Supabase anonymous user (a demo guest). Read from Supabase's answer, never from
+    # the request. A guest who links GitHub becomes a normal user at their next login check.
+    is_anonymous: bool = False
 
 
 @dataclass(frozen=True)
@@ -123,7 +132,22 @@ def player_from_response(response: httpx.Response) -> Player:
         raise auth_unavailable() from error
     if not isinstance(user, dict) or not isinstance(user.get("id"), str) or not user["id"]:
         raise auth_unavailable()
-    return Player(id=user["id"])
+    return Player(id=user["id"], is_anonymous=is_anonymous_user(user))
+
+
+def is_anonymous_user(user: dict) -> bool:
+    """True if Supabase's user object says this is an anonymous (guest) user.
+
+    Supabase sets "is_anonymous": true on such users, and their app_metadata names the provider
+    "anonymous". When the answer has the "is_anonymous" field, it alone decides: a guest who linked
+    GitHub or Google gets false there, even if an older provider name is still in app_metadata.
+    Only an answer without that field falls back to the provider name.
+    """
+    flag = user.get("is_anonymous")
+    if isinstance(flag, bool):
+        return flag
+    metadata = user.get("app_metadata")
+    return isinstance(metadata, dict) and metadata.get("provider") == "anonymous"
 
 
 class PlayerVerifier:
@@ -208,10 +232,21 @@ def get_verifier(request: Request) -> PlayerVerifier:
 VerifierDep = Annotated[PlayerVerifier, Depends(get_verifier)]
 
 
+async def admit_guest(request: Request, player: Player) -> Player:
+    """Let a guest through only while the demo is open (403 demo_closed). Others pass untouched.
+
+    The gate lives on the app (create_app stores it as app.state.demo_gate). Routes that verify a
+    token themselves instead of using PlayerDep call this too.
+    """
+    if player.is_anonymous:
+        await request.app.state.demo_gate.admit(player)
+    return player
+
+
 async def get_current_player(request: Request, verifier: VerifierDep) -> Player:
-    """FastAPI dependency: the signed-in player, or a 401/503 error."""
+    """FastAPI dependency: the signed-in player, or a 401/403/503 error."""
     token = read_bearer_token(request.headers.get("Authorization"))
-    return await verifier.verify(token)
+    return await admit_guest(request, await verifier.verify(token))
 
 
 # Write `player: PlayerDep` in a route and FastAPI checks the login for you.
