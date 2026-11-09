@@ -5,7 +5,7 @@ import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
 import {validateIntent} from '../src/online/case-adapter/validate.js';
 import {mapAccount} from '../src/online/case-adapter/account-view.js';
 import {mapApiResult} from '../src/online/case-adapter/reasons.js';
-import {providerActions,signInProviders} from '../src/screens/account/providers.js';
+import {offersEmail,providerActions,signInProviders} from '../src/screens/account/providers.js';
 
 const me={id:'private-player-placeholder',captainName:'Placeholder captain',coins:0,kit:null,place:null,crews:[]};
 function setup(config){
@@ -46,34 +46,42 @@ describe('guest sign-in through the adapter',()=>{
     }
   });
   it('offers each configured provider and refuses one that is not listed',async()=>{
-    const f=setup({...base,auth:{provider:'github',providers:['github','google']}});
+    const f=setup({...base,auth:{provider:'github',providers:['github','email','google']}});
     try{
-      await vi.waitFor(()=>expect(f.adapter.read().account.providers).toEqual(['github','google']));
-      expect(await f.adapter.signIn({provider:'google'})).toMatchObject({accepted:true});
-      expect(f.auth.signIn).toHaveBeenCalledWith('google');
+      await vi.waitFor(()=>expect(f.adapter.read().account.providers).toEqual(['github','email']));
+      expect(await f.adapter.signIn({provider:'github'})).toMatchObject({accepted:true});
+      expect(f.auth.signIn).toHaveBeenCalledWith('github');
+      // Google was dropped: the intent shape refuses it before any transport.
+      expect(await f.adapter.signIn({provider:'google'})).toMatchObject({accepted:false,reason:'invalid_request'});
+      expect(f.auth.signIn).toHaveBeenCalledOnce();
     }finally{f.adapter.dispose();}
     const g=setup(base);
     try{
       await vi.waitFor(()=>expect(g.adapter.read().account.providers).toEqual(['github']));
-      expect(await g.adapter.signIn({provider:'google'})).toMatchObject({accepted:false,reason:'invalid_request'});
+      expect(await g.adapter.signIn({provider:'email',email:'captain@example.org'})).toMatchObject({accepted:false,reason:'invalid_request'});
       expect(await g.adapter.signIn()).toMatchObject({accepted:true});expect(g.auth.signIn).toHaveBeenCalledWith('github');
     }finally{g.adapter.dispose();}
   });
   it('upgrades only a guest, through the auth upgrade',async()=>{
-    const f=setup({...base,demo:{open:true},auth:{providers:['github','google']}});
+    const f=setup({...base,demo:{open:true},auth:{providers:['github','email']}});
     try{
       expect(await f.adapter.signIn({upgrade:true})).toMatchObject({accepted:false,reason:'invalid_request'});
       await f.adapter.signIn({guest:true});
-      expect(await f.adapter.signIn({provider:'google',upgrade:true})).toMatchObject({accepted:true});
-      expect(f.auth.upgrade).toHaveBeenCalledWith('google');
+      expect(await f.adapter.signIn({provider:'github',upgrade:true})).toMatchObject({accepted:true});
+      expect(f.auth.upgrade).toHaveBeenCalledWith('github');
     }finally{f.adapter.dispose();}
   });
 });
 
 describe('guest shapes and answers',()=>{
   it('validates sign-in options before any transport',()=>{
-    for(const ok of [undefined,{},{provider:'google'},{guest:true},{provider:'github',upgrade:true}])expect(validateIntent('signIn',[ok])).toBeNull();
-    for(const bad of [null,'github',[],{provider:'myspace'},{guest:false},{guest:true,provider:'github'},{guest:true,upgrade:true},{extra:1}])
+    for(const ok of [undefined,{},{provider:'github'},{guest:true},{provider:'github',upgrade:true},
+      {provider:'email',email:'captain@example.org'},{provider:'email',email:'captain@example.org',code:'012345'},
+      {provider:'email',email:'captain@example.org',upgrade:true}])expect(validateIntent('signIn',[ok])).toBeNull();
+    for(const bad of [null,'github',[],{provider:'myspace'},{provider:'google'},{guest:false},{guest:true,provider:'github'},{guest:true,upgrade:true},{extra:1},
+      {provider:'email'},{provider:'email',email:42},{provider:'email',email:`${'a'.repeat(250)}@x.io`},{email:'captain@example.org'},
+      {provider:'github',email:'captain@example.org'},{provider:'email',email:'captain@example.org',code:'12345'},
+      {provider:'email',email:'captain@example.org',code:123456},{provider:'github',code:'123456'},{guest:true,provider:'email',email:'a@b.co'}])
       expect(validateIntent('signIn',[bad])).toMatchObject({accepted:false,reason:'invalid_request'});
   });
   it('shows a plain message for 403 demo_closed and keeps other 403s as forbidden',()=>{
@@ -82,15 +90,20 @@ describe('guest shapes and answers',()=>{
     expect(mapApiResult({ok:false,status:403,code:'not_host'},{route:'/api/me'})).toMatchObject({reason:'forbidden'});
   });
   it('maps guest and provider facts into the account view',()=>{
-    expect(mapAccount({accountState:'signed_in',auth:{guest:true,configured:true},config:{auth:{providers:['google','github','google','x']}}}))
-      .toMatchObject({guest:true,providers:['google','github']});
+    expect(mapAccount({accountState:'signed_in',auth:{guest:true,configured:true},config:{auth:{providers:['email','google','github','email','x']}}}))
+      .toMatchObject({guest:true,providers:['email','github']});
+    expect(mapAccount({accountState:'signed_out',config:{auth:{providers:['google']}}})).toMatchObject({providers:['github']});
     expect(mapAccount({accountState:'signed_out',auth:{guest:true}})).toMatchObject({guest:false,providers:['github']});
   });
   it('turns providers into plain sign-in and upgrade buttons',()=>{
     expect(signInProviders({})).toEqual(['github']);
-    expect(providerActions({providers:['github','google']}).map(item=>[item.label,item.args,item.focus])).toEqual([
-      ['Sign in with GitHub',[],'account-sign-in'],['Sign in with Google',[{provider:'google'}],'account-sign-in-google']]);
-    expect(providerActions({providers:['google']},{prefix:'Keep progress with',upgrade:true,focus:'up'}).map(item=>[item.label,item.args]))
-      .toEqual([['Keep progress with Google',[{provider:'google',upgrade:true}]]]);
+    expect(signInProviders({providers:['google']})).toEqual(['github']);
+    // Email is the code form, not a button; email alone leaves no OAuth button and no GitHub fallback.
+    expect(signInProviders({providers:['email']})).toEqual([]);
+    expect(offersEmail({providers:['github','email']})).toBe(true);expect(offersEmail({providers:['github','google']})).toBe(false);
+    expect(providerActions({providers:['github','email','google']}).map(item=>[item.label,item.args,item.focus])).toEqual([
+      ['Sign in with GitHub',[],'account-sign-in']]);
+    expect(providerActions({providers:['email','github']},{prefix:'Keep progress with',upgrade:true,focus:'up'}).map(item=>[item.label,item.args]))
+      .toEqual([['Keep progress with GitHub',[{provider:'github',upgrade:true}]]]);
   });
 });

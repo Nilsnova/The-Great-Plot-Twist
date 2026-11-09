@@ -34,9 +34,9 @@ function accountSave(state){
     updatedAt:chosen?.updatedAt??null,device,cloud};
 }
 
-// /api/config auth.providers names the sign-in buttons; GitHub alone when the list is missing.
+// /api/config auth.providers names the sign-in choices (github, email); GitHub alone when missing.
 function providerList(config){
-  const list=Array.isArray(config?.auth?.providers)?config.auth.providers.filter(name=>['github','google'].includes(name)):[];
+  const list=Array.isArray(config?.auth?.providers)?config.auth.providers.filter(name=>['github','email'].includes(name)):[];
   return list.length?[...new Set(list)]:['github'];
 }
 

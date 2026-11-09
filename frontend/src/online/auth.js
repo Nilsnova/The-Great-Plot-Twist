@@ -1,12 +1,14 @@
-// Lazy OAuth PKCE (GitHub, Google), guest (anonymous) sign-in and tab-scoped SDK sessions feed only
-// the access token into A2's memory session. A guest upgrade links a provider to the same user.
+// Lazy OAuth PKCE (GitHub), email codes, guest (anonymous) sign-in and tab-scoped SDK sessions feed
+// only the access token into A2's memory session. A guest upgrade links GitHub or confirms an email
+// on the same user, so the player id and its progress stay.
 import {session as defaultSession} from './session.js';
 import {AUTH_STORAGE_KEY, createAuthStorage} from './auth-storage.js';
 import {AUTH_MESSAGES, authConfiguration, signInAddress, ownReturnAddress,
-  validAuthCode, guardAuthStorage} from './auth-state.js';
+  validAuthCode, guardAuthStorage, normalEmail, validEmailCode, emailFailure} from './auth-state.js';
 
 const SIGN_OUT_TIMEOUT_MS = 10000;
-export const AUTH_PROVIDERS = ['github', 'google'];
+// OAuth redirect providers. Email codes use sendEmailCode and verifyEmailCode instead.
+export const AUTH_PROVIDERS = ['github'];
 async function finishSdkSignOut(record) {
   if (!record) return;
   let timer;
@@ -31,7 +33,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
   let state = session.isSignedIn() ? 'signed_in' : 'signed_out';
   let message = AUTH_MESSAGES[state], closed = false, epoch = 0, expiresAt = null, playerId = null, guest = false;
   let current = null, loading = null, signInTask = null, returnTask = null, refreshTask = null, signOutTask = null, guestTask = null;
-  let leaving = null;
+  let leaving = null, emailTask = null, pendingEmail = null;
   let clearing = false, returnEpoch = null;
   const subscribers = new Set();
   const stopRenewal = session.setRenewal?.(() => renew());
@@ -62,7 +64,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     try { session.clearToken(); } finally { clearing = false; }
   }
   function expire() {
-    epoch += 1;
+    epoch += 1; pendingEmail = null;
     release(current); current = null; loading = null;
     signInTask = null; refreshTask = null;
     storage.clearSession(); expiresAt = null; playerId = null; guest = false;
@@ -197,6 +199,73 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     guestTask ??= beginGuest().finally(() => { guestTask = null; });
     return guestTask;
   }
+  // Email code, step 1. A visitor gets a sign-in code (signInWithOtp, a new address makes a new
+  // account). A guest gets a confirmation code for the address (updateUser), so the same user id
+  // keeps its progress. No redirect: the player types the code into this tab.
+  async function beginEmailCode(email, upgrade) {
+    if (signOutTask) await signOutTask;
+    const missing = unavailable(); if (missing) return missing;
+    const refused = reason => ({...answer(false), reason});
+    if (upgrade ? !guest || !session.isSignedIn() : session.isSignedIn()) return refused('not_allowed');
+    const token = epoch;
+    try {
+      const client = await clientFor(token); if (!client) return refused('error');
+      const result = upgrade ? await client.auth.updateUser({email})
+        : await client.auth.signInWithOtp({email, options: {shouldCreateUser: true}});
+      if (!isCurrent(token)) return refused('error');
+      if (result?.error) { storage.clearVerifiers(); return refused(emailFailure(result.error, 'send')); }
+      pendingEmail = {email, type: upgrade ? 'email_change' : 'email', epoch: token};
+      return {...answer(true), reason: 'sent'};
+    } catch {
+      if (isCurrent(token)) storage.clearVerifiers();
+      return refused('error');
+    }
+  }
+  function sendEmailCode(value, {upgrade = false} = {}) {
+    const email = normalEmail(value);
+    if (!email) return Promise.resolve({...answer(false), reason: 'invalid_email'});
+    if (closed) return Promise.resolve({...answer(false), reason: 'error', message: AUTH_MESSAGES.disposed});
+    if (!emailTask) {
+      const task = beginEmailCode(email, upgrade === true).finally(() => { if (emailTask === task) emailTask = null; });
+      emailTask = task;
+    }
+    return emailTask;
+  }
+  // Email code, step 2: verifyOtp with the type step 1 used. A visitor signs in; a guest's address
+  // is confirmed and the next token says is_anonymous false.
+  async function finishEmailCode(email, code) {
+    const missing = unavailable(); if (missing) return missing;
+    const refused = reason => ({...answer(false), reason});
+    const pending = pendingEmail;
+    if (!pending || pending.epoch !== epoch || pending.email !== email) return refused('no_code');
+    const token = epoch;
+    try {
+      const client = await clientFor(token); if (!client) return refused('error');
+      const reply = await client.auth.verifyOtp({email, token: code, type: pending.type});
+      if (!isCurrent(token)) return refused('error');
+      if (reply?.error) return refused(emailFailure(reply.error, 'verify'));
+      let value = reply?.data?.session;
+      if (!value?.access_token && pending.type === 'email_change') {
+        const renewed = await client.auth.refreshSession();
+        if (!isCurrent(token)) return refused('error');
+        value = renewed?.error ? null : renewed?.data?.session;
+      }
+      if (!applySession(value, token)) return refused('error');
+      if (pendingEmail === pending) pendingEmail = null;
+      storage.clearVerifiers();
+      return {...answer(true), reason: pending.type === 'email_change' ? 'confirmed' : 'signed_in'};
+    } catch { return refused('error'); }
+  }
+  function verifyEmailCode(value, code) {
+    const email = normalEmail(value);
+    if (!email || !validEmailCode(code)) return Promise.resolve({...answer(false), reason: 'wrong_code'});
+    if (closed) return Promise.resolve({...answer(false), reason: 'error', message: AUTH_MESSAGES.disposed});
+    if (!emailTask) {
+      const task = finishEmailCode(email, code).finally(() => { if (emailTask === task) emailTask = null; });
+      emailTask = task;
+    }
+    return emailTask;
+  }
   async function exchange(result) {
     const missing = unavailable(); if (missing) { storage.clearVerifiers(); return missing; }
     if (!validAuthCode(result)) { storage.clearVerifiers(); publish('error'); return answer(false); }
@@ -245,7 +314,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     if (closed) return unavailable();
     epoch += 1; const record = current;
     current = null; loading = null; expiresAt = null; playerId = null; guest = false;
-    signInTask = null; refreshTask = null;
+    signInTask = null; refreshTask = null; emailTask = null; pendingEmail = null;
     try { record?.subscription?.unsubscribe(); } catch { /* Local sign-out still completes. */ }
     record?.storage.detach();
     storage.clearSession();
@@ -328,6 +397,7 @@ export function createAuth({session = defaultSession, storage = createAuthStorag
     stopRenewal?.(); stopSession(); subscribers.clear();
     storage.close({clear: false}); clearMemory();
   }
-  return {read, subscribe, signIn, upgrade, signInAnonymously, handleReturn, restore, renew, getAccessToken,
+  return {read, subscribe, signIn, upgrade, signInAnonymously, sendEmailCode, verifyEmailCode,
+    handleReturn, restore, renew, getAccessToken,
     signOut, readOwnLedger, readCrewMemberIds, readCrewSeats, dispose};
 }

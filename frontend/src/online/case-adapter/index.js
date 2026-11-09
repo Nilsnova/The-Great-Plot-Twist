@@ -233,9 +233,11 @@ export function createRealCaseAdapter(deps = {}) {
     }};
   // signIn() and signIn({provider}) start OAuth; {upgrade: true} links a provider to a guest;
   // {guest: true} is the title's silent guest start, allowed only while /api/config says demo.open.
+  // {provider: 'email', email[, code][, upgrade]} sends or checks a 6-digit email code.
   handlers.signIn = async (options = {}) => {
     const provider = options.provider ?? 'github';
     if (options.guest === true) return guestSignIn();
+    if (provider === 'email') return emailSignIn(options);
     if (options.upgrade === true) return upgradeGuest(provider);
     if (session.isSignedIn()) {
       const scope=store.scope();
@@ -264,8 +266,46 @@ export function createRealCaseAdapter(deps = {}) {
   }
   function configProviders() {
     const list = ctx.state.config?.auth?.providers;
-    const known = Array.isArray(list) ? list.filter(name => ['github', 'google'].includes(name)) : [];
+    const known = Array.isArray(list) ? list.filter(name => ['github', 'email'].includes(name)) : [];
     return known.length ? known : ['github'];
+  }
+  // Fixed texts for the email code steps; the auth layer reports a reason, never SDK text. Reasons
+  // stay outside the transport-failure set (adapter/call-failure.js), so these texts reach the form.
+  const emailAnswers = {
+    sent: [true, 'Code sent. Check your inbox and spam folder.'],
+    confirm_sent: [true, 'Code sent. Check your inbox and spam folder. Your progress stays with this captain.'],
+    signed_in: [true, 'You are signed in.'],
+    confirmed: [true, 'Email confirmed. Your progress is kept.'],
+    rate_limited: ['too_many_tries', 'Too many requests. Wait a minute, then try again.'],
+    wrong_code: ['wrong_code', 'That code is wrong or has expired. Check it, or send a new code.'],
+    no_code: ['wrong_code', 'Send a code to this email first.'],
+    invalid_email: ['invalid_request', 'Enter your full email address.'],
+    email_taken: ['invalid_request', 'This email already has an account. To use it, sign out and sign in with that email. Guest progress is not moved.'],
+    email_off: ['not_ready', 'Email sign-in is not switched on yet. Use GitHub for now.'],
+    not_allowed: ['invalid_request', 'Check this action and try again.'],
+  };
+  function emailAnswer(key) {
+    const [outcome, message] = emailAnswers[key] ?? ['not_connected', 'Email sign-in could not finish. Try again in a moment.'];
+    return outcome === true ? ctx.accept(message) : {...ctx.refuse(outcome), message};
+  }
+  async function emailSignIn({email, code, upgrade}) {
+    if (!import.meta.env.DEV && ctx.state.config?.flags?.sign_in !== true) return ctx.refuse('feature_off');
+    if (!configProviders().includes('email')) return ctx.refuse('invalid_request');
+    const asGuest = upgrade === true;
+    if (asGuest && (!session.isSignedIn() || ctx.auth.read?.()?.guest !== true)) return ctx.refuse('invalid_request');
+    if (!asGuest && session.isSignedIn()) return ctx.accept('Your account is ready.');
+    if (!ctx.auth.sendEmailCode || !ctx.auth.verifyEmailCode) return ctx.refuse('not_connected');
+    const intent = ++authIntentGeneration;
+    const current = () => !store.isClosed() && intent === authIntentGeneration;
+    const result = code === undefined ? await ctx.auth.sendEmailCode(email, {upgrade: asGuest})
+      : await ctx.auth.verifyEmailCode(email, code);
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+    if (!result?.ok) return emailAnswer(result?.reason);
+    if (code === undefined) return emailAnswer(asGuest ? 'confirm_sent' : 'sent');
+    store.commit({auth: ctx.auth.read?.() ?? null});
+    await hydrate();
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+    return emailAnswer(result.reason === 'confirmed' ? 'confirmed' : 'signed_in');
   }
   async function guestSignIn() {
     if (session.isSignedIn()) return ctx.accept('Your account is ready.');
