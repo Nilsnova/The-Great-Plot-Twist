@@ -55,7 +55,7 @@
 .projector{position:absolute;inset:16px;z-index:70;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center;background:#16271f;border:5px solid #f3d58c;padding:28px;font:22px/1.4 'Courier New',monospace;color:#fff0c5;overflow:auto}
 .projector h2{font-size:44px;line-height:1.1;margin:0 0 14px;color:#f3d58c}
 .projector canvas{width:min(100%,62vh);height:auto;aspect-ratio:1;image-rendering:pixelated;background:#fff;justify-self:center;border:8px solid #fff}
-.projector .projector-code{font-size:76px;letter-spacing:.14em;color:#fff;margin:6px 0 10px;font-weight:bold}
+.projector .projector-code{font-size:min(60px,5vw);letter-spacing:.06em;white-space:nowrap;color:#fff;margin:6px 0 10px;font-weight:bold}
 .projector .projector-count{font-size:32px;color:#bad28b;margin:0 0 10px}
 .projector .projector-window{font-size:20px;margin:0 0 12px}
 .projector ol{margin:0 0 14px;padding-left:1.3em;font-size:20px}
@@ -66,6 +66,6 @@
 .projector .projector-confirm-text{flex:1 1 100%;margin:0;font-size:18px}
 .projector canvas[hidden]{display:none}
 .projector .projector-error{color:#f0b77a;min-height:1.4em;margin:0 0 8px;font-size:18px}
-@media(max-width:760px){.projector{grid-template-columns:1fr;font-size:18px}.projector h2{font-size:30px}.projector .projector-code{font-size:48px}.quest-strip{top:auto;bottom:88px;max-width:230px}.quest-item{min-height:36px;padding:4px 8px;font-size:14px}.quest-strip h2{display:none}.demo-prompt{bottom:250px}.duel-invite{bottom:250px}.demo-toast{top:130px}}
+@media(max-width:760px){.projector{grid-template-columns:1fr;font-size:18px}.projector h2{font-size:30px}.projector .projector-code{font-size:min(40px,9vw)}.quest-strip{top:auto;bottom:88px;max-width:230px}.quest-item{min-height:36px;padding:4px 8px;font-size:14px}.quest-strip h2{display:none}.demo-prompt{bottom:250px}.duel-invite{bottom:250px}.demo-toast{top:130px}}
 @media(prefers-reduced-motion:reduce){.demo-splash div,.duel-spotlight .spotlight-beam,.duel-spotlight .duel-reveal{animation:none}}
 .demo-motion-off .demo-splash div{animation:none}
