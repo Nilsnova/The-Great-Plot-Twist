@@ -49,7 +49,9 @@ try {
   const position=await page.evaluate(()=>window.__island.player.position.toArray());await page.keyboard.down('KeyW');await page.waitForTimeout(200);await page.keyboard.up('KeyW');
   check(await page.evaluate(position=>JSON.stringify(window.__island.player.position.toArray())===JSON.stringify(position),position),'Pause blocks held movement');
   await page.screenshot({path:'captures/20261105_G5-Pause.png'});await page.getByRole('button',{name:'Return to title',exact:true}).click();await startFromTitle(page,{closeIntro:false});
-  check(await page.evaluate(()=>window.__island.world.intro.actions.length===0&&window.__island.world.intro.state.scene==='cottage'),'New game resets only the local intro');await dismissIntro(page);
+  // G29 removed New game: Settings > Story > Lighthouse prologue resumes an unfinished prologue (a finished one
+  // offers 'Start a new intro'). The successor assertion: the same journal and scene, preferences untouched.
+  check(await page.evaluate(journal=>localStorage.getItem('plot_twist_intro_moves_v1')===journal&&window.__island.world.intro.actions.length===2&&window.__island.world.intro.state.scene==='desk'&&window.__island.settings.quality==='low',journal),'The Lighthouse prologue resumes only the unfinished local intro and keeps preferences');await dismissIntro(page);
   await page.evaluate(()=>{window.__pad={id:'Test standard pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[window.__pad]});});
   const before=await page.evaluate(()=>window.__island.player.position.x);await page.waitForTimeout(60);await page.evaluate(()=>window.__pad.axes[0]=1);await page.waitForTimeout(250);await page.evaluate(()=>window.__pad.axes[0]=0);
   check(await page.evaluate(before=>window.__island.player.position.x>before+0.2,before),'Standard gamepad stick moves the player');
