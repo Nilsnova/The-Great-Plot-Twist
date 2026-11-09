@@ -29,6 +29,10 @@ so this file is the full list of what can be configured:
                               never in the browser, a log or the repo. Empty keeps the stocks off.
     SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty disables live sports.
     SPORTS_API_KEY            server-only provider key; empty keeps live sports unavailable.
+    AUTH_PROVIDERS            the sign-in providers the browser may offer, comma separated:
+                              github and google (default: github). An unknown name stops the
+                              server, like a misspelled FEATURE_FLAGS name. Not secret: each
+                              provider is also switched on in the Supabase dashboard.
 
 Used by: app.py (reads the environment once at start-up), auth.py, supabase_admin.py and
 crew_broadcast.py (the Supabase address and keys, and for the broadcaster the flag live_presence),
@@ -55,6 +59,11 @@ APP_ENVS = ("local", "preview", "production")
 # The stock providers STOCK_API_PROVIDER may name. Keep it the same as PROVIDER_NAMES in
 # market/stocks.py (a test checks that): this file stays free of imports from the market package.
 STOCK_PROVIDER_NAMES = ("finnhub",)
+
+# The sign-in providers AUTH_PROVIDERS may name, in the order the browser shows them. Anonymous
+# guest sign-in is not one of them: it depends on the demo window (server/demo/), not a setting.
+AUTH_PROVIDER_NAMES = ("github", "google")
+DEFAULT_AUTH_PROVIDERS = ("github",)
 
 # The place whose real weather the game shows. The Faroe Islands are the team's proposal, because
 # their real fog and storms suit the story. The team may change it (Lisbon is the other option,
@@ -106,6 +115,8 @@ class Settings:
     stock_api_key: SecretStr = SecretStr("")
     sports_api_provider: str = ""
     sports_api_key: SecretStr = SecretStr("")
+    # The sign-in providers GET /api/config lists, in the order of AUTH_PROVIDERS.
+    auth_providers: tuple[str, ...] = DEFAULT_AUTH_PROVIDERS
 
 
 def read_text(env: Mapping[str, str], name: str) -> str:
@@ -240,6 +251,24 @@ def read_sports_provider(env: Mapping[str, str]) -> str:
     return value
 
 
+def read_auth_providers(env: Mapping[str, str]) -> tuple[str, ...]:
+    """AUTH_PROVIDERS: github and/or google, comma separated. Empty means github only.
+
+    Repeats and empty pieces are ignored; the order of first mention is kept. An unknown name stops
+    the server, so a typo such as "gogle" cannot hide.
+    """
+    pieces = [piece.strip().lower() for piece in read_text(env, "AUTH_PROVIDERS").split(",")]
+    names = [piece for piece in pieces if piece]
+    unknown = [name for name in names if name not in AUTH_PROVIDER_NAMES]
+    if unknown:
+        raise SettingsError(
+            f"AUTH_PROVIDERS must name only {', '.join(AUTH_PROVIDER_NAMES)} "
+            f"(unknown: {', '.join(unknown)})."
+        )
+    providers = tuple(dict.fromkeys(names))
+    return providers or DEFAULT_AUTH_PROVIDERS
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     """Build the settings from a dictionary of variables. A pure function, so tests are easy."""
     app_env = read_app_env(env)
@@ -266,6 +295,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         stock_api_key=SecretStr(read_text(env, "STOCK_API_KEY")),
         sports_api_provider=read_sports_provider(env),
         sports_api_key=SecretStr(read_text(env, "SPORTS_API_KEY")),
+        auth_providers=read_auth_providers(env),
     )
 
 

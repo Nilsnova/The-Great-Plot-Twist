@@ -523,6 +523,37 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
+## D029 · Class demo: guest play, demo window, Keeper's Lock · 2026-11-09
+
+**Status:** Decided by Nils on 9 Nov 2026 (the G29 demo journey); server part (C0) recorded by the
+G29 server agent. Numbered D029 because D028 is already taken by the island redesign entry below.
+
+**Decision:** For the class demo, phones join as Supabase anonymous users ("guests"). The API admits
+a guest only while the new flag `demo` is on and a host has opened the demo window ("Demo open for N
+hours", 1 to 6, stored in `demo_window`); otherwise every login route answers `403 demo_closed`.
+GitHub and Google users are never gated. A host can delete anonymous users older than 24 hours
+through `delete_player`. Guests skip Act 1: on the first admitted call they get a generated captain
+name and the Stranger kit through the existing `assign_captain_name` and `grant_entry_kit`
+(ending `ending_demo`, decision `none`, move count 1, the existing `kit_grant` reason). The Keeper's
+Lock asks about the real sky at the player's place (chosen place, else Vercel's city-level IP
+headers, else the default weather place), accepts an answer one step away as close enough, falls
+back to the last good reading (at most 6 hours) and then to a riddle, and offers a hint path after
+one wrong answer. It stores only the answer id and verdict, never the place, and pays no coins.
+`AUTH_PROVIDERS` adds Google as a second ordinary sign-in.
+
+**Why:** Two players needed 45 to 50 clicks and a GitHub account; a QR join must take seconds. A
+time-boxed window keeps anonymous accounts out of the game outside the class. The Stranger ("took no
+side") is the kit that fits a player who never played Act 1, and reusing the two existing functions
+keeps one path for names, profiles and coins. `ending_demo` passes the table rule for endings and
+marks the profile as demo-made; 1 is the closest move count the table allows. The weather lock must
+never block the demo, hence the cache, the riddle and the hint.
+
+**Limits:** The gate covers this API only. While anonymous sign-in is on in Supabase, guests hold the
+`authenticated` role, so the existing read policies and Realtime rooms admit them even with the
+window closed: switch anonymous sign-in off after the demo. The window is cached 10 seconds per server
+instance. Cleanup reads Supabase Auth's admin user list (up to 5,000 users) and deletes at most 100
+per call. See [INTERFACES.md](INTERFACES.md#class-demo-guest-play-demo-window-and-the-keepers-lock-g29-c0).
+
 ## Next entry
 
 - **ID / date / title:**

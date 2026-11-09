@@ -18,6 +18,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106090000_exchange_leverage.sql](migrations/20261106090000_exchange_leverage.sql) | The third migration, for the Island Exchange version 2 (real prices, 10x positions): two wallet reasons, two tables and three functions, and it removes what the second one added (except the reasons). Run it after the second. See [The Island Exchange migration](#the-island-exchange-migration). |
 | [migrations/20261106100000_prediction_desk.sql](migrations/20261106100000_prediction_desk.sql) | The migration for the prediction desk (package L5): two wallet reasons, two tables, one view, one trigger and two functions. Run it after the others (it needs only the first). See [The prediction desk migration](#the-prediction-desk-migration). |
 | [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
+| [migrations/20261109010000_demo_window.sql](migrations/20261109010000_demo_window.sql) | The class demo (G29 C0, D029): the host's demo window for guest play and the answers of the Keeper's Lock. Three tables and three functions, no wallet reason. Run it after the whole 20261106 chain, before the flag `demo` goes on. See [Class demo migration](#class-demo-migration-20261109010000). |
 
 ## G10 follow-up migration (140000)
 
@@ -276,7 +277,7 @@ Every new user gets a wallet with 0 coins and a profile that all players can see
 1. In the dashboard open **Authentication > Sign In / Providers**.
 2. Switch **GitHub** on. A teammate sets up the GitHub app and pastes its keys into the dashboard only, never into this repository.
 3. Switch **Email** off.
-4. Keep **Anonymous sign-ins** off. An anonymous user counts as a signed-in player too.
+4. Keep **Anonymous sign-ins** off, except during the class demo ([Class demo migration](#class-demo-migration-20261109010000)). An anonymous user counts as a signed-in player too.
 
 ### Option A: SQL editor (quickest)
 
@@ -3032,3 +3033,37 @@ sorted wallet locks; settlement rechecks the complete stake snapshot after waits
 deletion cannot deadlock a payout or silently change its recipients. Rejected earlier 170000/180000
 draft hashes must never be applied. The final files passed independent full-chain restricted-owner,
 broad-default-grant, replay, role, conservation and real-connection concurrency checks.
+
+## Class demo migration (20261109010000)
+
+[`20261109010000_demo_window.sql`](migrations/20261109010000_demo_window.sql) is additive: it changes no
+earlier object, adds no wallet reason and writes no ledger row. All three tables have RLS on and **no
+policy**, so `anon` and `authenticated` (which includes Supabase's anonymous guests) see nothing; the
+security advisor's RLS-without-policy notice is intentional. Every function runs as the invoker
+(not `SECURITY DEFINER`) with `search_path = ''`, and only `service_role` may execute it.
+
+| Object | `anon` / `authenticated` | `service_role` |
+|---|---|---|
+| `demo_window` | No access; RLS on, no policy | Select, update. One row (`class_demo`): `open_until` (null = closed), `changed_by` (set null when that host is deleted), `changed_at`. |
+| `demo_window_actions` | No access; RLS on, no policy | Select, insert. One row per host switch, primary key (host, actionUid); hours 0 to 6. Cascades with the host. |
+| `demo_lock_attempts` | No access; RLS on, no policy | Select, insert. One row per Keeper's Lock answer, primary key (player, actionUid): answer id, outcome, accepted. Never a place, coordinates or weather. Cascades with the player. |
+| `demo_window_set(uuid, uuid, integer)` | No execute | Execute: opens the window for 1 to 6 hours from the database clock or closes it (0), once per host and actionUid; a repeat answers the current window with `repeat: true`; raises `bad_demo_window` for other hours. |
+| `demo_window_read()` | No execute | Execute: `{open, openUntil}` by the database clock; an ended window reads as closed. |
+| `demo_lock_record(uuid, text, text, text)` | No execute | Execute: locks the profile, stores one verdict per player and actionUid; `repeat` returns the stored one, `full` after 40 answers, `missing` without a profile. |
+
+The host's "Clean up guests" deletes guests through the existing `delete_player()` after reading
+Supabase Auth's admin user list (`GET /auth/v1/admin/users` with the secret key); no SQL here reads
+`auth.users`.
+
+**Dashboard switches for the demo** (the owner, on the day): Authentication > Sign In / Providers >
+**Allow anonymous sign-ins** on; Authentication > Rate Limits > **anonymous sign-ins per hour**
+raised (for example 300, one shared class IP). Switch anonymous sign-ins off afterwards: while it is
+on, guests hold the `authenticated` role and the existing read policies and Realtime rooms admit
+them even with the demo window closed. For Google sign-in, see [SETUP.md, Step 3b](../docs/SETUP.md).
+
+Scratch validation from `backend/` (all migrations applied twice on a disposable local PostgreSQL;
+neither package is added to the project):
+
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/demo_sql
+```

@@ -1,7 +1,19 @@
 """Config route: GET /api/config tells the browser how the server is set up.
 
-It returns the environment, whether demo mode is on, which feature flags are on and how to
-sign in: the sign-in provider (always github) and the address of our Supabase project.
+It returns the environment, whether demo mode is on, which feature flags are on, how to sign in
+(the sign-in providers and the address of our Supabase project) and whether the class demo is open
+for guests.
+
+    "auth": {"provider": "github", "providers": ["github", "google"], "supabaseUrl": "https://..."}
+        providers   the setting AUTH_PROVIDERS (github and/or google; default github), in order
+        provider    the old single field, kept for older pages: "github" while GitHub is listed,
+                    otherwise the first provider
+    "demo": {"open": true, "openUntil": "2026-11-09T15:00:00Z"}
+        open        guests (Supabase anonymous sign-in) may play now: the feature flag demo is on
+                    and the host's demo window is open. The browser shows guest play only then.
+        openUntil   the end of the window, or null while closed
+        Read through the demo gate (10-second memory); a window that cannot be read shows as
+        closed here and never makes this route fail. With the flag off nothing is read.
 
 Everything in it is public. The Supabase address is not a secret: the browser needs it to start
 the GitHub sign-in, and it is visible in the browser's address bar during sign-in anyway. This
@@ -16,19 +28,28 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from server.host_console import case_clock_available
-from server.settings import SettingsDep
+from server.settings import Settings, SettingsDep
+from server.weather.mapping import format_utc_time
 
 router = APIRouter()
 
-# The one way to sign in. Email and anonymous sign-in are switched off in Supabase.
+# The provider older pages start the sign-in with. Email sign-in stays off in Supabase.
 AUTH_PROVIDER = "github"
 
 
 class AuthConfig(BaseModel):
-    """How the browser signs in. Both values are public."""
+    """How the browser signs in. Every value is public."""
 
     provider: str
+    providers: list[str]
     supabaseUrl: str  # camelCase on purpose. Empty text while SUPABASE_URL is not set.
+
+
+class DemoConfig(BaseModel):
+    """Whether guests may play now. Public: an end time, nothing else."""
+
+    open: bool
+    openUntil: str | None
 
 
 class ConfigResponse(BaseModel):
@@ -39,15 +60,24 @@ class ConfigResponse(BaseModel):
     flags: dict[str, bool]
     auth: AuthConfig
     capabilities: dict[str, bool]
+    demo: DemoConfig
+
+
+def auth_config(settings: Settings) -> AuthConfig:
+    providers = list(settings.auth_providers)
+    provider = AUTH_PROVIDER if AUTH_PROVIDER in providers else providers[0]
+    return AuthConfig(provider=provider, providers=providers, supabaseUrl=settings.supabase_url)
 
 
 @router.get("/config")
 async def get_config(settings: SettingsDep, request: Request) -> ConfigResponse:
-    auth = AuthConfig(provider=AUTH_PROVIDER, supabaseUrl=settings.supabase_url)
+    window = await request.app.state.demo_gate.public_window()
+    until = format_utc_time(window.open_until) if window.open and window.open_until else None
     return ConfigResponse(
         env=settings.app_env,
         demoMode=settings.demo_mode,
         flags=settings.flags,
-        auth=auth,
+        auth=auth_config(settings),
         capabilities={"hostCaseClock": case_clock_available(request.app.openapi(), settings.flags)},
+        demo=DemoConfig(open=window.open, openUntil=until),
     )

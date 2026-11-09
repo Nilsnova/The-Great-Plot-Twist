@@ -620,6 +620,42 @@ Purpose: Player fixture choice, play-coin amount, payout and repeat identity. Re
 | `player_id` | Verified player UUID linking this account-owned record. |
 | `stake_id` | Stable per-player stake repeat identity. |
 
+### public.demo_window
+
+Purpose: The class demo's single guest-play window (D029). Readers: Server only; the browser sees only `demo.open` and `demo.openUntil` in `GET /api/config`. Lifetime: One shared operational row; the last host's ID is cleared when that host deletes their account.
+
+| Column | What it holds and why |
+|---|---|
+| `changed_at` | Database time of the last switch. |
+| `changed_by` | Verified host who switched the window last, cleared on account deletion. |
+| `name` | Always `class_demo`. |
+| `open_until` | End of the guest-play window, or null while closed. |
+
+### public.demo_window_actions
+
+Purpose: Host-scoped once-only switches of the demo window. Readers: Server only. Lifetime: Removed with the host account.
+
+| Column | What it holds and why |
+|---|---|
+| `action_uid` | Retry identity scoped to this host. |
+| `created_at` | Database time of the switch. |
+| `host_id` | Verified host who switched the window. |
+| `hours` | Hours asked for: 0 closes, 1 to 6 opens. |
+| `open_until` | End time this switch set, or null for a close. |
+
+### public.demo_lock_attempts
+
+Purpose: Keeper's Lock answers and the server's verdicts, for retries, the hint path and "opened". Readers: Server only; the player sees their own verdicts through the lock routes. Lifetime: Removed with the player account. No place, coordinates, IP address or weather reading is stored.
+
+| Column | What it holds and why |
+|---|---|
+| `accepted` | Whether the answer opened the lock. |
+| `action_uid` | Stable per-player answer repeat identity. |
+| `answer` | Chosen sky or riddle choice id, or `hint` / `hint_confirm`. |
+| `created_at` | Database time of the answer. |
+| `outcome` | Server verdict: exact, close, hint, clue, wrong, hint_too_early, hint_offered or question_changed. |
+| `player_id` | Verified player UUID linking this account-owned record. |
+
 ## Access beyond direct table reads
 
 The [crew join route](../backend/server/routes/crews.py) uses the [crew service](../backend/server/crews/service.py) and server-only `crew_find_by_code()` to look up a code and choose a seat internally. The lookup includes crew ID/status/version and seat/player/NPC/kit details for the server; it is not exposed as a browser preview endpoint. After joining, the API returns a crew view with names, kits and seat details, omitting player UUIDs and the version counter. Direct database RLS still lets members read every column of their crew and seats, including player UUIDs, codes and timestamps.
@@ -632,12 +668,13 @@ These are outside the application tables:
 
 | Data/place | Why and who receives it | Lifetime / deletion limits |
 |---|---|---|
-| Supabase-managed Auth users, identities and sessions | GitHub sign-in account details, user UUID and login/session information. The game uses the verified UUID, not the GitHub name/email as a public captain name. Supabase's internal schema is not defined by these migrations. | The implemented delete function removes the Auth user and associated identities/sessions. GitHub's own account and records remain. Hosted behavior still needs a live test. |
+| Supabase-managed Auth users, identities and sessions | GitHub (or Google) sign-in account details, or an anonymous guest user during the class demo (no e-mail; the host deletes guests older than 24 hours by reading Supabase Auth's admin user list), user UUID and login/session information. The game uses the verified UUID, not the GitHub name/email as a public captain name. Supabase's internal schema is not defined by these migrations. | The implemented delete function removes the Auth user and associated identities/sessions. GitHub's own account and records remain. Hosted behavior still needs a live test. |
 | Supabase `auth.audit_log_entries` | Auth events may include actor UUID, login email and IP address; accessible to authorised service/project operators. | Not removed by the game's delete function; no user foreign key triggers cleanup. The game does not purge provider audit rows. No fixed provider retention duration is established here. |
 | Vercel/Supabase platform logs and backups | Request/network metadata, service operation and diagnostics; provider and authorised project operators may have access. | Account deletion does not clear them. Provider settings/schedules govern retention; this repository sets no numeric duration or backup-erasure guarantee. |
 | Application server logs | Ordinary auth/code/database warnings use status/error type or code; HTTP client INFO URLs are suppressed because database URLs may include player IDs. Unexpected errors log method, path and an exception traceback, so logs must not be described as anonymous. | Provider/runtime retention, outside account-row deletion. Successful deletion logs a generic message without the player ID. |
 | Auth verification memory cache | SHA-256 token fingerprint, player UUID and expiry; recognises a verified token for up to 60 seconds. Raw tokens are not stored in this cache. | Removed lazily or on process exit, not explicitly purged by deletion. A deleted player's token may pass the same instance's check briefly. A validity window is not a guaranteed memory-erasure time. |
 | Market rate-limit memory | Player UUID and recent trade timestamps; limits requests in a 30-second window. | Cleaned on reuse, when the map grows beyond 5,000 players, or process exit; deletion does not explicitly purge it. The counting window is not a maximum retention time. |
+| Demo gate and Keeper's Lock memory | Player UUIDs of guests already given a name and kit (at most 5,000), the demo window for 10 seconds, per-player lock/search request times, the weather of rounded places (0.1 degree) for 10 minutes and place-search texts with their results for 24 hours. The player's own place (from Vercel's IP geolocation headers or chosen by them) is used for one request and never stored or logged. | Process memory only; dropped oldest-first, lazily, or on process exit; deletion does not explicitly purge it. |
 | `HOST_PLAYER_IDS` configuration | Host player UUIDs, used by the server to restrict presenter routes. | Kept in server settings until an operator changes them; account deletion does not edit configuration. |
 | Browser `plot_twist_preferences_v1` (local storage) | Version, graphics quality, master/music/effects volume, reduced motion, text speed, colourblind setting, captain visibility (`showCaptains`: everyone/crew/off), guidance toggle (`hintsEnabled`) and up to 100 dismissed hint IDs (`dismissedHints`). Same-origin browser code can read it. | No expiry; overwritten by preference changes, removed when site data is cleared. Not cleared by account deletion. |
 | Browser `plot_twist_intro_moves_v1` (local storage) | Version and intro action IDs; replays the local story on reload. | No expiry; a new/restarted intro replaces the action list. Clear site data to remove it. Not cleared by account deletion. |
@@ -658,7 +695,7 @@ Sources: [settings](../frontend/src/settings/logic.js), [intro journal](../front
 | GitHub | Browser visits for sign-in and GitHub's own account/authentication handling. GitHub and Supabase exchange provider identity information to establish a login. This is a browser redirect flow, not a server-only data feed. |
 | Supabase | Authentication codes/verifiers, token checks and the game's stored account/activity data. The setup guide selects West EU (Ireland) for the database project; its actual deployed region/settings were not checked here. |
 | Vercel | Browser/API requests, network metadata and backend logs. Functions are configured for Dublin (`dub1`); this does not establish that every CDN request, log or backup stays in Dublin. |
-| Open-Meteo | Server-side weather calls with the configured game place's latitude/longitude and requested weather fields/units. No browser geolocation or player ID/token is sent in the parameters. Provider sees the server's network metadata. Demo mode uses a recording. |
+| Open-Meteo | Server-side weather calls with the configured game place's latitude/longitude and requested weather fields/units. No browser geolocation or player ID/token is sent in the parameters. Provider sees the server's network metadata. Demo mode uses a recording. The Keeper's Lock (class demo) also sends the player's place rounded to 0.1 degree (from Vercel's city-level IP headers or the player's chosen place) and, for "Change place", the typed search text to the geocoding API; neither is stored. |
 | Binance | Server-side public price calls with instrument symbols, not a player's holdings, orders, identity or login token. No real trading account is opened. Provider sees the server's network metadata. Feature flags/demo mode can use no live feed. |
 | Finnhub | Integrated stock-price source; receives public stock symbols from the server, never a player ID, token, position or game stake. |
 | Manifold | Integrated public question/result source; requests use public market IDs, not player stakes or identity. |

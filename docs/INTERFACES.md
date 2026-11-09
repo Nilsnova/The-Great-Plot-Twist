@@ -97,15 +97,15 @@ How this server is set up: the environment, demo mode, which feature flags are o
 GET /api/config
 
 200 OK
-{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "case": false, "sign_in": false, "bulletin": false, "festival": false}, "auth": {"provider": "github", "supabaseUrl": ""}, "capabilities": {"hostCaseClock": false}}
+{"env": "local", "demoMode": false, "flags": {"market": false, "predictions": false, "sports": false, "arena": false, "raid": false, "live_presence": false, "case": false, "sign_in": false, "bulletin": false, "festival": false, "demo": false}, "auth": {"provider": "github", "providers": ["github"], "supabaseUrl": ""}, "capabilities": {"hostCaseClock": false}, "demo": {"open": false, "openUntil": null}}
 ```
 
-`flags` contains all ten registered names, including `festival`. `capabilities.hostCaseClock` is
+`flags` contains all eleven registered names, including `festival` and `demo`. `capabilities.hostCaseClock` is
 true only while the installed host-clock route and enabled case flag make it available; host UI
 also requires the verified account's `isHost`. Current G9 integration answers are in the
 [cloud readiness note](handoff/g9-cloud-readiness.md).
 
-`auth.provider` is always `github`. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
+`auth.providers` lists the sign-in providers the browser may offer, in the order of the setting `AUTH_PROVIDERS` (`github`, `google`; default `github` only; an unknown name stops the server at start-up). Google users are ordinary players, exactly like GitHub users. `auth.provider` is kept for older pages: `github` while GitHub is listed, otherwise the first provider. `demo.open` is true only while the flag `demo` is on and the host's demo window is open; `demo.openUntil` is its end in UTC, or `null` (see [Class demo](#class-demo-guest-play-demo-window-and-the-keepers-lock-g29-c0)). A window that cannot be read shows as closed and never fails this route. `auth.supabaseUrl` is the address of our Supabase project, the value of the setting `SUPABASE_URL`. It is public on purpose: the browser needs it to start the GitHub sign-in, and it shows in the address bar during sign-in anyway. It is an empty string while `SUPABASE_URL` is not set, which is why the example above (an empty `.env`) shows `""`. No key is ever in this answer: not the secret key, not the publishable key and not the keep-alive secret (`CRON_SECRET`).
 
 ### GET /api/me
 
@@ -1216,6 +1216,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
+| `demo` | guest play for the class demo: Supabase anonymous users may use the API while the host's demo window is open | G29 C0; off by default; needs migration 20261109010000 applied first |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
@@ -1445,6 +1446,51 @@ and errors are in [G15's contract](handoff/g15-checkpoint-2.md).
 Every browser write keeps its original ID after an uncertain response, including a rate-limit
 response on a retry; signing out clears private state. Local festival rehearsal requires both
 `demo=1` and `festival=1`, uses memory only and never changes a server flag or sends a live write.
+
+### Class demo: guest play, demo window and the Keeper's Lock (G29 C0)
+
+Decision [D029](DECISIONS.md#d029--class-demo-guest-play-demo-window-keepers-lock--2026-11-09). Migration `20261109010000_demo_window.sql`. Every answer below is `Cache-Control: private, no-store`. No route here moves coins.
+
+**Guests.** A guest is a Supabase anonymous user: the user object from `GET /auth/v1/user` has `is_anonymous: true` (only when that field is missing does `app_metadata.provider == "anonymous"` count). While the flag `demo` is off or the demo window is closed, every route that needs a login answers a guest `403 demo_closed` (`{"error":{"code":"demo_closed","message":"..."}}`); GitHub and Google users are never affected. The window is read through `demo_window_read()` and remembered for 10 seconds per server instance, so a close can take up to 10 seconds to reach every instance. On a guest's first admitted call per instance the server gives a captain name (`assign_captain_name`) and the default kit (`grant_entry_kit`: kit `stranger`, ending `ending_demo`, decision `none`, `readLog` false, move count 1, start place `saltreach_harbor`, 1,600 coins with the existing `kit_grant` reason). So `GET /api/me` shows `captainName`, `kit` and `place` after the first call, and crews work without Act 1. A GitHub or Google player without Act 1 still gets `409 kit_needed` from `POST /api/crews`. `DELETE /api/me` is never gated, so a guest can always delete their own data. A guest who links GitHub (Supabase `linkIdentity`) keeps the same player id and becomes an ordinary player at the next login check (at most 60 seconds of cache).
+
+| Route | Access and body | Answer |
+|---|---|---|
+| `GET /api/host/demo` | `HostDep` (401 visitor, 403 `forbidden` player) | `{"flagOn":true,"open":true,"openUntil":"2026-11-09T15:00:00Z"}`; read from the database, never the cache |
+| `POST /api/host/demo` | Host; `{"hours":2,"actionUid":"<uuid>"}`, hours a whole number 0 to 6 (0 closes) | `{"flagOn":true,"open":true,"openUntil":"...","repeat":false}`; the window runs from now and replaces any earlier one; a repeated uid changes nothing and answers the current window with `repeat:true`; 422 `validation_error` for anything else |
+| `POST /api/host/demo/cleanup` | Host; `{"actionUid":"<uuid>"}` | `{"checked":57,"deleted":41,"more":false}`: deletes anonymous users older than 24 hours through `delete_player`, at most 100 per call (`more:true`: press again). A user is deleted only if `is_anonymous` is true, it has no e-mail or phone, every identity and provider is `anonymous`, and it is not a host. Safe to repeat; the uid is not stored. |
+| `GET /api/lock` | Login; optional query `name`, `latitude`, `longitude` (all three or none) | The lock view, below |
+| `POST /api/lock/answer` | Login; `{"answer":"cloudy","actionUid":"lock0001","place":{"name":"Lisbon","latitude":38.72,"longitude":-9.14}}`, `place` optional | House answer shape, below |
+| `GET /api/places/search?q=lisb` | Login; `q` 2 to 60 printable characters | `{"places":[{"name":"Lisbon","region":"Lisbon","country":"Portugal","latitude":38.71667,"longitude":-9.13333}],"attribution":"Place search by Open-Meteo.com, data from GeoNames"}`; at most 5; cached 24 hours per text; 503 `places_unavailable` |
+
+The lock view:
+
+```json
+{"question":"What does the sky over Lisbon look like right now?",
+ "note":"This lock uses the real weather of your place right now (Open-Meteo). Your place is used for this question only and is never stored.",
+ "place":{"name":"Lisbon","latitude":38.72,"longitude":-9.14,"source":"ip"},
+ "weatherSource":"live",
+ "choices":[{"id":"clear","label":"Sunny or clear"},{"id":"cloudy","label":"Cloudy"},{"id":"rain","label":"Rain"},{"id":"fog","label":"Fog or mist"},{"id":"snow","label":"Snow"}],
+ "opened":false,"hintReady":false,
+ "attribution":"Weather data by Open-Meteo.com, adapted for the game"}
+```
+
+- `place.source`: `chosen` (the request named it; the browser keeps the "Change place" choice), `ip` (Vercel's `x-vercel-ip-city`, URL-decoded, with `x-vercel-ip-latitude` and `x-vercel-ip-longitude`; a missing city name shows as `your area`) or `default` (the `WEATHER_*` settings place). The place is never stored or logged.
+- `weatherSource`: `live` (a reading at most 10 minutes old, cached per place rounded to 0.1 degree), `cache` (Open-Meteo is down; the last good reading of that place, at most 6 hours old) or `clue` (no reading, or demo mode: the question becomes a riddle with its own four choices and `attribution` is `null`). The reading itself is never sent before an answer.
+- `hintReady` turns true after one wrong answer: then show "That's not what I see outside".
+
+The answer:
+
+```json
+{"accepted":true,"reason":null,"match":"close","message":"Close enough: the reading says Rain, one step from your answer. The lock opens.","lock":{}}
+{"accepted":false,"reason":"wrong","match":null,"message":"Not quite. ...","lock":{}}
+{"accepted":false,"reason":"hint_offered","match":null,"message":"...","prompt":"I looked outside","lock":{}}
+```
+
+`answer` is a choice id of the current question, `hint` or `hint_confirm`; `actionUid` is 8 to 64 of A-Z a-z 0-9 _ -. `match` is `exact`, `close` (one step: clear and cloudy, cloudy and fog, cloudy and rain, fog and rain, rain and snow), `hint` or `clue`. `reason` is `wrong`, `hint_too_early` (`hint` or `hint_confirm` before a wrong answer), `hint_offered` (send `hint_confirm` with a new uid to open the lock) or `question_changed` (the answer belongs to the other question because the weather came or went; it is not a wrong try). The WMO mapping: 0 to 1 clear, 2 to 3 cloudy, 45 and 48 fog, 51 to 67, 80 to 82 and 95 to 99 rain, 71 to 77, 85 and 86 snow. A repeated uid answers its stored verdict first with `repeat:true`; an answer after the lock opened is `accepted:true, alreadyOpen:true` and is not stored. `lock` is the fresh view. Errors: 404 `player_not_set_up`, 409 `too_many_tries` (40 stored answers), 422 `validation_error` (unknown answer id, bad uid or place, extra field), 429 `too_many_requests` (30 lock requests or 10 searches a minute per player and instance, with `Retry-After`), 503 `lock_unavailable`.
+
+**Class harbor.** The demo's shared presence room is `live:place:class_harbor:1`. The existing A4 Realtime policies already accept place rooms by pattern, so the server needs no change; the raised captain limit for that room is a browser setting. The duel shortcut uses the existing named-challenge route (`POST /api/duels` with `opponentName`, `rounds: 3`, `stake: 0`, the sealed signals and an `actionUid`; the opponent answers with `POST /api/duels/{id}/move`). The server has no place rule for duels, so no new duel route is needed; the flag `arena` must be on.
+
+**Not covered by the gate.** Anonymous guests hold Supabase's `authenticated` role. The demo window guards this API only; the existing row-level-security read policies (for example public captain profiles) and the A4 Realtime room policies also admit guests while anonymous sign-in is switched on in Supabase. Switch anonymous sign-in off in the dashboard after the demo.
 
 ## Historical open questions for Mon 9
 

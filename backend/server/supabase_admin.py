@@ -16,6 +16,10 @@ What it does:
   * select_rows(table, query) reads rows from a table
     (GET {SUPABASE_URL}/rest/v1/<table>?<query>). It can only read, never change anything.
     The keep-alive route and routes/me.py use it.
+  * list_auth_users(page, per_page) reads one page of Supabase Auth's user list
+    (GET {SUPABASE_URL}/auth/v1/admin/users). It only reads. The host's "Clean up guests" button
+    (server/demo/guests.py) uses it to find anonymous guests; the deletion itself is the database
+    function delete_player.
 
 Used by: wallet.py, routes/keepalive.py, routes/me.py, and later any server module that must
 change data players may not touch.
@@ -214,6 +218,24 @@ class SupabaseAdmin:
             raise ValueError(f"Not a valid database table name: {table!r}")
         reply = await self._send("GET", f"{self.base_url}/rest/v1/{table}", params=query)
         return read_rows(reply)
+
+    async def list_auth_users(self, page: int, per_page: int) -> list[dict[str, Any]]:
+        """One page of Supabase Auth's users (the admin list). Reads only, never changes anything.
+
+        Pages start at 1. The answer is {"users": [...]}; a page shorter than per_page is the last.
+        """
+        self.check_configured()
+        if not (1 <= page <= 1000 and 1 <= per_page <= 1000):
+            raise ValueError("page and per_page must be from 1 to 1000.")
+        reply = await self._send(
+            "GET",
+            f"{self.base_url}/auth/v1/admin/users",
+            params={"page": str(page), "per_page": str(per_page)},
+        )
+        users = reply.get("users") if isinstance(reply, dict) else None
+        if not isinstance(users, list) or not all(isinstance(user, dict) for user in users):
+            raise SupabaseRejected("The login service sent an answer we could not read.")
+        return users
 
     def check_configured(self) -> None:
         """Stop before any network call if the address or the secret key is missing."""

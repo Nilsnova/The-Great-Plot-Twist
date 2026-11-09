@@ -49,8 +49,9 @@ def test_config_defaults_have_every_flag_switched_off():
         "env": "local",
         "demoMode": False,
         "flags": {name: False for name in FLAG_NAMES},
-        "auth": {"provider": "github", "supabaseUrl": ""},
+        "auth": {"provider": "github", "providers": ["github"], "supabaseUrl": ""},
         "capabilities": {"hostCaseClock": False},
+        "demo": {"open": False, "openUntil": None},
     }
 
 
@@ -68,6 +69,7 @@ def test_config_lists_all_flags_in_the_agreed_order():
         "sign_in",
         "bulletin",
         "festival",
+        "demo",
     ]
 
 
@@ -88,7 +90,25 @@ def test_config_shows_demo_mode_and_the_flags_that_are_on():
 def test_config_tells_the_browser_how_to_sign_in():
     body = make_client(CONFIGURED_SETTINGS).get("/api/config").json()
 
-    assert body["auth"] == {"provider": "github", "supabaseUrl": FAKE_URL}
+    assert body["auth"] == {"provider": "github", "providers": ["github"], "supabaseUrl": FAKE_URL}
+
+
+def test_config_lists_the_sign_in_providers_in_the_order_of_the_setting():
+    settings = replace(CONFIGURED_SETTINGS, auth_providers=("google", "github"))
+
+    auth = make_client(settings).get("/api/config").json()["auth"]
+
+    assert auth["providers"] == ["google", "github"]
+    # The old single field keeps naming GitHub while it is offered, for older pages.
+    assert auth["provider"] == "github"
+
+
+def test_config_names_google_as_the_old_provider_field_when_it_is_the_only_one():
+    settings = replace(CONFIGURED_SETTINGS, auth_providers=("google",))
+
+    auth = make_client(settings).get("/api/config").json()["auth"]
+
+    assert auth == {"provider": "google", "providers": ["google"], "supabaseUrl": FAKE_URL}
 
 
 def test_config_has_an_empty_sign_in_address_while_supabase_is_not_set_up():
@@ -97,11 +117,12 @@ def test_config_has_an_empty_sign_in_address_while_supabase_is_not_set_up():
     assert body["auth"]["supabaseUrl"] == ""
 
 
-def test_config_auth_has_exactly_two_public_fields():
-    # A third field would be a new thing to share with every visitor. Decide that on purpose.
+def test_config_auth_has_exactly_three_public_fields():
+    # A fourth field would be a new thing to share with every visitor. Decide that on purpose.
+    # "providers" was added on purpose for Google sign-in (G29); it lists public names only.
     auth = make_client(CONFIGURED_SETTINGS).get("/api/config").json()["auth"]
 
-    assert list(auth) == ["provider", "supabaseUrl"]
+    assert list(auth) == ["provider", "providers", "supabaseUrl"]
 
 
 def test_config_shares_the_supabase_address_only_inside_auth():
