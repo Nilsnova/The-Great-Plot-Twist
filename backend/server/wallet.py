@@ -12,17 +12,17 @@ single step. This file does two things:
   2. apply_transaction validates, asks the database to do it and returns the new balance.
 
 Every reason has a direction. "earn" adds coins (a positive amount), "spend" takes coins away
-(a negative amount) and "either" may go both ways (only admin_adjust). The list of reasons lives
-in the database table wallet_reasons. WALLET_REASONS below is its copy in Python, and a test
-fails if the two differ. The database checks the direction too, so even a bug here cannot hand
-out coins.
+(a negative amount) and "either" may go both ways (admin_adjust and fresh_start). The list of
+reasons lives in the database table wallet_reasons. WALLET_REASONS below is its copy in Python,
+and a test fails if the two differ. The database checks the direction too, so even a bug here
+cannot hand out coins.
 
 To add a reason, in one pull request: write a migration with one INSERT into wallet_reasons and
 add the same (reason, direction) pair at the END of WALLET_REASONS. Never rename a reason or
 change its direction.
 
 Used by: every feature route that moves coins (the entry kit, rewards, clues, cargo, buildings,
-the Island Exchange, Lantern Duels).
+the Island Exchange, Lantern Duels, the island and its pirate waves).
 
 Example inside a route (a negative number takes coins away, a positive number adds them):
 
@@ -82,6 +82,11 @@ WALLET_REASONS = (
     # Added by supabase/migrations/20261106110000_lantern_duels.sql (Lantern Duels).
     ("arena_stake", SPEND),
     ("arena_payout", EARN),
+    # Added by supabase/migrations/20261110010000_islands_and_waves.sql (islands and pirate waves).
+    # fresh_start is used only by the admin script scripts/admin/fresh_start.sql.
+    ("pirate_loot", EARN),
+    ("starting_coins", EARN),
+    ("fresh_start", EITHER),
 )
 
 

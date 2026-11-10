@@ -83,6 +83,9 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("prediction_payout", "earn"),
         ("arena_stake", "spend"),
         ("arena_payout", "earn"),
+        ("pirate_loot", "earn"),
+        ("starting_coins", "earn"),
+        ("fresh_start", "either"),
     )
 
 
@@ -120,6 +123,9 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "prediction_payout",
         "arena_stake",
         "arena_payout",
+        "pirate_loot",
+        "starting_coins",
+        "fresh_start",
     ]
 
 
@@ -209,6 +215,8 @@ def test_every_spend_reason_is_accepted_with_a_negative_amount(reason):
         "cargo_sale",
         "market_sell",
         "prediction_payout",
+        "pirate_loot",
+        "starting_coins",
     ],
 )
 def test_every_earn_reason_is_accepted_with_a_positive_amount(reason):
@@ -218,6 +226,11 @@ def test_every_earn_reason_is_accepted_with_a_positive_amount(reason):
 @pytest.mark.parametrize("delta", [10, -10])
 def test_admin_adjust_is_accepted_in_both_directions(delta):
     validate_transaction(delta, "admin_adjust", GOOD_REF)
+
+
+@pytest.mark.parametrize("delta", [10, -10])
+def test_fresh_start_is_accepted_in_both_directions(delta):
+    validate_transaction(delta, "fresh_start", GOOD_REF)
 
 
 @pytest.mark.parametrize(
@@ -238,6 +251,8 @@ def test_a_spend_reason_with_a_positive_amount_is_refused(reason):
         "cargo_sale",
         "market_sell",
         "prediction_payout",
+        "pirate_loot",
+        "starting_coins",
     ],
 )
 def test_an_earn_reason_with_a_negative_amount_is_refused(reason):
