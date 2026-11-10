@@ -1217,7 +1217,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `arena` | Lantern Duels, the turn-based arena | A7 |
 | `raid` | the phone class raid | A5, later |
 | `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
-| `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
+| `case` | every case route, including the later world view | **Off.** The mystery left the game on 10 Nov 2026 (D031); the browser no longer calls these routes. Backend removal follows later |
 | `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
