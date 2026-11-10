@@ -83,11 +83,14 @@ The fortune teller shows nothing because all questions in `backend/content/predi
 - [ ] README complete by Fri 20 Nov: deployed URL, every member's name and student number, the install / run / test commands on the first screen.
 - [ ] One member submits the repository link on Moodle by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59; later commits do not count); a named backup can submit if needed. Keep a screenshot of the confirmation.
 
-## 7. Being done by the project owner with Claude (lane 0), for information
+## 7. Lane 0 (project owner with Claude): status on Tue 10 Nov, evening
 
-- The class-code and email-sign-in release: checks running, then live.
-- The mystery leaves the game and the frontend (also the festival, bulletin and rewards pages): in progress. **Merge `main` into your branch once it lands.**
-- Islands and waves server: built; its database part is live. Next: shared loot for friends and Pirate Point, sports with more leagues, the new voiced pirate intro, wiring day (Sat 14 – Sun 15 Nov), the fresh start for all players and the release on Thu 19 Nov.
+**Merge `main` into your branch now:** the mystery is gone from `main` (D031), so files you may have looked at this morning no longer exist.
+
+- **Live:** the class code for guests (D030) and email sign-in (hidden until 4b is done); the mystery, festival, bulletin and rewards pages removed; the islands and waves server (D032) with its database, switched off (flag `islands`) until the pirate frontend is wired in.
+- **Real API ready for wiring:** `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/join`, `/api/waves/current`, `/api/waves/finish` (BUILD-PLAN section 3.4). New players get 100 🪙 when their island opens.
+- **Next:** the new voiced pirate intro, the wiring day (Sat 14 – Sun 15 Nov), the fresh start for all players and the release on Thu 19 Nov.
+- **Known gaps:** a brand-new player has 0 🪙 until their island opens (the wiring fixes it); football shows no matches during the international break (back around 21 Nov); the prediction questions all settle after the deadline (lane H task H3 picks short-term ones).
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
