@@ -282,6 +282,10 @@ After applying it, the three quick checks below show two more tables, two more p
 
 It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `fresh_start` either) and replaces the check rule `islet_buildings_plot_fits_building` with one that lists the four home islet pairs and the eleven island spots; existing rows keep passing. The island's builds go through `islet_build()` with a timber price of 0. The opt-in SQL checks are `backend/server/tests/island_sql/` (`CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql`). The fresh start of the redesign is `scripts/admin/fresh_start.sql`: not a migration, a dry run until its `c_apply` constant is switched, run once by the owner.
 
+## The shared waves migration
+
+`migrations/20261110020000_wave_crews.sql` (lane 0, task 0.4) builds on the islands and waves migration without editing it. It adds `wave_participants` (one row per player in a wave, with their own result and loot; RLS on, no policy, no browser grant), the column `wave_runs.flag_counted`, and the functions `wave_join()` (join a running wave, safe to repeat) and `wave_current()` (the running wave of an island or Pirate Point, or null). It replaces `wave_start()` (same arguments; the bell-ringer becomes the first participant) and drops the 7-argument `wave_finish()` for an 8-argument one (`p_point_loot_base`): every participant finishes for themselves, ledger ref `wave:<id>:<player>`; the first finish closes the wave run; the best wave and one flag count once (`flag_counted`). It backfills every existing wave with its bell-ringer as participant. Until the new server code is deployed, `POST /api/waves/finish` of an older server fails; the flag `islands` stays off until then.
+
 ## Apply the migration
 
 Use one way. The file is safe to run twice, so nothing breaks if you run it again.
@@ -474,6 +478,11 @@ The three actors, and the database role behind each:
 | `wave_runs` | update | no access | no access | yes (through `wave_start()` and `wave_finish()`) |
 | `wave_runs` | delete | no access | no access | no access (deleted with its player or island, by cascade) |
 | `island_open()`, `wave_start()`, `wave_finish()` | run | no access | no access | yes |
+| `wave_participants` | read | no access | no access | yes |
+| `wave_participants` | insert | no access | no access | yes (through `wave_start()` and `wave_join()`) |
+| `wave_participants` | update | no access | no access | yes (through `wave_finish()`) |
+| `wave_participants` | delete | no access | no access | no access (deleted with its player or wave, by cascade) |
+| `wave_join()`, `wave_current()` | run | no access | no access | yes |
 
 | `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
 | `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |

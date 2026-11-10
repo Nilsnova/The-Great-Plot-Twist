@@ -15,7 +15,7 @@ puts every coin on one small scale. The numbers live in `backend/content/islands
 |---|---|---|
 | Starting coins | 100 | `island_open()`: once, only to a wallet that never moved (`starting_coins`); guests: the guest kit pays 100; existing players: `scripts/admin/fresh_start.sql` (`fresh_start`) |
 | Wall / cannon / watchtower / house | 10 / 30 / 40 / 50 | `islet_build()` with the price from `islands.json`, coins only (`building_purchase`) |
-| Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house on that island | `wave_finish()`: computed in the database, a lost or expired wave pays 0 (`pirate_loot`, once per wave) |
+| Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house on that island; Pirate Point 20 + 5 × *n* | `wave_finish()`: computed in the database for each participant, once per player and wave; a lost or late finish pays 0 (`pirate_loot`) |
 | Harbor stakes, duel stake | 5, 10 or 25; 0 or 10 | lane H (not changed by this entry) |
 
 Abuse bounds of the waves: the browser reports `survived`, so the server bounds what it

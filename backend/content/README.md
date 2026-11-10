@@ -596,7 +596,7 @@ The numbers of the island game (docs/BUILD-PLAN.md sections 3.2 to 3.4, decision
 | `startingCoins` | Coins a brand-new captain gets once (100). Also the guest coins (`GUEST_COINS` in `server/demo/guests.py`, checked by a test). |
 | `kinds` | `[{kind, name, coins}]`: the four kinds (`wall` 10, `cannon` 30, `watchtower` 40, `house` 50), whole coins from 1 to 1,000,000. No two share a `kind`. |
 | `spots` | `[{id, kind}]` in the order `GET /api/island` shows them: `wall_1`..`wall_4`, `cannon_1`..`cannon_4`, `tower_1`, `house_1`, `house_2`. Each `kind` must be in `kinds`; ids are unique. A new spot also needs a new migration that widens the check rule `islet_buildings_plot_fits_building`. |
-| `loot` | `{base, perWave, perHouse}`: a survived wave *n* pays `base + perWave * n + perHouse * houses` (10, 5, 5). |
+| `loot` | `{base, perWave, perHouse, piratePointBase}`: a survived wave *n* pays each participant `base + perWave * n + perHouse * houses` (10, 5, 5) on an island, `piratePointBase + perWave * n` (20, 5) on Pirate Point. |
 | `waves` | `{countdownSeconds, minimumSeconds, maximumSeconds, highestWave}`: 10 s from the bell to the ships, no finish earlier than 15 s after that, a wave is over after 900 s, at most wave 50. |
 | `weather` | One entry per weather state (`storm`, `fog`, `rain`, `calm`): `{kind, label, ships, fog}`. `ships` 0.5 to 3, `fog` 0 to 1. Storm 1.5 / 0, fog 1.0 / 0.4, the others 1.0 / 0. |
 

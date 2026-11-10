@@ -1,28 +1,27 @@
 """The wave service: ring the bell and finish a wave, for routes/waves.py.
 
     start()    a new wave on your own island, on a friend's island (by code) or on Pirate Point
-    finish()   the result of a wave: the loot, the coins, the best wave and the flags
+    join()     join a running wave, so a friend or a Pirate Point captain fights it too
+    current()  the running wave of an island or of Pirate Point, or None
+    finish()   one participant's result: their own loot, the coins, the best wave and the flags
 
-The weather of a wave is the real weather of the default place (the place of GET /api/weather,
-WEATHER_PLACE_NAME in the settings), through the same cached source and the same state rules: a
-storm brings 1.5 times the ships, fog hides them (0.4), anything else changes nothing. A weather
-source that is down, or a rules file that cannot be read, never stops a wave: it is calm then.
+The weather of a new wave comes from wave_weather.py (the bell-ringer's area, else the default
+place, else calm); a joined or current wave carries the weather stored with it. A Pirate Point wave
+says flagship: true, so the client shows the flagship that only the three lamps can sink.
 
-The database decides everything that depends on time and on other players (wave_start and
-wave_finish, see store.py): one running wave per island, the wave number, the countdown, the
-minimum and maximum length, the loot cap and the payment.
+The database decides everything that depends on time and on other players (wave_start, wave_join,
+wave_current and wave_finish, see store.py): one running wave per island, who is in a wave, the
+wave number, the countdown, the minimum and maximum length, each player's loot and payment.
 
 Used by: routes/waves.py and the tests.
 """
 
-import logging
 import secrets
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from server.adapters.base import CachedSource
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island import store
@@ -30,13 +29,8 @@ from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import weather_for
 from server.island.service import no_such_island
-from server.island.store import Refusal
+from server.island.store import Refusal, WaveRow
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
-from server.weather.mapping import map_reading
-from server.weather.state_rules import StateRules
-from server.weather.states import state_of
-
-logger = logging.getLogger(__name__)
 
 OWN = "own"
 PIRATE_POINT = "pirate_point"
@@ -46,11 +40,14 @@ SEED_LIMIT = 2**31
 
 @dataclass(frozen=True)
 class WaveStart:
+    """A wave as start, join and current answer it."""
+
     wave_id: UUID
     wave: int
     seed: int
     starts_at: datetime
     weather: Weather
+    flagship: bool  # True on Pirate Point: the flagship only the three lamps can sink
 
 
 @dataclass(frozen=True)
@@ -59,20 +56,6 @@ class WaveFinish:
     coins: int
     wave_best: int
     flags: int
-
-
-async def current_weather(
-    catalogue: IslandCatalogue, source: CachedSource, state_rules: StateRules | None
-) -> Weather:
-    """What the real weather does to the pirates now. Never raises: calm when it cannot tell."""
-    state = None
-    try:
-        result = await source.get()
-        if state_rules is not None:
-            state = state_of(map_reading(result.data.reading), state_rules)
-    except Exception as error:  # the weather must never stop a wave, whatever went wrong
-        logger.warning("Wave weather unavailable (%s); the sea is calm.", type(error).__name__)
-    return weather_for(catalogue, state)
 
 
 async def find_place(
@@ -128,21 +111,54 @@ async def start(
     reply = await store.start_wave(admin, arguments)
     if isinstance(reply, Refusal):
         raise start_refusal(reply)
-    # A repeat carries the weather stored with the wave, which may differ from the weather now.
-    stored = weather_for(catalogue, reply.weatherKind)
-    wave_weather = Weather(stored.kind, stored.label, reply.ships, reply.fog)
-    return WaveStart(reply.waveId, reply.wave, reply.seed, reply.startsAt, wave_weather)
+    return wave_of(catalogue, reply)
+
+
+def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
+    """The wave of a database answer, with the weather stored with it (which may differ from the
+    weather now)."""
+    stored = weather_for(catalogue, row.weatherKind)
+    weather = Weather(stored.kind, stored.label, row.ships, row.fog)
+    flagship = row.place == PIRATE_POINT
+    return WaveStart(row.waveId, row.wave, row.seed, row.startsAt, weather, flagship)
+
+
+async def join(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, wave_id: UUID
+) -> WaveStart:
+    """Join a running wave (a friend's island or Pirate Point). Safe to repeat."""
+    reply = await store.join_wave(admin, player_id, str(wave_id))
+    if isinstance(reply, Refusal):
+        if reply.reason == "no_such_wave":
+            raise no_such_wave()
+        if reply.reason == "wave_over":
+            raise ApiError(409, "wave_over", "This wave is over. Ring the bell for the next one.")
+        if reply.reason == "player_not_set_up":
+            raise player_not_set_up()
+        raise SupabaseRejected()
+    return wave_of(catalogue, reply)
+
+
+async def current(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, where: str
+) -> WaveStart | None:
+    """The running wave of "own", an island code or Pirate Point, or None."""
+    place, owner = await find_place(admin, catalogue, player_id, where)
+    row = await store.current_wave(admin, place, owner)
+    return None if row is None else wave_of(catalogue, row)
+
+
+def no_such_wave() -> ApiError:
+    return ApiError(404, "no_such_wave", "There is no such wave.")
 
 
 def finish_refusal(refusal: Refusal) -> ApiError:
     if refusal.reason == "player_not_set_up":
         return player_not_set_up()
     if refusal.reason == "no_such_wave":
-        return ApiError(404, "no_such_wave", "There is no such wave.")
-    if refusal.reason == "not_your_wave":
-        return ApiError(
-            403, "not_your_wave", "Only the captain who rang the bell can end this wave."
-        )
+        return no_such_wave()
+    if refusal.reason == "not_in_wave":
+        return ApiError(403, "not_in_wave", "Join the wave first: you are not in this wave.")
     if refusal.reason == "too_early":
         wait = max(1, refusal.wait_seconds)
         message = f"The wave is not over yet. Try again in {wait} seconds."
@@ -158,7 +174,7 @@ async def finish(
     survived: bool,
     ships_sunk: int,
 ) -> WaveFinish:
-    """End a wave. A repeat answers with the stored result and pays nothing more."""
+    """End this player's part of a wave. A repeat answers the stored result and pays nothing."""
     loot = catalogue.loot
     arguments = {
         "p_player_id": player_id,
@@ -168,6 +184,7 @@ async def finish(
         "p_loot_base": loot.base,
         "p_loot_per_wave": loot.per_wave,
         "p_loot_per_house": loot.per_house,
+        "p_point_loot_base": loot.pirate_point_base,
     }
     reply = await store.finish_wave(admin, arguments)
     if isinstance(reply, Refusal):

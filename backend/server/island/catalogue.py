@@ -56,6 +56,7 @@ class Loot:
     base: int  # loot for surviving wave n: base + per_wave * n + per_house * houses
     per_wave: int
     per_house: int
+    pirate_point_base: int  # the base on Pirate Point, where there are no houses
 
 
 @dataclass(frozen=True)
@@ -172,6 +173,7 @@ def read_loot(data: dict) -> Loot:
         base=read_whole(entry, "base", "loot", 0, 1000),
         per_wave=read_whole(entry, "perWave", "loot", 0, 1000),
         per_house=read_whole(entry, "perHouse", "loot", 0, 1000),
+        pirate_point_base=read_whole(entry, "piratePointBase", "loot", 0, 1000),
     )
 
 

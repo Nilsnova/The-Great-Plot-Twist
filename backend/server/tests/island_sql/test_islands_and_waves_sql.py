@@ -1,4 +1,6 @@
-"""Real SQL checks for 20261110010000_islands_and_waves.sql and scripts/admin/fresh_start.sql.
+"""Real SQL checks for 20261110010000_islands_and_waves.sql, 20261110020000_wave_crews.sql (the
+replaced wave_start and wave_finish; the shared-wave checks are in test_wave_crews_sql.py) and
+scripts/admin/fresh_start.sql.
 
 Opt-in, on a disposable local PostgreSQL that the case_sql fixture builds (all migrations, applied
 twice). Run from backend/:
@@ -26,7 +28,7 @@ FRESH_START = ROOT / "scripts" / "admin" / "fresh_start.sql"
 OWNER = UUID(int=921)
 FRIEND = UUID(int=922)
 VETERAN = UUID(int=923)  # a player whose wallet moved before (an entry kit)
-LOOT = (10, 5, 5)  # islands.json: base, perWave, perHouse
+LOOT = (10, 5, 5, 20)  # islands.json: base, perWave, perHouse, Pirate Point base
 TIMING = (10, 15, 900, 50)  # countdown, minimum, maximum, highest wave
 
 
@@ -83,7 +85,7 @@ def finish(database, player, wave_id, survived=True, sunk=7):
     as_server(database)
     return call(
         database,
-        "select public.wave_finish(%s, %s, %s, %s, %s, %s, %s)",
+        "select public.wave_finish(%s, %s, %s, %s, %s, %s, %s, %s)",
         player,
         wave_id,
         survived,
@@ -290,7 +292,7 @@ def test_a_survived_wave_pays_the_capped_loot_once_and_counts_a_flag(database):
         "repeat": False,
     }
     assert repeat == {**done, "repeat": True}
-    assert ledger(database, OWNER, "pirate_loot") == [(20, f"wave:{wave['waveId']}")]
+    assert ledger(database, OWNER, "pirate_loot") == [(20, f"wave:{wave['waveId']}:{OWNER}")]
 
 
 def test_the_next_wave_is_one_stronger_after_a_win(database):
@@ -330,7 +332,7 @@ def test_a_finish_after_the_maximum_length_pays_nothing(database):
     assert (late["loot"], late["survived"], late["expired"]) == (0, False, True)
 
 
-def test_only_the_player_who_rang_the_bell_may_finish(database):
+def test_only_a_participant_may_finish(database):
     add_players(database, OWNER, FRIEND)
     open_island(database, OWNER, "K7Q2M")
     wave = start(database, OWNER, "bell-0001", owner=OWNER)
@@ -338,7 +340,7 @@ def test_only_the_player_who_rang_the_bell_may_finish(database):
 
     assert finish(database, FRIEND, wave["waveId"]) == {
         "status": "refused",
-        "reason": "not_your_wave",
+        "reason": "not_in_wave",
     }
     assert finish(database, OWNER, uuid4()) == {"status": "refused", "reason": "no_such_wave"}
 
@@ -356,7 +358,7 @@ def test_a_friend_who_defends_an_island_gets_the_loot_and_the_island_the_flag(da
     assert balance(database, OWNER) == 100
 
 
-def test_pirate_point_counts_its_own_best_wave_and_pays_no_house_loot(database):
+def test_pirate_point_counts_its_own_best_wave_and_pays_its_own_base_and_no_house_loot(database):
     add_players(database, OWNER)
     open_island(database, OWNER, "K7Q2M")
     build(database, OWNER, "house_1", "house", "island:click-0001", coins=50)
@@ -365,7 +367,7 @@ def test_pirate_point_counts_its_own_best_wave_and_pays_no_house_loot(database):
 
     done = finish(database, OWNER, wave["waveId"])
 
-    assert (done["loot"], done["waveBest"], done["flags"]) == (15, 1, 1)
+    assert (done["loot"], done["waveBest"], done["flags"]) == (25, 1, 1)  # 20 + 5 x wave 1
     assert start(database, OWNER, "bell-0002", place="pirate_point")["wave"] == 2
 
 
@@ -384,7 +386,8 @@ def test_no_browser_role_may_read_the_tables_or_run_the_functions(database):
                  'public.wave_start(uuid, text, text, uuid, integer, integer, integer, integer,
                                     integer, text, numeric, numeric)', 'execute'),
                has_function_privilege('authenticated',
-                 'public.wave_finish(uuid, uuid, boolean, integer, integer, integer, integer)',
+                 'public.wave_finish(uuid, uuid, boolean, integer, integer, integer, integer,
+                                     integer)',
                  'execute')
         """
     ).fetchone()

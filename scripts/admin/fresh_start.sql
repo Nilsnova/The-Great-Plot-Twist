@@ -14,7 +14,8 @@
 --     3. removes every building from islet_buildings except cabins (the cabin
 --        stands from the start and has no row anyway),
 --     4. sets the best wave and the flags of every island to 0, and
---     5. removes every wave run (so Pirate Point starts again at wave 1 too).
+--     5. removes every wave run (so Pirate Point starts again at wave 1 too);
+--        their participants (wave_participants, 20261110020000) go with them.
 --
 -- THIS IS NOT A MIGRATION
 --   It lives outside supabase/migrations/ on purpose: it is run by hand, once,

@@ -6,6 +6,7 @@ here fails if islands.json drifts from the contract the frontend lanes build aga
 Used by: pytest (cd backend && uv run pytest).
 """
 
+import hashlib
 import json
 import re
 
@@ -19,6 +20,7 @@ from server.tests.helpers import REPO_ROOT
 from server.wallet import find_direction
 
 MIGRATION = REPO_ROOT / "supabase" / "migrations" / "20261110010000_islands_and_waves.sql"
+CREWS = REPO_ROOT / "supabase" / "migrations" / "20261110020000_wave_crews.sql"
 
 
 def write_island(tmp_path, change):
@@ -150,10 +152,10 @@ def migration_text() -> str:
     return MIGRATION.read_text()
 
 
-def declared_parameters(function_name: str) -> list[str]:
+def declared_parameters(function_name: str, text: str | None = None) -> list[str]:
     match = re.search(
         rf"create or replace function public\.{function_name}\((.*?)\)\s*returns",
-        migration_text(),
+        migration_text() if text is None else text,
         re.DOTALL,
     )
     assert match, function_name
@@ -199,3 +201,28 @@ def test_the_weather_kinds_and_the_seed_fit_the_table_rules():
 
     assert "weather_kind in ('storm', 'fog', 'rain', 'calm')" in text
     assert SEED_LIMIT == 2**31  # the seed column is an integer from 0 to 2147483647
+
+
+def test_the_shared_wave_functions_take_exactly_the_arguments_the_server_sends():
+    text = CREWS.read_text()
+
+    assert declared_parameters("wave_join", text) == ["p_player_id", "p_wave_id"]
+    assert declared_parameters("wave_current", text) == ["p_place", "p_island_owner"]
+    assert declared_parameters("wave_finish", text) == [
+        "p_player_id", "p_wave_id", "p_survived", "p_ships_sunk",
+        "p_loot_base", "p_loot_per_wave", "p_loot_per_house", "p_point_loot_base",
+    ]  # fmt: skip
+    assert declared_parameters("wave_start", text) == declared_parameters("wave_start")
+    assert "'pirate_loot',\n        'wave:' || v_run.id::text || ':' || p_player_id::text" in text
+
+
+def test_the_shared_waves_do_not_change_the_applied_migration():
+    # 20261110010000 is applied live; its bytes must never change (md5 of the applied file).
+    assert hashlib.md5(MIGRATION.read_bytes()).hexdigest() == "79278156e4925b2d39076722c11d2f00"
+
+
+def test_pirate_point_pays_its_own_base_and_no_houses():
+    loot = load_island().loot
+
+    assert loot.pirate_point_base == 20
+    assert rules.loot_cap(loot, 1, 2, pirate_point=True) == 25

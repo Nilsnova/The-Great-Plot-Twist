@@ -85,6 +85,7 @@ from server.world_stage import WorldStageReader
 ISLAND_BUILDS_PER_MINUTE = 30
 ISLAND_VISITS_PER_MINUTE = 30
 WAVE_CALLS_PER_MINUTE = 20
+WAVE_READS_PER_MINUTE = 30
 
 
 def new_fastapi_app(settings: Settings) -> FastAPI:
@@ -232,7 +233,7 @@ def create_app(
     app.state.place_search = place_search
     app.state.lock_budget = PlayerBudget(30, 60, clock=clock)
     app.state.search_budget = PlayerBudget(10, 60, clock=clock)
-    # The island and its waves (BUILD-PLAN 3.4): the catalogue (islands.json) and three budgets.
+    # The island and its waves (BUILD-PLAN 3.4): the catalogue (islands.json) and four budgets.
     app.state.island = island_catalogue
     app.state.island_build_budget = PlayerBudget(
         ISLAND_BUILDS_PER_MINUTE, 60, clock=clock, message="Too many builds at once. Wait a moment."
@@ -242,6 +243,9 @@ def create_app(
     )
     app.state.wave_budget = PlayerBudget(
         WAVE_CALLS_PER_MINUTE, 60, clock=clock, message="Too many bells at once. Wait a moment."
+    )
+    app.state.wave_read_budget = PlayerBudget(
+        WAVE_READS_PER_MINUTE, 60, clock=clock, message="Too many wave checks. Wait a moment."
     )
 
     register_error_handlers(app)

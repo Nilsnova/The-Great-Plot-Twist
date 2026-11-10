@@ -21,7 +21,7 @@
     { "id": "house_1", "kind": "house" },
     { "id": "house_2", "kind": "house" }
   ],
-  "loot": { "base": 10, "perWave": 5, "perHouse": 5 },
+  "loot": { "base": 10, "perWave": 5, "perHouse": 5, "piratePointBase": 20 },
   "waves": {
     "countdownSeconds": 10,
     "minimumSeconds": 15,

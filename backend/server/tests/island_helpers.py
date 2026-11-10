@@ -9,6 +9,9 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/islet_build                     the build (build_reply: JSON or an httpx.Response)
   * GET islands, GET profiles                a visit by code and the owner's captain name
   * POST rpc/wave_start, rpc/wave_finish     start_reply and finish_reply
+  * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
+
+FakePlaceWeather stands in for the Keeper's Lock weather of a place (the bell-ringer's area).
 
 The login check knows a GitHub player, a friend and a guest (anonymous). Nothing uses the network.
 
@@ -67,6 +70,7 @@ STARTED = {
     "weatherKind": "calm",
     "ships": 1.0,
     "fog": 0,
+    "place": "island",
     "repeat": False,
 }
 FINISHED = {
@@ -122,6 +126,8 @@ class FakeIslandDatabase:
         }
         self.start_reply: dict | httpx.Response = STARTED
         self.finish_reply: dict | httpx.Response = FINISHED
+        self.join_reply: dict | httpx.Response = {**STARTED, "status": "joined"}
+        self.current_reply: dict | None = None
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -136,6 +142,8 @@ class FakeIslandDatabase:
             "GET /profiles": self.read_name,
             "POST /rpc/wave_start": lambda _: self.answer(self.start_reply),
             "POST /rpc/wave_finish": lambda _: self.answer(self.finish_reply),
+            "POST /rpc/wave_join": lambda _: self.answer(self.join_reply),
+            "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
         }
         return handlers[route](request)
 
@@ -176,6 +184,18 @@ class FakeIslandDatabase:
         return [f"{r.method} {r.url.path.removeprefix('/rest/v1')}" for r in self.requests]
 
 
+class FakePlaceWeather:
+    """The weather of a chosen place: a reading, or None (nothing usable). Records each ask."""
+
+    def __init__(self, reading: WeatherReading | None = None) -> None:
+        self.reading_now = reading
+        self.asked: list[tuple[float, float]] = []
+
+    async def reading(self, latitude: float, longitude: float) -> SimpleNamespace | None:
+        self.asked.append((latitude, longitude))
+        return None if self.reading_now is None else SimpleNamespace(reading=self.reading_now)
+
+
 def login(request: httpx.Request) -> httpx.Response:
     user = USERS.get(request.headers["authorization"])
     if user is None:
@@ -194,14 +214,25 @@ async def nothing_to_provision(admin: SupabaseAdmin, player_id: str) -> None:
 class World:
     """One test world: the app, a client, the fake database and the fake weather."""
 
-    def __init__(self, settings=ISLAND_SETTINGS, weather: WeatherReading | None = CALM) -> None:
+    def __init__(
+        self,
+        settings=ISLAND_SETTINGS,
+        weather: WeatherReading | None = CALM,
+        local_weather: WeatherReading | None = None,
+    ) -> None:
         self.database = FakeIslandDatabase()
         self.weather = FakeWeather(weather)
+        self.local_weather = FakePlaceWeather(local_weather)
         self.clock = FakeClock()
         admin = SupabaseAdmin(FAKE_URL, FAKE_SECRET_KEY, httpx.MockTransport(self.database))
         verifier = PlayerVerifier(settings, transport=httpx.MockTransport(login), clock=self.clock)
         self.app = create_app(
-            settings, verifier, admin, weather_source=self.weather, clock=self.clock
+            settings,
+            verifier,
+            admin,
+            weather_source=self.weather,
+            clock=self.clock,
+            lock_weather=self.local_weather,
         )
         # A guest admitted with the class code, without the class code's own database calls.
         self.app.state.demo_gate = DemoGate(
@@ -224,6 +255,14 @@ class World:
         request = {"where": "own", "actionUid": "bell-0001"}
         request.update(body)
         return self.client.post("/api/waves/start", json=request, headers=headers)
+
+    def join(self, headers=PLAYER, **body) -> httpx.Response:
+        request = {"waveId": WAVE_ID}
+        request.update(body)
+        return self.client.post("/api/waves/join", json=request, headers=headers)
+
+    def current(self, where: str = "own", headers=PLAYER) -> httpx.Response:
+        return self.client.get("/api/waves/current", params={"where": where}, headers=headers)
 
     def finish(self, headers=PLAYER, **body) -> httpx.Response:
         request = {"waveId": WAVE_ID, "survived": True, "shipsSunk": 7}

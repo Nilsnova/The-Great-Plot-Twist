@@ -97,8 +97,11 @@ def spot_taken(catalogue: IslandCatalogue, spot: Spot) -> BuildRefused:
     return BuildRefused(409, "spot_taken", f"{name} already stands on this spot.")
 
 
-def loot_cap(loot: Loot, wave: int, houses: int) -> int:
-    """The loot for surviving wave `wave` with `houses` houses: 10 + 5 x wave + 5 x houses."""
+def loot_cap(loot: Loot, wave: int, houses: int, pirate_point: bool = False) -> int:
+    """The loot for surviving wave `wave`: 10 + 5 x wave + 5 x houses on an island, and
+    20 + 5 x wave on Pirate Point (which has no houses)."""
+    if pirate_point:
+        return loot.pirate_point_base + loot.per_wave * wave
     return loot.base + loot.per_wave * wave + loot.per_house * houses
 
 

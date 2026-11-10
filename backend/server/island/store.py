@@ -7,7 +7,9 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
 
     island_open(player, code, startingCoins)   the island with its code, and the starting coins
     wave_start(...)                            ring the bell; one running wave per island
-    wave_finish(...)                           the result, the loot, the best wave and the flags
+    wave_join(player, wave)                    join a running wave (20261110020000_wave_crews.sql)
+    wave_current(place, owner)                 the running wave of an island, or null
+    wave_finish(...)                           one participant's result, loot, best wave, flags
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -60,8 +62,10 @@ class NameRow(BaseModel):
     display_name: StrictStr
 
 
-class StartedRow(BaseModel):
-    status: Literal["started"]
+class WaveRow(BaseModel):
+    """A wave as wave_start, wave_join and wave_current answer it."""
+
+    status: Literal["started", "joined", "running"]
     waveId: UUID
     wave: StrictInt
     seed: StrictInt
@@ -69,7 +73,8 @@ class StartedRow(BaseModel):
     weatherKind: StrictStr
     ships: float
     fog: float
-    repeat: StrictBool
+    place: Literal["island", "pirate_point"]
+    repeat: StrictBool = False
 
 
 class FinishedRow(BaseModel):
@@ -191,10 +196,22 @@ def refusal_or_none(reply: object) -> Refusal | None:
     return None
 
 
-async def start_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> StartedRow | Refusal:
-    """Run wave_start. The arguments are built by service.py with the names of the SQL."""
+async def start_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> WaveRow | Refusal:
+    """Run wave_start. The arguments are built by waves.py with the names of the SQL."""
     reply = await admin.call_function("wave_start", arguments)
-    return refusal_or_none(reply) or read_model(StartedRow, reply)
+    return refusal_or_none(reply) or read_model(WaveRow, reply)
+
+
+async def join_wave(admin: SupabaseAdmin, player_id: str, wave_id: str) -> WaveRow | Refusal:
+    """Run wave_join: the player joins a running wave (safe to repeat)."""
+    reply = await admin.call_function("wave_join", {"p_player_id": player_id, "p_wave_id": wave_id})
+    return refusal_or_none(reply) or read_model(WaveRow, reply)
+
+
+async def current_wave(admin: SupabaseAdmin, place: str, owner: str | None) -> WaveRow | None:
+    """Run wave_current: the running wave of an island or Pirate Point, or None."""
+    reply = await admin.call_function("wave_current", {"p_place": place, "p_island_owner": owner})
+    return None if reply is None else read_model(WaveRow, reply)
 
 
 async def finish_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> FinishedRow | Refusal:

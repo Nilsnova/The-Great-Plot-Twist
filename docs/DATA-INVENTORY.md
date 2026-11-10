@@ -311,10 +311,11 @@ Purpose: Every pirate wave a player started, on an island or on Pirate Point, so
 | `action_uid` | The retry identity of the bell click, scoped to the player. |
 | `created_at` | Database time of the bell. |
 | `expired` | Whether the wave was closed because nobody finished it in time. |
+| `flag_counted` | Whether the wave's one best wave and flag were counted (at the first survived finish). |
 | `finished_at` | When the wave was finished or closed. |
 | `id` | The wave id; the loot's ledger ref is `wave:<id>`. |
 | `island_owner` | The owner of the island the wave was fought on; empty on Pirate Point. |
-| `loot` | Play coins paid for the wave (capped by the wave number and the houses). |
+| `loot` | Play coins paid to the first player who finished the wave (each participant's own loot is in wave_participants). |
 | `maximum_seconds` | After this long the wave is over and pays nothing. |
 | `minimum_seconds` | A finish earlier than this after the countdown is refused. |
 | `place` | `island` or `pirate_point`. |
@@ -324,9 +325,24 @@ Purpose: Every pirate wave a player started, on an island or on Pirate Point, so
 | `starts_at` | When the ships come (the bell plus the countdown). |
 | `survived` | Whether the island held, as the player's browser reported it. |
 | `wave` | The wave number. |
-| `weather_fog` | How much fog hid the ships (from the real weather of the game's default place, not the player's location). |
+| `weather_fog` | How much fog hid the ships (from the real weather where the bell was rung, else the game's default place; the place itself is never stored). |
 | `weather_kind` | The weather state at the start: storm, fog, rain or calm. |
 | `weather_ships` | How many ships compared with calm weather. |
+
+### public.wave_participants
+
+Purpose: Every player in a pirate wave (the bell-ringer and everyone who joined), so each gets their own capped loot once. Readers: Server only (no browser policy); a player sees their own result through the wave routes. Lifetime: Removed with the player, or with the wave run; the fresh-start admin script removes every wave run and so these rows too.
+
+| Column | What it holds and why |
+|---|---|
+| `expired` | Whether the player finished too late and so got nothing. |
+| `finished_at` | When the player finished their part. |
+| `joined_at` | When the player rang the bell or joined. |
+| `loot` | Play coins paid to this player for the wave. |
+| `player_id` | The participant's player UUID. |
+| `ships_sunk` | Ships sunk, as this player's browser reported it. |
+| `survived` | Whether the island held, as this player's browser reported it. |
+| `wave_id` | The wave. |
 
 ### public.board_pins
 

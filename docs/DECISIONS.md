@@ -537,7 +537,9 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Why:** The server keeps the rules it can check (who, when, how much), and the browsers run the same deterministic simulation from one seed, so friends see the same wave without a server game loop. The browser's `survived` cannot be proven; the loot cap, the minimum length, one wave at a time and the per-player budget bound what a cheat can earn to small play-money amounts. Reusing `islet_build()` keeps one audited money path for buildings.
 
-**Limits:** Only the bell-ringer gets the loot; shared loot for friends and the class battle (task 0.4) come later. The first cannon of the pitch's "first 3 minutes" is not free: it costs 30 like every cannon (BUILD-PLAN 3.2 is the contract). Budgets hold per server instance. The weather is the game's default place, not each owner's own location.
+**Shared waves (task 0.4, migration `20261110020000_wave_crews.sql`):** friends join a running wave (`POST /api/waves/join`, found with `GET /api/waves/current`), and every participant finishes for themselves with their own loot (Pirate Point base 20 instead of 10, and `flagship: true`). The first finish closes the wave for new joins; the island's best wave and one flag count once, at the first survived finish. The weather comes from the bell-ringer's area (Vercel geo headers, never stored), else the default place, else calm.
+
+**Limits:** The flagship and the three lamps are drawn and decided in the browsers; the server only flags the wave. The first cannon of the pitch's "first 3 minutes" is not free: it costs 30 like every cannon (BUILD-PLAN 3.2 is the contract). Budgets hold per server instance. The weather follows whoever rings the bell, not the island owner, because the server stores no place.
 
 ## D030 · Class code instead of the demo window · 2026-11-09
 
