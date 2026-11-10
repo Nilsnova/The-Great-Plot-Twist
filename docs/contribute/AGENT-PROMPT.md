@@ -7,18 +7,20 @@ I am <YOUR NAME>, a member of the team behind "The Great Plot Twist" (Nova SBE, 
 
 READ FIRST, in this order, and do not change anything yet:
 1. AGENTS.md and CONTRIBUTING.md (team rules; they win over anything below).
-2. docs/FINAL-ROADMAP.md: the grading criteria, the phases and the task board with IDs (A1, B3, ...).
-3. docs/OPEN-TODOS.md and docs/STATUS.md ("Right now") for the current state.
-4. docs/ARCHITECTURE.md and docs/ENGINEERING.md section 3 (commands).
+2. docs/PITCH.md (what the game is now) and docs/BUILD-PLAN.md (the lanes P, H, U and 0, the shared contracts, the task IDs P1, H2, U3, ...).
+3. docs/FINAL-ROADMAP.md: the grading criteria and the extra tasks A, D, E and F.
+4. docs/OPEN-TODOS.md and docs/STATUS.md ("Right now") for the current state.
+5. docs/ARCHITECTURE.md and docs/ENGINEERING.md section 3 (commands).
 
 THEN PICK A TASK:
 - Run `git fetch --all` and list remote branches and open pull requests. A task is taken if a branch or PR contains its ID.
-- Choose the highest-value open task (★★★ first, groups A and B first) that fits in one or two working sessions. Ask me if two tasks look equally good.
+- Ask me which lane I chose (P, H or U in BUILD-PLAN.md). Choose the highest-value open task in that lane (★★★ first; lane 0 is the project owner's) that fits in one or two working sessions. Ask me if two tasks look equally good.
 - Before writing any code, show me: the task ID and title, why it has the highest value now, the files you expect to touch, your plan in at most 8 steps, the tests or evidence that will prove it is done, and what could break. Wait for my OK.
 
 HOW TO WORK (after my OK):
 - Make sure git uses MY identity (`git config user.name` and `user.email`); the commits must be mine. If they are not, stop and tell me.
 - Branch from current main: `<type>/<task-id>-<short-topic>`, e.g. `feat/b3-feedback-audit`. Push it right away and open a DRAFT pull request titled `[<ID>] <title>` to claim the task.
+- Stay inside your lane's folders and the contracts in BUILD-PLAN.md section 3; use the fakes until the real API exists.
 - Smallest understandable change. One task per branch. Keep the pull request under about 400 changed lines of code; split bigger work.
 - Simplicity is a goal: prefer deleting or merging code to adding new layers. No new npm or Python packages, no new external services, no new accounts.
 - Never: commit or print keys, tokens or passwords; touch .env; apply database migrations (you may write a migration file; the project owner applies it); change vercel.json security headers without saying so in the PR; push to main; force-push; weaken, skip or delete a test to make it pass; put the case solution (the culprit) into any file the browser downloads.
