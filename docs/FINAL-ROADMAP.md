@@ -8,6 +8,8 @@
 > - Presentations: **Tue 24 Nov or Fri 4 Dec**. A live demo at the deployed URL (no slides or video instead), then a repository walkthrough where staff can ask **any member about any part**: how it is built, why, its limits and how it could change.
 > - The README must have the deployed URL, every member's name and student number, and the commands to run the app and its tests.
 >
+> **Direction changed on Tue 10 Nov:** the mystery is out; the game becomes island building, a shared trading harbor and pirate-wave defense with friends ([PITCH.md](PITCH.md)). The build plan for that is being prepared; until this board is updated, skip tasks that only concern the mystery (for example B4) and prefer A, D, E and F.
+>
 > Last updated: Tue 10 Nov 2026.
 
 ## Where we stand against the grading criteria
