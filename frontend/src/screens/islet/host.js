@@ -3,10 +3,6 @@ import {createIsletAdapter} from './adapter.js';
 import {builtPlots, MESSAGES} from './view.js';
 
 const HOME_PLACE = 'home_islet';
-// The signal station's hotspot opens the finale screen (world/places/case-spots.js), which has its
-// own build step. Since G8 the world reports that hotspot as a plot too, so the panel ignores it
-// there and shows the station only with the other spots.
-const FINALE_HOTSPOTS = new Set(['islet_signal_station']);
 
 // ?islet=local asks for the in-memory fake. Only a dev build can honour it.
 function chooseMode({dev, loadFake, search, transport}) {
@@ -106,7 +102,7 @@ export function attachIsletPanel({
   }).catch(() => {});
 
   const stops = [
-    on('plot_clicked', event => { if (!FINALE_HOTSPOTS.has(event.plot)) openAt(event.plot); }),
+    on('plot_clicked', event => openAt(event.plot)),
     on('travel', close),
     on('arrived', event => { if (event.place === HOME_PLACE) refresh(); }),
     adapter.subscribe(announce),

@@ -5,8 +5,10 @@ hotspots (the registry calls them zones), their lights and the chart position of
 case file owns what is found there. Both name the same ids, so a typo on either side would put a
 card at a spot nobody can walk to. This test reads the registry with Node.js and compares:
 
-  * every place and hotspot of the case exists in the registry, except the virtual place
-    `anywhere` (the journal and the satchel), which is not a place on the map,
+  * every place of the case exists in the registry, except the virtual place `anywhere` (the
+    journal and the satchel), which is not a place on the map. Since the mystery left the browser
+    on 10 Nov 2026 (D031) the registry no longer has the case hotspots, so they are not compared;
+    this test goes with the case code in the later backend cleanup,
   * every light of the case stands in the registry place that the case names,
   * every light's chart_xy equals the place's chart position plus half the beam origin, with the
     vertical part flipped (the chart's y grows to the south), within 0.01.
@@ -95,13 +97,11 @@ def expected_chart_position(registry: dict, place_id: str, light: dict) -> tuple
     return (chart_x + light["beamOrigin"]["x"] / 2, chart_y - light["beamOrigin"]["y"] / 2)
 
 
-def test_case_ids_and_light_positions_match_the_place_registry(data, registry):
+def test_case_places_and_light_positions_match_the_place_registry(data, registry):
     for place in data.places:
         if place.id == VIRTUAL_PLACE:
             continue
         assert place.id in registry, f"place {place.id} is not in the registry"
-        for hotspot in place.hotspots:
-            assert hotspot.id in registry[place.id]["zones"], f"hotspot {hotspot.id} has no zone"
 
     lights = registry_lights(registry)
     for light in data.night.lights:

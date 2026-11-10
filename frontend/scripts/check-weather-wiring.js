@@ -1,4 +1,3 @@
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Weather still drives the island; provider/licence details are available only in Settings → Credits.
 import assert from 'node:assert/strict';
@@ -9,7 +8,7 @@ const env=await openWorldBrowser(),{page}=env;
 const report={checked:new Date().toISOString(),checks:[]};
 try {
   await page.unroute('**/api/weather');await stubWeather(page,{wind:.73,rain:.44,fog:.35,cloudCover:.7});
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await page.goto(env.url);await startFromTitle(page);
   await page.waitForFunction(async()=>{const {getWeather}=await import('/src/world/weather.js');return getWeather().wind===.73;});
   const weather=await page.evaluate(async()=>{const {getWeather}=await import('/src/world/weather.js');return getWeather();});
   assert.deepEqual(weather,{wind:.73,rain:.44,fog:.35,cloudCover:.7});report.checks.push('Startup weather response still drives all four weather values');

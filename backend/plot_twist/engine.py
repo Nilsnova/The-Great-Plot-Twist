@@ -8,9 +8,8 @@ rules. Two things changed on purpose:
   - saving to a file is optional. With save_path=None (the default) no file is ever written,
     because the web server never writes files.
 
-The browser has the same rules in frontend/src/story/engine.js. When you change a rule here,
-change it there in the same pull request. plot_twist/tests/test_web_parity.py fails when the
-two engines disagree.
+The browser copy of these rules was removed on 10 Nov 2026 (D031); this engine stays until the
+later backend cleanup.
 
 Used by: server/routes/content.py (it takes CONTENT_DIR from here), the tests in
 plot_twist/tests and, in later packages, more server routes.

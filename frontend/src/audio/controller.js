@@ -9,7 +9,6 @@ import {createFestivalSound} from './festival.js';
 export function createAudio({container,on,caption}) {
   let context, master, musicBus, effectsBus;
   let synth, ambience, music, hum, humGain, festivalSound;
-  let festivalMusic=false;
   let humActive = false, disposed = false, screen = 'title', finale = false;
   let stride = 0, hornAt = 0, harborHornAt = 0, flagAt = 0, beamAt = 0, lastBlip = 0;
   function apply() {
@@ -29,8 +28,7 @@ export function createAudio({container,on,caption}) {
     }
   }
   function theme() {
-    const themeName = document.hidden || festivalMusic ? null : finale ? 'finale' : screen === 'title' ? 'title' : null;
-    festivalSound?.setActive(festivalMusic&&!document.hidden);
+    const themeName = document.hidden ? null : finale ? 'finale' : screen === 'title' ? 'title' : null;
     music?.set(themeName);
   }
   function unlock(event) {
@@ -86,18 +84,9 @@ export function createAudio({container,on,caption}) {
       synth.tone(effectsBus, 262, 0.12, harborCueVolumes.build * .72, 'triangle', 0.06);
       caption('A building settles into place');
     }
-    if (name === 'paper') {
-      synth.noise(effectsBus, 0.16, harborCueVolumes.paper, 1250);
-      caption('Paper rustles on the harbor bulletin board');
-    }
     if (name === 'flag') {
       synth.noise(effectsBus, 0.1, harborCueVolumes.flag, 2100);
       caption('A flag snaps in the storm wind');
-    }
-    if (name === 'hook') {
-      synth.tone(effectsBus, 523, 0.35, harborCueVolumes.hook, 'sine');
-      synth.tone(effectsBus, 392, 0.42, harborCueVolumes.hook * .78, 'sine', 0.18);
-      caption('A faint tone carries from far out at sea');
     }
     if (name === 'step') synth.tone(effectsBus, 105, 0.035, 0.035, 'triangle');
     if (name === 'click') synth.tone(effectsBus, 440, 0.055, 0.035, 'triangle');
@@ -127,17 +116,10 @@ export function createAudio({container,on,caption}) {
     if (finale) cue('beam');
     theme();
   });
-  const harborCueEvents = ['bulletin_opened', 'islet_build_raised'];
-  const harborCueNames = ['paper', 'build'];
-  const stopHarborCues = harborCueEvents.map((type, index) =>
-    on(type, () => cue(harborCueNames[index])),
-  );
-  let hookInitialized = false;
-  let hookPresent = false;
+  const stopHarborCues = [on('islet_build_raised', () => cue('build'))];
   return {unlock,get state(){return context?.state??'locked';},cue,
-    setFestivalMusic(value){festivalMusic=!!value;theme();},
     setScreen(mode){screen=mode;theme();},
-    update(dt, { weather, weatherAnswer, bulletin, isletBuilt = [], speed = 0, night = 0, active = false, place } = {}) {
+    update(dt, { weather, weatherAnswer, isletBuilt = [], speed = 0, night = 0, active = false, place } = {}) {
       if (!context || disposed) return;
       const isPlaying = screen === 'playing' && active;
       ambience.update(weather, isPlaying);
@@ -154,7 +136,7 @@ export function createAudio({container,on,caption}) {
         humGain.gain.setTargetAtTime(humWanted ? harborCueVolumes.stationHum : 0, now, 0.5);
       }
 
-      const cues = harborAudioConditions({ weatherAnswer, bulletin, place, active: isPlaying, night });
+      const cues = harborAudioConditions({ weatherAnswer, place, active: isPlaying, night });
       if (cues.fogHorn) {
         harborHornAt += dt;
         if (harborHornAt > 26) {
@@ -169,11 +151,6 @@ export function createAudio({container,on,caption}) {
           cue('flag');
         }
       } else flagAt = 0;
-
-      const hasHook = !!bulletin?.chapterTwoHook;
-      if (hookInitialized && hasHook && !hookPresent) cue('hook');
-      hookInitialized = true;
-      hookPresent = hasHook;
 
       if (active && place === 'lighthouse_isle') {
         hornAt += dt;

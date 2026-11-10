@@ -27,12 +27,12 @@ describe('procedural audio math',()=>{
       .toEqual({fogHorn:false,flagSnap:false});
     expect(harborAudioConditions({place:'lighthouse_isle',active:true,night:.8,weatherAnswer:{state:'storm',tonight:{isFogNight:true}}}))
       .toEqual({fogHorn:false,flagSnap:false});
-    expect(harborAudioConditions({place:'saltreach_harbor',active:true,night:.8,weatherAnswer:{state:null,tonight:{isFogNight:false}},
-      bulletin:{status:'ready',weather:{tonight:{state:'storm',isFogNight:true,isNow:true}}}})).toEqual({fogHorn:true,flagSnap:true});
-    expect(harborAudioConditions({place:'saltreach_harbor',active:true,night:.8,weatherAnswer:{state:'storm',tonight:{isFogNight:true}},
-      bulletin:{status:'off',weather:null}})).toEqual({fogHorn:true,flagSnap:true});
-    expect(harborAudioConditions({place:'saltreach_harbor',active:true,night:.8,weatherAnswer:{state:'calm'},
-      bulletin:{status:'ready',weather:{tonight:{state:'storm',isNow:false,isFogNight:false}}}})).toEqual({fogHorn:false,flagSnap:false});
+    expect(harborAudioConditions({place:'saltreach_harbor',active:true,night:.8,weatherAnswer:{state:null,tonight:{isFogNight:false}}}))
+      .toEqual({fogHorn:false,flagSnap:false});
+    expect(harborAudioConditions({place:'saltreach_harbor',active:true,night:.8,weatherAnswer:{state:'storm',tonight:{isFogNight:true}}}))
+      .toEqual({fogHorn:true,flagSnap:true});
+    expect(harborAudioConditions({place:'saltreach_harbor',active:true,night:.8,weatherAnswer:{state:'calm'}}))
+      .toEqual({fogHorn:false,flagSnap:false});
   });
   it('hums only for an active, built, lit home station',()=>{
     expect(isStationHumActive({place:'home_islet',active:true,night:.8,isletBuilt:['plot_1','islet_signal_station']})).toBe(true);

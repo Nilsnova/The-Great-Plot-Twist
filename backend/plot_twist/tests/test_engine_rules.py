@@ -20,8 +20,8 @@ Rules the real story does show, but that the scenarios A1-A6 never check:
 The one deliberate change from the solo engine: a Game without a save_path never opens a file,
 because the web server never writes files.
 
-These tests are NOT from the solo game. The browser engine has the same tests in
-frontend/tests/story-engine-rules.test.js.
+These tests are NOT from the solo game. The browser engine and its copy of these tests were
+removed on 10 Nov 2026 (D031).
 
 Used by: pytest (uv run pytest, from the backend folder).
 """

@@ -3,7 +3,6 @@
 import assert from 'node:assert/strict';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {startFromTitle} from './shell-browser-tools.js';
-import {stubIntro} from './intro-browser-fixture.js';
 import {openPanelHotspot,assertPanelReadable} from './online-panel-actions.js';
 
 const desk='.desk-modal[open]',arena='.duel-modal[open]';
@@ -12,25 +11,19 @@ const check=(checks,value,label)=>{assert.ok(value,label);checks.push(label);};
 async function chartLanding(page,area){
   const place=area==='predictions'?'saltreach_harbor':'smugglers_cove';
   const label=area==='predictions'?'Saltreach Harbor':'Smugglers’ Cove';
-  await page.locator('canvas[tabindex="0"]:not(.interiors-canvas)').focus();await page.keyboard.press('KeyM');
+  await page.locator('canvas[tabindex="0"]').focus();await page.keyboard.press('KeyM');
   const chart=page.locator('.sea-chart[open]');await chart.waitFor({state:'visible'});
   const landing=chart.locator(`[data-place="${place}"]`);
   assert.equal(await landing.getAttribute('aria-disabled'),'false','The public sea chart enables the practice landing');
   await chart.getByRole('checkbox',{name:'Fast travel',exact:true}).check();await landing.click();
   await page.waitForFunction(label=>document.querySelector('.hud .chapter')?.textContent.includes(label),label);
   await page.locator('.sailing').waitFor({state:'hidden'});await chart.waitFor({state:'hidden'});
-  await page.locator('canvas[tabindex="0"]:not(.interiors-canvas)').focus();
+  await page.locator('canvas[tabindex="0"]').focus();
 }
 async function openPractice(env,area){
-  const {page}=env;await page.emulateMedia({reducedMotion:'reduce'});await stubIntro(page);
+  const {page}=env;await page.emulateMedia({reducedMotion:'reduce'});
   const query=area==='predictions'?'desk=local':'arena=local';
-  await page.goto(env.url+'/?case=local&'+query);await startFromTitle(page);
-  const room=page.locator('.interiors-scene:not([hidden])');
-  if(await room.isVisible()){
-    await page.waitForFunction(()=>document.querySelector('.interiors-scene:not([hidden])')?.dataset.state==='ready');
-    await room.getByRole('button',{name:'Leave room',exact:true}).click();
-    await room.waitFor({state:'hidden'});
-  }
+  await page.goto(env.url+'/?adapter=local&'+query);await startFromTitle(page);
   await chartLanding(page,area);await openPanelHotspot(env,area);
   const selector=area==='predictions'?desk:arena;
   const practice=area==='predictions'?'.desk-practice':'.duel-practice';

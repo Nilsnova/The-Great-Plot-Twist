@@ -645,7 +645,7 @@ The routes need the home islet migration (`20261106070000_home_islet.sql`). Unti
 
 ### Your island and the pirate waves (lane 0, tasks 0.2 and 0.3)
 
-The new game loop of [PITCH.md](PITCH.md): every player has their own island, builds walls, cannons, a watchtower and houses with coins, and rings the bell for pirate waves. The binding contract is [BUILD-PLAN.md section 3](BUILD-PLAN.md#3-contracts-the-only-things-lanes-share); this section is the server's side of it. The routes' home is the comment at the top of `backend/server/routes/island.py` and `backend/server/routes/waves.py`; the rules are in `backend/server/island/`; the numbers in `backend/content/islands.json`; the database part in `supabase/migrations/20261110010000_islands_and_waves.sql` ([D031](DECISIONS.md#d031--islands-and-pirate-waves-10-nov--2026-11-10)).
+The new game loop of [PITCH.md](PITCH.md): every player has their own island, builds walls, cannons, a watchtower and houses with coins, and rings the bell for pirate waves. The binding contract is [BUILD-PLAN.md section 3](BUILD-PLAN.md#3-contracts-the-only-things-lanes-share); this section is the server's side of it. The routes' home is the comment at the top of `backend/server/routes/island.py` and `backend/server/routes/waves.py`; the rules are in `backend/server/island/`; the numbers in `backend/content/islands.json`; the database part in `supabase/migrations/20261110010000_islands_and_waves.sql` ([D032](DECISIONS.md#d032--islands-and-pirate-waves-10-nov--2026-11-10)).
 
 Every route needs a signed-in player (GitHub, email, or a guest admitted with the class code) and then the flag `islands` (`404 feature_off` while it is off, before the body is checked or the database is asked). The player id comes from the verified sign-in. Answers carry `Cache-Control: private, no-store`. Build, visit and the two wave routes have per-player budgets per server instance (30, 30 and 20 requests a minute; `429 too_many_requests` with `Retry-After`).
 
@@ -1251,12 +1251,12 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `arena` | Lantern Duels, the turn-based arena | A7 |
 | `raid` | the phone class raid | A5, later |
 | `live_presence` | other captains live: moves, presence, emotes, crew events (Supabase Realtime) | A4 |
-| `case` | every case route, including the later world view | G10; off until all migrations used by the deployment are applied |
+| `case` | every case route, including the later world view | **Off.** The mystery left the game on 10 Nov 2026 (D031); the browser no longer calls these routes. Backend removal follows later |
 | `sign_in` | the browser's in-game GitHub sign-in UI | G9/R3; default off; enable externally only after R2 callback protection is implemented and checked |
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
-| `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish` | lane 0 (D031); off by default; needs migration 20261110010000 applied first |
+| `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth

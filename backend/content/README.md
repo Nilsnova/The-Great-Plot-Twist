@@ -588,7 +588,7 @@ A file that breaks a rule stops the code with a message that names the file and 
 
 ## islands.json: your island and the pirate waves
 
-The numbers of the island game (docs/BUILD-PLAN.md sections 3.2 to 3.4, decision D031). Server only, never served; `backend/server/island/catalogue.py` reads and checks it at start-up, and a mistake stops only the island routes (`503 island_unavailable`). `backend/server/tests/test_island_rules.py` keeps it equal to the economy table of BUILD-PLAN 3.2, so change both together.
+The numbers of the island game (docs/BUILD-PLAN.md sections 3.2 to 3.4, decision D032). Server only, never served; `backend/server/island/catalogue.py` reads and checks it at start-up, and a mistake stops only the island routes (`503 island_unavailable`). `backend/server/tests/test_island_rules.py` keeps it equal to the economy table of BUILD-PLAN 3.2, so change both together.
 
 | Field | What it holds |
 |---|---|

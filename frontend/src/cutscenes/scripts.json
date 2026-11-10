@@ -45,13 +45,6 @@
         {"id": "lamps_relit_03", "text": "Ships turn toward the harbor, and Saltreach cheers.", "seconds": 4},
         {"id": "lamps_relit_04", "text": "The light is back. Elena's story is not over yet.", "seconds": 4.2}
       ]
-    },
-    {
-      "id": "reveal",
-      "title": "The reveal",
-      "source": "server",
-      "note": "The full mystery's reveal keeps its existing lines. They arrive from the server only after a solve and never ship in this file. Voice, if any, may play only after a solve.",
-      "lines": []
     }
   ]
 }

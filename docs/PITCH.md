@@ -51,7 +51,7 @@
 
 1. Press **Play** and watch a 20-second voiced intro.
 2. You land on your island. One card says: "Build a cannon. The pirates are coming."
-3. Place your first cannon (free).
+3. Place your first cannon (30 of your 100 🪙).
 4. Ring the bell. A tiny first wave arrives, you win, and your first 🪙 loot pops up.
 5. The quest strip says "Sail to the Harbor". There you see other captains and wave to one.
 6. Put 10 🪙 on a real match or price.

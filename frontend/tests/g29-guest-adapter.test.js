@@ -2,10 +2,10 @@
 // answers, with recorded replies.
 import {describe,expect,it,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
-import {validateIntent} from '../src/online/case-adapter/validate.js';
-import {mapAccount} from '../src/online/case-adapter/account-view.js';
-import {mapApiResult} from '../src/online/case-adapter/reasons.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
+import {validateIntent} from '../src/online/adapter/validate.js';
+import {mapAccount} from '../src/online/adapter/account-view.js';
+import {mapApiResult} from '../src/online/adapter/reasons.js';
 import {offersEmail,providerActions,signInProviders} from '../src/screens/account/providers.js';
 
 const me={id:'private-player-placeholder',captainName:'Placeholder captain',coins:0,kit:null,place:null,crews:[]};
@@ -22,7 +22,7 @@ function setup(config,join={ok:true,status:200,data:{admitted:true}}){
     signIn:vi.fn(async()=>({ok:true})),upgrade:vi.fn(async()=>({ok:true})),signOut:vi.fn(async()=>({ok:true})),dispose(){},
     sendEmailCode:vi.fn(async()=>({ok:true,reason:'sent'})),verifyEmailCode:vi.fn(async()=>({ok:true,reason:'confirmed'})),
     signInAnonymously:vi.fn(async()=>{session.setToken(`fixture-${Date.now()}`);publish({state:'signed_in',message:'',configured:true,guest:true});return {ok:true,state:'signed_in'};})};
-  const adapter=createRealCaseAdapter({api,publicApi:api,session,auth});
+  const adapter=createRealAdapter({api,publicApi:api,session,auth});
   return {adapter,auth,session,calls};
 }
 const base={flags:{sign_in:true},auth:{provider:'github',supabaseUrl:''}};

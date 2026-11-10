@@ -10,5 +10,5 @@
 .host-crew{padding:16px 0;border-top:1px solid #657954;overflow-wrap:anywhere}.host-crew h3{margin:0}.host-crew ul{padding-left:24px}
 .host-confirm{display:flex;gap:10px;align-items:center;min-height:48px;margin:12px 0}.host-confirm input{width:22px;height:22px;flex-shrink:0;accent-color:#cbbb83}
 .host-checklist{padding-left:24px}.host-checklist li{margin-bottom:12px}a{color:#f0d99c;text-underline-offset:4px}
-.host-clock-label{display:block;margin:12px 0}#clock-seconds{display:block;width:100%;max-width:240px;font:inherit;background:#1b3028;color:inherit;border:2px solid #a18f62;min-height:44px;padding:8px;margin-bottom:16px}.host-clock-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+
 [hidden]{display:none!important}@media(max-width:500px){#host-console{padding:20px 12px 40px}.host-counts{grid-template-columns:1fr}.host-counts dd{margin-bottom:8px}#host-actions .kit-button{flex:1 1 100%}}

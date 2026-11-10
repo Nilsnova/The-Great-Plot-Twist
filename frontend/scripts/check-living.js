@@ -2,15 +2,14 @@
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
-import {startPrologue,closeSettings} from './shell-browser-tools.js';
-import {dismissIntro} from './intro-browser-fixture.js';
+import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 import {openSettingsAccount,openAccountControls} from './online-browser-actions.js';
 const env=await openWorldBrowser(),{page}=env,report={checks:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);console.log(`PASS ${label}`);};
 const capture=name=>page.screenshot({path:`captures/20261105_G7-C1-${name}.png`});
 try{
   await page.route('**/api/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"offline rehearsal"}'}));
-  await page.goto(env.url+'/?case=local');await page.locator('.shell-screen[open]').waitFor();
+  await page.goto(env.url+'/?adapter=local');await page.locator('.shell-screen[open]').waitFor();
   const summary=await openSettingsAccount(page);await summary.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();
   await page.waitForFunction(()=>window.__plotTwist?.adapter.read().account.state==='signed_in');
   check(true,'Title sign-in uses the local adapter while APIs are down');
@@ -19,10 +18,8 @@ try{
   await page.getByRole('button',{name:'Change captain name once'}).click();
   check(await page.evaluate(()=>!window.__plotTwist.adapter.read().account.canReroll),'Name can be changed once');
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
-  await startPrologue(page);await page.waitForFunction(()=>window.__island);
-  await page.locator('.intro-modal[open] .intro-view').waitFor();
-  await page.locator('.interiors-scene:not([hidden])').waitFor();
-  check(true,'The unchanged bundled intro opens without the intro API');await dismissIntro(page);
+  await page.getByRole('button',{name:'Back',exact:true}).click();await startFromTitle(page);
+  check(true,'Play lands in Saltreach Harbor without any API');
   await page.evaluate(async()=>{const {initialPresenceState}=await import('/src/adapter/fake/presence.js');window.__plotTwist.adapter.dev.setPresence(initialPresenceState({count:30}));});
   await page.waitForFunction(()=>window.__island.experience.stats.drawn===8);
   check(await page.evaluate(()=>window.__island.experience.stats.hidden===22),'Thirty nearby captains draw at most eight and keep an overflow count');
@@ -48,14 +45,10 @@ try{
   await page.getByRole('button',{name:'Emote wave',exact:true}).click();
   await page.waitForFunction(()=>window.__island.scene.getObjectByName('local-captain-emote')?.visible);
   check(await page.locator('[data-focus=presence-wave]').isDisabled(),'A speech-bubble emote appears and its cooldown comes from the adapter');
-  const before=await page.evaluate(()=>localStorage.getItem('plot_twist_intro_moves_v1'));
   await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'expired'}));
-  await page.locator('.account-modal[open] .account-banner').waitFor();check(await page.locator('.account-banner').textContent().then(text=>text.includes('this device')),'Expired session explains that device progress remains');
+  await page.locator('.account-modal[open] .account-banner').waitFor();check(await page.locator('.account-banner').textContent().then(text=>text.includes('Sign in again')),'Expired session asks to sign in again');
   await page.getByRole('button',{name:'Sign in again with GitHub',exact:true}).click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().account.state==='signed_in');
-  check(await page.evaluate(()=>localStorage.getItem('plot_twist_intro_moves_v1'))===before,'Signing in again preserves the local intro journal');
-  await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({saveState:'conflict',deviceSave:{state:'saved',kind:'intro',actions:[],place:'lighthouse_isle',label:'This device',updatedAt:null},cloudSave:{state:'saved',kind:'intro',actions:['to_desk'],place:'lighthouse_isle',label:'Cloud copy',updatedAt:null}}));
-  await page.getByRole('button',{name:'Use the cloud save',exact:true}).click();
-  check(await page.evaluate(()=>window.__plotTwist.adapter.read().account.save.source)==='cloud','Save conflict uses the explicitly selected cloud copy');
+  check(true,'Signing in again restores the local account');
   await page.setViewportSize({width:375,height:667});await capture('Account-Phone');
   check(await page.locator('.account-modal[open]').evaluate(el=>el.scrollWidth<=el.clientWidth),'Account panel wraps at 375 px');await page.keyboard.press('Escape');
   await page.waitForTimeout(400);await capture('Presence-Phone');

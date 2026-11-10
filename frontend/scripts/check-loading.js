@@ -4,7 +4,6 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {gzipSync} from 'node:zlib';
 import {openWorldBrowser} from './world-browser-tools.js';
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 const captureDir=process.env.CAPTURE_DIR||'captures',prefix=process.env.CAPTURE_PREFIX||'20261105_G5';
 await mkdir(captureDir,{recursive:true});
@@ -23,7 +22,7 @@ try {
   const titleImage=await readFile('dist/places/title.webp');report.titleImageBytes=titleImage.length;check(titleImage.length<=350000,'Detailed original title WebP stays below its reviewed 350 kB image budget');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
   for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
-  const realChunk=manifest['src/online/case-adapter/index.js'];
+  const realChunk=manifest['src/online/adapter/index.js'];
   check(realChunk?.isDynamicEntry,'Real adapter is a separate dynamic entry');
   await page.addInitScript(()=>{
     const observer=new MutationObserver(()=>{
@@ -33,7 +32,7 @@ try {
       });
     });observer.observe(document,{childList:true,subtree:true});
   });
-  await stubIntro(page);await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
+  await page.goto(env.url);await page.locator('.shell-screen[open]').waitFor();
   await page.waitForFunction(()=>!!window.__titleFrame);
   report.titleFrame=await page.evaluate(()=>window.__titleFrame);
   check(!report.titleFrame.resources.some(url=>url.endsWith(realChunk.file)),

@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { harborCueVolumes } from '../src/audio/logic.js';
 import { startFromTitle } from './shell-browser-tools.js';
-import { stubIntro } from './intro-browser-fixture.js';
 import { measure, openWorldBrowser, settle } from './world-browser-tools.js';
 
 const env = await openWorldBrowser(), { page } = env;
@@ -24,7 +23,7 @@ const captionIs = async text => {
 };
 
 try {
-  await stubIntro(page); await page.goto(env.url); await page.setViewportSize({ width: 1280, height: 800 });
+   await page.goto(env.url); await page.setViewportSize({ width: 1280, height: 800 });
   await startFromTitle(page);
   await page.evaluate(() => window.__island.settings.hour = 0);
   await page.evaluate(() => window.__island.isletState.previewBuilt(['plot_1', 'plot_4', 'islet_signal_station']));

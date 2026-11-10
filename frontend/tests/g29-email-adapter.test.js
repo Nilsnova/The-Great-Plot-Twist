@@ -2,7 +2,7 @@
 // auth layer and recorded server replies. Messages are fixed text; no SDK text reaches a screen.
 import {describe,expect,it,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
 import {normalizeIntentResult} from '../src/adapter/call-failure.js';
 
 const address='captain@example.org';
@@ -23,7 +23,7 @@ function setup(config,{guest=false,send,verify}={}){
     verifyEmailCode:vi.fn(verify??(async()=>{
       session.setToken(`fixture-${Date.now()}`);publish({state:'signed_in',message:'',configured:true});
       return {ok:true,state:'signed_in',reason:guest?'confirmed':'signed_in'};}))};
-  const adapter=createRealCaseAdapter({api,publicApi:api,session,auth});
+  const adapter=createRealAdapter({api,publicApi:api,session,auth});
   return {adapter,auth,session};
 }
 const config={flags:{sign_in:true},auth:{provider:'github',providers:['github','email'],supabaseUrl:''}};

@@ -1,7 +1,6 @@
 // Real game weather startup/event/credit wiring; local HTTP is deterministically intercepted.
 import { expect, it } from 'vitest';
 import { browserHarness } from './g20-browser.js';
-import { stubIntro } from '../scripts/intro-browser-fixture.js';
 const evaluate = browserHarness();
 
 it('startup forwards API weather metadata and keeps attribution in Settings credits', async () => {
@@ -9,7 +8,6 @@ it('startup forwards API weather metadata and keeps attribution in Settings cred
     const answer = { wind: .73, rain: .44, fog: .35, cloudCover: .7, source: 'cache', fetchedAt: '2026-11-06T10:00:00Z', attribution: 'Weather data by Open-Meteo.com, adapted for the game' };
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('**/api/weather', route => route.fulfill({ json: answer }));
-    await stubIntro(page);
     await page.goto(base);
     await page.addScriptTag({ type: 'module', content: 'window.g20Import = path => import(path);' });
     await page.waitForFunction(() => typeof window.g20Import === 'function');

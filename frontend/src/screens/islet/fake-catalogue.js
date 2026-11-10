@@ -29,7 +29,7 @@ export const fakeCatalogue = {
     },
     {
       plot: 'islet_signal_station', plotName: 'Islet signal station', type: 'signal_station', name: 'Signal station',
-      about: 'Your home light. Your crew needs one signal station for the Night of Three Lights.',
+      about: 'Your home light. It shines over your islet at night.',
       buildable: true,
     },
   ],

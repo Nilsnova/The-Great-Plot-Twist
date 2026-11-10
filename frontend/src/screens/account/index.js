@@ -1,6 +1,6 @@
 import '../../ui/open-panels.css';
 import '../../ui/settings-polish.css';
-// Account and save presentation. All state and decisions arrive through supplied view data.
+// Account presentation. All state and decisions arrive through supplied view data.
 import './account.css';
 import './screen.css';
 import {node} from '../helpers.js';
@@ -13,14 +13,11 @@ import {providerActions} from './providers.js';
 import {createEmailCodeForm} from './email-code.js';
 
 const accountStates={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account error'};
-const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline copy',conflict:'Conflict'};
 const accountOf=view=>view?.account??view??{};
-const saveOf=(account,key)=>account.save?.[key]??{state:'idle',label:key==='device'?'No intro progress saved on this device':'No cloud save',updatedAt:null};
-function timestamp(value){if(!value)return null;const parsed=new Date(value);return Number.isNaN(parsed.valueOf())?null:new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Lisbon'}).format(parsed);}
 function stateLabel(value,labels){return labels[value]??(String(value??'').replaceAll('_',' ')||'Unknown');}
 
-export function createAccountScreen({send,navigate}){
-  const element=node('section','account-screen');element.setAttribute('aria-label','Account and saved games');
+export function createAccountScreen({send}){
+  const element=node('section','account-screen');element.setAttribute('aria-label','Account');
   let view={},feedback='',busy=false,deleteArmed=false,buttons=[],lastIntent=null,disposed=false,request=0,expiryAttention=false;
   const connection=createConnectionBanner({inline:true,send:(...args)=>send?.(...args)});
   // Made once: each render moves the same form, so a typed address or code is kept.
@@ -34,32 +31,17 @@ export function createAccountScreen({send,navigate}){
   }
   function clearButtons(){buttons.forEach(item=>item.dispose());buttons=[];}
   function render(){
-    const account=accountOf(view),name=String(account.captainName??'Captain pending'),state=account.state??'signed_out',save=account.save??{};
+    const account=accountOf(view),name=String(account.captainName??'Captain pending'),state=account.state??'signed_out';
     if(state==='signed_out')deleteArmed=false;
-    clearButtons();element.replaceChildren(node('h3','','Account and saved games'));
+    clearButtons();element.replaceChildren(node('h3','','Account'));
     element.append(node('p','account-status',`${stateLabel(state,accountStates)} · ${name}`));
     if(state==='expired'){
-      const banner=node('p','account-banner','Your session expired. Sign in again to view cloud data. Accepted progress on this device remains available.');banner.setAttribute('role','alert');banner.dataset.state=state;element.append(banner);
+      const banner=node('p','account-banner','Your session expired. Sign in again to keep playing online.');banner.setAttribute('role','alert');banner.dataset.state=state;element.append(banner);
     }else if(state==='error'){
-      const banner=node('p','account-banner','The account service could not complete the last request. Your saved progress is unchanged.');banner.setAttribute('role','alert');banner.dataset.state=state;element.append(banner);
-    }else if(state==='signing_in')element.append(node('p','account-banner','Sign-in is in progress. This device’s saved progress remains available.'));
+      const banner=node('p','account-banner','The account service could not complete the last request. Try again in a moment.');banner.setAttribute('role','alert');banner.dataset.state=state;element.append(banner);
+    }else if(state==='signing_in')element.append(node('p','account-banner','Sign-in is in progress.'));
 
     if(account.signInMessage)element.append(node('p','account-banner',account.signInMessage));
-    const saves=node('dl','account-save-list');
-    for(const [key,title] of [['device','This device'],['cloud','Cloud']]){
-      const source=saveOf(account,key),card=node('div','account-save');
-      card.append(node('dt','',title),node('dd','account-save-state',stateLabel(source.state,saveStates)),node('dd','',String(source.label??'')));
-      const updated=timestamp(source.updatedAt);if(updated)card.append(node('dd','account-muted',`Updated ${updated}`));saves.append(card);
-    }
-    element.append(saves);
-    if(save.state==='conflict'){
-      const conflict=node('section','account-conflict'),title=node('h4','','Choose which saved game to keep');
-      conflict.append(title,node('p','','The copies differ. Review each save above, then choose one before continuing.'));
-      const choices=node('div','account-save-choices');
-      action(choices,'Keep this device','resolveSaveConflict',['keep_this_device'],'account-keep-device',busy||save.device?.state==='idle');
-      action(choices,'Use the cloud save','resolveSaveConflict',['use_cloud'],'account-use-cloud',busy||save.cloud?.state==='idle');
-      conflict.append(choices);element.append(conflict);
-    }
 
     const actions=node('div','account-actions');
     if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))for(const item of providerActions(account,{prefix:state==='expired'?'Sign in again with':'Sign in with'}))action(actions,item.label,'signIn',item.args,item.focus,busy);
@@ -71,17 +53,15 @@ export function createAccountScreen({send,navigate}){
       }
       action(actions,'Sign out','signOut',[],'account-sign-out',busy);
       if(account.canReroll)action(actions,'Change captain name once','rerollName',[],'account-reroll',busy);
-      else if(account.namePending){actions.append(node('p','account-muted','Captain setup is not ready. Your progress on this device is kept.'));if(account.canRetryName)action(actions,'Retry captain setup','signIn',[],'account-name-setup',busy);}
+      else if(account.namePending){actions.append(node('p','account-muted','Captain setup is not ready yet.'));if(account.canRetryName)action(actions,'Retry captain setup','signIn',[],'account-name-setup',busy);}
       else actions.append(node('p','account-muted','Your captain name change has been used.'));
     }
-    action(actions,account.canContinue?(save.source==='cloud'?'Continue from cloud':'Continue from this device'):'No game to continue','continueGame',[],'account-continue',busy||!account.canContinue);
     element.append(actions);email.update(account);element.append(email.element);
-    if(account.hasKit)element.append(node('p','account-muted','Your confirmed kit is available for the next crew. Replaying the Lighthouse prologue does not remove it.'));
     if(state==='signed_in'||state==='expired'){
       if(deleteArmed){
         const confirm=node('section','account-delete-confirm');confirm.setAttribute('aria-labelledby','account-delete-title');
         const heading=node('h4','','Delete all your player data?');heading.id='account-delete-title';
-        const description=node('p','','This removes your account data, captain name, kit, saves, crew membership, coins, rewards and ledger history. This cannot be undone. Other crew members and shared case progress remain. If your crew has other players, leadership passes to the next occupied player seat.');description.id='account-delete-description';confirm.append(heading,description);
+        const description=node('p','','This removes your account data, captain name, coins, islet buildings and ledger history. This cannot be undone.');description.id='account-delete-description';confirm.append(heading,description);
         const controls=node('div','account-actions');const confirmButton=action(controls,'Confirm deletion','deleteMyData',[{confirm:true}],'account-delete-confirm',busy);confirmButton.setAttribute('aria-describedby',description.id);
         const cancel=createButton({label:'Keep my data',variant:'quiet',onClick:()=>{deleteArmed=false;feedback='';focusKey='account-delete';refresh();}});
         cancel.element.dataset.focus='account-delete-cancel';buttons.push(cancel);controls.append(cancel.element);confirm.append(controls);element.append(confirm);
@@ -108,7 +88,7 @@ export function createAccountScreen({send,navigate}){
     if(busy||disposed||(lastIntent?.[0]===method&&call.read().remaining>0))return;
     const source=document.activeElement;refusedFocus=source?.dataset.intent===method?source.dataset.focus:[...element.querySelectorAll('[data-intent]')].find(item=>item.dataset.intent===method)?.dataset.focus??refusedFocus;
     busy=true;const token=++request;feedback='';expiryAttention=false;lastIntent=[method,...args];call.loading();refresh();
-    try{const result=await send?.(method,...args);if(disposed||token!==request)return;if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());if(result?.accepted&&method==='deleteMyData')deleteArmed=false;if(result?.accepted&&method==='continueGame')navigate?.('continue',result);}
+    try{const result=await send?.(method,...args);if(disposed||token!==request)return;if(result?.accepted)call.succeed({message:result.message});else call.fail(result??intentFailure());if(result?.accepted&&method==='deleteMyData')deleteArmed=false;}
     catch(error){if(!disposed&&token===request)call.fail(intentFailure(error));}
     finally{busy=false;if(!disposed)refresh();}
   }

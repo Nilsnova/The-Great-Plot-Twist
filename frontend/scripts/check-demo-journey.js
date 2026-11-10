@@ -49,7 +49,7 @@ try{
   await page.waitForTimeout(800);await shot('02-harbor');
   check(await page.locator('.quest-strip').isVisible(),'The quest strip is visible in the harbor');
   check((await page.locator('.quest-item').allTextContents()).join('|').includes("Open the Keeper's Lock"),'The strip lists wave, duel and the lock');
-  check(await page.evaluate(()=>document.querySelector('#game').classList.contains('demo-path')),'The demo path hides the full mystery HUD clutter');
+  check(await page.evaluate(()=>document.querySelector('#game').classList.contains('demo-path')&&!document.querySelector('.journal-toggle,.case-toolbar')),'The harbor shows the demo layer and no Journal or case tools');
   await page.getByRole('button',{name:'Join the class harbor'}).click();
   check(await page.evaluate(()=>window.__island.classDemo.joined&&sessionStorage.getItem('plot_twist_join_v1')==='harbor'),'Join the class harbor remembers the class harbor');
   check(await page.evaluate(()=>window.__island.classDemo.presencePlace('saltreach_harbor')==='class_harbor'),'A joined player announces the class harbor place');
@@ -81,8 +81,7 @@ try{
   await page.waitForFunction(()=>window.__island.classDemo.debug.others.length>=10,null,{timeout:15000});
   await page.waitForTimeout(1200);await shot('21-rehearsal-harbor');
   check(await page.evaluate(()=>window.__island.experience.stats.drawn>=10),'Simulated captains are drawn in the harbor');
-  await page.locator('.presenter-reopen').waitFor();
-  check(await page.locator('.presenter-panel').isHidden(),'In the class harbor the presenter panel folds into one small button');
+  check(await page.locator('.presenter-panel,.presenter-reopen').count()===0,'The rehearsal shows no highlights-tour presenter panel over the class harbor');
   // A simulated captain away from the lock and the lamps (those spots win the E key there).
   const nearBot=async()=>{const bot=await page.evaluate(()=>{const spots=[[6.2,14.2],[-5,16.4],[-2,14.6],[2.4,14.6]];const others=window.__island.classDemo.debug.others;
     return others.find(other=>spots.every(([x,z])=>Math.hypot(other.x+.8-x,other.y-z)>2.6))??others[0];});await teleport(bot.x+.8,bot.y);};
@@ -110,12 +109,12 @@ try{
   check(await page.evaluate(()=>{const canvas=document.querySelector('.projector canvas');return canvas.width>200&&!canvas.hidden&&document.querySelector('.projector-code').textContent==='HARBOR-TESTS'
     &&canvas.getAttribute('aria-label')==='QR code for https://the-great-plot-twist.vercel.app/?join=TESTS';}),'J shows the projector panel with the QR canvas for the practice class code HARBOR-TESTS');
   await page.keyboard.press('KeyJ');
-  await page.locator('.presenter-reopen').click();check(await page.locator('.presenter-panel').isVisible()&&await page.locator('.presenter-reopen').isHidden(),'The Presenter button opens the panel again');
   check(writes.length===0,'The rehearsal sends no server writes');
   await page.keyboard.press('Escape');await page.locator('.shell-screen[open] .shell-menu').waitFor();
-  check((await page.locator('.shell-menu button').allTextContents()).includes('Full mystery'),'The pause menu offers Full mystery');
-  await page.getByRole('button',{name:'Full mystery'}).click();await page.waitForTimeout(800);
-  check(await page.evaluate(()=>!document.querySelector('#game').classList.contains('demo-path')&&document.querySelector('.quest-strip').hidden),'Full mystery restores the full HUD and hides the strip');
+  const menu=await page.locator('.shell-menu button').allTextContents();
+  check(!menu.some(label=>/mystery|prologue/i.test(label)),'The pause menu offers no Full mystery or Lighthouse prologue entry');
+  await page.getByRole('button',{name:'Resume',exact:true}).click();await page.waitForTimeout(300);
+  check(await page.evaluate(()=>!document.querySelector('.quest-strip').hidden),'Resume returns to the harbor with the quest strip');
   // ---- part 3: frame numbers ----
   if(perf){
     report.perf={};

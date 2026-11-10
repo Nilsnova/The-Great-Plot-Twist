@@ -125,7 +125,7 @@ describe('G24 player-facing text',()=>{
     await writeFile(join(root,'frontend/src/copy.js'),"const label='A mispelled captain.';");
     result = await lintRepository(root);
     expect(result.diagnostics.some(issue=>issue.rule==='spelling' && !issue.reportOnly)).toBe(true);
-    expect(reportOnly('frontend/src/demo/intro-story.json')).toBe(true);
+    expect(reportOnly('frontend/src/demo/intro-story.json')).toBe(false);
   });
   it('blocks undeclared partner fields and samples exceeding the declared length',async()=>{
     const root = await fixture(), path = join(root,'backend/content/partners.json');

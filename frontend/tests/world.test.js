@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { sunPosition } from '../src/core/math.js';
 import { terrainHeight } from '../src/world/terrain.js';
 import { setWeather, getWeather, clampWeather } from '../src/world/weather.js';
-import { zones, findZone } from '../src/world/zones.js';
+import { findZone } from '../src/world/zones.js';
 import { canStand, groundHeight, moveWithCollisions, overlapsCollider } from '../src/player/collision.js';
 import { on, emit } from '../src/core/events.js';
 import { anchors } from '../src/world/lighthouse.js';
@@ -47,16 +47,10 @@ describe('weather contract', () => {
     expect(clampWeather(previous, null)).toEqual(previous);
   });
 });
-describe('story integration', () => {
-  it('returns the exact four story ids at reachable stand points, or none', () => {
-    expect(zones.map(zone => zone.id).sort()).toEqual(['cottage', 'desk', 'shore', 'tower_door']);
-    for (const zone of zones) {
-      const point = { x: zone.x, y: groundHeight(zone.x, zone.z), z: zone.z };
-      expect(canStand(point.x, point.z)).toBe(true);
-      expect(findZone(point)).toBe(zone.id);
-      expect(findZone({ ...point, y: point.y + 10 })).toBe(null);
-    }
-    expect(findZone({ x: 100, y: 0, z: 100 })).toBe(null);
+describe('zones and events', () => {
+  it('finds no zone without a supplied list, and none far away', () => {
+    expect(findZone({ x: -6.2, y: groundHeight(-6.2, 3.7), z: 3.7 })).toBe(null);
+    expect(findZone({ x: 100, y: 0, z: 100 }, [{ id: 'plot_1', x: 0, y: 0, z: 0, radius: 1 }])).toBe(null);
   });
   it('selects a small nearby desk zone over a broad overlapping zone', () => {
     const list = [{ id: 'cottage', x: 0, y: 0, z: 0, radius: 5 }, { id: 'desk', x: 1, y: 0, z: 0, radius: 1 }];
@@ -89,13 +83,5 @@ describe('movement safety', () => {
     expect(canStand(result.x, result.z)).toBe(true);
     expect(Math.hypot(result.x, result.z)).toBeLessThan(30);
   });
-  it('lets a player enter the real cottage doorway and reach the desk without crossing furniture', () => {
-    const colliders = getBuildingColliders();
-    const inside = moveWithCollisions({ x: -7, z: 7 }, 0, -3.3, colliders);
-    expect(inside.z).toBeCloseTo(3.7);
-    const atDesk = moveWithCollisions(inside, 0.8, 0, colliders);
-    expect(findZone(atDesk)).toBe('desk');
-    const blocked = moveWithCollisions(atDesk, 3, 0, colliders);
-    expect(blocked.x).toBeLessThan(-6);
-  });
+
 });

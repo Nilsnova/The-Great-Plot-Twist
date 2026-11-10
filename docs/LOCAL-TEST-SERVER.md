@@ -58,5 +58,6 @@ it also accepts the NPC tables and two intents once their migration and runtime 
 It uses explicit relation and RPC allowlists, bound SQL values, current compound ordering, and
 per-relation filters and limits. It exposes no wallet-write helper. Full solo and multiplayer
 case completion are checked separately by the integrated case proof, rather than inferred from
-this smoke test. `DEMO_MODE` is true, the case flag is on, `bulletin` and `sign_in` are off, and
+this smoke test. `DEMO_MODE` is true, the case flag is on only for this backend case smoke (the browser no longer
+calls case routes since 10 Nov 2026, D031), `bulletin` and `sign_in` are off, and
 `RELIGHT_OPEN` is false. The production app never imports the local factory or fixture verifier.

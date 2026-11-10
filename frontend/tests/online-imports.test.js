@@ -13,6 +13,6 @@ it('keeps every real adapter dependency outside adapter/fake',async()=>{
       if(path.startsWith('.')&&path.endsWith('.js'))await walk(resolve(dirname(file),path));
     }
   }
-  await walk(resolve('src/online/case-adapter/index.js'));
+  await walk(resolve('src/online/adapter/index.js'));
   expect(seen.size).toBeGreaterThan(10);
 });

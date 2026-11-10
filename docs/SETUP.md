@@ -165,7 +165,7 @@ If the address is missing, Supabase sends the browser to the Site URL instead, w
 
 ## Opening the relight switch
 
-`case` stays off until every case migration read by the deployment is applied. `RELIGHT_OPEN` stays unset during team tests. Only explicit `true` with `APP_ENV=production` opens this irreversible switch; local and preview copies refuse to start with it. Claude opens it only after the last team test crew has finished, then redeploys production. Phase 1 has an empty world hook, so its solves change only their crew. Later phases implement the world change; locked solves never replay into the world after the switch opens (Nils, 6 Nov 2026).
+`case` stays off: the mystery left the game on 10 Nov 2026 (D031) and the browser no longer calls the case routes. The owner switches it off on Vercel (the `FEATURE_FLAGS` setting) and redeploys. `RELIGHT_OPEN` stays unset during team tests. Only explicit `true` with `APP_ENV=production` opens this irreversible switch; local and preview copies refuse to start with it. Claude opens it only after the last team test crew has finished, then redeploys production. Phase 1 has an empty world hook, so its solves change only their crew. Later phases implement the world change; locked solves never replay into the world after the switch opens (Nils, 6 Nov 2026).
 
 ## Keep it awake until the demo
 

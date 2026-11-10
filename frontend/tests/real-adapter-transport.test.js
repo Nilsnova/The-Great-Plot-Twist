@@ -2,7 +2,7 @@
 import {describe, expect, it, vi} from 'vitest';
 import {createApi} from '../src/online/api.js';
 import {createSession} from '../src/online/session.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
 
 const me = {id: 'player-placeholder', captainName: 'Placeholder captain', coins: 5,
   kit: null, place: null, crews: []};
@@ -16,7 +16,6 @@ function setup(postReplies = []) {
   const calls = [];
   const reads = new Map([
     ['/api/config', okay({flags: {sign_in: true}})], ['/api/me', okay(me)],
-    ['/api/save', okay({version: 1, data: {}})], ['/api/crews/me', okay({crew: null})],
   ]);
   const fetchImpl = async (route, options) => {
     calls.push({method: options.method, route, body: options.body ? JSON.parse(options.body) : null});
@@ -29,7 +28,7 @@ function setup(postReplies = []) {
   };
   const api = createApi({session, fetchImpl});
   const publicApi = createApi({session: {getToken: () => null, clearToken() {}}, fetchImpl});
-  const adapter = createRealCaseAdapter({session, api, publicApi, document: {}, window: {}});
+  const adapter = createRealAdapter({session, api, publicApi, document: {}, window: {}});
   const ready = async () => {
     await vi.waitFor(() => expect(adapter.read().account.canReroll).toBe(true));
     expect(calls.filter(call => call.route === '/api/me/name')).toEqual([
@@ -85,15 +84,15 @@ describe('real adapter transport', () => {
     } finally { test.adapter.dispose(); }
   });
 
-  it.each(['already_applied', 'already_seated', 'already_started'])('accepts %s then rereads', async code => {
-    const test = setup([failure(409, code)]);
+  it('accepts already_applied then rereads the account', async () => {
+    const test = setup([failure(409, 'already_applied')]);
     try {
       await test.ready();
       test.calls.length = 0;
-      expect((await test.adapter.muster()).accepted).toBe(true);
-      expect(test.calls[0]).toMatchObject({method: 'POST', route: '/api/crews/me/start'});
-      expect(test.calls.slice(1).some(call => call.method === 'GET' && call.route === '/api/crews/me')).toBe(true);
-      expect(test.calls.filter(call => call.method === 'POST')).toHaveLength(1);
+      expect((await test.adapter.rerollName()).accepted).toBe(true);
+      expect(test.calls[0]).toMatchObject({method: 'POST', route: '/api/me/name/reroll'});
+      expect(test.calls.slice(1).some(call => call.method === 'GET' && call.route === '/api/me')).toBe(true);
+      expect(test.calls.filter(call => call.route === '/api/me/name/reroll')).toHaveLength(1);
     } finally { test.adapter.dispose(); }
   });
 
@@ -114,10 +113,9 @@ describe('real adapter transport', () => {
         await test.ready();
         const before = test.adapter.read();
         test.reads.set('/api/me', okay(body));
-        await test.adapter.continueGame();
+        await test.adapter.signIn();
         expect(test.adapter.read().account.captainName).toBe(before.account.captainName);
         expect(test.adapter.read().captain.coins).toBe(before.captain.coins);
-        expect(test.adapter.read().crew).toEqual(before.crew);
       } finally { test.adapter.dispose(); }
     },
   );
@@ -130,7 +128,7 @@ describe('real adapter transport', () => {
       test.reads.set('/api/me', () => new Promise(resolve => { finish = resolve; }));
       let events = 0;
       test.adapter.subscribe(() => { events += 1; });
-      const pending = test.adapter.continueGame();
+      const pending = test.adapter.signIn();
       await vi.waitFor(() => expect(typeof finish).toBe('function'));
       const before = test.adapter.read();
       const delivered = events;

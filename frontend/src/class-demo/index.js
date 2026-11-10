@@ -9,9 +9,9 @@ import {node} from '../ui/kit/dom.js';
 import {api as defaultApi} from '../online/api.js';
 import {isMe, resolvePeer, sendExtra, setClassHarbor} from '../net/live-extras.js';
 import {CLASS_HARBOR_PLACE} from '../net/live-rules.js';
-import {addMenuExtras, onPrologue} from '../shell/menu-extras.js';
+import {addMenuExtras} from '../shell/menu-extras.js';
 import {readQuests, writeQuests, completeQuest, playerKey, questView} from './quests.js';
-import {HARBOR_PLACE, LOCK_SPOT, LAMP_SPOTS, arrivals, joinedText, nearestSpot, presencePlace, readInvite, rememberInvite, readPath, writePath} from './harbor.js';
+import {HARBOR_PLACE, LOCK_SPOT, LAMP_SPOTS, arrivals, joinedText, nearestSpot, presencePlace, readInvite, rememberInvite} from './harbor.js';
 import {nearestCaptain} from './duel-shortcut.js';
 import {hasNews, isLampLit, isRelit} from './lamp-sync.js';
 import {createQuestStrip} from './quest-strip.js';
@@ -29,7 +29,7 @@ export function createClassDemo(ctx) {
   const {container, scene, world, player, input, audio, reducedMotion, on, canvas} = ctx;
   const api = ctx.api ?? defaultApi, storage = ctx.storage ?? local(), session = ctx.sessionStorage ?? sessionStore();
   const rehearsal = ctx.rehearsal === true, present = ctx.present === true;
-  let path = readPath(storage), joined = rehearsal || readInvite(session), disposed = false, view = null, key = 'device';
+  let joined = rehearsal || readInvite(session), disposed = false, view = null, key = 'device';
   let quests = readQuests(storage, key), host = rehearsal || false, hostChecked = false, splashShown = false;
   let promptKey = '', target = null, lastCount = 1, known = new Set(), seeded = false, invitePoll = 0, inviteSeen = new Set();
   let lock = null, duel = null, projector = null, captains = null, simulateAt = 0, localEmote = null, lockOpened = false, rehearsalInvited = false, arrivedAt = null;
@@ -103,21 +103,10 @@ export function createClassDemo(ctx) {
   }
   const stopMenu = addMenuExtras(() => {
     const entries = [];
-    if (path === 'demo') entries.push({label: 'Full mystery', prologue: true, onSelect: () => setPath('full')});
-    else entries.push({label: 'Class demo', onSelect: () => setPath('demo')});
     if (isHostLike()) entries.push({label: 'Projector: Join the harbor (J)', onSelect: () => void toggleProjector()});
-    if (!joined && path === 'demo') entries.push({label: 'Join the class harbor', onSelect: joinHarbor});
+    if (!joined) entries.push({label: 'Join the class harbor', onSelect: joinHarbor});
     return entries;
   });
-  const stopPrologue = onPrologue(() => { if (path !== 'full') setPath('full'); });
-  function setPath(next) {
-    path = next;writePath(storage, next);applyPath();
-  }
-  function applyPath() {
-    const demo = path === 'demo';
-    container.classList.toggle('demo-path', demo);strip.hidden = !demo;
-    if (!demo) { prompt.hidden = true; joinButton.hidden = true; objects.setVisible(false); }
-  }
 
   // ---- presence: arrivals, the count, invitations and lamps ----
   const stops = [];
@@ -127,7 +116,7 @@ export function createClassDemo(ctx) {
     const named = (event.shown ?? []).filter(peer => typeof peer.name === 'string' && peer.name.trim());
     const fresh = arrivals(known, named);
     for (const peer of named) known.add(peer.id);
-    if (seeded && fresh.length && path === 'demo') say(joinedText(fresh.map(peer => peer.name)));
+    if (seeded && fresh.length) say(joinedText(fresh.map(peer => peer.name)));
     seeded = true;
   }));
   stops.push(on('live_peer_extra', event => {
@@ -235,7 +224,7 @@ export function createClassDemo(ctx) {
 
   // Taps on a captain near you open the same menu.
   function tapCaptain(event) {
-    if (path !== 'demo' || ctx.isBlocked?.() || !ctx.project) return;
+    if (ctx.isBlocked?.() || !ctx.project) return;
     const others = currentOthers(), me = {x: player.position.x, y: player.position.z};
     for (const other of others) {
       if (Math.hypot(other.x - me.x, other.y - me.y) > 6) continue;
@@ -253,13 +242,13 @@ export function createClassDemo(ctx) {
     return (view?.presence?.others ?? []).filter(other => other.place === CLASS_HARBOR_PLACE || other.place === world.current?.id);
   }
 
-  applyPath();strip.update(quests);
+  container.classList.add('demo-path');strip.update(quests);
 
   return {
     get active() { return !!(lock?.active || duel?.active || cutscene); },
     get joined() { return joined; },
     // For the browser checks and the presenter's console: what the demo knows right now.
-    get debug() { return {others: currentOthers(), quests: {...quests}, lamps: finale.state, target, path, host: isHostLike(), count: lastCount, rehearsalCaptains: captains}; },
+    get debug() { return {others: currentOthers(), quests: {...quests}, lamps: finale.state, target, host: isHostLike(), count: lastCount, rehearsalCaptains: captains}; },
     presencePlace: place => presencePlace(place, joined),
     apply(next) {
       view = next;
@@ -269,8 +258,8 @@ export function createClassDemo(ctx) {
     },
     update(delta, {blocked = false, zoneActive = false} = {}) {
       if (disposed) return;
-      const now = Date.now(), place = world.current?.id, inHarbor = place === HARBOR_PLACE, demo = path === 'demo';
-      const shown = demo && inHarbor;
+      const now = Date.now(), place = world.current?.id, inHarbor = place === HARBOR_PLACE;
+      const shown = inHarbor;
       objects.setVisible(shown);objects.update(delta);
       joinButton.hidden = !shown || joined || blocked;
       if (shown && joined && !splashShown && !blocked) splash();
@@ -318,7 +307,7 @@ export function createClassDemo(ctx) {
     },
     dispose() {
       if (disposed) return;
-      disposed = true;clearTimeout(toastTimer);stopMenu();stopPrologue();for (const stop of stops) stop();
+      disposed = true;clearTimeout(toastTimer);stopMenu();for (const stop of stops) stop();
       canvas?.removeEventListener('click', tapCaptain);
       lock?.dispose();duel?.dispose();projector?.dispose();finale.dispose();objects.dispose();cutscene?.dispose?.();
       ctx.simulate?.(null);container.classList.remove('demo-path');layer.remove();

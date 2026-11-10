@@ -10,7 +10,6 @@ export const GAME_URL = 'https://the-great-plot-twist.vercel.app/';
 export const joinUrl = code => (classCode(code) ? `${GAME_URL}?join=${classCode(code)}` : '');
 // Rehearsal (?demo=1) shows this made-up code; nothing is sent to the server with it.
 export const REHEARSAL_CODE = 'TESTS';
-export const PATH_KEY = 'plot_twist_path_v1'; // 'full' after "Full mystery"; otherwise the demo path
 
 // The lock by the lighthouse path, and the three lamp posts along it (x, z in Saltreach Harbor).
 export const LOCK_SPOT = Object.freeze({id: 'keepers_lock', x: 6.2, z: 14.2, radius: 1.9});
@@ -76,11 +75,3 @@ export function projectorModel({demo = null, count = 1, host = false, rehearsal 
 }
 export const newCodeBody = actionUid => ({actionUid});
 
-// Demo path or full mystery. The front door (Play, Join HARBOR) is the demo path unless the player chose
-// "Full mystery" on this device; the Lighthouse prologue and a saved story are the full mystery.
-export function readPath(storage) {
-  try { return storage?.getItem(PATH_KEY) === 'full' ? 'full' : 'demo'; } catch { return 'demo'; }
-}
-export function writePath(storage, path) {
-  try { storage?.setItem(PATH_KEY, path === 'full' ? 'full' : 'demo'); return true; } catch { return false; }
-}

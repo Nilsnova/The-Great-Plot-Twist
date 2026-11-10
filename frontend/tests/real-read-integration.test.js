@@ -1,10 +1,10 @@
 // Polling and transport cooperate without duplicate reads or unbounded retry timers.
 import {afterEach, expect, it, vi} from 'vitest';
-import {createAdapterPolling} from '../src/online/case-adapter/polling.js';
-import {createAdapterTransport} from '../src/online/case-adapter/transport.js';
-import {createAdapterStore} from '../src/online/case-adapter/store.js';
+import {createAdapterPolling} from '../src/online/adapter/polling.js';
+import {createAdapterTransport} from '../src/online/adapter/transport.js';
+import {createAdapterStore} from '../src/online/adapter/store.js';
 import {createSession} from '../src/online/session.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
 
 afterEach(() => vi.useRealTimers());
 
@@ -63,29 +63,24 @@ it('shares an in-flight read while keeping a new identity separate from the old 
   store.dispose();
 });
 
-it.each(['me','save'])('finishes account loading and reconciles the save after an automatic %s recovery',async kind=>{
+it.each(['me'])('finishes account loading after an automatic %s recovery',async kind=>{
   vi.useFakeTimers();
   const session=createSession();session.setToken('fixture-'+crypto.randomUUID());
   const me={id:crypto.randomUUID(),captainName:'Recorded Captain',coins:0,crews:[],kit:null,place:null};
   let failed=false;
-  const replies={'/api/config':{flags:{sign_in:true}},'/api/me':me,'/api/crews/me':{crew:null},
-    '/api/save':{version:2,data:{kind:'intro',actions:['to_shore'],place:'lighthouse_isle'}}};
+  const replies={'/api/config':{flags:{sign_in:true}},'/api/me':me};
   const api={get:vi.fn(async path=>{
     if(path==='/api/'+kind&&!failed){failed=true;return {ok:false,status:503,code:'database_unavailable'};}
     return {ok:true,status:200,data:replies[path]};
   }),post:vi.fn(async()=>({ok:true,status:200,data:{captainName:me.captainName,rerollsLeft:1}}))};
-  const ledger=vi.fn(async()=>({ok:true,rows:[]}));
-  const adapter=createRealCaseAdapter({session,api,publicApi:api,auth:{readOwnLedger:ledger},document:{},window:{},
-    readLocalSave:()=>({version:1,actions:['to_desk']})});
+  const adapter=createRealAdapter({session,api,publicApi:api,auth:{},document:{},window:{}});
   try{
     await vi.advanceTimersByTimeAsync(0);
     expect(api.post).toHaveBeenCalledTimes(kind==='me'?0:1);
     await vi.advanceTimersByTimeAsync(5000);
     expect(api.post).toHaveBeenCalledTimes(1);
-    expect(adapter.read().account).toMatchObject({canReroll:true,save:{state:'conflict'}});
-    expect(adapter.read().rewards.status).toBe('ready');
-    expect(ledger).toHaveBeenCalledTimes(1);
-    expect(api.get).toHaveBeenCalledWith('/api/crews/me');
+    expect(adapter.read().account).toMatchObject({canReroll:true});
+    expect(api.get).not.toHaveBeenCalledWith('/api/crews/me');expect(api.get).not.toHaveBeenCalledWith('/api/save');
   }finally{adapter.dispose();}
   expect(vi.getTimerCount()).toBe(0);
 });
@@ -97,14 +92,12 @@ it('still retries a failed me read while name initialization holds the hydration
   let meReads=0,posts=0,finishName;
   const api={get:vi.fn(async path=>{
     if(path==='/api/me'&&++meReads===2)return {ok:false,status:503,code:'database_unavailable'};
-    return {ok:true,status:200,data:path==='/api/config'?{flags:{sign_in:true}}:path==='/api/me'?me:
-      path==='/api/crews/me'?{crew:null}:{version:1,data:{}}};
+    return {ok:true,status:200,data:path==='/api/config'?{flags:{sign_in:true}}:me};
   }),post:vi.fn(async()=>{
     if(++posts===1)return {ok:false,status:503,code:'database_unavailable'};
     return new Promise(resolve=>{finishName=resolve;});
   })};
-  const adapter=createRealCaseAdapter({session,api,publicApi:api,auth:{readOwnLedger:async()=>({ok:true,rows:[]})},
-    document:{},window:{},readLocalSave:()=>null});
+  const adapter=createRealAdapter({session,api,publicApi:api,auth:{},document:{},window:{}});
   try{
     await vi.advanceTimersByTimeAsync(0);
     expect(typeof finishName).toBe('function');expect(meReads).toBe(2);
@@ -114,7 +107,6 @@ it('still retries a failed me read while name initialization holds the hydration
     await vi.advanceTimersByTimeAsync(0);
     expect(posts).toBe(2);
     expect(adapter.read().account.canReroll).toBe(true);
-    expect(adapter.read().rewards.status).toBe('ready');
   }finally{adapter.dispose();}
   expect(vi.getTimerCount()).toBe(0);
 });

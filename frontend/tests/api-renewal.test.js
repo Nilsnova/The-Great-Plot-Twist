@@ -19,7 +19,7 @@ function setup(fetchImpl) {
 
 describe('API access-token renewal', () => {
   afterEach(() => vi.useRealTimers());
-  it.each(['/api/config', '/api/world', '/api/bulletin', '/api/market?replay=1'])(
+  it.each(['/api/config', '/api/market?replay=1'])(
     'keeps cached public reads anonymous even with a signed-in caller: %s', async path => {
       const fetchImpl = vi.fn().mockResolvedValue(reply(401));
       const {session, api} = setup(fetchImpl);

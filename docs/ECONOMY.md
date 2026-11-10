@@ -4,7 +4,7 @@ Offline evidence for Nils and economy/server reviewers. Integration branch:
 `integrate/economy-abuse-v2`, starting from `478bc9d` on 6 November 2026.
 No production database, credentials, live market APIs or GitHub Actions are used.
 
-## The island scale (10 Nov 2026, D031)
+## The island scale (10 Nov 2026, D032)
 
 The redesign ([PITCH.md](PITCH.md), [BUILD-PLAN.md 3.2](BUILD-PLAN.md#32-the-economy-one-scale-everywhere))
 puts every coin on one small scale. The numbers live in `backend/content/islands.json`

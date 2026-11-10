@@ -2,6 +2,8 @@
 
 This guide is for a classmate who knows basic JavaScript. It follows one player action from the title screen to the world and back. The code uses plain JavaScript modules, the browser DOM and Three.js.
 
+> **10 Nov 2026: the mystery left the game** (D031 in [DECISIONS.md](../docs/DECISIONS.md), [PITCH.md](../docs/PITCH.md)). The case screens, the case bridge, the story engine, the rooms, the case cinematics, the highlights tour, the festival, the bulletin and the rewards page were removed. This guide describes what remains; sections marked *removed* are history.
+
 ## A map of the game
 
 ```mermaid
@@ -13,46 +15,21 @@ flowchart TD
   World --> Registry[src/world/places/registry.js\nplace ids, routes, hotspots]
   World --> Factory[src/world/places/factory.js\nloads a place]
   Factory --> Places[src/world/places/settlement.js\nscene, update, cleanup]
-  Game --> Bridge[src/adapter/bridge.js\nlazy screen host]
-  Bridge --> Screens[src/screens/controller.js\ncase panels]
-  Screens --> Contract[src/adapter/contract.js\nviews and intents]
+  Game --> Panels[hotspot panels\nislet, market, desk, sports]
+  Game --> Demo[src/class-demo/index.js\nquest strip, lock, lamps, duels]
+  Main --> Contract[src/adapter/contract.js\nviews and intents]
   Contract --> Select[src/adapter/select.js]
   Select --> Fake[adapter/fake\nlocal rehearsal]
-  Select --> Real[real adapter\nwhen connected]
-  Game --> Cinema[src/world/cinematics/lazy.js\nload a shot only when asked]
+  Select --> Real[online/adapter\nwhen connected]
   Fake --> NoGameData[Local only]
   Real --> Server[Python server\nproduction rules]
 ```
 
-The boundary matters. In production, the server owns game outcomes and writes. The screen displays a view and sends an intent. On this branch, `select.js` chooses the local fake only for its allowed rehearsal query and otherwise returns the disconnected adapter; the future real adapter must follow the same contract. The fake is for testing and the class tour. It does not make real server writes.
+The boundary matters. In production, the server owns game outcomes and writes. The screen displays a view and sends an intent. `select.js` chooses the local fake only for `?adapter=local` in a dev build, the disconnected adapter for `?demo=1`, and otherwise the online adapter; every adapter follows the same contract. The fake is for local rehearsal and tests. It does not make real server writes.
 
 ## One hotspot, from walk to panel
 
-```mermaid
-sequenceDiagram
-  participant P as Player
-  participant W as World
-  participant G as game.js
-  participant B as Case bridge
-  participant M as Screen controller
-  participant A as Adapter
-  P->>W: interact with a hotspot
-  W->>G: interact event with place and hotspot id
-  G->>B: pass the event to the bridge
-  B->>B: case-spots.js maps hotspot to screen
-  B->>M: open the screen, load it if needed
-  M->>A: read current view
-  A-->>M: view snapshot
-  M-->>P: show screen.element
-  P->>M: choose an action
-  M->>A: send intent and its arguments
-  A-->>M: accepted or refused result and new view
-  M-->>P: render the updated view
-```
-
-`world.interact(id)` publishes an `interact` event. The game forwards it to `caseUi.interact`. The bridge uses [`case-spots.js`](src/world/places/case-spots.js) to map the hotspot id to a screen name and asks [`screens/controller.js`](src/screens/controller.js) to open that screen. The screen receives the view and callbacks. It does not call `fetch`, import the network code, or decide whether an action succeeds.
-
-When the screen asks the adapter to do something, the adapter returns an answer and an updated view. The screen redraws from that view. A refused action follows the same path, so the player sees the server's reason without the screen inventing a rule.
+`world.interact(id)` publishes an `interact` event with the place and hotspot id. [`game.js`](src/game.js) listens for it and opens the matching panel: `market_hall` opens the Exchange host, `prediction_kiosk` the prediction desk and `sports_pavilion` the sports pavilion. On the Home islet, a plot or the signal station emits `plot_clicked` and [`screens/islet/host.js`](src/screens/islet/host.js) opens the build panel. The class demo's own spots (the Keeper's Lock, the three lamps, a captain near you) live in [`class-demo/`](src/class-demo/index.js). A panel receives its data and callbacks; it does not decide whether an action succeeds. The case screens and their bridge (`case-spots.js`) were removed on 10 Nov.
 
 ### A small DOM detail
 
@@ -62,13 +39,12 @@ The helper [`screens/helpers.js`](src/screens/helpers.js) has a different `butto
 
 ## Views in, intents out
 
-The schema-1 contract is in [`adapter/contract.js`](src/adapter/contract.js). A view is a read-only picture of the game at one revision. It includes the fields listed by `caseViewKeys`, such as the crew, board, world, account and bulletin. The same key must exist when a feature is off; its status or empty value tells the screen what to show.
+The schema-1 contract is in [`adapter/contract.js`](src/adapter/contract.js). A view is a read-only picture of the game at one revision. It has exactly the fields listed by `viewKeys`: `schema`, `mode`, `revision`, `now`, `captain` (name and coins), `account`, `presence` and `notice`. The same key must exist when a feature is off; its status or empty value tells the screen what to show. New features add their keys here.
 
-An intent is a request such as `pin`, `search`, or `buildLight`, with arguments. A screen can ask for an intent, then display the answer. It cannot award coins, decide that a clue is sufficient, choose a name, or claim that a save worked. Those rules belong to the server. The fake can imitate them for a local rehearsal, but is not a production authority.
+An intent is a request such as `signIn`, `rerollName` or `setEmote`, with arguments. A screen can ask for an intent, then display the answer. It cannot award coins, choose a name, or claim that a write worked. Those rules belong to the server. The fake can imitate them for a local rehearsal, but is not a production authority.
 
 The islet has a small app-owned preview state in [`world/islet/state.js`](src/world/islet/state.js). It remembers valid `islet_changed` events for the world. The presenter can temporarily call `previewBuilt(...)` to show a rehearsal build, then `clearPreview()` restores the latest actual event. A rehearsal preview is not a server answer and does not write a player's live islet.
 
-The tour's [`createVisibleClock`](src/core/visible-clock.js) measures elapsed time only while the page is visible. The tour resets that clock while paused or changing steps, so time spent in another tab does not silently skip ahead. Its `dispose()` removes the visibility listener.
 
 ## The frame loop and the budget
 
@@ -80,7 +56,7 @@ The published target is 60 frames per second, fewer than 150 draw calls, and few
 
 ## How the spoiler guard works
 
-The browser bundle must not contain protected case prose or elimination data. The production build runs [`scripts/check-spoilers.js`](scripts/check-spoilers.js) after Vite builds `dist/`. The guard checks output files against committed fingerprints for protected text and looks for elimination data. It reports file and fingerprint counts without printing the protected text. The public fake uses placeholders where server-supplied story wording belongs.
+The browser bundle must not contain protected case prose or elimination data. The case screens are gone, but the guard keeps running after every build so the culprit can never reach the browser through a later change. The production build runs [`scripts/check-spoilers.js`](scripts/check-spoilers.js) after Vite builds `dist/`. The guard checks output files against committed fingerprints for protected text and looks for elimination data. It reports file and fingerprint counts without printing the protected text. The public fake uses placeholders where server-supplied story wording belongs.
 
 Do not copy secret content into `frontend/` to make a screen easier to build. If the guard fails, treat it as a real bundle leak and fix the source or build boundary before continuing.
 
@@ -113,33 +89,20 @@ npm run test:art
 npm run test:art:production
 npm run test:ui
 npm run test:ui:production
-npm run test:cinematics
-npm run test:intro
 npm run test:weather:wiring
-npm run test:experience
 npm run test:demo
-npm run test:demo:tour
 npm run test:loading
 npm run test:spoilers
-npm run test:case
 npm run test:credits
 npm run test:living
-npm run test:life
 npm run test:lifecycle
-npm run test:golden
-npm run test:chaos
-npm run test:g7
 npm run test:csp
 npm run test:islet:world
-npm run test:bulletin
-npm run test:hook
 npm run test:harbor:life
-npm run test:presenter
 npm run test:a11y
-npm run test:g8
 ```
 
-`test:art:production`, `test:ui:production`, `test:loading`, `test:spoilers`, `test:csp` and `test:presenter` include a production build. `test:a11y` runs the accessibility browser checks. `test:g8` runs the sequential G8 regression driver. If a check opens Chrome and no Vite server is already running, it starts its own short-lived local server. For checks that accept a custom URL, set `TEST_URL`; do not run two GPU checks at once.
+`test:art:production`, `test:ui:production`, `test:loading`, `test:spoilers` and `test:csp` include a production build. `test:a11y` runs the accessibility browser checks. If a check opens Chrome and no Vite server is already running, it starts its own short-lived local server. For checks that accept a custom URL, set `TEST_URL`; do not run two GPU checks at once.
 
 ## A ten-file reading path
 
@@ -147,16 +110,16 @@ Read these in order. Each step builds on the previous one.
 
 1. [`src/main.js`](src/main.js) — find the title, adapter selection and the point where the game is loaded.
 2. [`src/shell/controller.js`](src/shell/controller.js) — see how title, pause and settings share one shell.
-3. [`src/game.js`](src/game.js) — follow the world setup and per-frame update.
-4. [`src/adapter/contract.js`](src/adapter/contract.js) — learn what a view and an intent look like.
-5. [`src/adapter/select.js`](src/adapter/select.js) — see how the fake or disconnected adapter is selected.
-6. [`src/adapter/bridge.js`](src/adapter/bridge.js) — see how a view reaches a lazily loaded panel.
-7. [`src/screens/controller.js`](src/screens/controller.js) — follow panel creation, updates and disposal.
+3. [`src/shell/routes.js`](src/shell/routes.js) and [`src/front-door/index.js`](src/front-door/index.js) — follow Play: lore, goal card, harbor.
+4. [`src/game.js`](src/game.js) — follow the world setup and per-frame update.
+5. [`src/adapter/contract.js`](src/adapter/contract.js) — learn what a view and an intent look like.
+6. [`src/adapter/select.js`](src/adapter/select.js) — see how the fake, disconnected or online adapter is selected.
+7. [`src/online/adapter/index.js`](src/online/adapter/index.js) — the online adapter: account, sign-in, presence and the islet engine.
 8. [`src/world/places/registry.js`](src/world/places/registry.js) — find stable place, route and hotspot ids.
 9. [`src/world/places/manager.js`](src/world/places/manager.js) — follow travel and place cleanup.
-10. [`src/world/cinematics/lazy.js`](src/world/cinematics/lazy.js) — see how visual shots load only when requested.
+10. [`src/class-demo/index.js`](src/class-demo/index.js) — the class harbor layer: quests, duels, the lock and the lamps.
 
-Keep [`src/world/places/case-spots.js`](src/world/places/case-spots.js) nearby while following the hotspot example. For scene layout and resource ownership, continue into [`src/world/places/settlement.js`](src/world/places/settlement.js).
+For scene layout and resource ownership, continue into [`src/world/places/settlement.js`](src/world/places/settlement.js).
 
 ## Explain-back cards
 
@@ -167,7 +130,7 @@ Use these cards to practise explaining the code to a teammate. Each function nam
 This file builds the title shell and loads the world only after the player starts.
 
 - `loadGame` imports and starts the game once.
-- `play` resumes or starts, then hands off to the runtime.
+- `play` loads the world and begins in Saltreach Harbor.
 - `onEscape` gives the open account or loading screen first chance to close.
 
 **Teacher asks:** Why does `main.js` load `game.js` later? **Answer:** The title can appear without loading Three.js and the full world first.
@@ -176,7 +139,7 @@ This file builds the title shell and loads the world only after the player start
 
 This is the game wiring layer. It gives each system its collaborators and owns the frame loop.
 
-- `startGame` creates the renderer, world, player, screens and update loop.
+- `startGame` creates the renderer, world, player, panels and update loop.
 - `travel` asks the place manager to move and shows a message if it fails.
 - `handleEscape` applies the shared rule for closing the top panel or skipping a shot.
 
@@ -207,7 +170,6 @@ The manager owns which place is active and how travel succeeds or recovers.
 This file composes a walkable place from registered art, layout data and scene effects.
 
 - `createSettlement` loads art and creates the place group.
-- `teaserShouldShow` chooses whether the coast's supplied fog-night state warrants the teaser.
 - `stormFlagShouldShow` checks the supplied weather state for the mast flag.
 
 **Teacher asks:** Why is the storm flag decision a small function? **Answer:** The display rule can be tested without loading Three.js or the whole scene.
@@ -228,59 +190,10 @@ The chart shows route choices and display-only marks supplied by the game.
 
 - `createChart` creates the chart dialog and its controls.
 - `refresh` redraws current routes, names and marks from current data.
-- `drawPartners` draws supplied partner paths on the chart.
 
 **Teacher asks:** Can a chart marker unlock a route? **Answer:** No. `world.canTravel` decides whether travel is allowed.
 
-### `src/screens/controller.js`
-
-This file hosts case screens and passes them a view and intent callbacks.
-
-- `createCaseScreens` creates the modal and the lazy screen map.
-- `open` selects, loads and displays a screen's `.element`.
-- `send` forwards an intent through the adapter and renders its returned view.
-
-**Teacher asks:** What does a screen receive? **Answer:** A view, callbacks and DOM component elements, not the network transport.
-
-### `src/adapter/bridge.js`
-
-The bridge connects adapter updates to the panel host and maps hotspot interactions to screen names.
-
-- `createCaseBridge` creates the bridge and decides whether it owns its adapter.
-- `ensure` loads the screen host on demand.
-- `onView` forwards new views and handles queued cinematic effects.
-
-**Teacher asks:** Why is `ensure` lazy? **Answer:** Most panels are not needed at title load, so they stay out of the first chunk until opened.
-
-### `src/adapter/fake/index.js`
-
-The fake adapter is an in-memory service for local rehearsal and browser checks.
-
-- `createFakeCaseAdapter` creates the simulated service.
-- `read` returns a cloned view snapshot.
-- `dispatch` runs the selected fake handler and publishes the result.
-
-**Teacher asks:** Can the fake grant real game progress? **Answer:** No. It has no live server connection and exists only to rehearse the interface.
-
-### `src/world/cinematics/controller.js`
-
-This controller owns the canvas, image loading, timing and cleanup for one cinematic.
-
-- `createCinematics` creates the controller and its dialog.
-- `play` validates a shot request and loads its local art.
-- `finish` settles the shot as completed, skipped or cancelled and emits the matching event.
-
-**Teacher asks:** How does Escape skip a shot? **Answer:** The dialog calls `finish('skipped')`, which stops timing and resolves the request.
-
-### `src/demo/tour.js`
-
-The tour runs a short class rehearsal with a fake adapter and temporary display state.
-
-- `createTour` creates the step machine, fake screens and a visible-page clock.
-- `enter` sets up the current highlight.
-- `stop` closes views and restores the saved place, weather, time and case view.
-
-**Teacher asks:** Why does the tour use an islet preview? **Answer:** It can show a build without changing the player's actual islet state.
+*Removed on 10 Nov 2026 (D031):* the cards for `src/screens/controller.js`, `src/adapter/bridge.js`, the case fake, `src/world/cinematics/controller.js` and `src/demo/tour.js`. The fake adapter that remains ([`src/adapter/fake/index.js`](src/adapter/fake/index.js)) holds only a local account and simulated captains.
 
 
 ## Host and demo console (G14)
@@ -289,10 +202,10 @@ The tour runs a short class rehearsal with a fake adapter and temporary display 
 
 `src/host/controller.js` asks the server for host access before displaying anything. `view.js` and `panels.js` render explicit safe fields with text nodes. Refresh failures and sign-out remove the panels, and stale responses cannot restore them. Crew cleanup requires confirmation and reuses one action UUID after an unknown outcome.
 
-The clock is hidden unless `/api/config` confirms G10 is installed and `case` is on. Its input and quick buttons send `{seconds, actionUid}` with 1–3600 whole seconds. Only the outcome message/time is displayed; the returned case view is ignored. `?perf=1` is linked for the demo rehearsal; G14 does not change the game's production performance display.
+The case clock was removed on 10 Nov 2026 (D031). `?perf=1` shows the frame-rate panel in the game.
 
 Run `npm test` and `npm run build`; after the build, `CHROME_PATH=/usr/bin/chromium npm run test:host` checks the page at desktop and phone widths against fake same-origin API responses only. Operator guidance and backend contracts are in [HOST-CONSOLE.md](../docs/HOST-CONSOLE.md).
-## G13: optional festival and sound
+## G13: optional festival and sound (removed on 10 Nov 2026)
 
 `src/screens/festival/entry.js` adds the title/pause launcher after checking the live feature flag. The screen and its transports are lazy. `adapter.js` uses the existing verified session, preserves an uncertain write's action id for retry, and clears private state on sign-out. `panel.js` displays the server timer and lamp ownership, gathers three A7 signals, and opens the existing duel view after pairing. It does not decide money, winners or whether a live claim succeeds.
 
@@ -308,7 +221,7 @@ The game’s [islet hook](src/online/islet-host.js) watches its exact session’
 [islet lifecycle](src/online/case-adapter/islet-lifecycle.js) owns one
 [L2 engine](src/screens/islet/adapter.js), so the panel and the existing finale `buildLight` intent
 share server snapshots and uncertain click IDs. Screens display those views and send intents;
-A2 remains the authenticated transport. A changed wallet triggers fresh own-account/ledger reads.
+A2 remains the authenticated transport. A changed wallet triggers a fresh own-account read.
 
 An uncertain build first reads the authoritative islet before an explicit repeat. The repeat keeps
 the original click ID, including if a resend is refused. Only an accepted build, a confirmed built readback or an
@@ -316,9 +229,8 @@ account reset clears the uncertainty. An old account’s held controller complet
 unlock the next account’s request. Closing/reopening an ordinary panel keeps its factory engine.
 
 The world draws accepted `islet_changed` answers and clears actual/private plots at account boundaries;
-its server-free tour preview remains separate. The muster reminder and finale’s Open your islet
-control open the same panel. Live case projection/post-build refresh remains deferred to streams
-12–15 pending R11. The local full-case rehearsal proves the panel-to-world-to-third-light path.
+its server-free preview remains separate. Since 10 Nov 2026 the signal station hotspot opens the same
+panel as the plots (the finale screen is gone).
 
 Run `npm run test:online:islet` and `npm run test:online:islet:chaos` after the normal stream gate.
 Both use production UI, generated credential placeholders and intercepted endpoints. The recordings
@@ -328,13 +240,12 @@ physical hardware and the full online case remain outside that proof.
 
 ## G29: the front door (Play, Join, lore intro, harbor start)
 
-The title has two actions. **Play** continues a saved story (local intro or cloud continuation); otherwise it
-runs the front door: the lore cutscene, one goal-and-controls card, then the player stands outside in
-Saltreach Harbor (`begin(false, {kind: 'world', place: 'saltreach_harbor'})`). **Join** opens a small page:
-a code (`HARBOR` is the class harbor; any other code goes to the friends and crew flow and is offered once
-in the crew screen) and a hint to scan the projector QR. `?join=harbor` is remembered in session storage
-for the class-harbor stage. The original Act 1 is the **Lighthouse prologue** in the pause menu and Settings.
-Settings holds Story (prologue, replay the intro), Account (sign-in buttons, saves) and About (build stamp).
+The title has two actions. **Play** runs the front door: the lore cutscene (once per device), one
+goal-and-controls card, then the player stands outside in Saltreach Harbor
+(`begin(false, {kind: 'world', place: 'saltreach_harbor', demo: true})`). **Join** opens a small page:
+the class code (other codes are refused since the crews left on 10 Nov) and a hint to scan the projector QR. `?join=harbor` is remembered in session storage
+for the class-harbor stage. Settings holds Account (sign-in buttons), Intro (replay the intro) and About
+(build stamp). The Lighthouse prologue was removed on 10 Nov 2026.
 
 Everything new loads after a click: `shell/routes.js`, `front-door/` and `cutscenes/`. The cold title is
 20,364 of its 21,080 JavaScript bytes (was 21,066) and 11,404 of 12,000 CSS bytes.
@@ -344,7 +255,7 @@ Everything new loads after a click: `shell/routes.js`, `front-door/` and `cutsce
 music bed is procedural Web Audio; a voice line plays `public/audio/voice/<id>.<ext>` only when
 `public/audio/voice/manifest.json` lists it (`{version: 1, lines: {id: {file, seconds}}}`), so the
 cutscenes stay silent until voices exist. Voices are fetched and decoded with Web Audio because the CSP
-keeps `media-src 'none'`. Skip with the button, Escape or a tap. The reveal's lines never ship here.
+keeps `media-src 'none'`. Skip with the button, Escape or a tap.
 
 Guest play: when `/api/config` answers `demo.open: true`, Play calls the `signIn({guest: true})` intent,
 which signs in anonymously with supabase-js. Otherwise Play stays local and Settings offers one sign-in
@@ -374,8 +285,6 @@ presence place `class_harbor` while standing in Saltreach Harbor, so ~30 phones 
 `live:place:class_harbor:1` with 40 drawn captains and bigger emote bubbles. Lamp states and duel
 invitations travel in that room only (`src/net/live-extras.js`, docs/INTERFACES.md section 7); no table,
 no `world_state`. The host (GET `/api/host/demo` answers 200) or `?present=1` gets J and a pause-menu
-entry for the projector panel. The pause menu offers "Full mystery" (back to the unchanged HUD and the
-Lighthouse prologue) and "Class demo". `?demo=1` rehearses all of it alone: simulated captains
+entry for the projector panel. `?demo=1` rehearses all of it alone: simulated captains
 (`&captains=40` for a load check), a practice rival and a fixture lock; nothing is sent to a server.
-`npm run test:demo` walks the journey in Chrome (`-- --perf` adds frame numbers); the old highlights
-tour check is `npm run test:demo:tour`.
+`npm run test:demo` walks the journey in Chrome (`-- --perf` adds frame numbers).

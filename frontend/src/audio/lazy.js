@@ -1,6 +1,6 @@
 // Keep synthesis out of the cold title. One trusted gesture loads and unlocks the audio owner.
 export function createLazyAudio(ctx){
-  let instance=null,pending=null,disposed=false,screen='title',festivalMusic=false;
+  let instance=null,pending=null,disposed=false,screen='title';
   const events=['pointerdown','keydown','click'];
   function stopListening(){for(const name of events)window.removeEventListener(name,unlock,true);}
   function unlock(event){
@@ -9,7 +9,7 @@ export function createLazyAudio(ctx){
     if(pending)return;
     pending=import('./controller.js').then(module=>{
       if(disposed)return;
-      instance=module.createAudio(ctx);instance.setScreen(screen);instance.setFestivalMusic(festivalMusic);
+      instance=module.createAudio(ctx);instance.setScreen(screen);
       instance.unlock(event);stopListening();
     }).catch(()=>{pending=null;ctx.caption('Sound unavailable. All cues remain visible.');});
   }
@@ -17,7 +17,6 @@ export function createLazyAudio(ctx){
   return {
     get state(){return instance?.state??'locked';},
     cue(name){instance?.cue(name);},
-    setFestivalMusic(value,event){festivalMusic=!!value;if(event)unlock(event);instance?.setFestivalMusic(festivalMusic);},
     setScreen(mode){screen=mode;instance?.setScreen(mode);},
     update(dt,state){instance?.update(dt,state);},
     dispose(){if(disposed)return;disposed=true;stopListening();instance?.dispose();},

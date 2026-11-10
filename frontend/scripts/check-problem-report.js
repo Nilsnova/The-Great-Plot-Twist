@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import {readFile, writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 
 const env = await openWorldBrowser({preview: true});
@@ -61,7 +60,7 @@ async function setGamepads(connected) {
   }, connected);
 }
 try {
-  await stubIntro(page);
+  
   await page.goto(env.url);
   await page.getByRole('button', {name: 'Settings', exact: true}).click();
   let body = await draft();

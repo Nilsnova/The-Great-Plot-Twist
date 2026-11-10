@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import {readFile,readdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 const stamp=JSON.parse(await readFile('dist/build-stamp.json','utf8'));
 const files=await readdir('dist/assets');let embedded=false;
@@ -11,7 +10,7 @@ assert.ok(embedded,'Built JavaScript contains the same SHA and time as the publi
 const env=await openWorldBrowser({preview:true}),{page}=env,report={stamp,checks:['Built JavaScript contains the injected stamp']};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);};
 try{
-  await stubIntro(page);await page.goto(env.url);await page.locator('#title-build-stamp').waitFor({state:'visible'});
+  await page.goto(env.url);await page.locator('#title-build-stamp').waitFor({state:'visible'});
   check((await page.locator('#title-build-stamp').textContent()).includes(stamp.sha),'Built title HTML contains the release identity');
   check(await page.locator('.shell-screen').evaluate((el,sha)=>!el.textContent.includes(sha)&&getComputedStyle(el.querySelector('.kit-modal-header'),'::after').content==='none',stamp.sha),'The title shows no build badge; the stamp lives in Settings > About');
   await page.setViewportSize({width:375,height:812});await page.screenshot({path:'captures/20261106_G9-C0/title-stamp-375.png'});await page.setViewportSize({width:1440,height:900});
@@ -26,8 +25,8 @@ try{
   await page.setViewportSize({width:375,height:667});
   check(await page.locator('.build-badge').count()===0,'The phone play area carries no build label');
   await page.screenshot({path:'captures/20261106_G9-Build-Stamp-World-375.png'});
-  await page.goto(env.url+'/?demo=1');await page.getByRole('button',{name:'Highlights tour',exact:true}).click();await page.locator('.intro-modal[open]').waitFor();
-  check(await page.locator('.build-badge').count()===0,'Presenter mode contains no corner build label');
+  await page.goto(env.url+'/?demo=1');await startFromTitle(page);
+  check(await page.locator('.build-badge').count()===0,'The class demo rehearsal contains no corner build label');
   await page.goto(env.url+'/?perf=1');await startFromTitle(page);
   await page.evaluate(()=>{window.__copiedPerf='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedPerf=text;}}});});
   await page.waitForFunction(()=>document.querySelector('.performance-panel dd')?.textContent!=='Unavailable');

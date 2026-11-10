@@ -5,7 +5,6 @@ import {readFile} from 'node:fs/promises';
 import {build} from 'vite';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {buildSecurityHeaders} from './security-headers.js';
-import {stubIntro} from './intro-browser-fixture.js';
 
 const origin = 'https://placeholder.supabase.co';
 // Earlier auth/crew journeys keep the recorded captain at zero coins and do not build on the islet.
@@ -113,6 +112,6 @@ export async function openAuthFixture() {
     return route.fulfill({status: data ? 200 : 503, json: data
       ?? {error: {code: 'unavailable', message: 'Recorded offline service.'}}});
   });
-  await stubIntro(env.page);
+  
   return {...env, checks, requests, fixtureUserId: userId};
 }

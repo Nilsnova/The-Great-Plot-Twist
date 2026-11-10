@@ -4,10 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { pixelArt, pixelArtIds, snapPixel } from '../src/pixel/catalog.js';
 import { artSizes, loadArt, placeArt } from '../src/world/art.js';
 import { pixelViewport } from '../src/pixel/display.js';
-import { decorationPlacements } from '../src/world/decorations.js';
-import { zones } from '../src/world/zones.js';
-import { canStand } from '../src/player/collision.js';
-import { getBuildingColliders } from '../src/world/buildings.js';
 
 describe('active pixel artwork', () => {
   it('registers every native PNG once and agrees with each file header', () => {
@@ -32,11 +28,6 @@ describe('active pixel artwork', () => {
     await expect(loadArt(['toString'])).rejects.toThrow('Unknown drawing');
     await expect(loadArt('crate')).rejects.toThrow('array');
     expect(() => placeArt(null, {}, 'crate', 0, 0)).toThrow('Load drawing before placing');
-  });
-  it('keeps original story stand points clear of added coastal props', () => {
-    const extra = decorationPlacements.filter(item => item.collider).map(item => ({ x: item.x, z: item.z, ...item.collider }));
-    const colliders = [...getBuildingColliders(), ...extra];
-    for (const zone of zones) expect(canStand(zone.x, zone.z, colliders), zone.id).toBe(true);
   });
   it('uses whole CSS scale factors with at most a one-scale-unit edge gap', () => {
     for (const [width, height] of [[1440, 900], [1600, 1000], [1920, 1080], [1365, 768]]) {

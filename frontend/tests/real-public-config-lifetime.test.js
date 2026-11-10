@@ -2,9 +2,9 @@
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createAdapterStore} from '../src/online/case-adapter/store.js';
-import {createAdapterTransport} from '../src/online/case-adapter/transport.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import {createAdapterStore} from '../src/online/adapter/store.js';
+import {createAdapterTransport} from '../src/online/adapter/transport.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
 
 const okay=data=>({ok:true,status:200,data});
 const config={flags:{sign_in:true,predictions:false,arena:false,case:false,live_presence:false}};
@@ -44,7 +44,7 @@ function factory({signedIn=true}={}){
     post:vi.fn(async()=>okay({captainName:me.captainName,rerollsLeft:1}))};
   const auth={read:()=>({configured:true,state:session.isSignedIn()?'signed_in':'signed_out'}),
     restore:vi.fn(async()=>{}),signOut:vi.fn(async()=>{}),readOwnLedger:vi.fn(async()=>({ok:true,rows:[]})),dispose:vi.fn()};
-  const adapter=createRealCaseAdapter({session,api,publicApi,auth,clock:()=>Date.now(),random:()=>.5,
+  const adapter=createRealAdapter({session,api,publicApi,auth,clock:()=>Date.now(),random:()=>.5,
     document:{},window:{},readLocalSave:()=>null});
   return {adapter,session,api,publicApi,publicReply,auth};
 }

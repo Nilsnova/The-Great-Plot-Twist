@@ -4,7 +4,7 @@ import {startFromTitle} from './shell-browser-tools.js';
 const selector = '.desk-modal[open]';
 async function openLocalDesk(page, url) {
   await page.emulateMedia({reducedMotion: 'reduce'});
-  await page.goto(url + '/?case=local&desk=local'); await startFromTitle(page);
+  await page.goto(url + '/?adapter=local&desk=local'); await startFromTitle(page);
   await page.waitForFunction(() => !!window.__island);
   await page.evaluate(async () => {
     const game = window.__island; await game.world.goTo('saltreach_harbor', {fast: true});

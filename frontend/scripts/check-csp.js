@@ -8,7 +8,7 @@ const policyName=Object.hasOwn(previewSecurityHeaders,'Content-Security-Policy')
 const policy=previewSecurityHeaders[policyName];
 const env = await openWorldBrowser({ preview: true });
 const { page } = env;
-const report = { checked: new Date().toISOString(), browser: env.browser.version(), pages: [], tour: [], errors: [], external: [] };
+const report = { checked: new Date().toISOString(), browser: env.browser.version(), pages: [], journey: [], errors: [], external: [] };
 const javascriptErrors = [], consoleErrors = [];
 page.setDefaultTimeout(15000);
 page.setDefaultNavigationTimeout(15000);
@@ -17,7 +17,7 @@ page.on('console', message => { if (message.type() === 'error') consoleErrors.pu
 
 function check(condition, label) {
   assert.ok(condition, label);
-  report.tour.push(label);
+  report.journey.push(label);
 }
 
 async function verifyPage(path) {
@@ -50,23 +50,6 @@ async function verifyPage(path) {
   report.pages.push({ path, status: response.status(), policy: headers[policyName.toLowerCase()], styles: style, violations });
 }
 
-async function waitForStep(title) {
-  await page.waitForFunction(expected => document.querySelector('.presenter-panel .kit-heading')?.textContent === expected, title);
-}
-
-async function confirmStep(title, id) {
-  await waitForStep(title);
-  if (id === 'intro') await page.locator('.intro-modal[open] .intro-view').waitFor();
-  if (id === 'arrival') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('LIGHTHOUSE ISLE'));
-  if (id === 'islet') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('HOME ISLET'));
-  if (id === 'chart') await page.locator('.sea-chart[open]').waitFor();
-  if (id === 'harbor') { await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('SALTREACH HARBOR')); await page.locator('.case-modal[open] .case-screen-content').waitFor(); }
-  if (id === 'board' || id === 'finale') await page.locator('.case-modal[open] .case-screen-content').waitFor();
-  if (id === 'weather') await page.waitForFunction(() => document.querySelector('.presenter-panel .tour-copy')?.textContent.includes('storm'));
-  if (id === 'relighting') await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('GULL'));
-  check(true, `Production tour reached ${title}`);
-}
-
 try {
   await mkdir('captures', { recursive: true });
   await page.unroute('**/api/weather');
@@ -96,35 +79,29 @@ try {
   await verifyPage('/help.html');
   await verifyPage('/privacy.html');
 
+  // The production front door under the CSP: Play, skip the lore, the goal card, the class harbor,
+  // then a sail to the Home islet (the old highlights tour left with the mystery on 10 Nov).
   await page.goto(`${env.url}/?demo=1`, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Highlights tour', exact: true }).click();
-
-  const steps = [
-    ['A page from the intro', 'intro'],
-    ['Arrival on Lighthouse Isle', 'arrival'],
-    ['Build the signal station', 'islet'],
-    ['Set a coastal course', 'chart'],
-    ['Harbor bulletin and live captains', 'harbor'],
-    ['At the Captain’s Table', 'board'],
-    ['Weather · almanac fog and storm', 'weather'],
-    ['The Night of Three Lights', 'finale'],
-    ['The Relighting', 'relighting'],
-  ];
-  for (let index = 0; index < steps.length; index++) {
-    const [title, id] = steps[index];
-    await confirmStep(title, id);
-    await page.keyboard.press('Space');
-    if (index + 1 < steps.length) await waitForStep(steps[index + 1][0]);
-  }
-  await page.getByRole('button', { name: 'Start highlights tour', exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Start highlights tour', exact: true }).click();
-  await page.getByRole('button', { name: 'End rehearsal', exact: true }).click();
-  await page.getByRole('button', { name: 'Start highlights tour', exact: true }).waitFor();
-  check(await page.locator('.case-reveal-line').count() === 0, 'Production demo shows no reveal text');
-  check(await page.evaluate(() => typeof window.__island) === 'undefined', 'Production tour uses no development inspection hooks');
+  await page.locator('#play').click();
+  await page.locator('dialog.cutscene[open]').waitFor();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
+  await page.locator('.goal-card[open]').waitFor({ timeout: 30000 });
+  check(true, 'Production front door shows the lore cutscene and the goal card');
+  await page.getByRole('button', { name: 'Got it', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('SALTREACH HARBOR') && !document.querySelector('dialog[open]'));
+  await page.locator('.quest-strip').waitFor();
+  check(true, 'Production front door lands in Saltreach Harbor with the quest strip');
+  await page.locator('.chart-toggle').evaluate(button => button.click());
+  await page.locator('.sea-chart[open]').waitFor();
+  await page.locator('.sea-chart .fast-travel').check();
+  await page.locator('.sea-chart [data-place="home_islet"]').click();
+  await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('HOME ISLET'), null, { timeout: 30000 });
+  check(true, 'Production sea chart sails to the Home islet');
+  check(await page.locator('.case-reveal-line, .case-modal, .intro-modal').count() === 0, 'Production game shows no case or prologue screen');
+  check(await page.evaluate(() => typeof window.__island) === 'undefined', 'Production game uses no development inspection hooks');
   const finalViolations = await page.evaluate(() => window.__cspViolations ?? []);
-  assert.deepEqual(finalViolations, [], 'Production tour produces no CSP violations');
-  check(apiResponses.length > 0 && apiResponses.every(response => response.status === 503), 'API requests occur only as expected 503 responses during the production tour');
+  assert.deepEqual(finalViolations, [], 'Production journey produces no CSP violations');
+  check(apiResponses.length > 0 && apiResponses.every(response => response.status === 503), 'API requests occur only as expected 503 responses during the production journey');
   check(report.external.length === 0, 'Production pages request no external assets');
   report.apiResponses = apiResponses;
   const expected503 = /Failed to load resource: the server responded with a status of 503/;

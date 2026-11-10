@@ -1,17 +1,13 @@
 // Reusable Vitest contract checks for memory, fixture-backed and production adapters.
 import {describe,it,expect} from 'vitest';
-import {caseMethods,caseReasons,caseViewKeys} from '../contract.js';
-import {validateBulletin} from './bulletin.js';
-import {validateIsletDisplay} from './islet.js';
+import {adapterMethods,adapterReasons,viewKeys} from '../contract.js';
 
 const stableView=view=>{const copy=structuredClone(view);delete copy.revision;delete copy.notice;return copy;};
 const hasKeys=(value,keys)=>expect(Object.keys(value)).toEqual(expect.arrayContaining(keys));
 const stringOrNull=value=>expect(value===null||typeof value==='string').toBe(true);
 const allowed=(value,values)=>expect(values).toContain(value);
-function validateExtensions(view){
-  validateBulletin(view.bulletin);
-  validateIsletDisplay(view);
-  const p=view.presence,a=view.account,r=view.rewards,l=view.log,h=view.hints;
+function validateParts(view){
+  const p=view.presence,a=view.account,c=view.captain;
   hasKeys(p,['localEmote','canEmote','cooldown','emotes']);expect(typeof p.canEmote).toBe('boolean');expect(Number.isFinite(p.cooldown)&&p.cooldown>=0).toBe(true);expect(Array.isArray(p.emotes)).toBe(true);
   if(p.localEmote!==null){hasKeys(p.localEmote,['id','until']);allowed(p.localEmote.id,['wave','cheer','point','lantern','shrug']);expect(Number.isFinite(p.localEmote.until)).toBe(true);}
   allowed(p.status,['live','reconnecting','offline','off']);stringOrNull(p.place);
@@ -24,64 +20,46 @@ function validateExtensions(view){
     allowed(peer.facing,['front','back','left','right']);expect(typeof peer.moving).toBe('boolean');
     allowed(peer.emote,[null,'wave','cheer','point','lantern','shrug']);expect(typeof peer.isCrew).toBe('boolean');expect(Number.isFinite(peer.at)).toBe(true);
   }
-  for(const member of p.crew){
-    hasKeys(member,['id','seat','name','kit','online','place','isPartner']);
-    expect(typeof member.id).toBe('string');expect(Number.isInteger(member.seat)).toBe(true);expect(typeof member.name).toBe('string');
-    if(member.kit!==null)hasKeys(member.kit,['id','name']);expect(typeof member.online).toBe('boolean');stringOrNull(member.place);expect(typeof member.isPartner).toBe('boolean');
-  }
   allowed(a.state,['signed_out','signing_in','signed_in','expired','error']);stringOrNull(a.captainName);
-  expect(typeof a.canReroll).toBe('boolean');expect(typeof a.hasKit).toBe('boolean');expect(typeof a.canContinue).toBe('boolean');
-  allowed(a.save.state,['idle','saving','saved','offline','conflict']);expect(typeof a.save.label).toBe('string');
-  expect(a.save.updatedAt===null||typeof a.save.updatedAt==='string'||Number.isFinite(a.save.updatedAt)).toBe(true);
-  for(const key of ['recent','ledger','keepsakes','epilogue','contributors'])expect(Array.isArray(r[key])).toBe(true);
-  expect(r.balance===null||Number.isFinite(r.balance)).toBe(true);expect(typeof r.festivalBadge).toBe('boolean');
-  for(const entry of [...r.recent,...r.ledger]){hasKeys(entry,['id','amount','reason','label','at']);expect(typeof entry.id).toBe('string');expect(Number.isFinite(entry.amount)).toBe(true);expect(typeof entry.reason).toBe('string');expect(typeof entry.label).toBe('string');}
-  for(const item of r.keepsakes){hasKeys(item,['id','title','description','owned']);expect(typeof item.owned).toBe('boolean');}
-  for(const item of r.epilogue){hasKeys(item,['id','text']);expect(typeof item.text).toBe('string');}
-  for(const key of ['cards','deductions','partnerReports','nights','reveal','observations'])expect(Array.isArray(l[key])).toBe(true);
-  for(const item of l.observations)expect(item).toMatchObject({id:expect.any(String),text:expect.any(String)});
-  expect(Array.isArray(h.items)).toBe(true);expect(Array.isArray(h.actions)).toBe(true);
-  for(const item of h.items)hasKeys(item,['id','title','body']);
-  for(const action of h.actions)hasKeys(action,['id','label','screen','params','available','priority']);
-  if(view.continuation!==null){const c=view.continuation;hasKeys(c,['source','kind','actions','place']);allowed(c.source,['local','cloud']);allowed(c.kind,['intro','world']);expect(c.actions===null||Array.isArray(c.actions)).toBe(true);stringOrNull(c.place);}
+  expect(typeof a.canReroll).toBe('boolean');expect(typeof a.guest).toBe('boolean');expect(Array.isArray(a.providers)).toBe(true);
+  expect(typeof c.name).toBe('string');expect(c.coins===null||Number.isFinite(c.coins)).toBe(true);
 }
 const validResult=result=>{
   expect(result).toMatchObject({accepted:expect.any(Boolean),message:expect.any(String)});
-  expect(Object.keys(result.view)).toEqual(expect.arrayContaining(caseViewKeys));
+  expect(Object.keys(result.view)).toEqual(expect.arrayContaining(viewKeys));
   if(result.accepted)expect(result.reason).toBeNull();
-  else expect(caseReasons).toContain(result.reason);
+  else expect(adapterReasons).toContain(result.reason);
   if(result.retryAfterSeconds!==undefined){expect(result.accepted).toBe(false);expect(['rate_limited','too_many_tries']).toContain(result.reason);expect(typeof result.retryAfterSeconds).toBe('number');expect(Number.isFinite(result.retryAfterSeconds)&&result.retryAfterSeconds>=0&&result.retryAfterSeconds<=86400).toBe(true);}
 };
 
 /** Register reusable adapter checks. Driver: {options,probes,prepare,sequence,assertProgress,stableView}. */
 export function defineAdapterConformance(name,factory,driver={}){
   const create=()=>driver.create?driver.create():factory(driver.options??{});
-  describe(`${name} case adapter contract`,()=>{
+  describe(`${name} adapter contract`,()=>{
     it('returns every schema key and caller-owned nested read snapshots',async()=>{
       const adapter=await create();
       try{
         const before=adapter.read(),copy=adapter.read();
-        expect(Object.keys(before)).toEqual(expect.arrayContaining(caseViewKeys));
+        expect(Object.keys(before)).toEqual(expect.arrayContaining(viewKeys));
         expect(before.schema).toBe(1);
-        validateExtensions(before);
-        copy.captain.name='mutated by caller';copy.rewards.ledger.push({id:'caller'});
-        copy.presence.others.push({id:'caller'});copy.bulletin.lines.push({kind:'caller',text:'caller'});
+        validateParts(before);
+        copy.captain.name='mutated by caller';copy.presence.others.push({id:'caller'});copy.account.providers.push('caller');
         expect(adapter.read()).toEqual(before);
       }finally{adapter.dispose();}
     });
 
-    for(const method of caseMethods)it(`answers ${method} with a known reason`,async()=>{
+    for(const method of adapterMethods)it(`answers ${method} with a known reason`,async()=>{
       const adapter=await create();
       try{
         expect(typeof adapter[method]).toBe('function');
         let result;
         try{result=await adapter[method](...(driver.probes?.[method]??[]));}
-        catch(error){expect(caseReasons).toContain(error?.reason);expect(error?.message).toEqual(expect.any(String));return;}
+        catch(error){expect(adapterReasons).toContain(error?.reason);expect(error?.message).toEqual(expect.any(String));return;}
         validResult(result);
       }finally{adapter.dispose();}
     });
 
-    it('publishes cloned state before resolving and keeps pin-pair progress safe on repeats',async()=>{
+    it('publishes cloned state before resolving and keeps state safe on repeats',async()=>{
       const flow=driver.sequence;
       if(!flow?.length){expect(typeof driver.sequence).toBe('object');return;}
       const adapter=await create();let off=()=>{},resolved=false,publishedBeforeResolve=false,initialName;
@@ -113,7 +91,7 @@ export function defineAdapterConformance(name,factory,driver={}){
         expect((driver.stableView??stableView)(adapter.read())).toEqual(before);
         let afterDispose;
         try{afterDispose=await adapter[step.method](...(step.args??[]));}
-        catch(error){expect(caseReasons).toContain(error?.reason);expect(error.reason).toBe('disposed');}
+        catch(error){expect(adapterReasons).toContain(error?.reason);expect(error.reason).toBe('disposed');}
         if(afterDispose){validResult(afterDispose);expect(afterDispose.accepted).toBe(false);expect(afterDispose.reason).toBe('disposed');}
         expect(events).toBe(afterFirst);expect(adapter.read()).toEqual(afterDisposeRead);
       }finally{adapter.dispose();}

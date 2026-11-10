@@ -1,7 +1,7 @@
 // Real presence tests inject A4 controllers, clocks and identities; no socket or service is used.
 import {describe, expect, it, vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createOnlinePresence} from '../src/online/case-adapter/presence.js';
+import {createOnlinePresence} from '../src/online/adapter/presence.js';
 import {playerId, createFakeClient, worldOf} from './realtime-fakes.js';
 import {startRealtime as startA4} from '../src/online/realtime.js';
 import {createPositionReporter} from '../src/controls/presence-report.js';
@@ -418,14 +418,14 @@ describe('online presence controller', () => {
     expect(ctx.state.presence.others[0].emote).toBeNull();
   });
 
-  it('forwards crew hints without interpreting game outcomes', async () => {
-    const ctx = setup(); await ctx.presence.refresh(); ctx.state.case = {writeRevision: 3};
+  it('passes crew room events to the bus without a reader or a view change', async () => {
+    const ctx = setup(); await ctx.presence.refresh();
+    const calls = ctx.store.commit.mock.calls.length;
     const event = {type: 'live_crew_updated', kind: 'crew_changed', data: {version: 4}};
     ctx.event(event);
-    expect(ctx.onCrewUpdated).toHaveBeenCalledWith({kind: 'crew_changed', data: {version: 4}});
-    expect(ctx.onCaseHint).toHaveBeenCalledWith(4);
-    ctx.event({...event, data: {version: 3}});
-    expect(ctx.onCaseHint).toHaveBeenCalledTimes(1);
+    expect(ctx.onCrewUpdated).not.toHaveBeenCalled();
+    expect(ctx.onCaseHint).not.toHaveBeenCalled();
+    expect(ctx.store.commit).toHaveBeenCalledTimes(calls);
     expect(ctx.emit).toHaveBeenCalledWith(event);
   });
 

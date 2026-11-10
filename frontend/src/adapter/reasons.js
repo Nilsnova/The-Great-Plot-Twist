@@ -1,5 +1,5 @@
 // Shared refusal vocabulary. Loaded by diagnostics and intent handlers, not the title.
-export const caseReasons = [
+export const adapterReasons = [
   'accusation_cooldown',
   'accusation_refused',
   'aim_cooldown',

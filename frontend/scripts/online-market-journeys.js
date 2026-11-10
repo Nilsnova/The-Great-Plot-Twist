@@ -1,7 +1,7 @@
 // Recorded L4-v2 journeys use public controls and intercepted endpoints, never game hooks.
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {openAccountControls,openCrewFromHud, playFromTitle} from './online-browser-actions.js';
+import {openAccountControls, playFromTitle} from './online-browser-actions.js';
 
 const market = page => page.locator('.market-modal[open]');
 const writes = env => env.marketRequests.filter(request => request.method === 'POST');
@@ -42,27 +42,10 @@ async function recordedStockStates(page){
   await market(page).locator('.market-card').first().scrollIntoViewIfNeeded();
   return true;
 }
-async function recordedRewards(env,balance,rows){
+// The Rewards page with its coin ledger left with the mystery on 10 Nov (D031); the market closes and
+// the authoritative balance is checked through the account reads instead.
+async function recordedRewards(env){
   const {page}=env;await page.keyboard.press('Escape');await market(page).waitFor({state:'hidden'});
-  await openCrewFromHud(page);
-  const modal=page.locator('.case-modal[open]'),picker=modal.getByRole('combobox',{name:'Case page'});
-  if(await picker.isVisible())await picker.selectOption('rewards');
-  else await modal.getByRole('button',{name:'Rewards',exact:true}).click();
-  await modal.locator('.rewards-ledger').waitFor();
-  await page.waitForFunction(({balance,rows})=>{
-    const screen=document.querySelector('.case-modal[open] .rewards-screen');
-    const actual=[...(screen?.querySelectorAll('.rewards-ledger > li')??[])].map(row=>({
-      amount:row.querySelector('strong')?.textContent,reason:row.querySelector('span')?.textContent}));
-    return screen?.querySelector('.rewards-balance')?.textContent===balance&&JSON.stringify(actual)===JSON.stringify(rows);
-  },{balance,rows});
-  const proof=env.marketLedgerProof();
-  assert.ok(proof.reads>0&&proof.lastRows===rows.length&&proof.allGet&&proof.allAuthorized&&proof.allOwnUser&&proof.allExpectedQuery,
-    'The real Rewards balance and fixed rows arrived through authorized own-player SDK ledger reads.');
-  await page.keyboard.press('Escape');await modal.waitFor({state:'hidden'});
-  await page.waitForFunction(()=>document.activeElement?.matches('canvas[tabindex="0"]'));
-  assert.ok(await page.locator('canvas[tabindex="0"]').first().evaluate(element=>document.activeElement===element),
-    'Rewards Escape returns focus to the public canvas.');
-  assert.equal(await page.locator('.shell-screen[open][data-mode="pause"]').count(),0,'Closing Rewards does not open Pause.');
   return true;
 }
 async function recordedMarketCredits(page){

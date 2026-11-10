@@ -1,17 +1,11 @@
-// G29 C1: what Play starts, the Join code rules and the remembered projector invitation.
+// G29 C1: where Play lands, the Join code rules and the remembered projector invitation.
 import {describe,expect,it} from 'vitest';
-import {playChoice,joinTarget,readFlag,writeFlag,rememberJoin,readJoinCode,forgetJoinCode,joinedHarbor,classCode,displayCode,goalCopy,HARBOR_START,JOIN_KEY} from '../src/front-door/logic.js';
+import {joinTarget,readFlag,writeFlag,rememberJoin,readJoinCode,forgetJoinCode,joinedHarbor,classCode,displayCode,goalCopy,HARBOR_START,JOIN_KEY} from '../src/front-door/logic.js';
 import {shellTransition} from '../src/shell/logic.js';
 
 function memory(){const values=new Map();return {values,getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key)};}
 
 describe('front door rules',()=>{
-  it('continues a saved story and otherwise opens the front door',()=>{
-    expect(playChoice({})).toBe('front_door');
-    expect(playChoice({localIntro:true})).toBe('continue');
-    expect(playChoice({account:{canContinue:true}})).toBe('continue');
-    expect(playChoice({account:{canContinue:false},localIntro:false})).toBe('front_door');
-  });
   it('starts outside in Saltreach Harbor through the world continuation',()=>{
     expect(HARBOR_START).toEqual({kind:'world',place:'saltreach_harbor',demo:true});
     expect(Object.isFrozen(HARBOR_START)).toBe(true);

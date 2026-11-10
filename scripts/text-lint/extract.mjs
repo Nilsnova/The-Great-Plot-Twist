@@ -128,7 +128,7 @@ export function displayJavascriptStrings(source) {
 export function reportOnly(file) {
   return /frontend\/src\/(?:online|adapter|fake)\//.test(file) ||
     /frontend\/src\/screens\/(?!festival\/|sports\/)/.test(file) ||
-    file === 'backend/content/story.json' || file === 'frontend/src/demo/intro-story.json' ||
+    file === 'backend/content/story.json' ||
     file.startsWith('backend/content/market/') || file.startsWith('backend/content/weather/');
 }
 

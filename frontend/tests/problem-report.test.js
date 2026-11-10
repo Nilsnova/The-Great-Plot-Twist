@@ -6,7 +6,7 @@ const sample = {
   build: {sha: 'abcdef0-dirty', builtAt: '2026-11-06T16:00:00.000Z', environment: 'preview'},
   placeId: 'lighthouse_isle', screen: 'pause', mode: 'online', accountState: 'signed_in',
   browser: {family: 'Chrome', major: 131}, viewport: {width: 1280, height: 800}, inputType: 'mouse',
-  performance: null, actions: ['settings_open', 'pin → accepted', 'pair → wrong_pair'],
+  performance: null, actions: ['settings_open', 'setEmote → accepted', 'rerollName → name_reroll_used'],
 };
 
 describe('problem reports', () => {
@@ -18,7 +18,7 @@ describe('problem reports', () => {
       build: {...sample.build, token: 'PRIVATE_NESTED'},
       browser: {...sample.browser, userAgent: 'PRIVATE_UA'},
       viewport: {...sample.viewport, extra: 'PRIVATE_DIMENSION'},
-      actions: [...sample.actions, 'pin → PRIVATE', 'PRIVATE_ACTION'],
+      actions: [...sample.actions, 'setEmote → PRIVATE', 'PRIVATE_ACTION'],
     });
     expect(report).toEqual(sample);
     expect(JSON.stringify(report)).not.toContain('PRIVATE');
@@ -57,7 +57,7 @@ describe('problem reports', () => {
   it('creates a bounded draft with public notice, safe title and two empty sections', () => {
     const input = {...sample, title: 'PRIVATE_TITLE', body: 'PRIVATE_BODY'};
     for (let count = 0; count <= 300; count++) {
-      const url = new URL(createProblemUrl({...input, actions: Array(count).fill('pin → accepted')}));
+      const url = new URL(createProblemUrl({...input, actions: Array(count).fill('setEmote → accepted')}));
       expect(url.origin + url.pathname).toBe('https://github.com/Nilsnova/The-Great-Plot-Twist/issues/new');
       expect(url.searchParams.get('title')).toBe('[playtest abcdef0-dirty] lighthouse_isle: ');
       expect(url.searchParams.get('body')).toContain('Screen: pause');
@@ -73,7 +73,7 @@ describe('problem reports', () => {
 
   it('retains only the last ten validated actions and returns copies', () => {
     const trace = createUiTrace();
-    for (let index = 0; index < 15; index++) trace.record(index % 2 ? 'pin → accepted' : 'resume');
+    for (let index = 0; index < 15; index++) trace.record(index % 2 ? 'setEmote → accepted' : 'resume');
     trace.record('private arbitrary text');
     trace.record('pair → PRIVATE');
     const actions = trace.read();

@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { openWorldBrowser } from './world-browser-tools.js';
-import { stubIntro } from './intro-browser-fixture.js';
 import { startFromTitle } from './shell-browser-tools.js';
 import { BOARD } from '../tests/sports/sample-answers.js';
 const env = await openWorldBrowser(), { page } = env, report = { checks: [] };
@@ -13,7 +12,7 @@ await page.route('**/api/sports', route => {
   return route.fulfill({ contentType: 'application/json', body: JSON.stringify(BOARD) });
 });
 try {
-  await stubIntro(page); await page.goto(`${env.url}?case=local`); await startFromTitle(page);
+   await page.goto(`${env.url}?adapter=local`); await startFromTitle(page);
   await page.evaluate(async () => {
     const game = window.__island;
     await game.world.goTo('saltreach_harbor', { fast: true });

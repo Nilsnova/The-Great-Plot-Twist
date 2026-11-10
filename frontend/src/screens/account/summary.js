@@ -7,13 +7,12 @@ import {createEmailCodeForm} from './email-code.js';
 
 const accountOf=view=>view?.account??view??{};
 const labels={signed_out:'Signed out',signing_in:'Signing in',signed_in:'Signed in',expired:'Session expired',error:'Account unavailable'};
-const saveStates={idle:'No save',saving:'Saving',saved:'Saved',offline:'Offline copy',conflict:'Conflict'};
-export function createAccountSummary({send,openAccount,onContinue}){
-  const element=node('section','account-summary');element.setAttribute('aria-label','Account and saved game');
+export function createAccountSummary({send,openAccount}){
+  const element=node('section','account-summary');element.setAttribute('aria-label','Account');
   const replayNote=node('p','shell-note');
-  const status=node('p','account-summary-status'),saveStatus=node('p','account-summary-note'),name=node('strong'),actions=node('div','account-summary-actions');status.append(name);
+  const status=node('p','account-summary-status'),name=node('strong'),actions=node('div','account-summary-actions');status.append(name);
   // The email code form lives outside the repainted actions, so typing and focus survive updates.
-  const email=createEmailCodeForm({send,focusPrefix:'email'});element.append(status,saveStatus,actions,email.element,replayNote);
+  const email=createEmailCodeForm({send,focusPrefix:'email'});element.append(status,actions,email.element,replayNote);
   let buttons=[];
   function button(label,onClick,focusKey,disabled=false){const component=createButton({label,onClick,disabled,variant:'quiet'});component.element.dataset.focus=focusKey;buttons.push(component);actions.append(component.element);}
   function update(view){
@@ -21,19 +20,13 @@ export function createAccountSummary({send,openAccount,onContinue}){
     const account=accountOf(view),state=account.state??'signed_out';name.textContent=String(account.captainName??'Captain pending');
     status.setAttribute('role','status');status.setAttribute('aria-label',`${labels[state]??state} · ${name.textContent}`);
     status.replaceChildren(node('span','account-summary-state',labels[state]??state),document.createTextNode(' · '),name);
-    replayNote.textContent=account.guest?'You are playing as a guest. Sign in to keep your progress.'
-      :'Play continues your saved game. The Lighthouse prologue is in Settings.';
-    const save=account.save??{};saveStatus.textContent=`${saveStates[save.state]??'Save status'} · ${save.label??'No saved progress'}`;
+    replayNote.textContent=account.guest?'You are playing as a guest. Sign in to keep your progress.':'';replayNote.hidden=!account.guest;
     buttons.forEach(item=>item.dispose());buttons=[];actions.replaceChildren();
-    button('Account and saves',()=>openAccount?.(),'account');
+    button('Account',()=>openAccount?.(),'account');
     if(account.canSignIn!==false&&(state==='signed_out'||state==='expired'||state==='error'))for(const item of providerActions(account,{prefix:state==='expired'?'Sign in again with':'Sign in with',focus:'sign-in'}))button(item.label,()=>send?.('signIn',...item.args),item.focus);
     if(account.canSignIn!==false&&state==='signed_in'&&account.guest===true)for(const item of providerActions(account,{prefix:'Keep progress with',upgrade:true,focus:'upgrade'}))button(item.label,()=>send?.('signIn',...item.args),item.focus);
     email.update(account);
     if(account.signInMessage)actions.append(node('span','account-summary-note',account.signInMessage));
-    if(account.canContinue){
-      if(onContinue)button(account.save?.source==='cloud'?'Continue from cloud':'Continue',async()=>{const result=await send?.('continueGame');if(result?.accepted)onContinue(result);},'continue');
-    }else if(account.save?.state!=='conflict')actions.append(node('span','account-summary-note','No saved game'));
-    if(account.save?.state==='conflict')actions.append(node('span','account-summary-note','Choose a save in Account and saves'));
     if(focusKey){const replacement=[...actions.querySelectorAll('[data-focus]')].find(item=>item.dataset.focus===focusKey&&!item.disabled);
       (replacement??actions.querySelector('button:not(:disabled)'))?.focus({preventScroll:true});}
   }

@@ -5,7 +5,6 @@ import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {stubWeather} from './weather-browser-fixture.js';
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 const output=process.env.CAPTURE_DIR||'/tmp/redesign-movement';
 const report={checks:[],modes:[]},check=(value,label)=>{assert.ok(value,label);report.checks.push(label);};
@@ -21,7 +20,7 @@ try{
       const page=await context.newPage(),errors=[],external=[];
       page.on('pageerror',error=>errors.push(error.message));
       page.on('request',request=>{if(!request.url().startsWith(url)&&!request.url().startsWith('data:'))external.push(request.url());});
-      await stubOfflineApi(page);await stubWeather(page);await stubIntro(page);await page.goto(url);await startFromTitle(page);
+      await stubOfflineApi(page);await stubWeather(page);await page.goto(url);await startFromTitle(page);
       await page.waitForFunction(()=>window.__island?.renderer.info.render.frame>8);
       const before=await page.evaluate(()=>{
         const g=window.__island;return {x:g.player.position.x,width:g.renderer.domElement.width,height:g.renderer.domElement.height};

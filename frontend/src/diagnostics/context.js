@@ -1,16 +1,15 @@
 // Only coarse, bounded context and contract vocabulary may enter an issue draft.
-import {caseMethods} from '../adapter/contract.js';
-import {caseReasons} from '../adapter/reasons.js';
+import {adapterMethods} from '../adapter/contract.js';
+import {adapterReasons} from '../adapter/reasons.js';
 import {allowedUiActions} from './ui-actions.js';
 
 export const diagnosticScreens = Object.freeze([
-  'title', 'pause', 'settings', 'credits', 'account', 'intro', 'chart', 'arrival', 'crew', 'board',
-  'search', 'partners', 'finale', 'accusation', 'reveal', 'relighting', 'rewards', 'log', 'hints',
-  'bulletin', 'islet', 'market', 'predictions', 'duels', 'cinematic', 'world', 'loading',
+  'title', 'pause', 'settings', 'credits', 'account', 'intro', 'chart',
+  'islet', 'market', 'predictions', 'duels', 'cinematic', 'world', 'loading',
 ]);
 const screens = new Set(diagnosticScreens);
-const methods = new Set(caseMethods);
-const reasons = new Set(caseReasons);
+const methods = new Set(adapterMethods);
+const reasons = new Set(adapterReasons);
 const modes = new Set(['online', 'unavailable', 'local']);
 const accountStates = new Set(['signed_out', 'signing_in', 'signed_in', 'expired', 'error']);
 const browserFamilies = new Set(['Chrome', 'Firefox', 'Safari', 'Edge', 'Other']);

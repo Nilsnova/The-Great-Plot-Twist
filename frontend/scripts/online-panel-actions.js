@@ -1,14 +1,14 @@
 // All navigation below is through visible game controls and ordinary keyboard/touch input.
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {dismissIntro} from './intro-browser-fixture.js';
+import {dismissPanels} from './shell-browser-tools.js';
 import {playFromTitle} from './online-browser-actions.js';
 
 export async function enterPanelWorld(env,{area}={}){
   const {page}=env;await page.emulateMedia({reducedMotion:'reduce'});await signInFromTitle(env);
   if(await page.locator('.account-modal[open]').isVisible())await page.keyboard.press('Escape');
   await playFromTitle(page);
-  await page.locator('.hud.exploring').waitFor();await dismissIntro(page);
+  await page.locator('.hud.exploring').waitFor();await dismissPanels(page);
   const expected=area==='predictions'?'Saltreach Harbor':'Smugglers’ Cove';
   await page.waitForFunction(expected=>document.querySelector('.hud .chapter')?.textContent.includes(expected),expected);
   await page.locator('canvas').first().focus();
@@ -31,14 +31,7 @@ async function walkFrames(page, seconds) {
 
 export async function openPanelHotspot(env,area,{opened=true}={}){
   const {page}=env,id=area==='predictions'?'prediction_kiosk':'arena_gate';
-  // Reach the observed public Table prompt before taking its clear east side; cold frames cannot skip readiness.
-  if(area==='predictions'){
-    await page.keyboard.down('KeyW');
-    try{await page.waitForFunction(()=>{const prompt=document.querySelector('.hud .interact');
-      return prompt?.dataset.zone==='captains_table'&&!prompt.hidden;},null,{timeout:20000});}
-    finally{await page.keyboard.up('KeyW');}
-    await page.keyboard.down('KeyD');try{await walkFrames(page, .4);}finally{await page.keyboard.up('KeyD');}
-  }
+  // From the harbor landing the kiosk is straight north; the Captain's Table stop left with the mystery.
   await page.keyboard.down('KeyW');
   try{await page.waitForFunction(id=>{const prompt=document.querySelector('.hud .interact');
     return prompt?.dataset.zone===id&&!prompt.hidden;},id,{timeout:20000});}

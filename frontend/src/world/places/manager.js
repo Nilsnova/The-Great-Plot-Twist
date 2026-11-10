@@ -1,18 +1,16 @@
 // One owner for place lifetime. Rejected travel leaves the current place untouched.
 import { routeTo, places } from './registry.js';
 export function createWorld(ctx) {
-  let current = null, busy = false, disposed = false, relit = false;
+  let current = null, busy = false, disposed = false;
   const idleWaiters=new Set(),wakeIdle=()=>{for(const resolve of idleWaiters)resolve();idleWaiters.clear();};
   return {
     get current() { return current; }, get busy() { return busy || !!ctx.isBlocked?.(); },
     whenIdle(){return busy&&!disposed?new Promise(resolve=>idleWaiters.add(resolve)):Promise.resolve();},
-    get relit() { return relit; },
-    canTravel(id) { return !disposed && !!routeTo(current?.id, id, relit); },
-    setRelightingComplete(value) { relit = value === true; },
+    canTravel(id) { return !disposed && !!routeTo(current?.id, id); },
     // Keep a single active place and restore the departure scene if loading the destination fails.
     async goTo(id, options = {}) {
       if (disposed || busy || ctx.isBlocked?.()) return false;
-      const routeExists = routeTo(current?.id, id, relit);
+      const routeExists = routeTo(current?.id, id);
       if (!routeExists || current?.id === id) return false;
       busy = true;
       const previousPlaceId = current?.id;

@@ -1,6 +1,6 @@
-// G29 C2: the class harbor rules (presence place, joined toast, spots, demo path) and the projector's words.
+// G29 C2: the class harbor rules (presence place, joined toast, spots) and the projector's words.
 import {describe,expect,it} from 'vitest';
-import {GAME_URL,LAMP_SPOTS,LOCK_SPOT,REHEARSAL_CODE,arrivals,joinUrl,joinedText,nearestSpot,newCodeBody,presencePlace,projectorModel,readInvite,readPath,rememberInvite,writePath} from '../src/class-demo/harbor.js';
+import {GAME_URL,LAMP_SPOTS,LOCK_SPOT,REHEARSAL_CODE,arrivals,joinUrl,joinedText,nearestSpot,newCodeBody,presencePlace,projectorModel,readInvite,rememberInvite} from '../src/class-demo/harbor.js';
 import {CLASS_ROOM_SIZE,MAX_SHOWN,chooseRoom,placeTopic,readExtra,shownLimit,startDelayMs,trackJitterMs} from '../src/net/live-rules.js';
 
 function memory(){const data=new Map();return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,String(value)),removeItem:key=>data.delete(key)};}
@@ -29,8 +29,8 @@ describe('class harbor',()=>{
     expect(readExtra('duel',{v:1,id:id(1),seq:3,data:{text:'x'.repeat(600)}})).toBeNull();
     expect(readExtra('duel',{v:1,id:id(1),seq:3,data:[1]})).toBeNull();
   });
-  it('remembers the invitation and the chosen path',()=>{
-    const session=memory(),local=memory();
+  it('remembers the invitation',()=>{
+    const session=memory();
     expect(readInvite(session)).toBe(false);rememberInvite(session);expect(readInvite(session)).toBe(true);
     expect(session.getItem('plot_twist_join_v1')).toBe('harbor');
     // A class code from the QR or the Join page also means "in the class harbor", and the in-game
@@ -38,7 +38,6 @@ describe('class harbor',()=>{
     const coded=memory();coded.setItem('plot_twist_join_v1','K7QXM');
     expect(readInvite(coded)).toBe(true);rememberInvite(coded);expect(coded.getItem('plot_twist_join_v1')).toBe('K7QXM');
     const odd=memory();odd.setItem('plot_twist_join_v1','<b>');expect(readInvite(odd)).toBe(false);
-    expect(readPath(local)).toBe('demo');writePath(local,'full');expect(readPath(local)).toBe('full');writePath(local,'demo');expect(readPath(local)).toBe('demo');
   });
   it('toasts new named captains in one short line',()=>{
     const known=new Set(['a']);
