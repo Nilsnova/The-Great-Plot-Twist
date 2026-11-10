@@ -108,7 +108,7 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
     checkPath(path);
     const headers = {};
     const publicRead = method === 'GET'
-      && ['/api/config', '/api/world', '/api/bulletin', '/api/market'].includes(path.split('?')[0]);
+      && ['/api/config', '/api/market'].includes(path.split('?')[0]);
     const token = publicRead ? null : session.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
     const options = { method, headers };

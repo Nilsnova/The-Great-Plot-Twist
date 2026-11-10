@@ -1,14 +1,9 @@
 // Recorded route replies for adapter work. This request function never opens a socket.
-export function caseFixtures(){return [
+export function routeFixtures(){return [
   {method:'GET',path:'/api/me',status:200,body:{id:'player-1',displayName:'Captain Shoal',
     captainName:'Captain Shoal',kit:null,place:null,coins:0,crews:[]}},
-  {method:'POST',path:'/api/intro/complete',status:200,body:{ending:'ending_rescue',decision:'warned',
-    readLog:false,kit:{id:'true_keeper',name:'True Keeper',startPlace:'lighthouse_isle',coins:1000,
-      item:{id:'permit',name:'Keeper’s permit',text:'A recorded item.'},cheapCard:'C6'},
-    coinsPaid:1000,alreadyGranted:false}},
-  {method:'POST',path:'/api/crews',status:200,body:{crew:{id:'crew-1',code:'TIDE7K',status:'forming',seats:[]}}},
-  {method:'GET',path:'/api/case',status:200,body:{case:null}},
-  {method:'PUT',path:'/api/save',status:409,body:{error:{code:'stale_save',message:'This save is out of date.'}}},
+  {method:'POST',path:'/api/me/name/reroll',status:200,body:{captainName:'Captain Reed',rerollsLeft:0}},
+  {method:'GET',path:'/api/islet',status:200,body:{coins:100,timber:20,buildings:[]}},
 ];}
 
 /** Fetch-like injected request with ordered fixtures and inspectable, non-secret call records. */

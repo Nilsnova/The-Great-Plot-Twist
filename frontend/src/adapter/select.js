@@ -1,5 +1,5 @@
 // The sole adapter composition point. Background network work belongs to the real factory.
-import {createUnavailableCaseAdapter} from './unavailable.js';
+import {createUnavailableAdapter} from './unavailable.js';
 import {adapterChoice,hasSignInReturn} from './selection.js';
 import {createLazyOnlineAdapter} from './lazy-online.js';
 
@@ -16,10 +16,10 @@ export async function createClientAdapter() {
   const search = location.search;
   const choice = adapterChoice(search, import.meta.env.DEV);
   if (choice === 'local') {
-    const {createLocalAdapter} = await import('./local-start.js');
-    return createLocalAdapter();
+    const {createFakeAdapter} = await import('./fake/index.js');
+    return createFakeAdapter();
   }
-  if (choice === 'unavailable') return createUnavailableCaseAdapter();
+  if (choice === 'unavailable') return createUnavailableAdapter();
   const auth = hasSignInReturn(search) ? await prepareSignInReturn() : null;
   return createLazyOnlineAdapter(auth ? {deps: {auth}} : undefined);
 }

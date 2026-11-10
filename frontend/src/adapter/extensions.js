@@ -1,12 +1,8 @@
-// Disconnected G7 view parts. No account data, reward or presence is invented here.
+// Disconnected view parts. No account data or presence is invented here.
 export function emptyExtensions(){
   return {
     presence:{status:'off',place:null,others:[],hiddenCount:0,crew:[],sampledAt:0,localEmote:null,canEmote:false,cooldown:0,emotes:[]},
-    account:{state:'signed_out',captainName:null,canReroll:false,hasKit:false,canContinue:false,save:{state:'idle',label:'Local intro only',updatedAt:null}},
-    rewards:{balance:null,recent:[],ledger:[],keepsakes:[],epilogue:[],wallEntry:null,festivalBadge:false,contributors:[]},
-    log:{intro:null,cards:[],deductions:[],partnerReports:[],nights:[],reveal:[],observations:[]},
-    hints:{items:[],actions:[]},
-    continuation:null,
-    bulletin:{status:'off',day:null,lines:[],weather:null,exchange:null,chapterTwoHook:null},
+    account:{state:'signed_out',captainName:null,canSignIn:false,canReroll:false,guest:false,providers:['github'],
+      connection:{state:'idle',message:'',reason:null}},
   };
 }

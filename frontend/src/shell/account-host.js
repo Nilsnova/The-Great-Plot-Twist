@@ -2,14 +2,14 @@
 import {createServerCallState} from '../ui/kit/server-call-state.js';
 import {createModal} from '../ui/kit/modal.js';
 import {node} from '../ui/kit/dom.js';
-import {sendCaseIntent} from '../adapter/intent.js';
-export function createAccountHost({container,adapter,focus,onContinue}){
+import {sendIntent} from '../adapter/intent.js';
+export function createAccountHost({container,adapter,focus}){
   let modal=null,screen=null,request=0,disposed=false,active=false,lastKey='';
   let retryExternal=null;
   const external=createServerCallState({messageElement:node('p','account-result'),label:'previous request',onRetry:()=>retryExternal?.(),onSignIn:()=>screen?.signIn()});
   const syncSignIn=view=>external.setSignInAllowed(view?.account?.canSignIn!==false);
   async function send(name,...args){
-    external.clear();const result=await sendCaseIntent(adapter,name,...args);
+    external.clear();const result=await sendIntent(adapter,name,...args);
     if(!disposed){syncSignIn(result.view);screen?.update(result.view);}return result;
   }
   function update(view){
@@ -34,7 +34,7 @@ export function createAccountHost({container,adapter,focus,onContinue}){
     try{
       const {createAccountScreen}=await import('../screens/account/index.js');
       if(disposed||token!==request)return;
-      if(!screen)screen=createAccountScreen({send,navigate(name,result){if(name==='continue'){close();onContinue?.(result);}}});
+      if(!screen)screen=createAccountScreen({send});
       const view=adapter.read();syncSignIn(view);modal.setContent(screen.element);screen.update(view);
       const expired=view.account?.state==='expired'?screen.element.querySelector('[data-focus="account-sign-in"]:not(:disabled)'):null;
       expired?.scrollIntoView({block:'nearest',inline:'nearest'});

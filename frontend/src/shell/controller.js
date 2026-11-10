@@ -16,12 +16,11 @@ export function createShell(ctx) {
     modal.element.dataset.mode=mode;
     const body=node('div','shell-body'),nav=node('nav','shell-menu');nav.setAttribute('aria-label','Game menu');
     if(mode==='title') {
-      modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','AN ISLAND MYSTERY'),node('p','shell-copy','The lighthouse is dark. Find the missing keeper.'));
+      modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','BUILD · TRADE · DEFEND'),node('p','shell-copy','Build your island, trade at the harbor and hold the coast against the pirates.'));
       const go=menuButton('Play',()=>{play();ctx.onStart?.();});go.id='play';nav.append(go,menuButton('Join',()=>page('join'),true));
-      if(ctx.demo)nav.append(menuButton('Highlights tour',()=>{play();ctx.onDemo();},true));
       const more=menuButton('Settings',()=>page('settings'),true);more.classList.add('shell-more');body.append(nav,more);
     } else {
-      modal.setTitle(({pause:'A moment ashore',credits:'Made together',friends:'Play with friends',join:'Join'})[mode]??'Settings');
+      modal.setTitle(({pause:'A moment ashore',credits:'Made together',join:'Join'})[mode]??'Settings');
       const loading=node('p','','Loading…');loading.setAttribute('role','status');body.append(loading);
       const isCurrent=()=>!disposed&&token===request;
       import('./subpages.js').then(({fillSubpage})=>{if(isCurrent())return fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back});})

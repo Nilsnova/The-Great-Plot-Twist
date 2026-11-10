@@ -1,4 +1,4 @@
-<!-- Standalone, spoiler-free player guide. Public aliases ship it without changing shared pages. -->
+<!-- Standalone player guide. Public aliases ship it without changing shared pages. -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'none'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; media-src 'none'; worker-src 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#20382c">
-  <meta name="description" content="A spoiler-free field guide to The Great Plot Twist: getting started, crews, case tools, controls and accessibility.">
+  <meta name="description" content="A field guide to The Great Plot Twist: getting started, your islet, the harbor, duels, controls and accessibility.">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./help/kit.css">
   <link rel="stylesheet" href="./help/help.css">
@@ -20,21 +20,20 @@
     <header class="help-header">
       <p class="eyebrow">THE SALTREACH ISLES · FIELD GUIDE</p>
       <h1>How to play</h1>
-      <p class="lede">A little direction. No answers to the mystery.</p>
+      <p class="lede">A little direction for your first visit.</p>
       <a class="kit-button kit-quiet return-link" href="./">Return to the game</a>
     </header>
 
     <aside class="kit-panel build-note" aria-labelledby="build-title">
       <h2 class="kit-heading" id="build-title">Before you set sail</h2>
-      <p>Press <strong>Play</strong> for a short intro and a walk around Saltreach Harbor, or <strong>Join</strong> with a code from a friend or the class projector. Sign in from <strong>Settings</strong> to keep your progress, then start a crew or join a friend's code.</p>
-      <p>Check the account, crew and save status before acting. <strong>Local intro only</strong> is this browser's copy; <strong>Saved</strong> under Cloud confirms an online save. Screens marked <strong>Local rehearsal</strong> are practice examples, not live multiplayer.</p>
+      <p>Press <strong>Play</strong> for a short intro and a walk around Saltreach Harbor, or <strong>Join</strong> with the class code from the projector. Sign in from <strong>Settings</strong> to play online with your own captain.</p>
+      <p>Screens marked <strong>Local rehearsal</strong> are practice examples, not live multiplayer.</p>
     </aside>
 
     <nav class="contents" aria-label="Guide topics">
-      <a href="#start">Start &amp; kit</a><a href="#crews">Crews &amp; partners</a>
-      <a href="#case">The case</a><a href="#islet">Your islet</a>
+      <a href="#start">Getting started</a><a href="#islet">Your islet</a>
       <a href="#exchange">Exchange risks</a><a href="#predictions">Predictions</a>
-      <a href="#duels">Duels</a><a href="#weather">Weather &amp; bulletin</a>
+      <a href="#duels">Duels</a><a href="#weather">Weather</a>
       <a href="#controls">Controls</a><a href="#accessibility">Settings &amp; access</a>
       <a href="#report">Report a problem</a><a href="#privacy">Privacy</a>
     </nav>
@@ -42,7 +41,7 @@
     <form id="help-search" class="help-search" role="search" hidden>
       <label for="topic-search">Find a topic</label>
       <div class="search-row">
-        <input id="topic-search" type="search" placeholder="Try controls, crew or coins" maxlength="100" autocomplete="off" aria-controls="guide">
+        <input id="topic-search" type="search" placeholder="Try controls, islet or coins" maxlength="100" autocomplete="off" aria-controls="guide">
         <button class="kit-button kit-quiet" id="clear-search" type="button">Clear</button>
       </div>
       <p id="search-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -54,48 +53,16 @@
 
       <section class="kit-panel help-topic" id="start" aria-labelledby="start-title">
         <p class="eyebrow">01 · YOUR FIRST VISIT</p>
-        <h2 class="kit-heading" id="start-title">Getting started &amp; your kit</h2>
+        <h2 class="kit-heading" id="start-title">Getting started</h2>
         <ol>
-          <li><strong>Play</strong> continues your saved game, or shows the intro and starts you in the harbor. <strong>Lighthouse prologue</strong> (in the menu and Settings) opens <em>The Keeper's Last Log</em>, your solo opening story; review any device/cloud conflict first.</li>
-          <li>Read, choose an offered action, and check inventory and notes. <strong>Show full text</strong> finishes the current text without choosing for you. <strong>Back to island</strong> closes the story so you can explore and revisit prompts.</li>
-          <li>Play your own choices. <strong>Start a new intro</strong> resets your intro. There is no best-answer sequence here.</li>
+          <li><strong>Play</strong> shows a short intro once, then a card with your goal and the controls, and you stand in Saltreach Harbor. <strong>Replay the intro</strong> in Settings shows it again.</li>
+          <li>In the harbor the goal strip lists three things to do: wave to a captain, try a friendly duel and open the Keeper's Lock. Then light the three lamps together with two other captains.</li>
+          <li>Open the <strong>Sea chart</strong> to sail to your Home islet and the other places of the Saltreach Isles.</li>
         </ol>
-        <p>A connected case service must confirm your ending before awarding your kit. Its arrival screen shows your items, starting place and coins. Kits are <strong>True Keeper, Witness, Informant and Stranger</strong>; different kits offer different routes into the case.</p>
-        <p><strong>Account and saves</strong> offers GitHub sign-in and separate device/cloud save states. You can explore and play the intro without signing in. Sign in for cloud saves and shared crews, and read the confirmed save status before changing devices. If copies differ, review both before choosing which to keep.</p>
+        <p><strong>Account</strong> in Settings offers sign-in with GitHub or an email code. You can explore without signing in; online play, coins and buildings need a signed-in captain. In class, the code from the projector lets you play as a guest.</p>
       </section>
 
-      <section class="kit-panel help-topic" id="crews" aria-labelledby="crews-title">
-        <p class="kit-badge">Live crews · sign-in required</p>
-        <h2 class="kit-heading" id="crews-title">Crews &amp; partners</h2>
-        <p>A crew has four seats, filled by friends or NPC partners. Open <strong>Crew</strong> and check its connection status. When available, use <strong>Start a crew</strong>, or enter a code, <strong>Check crew code</strong>, review <strong>Your seat</strong>, then <strong>Confirm join</strong>. Share the code privately.</p>
-        <p><strong>Muster with NPC partners</strong> fills empty seats. In <strong>Partners</strong>, select an offered order and target, then <strong>Send order</strong>. Watch travel/work timers and return for the report. Partners can search, pin cards and take light posts. You choose deductions and accusations; partners do not supply hints.</p>
-        <p>Friends must each sign in, complete their own intro and confirm a kit before joining. Share the crew code and wait until everyone has joined before muster. The rehearsal images below are examples; their codes do not join a live crew.</p>
-        <details class="rehearsal-examples">
-          <summary>See local rehearsal examples</summary>
-          <figure>
-            <a href="./help/crew-rehearsal.png"><img src="./help/crew-rehearsal.png" width="922" height="688" loading="lazy" decoding="async" alt="Local fake crew before muster: one captain and three open seats, with the Muster with NPC partners button."></a>
-            <figcaption>Local fake: a forming crew. The displayed code is an example, not a live invitation. Select the image for full size.</figcaption>
-          </figure>
-          <figure>
-            <a href="./help/partners-rehearsal.png"><img src="./help/partners-rehearsal.png" width="922" height="688" loading="lazy" decoding="async" alt="Local fake crew after muster: one captain and three NPC partners occupy all four seats."></a>
-            <figcaption>Local fake: partners fill the open seats after muster. No real accounts, rewards or case solutions are shown.</figcaption>
-          </figure>
-        </details>
-      </section>
 
-      <section class="kit-panel help-topic" id="case" aria-labelledby="case-title">
-        <p class="kit-badge">Shared crew progress</p>
-        <h2 class="kit-heading" id="case-title">The case, without solutions</h2>
-        <p>Investigate the dangerous light at sea using what your crew discovers. This guide does not interpret clues or name useful card pairs.</p>
-        <h3>Searches, satchel &amp; pins</h3>
-        <p>Inspect a search route's price, duration and restrictions before confirming. Paid actions name their coin cost. Wait for the result. Use <strong>Pin my card</strong> on the case board to share a found card; the board records the contributing seat.</p>
-        <h3>Deductions</h3>
-        <p>Select <strong>First card</strong> and <strong>Second card</strong>, then <strong>Pair cards</strong>. Dragging is optional. Contributions must come from different seats. Read the response and progress indicators rather than guessing what has been accepted.</p>
-        <h3>The Night of Three Lights</h3>
-        <p>When offered, use <strong>Call nightfall</strong> and coordinate several seats at different posts. Aim with the compass controls or slider, then <strong>Lock this beam</strong>. Watch the timers together. This uses the case clock; you need not wait for real fog or a real-world hour.</p>
-        <h3>Accusing</h3>
-        <p>When available, review earned evidence and your suspect selection before <strong>Present this accusation</strong>. If refused, follow the message or retry cooldown. Neither the correct person nor the required evidence is given here.</p>
-      </section>
 
       <section class="kit-panel help-topic" id="islet" aria-labelledby="islet-title">
         <h2 class="kit-heading" id="islet-title">Sailing &amp; your islet</h2>
@@ -117,15 +84,13 @@
       </section>
 
       <section class="kit-panel help-topic" id="duels" aria-labelledby="duels-title">
-        <h2 class="kit-heading" id="duels-title">Lantern Duels &amp; the festival</h2>
-        <p>The arena gate opens <strong>Lantern Duels</strong>. Choose the offered rounds, signals and either a friendly duel or a stated play-coin stake. Read <strong>Rules</strong> for the oil allowance, answer deadline, refunds and winner payout. Signals stay sealed until both captains answer.</p>
-        <p>When available, open <strong>Lantern festival</strong> from the game menu. It waits for the first Relighting, then runs for 48 hours. Free lamp reservations and a friendly three-round ring have no stake or coin reward. A reservation does not add a light to the coast.</p>
+        <h2 class="kit-heading" id="duels-title">Lantern Duels</h2>
+        <p>Walk up to another captain in the harbor, or tap them, and choose <strong>Friendly duel</strong>. Each of you picks three sealed signals; they stay sealed until both captains answer, then the reveal shows who won each round.</p>
       </section>
 
       <section class="kit-panel help-topic" id="weather" aria-labelledby="weather-title">
-        <h2 class="kit-heading" id="weather-title">Weather &amp; the bulletin</h2>
+        <h2 class="kit-heading" id="weather-title">Weather</h2>
         <p>Cloud, rain, fog and wind shape the islands. Weather updates at startup and periodically afterwards; a failed update can leave previous conditions in place. Demo or unavailable data can use recorded conditions. The picture alone does not prove the data is live. Attribution appears in the game; wind also affects sailing presentation.</p>
-        <p>The harbor bulletin and tonight information have their own availability labels. Recorded, old or unavailable data is not a fresh update. Follow the case's own clock and instructions for its events.</p>
       </section>
 
       <section class="kit-panel help-topic" id="controls" aria-labelledby="controls-title">
@@ -137,13 +102,12 @@
           <dt>M / Sea chart</dt><dd>Open the chart.</dd>
           <dt>Mouse wheel</dt><dd>Zoom over the world.</dd>
           <dt>Escape</dt><dd>Close a view or pause.</dd>
-          <dt>Dialogue</dt><dd>1 to 9 for choices, arrows to browse, Enter to confirm.</dd>
           <dt>Menus</dt><dd>Tab / Shift+Tab to move focus; Enter or Space activates buttons.</dd>
         </dl>
         <h3>Touch</h3>
-        <p>Tap a clear spot on the map to walk, or drag the movement stick. Use <strong>Inspect</strong> near an object, <strong>Chart</strong> to travel and <strong>Menu</strong> to pause. Tap story choices directly. There are no separate touch run or zoom buttons.</p>
+        <p>Tap a clear spot on the map to walk, or drag the movement stick. Use <strong>Inspect</strong> near an object, <strong>Chart</strong> to travel and <strong>Menu</strong> to pause. There are no separate touch run or zoom buttons.</p>
         <h3>Standard gamepad</h3>
-        <p>Left stick or D-pad walks; A interacts, Y opens the chart, Menu pauses. Supported menus use D-pad and A; B or Menu closes. Left/right adjusts supported selects and sliders. There are no separate run or zoom buttons. <strong>Use keyboard or touch for intro dialogue</strong>; gamepad dialogue navigation is not reliably integrated yet.</p>
+        <p>Left stick or D-pad walks; A interacts, Y opens the chart, Menu pauses. Supported menus use D-pad and A; B or Menu closes. Left/right adjusts supported selects and sliders. There are no separate run or zoom buttons.</p>
         <p>Keyboard and touch remain available if your browser cannot use the pad. Click or tap the world to restore movement focus. This help page uses ordinary links and controls, not the game's gamepad mapping.</p>
       </section>
 
@@ -151,25 +115,25 @@
         <h2 class="kit-heading" id="accessibility-title">Settings &amp; accessibility</h2>
         <p>Open <strong>Settings</strong> from the title, pause menu or in-game settings button. Use <strong>Low</strong> quality for lighter weather. Set master, music and effects volumes separately.</p>
         <p><strong>Reduced motion</strong> can follow your device, stay On for still transitions, or be Off. Choose Relaxed, Steady, Quick or <strong>Instant</strong> text; <strong>Show full text</strong> skips typing. Try <strong>Color-blind-safe highlights</strong>.</p>
-        <p>Preferences save in this browser; if storage fails, they apply for this visit only. Card selectors and the lights' slider offer alternatives to dragging. The WebGL world is not guaranteed to support every assistive technology; please report a control that blocks you.</p>
+        <p>Preferences save in this browser; if storage fails, they apply for this visit only. Buttons offer alternatives to dragging. The WebGL world is not guaranteed to support every assistive technology; please report a control that blocks you.</p>
       </section>
 
       <section class="kit-panel help-topic" id="report" aria-labelledby="report-title">
         <h2 class="kit-heading" id="report-title">Report a problem</h2>
         <p>First check for <strong>not connected</strong>, <strong>pending</strong> or <strong>local fake</strong> labels. For a new fault, include the page name, browser/device, input method, what you expected, what happened, and steps to repeat it. Say if you used fake mode and whether refreshing helped.</p>
-        <p>Crop screenshots to controls or an empty board. <strong>Do not post clue text, deductions, accusations, solutions, crew codes, tokens, passwords or account details publicly.</strong> Report sensitive problems privately to the project team.</p>
+        <p>Crop screenshots to the controls. <strong>Do not post class codes, tokens, passwords or account details publicly.</strong> Report sensitive problems privately to the project team.</p>
         <p><a class="kit-button report-link" href="https://github.com/Nilsnova/The-Great-Plot-Twist/issues/new" rel="noreferrer noopener">Open a GitHub issue</a></p>
         <p>GitHub sign-in may be required. If unavailable, tell your teammate or class host. Following the link opens GitHub; this page does not upload a report for you.</p>
       </section>
 
       <section class="kit-panel help-topic" id="privacy" aria-labelledby="privacy-title">
         <h2 class="kit-heading" id="privacy-title">Privacy in short</h2>
-        <p>Intro progress and settings use local browser storage. Clearing site data, private browsing or changing browsers can lose them. A local save is not a cloud backup; use your own browser profile on shared devices.</p>
-        <p>The account screen offers <strong>Delete my data</strong>, then <strong>Confirm deletion</strong>, when connected. This removes your own game records, including coins and ledger history. Other crew members keep their progress; leadership passes to another player if needed. While the game cannot confirm your account, contact Nils through the course page for help. Clearing site data is separate. Provider security logs and backups follow their own retention rules. <a href="./privacy.html">Read the privacy notice</a>.</p>
+        <p>Settings use local browser storage. Clearing site data, private browsing or changing browsers can lose them; use your own browser profile on shared devices.</p>
+        <p>The account screen offers <strong>Delete my data</strong>, then <strong>Confirm deletion</strong>, when connected. This removes your own game records, including coins and ledger history. While the game cannot confirm your account, contact Nils through the course page for help. Clearing site data is separate. Provider security logs and backups follow their own retention rules. <a href="./privacy.html">Read the privacy notice</a>.</p>
         <p>This help page does not sign you in, call the game API, save your search or submit telemetry. Only following the report link opens GitHub. Local-fake examples contain no real player records or rewards.</p>
       </section>
     </main>
-    <footer class="help-footer"><p>No culprit, clue meanings or solution in this guide.</p><a href="#">Back to top</a></footer>
+    <footer class="help-footer"><p>The game changes often while the team builds it; this guide follows the current version.</p><a href="#">Back to top</a></footer>
   </div>
 </body>
 </html>

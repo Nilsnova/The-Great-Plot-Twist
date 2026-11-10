@@ -7,24 +7,22 @@ import './presence.css';
 const emotes=['wave','cheer','point','lantern','shrug'];
 const setText=(element,value)=>{if(element.textContent!==value)element.textContent=value;};
 
-export function createPresenceHud({send,onCrew=()=>{}}={}){
+export function createPresenceHud({send}={}){
   const element=node('aside','presence-hud');element.setAttribute('aria-label','Nearby captains presence');
   element.dataset.emotesOpen='false';
   const status=node('span','presence-sr-only');status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.setAttribute('aria-atomic','true');
   const connection=node('p','presence-connection');
-  const heading=node('div','presence-heading');const crewButton=button('Crew',()=>onCrew());
+  const heading=node('div','presence-heading');
   const emoteToggle=button('Emotes',()=>setEmotesOpen(element.dataset.emotesOpen!=='true'));
-  heading.append(connection,crewButton,emoteToggle);
+  heading.append(connection,emoteToggle);
   const count=node('p','presence-count'),more=node('span','presence-more');
-  const crewStrip=node('div','presence-crew-strip');crewStrip.setAttribute('aria-label','Crew seats');
-  const seats=[1,2,3,4].map(()=>node('span','presence-seat'));crewStrip.append(...seats);
   const emoteRow=node('div','presence-emotes');emoteRow.hidden=true;
   let lastEmote=null,busy=false,disposed=false;
   const call=createServerCallState({label:'emote',onRetry:()=>lastEmote&&invokeEmote(lastEmote),onSignIn:()=>send?.('signIn')});
   async function invokeEmote(id){if(busy||disposed||model.status!=='live'||!model.canEmote)return;lastEmote=id;busy=true;call.loading();try{const result=await send?.('setEmote',id);if(!disposed){if(result?.accepted)call.succeed();else call.fail(result??intentFailure());}}catch(error){if(!disposed)call.fail(intentFailure(error));}finally{busy=false;}}
   const emoteButtons=emotes.map(id=>button(`Emote ${id}`,()=>{void invokeEmote(id);setEmotesOpen(false);},{focus:`presence-${id}`}));
-  emoteRow.append(...emoteButtons);element.append(heading,status,count,more,crewStrip,emoteRow,call.element);
-  let model={status:'off',others:[],crew:[],hiddenCount:0,canEmote:false,cooldown:0};
+  emoteRow.append(...emoteButtons);element.append(heading,status,count,more,emoteRow,call.element);
+  let model={status:'off',others:[],hiddenCount:0,canEmote:false,cooldown:0};
   let counts={drawn:0,hidden:0,ids:[]};
 
   function setEmotesOpen(open){
@@ -41,15 +39,6 @@ export function createPresenceHud({send,onCrew=()=>{}}={}){
     const accessibleMessage=model.status==='off'?'Presence is off.':model.status==='offline'?'Presence is offline.':model.status==='reconnecting'?'Reconnecting to captains nearby.':
       `${nearby} captains nearby; ${counts.drawn} shown${names.length?`: ${names.join(', ')}`:''}${counts.hidden?`, ${counts.hidden} more here`:''}.`;
     setText(connection,connectionMessage);setText(status,accessibleMessage);
-    const crew= new Map((model.crew??[]).map(member=>[member.seat,member]));
-    setText(crewButton,`Crew (${model.crew?.length??0})`);
-    seats.forEach((badge,index)=>{
-      const seat=index+1,member=crew.get(seat);
-      setText(badge,member?`${seat} ${member.online?'On':'Away'}${member.isPartner?' ★':''}`:`${seat} Open`);
-      badge.dataset.online=member?.online?'online':'away';badge.dataset.partner=member?.isPartner?'true':'false';
-      const label=member?`Seat ${seat}: ${member.name}, ${member.online?'online':'away'}${member.isPartner?', partner':''}`:`Seat ${seat}: open`;
-      if(badge.dataset.summary!==label){badge.setAttribute('aria-label',label);badge.dataset.summary=label;}
-    });
     for(const control of emoteButtons){
       const disabled=model.status!=='live'||!model.canEmote;
       if(control.disabled!==disabled)control.disabled=disabled;

@@ -1,15 +1,5 @@
-// Exact story ids and pure zone tests. Small zones remain independently reachable.
-import { layout } from '../config.js';
-import { terrainHeight } from './terrain.js';
-
-export const zones = [
-  { id: 'desk', x: -6.2, z: 3.7, radius: 1.15, y: terrainHeight(-7, 3) },
-  { id: 'cottage', x: -7, z: 5.8, radius: 2.3, y: terrainHeight(-7, 5.8) },
-  { id: 'shore', x: -2, z: 17, radius: 3, y: 1.03 },
-  { id: 'tower_door', x: layout.lighthouse.x, z: layout.lighthouse.z + 2.8, radius: 1.8,
-    y: terrainHeight(layout.lighthouse.x, layout.lighthouse.z) },
-];
-export function findZone(position, list = zones) {
+// Pure zone test: the nearest interaction zone the player stands in. Small zones stay reachable.
+export function findZone(position, list = []) {
   let closest = null, bestDistance = Infinity;
   for (const zone of list) {
     const distance = Math.hypot(position.x - zone.x, position.z - zone.z);

@@ -7,7 +7,6 @@ export { createTable } from './table.js';
 export { createModal } from './modal.js';
 export { createToast } from './toast.js';
 export { createDialogue } from './dialogue.js';
-export { createClueCard } from './clue-card.js';
 export { createHudBar } from './hud-bar.js';
 export { createMiniChart } from './mini-chart.js';
 export { createProgress } from './progress.js';

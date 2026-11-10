@@ -1,4 +1,4 @@
-// Join: enter a crew code or the class code (HARBOR-K7QXM), or scan the QR on the projector. Loaded
+// Join: enter the class code (HARBOR-K7QXM), or scan the QR on the projector. Loaded
 // only when opened. A class code is checked by the server before the game starts (POST /api/demo/join
 // through the adapter); a wrong or old code shows a plain message and the player types it again. The
 // code lives only in sessionStorage, so it ends with the tab.
@@ -13,7 +13,7 @@ const REHEARSAL_CODE='TESTS'; // class-demo/harbor.js shows it in a rehearsal (?
 function remember(key,value){try{sessionStorage.setItem(key,value);return true;}catch{return false;}}
 function session(){try{return sessionStorage;}catch{return null;}}
 
-export function fillJoinPage({body,nav,ctx,isCurrent,play,page,back}){
+export function fillJoinPage({body,nav,ctx,isCurrent,play,back}){
   const form=node('form','join-form'),label=node('label','preference'),input=node('input'),status=node('p','shell-note');
   const id=uniqueId('join-code');input.id=id;label.htmlFor=id;input.autocomplete='off';input.autocapitalize='characters';
   input.spellcheck=false;input.maxLength=24;input.inputMode='text';input.name='code';
@@ -44,9 +44,9 @@ export function fillJoinPage({body,nav,ctx,isCurrent,play,page,back}){
     event.preventDefault();if(!isCurrent()||busy)return;
     const target=joinTarget(input.value);
     if(!target){refuse('Codes use letters and numbers only. Check the code and try again.');return;}
-    if(target.kind==='class'){if(!target.code){refuse(INVALID);return;}void joinClass(target.code);return;}
-    // A crew code goes through the existing friends and crew flow for now.
-    remember('plot_twist_crew_code_v1',target.code);page('friends');
+    if(target.kind==='class'&&target.code){void joinClass(target.code);return;}
+    // Crew codes left with the mystery (10 Nov); only the class code joins for now.
+    refuse(INVALID);
   });
   form.append(copy,label,status,join);nav.append(menuButton('Back',back,true));
   body.replaceChildren(form,hint,nav);input.focus();

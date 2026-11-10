@@ -15,14 +15,10 @@ import { backdrop, createLifetime, loadBackdrop } from './resources.js';
 export async function createSettlement(ctx) {
   const { id } = ctx;
   const data = places[id];
-  const harborNotice = id === 'saltreach_harbor'
-    ? [{ asset: 'notice-board', x: 6, z: 7, bulletinBoard: true }]
-    : [];
-  const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? []), ...harborNotice];
+  const placements = [...(layouts[id] ?? []), ...(ctx.placements ?? [])];
   const trees = edgeTrees[id] ?? [];
   const extraArtIds = [
-    ...(id === 'saltreach_harbor' ? ['harbour-office-glow', 'wall-of-lights-open', 'festival-lantern-string'] : []),
-    ...(id === 'the_teeth' ? ['false-light'] : []),
+    ...(id === 'saltreach_harbor' ? ['harbour-office-glow'] : []),
     ...(id === 'home_islet'
       ? ['build-plot', 'islet-empty-plot', 'islet-locked-sign', 'islet-signal-station', 'islet-signal-station-lit', 'cabin', 'workshop', 'windmill', 'greenhouse']
       : []),
@@ -39,13 +35,10 @@ export async function createSettlement(ctx) {
   const cleanups = [], dispose = createLifetime(group, art, cleanups);
   try {
     backdrop(group, await (ctx.loadBackdrop ?? loadBackdrop)(`places/${id}.png`));
-    const fogMeshes = [];
-    let bulletinBoard = null;
     placements.forEach(item => {
       const mesh = placeArt(group, art, item.asset, item.x, item.z);
-      if (item.bulletinBoard) { bulletinBoard = mesh; mesh.visible = false; }
       if (item.asset === 'ferry-pier') mesh.renderOrder = 6;
-      if (item.asset === 'fog-bank') { mesh.renderOrder = 920; fogMeshes.push(mesh); }
+      if (item.asset === 'fog-bank') mesh.renderOrder = 920;
     });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
@@ -64,25 +57,15 @@ export async function createSettlement(ctx) {
         beam: createBeam(group, x, y),
       };
     });
-    let windowGlow, wall, festive, teaser, stormFlag;
-    let bulletinEnabled = false;
-    if (id === 'the_teeth') {
-      teaser = placeArt(group, art, 'false-light', 10, -10);
-      teaser.visible = false;
-      teaser.renderOrder = 921;
-    }
+    let windowGlow, stormFlag;
     if (id === 'saltreach_harbor') {
-      wall = placeArt(group, art, 'wall-of-lights-open', 12, 5.3);
-      wall.visible = false;
-      festive = placeArt(group, art, 'festival-lantern-string', -1, 7);
-      festive.visible = false;
       windowGlow = placeArt(group, art, 'harbour-office-glow', -8, 8.5);
       windowGlow.material = windowGlow.material.clone(); windowGlow.renderOrder = 922;
       stormFlag = createStormFlag(group);
     }
     const place = {
       ...data,
-      zones: id === 'saltreach_harbor' ? data.zones.filter(zone => zone.id !== 'bulletin_board') : data.zones,
+      zones: data.zones,
       id,
       group,
       groundHeight: placeGround(id),
@@ -92,31 +75,19 @@ export async function createSettlement(ctx) {
       ],
       update(dt, state) {
         state = frameState(dt, state);
-        if (id === 'saltreach_harbor') {
-          const enabled = !!state.bulletin?.status && state.bulletin.status !== 'off';
-          if (enabled !== bulletinEnabled) {
-            bulletinEnabled = enabled;
-            place.zones = enabled ? data.zones : data.zones.filter(zone => zone.id !== 'bulletin_board');
-          }
-          if (bulletinBoard) bulletinBoard.visible = enabled;
-        }
         foliage.forEach(mesh => {
           const p = mesh.userData.ground;
           mesh.material.opacity = state.player.z < p.z && Math.abs(state.player.x - p.x) < 2.2 && p.z - state.player.z < 6 ? .3 : 1;
           updateSway(mesh.material, state.time, state.weather?.wind ?? 0);
         });
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
-        const brightness = state.relit ? Math.max(.65, state.night) : state.night;
+        const brightness = state.night;
         lights.forEach(light => {
           const builtPlots = ctx.isletState?.getBuilt?.() ?? [];
           const enabled = light.id !== 'islet_signal_station' || builtPlots.includes('islet_signal_station');
           light.glow.material.opacity = enabled ? brightness * .8 : 0;
           light.beam.update(state.time, enabled ? brightness : 0);
         });
-        fogMeshes.forEach(mesh => { mesh.visible = !state.relit; });
-        if (wall) wall.visible = !!state.relit;
-        if (festive) festive.visible = !!state.festival;
-        if (teaser) teaser.visible = teaserShouldShow(state);
         if (stormFlag) stormFlag.visible = stormFlagShouldShow(state);
       }, dispose,
     };
@@ -134,16 +105,9 @@ export async function createSettlement(ctx) {
   } catch (error) { dispose(); throw error; }
 }
 
-export function teaserShouldShow(state={}){
-  if(state.relit||!(state.night>.6))return false;
-  const bulletin=state.bulletin??{},hasStream=!!bulletin.status&&bulletin.status!=='off';
-  const tonight=hasStream?(bulletin.weather?.tonight??state.weatherAnswer?.tonight??null):null;
-  return tonight?!!tonight.isFogNight:(state.weather?.fog??0)>.65;
-}
+// The storm flag follows the live weather answer only (the bulletin left with the mystery, 10 Nov).
 export function stormFlagShouldShow(state={}){
-  const bulletin=state.bulletin??{};if(!bulletin.status||bulletin.status==='off')return false;
-  if(typeof state.weatherAnswer?.state==='string')return state.weatherAnswer.state==='storm';
-  const tonight=bulletin.weather?.tonight;return tonight?.isNow===true&&tonight.state==='storm';
+  return state.weatherAnswer?.state==='storm';
 }
 function createStormFlag(group){
   const flag=new THREE.Group();flag.name='storm-warning-flag';

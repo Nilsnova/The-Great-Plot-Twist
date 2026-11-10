@@ -1,23 +1,13 @@
-// Client case intents. A real adapter can implement this surface without changing a screen.
-export const caseMethods=['completeIntro','createCrew','joinCrew','muster','pin','pair','search','inspectSpot','orderPartner','buildLight','callNightfall','takePost','aim','boardSchooner','accuse','nextReveal','claimLantern',
-  'reportPosition','setEmote','signIn','signOut','rerollName','deleteMyData','resolveSaveConflict','continueGame'];
-export function bindCaseMethods(adapter,dispatch) {
-  for(const name of caseMethods)adapter[name]=(...args)=>dispatch(name,args);
+// Client intents. A real adapter can implement this surface without changing a screen.
+// The case intents and views left the browser on 10 Nov 2026 (D031); new features add theirs here.
+export const adapterMethods=['reportPosition','setEmote','signIn','signOut','rerollName','deleteMyData'];
+export function bindAdapterMethods(adapter,dispatch) {
+  for(const name of adapterMethods)adapter[name]=(...args)=>dispatch(name,args);
   return adapter;
 }
 export const copyView=value=>structuredClone(value);
 
-// Additive G7 view parts retain schema 1. Real adapters return every key, even when disconnected.
-// Optional G9 nested display: crew.isletReminder is null or {message, actionLabel};
-// finale.islet is null or {id, name, built, canBuild, buildLabel, caption};
-// finale.isletFailure is null or {reason, message, status?, retryAfterSeconds?, retryUntil?}.
-// These display fields grant no case light or outcome; private fields clear when signed out.
-// Optional public bulletin.request is null or {reason, message, status?, retryUntil?};
-// Optional crew.caseReady is null while reading, false for an authoritative null case, or true.
-// public 401/409 are read errors, and retryUntil is a client presentation deadline only.
-export const caseViewKeys = [
-  'schema','mode','revision','now','captain','arrival','crew','permissions','board','search',
-  'partners','finale','accusation','reveal','world','notice','effects',
-  'presence','account','rewards','log','hints','continuation','bulletin',
-];
-export {caseReasons} from './reasons.js';
+// Schema 1 view. Real adapters return every key, even when disconnected; a status or empty value tells
+// the screen what to show. captain.coins is null until a signed-in account read answers.
+export const viewKeys = ['schema','mode','revision','now','captain','account','presence','notice'];
+export {adapterReasons} from './reasons.js';

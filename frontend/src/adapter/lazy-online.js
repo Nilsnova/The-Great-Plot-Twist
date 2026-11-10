@@ -1,9 +1,9 @@
 // Keep the account transport out of the first title paint; intents can start it sooner.
-import {createUnavailableCaseAdapter} from './unavailable.js';
-import {bindCaseMethods} from './contract.js';
+import {createUnavailableAdapter} from './unavailable.js';
+import {bindAdapterMethods} from './contract.js';
 
 export function createLazyOnlineAdapter({load = () => import('./online-loader.js').then(module => module.loadRealAdapterModule()), deps} = {}) {
-  const empty = createUnavailableCaseAdapter();
+  const empty = createUnavailableAdapter();
   const view = {...empty.read(), mode: 'online', notice: null};
   view.account.canSignIn = false;
   empty.dispose();
@@ -24,21 +24,21 @@ export function createLazyOnlineAdapter({load = () => import('./online-loader.js
     if (closed) return null;
     if (adapter) return adapter;
     if (pending) return pending;
-    pending = load().then(({createRealCaseAdapter}) => {
-      const loaded = createRealCaseAdapter(deps);
+    pending = load().then(({createRealAdapter}) => {
+      const loaded = createRealAdapter(deps);
       authAdopted = true;
       if (closed) { loaded.dispose(); return null; }
       adapter = loaded;
       stop = adapter.subscribe(publish);
-      publish({type: 'case_updated', view: adapter.read()});
+      publish({type: 'view_updated', view: adapter.read()});
       return adapter;
     }).catch(() => {
       releaseAuth();
       if (closed) return null;
-      adapter = createUnavailableCaseAdapter({message:
+      adapter = createUnavailableAdapter({message:
         'The account service could not load. You can still play Act 1.'});
       stop = adapter.subscribe(publish);
-      publish({type: 'case_updated', view: adapter.read()});
+      publish({type: 'view_updated', view: adapter.read()});
       return adapter;
     });
     return pending;
@@ -47,7 +47,7 @@ export function createLazyOnlineAdapter({load = () => import('./online-loader.js
     frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => void start()); });
   }
   const read = () => adapter ? adapter.read() : structuredClone(view);
-  return bindCaseMethods({
+  return bindAdapterMethods({
     read, subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     tick(dt) { adapter?.tick(dt); },
     dispose() {

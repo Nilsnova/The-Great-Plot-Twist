@@ -485,6 +485,7 @@ decline
 declined
 deduction
 deductions
+defend
 degree
 degrees
 delayed
@@ -1083,6 +1084,7 @@ listed
 listen
 listener
 listeners
+lists
 lit
 little
 live
@@ -1291,6 +1293,7 @@ offers
 office
 official
 offline
+often
 oil
 old
 older
@@ -1412,6 +1415,7 @@ phone
 phones
 pick
 picked
+picks
 picture
 pictures
 pier
@@ -1420,6 +1424,7 @@ pinnable
 pinned
 pinning
 pins
+pirates
 pixel
 pixels
 pkce
@@ -1435,6 +1440,7 @@ played
 player
 player's
 players
+playing
 plays
 please
 plot
@@ -1972,6 +1978,7 @@ story
 stranger
 streamed
 strict
+strip
 strong
 stuck
 student
@@ -2058,6 +2065,7 @@ there
 these
 they
 thin
+things
 thinking
 third
 this
