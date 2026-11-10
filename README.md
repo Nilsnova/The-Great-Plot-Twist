@@ -33,27 +33,24 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 ## Project status
 
-*Last updated: 8 Nov 2026, Codex player-experience integration.*
+*Last updated: 10 Nov 2026, the mystery leaves the game (D031).*
 
-The team is turning the text mystery Plot Twist into a browser game: a detailed top-down island world with GitHub sign-in, a shared mystery and a play-money economy.
+On 10 Nov 2026 the team changed direction ([PITCH.md](docs/PITCH.md)): each player builds and defends
+their own island against pirate waves, everyone trades at the shared Harbor, and the class fights one
+joint Pirate Point battle. The 2-hour mystery is out of the game.
 
-- **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs Lighthouse Isle in original pixel art (decision D005) from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
-- **Visual redesign:** detailed title/island art, compact replacing story passages, full-screen rooms,
-  a quiet HUD with optional controls, smoother motion and stable visual light challenges. See the
-  [redesign evidence](docs/handoff/visual-redesign-release.md).
-- **Built:** the playable intro, sea chart and harbor, original music/ambience/effects, weather,
-  account/save and crew services, live presence, Exchange v2, predictions and Lantern Duels.
-  The case backend includes earned clues, the shared board, three-light finale, Relighting and
-  free NPC orders, with solo and four-player API playthroughs over real scratch PostgreSQL.
-- **Online browser adapter:** G9 account, cloud-save, crew, presence and case connections are integrated.
-  The latest release also adds phone tap-to-walk, clearer guidance and polished inspection/settings screens.
-  **3,719 frontend tests pass**; [release evidence](docs/handoff/player-experience-visual-pass.md) separates
-  recorded browser proofs from live private-account and physical-device checks.
-- **Current release:** festival and host tools deployed; sports is enabled with a verified live football-data.org
-  feed. Account and crew entry use the G9 browser adapter. Reliability, regression coverage,
-  help/privacy, security/notices and submission materials are deployed with passing release gates.
-  The [roadmap](ROADMAP.md#execution-update--6-nov-2026) gives the remaining order.
-- **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.
+- **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs the pixel
+  Saltreach Isles from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
+- **In the browser now:** Play (voiced lore intro, goal card, Saltreach Harbor), Join with the class
+  code, the class demo (quest strip, duel shortcut, Keeper's Lock, three lamps, projector), sea chart and
+  sailing, the Home islet build panel, live presence, Exchange, predictions, sports, real weather,
+  account and sign-in (GitHub, email code, guests), settings, audio and the host console.
+- **Removed on 10 Nov:** the Lighthouse prologue, every case screen (crew, board, searches, partners,
+  finale, accusation, reveal, relighting), the journal and hints, the festival, the bulletin and the
+  rewards page, the arena gate (the captain duel stays), Gull's Rest and the rooms. The backend case
+  code is still there for a later cleanup; the browser no longer calls it and the `case` flag is off.
+- **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API
+  against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.
 
 ### What the final README must contain
 

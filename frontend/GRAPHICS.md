@@ -1,5 +1,8 @@
 # Saltreach Isles graphics
 
+> **10 Nov 2026: the mystery left the game** (D031 in [DECISIONS.md](../docs/DECISIONS.md), [PITCH.md](../docs/PITCH.md)). The sections below on Act 1 in the browser, the demo tour, the case adapter, board, finale, reveal, relighting, rewards, partners in the world, the Captain’s Log and hints, the golden path, Gull’s Rest, the Chapter 2 hook, the presenter kit, the festival frontend and the bulletin describe screens and checks that were removed on 10 Nov. They stay as history; their files and `npm run` scripts no longer exist.
+
+
 The approved direction is original, code-authored top-down pixel art, selected by Nils on 5 November 2026. G2/G3 extends the approved Lighthouse Isle into seven owned places. G4 adds the reusable UI kit, original story art, five finale beats and the playable original intro (S2). G5 adds the title/pause shell, shared settings, original procedural audio, touch/gamepad controls, the local highlights tour and lazy loading. G6 puts the case screens behind one adapter; G7 adds account/presence, rewards, partner life, the log and complete local-case checks. G8 draws accepted islet builds, the supplied harbor day and distant signal, and adds the class presenter kit, accessibility audit and code walkthrough. Rich greens, tan paths, clustered foliage and selective dark outlines keep the explorer and landmarks readable. Gold is reserved for lights, interaction and clues. The old paper studies are archived and excluded from the active build. The supplied style reference is excluded from Git and runtime art.
 
 ## Run, controls and readability

@@ -39,7 +39,9 @@ A concurrent join or profile action may return `409 crew_busy`. That refusal cha
 
 If the result is unknown, retry the **same crew** in the same page: the same action UUID is sent. A successful repeat returns the stored success without changing state again. A UUID cannot close a different crew. A fresh action on an already-finished crew is refused. Refreshing or closing the tab discards the browser's retry identity; inspect the refreshed crew status before trying anything else.
 
-### Case clock (G10)
+### Case clock (G10), removed on 10 Nov 2026
+
+> **Removed:** the console no longer shows or posts the case clock since the mystery left the game (D031, [PITCH.md](PITCH.md)). The text below is kept as history of the backend route, which stays until the later backend cleanup.
 
 The panel is hidden until `GET /api/config` reports `capabilities.hostCaseClock: true`. This requires **both** an installed `POST /api/host/case/clock` route in the server's OpenAPI schema **and** the `case` flag on. G14 does not add that flag, create the G10 route or switch the case on.
 
