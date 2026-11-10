@@ -6,7 +6,7 @@ import { createSession } from '../src/online/session.js';
 import { takeCallback, finishHostLogin } from '../src/host/auth.js';
 
 const ok = data => ({ ok:true, status:200, data });
-const overview = { players:12, caseClockAvailable:false };
+const overview = { players:12 };
 const crews = { crews:[{ id:'crew-1', code:'K7QF2M', canClose:true }], total:1, limit:50 };
 function setup() {
   const api = { get:vi.fn(path => Promise.resolve(ok(path.endsWith('overview') ? overview : crews))),
@@ -67,10 +67,11 @@ it('removes old panels if refresh fails and refuses pending writes', async () =>
   await controller.closeCrew('crew-1',true);
   expect(api.post).not.toHaveBeenCalled();
 });
-it('hides the future clock and never posts it before capability and host checks', async () => {
+it('offers no case clock and never posts to the case route', async () => {
   const {api,controller} = setup();
   await controller.refresh();
-  await controller.setClock({action:'pause'});
+  expect(controller.setClock).toBeUndefined();
+  expect(api.get.mock.calls.map(([path])=>path)).not.toContain('/api/config');
   expect(api.post).not.toHaveBeenCalled();
 });
 it('uses same-origin authenticated API calls and checks private response headers', async () => {
@@ -84,84 +85,23 @@ it('uses same-origin authenticated API calls and checks private response headers
   expect(() => api.get('https://elsewhere.invalid/')).toThrow();
   api.resetHeaders();expect(api.headerChecks().noStore).toBe(false);
 });
-function enableClock(api) {
-  api.get.mockImplementation(path=>Promise.resolve(ok(path.endsWith('overview')?overview:
-    path.endsWith('config')?{capabilities:{hostCaseClock:true}}:crews)));
-}
-it('uses G10 seconds contract and never renders the returned case view', async () => {
-  const {api,view,controller}=setup();enableClock(api);
-  api.post.mockResolvedValue(ok({accepted:true,reason:null,message:'Clock moved.',now:2725,
-    case:{solution:'private-test-case-view'}}));
-  await controller.refresh();
-  for(const bad of [0,3601,1.5,'600',NaN])await controller.setClock(bad);
-  expect(api.post).not.toHaveBeenCalled();
-  await controller.setClock(600);
-  expect(api.post).toHaveBeenCalledWith('/api/host/case/clock',{seconds:600,actionUid:'action-1'});
-  expect(view.say).toHaveBeenLastCalledWith('Clock moved: Clock moved. Case second 2725.');
-  expect(JSON.stringify(view.say.mock.calls)).not.toContain('private-test-case-view');
-});
-it('retains a clock intent through unknown outcomes and prevents changing seconds on retry', async () => {
-  const {api,controller}=setup();enableClock(api);
-  api.post.mockResolvedValue({ok:false,status:0});
-  await controller.refresh();await controller.setClock(60);await controller.setClock(300);
-  await controller.setClock(60);
-  expect(api.post.mock.calls).toEqual([
-    ['/api/host/case/clock',{seconds:60,actionUid:'action-1'}],
-    ['/api/host/case/clock',{seconds:60,actionUid:'action-1'}],
-  ]);
-});
-it('retains clock retry identity after an unreadable successful response', async () => {
-  const {api,view,controller}=setup();enableClock(api);
-  api.post.mockResolvedValueOnce(ok(null)).mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:60,repeat:true}));
-  await controller.refresh();await controller.setClock(60);await controller.setClock(60);
-  expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
-  expect(view.say).toHaveBeenLastCalledWith('Clock moved: Moved. Case second 60. (repeat)');
-});
-it('resolves an actual G10 repeat without extra numbers and permits the next clock move', async () => {
-  const {api,view,controller}=setup();enableClock(api);
-  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({
-    accepted:true,reason:null,repeat:true,message:'The case clock moved forward.',
-    case:{now:60,solution:'private-test-case-view'},
-  })).mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:360}));
-  await controller.refresh();await controller.setClock(60);await controller.setClock(60);
-  expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
-  expect(view.say).toHaveBeenLastCalledWith('Clock moved: The case clock moved forward. (repeat)');
-  await controller.setClock(300);
-  expect(api.post.mock.calls[2][1].seconds).toBe(300);
-  expect(JSON.stringify(view.say.mock.calls)).not.toContain('private-test-case-view');
-});
-it('does not lose an uncertain clock UUID when the retry is rate-limited', async () => {
-  const {api,controller}=setup();enableClock(api);
-  const original=api.post;
-  original.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce({ok:false,status:429})
-    .mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:60,repeat:true}));
-  await controller.refresh();
-  await controller.setClock(60);await controller.setClock(60);await controller.setClock(60);
-  expect(original.mock.calls.map(([,body])=>body.actionUid)).toEqual(['action-1','action-1','action-1']);
-});
-it('retains uncertain writes through a temporary failed refresh', async () => {
-  const {api,controller}=setup();enableClock(api);
-  api.post.mockResolvedValueOnce({ok:false,status:0}).mockResolvedValueOnce(ok({accepted:true,message:'Moved.',now:60,repeat:true}));
-  await controller.refresh();await controller.setClock(60);
+it('retains an uncertain new-code write through a temporary failed refresh', async () => {
+  const {api,controller}=setup();
+  api.post.mockResolvedValueOnce({ok:false,status:0});
+  await controller.refresh();await controller.newCode(true);
+  const get=api.get.getMockImplementation();
   api.get.mockResolvedValueOnce({ok:false,status:503});await controller.refresh();
-  enableClock(api);await controller.refresh();await controller.setClock(60);
+  api.get.mockImplementation(get);await controller.refresh();
+  api.post.mockResolvedValueOnce({ok:false,status:0});await controller.newCode(true);
   expect(api.post.mock.calls[0]).toEqual(api.post.mock.calls[1]);
 });
 it('does not invalidate an in-flight write with a refresh', async () => {
-  const {api,view,controller}=setup();enableClock(api);await controller.refresh();
+  const {api,view,controller}=setup();await controller.refresh();
   let done;api.post.mockImplementation(()=>new Promise(resolve=>{done=resolve;}));
-  const clock=controller.setClock(60),reads=api.get.mock.calls.length;
+  const write=controller.newCode(true),reads=api.get.mock.calls.length;
   await controller.refresh();expect(api.get).toHaveBeenCalledTimes(reads);
   expect(view.say).toHaveBeenLastCalledWith('Wait for the current action before refreshing.');
-  done(ok({accepted:true,message:'Moved.',now:60}));await clock;
-  expect(view.say).toHaveBeenLastCalledWith('Clock moved: Moved. Case second 60.');
-});
-it('shows game-rule refusal and rate-limit messages without rendering case data', async () => {
-  const {api,view,controller}=setup();enableClock(api);await controller.refresh();
-  api.post.mockResolvedValueOnce(ok({accepted:false,message:'Crew is finished.',reason:'finished',case:{}}));
-  await controller.setClock(60);expect(view.say).toHaveBeenLastCalledWith('Clock not moved: Crew is finished.');
-  api.post.mockResolvedValueOnce({ok:false,status:429});
-  await controller.setClock(300);expect(view.say).toHaveBeenLastCalledWith('Clock rate limit reached. Wait before trying again.');
+  done({ok:false,status:0});await write;
 });
 it('removes OAuth query and fragment before exchanging the one-time code', async () => {
   const history={replaceState:vi.fn()};
