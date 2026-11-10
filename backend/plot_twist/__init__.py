@@ -10,9 +10,8 @@ Where things are (one job per file):
                 plus tests added at import: engine rules (test_engine_rules.py) and the format
                 of story.json (test_story_format.py)
 
-The browser has its own copy of these rules in frontend/src/story/engine.js. The two engines
-must stay rule for rule equal. The parity test (tests/test_web_parity.py) plays the same moves
-through both and fails when they disagree.
+The browser copy of these rules (frontend/src/story/engine.js) and its parity test were removed
+on 10 Nov 2026 when the mystery left the game (D031); this engine goes in the later backend cleanup.
 
 This code was imported from Nils' solo game Plot Twist (commit e235ee4, decision D007). The
 original also had a terminal version (cli.py). It is not part of the web game, so it was not

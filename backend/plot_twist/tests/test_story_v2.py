@@ -16,8 +16,7 @@ shore note (the fisherman tying up the red boat) to a player who trusted the fis
 test now finds the shore notes by their conditions and still checks the exact list. The helpers
 that search every playthrough are in story_search.py.
 
-Used by: pytest (uv run pytest, from the backend folder). The parity tests for the new routes are
-in test_web_parity.py and use the route lists defined here.
+Used by: pytest (uv run pytest, from the backend folder).
 """
 
 from plot_twist.engine import Game, Story
