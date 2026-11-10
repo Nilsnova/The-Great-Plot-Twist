@@ -1,66 +1,97 @@
 # Open to-dos
 
-> **The plan for the last two weeks, with a ranked task board, is [FINAL-ROADMAP.md](FINAL-ROADMAP.md).** This file holds the account setup and demo-day steps.
+> **What this file is:** the one checklist of what is still open, for every team member. Tick a box in the same pull request that does the work. No task is assigned to a person; take what fits you and claim it with a draft pull request.
 >
-> **What this file is:** the one list of work that is still open, for anyone on the team. No task here belongs to a particular person: pick one, do it, then tick it off here in the same pull request (or tell the person who keeps this list).
+> **The plan behind it:** [PITCH.md](PITCH.md) (what the game is now), [BUILD-PLAN.md](BUILD-PLAN.md) (the lanes and their tasks), [FINAL-ROADMAP.md](FINAL-ROADMAP.md) (grading criteria and dates).
 >
-> **Last updated:** Mon 9 Nov 2026, after the G29 class-demo release (main `c7f8c95`, live on https://the-great-plot-twist.vercel.app).
+> **Key dates:** feature freeze **Thu 19 Nov** · README complete **Fri 20 Nov** · submit by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59) · presentations Tue 24 Nov or Fri 4 Dec.
 >
-> **Never** paste keys, SMTP passwords, tokens or student numbers into this file, a commit, an issue or a chat. They go straight into the Supabase or Vercel dashboard.
+> **Never** paste keys, SMTP passwords, tokens or student numbers into a chat, an issue or a commit message. Student numbers go only into the README line of their owner.
+>
+> Last updated: Tue 10 Nov 2026.
 
-## 1. Account setup in the Supabase dashboard (needs dashboard access)
+## 1. Every member, today (30 minutes)
 
-### 1a. Guest sign-in for the class code (about 3 minutes, once)
+- [ ] Accept the GitHub invite (write access to `Nilsnova/The-Great-Plot-Twist`), set your own git name and email, clone `main`, and run the checks once ([ENGINEERING.md](ENGINEERING.md#3-commands)).
+- [ ] Pick **one lane** in [BUILD-PLAN.md](BUILD-PLAN.md#4-lanes-and-tasks): **P** pirates, **H** Harbor and coins, **U** look and feel. Lane 0 (server, database, release) is the project owner's.
+- [ ] Give your coding agent the prompt in [contribute/AGENT-PROMPT.md](contribute/AGENT-PROMPT.md) and tell it your lane.
+- [ ] Open your first **draft pull request** today from your own account, titled with the task ID (for example `[P1] Wave simulation`).
 
-Wait until the class-code release (section 3) is live on main. Then guests can only play with the current class code from the projector QR, so this setting stays on for good. There is no switching on and off per lecture.
+## 2. Lane tasks (by Thu 19 Nov; details in BUILD-PLAN.md)
 
+Start with the ★★★ tasks; each member merges at least two pull requests of their own.
+
+| Lane | ★★★ first | Then |
+|---|---|---|
+| P, Pirates | P1 wave simulation + fake API · P2 pirate pixel art · P3 waves on screen | P4 man a cannon / repair · P5 sounds |
+| H, Harbor and coins | H1 `formatCoins()` 🪙 everywhere · H2 market stall "up or down?" · H3 match board and fortune teller | H4 weather board · H5 stalls in the world |
+| U, Look and feel | U1 new panel style · U2 HUD with three things · U3 first 3 minutes · U4 play with friends | U5 toasts and feedback |
+
+Work against the fakes in BUILD-PLAN section 3 until the real API is wired in (planned Sat 14 – Sun 15 Nov). The real API's error shape is `{"error": {"code", "message"}}`. Lanes U and H: start from [UX-AUDIT.md](UX-AUDIT.md).
+
+## 3. Every member, before the freeze (walkthrough = 20% of the grade)
+
+- [ ] **Walkthrough sheet** ([FINAL-ROADMAP A1](FINAL-ROADMAP.md#a-repository-walkthrough-criterion-6-20)): each member writes the page about their own lane (what, where, why, limits, how it could change) in `docs/WALKTHROUGH.md`; one member adds the database/server page with the project owner.
+- [ ] **Mock walkthrough** (A2): each member answers 6 random questions aloud, without notes, about **any** part, including the three course questions: where the data is stored, what the tests cover and miss, what happens when an external API is down.
+- [ ] **Invalid input** (D1): one test per rejected input in your lane (empty, too long, wrong type, repeated click).
+- [ ] **Test map** (E1): add your lane's row to `docs/TEST-MAP.md`: which tests cover it and what they do not.
+- [ ] **README line** (F1, by Fri 20 Nov): add your own name and student number to the README members table yourself.
+
+## 4. Account setup (needs dashboard access; the project owner or a member with access)
+
+### 4a. Guest sign-in for the class code (3 minutes, once, after the class-code release is live)
+
+Guests can only play with the current class code from the projector QR, so this setting stays on for good.
 1. supabase.com/dashboard > project **great-plot-twist** > **Authentication** > **Sign In / Providers** > under "User Signups" switch on **Allow anonymous sign-ins** > **Save**.
-2. **Authentication** > **Rate Limits** > **anonymous sign-ins per hour**: set **100** > **Save**. A whole class shares one Wi-Fi address, and the default of 30 is too low.
-3. Check: open the live site on a phone with the current class link (host console > Class demo) and press Play. You should land in the class harbor.
+2. **Authentication** > **Rate Limits** > **anonymous sign-ins per hour**: **100** > **Save** (a whole class shares one Wi-Fi address).
+3. Check: open the live site on a phone with the current class link (host console > Class demo) and press Play.
 
-### 1b. Email sign-in with a 6-digit code (about 15 minutes)
+### 4b. Email sign-in with a 6-digit code (15 minutes)
 
-Supabase's built-in mailer only delivers to the project team's own addresses, about two emails an hour, so email login needs a mail service. Google sign-in was dropped; the options are GitHub, email and guests.
+Supabase's built-in mailer only reaches the project team, so email login needs a mail service. Sign-in options: GitHub, email and guests (Google was dropped).
+1. **brevo.com**: free account > **Senders, Domains & Dedicated IPs** > **Senders** > **Add a sender**: name "The Great Plot Twist", an address the team controls; confirm it.
+2. Brevo > **SMTP & API** > **SMTP** > **Generate a new SMTP key**.
+3. Supabase > **Authentication** > **Emails** > **SMTP Settings** > **Enable custom SMTP**: sender = the Brevo sender, name "The Great Plot Twist", host `smtp-relay.brevo.com`, port `587`, username = the Brevo SMTP login, password = the SMTP key > **Save**.
+4. Supabase > **Authentication** > **Emails** > **Templates**: put `{{ .Token }}` into **three** templates and save each:
+   - **Magic Link**: subject `Your Great Plot Twist sign-in code`, body `<p>Your sign-in code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
+   - **Confirm signup**: same subject and body.
+   - **Change Email Address**: subject `Confirm your email for The Great Plot Twist`, body `<p>Your confirmation code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
+5. Supabase > **Authentication** > **Sign In / Providers** > **Email**: enabled; **Confirm email** on; **Email OTP length** 6; **Email OTP expiration** 3600 s or less; Google off. **Rate Limits** > emails per hour: **100**.
+6. Tell the project owner "email is on": the game's email option is switched on (Vercel `AUTH_PROVIDERS=github,email`) after one test code arrived. Players should check their spam folder.
 
-1. **brevo.com**: create a free account (300 emails a day). **Senders, Domains & Dedicated IPs** > **Senders** > **Add a sender**: name "The Great Plot Twist", an email address the team controls. Confirm the email Brevo sends.
-2. Brevo > **SMTP & API** > **SMTP** tab > **Generate a new SMTP key**. Keep it only in the next step.
-3. Supabase > **Authentication** > **Emails** > **SMTP Settings** > **Enable custom SMTP**:
-   - sender email: the Brevo sender; sender name: The Great Plot Twist
-   - host `smtp-relay.brevo.com`, port `587`
-   - username: the Brevo SMTP login; password: the SMTP key
-   - **Save**.
-4. Supabase > **Authentication** > **Emails** > **Templates**: put the code `{{ .Token }}` into **three** templates, then **Save** each. The game asks for this 6-digit code; a code works better on phones than a link.
-   - **Magic Link** (returning players): subject `Your Great Plot Twist sign-in code`, body `<p>Your sign-in code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
-   - **Confirm signup** (a new email address gets this one): subject `Your Great Plot Twist sign-in code`, same body.
-   - **Change Email Address** (a guest who adds an email to keep their progress): subject `Confirm your email for The Great Plot Twist`, body `<p>Your confirmation code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
-5. Supabase > **Authentication** > **Sign In / Providers** > **Email**: enabled; **Confirm email** stays on (without it a guest could claim someone else's address); **Email OTP length** 6; **Email OTP expiration** 3600 seconds or less. If Google is still switched on there, switch it off. Then **Rate Limits** > emails sent per hour: **100**.
-6. Once the game's email option is switched on (Vercel `AUTH_PROVIDERS=github,email`, section 3), send one test code to your own address from the live site and report it here.
+### 4c. Stock prices: re-enter the Finnhub key (5 minutes, project owner)
 
-Note: mail sent from a free-mail address (for example Gmail) through Brevo can land in spam. Tell players to check their spam folder. Owning a domain fixes this but costs money, so it needs the project owner's decision.
+Finnhub answers every stock request with HTTP 401 (key rejected, seen in the live log on 10 Nov).
+1. finnhub.io > Dashboard > copy the API key (or create a new one).
+2. Vercel > project the-great-plot-twist > Settings > Environment Variables > `STOCK_API_KEY` > Edit: paste with no spaces or quotes, Production and Preview > Save.
+3. Redeploy the latest production deployment (or wait for the next push).
 
-## 2. Before the class demo
+### 4d. Approve the prediction questions (10 minutes, project owner or any member)
 
-- [ ] **Two-phone test** (20 minutes): the presenter laptop on the projector, signed in with the host GitHub account, press **J**. Two phones scan the QR and press Play. Check that both appear on the laptop, then wave, start a friendly duel (two taps), open the Keeper's Lock with the real weather, and light the three lamps (laptop + two phones, or the host's "Fill missing lamps").
-- [ ] **Presenter laptop check** (5 minutes): on power, browser full screen, open `https://the-great-plot-twist.vercel.app/?demo=1&captains=40&perf=1`. The FPS number should stay around 50 or higher.
-- [ ] **One rehearsal** of the 5-minute script in [PRESENTER-SCRIPT.md](PRESENTER-SCRIPT.md).
+The fortune teller shows nothing because all questions in `backend/content/predictions/questions.json` still say `reviewedBy: pending`. Read each question; approve the suitable ones for a class (no politics, violence or gambling-adjacent topics) by a pull request that sets `reviewedBy` to your name; replace unsuitable ones.
+
+## 5. Before the class demo (the new game)
+
+- [ ] **Two-phone test** (20 minutes): presenter laptop on the projector, signed in with the host account, press **J**. Two phones scan the QR and press Play. Check: both appear, build a cannon, ring the bell and win a wave, visit each other's island by code, place a 10 🪙 stake at the Harbor, and fight one Pirate Point wave together with the three lamps.
+- [ ] **Presenter laptop check** (5 minutes): on power, full screen, `https://the-great-plot-twist.vercel.app/?demo=1&captains=40&perf=1`; the FPS number stays around 50 or higher.
+- [ ] **Two rehearsals** of the 5-minute script in [PRESENTER-SCRIPT.md](PRESENTER-SCRIPT.md) (it is rewritten for the pirates after the freeze), with roles: who drives the projector, who holds the phones, who explains which part.
 - [ ] **The day before:** open the Supabase dashboard once, so a sleeping free project wakes up.
-- [ ] **On the day:** host console (`/host.html`) > **Class demo** > **New class code** (or the J projector panel), then show the QR.
-- [ ] **After the demo:** **New class code** again, so the projector code stops working for new guests. Old guest accounts are removed after 24 hours whenever the host console is opened.
+- [ ] **On the day:** host console (`/host.html`) > **Class demo** > **New class code**, then show the QR. **After:** **New class code** again.
 
-## 3. In this release (merged on `integrate/g29`, waiting for review and release to main)
+## 6. Submission
 
-- **Class-code gate** (was `feat/g29-classcode`): replaces the on/off demo window. Guests need the current class code from the QR; the database rules let an anonymous user without a code do nothing. Its migration `20261109020000_class_code.sql` is already applied to the live database. The account setup in section 1a is still needed once the release is live.
-- **Email sign-in** (was `feat/g29-email`): "Email me a sign-in code" next to GitHub in Settings > Account; the Google option is removed. A guest who joined with the class code can keep their progress with GitHub or an email code. It is switched on in the game (Vercel `AUTH_PROVIDERS=github,email`) only after section 1b is done and one test code arrived.
+- [ ] README complete by Fri 20 Nov: deployed URL, every member's name and student number, the install / run / test commands on the first screen.
+- [ ] One member submits the repository link on Moodle by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59; later commits do not count); a named backup can submit if needed. Keep a screenshot of the confirmation.
 
-## 4. Smaller follow-ups (good first tasks)
+## 7. Being done by the project owner with Claude (lane 0), for information
 
-- [ ] **Wind on flags:** the wow-graphics pass moves tree crowns in the wind but not the harbor flags (`frontend/src/world/wind.js`).
-- [ ] **Arrival ripples in rehearsal:** in `?demo=1&captains=40` all simulated captains arrive in the first snapshot, so the arrival ripple never plays. Stagger their arrival (`frontend/src/class-demo/rehearsal.js`).
-- [ ] **Old title buttons in two browser scripts:** `frontend/scripts/check-festival-ui.js` and `check-friends-entry.js` still drive the removed title buttons (New game, Play with friends). They are not in a gate list; update them to Play, Join and Settings like the other scripts.
-- [ ] **Host-console migration probes:** `host_console_overview()` in the database probes a fixed table list without `demo_window` (and without the sports desk). Adding them needs a small migration that redefines the function; the server list is in `backend/server/host_console.py`.
-- [ ] **Busy-laptop timing check:** `test:g8`'s presenter-tour check "one key skips each step quickly" fails when the laptop is under heavy load (23 fps). Make it measure in frames rather than milliseconds, or skip it when the measured frame rate is low.
-- [ ] **Restart a half-finished prologue:** the Lighthouse prologue resumes an unfinished intro and offers "Start a new intro" only at its ending. Decided to leave as is for now; reopen if players ask.
+- The class-code and email-sign-in release: checks running, then live.
+- The mystery leaves the game and the frontend (also the festival, bulletin and rewards pages): in progress. **Merge `main` into your branch once it lands.**
+- Islands and waves server: built; its database part is live. Next: shared loot for friends and Pirate Point, sports with more leagues, the new voiced pirate intro, wiring day (Sat 14 – Sun 15 Nov), the fresh start for all players and the release on Thu 19 Nov.
 
-## 5. Course deadline
+## 8. Small follow-ups (good first tasks if your lane waits)
 
-- [ ] **End review** of the whole game, then the **Moodle submission by Mon 23 Nov 2026, 23:59** (commits after it do not count; aim for Sun 22 Nov): the live link, the repository and the report, with a named backup person who can submit if the first one cannot.
+- [ ] **Wind on flags** in the harbor (`frontend/src/world/wind.js`): only tree crowns move today.
+- [ ] **Staggered arrivals** in rehearsal `?demo=1&captains=40`, so the arrival ripple plays (`frontend/src/class-demo/rehearsal.js`).
+- [ ] **Busy-laptop timing check**: the presenter-tour check "one key skips each step quickly" fails under heavy load; measure in frames, not milliseconds.
+- [ ] **Host-console probes** for the new tables (`islands`, `wave_runs`, `demo_class_code`, `demo_guests`): write the migration that redefines `host_console_overview()`; the project owner applies it.
