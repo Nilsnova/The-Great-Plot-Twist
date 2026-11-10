@@ -1,0 +1,37 @@
+{
+  "about": "Your own island and the pirate waves (docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices, the starting coins, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island. Every number changes only by pull request, and BUILD-PLAN.md section 3.2 changes with it.",
+  "playMoneyNote": "Play money. No cash value. It cannot be bought or cashed out.",
+  "startingCoins": 100,
+  "kinds": [
+    { "kind": "wall", "name": "Wall", "coins": 10 },
+    { "kind": "cannon", "name": "Cannon", "coins": 30 },
+    { "kind": "watchtower", "name": "Watchtower", "coins": 40 },
+    { "kind": "house", "name": "House", "coins": 50 }
+  ],
+  "spots": [
+    { "id": "wall_1", "kind": "wall" },
+    { "id": "wall_2", "kind": "wall" },
+    { "id": "wall_3", "kind": "wall" },
+    { "id": "wall_4", "kind": "wall" },
+    { "id": "cannon_1", "kind": "cannon" },
+    { "id": "cannon_2", "kind": "cannon" },
+    { "id": "cannon_3", "kind": "cannon" },
+    { "id": "cannon_4", "kind": "cannon" },
+    { "id": "tower_1", "kind": "watchtower" },
+    { "id": "house_1", "kind": "house" },
+    { "id": "house_2", "kind": "house" }
+  ],
+  "loot": { "base": 10, "perWave": 5, "perHouse": 5 },
+  "waves": {
+    "countdownSeconds": 10,
+    "minimumSeconds": 15,
+    "maximumSeconds": 900,
+    "highestWave": 50
+  },
+  "weather": [
+    { "kind": "storm", "label": "Storm: 50% more pirate ships", "ships": 1.5, "fog": 0 },
+    { "kind": "fog", "label": "Fog: the pirates appear later", "ships": 1.0, "fog": 0.4 },
+    { "kind": "rain", "label": "Rain: the pirates do not mind", "ships": 1.0, "fog": 0 },
+    { "kind": "calm", "label": "Calm sea", "ships": 1.0, "fog": 0 }
+  ]
+}

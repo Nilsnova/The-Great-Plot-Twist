@@ -24,7 +24,7 @@ FRESH_START = ROOT / "scripts" / "admin" / "fresh_start.sql"
 OWNER = UUID(int=921)
 FRIEND = UUID(int=922)
 VETERAN = UUID(int=923)  # a player whose wallet moved before (an entry kit)
-LOOT = (10, 5, 5)  # island.json: base, perWave, perHouse
+LOOT = (10, 5, 5)  # islands.json: base, perWave, perHouse
 TIMING = (10, 15, 900, 50)  # countdown, minimum, maximum, highest wave
 
 

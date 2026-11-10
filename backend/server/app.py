@@ -31,6 +31,7 @@ from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
 from server.game.world_state import DatabaseWorldStage, relit_check
 from server.host_console_cache import HostConsoleHeaders
+from server.island.catalogue import IslandCatalogue, island_or_none
 from server.lock.limits import PlayerBudget
 from server.lock.places import PlaceSearch
 from server.lock.weather import PlaceWeather
@@ -56,6 +57,7 @@ from server.routes import (
     host_case,
     host_console,
     intro,
+    island,
     islet,
     keepalive,
     lock,
@@ -64,6 +66,7 @@ from server.routes import (
     predictions,
     save,
     sports,
+    waves,
     weather,
     world,
 )
@@ -75,6 +78,13 @@ from server.supabase_admin import SupabaseAdmin, admin_from_settings
 from server.weather.source import make_weather_source
 from server.weather.state_rules import load_state_rules
 from server.world_stage import WorldStageReader
+
+# Requests per player and minute on the island and wave routes, per server instance. A player
+# builds or rings the bell a few times a minute at most; the budgets stop a runaway loop and make
+# guessing island codes slow.
+ISLAND_BUILDS_PER_MINUTE = 30
+ISLAND_VISITS_PER_MINUTE = 30
+WAVE_CALLS_PER_MINUTE = 20
 
 
 def new_fastapi_app(settings: Settings) -> FastAPI:
@@ -121,6 +131,7 @@ def create_app(
     sports_service: SportsService | None = None,
     lock_weather: PlaceWeather | None = None,
     place_search: PlaceSearch | None = None,
+    island_catalogue: IslandCatalogue | None = None,
 ) -> FastAPI:
     """Build the API. With no arguments it uses the real environment (what Vercel does).
 
@@ -162,6 +173,8 @@ def create_app(
         lock_weather = PlaceWeather(enabled=not settings.demo_mode, clock=clock)
     if place_search is None:
         place_search = PlaceSearch(clock=clock)
+    if island_catalogue is None:
+        island_catalogue = island_or_none()  # None if islands.json is broken
 
     if case_service is None:
         stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()
@@ -219,6 +232,17 @@ def create_app(
     app.state.place_search = place_search
     app.state.lock_budget = PlayerBudget(30, 60, clock=clock)
     app.state.search_budget = PlayerBudget(10, 60, clock=clock)
+    # The island and its waves (BUILD-PLAN 3.4): the catalogue (islands.json) and three budgets.
+    app.state.island = island_catalogue
+    app.state.island_build_budget = PlayerBudget(
+        ISLAND_BUILDS_PER_MINUTE, 60, clock=clock, message="Too many builds at once. Wait a moment."
+    )
+    app.state.island_visit_budget = PlayerBudget(
+        ISLAND_VISITS_PER_MINUTE, 60, clock=clock, message="Too many visits at once. Wait a moment."
+    )
+    app.state.wave_budget = PlayerBudget(
+        WAVE_CALLS_PER_MINUTE, 60, clock=clock, message="Too many bells at once. Wait a moment."
+    )
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -237,6 +261,8 @@ def create_app(
     app.include_router(crews.router, prefix="/api")
     app.include_router(crew_orders.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
+    app.include_router(island.router, prefix="/api")
+    app.include_router(waves.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")
     app.include_router(festival.router, prefix="/api")

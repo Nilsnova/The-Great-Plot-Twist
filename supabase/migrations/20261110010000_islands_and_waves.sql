@@ -67,7 +67,7 @@
 --      maximum length pays nothing.
 --   7. The loot of a survived wave is base + perWave * wave + perHouse *
 --      houses (houses on the island the wave was fought on; none on Pirate
---      Point). The server passes the three numbers (backend/content/island.json:
+--      Point). The server passes the three numbers (backend/content/islands.json:
 --      10, 5 and 5); a lost wave pays 0.
 --   8. Someone who is not signed in (role "anon"), and every browser role, gets
 --      nothing at all from the new tables and functions.
@@ -140,7 +140,7 @@ on conflict (reason) do nothing;
 -- one row per building, the primary key (player_id, plot) allows one building
 -- per spot, and islet_build() writes the row together with the coins. The list
 -- of pairs repeats backend/content/buildings.json (the four old pairs) and
--- backend/content/island.json (the eleven new ones); a test keeps them equal.
+-- backend/content/islands.json (the eleven new ones); a test keeps them equal.
 -- Every existing row has one of the four old pairs, so the new rule accepts it.
 
 alter table public.islet_buildings
@@ -167,7 +167,7 @@ alter table public.islet_buildings
     ));
 
 comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is
-  'Each spot holds only its own kind of building: the four home islet pairs (buildings.json) and the eleven island spots (island.json: wall_1..4 wall, cannon_1..4 cannon, tower_1 watchtower, house_1..2 house). The cabin has no row.';
+  'Each spot holds only its own kind of building: the four home islet pairs (buildings.json) and the eleven island spots (islands.json: wall_1..4 wall, cannon_1..4 cannon, tower_1 watchtower, house_1..2 house). The cabin has no row.';
 
 
 -- -----------------------------------------------------------------------------
@@ -323,7 +323,7 @@ comment on column public.wave_runs.place is
 comment on column public.wave_runs.island_owner is
   'The owner of the island the wave is fought on; null on Pirate Point. Deleting that island deletes the row.';
 comment on column public.wave_runs.wave is
-  'The wave number, from 1: the best wave of the place plus one, at most the highest wave of island.json.';
+  'The wave number, from 1: the best wave of the place plus one, at most the highest wave of islands.json.';
 comment on column public.wave_runs.seed is
   'The random seed of the wave simulation (frontend/src/pirates/sim.js), made by the server, from 0 to 2147483647.';
 comment on column public.wave_runs.starts_at is
@@ -367,7 +367,7 @@ grant select, insert, update on table public.wave_runs to service_role;
 --   p_player_id       the verified player
 --   p_code            a new code the server made (5 symbols); used only when the
 --                     player has no island yet
---   p_starting_coins  the starting coins of island.json (100)
+--   p_starting_coins  the starting coins of islands.json (100)
 --
 -- In one transaction it locks the profile row (FOR NO KEY UPDATE, the same lock
 -- grant_entry_kit() takes first) and the wallet, makes the island if there is
@@ -594,7 +594,7 @@ comment on function public.wave_start(
 --   p_survived        did the island hold (as the browser's simulation says)
 --   p_ships_sunk      ships sunk (as the browser says), 0 to 1000
 --   p_loot_base, p_loot_per_wave, p_loot_per_house
---                     the loot rule of island.json (10, 5, 5)
+--                     the loot rule of islands.json (10, 5, 5)
 --
 -- In one transaction it:
 --   1. checks the arguments (bad_wave_finish),
