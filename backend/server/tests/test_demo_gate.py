@@ -11,8 +11,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from server.auth import PlayerDep, is_anonymous_user, player_from_response
-from server.demo.guests import GUEST_ENDING, GUEST_KIT
+from server.demo.guests import GUEST_COINS, GUEST_ENDING, GUEST_KIT
 from server.flags import parse_flags
+from server.island.catalogue import load_island
 from server.tests.demo_helpers import (
     DEMO_SETTINGS,
     EMAIL_PLAYER,
@@ -153,6 +154,16 @@ def test_an_admitted_guest_passes_and_gets_a_name_and_the_default_kit():
     assert granted["p_move_count"] == 1
     assert granted["p_start_place"] == "saltreach_harbor"
     assert len(granted["p_story_sha256"]) == 64
+
+
+def test_a_guest_is_paid_the_starting_coins_of_every_new_captain():
+    client, database, _ = client_with_route()
+    database.admit(GUEST_ID)
+
+    client.get(URL, headers=GUEST)
+
+    (granted,) = database.calls("grant_entry_kit")
+    assert granted["p_kit_coins"] == GUEST_COINS == load_island().starting_coins == 100
 
 
 def test_a_ready_guest_is_not_set_up_twice_and_the_admission_is_remembered():

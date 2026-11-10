@@ -9,8 +9,11 @@ gate lets through, the guest gets, in this order and each step only once:
      is written once and the kit coins are paid once, reason kit_grant, ref kit).
 
 The default kit is the Stranger: the kit of a player who "took no side", which is what a guest who
-never played Act 1 did. Its start place is saltreach_harbor, the harbor of the class demo. The
-profile is stored with:
+never played Act 1 did. Its start place is saltreach_harbor, the harbor of the class demo. A guest
+is paid GUEST_COINS (100, the starting coins of every new captain in backend/content/islands.json,
+docs/BUILD-PLAN.md section 3.2) instead of the Stranger's 1600, so a guest starts the island game
+like everyone else; the kit still brings its profile, start place and item. The profile is stored
+with:
 
     ending       ending_demo   not a scene of the story, so the profile always shows that it came
                                from the demo, never from a replay. The table rule
@@ -51,7 +54,7 @@ Used by: demo/gate.py (provision_guest) and routes/demo.py (cleanup_guests, Auto
 import asyncio
 import logging
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -73,6 +76,8 @@ logger = logging.getLogger(__name__)
 GUEST_KIT = "stranger"
 GUEST_ENDING = "ending_demo"
 GUEST_MOVE_COUNT = 1
+# The coins of a guest: the starting coins of islands.json (a test keeps the two equal).
+GUEST_COINS = 100
 
 # Cleanup: guests whose account is older than this are deleted.
 GUEST_MAX_AGE = timedelta(hours=24)
@@ -115,7 +120,7 @@ async def provision_guest(admin: SupabaseAdmin, player_id: str) -> None:
     )
     if named.status == "missing":
         raise player_not_set_up()
-    kit = kit_by_id(load_entry_kits(ENTRY_KITS_PATH), GUEST_KIT)
+    kit = replace(kit_by_id(load_entry_kits(ENTRY_KITS_PATH), GUEST_KIT), coins=GUEST_COINS)
     verdict = guest_verdict()
     if kit.decision != verdict.decision:
         raise ValueError("The guest kit must be the kit of a player who took no side.")
