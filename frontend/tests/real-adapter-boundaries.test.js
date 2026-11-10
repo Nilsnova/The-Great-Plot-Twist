@@ -1,22 +1,18 @@
 // Recorded malformed successes and lifecycle races cannot grant progress or leak an abandoned account.
 import {describe, expect, it, vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
 import {createLazyOnlineAdapter} from '../src/adapter/lazy-online.js';
 
 const me = {id: 'player-placeholder', captainName: 'Placeholder captain', coins: 0,
   kit: null, place: null, crews: []};
 const okay = data => ({ok: true, status: 200, data: structuredClone(data)});
-const profile = {ending: 'ending_rescue', decision: 'warned', readLog: false,
-  coinsPaid: 5, alreadyGranted: false, kit: {id: 'true_keeper', name: 'True Keeper', coins: 5,
-    startPlace: 'saltreach_harbor', item: {id: 'item-placeholder', name: 'Placeholder item', text: 'Placeholder text.'}}};
 function setup(player = me) {
   const session = createSession();
   session.setToken(String(Math.random()));
   const writes = [];
   const replies = new Map([
     ['/api/config', okay({flags: {sign_in: true}})], ['/api/me', okay(player)],
-    ['/api/save', okay({version: 1, data: {}})], ['/api/crews/me', okay({crew: null})],
   ]);
   const api = {
     get: async route => structuredClone(replies.get(route)),
@@ -24,7 +20,7 @@ function setup(player = me) {
       return okay(route === '/api/me/name' ? {captainName: player.captainName, rerollsLeft: 1} : null); },
     del: async () => okay(null),
   };
-  const adapter = createRealCaseAdapter({session, api, publicApi: api, document: {}, window: {}});
+  const adapter = createRealAdapter({session, api, publicApi: api, document: {}, window: {}});
   const ready = async () => {
     await vi.waitFor(() => expect(adapter.read().account.canReroll).toBe(true));
     expect(writes).toEqual([{route: '/api/me/name', body: undefined}]);
@@ -34,21 +30,6 @@ function setup(player = me) {
 }
 
 describe('real adapter boundaries', () => {
-  it.each([null, {}, {...profile, kit: {id: 'true_keeper'}}, {...profile, coinsPaid: '5'}])(
-    'refuses malformed successful intro replies without granting a kit', async reply => {
-      const test = setup();
-      try {
-        await test.ready();
-        test.api.post = async () => okay(reply);
-        expect(await test.adapter.completeIntro({actions: ['to_desk']}))
-          .toMatchObject({accepted: false, reason: 'invalid_request'});
-        expect(test.adapter.read().account.hasKit).toBe(false);
-        expect(test.adapter.read().arrival.status).toBe('pending');
-        expect(test.adapter.read().captain.coins).toBe(0);
-      } finally { test.adapter.dispose(); }
-    },
-  );
-
   it.each([null, {}, {deleted: 'true'}, {deleted: false}])('rejects malformed deletion confirmation', async reply => {
     const test = setup();
     try {
@@ -57,29 +38,6 @@ describe('real adapter boundaries', () => {
       expect(await test.adapter.deleteMyData({confirm: true})).toMatchObject({accepted: false});
       expect(test.session.isSignedIn()).toBe(true);
       expect(test.adapter.read().account.state).toBe('signed_in');
-    } finally { test.adapter.dispose(); }
-  });
-
-  it.each([['UPPER'], ['../placeholder'], [null], Array(301).fill('to_desk')])(
-    'keeps invalid cloud replay actions out of continuation', async (...actions) => {
-      const test = setup();
-      try {
-        await test.ready();
-        test.replies.set('/api/save', okay({version: 1, data: {kind: 'intro', actions}}));
-        const result = await test.adapter.continueGame();
-        expect(result.accepted).toBe(true);
-        expect(result.view.continuation).toMatchObject({source: 'local', kind: 'intro', actions: null});
-      } finally { test.adapter.dispose(); }
-    },
-  );
-
-  it.each(['true', 1, null, {}])('rejects nonboolean join confirmation without a POST', async confirm => {
-    const test = setup();
-    try {
-      await test.ready();
-      expect(await test.adapter.joinCrew('PLACEHOLDER', {confirm}))
-        .toMatchObject({accepted: false, reason: 'invalid_request'});
-      expect(test.writes).toHaveLength(0);
     } finally { test.adapter.dispose(); }
   });
 
@@ -103,26 +61,15 @@ describe('real adapter boundaries', () => {
     } finally { test.adapter.dispose(); }
   });
 
-  it('continues in the world when a captain has a kit but the cloud save is not set up', async () => {
-    const test = setup({...me, kit: 'true_keeper', place: 'saltreach_harbor'});
-    try {
-      await test.ready();
-      test.replies.set('/api/save', {ok: false, status: 404, code: 'player_not_set_up'});
-      expect(await test.adapter.continueGame()).toMatchObject({accepted: true, view: {
-        continuation: {source: 'cloud', kind: 'world', actions: [], place: 'saltreach_harbor'},
-      }});
-    } finally { test.adapter.dispose(); }
-  });
-
-  it('forwards fallback continuation events before the failed-chunk intent resolves', async () => {
+  it('forwards the fallback view before the failed-chunk intent resolves', async () => {
     const adapter = createLazyOnlineAdapter({load: async () => { throw new Error('Placeholder load failure'); }});
     let resolved = false;
     let published = false;
     adapter.subscribe(() => { throw new Error('Placeholder observer failure'); });
-    adapter.subscribe(event => { if (event.view.continuation && !resolved) published = true; });
+    adapter.subscribe(event => { if (event.view.mode === 'unavailable' && !resolved) published = true; });
     try {
-      const result = await adapter.continueGame().then(value => { resolved = true; return value; });
-      expect(result.accepted).toBe(true);
+      const result = await adapter.rerollName().then(value => { resolved = true; return value; });
+      expect(result).toMatchObject({accepted: false, reason: 'not_connected'});
       expect(published).toBe(true);
     } finally { adapter.dispose(); }
   });
@@ -131,11 +78,11 @@ describe('real adapter boundaries', () => {
     const test = setup();
     const dispose = vi.spyOn(test.adapter, 'dispose');
     const create = vi.fn(() => test.adapter);
-    const adapter = createLazyOnlineAdapter({load: async () => ({createRealCaseAdapter: create})});
+    const adapter = createLazyOnlineAdapter({load: async () => ({createRealAdapter: create})});
     adapter.subscribe(() => { throw new Error('Placeholder observer failure'); });
     try {
       await test.ready();
-      expect((await adapter.continueGame()).accepted).toBe(true);
+      expect((await adapter.signIn()).accepted).toBe(true);
       expect(adapter.read().mode).toBe('online');
       expect(create).toHaveBeenCalledTimes(1);
       expect(dispose).not.toHaveBeenCalled();

@@ -2,7 +2,7 @@
 import {randomUUID} from 'node:crypto';
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createRealCaseAdapter} from '../src/online/case-adapter/index.js';
+import {createRealAdapter} from '../src/online/adapter/index.js';
 
 const okay=data=>({ok:true,status:200,data}),copy=value=>structuredClone(value);
 const sample=(x=1,y=2)=>({place:'saltreach_harbor',x,y,facing:'front',moving:true});
@@ -12,12 +12,6 @@ class UnitDocument extends EventTarget {
   hidden=false;
   setHidden(value){this.hidden=value;this.dispatchEvent(new Event('visibilitychange'));}
 }
-function crewFor(me,code='START7'){
-  return {id:randomUUID(),code,status:'forming',mode:'crew',mySeat:1,startedAt:null,
-    seats:[1,2,3,4].map(seatNo=>({seatNo,holder:seatNo<=2?'player':'open',
-      name:seatNo===1?me.captainName:seatNo===2?'Recorded peer':null,
-      kit:seatNo===1?'witness':seatNo===2?'stranger':null,isMe:seatNo===1}))};
-}
 const fixtures=[];
 function setup(options={}){
   const {signedIn=true,holdName=false}=options;
@@ -25,26 +19,22 @@ function setup(options={}){
   const session=createSession();if(signedIn)session.setToken(`fixture-${randomUUID()}`);
   const me={id:randomUUID(),captainName:holdName?null:'Recorded Captain',coins:0,
     kit:'witness',place:'saltreach_harbor',crews:[]},peer={id:randomUUID()};
-  let serverCrew=crewFor(me);
-  const heldName=holdName?deferred():null,crewReplies=[],requests=[],records=[],authListeners=new Set();
+  const heldName=holdName?deferred():null,requests=[],records=[],authListeners=new Set();
   const document=new UnitDocument(),window=new EventTarget(),emit=vi.fn();
   const api={get:vi.fn(async path=>{
     requests.push({method:'GET',path});
     if(path==='/api/config')return okay({flags:{sign_in:true,live_presence:flag,case:false}});
     if(path==='/api/me')return okay(copy(me));
-    if(path==='/api/save')return okay({version:1,data:{},updatedAt:null});
-    if(path==='/api/crews/me')return crewReplies.length?crewReplies.shift():okay({crew:copy(serverCrew)});
     throw new Error('Unexpected recorded presence GET');
   }),post:vi.fn(async path=>{
     requests.push({method:'POST',path});
     if(path==='/api/me/name')return heldName?heldName.promise:okay({captainName:me.captainName,rerollsLeft:1});
-    if(path==='/api/crews/me/start')return {ok:false,status:409,code:'crew_busy'};
     throw new Error('Unexpected recorded presence POST');
   }),put:vi.fn(async()=>{throw new Error('No save write in the presence fixture');}),
   del:vi.fn(async()=>{throw new Error('No deletion in the presence fixture');})};
   const auth={read:()=>({state:session.isSignedIn()?'signed_in':'signed_out',configured:true}),
     restore:vi.fn(async()=>{}),signOut:vi.fn(async()=>{}),dispose:vi.fn(),
-    getAccessToken:vi.fn(async()=>session.getToken()),readOwnLedger:vi.fn(async()=>({ok:true,rows:[]})),
+    getAccessToken:vi.fn(async()=>session.getToken()),
     readCrewSeats:vi.fn(async()=>({ok:true,seats:[{playerId:me.id,seatNo:1},{playerId:peer.id,seatNo:2}]})),
     subscribe(listener){authListeners.add(listener);return ()=>authListeners.delete(listener);},
   };
@@ -54,25 +44,21 @@ function setup(options={}){
     records.push(live);wire.emit({type:'live_status_changed',state:'live'});return live;
   });
   const loadRealtime=vi.fn(async()=>({startRealtime}));
-  const adapter=createRealCaseAdapter({session,api,publicApi:api,auth,document,window,emit,loadRealtime,
+  const adapter=createRealAdapter({session,api,publicApi:api,auth,document,window,emit,loadRealtime,
     supabaseUrl:'https://placeholder.supabase.co',publishableKey:`public-${randomUUID()}`,
-    clock:()=>Date.now(),random:()=>.5,isCrewVisible:()=>false,readLocalSave:()=>null,on:()=>()=>{}});
+    clock:()=>Date.now(),random:()=>.5,on:()=>()=>{}});
   const fixture={adapter,session,api,auth,document,window,emit,loadRealtime,startRealtime,records,requests,me,peer,authListeners,
-    crewReads:()=>requests.filter(request=>request.path==='/api/crews/me'),
-    async ready(count=1){await settle();expect(auth.readOwnLedger).toHaveBeenCalled();
-      expect(adapter.read().account).toMatchObject({state:'signed_in',hasKit:true,namePending:false});
+    async ready(count=1){await settle();
+      expect(adapter.read().account).toMatchObject({state:'signed_in',namePending:false});
       expect(records).toHaveLength(count);},
     finishName(){me.captainName='Recorded Captain';heldName.resolve(okay({captainName:me.captainName,rerollsLeft:1}));},
-    replaceCrew(code){serverCrew={...serverCrew,code};},
-    nextIdentity(){me.id=randomUUID();me.captainName='Second Recorded Captain';serverCrew=crewFor(me,'NEXT7');},
-    holdCrew(){const held=deferred();crewReplies.push(held.promise);return held;},
-    crewSnapshot:()=>copy(serverCrew),
+    nextIdentity(){me.id=randomUUID();me.captainName='Second Recorded Captain';},
   };
   fixtures.push(fixture);return fixture;
 }
-async function crewNotice(f){
-  expect((await f.adapter.muster()).reason).toBe('not_ready');await settle();
-  const notice=f.adapter.read().notice;expect(notice.reason).toBe('not_ready');return notice;
+async function heldNotice(f){
+  expect((await f.adapter.deleteMyData({confirm:false})).reason).toBe('confirmation_required');await settle();
+  const notice=f.adapter.read().notice;expect(notice.reason).toBe('confirmation_required');return notice;
 }
 function peerEvents(f,live=f.records.at(-1)){
   const roster={type:'live_presence_changed',place:'saltreach_harbor',room:1,
@@ -106,12 +92,12 @@ describe('real factory presence lifecycle',()=>{
     expect(f.records[0].wire.playerId).toBe(f.me.id);
   });
 
-  it('exposes safe peer views and cosmetic receipts without replacing a held crew refusal',async()=>{
+  it('exposes safe peer views and cosmetic receipts without replacing a held refusal',async()=>{
     const f=setup();await f.ready();const live=f.records[0],roster=peerEvents(f);
     expect(f.adapter.read().presence.others).toMatchObject([{name:'Recorded peer',x:3,y:4,facing:'back'}]);
     expect(JSON.stringify(f.adapter.read().presence)).not.toContain(f.peer.id);
     expect(f.emit.mock.calls.map(([event])=>event).filter(event=>event.type==='live_presence_changed')).toEqual([roster]);
-    const notice=await crewNotice(f),events=f.emit.mock.calls.length;
+    const notice=await heldNotice(f),events=f.emit.mock.calls.length;
     const receipts=[await f.adapter.reportPosition(sample()),await f.adapter.setEmote('wave'),
       await f.adapter.setEmote('cheer'),await f.adapter.reportPosition(sample(NaN)),
       await f.adapter.setEmote('unknown')];
@@ -134,17 +120,16 @@ describe('real factory presence lifecycle',()=>{
     expect(first.stop).toHaveBeenCalledOnce();expect(f.adapter.read().presence.others).toEqual([]);
     await f.adapter.reportPosition(sample(99,99));first.wire.emit({type:'live_status_changed',state:'live'});
     expect(first.update).toHaveBeenCalledTimes(1);expect(f.adapter.read().presence.status).toBe('off');
-    const crewReads=f.crewReads().length;f.document.setHidden(false);await settle();
+    f.document.setHidden(false);await settle();
     const fresh={...sample(5,6),facing:'back',moving:false};await f.adapter.reportPosition(fresh);
     await vi.advanceTimersByTimeAsync(499);expect(f.records).toHaveLength(1);
     await vi.advanceTimersByTimeAsync(1);await settle();expect(f.records).toHaveLength(2);
     expect(f.records[1].setPlace).toHaveBeenLastCalledWith('saltreach_harbor');
     expect(f.records[1].update).toHaveBeenCalledExactlyOnceWith({x:5,z:6,facing:'up',moving:false});
-    expect(f.crewReads()).toHaveLength(crewReads);
   });
 
   it('clears identity cosmetics immediately and ignores stale A4 callbacks after signout and disposal',async()=>{
-    const f=setup();await f.ready();const first=f.records[0];peerEvents(f);const notice=await crewNotice(f);
+    const f=setup();await f.ready();const first=f.records[0];peerEvents(f);const notice=await heldNotice(f);
     f.session.clearToken();expect(first.stop).toHaveBeenCalledOnce();
     expect(f.adapter.read().presence).toMatchObject({status:'off',others:[],crew:[]});
     const refused=await f.adapter.reportPosition(sample());
@@ -167,17 +152,4 @@ describe('real factory presence lifecycle',()=>{
     expect(f.auth.dispose).toHaveBeenCalledOnce();expect(f.authListeners.size).toBe(0);
   });
 
-  it('rereads a live crew push and drops an older push completion across an identity change',async()=>{
-    const f=setup();await f.ready();const first=f.records[0],initial=f.crewReads().length;
-    f.replaceCrew('PUSH7');
-    first.wire.emit({type:'live_crew_updated',kind:'crew_changed',data:{version:2}});
-    await settle();expect(f.crewReads()).toHaveLength(initial+1);
-    expect(f.adapter.read()).toMatchObject({crew:{code:'PUSH7'},notice:{message:'Your crew changed.'}});
-    const old=f.crewSnapshot(),held=f.holdCrew();
-    first.wire.emit({type:'live_crew_updated',kind:'crew_changed',data:{version:3}});await settle();
-    expect(f.crewReads()).toHaveLength(initial+2);
-    f.session.clearToken();f.nextIdentity();f.session.setToken(`fixture-${randomUUID()}`);await f.ready(2);
-    const current=f.adapter.read();expect(current.crew.code).toBe('NEXT7');
-    held.resolve(okay({crew:old}));await settle();expect(f.adapter.read()).toEqual(current);
-  });
 });

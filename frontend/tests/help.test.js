@@ -44,7 +44,7 @@ describe('standalone player help', () => {
   });
 
   it('keeps every topic and working contents anchor available without JavaScript', () => {
-    const topics = ['start', 'crews', 'case', 'islet', 'exchange', 'predictions', 'duels',
+    const topics = ['start', 'islet', 'exchange', 'predictions', 'duels',
       'weather', 'controls', 'accessibility', 'report', 'privacy'];
     for (const id of topics) {
       expect(html).toContain(`id="${id}"`);
@@ -55,8 +55,8 @@ describe('standalone player help', () => {
     expect(html).toContain('Play money only');
     expect(html).toContain('not connected');
     expect(html).toContain('Your positions');
-    expect(html).toContain('first Relighting');
-    expect(html).toContain('Live crews');
+    for (const removed of ['id="crews"', 'id="case"', 'Relighting', 'Live crews', 'Lighthouse prologue', 'culprit', 'accusation'])
+      expect(html).not.toContain(removed);
     expect(html).toContain('source freshness');
     expect(html).not.toContain('optional spoiler-safe hint assistant');
     expect(html).not.toContain('older market service');
@@ -70,19 +70,8 @@ describe('standalone player help', () => {
     }
   });
 
-  it('ships small, labelled local-fake images with descriptive alternatives', async () => {
-    expect(html).toContain('Local fake: a forming crew');
-    expect(html).toContain('Local fake: partners fill the open seats');
-    const images = [...html.matchAll(/<img\b[^>]+>/g)];
-    expect(images).toHaveLength(2);
-    for (const image of images) expect(image[0]).toMatch(/alt="Local fake crew [^"]+"/);
-    for (const name of ['crew-rehearsal.png', 'partners-rehearsal.png']) {
-      const image = await readFile(join(output, 'help', name));
-      expect(image.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
-      expect(image.length).toBeLessThan(150 * 1024);
-      expect(image.readUInt32BE(16)).toBeLessThanOrEqual(960);
-      expect(image.equals(await readFile(join('public/help', name)))).toBe(true);
-    }
+  it('ships no images since the crew rehearsal pictures left with the mystery', () => {
+    expect([...html.matchAll(/<img\b[^>]+>/g)]).toHaveLength(0);
   });
 
   it('ships the current privacy notice without obsolete provider or deletion claims', async () => {

@@ -2,11 +2,10 @@
 import {randomUUID} from 'node:crypto';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createAdapterStore} from '../src/online/case-adapter/store.js';
-import {createAdapterTransport} from '../src/online/case-adapter/transport.js';
-import {createReadMonitor} from '../src/online/case-adapter/read-monitor.js';
-import {refreshAccountRewards} from '../src/online/case-adapter/rewards.js';
-import {createPanelWallet} from '../src/online/case-adapter/panel-wallet.js';
+import {createAdapterStore} from '../src/online/adapter/store.js';
+import {createAdapterTransport} from '../src/online/adapter/transport.js';
+import {createReadMonitor} from '../src/online/adapter/read-monitor.js';
+import {createPanelWallet} from '../src/online/adapter/panel-wallet.js';
 
 const good = data => ({ok: true, status: 200, data});
 const failed = (status, code = 'database_unavailable') => ({ok: false, status, code});
@@ -38,8 +37,7 @@ function setup() {
   const ctx = {session, store, state: store.state, api, publicApi: api, now: () => now,
     accept: (message = '') => ({accepted: true, reason: null, message}),
     refuse: reason => ({accepted: false, reason, message: `Refused: ${reason}`}),
-    waitForSave: vi.fn(async () => {}), onMeRefreshed: vi.fn(async () => ({ledgerHandled: false})),
-    auth: {readOwnLedger: vi.fn(async () => ({ok: true, rows: []}))}};
+    waitForSetup: vi.fn(async () => {}), onMeRefreshed: vi.fn(async () => ({setupHandled: false}))};
   ctx.readMonitor = createReadMonitor(ctx, {
     setTimer(callback, delay) { const id = ++nextTimer; timers.set(id, {callback, delay}); return id; },
     clearTimer(id) { timers.delete(id); },
@@ -54,7 +52,7 @@ function setup() {
     setTime(value) { now = value; },
     replaceIdentity(coins = 77) {
       session.clearToken(); store.invalidate(); ctx.readMonitor.reset(); ctx.transport.clearPending();
-      serverMe = me(coins); store.commit({me: structuredClone(serverMe), rewardsRows: []});
+      serverMe = me(coins); store.commit({me: structuredClone(serverMe)});
       session.setToken(`fixture-${randomUUID()}`); store.invalidate();
     },
     dispose() { store.dispose(); wallet.dispose(); ctx.readMonitor.dispose(); },
@@ -64,24 +62,17 @@ function setup() {
 afterEach(() => { for (const fixture of fixtures.splice(0)) fixture.dispose(); });
 
 describe('panel observations reconcile the shared authoritative wallet', () => {
-  it('preserves exact A2 objects and bodies, never repeats a POST, and refreshes ledger even at the same balance', async () => {
+  it('preserves exact A2 objects and bodies, never repeats a POST, and rereads the account even at the same balance', async () => {
     const f = setup(), response = good({recorded: true}), body = {amount: 7, stakeId: randomUUID()};
     f.posts.push(() => Promise.resolve(response));
-    f.ctx.auth.readOwnLedger.mockResolvedValue({ok: true, rows: [
-      {amount: -7, reason: 'prediction_stake', reference_id: randomUUID()},
-      {amount: 7, reason: 'recorded_refund', reference_id: randomUUID()},
-    ]});
     expect(await f.wallet.api.post('/api/predictions/stake', body)).toBe(response);
     await f.wallet.waitIdle();
     expect(f.api.post).toHaveBeenCalledExactlyOnceWith('/api/predictions/stake', body);
     expect(f.api.post.mock.calls[0][1]).toBe(body);
     expect(f.meReads()).toHaveLength(1);
     expect(f.ctx.onMeRefreshed).toHaveBeenCalledOnce();
-    expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce();
     const view = f.store.read();
-    expect(view.captain.coins).toBe(1000); expect(view.rewards.balance).toBe(1000);
-    expect(view.rewards.ledger.map(row => row.amount)).toEqual([-7, 7]);
-    expect(f.store.state.rewardsRows.every(row => !('reference_id' in row))).toBe(true);
+    expect(view.captain.coins).toBe(1000); expect(view).not.toHaveProperty('rewards');
   });
 
   it.each(['/api/market/open', '/api/market/close', '/api/predictions/stake', '/api/duels',
@@ -90,7 +81,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     const f = setup(), response = good({coins: 123456}); f.posts.push(() => Promise.resolve(response));
     f.setMe(me(930)); expect(await f.wallet.api.post(path, {actionUid: randomUUID()})).toBe(response);
     await f.wallet.waitIdle();
-    expect(f.meReads()).toHaveLength(1); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce();
+    expect(f.meReads()).toHaveLength(1);
     expect(f.store.read().captain.coins).toBe(930); expect(f.api.post).toHaveBeenCalledOnce();
   });
 
@@ -102,7 +93,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     const f = setup(); f.posts.push(() => Promise.resolve(response));
     expect(await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()})).toBe(response);
     await f.wallet.waitIdle();
-    expect(f.meReads()).toHaveLength(1); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce();
+    expect(f.meReads()).toHaveLength(1);
     expect(f.api.post).toHaveBeenCalledOnce();
   });
 
@@ -118,7 +109,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     const f = setup(); f.posts.push(() => Promise.resolve(response));
     expect(await f.wallet.api.post(path, {actionUid: randomUUID()})).toBe(response);
     await f.wallet.waitIdle();
-    expect(f.meReads()).toHaveLength(0); expect(f.ctx.auth.readOwnLedger).not.toHaveBeenCalled();
+    expect(f.meReads()).toHaveLength(0);
     expect(f.api.post).toHaveBeenCalledOnce();
   });
 
@@ -145,7 +136,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     await f.wallet.api.post('/api/market/open', {actionUid: randomUUID()}); await started.promise;
     await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()});
     f.setMe(me(800)); held.resolve(good(me(900))); await f.wallet.waitIdle();
-    expect(f.meReads()).toHaveLength(2); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledTimes(2);
+    expect(f.meReads()).toHaveLength(2);
     expect(f.store.read().captain.coins).toBe(800); expect(f.api.post).toHaveBeenCalledTimes(2);
   });
 
@@ -153,7 +144,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
   ('refreshes a passive authoritative payout hint on %s while leaving its answer untouched', async path => {
     const f = setup(), response = good({coins: 1100}); f.gets.push(() => Promise.resolve(response));
     f.setMe(me(1100)); expect(await f.wallet.api.get(path)).toBe(response); await f.wallet.waitIdle();
-    expect(f.meReads()).toHaveLength(1); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce();
+    expect(f.meReads()).toHaveLength(1);
     expect(f.store.read().captain.coins).toBe(1100); expect(f.api.post).not.toHaveBeenCalled();
   });
 
@@ -184,7 +175,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
       f.gets.push(() => Promise.resolve(good({coins: 900}))); await f.wallet.api.get(path);
     }
     f.gets.push(() => Promise.resolve({...failed(503), data: {coins: 900}})); await f.wallet.api.get('/api/duels');
-    await f.wallet.waitIdle(); expect(f.meReads()).toHaveLength(0); expect(f.ctx.auth.readOwnLedger).not.toHaveBeenCalled();
+    await f.wallet.waitIdle(); expect(f.meReads()).toHaveLength(0);
   });
 
   it('recognizes a returned payout hint after an intervening observed balance matched shared ME', async () => {
@@ -199,16 +190,16 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     expect(f.api.post).not.toHaveBeenCalled();
   });
 
-  it('waits for hydration, covers all preceding writes once, and leaves already-handled ledger ownership alone', async () => {
+  it('waits for hydration, covers all preceding writes once, and leaves already-handled account read ownership alone', async () => {
     const f = setup(), barrier = deferred(), entered = deferred();
-    f.ctx.waitForSave.mockImplementation(() => { entered.resolve(); return barrier.promise; });
-    f.ctx.onMeRefreshed.mockImplementation(async () => { await refreshAccountRewards(f.ctx); return {ledgerHandled: true}; });
+    f.ctx.waitForSetup.mockImplementation(() => { entered.resolve(); return barrier.promise; });
+    f.ctx.onMeRefreshed.mockImplementation(async () => ({setupHandled: true}));
     await f.wallet.api.post('/api/market/open', {actionUid: randomUUID()}); await entered.promise;
     await f.wallet.api.post('/api/duels', {actionUid: randomUUID()});
-    expect(f.meReads()).toHaveLength(0); expect(f.ctx.auth.readOwnLedger).not.toHaveBeenCalled();
+    expect(f.meReads()).toHaveLength(0);
     barrier.resolve(); await f.wallet.waitIdle();
     expect(f.meReads()).toHaveLength(1); expect(f.ctx.onMeRefreshed).toHaveBeenCalledOnce();
-    expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce(); expect(f.api.post).toHaveBeenCalledTimes(2);
+    expect(f.api.post).toHaveBeenCalledTimes(2);
   });
 
   it('reconciles a sent write across feature-off, but never across identity replacement', async () => {
@@ -217,15 +208,15 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     await f.wallet.api.post('/api/duels', {actionUid: randomUUID()}); await started.promise;
     f.store.commit({config: {flags: {arena: false}}});
     old.resolve(good(me(950))); await f.wallet.waitIdle();
-    expect(f.store.read().captain.coins).toBe(950); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce();
+    expect(f.store.read().captain.coins).toBe(950);
     const late = deferred(), lateStarted = deferred();
     f.reads.push(() => { lateStarted.resolve(); return late.promise; });
     await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()}); await lateStarted.promise;
     f.replaceIdentity(77); late.resolve(good(me(1))); await f.wallet.waitIdle();
-    expect(f.store.read().captain.coins).toBe(77); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledOnce();
+    expect(f.store.read().captain.coins).toBe(77);
     expect(f.ctx.onMeRefreshed).toHaveBeenCalledOnce();
     f.setMe(me(66)); await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()}); await f.wallet.waitIdle();
-    expect(f.store.read().captain.coins).toBe(66); expect(f.ctx.auth.readOwnLedger).toHaveBeenCalledTimes(2);
+    expect(f.store.read().captain.coins).toBe(66);
   });
 
   it('returns a late old-account POST unchanged without starting reads for the replacement account', async () => {
@@ -234,7 +225,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     const pending = f.wallet.api.post('/api/duels', {actionUid: randomUUID()});
     f.replaceIdentity(77); held.resolve(response);
     expect(await pending).toBe(response); await f.wallet.waitIdle();
-    expect(f.meReads()).toHaveLength(0); expect(f.ctx.auth.readOwnLedger).not.toHaveBeenCalled();
+    expect(f.meReads()).toHaveLength(0);
     expect(f.store.read().captain.coins).toBe(77);
   });
 
@@ -245,18 +236,18 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     left.session.setToken(`fixture-renewed-${randomUUID()}`); held.resolve(good(me(950)));
     await left.wallet.waitIdle();
     expect(left.store.read().captain.coins).toBe(950); expect(right.store.read().captain.coins).toBe(1000);
-    expect(right.meReads()).toHaveLength(0); expect(right.ctx.auth.readOwnLedger).not.toHaveBeenCalled();
+    expect(right.meReads()).toHaveLength(0);
     await right.wallet.api.post('/api/market/open', {actionUid: uid}); await right.wallet.waitIdle();
     expect(right.meReads()).toHaveLength(1); expect(left.meReads()).toHaveLength(1);
   });
 
-  it('keeps the factory-disposed view frozen and never begins ledger work after a late ME', async () => {
+  it('keeps the factory-disposed view frozen and never begins account read work after a late ME', async () => {
     const f = setup(), held = deferred(), started = deferred();
     f.reads.push(() => { started.resolve(); return held.promise; });
     await f.wallet.api.post('/api/duels', {actionUid: randomUUID()}); await started.promise;
     const before = f.store.read(); f.dispose(); held.resolve(good(me(1)));
     await Promise.all(f.transportTasks); await f.wallet.waitIdle();
-    expect(f.store.read()).toEqual(before); expect(f.ctx.auth.readOwnLedger).not.toHaveBeenCalled();
+    expect(f.store.read()).toEqual(before);
     expect(f.ctx.onMeRefreshed).not.toHaveBeenCalled(); expect(f.timers.size).toBe(0);
   });
 });

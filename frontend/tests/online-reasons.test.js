@@ -1,6 +1,6 @@
 // The A2 transport vocabulary becomes stable adapter results without leaking unknown payloads.
 import {describe, expect, it} from 'vitest';
-import {mapApiResult} from '../src/online/case-adapter/reasons.js';
+import {mapApiResult} from '../src/online/adapter/reasons.js';
 import {normalizeIntentResult} from '../src/adapter/call-failure.js';
 import {createCallState} from '../src/ui/kit/call-state.js';
 

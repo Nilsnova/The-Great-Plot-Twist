@@ -1,6 +1,6 @@
 // Action UIDs identify one player action; they carry no account or authentication material.
 import {describe, expect, it} from 'vitest';
-import {createUidFactory} from '../src/online/case-adapter/uid.js';
+import {createUidFactory} from '../src/online/adapter/uid.js';
 
 describe('action UID factory', () => {
   it('makes distinct valid UIDs even with a fixed clock and fixed random source', () => {

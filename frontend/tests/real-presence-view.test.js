@@ -1,6 +1,6 @@
 // Pure projection keeps cosmetic wire data separate from the schema-1 display shape.
 import {describe, expect, it} from 'vitest';
-import {peerFacing, wireFacing, projectOnlinePresence} from '../src/online/case-adapter/presence-view.js';
+import {peerFacing, wireFacing, projectOnlinePresence} from '../src/online/adapter/presence-view.js';
 import {playerId} from './realtime-fakes.js';
 
 describe('online presence projection', () => {

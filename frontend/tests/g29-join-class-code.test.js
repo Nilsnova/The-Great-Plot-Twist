@@ -20,12 +20,13 @@ it('checks a class code before playing, shows the message for a wrong one and le
     const refused={status:status.textContent,focused:document.activeElement===input,stored:sessionStorage.getItem('plot_twist_join_v1'),log:[...log]};
     input.value='harbor-k7q xm';form.requestSubmit();await new Promise(resolve=>setTimeout(resolve,20));
     const joined={log:[...log],stored:sessionStorage.getItem('plot_twist_join_v1'),local:Object.keys(localStorage)};
-    // HARBOR alone and a crew code take their own paths, without a guest sign-in.
+    // HARBOR alone and an old crew code are refused, without a guest sign-in.
     input.value='HARBOR';form.requestSubmit();await new Promise(resolve=>setTimeout(resolve,10));
     const prefixOnly=status.textContent;
     input.value='K7QF2M';form.requestSubmit();await new Promise(resolve=>setTimeout(resolve,10));
+    const crewCode=status.textContent;
     body.remove();
-    return {first,refused,joined,prefixOnly,last:log.at(-1),signIns:log.filter(([name])=>name==='signIn').length};
+    return {first,refused,joined,prefixOnly,crewCode,last:log.at(-1),signIns:log.filter(([name])=>name==='signIn').length};
   });
   expect(result.first).toEqual({value:'HARBOR-ZZ234',copy:'You are invited to the class harbor. Press Join to start.'});
   expect(result.refused).toEqual({status:'This class code is not valid. Ask the presenter for the current code.',focused:true,stored:null,
@@ -33,7 +34,8 @@ it('checks a class code before playing, shows the message for a wrong one and le
   expect(result.joined.log.slice(1)).toEqual([['signIn',{guest:true,code:'K7QXM'}],['play'],['start']]);
   expect(result.joined.stored).toBe('K7QXM');expect(result.joined.local).toEqual([]);
   expect(result.prefixOnly).toBe('This class code is not valid. Ask the presenter for the current code.');
-  expect(result.last).toEqual(['page','friends']);expect(result.signIns).toBe(2);
+  expect(result.crewCode).toBe('This class code is not valid. Ask the presenter for the current code.');
+  expect(result.last).toEqual(['start']);expect(result.signIns).toBe(2);
 });
 
 it('lets a rehearsal join with the practice code and never calls the server',async()=>{

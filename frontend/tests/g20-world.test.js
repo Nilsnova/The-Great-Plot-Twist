@@ -31,10 +31,9 @@ describe('G20 registry paths', () => {
     expect(routeTo('home_islet', id, true)).toBeNull();
     expect(routeTo(id, 'home_islet', true)).toBeNull();
   });
-  it('locks arrivals at Gull’s Rest while allowing departure after relocking', () => {
+  it('has no route to the removed Gull’s Rest', () => {
     expect(routeTo('the_teeth', 'gulls_rest')).toBeNull();
-    expect(routeTo('the_teeth', 'gulls_rest', true)).toEqual(['the_teeth', 'gulls_rest']);
-    expect(routeTo('gulls_rest', 'the_teeth')).toEqual(['gulls_rest', 'the_teeth']);
+    expect(routeTo('gulls_rest', 'the_teeth')).toBeNull();
   });
 });
 
@@ -42,13 +41,13 @@ describe('G20 world lifecycle', () => {
   it('makes blocked/same-place travel and blocked interactions side-effect free', async () => {
     let blocked = false;
     const { world, ctx, instances } = setup({ isBlocked: () => blocked });
-    await world.goTo('lighthouse_isle'); ctx.emit.mockClear();
-    expect(await world.goTo('lighthouse_isle')).toBe(false);
-    blocked = true;
-    expect(world.busy).toBe(true); expect(world.interact('desk')).toBe(false);
+    await world.goTo('home_islet'); ctx.emit.mockClear();
     expect(await world.goTo('home_islet')).toBe(false);
+    blocked = true;
+    expect(world.busy).toBe(true); expect(world.interact('plot_1')).toBe(false);
+    expect(await world.goTo('saltreach_harbor')).toBe(false);
     expect(ctx.emit).not.toHaveBeenCalled(); expect(instances[0].dispose).not.toHaveBeenCalled();
-    blocked = false; expect(world.interact('desk')).toBe(true); world.dispose();
+    blocked = false; expect(world.interact('plot_1')).toBe(true); world.dispose();
   });
   it.each(['loader', 'transition'])('restores departure after %s rejection and allows retry', async failure => {
     const { world, ctx, instances } = setup();
@@ -72,11 +71,10 @@ describe('G20 world lifecycle', () => {
     expect(ctx.cancelTransition).toHaveBeenCalledOnce(); expect(ctx.disposeVisuals).toHaveBeenCalledOnce();
     expect(await world.goTo('home_islet')).toBe(false);
   });
-  it('forwards frame state and accepts only boolean true for the public gate', async () => {
+  it('forwards frame state and never offers the removed Gull’s Rest', async () => {
     const { world, instances } = setup(); await world.goTo('lighthouse_isle');
     const state = { night: true }; world.update(.25, state);
     expect(instances[0].update).toHaveBeenCalledWith(.25, state);
-    for (const value of [1, 'true', null, false]) { world.setRelightingComplete(value); expect(world.canTravel('gulls_rest')).toBe(false); }
-    world.setRelightingComplete(true); expect(world.canTravel('gulls_rest')).toBe(true); world.dispose();
+    expect(world.canTravel('gulls_rest')).toBe(false); expect(world.canTravel('home_islet')).toBe(true); world.dispose();
   });
 });

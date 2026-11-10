@@ -6,15 +6,15 @@ import {
 
 describe('diagnostic context', () => {
   it('keeps only contract intent names and outcomes, without arguments or raw errors', () => {
-    expect(formatIntentOutcome('pin', {accepted: true, args: ['PRIVATE']})).toBe('pin → accepted');
-    expect(formatIntentOutcome('pin', {accepted: false, reason: 'not_ready'})).toBe('pin → not_ready');
+    expect(formatIntentOutcome('setEmote', {accepted: true, args: ['PRIVATE']})).toBe('setEmote → accepted');
+    expect(formatIntentOutcome('setEmote', {accepted: false, reason: 'not_ready'})).toBe('setEmote → not_ready');
     expect(formatIntentOutcome('PRIVATE', {accepted: true})).toBeNull();
-    expect(formatIntentOutcome('pin', {accepted: false, reason: 'PRIVATE'})).toBeNull();
-    expect(formatIntentOutcome('pin', {accepted: 'true'})).toBeNull();
+    expect(formatIntentOutcome('setEmote', {accepted: false, reason: 'PRIVATE'})).toBeNull();
+    expect(formatIntentOutcome('setEmote', {accepted: 'true'})).toBeNull();
   });
 
   it('validates the screen and adapter fields without retaining account content', () => {
-    expect(sanitizeScreen('accusation')).toBe('accusation');
+    expect(sanitizeScreen('islet')).toBe('islet');
     expect(sanitizeScreen('PRIVATE')).toBeNull();
     expect(sanitizeAdapterContext({mode: 'online', account: {state: 'expired', name: 'PRIVATE'}}))
       .toEqual({mode: 'online', accountState: 'expired'});
@@ -78,16 +78,16 @@ describe('diagnostic screen detection', () => {
 
 describe('diagnostic runtime', () => {
   it('accepts intent outcomes in Node without browser globals', () => {
-    expect(() => noteIntentOutcome('pin', {accepted: true})).not.toThrow();
+    expect(() => noteIntentOutcome('setEmote', {accepted: true})).not.toThrow();
   });
   it('retains only coarse account/mode fields and contract outcomes', () => {
     stubRuntime();
     noteAdapterView({mode: 'online', account: {state: 'signed_in', captainName: 'PRIVATE_NAME'}});
-    noteIntentOutcome('pin', {accepted: false, reason: 'not_ready', error: 'PRIVATE_ERROR'});
+    noteIntentOutcome('setEmote', {accepted: false, reason: 'not_ready', error: 'PRIVATE_ERROR'});
     const result = readDiagnostics();
     expect(result.mode).toBe('online');
     expect(result.accountState).toBe('signed_in');
-    expect(result.actions).toEqual(['pin → not_ready']);
+    expect(result.actions).toEqual(['setEmote → not_ready']);
     expect(result.browser).toEqual({family: 'Chrome', major: 131});
     expect(JSON.stringify(result)).not.toContain('PRIVATE');
   });

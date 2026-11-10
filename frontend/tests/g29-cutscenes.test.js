@@ -9,15 +9,14 @@ const total=id=>findScript(data,id).lines.reduce((sum,line)=>sum+line.seconds,0)
 const publicFile=path=>new URL(`../public/${path}`,import.meta.url);
 
 describe('cutscene scripts',()=>{
-  it('holds the five spec scripts with their target lengths',()=>{
-    expect(data.scripts.map(script=>script.id)).toEqual(['lore_intro','harbor_arrival','lock_opens','lamps_relit','reveal']);
+  it('holds the four kept scripts with their target lengths',()=>{
+    expect(data.scripts.map(script=>script.id)).toEqual(['lore_intro','harbor_arrival','lock_opens','lamps_relit']);
     expect(total('lore_intro')).toBeGreaterThanOrEqual(22);expect(total('lore_intro')).toBeLessThanOrEqual(28);
     expect(total('harbor_arrival')).toBeGreaterThanOrEqual(5);expect(total('harbor_arrival')).toBeLessThanOrEqual(8);
     for(const id of ['lock_opens','lamps_relit']){expect(total(id)).toBeGreaterThanOrEqual(15);expect(total(id)).toBeLessThanOrEqual(30);}
   });
-  it('leaves the reveal to the server and ships none of its lines',()=>{
-    const reveal=data.scripts.find(script=>script.id==='reveal');
-    expect(reveal).toMatchObject({source:'server',lines:[]});
+  it('ships no reveal script since the mystery left the game',()=>{
+    expect(data.scripts.find(script=>script.id==='reveal')).toBeUndefined();
     expect(findScript(data,'reveal')).toBeNull();
   });
   it('uses short plain lines with unique voice ids and no reveal words',()=>{

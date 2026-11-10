@@ -1,10 +1,9 @@
-// Recorded account intents prove naming, intro, deletion and private ledger mapping without a service.
+// Recorded account intents prove naming and deletion without a service.
 import {describe,expect,it,vi} from 'vitest';
 import {createSession} from '../src/online/session.js';
-import {createAdapterStore} from '../src/online/case-adapter/store.js';
-import {createAdapterTransport} from '../src/online/case-adapter/transport.js';
-import {createProfileHandlers,initializeAccountName} from '../src/online/case-adapter/profile.js';
-import {refreshAccountRewards} from '../src/online/case-adapter/rewards.js';
+import {createAdapterStore} from '../src/online/adapter/store.js';
+import {createAdapterTransport} from '../src/online/adapter/transport.js';
+import {createProfileHandlers,initializeAccountName} from '../src/online/adapter/profile.js';
 
 const me={id:'private-player-placeholder',captainName:'Placeholder captain',coins:30,crews:[],kit:null,place:null};
 const okay=data=>({ok:true,status:200,data});
@@ -13,7 +12,7 @@ function setup(){
   const session=createSession();session.setToken(String(Math.random()));
   const store=createAdapterStore({session});store.commit({me});
   const calls=[],replies=[],reads=new Map([
-    ['/api/me',okay(me)],['/api/save',okay({version:2,data:{}})],
+    ['/api/me',okay(me)],
   ]);
   const get=async route=>{calls.push({method:'GET',route});return reads.get(route);};
   const change=method=>async(route,body)=>{calls.push({method,route,body});return replies.shift()??fail(404,'feature_off');};
@@ -51,25 +50,6 @@ describe('real account profile',()=>{
     expect(test.store.state.nameReply).toEqual({captainName:'Original placeholder',rerollsLeft:0});
     expect(test.calls.filter(call=>call.method==='POST').map(call=>call.route)).toEqual(['/api/me/name/reroll','/api/me/name']);
   });
-  it('sends only accepted action ids and saves the confirmed world arrival replay',async()=>{
-    const test=setup();const actions=['to_desk','take_key'];
-    const profile={ending:'ending_rescue',decision:'warned',readLog:true,coinsPaid:1000,alreadyGranted:false,
-      kit:{id:'true_keeper',name:'Server kit',startPlace:'lighthouse_isle',coins:1000,item:{id:'item',name:'Server item',text:'Server description'}}};
-    test.replies.push(okay(profile));test.ctx.saves={stageReplay:vi.fn(async()=>({accepted:true}))};
-    expect((await test.handlers.completeIntro({ending:'ending_rescue',actions,coins:99999})).accepted).toBe(true);
-    expect(test.calls[0]).toEqual({method:'POST',route:'/api/intro/complete',body:{actions}});
-    expect(test.ctx.saves.stageReplay).toHaveBeenCalledWith({kind:'world',actions,place:'lighthouse_isle'},{immediate:true});
-    expect(test.store.read().arrival.kit).toMatchObject({item:'Server item',startLabel:'Lighthouse Isle'});
-  });
-  it('does not save an old account arrival when its follow-up read outlives sign-out',async()=>{
-    const test=setup();const profile={ending:'ending_rescue',decision:'warned',readLog:false,coinsPaid:1000,alreadyGranted:false,
-      kit:{id:'true_keeper',startPlace:'lighthouse_isle',coins:1000,item:{id:'item',name:'Placeholder item',text:'Placeholder text'}}};
-    let finish;test.reads.set('/api/me',new Promise(resolve=>{finish=resolve;}));test.replies.push(okay(profile));
-    test.ctx.saves={stageReplay:vi.fn()};const pending=test.handlers.completeIntro({actions:['to_desk']});
-    await vi.waitFor(()=>expect(test.calls.some(call=>call.method==='GET')).toBe(true));
-    test.store.invalidate();test.ctx.session.clearToken();finish(okay(me));
-    expect((await pending).reason).toBe('session_expired');expect(test.ctx.saves.stageReplay).not.toHaveBeenCalled();
-  });
   it('requires confirmation before deletion and retries an uncertain deletion only once',async()=>{
     const test=setup();expect((await test.handlers.deleteMyData({confirm:false})).reason).toBe('confirmation_required');
     expect(test.calls).toEqual([]);
@@ -83,46 +63,15 @@ describe('real account profile',()=>{
     expect((await test.handlers.deleteMyData({confirm:true})).reason).toBe('invalid_request');
     expect(test.ctx.signOut).not.toHaveBeenCalled();
   });
-  it('continues a saved public place only when the server confirms a kit',async()=>{
-    const test=setup();test.reads.set('/api/me',okay({...me,kit:'witness',place:'saltreach_harbor'}));
-    test.reads.set('/api/save',okay({version:2,data:{kind:'world',actions:['to_desk'],place:'home_islet'}}));
-    expect((await test.handlers.continueGame()).accepted).toBe(true);
-    expect(test.store.state.continuation).toEqual({source:'cloud',kind:'world',actions:['to_desk'],place:'home_islet'});
-    test.reads.set('/api/me',okay(me));await test.handlers.continueGame();
-    expect(test.store.state.continuation.kind).toBe('intro');
+  it('offers no intro, save or continue intents any more',()=>{
+    const test=setup();
+    expect(Object.keys(test.handlers).sort()).toEqual(['deleteMyData','rerollName']);
   });
   it('projects sign-in availability without importing auth into presentation code',()=>{
     const test=setup();test.store.commit({signInAllowed:false,auth:{configured:true,message:'You are signed in.'}});
     expect(test.store.read().account).toMatchObject({canSignIn:false,
-      signInMessage:'Sign-in opens later. Your progress on this device is kept.'});
+      signInMessage:'Sign-in opens later. You can keep playing on this device.'});
     test.store.commit({signInAllowed:true,auth:{configured:false,message:'Sign-in is not configured.'}});
     expect(test.store.read().account).toMatchObject({canSignIn:false,signInMessage:'Sign-in is not configured.'});
-  });
-});
-
-describe('real account ledger privacy',()=>{
-  it('keeps only amount, reason and a timestamp from own-row results',async()=>{
-    const test=setup();test.ctx.auth={readOwnLedger:vi.fn(async()=>({ok:true,rows:[
-      {amount:30,reason:'kit_grant',created_at:'2026-11-06T12:00:00Z',ref:'private-reference',id:'private-id'},
-      {amount:-5,reason:'building_purchase'},
-    ]}))};
-    expect((await refreshAccountRewards(test.ctx)).accepted).toBe(true);
-    expect(test.store.state.rewardsRows).toEqual([
-      {amount:30,reason:'kit_grant',created_at:'2026-11-06T12:00:00Z'},
-      {amount:-5,reason:'building_purchase',created_at:null},
-    ]);
-    expect(JSON.stringify(test.store.read().rewards)).not.toContain('private-');
-  });
-  it('drops malformed rows and keeps unavailable ledger data empty',async()=>{
-    const test=setup();test.ctx.auth={readOwnLedger:vi.fn(async()=>({ok:true,rows:[{amount:0,reason:'kit_grant'},{amount:2,reason:'<bad>'}]}))};
-    await refreshAccountRewards(test.ctx);expect(test.store.state.rewardsRows).toEqual([]);
-    test.ctx.auth.readOwnLedger.mockResolvedValue({ok:false});await refreshAccountRewards(test.ctx);
-    expect(test.store.state.rewardsRows).toEqual([]);
-  });
-  it('does not apply a ledger result from a previous account scope',async()=>{
-    const test=setup();let finish;test.ctx.auth={readOwnLedger:()=>new Promise(resolve=>{finish=resolve;})};
-    const pending=refreshAccountRewards(test.ctx);test.store.invalidate();
-    finish({ok:true,rows:[{amount:30,reason:'kit_grant'}]});await pending;
-    expect(test.store.state.rewardsRows).toEqual([]);
   });
 });
