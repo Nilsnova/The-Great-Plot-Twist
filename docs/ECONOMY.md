@@ -4,6 +4,31 @@ Offline evidence for Nils and economy/server reviewers. Integration branch:
 `integrate/economy-abuse-v2`, starting from `478bc9d` on 6 November 2026.
 No production database, credentials, live market APIs or GitHub Actions are used.
 
+## The island scale (10 Nov 2026, D031)
+
+The redesign ([PITCH.md](PITCH.md), [BUILD-PLAN.md 3.2](BUILD-PLAN.md#32-the-economy-one-scale-everywhere))
+puts every coin on one small scale. The numbers live in `backend/content/islands.json`
+(the island and waves) and are checked against the contract by
+`backend/server/tests/test_island_rules.py`.
+
+| Thing | Coins | Where it is enforced |
+|---|---|---|
+| Starting coins | 100 | `island_open()`: once, only to a wallet that never moved (`starting_coins`); guests: the guest kit pays 100; existing players: `scripts/admin/fresh_start.sql` (`fresh_start`) |
+| Wall / cannon / watchtower / house | 10 / 30 / 40 / 50 | `islet_build()` with the price from `islands.json`, coins only (`building_purchase`) |
+| Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house on that island | `wave_finish()`: computed in the database, a lost or expired wave pays 0 (`pirate_loot`, once per wave) |
+| Harbor stakes, duel stake | 5, 10 or 25; 0 or 10 | lane H (not changed by this entry) |
+
+Abuse bounds of the waves: the browser reports `survived`, so the server bounds what it
+can earn instead of proving it. One running wave per island, a finish no earlier than
+15 s after the countdown (refused, not paid), at most 20 wave calls per minute per player
+and server instance, loot paid once per wave and capped by the wave number (at most 50)
+and the houses (at most 2). With a 25 s minimum cycle (10 s countdown + 15 s), a player
+earns at most (20 + 5 × *n*) coins per 25 s at wave *n*: 0.6 coins a second at wave 1 without
+houses, 10.8 at wave 50 with both houses. A client that always reports "survived" climbs one
+wave per cycle, so it needs at least about 20 minutes to reach wave 50; that is the known
+residual risk until the class battle (task 0.4) adds server-side checks. The pre-redesign Exchange, prediction and case numbers below are kept
+as the record of G12; the Exchange and the case leave the game with the redesign.
+
 ## Current scope and source contracts
 
 G12 now targets **Exchange v2**, the implemented 10× rising/falling position engine.

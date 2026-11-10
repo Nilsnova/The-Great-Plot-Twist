@@ -523,6 +523,22 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
+## D031 · Islands and pirate waves (10 Nov) · 2026-11-10
+
+**Status:** Built by lane 0 (tasks 0.2 and 0.3) on branch `feat/g30-core-api`, following [PITCH.md](PITCH.md) and the contracts of [BUILD-PLAN.md section 3](BUILD-PLAN.md#3-contracts-the-only-things-lanes-share). Migration `20261110010000_islands_and_waves.sql`, behind the new flag `islands`. Not applied yet: the owner reviews and applies it.
+
+**Decision:**
+
+- **One island per player, with a code.** `islands` holds the code (5 symbols of the class-code alphabet, shown as `ISLE-K7Q2M`, unique, made by the server at random), the best wave and the flags. The first `GET /api/island` (or build, or bell on `"own"`) makes it. The code is not a secret: it lets another signed-in player look at the island and help defend it; visits are rate limited so guessing stays slow.
+- **The economy of BUILD-PLAN 3.2, coins only.** `backend/content/islands.json` holds the prices (wall 10, cannon 30, watchtower 40, house 50), the eleven spots, the starting coins (100), the loot rule and the wave timing. Builds reuse the home islet's atomic `islet_build()` with a timber price of 0, so the island and the old islet share `islet_buildings`; its check rule now lists the 4 old and the 11 new spot pairs. The old `/api/islet` and its `buildings.json` stay, because the islet screen and the case finale still read them; they retire with the case cleanup.
+- **Starting coins.** A brand-new player (a wallet that never moved) gets 100 coins once when their island opens (reason `starting_coins`, fixed ref). An admitted class-demo guest still gets the Stranger kit (profile, start place, item) but is paid 100 instead of 1600, so guests and players start alike. Players who already hold coins keep them until the fresh start.
+- **Waves are started and finished by the server; the fight runs in the browsers.** `POST /api/waves/start` hands out the wave number (best + 1, at most 50), a seed and `startsAt` (bell + 10 s) to the shared simulation, with the real weather of the default place (storm: 1.5x ships; fog: fog 0.4; down: calm). One running wave per island; an unfinished wave expires after 900 s. `POST /api/waves/finish` is accepted only from the player who rang the bell, not earlier than 15 s after `startsAt` (refused, the wave keeps running), and pays at most 10 + 5 × wave + 5 × houses for a survived wave, 0 for a lost or expired one (reason `pirate_loot`, ref `wave:<id>`). A survived island wave raises that island's best wave and adds a flag. Both routes are safe to repeat.
+- **Fresh start.** `scripts/admin/fresh_start.sql` (not a migration) sets every wallet to 100 through the wallet function (reason `fresh_start`), clears cloud saves, removes buildings, best waves, flags and wave runs, and keeps accounts, names and island codes. It is a dry run unless one constant is switched.
+
+**Why:** The server keeps the rules it can check (who, when, how much), and the browsers run the same deterministic simulation from one seed, so friends see the same wave without a server game loop. The browser's `survived` cannot be proven; the loot cap, the minimum length, one wave at a time and the per-player budget bound what a cheat can earn to small play-money amounts. Reusing `islet_build()` keeps one audited money path for buildings.
+
+**Limits:** Only the bell-ringer gets the loot; shared loot for friends and the class battle (task 0.4) come later. The first cannon of the pitch's "first 3 minutes" is not free: it costs 30 like every cannon (BUILD-PLAN 3.2 is the contract). Budgets hold per server instance. The weather is the game's default place, not each owner's own location.
+
 ## D030 · Class code instead of the demo window · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the

@@ -643,6 +643,24 @@ The checks of a build come in a fixed order, and the first one that fails is the
 
 The routes need the home islet migration (`20261106070000_home_islet.sql`). Until it is applied, `GET /api/islet` answers `502 database_error`, so do not pass the live transport (`transport: api` in `frontend/src/game.js`) before the migration is applied. Until then the panel runs in unavailable mode and sends no request.
 
+### Your island and the pirate waves (lane 0, tasks 0.2 and 0.3)
+
+The new game loop of [PITCH.md](PITCH.md): every player has their own island, builds walls, cannons, a watchtower and houses with coins, and rings the bell for pirate waves. The binding contract is [BUILD-PLAN.md section 3](BUILD-PLAN.md#3-contracts-the-only-things-lanes-share); this section is the server's side of it. The routes' home is the comment at the top of `backend/server/routes/island.py` and `backend/server/routes/waves.py`; the rules are in `backend/server/island/`; the numbers in `backend/content/islands.json`; the database part in `supabase/migrations/20261110010000_islands_and_waves.sql` ([D031](DECISIONS.md#d031--islands-and-pirate-waves-10-nov--2026-11-10)).
+
+Every route needs a signed-in player (GitHub, email, or a guest admitted with the class code) and then the flag `islands` (`404 feature_off` while it is off, before the body is checked or the database is asked). The player id comes from the verified sign-in. Answers carry `Cache-Control: private, no-store`. Build, visit and the two wave routes have per-player budgets per server instance (30, 30 and 20 requests a minute; `429 too_many_requests` with `Retry-After`).
+
+| Route | Answer |
+|---|---|
+| `GET /api/island` | `{code, coins, waveBest, flags, spots: [{id, kind, built, cost}]}`. The first call makes the island with a new code (`ISLE-` + 5 symbols) and pays a brand-new player (a wallet that never moved) the 100 starting coins once (reason `starting_coins`). 11 spots in this order: `wall_1`..`wall_4` (wall, 10), `cannon_1`..`cannon_4` (cannon, 30), `tower_1` (watchtower, 40), `house_1`, `house_2` (house, 50). The cabin stands from the start and is not listed. `cost` is the price of the kind, also once built. |
+| `POST /api/island/build` `{spot, kind, actionUid}` | The island after the build (same shape). Coins only, price from `islands.json`, ledger ref `island:<actionUid>` (reason `building_purchase`, through `islet_build()` with timber 0). A repeated `actionUid` answers `200` with the island as it is and charges nothing. `409 insufficient_funds`, `409 spot_taken` (also `cabin`), `422 wrong_kind`, `404 no_such_spot`, `422 validation_error` (a missing or extra field). |
+| `GET /api/island/visit/{code}` | `{code, ownerName, waveBest, spots}`. The code with or without `ISLE-`, any case, spaces and dashes ignored. `404 no_such_island`. A visit never opens an island. |
+| `POST /api/waves/start` `{where, actionUid}` | `{waveId, wave, seed, startsAt, weather: {kind, label, ships, fog}}`. `where` is `"own"`, an island code or `"pirate_point"`. `wave` is the best wave survived there + 1 (at most 50); `seed` is 0 to 2147483647; `startsAt` is the bell + 10 s, UTC, whole seconds (`2026-11-10T12:00:10Z`). `weather.kind` is the real weather state of the default place (`GET /api/weather`): `storm` (ships 1.5, fog 0), `fog` (ships 1.0, fog 0.4), `rain` or `calm` (1.0, 0); calm when the weather cannot be read. A repeated `actionUid` answers the same wave with its stored weather. `409 wave_running` (one wave per island; Pirate Point is one island), `404 no_such_island`. |
+| `POST /api/waves/finish` `{waveId, survived, shipsSunk}` | `{loot, coins, waveBest, flags}`. Only the player who rang the bell (`403 not_your_wave`; `404 no_such_wave`). A survived wave *n* pays 10 + 5 × *n* + 5 × houses on that island (none on Pirate Point); a lost wave 0 (reason `pirate_loot`, ref `wave:<waveId>`). Earlier than 15 s after `startsAt`: `409 wave_too_early` with `Retry-After`, nothing changes and the wave keeps running. Later than 900 s after it: `200` with loot 0. `waveBest` and `flags` belong to the island of the wave (Pirate Point: its shared best survived wave and the number of survived waves). A repeat answers the stored loot and the coins now. `shipsSunk` is 0 to 1000 and only recorded. |
+
+Errors have the house shape `{"error": {"code": "...", "message": "..."}}`; the message is a plain sentence. `503 database_unavailable` on a build or a finish means the outcome is unknown: read the island again, or repeat the same request (both are safe to repeat). `503 island_unavailable` means `islands.json` could not be read; the rest of the API works.
+
+The live room of an island is `live:place:isle_<the 5 symbols in lowercase>:1` (for `ISLE-K7Q2M`: `live:place:isle_k7q2m:1`), Pirate Point's is `live:place:pirate_point:1`; both fit the existing place-room policies (BUILD-PLAN 3.6).
+
 ### The prediction desk (package L5)
 
 Hand-picked real questions from Manifold Markets (a play-money forecasting site), and play-coin pools that the winners share. The home of each route is the comment at the top of `backend/server/routes/predictions.py`; the rules are in `backend/server/predictions/` and are explained in decision D025 (provisional number, see [DECISIONS.md](DECISIONS.md)). Everything is behind the flag `predictions`, which stays off: while it is off, every route answers `404 feature_off` ("The prediction desk is closed for now."). Play money only: every answer of the list carries the line "Forecasting with play coins. Play money: no cash value. It cannot be bought or cashed out.", Manifold is credited in text, nothing links to a betting site, and Manifold's own probability is never shown.
@@ -910,6 +928,15 @@ The home islet migration, `supabase/migrations/20261106070000_home_islet.sql` (p
 
 `islet_build()` is the only way a building goes up. In one step it locks the wallet, refuses a repeated ref, makes the islet row with the starter pack if there is none, refuses a plot that holds a building and a build with too little timber, takes the coins through `apply_wallet_transaction()` (reason `building_purchase`) and writes the building. It is for the server only. The prices and the starter pack are arguments, taken from `backend/content/buildings.json`. The finale reads `islet_buildings` (`player_id`, `building_type`): the table and column names are part of this contract.
 
+The islands and waves migration, `supabase/migrations/20261110010000_islands_and_waves.sql` (lane 0, run after every earlier one), adds two tables, three functions and three wallet reasons, and widens the check rule of `islet_buildings` to the eleven island spots (`wall_1`..`wall_4` wall, `cannon_1`..`cannon_4` cannon, `tower_1` watchtower, `house_1`, `house_2` house; the four home islet pairs stay). Neither new table has a browser policy or grant.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `islands` | player who opened their island: the code (5 symbols, unique), the best wave and the flags | nothing (no policy, no grant) | read, add (through `island_open()`), change (through `wave_finish()`); never delete | lane 0 |
+| `wave_runs` | started wave: who, where (`island` with its owner, or `pirate_point`), wave number, seed, `starts_at`, minimum and maximum length, weather kind and modifiers, and once finished `finished_at`, `survived`, `ships_sunk`, `loot`, `expired` | nothing (no policy, no grant) | read, add (through `wave_start()`), change (through `wave_finish()` and the expiry in `wave_start()`); never delete | lane 0 |
+
+`island_open()` makes the island with a server-made code (answering `code_taken` so the server tries a new one) and pays the starting coins once to a wallet that never moved. `wave_start()` locks the island (or Pirate Point), answers a repeated actionUid with the same wave, closes a wave past its maximum length as expired, refuses a second running wave and writes the next one. `wave_finish()` locks the wallet, then the wave, checks the timing, works out the capped loot, raises the best wave and the flags of a survived island wave and pays through `apply_wallet_transaction()`. All three are for the server only and are not `SECURITY DEFINER`. The fresh start of the redesign is the admin script `scripts/admin/fresh_start.sql`, not a migration.
+
 Details that other packages rely on:
 
 - **Display names** (`profiles.display_name`): 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at either end. Not unique. At sign-up every player gets a neutral placeholder: `Captain-` and the first 6 characters of their id. A name never comes from the GitHub login or any other login detail, because names appear on a projector.
@@ -1013,6 +1040,9 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `prediction_payout` | earn | Coins paid back from a prediction desk pool, for a win or a refund (same migration); ref `pool:<questionId>` |
 | `arena_stake` | spend | The stake of a Lantern Duel, held when a captain challenges or answers (migration `20261106110000`) |
 | `arena_payout` | earn | A Lantern Duel payout: the winnings, or a stake that comes back after a draw, a withdrawal, a decline or an expiry (same migration) |
+| `pirate_loot` | earn | Loot for surviving a pirate wave, capped by the wave number and the houses (migration `20261110010000`); ref `wave:<waveId>` |
+| `starting_coins` | earn | The 100 starting coins of a brand-new captain, paid once when their island opens (same migration); fixed ref `starting_coins` |
+| `fresh_start` | either | Sets a wallet to the new starting coins in the fresh start of the redesign, only from `scripts/admin/fresh_start.sql` (same migration); ref `fresh_start:2026-11-19` |
 
 A new reason is one new migration plus the same pair added at the end of `WALLET_REASONS`, in one pull request ([ENGINEERING.md, recipe 4.7](ENGINEERING.md#47-add-a-wallet-reason)). Never rename a reason or change its direction. The reason names later packages have reserved are in [section 9](#9-reserved-interfaces).
 
@@ -1222,6 +1252,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
+| `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish` | lane 0 (D031); off by default; needs migration 20261110010000 applied first |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth

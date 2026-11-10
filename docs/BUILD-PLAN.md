@@ -65,7 +65,7 @@ The other places (Gull's Rest, Smugglers' Cove, Wreck Point, The Teeth) leave th
 | `POST /api/waves/start {where: "own" or island code or "pirate_point", actionUid}` | `{waveId, wave, seed, startsAt, weather: {kind, label, ships, fog}}`; `409 wave_running` |
 | `POST /api/waves/finish {waveId, survived, shipsSunk}` | `{loot, coins, waveBest, flags}`; the server caps loot by wave number and checks timing |
 
-Errors use the house shape `{error, message}`; the message is a plain sentence the panel can show as it is.
+Errors use the house shape `{"error": {"code": "spot_taken", "message": "..."}}` (the code is nested under `error`, as on every other route); the message is a plain sentence the panel can show as it is. Besides the codes above the real API can also answer `404 no_such_spot`, `409 wave_too_early` (a finish earlier than 15 s after `startsAt`, with `Retry-After`; the wave keeps running), `403 not_your_wave` and `404 no_such_wave` (only the player who rang the bell may finish), `404 feature_off` (flag `islands` off), `429 too_many_requests` and `401`/`403 demo_closed`. A repeated `actionUid` (build, start) or `waveId` (finish) answers like the first call and never charges or pays twice. The server's details are in [INTERFACES.md](INTERFACES.md#your-island-and-the-pirate-waves-lane-0-tasks-02-and-03).
 
 ### 3.5 The wave simulation (built by lane P)
 
@@ -84,7 +84,7 @@ Events (also sent on the game's event bus): `wave_countdown`, `wave_started`, `s
 
 ### 3.6 Playing together
 
-- Island room for live presence: `live:place:isle_<code in lowercase>:1` (fits the existing Realtime rules). Pirate Point: `live:place:pirate_point:1`. The Harbor: the existing harbor rooms.
+- Island room for live presence: `live:place:isle_<code in lowercase>:1`, where the code is the 5 symbols after `ISLE-` (`ISLE-K7Q2M` → `live:place:isle_k7q2m:1`; fits the existing Realtime rules). Pirate Point: `live:place:pirate_point:1`. The Harbor: the existing harbor rooms.
 - Broadcasts in a room during a wave: `wave_start {waveId, seed, startsAt}`, `cannon_shot {by, cannonId, targetId, t}`, `wall_repair {by, wallId, t}`. Every client feeds them as inputs into the same simulation.
 
 ## 4. Lanes and tasks

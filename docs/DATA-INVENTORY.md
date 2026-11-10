@@ -280,14 +280,53 @@ Purpose: Accepted building levels and timber/play-coin costs. Readers: Owner thr
 
 | Column | What it holds and why |
 |---|---|
-| `building_type` | What stands on the plot: workshop, windmill, greenhouse or signal_station. Each plot holds only its own kind of building (a check rule). The finale counts the rows of type signal_station. |
+| `building_type` | What stands on the plot: workshop, windmill, greenhouse or signal_station on the home islet, or wall, cannon, watchtower or house on the island (migration 20261110010000). Each plot holds only its own kind of building (a check rule). The finale counts the rows of type signal_station. |
 | `built_at` | When the database transaction of the build started. |
 | `coins_paid` | Whole coins the player paid for the building, at least 1. The wallet ledger has the matching row (reason building_purchase, the same ref). |
 | `level` | The level of the building, from 1 to 3. islet_build() builds level 1. Levels 2 and 3 come with the upgrades of a later migration. |
 | `player_id` | The player whose islet the building stands on. With plot it is the primary key, so a plot holds one building. Deleting the islet deletes this row. |
-| `plot` | The spot of the islet, as written in backend/content/buildings.json and in the place registry: plot_2, plot_3, plot_4 or islet_signal_station. The cabin spot plot_1 has no row. |
-| `ref` | islet: plus the actionUid the browser made for the click, at most 120 characters. For one player the same ref can be used only once, so a repeated request cannot build or charge twice. The wallet ledger row of the build uses the same ref. |
+| `plot` | The spot: plot_2, plot_3, plot_4 or islet_signal_station (backend/content/buildings.json), or wall_1..4, cannon_1..4, tower_1, house_1..2 (backend/content/islands.json). The cabin has no row. |
+| `ref` | islet: (home islet) or island: (island) plus the actionUid the browser made for the click, at most 120 characters. For one player the same ref can be used only once, so a repeated request cannot build or charge twice. The wallet ledger row of the build uses the same ref. |
 | `timber_paid` | Whole pieces of timber the building took from the islet. Timber has no ledger, so this column is the only record of it. |
+
+### public.islands
+
+Purpose: Each player's own island for the island game: its code, so friends can visit and defend it, and its progress. Readers: Server only (no browser policy); `GET /api/island` shows the owner, and `GET /api/island/visit/{code}` shows anyone signed in who knows the code the captain name, best wave and buildings. Lifetime: Removed with the player account; the fresh-start admin script resets the best wave and flags but keeps the code.
+
+| Column | What it holds and why |
+|---|---|
+| `code` | The island code (5 symbols, shown as ISLE-<code>), made by the server at random. Not a secret: it lets another player look at the island and defend it. |
+| `created_at` | When the island was first opened. |
+| `flags` | Pirate flags won on this island: one per survived wave. |
+| `player_id` | The owner's player UUID, also the primary key. |
+| `updated_at` | When the best wave or the flags last changed. |
+| `wave_best` | The highest wave survived on this island. |
+
+### public.wave_runs
+
+Purpose: Every pirate wave a player started, on an island or on Pirate Point, so the server can hand out one shared seed, allow one running wave per island, check the timing and pay capped loot once. Readers: Server only (no browser policy); the player sees their own wave through the wave routes. Lifetime: Removed with the player who started it, or with the island it was fought on; the fresh-start admin script removes every row.
+
+| Column | What it holds and why |
+|---|---|
+| `action_uid` | The retry identity of the bell click, scoped to the player. |
+| `created_at` | Database time of the bell. |
+| `expired` | Whether the wave was closed because nobody finished it in time. |
+| `finished_at` | When the wave was finished or closed. |
+| `id` | The wave id; the loot's ledger ref is `wave:<id>`. |
+| `island_owner` | The owner of the island the wave was fought on; empty on Pirate Point. |
+| `loot` | Play coins paid for the wave (capped by the wave number and the houses). |
+| `maximum_seconds` | After this long the wave is over and pays nothing. |
+| `minimum_seconds` | A finish earlier than this after the countdown is refused. |
+| `place` | `island` or `pirate_point`. |
+| `seed` | The random seed every client feeds into the same wave simulation. |
+| `ships_sunk` | Ships sunk, as the player's browser reported it. |
+| `started_by` | The player UUID of who rang the bell (only they may finish it and get the loot). |
+| `starts_at` | When the ships come (the bell plus the countdown). |
+| `survived` | Whether the island held, as the player's browser reported it. |
+| `wave` | The wave number. |
+| `weather_fog` | How much fog hid the ships (from the real weather of the game's default place, not the player's location). |
+| `weather_kind` | The weather state at the start: storm, fog, rain or calm. |
+| `weather_ships` | How many ships compared with calm weather. |
 
 ### public.board_pins
 

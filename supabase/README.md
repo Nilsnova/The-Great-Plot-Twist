@@ -88,6 +88,9 @@ The ledger accepts only the reasons in `wallet_reasons`, in this order. The Pyth
 | `market_buy` | spend | Coins paid for shares bought on the Island Exchange. *Added by the second migration.* |
 | `market_sell` | earn | Coins received for shares sold on the Island Exchange. *Added by the second migration.* |
 | `market_fee` | spend | Fee paid on a trade on the Island Exchange. *Added by the second migration.* |
+| `pirate_loot` | earn | Loot for surviving a pirate wave, capped by the wave number and the houses. *Added by 20261110010000 (islands and waves).* |
+| `starting_coins` | earn | The starting coins of a brand-new captain, paid once when their island opens. *Same migration.* |
+| `fresh_start` | either | Sets a wallet to the new starting coins in the fresh start of the redesign (only `scripts/admin/fresh_start.sql`). *Same migration.* |
 
 The first eight come from the foundation migration, the last three from the Island Exchange migration. The direction says which way the coins move. **earn** adds coins, so the amount must be above 0. **spend** takes coins away, so the amount must be below 0. **either** may go both ways, but never 0. `apply_wallet_transaction()` looks the reason up and checks the direction before it touches the balance, and the Python code checks the same rule even earlier. The `reason` column of the ledger is also a foreign key to `wallet_reasons`, so an unknown reason cannot get into the ledger by any route.
 
@@ -264,6 +267,20 @@ The kill switch, if a flood ever happens, is in [Changing the database later](#c
 **The finale reads it.** A signal station is never removed or downgraded: no role can update or delete a building. So "this player has a signal station" can only change from no to yes. In SQL it is `exists (select 1 from public.islet_buildings where player_id = <player> and building_type = 'signal_station')`. The table and column names are part of the contract in [INTERFACES.md](../docs/INTERFACES.md#your-home-islet-package-l2).
 
 After applying it, the three quick checks below show two more tables, two more policies and two more `authenticated` grant rows than before this migration. Run the home islet checks (steps H1 to H15) at the end of the manual test plan.
+
+## The islands and waves migration
+
+`migrations/20261110010000_islands_and_waves.sql` (lane 0, decision D031) is the database part of the new island game ([INTERFACES.md](../docs/INTERFACES.md#your-island-and-the-pirate-waves-lane-0-tasks-02-and-03)). Apply it after every earlier file. It adds:
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `islands` | One row per player who opened their island: the code (5 symbols, unique, shown as `ISLE-<code>`), the best wave and the flags. RLS on, no policy, no browser grant. | Only `island_open()` (adds) and `wave_finish()` (best wave, flags). |
+| `wave_runs` | One row per started wave: who rang the bell, where (`island` with its owner, or `pirate_point`), wave number, seed, `starts_at`, minimum and maximum length, weather, and the result once finished. One running wave per island (a unique partial index). RLS on, no policy, no browser grant. | Only `wave_start()` and `wave_finish()`. |
+| `island_open()` | Locks the profile (`for no key update`) and the wallet, makes the island with the server's code (`code_taken` if another island has it) and pays 100 starting coins once (`starting_coins`, ref `starting_coins`) to a wallet with no ledger row. | Run by the server only. |
+| `wave_start()` | Locks the island (Pirate Point: a transaction advisory lock), answers a repeated actionUid with the same wave, closes a wave past its maximum length as expired, refuses `wave_running` / `no_such_island`, writes the next wave. Never moves coins. | Run by the server only. |
+| `wave_finish()` | Locks the wallet, then the wave. Refuses `not_your_wave`, `no_such_wave`, `too_early`; a finished wave answers its stored result; a late finish pays 0; otherwise pays the capped loot (`pirate_loot`, ref `wave:<id>`) and raises the island's best wave and flags. | Run by the server only. |
+
+It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `fresh_start` either) and replaces the check rule `islet_buildings_plot_fits_building` with one that lists the four home islet pairs and the eleven island spots; existing rows keep passing. The island's builds go through `islet_build()` with a timber price of 0. The opt-in SQL checks are `backend/server/tests/island_sql/` (`CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql`). The fresh start of the redesign is `scripts/admin/fresh_start.sql`: not a migration, a dry run until its `c_apply` constant is switched, run once by the owner.
 
 ## Apply the migration
 
@@ -448,6 +465,15 @@ The three actors, and the database role behind each:
 | `islet_buildings` | insert | no access | no access | yes [6] (through `islet_build()`) |
 | `islet_buildings` | update | no access | no access | no access (a building is never changed in this version) |
 | `islet_buildings` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `islands` | read | no access | no access | yes |
+| `islands` | insert | no access | no access | yes (through `island_open()`) |
+| `islands` | update | no access | no access | yes (through `wave_finish()`) |
+| `islands` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `wave_runs` | read | no access | no access | yes |
+| `wave_runs` | insert | no access | no access | yes (through `wave_start()`) |
+| `wave_runs` | update | no access | no access | yes (through `wave_start()` and `wave_finish()`) |
+| `wave_runs` | delete | no access | no access | no access (deleted with its player or island, by cascade) |
+| `island_open()`, `wave_start()`, `wave_finish()` | run | no access | no access | yes |
 
 | `exchange_positions` | One row per position: the company, the side (`rising` or `falling`), the price mode (`live` or `replay`), the stake, the entry price, the zero point (worked out by the database: 90 % of the entry price for a rising position, 110 % for a falling one), the opening fee and, once it is closed, the closing price, value, fee and ref. `status` is `open`, `closed` (the player closed it) or `zeroed` (the stake was used up). A zeroed position has a value and a fee of 0. Rows are never deleted, except together with their player. | Only `exchange_open_position()`, `exchange_close_position()` and `exchange_close_used_up()`. |
 | `exchange_events` | The history: one row for every opening (`open`), closing by the player (`close`) and close at zero (`zero`), never edited. The ref can be used once per player, so a repeated click can never act twice. | Only the three functions. |
