@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { startFromTitle } from './shell-browser-tools.js';
-import { stubIntro } from './intro-browser-fixture.js';
 import { openWorldBrowser, settle, measure } from './world-browser-tools.js';
 
 const env = await openWorldBrowser(), { page } = env;
@@ -13,7 +12,7 @@ const capture = async name => {
   await page.screenshot({ path, fullPage: true }); report.captures[name] = path;
 };
 try {
-  await stubIntro(page); await page.goto(env.url); await startFromTitle(page);
+   await page.goto(env.url); await startFromTitle(page);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.evaluate(() => window.__island.world.goTo('home_islet', { fast: true })); await settle(page);
   check(await page.evaluate(() => {

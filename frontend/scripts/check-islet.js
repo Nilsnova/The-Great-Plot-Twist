@@ -4,7 +4,6 @@
 import assert from 'node:assert/strict';
 import {places} from '../src/world/places/registry.js';
 import {PAD, installGamepad, pressPad, tiltStick} from './gamepad-browser-fixture.js';
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle} from './shell-browser-tools.js';
 import {openWorldBrowser, settle} from './world-browser-tools.js';
 
@@ -43,7 +42,7 @@ const closes = async () => {
   await page.waitForFunction(() => !document.querySelector('.islet-modal[open]'), null, {timeout: 3000}).catch(() => {});
   return await modal.count() === 0;
 };
-const gameBehind = () => page.evaluate(() => ({finale: window.__island.caseUi.active || !!document.querySelector('.case-modal[open]'), chart: window.__island.chart.open}));
+const gameBehind = () => page.evaluate(() => ({finale: false, chart: window.__island.chart.open}));
 
 // --- the explorer ---
 const where = () => page.evaluate(() => ({x: window.__island.player.position.x, z: window.__island.player.position.z}));
@@ -96,7 +95,7 @@ async function enterGame(search) {
 
 try {
   await installGamepad(page);
-  await stubIntro(page);
+  
   await enterGame('?islet=local');
   check(await page.evaluate(() => JSON.stringify(window.__changes[0])) === '{"type":"islet_changed","built":["plot_1"],"signalStationBuilt":false}', 'Arriving at the home islet tells the world that only the cabin stands');
 

@@ -5,7 +5,7 @@ const selector='.market-modal[open]';
 const simulation='Simulation with play money. Real names and real prices, no real money and no prizes.';
 
 async function openLocalMarket(page,url){
-  await page.goto(url+'/?case=local&market=local');
+  await page.goto(url+'/?adapter=local&market=local');
   await startFromTitle(page);
   await page.evaluate(async()=>{
     const game=window.__island;await game.world.whenIdle();

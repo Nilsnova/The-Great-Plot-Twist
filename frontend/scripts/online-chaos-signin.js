@@ -3,7 +3,7 @@ import {openSettingsAccount} from './online-browser-actions.js';
 export async function signInFromTitle({page,url}){
   await page.goto(url);
   const summary = await openSettingsAccount(page);
-  await summary.getByRole('button',{name:'Account and saves',exact:true}).waitFor();
+  await summary.getByRole('button',{name:'Account',exact:true}).waitFor();
   const signedIn=page.locator('.account-summary-state').filter({hasText:'Signed in'});
   await page.waitForFunction(()=>document.querySelector('.account-summary-state')?.textContent==='Signed in'
     || [...document.querySelectorAll('.account-summary button')].some(button=>/^Sign in(?: again)? with GitHub$/.test(button.textContent)));

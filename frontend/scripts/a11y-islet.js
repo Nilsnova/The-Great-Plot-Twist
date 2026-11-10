@@ -2,7 +2,7 @@
 import {startFromTitle} from './shell-browser-tools.js';
 
 async function openLocalPanel(page,url){
-  await page.goto(url+'/?case=local&islet=local');
+  await page.goto(url+'/?adapter=local&islet=local');
   await startFromTitle(page);
   await page.evaluate(async()=>{
     const game=window.__island;

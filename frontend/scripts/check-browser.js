@@ -5,7 +5,7 @@ import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
 // Real-browser smoke checks using an installed Chrome. Saves review screenshots.
-import { stubIntro,dismissIntro } from './intro-browser-fixture.js';
+import {dismissPanels} from './shell-browser-tools.js';
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
 import { access, mkdir, writeFile } from 'node:fs/promises';
@@ -35,7 +35,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('request', request => { if (!request.url().startsWith(url) && !request.url().startsWith('data:')) external.push(request.url()); });
-  await stubOfflineApi(page);await stubWeather(page); await stubIntro(page);
+  await stubOfflineApi(page);await stubWeather(page); 
   await page.goto(url);await startFromTitle(page);await page.waitForFunction(() => window.__island?.renderer.info.render.frame > 5);
   await page.waitForTimeout(1500); // Let shaders and the first shadow map warm up.
   await mkdir('captures', { recursive: true });
@@ -87,13 +87,13 @@ try {
     await page.waitForFunction(id => document.querySelector('.interact')?.dataset.zone === id, zone.id);
     await page.keyboard.down('KeyE');
     await page.waitForFunction(count => window.__received.length >= count, index + 1);
-    await page.waitForTimeout(180); await page.keyboard.up('KeyE'); await dismissIntro(page);
+    await page.waitForTimeout(180); await page.keyboard.up('KeyE'); await dismissPanels(page);
   }
   const received = await page.evaluate(() => window.__received);
   check(received.length === 4 && received.every((event, index) => event.type === 'interact' && event.id === events[index].id), `All four hooks emit exactly once per held E press: ${JSON.stringify(received)}`);
   await page.evaluate(() => { const game = window.__island; game.player.position.set(-7, 4, 7); });
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700); await page.keyboard.up('KeyW');
-  await dismissIntro(page);
+  await dismissPanels(page);
   await page.waitForFunction(() => document.querySelector('.toast').hidden);
   await capture('Exploration');
   await page.evaluate(() => { window.__island.player.position.set(-1, 0, 10);
@@ -119,7 +119,7 @@ try {
   check(errors.length === 0, `No browser or WebGL errors (${errors.join('; ')})`);
   await page.close(); // Benchmark one WebGL page at a time on the same GPU.
   const retina = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
-  await stubOfflineApi(retina);await stubWeather(retina);await stubIntro(retina);await retina.goto(url);await startFromTitle(retina);await retina.waitForTimeout(1200);
+  await stubOfflineApi(retina);await stubWeather(retina);await retina.goto(url);await startFromTitle(retina);await retina.waitForTimeout(1200);
   await measure('retina-high', retina); await retina.screenshot({ path: `captures/${stamp}_${prefix}-Retina.png` });
   await retina.evaluate(() => window.__island.quality('low')); await measure('retina-low', retina);
   for (const [quality, maximum, ratioCap] of [['high', 1920 * 1080, 1.5], ['low', 1280 * 720, 1]]) {

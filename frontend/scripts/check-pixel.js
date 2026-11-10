@@ -1,7 +1,6 @@
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
 import {startFromTitle} from './shell-browser-tools.js';
-import {stubIntro} from './intro-browser-fixture.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
 // Inspect native PNGs, integer scaling, the live game and the built pixel workshop.
@@ -68,7 +67,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   const requested = new Set();
   page.on('request', request => { const match = request.url().match(/\/pixel\/(?:hd\/)?([^/?]+\.png)(?:[?#]|$)/); if (match) requested.add(match[1]); });
-  await stubIntro(page);await page.goto(url);await startFromTitle(page);
+  await page.goto(url);await startFromTitle(page);
   await page.waitForTimeout(1100);
   check([...requested].every(file => file === 'ground.png' || pixelArtIds.includes(file.replace('.png', ''))), 'Game requests only active pixel artwork');
   const display = await page.evaluate(() => {

@@ -29,9 +29,9 @@ try{
   await page.waitForFunction(dev=>!document.querySelector('dialog[open]')&&(dev?window.__island.world.current?.id==='saltreach_harbor'
     :document.querySelector('.masthead')?.textContent.includes('Saltreach Harbor')),dev);
   await page.waitForTimeout(1500);await page.screenshot({path:`${outDir}/05-harbor-start.png`});
-  const where=await page.evaluate(()=>window.__island?{place:window.__island.world.current.id,interior:!!window.__island.interiors?.active,
+  const where=await page.evaluate(()=>window.__island?{place:window.__island.world.current.id,
     player:{x:+window.__island.player.position.x.toFixed(2),z:+window.__island.player.position.z.toFixed(2)},
-    focused:document.activeElement?.matches('canvas[tabindex="0"]')}:{place:'saltreach_harbor',interior:!!document.querySelector('.interiors-scene:not([hidden])'),
+    focused:document.activeElement?.matches('canvas[tabindex="0"]')}:{place:'saltreach_harbor',
     focused:document.activeElement?.matches('canvas[tabindex="0"]')});
   step('harbor',where);
   await page.keyboard.down('KeyW');await page.waitForTimeout(500);await page.keyboard.up('KeyW');

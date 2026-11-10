@@ -1,8 +1,8 @@
 // Public production islet controls with intercepted answers; no development inspection or event injection.
 import assert from 'node:assert/strict';
 import {signInFromTitle} from './online-chaos-signin.js';
-import {openAccountControls,assertEngineReplay, playFromTitle} from './online-browser-actions.js';
-import {dismissIntro} from './intro-browser-fixture.js';
+import {openAccountControls, playFromTitle} from './online-browser-actions.js';
+import {dismissPanels} from './shell-browser-tools.js';
 import {onlineChaosFaults} from './online-chaos-fixtures.js';
 
 const modal=page=>page.locator('.islet-modal[open]');
@@ -55,7 +55,7 @@ export async function enterRecordedIslet(env){
   await playFromTitle(page);
   await page.locator('.hud.exploring').waitFor();
   await page.waitForFunction(()=>document.querySelector('.chapter')?.textContent.includes('Home islet'));
-  await dismissIntro(page); // This public helper already closes case/islet/intro overlays; no extra Escape.
+  await dismissPanels(page); // This public helper already closes the open panels; no extra Escape.
   await savedCaptain(page);
   assert.equal(await page.locator('.shell-screen[open],.account-modal[open]').count(),0,'Continue leaves the world ready for physical movement');
   await page.locator('canvas[tabindex="0"]').focus();
@@ -91,7 +91,6 @@ export async function recordedIsletGolden(env,{width=375,capture}={}){
   assert.deepEqual(env.isletStats(),{coins:700,timber:10,charges:1,builtCount:1});
   check(env.isletRequests.slice().filter(request=>request.method==='POST').at(-1).bodyKeys.join()==='actionUid,plot,type',
     'The A2 build body has exactly actionUid, plot and server-supplied type');
-  await assertEngineReplay(page);
   check(await page.evaluate(()=>!window.__island&&!window.__isletLocal&&!window.__plotTwist),'Production exposes no inspection or local-fake hooks');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'The islet panel has no horizontal overflow');
   check(env.isletRequests.every(request=>Object.keys(request).sort().join()==='actionUidMatchesPrevious,bodyKeys,method,path'
@@ -172,7 +171,7 @@ export async function recordedIsletExpiry(env,{capture}={}){
   assert.equal(posts[1].actionUidMatchesPrevious,true,'A2 renewal retains the same build UID/body');
   assert.deepEqual(env.isletStats(),{coins:1000,timber:20,charges:0,builtCount:0});
   assert.equal(env.pageErrors.length,0,'Islet expiry causes no uncaught browser error');
-  await assertEngineReplay(page);await capture?.('islet-expired-account',page);
+  await capture?.('islet-expired-account',page);
   return {checks:['Immediate expiry clears the private islet UI and gives Account focus without charging']};
 }
 

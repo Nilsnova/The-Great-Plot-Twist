@@ -1,4 +1,3 @@
-import {stubIntro} from './intro-browser-fixture.js';
 import {startFromTitle,closeSettings} from './shell-browser-tools.js';
 // Check readable DOM text and panel bounds at laptop and large-desktop resolutions.
 import assert from 'node:assert/strict';
@@ -7,7 +6,7 @@ import { openWorldBrowser, settle } from './world-browser-tools.js';
 const env = await openWorldBrowser(), { page } = env;
 const report = { checked: new Date().toISOString(), viewports: [] };
 try {
-  await stubIntro(page);await page.goto(env.url);await startFromTitle(page);
+  await page.goto(env.url);await startFromTitle(page);
   await page.evaluate(async () => { await window.__island.world.goTo('saltreach_harbor', { fast: true }); window.__island.player.position.set(-8,1.03,10.3); window.__island.settings.hour = 12; });
   for (const [width, height] of [[1365,768],[1920,1080],[1100,700]]) {
     await page.setViewportSize({ width, height }); await settle(page);

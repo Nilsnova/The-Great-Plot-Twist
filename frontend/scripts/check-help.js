@@ -1,6 +1,6 @@
-// Checks the built guide in Chromium. --capture refreshes only the two local-fake crew images.
+// Checks the built guide in Chromium.
 import assert from 'node:assert/strict';
-import {mkdir, readFile, stat, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {preview} from 'vite';
 import {chromium} from 'playwright-core';
 
@@ -26,7 +26,7 @@ try {
   page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   await page.goto(`${origin}/help.html`);
   await page.waitForFunction(() => !document.querySelector('#help-search').hidden);
-  check(await page.locator('.help-topic:visible').count() === 12, 'All twelve player topics are readable');
+  check(await page.locator('.help-topic:visible').count() === 10, 'All ten player topics are readable');
 
   for (const width of [320, 375, 960]) {
     await page.setViewportSize({width, height: 820});
@@ -40,25 +40,22 @@ try {
 
   const input = page.getByLabel('Find a topic');
   await input.fill('gamepad');
-  check(await page.locator('#controls').isVisible() && await page.locator('.help-topic:visible').count() < 12, 'Topic search keeps matching controls');
+  check(await page.locator('#controls').isVisible() && await page.locator('.help-topic:visible').count() < 10, 'Topic search keeps matching controls');
   await input.fill('no-such-topic-g23');
   check(await page.locator('#no-results').isVisible(), 'Empty results explain how to recover');
   await page.getByRole('button', {name: 'Clear', exact: true}).click();
-  check(await page.locator('.help-topic:visible').count() === 12 && await input.evaluate(node => node === document.activeElement), 'Clear restores all topics and search focus');
+  check(await page.locator('.help-topic:visible').count() === 10 && await input.evaluate(node => node === document.activeElement), 'Clear restores all topics and search focus');
   await input.fill('coins');
   await input.press('Escape');
-  check(await input.inputValue() === '' && await page.locator('.help-topic:visible').count() === 12, 'Escape clears a filter');
+  check(await input.inputValue() === '' && await page.locator('.help-topic:visible').count() === 10, 'Escape clears a filter');
   await input.fill('gamepad');
   await page.locator('.contents').getByRole('link', {name: 'Exchange risks'}).click();
   check(await page.locator('#exchange').isVisible() && await input.inputValue() === '', 'Contents links restore a filtered topic');
   await input.fill('gamepad');
-  await page.evaluate(() => { location.hash = 'crews'; });
-  await page.waitForFunction(() => !document.querySelector('#crews').hidden);
+  await page.evaluate(() => { location.hash = 'islet'; });
+  await page.waitForFunction(() => !document.querySelector('#islet').hidden);
   check(await input.inputValue() === '', 'Hash navigation restores hidden destinations');
-  await page.locator('.rehearsal-examples summary').click();
-  await page.waitForFunction(() => [...document.querySelectorAll('.rehearsal-examples img')].every(image => image.complete && image.naturalWidth > 0));
-  check(await page.locator('.rehearsal-examples img:visible').count() === 2, 'Both labelled fake-mode images load from the production build');
-  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Expanded screenshots fit the phone width');
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'The guide fits the phone width');
 
   const report = page.getByRole('link', {name: 'Open a GitHub issue'});
   check(await report.getAttribute('href') === 'https://github.com/Nilsnova/The-Great-Plot-Twist/issues/new', 'Report link opens the correct project without submitting data');
@@ -83,7 +80,7 @@ try {
   const noScript = await browser.newContext({javaScriptEnabled: false, viewport: {width: 320, height: 820}});
   const staticPage = await noScript.newPage();
   await staticPage.goto(`${origin}/help.html`);
-  check(await staticPage.locator('.help-topic:visible').count() === 12 && await staticPage.locator('#help-search').isHidden(), 'All content and anchors remain available without JavaScript');
+  check(await staticPage.locator('.help-topic:visible').count() === 10 && await staticPage.locator('#help-search').isHidden(), 'All content and anchors remain available without JavaScript');
   check(await staticPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No-JavaScript phone layout fits at 320px');
   await noScript.close();
 
@@ -114,29 +111,6 @@ try {
   await game.close();
   await notice.close();
 
-  if (process.argv.includes('--capture')) {
-    const lab = await browser.newPage({viewport: {width: 960, height: 900}, reducedMotion: 'reduce'});
-    const calls = []; lab.on('request', request => { if (request.url().includes('/api/')) calls.push(request.url()); });
-    await lab.goto(`${origin}/case-lab.html?demo=1`);
-    check(await lab.getByText('LOCAL FAKE · UNAPPROVED DRAFT DESIGN', {exact: true}).isVisible(), 'Capture source is visibly labelled local fake');
-    await lab.getByRole('navigation', {name: 'Local rehearsal controls'}).getByRole('button', {name: 'Crew', exact: true}).click();
-    const modal = lab.locator('dialog[open]');
-    await modal.getByRole('button', {name: 'Start a crew', exact: true}).click();
-    check(await modal.locator('.crew-seat[data-kind="player"]').count() === 1 && await modal.locator('.crew-seat[data-kind="open"]').count() === 3, 'First capture has one fake captain and three open seats');
-    await mkdir('public/help', {recursive: true});
-    await modal.screenshot({path: 'public/help/crew-rehearsal.png'});
-    await modal.getByRole('button', {name: 'Muster with NPC partners', exact: true}).click();
-    check(await modal.locator('.crew-seat').count() === 4, 'Muster capture shows four fake seats');
-    check(await modal.locator('.crew-seat[data-kind="npc"]').count() === 3, 'Three NPC partners fill the fake crew');
-    check(await modal.locator('.case-clue').count() === 0, 'Captures contain no clue cards or progressed case');
-    await modal.screenshot({path: 'public/help/partners-rehearsal.png'});
-    check(calls.length === 0, 'Fake captures make no API calls');
-    await lab.close();
-  }
-  for (const name of ['crew-rehearsal.png', 'partners-rehearsal.png']) {
-    const path = `public/help/${name}`, png = await readFile(path);
-    check((await stat(path)).size < 150 * 1024 && png.readUInt32BE(16) <= 960, `${name} stays small and at most 960px wide`);
-  }
   const browserReport = {browser: browser.version(), checks, expectedCspDenials: violations};
   await writeFile(`${output}/checks.json`, JSON.stringify(browserReport, null, 2) + '\n');
   console.log(JSON.stringify(browserReport, null, 2));
