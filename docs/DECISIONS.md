@@ -523,6 +523,46 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Decision:** Nils owns the Finnhub key. Keys live only in Vercel settings, never in the repository, a local file, a prompt or a report. G10 does not read or change them.
 
+## D031 · The mystery leaves the game (10 Nov) · 2026-11-10
+
+**Status:** Decided by Nils on Tue 10 Nov 2026 with the new direction in [PITCH.md](PITCH.md);
+implemented on branch `feat/g30-remove-mystery`. Changes D013 (story skeleton), D012 (crews) and the
+"Full mystery" path of D029/D030.
+
+**Decision:** The 2-hour mystery leaves the game and the browser code. Removed: the Lighthouse prologue
+(the story engine, the intro screens, the cottage, boathouse and lighthouse rooms, the intro journal and
+cloud saves of it), every case screen (crew, board, searches, partners, finale, accusation, reveal,
+relighting, arrival, log, hints and the onboarding tips), the case adapters (fake and online: case,
+crew, save, ledger and bulletin reads), the case world (case hotspots, Gull's Rest, the Chapter 2 hook,
+NPC partners, the case cinematics), the "Full mystery" and "Lighthouse prologue" menu entries, the
+highlights tour and the presenter tour panel, and the host console's case clock. In the same removal,
+from the UX audit: the festival gameplay (it could only start after the case's Relighting), the
+bulletin and rewards pages, and the arena gate with its duel panel, so the class demo's duel shortcut
+(tap a captain) is the one way to start a duel. The HUD wordmark no longer reloads the page.
+
+Kept: the islands and the sea chart, the title (Play, Join, Settings), the lore and class-demo
+cutscenes, the class demo, live presence, the Home islet build panel (it now also opens at the signal
+station), Exchange, predictions, sports, weather, account and sign-in (GitHub, email, guests),
+settings, audio and the host console. Shared pieces: the coin counter stays (it reads
+`captain.coins`); the crew rows, crew codes and crew Realtime room are no longer read by the browser
+(the Join page accepts only the class code), so the coming island/Harbor code can replace them; the
+festival lamp art and sound cues stay because the class demo uses them. The adapter contract keeps
+`schema, mode, revision, now, captain, account, presence, notice` and the intents `signIn, signOut,
+rerollName, deleteMyData, reportPosition, setEmote`; `online/case-adapter` is now `online/adapter`.
+
+The backend case code, its routes and its tables stay for a later cleanup; the browser no longer calls
+`/api/case*`, `/api/board/*`, `/api/finale/*`, `/api/crews*`, `/api/save`, `/api/intro/complete`,
+`/api/content/intro-story`, `/api/world`, `/api/bulletin` or `/api/host/case/clock`. The `case`
+flag is off in the default and local configuration; the owner switches it off on Vercel later.
+
+**Why:** Three teammates start the island, Harbor and Pirate Point features today on a smaller, simpler
+codebase. The mystery's screens, adapters and checks were about half of the browser code and every new
+feature had to route around them.
+
+**Limits:** The intro used to grant the only starting coins (the entry kit); until the new economy
+adds a starting grant, a new player starts with 0 coins. Existing local intro saves stay in the
+browser's storage unread. The `case`, crew and save routes still answer if the flag is turned on.
+
 ## D030 · Class code instead of the demo window · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the
