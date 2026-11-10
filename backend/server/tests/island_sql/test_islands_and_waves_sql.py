@@ -15,8 +15,10 @@ import json
 from pathlib import Path
 from uuid import UUID, uuid4
 
-import psycopg
 import pytest
+
+# Opt-in: without the test-only package the whole file is skipped, like the other SQL checks.
+psycopg = pytest.importorskip("psycopg")
 
 ROOT = Path(__file__).resolve().parents[4]
 FRESH_START = ROOT / "scripts" / "admin" / "fresh_start.sql"
