@@ -21,6 +21,8 @@ from server.wallet import find_direction
 
 MIGRATION = REPO_ROOT / "supabase" / "migrations" / "20261110010000_islands_and_waves.sql"
 CREWS = REPO_ROOT / "supabase" / "migrations" / "20261110020000_wave_crews.sql"
+# The md5 of 20261110010000 as applied live (a checksum, not a secret).
+APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
 
 def write_island(tmp_path, change):
@@ -218,7 +220,7 @@ def test_the_shared_wave_functions_take_exactly_the_arguments_the_server_sends()
 
 def test_the_shared_waves_do_not_change_the_applied_migration():
     # 20261110010000 is applied live; its bytes must never change (md5 of the applied file).
-    assert hashlib.md5(MIGRATION.read_bytes()).hexdigest() == "79278156e4925b2d39076722c11d2f00"
+    assert hashlib.md5(MIGRATION.read_bytes()).hexdigest() == APPLIED_MD5
 
 
 def test_pirate_point_pays_its_own_base_and_no_houses():
