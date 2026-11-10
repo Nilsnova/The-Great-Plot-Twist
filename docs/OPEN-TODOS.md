@@ -1,5 +1,7 @@
 # Open to-dos
 
+> **The plan for the last two weeks, with a ranked task board, is [FINAL-ROADMAP.md](FINAL-ROADMAP.md).** This file holds the account setup and demo-day steps.
+>
 > **What this file is:** the one list of work that is still open, for anyone on the team. No task here belongs to a particular person: pick one, do it, then tick it off here in the same pull request (or tell the person who keeps this list).
 >
 > **Last updated:** Mon 9 Nov 2026, after the G29 class-demo release (main `c7f8c95`, live on https://the-great-plot-twist.vercel.app).
@@ -61,4 +63,4 @@ Note: mail sent from a free-mail address (for example Gmail) through Brevo can l
 
 ## 5. Course deadline
 
-- [ ] **End review** of the whole game, then the **Moodle submission by Mon 23 Nov 2026, 18:00**: the live link, the repository and the report, with a named backup person who can submit if the first one cannot.
+- [ ] **End review** of the whole game, then the **Moodle submission by Mon 23 Nov 2026, 23:59** (commits after it do not count; aim for Sun 22 Nov): the live link, the repository and the report, with a named backup person who can submit if the first one cannot.
