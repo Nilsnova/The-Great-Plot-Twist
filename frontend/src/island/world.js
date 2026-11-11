@@ -56,16 +56,15 @@ const PAINT = {
 const SIZES = {wall: [40, 24], cannon: [32, 24], mortar: [32, 24], watchtower: [32, 56], house: [40, 40], bell: [24, 40]};
 // "You can build here": a glowing ring on the ground (pulses) and a floating badge with the kind
 // (bobs). Stepped, dithered light like the class demo's lamps; no smooth gradients.
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 function paintRing(c) {
   for (let y = 0; y < 24; y++) for (let x = 0; x < 48; x++) {
     const r = Math.hypot((x + .5 - 24) / 23, (y + .5 - 12) / 11);
     if (r > 1) continue;
+    // The clean look: solid bands, no dithering. A bright rim, a gold ring and a soft inner and outer band.
     const edge = Math.abs(r - .78);
     if (edge < .09) { c.fillStyle = r > .78 ? '#fff2c4' : '#f3c75a'; c.fillRect(x, y, 1, 1); continue; }
-    const glow = Math.max(0, 1 - edge / .4) + (BAYER[(y % 4) * 4 + (x % 4)] + .5) / 16 - .5;
-    if (glow <= .15) continue;
-    c.fillStyle = glow > .6 ? 'rgba(255,214,120,0.75)' : 'rgba(240,170,60,0.45)'; c.fillRect(x, y, 1, 1);
+    if (edge < .2) { c.fillStyle = 'rgba(255,214,120,0.6)'; c.fillRect(x, y, 1, 1); continue; }
+    if (edge < .32) { c.fillStyle = 'rgba(240,170,60,0.3)'; c.fillRect(x, y, 1, 1); }
   }
 }
 const GLYPHS = {

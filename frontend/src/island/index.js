@@ -373,6 +373,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return flow.current && !flow.current.joined ? flow.join(where()) : null;
     },
     setBattle(value) { battle = value === true; applyWorld(); },
+    // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the
+    // player stands (own island or the friend's), the bell swings; answers like flow.ring ({ok, ...}).
+    async ringBell() {
+      if (disposed || !target()) return {ok: false, status: 0, code: 'not_ready', message: 'Your island is still loading.'};
+      const answer = await flow.ring(where());
+      if (!disposed && answer.ok) world?.ring();
+      return answer;
+    },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),
     chartLabel: id => CHART_NAMES[id],
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },

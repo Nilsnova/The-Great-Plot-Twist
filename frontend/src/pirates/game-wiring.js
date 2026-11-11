@@ -53,7 +53,7 @@ export function wireWaves(ctx) {
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
     captainLevel: () => own()?.captain?.level ?? 1,
-    startNextWave: island ? () => island.flow.ring(island.visiting?.code ?? 'own') : null});
+    startNextWave: island ? () => island.ringBell() : null});
 
   function followRoom() {
     const place = island && world.current?.id === ISLAND_PLACE ? island.roomPlace() : null;
