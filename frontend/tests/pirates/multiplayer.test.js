@@ -7,6 +7,7 @@ import { wireWaves } from '../../src/pirates/game-wiring.js';
 import { createWaveFlow } from '../../src/island/wave-flow.js';
 import { WAVE_STARTED } from '../../src/island/wave-hooks.js';
 import { createFakeIslandApi } from '../island/fake.js';
+import { createFakeIslandTransport, createSharedFakeStore, fakePlayerFor } from '../../src/pirates/fake-api.js';
 
 const START = Date.UTC(2026, 10, 11, 12, 0, 0);
 const info = (id, wave = 1) => ({ waveId: id, wave, seed: 77, startsAt: new Date(START + 10000).toISOString(), weather: { ships: 1, fog: 0 }, flagship: false });
@@ -165,5 +166,31 @@ describe('the island room for every defender', () => {
     await h.flush();
     expect(h.island.refreshDefended).toHaveBeenCalledTimes(1); // two hints close together: one read
     h.waves.dispose();
+  });
+});
+
+describe('the shared fake world (?islands=fake&fakeworld=…, scripts/check-multiplayer.js)', () => {
+  it('reads its tab\'s captain from the address', () => {
+    expect(fakePlayerFor('?islands=fake&fakeworld=mp1&fakeplayer=ben&fakename=Ben')).toEqual({ shared: 'mp1', playerId: 'ben', ownerName: 'Ben' });
+    expect(fakePlayerFor('?islands=fake')).toEqual({ shared: null, playerId: 'me', ownerName: null });
+    expect(fakePlayerFor('?fakeworld=a b&fakeplayer=<x>').shared).toBe(null);
+  });
+  it('lets four tabs build, visit and fight one island together', async () => {
+    const items = new Map(), storage = { getItem: key => items.get(key) ?? null, setItem: (key, value) => items.set(key, String(value)) };
+    const tab = (playerId, ownerName) => createFakeIslandTransport({ playerId, ownerName, shared: createSharedFakeStore('t', { storage, locks: null }) });
+    const host = tab('me', 'Nils'), friends = [tab('ben', 'Ben'), tab('ana', 'Ana'), tab('max', 'Max')];
+    expect((await host.post('/api/island/build', { spot: 'cannon_1', kind: 'cannon', actionUid: 'host-build-1' })).ok).toBe(true);
+    for (const friend of friends) {
+      const visit = await friend.get('/api/island/visit/ISLE-K7Q2M');
+      expect(visit.data).toMatchObject({ ownerName: 'Nils' });
+      expect(visit.data.spots.find(spot => spot.id === 'cannon_1').built).toBe(true);
+    }
+    expect((await friends[0].post('/api/island/build', { spot: 'wall_2', kind: 'wall', actionUid: 'ben-build-1', code: 'ISLE-K7Q2M' })).ok).toBe(true);
+    const own = await host.get('/api/island');
+    expect(own.data.spots.find(spot => spot.id === 'wall_2').built).toBe(true);
+    expect(own.data.coins).toBe(70); // Ben paid for the wall
+    const wave = (await host.post('/api/waves/start', { where: 'own', actionUid: 'host-start-1' })).data;
+    expect((await friends[1].post('/api/waves/start', { where: 'ISLE-K7Q2M', actionUid: 'ana-start-1' })).code).toBe('wave_running');
+    for (const friend of friends) expect((await friend.post('/api/waves/join', { waveId: wave.waveId })).data.seed).toBe(wave.seed);
   });
 });
