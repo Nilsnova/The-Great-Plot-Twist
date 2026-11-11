@@ -1,10 +1,10 @@
 // The texts of the islet panel, worked out from the view. Display only: the server decides what can be built.
-import {formatCoins} from '../../ui/kit/logic.js';
+import {formatCoins} from '../../lib/coins.js';
 
 // The same words as coinsText in view.js, copied on purpose: if this file imported view.js, the
 // bundler would put view.js in a chunk shared with the game, and the cold title would list one more
 // file (scripts/check-loading.js keeps the title within 21,080 bytes).
-const coinsText = amount => `${formatCoins(amount)} ${amount === 1 ? 'coin' : 'coins'}`;
+const coinsText = amount => formatCoins(amount);
 
 const BADGES = {built: 'Standing', empty: 'Empty plot', locked: 'Coming later'};
 const BUSY_LABEL = 'Building...';
@@ -29,8 +29,7 @@ function formatDate(iso) {
 function shortfall(need, cost, view) {
   if (!Number.isSafeInteger(view[need])) return `more ${need}`;
   const amount = Math.max(0, cost[need] - view[need]);
-  const word = need === 'coins' && amount === 1 ? 'coin' : need;
-  return `${formatCoins(amount)} more ${word}`;
+  return need === 'coins' ? `${formatCoins(amount)} more` : `${amount} more ${need}`;
 }
 
 function missingText(spot, view) {

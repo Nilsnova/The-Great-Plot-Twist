@@ -5,6 +5,7 @@ import { node, uniqueId } from '../../ui/kit/dom.js';
 import { createModal } from '../../ui/kit/modal.js';
 import { createTabs } from '../../ui/kit/tabs.js';
 import { createSportsActions } from './actions.js';
+import { formatCoins } from '../../lib/coins.js';
 import { SIMULATION, UNKNOWN, fixtureStatus, pickName, settlementText, when } from './words.js';
 
 function button(label, click, key) {
@@ -70,7 +71,7 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
       summary.append(line(`${board.provider} · ${board.source === 'recorded' ? 'Recorded data' : 'Live source, scores may be delayed'}`, 'sports-source'),
         line(`Source updated ${when(board.fetchedAt)}`, 'sports-freshness'));
     } else summary.append(line('Current fixtures, shared play-coin pools.', 'sports-source'));
-    if (own) summary.append(line(`${own.coins} coins · ${own.stakedToday} staked today · ${own.coinsLeftToday} left in today’s allowance`, 'sports-balance'));
+    if (own) summary.append(line(`${formatCoins(own.coins)} · ${formatCoins(own.stakedToday)} staked today · ${formatCoins(own.coinsLeftToday)} left in today’s allowance`, 'sports-balance'));
   }
   function renderPending() {
     const pending = actions.pending;
@@ -78,7 +79,7 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
     if (!pending) return;
     const fixture = board?.fixtures.find(value => value.id === pending.fixtureId);
     pendingBox.append(node('h3', '', actions.busy ? 'Waiting for the server' : 'One stake to check'),
-      line(`${pending.amount} coins · ${fixture ? pickName(pending.pick, fixture) : pending.pick} · ${fixture ? `${fixture.home} v ${fixture.away}` : pending.fixtureId}`),
+      line(`${formatCoins(pending.amount)} · ${fixture ? pickName(pending.pick, fixture) : pending.pick} · ${fixture ? `${fixture.home} v ${fixture.away}` : pending.fixtureId}`),
       line(`Reference ${pending.stakeId}`, 'sports-reference'));
     const retry = button('Retry same stake', () => submit(pending), 'retry-stake');
     retry.disabled = actions.busy;
@@ -89,7 +90,7 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
     drafts.set(fixture.id, draft);
     const form = node('form', 'sports-form');
     if (draft.review) {
-      form.append(line(`Confirm ${draft.amount} play coins on ${pickName(draft.pick, fixture)}?`, 'sports-confirm'),
+      form.append(line(`Confirm ${formatCoins(draft.amount)} on ${pickName(draft.pick, fixture)}?`, 'sports-confirm'),
         line('The server checks the closing time, your balance and your daily limit.'));
       const confirm = button('Confirm stake', () => submit({ fixtureId: fixture.id, pick: draft.pick, amount: Number(draft.amount) }), `confirm-${fixture.id}`);
       const cancel = button('Edit choice', () => {
@@ -134,14 +135,14 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
     const pool = node('ul', 'sports-pool');
     for (const pick of fixture.picks) {
       const side = fixture.pool.sides[pick] ?? { players: 0, coins: 0 };
-      pool.append(node('li', '', `${pickName(pick, fixture)} · ${side.players} players · ${side.coins} coins`));
+      pool.append(node('li', '', `${pickName(pick, fixture)} · ${side.players} players · ${formatCoins(side.coins)}`));
     }
-    card.append(pool, line(`Pool total · ${fixture.pool.total} coins`, 'sports-pool-total'));
+    card.append(pool, line(`Pool total · ${formatCoins(fixture.pool.total)}`, 'sports-pool-total'));
     if (fixture.pool.status === 'settled') {
       card.append(line(fixture.pool.outcome === 'void' ? 'Voided result · pool refunded'
         : `Verified result · ${pickName(fixture.pool.outcome, fixture)}`, 'sports-saved'));
       if (Number.isInteger(fixture.pool.paidCoins) && Number.isInteger(fixture.pool.cutCoins)) {
-        card.append(line(`Pool returned ${fixture.pool.paidCoins} coins · ${fixture.pool.cutCoins} coins pool cut`));
+        card.append(line(`Pool returned ${formatCoins(fixture.pool.paidCoins)} · ${formatCoins(fixture.pool.cutCoins)} pool cut`));
       }
     }
     const available = fixture.canStake && fixture.source === 'live' && fixture.status === 'scheduled'
@@ -158,7 +159,7 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
     fixtures.replaceChildren();
     if (boardError) return showError(fixtures, boardError, 'Current sports fixtures are unavailable. Try again later.');
     if (!board) { fixtures.append(line('Checking the fixture board…')); return; }
-    fixtures.append(line(`${board.rules.minStake} to ${board.rules.maxStake} coins per stake · ${board.rules.dailyCap} per day · ${board.rules.poolCutPercent}% pool cut · closes ${board.rules.pickLeadMinutes} minutes before kickoff`, 'sports-rules'));
+    fixtures.append(line(`${formatCoins(board.rules.minStake)} to ${formatCoins(board.rules.maxStake)} per stake · ${formatCoins(board.rules.dailyCap)} per day · ${board.rules.poolCutPercent}% pool cut · closes ${board.rules.pickLeadMinutes} minutes before kickoff`, 'sports-rules'));
     if (!board.fixtures.length) fixtures.append(line('No current fixtures are listed. Check back later.', 'sports-empty'));
     for (const fixture of board.fixtures) fixtures.append(fixtureCard(fixture));
   }
@@ -172,7 +173,7 @@ export function createSportsPanel({ container, adapter, getToken = () => null, r
     for (const stake of own.stakes) {
       const card = node('article', 'sports-card');
       card.append(node('h3', '', `${stake.home} v ${stake.away}`),
-        line(`${stake.amount} coins on ${pickName(stake.pick, stake)}`),
+        line(`${formatCoins(stake.amount)} on ${pickName(stake.pick, stake)}`),
         line(`Kickoff ${when(stake.kickoff)}`, 'sports-time'), line(settlementText(stake), 'sports-saved'));
       if (stake.status === 'open') {
         const check = button('Check verified result', () => settle(stake.fixtureId), `settle-${stake.id}`);

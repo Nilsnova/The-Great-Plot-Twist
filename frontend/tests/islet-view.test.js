@@ -143,14 +143,14 @@ describe('cardLabels', () => {
 
   it('shows an empty plot with its price and an enabled build button', () => {
     expect(cardLabels(spot({}), held(1000, 20))).toEqual({
-      badge: 'Empty plot', tone: 'empty', cost: 'Cost: 300 coins and 10 timber', missing: null, note: null,
-      button: {label: 'Build the workshop for 300 coins and 10 timber', disabled: false},
+      badge: 'Empty plot', tone: 'empty', cost: 'Cost: 🪙 300 and 10 timber', missing: null, note: null,
+      button: {label: 'Build the workshop for 🪙 300 and 10 timber', disabled: false},
     });
   });
 
   it('says how many coins are missing and disables the button', () => {
     const short = spot({missing: ['coins'], canBuild: false});
-    expect(cardLabels(short, held(180, 20))).toMatchObject({missing: 'You need 120 more coins', button: {disabled: true}});
+    expect(cardLabels(short, held(180, 20))).toMatchObject({missing: 'You need 🪙 120 more', button: {disabled: true}});
   });
 
   it('says how much timber is missing', () => {
@@ -160,12 +160,12 @@ describe('cardLabels', () => {
 
   it('says what is missing when both coins and timber are short', () => {
     const short = spot({missing: ['coins', 'timber'], canBuild: false});
-    expect(cardLabels(short, held(100, 0)).missing).toBe('You need 200 more coins and 10 more timber');
+    expect(cardLabels(short, held(100, 0)).missing).toBe('You need 🪙 200 more and 10 more timber');
   });
 
   it('says 1 coin, not 1 coins', () => {
     const short = spot({missing: ['coins'], canBuild: false});
-    expect(cardLabels(short, held(299, 20)).missing).toBe('You need 1 more coin');
+    expect(cardLabels(short, held(299, 20)).missing).toBe('You need 🪙 1 more');
   });
 
   it('says only that more is needed when the amount held is not known', () => {
@@ -175,8 +175,8 @@ describe('cardLabels', () => {
 
   it('shows a locked plot as coming later, with the note, the future price and a disabled button', () => {
     expect(cardLabels(spot(windmill), held(1000, 20))).toEqual({
-      badge: 'Coming later', tone: 'locked', cost: 'Price when it opens: 300 coins and 10 timber', missing: null, note: LOCKED_NOTE,
-      button: {label: 'Build the windmill for 300 coins and 10 timber', disabled: true},
+      badge: 'Coming later', tone: 'locked', cost: 'Price when it opens: 🪙 300 and 10 timber', missing: null, note: LOCKED_NOTE,
+      button: {label: 'Build the windmill for 🪙 300 and 10 timber', disabled: true},
     });
   });
 
@@ -204,7 +204,7 @@ describe('cardLabels', () => {
     const running = cardLabels(spot({}), held(1000, 20, 'plot_2'));
     const other = cardLabels(spot(station), held(1000, 20, 'plot_2'));
     expect(running.button).toEqual({label: 'Building...', disabled: true});
-    expect(other.button).toEqual({label: 'Build the signal station for 300 coins and 10 timber', disabled: true});
+    expect(other.button).toEqual({label: 'Build the signal station for 🪙 300 and 10 timber', disabled: true});
   });
 
   it('never enables a button the server did not allow, however many coins the view holds', () => {
@@ -219,11 +219,11 @@ describe('cardLabels', () => {
 
 describe('walletLine', () => {
   it('names the coins with thousands separators and the timber', () => {
-    expect(walletLine(held(1000, 20))).toBe('You have 1,000 coins and 20 timber.');
+    expect(walletLine(held(1000, 20))).toBe('You have 🪙 1,000 and 20 timber.');
   });
 
-  it('says 1 coin, not 1 coins', () => {
-    expect(walletLine(held(1, 0))).toBe('You have 1 coin and 0 timber.');
+  it('writes one coin as 🪙 1', () => {
+    expect(walletLine(held(1, 0))).toBe('You have 🪙 1 and 0 timber.');
   });
 
   it('is empty before the first answer', () => {
@@ -237,7 +237,7 @@ describe('notices', () => {
   it('thanks the player with the receipt after a good build', () => {
     const receipt = {coinsPaid: 300, timberPaid: 10, coins: 700, timber: 10};
     expect(builtNotice(stationSpot, receipt, true)).toEqual({
-      tone: 'success', code: 'built', message: 'Signal station built. You have 700 coins and 10 timber left.',
+      tone: 'success', code: 'built', message: 'Signal station built. You have 🪙 700 and 10 timber left.',
     });
   });
 
@@ -248,7 +248,7 @@ describe('notices', () => {
   it('says so when the islet could not be reloaded after a good build', () => {
     const receipt = {coins: 700, timber: 10};
     expect(builtNotice(stationSpot, receipt, false).message).toBe(
-      'Signal station built. You have 700 coins and 10 timber left. We could not reload your islet. Press Refresh.',
+      'Signal station built. You have 🪙 700 and 10 timber left. We could not reload your islet. Press Refresh.',
     );
   });
 
@@ -257,7 +257,7 @@ describe('notices', () => {
   });
 
   it('shows the message of the server for a failure', () => {
-    const result = {ok: false, status: 409, code: 'insufficient_funds', message: 'The signal station costs 300 coins. You do not have enough coins.'};
+    const result = {ok: false, status: 409, code: 'insufficient_funds', message: 'The signal station costs 🪙 300. You do not have enough coins.'};
     expect(failureNotice(result)).toEqual({tone: 'error', code: 'insufficient_funds', message: result.message});
   });
 

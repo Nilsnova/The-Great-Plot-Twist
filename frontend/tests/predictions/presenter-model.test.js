@@ -42,21 +42,21 @@ describe('the Manifold line', () => {
 
 describe('our pool line', () => {
   it('says open until the closing time, with the total', () => {
-    expect(poolLine(question(), UTC)).toBe('Our pool: open until Thu 17 Dec, 12:00 UTC. 200 coins in total.');
+    expect(poolLine(question(), UTC)).toBe('Our pool: open until Thu 17 Dec, 12:00 UTC. 🪙 200 in total.');
   });
 
   it('says closed and waiting for the result', () => {
-    expect(poolLine(question({ status: 'closed' }), UTC)).toBe('Our pool: closed, waiting for the result. 200 coins in total.');
+    expect(poolLine(question({ status: 'closed' }), UTC)).toBe('Our pool: closed, waiting for the result. 🪙 200 in total.');
   });
 
   it('says settled and who won', () => {
     const settled = question({ status: 'settled', outcome: 'yes', settlement: 'winners' });
-    expect(poolLine(settled, UTC)).toBe('Our pool: settled. YES won. 200 coins in total.');
+    expect(poolLine(settled, UTC)).toBe('Our pool: settled. YES won. 🪙 200 in total.');
   });
 
   it('says settled as void', () => {
     const settled = question({ status: 'settled', outcome: 'void', settlement: 'refund_void' });
-    expect(poolLine(settled, UTC)).toBe('Our pool: settled. Everybody got their coins back. 200 coins in total.');
+    expect(poolLine(settled, UTC)).toBe('Our pool: settled. Everybody got their coins back. 🪙 200 in total.');
   });
 });
 
@@ -115,14 +115,14 @@ describe('the buttons and their confirm text', () => {
 
 describe('the receipt', () => {
   it('says who was paid and how many coins left the game', () => {
-    expect(receiptText({ paidPlayers: 4, paidCoins: 196, cutCoins: 4 })).toBe('Paid 4 captains 196 coins. 4 coins left the game.');
+    expect(receiptText({ paidPlayers: 4, paidCoins: 196, cutCoins: 4 })).toBe('Paid 4 captains 🪙 196. 🪙 4 left the game.');
   });
 
   it('uses the singular', () => {
-    expect(receiptText({ paidPlayers: 1, paidCoins: 1, cutCoins: 1 })).toBe('Paid 1 captain 1 coin. 1 coin left the game.');
+    expect(receiptText({ paidPlayers: 1, paidCoins: 1, cutCoins: 1 })).toBe('Paid 1 captain 🪙 1. 🪙 1 left the game.');
   });
 
   it('writes zeros', () => {
-    expect(receiptText({ paidPlayers: 0, paidCoins: 0, cutCoins: 0 })).toBe('Paid 0 captains 0 coins. 0 coins left the game.');
+    expect(receiptText({ paidPlayers: 0, paidCoins: 0, cutCoins: 0 })).toBe('Paid 0 captains 🪙 0. 🪙 0 left the game.');
   });
 });

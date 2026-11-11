@@ -1,5 +1,5 @@
 // The islet view: its first shape, how a server answer becomes view data, and the notices the panel shows. Pure, no DOM.
-import {formatCoins} from '../../ui/kit/logic.js';
+import {formatCoins} from '../../lib/coins.js';
 
 export const PLAY_MONEY_NOTE = 'Play money. No cash value. It cannot be bought or cashed out.';
 export const MESSAGES = {
@@ -40,7 +40,7 @@ const isText = value => typeof value === 'string' && value.trim() !== '';
 const readCount = value => (Number.isSafeInteger(value) && value >= 0 ? value : null);
 
 export const makeNotice = (tone, code, message) => ({tone, code, message});
-export const coinsText = amount => `${formatCoins(amount)} ${amount === 1 ? 'coin' : 'coins'}`;
+export const coinsText = amount => formatCoins(amount);
 
 // The view before the first answer. Unavailable mode never asks the server, so it is final.
 export function createEmptyView(mode) {

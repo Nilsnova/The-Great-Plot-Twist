@@ -1,6 +1,6 @@
 // Plain formatting for the Exchange panel: coins, prices, percent and times. No DOM, no game rules.
 // Used by: words.js, result-words.js and view-models.js. Times show in the player's own time zone.
-import { formatCoins } from '../../ui/kit/logic.js';
+import { formatCoinDelta, formatCoins } from '../../lib/coins.js';
 
 export const UNKNOWN = 'unknown';
 const DEFAULT_DECIMALS = 2;
@@ -14,10 +14,10 @@ function cached(cache, key, make) {
 }
 
 export const coinsText = value => (Number.isSafeInteger(value) ? formatCoins(value) : UNKNOWN);
-export const coinsLabel = value => (Number.isSafeInteger(value) ? `${formatCoins(value)} ${Math.abs(value) === 1 ? 'coin' : 'coins'}` : UNKNOWN);
+export const coinsLabel = coinsText;
 export function signedCoinsText(value) {
   if (!Number.isSafeInteger(value)) return UNKNOWN;
-  return value > 0 ? `+${formatCoins(value)}` : formatCoins(value);
+  return formatCoinDelta(value);
 }
 
 const validDecimals = value => (Number.isInteger(value) && value >= 0 && value <= MAX_DECIMALS ? value : DEFAULT_DECIMALS);

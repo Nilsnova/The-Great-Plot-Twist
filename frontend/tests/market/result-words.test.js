@@ -9,7 +9,7 @@ describe('after opening a position', () => {
 
   it('shows the entry price and the zero point the server set, and what was paid', () => {
     expect(openedWords(answer, harbor)).toBe(
-      'Opened your rising position in Saltreach Harbor Trust at 76,159.21 USDT. Zero point: 68,543.29 USDT. You paid 102 coins and have 838 coins left.');
+      'Opened your rising position in Saltreach Harbor Trust at 76,159.21 USDT. Zero point: 68,543.29 USDT. You paid 🪙 102 and have 🪙 838 left.');
   });
 
   it('rounds a falling zero point the other way', () => {
@@ -20,25 +20,25 @@ describe('after opening a position', () => {
 
   it('still says something useful when the company is not known to the board', () => {
     expect(openedWords(answer, null)).toBe(
-      'Opened your rising position in harbor-trust at 76,159.21. Zero point: 68,543.29. You paid 102 coins and have 838 coins left.');
+      'Opened your rising position in harbor-trust at 76,159.21. Zero point: 68,543.29. You paid 🪙 102 and have 🪙 838 left.');
   });
 });
 
 describe('after closing a position', () => {
   it('says what was received', () => {
     const answer = { closedAs: 'closed', closePrice: 76159.21, value: 115, fee: 2, coinsChange: 113, coins: 951 };
-    expect(closedWords(answer, harbor)).toBe('Closed your position in Saltreach Harbor Trust at 76,159.21 USDT. You received 113 coins and now have 951 coins.');
+    expect(closedWords(answer, harbor)).toBe('Closed your position in Saltreach Harbor Trust at 76,159.21 USDT. You received 🪙 113 and now have 🪙 951.');
   });
 
   it('says when nothing was paid out', () => {
     const answer = { closedAs: 'closed', closePrice: 45.03, value: 3, fee: 3, coinsChange: 0, coins: 940 };
-    expect(closedWords(answer, harbor)).toBe('Closed your position in Saltreach Harbor Trust at 45.03 USDT. No coins were paid out. You have 940 coins.');
+    expect(closedWords(answer, harbor)).toBe('Closed your position in Saltreach Harbor Trust at 45.03 USDT. No coins were paid out. You have 🪙 940.');
   });
 
   it('explains a position that had already reached its zero point', () => {
     const answer = { closedAs: 'zeroed', closePrice: 68000, value: 0, fee: 0, coinsChange: 0, coins: 940 };
     expect(closedWords(answer, harbor)).toBe(
-      'Your position in Saltreach Harbor Trust had already reached its zero point, so it closed at zero. No coins were paid out. You have 940 coins.');
+      'Your position in Saltreach Harbor Trust had already reached its zero point, so it closed at zero. No coins were paid out. You have 🪙 940.');
   });
 });
 

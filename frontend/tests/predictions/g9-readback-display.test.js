@@ -91,8 +91,8 @@ it('shows the confirmed server stake after edited retry readback even when both 
       await (await prepare(page, '10', 'No')).click();
       await page.waitForFunction(() => window.predictionReadbackProof.mineReads === 4
         && document.querySelector('.desk-body > .server-call')?.dataset.state === 'error');
-      expect(await modal(page).locator('.desk-your-stake').textContent()).toBe('Your stake: 20 coins on YES');
-      expect(await modal(page).locator('.desk-your-stake').textContent()).not.toContain('10 coins');
+      expect(await modal(page).locator('.desk-your-stake').textContent()).toBe('Your stake: 🪙 20 on YES');
+      expect(await modal(page).locator('.desk-your-stake').textContent()).not.toContain('🪙 10');
       const writes = await page.evaluate(() => window.predictionReadbackProof.posts.map(row => ({path: row.path,
         side: row.body.side, amount: row.body.amount, exactKeys: Object.keys(row.body).sort().join(',')})));
       expect(writes).toEqual([{path: '/api/predictions/stake', side: 'yes', amount: 20,

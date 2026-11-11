@@ -88,13 +88,13 @@ function closedRow(position, company) {
   const reached = `the price reached ${priceText(position.closePrice, style)} (your zero point was ${zeroPointText(position.zeroPrice, position.side, style)})`;
   return {
     id: position.id, heading: position.name, sideText: sideWords(position.side), zeroed,
-    line: zeroed ? `Closed at zero: ${reached}` : `Closed by you: ${signedCoinsText(position.coinsChange)} coins`,
-    resultText: `Result after both fees: ${signedCoinsText(position.result)} coins`,
+    line: zeroed ? `Closed at zero: ${reached}` : `Closed by you: ${signedCoinsText(position.coinsChange)}`,
+    resultText: `Result after both fees: ${signedCoinsText(position.result)}`,
   };
 }
 
-const ofTotal = (label, amount, limit, unit = '') => (Number.isSafeInteger(amount) && Number.isSafeInteger(limit)
-  ? `${label}: ${coinsText(amount)} of ${coinsText(limit)}${unit}` : '');
+const ofTotal = (label, amount, limit, coins = false) => (Number.isSafeInteger(amount) && Number.isSafeInteger(limit)
+  ? `${label}: ${coins ? coinsText(amount) : amount} of ${coins ? coinsText(limit) : limit}` : '');
 
 export function positionRows(portfolio, board, options = {}) {
   const context = { ...options, now: portfolio?.generatedAt };
@@ -102,7 +102,7 @@ export function positionRows(portfolio, board, options = {}) {
   const companyOf = position => companies.get(position.companyId);
   return {
     coinsText: Number.isSafeInteger(portfolio?.coins) ? coinsLabel(portfolio.coins) : 'unknown',
-    stakedText: ofTotal('Staked today', portfolio?.stakedToday, portfolio?.dailyStakeCap, ' coins'),
+    stakedText: ofTotal('Staked today', portfolio?.stakedToday, portfolio?.dailyStakeCap, true),
     openCountText: ofTotal('Open positions', portfolio?.openCount, portfolio?.maxOpenPositions),
     open: listOf(portfolio?.positions).map(position => openRow(position, companyOf(position), context)),
     closed: listOf(portfolio?.recentlyClosed).map(position => closedRow(position, companyOf(position))),

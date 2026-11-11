@@ -22,7 +22,7 @@ try {
   check(await page.locator('.kit-clue-card[data-state=new]').count() === 1 && await page.locator('.kit-clue-card[data-state=pinned]').count() === 1 && await page.locator('.kit-clue-card[data-state=used]').count() === 1,'Clue states are presented without board logic');
   check(await page.locator('.kit-mini-chart[data-halted=true] .kit-badge').textContent() === 'Trading halted','Halted sparkline has a readable status');
   check(await page.locator('progress').evaluate(el=>el.value===.6),'Native progress exposes the supplied ratio');
-  check(await page.locator('.kit-hud-bar').textContent().then(text=>text.includes('1,240 coins')&&text.includes('NPC partner')),'HUD formats supplied balance and distinguishes NPC seats');
+  check(await page.locator('.kit-hud-bar').textContent().then(text=>text.includes('🪙 1,240')&&text.includes('NPC partner')),'HUD formats supplied balance and distinguishes NPC seats');
   await page.getByRole('button',{name:'Show a toast'}).click();
   check(await page.locator('.kit-toast').textContent() === 'Your field notes are ready.','Toast announces plain status text');
   await page.screenshot({path:`captures/20261105_G4-UI-Kit${production?'-Production':''}.png`,fullPage:true});

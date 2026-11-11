@@ -32,7 +32,7 @@ describe('opening a position', () => {
     const result = await trades.open(intent);
     expect(adapter.open).toHaveBeenCalledWith(intent, { uid: 'click-uid-1' });
     expect(result.kind).toBe('done');
-    expect(result.message).toBe('Opened your rising position in Saltreach Harbor Trust at 76,159.21 USDT. Zero point: 68,543.29 USDT. You paid 102 coins and have 838 coins left.');
+    expect(result.message).toBe('Opened your rising position in Saltreach Harbor Trust at 76,159.21 USDT. Zero point: 68,543.29 USDT. You paid 🪙 102 and have 🪙 838 left.');
     expect(trades.pending).toBe(null);
   });
 
@@ -69,7 +69,7 @@ describe('opening a position', () => {
   it('names the coins needed when there are not enough', async () => {
     const { fake, trades } = await setup();
     fake.dev.failNext('insufficient_funds');
-    expect((await trades.open(intent)).message).toBe('You need 102 coins for this stake and its fee.');
+    expect((await trades.open(intent)).message).toBe('You need 🪙 102 for this stake and its fee.');
   });
 
   it('says how long to wait after a too-fast trade and does not ask the server for more', async () => {
@@ -298,7 +298,7 @@ describe('closing a position', () => {
     const result = await trades.close({ positionId: id });
     expect(adapter.close).toHaveBeenCalledWith({ positionId: id }, { uid: 'click-uid-1' });
     expect(result.kind).toBe('done');
-    expect(result.message).toBe('Closed your position in Saltreach Harbor Trust at 76,159.21 USDT. You received 113 coins and now have 1,053 coins.');
+    expect(result.message).toBe('Closed your position in Saltreach Harbor Trust at 76,159.21 USDT. You received 🪙 113 and now have 🪙 1,053.');
     await result.refreshed;
     expect(session.portfolio.positions.some(item => item.id === id)).toBe(false);
   });
@@ -319,7 +319,7 @@ describe('closing a position', () => {
     session.portfolio.positions = [position];
     adapter.close.mockResolvedValueOnce({ ok: true, data: { positionId: position.id, closedAs: 'closed', closePrice: 2.4012, value: 49, fee: 1, coinsChange: 48, coins: 988 } });
     const result = await trades.close({ positionId: position.id });
-    expect(result.message).toBe('Closed your position in Pier Post Courier at 2.4012 USDT. You received 48 coins and now have 988 coins.');
+    expect(result.message).toBe('Closed your position in Pier Post Courier at 2.4012 USDT. You received 🪙 48 and now have 🪙 988.');
   });
 
   it('keeps the uid for sending a close again', async () => {

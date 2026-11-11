@@ -4,7 +4,7 @@
 //
 // Used by: questions-view.js, stakes-view.js, presenter-model.js, flow.js and the tests.
 
-import { formatCoins } from '../../ui/kit/logic.js';
+import { formatCoins } from '../../lib/coins.js';
 import { MANIFOLD_PAUSED_LINE, SIGN_IN_LINE } from './messages.js';
 import { closingLabel, formatLocalTime } from './time-labels.js';
 
@@ -16,7 +16,7 @@ const REFUND_REASONS = {
   refund_one_sided: 'everybody picked the same answer',
 };
 
-export const coinsText = amount => `${formatCoins(amount)} ${amount === 1 ? 'coin' : 'coins'}`;
+export const coinsText = amount => formatCoins(amount);
 export const captainsText = count => `${count} ${count === 1 ? 'captain' : 'captains'}`;
 export const sideName = side => String(side).toUpperCase();
 export const topicText = topic => (Object.hasOwn(TOPICS, topic) ? TOPICS[topic] : 'General');
@@ -54,7 +54,7 @@ export function hintLine(leftToday, dailyCap) {
   return `You can still stake ${coinsText(leftToday)} today.`;
 }
 
-export const todayLine = mine => `Today you staked ${mine.stakedToday} of ${coinsText(mine.dailyCap)}.`;
+export const todayLine = mine => `Today you staked ${coinsText(mine.stakedToday)} of ${coinsText(mine.dailyCap)}.`;
 export const stakeSummary = stake => `Your stake: ${coinsText(stake.amount)} on ${sideName(stake.side)}`;
 export const stakePlacedLine = stake => `Your stake is in: ${coinsText(stake.amount)} on ${sideName(stake.side)}.`;
 export const stakeConfirmText = ({ side, amount }) =>

@@ -10,5 +10,5 @@ it('distinguishes closed/live/finished and unpaid stakes from confirmed returns'
   expect(fixtureStatus({ ...FIXTURE, closesAt: '2023-01-01T19:00:00Z', canStake: true })).toBe('Staking closed');
   expect(fixtureStatus({ ...FIXTURE, status: 'playing' })).toContain('staking closed');
   expect(settlementText(OPEN_STAKE)).toContain('No payout has been confirmed');
-  expect(settlementText({ ...OPEN_STAKE, status: 'settled', payout: 10, settlement: 'refund_no_winners' })).toBe('Refunded · 10 coins returned');
+  expect(settlementText({ ...OPEN_STAKE, status: 'settled', payout: 10, settlement: 'refund_no_winners' })).toBe('Refunded · 🪙 10 returned');
 });

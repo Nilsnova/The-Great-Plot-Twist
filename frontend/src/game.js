@@ -25,6 +25,7 @@ import {attachIsletPanel} from './screens/islet/host.js';
 import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
 import {createPredictionsEntry} from './online/predictions-entry.js';
+import {createHarbor,loadFortuneCard,loadMarketCard,loadMatchCard} from './harbor/host.js';
 import {findPanelServices} from './online/panel-services.js';
 import {resolveIslandsMode,startPlace} from './island/mode.js';
 import {readVisit} from './island/codes.js';
@@ -68,16 +69,16 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const isletState=createIsletState({on});
   let mapTouch=null;
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null;
-  let active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
-  const externalOverlay=()=>!!(island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active);
+  let harbor=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
+  const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
-  const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus()});
+  const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
   // The desk and app-owned ring capture current private capabilities before loading their screens.
   const desk=createPredictionsEntry({session,container,resetInput:resetControls,
     focus:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
-    onSignIn:()=>{desk.close();openAccount?.();}});
+    onSignIn:()=>{desk.close();openAccount?.();},load:loadFortuneCard});
   const openDesk=()=>void desk.open();
   const practice=new URLSearchParams(location.search);
   function panelLabel(zone){
@@ -88,7 +89,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     return 'The prediction desk is closed for now.';
   }
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();shortcuts.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();shortcuts.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -113,7 +114,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   // Public prices and private trading share the factory's explicit-session capabilities.
   marketUi=createMarketHost({session,container,resetInput:resetControls,
     focusGame:()=>graphics.renderer.domElement.focus(),notify:message=>hud.message(message),
-    onSignIn:()=>{marketUi.close();openAccount?.();}});
+    onSignIn:()=>{marketUi.close();openAccount?.();},load:loadMarketCard});
+  // Lane H: the Harbor overview (menu "Harbor") and the weather board; the stalls open the cards above.
+  harbor=createHarbor({container,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),getWeather:()=>weatherAnswer,
+    openStall:id=>void(id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):openDesk()),notify:message=>hud.message(message)});
   const panelClosed=event=>{
     const element=event.target;if(element?.open||!element?.matches)return;
     if(element.matches('.market-modal')&&container.querySelector('.market-modal')===element
@@ -231,7 +235,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;} };
   function dispose() {
     if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;island?.dispose();island=null;
-    mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
@@ -240,8 +244,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
-  return {dispose,resetInput:resetControls,hasOverlay:()=>!!island?.active||!!classDemo?.active||shortcuts.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||desk?.active||stopPlots.active,
-    setMode(mode){mapTouch?.cancel();if(mode!=='playing'){marketUi?.close();desk.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
+  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!classDemo?.active||shortcuts.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||desk?.active||stopPlots.active,
+    setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();marketUi?.close();desk.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       if(island?.handleEscape())return true;

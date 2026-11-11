@@ -4,6 +4,7 @@
 // point is already decided; the screen only turns it into sentences.
 // Used by: reveal.js, history.js and the tests.
 import { ANSWER_HOURS, SIGNAL_NAMES, otherCaptainName } from './logic.js';
+import { formatCoinDelta } from '../../lib/coins.js';
 
 const BEAT_LINES = {
   flash: 'Flash outshines Shade',
@@ -30,8 +31,7 @@ function roundStep(entry, total, score, themName) {
 
 function coinsPhrase(duel) {
   if (duel.stake === 0) return 'Friendly duel, no coins.';
-  if (duel.coinsChange > 0) return `+${duel.coinsChange} coins (play money).`;
-  if (duel.coinsChange < 0) return `${duel.coinsChange} coins (play money).`;
+  if (duel.coinsChange !== 0) return `${formatCoinDelta(duel.coinsChange)} (play money).`;
   return 'Stake returned.';
 }
 
@@ -74,8 +74,7 @@ function finishedLine(duel) {
   const against = duel.yourResult === 'draw' ? '' : ` against ${otherCaptainName(duel) ?? 'a captain who has left'}`;
   if (duel.stake === 0) return `${word} ${score}${against}, friendly duel`;
   if (duel.yourResult === 'draw') return `${word} ${score}, stake returned`;
-  const sign = duel.coinsChange > 0 ? '+' : '';
-  return `${word} ${score}${against}, ${sign}${duel.coinsChange} coins`;
+  return `${word} ${score}${against}, ${formatCoinDelta(duel.coinsChange)}`;
 }
 
 // "Won 3 to 1 against Captain-3fa85f, +90 coins", "Withdrawn, stake returned" and so on.

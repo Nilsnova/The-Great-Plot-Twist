@@ -6,27 +6,27 @@ import {
 
 describe('coins', () => {
   it('writes whole coins with thousands separators', () => {
-    expect(coinsText(0)).toBe('0');
-    expect(coinsText(2000)).toBe('2,000');
-    expect(coinsText(-5)).toBe('-5');
+    expect(coinsText(0)).toBe('🪙 0');
+    expect(coinsText(2000)).toBe('🪙 2,000');
+    expect(coinsText(-5)).toBe('−🪙 5');
   });
 
   it('writes a missing or fractional amount as unknown instead of inventing one', () => {
     for (const value of [null, undefined, NaN, 1.5, '12', Infinity]) expect(coinsText(value)).toBe('unknown');
   });
 
-  it('adds the word coin or coins, one for exactly one', () => {
-    expect(coinsLabel(1)).toBe('1 coin');
-    expect(coinsLabel(-1)).toBe('-1 coin');
-    expect(coinsLabel(0)).toBe('0 coins');
-    expect(coinsLabel(1234)).toBe('1,234 coins');
+  it('writes the same coin format as formatCoins', () => {
+    expect(coinsLabel(1)).toBe('🪙 1');
+    expect(coinsLabel(-1)).toBe('−🪙 1');
+    expect(coinsLabel(0)).toBe('🪙 0');
+    expect(coinsLabel(1234)).toBe('🪙 1,234');
     expect(coinsLabel(null)).toBe('unknown');
   });
 
   it('signs a change so that gain and loss are never only a colour', () => {
-    expect(signedCoinsText(113)).toBe('+113');
-    expect(signedCoinsText(-20)).toBe('-20');
-    expect(signedCoinsText(0)).toBe('0');
+    expect(signedCoinsText(113)).toBe('🪙 +113');
+    expect(signedCoinsText(-20)).toBe('🪙 −20');
+    expect(signedCoinsText(0)).toBe('🪙 0');
     expect(signedCoinsText(null)).toBe('unknown');
   });
 });
