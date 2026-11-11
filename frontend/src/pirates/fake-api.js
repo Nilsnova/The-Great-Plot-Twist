@@ -128,6 +128,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2 } = {}) {
   // unlocking: the server's §9 locks (409 locked). Off by default here; the game's transport and version 2 turn it on.
   let weatherKind = weather;
+  const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
   const me = () => {
     let player = world.players.get(playerId);
     if (!player) world.players.set(playerId, player = { coins: 0, ownerName, actions: new Map(), code: null });
@@ -198,7 +199,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const nowMs = () => { const value = now(); return value instanceof Date ? value.getTime() : Number(value); };
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
   const shape = run => ({ waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
-    weather: { ...run.weather }, flagship: run.flagship, boss: isBoss(run) });
+    weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}) });
   const uid = value => typeof value === 'string' && value.length > 0 && value.length <= 64;
 
   const api = {
@@ -302,7 +303,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!run.participants.has(playerId)) refuse(403, 'not_in_wave', 'Join the wave first: you are not in this wave.');
       const placeBest = () => (run.island ? { waveBest: run.island.waveBest, flags: run.island.flags } : { waveBest: world.pointBest, flags: world.pointFlags });
       const stored = run.results.get(playerId);
-      const runInfo = () => (run.island ? { nextWave: run.island.nextWave, boss: isBoss(run) } : {});
+      const runInfo = () => (v2 && run.island ? { nextWave: run.island.nextWave, boss: isBoss(run) } : {});
       if (stored !== undefined) return { loot: stored, coins: player.coins, ...placeBest(), ...runInfo() };
       const elapsed = (nowMs() - run.startsAtMs) / 1000;
       if (elapsed < ISLAND_RULES.waves.minimumSeconds) {
@@ -390,14 +391,16 @@ const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'obje
  * {get(path), post(path, body), dev, api}: the fake behind ?islands=fake, answering like online/api.js.
  * Your island is ISLE-K7Q2M with `coins` starting coins; ISLE-FR3ND (Captain Gull) is a friend's island.
  */
+/** The answers' version for a page: 2 (the tower defense extras) in the browser, 1 without a page (the older tests). */
+export const fakeVersionFor = search => (typeof search !== 'string' ? 1 : new URLSearchParams(search).get('td') === '1' ? 1 : 2);
 export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, now = () => Date.now(), weather = 'calm',
-  code = FAKE_OWN_CODE, ownerName = 'You', friends = [FAKE_FRIEND], seed = 7, unlocking = true, version = 2 } = {}) {
-  void version; // one shape now: the tower defense answers (§7) with the locks on
+  code = FAKE_OWN_CODE, ownerName = 'You', friends = [FAKE_FRIEND], seed = 7, unlocking = true,
+  version = fakeVersionFor(globalThis.location?.search) } = {}) {
   let world, api, others = 0;
   const failures = [];
   function reset() {
     world = createFakeWorld({ seed, friends });
-    api = createFakeIslandApi({ world, playerId: 'me', ownerName, now, weather, code, unlocking });
+    api = createFakeIslandApi({ world, playerId: 'me', ownerName, now, weather, code, unlocking, version });
     world.players.set('me', { coins: 0, ownerName, actions: new Map(), code: null });
     void api.island(); world.players.get('me').coins = coins;
   }

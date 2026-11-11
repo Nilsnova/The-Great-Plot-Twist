@@ -184,9 +184,9 @@ describe('the v2 fake API', () => {
     const api = createFakeIslandApi({ version: 2 });
     const island = await api.island();
     expect(island.spots).toHaveLength(16);
-    expect(island.spots.find(item => item.id === 'tower_s5')).toMatchObject({ kinds: ['cannon', 'mortar'], level: 0, built: false });
+    expect(island.spots.find(item => item.id === 'cannon_5')).toMatchObject({ kinds: ['cannon', 'mortar'], level: 0, built: false });
     expect(island).toMatchObject({ crew: { gunner: 0, carpenter: 0, lookout: 0 }, nextWave: 1, captain: { level: 1, nextPrice: 20 },
-      prices: { build: { mortar: 60 }, upgrade: { cannon: [60, 120] }, crew: { gunner: 40 } } });
+      prices: { kinds: { mortar: [60, 120, 240], cannon: [30, 60, 120] }, crew: { gunner: { price: 40, max: 2 } } } }); // the backend's shape (routes/island.py)
     const code = async promise => { try { await promise; } catch (error) { return error.code; } return 'ok'; };
     expect(await code(api.build({ spot: 'tower_s5', kind: 'mortar', actionUid: 'b1' }))).toBe('locked'); // after wave 3
     expect(await code(api.build({ spot: 'wall_5', kind: 'mortar', actionUid: 'b2' }))).toBe('wrong_kind');
@@ -216,7 +216,7 @@ describe('the v2 fake API', () => {
     expect((await api.island()).nextWave).toBe(8); // best 10 − 2
     // Everything is unlocked now: upgrade, mortar, crew, captain.
     await api.build({ spot: 'tower_s5', kind: 'mortar', actionUid: 'm1' });
-    expect((await api.upgrade({ spot: 'tower_s5', actionUid: 'm2' })).spots.find(item => item.id === 'tower_s5')).toMatchObject({ kind: 'mortar', level: 2, upgradeCost: 240 });
+    expect((await api.upgrade({ spot: 'tower_s5', actionUid: 'm2' })).spots.find(item => item.id === 'cannon_5')).toMatchObject({ kind: 'mortar', level: 2, upgradeCost: 240 });
     await api.upgrade({ spot: 'tower_s5', actionUid: 'm3' });
     await expect(api.upgrade({ spot: 'tower_s5', actionUid: 'm4' })).rejects.toMatchObject({ code: 'max_level' });
     await api.hire({ crew: 'lookout', actionUid: 'l1' });
@@ -232,6 +232,6 @@ describe('the v2 fake API', () => {
     expect(await transport.get('/api/pirate-point')).toMatchObject({ ok: true, data: { spots: expect.any(Array) } });
     expect(TD_RULES.highestWave).toBe(100);
     // Levels reach the sim through the wiring even when the island lane leaves them out.
-    expect(withLevels([{ id: 'tower_s5', kind: 'mortar', x: 1, z: 2 }], await api.island())).toEqual([{ id: 'tower_s5', kind: 'mortar', x: 1, z: 2, level: 3 }]);
+    expect(withLevels([{ id: 'cannon_5', kind: 'mortar', x: 1, z: 2 }], await api.island())).toEqual([{ id: 'cannon_5', kind: 'mortar', x: 1, z: 2, level: 3 }]);
   });
 });
