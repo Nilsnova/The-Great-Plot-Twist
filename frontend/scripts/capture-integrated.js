@@ -2,7 +2,7 @@
 // (?desk=local): title, lore, goal card, your island, a cannon, the bell and its wave, the loot toast,
 // the sea chart, the Harbor, a stake, back home and the invite card. Checks that the quest strip moves
 // through all five goals in order, and captures each step at 1280x720 and 375x812.
-//   node scripts/capture-integrated.js [output folder]     (default captures/integrated)
+//   node scripts/capture-integrated.js [output folder] [WIDTHxHEIGHT]   (default captures/integrated, both sizes)
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {openWorldBrowser, settle} from './world-browser-tools.js';
@@ -22,7 +22,9 @@ const courier = async selector => { const found = await page.evaluate(selector =
   assert.deepEqual(found, [], `no Courier inside ${selector}`); };
 const closeDialogs = async () => { for (let i = 0; i < 4 && await page.locator('dialog[open]').count(); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(200); } };
 try {
-  for (const [width, height] of [[1280, 720], [375, 812]]) {
+  // One size per run keeps each run in a fresh browser: node scripts/capture-integrated.js <folder> 375x812
+  const sizes = process.argv[3] ? [process.argv[3].split('x').map(Number)] : [[1280, 720], [375, 812]];
+  for (const [width, height] of sizes) {
     await page.setViewportSize({width, height});
     await page.goto(`${env.url}/?islands=fake&desk=local`);
     await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* fresh device */ } });
@@ -42,7 +44,8 @@ try {
         const arrivalKey = () => page.evaluate(() => localStorage.getItem('plot_twist_island_arrival_v1'));
         assert.equal(await arrivalKey(), null, 'the island arrival waits for the goal card');
         await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
-        await page.waitForFunction(() => document.querySelector('dialog.cutscene[open]'), null, {timeout: 8000, polling: 100}).catch(() => {});
+        await page.waitForFunction(() => document.querySelector('dialog.cutscene[open]') || localStorage.getItem('plot_twist_island_arrival_v1') === '1',
+          null, {timeout: 30000, polling: 100}).catch(() => {});
         // A slow headless frame can let the whole cutscene pass between two polls; its stored flag still says it played.
         if (!await page.locator('dialog.cutscene[open]').count() && await arrivalKey() === '1') seen.push('island_arrival');
       } else if (await page.locator('dialog.cutscene[open]').count()) {
@@ -143,6 +146,62 @@ try {
     assert.equal(await doneCount(), 5, 'goal 5 done');
     await closeDialogs();
     console.log('quests at the end:', await quests());
+    // A friend's visit: ISLE-FR3ND (Captain Gull), ring the friend's bell and win that wave together.
+    await page.evaluate(async () => { const island = window.__island.island; island.visit('ISLE-FR3ND'); await island.load(); });
+    await page.waitForFunction(() => !!window.__island.island.visiting?.ownerName);
+    await stand(6.5, 11.4);
+    await shot(`14-friend-visit-${width}`);
+    await stand(8, 11.4);
+    await page.keyboard.press('KeyE');
+    await page.locator('.island-card-bell[open]').waitFor();
+    await page.locator('.island-card[open] .island-card-body .kit-button').click();
+    await page.waitForFunction(() => window.__island.waves?.island.state?.ships?.length > 0, null, {timeout: 30000, polling: 250});
+    await page.waitForTimeout(2500);
+    await shot(`15-friend-wave-${width}`);
+    // Captain Gull's island has one cannon for wave 3: it may hold or fall; either way the toast says so.
+    await page.waitForFunction(() => [...document.querySelectorAll('.u-toast')].some(node => /loot|broke through/.test(node.textContent)), null, {timeout: 240000, polling: 500});
+    console.log('friend wave:', await page.evaluate(() => [...document.querySelectorAll('.u-toast')].map(node => node.textContent).join(' | ')));
+    await shot(`16-friend-wave-end-${width}`);
+    await page.evaluate(() => window.__island.island.sailHome());
+    // Pirate Point in the class rehearsal (?demo=1&captains=40: the in-memory fake, simulated captains).
+    await page.goto(`${env.url}/?demo=1&captains=40`);
+    await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* fresh device */ } });
+    await page.reload();
+    await page.locator('#play').click();
+    for (let i = 0; i < 6; i++) {
+      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.goal-card[open]')
+        || (window.__island?.world.current?.id === 'saltreach_harbor' && window.__island.classDemo && !document.querySelector('dialog[open]')), null, {timeout: 30000});
+      if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
+      else if (await page.locator('dialog.cutscene[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
+      else break;
+      await page.waitForTimeout(300);
+    }
+    await page.keyboard.press('KeyJ');
+    await page.locator('.projector:not([hidden])').getByRole('button', {name: 'Ring the Pirate Point bell', exact: true}).click();
+    await page.waitForFunction(() => !!window.__island.waves?.point?.controller.wave, null, {timeout: 15000});
+    await shot(`17-projector-bell-${width}`);
+    await page.keyboard.press('KeyJ');
+    await page.evaluate(async () => { await window.__island.world.goTo('lighthouse_isle', {fast: true}); });
+    for (let i = 0; i < 4; i++) {
+      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open]') || (window.__island.world.current?.id === 'lighthouse_isle' && !document.querySelector('dialog[open]')), null, {timeout: 30000});
+      if (!await page.locator('dialog.cutscene[open]').count()) break;
+      await page.getByRole('button', {name: 'Skip', exact: true}).click(); await page.waitForTimeout(400);
+    }
+    await page.waitForFunction(() => window.__island.waves.point.controller.state?.ships?.length > 0 && window.__island.experience.stats.drawn >= 10, null, {timeout: 30000, polling: 250});
+    await page.waitForTimeout(1500);
+    await shot(`18-pirate-point-battle-${width}`);
+    await page.evaluate(([x, z]) => { const g = window.__island; g.player.position.set(x, g.world.current.groundHeight(x, z), z); }, [4.5, -8]);
+    await page.locator('.pirate-point-prompt .lamp-hold').waitFor({timeout: 15000});
+    await page.keyboard.down('KeyE'); await page.waitForTimeout(2300); await page.keyboard.up('KeyE');
+    await page.waitForFunction(() => window.__island.waves.point.finale?.state.relitAt != null, null, {timeout: 20000});
+    await page.waitForTimeout(700);
+    await shot(`19-pirate-point-lamps-${width}`);
+    const captions = await page.evaluate(() => [...document.querySelectorAll('.lamp-status,.pirate-point-prompt,.sound-caption,.u-toast')]
+      .filter(node => !node.hidden && node.getClientRects().length && node.textContent.trim()).map(node => node.textContent.trim()));
+    console.log('captions at the lamps moment:', JSON.stringify(captions));
+    await page.waitForFunction(() => window.__island.waves.point.controller.wave?.flagshipSunk === true || !window.__island.waves.point.controller.wave, null, {timeout: 30000});
+    await page.waitForTimeout(1200);
+    await shot(`20-pirate-point-flagship-${width}`);
   }
   assert.ok(!requests.some(path => path === '/api/islet'), 'no GET /api/islet with the islands on');
   // Headless Chrome on some Macs has no audio device; that error is printed, never hidden or counted as a pass.

@@ -245,6 +245,7 @@ bundled
 buoy
 bureau
 burn
+burning
 burns
 busy
 but
@@ -1907,6 +1908,7 @@ silver
 simulated
 simulation
 since
+sink
 sinks
 siren
 sit

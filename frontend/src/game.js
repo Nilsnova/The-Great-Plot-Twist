@@ -253,7 +253,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:panelLabel(zone),speed,blocked:!active||outsideBlocked() }); input.endFrame();
+    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:panelLabel(zone),speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);
