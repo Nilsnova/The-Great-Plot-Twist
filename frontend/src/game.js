@@ -98,7 +98,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
-  chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus(),{visible:id=>island?.chartVisible(id)??true,label:id=>island?.chartLabel(id)});
+  chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus(),{visible:id=>island?.chartVisible(id)??true,label:id=>island?.chartLabel(id)??(id==='lighthouse_isle'&&waves?.point?'Pirate Point':undefined)});
   function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
