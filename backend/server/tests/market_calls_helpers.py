@@ -9,7 +9,6 @@ FakeClock that only moves when the test says so. Nothing uses the network.
 
 import json
 from dataclasses import replace
-from datetime import timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -21,6 +20,7 @@ from server.auth import PlayerVerifier
 from server.demo.gate import DemoGate
 from server.flags import parse_flags
 from server.market.calendars import load_calendars
+from server.market.calls import HOLD
 from server.market.companies import load_companies
 from server.market.exchange import MarketService
 from server.market.feed import PriceFeed
@@ -103,7 +103,7 @@ class FakeCallsDatabase:
             "id": str(uuid4()), "player_id": player, "action_uid": body["p_action_uid"],
             "asset": body["p_asset"], "direction": body["p_direction"], "stake": body["p_stake"],
             "open_price": float(body["p_open_price"]), "opened_at": iso(now),
-            "settle_at": iso(now + timedelta(hours=1)), "settled_at": None,
+            "settle_at": iso(now + HOLD), "settled_at": None,
             "settle_price": None, "outcome": None, "payout": None,
         }  # fmt: skip
         self.rows.append(row)

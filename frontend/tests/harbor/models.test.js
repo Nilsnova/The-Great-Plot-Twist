@@ -54,7 +54,7 @@ describe('market stall', () => {
       'Recorded prices only, so no calls right now', 'This stall takes no new stakes.', 'Market closed for now']);
     expect(['weekend', 'quote_old', 'source_off', 'demo'].map(reasonText).join(' ')).not.toMatch(/_|leverage|fee|position/i);
   });
-  it('counts an open call down to its hour', () => {
+  it('counts an open call down to its five minutes', () => {
     expect(countdownText('2026-11-11T12:42:00Z', NOW)).toBe('Decided in 42 min');
     expect(countdownText('2026-11-11T12:41:30Z', NOW)).toBe('Decided in 42 min');
     expect(countdownText('2026-11-11T12:00:30Z', NOW)).toBe('Decided in under a minute');

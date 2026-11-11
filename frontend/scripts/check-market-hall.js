@@ -1,9 +1,9 @@
-// The Harbor market stall (lane H, "Up or down in 1 hour?") in the production build with recorded answers
+// The Harbor market stall (lane H, "Up or down in 5 minutes?") in the production build with recorded answers
 // of GET and POST /api/market/calls (online-market-fixture.js): Play, open Menu > Harbor > Open the market
 // stall (public controls only, no game hooks) as an anonymous player, then signed in through the bundled
 // PKCE fixture with the market flag off, then on. With the flag on: nothing preselected, a 🪙 10 call on Up
 // is POSTed once with a valid actionUid and exactly {asset, direction, stake, actionUid}, it shows as an open
-// call counting down to its hour, and the HUD's 🪙 counter follows the wallet (GET /api/me). The walk-up
+// call counting down to its five minutes, and the HUD's 🪙 counter follows the wallet (GET /api/me). The walk-up
 // hotspot and the keyboard are audited in dev by check-a11y.js (a11y-market.js).
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -90,7 +90,7 @@ for(const width of [1280,375]){
     check(JSON.stringify(await stall(page).locator('.harbor-asset h3').allTextContents())==='["Bitcoin","Ether","Gold","Apple","NVIDIA"]',
       'One item per asset, with the server names in the server order');
     check(await bitcoin.locator('.harbor-price').textContent()==='$100.00','The recorded price shows on Bitcoin');
-    check(await bitcoin.locator('.harbor-question').textContent()==='Up or down in 1 hour?','Bitcoin asks "Up or down in 1 hour?"');
+    check(await bitcoin.locator('.harbor-question').textContent()==='Up or down in 5 minutes?','Bitcoin asks "Up or down in 5 minutes?"');
     check(await stall(page).locator('.harbor-picker').count()===1,'Only the open asset takes a call; the closed ones do not');
     check(await item(page,'Apple').locator('.harbor-reason').textContent()==='Closed for the weekend'
       &&await item(page,'Ether').locator('.harbor-reason').textContent()==='Prices are catching up. Try again in a minute.'
@@ -109,8 +109,8 @@ for(const width of [1280,375]){
     const open=bitcoin.locator('.harbor-call[data-open="true"]');
     await open.waitFor();
     check(await open.locator('p').first().textContent()==='You said Up with 🪙 10.'
-      &&/^Decided in (60|59) min$/.test(await open.locator('.harbor-now').textContent()),
-      'The call shows as an open call counting down to its hour');
+      &&/^Decided in (5|4) min$/.test(await open.locator('.harbor-now').textContent()),
+      'The call shows as an open call counting down to its five minutes');
     await page.screenshot({path:`${folder}/called-${width}.png`});
     await page.waitForFunction(()=>document.querySelector('.hud-coins')?.textContent==='🪙 990',null,{timeout:15000});
     check(true,'The HUD follows the authoritative wallet after the call (🪙 990)');

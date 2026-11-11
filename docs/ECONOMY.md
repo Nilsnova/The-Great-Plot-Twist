@@ -16,7 +16,7 @@ puts every coin on one small scale. The numbers live in `backend/content/islands
 | Starting coins | 100 | `island_open()`: once, only to a wallet that never moved (`starting_coins`); guests: the guest kit pays 100; existing players: `scripts/admin/fresh_start.sql` (`fresh_start`) |
 | Wall / cannon / watchtower / house | 10 / 30 / 40 / 50 | `islet_build()` with the price from `islands.json`, coins only (`building_purchase`) |
 | Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house on that island; Pirate Point 20 + 5 × *n* | `wave_finish()`: computed in the database for each participant, once per player and wave; a lost or late finish pays 0 (`pirate_loot`) |
-| Market stall call (up or down in 1 hour) | stake 5, 10 or 25; right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); no fee, so a fair call has an expected value of about 0 |
+| Market stall call (up or down in 5 minutes) | stake 5, 10 or 25; right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); no fee, so a fair call has an expected value of about 0 |
 | Other Harbor stakes, duel stake | 5, 10 or 25; 0 or 10 | lane H |
 
 ### Tower defense v2 (11 Nov 2026, D036)

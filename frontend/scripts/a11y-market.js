@@ -1,4 +1,4 @@
-// Audit the Harbor market stall (lane H, "Up or down in 1 hour?") that the market hall hotspot opens, with
+// Audit the Harbor market stall (lane H, "Up or down in 5 minutes?") that the market hall hotspot opens, with
 // public native controls. The hotspot opens the card in the local game (?market=local: the in-memory
 // calls fake, with prices and calls); the same card is then audited with the made-up calls fixture of the
 // Harbor card tests: up or down, a 5 / 10 / 25 stake, the confirm button and the placed call with its
@@ -86,7 +86,7 @@ export async function auditMarketPanel(page,{url,audit,capture}){
     };
     checks.hotspotPrices=await panel.locator('.harbor-asset').count()===5
       &&/^\$[\d,.]+$/.test(await panel.locator('.harbor-asset .harbor-price').first().textContent())
-      &&await panel.locator('.harbor-question').first().textContent()==='Up or down in 1 hour?';
+      &&await panel.locator('.harbor-question').first().textContent()==='Up or down in 5 minutes?';
     await auditState('market-hotspot');
     const hotspot=await closesToGame(page);
     checks.hotspotEscapeClosed=hotspot.escapeClosed;checks.hotspotNoPause=hotspot.noPause;checks.hotspotCanvasFocus=hotspot.canvasFocus;
@@ -105,7 +105,7 @@ export async function auditMarketPanel(page,{url,audit,capture}){
     // Keyboard only: the confirm button takes Enter.
     await confirm.focus();await page.keyboard.press('Enter');
     await asset.locator('.harbor-notice').filter({hasText:'Your 🪙 10 is on Up.'}).waitFor();
-    checks.placedCountdown=await asset.locator('.harbor-call[data-open="true"] .harbor-now').textContent()==='Decided in 60 min';
+    checks.placedCountdown=await asset.locator('.harbor-call[data-open="true"] .harbor-now').textContent()==='Decided in 5 min';
     await auditState('market-placed');
     Object.assign(checks,await shortPanel(page,capture));
     await page.setViewportSize({width:1280,height:900});

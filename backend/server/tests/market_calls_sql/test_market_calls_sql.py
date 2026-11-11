@@ -1,4 +1,4 @@
-"""Real SQL checks for 20261111010000_market_calls.sql: up-or-down market calls.
+"""Real SQL checks for the market calls migrations (20261111010000, 20261112010000): up or down.
 
 Opt-in, on a disposable local PostgreSQL that the case_sql fixture builds (all migrations, applied
 twice). Run from backend/:
@@ -94,7 +94,7 @@ def ledger(database, reason):
     ).fetchall()
 
 
-def test_a_call_takes_the_stake_and_is_decided_an_hour_later(database):
+def test_a_call_takes_the_stake_and_is_decided_five_minutes_later(database):
     player_with(database, PLAYER, 100)
 
     opened = open_call(database)
@@ -110,7 +110,7 @@ def test_a_call_takes_the_stake_and_is_decided_an_hour_later(database):
     hold = call(
         database, "select settle_at - opened_at from public.market_calls where id = %s", made["id"]
     )
-    assert hold.total_seconds() == 3600
+    assert hold.total_seconds() == 300
     assert ledger(database, "market_call_stake") == [(-10,)]
 
 

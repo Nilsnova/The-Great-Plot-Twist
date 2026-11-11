@@ -643,9 +643,9 @@ The checks of a build come in a fixed order, and the first one that fails is the
 
 The routes need the home islet migration (`20261106070000_home_islet.sql`). Until it is applied, `GET /api/islet` answers `502 database_error`, so do not pass the live transport (`transport: api` in `frontend/src/game.js`) before the migration is applied. Until then the panel runs in unavailable mode and sends no request.
 
-### The market stall: up or down in 1 hour (lane 0, D034)
+### The market stall: up or down in 5 minutes (lane 0, D034)
 
-The simple Harbor market of [PITCH.md](PITCH.md): "Will Bitcoin be higher in an hour? Put 10 coins on up or down." It replaces the leverage positions in the player-facing game (the Exchange routes above stay for now). The home of each route is the comment at the top of `backend/server/routes/market_calls.py`; the rules are in `backend/server/market/calls.py`; the database part in `supabase/migrations/20261111010000_market_calls.sql`. Both routes need a signed-in player (guests admitted with the class code too) and the flag `market` (`404 feature_off`). Answers carry `Cache-Control: private, no-store`. Budgets: POST 20, GET 60 requests a minute per player and server instance (`429 too_many_requests`).
+The simple Harbor market of [PITCH.md](PITCH.md): "Will Bitcoin be higher in 5 minutes? Put 10 coins on up or down." It replaces the leverage positions in the player-facing game (the Exchange routes above stay for now). The home of each route is the comment at the top of `backend/server/routes/market_calls.py`; the rules are in `backend/server/market/calls.py`; the database part in `supabase/migrations/20261111010000_market_calls.sql`. Both routes need a signed-in player (guests admitted with the class code too) and the flag `market` (`404 feature_off`). Answers carry `Cache-Control: private, no-store`. Budgets: POST 20, GET 60 requests a minute per player and server instance (`429 too_many_requests`).
 
 | Route | Answer |
 |---|---|

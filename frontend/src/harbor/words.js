@@ -25,15 +25,15 @@ export const EXPLAIN = {
 };
 export const OPEN_STALL = name => `Open the ${name.toLowerCase()}`;
 
-// The market stall: "Up or down in 1 hour?" (INTERFACES.md, the market stall, D034). A won call shows
+// The market stall: "Up or down in 5 minutes?" (INTERFACES.md, the market stall, D034). A won call shows
 // the server's payout (2 x stake: a 🪙 10 call on the right side shows "You won 🪙 +20"), a refunded
 // call the coins that came back, a lost call just "Lost".
 export const MARKET = {
-  question: 'Up or down in 1 hour?',
+  question: 'Up or down in 5 minutes?',
   up: 'Up', down: 'Down',
   stakeGroup: 'Your stake',
   sideGroup: name => `Up or down for ${name}`,
-  promise: stake => `Right in 1 hour: you get ${formatCoins(stake * 2)}. Wrong: the ${formatCoins(stake)} is gone.`,
+  promise: stake => `Right in 5 minutes: you get ${formatCoins(stake * 2)}. Wrong: the ${formatCoins(stake)} is gone.`,
   choose: 'Pick up or down, then a stake.',
   confirm: (stake, side) => `Place ${formatCoins(stake)} on ${side}`,
   placed: (stake, side) => `Your ${formatCoins(stake)} is on ${side}.`,

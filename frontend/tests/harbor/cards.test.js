@@ -1,6 +1,6 @@
 // The Harbor cards on a real DOM (headless Chrome): stake buttons send exactly 5, 10 or 25, the server's
 // accepted stake raises harbor_stake_placed, and the open, closed, unavailable, signed-out, refused and
-// empty states show plain words. The market stall follows the calls routes ("Up or down in 1 hour?"). Fakes from fixtures.js stand in for the server.
+// empty states show plain words. The market stall follows the calls routes ("Up or down in 5 minutes?"). Fakes from fixtures.js stand in for the server.
 import {describe, expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 
@@ -49,7 +49,7 @@ describe('market stall card', () => {
     expect(result.sent).toEqual([[{asset: 'harbor-trust', direction: 'up', stake: 5}, 'uid-1-abcdefgh'],
       [{asset: 'harbor-trust', direction: 'down', stake: 10}, 'uid-2-abcdefgh'], [{asset: 'harbor-trust', direction: 'up', stake: 25}, 'uid-3-abcdefgh']]);
     expect(result.labels).toEqual(['Place 🪙 5 on Up, Bitcoin', 'Place 🪙 10 on Down, Bitcoin', 'Place 🪙 25 on Up, Bitcoin']);
-    expect(result.names.slice(0, 3)).toEqual(['Up or down in 1 hour?', 'Up, Bitcoin', 'You said Up with 🪙 5.Decided in 60 min']);
+    expect(result.names.slice(0, 3)).toEqual(['Up or down in 5 minutes?', 'Up, Bitcoin', 'You said Up with 🪙 5.Decided in 5 min']);
     expect(result.events).toEqual([{kind: 'market', stake: 5}, {kind: 'market', stake: 10}, {kind: 'market', stake: 25}]);
   });
 
@@ -94,7 +94,7 @@ describe('market stall card', () => {
     expect(result.nvidia).toContain('Prices unavailable right now');
     expect(result.closedPickers).toBe(0);
     expect(result.text).not.toMatch(/leverage|USDT|zero point|fee|position|outside_hours|source_off/i);
-    expect(result.closeButtons).toBe(0); // a call is never closed early: it is decided after its hour
+    expect(result.closeButtons).toBe(0); // a call is never closed early: it is decided after its five minutes
     expect(result.dialog).toBe(true);
     expect(result.broken).toContain('Prices unavailable right now');
     expect(result.broken).toContain('Try again');
@@ -175,7 +175,7 @@ describe('market stall card', () => {
     expect(result.places[1]).toEqual(result.places[0]);
     expect(result.places[0]).toEqual([{asset: 'tidewright-works', direction: 'down', stake: 10}, 'uid-1-abcdefgh']);
     expect(result.after).toContain('Your 🪙 10 is on Down.');
-    expect(result.after).toContain('You said Down with 🪙 10.Decided in 60 min');
+    expect(result.after).toContain('You said Down with 🪙 10.Decided in 5 min');
     expect(result.events).toEqual([{kind: 'market', stake: 10}]);
   });
 });

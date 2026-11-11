@@ -12,13 +12,25 @@ from dataclasses import replace
 import pytest
 
 from server.flags import parse_flags
-from server.market.calls import CALL_ASSETS, MAX_OPEN_CALLS, STAKES
+from server.market.calls import CALL_ASSETS, HOLD, MAX_OPEN_CALLS, PRICE_WAIT, STAKES
 from server.tests.helpers import REPO_ROOT, assert_error
 from server.tests.market_calls_helpers import GUEST, GUEST_ID, MARKET_ON, PLAYER_ID, CallsWorld
 from server.wallet import find_direction
 
-HOUR = 3600
-MIGRATION = REPO_ROOT / "supabase" / "migrations" / "20261111010000_market_calls.sql"
+HOLD_SECONDS = int(HOLD.total_seconds())
+DAY = 24 * 3600
+MIGRATIONS = REPO_ROOT / "supabase" / "migrations"
+MIGRATION = MIGRATIONS / "20261111010000_market_calls.sql"
+
+
+def newest_open_function():
+    """The text of the newest migration that defines market_call_open() (later ones win)."""
+    files = sorted(
+        path
+        for path in MIGRATIONS.glob("*.sql")
+        if "create or replace function public.market_call_open(" in path.read_text()
+    )
+    return files[-1].read_text()
 
 
 # --- GET /api/market/calls ---
@@ -86,7 +98,7 @@ def test_a_call_is_opened_at_the_live_price_and_takes_the_stake():
         "harbor-trust", "up", 10, 76159.21)  # fmt: skip
     assert (body["status"], body["settlePrice"], body["payout"], body["balance"]) == (
         "open", None, None, 90)  # fmt: skip
-    assert (body["openedAt"], body["settleAt"]) == ("2026-11-09T16:00:00Z", "2026-11-09T17:00:00Z")
+    assert (body["openedAt"], body["settleAt"]) == ("2026-11-09T16:00:00Z", "2026-11-09T16:05:00Z")
     (sent,) = world.database.calls("market_call_open")
     assert sent == {"p_player_id": PLAYER_ID, "p_action_uid": "click-0001", "p_asset":
                     "harbor-trust", "p_direction": "up", "p_stake": 10,
@@ -194,7 +206,7 @@ def test_a_due_call_is_decided_with_the_price_read_at_the_next_look(
 ):
     world = CallsWorld()
     world.call(direction=direction)
-    world.advance(HOUR + 5)
+    world.advance(HOLD_SECONDS + 5)
     world.set_price(BTCUSDT=price)
 
     body = world.look().json()
@@ -204,10 +216,10 @@ def test_a_due_call_is_decided_with_the_price_read_at_the_next_look(
     assert decided["settlePrice"] == float(price)
 
 
-def test_a_call_is_not_decided_before_its_hour():
+def test_a_call_is_not_decided_before_its_five_minutes():
     world = CallsWorld()
     world.call()
-    world.advance(HOUR - 60)
+    world.advance(HOLD_SECONDS - 60)
     world.set_price(BTCUSDT="90000.00")
 
     (still,) = world.look().json()["calls"]
@@ -219,11 +231,11 @@ def test_a_call_is_not_decided_before_its_hour():
 def test_a_stock_call_waits_for_a_price_and_is_refunded_after_a_day():
     world = CallsWorld(stocks=True)
     world.call(asset="apple")
-    world.advance(HOUR + 5)
+    world.advance(HOLD_SECONDS + 5)
     world.client.app.state.market.feed.stocks = None  # the stock source goes away
 
     waiting = world.look().json()["calls"][0]
-    world.advance(24 * HOUR)
+    world.advance(DAY)
     refunded = world.look().json()
 
     assert waiting["status"] == "open"
@@ -233,7 +245,7 @@ def test_a_stock_call_waits_for_a_price_and_is_refunded_after_a_day():
 def test_a_decided_call_stays_decided_and_pays_once():
     world = CallsWorld()
     world.call()
-    world.advance(HOUR + 5)
+    world.advance(HOLD_SECONDS + 5)
     world.set_price(BTCUSDT="80000.00")
     world.look()
 
@@ -249,12 +261,15 @@ def test_a_decided_call_stays_decided_and_pays_once():
 
 def test_the_assets_stakes_and_reasons_are_the_ones_of_the_migration():
     text = MIGRATION.read_text()
+    newest = newest_open_function()
 
     ids = ", ".join(f"'{asset_id}'" for asset_id, _name in CALL_ASSETS)
     assert f"check (asset in ({ids}))" in text
     assert f"check (stake in ({', '.join(str(stake) for stake in STAKES)}))" in text
-    assert f"c_max_open constant integer  := {MAX_OPEN_CALLS};" in text
-    assert "c_hold     constant interval := interval '1 hour';" in text
+    assert f"c_max_open constant integer  := {MAX_OPEN_CALLS};" in newest
+    minutes = HOLD_SECONDS // 60
+    assert f"c_hold     constant interval := interval '{minutes} minutes';" in newest
     assert "c_price_wait constant interval := interval '24 hours';" in text
+    assert PRICE_WAIT.total_seconds() == DAY
     assert find_direction("market_call_stake") == "spend"
     assert find_direction("market_call_payout") == "earn"

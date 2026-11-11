@@ -22,7 +22,7 @@
 
 - The meeting place, where you see everyone online.
 - All the real-world features live here, each explained in one sentence:
-  - 📈 **Market stall:** "Will Bitcoin be higher in an hour? Put 10 🪙 on up or down." Real prices, no leverage jargon.
+  - 📈 **Market stall:** "Will Bitcoin be higher in 5 minutes? Put 10 🪙 on up or down." Real prices, no leverage jargon.
   - ⚽ **Match board:** "Who wins tonight? Pick a team." Real football results pay out.
   - 🌦️ **Weather board:** the real weather at your location, and what it does to the sea (storm: more pirate ships; fog: they appear later).
   - ⚔️ **Duel ring:** challenge any captain to a quick 3-round duel in two taps.

@@ -38,21 +38,21 @@ describe('calls http adapter', () => {
 });
 
 describe('local calls fake (?market=local)', () => {
-  it('shows prices, takes calls, refuses like the server and decides after the hour', async () => {
+  it('shows prices, takes calls, refuses like the server and decides after the five minutes', async () => {
     let clock = Date.parse('2026-11-11T12:00:00Z');
     const fake = createFakeCallsAdapter({now: () => clock});
     const first = await fake.read();
     expect(first.data.assets.map(asset => asset.name)).toEqual(['Bitcoin', 'Ether', 'Gold', 'Apple', 'NVIDIA']);
     expect(first.data.assets.filter(asset => asset.open).length).toBe(4);
     const placed = await fake.place({asset: 'harbor-trust', direction: 'up', stake: 10}, {uid: 'uid-a-12345'});
-    expect(placed.data).toMatchObject({status: 'open', stake: 10, balance: 90, settleAt: '2026-11-11T13:00:00Z'});
+    expect(placed.data).toMatchObject({status: 'open', stake: 10, balance: 90, settleAt: '2026-11-11T12:05:00Z'});
     expect((await fake.place({asset: 'harbor-trust', direction: 'up', stake: 10}, {uid: 'uid-a-12345'})).data).toMatchObject({id: placed.data.id, balance: 90});
     expect((await fake.place({asset: 'nvidia', direction: 'up', stake: 5}, {uid: 'uid-b-12345'})).code).toBe('market_closed');
     expect((await fake.place({asset: 'apple', direction: 'up', stake: 7}, {uid: 'uid-c-12345'})).code).toBe('bad_stake');
     await fake.place({asset: 'apple', direction: 'up', stake: 5}, {uid: 'uid-d-12345'});
     await fake.place({asset: 'apple', direction: 'down', stake: 5}, {uid: 'uid-e-12345'});
     expect((await fake.place({asset: 'apple', direction: 'up', stake: 5}, {uid: 'uid-f-12345'})).code).toBe('too_many_calls');
-    clock += 3600000;
+    clock += 300000;
     const later = await fake.read();
     expect(later.data.calls.every(call => ['won', 'lost', 'refunded'].includes(call.status))).toBe(true);
     const back = later.data.calls.reduce((sum, call) => sum + call.payout, 0);

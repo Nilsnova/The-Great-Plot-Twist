@@ -1,8 +1,8 @@
 """Up-or-down market calls: the simple Harbor market stall (decision D034).
 
-"Will Bitcoin be higher in an hour?" A player picks an asset, up or down, and a stake of 5, 10 or
-25 coins. One hour later the call is decided: right pays twice the stake, wrong pays nothing, the
-same price pays the stake back. It replaces the leverage positions in the game.
+"Will Bitcoin be higher in 5 minutes?" A player picks an asset, up or down, and a stake of 5, 10
+or 25 coins. Five minutes later the call is decided: right pays twice the stake, wrong pays
+nothing, the same price pays the stake back. It replaces the leverage positions in the game.
 
     look()       the five assets with their price now, the player's calls and coins. Every open
                  call past its settle time is decided first (lazy settlement, see below).
@@ -11,6 +11,8 @@ same price pays the stake back. It replaces the leverage positions in the game.
 The prices come from the Island Exchange feed (MarketService): Binance for Bitcoin, Ether and Gold
 (PAXG), the stock source for Apple and NVIDIA. An asset is open for new calls only while the feed
 holds a live price for it (the market is open, the price is fresh, not the demo recording).
+That matters most for the stocks: outside New York hours the price would not move, so a
+5-minute call on it would only return the stake. The stall does not offer them then.
 
 Lazy settlement, and its limit. Nothing runs in the background: a call is decided when its player
 next reads GET /api/market/calls at or after the settle time. The settle price is the first price
@@ -18,8 +20,10 @@ the server reads at or after settle_at (fetched at or after it, quoted after the
 exact price at that second. For a stock outside New York hours it is the last close. If no such
 price comes within 24 hours after settle_at, the stake goes back.
 
-The database part is supabase/migrations/20261111010000_market_calls.sql: it keeps the same rules
-(the five assets, the stakes, at most 3 open calls, 1 hour, the outcomes) and moves the coins.
+The database part is supabase/migrations/20261111010000_market_calls.sql, with the hold changed
+from 1 hour to 5 minutes by 20261112010000_market_calls_5_minutes.sql (owner request, 11 Nov;
+calls opened before it keep their stored settle_at): it keeps the same rules
+(the five assets, the stakes, at most 3 open calls, 5 minutes, the outcomes) and moves the coins.
 
 Used by: routes/market_calls.py and the tests.
 """
@@ -54,7 +58,7 @@ STAKES = (5, 10, 25)
 DIRECTIONS = ("up", "down")
 # The same numbers as the constants in market_call_open() and market_call_settle().
 MAX_OPEN_CALLS = 3
-HOLD = timedelta(hours=1)
+HOLD = timedelta(minutes=5)
 PRICE_WAIT = timedelta(hours=24)
 
 
