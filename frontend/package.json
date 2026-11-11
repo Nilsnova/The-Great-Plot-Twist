@@ -40,8 +40,6 @@
     "test:online:islet": "npm run build && node scripts/check-online-islet.js",
     "test:online:islet:chaos": "npm run build && node scripts/check-online-islet.js --chaos",
     "test:market": "npm run build && node scripts/check-market-hall.js",
-    "test:online:market:chaos": "npm run build && node scripts/check-online-market.js --chaos",
-    "test:online:predictions": "npm run build && node scripts/check-online-predictions.js",
     "test:input": "vitest run --maxWorkers=1 tests/g20-input.test.js tests/map-touch.test.js tests/tap-path.test.js",
     "test:mobile": "node scripts/check-mobile-walking.js",
     "test:panels": "node scripts/check-open-panels.js",

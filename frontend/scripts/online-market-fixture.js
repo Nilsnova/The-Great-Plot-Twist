@@ -29,7 +29,8 @@ export async function openMarketFixture(){
  let allBodiesExpected=true,allPublicAnonymous=true,allPrivateAuthorized=true;
  const observe=request=>{if(assets.has(new URL(request.url()).pathname))chunks++;};
  page.on('request',observe);
- const company=()=>({id:companyId,name:'Recorded Company',ticker:'REC',kind:'island',follows:'Recorded reference',
+ // It follows Bitcoin so the Harbor market stall (which keeps Bitcoin, Ether, gold and two stocks) shows it.
+ const company=()=>({id:companyId,name:'Recorded Company',ticker:'REC',kind:'island',follows:'Bitcoin (recorded reference)',
   tagline:'Recorded company information.',market:'always',marketName:'Recorded market',currency:'USDT',priceDecimals:2,
   source:'cache',status:'open',reason:null,holiday:null,opensAt:null,closesAt:null,delisted:false,
   canOpen:tradingEnabled,canClose:tradingEnabled,price:100,priceAt:stamp,zeroPrices:{rising:90,falling:110}});

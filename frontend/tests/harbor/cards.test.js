@@ -121,6 +121,35 @@ describe('market stall card', () => {
     expect(result.label).toBe('Close your Up stake on Bitcoin');
     expect(result.after).toContain('You won 🪙 +10');
   });
+
+  // Replaces the browser chaos journey of the old Exchange panel (check-online-market.js --chaos).
+  it('says it did not hear back and sends the very same stake again, with the same actionUid', async () => {
+    const result = await run(async () => {
+      const {fx, events, tick, text, press} = await window.harborKit();
+      const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
+      const adapter = fx.fakeMarket();
+      const open = adapter.open.bind(adapter);
+      let first = true;
+      adapter.open = async (body, options) => { if (first) { first = false; adapter.calls.push(['open', body, options.uid]); return {ok: false, status: 0, code: 'outcome_unknown', message: ''}; } return open(body, options); };
+      const market = createMarketEntry({adapter, now: () => fx.NOW, makeUid: (() => { let n = 0; return () => `uid-${++n}-abcdefgh`; })()});
+      await market.open(); await tick();
+      const ether = document.querySelector('[data-asset="tidewright-works"]');
+      await press(ether, '[data-side="falling"]'); await press(ether, '[data-stake="10"]'); await press(ether, '.harbor-confirm'); await tick();
+      const unknown = text(), again = [...document.querySelectorAll('dialog[open] .harbor-status button')].map(button => button.textContent);
+      document.querySelector('dialog[open] .harbor-status button').click(); await tick(60);
+      const opens = adapter.calls.filter(call => call[0] === 'open').map(call => [call[1], call[2]]);
+      const after = document.querySelector('[data-asset="tidewright-works"]').textContent;
+      market.dispose();
+      return {unknown, again, opens, after, events};
+    });
+    expect(result.unknown).toContain('We did not hear back.');
+    expect(result.again).toEqual(['Send again']);
+    expect(result.opens).toHaveLength(2);
+    expect(result.opens[1]).toEqual(result.opens[0]);
+    expect(result.opens[0][1]).toBe('uid-1-abcdefgh');
+    expect(result.after).toContain('Your 🪙 10 is on Down.');
+    expect(result.events).toEqual([{kind: 'market', stake: 10}]);
+  });
 });
 
 describe('match board card', () => {

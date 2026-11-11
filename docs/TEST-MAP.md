@@ -88,14 +88,13 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 | `test:production` | `check-production.js` | The production build end to end with an offline API stub |
 | `test:demo` | `check-demo-journey.js` | The class-demo journey with recorded API answers |
 | `test:browser`, `test:world`, `test:readability` | `check-browser.js`, `check-world.js`, `check-readability.js` | The world loads, places, text contrast |
-| `test:mobile`, `test:panels` | `check-mobile-walking.js`, `check-open-panels.js` | Touch walking at phone size; every kept panel opens |
-| `test:market`, `test:online:market:chaos` | `check-market-hall.js`, `check-online-market.js` | Market with recorded answers; failing answers ("chaos") |
+| `test:mobile`, `test:panels` | `check-mobile-walking.js`, `check-open-panels.js` | Touch walking at phone size; every panel a player can open (account, settings, the Harbor cards, the old islet panel, the island cards) fits at four sizes |
+| `test:market` | `check-market-hall.js` | The Harbor market stall in the production build with recorded answers: trading off, a 🪙 10 stake, closing it, the HUD wallet |
 | `test:online:islet`, `test:online:islet:chaos` | `check-online-islet.js` | Islet build with intercepted accounts; failures |
-| `test:online:predictions` | `check-online-predictions.js` | Prediction journeys with recorded answers |
-| `test:a11y`, `test:ui`, `test:help`, `test:credits` | `check-a11y.js`, `check-ui-kit.js`, `check-help.js`, `check-credits.js` | Keyboard, focus, reduced motion, hostile text, help and credits pages |
+| `test:a11y`, `test:ui`, `test:help`, `test:credits` | `check-a11y.js`, `check-ui-kit.js`, `check-help.js`, `check-credits.js` | Keyboard, focus, reduced motion, hostile text (the Harbor market stall and fortune teller included), help and credits pages |
 | `test:host` | `check-host-console.js` | Host console against fake responses |
 | others | `test:art` (`check-pixel.js`), `test:weather:wiring`, `test:harbor:life`, `test:lifecycle`, `test:living`, `test:title-start`, `test:settings:visuals`, `test:build-stamp`, `test:problem-report`, `test:islet:world`, `test:festival` | See the first line of each script |
-| no npm script | `check-islet.js`, `check-local-dev.js`, `check-online-auth.js`, `check-online-signin-gate.js`, `check-redesign-hud.js`, `check-redesign-movement.js`, `check-sports.js`, `check-sports-hotspot.js` | Run with `node scripts/<name>` |
+| no npm script | `check-islet.js`, `check-local-dev.js`, `check-online-auth.js`, `check-online-signin-gate.js`, `check-redesign-hud.js`, `check-redesign-movement.js`, `check-sports.js`, `check-sports-hotspot.js`, `capture-integrated.js` (the first 3 minutes with `?islands=fake`, screenshots) | Run with `node scripts/<name>` |
 
 **Do not cover:** physical phones and their browsers, real audio output (headless Chrome has no real audio device), real sign-in, the live API and Realtime, and slow class Wi-Fi.
 
