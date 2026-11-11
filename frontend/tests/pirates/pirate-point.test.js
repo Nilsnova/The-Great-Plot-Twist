@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createFakeIslandApi, createFakeWorld } from '../../src/pirates/fake-api.js';
 import { BELL_SPOT, COAST, DEFENSES, LAMP_SPOTS, LANES, PLACE, ROOM_TOPIC, createPiratePoint, lampHint, LAMP_HINT_SECONDS } from '../../src/pirates/pirate-point.js';
 import { createWave } from '../../src/pirates/sim.js';
+import { encodeLamps, lightLamp, mergeLamps, createLamps } from '../../src/class-demo/lamp-sync.js';
 
 function createBus() {
   const listeners = new Map(), log = [];
@@ -84,6 +85,74 @@ describe('Pirate Point', () => {
     expect(h.room.sent.filter(item => item.type === 'lamps_lit')).toHaveLength(0);
     expect(h.point.controller.state.lampsLit).toBe(true);
     h.point.dispose();
+  });
+});
+
+// Three captains on three pages at Pirate Point: one room each, joined by a hub that hands every message
+// to the other pages (as live:place:pirate_point:1 does). The finale is the class demo's real lamp sync.
+describe('Pirate Point with three captains', () => {
+  it('one rings, all join, three different captains light the three lamps, one lamps_lit, the flagship sinks, all get loot', async () => {
+    const shared = createFakeWorld(), clock = { now: Date.UTC(2026, 10, 11, 12) };
+    const rooms = [];
+    const hubRoom = () => {
+      const handlers = new Map(), sent = [];
+      const room = { sent, handlers, send(type, payload) { sent.push({ type, payload });
+        for (const other of rooms) if (other !== room) for (const fn of [...(other.handlers.get(type) ?? [])]) fn(payload);
+        return true; },
+      on(type, fn) { if (!handlers.has(type)) handlers.set(type, new Set()); handlers.get(type).add(fn); return () => handlers.get(type)?.delete(fn); },
+      close() { handlers.clear(); } };
+      rooms.push(room); return room;
+    };
+    const captains = ['ana', 'ben', 'max'].map(playerId => {
+      const room = hubRoom(), finales = [], bus = createBus();
+      const api = createFakeIslandApi({ world: shared, playerId, now: () => clock.now });
+      const point = createPiratePoint({ bus, api, world: { place: () => PLACE, player: { position: { x: 30, z: 30 } } }, playerId,
+        openRoom: () => room, playCutscene: async () => {},
+        // The real lamp sync (lamp-sync.js) behind the finale: light(index) is this captain holding E at a lamp.
+        createFinale: options => {
+          let state = createLamps();
+          const apply = result => { if (!result.changed) return; state = result.state; if (result.relitNow) options.onRelit({ celebrate: true }); };
+          const finale = { options, get state() { return state; }, update: () => ({ progress: 0 }), lit: () => false, dispose() {},
+            light(index) { apply(lightLamp(state, index, playerId, clock.now)); options.send('lamp', encodeLamps(state, clock.now)); },
+            receive(data) { apply(mergeLamps(state, data, clock.now)); } };
+          finales.push(finale); return finale;
+        },
+        controllerOptions: { now: () => clock.now, createRenderer: () => null, createHud: () => null, setTimer: () => 0, clearTimer() {} } });
+      return { playerId, room, finales, bus, point };
+    });
+    const [ana, ben, max] = captains;
+    await flush();
+    expect(await ana.point.ringBell()).toBe(true);
+    for (let i = 0; i < 4; i++) await flush(); // ben and max hear wave_start and join
+    const waveId = ana.point.controller.wave.info.waveId;
+    expect(captains.map(c => c.point.controller.wave?.info.waveId)).toEqual([waveId, waveId, waveId]);
+    expect(captains.every(c => c.point.controller.wave.info.flagship)).toBe(true);
+
+    // Into the wave: each captain lights a different lamp, a second apart.
+    const start = ana.room.sent.find(item => item.type === 'wave_start').payload;
+    clock.now = Date.parse(start.startsAt) + 3000;
+    for (const c of captains) c.point.update(.1);
+    for (const c of captains) expect(c.finales).toHaveLength(1);
+    captains.forEach((c, index) => { clock.now += 1000; c.finales[0].light(index); for (const d of captains) d.point.update(.1); });
+    for (let i = 0; i < 5; i++) { clock.now += 100; for (const c of captains) c.point.update(.1); }
+    const sentLit = captains.flatMap(c => c.room.sent.filter(item => item.type === 'lamps_lit').map(item => item.payload.by));
+    expect(sentLit).toHaveLength(1); // the lamps burn together: one lamps_lit for everybody
+    // Each captain told the room about his own lamp, tagged with the wave (three different senders).
+    expect(captains.map(c => c.room.sent.filter(item => item.type === 'lamp' && item.payload.waveId === waveId).length > 0)).toEqual([true, true, true]);
+    expect(captains.map(c => c.finales[0].state.relitAt)).toEqual(captains.map(() => expect.any(Number))); // every page saw all three burn
+    expect(captains.every(c => c.point.controller.state.lampsLit)).toBe(true);
+
+    // The beam burns the flagship; the wave ends on every page and each captain gets loot.
+    for (let i = 0; i < 6000 && !captains.every(c => c.bus.log.some(e => e.type === 'wave_finish_answered')); i++) {
+      clock.now += 100; for (const c of captains) c.point.update(.1);
+      if (i % 20 === 0) await flush();
+    }
+    for (const c of captains) {
+      const finished = c.bus.log.find(e => e.type === 'wave_finished' && e.waveId === waveId);
+      expect(finished, c.playerId).toMatchObject({ survived: true });
+      expect(c.bus.log.find(e => e.type === 'wave_finish_answered').loot, c.playerId).toBeGreaterThan(0);
+    }
+    for (const c of captains) c.point.dispose();
   });
 });
 
