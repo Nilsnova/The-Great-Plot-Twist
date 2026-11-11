@@ -34,7 +34,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click) | `backend/server/tests/` | S |
 | T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
 
-Being built right now by the project owner with Claude (do not pick): tower upgrades and the mortar, crew (gunner, carpenter, lookout), the fighting captain, unlocks by wave, boss waves up to 100, building on Pirate Point, play-with-a-friend for up to 4 players, more detailed art, more football leagues. Merge `main` again after it lands (expected tonight).
+**Live since Wed 11 Nov, ~19:50:** tower defense v2 (upgrades to level 3, the mortar, crew, the fighting captain, unlocks by wave, boss warships, waves up to 100, building together on a friend's island and on Pirate Point, play-with-a-friend links for up to 4 players), clean detailed art, more football leagues. Merge `main` before you start; build on [TOWER-DEFENSE.md](TOWER-DEFENSE.md).
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
@@ -90,16 +90,13 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 - [ ] README complete by Fri 20 Nov: deployed URL, every member's name and student number, the install / run / test commands on the first screen.
 - [ ] One member submits the repository link on Moodle by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59; later commits do not count); a named backup can submit if needed. Keep a screenshot of the confirmation.
 
-## 7. Status on Wed 11 Nov, evening: the pirate game is live
+## 7. Status on Wed 11 Nov, ~19:50: tower defense v2 is live
 
-**Merge `main` into your branch before you start:** the whole game changed today.
-
-- **Live on https://the-great-plot-twist.vercel.app (main `48f027b`):** your own island with 11 build spots (walls, cannons, watchtower, houses), the harbor bell and pirate waves (real weather changes them), manning cannons and repairing walls, friends visiting by island code or QR and defending together, the Harbor (market stall "up or down in 1 hour?" on Bitcoin, Ether, gold and stocks with 5/10/25 🪙; football match board; weather board; duel ring), Pirate Point battles with the flagship and the three lamps, the class code that drops the class at Pirate Point, a new look (HUD with 🪙, goals and Menu), voiced pirate cutscenes.
-- **Removed:** the mystery (D031) and the prediction market (D035).
-- **Fresh start done:** every wallet is at 🪙 100; no islands or waves existed yet.
-- **Checks before release:** backend 15,827 tests, frontend 2,497 tests, build, budgets, text lint, CSP, accessibility, panels and market browser checks all passed; the class-demo browser check passed all 32 checks and fails only on a known headless-Chrome audio-device error; live smoke 0 failures.
-- **Not tested yet: two real people in one wave on live Realtime.** Do the two-phone test in section 5 now; report anything odd as an issue.
-- **Your lanes now:** extend and polish (new buildings, art, sounds, balance, more Harbor ideas), plus the walkthrough pages and tests in section 3. Small pull requests from your own account.
+- **Live (main `395b309`):** your island with 16 build spots; walls, cannons and mortars up to level 3, watchtower and houses; crew (gunner, carpenter, lookout); your captain's musket (5 levels); unlocks after waves 1, 2, 3, 5 and 8; boss warships every 5th wave; waves up to 100 with a 15-second break and "Next wave"; friends join with one link (`?visit=ISLE-…`, "Join as guest", no account) and build with their own coins on your island; Pirate Point battles with shared buildings; Harbor market calls and football (Premier League, Primeira Liga, Champions League, Brazil, Spain, Italy, Germany, France, Championship, Netherlands); weather changes the waves.
+- **Database:** 24 migrations, the last `20261111030000_tower_defense` (applied and verified).
+- **Checks before release:** backend 15,876 tests, frontend 2,540, build, budgets, text lint, CSP, accessibility, panels, market and class-demo browser checks all green; live smoke 0 failures; every API answered live (weather, Binance, Finnhub, football-data).
+- **Not tested yet:** four real players on live Realtime at once. Report anything odd as a GitHub issue with steps.
+- **Known small issues (good first tasks):** outside a wave your island's buildings always look level 1 (levels show in the card and in battle); the musket pose is very short; at Pirate Point the lamp hint covers part of the island on phones.
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
