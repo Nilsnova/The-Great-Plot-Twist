@@ -11,7 +11,10 @@ export const VISIBLE_GOALS = 3;
 export const IDLE_HINT_MS = 20000;
 // Each goal names the event (and payload test) that completes it. Goals complete strictly in order:
 // only the current goal listens, so standing in the Harbor at the start does not tick goal 3.
-export const FIRST_QUESTS = Object.freeze([
+// TRAVEL_QUESTS are the goals with the sea chart (the Harbor and its stake); FIRST_QUESTS replace those two
+// with island goals while "one island" is on (docs/GAME-V3.md §2, src/island/one-island.js), at the same
+// places in the list, so a saved count of done goals means the same thing in both lists.
+export const TRAVEL_QUESTS = Object.freeze([
   {id: 'cannon', label: 'Build a cannon', hint: 'Walk to a glowing spot on your island and press E (or tap it) to build a cannon for 30 🪙.',
     event: QUEST_EVENTS.ISLAND_BUILT, matches: event => event.kind === 'cannon'},
   {id: 'wave', label: 'Ring the bell and win a wave', hint: 'Ring the bell by your cabin. Your cannon fires on its own; stay close to help.',
@@ -20,7 +23,7 @@ export const FIRST_QUESTS = Object.freeze([
     event: QUEST_EVENTS.PLACE_ARRIVED, matches: event => event.id === HARBOR_ID},
   {id: 'stake', label: 'Place a 🪙 stake', hint: 'Walk up to a Harbor stall and put 5, 10 or 25 🪙 on a real match or price.',
     event: QUEST_EVENTS.HARBOR_STAKE_PLACED, matches: () => true},
-  {id: 'invite', label: 'Invite a friend', hint: 'Open Invite a friend on your island and share your island code.',
+  {id: 'invite', label: 'Invite a friend', hint: 'Open the Menu, choose Players and invite, and send the link to a friend.',
     event: QUEST_EVENTS.ISLAND_INVITE_OPENED, matches: () => true},
   // Tower defense (TOWER-DEFENSE.md), in the order things unlock: level 2 after wave 2, the mortar after
   // wave 3, the crew after wave 5.
@@ -35,6 +38,15 @@ export const FIRST_QUESTS = Object.freeze([
   {id: 'wave10', label: 'Win wave 10', hint: 'Upgrade your towers and bring a friend: wave 10 brings two warships.',
     event: QUEST_EVENTS.WAVE_FINISHED, matches: event => event.survived === true && waveOf(event) >= 10},
 ]);
+const ISLAND_GOALS = Object.freeze({
+  harbor: {id: 'wall', label: 'Build a wall', hint: 'Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.',
+    event: QUEST_EVENTS.ISLAND_BUILT, matches: event => event.kind === 'wall'},
+  stake: {id: 'wave3', label: 'Win wave 3', hint: 'Ring the bell again after each win. Wave 3 opens the mortar and the watchtower.',
+    event: QUEST_EVENTS.WAVE_FINISHED, matches: event => event.survived === true && waveOf(event) >= 3},
+});
+// The goals of the one island: the same list with the two travel goals swapped for island goals.
+export const FIRST_QUESTS = Object.freeze(TRAVEL_QUESTS.map(quest => ISLAND_GOALS[quest.id] ?? quest));
+export const questsFor = (travel = false) => (travel === true ? TRAVEL_QUESTS : FIRST_QUESTS);
 export const FIRST_DONE_LINE = 'All goals done. Upgrade everything and see how far you get: wave 100 is the end.';
 
 // The number of goals done so far (always a prefix, because goals complete in order).
@@ -42,7 +54,7 @@ export function readFirstQuests(storage) {
   try {
     const value = JSON.parse(storage?.getItem(FIRST_QUEST_KEY) ?? 'null');
     const done = Number(value?.done);
-    return {done: value?.version === 1 && Number.isInteger(done) ? Math.max(0, Math.min(FIRST_QUESTS.length, done)) : 0};
+    return {done: value?.version === 1 && Number.isInteger(done) ? Math.max(0, Math.min(TRAVEL_QUESTS.length, done)) : 0};
   } catch { return {done: 0}; }
 }
 export function writeFirstQuests(storage, state) {
@@ -50,8 +62,8 @@ export function writeFirstQuests(storage, state) {
 }
 
 // One bus event in, the next state out. changed is true only when the current goal completed.
-export function applyQuestEvent(state, event) {
-  const done = state?.done ?? 0, current = FIRST_QUESTS[done];
+export function applyQuestEvent(state, event, quests = FIRST_QUESTS) {
+  const done = state?.done ?? 0, current = quests[done];
   if (!current || !event || event.type !== current.event) return {state, changed: false, completed: null};
   let ok = false;
   try { ok = current.matches(event) === true; } catch { ok = false; }
@@ -60,13 +72,13 @@ export function applyQuestEvent(state, event) {
 }
 
 // What the strip shows: three goals from the current one (the last three once near the end).
-export function firstQuestView(state) {
-  const done = state?.done ?? 0, total = FIRST_QUESTS.length;
+export function firstQuestView(state, quests = FIRST_QUESTS) {
+  const done = state?.done ?? 0, total = quests.length;
   const start = Math.max(0, Math.min(done, total - VISIBLE_GOALS));
-  const items = FIRST_QUESTS.slice(start, start + VISIBLE_GOALS).map((quest, index) => ({
+  const items = quests.slice(start, start + VISIBLE_GOALS).map((quest, index) => ({
     id: quest.id, label: quest.label, hint: quest.hint, step: start + index + 1, done: start + index < done, current: start + index === done}));
   return {kind: 'first', title: 'Goals', progress: `${Math.min(done, total)} of ${total}`, items, doneCount: done, total,
-    allDone: done >= total, finale: done >= total ? FIRST_DONE_LINE : '', current: FIRST_QUESTS[done] ?? null};
+    allDone: done >= total, finale: done >= total ? FIRST_DONE_LINE : '', current: quests[done] ?? null};
 }
 
 // The idle hint: fires once after IDLE_HINT_MS of standing still without progress, then waits until

@@ -1,11 +1,15 @@
-// Up to four players on one island (TOWER-DEFENSE.md §6, §11) without live accounts: headless Chrome,
+// Players on one island (GAME-V3.md §2, TOWER-DEFENSE.md §6) without live accounts: headless Chrome,
 // one browser context, the fake server shared by every tab (?islands=fake&fakeworld=…, fake-api.js) and
 // the BroadcastChannel room with the live room's rules (pirates/room.js). Two pages first, then four:
-//   the owner builds a cannon; a friend opens ?visit=ISLE-K7Q2M and joins; the friend builds a wall co-op
-//   and the owner's island shows it; the owner rings the bell; both run the same wave (the same ships at
-//   the same tick); both captains fire their musket and each shot reaches the other page; both finish with
-//   loot; both press "Next wave" at the same moment and end up in one wave 2; two more friends land
-//   mid-wave and join it.
+//   the host presses Play › Create a game and the lobby opens; a friend presses Play › Join a game with
+//   the code; both lobbies list both players online; the host presses Start and both lobbies close (the
+//   narrator's game_started fires on both pages); the owner builds a cannon; the friend builds a wall
+//   co-op and the owner's island shows it; the owner rings the bell; both run the same wave (the same ships
+//   at the same tick); both captains fire their musket and each shot reaches the other page; both finish
+//   with loot; the host pauses the break and the friend's break says "Paused by Nils"; after Resume both
+//   press "Next wave" at the same moment and end up in one wave 2; two more friends open the ?game= link
+//   mid-wave, their lobby closes by itself (the game is on) and they join the wave. Ten players in one
+//   room are covered by the unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js).
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -21,7 +25,9 @@ const env = await openWorldBrowser(), context = env.page.context();
 const pages = [];
 const log = (...args) => console.log(...args);
 
-async function openCaptain(name, playerId, visit = null) {
+// The front door's cards until the player stands on the island: Skip the lore and the pages, Got it on the
+// goal card, and on the games card Create a game (host) or Join a game with the code (join).
+async function openCaptain(name, playerId, visit = null, {create = false, join = null} = {}) {
   const page = pages.length ? await context.newPage() : env.page, first = !pages.length;
   if (!first) {
     await stubOfflineApi(page); await stubWeather(page);
@@ -41,10 +47,17 @@ async function openCaptain(name, playerId, visit = null) {
     for (let i = 0; i < 5 && await join.isVisible().catch(() => false); i++) { await join.click().catch(() => {}); await page.waitForTimeout(1500); }
   }
   else await page.locator('#play').click();
-  for (let i = 0; i < 10; i++) {
-    await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')
+  for (let i = 0; i < 12; i++) {
+    await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open],.games-card[open],.island-card-lobby[open]')
       || (window.__island?.world.current?.id === 'home_islet' && window.__island.island?.island && !document.querySelector('dialog[open]')), null, {timeout: 60000, polling: 100});
-    if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
+    if (await page.locator('.games-card[open]').count()) {
+      await page.locator('.games-card[open] .games-create-button').waitFor();
+      await page.waitForTimeout(400); // Continue (GET /api/games) fills in
+      captainShots.push(page.screenshot({path: `${out}/00-games-card-${playerId}.png`}));
+      if (join) { await page.locator('.games-card[open] .games-code').fill(join); await page.locator('.games-card[open]').getByRole('button', {name: 'Join', exact: true}).click(); }
+      else await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
+    }
+    else if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
     else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
     else break;
     await page.waitForTimeout(300);
@@ -53,7 +66,8 @@ async function openCaptain(name, playerId, visit = null) {
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: []};
+    g.on('game_started', event => window.__mp.started.push(event));
     // What crossed the island room from the other tabs (the raw BroadcastChannel of pirates/room.js).
     const channel = new BroadcastChannel('tgpt:live:place:isle_k7q2m:1');
     channel.onmessage = event => window.__mp.heard.push(event.data?.type);
@@ -123,15 +137,38 @@ async function compare(a, b, waveId) {
 }
 
 const results = [];
+const captainShots = [];
+const lobbyOf = captain => captain.page.evaluate(() => ({open: window.__island.island.ui.open === 'lobby',
+  rows: [...document.querySelectorAll('.island-card-lobby[open] .island-lobby-player')].map(row => `${row.querySelector('.island-lobby-name').textContent}:${row.classList.contains('is-online') ? 'online' : 'away'}`),
+  start: document.querySelector('.island-card-lobby[open] .island-lobby-start')?.disabled ?? null}));
 try {
-  // 1 The owner and one friend.
-  const host = await openCaptain('Nils', 'me');
+  // 1 The host creates a game (Play › Create a game): the lobby opens over the island.
+  const host = await openCaptain('Nils', 'me', null, {create: true});
   assert.equal(await island(host, i => i.island.code), 'ISLE-K7Q2M');
+  await host.page.waitForFunction(() => window.__island.island.ui.open === 'lobby' && document.querySelector('.island-lobby-player'), null, {timeout: 15000});
+  // 2 A friend joins with the code (Play › Join a game).
+  const ben = await openCaptain('Ben', 'ben', null, {join: 'k7q2m'});
+  assert.equal(await island(ben, i => i.visiting.ownerName), 'Nils');
+  await ben.page.waitForFunction(() => window.__island.island.ui.open === 'lobby', null, {timeout: 15000});
+  // Both lobbies list both players online (the room's hello), and only the host may Start.
+  for (const captain of pages) {
+    await captain.page.waitForFunction(() => [...document.querySelectorAll('.island-card-lobby[open] .island-lobby-player.is-online')].length === 2, null, {timeout: 30000, polling: 250});
+  }
+  const lobbies = {host: await lobbyOf(host), ben: await lobbyOf(ben)};
+  results.push(`lobbies: host ${lobbies.host.rows.join(', ')} (Start ${lobbies.host.start ? 'off' : 'on'}); friend ${lobbies.ben.rows.join(', ')} (Start ${lobbies.ben.start ? 'off' : 'on'})`);
+  assert.deepEqual(lobbies.host.rows, ['Nils (you):online', 'Ben:online']);
+  assert.equal(lobbies.host.start, false, 'the host may start');
+  assert.equal(lobbies.ben.start, true, 'a friend waits for the host');
+  await shot('01-lobby-two-captains');
+  // 3 Start: every lobby closes and game_started fires on every page.
+  await host.page.locator('.island-card-lobby[open] .island-lobby-start').click();
+  for (const captain of pages) {
+    await captain.page.waitForFunction(() => window.__island.island.ui.open !== 'lobby' && window.__mp.started.length === 1, null, {timeout: 15000, polling: 100});
+  }
+  results.push(`Start: both lobbies closed, game_started ${JSON.stringify(await host.page.evaluate(() => window.__mp.started[0].first))} (first) on both pages`);
   await island(host, async i => i.build('cannon_1', 'cannon'));
   assert.ok(await spotBuilt(host, 'cannon_1'), 'the owner built a cannon');
-  const ben = await openCaptain('Ben', 'ben', 'ISLE-K7Q2M');
-  assert.equal(await island(ben, i => i.visiting.ownerName), 'Nils');
-  assert.ok(await spotBuilt(ben, 'cannon_1'), 'the friend sees the owner\'s cannon');
+  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'cannon_1')?.built, null, {timeout: 5000, polling: 100});
   // Both captains are in the island's room (live:place:isle_k7q2m:1).
   for (const captain of pages) await captain.page.waitForFunction(() => window.__island.island.roomPlace() === 'isle_k7q2m', null, {timeout: 5000});
   await shot('01-two-captains');
@@ -166,6 +203,15 @@ try {
   // 5 Everybody finishes with loot, then both press "Next wave" at the same moment.
   // The break lasts 15 s: press Next wave on both pages first, look at the loot after.
   for (const captain of pages) await until(captain, state => state?.pause, 'the break', 240000);
+  // The host pauses the break for the whole room; the friend's break says who paused and waits.
+  await host.page.locator('.pirate-break:not([hidden]) .pirate-hold').click();
+  await ben.page.waitForFunction(() => document.querySelector('.pirate-break:not([hidden]) .pirate-break-line')?.textContent === 'Paused by Nils', null, {timeout: 10000, polling: 100});
+  await ben.page.waitForTimeout(9000); // longer than the 8-second break
+  assert.ok(await ben.page.evaluate(() => window.__island.waves.island.inBreak), 'the paused break stays open');
+  await shot('04-paused-break');
+  results.push('Pause: the friend\'s break said "Paused by Nils" and stayed open past its 8 seconds');
+  await host.page.locator('.pirate-break:not([hidden]) .pirate-hold').click();
+  await ben.page.waitForFunction(() => !document.querySelector('.pirate-break.is-paused'), null, {timeout: 10000, polling: 100});
   await Promise.all([host, ben].map(captain => captain.page.waitForFunction(() => window.__island.waves.island.wave?.pause?.ready === true, null, {timeout: 14000})));
   await Promise.all([host, ben].map(captain => captain.page.evaluate(() => window.__island.waves.island.next())));
   for (const captain of pages) await captain.page.waitForFunction(id => window.__mp.loot.some(item => item.waveId === id && item.loot > 0), first.waveId, {timeout: 30000});
@@ -177,14 +223,21 @@ try {
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
-  // 6 Two more friends land mid-wave and join it.
+  // 6 Two more friends open the game link (?game=ISLE-K7Q2M) mid-wave and join it.
   await until(host, state => state?.ticks > 20, 'wave 2 under way', 60000);
   // Both load at once (a page takes a while to load; the wave must still run when they land).
   const [ana, max] = await Promise.all([openCaptain('Ana', 'ana', 'ISLE-K7Q2M'), openCaptain('Max', 'max', 'ISLE-K7Q2M')]);
   for (const captain of [ana, max]) {
     const joined = await until(captain, state => state?.waveId === second.waveId, `${captain.name} joining the running wave mid-wave`, 30000);
     results.push(`${captain.name} joined wave ${second.wave} mid-wave at tick ${joined.ticks}`);
+    // The game is on already: the room tells the late friend, and their lobby closes by itself.
+    // (game_started may fire before this page's listener above, so the room state says it.)
+    await captain.page.waitForFunction(() => window.__island.island.ui.open !== 'lobby' && window.__island.island.game?.started === true, null, {timeout: 20000, polling: 200});
   }
+  results.push('late friends: their lobbies closed by themselves (the room said the game is on)');
+  const members = await host.page.evaluate(async () => (await window.__island.island.api.lobby('ISLE-K7Q2M')).data.members.map(member => member.name));
+  results.push(`members: ${members.join(', ')}`);
+  assert.deepEqual([...members].sort(), ['Ana', 'Ben', 'Max', 'Nils'], 'all four are members of the game');
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
   for (const captain of [ben, ana, max]) {
@@ -194,6 +247,7 @@ try {
   }
   for (const captain of pages) await until(captain, state => !state || state.pause || state.done, 'the end of wave 2', 240000);
   await shot('06-wave2-end');
+  await Promise.all(captainShots);
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text) && !audio.includes(text));
   assert.deepEqual(errors, [], 'no browser errors');

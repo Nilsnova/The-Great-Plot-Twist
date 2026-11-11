@@ -58,6 +58,24 @@ describe('the break with several captains', () => {
   });
 });
 
+describe('the room-wide Pause between waves (GAME-V3.md §2)', () => {
+  it('holds the break open, stops Auto next and "Next wave", and shows who paused; Resume lets it run out', async () => {
+    let hold = { paused: true, line: 'Paused by Nils', label: 'Resume', canToggle: false };
+    const startNextWave = vi.fn(async () => ({ ok: true }));
+    const h = controllerHarness({ startNextWave, loadAuto: () => true, holdBreak: () => hold, toggleHold: () => {} });
+    h.waves.start(info('w-1'));
+    while (!h.waves.inBreak && h.clock.now < START + 200000) await h.advance(500);
+    await h.advance(60000); // a minute later the break is still open
+    expect(h.waves.inBreak).toBe(true);
+    expect(startNextWave).not.toHaveBeenCalled();
+    expect(h.waves.next()).toBe(false);
+    expect(h.huds[0].paused).toMatchObject({ line: 'Paused by Nils', paused: true, ready: false, hold: { label: 'Resume', enabled: false } });
+    hold = { paused: false, line: '', label: 'Pause', canToggle: true };
+    await h.advance(9000); // the break runs out; Auto next rings the bell
+    expect(startNextWave).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('the bell when two captains ring at once', () => {
   beforeEach(() => { vi.useFakeTimers({ now: Date.parse('2026-11-11T10:00:00Z') }); });
   afterEach(() => { vi.useRealTimers(); });
@@ -191,11 +209,13 @@ describe('the shared fake world (?islands=fake&fakeworld=…, scripts/check-mult
     expect(fakePlayerFor('?islands=fake')).toEqual({ shared: null, playerId: 'me', ownerName: null });
     expect(fakePlayerFor('?fakeworld=a b&fakeplayer=<x>').shared).toBe(null);
   });
-  it('lets four tabs build, visit and fight one island together', async () => {
+  it('lets four tabs join, build, visit and fight one island together', async () => {
     const items = new Map(), storage = { getItem: key => items.get(key) ?? null, setItem: (key, value) => items.set(key, String(value)) };
     const tab = (playerId, ownerName) => createFakeIslandTransport({ playerId, ownerName, shared: createSharedFakeStore('t', { storage, locks: null }) });
     const host = tab('me', 'Nils'), friends = [tab('ben', 'Ben'), tab('ana', 'Ana'), tab('max', 'Max')];
     expect((await host.post('/api/island/build', { spot: 'cannon_1', kind: 'cannon', actionUid: 'host-build-1' })).ok).toBe(true);
+    // GAME-V3.md §2: the friends join the game first (members build and ring the bell there).
+    for (const [index, friend] of friends.entries()) expect((await friend.post('/api/games/join', { code: 'ISLE-K7Q2M', actionUid: `join-000${index}` })).ok).toBe(true);
     for (const friend of friends) {
       const visit = await friend.get('/api/island/visit/ISLE-K7Q2M');
       expect(visit.data).toMatchObject({ ownerName: 'Nils' });

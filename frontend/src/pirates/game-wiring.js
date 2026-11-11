@@ -14,8 +14,11 @@
 //   - co-op builds: every build or upgrade sends island_changed into the room (Pirate Point's for its
 //     spots), and every other defender reads that island again within about a second;
 //   - the island's own wall and cannon sprites step aside between wave_controller_started and _stopped;
-//   - Pirate Point: the island client (or, in a rehearsal without a server, the in-memory fake) as api.
+//   - Pirate Point: the island client (or, in a rehearsal without a server, the in-memory fake) as api;
+//   - the game (GAME-V3.md §2, src/island/game-room.js) rides on the same island room: the lobby's Start,
+//     who is online, and the room-wide Pause that holds the break open (the break card's Pause button).
 import {mountPirates} from './index.js';
+import {createGameRoom} from '../island/game-room.js';
 import {createRoomProxy} from './room.js';
 import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wave-hooks.js';
 import {defenses as spotDefenses} from '../island/spots.js';
@@ -64,6 +67,9 @@ export function wireWaves(ctx) {
   // Host and visitors must feed the sim the same island, so both read the defended island's answer (a
   // visitor's comes from the visit route and needs its levels and crew too).
   const own = () => island?.island ?? null, defended = () => island?.visiting ?? own();
+  // The game's room state: Start, Pause and who is online, on the island's room (game_hello, game_state).
+  const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
+  if (game) island.attachGame?.(game);
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
@@ -71,7 +77,9 @@ export function wireWaves(ctx) {
     captainLevel: () => own()?.captain?.level ?? 1,
     // Pirate Point's shared spots once more before its battle, so every captain fights the same towers.
     beforePointWave: island ? () => island.loadPoint() : null,
-    startNextWave: island ? () => island.ringBell() : null});
+    startNextWave: island ? () => island.ringBell() : null,
+    // The room-wide Pause between waves: the break stays open and Auto next waits (GAME-V3.md §2).
+    holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => game.togglePause() : null});
 
   function followRoom() {
     const place = island && world.current?.id === ISLAND_PLACE ? island.roomPlace() : null;
@@ -79,6 +87,7 @@ export function wireWaves(ctx) {
     if (topic === roomTopic) return;
     realRoom?.close?.(); realRoom = topic ? openRoom(topic) : null; roomTopic = topic;
     islandRoom.attach(realRoom);
+    if (realRoom) game?.roomChanged();
   }
   // Join the wave running on this island (a wave_start in the room, or landing while one runs). The bell
   // may be busy with our own ring for a moment: try again a few times.
@@ -142,12 +151,13 @@ export function wireWaves(ctx) {
     pirates,
     get point() { return pirates.point; },
     get island() { return pirates.island; },
+    get game() { return game; },
     ringPiratePoint: () => pirates.point?.ringBell() ?? Promise.resolve(false),
     dispose() {
       if (disposed) return; disposed = true;
       for (const stop of stops.splice(0)) stop?.();
       for (const cancel of [...timers]) cancel(); timers.clear();
-      stopRenderer(); pirates.dispose(); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
+      stopRenderer(); pirates.dispose(); game?.dispose(); island?.attachGame?.(null); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
     },
   };
 }

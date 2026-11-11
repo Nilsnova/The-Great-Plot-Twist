@@ -13,7 +13,7 @@ export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round
 
 export const musketText = ready => (ready ? 'Musket' : 'No ship in range');
 
-export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, reducedMotion = () => false }) {
+export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {}, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
@@ -54,7 +54,10 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   mini.addEventListener('click', event => { event.preventDefault(); if (!mini.disabled) onNext(); });
   let pauseClosed = false;
   close.addEventListener('click', event => { event.preventDefault(); pauseClosed = true; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); });
-  pause.append(close, pauseTitle, pauseLine, next, autoLabel);
+  // The game's room-wide Pause (GAME-V3.md §2): the host (or anyone when the host is away) holds the break.
+  const hold = node('button', 'kit-button kit-quiet pirate-hold'); hold.type = 'button'; hold.hidden = true;
+  hold.addEventListener('click', event => { event.preventDefault(); if (!hold.disabled) onHold(); });
+  pause.append(close, pauseTitle, pauseLine, next, hold, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
   layer.append(edge, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
@@ -109,15 +112,17 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       lastLoot = text; loot.hidden = !text; loot.textContent = text;
     },
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
-    // The break: {title, line, seconds, auto, ready} or null to hide it.
+    // The break: {title, line, seconds, auto, ready, paused, hold: {label, enabled} | null} or null to hide it.
     pause(info) {
       if (!info) { pause.hidden = true; mini.hidden = true; pauseClosed = false; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }
-      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.ready}|${pauseClosed}`;
+      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.ready}|${info.paused}|${info.hold?.label}|${info.hold?.enabled}|${pauseClosed}`;
       pause.hidden = pauseClosed; mini.hidden = !pauseClosed;
       if (key === lastPause) return;
       lastPause = key; pauseTitle.textContent = info.title; pauseLine.textContent = info.line ?? '';
-      next.textContent = info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : 'Counting the loot…';
+      next.textContent = info.paused ? 'Paused' : info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : 'Counting the loot…';
       next.disabled = !info.ready; auto.checked = info.auto === true;
+      hold.hidden = !info.hold; hold.textContent = info.hold?.label ?? ''; hold.disabled = info.hold?.enabled !== true;
+      pause.classList.toggle('is-paused', info.paused === true);
       mini.textContent = next.textContent; mini.disabled = next.disabled;
       if (pauseClosed) return;
       if (info.ready && document.activeElement === document.body) next.focus({ preventScroll: true });

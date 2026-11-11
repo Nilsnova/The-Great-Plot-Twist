@@ -192,7 +192,7 @@ describe('island api: one click id per build and per bell', () => {
   });
   it('the function-level fake has the same names', () => {
     const api = createFakeIslandApi();
-    expect(Object.keys(api).sort()).toEqual(['build', 'currentWave', 'dev', 'finishWave', 'getIsland', 'heldActionUid', 'hire',
-      'joinInvite', 'joinWave', 'piratePoint', 'pointBuild', 'pointUpgrade', 'startWave', 'upgrade', 'upgradeCaptain', 'visit']);
+    expect(Object.keys(api).sort()).toEqual(['build', 'createGame', 'currentWave', 'dev', 'finishWave', 'games', 'getIsland', 'heldActionUid', 'hire',
+      'joinGame', 'joinInvite', 'joinWave', 'leaveGame', 'lobby', 'piratePoint', 'pointBuild', 'pointUpgrade', 'startWave', 'upgrade', 'upgradeCaptain', 'visit']);
   });
 });

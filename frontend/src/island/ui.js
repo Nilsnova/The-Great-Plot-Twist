@@ -1,5 +1,5 @@
 // The island's DOM: one small card at a time (a build spot, the crew, the captain, the harbor bell, Play
-// with a friend, the captains here), the countdown
+// with a friend, the captains here, the game's lobby), the countdown
 // banner and the visit banner. It shows models from card-model.js and calls back; it decides nothing.
 // Built on the UI kit's modal and button (the one brass panel); toasts go through the game's one toast
 // queue (src/ui/toasts.js).
@@ -194,8 +194,41 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return model.url ? copy : done;
     });
   }
+  // The lobby of a game (GAME-V3.md §2): the code, the link with Copy and its QR (as the invite card), the
+  // players with who is online, and Start (the host, or anyone once the host has been away for 60 s).
+  function lobbyCard(model, {start = () => {}} = {}) {
+    open('lobby', model.title, body => {
+      const code = node('p', 'island-lobby-code', model.code); code.setAttribute('aria-label', `Game code ${model.code}`);
+      const field = node('input', 'island-link'); field.type = 'text'; field.readOnly = true; field.value = model.url; field.hidden = !model.url;
+      field.setAttribute('aria-label', 'Game link'); field.addEventListener('focus', () => field.select());
+      const status = line('island-copied', ''); status.setAttribute('role', 'status');
+      const copy = button(model.copy, () => void copyLink(field, status)); copy.dataset.focus = 'copy'; copy.hidden = !model.url;
+      const share = node('div', 'island-share'); share.append(field, copy);
+      const canvas = node('canvas', 'island-qr island-lobby-qr'); canvas.hidden = !model.url;
+      if (model.url) {
+        canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `QR code for ${model.url}`);
+        try { drawQr(canvas, model.url, {scale: 4, margin: 3, ecc: 'M'}); } catch { canvas.hidden = true; }
+      }
+      const head = node('p', 'island-lobby-count', [model.count, model.online].filter(Boolean).join(' · '));
+      const list = node('ul', 'island-lobby-players');
+      for (const row of model.rows) {
+        const item = node('li', `island-lobby-player${row.online ? ' is-online' : ''}`); item.dataset.player = row.id;
+        const dot = node('span', 'island-lobby-dot'); dot.setAttribute('aria-hidden', 'true');
+        const name = node('span', 'island-lobby-name', `${row.name}${row.you ? ' (you)' : ''}`);
+        const state = node('span', 'island-lobby-state', [row.tag, row.online ? 'online' : 'away'].filter(Boolean).join(' · '));
+        item.append(dot, name, state); list.append(item);
+      }
+      const go = button(model.start.label, () => start()); go.dataset.focus = 'start'; go.classList.add('island-lobby-start');
+      go.hidden = !model.start.show; go.disabled = model.start.disabled;
+      const note = line('island-lobby-line', model.start.line);
+      if (model.start.disabled && model.start.show && model.start.line) { note.id = 'island-lobby-why'; go.setAttribute('aria-describedby', note.id); }
+      const done = button(model.start.show ? 'Look around first' : 'Done', close, true); done.dataset.focus = 'done';
+      body.append(line('island-lead', model.lead), code, share, status, canvas, head, list, go, note, line('island-message', model.problem, 'alert'), done);
+      return model.start.show && !model.start.disabled ? go : model.url ? copy : done;
+    });
+  }
   return {
-    buildCard, bellCard, inviteCard, crewCard, captainCard, captainsCard, close, copyLink,
+    buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },

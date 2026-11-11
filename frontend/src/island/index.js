@@ -8,8 +8,10 @@
 //   chartVisible(id) / chartLabel(id)         the three sea chart destinations
 //   active / handleEscape() / dispose()
 //   decoratePoint(place, cleanups, adapters)  Pirate Point's shared build spots (TOWER-DEFENSE.md §5)
-//   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and Play with a friend
+//   openCrew() / openCaptain() / openInvite()  the Menu's Crew and Captain, and the invite card
 //   setPresence(presence)                     the captains in the room, for the arrival toasts (§11)
+//   enterGame({code, role}) / openLobby()       the games of GAME-V3.md §2: which game Play opens, its lobby
+//   attachGame(room)                           the game's room state (game-room.js, from the wave wiring)
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
 import {createIslandApi} from './api.js';
@@ -23,6 +25,7 @@ import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FI
 import {readUnlocks, newUnlocks, CREW, BUILDINGS} from './td-rules.js';
 import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
+import {GAME_STARTED, lobbyModel} from './lobby.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -43,6 +46,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
   let busyKind = null, point = null, pointWorld = null, pointMessage = '', busyCrew = null, busyCaptain = false, here = new Map(), presenceReady = false;
+  // The games (GAME-V3.md §2): the room state from the wave wiring, the codes joined this page, the lobby.
+  let game = null, gameCode = null, lobbyAnswer = null, lobbyProblem = '', lobbyBusy = false, lobbyRead = 0, stopGame = () => {};
+  const joined = new Set();
   const tellCaptain = island => { const level = island?.captain?.level; if (!disposed && Number.isSafeInteger(level)) { try { onCaptain(level); } catch { /* The HUD cannot stop the island. */ } } };
   // Once-per-device lines (the first unlock explanation, the musket hint).
   const news = (() => { try { return new Set(JSON.parse(storage?.getItem(NEWS_KEY) ?? '[]')); } catch { return new Set(); } })();
@@ -102,8 +108,25 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
 
+  // A friend's game: join it first (once per page), so building and the bell are allowed (GAME-V3.md §2).
+  // A full game or an unknown code ends the visit: the player lands on their own island instead.
+  async function joinFirst(code) {
+    if (joined.has(code)) return true;
+    const answer = await api.joinGame(code);
+    if (answer.ok) { joined.add(code); return true; }
+    if (['game_full', 'no_such_game', 'no_such_island'].includes(answer.code)) {
+      ui.toast(answer.message, 'error');
+      return false;
+    }
+    return true; // signed out or offline: the visit still shows; building answers on its own
+  }
   async function load() {
     const ticket = ++loadTicket;
+    if (visitCode && !(await joinFirst(visitCode))) {
+      if (disposed || ticket !== loadTicket) return {ok: false};
+      endVisit();
+    }
+    if (disposed || ticket !== loadTicket) return {ok: false};
     if (visitCode) {
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
@@ -121,9 +144,57 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (answer.ok) { setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
     }
     applyWorld(); refreshCard();
+    void syncGame();
     if (target()) await flow.look(where());
     return {ok: true};
   }
+  // --- the game: its lobby and room state ----------------------------------------------------------
+  const currentCode = () => islandCode(visiting?.code ?? visitCode ?? own?.code ?? '');
+  // The lobby answer once per game and landing (and when somebody new turns up in the room).
+  async function syncGame(force = false) {
+    const code = currentCode();
+    if (!code || disposed) return null;
+    if (!force && code === gameCode && Date.now() - lobbyRead < 10000) return null;
+    gameCode = code; lobbyRead = Date.now();
+    const answer = await api.lobby(code);
+    if (disposed || currentCode() !== code) return answer;
+    if (answer.ok) { lobbyProblem = ''; lobbyAnswer = answer.data; game?.setGame(answer.data); }
+    else lobbyProblem = answer.status === 401 || answer.code === 'not_ready' ? 'Sign in to see who is in this game.' : answer.message;
+    if (ui.open === 'lobby') refreshCard();
+    return answer;
+  }
+  let syncSoon = null;
+  function wantSync() {
+    if (syncSoon || disposed) return;
+    syncSoon = setTimeout(() => { syncSoon = null; if (!disposed) void syncGame(true); }, 1500);
+  }
+  function lobby() {
+    const state = game?.state ?? null, code = currentCode();
+    // Without the room state (no wave wiring yet) the lobby answer alone: the list, nobody known online.
+    const answered = islandCode(lobbyAnswer?.game?.code ?? '') === code ? lobbyAnswer : null;
+    const members = state?.code === code ? state.members : answered?.members ?? [];
+    const me = state?.me ?? answered?.members.find(member => member.you)?.id ?? null;
+    const hostId = state?.hostId ?? answered?.members.find(member => member.role === 'host')?.id ?? null;
+    return lobbyModel({code, members, online: state?.online ?? new Set(), me, hostId,
+      hostAwayMs: state?.hostAwayMs ?? 0, started: state?.code === code && state.started === true, problem: lobbyProblem});
+  }
+  function startGame() {
+    if (!game?.start()) { refreshCard(); return; }
+    if (ui.open === 'lobby') { ui.close(); openSpot = null; }
+  }
+  function openLobby() {
+    openSpot = null; cardMessage = '';
+    ui.lobbyCard(lobby(), {start: startGame});
+    emit({type: ISLAND_INVITE_OPENED, code: currentCode() ? displayIslandCode(currentCode()) : null});
+    lobbyBusy = true;
+    void syncGame(true).finally(() => { lobbyBusy = false; if (ui.open === 'lobby') refreshCard(); });
+  }
+  // Start pressed anywhere in the room: every lobby closes (the narrator listens to the same event).
+  const stopStartedGame = on(GAME_STARTED, () => {
+    if (disposed) return;
+    if (ui.open === 'lobby') { ui.close(); openSpot = null; }
+    ui.toast('The game is on! Ring the bell when you are ready.', 'success');
+  });
 
   // Pirate Point's shared spots: anyone builds and upgrades them with their own coins (§5).
   async function loadPoint() {
@@ -162,6 +233,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (ui.open === 'build' && openSpot) ui.buildCard(buildModel(openSpot), handlers);
     else if (ui.open === 'bell') ui.bellCard(bell(), bellAction);
     else if (ui.open === 'invite') ui.inviteCard(inviteModel(own?.code));
+    else if (ui.open === 'lobby') ui.lobbyCard(lobby(), {start: startGame});
     else if (ui.open === 'crew') ui.crewCard(crew(), hire);
     else if (ui.open === 'captain') ui.captainCard(captain(), upgradeCaptain);
     else if (ui.open === 'captains') ui.captainsCard(captainsModel([...here.values()]));
@@ -194,7 +266,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function pick(id) {
     if (disposed) return;
     if (id === BELL.id) void openBell();
-    else if (id === CABIN.id) { if (!visiting) openInvite(); }
+    else if (id === CABIN.id) openLobby();
     else if (spotById(id) || isPointSpot(id)) openBuild(id);
   }
 
@@ -304,11 +376,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       for (const [id, name] of next) if (!here.has(id)) ui.toast(`${name} joined ${visiting?.ownerName ? `${visiting.ownerName}'s island` : visiting ? 'this island' : 'your island'}`, 'success');
     }
     presenceReady = onIsland; here = next;
+    game?.setPresence({live: onIsland, ids: [...next.keys()]});
+    // Somebody we do not know yet is in the room: read the lobby again (at most every 10 s).
+    if (onIsland && game && [...next.keys()].some(id => !game.knows(id))) wantSync();
     if (ui.open === 'captains') refreshCard();
   }
   // The Menu's island entries (shell/menu-extras.js).
   const stopMenu = menu(() => [
-    {label: 'Play with a friend', onSelect: () => openInvite()},
+    {label: 'Players and invite', onSelect: () => openLobby()},
+    ...(visiting || visitCode ? [{label: 'Leave this game', onSelect: () => void leaveGame()}] : []),
     {label: 'Crew', onSelect: () => openCrew()},
     {label: 'Captain', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),
@@ -343,6 +419,26 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     visitCode = symbols; visiting = null; flow.reset(); ui.close();
     return true;
   }
+  // Leave the friend's game for good (until you join again) and sail home (GAME-V3.md §2).
+  async function leaveGame() {
+    const code = islandCode(visiting?.code ?? visitCode ?? '');
+    if (!code) return false;
+    const answer = await api.leaveGame(code);
+    if (disposed) return false;
+    if (!answer.ok) { ui.toast(answer.message, 'error'); return false; }
+    joined.delete(code);
+    ui.toast('You left the game. It stays under Continue until you join again.', 'info');
+    await sailHome();
+    return true;
+  }
+  // Which game Play opens (the front door's games card): your own (role host) or a friend's (member).
+  function enterGame({code, role = 'member', joined: already = true} = {}) {
+    const symbols = islandCode(code ?? '');
+    if (!symbols) return false;
+    if (already) joined.add(symbols);
+    if (role === 'host') { if (visiting || visitCode) endVisit(); flow.reset(); ui.close(); return true; }
+    return visit(symbols);
+  }
   async function sailHome() {
     endVisit(); flow.reset(); ui.close(); applyWorld();
     await load();
@@ -372,7 +468,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     owns: isIslandZone,
     label(zone) {
       if (zone === BELL.id) return flow.current && !flow.current.joined ? 'Join the defense' : 'Ring the harbor bell';
-      if (zone === CABIN.id) return 'Play with a friend';
+      if (zone === CABIN.id) return 'Players and invite';
       const pointSpot = isPointSpot(zone), spot = pointSpot ? ppSpotById(zone) : spotById(zone);
       if (!spot) return undefined;
       const answer = (pointSpot ? point : target())?.spots.find(item => item.id === zone);
@@ -384,7 +480,21 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '');
     },
     load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, setPresence,
-    openInvite, openCrew, openCaptain, openCaptains,
+    openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame,
+    // The game's room state (src/island/game-room.js), handed in by the wave wiring.
+    attachGame(room) {
+      stopGame(); game = room ?? null; gameCode = null;
+      if (game) { void syncGame(); stopGame = () => {}; }
+      if (ui.open === 'lobby') refreshCard();
+    },
+    get game() { return game?.state ?? null; },
+    get mode() { return mode; },
+    // The room state changed: draw the lobby again, and read it again when somebody new is in the room.
+    refreshLobby() {
+      if (game && [...(game.state.online ?? [])].some(id => !game.knows(id))) wantSync();
+      if (ui.open === 'lobby') refreshCard();
+    },
+    get gameCode() { return currentCode(); },
     get point() { return point ? structuredClone(point) : null; },
     // The wave on screen (src/pirates/, wired in game.js): the built defenses it fights with, the client
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
@@ -423,7 +533,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     dispose() {
       if (disposed) return; disposed = true;
-      stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.();
+      stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       flow.dispose(); ui.dispose(); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,

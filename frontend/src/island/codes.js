@@ -1,7 +1,8 @@
 // Island codes and visits as plain rules (BUILD-PLAN 3.3 and 3.6). No DOM, no network.
 //   islandCode('isle-k7q2m') -> 'K7Q2M'      displayIslandCode('K7Q2M') -> 'ISLE-K7Q2M'
 //   islandRoom('ISLE-K7Q2M') -> 'isle_k7q2m' (the presence place; the room topic is live:place:isle_k7q2m:1)
-// A visit link is ?visit=ISLE-K7Q2M. The code is kept in sessionStorage only, so it ends with the tab.
+// A game link is ?game=ISLE-K7Q2M (GAME-V3 §2: a game is an island, its code the game's code); the older
+// ?visit=ISLE-K7Q2M still works. The code is kept in sessionStorage only, so it ends with the tab.
 export const ISLAND_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // pragma: allowlist secret
 export const ISLAND_PREFIX = 'ISLE';
 export const VISIT_KEY = 'plot_twist_visit_v1';
@@ -20,13 +21,15 @@ export function islandCode(value, {requirePrefix = false} = {}) {
 }
 export const displayIslandCode = value => (islandCode(value) ? `${ISLAND_PREFIX}-${islandCode(value)}` : '');
 export const islandRoom = value => (islandCode(value) ? `isle_${islandCode(value).toLowerCase()}` : null);
-export const visitUrl = (value, base = GAME_URL) => (islandCode(value) ? `${base}?visit=${displayIslandCode(value)}` : '');
+export const visitUrl = (value, base = GAME_URL) => (islandCode(value) ? `${base}?game=${displayIslandCode(value)}` : '');
+export const gameUrl = visitUrl;
 
 const safeSession = () => { try { return globalThis.sessionStorage ?? null; } catch { return null; } };
-// Remember ?visit=ISLE-K7Q2M from the address. Anything that is not an island code is ignored.
+// Remember ?game=ISLE-K7Q2M (or the older ?visit=) from the address. Anything that is not a code is ignored.
 export function rememberVisit(search = globalThis.location?.search ?? '', storage = safeSession()) {
   try {
-    const code = islandCode(new URLSearchParams(search).get('visit') ?? '');
+    const query = new URLSearchParams(search);
+    const code = islandCode(query.get('game') ?? '') ?? islandCode(query.get('visit') ?? '');
     if (!code) return null;
     storage?.setItem(VISIT_KEY, code);
     return code;

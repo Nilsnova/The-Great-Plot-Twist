@@ -134,12 +134,12 @@ export function bellModel({wave = null, joined = false, countdown = null, busy =
   return model;
 }
 
-// Play with a friend (§6, §11): the link, its QR and one line on what happens.
+// Play with a friend (§6, GAME-V3.md §2: up to 10 players): the link, its QR and one line on what happens.
 // problem: null while loading, 'signin' when the player is not signed in (no island yet), or a
 // plain message when the island could not be read.
 export function inviteModel(code, base, problem = null) {
   const shown = displayIslandCode(code);
-  const model = {title: 'Play with a friend', lead: 'Send this link to up to 3 friends', code: shown || 'Loading…', url: shown ? visitUrl(code, base) : '',
+  const model = {title: 'Play with a friend', lead: 'Send this link to up to 9 friends', code: shown || 'Loading…', url: shown ? visitUrl(code, base) : '',
     line: shown ? 'They tap Join, and you defend your island together.' : 'Your island code is still loading.', copy: 'Copy link'};
   if (shown || !problem) return model;
   if (problem === 'signin') return {...model, code: 'Not signed in',
@@ -148,9 +148,9 @@ export function inviteModel(code, base, problem = null) {
 }
 // The captains on your island (§11), from the presence room: name tags for the menu card.
 export function captainsModel(names = []) {
-  const list = [...new Set(names.filter(name => typeof name === 'string' && name.trim()).map(name => name.trim()))].slice(0, 3);
+  const list = [...new Set(names.filter(name => typeof name === 'string' && name.trim()).map(name => name.trim()))].slice(0, 9);
   return {title: 'Captains on your island', names: list,
-    line: list.length ? `${list.length} of 3 friends here.` : 'Nobody else is here yet. Open Play with a friend and send the link.'};
+    line: list.length ? `${list.length} of 9 friends here.` : 'Nobody else is here yet. Open Players and invite and send the link.'};
 }
 
 export const lootText = ({loot, coins}) => `${formatCoinDelta(loot)} loot · you have ${coinText(coins)}`;

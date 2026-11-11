@@ -11,7 +11,7 @@ async function mount(page){
     window.events=await window.g20Import('/src/core/events.js');
     const {createHud}=await window.g20Import('/src/ui/hud.js');window.calls=[];
     const game=document.createElement('main');game.id='game';document.body.append(game);
-    window.testHud=createHud(game,{focus(){},start(){window.calls.push('start');},chart(){window.calls.push('chart');},controls(){window.calls.push('controls');},tutorial(){window.calls.push('tutorial');},menu(){window.calls.push('menu');}});
+    window.testHud=createHud(game,{focus(){},start(){window.calls.push('start');},chart(){window.calls.push('chart');},travel(){return true;},controls(){window.calls.push('controls');},tutorial(){window.calls.push('tutorial');},menu(){window.calls.push('menu');}});
     window.testHud.start();
   });
 }

@@ -18,7 +18,9 @@ describe('invite landing words', () => {
   });
   it('the fake admits a guest with a valid island code and refuses an unknown one', async () => {
     const api = createFakeIslandApi();
-    expect((await api.joinInvite('isle-fr3nd')).data).toEqual({admitted: true, island: {code: 'ISLE-FR3ND', ownerName: 'Captain Gull'}});
+    // The invite is an alias of POST /api/games/join (GAME-V3.md §2): it also answers the game.
+    expect((await api.joinInvite('isle-fr3nd')).data).toMatchObject({admitted: true, island: {code: 'ISLE-FR3ND', ownerName: 'Captain Gull'},
+      game: {code: 'ISLE-FR3ND', role: 'member'}});
     expect(await api.joinInvite('ISLE-ZZZZZ')).toMatchObject({ok: false, status: 404, code: 'no_such_island'});
     expect(await api.joinInvite('HARBOR-K7QXM')).toMatchObject({ok: false, code: 'validation_error'});
   });

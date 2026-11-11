@@ -1,5 +1,8 @@
 // The demo front door after Play: lore cutscene, the first How to play pages (once per device,
-// src/tutorial/), one goal-and-controls card, then the player stands outside in Saltreach Harbor.
+// src/tutorial/), the games card with the island game on (docs/GAME-V3.md §2: Continue, Create a game,
+// Join a game; games.js), one goal-and-controls card, then the player stands on the island, and after
+// Create, Join or Continue the game's lobby opens over it. A ?game= link (or the friend's landing) goes
+// straight into that game.
 // Loaded only after Play, so the cold title stays within its budget.
 // Guest sign-in starts here too, silently, and only for a player who brought a class code (?join= or
 // the Join page) while /api/config says demo.guestsByCode. A refused code is forgotten.
@@ -10,11 +13,13 @@ import {node} from '../ui/kit/dom.js';
 import {getPreferences, reducedMotion as defaultReducedMotion} from '../settings/preferences.js';
 import {TUTORIAL_KEY, firstRunPages, wantsFirstRun} from '../tutorial/pages.js';
 import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy, readJoinCode, forgetJoinCode, joinedHarbor} from './logic.js';
+import {readVisit} from '../island/codes.js';
 
 export function createFrontDoor({container, focus, storage = safeStorage(), session = safeSession(),
   preferences = getPreferences, reducedMotion = defaultReducedMotion,
-  loadPlayer = () => import('../cutscenes/player.js'), loadTutorial = () => import('../tutorial/card.js')} = {}) {
-  let player = null, card = null, finishCard = null, tutorial = null, disposed = false, request = 0;
+  loadPlayer = () => import('../cutscenes/player.js'), loadTutorial = () => import('../tutorial/card.js'),
+  loadGames = () => import('./games.js'), openAccount = null} = {}) {
+  let player = null, card = null, finishCard = null, tutorial = null, games = null, disposed = false, request = 0;
 
   function showCard() {
     return new Promise(resolve => {
@@ -66,8 +71,24 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
     }).catch(() => {});
   }
 
+  // The games card (GAME-V3.md §2): which game Play opens. A pending ?game= code goes straight in (the
+  // island lane joins it on landing); null keeps your own island without a lobby.
+  async function pickGame(runtime, adapter, token) {
+    const lane = await runtime.gameLane?.();
+    if (!lane || disposed || token !== request) return null;
+    const pending = readVisit(session);
+    if (pending) return {code: pending, role: 'member', joined: false};
+    const {chooseGame} = await loadGames();
+    if (disposed || token !== request) return null;
+    const current = games = chooseGame({container, lane, adapter, openAccount});
+    const choice = await current.done;
+    if (games === current) games = null;
+    if (choice) lane.enterGame(choice);
+    return choice;
+  }
+
   return {
-    get active() { return !!player || !!tutorial || !!card; },
+    get active() { return !!player || !!tutorial || !!card || !!games; },
     // run() resolves when the player stands in the harbor (or the request was replaced).
     async run({loadGame, isCurrent = () => true, adapter, replay = false} = {}) {
       const token = ++request;
@@ -86,6 +107,9 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
       }
       const runtime = await game;
       if (!runtime || !current()) return false;
+      let chosen = null;
+      try { chosen = await pickGame(runtime, adapter, token); } catch { chosen = null; /* Your own island, as before. */ }
+      if (!current()) return false;
       // First Play: lore, then the goal card over your island, then the island arrival cutscene
       // (docs/PITCH.md, the first 3 minutes). game.js plays the arrival itself on a later Play.
       await runtime.begin(false, seen ? HARBOR_START : {...HARBOR_START, arrival: 'later'});
@@ -95,16 +119,19 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
         writeFlag(storage, FRONT_DOOR_KEY);
         if (current()) { try { await runtime.playArrival?.(); } catch { /* The island is there without it. */ } }
       }
-      if (current()) focus?.();
+      // After Create, Join or Continue: the game's lobby over the island (code, link, players, Start).
+      if (chosen && current()) runtime.openLobby?.();
+      if (current() && !chosen) focus?.();
       return true;
     },
     handleEscape() {
       if (player) { player.skip(); return true; }
       if (tutorial) { tutorial.close('skipped'); return true; }
       if (finishCard) { finishCard(); return true; }
+      if (games) { games.close(); return true; }
       return false;
     },
-    cancel() { request++; player?.dispose(); player = null; tutorial?.dispose(); tutorial = null; finishCard?.(); },
+    cancel() { request++; player?.dispose(); player = null; tutorial?.dispose(); tutorial = null; games?.dispose(); games = null; finishCard?.(); },
     dispose() { disposed = true; this.cancel(); },
   };
 }

@@ -250,7 +250,7 @@ describe('the v2 fake API', () => {
     const point = await api.piratePointBuild({ spot: 'pp_tower_1', kind: 'mortar', actionUid: 'p1' });
     expect(point.spots.find(item => item.id === 'pp_tower_1')).toMatchObject({ kind: 'mortar', level: 1, built: true });
     expect((await api.piratePointUpgrade({ spot: 'pp_tower_1', actionUid: 'p2' })).spots[4].level).toBe(2);
-    expect(await api.inviteJoin({ code: 'ISLE-FR3ND', actionUid: 'i1' })).toEqual({ admitted: true, island: { code: 'ISLE-FR3ND', ownerName: 'Captain Gull' } });
+    expect(await api.inviteJoin({ code: 'ISLE-FR3ND', actionUid: 'i1' })).toMatchObject({ admitted: true, island: { code: 'ISLE-FR3ND', ownerName: 'Captain Gull' } });
     await expect(api.inviteJoin({ code: 'ISLE-ZZZZZ', actionUid: 'i2' })).rejects.toMatchObject({ code: 'no_such_island' });
     // The transport answers the same routes like online/api.js.
     expect(await transport.post('/api/island/hire', { crew: 'gunner', actionUid: 'hire-0001' })).toMatchObject({ ok: true, data: { crew: { gunner: 1 } } });

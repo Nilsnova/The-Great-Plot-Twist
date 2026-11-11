@@ -36,6 +36,8 @@ Shared spots `pp_wall_1`…`pp_wall_4`, `pp_tower_1`…`pp_tower_6` (cannon or m
 
 ## 6. Playing with a friend (no class code needed)
 
+> **v3 (GAME-V3.md §2):** the link is now `?game=ISLE-XXXXX` (`?visit=` still works), joining makes you a member of that game for good (at most 10 players), and only members build, upgrade and ring the bell there.
+
 Menu → **Play with a friend** shows a link `…/?visit=ISLE-XXXXX` and a QR. The friend opens the link → one tap **Join** → signs in as a guest (or GitHub) → the server admits a guest who presents a **valid island code** (like a class code) → they land on your island and you defend together. Everyone on an island can build and upgrade there with their own coins (co-op, changed 11 Nov by the owner): the buildings belong to that island, the payer's own unlocks count, and everyone earns their own loot from the waves they fight. Crew and the captain stay personal (your own island, your own captain).
 
 ## 7. API (backend B; the interface I uses a fake with the same shapes until merged)
@@ -51,7 +53,7 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 | `POST /api/island/hire` | `{crew: gunner|carpenter|lookout, actionUid}` | the island; `409 crew_full`, `409 insufficient_funds` |
 | `GET /api/pirate-point` | — | `{spots: [{id, kind, level, built, cost, upgradeCost}], waveBest}` |
 | `POST /api/pirate-point/build` and `/upgrade` | `{spot, kind?, actionUid}` | the Pirate Point state; same refusals |
-| `POST /api/island/invite/join` | `{code: "ISLE-XXXXX", actionUid}` | admits an anonymous guest who presents a valid island code (same admission table as the class code) → `{admitted: true, island: {code, ownerName}}`; `404 no_such_island`, `429` |
+| `POST /api/island/invite/join` | `{code: "ISLE-XXXXX", actionUid}` | admits an anonymous guest who presents a valid island code (same admission table as the class code) → `{admitted: true, island: {code, ownerName}}`; `404 no_such_island`, `429`. v3: an alias of `POST /api/games/join` (also answers `game`, `409 game_full`, GAME-V3.md §2) |
 | `POST /api/waves/start` | as today | `wave` can now reach 100; answer adds `boss: true|false` |
 | `POST /api/waves/finish` | as today | loot per section 4 |
 
@@ -86,9 +88,9 @@ Every player's character carries a musket: **tap or click a ship in range** (or 
 
 API: `GET /api/island` adds `captain: {level, nextPrice}` and `unlocks: {…}` (what is unlocked and at which wave the rest comes); `POST /api/island/captain {actionUid}` upgrades one level (`409 max_level`, `409 locked`, `409 insufficient_funds`). Sim input `{type: 'captain_shot', by, targetId, level}` (synced in the room like cannon shots; each player's own level).
 
-## 11. Up to four players together
+## 11. Up to ten players together
 
-The same invite link works for several friends at once (up to 4 players on one island; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
+The same invite link works for several friends at once (up to 10 players on one island since GAME-V3.md §2, before that 4; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
 
 ## 13. How to play (added 11 Nov, owner: "a longer intro, and a tutorial in the menu")
 

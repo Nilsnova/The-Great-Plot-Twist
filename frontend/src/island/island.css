@@ -67,3 +67,17 @@
 .island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
 .island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
 @media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}
+/* The game's lobby (docs/GAME-V3.md §2): the code, the link and QR, the players with who is online, Start. */
+.island-card-lobby.kit-modal{width:min(480px,calc(100vw - 32px))}
+.island-lobby-code{justify-self:center;padding:var(--u-2) var(--u-4);font:800 30px/1.2 var(--u-font);letter-spacing:2px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown);text-align:center}
+.island-lobby-qr{width:min(150px,40vw)}
+.island-lobby-count{color:var(--u-mute);font-size:var(--u-sm);text-align:center}
+.island-lobby-players{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:min(260px,32vh);overflow:auto}
+.island-lobby-player{display:flex;align-items:center;gap:var(--u-2);padding:6px var(--u-3);background:var(--u-card);border:2px solid var(--u-line);min-width:0}
+.island-lobby-dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--u-deep);border:2px solid var(--u-line)}
+.island-lobby-player.is-online .island-lobby-dot{background:#7fd08a;border-color:#2f6b3a}
+.island-lobby-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;color:var(--u-ink)}
+.island-lobby-state{flex:none;color:var(--u-mute);font-size:15px}
+.island-card-body>.island-lobby-start{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}
+.island-lobby-line{color:var(--u-gold);text-align:center}
+@media(max-height:760px){.island-lobby-qr{width:min(120px,34vw)}.island-lobby-code{font-size:24px}}

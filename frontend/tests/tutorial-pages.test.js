@@ -24,7 +24,7 @@ describe('How to play pages',()=>{
     expect(Object.isFrozen(TUTORIAL_PAGES)).toBe(true);expect(TUTORIAL_PAGES.every(page=>Object.isFrozen(page)&&Object.isFrozen(page.text))).toBe(true);
     const all=TUTORIAL_PAGES.map(page=>[page.title,...page.text,...(page.keys??[]).flat()].join(' ')).join(' ');
     for(const fact of ['16 build spots','press E','level 3','Every 5th wave','Next wave','Press F','hold F','musket button','on foot','Marksman, Brawler or Shipwright',
-      'Menu › Captain','Menu › Play with a friend','Up to 4','after 5 minutes','three lamps','flagship','joystick','Sea chart','Zoom'])expect(all).toContain(fact);
+      'Menu › Captain','Create a game','Up to 10','after 5 minutes','three lamps','flagship','joystick','Sea chart','Zoom'])expect(all).toContain(fact);
     expect(TUTORIAL_TITLE).toBe('How to play');expect(TUTORIAL_KEY).toBe('plot_twist_tutorial_v1');
   });
   it('lists the controls as keys on the last page',()=>{

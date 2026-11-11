@@ -4,7 +4,7 @@
 // that the core lane opens (openRoom in mountPirates). Here are two small helpers:
 //   createRoomProxy()   a stable room for the controllers while the real one comes and goes with travel
 //   createLocalRoom()   the same room between browser tabs on one computer (BroadcastChannel), for the
-//                       dev harness (two tabs with ?pirates=demo) and ?islands=fake (up to four tabs on
+//                       dev harness (two tabs with ?pirates=demo) and ?islands=fake (up to ten tabs on
 //                       one island, scripts/check-multiplayer.js). It keeps the live room's rules: only
 //                       the wave events of src/net/live-rules.js go out, wrapped as the presence sends
 //                       them ({v, id, seq, data}), and every arriving one must pass readWaveMessage, so a

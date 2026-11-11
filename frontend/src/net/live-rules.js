@@ -70,10 +70,24 @@ export const EXTRA_EVENTS = ['lamp', 'duel'];
 // events pass, each checked field by field (readWaveMessage); a malformed one is dropped.
 export const PIRATE_POINT_PLACE = 'pirate_point';
 // captain_shot is the captain's musket (TOWER-DEFENSE.md §10); island_changed says "somebody built or
-// upgraded here, read the island again" (co-op builds, §6), and carries no wave.
-export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed'];
-export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second)
+// upgraded here, read the island again" (co-op builds, §6), and carries no wave. game_hello and
+// game_state are the game's lobby and pause (GAME-V3.md §2, src/island/game-room.js): no wave either.
+export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
+  'game_hello', 'game_state'];
+export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second) in a small room
 export const MIN_WAVE_GAP_MS = 150; // and accept one per captain and kind this often
+// Up to 10 players on one island (GAME-V3.md §2). Every message in a wave room is delivered to every other
+// defender, so a room of n costs n x (n - 1) deliveries per round of sends. WAVE_ROOM_BUDGET caps one
+// room's deliveries a second: up to 4 players the gap stays 200 ms (5 a second each, at most 60
+// deliveries a second); 10 players send at most once a second each (at most 90 a second, in practice far
+// fewer: a captain sends only while firing or repairing). Moves keep their own budget (sendGapMs).
+export const MAX_WAVE_PLAYERS = 10;
+export const WAVE_ROOM_BUDGET = 90;
+export function waveGapMs(players) {
+  const count = Math.min(MAX_WAVE_PLAYERS, Math.max(1, Number.isFinite(players) ? Math.floor(players) : 1));
+  const wanted = (1000 * count * (count - 1)) / WAVE_ROOM_BUDGET;
+  return Math.max(WAVE_GAP_MS, Math.ceil(wanted / GAP_STEP_MS) * GAP_STEP_MS);
+}
 const ISLAND_ROOM_PLACE = /^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}$/;
 export const EXTRA_GAP_MS = 1000; // we send at most one extra this often
 export const MIN_EXTRA_GAP_MS = 800; // and accept one per captain and kind this often
@@ -331,8 +345,11 @@ const WAVE_DATA = {
   captain_shot: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'level', 'x', 'z']) && WAVE_ITEM.test(String(data.targetId))
     && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5 && [data.x, data.z].every(isCoord),
   island_changed: data => hasKeys(data, ['spot']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot),
+  game_hello: data => hasKeys(data, ['who']) && typeof data.who === 'string' && WAVE_BY.test(data.who),
+  game_state: data => hasKeys(data, ['who', 'started', 'paused', 'first']) && typeof data.who === 'string' && WAVE_BY.test(data.who)
+    && typeof data.started === 'boolean' && typeof data.paused === 'boolean' && typeof data.first === 'boolean',
 };
-const NO_WAVE = ['island_changed'];
+const NO_WAVE = ['island_changed', 'game_hello', 'game_state'];
 export function readWaveMessage(event, payload) {
   if (!WAVE_EVENTS.includes(event) || !isRecord(payload) || payload.v !== PROTOCOL_VERSION) return null;
   if (!isPlayerId(payload.id) || !isSequence(payload.seq)) return null;

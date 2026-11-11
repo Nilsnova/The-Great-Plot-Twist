@@ -30,6 +30,7 @@ import {findPanelServices} from './online/panel-services.js';
 import {islandsMode as quickIslandsMode,resolveIslandsMode,startPlace} from './island/mode.js';
 import {PLACE_ARRIVED} from './ui/quest-events.js';
 import {readVisit} from './island/codes.js';
+import {setOneIslandFlags,travelAllowed} from './island/one-island.js';
 import {joinedHarbor} from './front-door/logic.js';
 import { createChart } from './ui/chart.js';
 import { createSailing } from './ui/sailing.js';
@@ -89,12 +90,17 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
+  // One island (docs/GAME-V3.md §2): with the island game on, the sea chart and its travel stay hidden
+  // (Menu, M, the gamepad and the goals) unless /api/config sends flags.one_island = false or ?oneisland=0.
+  setOneIslandFlags(()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;});
+  const travelOpen=()=>travelAllowed({islandsMode:islandsMode??(islandsOn()?'live':'off'),classHarbor:joinedHarbor()});
+  const showChart=()=>{if(travelOpen())chart.show();};
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus(),{visible:id=>island?.chartVisible(id)??true,label:id=>island?.chartLabel(id)??(id==='lighthouse_isle'&&waves?.point?'Pirate Point':undefined)});
   function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) showChart(); },travel:()=>travelOpen(),controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
@@ -173,6 +179,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   async function ensureIsland(){
     islandsMode??=await resolveIslandsMode({search:location.search,dev:import.meta.env.DEV,online:adapter?.read?.().mode==='online',
       readFlags:()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;}});
+    hud.refreshQuests?.();
     if(islandsMode==='off'||disposed)return islandsMode;
     islandLoad??=Promise.all([import('./island/index.js'),islandsMode==='fake'&&import.meta.env.DEV?import('./pirates/fake-api.js'):null]).then(([module,fake])=>{
       if(disposed)return null;
@@ -208,7 +215,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(target){projected.set(target.x,-target.y*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}
       projected.set((x-rect.left)/rect.width*2-1,1-(y-rect.top)/rect.height*2,0).unproject(view.camera);return {x:projected.x,z:-projected.y/.72};
     }});
-  const deviceActions={onManualMove:()=>mapTouch.cancel(),chart:()=>chart.show(),menu:()=>shell.show('pause'),isPlaying:()=>active&&!outsideBlocked()};
+  const deviceActions={onManualMove:()=>mapTouch.cancel(),chart:()=>showChart(),menu:()=>shell.show('pause'),isPlaying:()=>active&&!outsideBlocked()};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
     weatherAnswer=answer;emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
@@ -220,7 +227,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     gamepad.update();adapter?.tick?.(delta);perf?.update();
     if (!outsideBlocked()) {
     if (input.consume('KeyT')) settings.fastTime = !settings.fastTime;
-    if (input.consume('KeyM') && active && !sailing.active) chart.show();
+    if (input.consume('KeyM') && active && !sailing.active) showChart();
 
     for (let i = 0; i < 4; i++) if (input.consume(`Digit${i + 1}`)) setWeather(Object.values(presets)[i]);
     }
@@ -282,6 +289,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       }
       return false;
     },
+    // The games (docs/GAME-V3.md §2) for the front door's games card: the island lane, once the island game
+    // is on (null with the islands off, or for a player who came with the class code).
+    async gameLane(){if(disposed||joinedHarbor())return null;const mode=await ensureIsland();return !disposed&&mode!=='off'?island:null;},
+    // The lobby over the island after Create, Join or Continue.
+    openLobby(){if(!disposed&&island&&world.current?.id==='home_islet')island.openLobby();},
     // The island arrival cutscene (once per device), after the front door's goal card.
     // The "Your island" banner shows again as the player takes over.
     async playArrival(){if(disposed||!onOwnIsland())return;await island.playArrival();if(!disposed&&world.current)hud.arrive(world.current.id);},

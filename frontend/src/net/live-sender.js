@@ -27,7 +27,7 @@
 // Used by: src/net/live-places.js, src/online/realtime.js and tests/realtime.test.js.
 import {
   EMOTES, EMOTE_COOLDOWN_MS, EXTRA_EVENTS, EXTRA_GAP_MS, FACINGS, GUARD_EVERY_MS, GUARD_WINDOW_MS, LOAD_LIMIT,
-  PROTOCOL_VERSION, REPLY_DELAY_MAX_MS, REPLY_DELAY_MIN_MS, SLOW_MS, WAVE_EVENTS, WAVE_GAP_MS, estimatedLoad, isClassPlace, isWavePlace, sendGapMs,
+  PROTOCOL_VERSION, REPLY_DELAY_MAX_MS, REPLY_DELAY_MIN_MS, SLOW_MS, WAVE_EVENTS, estimatedLoad, isClassPlace, isWavePlace, sendGapMs, waveGapMs,
 } from './live-rules.js';
 
 const round2 = value => Math.round(value * 100) / 100;
@@ -131,7 +131,8 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
     return true;
   }
 
-  // ---- the wave lane (an island's room or Pirate Point): every message goes, in order, 5 a second ----
+  // ---- the wave lane (an island's room or Pirate Point): every message goes, in order, 5 a second in a
+  // small room and slower in a full one (waveGapMs: up to 10 players keep the room's deliveries in budget) ----
   // The room only needs to be joined: a defender's first shot must not wait for the presence announcement.
   function waveRoomIsOpen() {
     const room = getRoom();
@@ -147,13 +148,14 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
   function pumpWaves() {
     if (waves.timer || !waves.queue.length) return;
     if (!waveRoomIsOpen()) { waves.queue.length = 0; return; }
-    const wait = waves.sentAt + WAVE_GAP_MS - now();
+    const gap = waveGapMs(members.size + 1);
+    const wait = waves.sentAt + gap - now();
     if (wait > 0) { waves.timer = later(() => { waves.timer = null; pumpWaves(); }, wait); return; }
     const [event, data] = waves.queue.shift();
     out.seq += 1;
     broadcast(event, { v: PROTOCOL_VERSION, id: playerId, seq: out.seq, data });
     waves.sentAt = now();
-    if (waves.queue.length) waves.timer = later(() => { waves.timer = null; pumpWaves(); }, WAVE_GAP_MS);
+    if (waves.queue.length) waves.timer = later(() => { waves.timer = null; pumpWaves(); }, gap);
   }
 
   // ---- the extras lane (class harbor only) ----

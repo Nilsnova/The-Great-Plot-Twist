@@ -18,7 +18,7 @@ export const TICK_SECONDS = CONFIG.tick;
 export const INPUT_LEAD_TICKS = 4;
 export const MAX_WAVE_SECONDS = 900;
 export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot' });
-export const MAX_PLAYERS = 4; // TOWER-DEFENSE.md §11: up to four players defend one island together
+export const MAX_PLAYERS = 10; // GAME-V3.md §2: up to ten players defend one island together (was 4)
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
 
