@@ -1,9 +1,10 @@
 """The island and its waves, loaded from backend/content/islands.json.
 
 The spots (also Pirate Point's), the prices per level of the five kinds, the crew, the captain,
-the unlocks, the starting coins, the loot rule, the wave timing and what each weather state does
-to the pirates live in a data file (decision D016), so a price changes
-by editing the file, not the code. This file reads it, checks every field and hands out an
+the captain's skill tree and weapon shop (docs/TOWER-DEFENSE.md sections 14 and 15), the
+unlocks, the starting coins, the loot rule, the wave timing and what each weather state does to
+the pirates live in a data file (decision D016), so a price changes by editing the file, not the
+code. This file reads it, checks every field and hands out an
 IslandCatalogue. A mistake stops only the island routes (503 island_unavailable), never the whole
 API. The numbers are the tables of docs/TOWER-DEFENSE.md and docs/ECONOMY.md; change them together.
 
@@ -38,6 +39,21 @@ MAX_LEVEL = 3
 MAX_CAPTAIN_LEVEL = 5
 # The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these three.
 CREW_KINDS = ("gunner", "carpenter", "lookout")
+# The skills and weapons the database knows (the check rules of 20261112030000_captain_skills.sql),
+# in the order of the tree and the shop. frontend/src/pirates/captain-ids.js lists the same.
+SKILL_IDS = (
+    "steady_aim",
+    "long_barrel",
+    "quick_hands",
+    "cutlass",
+    "sweep",
+    "second_wind",
+    "quick_fix",
+    "long_reach",
+    "master_shipwright",
+)
+WEAPON_IDS = ("musket", "pistols", "blunderbuss", "long_rifle", "fire_bombs")
+STARTING_WEAPON = "musket"
 
 
 class IslandFileError(ValueError):
@@ -87,6 +103,30 @@ class Captain:
 
 
 @dataclass(frozen=True)
+class Skill:
+    skill: str  # steady_aim
+    name: str  # Steady aim
+    branch: str  # marksman, brawler or shipwright
+    tier: int  # 1 to 3
+    cost: int  # skill points
+    needs: str | None  # the skill of the tier above in the same branch, or None for tier 1
+
+
+@dataclass(frozen=True)
+class SkillTree:
+    waves_per_point: int  # one skill point per this many won waves
+    tree: tuple[Skill, ...]  # in the order of SKILL_IDS
+
+
+@dataclass(frozen=True)
+class Weapon:
+    weapon: str  # pistols
+    name: str  # Pistols
+    coins: int  # the price, bought once (0 for the musket everybody has)
+    unlock_wave: int  # the best won wave a player needs before it can be bought
+
+
+@dataclass(frozen=True)
 class Loot:
     base: int  # loot for surviving wave n: base + per_wave * n + per_house * house levels
     per_wave: int
@@ -123,6 +163,8 @@ class IslandCatalogue:
     pirate_point_spots: tuple[Spot, ...]
     crew: tuple[Crew, ...]
     captain: Captain
+    skills: SkillTree
+    weapons: tuple[Weapon, ...]
     loot: Loot
     waves: WaveTiming
     weather: tuple[Weather, ...]
@@ -254,6 +296,57 @@ def read_captain(data: dict) -> Captain:
     return captain
 
 
+def read_skills(data: dict) -> SkillTree:
+    entry = read_object(data, "captainSkills")
+    tree = []
+    for index, item in enumerate(read_list(entry, "tree", len(SKILL_IDS))):
+        where = f"captainSkills.tree[{index}]"
+        needs = item.get("needs")
+        tree.append(
+            Skill(
+                skill=read_id(item, "skill", where),
+                name=read_text(item, "name", where, 40),
+                branch=read_id(item, "branch", where),
+                tier=read_whole(item, "tier", where, 1, 3),
+                cost=read_whole(item, "cost", where, 1, 10),
+                needs=None if needs is None else read_id(item, "needs", where),
+            )
+        )
+    if tuple(skill.skill for skill in tree) != SKILL_IDS:
+        raise IslandFileError(f"captainSkills.tree must list {', '.join(SKILL_IDS)} in this order.")
+    by_id = {skill.skill: skill for skill in tree}
+    for skill in tree:
+        above = by_id.get(skill.needs) if skill.needs else None
+        if (skill.tier == 1) != (skill.needs is None) or (
+            above is not None and (above.branch != skill.branch or above.tier != skill.tier - 1)
+        ):
+            raise IslandFileError(
+                f"captainSkills: '{skill.skill}' must need the tier above it in its branch."
+            )
+    return SkillTree(
+        waves_per_point=read_whole(entry, "wavesPerPoint", "captainSkills", 1, 100),
+        tree=tuple(tree),
+    )
+
+
+def read_weapons(data: dict) -> tuple[Weapon, ...]:
+    weapons = tuple(
+        Weapon(
+            weapon=read_id(entry, "weapon", f"weapons[{index}]"),
+            name=read_text(entry, "name", f"weapons[{index}]", 40),
+            coins=read_whole(entry, "coins", f"weapons[{index}]", 0, MAX_DELTA),
+            unlock_wave=read_whole(entry, "unlockWave", f"weapons[{index}]", 0, MAX_WAVE),
+        )
+        for index, entry in enumerate(read_list(data, "weapons", len(WEAPON_IDS)))
+    )
+    if tuple(weapon.weapon for weapon in weapons) != WEAPON_IDS:
+        raise IslandFileError(f"'weapons' must list {', '.join(WEAPON_IDS)} in this order.")
+    for weapon in weapons:
+        if (weapon.coins == 0) != (weapon.weapon == STARTING_WEAPON):
+            raise IslandFileError("weapons: the musket is free and every other weapon costs coins.")
+    return weapons
+
+
 def read_loot(data: dict) -> Loot:
     entry = read_object(data, "loot")
     return Loot(
@@ -316,6 +409,8 @@ def load_island(path: Path = CONTENT_FILE) -> IslandCatalogue:
         pirate_point_spots=read_spots(data, "piratePointSpots", kinds),
         crew=read_crew(data),
         captain=read_captain(data),
+        skills=read_skills(data),
+        weapons=read_weapons(data),
         loot=read_loot(data),
         waves=read_waves(data),
         weather=read_weather(data),

@@ -155,7 +155,7 @@ describe('pirate wave sync', () => {
     expect(schedule.take(10).map(input => input.targetId)).toEqual(['ship_2', 'ship_1']);
     expect(schedule.take(6)).toHaveLength(1);
     const message = toMessage({ type: 'repair', wallId: 'wall_2' }, { by: 'a', seq: 3, tick: 12 + INPUT_LEAD_TICKS, waveId: 'w' });
-    expect(message).toEqual({ type: 'wall_repair', payload: { by: 'a', seq: 3, t: .8, waveId: 'w', wallId: 'wall_2' } });
+    expect(message).toEqual({ type: 'wall_repair', payload: { by: 'a', seq: 3, t: .8, waveId: 'w', wallId: 'wall_2', skills: [] } });
     expect(readMessage(message.type, message.payload, 'w')).toMatchObject({ tick: 16, input: { type: 'repair', wallId: 'wall_2' } });
     expect(readMessage(message.type, message.payload, 'other')).toBe(null);
     expect(readMessage('cannon_shot', { by: 'a', seq: 1, t: 1, waveId: 'w', cannonId: '<b>', targetId: 'x' }, 'w')).toBe(null);

@@ -11,7 +11,8 @@ export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp }) =>
 
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
-export const musketText = ready => (ready ? 'Musket' : 'No ship in range');
+// The button shows the equipped weapon's name (§15), or that nothing is in range.
+export const musketText = (ready, name = 'Musket') => (ready ? name : 'No ship in range');
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
@@ -92,13 +93,16 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (next === lastPrompt) return;
       lastPrompt = next; prompt.hidden = !text; action.textContent = text ?? ''; prompt.disabled = !enabled;
     },
-    // The musket button: {share: reload 0..1, ready: a ship is in range} while the wave runs, null hides it.
+    // The gun button: {share: reload 0..1, ready: a ship is in range, label: the equipped weapon's name}
+    // while the wave runs, null hides it.
     musket(info) {
       if (!info) { if (!musket.hidden) { musket.hidden = true; lastMusket = ''; release(); } return; }
       musket.hidden = false;
-      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), key = `${info.ready === true}|${Math.round(share * 20)}`;
+      const name = typeof info.label === 'string' && info.label ? info.label : 'Musket';
+      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), key = `${info.ready === true}|${Math.round(share * 20)}|${name}`;
       if (key === lastMusket) return;
-      lastMusket = key; musketLabel.textContent = musketText(info.ready === true);
+      lastMusket = key; musketLabel.textContent = musketText(info.ready === true, name);
+      musket.setAttribute('aria-label', `Fire your ${name.toLowerCase()} (F)`);
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
     },

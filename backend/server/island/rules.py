@@ -21,7 +21,7 @@ Used by: service.py, pirate_point.py and the tests.
 from dataclasses import dataclass
 
 from server.errors import ApiError
-from server.island.catalogue import Crew, IslandCatalogue, Kind, Loot, Spot, Weather
+from server.island.catalogue import Crew, IslandCatalogue, Kind, Loot, Skill, Spot, Weapon, Weather
 
 # The weather state the waves use when the real weather cannot be read.
 CALM = "calm"
@@ -248,6 +248,83 @@ def check_captain(catalogue: IslandCatalogue, level: int, wave: int) -> int:
 def captain_next_price(catalogue: IslandCatalogue, level: int) -> int | None:
     prices = catalogue.captain.prices
     return prices[level] if level < len(prices) else None
+
+
+# --- the captain's skills and weapons (docs/TOWER-DEFENSE.md sections 14 and 15) ---
+
+
+def skill_points(
+    catalogue: IslandCatalogue, won_wave: int, known: tuple[str, ...]
+) -> tuple[int, int]:
+    """(points left, points spent): one point per wavesPerPoint won waves, minus the costs."""
+    spent = sum(skill.cost for skill in catalogue.skills.tree if skill.skill in known)
+    earned = max(0, won_wave) // catalogue.skills.waves_per_point
+    return max(0, earned - spent), spent
+
+
+def skill_named(catalogue: IslandCatalogue, skill: str) -> Skill:
+    for entry in catalogue.skills.tree:
+        if entry.skill == skill:
+            return entry
+    raise ApiError(400, "bad_skill", "There is no such skill.")
+
+
+def check_skill(
+    catalogue: IslandCatalogue, skill: str, known: tuple[str, ...], won_wave: int
+) -> Skill:
+    """400 bad_skill, 409 known, 409 locked (the tier above first), 409 no_points.
+    The database checks the order and the points again under its lock."""
+    entry = skill_named(catalogue, skill)
+    if entry.skill in known:
+        raise ApiError(409, "known", f"You know {entry.name} already.")
+    if entry.needs is not None and entry.needs not in known:
+        raise skill_locked(catalogue, entry.needs)
+    if skill_points(catalogue, won_wave, known)[0] < entry.cost:
+        raise no_points()
+    return entry
+
+
+def skill_locked(catalogue: IslandCatalogue, needs: str) -> ApiError:
+    return ApiError(409, "locked", f"Learn {skill_named(catalogue, needs).name} first.")
+
+
+def no_points() -> ApiError:
+    return ApiError(409, "no_points", "Win new waves to earn skill points.")
+
+
+def weapon_named(catalogue: IslandCatalogue, weapon: str) -> Weapon:
+    for entry in catalogue.weapons:
+        if entry.weapon == weapon:
+            return entry
+    raise ApiError(400, "bad_weapon", "There is no such weapon.")
+
+
+def check_weapon_buy(
+    catalogue: IslandCatalogue, weapon: str, owned: tuple[str, ...], wave: int
+) -> Weapon:
+    """400 bad_weapon, 409 owned, 409 locked. Whether the player can pay: the wallet answers."""
+    entry = weapon_named(catalogue, weapon)
+    if entry.weapon in owned or entry.coins == 0:
+        raise weapon_owned(entry)
+    if entry.unlock_wave > wave:
+        raise locked(entry.unlock_wave)
+    return entry
+
+
+def weapon_owned(entry: Weapon) -> ApiError:
+    return ApiError(409, "owned", f"You own the {entry.name.lower()} already.")
+
+
+def check_weapon_equip(catalogue: IslandCatalogue, weapon: str, owned: tuple[str, ...]) -> Weapon:
+    """400 bad_weapon, 409 not_owned."""
+    entry = weapon_named(catalogue, weapon)
+    if entry.weapon not in owned:
+        raise weapon_not_owned(entry)
+    return entry
+
+
+def weapon_not_owned(entry: Weapon) -> ApiError:
+    return ApiError(409, "not_owned", f"Buy the {entry.name.lower()} first.")
 
 
 def spot_taken(catalogue: IslandCatalogue, kind: str) -> BuildRefused:

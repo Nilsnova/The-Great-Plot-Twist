@@ -5,6 +5,7 @@
 // queue (src/ui/toasts.js).
 import './island.css';
 import {createModal} from '../ui/kit/modal.js';
+import {createTabs} from '../ui/kit/tabs.js';
 import {node} from '../ui/kit/dom.js';
 import {drawQr} from '../lib/qr/index.js';
 import {toasts as gameToasts} from '../ui/toasts.js';
@@ -131,21 +132,100 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return focusable ?? done;
     });
   }
-  function captainCard(model, onUpgrade) {
-    open('captain', model.title, body => {
-      const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', `Musket · ${model.stats}`));
-      body.append(row, line('island-hint', model.hint));
-      let act = null;
-      if (model.upgrade) {
-        const next = node('div', 'island-next');
-        next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
-        act = button(model.button, () => onUpgrade()); act.dataset.focus = 'upgrade'; act.disabled = model.disabled;
-        body.append(next, act);
-      }
-      footer(body, model, act);
-      const done = button('Done', close, true); done.dataset.focus = 'done'; body.append(done);
-      return act && !act.disabled ? act : done;
+  // Menu › Captain and skills (§10, §14, §15): three tabs. model: {tab, captain, skills, weapons} of
+  // card-model.js (or a lone captainModel); handlers: {upgrade(), tab(id), pick(id), learn(id), buy(id), equip(id)}.
+  function captainCard(model, handlers) {
+    const on = typeof handlers === 'function' ? {upgrade: handlers} : handlers ?? {};
+    const parts = model?.captain ? model : {captain: model, skills: null, weapons: null, tab: 'captain'};
+    open('captain', 'Captain and skills', body => {
+      let focusable = null;
+      const musket = node('div', 'island-captain-musket');
+      focusable = musketPart(musket, parts.captain, on);
+      if (!parts.skills && !parts.weapons) { body.append(...musket.childNodes); return closing(body, focusable); }
+      const items = [{id: 'captain', label: 'Captain', body: musket}];
+      if (parts.skills) items.push({id: 'skills', label: parts.skills.points > 0 ? `Skills (${parts.skills.points})` : 'Skills', body: skillsPart(parts.skills, on)});
+      if (parts.weapons) items.push({id: 'weapons', label: 'Weapons', body: weaponsPart(parts.weapons, on)});
+      const selected = Math.max(0, items.findIndex(item => item.id === parts.tab));
+      const tabs = createTabs({items, selected, onChange: id => on.tab?.(id)});
+      tabs.element.classList.add('island-captain-tabs');
+      tabs.element.querySelectorAll('.kit-tab').forEach((tab, index) => { tab.dataset.focus = `tab-${items[index].id}`; });
+      body.append(tabs.element);
+      const done = closing(body, null);
+      return items[selected].id === 'captain' ? focusable ?? done : tabs.element.querySelectorAll('.kit-tab')[selected];
     });
+  }
+  function closing(body, focusable) {
+    const done = button('Done', close, true); done.dataset.focus = 'done'; body.append(done);
+    return focusable ?? done;
+  }
+  // The musket's level and its upgrade (§10).
+  function musketPart(body, model, on) {
+    const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', `Musket · ${model.stats}`));
+    body.append(row, line('island-hint', model.hint));
+    let act = null;
+    if (model.upgrade) {
+      const next = node('div', 'island-next');
+      next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
+      act = button(model.button, () => on.upgrade?.()); act.dataset.focus = 'upgrade'; act.disabled = model.disabled;
+      body.append(next, act);
+    }
+    footer(body, model, act);
+    return act && !act.disabled ? act : null;
+  }
+  // The skill tree (§14): skill points on top, three columns (a branch each, tiers top to bottom, a line
+  // between tiers), a tap shows the skill's one line and its Learn button below.
+  function skillsPart(model, on) {
+    const part = node('div', 'island-skills');
+    const points = node('p', 'island-points', model.pointsText);
+    const tree = node('div', 'island-tree'); tree.setAttribute('role', 'group'); tree.setAttribute('aria-label', 'Skill tree');
+    for (const branch of model.branches) {
+      const column = node('section', `island-branch island-branch-${branch.id}`);
+      const head = node('h3', 'island-branch-head');
+      const icon = node('span', 'island-branch-icon', branch.icon); icon.setAttribute('aria-hidden', 'true');
+      head.append(icon, node('span', 'island-branch-name', branch.name));
+      const list = node('ol', 'island-branch-nodes');
+      branch.nodes.forEach((skill, index) => {
+        const item = node('li', `island-tier${index && branch.nodes[index - 1].state === 'learned' ? ' is-linked' : ''}`);
+        const choice = node('button', `island-skill is-${skill.state}${skill.id === model.picked ? ' is-picked' : ''}`); choice.type = 'button';
+        choice.dataset.focus = `skill-${skill.id}`; choice.dataset.skill = skill.id;
+        choice.setAttribute('aria-pressed', String(skill.id === model.picked)); choice.setAttribute('aria-label', skill.label);
+        const dots = node('span', 'island-skill-cost'); dots.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < skill.cost; i++) dots.append(node('span', 'island-skill-dot'));
+        const mark = node('span', 'island-skill-mark', skill.state === 'learned' ? '✓' : skill.state === 'locked' ? '🔒' : '');
+        mark.setAttribute('aria-hidden', 'true'); mark.hidden = skill.state === 'ready';
+        choice.append(node('span', 'island-skill-name', skill.name), dots, mark);
+        choice.addEventListener('click', () => on.pick?.(skill.id));
+        item.append(choice); list.append(item);
+      });
+      column.append(head, list); tree.append(column);
+    }
+    const pick = model.detail, detail = node('div', 'island-skill-detail'); detail.setAttribute('aria-live', 'polite');
+    const head = node('p', 'island-skill-detail-head'); head.append(node('strong', '', pick.name), node('span', 'island-skill-detail-cost', pick.costText));
+    const learn = button(pick.button, () => on.learn?.(pick.id)); learn.dataset.focus = 'learn'; learn.disabled = pick.disabled;
+    const reason = line('island-reason', pick.state === 'ready' ? '' : pick.reason);
+    if (reason.textContent) { reason.id = 'island-reason-skill'; learn.setAttribute('aria-describedby', reason.id); }
+    detail.append(head, line('island-skill-line', pick.line), reason, learn);
+    part.append(points, tree, detail, line('island-purpose island-skills-how', model.line), line('island-message', model.message, 'alert'));
+    return part;
+  }
+  // The weapon shop (§15): buy once, equip one.
+  function weaponsPart(model, on) {
+    const part = node('div', 'island-weapons');
+    const list = node('ul', 'island-crew island-shop');
+    for (const row of model.rows) {
+      const item = node('li', `island-crew-row island-weapon${row.equipped ? ' is-equipped' : ''}`); item.dataset.weapon = row.id;
+      const text = node('div', 'island-crew-text');
+      const head = node('p', 'island-crew-head');
+      head.append(node('strong', '', row.name), node('span', 'island-crew-owned', row.equipped ? 'Equipped' : row.owned ? 'Yours' : row.priceText));
+      text.append(head, node('p', 'island-crew-line', row.line));
+      if (row.reason) text.append(node('p', 'island-crew-reason', row.reason));
+      const act = button(row.button, () => (row.action === 'equip' ? on.equip?.(row.id) : row.action === 'buy' ? on.buy?.(row.id) : null));
+      act.dataset.focus = `weapon-${row.id}`; act.disabled = row.disabled;
+      act.setAttribute('aria-label', `${row.button} ${row.name}`);
+      item.append(text, act); list.append(item);
+    }
+    part.append(line('island-purpose', model.lead), list, line('island-message', model.message, 'alert'), line('island-coins', model.coins));
+    return part;
   }
   function captainsCard(model) {
     open('captains', model.title, body => {

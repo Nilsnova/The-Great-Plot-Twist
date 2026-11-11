@@ -113,7 +113,8 @@ describe('the captain and four players', () => {
 
   it('fires the musket at the nearest ship in range, synced as captain_shot', () => {
     const message = toMessage({ type: 'captain_shot', by: 'a', targetId: 'ship_2', level: 3, x: 4.5, z: -2 }, { by: 'a', seq: 1, tick: 20, waveId: 'w' });
-    expect(message).toEqual({ type: 'captain_shot', payload: { by: 'a', seq: 1, t: 1, waveId: 'w', targetId: 'ship_2', level: 3, x: 4.5, z: -2 } });
+    expect(message).toEqual({ type: 'captain_shot', payload: { by: 'a', seq: 1, t: 1, waveId: 'w', targetId: 'ship_2', level: 3, x: 4.5, z: -2,
+      skills: [], weapon: 'musket' } });
     expect(readMessage(message.type, message.payload, 'w')).toMatchObject({ input: { type: 'captain_shot', by: 'a', level: 3 } });
     expect(readMessage(message.type, { ...message.payload, level: 9 }, 'w')).toBe(null);
     expect(readMessage(message.type, { ...message.payload, x: 'x' }, 'w')).toBe(null);

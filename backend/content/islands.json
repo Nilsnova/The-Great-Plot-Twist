@@ -1,5 +1,5 @@
 {
-  "about": "Your own island, Pirate Point and the pirate waves (docs/TOWER-DEFENSE.md, docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices per level, the crew, the captain, the unlocks, the starting coins, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island and GET /api/pirate-point. Every number changes only by pull request, and docs/TOWER-DEFENSE.md and docs/ECONOMY.md change with it.",
+  "about": "Your own island, Pirate Point and the pirate waves (docs/TOWER-DEFENSE.md, docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices per level, the crew, the captain, the captain's skill tree and weapon shop, the unlocks, the starting coins, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island and GET /api/pirate-point. Every number changes only by pull request, and docs/TOWER-DEFENSE.md and docs/ECONOMY.md change with it.",
   "playMoneyNote": "Play money. No cash value. It cannot be bought or cashed out.",
   "startingCoins": 200,
   "kinds": [
@@ -269,6 +269,116 @@
       8
     ]
   },
+  "captainSkills": {
+    "about": "The captain's skill tree (docs/TOWER-DEFENSE.md section 14): one skill point per wavesPerPoint won waves (won_wave_best), no coins. Tier n of a branch costs n points and needs tier n - 1 of the same branch. The ids repeat frontend/src/pirates/captain-ids.js and the check rules of supabase/migrations/20261112030000_captain_skills.sql.",
+    "wavesPerPoint": 2,
+    "tree": [
+      {
+        "skill": "steady_aim",
+        "name": "Steady aim",
+        "branch": "marksman",
+        "tier": 1,
+        "cost": 1,
+        "needs": null
+      },
+      {
+        "skill": "long_barrel",
+        "name": "Long barrel",
+        "branch": "marksman",
+        "tier": 2,
+        "cost": 2,
+        "needs": "steady_aim"
+      },
+      {
+        "skill": "quick_hands",
+        "name": "Quick hands",
+        "branch": "marksman",
+        "tier": 3,
+        "cost": 3,
+        "needs": "long_barrel"
+      },
+      {
+        "skill": "cutlass",
+        "name": "Cutlass",
+        "branch": "brawler",
+        "tier": 1,
+        "cost": 1,
+        "needs": null
+      },
+      {
+        "skill": "sweep",
+        "name": "Sweep",
+        "branch": "brawler",
+        "tier": 2,
+        "cost": 2,
+        "needs": "cutlass"
+      },
+      {
+        "skill": "second_wind",
+        "name": "Second wind",
+        "branch": "brawler",
+        "tier": 3,
+        "cost": 3,
+        "needs": "sweep"
+      },
+      {
+        "skill": "quick_fix",
+        "name": "Quick fix",
+        "branch": "shipwright",
+        "tier": 1,
+        "cost": 1,
+        "needs": null
+      },
+      {
+        "skill": "long_reach",
+        "name": "Long reach",
+        "branch": "shipwright",
+        "tier": 2,
+        "cost": 2,
+        "needs": "quick_fix"
+      },
+      {
+        "skill": "master_shipwright",
+        "name": "Master shipwright",
+        "branch": "shipwright",
+        "tier": 3,
+        "cost": 3,
+        "needs": "long_reach"
+      }
+    ]
+  },
+  "weapons": [
+    {
+      "weapon": "musket",
+      "name": "Musket",
+      "coins": 0,
+      "unlockWave": 0
+    },
+    {
+      "weapon": "pistols",
+      "name": "Pistols",
+      "coins": 60,
+      "unlockWave": 2
+    },
+    {
+      "weapon": "blunderbuss",
+      "name": "Blunderbuss",
+      "coins": 120,
+      "unlockWave": 4
+    },
+    {
+      "weapon": "long_rifle",
+      "name": "Long rifle",
+      "coins": 200,
+      "unlockWave": 6
+    },
+    {
+      "weapon": "fire_bombs",
+      "name": "Fire bombs",
+      "coins": 300,
+      "unlockWave": 10
+    }
+  ],
   "loot": {
     "base": 25,
     "perWave": 10,

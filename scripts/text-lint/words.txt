@@ -96,6 +96,7 @@ apply
 approval
 approved
 approximate
+arc
 arch
 are
 area
@@ -158,6 +159,7 @@ balances
 balldontlie
 bank
 barnacle
+barrel
 basket
 basketball
 batteries
@@ -210,12 +212,15 @@ blind
 blinking
 blocks
 blue
+blunderbuss
 board
+boarder
 boat
 boathouse
 boats
 body
 bold
+bombs
 border
 boss
 bosun
@@ -224,6 +229,7 @@ bottom
 bought
 box
 boy
+branch
 brass
 brave
 brawler
@@ -255,10 +261,12 @@ bureau
 burn
 burning
 burns
+bursts
 busy
 but
 button
 buttons
+buy
 by
 c
 cabin
@@ -637,6 +645,8 @@ entry
 envelopes
 equal
 equals
+equip
+equipped
 erase
 erasure
 errand
@@ -696,6 +706,7 @@ falls
 false
 family
 far
+farther
 fast
 faster
 fate
@@ -747,6 +758,7 @@ fisherman
 fisherman's
 fit
 five
+fix
 fixture
 fixtures
 fizzy
@@ -873,6 +885,7 @@ guild
 gull
 gull's
 gulls
+gun
 gunner
 h
 had
@@ -882,6 +895,7 @@ halted
 hammers
 hand
 handle
+hands
 handwriting
 hangs
 happened
@@ -889,6 +903,7 @@ happens
 harbor
 harbor's
 harbormaster's
+hard
 hardy
 has
 have
@@ -1107,6 +1122,8 @@ leadership
 leads
 league
 leagues
+learn
+learned
 least
 leather
 leave
@@ -1505,6 +1522,7 @@ pinning
 pins
 pirate
 pirates
+pistols
 pixel
 pixels
 pkce
@@ -1616,12 +1634,14 @@ punxsutawney
 purchase
 purchases
 purge
+purpose
 purse
 put
 px
 q
 qr
 quality
+quarters
 query
 quest
 question
@@ -1659,6 +1679,7 @@ really
 realtime
 reason
 rebuild
+rebuilt
 receive
 received
 receives
@@ -1770,6 +1791,7 @@ revisit
 reward
 rewards
 riddle
+rifle
 right
 ring
 rings
@@ -1917,6 +1939,7 @@ shipped
 ships
 shipwright
 shoal
+shoots
 shop
 shore
 shores
@@ -2027,6 +2050,7 @@ sports
 spot
 spotify
 spots
+spray
 sprite
 sprites
 src
@@ -2086,6 +2110,7 @@ stranger
 streamed
 strength
 strict
+strike
 strip
 strong
 stronger
@@ -2121,6 +2146,7 @@ suspect
 suspects
 suspended
 swaps
+sweep
 sweeps
 swft
 swift
@@ -2189,6 +2215,7 @@ those
 three
 through
 throw
+thrown
 throws
 thumping
 thumps
@@ -2197,6 +2224,7 @@ tide
 tidewright
 tidy
 tied
+tier
 tight
 till
 timber
@@ -2247,6 +2275,7 @@ trapped
 travel
 traveling
 travelling
+tree
 triangles
 tries
 troy
@@ -2380,6 +2409,8 @@ wave
 waves
 way
 we
+weapon
+weapons
 weather
 webgl
 website

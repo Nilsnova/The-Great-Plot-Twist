@@ -8,7 +8,8 @@
 //   chartVisible(id) / chartLabel(id)         the three sea chart destinations
 //   active / handleEscape() / dispose()
 //   decoratePoint(place, cleanups, adapters)  Pirate Point's shared build spots (TOWER-DEFENSE.md §5)
-//   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and Play with a friend
+//   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and skills (the musket, the skill
+//                                             tree §14 and the weapon shop §15) and Play with a friend
 //   setPresence(presence)                     the captains in the room, for the arrival toasts (§11)
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
@@ -17,7 +18,8 @@ import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
 import {decorateIsland} from './world.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName} from './spots.js';
-import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, coinText} from './card-model.js';
+import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText} from './card-model.js';
+import {SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
 import {readUnlocks, newUnlocks, CREW, BUILDINGS} from './td-rules.js';
@@ -43,6 +45,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
   let busyKind = null, point = null, pointWorld = null, pointMessage = '', busyCrew = null, busyCaptain = false, here = new Map(), presenceReady = false;
+  // The Captain and skills card: the open tab, the skill shown below the tree, a learn, buy or equip under way.
+  let captainTab = 'captain', pickedSkill = null, busySkill = null, busyWeapon = null;
   const tellCaptain = island => { const level = island?.captain?.level; if (!disposed && Number.isSafeInteger(level)) { try { onCaptain(level); } catch { /* The HUD cannot stop the island. */ } } };
   // Once-per-device lines (the first unlock explanation, the musket hint).
   const news = (() => { try { return new Set(JSON.parse(storage?.getItem(NEWS_KEY) ?? '[]')); } catch { return new Set(); } })();
@@ -57,6 +61,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const setOwn = next => {
     const before = own; own = next; tellCoins(next?.coins); tellCaptain(next);
     for (const step of newUnlocks(before, next)) ui.toast(step.title, 'success', firstTime(`unlock_${step.wave}`) ? step.line : '');
+    if (!before || !next) return;
+    // A won wave may bring a skill point (§14) or a weapon in the shop (§15).
+    const from = readUnlocks(before).wonWave, to = readUnlocks(next).wonWave;
+    for (const weapon of WEAPONS) if (weapon.unlockWave > from && weapon.unlockWave <= to) ui.toast(`New in the weapon shop: ${weapon.name}!`, 'success');
+    const gained = (next.skills?.points ?? 0) - (before.skills?.points ?? 0);
+    if (gained > 0 && (next.skills?.spent ?? 0) === (before.skills?.spent ?? 0)) {
+      ui.toast(gained === 1 ? 'New skill point!' : `${gained} new skill points!`, 'success', firstTime('skill_point') ? 'Spend it in Menu › Captain and skills.' : '');
+    }
   };
   const unlocks = () => (own ? readUnlocks(own) : null);
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
@@ -149,7 +161,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       unlocks: own ? unlocks() : null, prices: own?.prices ?? null});
   }
   const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices});
-  const captain = () => captainModel({captain: own?.captain ?? null, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCaptain, message: cardMessage || (!own ? ownMessage : '')});
+  const captain = () => {
+    const message = cardMessage || (!own ? ownMessage : ''), wonWave = own ? unlocks().wonWave : 0;
+    return {tab: captainTab,
+      captain: captainModel({captain: own?.captain ?? null, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCaptain, message: captainTab === 'captain' ? message : ''}),
+      skills: skillsModel({skills: own?.skills ?? null, wonWave, picked: pickedSkill, busy: busySkill, message: captainTab === 'skills' ? message : ''}),
+      weapons: weaponsModel({weapons: own?.weapons ?? null, coins: own?.coins ?? null, wonWave, busy: busyWeapon, message: captainTab === 'weapons' ? message : ''})};
+  };
+  const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { captainTab = id; },
+    pick: id => { pickedSkill = id; cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
+    buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), hire: () => openCrew()};
   function bell() {
     const wave = flow.current;
@@ -163,7 +184,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (ui.open === 'bell') ui.bellCard(bell(), bellAction);
     else if (ui.open === 'invite') ui.inviteCard(inviteModel(own?.code));
     else if (ui.open === 'crew') ui.crewCard(crew(), hire);
-    else if (ui.open === 'captain') ui.captainCard(captain(), upgradeCaptain);
+    else if (ui.open === 'captain') ui.captainCard(captain(), captainHandlers);
     else if (ui.open === 'captains') ui.captainsCard(captainsModel([...here.values()]));
   }
   function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); }
@@ -174,7 +195,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
-  function openCaptain() { openSpot = null; cardMessage = ''; ui.captainCard(captain(), upgradeCaptain); void freshOwn(); }
+  function openCaptain(tab = null) {
+    openSpot = null; cardMessage = ''; if (['captain', 'skills', 'weapons'].includes(tab)) captainTab = tab;
+    ui.captainCard(captain(), captainHandlers); void freshOwn();
+  }
   function openCaptains() { openSpot = null; cardMessage = ''; ui.captainsCard(captainsModel([...here.values()])); }
   async function openBell() {
     openSpot = null; cardMessage = ''; ui.bellCard(bell(), bellAction);
@@ -294,6 +318,48 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     } else await refused(answer, false);
     refreshCard();
   }
+  // §14: learn a skill with skill points. The answer is the island with the new skill.
+  async function learnSkill(id) {
+    if (busySkill || !SKILL_BY_ID[id]) return;
+    busySkill = id; pickedSkill = id; cardMessage = ''; refreshCard();
+    const answer = await api.learnSkill({skill: id});
+    if (disposed) return;
+    busySkill = null;
+    if (answer.ok) {
+      setOwn(answer.data);
+      emit({type: 'captain_skill_learned', skill: id});
+      ui.toast(`New skill: ${SKILL_BY_ID[id].name}!`, 'success');
+    } else { cardMessage = answer.message; if (['locked', 'no_points', 'known'].includes(answer.code)) await reloadOwn(); }
+    refreshCard();
+  }
+  // §15: buy a weapon once with coins (the server equips it at once), or equip one you own.
+  async function buyWeapon(id) {
+    if (busyWeapon || !WEAPON_BY_ID[id]) return;
+    busyWeapon = id; cardMessage = ''; refreshCard();
+    const answer = await api.buyWeapon({weapon: id});
+    if (disposed) return;
+    busyWeapon = null;
+    if (answer.ok) {
+      setOwn(answer.data);
+      emit({type: 'captain_weapon_bought', weapon: id});
+      ui.toast(`${WEAPON_BY_ID[id].name} bought and equipped! You have ${coinText(own.coins)}.`, 'success');
+      if (readWeapon(own.weapons?.equipped) !== id) await equipWeapon(id, true);
+    } else await refused(answer, false);
+    refreshCard();
+  }
+  async function equipWeapon(id, quiet = false) {
+    if ((busyWeapon && !quiet) || !WEAPON_BY_ID[id]) return;
+    busyWeapon = id; cardMessage = ''; refreshCard();
+    const answer = await api.equipWeapon({weapon: id});
+    if (disposed) return;
+    busyWeapon = null;
+    if (answer.ok) {
+      setOwn(answer.data);
+      emit({type: 'captain_weapon_equipped', weapon: id});
+      ui.toast(`${WEAPON_BY_ID[id].name} equipped. Your captain shoots with it now.`, 'success');
+    } else { cardMessage = answer.message; if (answer.code === 'not_owned') await reloadOwn(); }
+    refreshCard();
+  }
   // The captains in your island's room (§11): a toast for each one who arrives, a list for the Menu.
   function setPresence(presence) {
     if (disposed) return;
@@ -310,7 +376,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopMenu = menu(() => [
     {label: 'Play with a friend', onSelect: () => openInvite()},
     {label: 'Crew', onSelect: () => openCrew()},
-    {label: 'Captain', onSelect: () => openCaptain()},
+    {label: 'Captain and skills', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),
   ]);
   async function bellAction(action) {
@@ -383,7 +449,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (place !== ISLAND_PLACE) return null;
       return islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '');
     },
-    load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, setPresence,
+    load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, learnSkill, buyWeapon, equipWeapon, setPresence,
+    // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
+    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills(own?.skills?.known ?? []), weapon: readWeapon(own?.weapons?.equipped)}),
     openInvite, openCrew, openCaptain, openCaptains,
     get point() { return point ? structuredClone(point) : null; },
     // The wave on screen (src/pirates/, wired in game.js): the built defenses it fights with, the client
