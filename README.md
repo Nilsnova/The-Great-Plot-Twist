@@ -2,6 +2,31 @@
 
 Plot Twist game expansion for Nova SBE’s Introduction to Programming group project.
 
+**Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/)
+
+## Run and test
+
+```bash
+# Backend (Python API)
+cd backend && uv sync && uv run pytest -q
+
+# Frontend (the game)
+cd frontend && npm install && npm test && npm run build && npm run test:mp
+```
+
+`npm run test:mp` drives an installed Chrome. Run locally: `cd frontend && npm run dev` (with `?islands=fake` for an in-memory island and waves). Details: [ENGINEERING.md, section 3](docs/ENGINEERING.md#3-commands).
+
+## Members
+
+Each member fills in their own line (by Fri 20 Nov).
+
+| Member | Student number |
+|---|---|
+| `<name>` | `<student number>` |
+| `<name>` | `<student number>` |
+| `<name>` | `<student number>` |
+| `<name>` | `<student number>` |
+
 ## Start here
 
 We are four equal teammates building with coding agents. Everyone can propose features, contribute code, review and merge changes under the same rules.
@@ -39,41 +64,12 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 *Last updated: Wed 11 Nov 2026.*
 
-The game is a pixel pirate game for the browser ([PITCH.md](docs/PITCH.md)). Every player builds and
-defends their own island, everyone trades at the shared Harbor, and the class fights one joint battle at
-Pirate Point. Who builds what is in the [build plan](docs/BUILD-PLAN.md); how to play is in
-[HOW-TO-PLAY.md](docs/HOW-TO-PLAY.md).
-
-- **Your island:** build walls, cannons, a watchtower and houses with 🪙, ring the bell, and survive
-  pirate waves for loot. Cannons fire on their own; you can man one or repair a wall. Friends visit with
-  your island code (`ISLE-…`) or its QR and fight the same wave with you.
-- **The Harbor:** a market stall (up or down in 1 hour on a real price), a match board (real football),
-  a weather board (the real weather and what it does to the pirates) and the duel ring; the market and
-  the match board take stakes of 🪙 5, 10 or 25. There is no prediction market in the game (D035).
-- **Pirate Point:** the shared lighthouse island. Anyone rings its bell; everyone there fights the
-  armada, and three captains light the three lamps to sink the flagship. In class, phones join with the
-  class code (`HARBOR-…`) from the projector QR and land there.
-- **Done on the integration branch:** every lane task of the build plan and the voiced pirate intro.
-  **Still open:** the market calls migration on the live database, the release and the live checks.
-- **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) still runs the
-  9 Nov class demo until the release, with the Python API from `backend/` behind it (`/api/health`).
-- **Removed on 10 Nov:** the 2-hour mystery (D031): the prologue, every case screen, the journal and
-  hints, the festival, the bulletin, the rewards page, the arena gate and Gull's Rest. The backend case
-  code is still there for a later cleanup; the browser no longer calls it and the `case` flag is off.
-- **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API
-  against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials. In a dev
-  build, `?islands=fake` runs the island, the waves and Pirate Point against an in-memory fake.
+- A multiplayer pixel-art tower defense in the browser: build and upgrade towers, walls, crew and your captain on your own island; hold pirate waves up to 100 with boss warships ([TOWER-DEFENSE.md](docs/TOWER-DEFENSE.md)).
+- Up to four players defend one island via a `?visit=ISLE-…` link; every browser runs the same seeded simulation ([walkthrough, part 12](docs/WALKTHROUGH.md#12-how-four-players-see-the-same-battle)).
+- Pirate Point: the class joins from the projector QR, builds together and lights three lamps to sink the flagship.
+- The Harbor: up-or-down market calls, a football match board, a weather board and duels; play money only, no prediction market (D035).
+- Live on `main` since 11 Nov evening; known small issues in [OPEN-TODOS.md, section 7](docs/OPEN-TODOS.md).
 
 ### What the final README must contain
 
-By the submission on Mon 23 Nov, this README must give the exact installation, run and test commands, the deployed URL, and every member's name and student number. Fill in the placeholders below then, with real values only.
-
-- **Deployed URL:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) (confirm before submission)
-- **Commands:** today in [docs/ENGINEERING.md, section 3](docs/ENGINEERING.md#3-commands). Copy the final ones here.
-
-| Member | Student number |
-|---|---|
-| `<name>` | `<student number>` |
-| `<name>` | `<student number>` |
-| `<name>` | `<student number>` |
-| `<name>` | `<student number>` |
+By the submission on Mon 23 Nov: the exact install, run and test commands, the deployed URL (both at the top) and every member's name and student number in the [members table](#members), with real values only.
