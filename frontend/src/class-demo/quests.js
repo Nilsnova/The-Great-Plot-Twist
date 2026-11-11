@@ -1,15 +1,18 @@
 // The demo's quest strip as plain data: three small goals, a one-line hint each, and the done state
 // kept per player in local storage. No DOM here; quest-strip.js draws it.
 export const QUEST_KEY = 'plot_twist_quests_v1';
+// The class at Pirate Point (lane 0, task 0.4): wave to a captain, help defend Pirate Point when the host
+// rings its bell, and light one of its three lamps (three captains together sink the flagship). The duel
+// shortcut and the Keeper's Lock still work in the harbor; they are no goals any more.
 export const QUESTS = Object.freeze([
   {id: 'wave', label: 'Wave to a captain', hint: 'Walk up to another captain, then tap them or press E and choose Wave.'},
-  {id: 'duel', label: 'Duel a captain', hint: 'Tap a captain or press E next to them, then choose Friendly duel.'},
-  {id: 'lock', label: "Open the Keeper's Lock", hint: "The lock stands on the lighthouse path, right of the ferry pier. Press E next to it."},
+  {id: 'defend', label: 'Help defend Pirate Point', hint: 'When the Pirate Point bell rings, stay on the island: cannons fire on their own, and E fires the one next to you.'},
+  {id: 'lamp', label: 'Light a lamp', hint: 'During the battle, stand at one of the three lamps by the lighthouse and hold E (or the button) for 2 seconds.'},
 ]);
-export const FINALE_HINT = 'All done. Now light the three lamps together: each lamp needs one captain.';
+export const FINALE_HINT = 'All done. Three lamps at once sink the flagship: each lamp needs one captain.';
 const MAX_PLAYERS = 12; // a shared laptop keeps at most this many players' strips
 
-const empty = () => ({wave: false, duel: false, lock: false});
+const empty = () => Object.fromEntries(QUESTS.map(quest => [quest.id, false]));
 
 // The key of one player: the captain's name when signed in, otherwise this device.
 export function playerKey(view) {

@@ -10,7 +10,8 @@ import {newActionUid} from '../screens/duels/logic.js';
 import {projectorModel, newCodeBody} from './harbor.js';
 
 // host: {read(), renew(body)} -> {ok, status, data}; null in a rehearsal without a signed-in host.
-export function createProjector({container, host, isHost = () => false, rehearsal = false, focus}) {
+// ringBell(): the host's "Ring the Pirate Point bell" (src/pirates/pirate-point.js), when the waves are on.
+export function createProjector({container, host, isHost = () => false, rehearsal = false, focus, ringBell = null}) {
   const element = node('section', 'projector'), heading = node('h2', '', 'Join the harbor');
   heading.id = 'projector-heading';element.setAttribute('aria-labelledby', heading.id);element.setAttribute('role', 'dialog');
   element.setAttribute('aria-modal', 'false');element.hidden = true;
@@ -27,7 +28,15 @@ export function createProjector({container, host, isHost = () => false, rehearsa
   confirm.setAttribute('aria-label', 'Confirm a new class code');
   confirm.append(confirmText, confirmYes, confirmNo);
   count.setAttribute('role', 'status');count.setAttribute('aria-live', 'polite');error.setAttribute('role', 'alert');
-  actions.append(renewButton, closeButton);
+  const bellButton = node('button', 'kit-button', 'Ring the Pirate Point bell');bellButton.type = 'button';
+  bellButton.hidden = typeof ringBell !== 'function';
+  bellButton.addEventListener('click', async () => {
+    if (bellButton.disabled) return;
+    bellButton.disabled = true;
+    try { await ringBell(); } catch { /* The Pirate Point toast says what went wrong. */ }
+    setTimeout(() => { bellButton.disabled = false; }, 3000);
+  });
+  actions.append(bellButton, renewButton, closeButton);
   side.append(heading, code, count, steps, status, error, actions, confirm, url);
   element.append(canvas, side);container.append(element);
   let demo = null, captains = 1, pending = false, failure = '', uid = null, disposed = false, refreshTimer = null, drawnUrl = '';

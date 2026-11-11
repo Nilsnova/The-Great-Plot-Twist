@@ -75,16 +75,16 @@ it('shows a practice code without a host button in a rehearsal, and no QR while 
 it('draws the quest strip with ticks and one-line hints',async()=>{
   const result=await evaluate(async()=>{
     const {createQuestStrip}=await window.g20Import('/src/class-demo/quest-strip.js');
-    const strip=createQuestStrip({parent:document.body});strip.update({wave:true,duel:false,lock:false});
+    const strip=createQuestStrip({parent:document.body});strip.update({wave:true,defend:false,lamp:false});
     const buttons=[...document.querySelectorAll('.quest-item')];
     buttons[2].click();
     const hint=document.querySelector('.quest-hint');
     const first={done:buttons.map(button=>button.dataset.done),labels:buttons.map(button=>button.getAttribute('aria-label')),hint:hint.textContent,hidden:hint.hidden,expanded:buttons[2].getAttribute('aria-expanded')};
-    strip.update({wave:true,duel:true,lock:true});
+    strip.update({wave:true,defend:true,lamp:true});
     return {first,next:!document.querySelector('.quest-next').hidden,closed:strip.closeHint()};
   });
   expect(result.first.done).toEqual(['true','false','false']);
   expect(result.first.labels[0]).toBe('Wave to a captain: done. Show a hint.');
-  expect(result.first).toMatchObject({hidden:false,expanded:'true'});expect(result.first.hint).toMatch(/lighthouse path/);
+  expect(result.first).toMatchObject({hidden:false,expanded:'true'});expect(result.first.hint).toMatch(/lamps by the lighthouse/);
   expect(result.next).toBe(true);expect(result.closed).toBe(true);
 });

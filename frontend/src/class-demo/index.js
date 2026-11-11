@@ -22,6 +22,7 @@ import {REWARD_LINE} from './lock-state.js';
 import {createDuelApi, pendingInvite} from './duel-api.js';
 
 const INVITE_POLL_MS = 20000;
+const POINT_PLACE = 'lighthouse_isle', POINT_PRESENCE = 'pirate_point';
 const local = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 const sessionStore = () => { try { return globalThis.sessionStorage ?? null; } catch { return null; } };
 
@@ -32,6 +33,7 @@ export function createClassDemo(ctx) {
   let joined = rehearsal || readInvite(session), disposed = false, view = null, key = 'device';
   let quests = readQuests(storage, key), host = rehearsal || false, hostChecked = false, splashShown = false;
   let promptKey = '', target = null, lastCount = 1, known = new Set(), seeded = false, invitePoll = 0, inviteSeen = new Set();
+  let pointCaptains = null;
   let lock = null, duel = null, projector = null, captains = null, simulateAt = 0, localEmote = null, lockOpened = false, rehearsalInvited = false, arrivedAt = null;
   if (joined) setClassHarbor(true);
 
@@ -50,7 +52,8 @@ export function createClassDemo(ctx) {
     if (disposed) return null;
     const asked = new URLSearchParams(globalThis.location?.search ?? '').get('captains'), count = asked === null || !Number.isFinite(Number(asked)) ? 14 : Number(asked);
     captains = module.createRehearsalCaptains({count, canStand: ctx.canStand});
-    return {duels: module.createRehearsalDuels(), lock: module.createRehearsalLock(), captains};
+    return {duels: module.createRehearsalDuels(), lock: module.createRehearsalLock(), captains,
+      pointCaptains: () => module.createRehearsalCaptains({count, canStand: ctx.canStand, area: module.POINT_AREA})};
   }) : null;
   const duelApi = () => rehearsalTools ? rehearsalTools.then(tools => tools?.duels) : Promise.resolve(createDuelApi({api}));
   const lockApi = () => rehearsalTools ? rehearsalTools.then(tools => tools?.lock) : Promise.resolve(createLockApi({api}));
@@ -61,7 +64,7 @@ export function createClassDemo(ctx) {
     if (!result.changed) return;
     quests = result.state;writeQuests(storage, key, quests);strip.update(quests);
     const progress = questView(quests);
-    showToast({text: progress.allDone ? 'All three goals done! Now light the three lamps together.' : `Goal done: ${progress.items.find(item => item.id === id).label}.`, tone: 'success'});
+    showToast({text: progress.allDone ? 'All three goals done! Keep the lamps burning with your class.' : `Goal done: ${progress.items.find(item => item.id === id).label}.`, tone: 'success'});
     audio?.cue?.('festival-claim');
   }
 
@@ -93,7 +96,7 @@ export function createClassDemo(ctx) {
       const module = await import('./projector.js');
       if (disposed) return;
       projector = module.createProjector({container: layer, host: host && !rehearsal ? module.createHostApi(api) : null,
-        isHost: () => host && !rehearsal, rehearsal, focus: ctx.focus});
+        isHost: () => host && !rehearsal, rehearsal, focus: ctx.focus, ringBell: ctx.ringPiratePoint ?? null});
     }
     projector.setCount(lastCount);projector.toggle();
   }
@@ -115,6 +118,9 @@ export function createClassDemo(ctx) {
     if (seeded && fresh.length) say(joinedText(fresh.map(peer => peer.name)));
     seeded = true;
   }));
+  // Pirate Point (src/pirates/pirate-point.js): joining its battle and lighting one of its lamps are goals.
+  stops.push(on('wave_controller_started', event => { if (event.flagship === true && joined) tick('defend'); }));
+  stops.push(on('pirate_lamp_lit', () => { if (joined) tick('lamp'); }));
   stops.push(on('live_peer_extra', event => {
     if (event.event === 'lamp') finale.receive(event.data);
     if (event.event === 'duel' && isMe(event.data?.to) && typeof event.data.duel === 'string' && event.data.duel.length <= 64) void lookForInvite(event.data.duel);
@@ -187,7 +193,7 @@ export function createClassDemo(ctx) {
       const others = [0, 1, 2].filter(index => index !== lit);
       others.forEach((index, order) => setTimeout(() => { if (!disposed) light(index); }, 3000 * (order + 1)));
     } : null,
-    onLit: () => audio?.cue?.('festival-claim'),
+    onLit: () => { audio?.cue?.('festival-claim'); tick('lamp'); },
     onRelit: ({celebrate}) => {
       // One caption for the moment: the lamp status line says it; the voiced cutscene follows.
       objects.setRelit(true);
@@ -269,6 +275,15 @@ export function createClassDemo(ctx) {
         if (!rehearsalInvited && now > arrivedAt + 25000 && captains.bots[1]) {
           rehearsalInvited = true;
           void rehearsalTools.then(async tools => { const overlay = await ensureDuel(); overlay?.invited(tools.duels.invite(captains.bots[1].name)); });
+        }
+      } else if (rehearsal && place === POINT_PLACE && ctx.pointBattle?.() === true) {
+        // ?demo=1 at Pirate Point: during a battle the simulated captains defend it with you.
+        if (!pointCaptains && captains) void rehearsalTools.then(tools => { pointCaptains ??= tools?.pointCaptains?.() ?? null; });
+        pointCaptains?.step(delta, now, {x: player.position.x, z: player.position.z});
+        if (pointCaptains && now >= simulateAt) {
+          simulateAt = now + 200;
+          ctx.simulate?.(pointCaptains.presence(now, POINT_PRESENCE));
+          if (lastCount !== pointCaptains.bots.length + 1) { lastCount = pointCaptains.bots.length + 1; projector?.setCount(lastCount); }
         }
       } else if (rehearsal && !inHarbor) ctx.simulate?.(null);
       const me = {x: player.position.x, z: player.position.z};

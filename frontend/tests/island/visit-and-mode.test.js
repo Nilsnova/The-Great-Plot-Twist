@@ -67,7 +67,7 @@ describe('the islands flag and where Play lands', () => {
   it('lands on your island, but keeps the class harbor for a class code', () => {
     expect(startPlace({mode: 'live'})).toBe('home_islet');
     expect(startPlace({mode: 'fake'})).toBe('home_islet');
-    expect(startPlace({mode: 'live', classHarbor: true})).toBe('saltreach_harbor');
+    expect(startPlace({mode: 'live', classHarbor: true})).toBe('lighthouse_isle'); // the class lands at Pirate Point;
     expect(startPlace({mode: 'live', classHarbor: true, visiting: true})).toBe('home_islet');
     expect(startPlace({mode: 'off'})).toBe('saltreach_harbor');
     expect(startPlace({mode: 'off', visiting: true})).toBe('saltreach_harbor');

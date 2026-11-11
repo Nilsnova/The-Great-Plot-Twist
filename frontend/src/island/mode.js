@@ -25,10 +25,12 @@ export async function resolveIslandsMode({search = '', dev = false, online = fal
   return islandsMode({search, dev, flags});
 }
 
-// Where Play lands: on your own island when the islands are on, except for a player who came for the
-// class harbor (a HARBOR- code, the projector QR or "Join the class harbor"), who keeps the harbor.
+// Where Play lands: on your own island when the islands are on, except for a player who came with the
+// class (a HARBOR- code, the projector QR or "Join the class harbor"), who lands at Pirate Point
+// (lighthouse_isle, the class battle). With the islands off the old start in the harbor stays.
+export const PIRATE_POINT = 'lighthouse_isle';
 export function startPlace({mode, destination = 'saltreach_harbor', classHarbor = false, visiting = false}) {
   if (mode === 'off' || destination !== 'saltreach_harbor') return destination;
   if (visiting) return 'home_islet';
-  return classHarbor ? destination : 'home_islet';
+  return classHarbor ? PIRATE_POINT : 'home_islet';
 }

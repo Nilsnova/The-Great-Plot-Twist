@@ -107,7 +107,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
-    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??(place==='lighthouse_isle'&&island?'pirate_point':null)??classDemo?.presencePlace(place)??place});
+    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??(place==='lighthouse_isle'&&(island||waves?.point)?'pirate_point':null)??classDemo?.presencePlace(place)??place});
   // The class goals (class demo) show in the quest strip except on your island, where the first-3-minutes
   // goals of src/ui/first-quests.js show (BUILD-PLAN 3.6). A class-code player keeps the class goals elsewhere.
   let classQuests=null;
@@ -170,6 +170,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     classDemoLoad??=import('./class-demo/index.js').then(module=>{
       if(disposed)return null;const query=new URLSearchParams(location.search);
       classDemo=module.createClassDemo({container,scene,world,player:controller.player,input,audio,reducedMotion,on,canvas:graphics.renderer.domElement,
+        ringPiratePoint:async()=>(await ensureWaves())?.ringPiratePoint()??false,pointBattle:()=>!!waves?.point?.controller.wave,
         rehearsal:query.get('demo')==='1',present:query.get('present')==='1',send:(name,...args)=>sendIntent(adapter,name,...args),
         canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),quests:view=>showQuests(view),
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),resetInput:resetControls,cancelWalk:()=>mapTouch?.cancel(),

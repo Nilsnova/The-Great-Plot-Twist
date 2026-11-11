@@ -78,7 +78,7 @@ export function createPiratePoint(ctx) {
   const { bus, world = {}, api, sound = null, reducedMotion = () => false, input = null } = ctx;
   const room = createRoomProxy();
   let realRoom = null, finale = null, objects = null, bell = null, disposed = false, busy = false, pressed = false;
-  let relitPending = false, lampsShownFor = null, sentLampsAt = null, promptKey = '';
+  let relitPending = false, relitShown = false, lampsShownFor = null, sentLampsAt = null, promptKey = '';
   const armadaShown = new Set(), stops = [];
   const here = () => (world.place?.() ?? null) === PLACE;
   const notify = ctx.notify ?? (() => {});
@@ -110,15 +110,15 @@ export function createPiratePoint(ctx) {
   }
   // A fresh lamp round for every wave: the class demo's finale, its messages in our room.
   async function newFinale(waveId) {
-    finale?.dispose(); finale = null; relitPending = false;
+    finale?.dispose(); finale = null; relitPending = false; relitShown = false;
     const create = ctx.createFinale ?? (await import('../class-demo/lamps.js')).createLampFinale;
     if (disposed || controller.wave?.info.waveId !== waveId) return;
     finale = create({ container: layer ?? world.container, myName: () => 'Captain', canFill: () => ctx.rehearsal === true || ctx.host === true,
       send: (event, data) => room.send(event, { ...data, waveId }) !== false,
       helpers: ctx.rehearsal ? (lit, light) => [0, 1, 2].filter(index => index !== lit)
         .forEach((index, order) => setTimeout(() => { if (!disposed) light(index); }, 2500 * (order + 1))) : null,
-      onLit: () => sound?.cue?.('festival-claim'),
-      onRelit: () => { relitPending = true; objects?.setRelit(true, { celebrate: true }); } });
+      onLit: () => { sound?.cue?.('festival-claim'); bus?.emit?.({ type: 'pirate_lamp_lit', waveId }); },
+      onRelit: () => { relitPending = true; relitShown = true; objects?.setRelit(true, { celebrate: true }); } });
     void ensureObjects();
   }
 
@@ -214,7 +214,8 @@ export function createPiratePoint(ctx) {
         const state = finale.update({ lampSpot, heldE: !!lampSpot && !!input?.held?.has?.('KeyE'), shown: shown && running && !blocked });
         progress = state?.progress ?? 0;
         objects?.setLamps?.(finale.state.lamps.map((_, index) => finale.lit(index)));
-        if (lampSpot) next = { kind: 'lamp', index: lampSpot.index, lit: state?.lit };
+        // One caption at the lamps moment: once the lighthouse burns again, its status line says so alone.
+        if (lampSpot && !relitShown) next = { kind: 'lamp', index: lampSpot.index, lit: state?.lit };
       }
       if (!next && shown && !wave && !blocked && player && nearest([BELL_SPOT], player)) next = { kind: 'bell' };
       showPrompt(next);

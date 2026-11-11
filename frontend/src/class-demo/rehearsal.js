@@ -11,13 +11,15 @@ const NOUNS = ['Puffin', 'Gull', 'Otter', 'Heron', 'Crab', 'Dolphin', 'Gannet', 
 const nameOf = index => `${ADJECTIVES[index % 10]} ${NOUNS[(index * 3 + Math.floor(index / 10)) % 10]} ${11 + index}`;
 const KITS = Object.values(kits);
 const AREA = {minX: -10, maxX: 11, minZ: 12, maxZ: 20};
+// Pirate Point (Lighthouse Isle): around the bell, the lamps and the cannons, clear of the forest.
+export const POINT_AREA = Object.freeze({minX: 0, maxX: 15, minZ: -12, maxZ: 10});
 const SPEED = 2.2;
 
-export function createRehearsalCaptains({count = 14, canStand = () => true, random = Math.random} = {}) {
+export function createRehearsalCaptains({count = 14, canStand = () => true, random = Math.random, area = AREA} = {}) {
   const pick = (min, max) => min + random() * (max - min);
   function spot() {
-    for (let i = 0; i < 20; i++) { const x = pick(AREA.minX, AREA.maxX), z = pick(AREA.minZ, AREA.maxZ); if (canStand(x, z)) return {x, z}; }
-    return {x: 0, z: 18};
+    for (let i = 0; i < 20; i++) { const x = pick(area.minX, area.maxX), z = pick(area.minZ, area.maxZ); if (canStand(x, z)) return {x, z}; }
+    return {x: (area.minX + area.maxX) / 2, z: (area.minZ + area.maxZ) / 2};
   }
   const bots = Array.from({length: Math.max(0, Math.min(40, count))}, (_, index) => {
     const start = spot(), kit = KITS[index % KITS.length];
