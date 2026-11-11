@@ -50,7 +50,7 @@ export function createSettingsView(view) {
   toggle('Color-blind-safe highlights','colourblind');
   const controls=node('section','controls-overview');controls.append(node('h3','','Controls'));
   for(const [title,copy] of [
-    ['Keyboard','WASD or arrows walk; Shift runs. E inspects, M opens the chart, and the wheel zooms. Escape closes or pauses. In story choices, use arrows and Enter or numbers 1 to 9.'],
+    ['Keyboard','WASD or arrows walk. F fires your musket (hold it to keep firing). E inspects, M opens the chart, and the wheel zooms. Escape closes or pauses. In story choices, use arrows and Enter or numbers 1 to 9.'],
     ['Touch','Tap a clear spot on the map to walk, or drag the stick. Use Inspect nearby, Chart to travel and Menu to pause. Tap story choices directly.'],
     ['Gamepad','Left stick or D-pad walks. A inspects, Y opens the chart, and Menu pauses. Menus also support D-pad and A.'],
   ]) {const paragraph=node('p');paragraph.append(node('strong','',title),document.createTextNode(copy));controls.append(paragraph);}

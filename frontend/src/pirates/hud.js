@@ -1,4 +1,5 @@
-// The wave's words on screen: a slim wave bar (wave N · ships left · ♥ island · loot this run), the
+// The wave's words on screen: a slim wave bar at the top (wave N · ships left · ♥ island · loot this run),
+// the musket button (bottom right: hold it or F to keep firing, its frame fills while it reloads), the
 // 10-second countdown, the boss warning, the "E · Fire" / "E · Repair" prompt next to a cannon or wall,
 // the end banner and the break between waves (a big "Next wave" button and the "Auto next wave" switch).
 // DOM only, built with the kit's safe text helpers; the controller decides what to show.
@@ -8,10 +9,11 @@ import { node } from '../ui/kit/dom.js';
 export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp }) =>
   `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
 
-export const MUSKET_HINT_WAVES = 2;
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
-export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, reducedMotion = () => false }) {
+export const musketText = ready => (ready ? 'Musket' : 'No ship in range');
+
+export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
@@ -26,10 +28,16 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const banner = node('div', 'pirate-banner'); banner.setAttribute('role', 'status'); banner.hidden = true;
   const loot = node('span', 'pirate-bar-loot'); loot.hidden = true;
   const extra = node('span', 'pirate-bar-extra'); bar.append(extra); extra.append(loot);
-  // The musket hint (§10) in the first two waves: "F · Musket" (on a touch screen "Tap a ship · Musket").
-  const musket = node('span', 'pirate-musket-hint'); musket.hidden = true;
-  musket.append(node('span', 'pirate-musket-key', 'F'), node('span', 'pirate-musket-tap', 'Tap a ship'), node('span', '', ' · Musket'));
-  extra.append(musket);
+  // The captain's musket (§10): a big button, held to keep firing at the nearest ship in range (or F).
+  const musket = node('button', 'kit-button pirate-musket'); musket.type = 'button'; musket.hidden = true;
+  const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
+  const musketFill = node('span', 'pirate-musket-fill'); musketMeter.append(musketFill); musketMeter.setAttribute('aria-hidden', 'true');
+  musket.append(node('kbd', 'pirate-musket-key', 'F'), musketLabel, musketMeter);
+  musket.setAttribute('aria-label', 'Fire your musket (F)');
+  const release = () => onShoot(false);
+  musket.addEventListener('pointerdown', event => { event.preventDefault(); try { musket.setPointerCapture(event.pointerId); } catch { /* old browsers */ } onShoot(true); });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) musket.addEventListener(type, release);
+  musket.addEventListener('click', event => { event.preventDefault(); if (event.detail === 0) { onShoot(true); onShoot(false); } }); // keyboard Enter or Space
   const warning = node('div', 'pirate-boss'); warning.setAttribute('role', 'alert'); warning.hidden = true;
   // The break between two won waves: seconds left, the big button and the switch (kept by the controller).
   const pause = node('div', 'pirate-break'); pause.hidden = true;
@@ -39,11 +47,18 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const autoLabel = node('label', 'pirate-auto'), auto = document.createElement('input');
   auto.type = 'checkbox'; auto.addEventListener('change', () => onAuto(auto.checked));
   autoLabel.append(auto, node('span', '', 'Auto next wave'));
-  pause.append(pauseTitle, pauseLine, next, autoLabel);
+  // × closes the card (owner, 11 Nov: "need to be able to close it"); a slim "Next wave" button stays
+  // under the wave bar until the break ends, so building between waves has the whole screen.
+  const close = node('button', 'pirate-break-close', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close');
+  const mini = node('button', 'kit-button pirate-next-mini'); mini.type = 'button'; mini.hidden = true;
+  mini.addEventListener('click', event => { event.preventDefault(); if (!mini.disabled) onNext(); });
+  let pauseClosed = false;
+  close.addEventListener('click', event => { event.preventDefault(); pauseClosed = true; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); });
+  pause.append(close, pauseTitle, pauseLine, next, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
-  layer.append(edge, bar, countdown, warning, prompt, banner, pause); container.append(layer);
-  let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', hurtUntil = 0, hp = null;
+  layer.append(edge, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
+  let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
 
   return {
     element: layer,
@@ -65,7 +80,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
         if (!reducedMotion()) { edge.classList.remove('pirate-flash'); void edge.offsetWidth; edge.classList.add('pirate-flash'); }
       }
       hp = state.islandHp;
-      musket.hidden = !(state.wave <= MUSKET_HINT_WAVES);
       bar.classList.toggle('pirate-hurt', performance.now() < hurtUntil);
       if (text === lastBar) return;
       lastBar = text; label.textContent = text;
@@ -78,6 +92,16 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (next === lastPrompt) return;
       lastPrompt = next; prompt.hidden = !text; action.textContent = text ?? ''; prompt.disabled = !enabled;
     },
+    // The musket button: {share: reload 0..1, ready: a ship is in range} while the wave runs, null hides it.
+    musket(info) {
+      if (!info) { if (!musket.hidden) { musket.hidden = true; lastMusket = ''; release(); } return; }
+      musket.hidden = false;
+      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), key = `${info.ready === true}|${Math.round(share * 20)}`;
+      if (key === lastMusket) return;
+      lastMusket = key; musketLabel.textContent = musketText(info.ready === true);
+      musket.classList.toggle('pirate-musket-idle', info.ready !== true);
+      musketFill.style.width = `${Math.round(share * 100)}%`;
+    },
     // Loot this run, under the bar; null hides it.
     loot(amount) {
       const text = amount === null || amount === undefined ? '' : runLootText(amount);
@@ -87,13 +111,15 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
     // The break: {title, line, seconds, auto, ready} or null to hide it.
     pause(info) {
-      if (!info) { pause.hidden = true; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }
-      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.ready}`;
-      pause.hidden = false;
+      if (!info) { pause.hidden = true; mini.hidden = true; pauseClosed = false; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }
+      const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.ready}|${pauseClosed}`;
+      pause.hidden = pauseClosed; mini.hidden = !pauseClosed;
       if (key === lastPause) return;
       lastPause = key; pauseTitle.textContent = info.title; pauseLine.textContent = info.line ?? '';
       next.textContent = info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : 'Counting the loot…';
       next.disabled = !info.ready; auto.checked = info.auto === true;
+      mini.textContent = next.textContent; mini.disabled = next.disabled;
+      if (pauseClosed) return;
       if (info.ready && document.activeElement === document.body) next.focus({ preventScroll: true });
       // Phones put the toasts below the break (pirates.css): tell them where it ends.
       const bottom = pause.getBoundingClientRect().bottom;
@@ -106,6 +132,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (line) banner.append(node('span', '', line));
       banner.hidden = false;
     },
-    dispose() { layer.remove(); document.documentElement.style.removeProperty('--pirate-break-bottom'); },
+    dispose() { release(); layer.remove(); document.documentElement.style.removeProperty('--pirate-break-bottom'); },
   };
 }

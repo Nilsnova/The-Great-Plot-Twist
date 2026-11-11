@@ -1,18 +1,30 @@
 // The quest strip, top-right in the HUD: a title with progress and at most three goals. Tap a goal
-// for its one-line hint. It only draws a view ({title, progress, items, allDone, finale}); the rules
+// for its one-line hint; the ▾/▸ button folds it to its title (kept per browser). It only draws a view ({title, progress, items, allDone, finale}); the rules
 // live in first-quests.js (the first 3 minutes) and class-demo/quests.js (the class demo).
 import {node, uniqueId} from './kit/dom.js';
+
+export const FOLD_KEY = 'tgpt:quests:folded';
+const readFolded = () => { try { return globalThis.localStorage?.getItem(FOLD_KEY) === '1'; } catch { return false; } };
+const saveFolded = value => { try { globalThis.localStorage?.setItem(FOLD_KEY, value ? '1' : '0'); } catch { /* private mode */ } };
 
 // focusGame: after a pointer tap the keyboard goes back to the game, so E and WASD keep working.
 export function createQuestStrip({parent, focusGame}) {
   const element = node('section', 'quest-strip'), heading = node('h2', 'quest-title'), title = node('span', 'quest-name'), progress = node('span', 'quest-progress');
   const list = node('ol'), hint = node('p', 'quest-hint'), next = node('p', 'quest-next');
   heading.id = uniqueId('quest-strip');
-  heading.append(title, progress);
+  // Fold or unfold the panel (owner, 11 Nov: "enable to toggle"), remembered in this browser.
+  const fold = node('button', 'quest-fold'); fold.type = 'button';
+  const setFolded = value => {
+    element.dataset.folded = String(value); fold.textContent = value ? '▸' : '▾';
+    fold.setAttribute('aria-expanded', String(!value)); fold.setAttribute('aria-label', value ? 'Show the goals' : 'Hide the goals');
+  };
+  fold.addEventListener('click', event => { const value = element.dataset.folded !== 'true'; setFolded(value); saveFolded(value); if (event.detail > 0) focusGame?.(); });
+  heading.append(title, progress, fold);
   element.dataset.hudGroup = 'quests';
   element.setAttribute('aria-labelledby', heading.id);
   hint.setAttribute('role', 'status');hint.hidden = true;next.hidden = true;
   element.append(heading, list, hint, next);
+  setFolded(readFolded());
   parent.append(element);
   let open = null, rows = new Map(), lastKey = '', items = [];
 

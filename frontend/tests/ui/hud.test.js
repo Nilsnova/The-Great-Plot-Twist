@@ -99,13 +99,15 @@ it('flashes the screen edge red when the island takes damage, never with reduced
         const box=document.createElement('div');document.body.append(box);
         const hud=createWaveHud({container:box,reducedMotion:()=>still});
         hud.bar({wave:1,shipsLeft:3,islandHp:100,maxIslandHp:100});hud.bar({wave:1,shipsLeft:3,islandHp:90,maxIslandHp:100});
-        const out={flash:box.querySelector('.pirate-hurt-edge').classList.contains('pirate-flash'),hint:!box.querySelector('.pirate-musket-hint').hidden};
-        hud.bar({wave:3,shipsLeft:3,islandHp:90,maxIslandHp:100});out.hintLater=!box.querySelector('.pirate-musket-hint').hidden;
+        const button=box.querySelector('.pirate-musket'),out={flash:box.querySelector('.pirate-hurt-edge').classList.contains('pirate-flash'),hint:!button.hidden};
+        hud.musket({share:.5,ready:true});out.musket=[!button.hidden,button.textContent.includes('Musket')];
+        hud.musket({share:1,ready:false});out.idle=button.textContent.includes('No ship in range');
+        hud.musket(null);out.hintLater=!button.hidden;
         hud.dispose();box.remove();return out;
       };
       return {moving:run(false),still:run(true)};
     });
-    expect(result.moving).toEqual({flash:true,hint:true,hintLater:false});
+    expect(result.moving).toEqual({flash:true,hint:false,musket:[true,true],idle:true,hintLater:false});
     expect(result.still.flash).toBe(false);
   });
 });

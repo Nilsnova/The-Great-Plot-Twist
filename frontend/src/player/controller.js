@@ -1,6 +1,9 @@
 // World-aligned WASD moves the logical player; the illustration projects it to the map.
+// One brisk speed, no sprint key (owner, 11 Nov: "no sprinting, just always fast moving").
 import { layout } from '../config.js';
 import { groundHeight, moveWithCollisions } from './collision.js';
+
+export const WALK_SPEED = 6.5;
 
 export function createController(character, input, colliders) {
   const player = character.group;
@@ -17,7 +20,7 @@ export function createController(character, input, colliders) {
     if (!Number.isFinite(forward)) forward = 0;
     if (!Number.isFinite(right)) right = 0;
     const length = Math.hypot(forward, right);
-    const speed = length ? (input.held.has('ShiftLeft') || input.held.has('ShiftRight') ? 6 : 3.2)*Math.min(1,length) : 0;
+    const speed = length ? WALK_SPEED * Math.min(1, length) : 0;
     if (length) { forward /= length; right /= length; }
     const dx = right * speed * dt, dz = -forward * speed * dt;
     const next = moveWithCollisions(player.position, dx, dz, colliders, groundAt);

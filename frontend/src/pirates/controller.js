@@ -108,7 +108,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id), onEvents = null,
   getCrew = () => null, captainLevel = () => 1, startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto } = {}) {
-  let wave = null, disposed = false, pressed = false, shootPressed = false, down = null, shake = 0;
+  let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
   let runLoot = 0, auto = !!loadAuto(), level = null;
   const myLevel = () => { const value = Number(level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const timers = new Set(), stops = [];
@@ -123,18 +123,21 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const stop = room.on(type, payload => receive(type, payload));
     if (typeof stop === 'function') stops.push(stop);
   }
+  // F (held: keeps firing whenever the musket has reloaded) and E (one action).
   const keydown = event => {
-    if ((event.code !== 'KeyE' && event.code !== 'KeyF') || event.repeat) return;
+    if (event.code !== 'KeyE' && event.code !== 'KeyF') return;
     const target = event.target;
     if (target instanceof HTMLElement && target.closest('input, select, textarea, button, [contenteditable=true]')) return;
-    if (event.code === 'KeyE') pressed = true; else shootPressed = true;
+    if (event.code === 'KeyF') { shootHeld = true; if (!event.repeat) shootPressed = true; } else if (!event.repeat) pressed = true;
   };
+  const keyup = event => { if (event.code === 'KeyF') shootHeld = false; };
+  const letGo = () => { shootHeld = false; };
   const pointerdown = event => { if (event.button === 0) down = [event.clientX, event.clientY]; };
   const pointerup = event => {
     if (!down || event.button !== 0 || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 8) { down = null; return; }
     down = null; tap(event.clientX, event.clientY);
   };
-  if (typeof window !== 'undefined') window.addEventListener('keydown', keydown);
+  if (typeof window !== 'undefined') { window.addEventListener('keydown', keydown); window.addEventListener('keyup', keyup); window.addEventListener('blur', letGo); }
   world.canvas?.addEventListener('pointerdown', pointerdown);
   world.canvas?.addEventListener('pointerup', pointerup);
 
@@ -166,6 +169,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     if (world.container) {
       Promise.resolve(createHud({ container: world.container, onAction: () => act(), onNext: () => next(), onAuto: value => setAuto(value),
+        onShoot: held => { shootHeld = held === true; if (held) shootPressed = true; },
         reducedMotion })).then(hud => {
         if (disposed || wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
       }).catch(error => console.error(error));
@@ -313,7 +317,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.action = !current.done && current.shown && !blocked() && player ? actionAt({ x: player.x, z: player.z }, current.defenses, current.state) : null;
     current.hud?.prompt(promptText(current.action), !!inputFor(current.action));
     if (pressed) { pressed = false; act(); }
-    if (shootPressed) { shootPressed = false; if (!blocked()) shoot(); }
+    if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
+    const running = player && current.shown && !current.done && current.state.phase === 'running';
+    current.hud?.musket?.(running ? { share: captainShare(current), ready: !!captainTarget(player, current.state, myLevel()) } : null);
     const captain = player && current.shown && !current.done ? { x: player.x, z: player.z, share: captainShare(current) } : null;
     current.renderer?.update({ state: current.state, simTime, dt, captain });
     if (shake > 0 && world.camera) {
@@ -408,7 +414,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       stop(); disposed = true;
       for (const id of timers) clearTimer(id);
       timers.clear(); stops.splice(0).forEach(stopListening => stopListening());
-      if (typeof window !== 'undefined') window.removeEventListener('keydown', keydown);
+      if (typeof window !== 'undefined') { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', letGo); }
       world.canvas?.removeEventListener('pointerdown', pointerdown);
       world.canvas?.removeEventListener('pointerup', pointerup);
     },

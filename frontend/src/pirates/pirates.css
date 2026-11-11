@@ -1,9 +1,10 @@
 /* The pirate wave HUD (lane P3/P4) in the UI kit's tokens, type and notched brass frame (src/ui/kit/kit.css,
-   src/ui/hud.css). Loaded with the wave, never on the cold title. The bar sits low, clear of the toasts and
-   the quest strip; the end banner sits under the toasts. */
+   src/ui/hud.css). Loaded with the wave, never on the cold title. Layout (owner, 11 Nov: "weirdly placed,
+   often overlapping"): the wave bar sits top centre between the coins and the Menu; the goals panel hides
+   and the toasts move under the bar while a wave runs; the musket button sits bottom right. */
 .pirate-hud{position:absolute;inset:0;pointer-events:none;z-index:35;font:16px/1.3 var(--u-font);color:var(--u-ink)}
 .pirate-hud>*{pointer-events:auto}
-.pirate-bar{position:absolute;left:50%;bottom:156px;transform:translateX(-50%);display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:min(340px,calc(100vw - 24px));max-width:calc(100vw - 24px);box-sizing:border-box;background:var(--u-sea);padding:6px 14px 8px;box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006;pointer-events:none}
+.pirate-bar{position:absolute;left:50%;top:16px;transform:translateX(-50%);display:flex;flex-direction:column;gap:4px;align-items:stretch;width:min(380px,calc(100vw - 440px));min-width:300px;max-width:calc(100vw - 24px);box-sizing:border-box;background:var(--u-sea);padding:6px 14px 8px;box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006;pointer-events:none}
 .pirate-bar-text{text-align:center;font:700 16px/1.3 var(--u-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pirate-bar-meter{display:block;height:8px;background:var(--u-deep);border:1px solid var(--u-line)}
 .pirate-bar-fill{display:block;height:100%;width:100%;background:#9fd26a;transition:width .25s steps(4)}
@@ -25,12 +26,15 @@
 .pirate-hurt-edge.pirate-flash{animation:pirate-edge .45s steps(3) both}
 @keyframes pirate-edge{0%{opacity:1}100%{opacity:0}}
 .pirate-bar-extra{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px}.pirate-bar-extra:empty,.pirate-bar-extra:not(:has(>:not([hidden]))){display:none}
-.pirate-musket-hint{text-align:center;font:600 16px/1.2 var(--u-font);color:var(--u-ink);opacity:.9}
-.pirate-musket-key{display:inline-block;border:2px solid currentColor;padding:0 5px;margin-right:2px}
-.pirate-musket-tap{display:none}
-@media(pointer:coarse){.pirate-musket-key{display:none}.pirate-musket-tap{display:inline}}
+/* The musket: bottom right, held to keep firing; its meter fills while it reloads. */
+.pirate-hud>.pirate-musket{position:absolute;right:20px;bottom:24px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:4px 10px;align-items:center;min-width:176px;min-height:64px;padding:8px 14px;font:700 18px/1.2 var(--u-font);touch-action:none;user-select:none;-webkit-user-select:none}
+.pirate-musket kbd{grid-row:1/3;font-size:20px;padding:4px 9px}
+.pirate-musket-meter{display:block;height:6px;background:var(--u-deep);border:1px solid var(--u-line)}
+.pirate-musket-fill{display:block;height:100%;width:100%;background:var(--u-gold)}
+.pirate-musket.pirate-musket-idle{opacity:.72}.pirate-musket.pirate-musket-idle .pirate-musket-label{font-size:15px;font-weight:600}
+@media(pointer:coarse){.pirate-musket kbd{display:none}.pirate-hud>.pirate-musket{grid-template-columns:1fr}}
 .pirate-bar-loot{text-align:center;font:600 15px/1.2 var(--u-font);color:var(--u-gold)}
-.pirate-boss{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#4a2a24;color:#ffe08a;padding:8px 18px;font:700 22px/1.25 var(--u-serif);text-align:center;pointer-events:none;max-width:calc(100vw - 32px);box-sizing:border-box;box-shadow:0 -2px #d8553f,0 2px #d8553f,-2px 0 #d8553f,2px 0 #d8553f,0 8px #0006}
+.pirate-boss{position:absolute;left:50%;top:104px;transform:translateX(-50%);background:#4a2a24;color:#ffe08a;padding:8px 18px;font:700 22px/1.25 var(--u-serif);text-align:center;pointer-events:none;max-width:calc(100vw - 32px);box-sizing:border-box;box-shadow:0 -2px #d8553f,0 2px #d8553f,-2px 0 #d8553f,2px 0 #d8553f,0 8px #0006}
 .pirate-break{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;background:var(--u-parch);color:var(--u-brown);padding:18px 28px;max-width:calc(100vw - 32px);box-sizing:border-box;box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
 .pirate-break-title{font:700 32px/1.15 var(--u-serif);color:var(--u-pink)}.pirate-break-line{font:600 18px/1.3 var(--u-font)}
 .pirate-next{min-height:56px;min-width:220px;font:700 22px/1.2 var(--u-font)}
@@ -38,7 +42,7 @@
 /* Phones: the break docks under the goals strip, where the toasts begin, and while it shows the toasts
    move below it (hud.js sets --pirate-break-bottom), so loot, unlock toasts and captions never cover it. */
 @media(max-width:760px){.pirate-break{top:172px;padding:10px 14px;gap:6px;width:calc(100vw - 24px)}.pirate-break-title{font-size:24px}html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-break-bottom,420px) 12px auto}}
-@media(max-width:760px){.pirate-bar{bottom:168px;min-width:0;width:calc(100vw - 24px)}.pirate-banner{top:42%}.pirate-countdown-number{font-size:64px}.pirate-countdown-words{font-size:18px}.pirate-prompt,.pirate-bell-prompt{bottom:250px}.pirate-banner strong{font-size:26px}}
+@media(max-width:760px){.pirate-bar{top:72px;min-width:0;width:calc(100vw - 24px)}.pirate-banner{top:42%}.pirate-countdown-number{font-size:64px}.pirate-countdown-words{font-size:18px}.pirate-prompt,.pirate-bell-prompt{bottom:250px}.pirate-banner strong{font-size:26px}}
 @media(prefers-reduced-motion:reduce){.pirate-hurt-edge.pirate-flash{animation:none}.pirate-pop .pirate-countdown-number{animation:none}.pirate-bar-fill{transition:none}}
 /* Pirate Point: the bell and lamp prompt, the lamps' status line under the wave bar. */
 .pirate-point-layer{position:absolute;inset:0;pointer-events:none;z-index:36}
@@ -55,5 +59,14 @@
 @media(max-width:900px){.pirate-boss{top:auto;bottom:330px;font-size:18px;width:max-content}}
 /* Phones with touch controls (stick bottom-left, 82 to 223 px from the bottom): the wave bar docks under
    them at the very bottom, the prompts and the lamp hint sit just above them. */
-@media(max-width:760px) and (pointer:coarse){.pirate-bar{bottom:6px;padding:4px 10px 6px;gap:3px}.pirate-prompt{bottom:232px}
+@media(max-width:760px) and (pointer:coarse){.pirate-bar{padding:4px 10px 6px;gap:3px}.pirate-prompt{bottom:232px}
+.pirate-hud>.pirate-musket{right:14px;bottom:300px;min-width:120px;min-height:56px;padding:6px 12px}
 .pirate-point-layer .lamp-status{bottom:232px}.pirate-point-prompt{bottom:294px}}
+/* While a wave runs: no goals panel, the toasts under the wave bar, the visiting chip out of the way. */
+html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{display:none}
+@media(min-width:901px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:150px 340px auto}}
+@media(max-width:760px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .island-visit{display:none}}
+.pirate-break-close{position:absolute;top:4px;right:6px;min-width:44px;min-height:44px;border:0;background:none;color:var(--u-brown);font:700 28px/1 var(--u-font);cursor:pointer}
+.pirate-break-close:hover,.pirate-break-close:focus-visible{color:var(--u-pink)}
+.pirate-hud>.pirate-next-mini{position:absolute;left:50%;top:104px;transform:translateX(-50%);min-height:48px;padding:8px 20px;font:700 18px/1.2 var(--u-font)}
+@media(max-width:760px){.pirate-hud>.pirate-next-mini{top:160px}}

@@ -4,7 +4,7 @@ import {describe,expect,it,vi} from 'vitest';
 import {pixelViewport,worldViewport} from '../src/pixel/display.js';
 import {createCamera} from '../src/player/camera.js';
 import {createCharacter} from '../src/player/character.js';
-import {createController} from '../src/player/controller.js';
+import {createController,WALK_SPEED} from '../src/player/controller.js';
 import {artSizes} from '../src/world/art.js';
 function walker({forward=0,right=1,running=false,colliders=[]}={}) {
   const character={group:new THREE.Object3D(),face:vi.fn(),animate:vi.fn()};
@@ -36,14 +36,14 @@ describe('higher framebuffer density with stable logical framing',()=>{
 });
 describe('responsive continuous explorer',()=>{
   it('starts on the first frame and stops on release or blocking',()=>{
-    const {controller,character,input}=walker();expect(controller.update(1/60,true)).toBeCloseTo(3.2);
-    expect(controller.player.position.x).toBeCloseTo(3.2/60);
+    const {controller,character,input}=walker();expect(controller.update(1/60,true)).toBeCloseTo(WALK_SPEED);
+    expect(controller.player.position.x).toBeCloseTo(WALK_SPEED/60);
     const before=controller.player.position.clone();input.axis=()=>0;expect(controller.update(1/60,true)).toBe(0);
     expect(controller.player.position.equals(before)).toBe(true);input.axis=()=>1;controller.update(1/60,false);
     expect(controller.player.position.equals(before)).toBe(true);expect(character.animate).toHaveBeenLastCalledWith(1/60,0);
   });
   it('travels equally at 20, 30, 60 and 144 fps',()=>{
-    for(const frames of [20,30,60,144]){const {controller}=walker();for(let i=0;i<frames;i++)controller.update(1/frames,true);expect(controller.player.position.x).toBeCloseTo(3.2,9);}
+    for(const frames of [20,30,60,144]){const {controller}=walker();for(let i=0;i<frames;i++)controller.update(1/frames,true);expect(controller.player.position.x).toBeCloseTo(WALK_SPEED,9);}
   });
   it('normalizes diagonals and preserves analogue strength',()=>{
     const a=walker(),d=walker({forward:1}),h=walker({right:.5});
@@ -58,11 +58,12 @@ describe('responsive continuous explorer',()=>{
   it.each([NaN,Infinity,-1])('ignores invalid duration %s',delta=>{
     const {controller}=walker(),before=controller.player.position.clone();expect(controller.update(delta,true)).toBe(0);expect(controller.player.position.equals(before)).toBe(true);
   });
-  it('preserves subpixel sprite motion',()=>{
+  it('draws the explorer on the camera\'s whole-pixel grid, so it never wobbles against the ground',()=>{
     const art=Object.fromEntries(Object.keys(artSizes).map(name=>[name,new THREE.MeshBasicMaterial()]));
-    const character=createCharacter(art,{reducedMotion:true});character.group.position.set(.0123,1,.0234);character.animate(1/60,3.2);
-    expect(character.sprite.position.x).toBeCloseTo(.0123,10);expect(character.sprite.position.y).toBeCloseTo(-.0234*.72,10);
-    character.group.position.x+=.001;character.animate(1/60,3.2);expect(character.sprite.position.x).toBeCloseTo(.0133,10);
+    const character=createCharacter(art,{reducedMotion:true});character.group.position.set(.53,1,.0234);character.animate(1/60,WALK_SPEED);
+    expect(Number.isInteger(character.sprite.position.x*16)).toBe(true);expect(Number.isInteger(character.sprite.position.y*16)).toBe(true);
+    expect(character.sprite.position.x).toBeCloseTo(.5,10);
+    character.group.position.x+=.04;character.animate(1/60,WALK_SPEED);expect(character.sprite.position.x).toBeCloseTo(.5625,10);
     Object.values(art).forEach(material=>material.dispose());character.sprite.geometry.dispose();
   });
 });
