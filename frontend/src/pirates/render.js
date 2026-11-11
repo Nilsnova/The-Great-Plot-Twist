@@ -31,7 +31,10 @@ const EXPLOSION_FRAMES = pirateFrames.explosion;
 const LAYER_ORDER = { far: 76, near: 124, air: 940, fog: 900 };
 const CAPACITY = { far: 96, near: 96, air: 320 };
 const SINK_SECONDS = 1.8, WRECK_SECONDS = 9, SPLASH_SECONDS = .5, FLASH_SECONDS = .12, FIRE_SECONDS = .22;
-const BURST_SECONDS = .6, TRACER_SECONDS = .14, POSE_SECONDS = .45, POST_CAPACITY = 8;
+const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 8;
+// The musket (§10): the firing pose and its flash stay ~250 ms, a short tracer runs to the target, a puff on the hit.
+export const MUSKET = Object.freeze({ fire: .25, tracerMin: .12, tracerLength: 1.6, puff: .4, muzzleX: 1.5, muzzleY: 1 });
+const musketLife = item => Math.max(POSE_SECONDS, item.flight + MUSKET.puff);
 
 /** Shelf-packs the sprites (and a small white block for bars and the beam) into one atlas. Pure. */
 export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width = 512, pad = 2) {
@@ -299,8 +302,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'captain_fired': {
-        tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock }));
-        effects()?.bloom(event.x, y + 1.1, { radius: .7, life: .2, colour: '#fff0b0' });
+        const flight = Math.max(MUSKET.tracerMin, Number.isFinite(event.impactAt) && Number.isFinite(event.t) ? event.impactAt - event.t : 0);
+        tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock, flight }));
+        const dir = event.toX < event.x ? -1 : 1;
+        effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .8, life: MUSKET.fire, colour: '#fff0b0' });
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
@@ -372,21 +377,29 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const grow = 1.2, y = drawnY(burst.z);
     layers.air.push(r, burst.x, y, r.w * grow, r.h * grow, .5, r.anchor * grow, { ...tintOf(r), a: 1 - Math.max(0, p - .6) * 2 });
   }
+  // The shot: the firing pose with its flash, a short tracer from the muzzle to the ship, a puff on the hit.
   function drawTracer(tracer) {
     drawPose(tracer);
-    const p = (clock - tracer.at) / TRACER_SECONDS;
-    if (p >= 1) return;
-    const fromY = drawnY(tracer.z) + 1.1, toY = drawnY(tracer.toZ) + 1;
-    const dx = tracer.toX - tracer.x, dy = toY - fromY, length = Math.hypot(dx, dy), angle = Math.atan2(dy, dx) - Math.PI / 2;
-    layers.air.push(rect[WHITE], tracer.x, fromY, .12, length, .5, 0, { r: 1, g: .95, b: .7, angle, a: .9 * (1 - p) });
+    const age = clock - tracer.at, dir = tracer.toX < tracer.x ? -1 : 1;
+    const mx = tracer.x + dir * MUSKET.muzzleX, my = drawnY(tracer.z) + MUSKET.muzzleY;
+    const tx = tracer.toX, ty = drawnY(tracer.toZ) + .7, dx = tx - mx, dy = ty - my, length = Math.hypot(dx, dy) || 1;
     const flash = rect['fx-musket-flash'];
-    if (flash && p < .6) layers.air.push(flash, tracer.x + Math.sign(dx) * .5, fromY, flash.w, flash.h, .5, flash.h / 2, { a: 1 - p });
-    else if (p < .5) layers.air.push(rect[WHITE], tracer.x + Math.sign(dx) * .5, fromY - .2, .5, .5, .5, 0, { r: 1, g: .9, b: .5, angle: .785, a: 1 - p * 2 });
+    if (flash && age < MUSKET.fire) layers.air.push(flash, mx + dir * .3, my, flash.w, flash.h, .5, flash.h / 2, { flip: dir < 0, a: age < MUSKET.fire * .6 ? 1 : .6 });
+    if (age < tracer.flight) {
+      // Reduced motion: the whole line for a moment instead of a moving streak.
+      const p = still() ? 1 : age / tracer.flight, head = Math.min(1, p), tail = still() ? 0 : Math.max(0, head - MUSKET.tracerLength / length);
+      const x0 = mx + dx * tail, y0 = my + dy * tail, span = (head - tail) * length, angle = Math.atan2(dy, dx) - Math.PI / 2;
+      if (span > .05) layers.air.push(rect[WHITE], x0, y0, .125, span, .5, 0, { r: 1, g: .93, b: .62, angle, a: .95 });
+    } else if (age < tracer.flight + MUSKET.puff) {
+      const p = (age - tracer.flight) / MUSKET.puff, puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
+      if (puff) layers.air.push(puff, tx, ty - .3, puff.w * .75, puff.h * .75, .5, puff.anchor * .75, { a: 1 - p * p });
+    }
   }
-  // The musket pose: the captain-musket art at the shooter for a moment after a shot.
+  // The musket pose: the captain-musket art at the shooter, firing (frame 2) for MUSKET.fire, then aiming.
   function drawPose(tracer) {
-    const p = (clock - tracer.at) / POSE_SECONDS, r = rect[pirateFrames.captain[p < .4 ? 1 : 0]];
-    if (p >= 1) return;
+    const age = clock - tracer.at;
+    if (age >= POSE_SECONDS) return;
+    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]];
     layers.air.push(r, tracer.x, drawnY(tracer.z), r.w, r.h, .5, r.anchor, { flip: tracer.toX < tracer.x });
   }
   function drawCaptain() {
@@ -514,7 +527,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own;
       shells.sweep(shell => simNow < shell.to);
       bursts.sweep(item => clock - item.at < BURST_SECONDS);
-      tracers.sweep(item => clock - item.at < POSE_SECONDS);
+      tracers.sweep(item => clock - item.at < musketLife(item));
       warnings.sweep(item => clock - item.at < 3.2);
       balls.sweep(ball => { if (simNow < ball.to) return true; land(ball); return false; });
       splashes.sweep(item => clock - item.at < SPLASH_SECONDS);

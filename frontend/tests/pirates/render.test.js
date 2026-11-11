@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
-import { ATLAS_IDS, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import { ATLAS_IDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 
 const at = (id, kind, bearing, radius) => {
@@ -70,6 +70,35 @@ describe('pirate wave renderer', () => {
     renderer.setVisible(false); renderer.update({ state: sim.state(), simTime: 15, dt: .05 });
     expect(renderer.stats().instances).toBe(0);
     expect(renderer.root.visible).toBe(false);
+    renderer.dispose();
+  });
+
+  it('holds the musket pose and flash ~250 ms, runs a tracer to the ship and puffs on the hit', () => {
+    const scene = new THREE.Scene(), pack = packAtlas(), renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack }, fx: () => null });
+    const air = renderer.root.children.find(item => item.name === 'pirates:air');
+    const drawn = () => {
+      const uv = air.geometry.getAttribute('iUv').array, out = [];
+      for (let i = 0; i < air.geometry.instanceCount; i++) {
+        const u = Math.min(uv[i * 4], uv[i * 4 + 2]);
+        const hit = Object.entries(pack.rects).find(([, r]) => Math.abs((r.x + .01) / pack.width - u) < 1e-6 && Math.abs(r.x + r.w - .01 - Math.max(uv[i * 4], uv[i * 4 + 2]) * pack.width) < 1e-3);
+        out.push(hit?.[0]);
+      }
+      return out;
+    };
+    expect(MUSKET.fire).toBeGreaterThanOrEqual(.25);
+    const state = { ships: [], walls: [], towers: [], fog: 0, sight: 28 };
+    renderer.events([{ type: 'captain_fired', t: 1, impactAt: 1.3, by: 'me', targetId: 's', x: 0, z: 0, toX: 8, toZ: -2 }]);
+    renderer.update({ state, simTime: 1, dt: .01 });
+    expect(drawn()).toEqual(expect.arrayContaining(['captain-musket-2', 'fx-musket-flash', 'white']));
+    const step = seconds => { for (let i = 0; i < Math.round(seconds / .01); i++) renderer.update({ state, simTime: 1, dt: .01 }); };
+    step(.2); // 210 ms: still firing, the tracer on its way
+    expect(drawn()).toEqual(expect.arrayContaining(['captain-musket-2', 'fx-musket-flash', 'white']));
+    step(.12); // 330 ms: past the fire time and the flight: aiming, the puff on the ship
+    const later = drawn();
+    expect(later).toContain('captain-musket-1'); expect(later).not.toContain('fx-musket-flash');
+    expect(later.some(id => /^fx-smoke-/.test(id))).toBe(true);
+    for (let i = 0; i < 10; i++) renderer.update({ state, simTime: 2, dt: .1 });
+    expect(renderer.stats().tracers).toBe(0);
     renderer.dispose();
   });
 });

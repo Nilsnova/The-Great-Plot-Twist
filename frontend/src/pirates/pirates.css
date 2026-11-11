@@ -21,6 +21,10 @@
 .pirate-banner strong{font:700 34px/1.15 var(--u-serif);color:var(--u-pink)}.pirate-banner span{font:600 18px/1.3 var(--u-font);color:var(--u-brown)}
 .pirate-bell-prompt{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);min-height:48px;font:700 18px/1.2 var(--u-font)}
 /* Tower defense v2: loot this run under the bar, the boss warning, the break between waves. */
+.pirate-musket-hint{text-align:center;font:600 14px/1.2 var(--u-font);color:var(--u-ink);opacity:.9}
+.pirate-musket-key{display:inline-block;border:2px solid currentColor;padding:0 5px;margin-right:2px}
+.pirate-musket-tap{display:none}
+@media(pointer:coarse){.pirate-musket-key{display:none}.pirate-musket-tap{display:inline}}
 .pirate-bar-loot{text-align:center;font:600 15px/1.2 var(--u-font);color:var(--u-gold)}
 .pirate-boss{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#4a2a24;color:#ffe08a;padding:8px 18px;font:700 22px/1.25 var(--u-serif);text-align:center;pointer-events:none;max-width:calc(100vw - 32px);box-sizing:border-box;box-shadow:0 -2px #d8553f,0 2px #d8553f,-2px 0 #d8553f,2px 0 #d8553f,0 8px #0006}
 .pirate-break{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;background:var(--u-parch);color:var(--u-brown);padding:18px 28px;max-width:calc(100vw - 32px);box-sizing:border-box;box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}

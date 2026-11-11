@@ -8,6 +8,7 @@ import { node } from '../ui/kit/dom.js';
 export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp }) =>
   `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
 
+export const MUSKET_HINT_WAVES = 2;
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, reducedMotion = () => false }) {
@@ -24,6 +25,10 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   prompt.addEventListener('click', event => { event.preventDefault(); onAction(); });
   const banner = node('div', 'pirate-banner'); banner.setAttribute('role', 'status'); banner.hidden = true;
   const loot = node('span', 'pirate-bar-loot'); loot.hidden = true; bar.append(loot);
+  // The musket hint (§10) in the first two waves: "F · Musket" (on a touch screen "Tap a ship · Musket").
+  const musket = node('span', 'pirate-musket-hint'); musket.hidden = true;
+  musket.append(node('span', 'pirate-musket-key', 'F'), node('span', 'pirate-musket-tap', 'Tap a ship'), node('span', '', ' · Musket'));
+  bar.append(musket);
   const warning = node('div', 'pirate-boss'); warning.setAttribute('role', 'alert'); warning.hidden = true;
   // The break between two won waves: seconds left, the big button and the switch (kept by the controller).
   const pause = node('div', 'pirate-break'); pause.hidden = true;
@@ -54,6 +59,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       bar.hidden = false;
       if (hp !== null && state.islandHp < hp) hurtUntil = performance.now() + 400;
       hp = state.islandHp;
+      musket.hidden = !(state.wave <= MUSKET_HINT_WAVES);
       bar.classList.toggle('pirate-hurt', performance.now() < hurtUntil);
       if (text === lastBar) return;
       lastBar = text; label.textContent = text;
