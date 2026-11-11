@@ -92,7 +92,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   });
 
   function applyWorld() {
-    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: visiting ? null : unlocks()});
+    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: unlocks()});
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: false, unlocks: null});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
@@ -109,7 +109,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
         endVisit(); ui.toast(answer.message, 'error');
       }
     }
-    if (!visiting) {
+    {
+      // Your own island also while visiting: its coins pay for what you build on the friend's island.
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) { setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
@@ -123,7 +124,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function loadPoint() {
     const answer = await api.piratePoint();
     if (disposed) return answer;
-    if (answer.ok) { point = answer.data; pointMessage = ''; } else pointMessage = answer.message;
+    if (answer.ok) { point = answer.data; pointMessage = ''; tookCoins(answer.data.coins); } else pointMessage = answer.message;
     if (!own) { const mine = await api.getIsland(); if (!disposed && mine.ok) setOwn(mine.data); }
     applyWorld(); refreshCard();
     return answer;
@@ -136,10 +137,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return buildCardModel({spotId, slot: ppSpotById(spotId).slot, spot, coins: own?.coins ?? null, busy: busySpot === spotId ? busyKind : false,
         message: cardMessage || (!point ? pointMessage : ''), point: true, prices: own?.prices ?? null});
     }
+    // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
-    return buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: visiting ? null : own?.coins ?? null,
+    return buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
-      unlocks: visiting ? null : unlocks(), prices: own?.prices ?? null});
+      unlocks: own ? unlocks() : null, prices: own?.prices ?? null});
   }
   const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices});
   const captain = () => captainModel({captain: own?.captain ?? null, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCaptain, message: cardMessage || (!own ? ownMessage : '')});
@@ -182,51 +184,64 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
 
   // The answer of a write: the island, or (on Pirate Point) the shared spots plus your fresh coins.
-  async function took(answer, pointSpot) {
-    if (pointSpot) { point = answer.data; const mine = await api.getIsland(); if (!disposed && mine.ok) setOwn(mine.data); }
+  // Where a build goes: Pirate Point's shared spots, the friend's island you visit, or your own.
+  const placeOf = spotId => (isPointSpot(spotId) ? 'point' : visiting ? 'visit' : 'own');
+  const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
+  async function reloadVisit() {
+    if (!visiting) return;
+    const fresh = await api.visit(visiting.code);
+    if (!disposed && fresh.ok && visiting) visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)};
+  }
+  async function reloadOwn() { const mine = await api.getIsland(); if (!disposed && mine.ok) setOwn(mine.data); }
+  async function took(answer, place) {
+    if (place === 'point') { point = answer.data; if (Number.isSafeInteger(answer.data.coins)) tookCoins(answer.data.coins); else await reloadOwn(); }
+    else if (place === 'visit') { await Promise.all([reloadVisit(), reloadOwn()]); }
     else setOwn(answer.data);
   }
-  async function refused(answer, pointSpot) {
+  async function refused(answer, place) {
     cardMessage = answer.message;
     if (['spot_taken', 'insufficient_funds', 'max_level', 'not_built', 'locked', 'crew_full'].includes(answer.code)) {
-      const fresh = pointSpot ? await api.piratePoint() : await api.getIsland();
-      if (disposed) return;
-      if (fresh.ok) { if (pointSpot) point = fresh.data; else setOwn(fresh.data); }
+      if (place === 'point') { const fresh = await api.piratePoint(); if (!disposed && fresh.ok) { point = fresh.data; tookCoins(fresh.data.coins); } }
+      else if (place === 'visit') await Promise.all([reloadVisit(), reloadOwn()]);
+      else await reloadOwn();
     }
   }
+  const onWhere = place => (place === 'point' ? ' for Pirate Point' : place === 'visit' ? ` on ${visiting?.ownerName ? `${visiting.ownerName}'s` : 'this'} island` : '');
   async function build(spotId, kind) {
-    const pointSpot = isPointSpot(spotId), spot = pointSpot ? ppSpotById(spotId) : spotById(spotId);
+    const place = placeOf(spotId), spot = place === 'point' ? ppSpotById(spotId) : spotById(spotId);
     const choice = kind ?? spot?.kind;
-    if (!spot || (visiting && !pointSpot) || busySpot || !BUILDINGS[choice]) return;
+    if (!spot || busySpot || !BUILDINGS[choice]) return;
     busySpot = spotId; busyKind = choice; cardMessage = ''; refreshCard();
-    const answer = pointSpot ? await api.pointBuild({spot: spotId, kind: choice}) : await api.build({spot: spotId, kind: choice});
+    const answer = place === 'point' ? await api.pointBuild({spot: spotId, kind: choice})
+      : await api.build({spot: spotId, kind: choice, ...(place === 'visit' ? {code: visiting.code} : {})});
     if (disposed) return;
     busySpot = null; busyKind = null;
     if (answer.ok) {
-      await took(answer, pointSpot);
+      await took(answer, place);
       if (disposed) return;
-      if (!pointSpot) emit({type: ISLAND_BUILT, kind: choice, spot: spotId});
+      if (place === 'own') emit({type: ISLAND_BUILT, kind: choice, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
-      ui.toast(`${BUILDINGS[choice].name} built${pointSpot ? ' for Pirate Point' : ''}! You have ${coinText(own?.coins)}.`, 'success');
-    } else await refused(answer, pointSpot);
+      ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
+    } else await refused(answer, place);
     refreshCard();
   }
   async function upgrade(spotId) {
-    const pointSpot = isPointSpot(spotId);
-    if ((visiting && !pointSpot) || busySpot) return;
+    const place = placeOf(spotId);
+    if (busySpot) return;
     busySpot = spotId; busyKind = 'upgrade'; cardMessage = ''; refreshCard();
-    const answer = pointSpot ? await api.pointUpgrade({spot: spotId}) : await api.upgrade({spot: spotId});
+    const answer = place === 'point' ? await api.pointUpgrade({spot: spotId})
+      : await api.upgrade({spot: spotId, ...(place === 'visit' ? {code: visiting.code} : {})});
     if (disposed) return;
     busySpot = null; busyKind = null;
     if (answer.ok) {
-      await took(answer, pointSpot);
+      await took(answer, place);
       if (disposed) return;
-      const now = (pointSpot ? point : own)?.spots.find(item => item.id === spotId);
+      const now = (place === 'point' ? point : place === 'visit' ? visiting : own)?.spots?.find(item => item.id === spotId);
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
-      if (!pointSpot) emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
-      ui.toast(`${name} is now level ${now?.level ?? '?'}! You have ${coinText(own?.coins)}.`, 'success');
-    } else await refused(answer, pointSpot);
+      if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
+      ui.toast(`${name} is now level ${now?.level ?? '?'}${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
+    } else await refused(answer, place);
     refreshCard();
   }
   async function hire(id) {
@@ -338,7 +353,6 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!spot) return undefined;
       const answer = (pointSpot ? point : target())?.spots.find(item => item.id === zone);
       if (answer?.built) return `${KINDS[answer.kind]?.name ?? slotName(spot.slot)} · level ${answer.level ?? 1}`;
-      if (visiting && !pointSpot) return slotName(spot.slot);
       return spot.slot === 'tower' ? 'Build a tower' : `Build a ${KINDS[spot.kind].name.toLowerCase()} · ${coinText(KINDS[spot.kind].cost)}`;
     },
     presencePlace(place) {

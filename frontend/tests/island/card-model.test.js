@@ -1,7 +1,7 @@
 // What the build and upgrade card, the crew and captain panels, the bell and Play with a friend say in each state.
 import {describe, expect, it} from 'vitest';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, lootText, countdownText, secondsUntil, coinText} from '../../src/island/card-model.js';
-import {unlocksFor, readUnlocks, newUnlocks} from '../../src/island/td-rules.js';
+import {unlocksFor, readUnlocks, newUnlocks, lockedWave} from '../../src/island/td-rules.js';
 
 const tower = (built = false, kind = 'cannon', level = built ? 1 : 0) => ({id: 'cannon_1', kind, built, level, cost: 30});
 const wall = (built = false, level = built ? 1 : 0) => ({id: 'wall_1', kind: 'wall', built, level, cost: 10});
@@ -51,10 +51,13 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
     expect(model.message).toBe('A wall costs 10 coins. You need more coins.');
     expect(buildCardModel({spotId: 'cannon_1', kind: 'cannon', message: 'Sign in to build on your island.'}).reason).toBe('');
   });
-  it('never lets a visitor build', () => {
-    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), visitor: true, ownerName: 'Captain Gull'}))
-      .toMatchObject({mode: 'info', disabled: true, reason: 'Only Captain Gull can build here.', coins: '', choices: []});
-    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), visitor: true, ownerName: 'Captain Gull'}).reason).toBe('Captain Gull built this cannon.');
+  it("on a friend's island: the same card, you pay, it stays theirs, no crew", () => {
+    const empty = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: fresh, visitor: true, ownerName: 'Captain Gull'});
+    expect(empty).toMatchObject({mode: 'choose', owner: "You pay · it stays on Captain Gull's island", coins: 'You have 🪙 100'});
+    expect(empty.choices.map(choice => choice.kind)).toEqual(['cannon']);
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 100, unlocks: wave3, visitor: true, ownerName: 'Captain Gull'}))
+      .toMatchObject({mode: 'upgrade', upgrade: {label: 'Level 2 · 🪙 60'}, hire: false, owner: "You pay · it stays on Captain Gull's island"});
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', visitor: true}).reason).toBe('The island is still loading.');
   });
   it('on Pirate Point: the same card, paid by you, nothing locked, no crew', () => {
     const model = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {id: 'pp_tower_1', kind: 'cannon', built: false, level: 0, cost: 30}, coins: 100, point: true});
@@ -97,7 +100,14 @@ describe('unlocks (§9)', () => {
     expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: null});
   });
   it('reads the server unlocks first and names what a won wave brings', () => {
-    expect(readUnlocks({waveBest: 0, unlocks: {wonWave: 3, levels: {mortar: 0}}}).levels).toMatchObject({mortar: 0, watchtower: 1});
+    // The backend's shape: ids "<kind>:<level>", "crew:<crew>", "captain:<level>" with the wave the rest needs.
+    const sent = readUnlocks({waveBest: 9, unlocks: {wave: 3, unlocked: ['wall:1', 'wall:2', 'cannon:1', 'cannon:2', 'house:1', 'watchtower:1', 'captain:1', 'captain:3'],
+      locked: {'mortar:1': 4, 'crew:gunner': 5, 'captain:4': 8}}});
+    expect(sent).toMatchObject({wonWave: 3, levels: {wall: 2, cannon: 2, mortar: 0, watchtower: 1, house: 1}, captain: 3, crew: {gunner: false}, next: {wave: 4}});
+    expect(lockedWave(sent, {kind: 'mortar'})).toBe(4);
+    expect(lockedWave(sent, {crew: 'gunner'})).toBe(5);
+    expect(lockedWave(sent, {kind: 'house', level: 2})).toBe(5); // not sent: the table
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: sent}).soon).toBe('Coming soon: Mortar · after wave 4');
     expect(readUnlocks({waveBest: 2}).levels.house).toBe(1);
     expect(newUnlocks({waveBest: 2}, {waveBest: 3})).toEqual([{wave: 3, title: 'New: Mortar unlocked!',
       line: 'A mortar hits every ship near the impact. Build one on a tower spot.'}]);

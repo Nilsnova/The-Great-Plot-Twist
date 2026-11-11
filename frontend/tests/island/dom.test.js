@@ -45,11 +45,11 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     await wait(30);
     const upgraded = {...read(), toast: island.ui.toastText};
     island.ui.close();
-    island.pick('tower_s5');
+    island.pick('cannon_5');
     const choice = read();
     body().querySelector('.island-choice[data-kind="mortar"]').click();
     await wait(30);
-    const mortar = island.island.spots.find(spot => spot.id === 'tower_s5');
+    const mortar = island.island.spots.find(spot => spot.id === 'cannon_5');
     transport.dev.setWaveBest(5); transport.dev.setCoins(1000); await island.load();
     island.pick('cannon_1'); body().querySelector('[data-focus="upgrade"]').click(); await wait(30);
     island.pick('cannon_1');
@@ -58,7 +58,7 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     transport.dev.setCoins(10); await island.load();
     island.pick('cannon_2');
     const short = read();
-    island.pick('tower_s5');
+    island.pick('cannon_5');
     const shortUpgrade = read();
     island.ui.close();
     island.pick('island_bell');
@@ -204,7 +204,7 @@ it('a server refusal shows its plain message on the card', async () => {
   expect(message).toBe('Wall already stands on this spot.');
 });
 
-it("visits a friend's island by code: their buildings, no building, the friend's room", async () => {
+it("visits a friend's island by code: their buildings, building there with your own coins, the friend's room", async () => {
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
@@ -215,8 +215,17 @@ it("visits a friend's island by code: their buildings, no building, the friend's
     await island.load();
     const visit = document.querySelector('.island-visit').textContent;
     island.pick('cannon_1');
-    const card = document.querySelector('.island-card[open]');
-    const built = {reason: card.querySelector('.island-reason').textContent, buttons: card.querySelectorAll('.island-card-body .kit-button, .island-choice').length};
+    let card = document.querySelector('.island-card[open]');
+    const built = {owner: card.querySelector('.island-owner').textContent, pips: card.querySelector('.island-pips').getAttribute('aria-label'),
+      soon: card.querySelector('.island-soon').textContent, hire: !!card.querySelector('.island-hire')};
+    // A visitor builds with their own coins; it stays on the friend's island.
+    island.pick('wall_3');
+    card = document.querySelector('.island-card[open]');
+    const wallCard = {owner: card.querySelector('.island-owner').textContent, button: card.querySelector('[data-focus="build"]').textContent};
+    card.querySelector('[data-focus="build"]').click();
+    await new Promise(resolve => setTimeout(resolve, 40));
+    const paid = {toast: island.ui.toastText, coins: transport.dev.read().coins, theirs: island.visiting.spots.find(spot => spot.id === 'wall_3').built,
+      mine: transport.dev.read().built.includes('wall_3')};
     island.ui.close();
     const room = island.presencePlace('home_islet'), cabin = island.label('island_cabin');
     island.pick('island_cabin');
@@ -224,10 +233,12 @@ it("visits a friend's island by code: their buildings, no building, the friend's
     await island.sailHome();
     const home = {room: island.presencePlace('home_islet'), visitHidden: document.querySelector('.island-visit').hidden, code: island.island.code};
     island.dispose();
-    return {visit, built, room, cabin, noInvite, home};
+    return {visit, built, wallCard, paid, room, cabin, noInvite, home};
   });
   expect(result.visit).toContain("Visiting Captain Gull's island · ISLE-FR3ND");
-  expect(result.built).toEqual({reason: 'Captain Gull built this cannon.', buttons: 0});
+  expect(result.built).toEqual({owner: "You pay · it stays on Captain Gull's island", pips: 'Level 1 of 3', soon: 'Coming soon: Level 2 · after wave 2', hire: false});
+  expect(result.wallCard).toEqual({owner: "You pay · it stays on Captain Gull's island", button: 'Build · 🪙 10'});
+  expect(result.paid).toEqual({toast: "Wall built on Captain Gull's island! You have 🪙 90.", coins: 90, theirs: true, mine: false});
   expect(result.room).toBe('isle_fr3nd');
   expect(result.noInvite).toBe(true);
   expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M'});

@@ -20,7 +20,7 @@ describe('fake island API', () => {
     expect(island.spots.map(spot => `${spot.id}:${spot.kind}:${spot.cost}:${spot.built}`)).toEqual([
       'wall_1:wall:10:false', 'wall_2:wall:10:false', 'wall_3:wall:10:false', 'wall_4:wall:10:false', 'wall_5:wall:10:false', 'wall_6:wall:10:false',
       'cannon_1:cannon:30:false', 'cannon_2:cannon:30:false', 'cannon_3:cannon:30:false', 'cannon_4:cannon:30:false',
-      'tower_s5:cannon:30:false', 'tower_s6:cannon:30:false', 'tower_s7:cannon:30:false', 'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false']);
+      'cannon_5:cannon:30:false', 'cannon_6:cannon:30:false', 'cannon_7:cannon:30:false', 'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false']);
     expect((await api.island()).code).toBe(island.code);
   });
 

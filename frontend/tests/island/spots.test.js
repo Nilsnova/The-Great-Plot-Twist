@@ -9,15 +9,16 @@ import {FAKE_SPOTS} from './fake.js';
 describe('island spots', () => {
   it('has 16 unique ids from one mapping table, in the order and kinds of the server', () => {
     expect(SPOT_IDS).toEqual(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
-      'tower_s5', 'tower_s6', 'tower_s7', 'tower_1', 'house_1', 'house_2']);
+      'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2']);
     expect(new Set(SPOT_IDS).size).toBe(16);
     expect(SPOT_TABLE.map(row => row[0])).toEqual(SPOT_IDS);
     expect(SPOTS.filter(spot => spot.slot === 'wall')).toHaveLength(6);
     expect(SPOTS.filter(spot => spot.slot === 'tower')).toHaveLength(7);
     expect(SPOTS.map(spot => [spot.id, spot.kind])).toEqual(FAKE_SPOTS.map(spot => [spot.id, spot.kind]));
     expect(Object.fromEntries(Object.entries(KINDS).map(([kind, info]) => [kind, info.cost]))).toEqual({wall: 10, cannon: 30, mortar: 60, watchtower: 40, house: 50});
-    // The backend may call the corner towers tower_s1…tower_s4: the alias table maps them.
-    expect(Object.keys(SPOT_ALIASES).map(localSpotId)).toEqual(['cannon_1', 'cannon_2', 'cannon_3', 'cannon_4']);
+    // The backend's ids are the table's own; only old draft names go through the alias table.
+    for (const id of SPOT_IDS) expect(localSpotId(id)).toBe(id);
+    expect(Object.values(SPOT_ALIASES).every(id => SPOT_IDS.includes(id))).toBe(true);
     expect(spotById('tower_s2').id).toBe('cannon_2');
   });
   it('lists the ten Pirate Point spots with unique ids and zones', () => {
@@ -63,7 +64,7 @@ describe('island spots', () => {
   });
   it('lists the built defences with their place for the wave simulation', () => {
     expect(defenses([{id: 'cannon_1', kind: 'cannon', built: true, cost: 30}, {id: 'wall_1', kind: 'wall', built: false, cost: 10},
-      {id: 'moat', kind: 'wall', built: true, cost: 10}, {id: 'tower_s5', kind: 'mortar', built: true, level: 2, cost: 30}]))
-      .toEqual([{id: 'cannon_1', kind: 'cannon', level: 1, x: -12.5, z: -14.5}, {id: 'tower_s5', kind: 'mortar', level: 2, x: -15, z: -6}]);
+      {id: 'moat', kind: 'wall', built: true, cost: 10}, {id: 'cannon_5', kind: 'mortar', built: true, level: 2, cost: 30}]))
+      .toEqual([{id: 'cannon_1', kind: 'cannon', level: 1, x: -12.5, z: -14.5}, {id: 'cannon_5', kind: 'mortar', level: 2, x: -15, z: -6}]);
   });
 });

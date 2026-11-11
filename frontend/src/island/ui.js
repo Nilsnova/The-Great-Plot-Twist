@@ -91,7 +91,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         }
         body.append(list);
       } else if (model.mode === 'build') {
-        body.append(line('island-cost', model.cost));
+        // The price is on the button ("Build · 🪙 10"), so it is not repeated above it.
         act = button(model.button, () => on.build?.(model.spotId, model.kind)); act.dataset.focus = 'build'; act.disabled = model.disabled;
         body.append(act);
       } else if (model.mode === 'upgrade') {

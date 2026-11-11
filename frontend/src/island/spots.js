@@ -16,10 +16,10 @@ export const KINDS = Object.freeze({
 });
 // THE spot table (docs/TOWER-DEFENSE.md §2, 16 spots): [id, slot, x, z, edge]. slot is what may stand
 // there: wall, tower (a cannon or a mortar, chosen at the first build), watchtower or house. The
-// server's ids are the first column; if the backend renames a spot, change it here (or add the new
-// name to SPOT_ALIASES) and nothing else.
+// server's ids are the first column (the backend's ids as built, 11 Nov); if the backend renames a
+// spot, change it here (or add the old name to SPOT_ALIASES) and nothing else.
 //   walls   six along the shore (west, north twice, east, south twice)
-//   towers  the four corners (the old cannon_1…cannon_4), west, east and the south beach
+//   towers  cannon_1…cannon_7 (a cannon or a mortar): the four corners, west, east and the south beach
 //   tower   the watchtower on the hill at the north end of the main path
 //   houses  inland, at the ends of the north cross path
 export const SPOT_TABLE = Object.freeze([
@@ -28,12 +28,12 @@ export const SPOT_TABLE = Object.freeze([
   ['wall_5', 'wall', 12, 18, 'shore'], ['wall_6', 'wall', -5, -19.5, 'shore'],
   ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
   ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
-  ['tower_s5', 'tower', -15, -6, 'side'], ['tower_s6', 'tower', 14.5, -3, 'side'], ['tower_s7', 'tower', 4.5, 16.5, 'side'],
+  ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
   ['tower_1', 'watchtower', 0, -14, 'hill'],
   ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
 ].map(row => Object.freeze(row)));
-// Other names the backend may use for the same spots (§2: tower_s1…tower_s4 may be cannon_1…cannon_4).
-export const SPOT_ALIASES = Object.freeze({tower_s1: 'cannon_1', tower_s2: 'cannon_2', tower_s3: 'cannon_3', tower_s4: 'cannon_4'});
+// Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
+export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));
 export const localSpotId = id => SPOT_ALIASES[id] ?? id;
 const DEFAULT_KIND = {wall: 'wall', tower: 'cannon', watchtower: 'watchtower', house: 'house'};
 const spot = ([id, slot, x, z, edge]) => Object.freeze({id, slot, kind: DEFAULT_KIND[slot], x, z, edge});

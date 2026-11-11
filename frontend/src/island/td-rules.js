@@ -79,19 +79,36 @@ export function unlockWave({kind = null, level = 1, crew = null, captain = null}
   return null;
 }
 
-// The island answer's unlocks, whatever the server sends: its own {levels, crew, captain} when present,
-// otherwise derived from unlocks.wonWave (or waveBest, the best wave on your own island).
+// The island answer's unlocks (the backend's shape, TOWER-DEFENSE.md §9):
+//   {wave, unlocked: ["wall:1", "cannon:1", "captain:1", "crew:gunner", ...], locked: {"mortar:1": 3, ...}}
+// read into the plain object of unlocksFor(), plus `locked` (id -> wave). Without `unlocked` it is
+// derived from unlocks.wave (or waveBest) with the table above.
 export function readUnlocks(island) {
-  const sent = island?.unlocks;
-  const won = Number.isSafeInteger(sent?.wonWave) ? sent.wonWave : Number.isSafeInteger(island?.waveBest) ? island.waveBest : 0;
+  const sent = island?.unlocks && typeof island.unlocks === 'object' ? island.unlocks : null;
+  const won = Number.isSafeInteger(sent?.wave) ? sent.wave : Number.isSafeInteger(island?.waveBest) ? island.waveBest : 0;
   const base = unlocksFor(won);
-  if (!sent || typeof sent !== 'object') return base;
-  const levels = {...base.levels};
-  for (const kind of Object.keys(levels)) if (Number.isSafeInteger(sent.levels?.[kind])) levels[kind] = sent.levels[kind];
-  const crew = {...base.crew};
-  for (const id of CREW_IDS) if (typeof sent.crew?.[id] === 'boolean') crew[id] = sent.crew[id];
-  return {wonWave: won, levels, crew, captain: Number.isSafeInteger(sent.captain) ? sent.captain : base.captain,
-    next: sent.next && Number.isSafeInteger(sent.next.wave) ? {wave: sent.next.wave, title: String(sent.next.title ?? base.next?.title ?? '')} : base.next};
+  const locked = sent?.locked && typeof sent.locked === 'object' ? {...sent.locked} : {};
+  if (!Array.isArray(sent?.unlocked)) return {...base, locked};
+  const levels = {wall: 0, cannon: 0, mortar: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  let captain = 1;
+  for (const id of sent.unlocked) {
+    if (typeof id !== 'string') continue;
+    const [name, value] = id.split(':');
+    if (name === 'crew' && Object.hasOwn(crew, value)) crew[value] = true;
+    else if (name === 'captain') captain = Math.max(captain, Number(value) || 1);
+    else if (Object.hasOwn(levels, name)) levels[name] = Math.max(levels[name], Number(value) || 1);
+  }
+  const waves = Object.values(locked).filter(Number.isSafeInteger);
+  const soonest = waves.length ? Math.min(...waves) : null;
+  return {wonWave: won, levels, crew, captain, locked,
+    next: soonest === null ? null : {wave: soonest, title: UNLOCK_NEWS[soonest]?.title ?? ''}};
+}
+// The wave after which an id ("mortar:1", "crew:gunner", "captain:4") unlocks: the server's word
+// first, then the table.
+export function lockedWave(unlocks, {kind = null, level = 1, crew = null, captain = null} = {}) {
+  const id = kind ? `${kind}:${level}` : crew ? `crew:${crew}` : captain ? `captain:${captain}` : '';
+  const sent = unlocks?.locked?.[id];
+  return Number.isSafeInteger(sent) ? sent : unlockWave({kind, level, crew, captain});
 }
 // The unlock steps passed between two island answers (for the "New: … unlocked!" toast), oldest first.
 export function newUnlocks(before, after) {
@@ -103,7 +120,7 @@ export function newUnlocks(before, after) {
 
 // The price of the next step of a spot: build (level 0 → 1) or upgrade, from the answer when it has one.
 export function priceFor(kind, level, prices = null) {
-  const sent = prices?.[kind]?.[level];
+  const sent = prices?.kinds?.[kind]?.[level];
   if (Number.isSafeInteger(sent)) return sent;
   return BUILDINGS[kind]?.price[level] ?? null;
 }

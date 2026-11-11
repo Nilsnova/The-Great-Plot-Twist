@@ -10,6 +10,7 @@
 //   await api.currentWave({where: 'own'});            // GET  /api/waves/current?where=
 //   await api.finishWave({waveId, survived, shipsSunk});   // POST /api/waves/finish
 //   await api.upgrade({spot});                        // POST /api/island/upgrade     (TOWER-DEFENSE.md §7)
+//   await api.build({spot, kind, code: 'ISLE-FR3ND'}) // on a friend's island, paid with your coins
 //   await api.hire({crew: 'gunner'});                 // POST /api/island/hire
 //   await api.upgradeCaptain();                       // POST /api/island/captain     (§10)
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
@@ -62,9 +63,12 @@ export function isVisit(data) {
   return !!data && isText(data.code) && typeof data.ownerName === 'string' && isCount(data.waveBest)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
+// GET /api/pirate-point: {spots, waveBest, coins} (coins: your own balance).
 export function isPoint(data) {
-  return !!data && Array.isArray(data.spots) && data.spots.every(isSpot) && isCount(data.waveBest ?? 0);
+  return !!data && Array.isArray(data.spots) && data.spots.every(isSpot) && isCount(data.waveBest ?? 0) && (data.coins === undefined || isCount(data.coins));
 }
+// A build or upgrade on a friend's island answers that island (or yours): anything with its spots.
+export const hasSpots = data => !!data && Array.isArray(data.spots) && data.spots.every(isSpot);
 export function isInvite(data) {
   return !!data && data.admitted === true && !!data.island && isText(data.island.code) && typeof data.island.ownerName === 'string';
 }
@@ -135,11 +139,18 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
 
   return {
     getIsland: () => askSpots(() => transport.get(PATHS.island), isIsland),
-    build({spot, kind} = {}) {
-      return writeSpots(`build:${spot}`, actionUid => transport.post(PATHS.build, {spot: sent(spot), kind, actionUid}), isIsland);
+    // code: a friend's island (ISLE-XXXXX) to build on with your own coins; without it your own island.
+    build({spot, kind, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(where ? `build:${where}:${spot}` : `build:${spot}`, actionUid => transport.post(PATHS.build, {spot: sent(spot), kind, actionUid, ...(where ? {code: where} : {})}),
+        where ? hasSpots : isIsland);
     },
-    upgrade({spot} = {}) {
-      return writeSpots(`upgrade:${spot}`, actionUid => transport.post(PATHS.upgrade, {spot: sent(spot), actionUid}), isIsland);
+    upgrade({spot, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(where ? `upgrade:${where}:${spot}` : `upgrade:${spot}`, actionUid => transport.post(PATHS.upgrade, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
+        where ? hasSpots : isIsland);
     },
     hire({crew} = {}) {
       if (!CREW_IDS.includes(crew)) return refuse(422, 'validation_error', MESSAGES.badCrew);

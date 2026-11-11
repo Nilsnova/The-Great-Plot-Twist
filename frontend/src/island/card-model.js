@@ -1,6 +1,6 @@
 // What the island's small cards say, as pure functions (no DOM): the build and upgrade card of a spot,
 // the crew and captain panels, the harbor bell, Play with a friend and the loot toast. The server decides; these only describe its last answer.
-import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, priceFor, statLine, captainLine, unlockWave} from './td-rules.js';
+import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, priceFor, statLine, captainLine, lockedWave} from './td-rules.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 
@@ -13,7 +13,9 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 //   mode 'choose'   an empty tower spot: choices [{kind, name, line, price, disabled, reason}]
 //   mode 'build'    an empty spot of one kind: button "Build · 🪙 10"
 //   mode 'upgrade'  a building that can go up a level: upgrade {label "Level 2 · 🪙 60", stats}
-//   mode 'info'     nothing to do here (a visitor, at the highest level, or the next level is locked)
+//   mode 'info'     nothing to do here (at the highest level, or the next level is locked)
+// A visitor (§6, 11 Nov) builds and upgrades on the friend's island with their own coins: the same
+// card, with "You pay · it stays on <owner>'s island" and no crew button.
 // One primary button at most (the build or the upgrade); `soon` is the small "Coming soon" line.
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
   busy = false, message = '', unlocks = null, prices = null, point = false} = {}) {
@@ -28,23 +30,19 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? 'Build a cannon or a mortar here.',
     mode: 'info', built, kind: shown, level, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy,
-    coins: visitor || coins === null ? '' : `You have ${coinText(coins)}`,
-    owner: point ? 'Paid by you · belongs to Pirate Point' : '', hire: false};
+    coins: coins === null ? '' : `You have ${coinText(coins)}`,
+    owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
     model.stats = statLine(shown, level);
   }
-  if (visitor) {
-    model.reason = built ? `${ownerName || 'The owner'} built this ${info.name.toLowerCase()}.` : `Only ${ownerName || 'the owner'} can build here.`;
-    return model;
-  }
-  if (!spot) { model.reason = message ? '' : 'Your island is still loading.'; return model; }
-  model.hire = !point && built && (place === 'tower' || place === 'wall');
+  if (!spot) { model.reason = message ? '' : visitor ? 'The island is still loading.' : 'Your island is still loading.'; return model; }
+  model.hire = !point && !visitor && built && (place === 'tower' || place === 'wall');
   if (!built && place === 'tower') {
     model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';
     for (const choice of SLOT_KINDS.tower) {
       const price = priceFor(choice, 0, prices);
-      if (allowed(choice) < 1) { model.soon = `Coming soon: ${BUILDINGS[choice].name} · after wave ${unlockWave({kind: choice}) ?? '?'}`; continue; }
+      if (allowed(choice) < 1) { model.soon = `Coming soon: ${BUILDINGS[choice].name} · after wave ${lockedWave(unlocks, {kind: choice}) ?? '?'}`; continue; }
       model.choices.push({kind: choice, name: BUILDINGS[choice].name, line: BUILDINGS[choice].line, price: coinText(price),
         disabled: busy || !enough(price), reason: coins === null ? 'Your coins are still loading.' : enough(price) ? '' : short(price),
         busy: busy === choice});
@@ -55,7 +53,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     const price = priceFor(shown, 0, prices);
     model.mode = 'build'; model.cost = coinText(price);
     model.button = busy ? 'Building…' : `Build · ${coinText(price)}`;
-    if (allowed(shown) < 1) { model.mode = 'info'; model.button = ''; model.soon = `Coming soon · after wave ${unlockWave({kind: shown}) ?? '?'}`; return model; }
+    if (allowed(shown) < 1) { model.mode = 'info'; model.button = ''; model.soon = `Coming soon · after wave ${lockedWave(unlocks, {kind: shown}) ?? '?'}`; return model; }
     if (busy) return model;
     if (coins === null) model.reason = 'Your coins are still loading.';
     else if (!enough(price)) model.reason = short(price);
@@ -65,7 +63,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   // Built: the next level, if any.
   const next = level + 1;
   if (level >= model.maxLevel) { model.reason = 'Highest level reached.'; return model; }
-  if (allowed(shown) < next) { model.soon = `Coming soon: Level ${next} · after wave ${unlockWave({kind: shown, level: next}) ?? '?'}`; return model; }
+  if (allowed(shown) < next) { model.soon = `Coming soon: Level ${next} · after wave ${lockedWave(unlocks, {kind: shown, level: next}) ?? '?'}`; return model; }
   const price = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(shown, level, prices);
   model.mode = 'upgrade';
   model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: statLine(shown, level, next)};
@@ -81,9 +79,10 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
 export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null} = {}) {
   const rows = [], soon = [];
   for (const id of CREW_IDS) {
-    const info = CREW[id], owned = Number.isSafeInteger(crew?.[id]) ? crew[id] : 0;
-    const price = Number.isSafeInteger(prices?.crew?.[id]) ? prices.crew[id] : info.price;
-    if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name} · after wave ${unlockWave({crew: id}) ?? '?'}`); continue; }
+    const sent = prices?.crew?.[id], owned = Number.isSafeInteger(crew?.[id]) ? crew[id] : 0;
+    const info = {...CREW[id], ...(Number.isSafeInteger(sent?.max) ? {max: sent.max} : {})};
+    const price = Number.isSafeInteger(sent?.price) ? sent.price : info.price;
+    if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name} · after wave ${lockedWave(unlocks, {crew: id}) ?? '?'}`); continue; }
     const full = owned >= info.max;
     const row = {id, name: info.name, line: info.line, price: coinText(price), owned: `${owned} of ${info.max}`,
       button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: ''};
@@ -95,7 +94,7 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
     rows.push(row);
   }
   return {title: 'Crew', lead: rows.length ? 'Crew members help on their own during every wave. You keep them.'
-    : `Crew members join after you win wave ${unlockWave({crew: 'gunner'})}.`,
+    : `Crew members join after you win wave ${lockedWave(unlocks, {crew: 'gunner'})}.`,
   rows, soon: soon.length ? `Coming soon: ${soon.join(', ')}` : '', message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
 }
 
@@ -106,7 +105,7 @@ export function captainModel({captain = null, coins = null, unlocks = null, busy
     stats: captainLine(level), hint: 'Tap a ship to fire your musket (F).', upgrade: null, button: '', disabled: true, reason: '', soon: '', message,
     coins: coins === null ? '' : `You have ${coinText(coins)}`};
   if (level >= CAPTAIN_MAX) { model.reason = 'Highest level reached.'; return model; }
-  if (unlocks && unlocks.captain < next) { model.soon = `Coming soon: Level ${next} · after wave ${unlockWave({captain: next}) ?? '?'}`; return model; }
+  if (unlocks && unlocks.captain < next) { model.soon = `Coming soon: Level ${next} · after wave ${lockedWave(unlocks, {captain: next}) ?? '?'}`; return model; }
   const price = Number.isSafeInteger(captain?.nextPrice) ? captain.nextPrice : CAPTAIN.price[level];
   model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: captainLine(level, next)};
   model.button = busy ? 'Upgrading…' : 'Upgrade';

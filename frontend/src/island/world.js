@@ -147,7 +147,7 @@ export function decorateIsland(place, ctx = {}) {
         buildings.get(`${spot.id}:${kind}`).visible = built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
       }
-      markers.get(spot.id).visible = !built && !visitor && known && !battle && open;
+      markers.get(spot.id).visible = !built && known && !battle && open; // a visitor builds too, with their own coins
     }
     if (layout.zones === islandZones) {
       place.zones = islandZones({visitor});

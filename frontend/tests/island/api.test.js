@@ -28,12 +28,13 @@ describe('island api: accepted answers', () => {
     expect(answer.data.code).toBe('ISLE-K7Q2M');
     expect(answer.data.coins).toBe(100);
     expect(answer.data.spots.map(spot => spot.id)).toEqual(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6',
-      'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'tower_s5', 'tower_s6', 'tower_s7', 'tower_1', 'house_1', 'house_2']);
-    expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', built: false, level: 0, cost: 30,
-      upgradeCost: null, kinds: ['cannon', 'mortar']});
+      'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2']);
+    expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar'], built: false, level: 0, cost: 30,
+      upgradeCost: null});
+    expect(answer.data.prices).toMatchObject({kinds: {wall: [10, 20, 40], mortar: [60, 120, 240]}, crew: {gunner: {price: 40, max: 2}}, captain: [0, 20, 40, 80, 160]});
     expect(answer.data.crew).toEqual({gunner: 0, carpenter: 0, lookout: 0});
     expect(answer.data.captain).toEqual({level: 1, nextPrice: 20});
-    expect(answer.data.unlocks).toMatchObject({wonWave: 0, levels: {wall: 1, cannon: 1, mortar: 0}, next: {wave: 1}});
+    expect(answer.data.unlocks).toMatchObject({wave: 0, unlocked: ['wall:1', 'cannon:1', 'captain:1'], locked: {'mortar:1': 3, 'crew:gunner': 5, 'captain:2': 1}});
   });
   it('builds a cannon for 30 coins and answers the new island', async () => {
     const {api, sent} = setup();
@@ -175,6 +176,19 @@ describe('island api: one click id per build and per bell', () => {
     const again = await api.startWave();
     expect(again.ok).toBe(true);
     expect(transport.dev.read().waves).toBe(1);
+  });
+  it("builds and upgrades on a friend's island with your own coins (code in the body)", async () => {
+    const {api, transport, sent} = setup();
+    const built = await api.build({spot: 'wall_3', kind: 'wall', code: 'isle-fr3nd'});
+    expect(built.ok).toBe(true);
+    expect(sent.at(-1)).toEqual({path: '/api/island/build', body: {spot: 'wall_3', kind: 'wall', actionUid: 'click000001', code: 'ISLE-FR3ND'}});
+    expect(built.data.spots.find(spot => spot.id === 'wall_3')).toMatchObject({built: true, level: 1});
+    expect(transport.dev.read().coins).toBe(90);
+    expect((await api.getIsland()).data.spots.find(spot => spot.id === 'wall_3').built).toBe(false);
+    expect((await api.upgrade({spot: 'cannon_1', code: 'ISLE-FR3ND'}))).toMatchObject({ok: false, code: 'locked', message: 'Unlocks after wave 2.'});
+    expect(await api.build({spot: 'wall_3', kind: 'wall', code: 'nope'})).toMatchObject({ok: false, code: 'validation_error'});
+    const point = await api.piratePoint();
+    expect(point.data).toMatchObject({waveBest: 0, coins: 90});
   });
   it('the function-level fake has the same names', () => {
     const api = createFakeIslandApi();
