@@ -7,11 +7,12 @@ const nothingDone = {
 function writeKind(path) {
   if (path === '/api/market/open' || path === '/api/market/close') return 'market';
   if (path === '/api/predictions/stake') return 'predictions';
+  if (path === '/api/island/build' || path === '/api/waves/finish') return 'island';
   if (path === '/api/duels' || /^\/api\/duels\/[^/?#]+\/(move|cancel)$/.test(path)) return 'arena';
   return null;
 }
 function walletRead(path) {
-  return ['/api/market/portfolio', '/api/predictions/mine', '/api/duels'].includes(path)
+  return ['/api/market/portfolio', '/api/predictions/mine', '/api/duels', '/api/island'].includes(path)
     || /^\/api\/duels\/[^/?#]+$/.test(path);
 }
 function mayHaveChanged(kind, result) {

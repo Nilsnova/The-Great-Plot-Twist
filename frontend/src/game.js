@@ -25,6 +25,9 @@ import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
 import {createPredictionsEntry} from './online/predictions-entry.js';
 import {findPanelServices} from './online/panel-services.js';
+import {resolveIslandsMode,startPlace} from './island/mode.js';
+import {readVisit} from './island/codes.js';
+import {joinedHarbor} from './front-door/logic.js';
 import { createChart } from './ui/chart.js';
 import { createSailing } from './ui/sailing.js';
 import { settings } from './config.js';
@@ -63,10 +66,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on});
   let mapTouch=null;
-  let classDemo=null,classDemoLoad=null;
+  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null;
   let active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
-  const externalOverlay=()=>!!(classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active);
+  const externalOverlay=()=>!!(island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus()});
@@ -77,6 +80,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const openDesk=()=>void desk.open();
   const practice=new URLSearchParams(location.search);
   function panelLabel(zone){
+    const islandLabel=island?.label(zone);if(islandLabel)return islandLabel;
     if(zone!=='prediction_kiosk')return;
     const local=import.meta.env.DEV&&practice.get('desk')==='local';
     if(local||findPanelServices(session)?.getFlags()?.predictions===true)return;
@@ -84,14 +88,14 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   }
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();shortcuts.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
-    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
+    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
     try { await world.goTo(id, options); }
     catch (error) { console.error(error); hud.message('Passage interrupted. Please try again.'); }
   }
-  chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus());
+  chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus(),{visible:id=>island?.chartVisible(id)??true,label:id=>island?.chartLabel(id)});
   function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
@@ -100,7 +104,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
-    isBlocked:outsideBlocked,presencePlace:place=>classDemo?.presencePlace(place)??place});
+    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??classDemo?.presencePlace(place)??place});
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>adapter?.dev?.setIsletBuilt?.(built));
   const applyView=view=>{noteAdapterView(view);classDemo?.apply(view);hud.setCaptain(view);experience.apply(view);};
   const stopView=adapter?adapter.subscribe(event=>applyView(event.view)):()=>{};
@@ -122,6 +126,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     try{return await task;}finally{if(marketLoad===task)marketLoad=null;}
   }
   const stopListening = on('interact', event => {
+    if(island?.owns(event.id))return;
     hud.notify(event.id);
     if (event.id === 'sports_pavilion') { sportsUi.open().catch(()=>hud.message('The sports pavilion could not open. Try again.')); return; }
     if (event.id === 'prediction_kiosk') { openDesk(); return; }
@@ -132,7 +137,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     resetWorld:()=>isletState.resetAccount(),
     isDemo:()=>new URLSearchParams(location.search).get('demo')==='1'});
   void stopPlots.refresh();
-  const stopArrivals = on('arrived', event => hud.arrive(event.place));
+  const stopArrivals = on('arrived', event => {hud.arrive(event.place);emit({type:'place_arrived',id:event.place});});
   try { await world.goTo('saltreach_harbor'); }
   catch (error) {
     disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
@@ -156,6 +161,21 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       return classDemo;
     }).catch(error=>{console.error(error);classDemoLoad=null;return null;});
     return classDemoLoad;
+  }
+  // The island game (src/island/, flag "islands" or ?islands=fake in dev): decided once, at the first
+  // Play, then loaded in its own chunk. Off keeps the old home islet and the harbor start.
+  async function ensureIsland(){
+    islandsMode??=await resolveIslandsMode({search:location.search,dev:import.meta.env.DEV,online:adapter?.read?.().mode==='online',
+      readFlags:()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;}});
+    if(islandsMode==='off'||disposed)return islandsMode;
+    islandLoad??=Promise.all([import('./island/index.js'),islandsMode==='fake'&&import.meta.env.DEV?import('./island/fake-api.js'):null]).then(([module,fake])=>{
+      if(disposed)return null;
+      island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
+        getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true})});
+      return island;
+    }).catch(error=>{console.error(error);islandLoad=null;return null;});
+    await islandLoad;return island?islandsMode:'off';
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
   canvas.setAttribute('aria-label','Island exploration. Tap a clear path or drag the movement stick to walk. Arrow keys and WASD also move.');
@@ -206,10 +226,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
   });
   // Local dev inspection only; Vite removes this branch in the production build.
-  if (import.meta.env.DEV) window.__island = { scene, renderer: graphics.renderer,
+  if (import.meta.env.DEV) window.__island = { get island(){return island;}, scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;} };
   function dispose() {
-    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;
+    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;island?.dispose();island=null;
     mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
@@ -219,10 +239,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
-  return {dispose,resetInput:resetControls,hasOverlay:()=>!!classDemo?.active||shortcuts.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||desk?.active||stopPlots.active,
+  return {dispose,resetInput:resetControls,hasOverlay:()=>!!island?.active||!!classDemo?.active||shortcuts.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||desk?.active||stopPlots.active,
     setMode(mode){mapTouch?.cancel();if(mode!=='playing'){marketUi?.close();desk.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
+      if(island?.handleEscape())return true;
       if(classDemo?.handleEscape())return true;
       if(desk.pending&&!container.querySelector('.desk-modal[open]')){desk.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
@@ -246,9 +267,17 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       sportsUi.close();chart.close();
       await world.whenIdle();
       if(disposed||token!==beginRequest||shell.blocked)return;
-      const destination=continuation?.kind==='world'?(continuation.place??'saltreach_harbor'):'saltreach_harbor';
+      const planned=continuation?.kind==='world'?(continuation.place??'saltreach_harbor'):'saltreach_harbor';
+      // With the islands on, Play lands on your own island (or the one you visit); a class code keeps the harbor.
+      const mode=await ensureIsland();
+      if(disposed||token!==beginRequest||shell.blocked)return;
+      const visitCode=island?readVisit():null;if(visitCode&&island.visiting?.code!==visitCode)island.visit(visitCode);
+      const destination=startPlace({mode,destination:planned,classHarbor:joinedHarbor(),visiting:!!island?.visiting});
       if(world.current?.id!==destination)await travel(destination,{fast:true});
+      else if(destination==='home_islet')void island?.load();
       if(disposed||token!==beginRequest||shell.blocked||isAppBlocked?.()||world.current?.id!==destination)return;
+      if(destination==='home_islet')await island?.playArrival();
+      if(disposed||token!==beginRequest||shell.blocked)return;
       hud.start();
       if(continuation?.demo!==false||classDemoQuery())void loadClassDemo();
     }};

@@ -1,6 +1,7 @@
 // Native pixel sea chart. Dialog focus, buttons and arrows support keyboard travel.
 import { places, placeIds } from '../world/places/registry.js';
-export function createChart(container, world, travel, focusGame) {
+// visible(id) and label(id) let the island game show only its three destinations under their own names.
+export function createChart(container, world, travel, focusGame, {visible = () => true, label = () => undefined} = {}) {
   const dialog = document.createElement('dialog'); dialog.className = 'sea-chart';
   dialog.setAttribute('aria-labelledby', 'chart-title');
   dialog.innerHTML = `<header><div><small>COASTAL SURVEY · 01</small><h2 id="chart-title">The Saltreach Isles</h2></div>
@@ -22,11 +23,12 @@ export function createChart(container, world, travel, focusGame) {
   function refresh() {
     dialog.querySelector('img').src = `${import.meta.env.BASE_URL}places/chart.png`;
     buttons.forEach(button => {
-      const id = button.dataset.place, open = world.canTravel(id);
+      const id = button.dataset.place, open = world.canTravel(id), name = label(id) ?? places[id].name;
+      button.hidden = !visible(id);
       button.setAttribute('aria-disabled', String(!open)); button.classList.toggle('locked', !open);
       button.setAttribute('aria-current', String(world.current?.id === id));
-      button.querySelector('span').textContent = open ? places[id].name : 'Uncharted islet';
-      button.setAttribute('aria-label', `${open ? places[id].name : 'Uncharted islet'}${open ? '' : ', locked'}${id==='home_islet'&&stationBuilt?', signal station built':''}`);
+      button.querySelector('span').textContent = open ? name : 'Uncharted islet';
+      button.setAttribute('aria-label', `${open ? name : 'Uncharted islet'}${open ? '' : ', locked'}${id==='home_islet'&&stationBuilt?', signal station built':''}`);
     });
   }
   buttons.forEach(button => { button.onclick = async () => {
@@ -42,8 +44,8 @@ export function createChart(container, world, travel, focusGame) {
     if (event.code === 'KeyM') { event.preventDefault(); event.stopPropagation(); close(); }
     if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.code)) return;
     event.preventDefault(); event.stopPropagation();
-    const direction = ['ArrowRight', 'ArrowDown'].includes(event.code) ? 1 : -1;
-    buttons[(buttons.indexOf(document.activeElement) + direction + buttons.length) % buttons.length].focus();
+    const direction = ['ArrowRight', 'ArrowDown'].includes(event.code) ? 1 : -1, shown = buttons.filter(button => !button.hidden);
+    shown[(shown.indexOf(document.activeElement) + direction + shown.length) % shown.length]?.focus();
   });
   return {setIsletBuilt(built){stationBuilt=(built??[]).includes('islet_signal_station');station.hidden=!stationBuilt;if(dialog.open)refresh();}, get open() { return dialog.open; }, close,
     show() {

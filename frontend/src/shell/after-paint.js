@@ -2,13 +2,15 @@
 // input and the connection banner.
 import {startTitleInput} from './title-input.js';
 import {rememberJoin} from '../front-door/logic.js';
+import {rememberVisit} from '../island/codes.js';
 import {createConnectionBanner} from '../ui/connection-banner.js';
 
 export function startAfterPaint(ctx) {
   let disposed=false;
   // A projector QR (?join=K7QXM) opens the Join page with the code filled in, so a wrong or old
   // code gets its message and the player can type it again before the game starts.
-  if(rememberJoin()&&ctx.shell?.()?.mode==='title')ctx.shell().show('join');
+  // An island invitation (?visit=ISLE-K7Q2M) opens it too, with the island code filled in.
+  if((rememberJoin()||rememberVisit())&&ctx.shell?.()?.mode==='title')ctx.shell().show('join');
   const titleInput=startTitleInput({adapter:ctx.adapter,isLoading:ctx.isLoading,hasRuntime:()=>!!ctx.runtime()});
   const banner=createConnectionBanner({send:ctx.send});
   ctx.container.append(banner.element);banner.update(ctx.adapter.read());
