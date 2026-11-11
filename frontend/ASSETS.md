@@ -367,3 +367,22 @@ fixed palettes and ordered 4 × 4 (Bayer) dithering instead of smooth gradients.
 | Animated title | `src/title/animated-title.js` | Brings the existing G29 title planes (`cutscenes/title-*.webp`, credited above) to life on one native-size canvas: parallax drift, a rolling sea, twinkling stars, moon and beam glints, and the sweeping lighthouse beam |
 
 Shared GLSL helpers (hash, value noise, Bayer dithering, banding) live in `src/world/pixel-glsl.js`.
+
+## G31 pirate waves (lane P2)
+
+24 original sprites, drawn as code in `scripts/pixel_art/pirates.py` and rebuilt with the rest of the kit by `python3 scripts/pixel_art/generate.py` (Pillow for authoring only). No downloaded art, font or reference image. Every size is a whole number of 16 px world units; ids, sizes and anchors live in `src/pixel/pirate-catalog.js` (also `pirateFrames` for the animations). They are `library` assets the island scene loads with `loadArt(ids)`; none enters the default preload. Gold appears only in lights: the flagship's stern windows, the watchtower lamp, the muzzle flash and the build-spot marker. Ships face right (mirror them for ships sailing left) and are cut at the waterline, so the world's sea shows below. `python3 scripts/pixel_art/pirates.py <file>` writes a 3× contact sheet for review.
+
+| Sprite ids | Native pixels | Purpose |
+| --- | --- | --- |
+| `pirate-sloop-1` to `-3` | 64 × 64 | Small pirate sloop, patched gaff sail, black-and-red flag; three bob frames with moving foam |
+| `pirate-brig-1` to `-3` | 96 × 80 | Two-masted brig with gunports; three bob frames |
+| `pirate-flagship-1` to `-3` | 128 × 112 | Three-masted flagship, dark canvas with red stripes, lit stern windows; three bob frames |
+| `pirate-splash-1` to `-3` | 32 × 32 | Cannonball splash: drop, column, ring |
+| `pirate-cannonball` | 16 × 16 | Iron shot in flight |
+| `pirate-wreck` | 64 × 48 | Half-sunk hull with a snapped mast and a floating plank |
+| `island-wall`, `-damaged`, `-broken` | 48 × 48 | Stone sea wall in three damage states |
+| `island-cannon`, `island-cannon-fire` | 48 × 32 | Cannon on a wooden carriage, idle and firing (recoil, flash, smoke) |
+| `island-watchtower` | 64 × 128 | Timber lookout with a lamp and a green island pennant |
+| `island-house` | 64 × 64 | Small cottage for the house spots |
+| `pirate-flag-trophy` | 32 × 48 | Captured swallowtail flag on its pole, for the island's flagpole |
+| `build-spot`, `build-spot-glow` | 32 × 32 | Glowing ring marking a free build spot; two frames for a pulse |
