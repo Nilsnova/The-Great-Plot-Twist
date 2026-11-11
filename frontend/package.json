@@ -20,6 +20,7 @@
     "test:weather:wiring": "node scripts/check-weather-wiring.js",
     "test:demo": "node scripts/check-demo-journey.js",
     "capture:wow": "node scripts/capture-wow.js",
+    "capture:integrated": "node scripts/capture-integrated.js",
     "test:loading": "npm run build && node scripts/check-loading.js",
     "test:spoilers": "npm run build",
     "test:credits": "node scripts/check-credits.js",
