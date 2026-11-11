@@ -237,7 +237,10 @@ describe('harbor overview and weather board', () => {
       const opened = [], menus = [];
       let answer = fx.weatherAnswer('storm');
       const harbor = createHarbor({container: document.body, getWeather: () => answer, openStall: id => opened.push(id), menu: provider => { menus.push(provider); return () => {}; }});
-      menus[0]()[0].onSelect(); await tick(80);
+      // The overview module loads on first use: wait for the card itself, not a fixed time (a busy
+      // machine took longer than 80 ms, so the stalls were not there yet and the match button was null).
+      menus[0]()[0].onSelect();
+      for (let waited = 0; !document.querySelector('dialog[open] [data-stall]') && waited < 5000; waited += 20) await tick(20);
       const stalls = [...document.querySelectorAll('[data-stall]')].map(node => ({id: node.dataset.stall, title: node.querySelector('h3').textContent,
         button: node.querySelector('button')?.textContent ?? null}));
       document.querySelector('[data-stall="match"] button').click(); await tick();
