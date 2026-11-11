@@ -110,7 +110,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function openInvite() {
     openSpot = null; cardMessage = '';
     ui.inviteCard(inviteModel(own?.code));
-    emit({type: 'island_invite_opened', code: own?.code ? displayIslandCode(own.code) : null});
+    emit({type: ISLAND_INVITE_OPENED, code: own?.code ? displayIslandCode(own.code) : null});
   }
   function pick(id) {
     if (disposed) return;

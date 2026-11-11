@@ -27,7 +27,8 @@ import {createMarketHost} from './online/market-host.js';
 import {createPredictionsEntry} from './online/predictions-entry.js';
 import {createHarbor,loadFortuneCard,loadMarketCard,loadMatchCard} from './harbor/host.js';
 import {findPanelServices} from './online/panel-services.js';
-import {resolveIslandsMode,startPlace} from './island/mode.js';
+import {islandsMode as quickIslandsMode,resolveIslandsMode,startPlace} from './island/mode.js';
+import {PLACE_ARRIVED} from './ui/quest-events.js';
 import {readVisit} from './island/codes.js';
 import {joinedHarbor} from './front-door/logic.js';
 import { createChart } from './ui/chart.js';
@@ -107,6 +108,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
     isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??classDemo?.presencePlace(place)??place});
+  // The class goals (class demo) show in the quest strip except on your island, where the first-3-minutes
+  // goals of src/ui/first-quests.js show (BUILD-PLAN 3.6). A class-code player keeps the class goals elsewhere.
+  let classQuests=null;
+  const onOwnIsland=()=>!!island&&world.current?.id==='home_islet';
+  function showQuests(view=classQuests){classQuests=view??null;hud.setQuests(onOwnIsland()?null:classQuests);}
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>adapter?.dev?.setIsletBuilt?.(built));
   const applyView=view=>{noteAdapterView(view);classDemo?.apply(view);hud.setCaptain(view);experience.apply(view);};
   const stopView=adapter?adapter.subscribe(event=>applyView(event.view)):()=>{};
@@ -142,7 +148,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     resetWorld:()=>isletState.resetAccount(),
     isDemo:()=>new URLSearchParams(location.search).get('demo')==='1'});
   void stopPlots.refresh();
-  const stopArrivals = on('arrived', event => {hud.arrive(event.place);emit({type:'place_arrived',id:event.place});});
+  const stopArrivals = on('arrived', event => {hud.arrive(event.place);showQuests();emit({type:PLACE_ARRIVED,id:event.place});});
   try { await world.goTo('saltreach_harbor'); }
   catch (error) {
     disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
@@ -159,7 +165,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;const query=new URLSearchParams(location.search);
       classDemo=module.createClassDemo({container,scene,world,player:controller.player,input,audio,reducedMotion,on,canvas:graphics.renderer.domElement,
         rehearsal:query.get('demo')==='1',present:query.get('present')==='1',send:(name,...args)=>sendIntent(adapter,name,...args),
-        canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),quests:view=>hud.setQuests(view),
+        canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),quests:view=>showQuests(view),
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),resetInput:resetControls,cancelWalk:()=>mapTouch?.cancel(),
         isBlocked:()=>!active||outsideBlocked(),project:(x,z)=>{const rect=graphics.renderer.domElement.getBoundingClientRect();projected.set(x,-z*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}});
       const current=adapter?.read?.();if(current)classDemo.apply(current);

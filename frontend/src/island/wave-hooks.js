@@ -14,9 +14,11 @@
 // {ok: true, data: {loot, coins, waveBest, flags}} or {ok: false, code, message}.
 // When the finish route answers, the island emits `wave_finished` {survived, loot, coins, waveId}.
 import {on} from '../core/events.js';
+import {WAVE_FINISHED} from '../ui/quest-events.js';
 
 export const WAVE_STARTED = 'wave_started_server';
-export const WAVE_FINISHED = 'wave_finished';
+// The quest strip's name for it (src/ui/quest-events.js), re-exported for the wave lane.
+export {WAVE_FINISHED};
 let renderer = null, finisher = null;
 
 export const onWaveStarted = listener => on(WAVE_STARTED, listener);

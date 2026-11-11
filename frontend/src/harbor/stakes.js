@@ -1,10 +1,12 @@
 // The Harbor stakes: 5, 10 or 25 coins and nothing else (BUILD-PLAN 3.2). Pure: no DOM, no fetch.
 // offeredStakes keeps only the sizes the server accepts, so a button never sends a stake the server
 // refuses as too small or too big. poolGain is a display estimate only: the server pays.
+import {HARBOR_STAKE_PLACED} from '../ui/quest-events.js';
+
 export const STAKES = Object.freeze([5, 10, 25]);
 // The bus event after the server accepted a stake: {type, kind: 'market' | 'match' | 'fortune', stake}.
-// The quest strip (lane U) listens for it.
-export const STAKE_EVENT = 'harbor_stake_placed';
+// The quest strip (lane U) listens for it; the name comes from src/ui/quest-events.js.
+export const STAKE_EVENT = HARBOR_STAKE_PLACED;
 
 const whole = value => (Number.isSafeInteger(value) ? value : null);
 
