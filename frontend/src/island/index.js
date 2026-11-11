@@ -37,7 +37,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const target = () => visiting ?? own;
   const where = () => (visiting ? displayIslandCode(visiting.code) : 'own');
   const flow = createWaveFlow({api, emit, placeholder, now, setTimer, clearTimer,
-    notify: text => ui.toast(text), banner: text => ui.banner(text), onChange: () => refreshCard(),
+    notify: (text, tone) => ui.toast(text, tone), banner: text => ui.banner(text), onChange: () => refreshCard(),
     defensesOf: () => defenses(target()?.spots ?? [])});
   const stopFinished = on('wave_finished', event => {
     if (disposed || !own || visiting) return;
@@ -65,7 +65,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
         visiting = {...answer.data, code: islandCode(answer.data.code)};
         ui.visit({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code)}, () => void sailHome());
       } else {
-        endVisit(); ui.toast(answer.message);
+        endVisit(); ui.toast(answer.message, 'error');
       }
     }
     if (!visiting) {
@@ -125,7 +125,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       emit({type: 'island_built', kind: spot.kind, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
-      ui.toast(`${KINDS[spot.kind].name} built! You have ${coinText(own.coins)}.`);
+      ui.toast(`${KINDS[spot.kind].name} built! You have ${coinText(own.coins)}.`, 'success');
     } else {
       cardMessage = answer.message;
       if (['spot_taken', 'insufficient_funds'].includes(answer.code)) {

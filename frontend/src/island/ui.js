@@ -1,10 +1,12 @@
 // The island's DOM: one small card at a time (a build spot, the harbor bell, the invite), the countdown
-// banner, the visit banner and a toast. It shows models from card-model.js and calls back; it decides
-// nothing. Built on the UI kit's modal and button.
+// banner and the visit banner. It shows models from card-model.js and calls back; it decides nothing.
+// Built on the UI kit's modal and button (the one brass panel); toasts go through the game's one toast
+// queue (src/ui/toasts.js).
 import './island.css';
 import {createModal} from '../ui/kit/modal.js';
 import {node} from '../ui/kit/dom.js';
 import {drawQr} from '../lib/qr/index.js';
+import {toasts as gameToasts} from '../ui/toasts.js';
 
 function button(label, onClick, quiet = false) {
   const element = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label); element.type = 'button';
@@ -12,12 +14,14 @@ function button(label, onClick, quiet = false) {
   return element;
 }
 
-export function createIslandUi({container, focus = () => {}, resetInput = () => {}} = {}) {
-  let modal = null, kind = null, render = null, disposed = false, toastTimer = null;
+export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts} = {}) {
+  let modal = null, kind = null, render = null, disposed = false, lastToast = null;
   const banner = node('div', 'island-banner'); banner.setAttribute('role', 'status'); banner.setAttribute('aria-live', 'polite'); banner.hidden = true;
+  const bannerEyebrow = node('span', 'island-banner-eyebrow', 'Harbor bell'), bannerText = node('strong', 'island-banner-text');
+  bannerEyebrow.setAttribute('aria-hidden', 'true');
+  banner.append(bannerEyebrow, bannerText);
   const visit = node('div', 'island-visit'); visit.hidden = true;
-  const toast = node('div', 'kit-toast island-toast'); toast.setAttribute('role', 'status'); toast.hidden = true;
-  container.append(banner, visit, toast);
+  container.append(banner, visit);
 
   function close() {
     if (!modal) return false;
@@ -89,22 +93,24 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
-    banner(text) { banner.textContent = text ?? ''; banner.hidden = !text; },
+    banner(text) { bannerText.textContent = text ?? ''; banner.hidden = !text; },
     visit(info, onHome) {
       visit.replaceChildren();
       visit.hidden = !info;
       if (!info) return;
       visit.append(node('span', '', `Visiting ${info.ownerName || 'a friend'}'s island · ${info.code}`), button('Sail home', onHome, true));
     },
-    toast(text, ms = 4200) {
-      clearTimeout(toastTimer); toast.textContent = text; toast.hidden = !text;
-      toastTimer = setTimeout(() => { toast.hidden = true; }, ms);
+    // tone: 'info', 'success' (a building, loot) or 'error' (the server's plain message).
+    toast(text, tone = 'info') {
+      if (disposed || !text) return;
+      const id = toasts().show({text, tone});
+      lastToast = id === null ? null : {id, text};
     },
-    get toastText() { return toast.hidden ? '' : toast.textContent; },
+    get toastText() { return lastToast && toasts().shown.some(item => item.id === lastToast.id) ? lastToast.text : ''; },
     dispose() {
-      if (disposed) return; disposed = true; clearTimeout(toastTimer);
+      if (disposed) return; disposed = true;
       if (modal) { const current = modal; modal = null; current.dispose(); }
-      banner.remove(); visit.remove(); toast.remove();
+      banner.remove(); visit.remove();
     },
   };
 }

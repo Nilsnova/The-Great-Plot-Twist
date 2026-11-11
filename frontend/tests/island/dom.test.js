@@ -37,7 +37,7 @@ it('builds from the card, refuses with the reason, rings the bell and invites wi
     const bell = read();
     card().querySelector('.island-card-body .kit-button').click();
     await wait(30);
-    const banner = document.querySelector('.island-banner').textContent, closedAfterRing = !card();
+    const banner = document.querySelector('.island-banner .island-banner-text').textContent, closedAfterRing = !card();
     island.pick('island_cabin');
     const invite = {title: read().title, code: card().querySelector('.island-code').textContent,
       url: card().querySelector('.island-url').textContent, qr: card().querySelector('canvas.island-qr').width,

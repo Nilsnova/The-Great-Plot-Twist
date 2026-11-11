@@ -4,7 +4,7 @@
 // placeholder finishes the wave as survived 20 s after the countdown, but only when `placeholder` is
 // true (the fake server, or ?wavedebug=1), so the loop can be tried end to end.
 import {WAVE_STARTED, WAVE_FINISHED, hasWaveRenderer as defaultHasRenderer, setWaveFinisher} from './wave-hooks.js';
-import {countdownText, lootText, secondsUntil} from './card-model.js';
+import {coinText, countdownText, lootText, secondsUntil} from './card-model.js';
 
 export const PLACEHOLDER_SECONDS = 20;
 const HERE_SECONDS = 3;
@@ -87,9 +87,10 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       later(() => { void finish({waveId, survived, shipsSunk}); }, (answer.retryAfterSeconds ?? 2) * 1000);
       return answer;
     }
-    if (!answer.ok) { notify(answer.message); return answer; }
+    if (!answer.ok) { notify(answer.message, 'error'); return answer; }
     if (current?.wave.waveId === waveId) { current.finished = true; stopTimers(); banner(null); current = null; }
-    notify(survived ? lootText(answer.data) : `The pirates broke through. You have 🪙 ${answer.data.coins}.`);
+    if (survived) notify(lootText(answer.data), 'success');
+    else notify(`The pirates broke through. You have ${coinText(answer.data.coins)}.`, 'error');
     emit({type: WAVE_FINISHED, survived: survived === true, waveId, ...answer.data});
     changed();
     return answer;

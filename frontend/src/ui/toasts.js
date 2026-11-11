@@ -38,7 +38,8 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
   if (typeof element.showPopover === 'function') element.popover = 'manual';
   let stack = [], next = 0;
   function render() {
-    element.replaceChildren(...stack.map(item => {
+    // Keep the toasts already shown in place (re-inserting them would restart their slide-in).
+    const nodes = stack.map(item => {
       if (item.node) return item.node;
       const box = item.node = node('div', 'u-toast');box.dataset.tone = item.tone;
       box.append(node('span', 'u-toast-icon', item.tone === 'error' ? '!' : item.tone === 'success' ? '✓' : '✦'));
@@ -46,7 +47,9 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
       if (item.next) copy.append(node('span', 'u-toast-next', item.next));
       box.append(copy);
       return box;
-    }));
+    });
+    for (const child of [...element.children]) if (!nodes.includes(child)) child.remove();
+    nodes.forEach((box, index) => { if (element.children[index] !== box) element.insertBefore(box, element.children[index] ?? null); });
     element.hidden = stack.length === 0;
     // In the top layer (popover) a toast stays readable above an open panel's backdrop.
     if (!element.isConnected || typeof element.showPopover !== 'function') return;
