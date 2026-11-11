@@ -5,7 +5,9 @@
 //   and the owner's island shows it; the owner rings the bell; both run the same wave (the same ships at
 //   the same tick); both captains fire their musket and each shot reaches the other page; both finish with
 //   loot; both press "Next wave" at the same moment and end up in one wave 2; two more friends land
-//   mid-wave and join it.
+//   mid-wave and join it. Upgrades (11 Nov: "sometimes some upgrades were not visible"): the owner upgrades
+//   a wall and the friend's map and card show the level within 2 s, then the friend upgrades it on the
+//   owner's island and the owner's map and open card follow, and an upgrade in the wave's break shows on both.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -90,6 +92,36 @@ const spotBuilt = (captain, spot) => captain.page.evaluate(spot => {
   const i = window.__island.island, target = i.visiting?.spots ? i.visiting : i.island;
   return !!target?.spots?.find(item => item.id === spot)?.built;
 }, spot);
+// What a page shows of one spot: the level art on the map (island-cannon:<spot>, its brass pips) and the card's
+// "Level n of m" with the price of the next level. The card is opened and closed again unless `keep`.
+const mapOf = (captain, spot) => captain.page.evaluate(spot => {
+  let level = 0, pips = 0;
+  window.__island.scene.traverse(object => {
+    if (/^island-(wall|cannon|mortar|watchtower|house):/.test(object.name) && object.name.endsWith(`:${spot}`)) level = object.userData.level ?? 0;
+    if (object.name.startsWith(`island-pip:${spot}:`)) pips++;
+  });
+  return {level, pips};
+}, spot);
+const cardOf = (captain, spot, keep = false) => captain.page.evaluate(async ([spot, keep]) => {
+  const game = window.__island.island;
+  game.pick(spot); await new Promise(resolve => setTimeout(resolve, 80));
+  const card = document.querySelector('.island-card[open]');
+  const read = {pips: card?.querySelector('.island-pips')?.getAttribute('aria-label') ?? '', next: card?.querySelector('.island-next-label')?.textContent ?? ''};
+  if (!keep) game.ui.close();
+  return read;
+}, [spot, keep]);
+// Waits (at most 2 s) until the map shows `level` with that many pips, then reads the card; answers the ms it took.
+async function shows(captain, spot, level, what) {
+  const began = Date.now();
+  const ok = async () => { const map = await mapOf(captain, spot); return map.level === level && map.pips === level; }; // a wall shows pips from level 2
+  while (Date.now() - began < 2000 && !await ok()) await captain.page.waitForTimeout(100);
+  assert.ok(await ok(), `${captain.name}'s map shows ${what} as level ${level}: ${JSON.stringify(await mapOf(captain, spot))}`);
+  const card = await cardOf(captain, spot);
+  assert.equal(card.pips, `Level ${level} of 3`, `${captain.name}'s card shows ${what} at level ${level}`);
+  const took = Date.now() - began;
+  assert.ok(took <= 2200, `${what} reached ${captain.name} within 2 s (${took} ms)`);
+  return took;
+}
 // Fire the musket: stand on the beach in front of the nearest ship, wait until it is in range, press F.
 async function musket(captain) {
   const {page} = captain;
@@ -141,6 +173,23 @@ try {
   await host.page.waitForFunction(() => window.__island.island.island.spots.find(spot => spot.id === 'wall_2')?.built, null, {timeout: 5000, polling: 100});
   results.push(`co-op wall on the owner's island after ${Date.now() - builtAt} ms`);
   await shot('02-coop-wall');
+  // 2b Upgrades are seen on the other page within 2 s: the owner's, then the friend's on the owner's island.
+  await island(host, async i => { i.dev.setWaveBest(5); i.dev.setCoins(900); await i.load(); });
+  await island(ben, async i => { i.dev.setWaveBest(5); i.dev.setCoins(900); await i.load(); });
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 1, pips: 0});
+  await island(host, async i => i.upgrade('wall_2'));
+  const ownerUpgrade = await shows(ben, 'wall_2', 2, 'the owner\'s wall');
+  results.push(`owner upgrade to level 2 on the friend's map and card after ${ownerUpgrade} ms`);
+  await shot('02b-owner-upgrade');
+  await cardOf(host, 'wall_2', true); // the owner keeps the card open while the friend upgrades
+  await island(ben, async i => i.upgrade('wall_2'));
+  const upgradedAt = Date.now();
+  await host.page.waitForFunction(() => document.querySelector('.island-card[open] .island-pips')?.getAttribute('aria-label') === 'Level 3 of 3', null, {timeout: 2000, polling: 100});
+  await shows(host, 'wall_2', 3, 'the wall the friend upgraded');
+  const friendUpgrade = Date.now() - upgradedAt;
+  await shows(ben, 'wall_2', 3, 'the wall the friend upgraded');
+  results.push(`friend upgrade to level 3 on the owner's map and open card after ${friendUpgrade} ms`);
+  await shot('02c-friend-upgrade');
   // 3 Wave 3 (more ships, so both muskets find a target) with two more cannons; the owner rings.
   await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); await i.build('cannon_3', 'cannon'); });
   await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'cannon_3')?.built, null, {timeout: 5000, polling: 100});
@@ -166,6 +215,12 @@ try {
   // 5 Everybody finishes with loot, then both press "Next wave" at the same moment.
   // The break lasts 15 s: press Next wave on both pages first, look at the loot after.
   for (const captain of pages) await until(captain, state => state?.pause, 'the break', 240000);
+  // An upgrade in the break (the wave's own drawing hides the island's sprites): both pages show it at once.
+  await island(host, async i => i.upgrade('cannon_2'));
+  const postLevels = captain => captain.page.evaluate(() => window.__island.waves.island.wave?.renderer?.levels?.().cannon_2 ?? 0);
+  for (const captain of [host, ben]) await captain.page.waitForFunction(() => window.__island.waves.island.wave?.renderer?.levels?.().cannon_2 === 2, null, {timeout: 2500, polling: 100});
+  results.push(`upgrade in the break: cannon_2 is level ${await postLevels(host)} / ${await postLevels(ben)} in the wave's drawing on both pages`);
+  await shot('04-break-upgrade');
   await Promise.all([host, ben].map(captain => captain.page.waitForFunction(() => window.__island.waves.island.wave?.pause?.ready === true, null, {timeout: 14000})));
   await Promise.all([host, ben].map(captain => captain.page.evaluate(() => window.__island.waves.island.next())));
   for (const captain of pages) await captain.page.waitForFunction(id => window.__mp.loot.some(item => item.waveId === id && item.loot > 0), first.waveId, {timeout: 30000});

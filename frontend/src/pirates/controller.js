@@ -449,6 +449,12 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     get auto() { return auto; },
     get runLoot() { return runLoot; },
     get inBreak() { return !!wave?.pause; },
+    // The island changed (an upgrade or a new building, ours or a friend's): once the wave is decided, in the
+    // break, its posts show the new levels. A wave under way keeps the defenses it started with.
+    refreshDefenses() {
+      if (!wave?.done || !wave.renderer) return false;
+      wave.renderer.setDefenses?.(getDefenses() ?? []); return true;
+    },
     setCaptainLevel(value) { level = Number.isInteger(value) ? value : null; },
     // Override the getters (tests, the dev harness): null goes back to captainSkills() / captainWeapon().
     setCaptainSkills(value) { skills = Array.isArray(value) ? readSkills(value) : null; },

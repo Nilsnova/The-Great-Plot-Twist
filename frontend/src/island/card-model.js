@@ -10,7 +10,7 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 
 // The build card of one spot (docs/TOWER-DEFENSE.md §2, §5, §9). spot: the server's {id, kind, built,
 // level, cost} or null while loading; slot: wall, tower, watchtower or house (spots.js); unlocks:
-// readUnlocks(island) (td-rules.js), or null on Pirate Point, where nothing is locked.
+// readUnlocks(island) (td-rules.js) of the payer's own island, also on Pirate Point (the server checks your own unlocks there too).
 //   mode 'choose'   an empty tower spot: choices [{kind, name, line, price, disabled, reason}]
 //   mode 'build'    an empty spot of one kind: button "Build · 🪙 10"
 //   mode 'upgrade'  a building that can go up a level: upgrade {label "Level 2 · 🪙 60", stats}

@@ -162,6 +162,7 @@ it('Pirate Point: the same build and upgrade card, paid by you, belongs to Pirat
     const transport = createFakeIslandTransport();
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, menu: () => () => {}});
     await island.loadPoint();
+    transport.dev.setWaveBest(5); await island.load(); // the server holds you to your own unlocks at Pirate Point too
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     const card = () => document.querySelector('.island-card[open]');
     island.pick('pp_tower_2');
