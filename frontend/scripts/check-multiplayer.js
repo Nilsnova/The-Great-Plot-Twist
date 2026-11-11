@@ -149,9 +149,11 @@ try {
   await host.page.waitForFunction(() => window.__island.island.island.spots.find(spot => spot.id === 'wall_2')?.built, null, {timeout: 5000, polling: 100});
   results.push(`co-op wall on the owner's island after ${Date.now() - builtAt} ms`);
   await shot('02-coop-wall');
-  // 3 Wave 3 (more ships, so both muskets find a target) with two more cannons; the owner rings.
-  await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); await i.build('cannon_3', 'cannon'); });
-  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'cannon_3')?.built, null, {timeout: 5000, polling: 100});
+  // 3 Wave 3 (more ships, so both muskets find a target) with one more cannon and the inner wall ring
+  // (TOWER-DEFENSE.md §12: two cannons let boarders come ashore, the ring holds them); the owner rings.
+  await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon');
+    for (const id of ['wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']) await i.build(id, 'wall'); });
+  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_12')?.built, null, {timeout: 5000, polling: 100});
   await island(host, async i => i.ringBell());
   const first = await until(host, state => state?.ships > 0, 'the first ships', 60000);
   const benWave = await until(ben, state => state?.waveId === first.waveId && state.ships > 0, 'the friend in the same wave', 30000);
