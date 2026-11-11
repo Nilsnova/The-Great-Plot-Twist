@@ -25,7 +25,7 @@
 .harbor-spark[data-trend=down] polyline{stroke:var(--harbor-bad)}
 .harbor-quiet,.harbor-reason,.harbor-footnote{color:var(--harbor-quiet)}
 .harbor-footnote{font-size:var(--u-sm);margin:0}
-.harbor-footnote a{color:inherit}
+.harbor-footnote a{color:inherit;display:inline-flex;align-items:center;min-height:44px;min-width:44px}
 .harbor-empty{margin:0;font-size:var(--u-md)}
 .harbor-notice{font-weight:bold}
 .harbor-good{color:var(--harbor-good)}

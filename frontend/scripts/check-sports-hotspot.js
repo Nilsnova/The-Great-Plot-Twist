@@ -1,4 +1,4 @@
-// Real harbor hotspot/overlay smoke in local Chromium; all sports HTTP is intercepted, read-only.
+// Real harbor hotspot/overlay smoke in local Chromium (the match board card); all sports HTTP is intercepted, read-only.
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { openWorldBrowser } from './world-browser-tools.js';
@@ -21,14 +21,16 @@ try {
   });
   await page.waitForFunction(() => document.querySelector('.interact')?.dataset.zone === 'sports_pavilion');
   await page.keyboard.press('KeyE');
-  await page.locator('.sports-modal[open]').waitFor();
-  await page.locator('.sports-source').getByText('football-data.org', { exact: false }).waitFor();
-  check(await page.locator('.sports-modal[open]').count() === 1 && reads === 1, 'Harbor sports pavilion opens one lazy real panel');
+  // Since lane H the pavilion opens the Harbor's match board card (src/harbor/match-card.js); the data
+  // credit lives under Settings, Credits, so the card is checked by the recorded fixture it lists.
+  await page.locator('.harbor-match[open]').waitFor();
+  await page.locator('.harbor-match[open] .harbor-item').filter({ hasText: 'Harbor Athletic' }).first().waitFor();
+  check(await page.locator('.harbor-match[open]').count() === 1 && reads === 1, 'Harbor sports pavilion opens one lazy match board card');
   const before = await page.evaluate(() => window.__island.player.position.toArray());
   await page.keyboard.down('KeyW'); await page.waitForTimeout(250); await page.keyboard.up('KeyW');
   check(JSON.stringify(await page.evaluate(() => window.__island.player.position.toArray())) === JSON.stringify(before), 'Typing in the panel cannot walk the explorer');
   check(await page.evaluate(() => window.__island.world.goTo('home_islet', { fast: true })) === false, 'Sports overlay blocks world travel');
-  await page.keyboard.press('Escape'); await page.locator('.sports-modal').waitFor({ state: 'hidden' });
+  await page.keyboard.press('Escape'); await page.locator('.harbor-match').waitFor({ state: 'hidden' });
   check(await page.locator('canvas[tabindex="0"]').evaluate(element => element === document.activeElement), 'Pavilion Escape returns focus to the game');
   check(!await page.evaluate(() => window.__island.sportsUi.active), 'Pavilion closes its overlay gate');
   check(await page.evaluate(() => window.__island.world.goTo('home_islet', { fast: true })) === true, 'Travel resumes after the pavilion closes');
