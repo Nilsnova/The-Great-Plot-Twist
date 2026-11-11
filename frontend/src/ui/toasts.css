@@ -1,0 +1,12 @@
+/* The one toast style (src/ui/toasts.js): parchment slips top-center, at most two, above open panels. */
+.u-toasts{position:fixed;z-index:90;top:16px;left:340px;right:340px;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:10px;margin:0;padding:0;border:0;background:none;overflow:visible;pointer-events:none;color:inherit}
+.u-toasts[popover]{inset:16px 340px auto;width:auto;height:auto}
+.u-toast{display:flex;align-items:flex-start;gap:10px;width:max-content;max-width:100%;box-sizing:border-box;padding:10px 16px 10px 10px;background:var(--u-parch);color:var(--u-pink);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006;animation:u-toast-in .22s ease-out both}
+.u-toast-icon{flex:none;display:grid;place-items:center;width:28px;height:28px;font:800 16px/1 var(--u-font);color:var(--u-gold);background:var(--u-sea)}
+.u-toast[data-tone=error]{background:#f3d9c8}.u-toast[data-tone=error] .u-toast-icon{background:#8a3b2a;color:#fff}
+.u-toast[data-tone=success] .u-toast-icon{background:#2f6b5a;color:#fff}
+.u-toast-text{margin:0;font:700 16px/1.45 var(--u-font)}.u-toast-next{display:block;margin-top:2px;font-weight:500}
+@keyframes u-toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media(max-width:900px){.u-toasts,.u-toasts[popover]{inset:172px 12px auto}}
+@media(prefers-reduced-motion:reduce){.u-toast{animation:none}}
+html[data-reduced-motion=true] .u-toast{animation:none}
