@@ -7,12 +7,12 @@
       "title": "The dark lighthouse",
       "music": "dusk",
       "lines": [
-        {"id": "lore_intro_01", "text": "On a stormy coast lies Saltreach, a small harbor town.", "seconds": 4},
-        {"id": "lore_intro_02", "text": "For years, Keeper Elena Vos lit the lighthouse every night.", "seconds": 4.2},
-        {"id": "lore_intro_03", "text": "Three nights ago, the light went dark. No one has seen Elena since.", "seconds": 4.6},
-        {"id": "lore_intro_04", "text": "Ships now sail by guesswork, and the harbor is full of rumors.", "seconds": 4.2},
-        {"id": "lore_intro_05", "text": "Captains are arriving from every island to help.", "seconds": 3.8},
-        {"id": "lore_intro_06", "text": "You are one of them. Find out what happened, and bring the light back.", "seconds": 4.6}
+        {"id": "lore_intro_01", "text": "On a stormy coast lie the Saltreach Isles.", "seconds": 3.6},
+        {"id": "lore_intro_02", "text": "For years, the great lighthouse kept their waters safe.", "seconds": 4},
+        {"id": "lore_intro_03", "text": "Three nights ago, its light went dark.", "seconds": 3.6},
+        {"id": "lore_intro_04", "text": "And out on the black water, the pirates noticed.", "seconds": 4},
+        {"id": "lore_intro_05", "text": "Every captain gets a small island and a few coins.", "seconds": 4.2},
+        {"id": "lore_intro_06", "text": "Build, trade, and hold the line until the light burns again.", "seconds": 4.6}
       ]
     },
     {
@@ -21,7 +21,7 @@
       "music": "harbor",
       "lines": [
         {"id": "harbor_arrival_01", "text": "Welcome to Saltreach Harbor.", "seconds": 2.6},
-        {"id": "harbor_arrival_02", "text": "Look around, and say hello to the other captains.", "seconds": 3.6}
+        {"id": "harbor_arrival_02", "text": "Trade, place your bets, and meet the other captains.", "seconds": 3.8}
       ]
     },
     {
@@ -31,8 +31,8 @@
       "lines": [
         {"id": "lock_opens_01", "text": "Click. The Keeper's Lock turns.", "seconds": 3.4},
         {"id": "lock_opens_02", "text": "The sky outside your window was the right answer.", "seconds": 4},
-        {"id": "lock_opens_03", "text": "Inside lies a small brass key for the lighthouse lamps.", "seconds": 4.4},
-        {"id": "lock_opens_04", "text": "Three lamps need three captains. Find two more.", "seconds": 4.2}
+        {"id": "lock_opens_03", "text": "Inside lies a brass key for the lighthouse lamps.", "seconds": 4},
+        {"id": "lock_opens_04", "text": "When the armada comes, three captains must light them together.", "seconds": 4.6}
       ]
     },
     {
@@ -41,9 +41,46 @@
       "music": "dawn",
       "lines": [
         {"id": "lamps_relit_01", "text": "One lamp. Two lamps. Three.", "seconds": 3.2},
-        {"id": "lamps_relit_02", "text": "The beam sweeps across the water again.", "seconds": 3.6},
-        {"id": "lamps_relit_03", "text": "Ships turn toward the harbor, and Saltreach cheers.", "seconds": 4},
-        {"id": "lamps_relit_04", "text": "The light is back. Elena's story is not over yet.", "seconds": 4.2}
+        {"id": "lamps_relit_02", "text": "The great beam sweeps across the water.", "seconds": 3.6},
+        {"id": "lamps_relit_03", "text": "It finds the pirate flagship, and the flagship burns.", "seconds": 4},
+        {"id": "lamps_relit_04", "text": "The coast is safe tonight. Well fought, captains.", "seconds": 4.4}
+      ]
+    },
+    {
+      "id": "island_arrival",
+      "title": "Your island",
+      "music": "harbor",
+      "lines": [
+        {"id": "island_arrival_01", "text": "This little island is yours, captain.", "seconds": 3},
+        {"id": "island_arrival_02", "text": "Build a cannon. The pirates are coming.", "seconds": 3.4}
+      ]
+    },
+    {
+      "id": "wave_won",
+      "title": "The wave is beaten",
+      "music": "dawn",
+      "lines": [
+        {"id": "wave_won_01", "text": "The last ship sinks beneath the waves.", "seconds": 3.2},
+        {"id": "wave_won_02", "text": "Your island holds. Collect your loot.", "seconds": 3}
+      ]
+    },
+    {
+      "id": "wave_lost",
+      "title": "The pirates broke through",
+      "music": "dusk",
+      "lines": [
+        {"id": "wave_lost_01", "text": "The pirates break through and sail off with their plunder.", "seconds": 4},
+        {"id": "wave_lost_02", "text": "Build stronger walls, and ring the bell again.", "seconds": 3.4}
+      ]
+    },
+    {
+      "id": "armada",
+      "title": "The armada",
+      "music": "dusk",
+      "lines": [
+        {"id": "armada_01", "text": "Sails on the horizon. The whole armada is coming.", "seconds": 4},
+        {"id": "armada_02", "text": "Every captain, to Pirate Point!", "seconds": 2.8},
+        {"id": "armada_03", "text": "Man the cannons, and get ready to light the lamps.", "seconds": 4}
       ]
     }
   ]
