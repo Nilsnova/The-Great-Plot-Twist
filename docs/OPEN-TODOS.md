@@ -8,7 +8,7 @@
 >
 > **Never** paste keys, SMTP passwords, tokens or student numbers into a chat, an issue or a commit message. Student numbers go only into the README line of their owner.
 >
-> Last updated: Tue 10 Nov 2026.
+> Last updated: Wed 11 Nov 2026, late evening.
 
 ## 1. If you jump in now (30 minutes to start)
 
@@ -34,7 +34,9 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click) | `backend/server/tests/` | S |
 | T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
 
-**Live since Wed 11 Nov, ~19:50:** tower defense v2 (upgrades to level 3, the mortar, crew, the fighting captain, unlocks by wave, boss warships, waves up to 100, building together on a friend's island and on Pirate Point, play-with-a-friend links for up to 4 players), clean detailed art, more football leagues. Merge `main` before you start; build on [TOWER-DEFENSE.md](TOWER-DEFENSE.md).
+**Live since Wed 11 Nov, late evening:** tower defense v2 plus the owner's play-test round: the wave bar at the top, a musket button (hold it or F), free aim (click anywhere to shoot that way), one fast walking speed, a foldable goals panel, a closable "Wave won" card, a 5 s countdown and an 8 s break, about twice the loot (new players start with 🪙 200), market calls decided after 5 minutes, and up to 30 matches on the board. Merge `main` before you start; build on [TOWER-DEFENSE.md](TOWER-DEFENSE.md).
+
+**Being built right now (do not pick, they change `sim.js`, the island and the Captain card):** pirates that come ashore and fight on foot (close combat with a cutlass), a ring of inner walls and rebuilding broken walls; the captain's skill tree (Marksman, Brawler, Shipwright) and a weapon shop (pistols, blunderbuss, long rifle, fire bombs); a "How to play" tutorial in the Menu and a longer first-run intro. T1–T3 below wait until these are merged (check §7).
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
