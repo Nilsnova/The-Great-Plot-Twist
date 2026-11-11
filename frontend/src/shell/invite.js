@@ -37,8 +37,9 @@ export function fillInvitePage({body,nav,ctx,isCurrent,play,back,ownerName=''}){
   const join=menuButton(copy.join,async()=>{
     if(busy||!isCurrent())return;
     if(!code){status.textContent='This link has no island code. Ask your friend to send it again.';return;}
-    // Local play (and ?islands=fake): nothing to sign in; the game sails to the island.
-    if(!online||signedIn){start();return;}
+    // Local play (and ?islands=fake in a dev build): nothing to sign in; the game sails to the island.
+    const fake=import.meta.env.DEV&&new URLSearchParams(globalThis.location?.search??'').get('islands')==='fake';
+    if(!online||signedIn||fake){start();return;}
     busy=true;join.disabled=true;status.textContent='Signing you in as a guest…';
     let result;
     try{result=await adapter.signIn({guest:true,island:displayIslandCode(code)});}catch{result={accepted:false,reason:'not_connected'};}
