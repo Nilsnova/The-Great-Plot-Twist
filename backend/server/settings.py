@@ -29,6 +29,11 @@ so this file is the full list of what can be configured:
                               never in the browser, a log or the repo. Empty keeps the stocks off.
     SPORTS_API_PROVIDER       empty, football-data.org or balldontlie. Empty disables live sports.
     SPORTS_API_KEY            server-only provider key; empty keeps live sports unavailable.
+    SPORTS_COMPETITIONS       football-data.org competition codes for the match board, comma
+                              separated (default: PL,PPL,CL: Premier League, Primeira Liga and
+                              Champions League). Only codes of the free plan are accepted; an
+                              unknown code stops the server. Not secret: the codes go to the
+                              provider as a query. balldontlie ignores it.
     AUTH_PROVIDERS            the sign-in providers the browser may offer, comma separated:
                               github and email (default: github). email is the 6-digit code
                               sign-in (Supabase email OTP). An unknown name, google included
@@ -68,6 +73,14 @@ STOCK_PROVIDER_NAMES = ("finnhub",)
 # setting.
 AUTH_PROVIDER_NAMES = ("github", "email")
 DEFAULT_AUTH_PROVIDERS = ("github",)
+
+# The competitions of football-data.org's free plan that SPORTS_COMPETITIONS may name. One request
+# to /v4/matches?competitions=... fetches them all, so more codes cost no extra calls. Every pick
+# settles on the 90-minute result (sports/parsing.py), so cup and knockout games are safe too.
+FOOTBALL_COMPETITION_CODES = (
+    "PL", "CL", "PPL", "BL1", "SA", "PD", "FL1", "DED", "ELC", "BSA", "WC", "EC",
+)
+DEFAULT_SPORTS_COMPETITIONS = ("PL", "PPL", "CL")
 
 # The place whose real weather the game shows. The Faroe Islands are the team's proposal, because
 # their real fog and storms suit the story. The team may change it (Lisbon is the other option,
@@ -119,6 +132,8 @@ class Settings:
     stock_api_key: SecretStr = SecretStr("")
     sports_api_provider: str = ""
     sports_api_key: SecretStr = SecretStr("")
+    # The football-data.org competitions of the match board, in the order of SPORTS_COMPETITIONS.
+    sports_competitions: tuple[str, ...] = DEFAULT_SPORTS_COMPETITIONS
     # The sign-in providers GET /api/config lists, in the order of AUTH_PROVIDERS.
     auth_providers: tuple[str, ...] = DEFAULT_AUTH_PROVIDERS
 
@@ -255,6 +270,23 @@ def read_sports_provider(env: Mapping[str, str]) -> str:
     return value
 
 
+def read_sports_competitions(env: Mapping[str, str]) -> tuple[str, ...]:
+    """SPORTS_COMPETITIONS: free-plan football-data.org codes, comma separated. Empty: PL,PPL,CL.
+
+    Case, repeats and empty pieces are ignored; the order of first mention is kept. An unknown code
+    stops the server. The error says where it is but never repeats it (it could be a pasted key).
+    """
+    pieces = [piece.strip().upper() for piece in read_text(env, "SPORTS_COMPETITIONS").split(",")]
+    codes = [piece for piece in pieces if piece]
+    for position, code in enumerate(codes, start=1):
+        if code not in FOOTBALL_COMPETITION_CODES:
+            raise SettingsError(
+                f"SPORTS_COMPETITIONS item {position} is not a football-data.org free-plan code. "
+                f"Use only {', '.join(FOOTBALL_COMPETITION_CODES)}."
+            )
+    return tuple(dict.fromkeys(codes)) or DEFAULT_SPORTS_COMPETITIONS
+
+
 def read_auth_providers(env: Mapping[str, str]) -> tuple[str, ...]:
     """AUTH_PROVIDERS: github and/or email, comma separated. Empty means github only.
 
@@ -299,6 +331,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         stock_api_key=SecretStr(read_text(env, "STOCK_API_KEY")),
         sports_api_provider=read_sports_provider(env),
         sports_api_key=SecretStr(read_text(env, "SPORTS_API_KEY")),
+        sports_competitions=read_sports_competitions(env),
         auth_providers=read_auth_providers(env),
     )
 
