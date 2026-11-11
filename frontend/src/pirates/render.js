@@ -192,12 +192,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   for (const layer of Object.values(layers)) root.add(layer.mesh);
   // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
   // watchtower gets one only for the lookout.
-  const posts = defenses.filter(item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'watchtower').map(item => {
+  const hasPost = item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'watchtower';
+  const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(3, item.level)) : 1);
+  const makePost = item => {
     const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + item.z, owned); root.add(layer.mesh);
-    const level = Number.isInteger(item.level) ? Math.max(1, Math.min(3, item.level)) : 1;
-    return { ...item, level, layer, flip: false };
-  });
-  const cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
+    return { ...item, level: levelOf(item), layer, flip: false };
+  };
+  const posts = defenses.filter(hasPost).map(makePost);
+  let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
   const fogUniforms = { uCannons: { value: Array.from({ length: 8 }, (_, i) => new THREE.Vector2(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0)) },
     uCount: { value: Math.min(8, cannonsList.length) }, uSight: { value: 28 }, uFog: { value: 0 }, uTime: { value: 0 } };
   const fogMaterial = new THREE.ShaderMaterial({ vertexShader: fogVertex, fragmentShader: fogFragment, uniforms: fogUniforms,
@@ -537,6 +539,23 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       draw();
     },
     setVisible(value) { visible = value !== false; root.visible = visible; },
+    // The island changed while this wave's posts stand (an upgrade or a new building in the break, or a
+    // friend's): every post takes its new level, and a spot built since gets its post. The sim is not
+    // touched; it fights with the defenses it started with.
+    setDefenses(list) {
+      if (disposed) return;
+      for (const item of list ?? []) {
+        if (!hasPost(item)) continue;
+        const post = posts.find(entry => entry.id === item.id);
+        if (post) { post.level = levelOf(item); if (item.kind === post.kind) continue; Object.assign(post, {kind: item.kind}); }
+        else posts.push(makePost(item));
+      }
+      cannonsList = (list ?? []).filter(item => item.kind === 'cannon' || item.kind === 'mortar');
+      fogUniforms.uCannons.value.forEach((vector, i) => vector.set(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0));
+      fogUniforms.uCount.value = Math.min(8, cannonsList.length);
+    },
+    // Each post's level, for checks.
+    levels() { return Object.fromEntries(posts.map(post => [post.id, post.level])); },
     // For the pooling test and the perf panel: what the renderer holds right now.
     stats() {
       return { objects: root.children.length, owned: owned.length, ships: ships.size, balls: balls.size, splashes: splashes.size,

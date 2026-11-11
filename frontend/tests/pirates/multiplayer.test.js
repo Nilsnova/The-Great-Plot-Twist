@@ -185,6 +185,40 @@ describe('the island room for every defender', () => {
   });
 });
 
+describe('an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible")', () => {
+  it('tells the room about our upgrade twice, in case a friend\'s room was still joining', async () => {
+    const h = wiringHarness({ visiting: { code: 'FR3ND', ownerName: 'Captain Gull' } });
+    h.tick();
+    h.emit({ type: 'island_spots_changed', place: 'visit', spot: 'cannon_1' });
+    expect(h.rooms[0].sent.filter(([type]) => type === 'island_changed')).toHaveLength(1);
+    await h.flush();
+    expect(h.rooms[0].sent.filter(([type]) => type === 'island_changed')).toHaveLength(2);
+    h.waves.dispose();
+  });
+  it('reads the island on screen again every 15 seconds, also when no message came', async () => {
+    const h = wiringHarness({ visiting: { code: 'FR3ND', ownerName: 'Captain Gull' } });
+    for (let i = 0; i < 14; i++) h.tick();
+    expect(h.island.refreshDefended).not.toHaveBeenCalled();
+    h.tick();
+    await h.flush();
+    expect(h.island.refreshDefended).toHaveBeenCalledTimes(1);
+    for (let i = 0; i < 14; i++) h.tick();
+    expect(h.island.refreshDefended).toHaveBeenCalledTimes(1);
+    h.waves.dispose();
+  });
+  it('gives the wave on screen the new levels after our change and after every read', async () => {
+    const h = wiringHarness({ visiting: { code: 'FR3ND', ownerName: 'Captain Gull' } });
+    const refresh = h.waves.pirates.island.refreshDefenses = vi.fn();
+    h.tick();
+    h.emit({ type: 'island_spots_changed', place: 'visit', spot: 'cannon_1' });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    h.rooms[0].hear('island_changed', { spot: 'cannon_1' });
+    await h.flush();
+    expect(refresh).toHaveBeenCalledTimes(2);
+    h.waves.dispose();
+  });
+});
+
 describe('the shared fake world (?islands=fake&fakeworld=…, scripts/check-multiplayer.js)', () => {
   it('reads its tab\'s captain from the address', () => {
     expect(fakePlayerFor('?islands=fake&fakeworld=mp1&fakeplayer=ben&fakename=Ben')).toEqual({ shared: 'mp1', playerId: 'ben', ownerName: 'Ben' });

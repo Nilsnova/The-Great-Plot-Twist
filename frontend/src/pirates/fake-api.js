@@ -240,8 +240,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return view();
     },
     async piratePoint() { me(); return pointView(); },
-    async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, null); return pointView(); },
-    async pointUpgrade(body = {}) { upgradeOn(world.point, ISLAND_RULES.pointSpots, body, null); return pointView(); },
+    async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
+    async pointUpgrade(body = {}) { upgradeOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
     piratePointBuild(body) { return api.pointBuild(body); },
     piratePointUpgrade(body) { return api.pointUpgrade(body); },
     async inviteJoin({ code, actionUid } = {}) {

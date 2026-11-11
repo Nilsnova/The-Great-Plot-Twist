@@ -59,6 +59,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     for (const step of newUnlocks(before, next)) ui.toast(step.title, 'success', firstTime(`unlock_${step.wave}`) ? step.line : '');
   };
   const unlocks = () => (own ? readUnlocks(own) : null);
+  // Reads and writes of one island can cross: a read asked before our own build or upgrade may answer after
+  // it, with the island as it was. reading(kind) gives a check for the answer: false when a newer read was
+  // already used or a write answered meanwhile (that answer is newer than the read), so the island on screen
+  // never steps back a level.
+  const turns = {own: {asked: 0, used: 0, wrote: 0}, visit: {asked: 0, used: 0, wrote: 0}, point: {asked: 0, used: 0, wrote: 0}};
+  const reading = kind => {
+    const turn = turns[kind], mine = ++turn.asked, wrote = turn.wrote;
+    return () => { if (mine < turn.used || turn.wrote !== wrote) return false; turn.used = mine; return true; };
+  };
+  const wrote = kind => { turns[kind].wrote++; };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const api = createIslandApi({transport: transport ?? live});
@@ -77,7 +87,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();
     // A won wave may unlock something (§9): read the island again; setOwn toasts what is new.
-    if (event.survived === true) void api.getIsland().then(fresh => { if (!disposed && fresh.ok) { setOwn(fresh.data); refreshCard(); } });
+    if (event.survived === true) { const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } }); }
   });
   // The musket hint (§10), once per device, when the first wave starts.
   const stopStarted = on(WAVE_STARTED, () => {
@@ -98,17 +108,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
 
   function applyWorld() {
     world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: unlocks(), crew: target()?.crew ?? null});
-    pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: null});
+    pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
 
   async function load() {
     const ticket = ++loadTicket;
     if (visitCode) {
+      const current = reading('visit');
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        visiting = {...answer.data, code: islandCode(answer.data.code)};
+        if (current() || !visiting) visiting = {...answer.data, code: islandCode(answer.data.code)};
         ui.visit({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code)}, () => void sailHome());
       } else {
         endVisit(); ui.toast(answer.message, 'error');
@@ -116,9 +127,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
     {
       // Your own island also while visiting: its coins pay for what you build on the friend's island.
+      const current = reading('own');
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
-      if (answer.ok) { setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
+      if (answer.ok) { if (current()) setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
     }
     applyWorld(); refreshCard();
     if (target()) await flow.look(where());
@@ -127,10 +139,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
 
   // Pirate Point's shared spots: anyone builds and upgrades them with their own coins (§5).
   async function loadPoint() {
+    const current = reading('point');
     const answer = await api.piratePoint();
     if (disposed) return answer;
-    if (answer.ok) { point = answer.data; pointMessage = ''; tookCoins(answer.data.coins); } else pointMessage = answer.message;
-    if (!own) { const mine = await api.getIsland(); if (!disposed && mine.ok) setOwn(mine.data); }
+    if (answer.ok) { if (current()) { point = answer.data; tookCoins(answer.data.coins); } pointMessage = ''; } else pointMessage = answer.message;
+    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwn(mine.data); }
     applyWorld(); refreshCard();
     return answer;
   }
@@ -140,7 +153,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (isPointSpot(spotId)) {
       const spot = point?.spots.find(item => item.id === spotId) ?? null;
       return buildCardModel({spotId, slot: ppSpotById(spotId).slot, spot, coins: own?.coins ?? null, busy: busySpot === spotId ? busyKind : false,
-        message: cardMessage || (!point ? pointMessage : ''), point: true, prices: own?.prices ?? null});
+        message: cardMessage || (!point ? pointMessage : ''), point: true, prices: own?.prices ?? null,
+        // The server holds you to your own unlocks at Pirate Point too (a level you have not won is refused).
+        unlocks: own ? unlocks() : null});
     }
     // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
@@ -169,8 +184,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); }
   async function freshOwn() {
     if (own) return null;
-    const answer = await api.getIsland();
-    if (!disposed && answer.ok) { setOwn(answer.data); refreshCard(); }
+    const current = reading('own'), answer = await api.getIsland();
+    if (!disposed && answer.ok && current()) { setOwn(answer.data); refreshCard(); }
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
@@ -204,10 +219,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
   async function reloadVisit() {
     if (!visiting) return;
-    const fresh = await api.visit(visiting.code);
-    if (!disposed && fresh.ok && visiting) visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)};
+    const current = reading('visit'), fresh = await api.visit(visiting.code);
+    if (!disposed && fresh.ok && visiting && current()) visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)};
   }
-  async function reloadOwn() { const mine = await api.getIsland(); if (!disposed && mine.ok) setOwn(mine.data); }
+  async function reloadOwn() { const current = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && current()) setOwn(mine.data); }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
   // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
   async function refreshDefended() {
@@ -216,14 +231,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     refreshCard();
   }
   async function took(answer, place) {
+    wrote(place === 'point' ? 'point' : place === 'visit' ? 'visit' : 'own');
     if (place === 'point') { point = answer.data; if (Number.isSafeInteger(answer.data.coins)) tookCoins(answer.data.coins); else await reloadOwn(); }
-    else if (place === 'visit') { await Promise.all([reloadVisit(), reloadOwn()]); }
+    else if (place === 'visit') { wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
     else setOwn(answer.data);
   }
   async function refused(answer, place) {
     cardMessage = answer.message;
     if (['spot_taken', 'insufficient_funds', 'max_level', 'not_built', 'locked', 'crew_full'].includes(answer.code)) {
-      if (place === 'point') { const fresh = await api.piratePoint(); if (!disposed && fresh.ok) { point = fresh.data; tookCoins(fresh.data.coins); } }
+      if (place === 'point') { const current = reading('point'), fresh = await api.piratePoint(); if (!disposed && fresh.ok && current()) { point = fresh.data; tookCoins(fresh.data.coins); } }
       else if (place === 'visit') await Promise.all([reloadVisit(), reloadOwn()]);
       else await reloadOwn();
     }

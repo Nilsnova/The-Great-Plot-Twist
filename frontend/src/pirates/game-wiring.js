@@ -24,6 +24,10 @@ const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
 export const WAVE_START_AGAIN_MS = [2000, 6000];
 const CHANGED_DELAY_MS = 400, JOIN_RETRY_MS = 1200, JOIN_TRIES = 4;
+// A room message can get lost (the room was still joining, the connection hiccuped): a build or upgrade is
+// told once more a little later, and the island on screen is read again every REREAD_SECONDS on its own,
+// so an upgrade of a friend never waits for a reload.
+export const CHANGED_AGAIN_MS = 3000, REREAD_SECONDS = 15;
 // The island client answers {ok, data} or {ok: false, code, message, retryAfterSeconds}; lane P's code
 // wants the data or a thrown error with the code (the fake-api.js shape).
 export function throwRefusal(answer) {
@@ -97,16 +101,24 @@ export function wireWaves(ctx) {
   function tick() {
     if (disposed) return;
     followRoom();
+    if (world.current?.id === ISLAND_PLACE && island && ++quiet >= REREAD_SECONDS && globalThis.document?.visibilityState !== 'hidden') void readIsland();
     if (!landed || world.current?.id !== ISLAND_PLACE || pirates.island.wave) return;
     const ready = island.visiting ? !!island.visiting.ownerName : !!island.island;
     if (!ready) return;
     landed = false;
     joinRunning();
   }
+  // The wave on screen (in its break, or the Pirate Point one) draws its towers from its own list: give it the new levels.
+  const relevel = () => { try { pirates.island.refreshDefenses?.(); pirates.point?.controller?.refreshDefenses?.(); } catch { /* A drawing cannot stop the island. */ } };
+  let quiet = 0;
+  async function readIsland() {
+    quiet = 0;
+    try { await island.refreshDefended?.(); relevel(); } catch { /* The island as we had it. */ }
+  }
   function changed() {
     if (changedSoon) return;
     changedSoon = true;
-    after(() => { changedSoon = false; void Promise.resolve(island.refreshDefended?.()).catch(() => {}); }, CHANGED_DELAY_MS);
+    after(() => { changedSoon = false; void readIsland(); }, CHANGED_DELAY_MS);
   }
   if (island) {
     stops.push(on('arrived', event => { if (event?.place === ISLAND_PLACE) landed = true; followRoom(); }),
@@ -128,12 +140,18 @@ export function wireWaves(ctx) {
     // Co-op builds (TOWER-DEFENSE.md §6): ours go to the room, a friend's make us read the island again.
     stops.push(on(SPOTS_CHANGED, event => {
       if (typeof event?.spot !== 'string') return;
-      if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot});
-      else islandRoom.send('island_changed', {spot: event.spot});
+      const tell = () => { if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot}); else islandRoom.send('island_changed', {spot: event.spot}); };
+      tell(); after(tell, CHANGED_AGAIN_MS); relevel();
     }));
+    // Back on this tab after a while: the room may have missed something.
+    const document = globalThis.document;
+    if (document?.addEventListener) {
+      const visible = () => { if (!disposed && document.visibilityState === 'visible' && world.current?.id === ISLAND_PLACE) void readIsland(); };
+      document.addEventListener('visibilitychange', visible); stops.push(() => document.removeEventListener('visibilitychange', visible));
+    }
     stops.push(islandRoom.on('island_changed', () => { if (!disposed) changed(); }));
     landed = world.current?.id === ISLAND_PLACE;
-    if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).catch(() => {}); }));
+    if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).then(relevel).catch(() => {}); }));
     stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));
     stops.push(on('wave_controller_stopped', () => { island.setBattle(false); island.setPointBattle(false); }));
     followRoom();
