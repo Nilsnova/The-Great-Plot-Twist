@@ -50,7 +50,8 @@ export const CONFIG = freeze({
     damage: 10, reload: 1.5, range: 28, towerBonus: 8, accuracy: 0.85, ballSpeed: 24,
     manualMultiplier: 2, manualCooldown: 0.5, missSpread: 2.5,
   },
-  fog: { max: 0.9 },          // sight = range × (1 − fog)
+  fog: { max: 0.9,            // sight = range × (1 − fog)
+    firstWaveSight: 0.7 },    // wave 1 always sees at least this share of the range: one cannon wins it in fog
   weather: { minShips: 0.5, maxShips: 3 },
   wall: { hp: 60, reach: 8, repairRate: 10, repairSeconds: 3 },
   maxWave: 50,
@@ -96,6 +97,21 @@ function readDefenses(list) {
   return out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
+// Another island's coast (Pirate Point on lighthouse_isle): {rx, rz, seed}, else the home_islet coast.
+function readCoast(coast) {
+  if (!coast || typeof coast !== 'object') return CONFIG.coast;
+  const { rx, rz, seed } = coast;
+  if (![rx, rz].every(value => finite(value) && value >= 5 && value <= 60) || !finite(seed)) return CONFIG.coast;
+  return { rx, rz, seed };
+}
+// Other sea lanes: 1 to 4 of {id, bearing in degrees}, else CONFIG.lanes.
+function readLanes(lanes) {
+  if (!Array.isArray(lanes) || lanes.length < 1 || lanes.length > 4) return CONFIG.lanes;
+  const out = lanes.filter(lane => lane && typeof lane.id === 'string' && lane.id && finite(lane.bearing))
+    .map(lane => ({ id: lane.id, bearing: lane.bearing }));
+  return out.length === lanes.length && new Set(out.map(lane => lane.id)).size === out.length ? out : CONFIG.lanes;
+}
+
 function shuffle(list, random) {
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
@@ -104,7 +120,7 @@ function shuffle(list, random) {
   return list;
 }
 
-/** createWave({seed, wave, weather: {ships, fog}, island: {hp}, defenses, flagship, countdown}) */
+/** createWave({seed, wave, weather: {ships, fog}, island: {hp}, defenses, flagship, countdown, coast, lanes}) */
 export function createWave(options = {}) {
   const C = CONFIG, random = createRandom(options?.seed);
   const waveNumber = clamp(Math.trunc(finite(options?.wave) ? options.wave : 1), 1, C.maxWave);
@@ -116,7 +132,8 @@ export function createWave(options = {}) {
   const defenses = readDefenses(options?.defenses);
   const hasTower = defenses.some(item => item.kind === 'watchtower');
   const range = C.cannon.range + (hasTower ? C.cannon.towerBonus : 0);
-  const sight = range * (1 - fog);
+  const sight = range * (waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog);
+  const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
   const cannons = defenses.filter(item => item.kind === 'cannon')
     .map(item => ({ ...item, reload: 0, lastShot: -Infinity, shots: 0 }));
   const walls = defenses.filter(item => item.kind === 'wall')
@@ -125,8 +142,8 @@ export function createWave(options = {}) {
   const wallById = new Map(walls.map(item => [item.id, item]));
 
   // The fleet is planned up front, so the random sequence never depends on frame timing.
-  const lanes = C.lanes.map(lane => {
-    const a = lane.bearing * Math.PI / 180, stop = coastPoint(a, C.stopRadius);
+  const lanes = laneList.map(lane => {
+    const a = lane.bearing * Math.PI / 180, stop = coastPoint(a, C.stopRadius, coast);
     const cover = cannons.length ? Math.min(...cannons.map(c => distance(c.x, c.z, stop.x, stop.z))) : 0;
     return { id: lane.id, a, stop, cover };
   });
@@ -147,7 +164,7 @@ export function createWave(options = {}) {
   for (const entry of plan) {
     const a = entry.lane.a + (random() * 2 - 1) * C.laneSpread * Math.PI / 180;
     const stopR = C.stopRadius + (random() * 2 - 1) * C.stopJitter;
-    entry.from = coastPoint(a, C.spawnRadius); entry.to = coastPoint(a, entry.kind === 'flagship' ? C.stopRadius + .1 : stopR);
+    entry.from = coastPoint(a, C.spawnRadius, coast); entry.to = coastPoint(a, entry.kind === 'flagship' ? C.stopRadius + .1 : stopR, coast);
   }
 
   let ticks = 0, rest = 0, nextSpawn = 0, nextShipId = 1, sunk = 0, islandHp = maxHp, done = false;

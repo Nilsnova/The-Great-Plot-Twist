@@ -67,14 +67,15 @@ describe('pirate wave simulation', () => {
   });
 
   it('shortens the sight range in fog, and a watchtower lengthens it', () => {
-    const clear = createWave({ seed: 3, defenses: pick('cannon_2') }).state();
-    const fog = createWave({ seed: 3, weather: { fog: .4 }, defenses: pick('cannon_2') }).state();
+    // From wave 2 on (wave 1 keeps a minimum sight: see the fog balance test).
+    const clear = createWave({ seed: 3, wave: 2, defenses: pick('cannon_2') }).state();
+    const fog = createWave({ seed: 3, wave: 2, weather: { fog: .4 }, defenses: pick('cannon_2') }).state();
     const tower = createWave({ seed: 3, defenses: pick('cannon_2', 'tower_1') }).state();
     expect(fog.sight).toBeCloseTo(clear.sight * .6, 5);
     expect(tower.sight).toBe(CONFIG.cannon.range + CONFIG.cannon.towerBonus);
     const firstShot = options => play(options).events.find(event => event.type === 'cannon_fired');
-    const near = firstShot({ seed: 3, weather: { fog: .4 }, defenses: pick('cannon_2') });
-    const far = firstShot({ seed: 3, defenses: pick('cannon_2') });
+    const near = firstShot({ seed: 3, wave: 2, weather: { fog: .4 }, defenses: pick('cannon_2') });
+    const far = firstShot({ seed: 3, wave: 2, defenses: pick('cannon_2') });
     expect(near.t).toBeGreaterThan(far.t); // the pirates appear later
     const distance = event => Math.hypot(event.toX - event.x, event.toZ - event.z);
     expect(distance(near)).toBeLessThanOrEqual(fog.sight + CONFIG.cannon.missSpread + 2);
