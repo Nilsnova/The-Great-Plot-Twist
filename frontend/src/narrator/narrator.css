@@ -1,0 +1,9 @@
+/* The narrator's caption card (src/narrator/card.js). Token-based, with fallbacks. */
+.narrator-card{position:fixed;left:50%;bottom:16px;z-index:48;transform:translateX(-50%);display:flex;align-items:flex-start;gap:4px;box-sizing:border-box;width:min(560px,calc(100vw - 32px));padding:12px 6px 12px 18px;background:var(--u-sea,#123238);color:var(--u-ink,#f6ecd2);border:2px solid var(--u-brass,#c99a4a);border-radius:14px;box-shadow:0 6px 20px rgb(0 0 0 / .35);pointer-events:none}
+.narrator-text{flex:1;margin:0;font:500 var(--u-md,18px)/1.45 var(--u-font,system-ui,sans-serif);overflow-wrap:anywhere}
+.narrator-card.is-large .narrator-text{font-size:var(--u-lg,22px)}
+.narrator-skip{flex:none;pointer-events:auto;display:grid;place-items:center;width:44px;height:44px;margin:-8px 0;padding:0;border:0;border-radius:10px;background:transparent;color:inherit;font:400 26px/1 var(--u-font,system-ui,sans-serif)}
+.narrator-skip:hover{background:var(--u-raise,#245059)}
+body:has(.narrator-card:not([hidden])) .sound-caption:not(.in-dialog){translate:0 calc(-1 * var(--narrator-card-height,0px) - 8px)}
+@media (prefers-reduced-motion:no-preference){:root:not([data-reduced-motion="true"]) .narrator-card:not([hidden]){animation:narrator-in .22s ease-out}}
+@keyframes narrator-in{from{opacity:0;translate:0 8px}}

@@ -8,7 +8,8 @@ import {createFestivalSound} from './festival.js';
 import {createPirateSound} from './pirates.js';
 // Keep audio behind a real user gesture and centralize listeners for complete cleanup.
 export function createAudio({container,on,caption}) {
-  let context, master, musicBus, effectsBus;
+  let context, master, musicBus, effectsBus, voiceBus, duck;
+  const voices = new Set();
   let synth, ambience, music, hum, humGain, festivalSound, pirateSound;
   let humActive = false, disposed = false, screen = 'title', finale = false;
   let stride = 0, hornAt = 0, harborHornAt = 0, flagAt = 0, beamAt = 0, lastBlip = 0;
@@ -21,6 +22,7 @@ export function createAudio({container,on,caption}) {
       [master, mix.master],
       [musicBus, preferences.music],
       [effectsBus, preferences.effects],
+      [voiceBus, preferences.voice],
     ];
     for (const [bus, value] of busLevels) {
       bus.gain.cancelScheduledValues(now);
@@ -42,8 +44,13 @@ export function createAudio({container,on,caption}) {
       master = context.createGain();
       musicBus = context.createGain();
       effectsBus = context.createGain();
+      voiceBus = context.createGain();
+      // The music passes a duck gain that dips while the narrator speaks (playVoice).
+      duck = context.createGain();
       master.gain.value = 0;
-      musicBus.connect(master);
+      musicBus.connect(duck);
+      duck.connect(master);
+      voiceBus.connect(master);
       effectsBus.connect(master);
       master.connect(context.destination);
       synth = createSynth(context);
@@ -100,6 +107,32 @@ export function createAudio({container,on,caption}) {
     }
     return true;
   }
+  // A recorded voice line (the narrator, src/narrator/): fetched and decoded here, played on the voice bus
+  // (Settings › Voice volume), with the music ducked while it speaks. Returns null while sound is locked;
+  // otherwise {done: Promise<boolean> (true when it played to the end), stop()}.
+  function ducking() {
+    if (!duck) return;
+    const now = context.currentTime;
+    duck.gain.cancelScheduledValues(now);
+    duck.gain.setTargetAtTime(voices.size ? 0.3 : 1, now, voices.size ? 0.08 : 0.4);
+  }
+  function playVoice(url, {fetchImpl = globalThis.fetch?.bind(globalThis)} = {}) {
+    if (!context || context.state !== 'running' || disposed || typeof url !== 'string' || !fetchImpl) return null;
+    let source = null, stopped = false, settled = false, settle;
+    const done = new Promise(resolve => { settle = resolve; });
+    const voice = {stop() { stopped = true; try { source?.stop(); } catch { /* already ended */ } finish(false); }};
+    function finish(played) { if (settled) return; settled = true; voices.delete(voice); ducking(); settle(played); }
+    voices.add(voice); ducking();
+    fetchImpl(url).then(response => (response.ok ? response.arrayBuffer() : null))
+      .then(data => (data && !stopped && !disposed ? context.decodeAudioData(data) : null))
+      .then(buffer => {
+        if (!buffer || stopped || disposed) { finish(false); return; }
+        source = context.createBufferSource(); source.buffer = buffer; source.connect(voiceBus);
+        source.onended = () => { source.disconnect(); finish(!stopped); };
+        source.start();
+      }).catch(() => finish(false));
+    return {done, stop: () => voice.stop()};
+  }
   const click = event => { if (event.target.closest('button')) cue('click'); };
   const blip = () => cue('blip');
   const visibility = () => {
@@ -120,7 +153,7 @@ export function createAudio({container,on,caption}) {
     theme();
   });
   const stopHarborCues = [on('islet_build_raised', () => cue('build'))];
-  return {unlock,get state(){return context?.state??'locked';},cue,
+  return {unlock,get state(){return context?.state??'locked';},cue,playVoice,
     setScreen(mode){screen=mode;theme();},
     update(dt, { weather, weatherAnswer, isletBuilt = [], speed = 0, night = 0, active = false, place } = {}) {
       if (!context || disposed) return;
@@ -180,6 +213,7 @@ export function createAudio({container,on,caption}) {
       stopPreferences();
       stopCinematic();
       stopHarborCues.forEach(stop => stop());
+      for (const voice of [...voices]) voice.stop();
       festivalSound?.dispose();
       music?.dispose();
       ambience?.dispose();
@@ -193,6 +227,8 @@ export function createAudio({container,on,caption}) {
       master?.disconnect();
       musicBus?.disconnect();
       effectsBus?.disconnect();
+      voiceBus?.disconnect();
+      duck?.disconnect();
       context?.close().catch(() => {});
     },
   };

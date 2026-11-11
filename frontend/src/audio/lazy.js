@@ -17,6 +17,7 @@ export function createLazyAudio(ctx){
   return {
     get state(){return instance?.state??'locked';},
     cue(name){instance?.cue(name);},
+    playVoice(url,options){return instance?.playVoice?.(url,options)??null;},
     setScreen(mode){screen=mode;instance?.setScreen(mode);},
     update(dt,state){instance?.update(dt,state);},
     dispose(){if(disposed)return;disposed=true;stopListening();instance?.dispose();},
