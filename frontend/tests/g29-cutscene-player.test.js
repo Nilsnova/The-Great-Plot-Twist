@@ -94,8 +94,8 @@ it('runs lore, harbor and one goal card once, then goes straight to the harbor',
     expect(await page.evaluate(()=>window.door.active)).toBe(true);
     await page.evaluate(()=>window.finishCutscene());
     await page.locator('.goal-card[open]').waitFor();
-    expect(await page.locator('.goal-card h2').textContent()).toBe('Your goal');
-    expect(await page.locator('.goal-card dt').allTextContents()).toEqual(['Move','Interact']);
+    expect(await page.locator('.goal-card h2').textContent()).toBe('Your island');
+    expect(await page.locator('.goal-card dt').allTextContents()).toEqual(['Walk','Use']);
     expect(await page.evaluate(()=>document.activeElement.textContent)).toBe('Got it');
     expect(await page.evaluate(()=>window.door.handleEscape())).toBe(true);
     expect(await page.evaluate(async()=>{await window.first;return window.log;})).toEqual([

@@ -186,7 +186,7 @@ describe('build: the normal path', () => {
     expect(result).toMatchObject({accepted: true, code: 'built'});
     expect(adapter.read()).toMatchObject({
       busyPlot: null, coins: 700, timber: 10, signalStationBuilt: true,
-      notice: {tone: 'success', code: 'built', message: 'Signal station built. You have 700 coins and 10 timber left.'},
+      notice: {tone: 'success', code: 'built', message: 'Signal station built. You have 🪙 700 and 10 timber left.'},
     });
     expect(spotOf(adapter, STATION)).toMatchObject({state: 'built', level: 1, builtAt: '2026-11-16T10:00:00Z', canBuild: false, retry: false});
   });
@@ -238,7 +238,7 @@ describe('build: the normal path', () => {
     expect(result).toMatchObject({accepted: true, code: 'built'});
     expect(adapter.read().notice).toEqual({
       tone: 'success', code: 'built',
-      message: 'Signal station built. You have 700 coins and 10 timber left. We could not reload your islet. Press Refresh.',
+      message: 'Signal station built. You have 🪙 700 and 10 timber left. We could not reload your islet. Press Refresh.',
     });
   });
 });
