@@ -201,7 +201,14 @@ def test_one_wave_at_a_time_per_island():
     "body",
     [
         {"where": ""},
+        {"where": None},
+        {"where": 7},
+        {"where": []},
+        {"where": "x" * 33},
         {"where": "own; drop"},
+        {"actionUid": ""},
+        {"actionUid": "x" * 65},
+        {"actionUid": False},
         {"actionUid": "short"},
         {"actionUid": None},
         {"seed": 4},
@@ -211,7 +218,8 @@ def test_a_start_that_does_not_fit_is_refused(body):
     world = World()
 
     assert_error(world.start(**body), 422, "validation_error")
-    assert world.database.calls("wave_start") == []
+    assert world.database.requests == []
+    assert world.local_weather.asked == []
 
 
 def test_an_admitted_guest_rings_the_bell_like_a_player():
@@ -307,12 +315,20 @@ def test_a_finish_the_database_refuses(reason, status, code):
 @pytest.mark.parametrize(
     "body",
     [
+        {"waveId": ""},
+        {"waveId": None},
+        {"waveId": 7},
         {"waveId": "not-a-uuid"},
+        {"survived": None},
+        {"survived": []},
         {"survived": "true"},
         {"survived": 1},
         {"shipsSunk": -1},
         {"shipsSunk": 1001},
         {"shipsSunk": 2.5},
+        {"shipsSunk": None},
+        {"shipsSunk": True},
+        {"shipsSunk": "7"},
         {"loot": 500},
     ],
 )
@@ -320,7 +336,7 @@ def test_a_finish_that_does_not_fit_is_refused(body):
     world = World()
 
     assert_error(world.finish(**body), 422, "validation_error")
-    assert world.database.calls("wave_finish") == []
+    assert world.database.requests == []
 
 
 def test_an_answer_the_server_cannot_read_is_a_database_error():
@@ -429,12 +445,23 @@ def test_a_join_the_database_refuses(reason, status, code):
     assert_error(world.join(), status, code)
 
 
-@pytest.mark.parametrize("body", [{"waveId": "nope"}, {"waveId": None}, {"seed": 4}])
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"waveId": "nope"},
+        {"waveId": None},
+        {"seed": 4},
+        {"waveId": ""},
+        {"waveId": []},
+        {"waveId": 7},
+        {"waveId": "x" * 37},
+    ],
+)
 def test_a_join_that_does_not_fit_is_refused(body):
     world = World()
 
     assert_error(world.join(**body), 422, "validation_error")
-    assert world.database.calls("wave_join") == []
+    assert world.database.requests == []
 
 
 def test_an_admitted_guest_joins_like_a_player():
@@ -445,6 +472,14 @@ def test_an_admitted_guest_joins_like_a_player():
 
 
 # --- GET /api/waves/current ---
+
+
+@pytest.mark.parametrize("where", ["", "x" * 33, "own; drop"])
+def test_an_invalid_current_wave_query_never_asks_the_database(where: str) -> None:
+    world = World()
+
+    assert_error(world.current(where), 422, "validation_error")
+    assert world.database.requests == []
 
 
 def test_no_running_wave_is_null():

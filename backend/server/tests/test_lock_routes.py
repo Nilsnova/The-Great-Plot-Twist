@@ -284,9 +284,17 @@ def test_an_answer_to_the_other_question_is_question_changed():
 @pytest.mark.parametrize(
     "body",
     [
+        {"answer": "", "actionUid": "answer0001"},
+        {"answer": None, "actionUid": "answer0001"},
+        {"answer": 7, "actionUid": "answer0001"},
+        {"answer": [], "actionUid": "answer0001"},
+        {"answer": "r" * 21, "actionUid": "answer0001"},
         {"answer": "lava", "actionUid": "answer0001"},
         {"answer": "RAIN", "actionUid": "answer0001"},
         {"answer": "rain", "actionUid": "short"},
+        {"answer": "rain", "actionUid": ""},
+        {"answer": "rain", "actionUid": None},
+        {"answer": "rain", "actionUid": "x" * 65},
         {"answer": "rain"},
         {"answer": "rain", "actionUid": "answer0001", "accepted": True},
         {
@@ -297,12 +305,13 @@ def test_an_answer_to_the_other_question_is_question_changed():
     ],
 )
 def test_odd_answers_are_refused_and_nothing_is_stored(body):
-    client, database, *_ = lock_client()
+    client, database, meteo, _ = lock_client()
 
     response = client.post("/api/lock/answer", json=body, headers=PLAYER)
 
     assert_error(response, 422, "validation_error")
     assert database.calls("demo_lock_record") == []
+    assert meteo.requests == []
 
 
 def test_forty_stored_answers_are_enough():
@@ -417,3 +426,25 @@ def test_place_search_budget_is_ten_a_minute():
         client.get(f"/api/places/search?q=town{number}", headers=PLAYER)
 
     assert_error(client.get("/api/places/search?q=more", headers=PLAYER), 429, "too_many_requests")
+
+
+@pytest.mark.parametrize("query", ["", "   ", "x" * 61])
+def test_a_bad_search_never_asks_the_place_provider(query: str) -> None:
+    geocoding = FakeGeocoding()
+    client, *_ = lock_client(places_reply=geocoding)
+
+    response = client.get("/api/places/search", params={"q": query}, headers=PLAYER)
+
+    assert_error(response, 422, "validation_error")
+    assert geocoding.requests == []
+
+
+@pytest.mark.parametrize("query", ["Li", "x" * 60])
+def test_search_accepts_both_length_boundaries(query: str) -> None:
+    geocoding = FakeGeocoding()
+    client, *_ = lock_client(places_reply=geocoding)
+
+    response = client.get("/api/places/search", params={"q": query}, headers=PLAYER)
+
+    assert response.status_code == 200
+    assert len(geocoding.requests) == 1

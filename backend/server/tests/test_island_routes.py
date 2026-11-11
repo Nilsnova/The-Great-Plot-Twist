@@ -238,6 +238,18 @@ def test_an_unknown_spot_is_refused():
 @pytest.mark.parametrize(
     "body",
     [
+        {"spot": ""},
+        {"spot": None},
+        {"spot": 1},
+        {"spot": "x" * 41},
+        {"kind": ""},
+        {"kind": None},
+        {"kind": []},
+        {"kind": "x" * 41},
+        {"actionUid": ""},
+        {"actionUid": None},
+        {"actionUid": 1},
+        {"actionUid": "x" * 65},
         {"actionUid": "short"},
         {"actionUid": "bad uid with spaces"},
         {"spot": "Cannon_1"},
@@ -249,7 +261,7 @@ def test_a_build_that_does_not_fit_is_refused(body):
     world = World()
 
     assert_error(world.build(**body), 422, "validation_error")
-    assert world.database.calls("islet_build") == []
+    assert world.database.requests == []
 
 
 def test_a_database_that_is_down_says_the_outcome_is_unknown():
@@ -304,6 +316,13 @@ def test_an_unknown_or_malformed_code_is_no_island(code):
     friend_island(world)
 
     assert_error(world.visit(code), 404, "no_such_island")
+
+
+def test_an_oversized_visit_code_is_refused_before_any_lookup() -> None:
+    world = World()
+
+    assert_error(world.visit("x" * 33), 422, "validation_error")
+    assert world.database.requests == []
 
 
 def test_a_visit_does_not_open_an_island():
