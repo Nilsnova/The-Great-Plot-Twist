@@ -365,5 +365,5 @@ def test_the_shared_waves_do_not_change_the_applied_migration():
 def test_pirate_point_pays_its_own_base_and_no_houses():
     loot = load_island().loot
 
-    assert loot.pirate_point_base == 20
-    assert rules.loot_cap(loot, 1, 2, pirate_point=True) == 25
+    assert loot.pirate_point_base == 40
+    assert rules.loot_cap(loot, 1, 2, pirate_point=True) == 50

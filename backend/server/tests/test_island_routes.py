@@ -94,7 +94,7 @@ def test_the_island_is_opened_with_a_fresh_code_and_the_starting_coins():
 
     (call,) = world.database.calls("island_open")
     assert call["p_player_id"] == PLAYER_ID
-    assert call["p_starting_coins"] == 100
+    assert call["p_starting_coins"] == 200
     assert len(call["p_code"]) == 5
 
 
