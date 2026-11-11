@@ -12,6 +12,12 @@ Run from anywhere with `python3 -I scripts/voice/generate.py --dry-run` first, t
   unless --force. A character budget (default 4,000 per run) is checked before any network call.
 * frontend/public/audio/voice/manifest.json lists every present file by scene and line id with its
   duration, read from the MP3 frame headers, for subtitle timing. Caption text stays in the scripts.
+* --narrator reads the narrator's lines (frontend/src/narrator/lines.json, GAME-V3.md section 6) as
+  one scene "narrator": files narrator-<id>.mp3, merged into the game's manifest format
+  {version: 1, lines: {"narrator-<id>": {file, seconds}}} without touching the cutscene entries.
+  Before any line is sent it asks ElevenLabs for the account's remaining characters
+  (GET /v1/user/subscription, numbers only) and sends only what fits with a 20% margin, in priority
+  order (priority 1 first). It never buys or changes anything on the account.
 """
 
 from __future__ import annotations
@@ -31,6 +37,11 @@ REPO = Path(__file__).resolve().parents[2]
 KEY_PATH = Path.home() / ".config" / "great-plot-twist" / "elevenlabs.key"
 SCRIPTS_PATH = REPO / "frontend" / "src" / "cutscenes" / "scripts.json"
 SAMPLE_PATH = Path(__file__).resolve().with_name("sample_scripts.json")
+NARRATOR_PATH = REPO / "frontend" / "src" / "narrator" / "lines.json"
+NARRATOR_SCENE = "narrator"
+NARRATOR_MAX_TEXT = 220  # one to three short sentences (GAME-V3.md section 6)
+CREDIT_MARGIN = 0.2  # send only when the account has 20% more characters left than the run needs
+SUBSCRIPTION_URL = "https://api.elevenlabs.io/v1/user/subscription"
 OUT_DIR = REPO / "frontend" / "public" / "audio" / "voice"
 PUBLIC_PREFIX = "audio/voice/"
 API_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
@@ -62,6 +73,11 @@ def load_scripts(path: Path | None = None) -> tuple[Path, list[dict]]:
         raise ToolError(f"Scripts file is not valid JSON: {path} ({error.msg}, line {error.lineno})") from None
     if not isinstance(scenes, list) or not scenes:
         raise ToolError("Scripts file must hold a non-empty list of scenes.")
+    validate_scenes(scenes)
+    return Path(path), scenes
+
+
+def validate_scenes(scenes: list[dict]) -> None:
     seen = set()
     for scene in scenes:
         if not isinstance(scene, dict) or not ID_PATTERN.match(str(scene.get("id", ""))):
@@ -81,7 +97,6 @@ def load_scripts(path: Path | None = None) -> tuple[Path, list[dict]]:
                 raise ToolError(f"Line {name} has no text.")
             if not ID_PATTERN.match(str(line.get("voice", "narrator"))):
                 raise ToolError(f"Line {name} has a bad voice name.")
-    return Path(path), scenes
 
 
 def build_plan(scenes: list[dict], out_dir: Path, only: list[str] | None, force: bool) -> list[dict]:
@@ -100,8 +115,39 @@ def build_plan(scenes: list[dict], out_dir: Path, only: list[str] | None, force:
             plan.append({
                 "scene": scene["id"], "line": line["id"], "name": name, "text": line["text"].strip(),
                 "voice": line.get("voice", "narrator"), "path": path, "skip": exists and not force,
+                "priority": line.get("priority", 2),
             })
     return plan
+
+
+def load_narrator(path: Path | None = None) -> tuple[Path, list[dict]]:
+    """The narrator's lines file as one scene "narrator" (lines keep their priority, default 2)."""
+    path = Path(path or NARRATOR_PATH)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise ToolError(f"Narrator lines not found: {path}") from None
+    except json.JSONDecodeError as error:
+        raise ToolError(f"Narrator lines are not valid JSON: {path} ({error.msg}, line {error.lineno})") from None
+    lines = data.get("lines") if isinstance(data, dict) else None
+    if not isinstance(lines, list) or not lines:
+        raise ToolError("Narrator lines file must hold {\"lines\": [...]} with at least one line.")
+    default_voice = data.get("voice", "narrator")
+    scene_lines = []
+    for line in lines:
+        if not isinstance(line, dict):
+            raise ToolError("Every narrator line must be an object.")
+        text = line.get("text")
+        if isinstance(text, str) and len(text.strip()) > NARRATOR_MAX_TEXT:
+            raise ToolError(f"Narrator line {line.get('id')!r} is longer than {NARRATOR_MAX_TEXT} characters.")
+        priority = line.get("priority", 2)
+        if not isinstance(priority, int) or not 1 <= priority <= 9:
+            raise ToolError(f"Narrator line {line.get('id')!r} has a bad priority (use 1 to 9).")
+        scene_lines.append({"id": line.get("id"), "text": text, "voice": line.get("voice", default_voice),
+                            "priority": priority})
+    scenes = [{"id": NARRATOR_SCENE, "lines": scene_lines}]
+    validate_scenes(scenes)
+    return path, scenes
 
 
 # ---------------------------------------------------------------------------------------------
@@ -295,6 +341,75 @@ def write_manifest(scenes: list[dict], out_dir: Path, model: str) -> dict:
 
 
 # ---------------------------------------------------------------------------------------------
+# Remaining characters on the account (read only)
+
+
+def remaining_characters(key: str, opener=None, timeout: float = 30) -> dict:
+    """{used, limit, remaining} from GET /v1/user/subscription. Only these numbers are kept."""
+    opener = opener or urllib.request.urlopen
+    request = urllib.request.Request(SUBSCRIPTION_URL, method="GET", headers={"xi-api-key": key, "Accept": "application/json"})
+    try:
+        with opener(request, timeout=timeout) as response:
+            data = json.loads(response.read(200_000).decode("utf-8", "replace"))
+    except urllib.error.HTTPError as error:
+        try:
+            detail = error.read(400).decode("utf-8", "replace").strip()
+        except Exception:  # noqa: BLE001 - the detail is optional
+            detail = ""
+        raise ToolError(redact(f"ElevenLabs answered HTTP {error.code} to the credit check; nothing was sent. {detail}", key).strip()) from None
+    except urllib.error.URLError as error:
+        raise ToolError(redact(f"Network error during the credit check: {error.reason}", key)) from None
+    except (ValueError, UnicodeDecodeError):
+        raise ToolError("The credit check did not answer JSON; nothing was sent.") from None
+    used, limit = (data.get("character_count"), data.get("character_limit")) if isinstance(data, dict) else (None, None)
+    if not all(isinstance(value, int) and value >= 0 for value in (used, limit)):
+        raise ToolError("The credit check did not include character_count and character_limit; nothing was sent.")
+    return {"used": used, "limit": limit, "remaining": max(0, limit - used)}
+
+
+def fit_to_credits(todo: list[dict], remaining: int, margin: float = CREDIT_MARGIN) -> tuple[list[dict], list[dict]]:
+    """The lines to send now (priority order, then file order) so that remaining >= sent * (1 + margin)."""
+    allowed = int(remaining / (1 + margin))
+    if sum(len(item["text"]) for item in todo) <= allowed:
+        return list(todo), []
+    ordered = sorted(enumerate(todo), key=lambda pair: (pair[1].get("priority", 2), pair[0]))
+    chosen, skipped, total = [], [], 0
+    for _, item in ordered:
+        # Stop at the first line that does not fit: the most important lines go first and nothing jumps ahead.
+        if not skipped and total + len(item["text"]) <= allowed:
+            chosen.append(item)
+            total += len(item["text"])
+        else:
+            skipped.append(item)
+    return chosen, skipped
+
+
+def write_manifest_v1(scenes: list[dict], out_dir: Path, note: str | None = None) -> dict:
+    """Merge the scenes' present files into the game's manifest {version: 1, lines: {name: {file, seconds}}}."""
+    path = out_dir / "manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        manifest = {}
+    if not isinstance(manifest, dict) or manifest.get("version") != 1 or not isinstance(manifest.get("lines"), dict):
+        manifest = {"version": 1, "note": note or f"Voice lines by id. {CREDIT}.", "lines": {}}
+    lines = manifest["lines"]
+    for scene in scenes:
+        for line in scene["lines"]:
+            name = f"{scene['id']}-{line['id']}"
+            file = out_dir / f"{name}.mp3"
+            if not file.is_file() or file.stat().st_size == 0:
+                lines.pop(name, None)
+                continue
+            lines[name] = {"file": f"{name}.mp3", "seconds": round(mp3_duration(file.read_bytes()), 2)}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    temporary = out_dir / "manifest.json.part"
+    temporary.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+    return manifest
+
+
+# ---------------------------------------------------------------------------------------------
 # Command line
 
 
@@ -311,11 +426,25 @@ def parse_args(argv):
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"model id (default {DEFAULT_MODEL})")
     parser.add_argument("--format", default=DEFAULT_FORMAT, help=f"ElevenLabs output_format (default {DEFAULT_FORMAT})")
     parser.add_argument("--scripts", type=Path, help="scripts JSON (default: cutscenes/scripts.json, else the sample)")
+    parser.add_argument("--narrator", action="store_true",
+                        help="the narrator's lines (src/narrator/lines.json) as scene 'narrator', with a credit check")
+    parser.add_argument("--lines", type=Path, help="narrator lines JSON for --narrator (default: src/narrator/lines.json)")
+    parser.add_argument("--priority-max", type=int, metavar="P",
+                        help="with --narrator: only lines with priority P or lower (1 = the most important)")
+    parser.add_argument("--without-credit-check", action="store_true",
+                        help="with --narrator --priority-max 1: send when the key may not read the subscription; "
+                             "stops at the first refusal (ElevenLabs refuses past the quota and charges nothing)")
+    parser.add_argument("--credits", action="store_true",
+                        help="print the account's used, limit and remaining characters (reads the key; sends no text)")
     args = parser.parse_args(argv)
     if not args.format.startswith("mp3_"):
         parser.error("--format must be an mp3_* output format")
     if args.max_chars < 1:
         parser.error("--max-chars must be positive")
+    if (args.priority_max is not None or args.without_credit_check or args.lines) and not args.narrator:
+        parser.error("--priority-max, --without-credit-check and --lines need --narrator")
+    if args.without_credit_check and args.priority_max != 1:
+        parser.error("--without-credit-check sends only the most important lines: add --priority-max 1")
     return args
 
 
@@ -335,7 +464,20 @@ def run(argv=None, *, key_path: Path = KEY_PATH, out_dir: Path = OUT_DIR, opener
         out=sys.stdout) -> int:
     args = parse_args(argv)
     say = lambda text="": print(text, file=out)  # noqa: E731
-    source, scenes = load_scripts(args.scripts)
+    if args.credits and not args.narrator:
+        key = read_key(key_path)
+        try:
+            credit = remaining_characters(key, opener=opener)
+        finally:
+            del key
+        say(f"Characters used: {credit['used']}, limit: {credit['limit']}, remaining: {credit['remaining']}.")
+        return 0
+    source, scenes = load_narrator(args.lines) if args.narrator else load_scripts(args.scripts)
+    if args.priority_max is not None:
+        scenes = [{**scene, "lines": [line for line in scene["lines"] if line.get("priority", 2) <= args.priority_max]}
+                  for scene in scenes]
+        if not scenes[0]["lines"]:
+            raise ToolError(f"No narrator line has priority {args.priority_max} or lower.")
     voices = voice_map(args)
     plan = build_plan(scenes, out_dir, args.only, args.force)
     todo = [item for item in plan if not item["skip"]]
@@ -360,6 +502,8 @@ def run(argv=None, *, key_path: Path = KEY_PATH, out_dir: Path = OUT_DIR, opener
     if chars > args.max_chars:
         raise ToolError(f"Refusing: {chars} characters exceeds --max-chars {args.max_chars}. "
                         "Use --only SCENE or raise the budget deliberately.")
+    if args.narrator:
+        return run_narrator(args, scenes, todo, voices, key_path, out_dir, opener, say)
     if todo:
         missing = sorted({item["voice"] for item in todo if item["voice"] not in voices and not args.voice_id})
         if missing:
@@ -382,6 +526,57 @@ def run(argv=None, *, key_path: Path = KEY_PATH, out_dir: Path = OUT_DIR, opener
         manifest = write_manifest(scenes, out_dir, args.model)
         say(f"Nothing to generate. Manifest: {out_dir / 'manifest.json'} "
             f"({sum(len(s['lines']) for s in manifest['scenes'])} lines)")
+    return 0
+
+
+def run_narrator(args, scenes, todo, voices, key_path, out_dir, opener, say) -> int:
+    """Credit check, then the lines that fit (priority first), then the merged v1 manifest."""
+    if not todo:
+        manifest = write_manifest_v1(scenes, out_dir)
+        say(f"Nothing to generate. Manifest: {out_dir / 'manifest.json'} ({len(manifest['lines'])} lines)")
+        return 0
+    missing = sorted({item["voice"] for item in todo if item["voice"] not in voices and not args.voice_id})
+    if missing:
+        raise ToolError(f"No voice id for {', '.join(missing)}: pass --voice-id ID or --voice NAME=ID.")
+    key = read_key(key_path)
+    written = 0
+    send = []
+    try:
+        needed = sum(len(item["text"]) for item in todo)
+        try:
+            credit = remaining_characters(key, opener=opener)
+        except ToolError as error:
+            if not args.without_credit_check:
+                raise
+            credit = None
+            say(f"Credit check unavailable ({str(error).split(';')[0]}); sending the priority 1 lines in order "
+                "and stopping at the first refusal.")
+        if credit is not None:
+            say(f"Characters used: {credit['used']}, limit: {credit['limit']}, remaining: {credit['remaining']}; "
+                f"this run needs {needed} (+{round(CREDIT_MARGIN * 100)}% margin: {round(needed * (1 + CREDIT_MARGIN))}).")
+            send, skipped = fit_to_credits(todo, credit["remaining"])
+        else:
+            send, skipped = sorted(todo, key=lambda item: item.get("priority", 2)), []
+        if skipped:
+            say(f"Not enough credits for every line: sending {len(send)} lines by priority, "
+                f"leaving {len(skipped)} for later: {', '.join(item['line'] for item in skipped)}.")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            for item in send:
+                data = synthesize(item["text"], voices.get(item["voice"], args.voice_id), key, args.model,
+                                  args.format, opener=opener)
+                temporary = item["path"].with_suffix(".mp3.part")
+                temporary.write_bytes(data)
+                os.replace(temporary, item["path"])
+                written += 1
+                say(f"wrote {item['path'].name} ({mp3_duration(data):.1f} s, {len(data)} bytes)")
+        finally:
+            manifest = write_manifest_v1(scenes, out_dir)
+            say(f"Manifest: {out_dir / 'manifest.json'} ({len(manifest['lines'])} lines in all)")
+    finally:
+        del key
+    sent = sum(len(item["text"]) for item in send[:written])
+    say(f"Narrator: {written} lines written, {sent} characters sent, {len(todo) - written} lines without audio.")
     return 0
 
 
