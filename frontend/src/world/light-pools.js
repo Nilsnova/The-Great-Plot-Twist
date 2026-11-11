@@ -34,7 +34,7 @@ void main(){
   float glow=pow(1.0-r,1.1)*max(uStrength,vMin)*flicker;
   float level=pxSteps(glow,3.0,px);
   if(level<=0.0)discard;
-  gl_FragColor=vec4(uColour*level*level*.3,1.0);
+  gl_FragColor=vec4(uColour*level*level*.26,1.0);
   ${toScreen}
 }`;
 

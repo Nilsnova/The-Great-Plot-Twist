@@ -1,7 +1,7 @@
 // Day, dusk and night as one code-drawn wash over the whole page, plus drifting pixel fog banks.
 // Dusk tints rose, night tints blue and darkens the far corners in two flat steps, so the warm
 // light pools (light-pools.js) and beams read like lanterns in the dark. Fog banks are value noise
-// quantised to three flat densities with clean edges that drift with the wind. update(hour, weather, time).
+// quantised to two flat densities with clean edges that drift with the wind. update(hour, weather, time).
 import * as THREE from 'three';
 import { smoothstep, sunPosition } from '../core/math.js';
 import { pixelGlsl, worldVertex, toScreen } from './pixel-glsl.js';
@@ -27,10 +27,10 @@ varying vec2 vWorld;
 void main(){
   vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;
   vec2 drift=vec2(uTime*(.18+uWind*.7),uTime*.04);
-  float n=pxNoise((p+drift)*vec2(.11,.17))*.65+pxNoise((p-drift*.6)*vec2(.27,.38))*.35;
-  // A flat haze plus banks in three stepped densities with narrow dithered seams.
-  float bank=smoothstep(.4,.8,n);
-  float alpha=uFog*.17+pxBands(bank*(.35+uFog*.65),3.0,px,.4)*uFog*.42;
+  float n=pxNoise((p+drift)*vec2(.08,.13))*.75+pxNoise((p-drift*.6)*vec2(.19,.27))*.25;
+  // A flat haze plus a few broad banks in two flat densities with clean edges.
+  float bank=smoothstep(.45,.8,n);
+  float alpha=uFog*.17+pxBands(bank*(.35+uFog*.65),2.0,px,0.0)*uFog*.36;
   gl_FragColor=vec4(mix(uFogDay,uFogNight,uNight*.85),alpha);
   ${toScreen}
 }`;
