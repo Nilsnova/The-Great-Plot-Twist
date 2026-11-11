@@ -79,7 +79,7 @@ describe('crew and captain panels (§3, §10)', () => {
   });
   it('the captain: musket numbers, the next level, locked and max', () => {
     expect(captainModel({captain: {level: 1, nextPrice: 20}, coins: 100, unlocks: unlocksFor(1)}))
-      .toMatchObject({badge: '⚔ 1', stats: 'Damage 6 · Range 14', upgrade: {label: 'Level 2 · 🪙 20', stats: 'Damage 6 → 9 · Range 14 → 15'}, disabled: false,
+      .toMatchObject({badge: '⚔️ 1', stats: 'Damage 6 · Range 14', upgrade: {label: 'Level 2 · 🪙 20', stats: 'Damage 6 → 9 · Range 14 → 15'}, disabled: false,
         hint: 'Tap a ship to fire your musket (F).'});
     expect(captainModel({captain: {level: 1, nextPrice: 20}, coins: 100, unlocks: fresh})).toMatchObject({upgrade: null, soon: 'Coming soon: Level 2 · after wave 1'});
     expect(captainModel({captain: {level: 3, nextPrice: 80}, coins: 100, unlocks: unlocksFor(5)})).toMatchObject({upgrade: null, soon: 'Coming soon: Level 4 · after wave 8'});

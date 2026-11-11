@@ -102,7 +102,7 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
 // The captain panel (§10): the musket's level and the next one.
 export function captainModel({captain = null, coins = null, unlocks = null, busy = false, message = ''} = {}) {
   const level = Number.isSafeInteger(captain?.level) && captain.level > 0 ? captain.level : 1, next = level + 1;
-  const model = {title: 'Your captain', level, badge: `⚔ ${level}`, pips: Array.from({length: CAPTAIN_MAX}, (_, index) => index < level),
+  const model = {title: 'Your captain', level, badge: `⚔️ ${level}`, pips: Array.from({length: CAPTAIN_MAX}, (_, index) => index < level),
     stats: captainLine(level), hint: 'Tap a ship to fire your musket (F).', upgrade: null, button: '', disabled: true, reason: '', soon: '', message,
     coins: coins === null ? '' : `You have ${coinText(coins)}`};
   if (level >= CAPTAIN_MAX) { model.reason = 'Highest level reached.'; return model; }

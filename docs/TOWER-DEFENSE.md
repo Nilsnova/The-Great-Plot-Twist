@@ -71,6 +71,8 @@ New players see only what they can use. Everything else appears with a toast "Ne
 | 5 | crew: gunner and carpenter; level 3 |
 | 8 | lookout, captain level 4–5 |
 
+Shape of `unlocks` (interface I, 11 Nov; the fake in `frontend/src/pirates/fake-api.js` answers it): `{wonWave, levels: {wall, cannon, mortar, watchtower, house} (highest level allowed, 0 = locked), crew: {gunner, carpenter, lookout} (true = may hire), captain (highest captain level allowed), next: {wave, title} | null}`. The interface derives all of it from `wonWave` (or `waveBest`) with the table above when a field is missing (`frontend/src/island/td-rules.js`). Spot ids live in one table, `SPOT_TABLE` in `frontend/src/island/spots.js` (`cannon_1`…`cannon_4` and `tower_s5`…`tower_s7` are the tower spots; `SPOT_ALIASES` maps `tower_s1`…`tower_s4` to the corners), Pirate Point's in `PP_SPOT_TABLE`.
+
 ## 10. Your captain fights (added 11 Nov, owner)
 
 Every player's character carries a musket: **tap or click a ship in range** (or press F for the nearest) to shoot. It works on your island, on a friend's island and at Pirate Point.

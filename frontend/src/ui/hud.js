@@ -103,7 +103,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     setCoins(value) { if (Number.isFinite(value)) { coins = Math.round(value); drawCoins(); } },
     setCaptainLevel(level) {
       const known = Number.isSafeInteger(level) && level > 0;
-      captainBadge.hidden = !known;captainBadge.textContent = known ? `⚔ ${level}` : '';
+      captainBadge.hidden = !known;captainBadge.textContent = known ? `⚔️ ${level}` : '';
       if (known) captainBadge.setAttribute('aria-label', `Captain level ${level}`); else captainBadge.removeAttribute('aria-label');
     },
     // 'island' (the island API sends setCoins) or 'wallet' (the default).
