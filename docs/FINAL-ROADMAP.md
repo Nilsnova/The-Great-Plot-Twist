@@ -71,6 +71,8 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 
 ### D. It works, including invalid input (criterion 1, 20%)
 
+D1 claimed by Johannes Franz Lang (`frcola`) on `test/d1-invalid-inputs`: [scope and acceptance checks in issue #4](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/4).
+
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
 | D1 | ★★★ | M | **Invalid-input sweep** on the demo workflows: empty, too long, wrong type and repeated requests for join code, email, lock answer, place search, duel challenge. Each must be rejected cleanly by the server with the house error shape | One test per case (backend), all green |
