@@ -9,6 +9,7 @@ import {loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes, snapPixel} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, islandZones} from './spots.js';
 import {SLOT_KINDS} from './td-rules.js';
+import {crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
@@ -18,6 +19,45 @@ export const ART_CANDIDATES = Object.freeze({
   bell: ['harbor-bell', 'island-bell', 'bell'],
 });
 export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ?? []).find(id => Object.hasOwn(sizes, id)) ?? null;
+// Outside a wave a built spot shows its real kind and level: the art lane's level art (pirateLevels) for
+// walls, cannons and mortars, the watchtower and the house (one drawing each; their pips tell the level).
+export const LEVEL_ART = Object.freeze({...pirateLevels, watchtower: ['island-watchtower'], house: ['island-house']});
+export const PIP_ART = 'fx-level-pip';
+export function buildingArt(kind, level = 1) {
+  const list = LEVEL_ART[kind];
+  if (!list) return null;
+  const n = Number.isSafeInteger(level) && level > 0 ? level : 1;
+  return list[Math.min(list.length, n) - 1];
+}
+// How many level pips stand above a building: towers always show theirs, the rest from level 2.
+export const pipCount = (kind, level = 1) => {
+  const n = Number.isSafeInteger(level) && level > 0 ? Math.min(3, level) : 1;
+  return kind === 'cannon' || kind === 'mortar' || n > 1 ? n : 0;
+};
+// Where the hired crew stand outside a wave (TOWER-DEFENSE.md §3): gunners beside the strongest towers
+// (level, then id order, as the wave mans them), carpenters beside the walls, the lookout at the
+// watchtower (or by the bell when there is none). spots: the answer's spots with their places {id, kind,
+// level, built, x, z}. Pure; returns [{kind, x, z, at}] with at the spot id (or 'bell').
+export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
+  const count = (value, max) => Math.max(0, Math.min(max, Number.isSafeInteger(value) ? value : value ? 1 : 0));
+  const built = spots.filter(item => item?.built === true && Number.isFinite(item.x) && Number.isFinite(item.z));
+  const beside = (item, side, front = .35) => ({x: item.x + (item.x > 0 ? -side : side), z: item.z + front});
+  const out = [];
+  const towers = built.filter(item => item.kind === 'cannon' || item.kind === 'mortar')
+    .sort((a, b) => (b.level ?? 1) - (a.level ?? 1) || (a.kind === b.kind ? 0 : a.kind === 'mortar' ? -1 : 1));
+  towers.slice(0, count(crew?.gunner, 2)).forEach(item => out.push({kind: 'gunner', at: item.id, ...beside(item, 1.3)}));
+  const walls = built.filter(item => item.kind === 'wall');
+  for (let i = 0; i < count(crew?.carpenter, 2) && walls.length; i++) {
+    const wall = walls[i % walls.length], twice = i >= walls.length;
+    out.push({kind: 'carpenter', at: wall.id, ...beside(wall, twice ? -1.6 : 1.6, .4)});
+  }
+  if (count(crew?.lookout, 1)) {
+    const tower = built.find(item => item.kind === 'watchtower');
+    if (tower) out.push({kind: 'lookout', at: tower.id, ...beside(tower, 1.5, .3)});
+    else if (bell) out.push({kind: 'lookout', at: 'bell', x: bell.x - 1.6, z: bell.z + .3});
+  }
+  return out;
+}
 
 const rects = (context, list) => { for (const [x, y, w, h, colour] of list) { context.fillStyle = colour; context.fillRect(x, y, w, h); } };
 const PAINT = {
@@ -131,23 +171,58 @@ export function decorateIsland(place, ctx = {}) {
   const bell = layout.bell === false ? null : sprite(root, textures.bell, SIZES.bell, BELL.x, BELL.z, 'island-bell');
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false, battle: false, unlocks: null}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null}, disposed = false;
+  // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
+  let art = null;
+  const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
+  const clear = id => { const item = shown.get(id); if (!item) return; for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); } shown.delete(id); };
+  const put = (id, x, z, lift = 0, order = 0) => {
+    const mesh = placeArt(root, art, id, x, z); mesh.position.y += lift; mesh.renderOrder += order; return mesh;
+  };
+  function showSpot(spot, answer, hidden) {
+    const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
+    const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
+    const id = kind ? buildingArt(kind, level) : null, pips = kind ? pipCount(kind, level) : 0;
+    const key = !id || hidden ? '' : `${id}:${pips}`;
+    if (shown.get(spot.id)?.key === key) return;
+    clear(spot.id);
+    if (!key) return;
+    const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    const meshes = [mesh], [, height, anchor] = pixelSizes[id], top = height * (1 - anchor) + .15;
+    for (let i = 0; i < pips; i++) {
+      const pip = put(PIP_ART, spot.x + (i - (pips - 1) / 2) * .6, spot.z, top, .01); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+    }
+    shown.set(spot.id, {key, meshes});
+  }
+  function showCrew(spots, crew, hidden) {
+    const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
+      const where = SPOTS.find(spot => spot.id === item.id); return where ? {...item, x: where.x, z: where.z} : null;
+    }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
+    const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
+    if (shown.get('crew')?.key === key) return;
+    clear('crew');
+    shown.set('crew', {key, meshes: places.map(item => { const mesh = put(crewArt[item.kind], item.x, item.z, 0, .02); mesh.name = `island-crew:${item.kind}:${item.at}`; return mesh; })});
+  }
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
-  function apply({spots = [], visitor = false, battle = false, unlocks = null} = {}) {
+  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null} = {}) {
     if (disposed) return;
-    state = {spots, visitor, battle, unlocks};
+    state = {spots, visitor, battle, unlocks, crew};
     const known = spots.length > 0;
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true;
       const open = !unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1);
+      const hidden = battle && ['wall', 'cannon', 'mortar'].includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
-        buildings.get(`${spot.id}:${kind}`).visible = built && (answer.kind === kind || (kindsOf(spot).length === 1))
+        buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
       }
+      if (art) showSpot(spot, answer, hidden);
       markers.get(spot.id).visible = !built && known && !battle && open; // a visitor builds too, with their own coins
     }
+    // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
+    if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
       place.zones = islandZones({visitor});
       place.colliders.splice(0, place.colliders.length, ...baseColliders,
@@ -156,24 +231,15 @@ export function decorateIsland(place, ctx = {}) {
   }
   apply(state);
 
-  // Real art from the catalog replaces the drawn sprite of the same kind, once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf), 'bell'])].map(kind => [kind, catalogArt(kind)]).filter(([, id]) => id);
-  if (wanted.length) {
-    (ctx.loadArt ?? loadArt)(wanted.map(([, id]) => id)).then(art => {
-      if (disposed) { Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
-      for (const [kind, id] of wanted) {
-        if (kind === 'bell') continue; // the bell keeps its drawn sprite object (it is picked by name)
-        const swap = mesh => {
-          const real = placeArt(root, art, id, mesh.userData.ground.x, mesh.userData.ground.z);
-          real.name = mesh.name; real.visible = mesh.visible; mesh.visible = false; root.remove(mesh);
-          mesh.geometry.dispose(); mesh.material.dispose();
-          return real;
-        };
-        for (const key of [...buildings.keys()].filter(item => item.endsWith(`:${kind}`))) buildings.set(key, swap(buildings.get(key)));
-      }
-      apply(state);
-    }).catch(() => { /* The drawn sprites stay. */ });
-  }
+  // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), PIP_ART, ...Object.values(crewArt)])]
+    .filter(id => Object.hasOwn(pixelSizes, id));
+  (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
+    if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
+    art = loaded;
+    for (const mesh of buildings.values()) { mesh.visible = false; root.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
+    apply(state);
+  }).catch(() => { /* The drawn sprites stay. */ });
 
   // The nearest pickable thing to a ground point (a tap), or null.
   function pickAt(x, z) {
@@ -218,6 +284,10 @@ export function decorateIsland(place, ctx = {}) {
       else bell.rotation.z = 0;
     },
     get root() { return root; },
-    dispose() { if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop()); },
+    dispose() {
+      if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      for (const id of [...shown.keys()]) clear(id);
+      if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
+    },
   };
 }

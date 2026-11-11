@@ -93,7 +93,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   });
 
   function applyWorld() {
-    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: unlocks()});
+    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: unlocks(), crew: target()?.crew ?? null});
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: null});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
