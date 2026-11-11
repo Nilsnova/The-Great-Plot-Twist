@@ -36,7 +36,7 @@ Shared spots `pp_wall_1`…`pp_wall_4`, `pp_tower_1`…`pp_tower_6` (cannon or m
 
 ## 6. Playing with a friend (no class code needed)
 
-Menu → **Play with a friend** shows a link `…/?visit=ISLE-XXXXX` and a QR. The friend opens the link → one tap **Join** → signs in as a guest (or GitHub) → the server admits a guest who presents a **valid island code** (like a class code) → they land on your island and you defend together. Both can build on the host's island? **No**: only the owner builds on their island; a visitor's coins go to their own island; both earn loot from waves they fight.
+Menu → **Play with a friend** shows a link `…/?visit=ISLE-XXXXX` and a QR. The friend opens the link → one tap **Join** → signs in as a guest (or GitHub) → the server admits a guest who presents a **valid island code** (like a class code) → they land on your island and you defend together. Both can build on the host's island? **Yes** (changed 11 Nov, see §9): a visitor builds and upgrades there with their own coins, and the building stays on the host's island; both earn loot from waves they fight.
 
 ## 7. API (backend B; the interface I uses a fake with the same shapes until merged)
 
@@ -70,6 +70,8 @@ New players see only what they can use. Everything else appears with a toast "Ne
 | 3 | mortar, watchtower |
 | 5 | crew: gunner and carpenter; level 3 |
 | 8 | lookout, captain level 4–5 |
+
+Shape as built (backend B, 11 Nov; the interface and the fake follow it): `GET /api/island` → `{code, coins, waveBest, nextWave, flags, spots: [{id, kind, kinds, built, level, cost, upgradeCost}], crew: {gunner, carpenter, lookout}, captain: {level, nextPrice}, prices: {kinds: {wall: [10, 20, 40], …}, crew: {gunner: {price, max}, …}, captain: [0, 20, 40, 80, 160]}, unlocks: {wave, unlocked: ["wall:1", "cannon:1", "captain:1", …], locked: {"mortar:1": 3, "crew:gunner": 5, …}}}`; unlock ids are `<kind>:<level>`, `crew:<crew>`, `captain:<level>`. `GET /api/pirate-point` → `{spots, waveBest, coins}`. Spot ids: `wall_1`…`wall_6`, `cannon_1`…`cannon_7` (cannon or mortar), `tower_1`, `house_1`, `house_2`, and `pp_wall_1`…`pp_wall_4`, `pp_tower_1`…`pp_tower_6`; their places are `SPOT_TABLE` and `PP_SPOT_TABLE` in `frontend/src/island/spots.js` (the one table to change on a rename). A visitor builds and upgrades on the island they visit with their own coins: `POST /api/island/build` and `/upgrade` take an optional `code` ("ISLE-XXXXX"); without it, your own island.
 
 ## 10. Your captain fights (added 11 Nov, owner)
 

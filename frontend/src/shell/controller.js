@@ -20,7 +20,7 @@ export function createShell(ctx) {
       const go=menuButton('Play',()=>{play();ctx.onStart?.();});go.id='play';nav.append(go,menuButton('Join',()=>page('join'),true));
       const more=menuButton('Settings',()=>page('settings'),true);more.classList.add('shell-more');body.append(nav,more);
     } else {
-      modal.setTitle(({pause:'A moment ashore',credits:'Made together',join:'Join'})[mode]??'Settings');
+      modal.setTitle(({pause:'A moment ashore',credits:'Made together',join:'Join',invite:'Join your friend'})[mode]??'Settings');
       const loading=node('p','','Loading…');loading.setAttribute('role','status');body.append(loading);
       const isCurrent=()=>!disposed&&token===request;
       import('./subpages.js').then(({fillSubpage})=>{if(isCurrent())return fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back});})

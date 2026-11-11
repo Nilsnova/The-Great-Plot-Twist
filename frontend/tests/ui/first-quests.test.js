@@ -1,23 +1,24 @@
 // Lane U3: the first-3-minutes quest sequence, its storage, the 3-goal window and the idle hint.
 import {describe,expect,it} from 'vitest';
-import {QUEST_EVENTS,ISLAND_BUILT,WAVE_FINISHED,PLACE_ARRIVED,HARBOR_STAKE_PLACED,ISLAND_INVITE_OPENED} from '../../src/ui/quest-events.js';
+import {QUEST_EVENTS,ISLAND_BUILT,WAVE_FINISHED,PLACE_ARRIVED,HARBOR_STAKE_PLACED,ISLAND_INVITE_OPENED,ISLAND_UPGRADED,CREW_HIRED} from '../../src/ui/quest-events.js';
 import {FIRST_QUESTS,FIRST_QUEST_KEY,IDLE_HINT_MS,applyQuestEvent,createIdleHint,firstQuestView,readFirstQuests,writeFirstQuests} from '../../src/ui/first-quests.js';
 
 const memory=()=>{const map=new Map();return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),map};};
 const run=(events,state={done:0})=>events.reduce((current,event)=>applyQuestEvent(current,event).state,state);
 
 describe('quest event names',()=>{
-  it('exports the five names other lanes emit, frozen',()=>{
+  it('exports the seven names other lanes emit, frozen',()=>{
     expect(QUEST_EVENTS).toEqual({ISLAND_BUILT:'island_built',WAVE_FINISHED:'wave_finished',PLACE_ARRIVED:'place_arrived',
-      HARBOR_STAKE_PLACED:'harbor_stake_placed',ISLAND_INVITE_OPENED:'island_invite_opened'});
+      HARBOR_STAKE_PLACED:'harbor_stake_placed',ISLAND_INVITE_OPENED:'island_invite_opened',ISLAND_UPGRADED:'island_upgraded',CREW_HIRED:'crew_hired'});
     expect(Object.isFrozen(QUEST_EVENTS)).toBe(true);
-    expect([ISLAND_BUILT,WAVE_FINISHED,PLACE_ARRIVED,HARBOR_STAKE_PLACED,ISLAND_INVITE_OPENED]).toEqual(Object.values(QUEST_EVENTS));
+    expect([ISLAND_BUILT,WAVE_FINISHED,PLACE_ARRIVED,HARBOR_STAKE_PLACED,ISLAND_INVITE_OPENED,ISLAND_UPGRADED,CREW_HIRED]).toEqual(Object.values(QUEST_EVENTS));
   });
 });
 
 describe('the first-3-minutes sequence',()=>{
-  it('has the five goals of the pitch in order',()=>{
-    expect(FIRST_QUESTS.map(quest=>quest.label)).toEqual(['Build a cannon','Ring the bell and win a wave','Sail to the Harbor','Place a 🪙 stake','Invite a friend']);
+  it('has the five goals of the pitch, then five tower-defense goals in the order they unlock',()=>{
+    expect(FIRST_QUESTS.map(quest=>quest.label)).toEqual(['Build a cannon','Ring the bell and win a wave','Sail to the Harbor','Place a 🪙 stake','Invite a friend',
+      'Upgrade a cannon','Build a mortar','Win wave 5','Hire a gunner','Win wave 10']);
     expect(FIRST_QUESTS.every(quest=>quest.hint.length>20)).toBe(true);
   });
   it('completes each goal only from its own event and payload, in order',()=>{
@@ -26,6 +27,17 @@ describe('the first-3-minutes sequence',()=>{
     for(const event of full){const result=applyQuestEvent(state,event);expect(result.changed).toBe(true);completed.push(result.completed.id);state=result.state;}
     expect(completed).toEqual(['cannon','wave','harbor','stake','invite']);expect(state).toEqual({done:5});
     expect(applyQuestEvent(state,{type:ISLAND_INVITE_OPENED})).toMatchObject({changed:false,completed:null});
+  });
+  it('goes on with the tower-defense goals after goal 5',()=>{
+    const ignored=[{type:ISLAND_UPGRADED,kind:'wall'},{type:ISLAND_BUILT,kind:'cannon'}];
+    expect(run(ignored,{done:5})).toEqual({done:5});
+    const rest=[{type:ISLAND_UPGRADED,kind:'cannon',level:2},{type:ISLAND_BUILT,kind:'mortar'},{type:WAVE_FINISHED,survived:true,wave:4},
+      {type:WAVE_FINISHED,survived:true,wave:5},{type:CREW_HIRED,crew:'carpenter'},{type:CREW_HIRED,crew:'gunner'},
+      {type:WAVE_FINISHED,survived:false,wave:10},{type:WAVE_FINISHED,survived:true,waveBest:10}];
+    let state={done:5};const completed=[];
+    for(const event of rest){const result=applyQuestEvent(state,event);if(result.changed)completed.push(result.completed.id);state=result.state;}
+    expect(completed).toEqual(['upgrade','mortar','wave5','gunner','wave10']);expect(state).toEqual({done:10});
+    expect(firstQuestView(state)).toMatchObject({allDone:true,progress:'10 of 10'});
   });
   it('ignores a wall, a lost wave, another place and an event for a later goal',()=>{
     expect(run([{type:ISLAND_BUILT,kind:'wall'},{type:ISLAND_BUILT},{type:'interact',kind:'cannon'}])).toEqual({done:0});
@@ -46,11 +58,12 @@ describe('the strip shows three goals at a time',()=>{
   it('starts at the current goal and keeps three visible near the end',()=>{
     const ids=done=>firstQuestView({done}).items.map(item=>`${item.step}${item.done?'✓':item.current?'*':''}`);
     expect(ids(0)).toEqual(['1*','2','3']);expect(ids(1)).toEqual(['2*','3','4']);expect(ids(2)).toEqual(['3*','4','5']);
-    expect(ids(3)).toEqual(['3✓','4*','5']);expect(ids(4)).toEqual(['3✓','4✓','5*']);expect(ids(5)).toEqual(['3✓','4✓','5✓']);
-    expect(firstQuestView({done:0})).toMatchObject({title:'Goals',progress:'0 of 5',allDone:false,finale:''});
-    expect(firstQuestView({done:5})).toMatchObject({progress:'5 of 5',allDone:true,current:null});
-    expect(firstQuestView({done:5}).finale).toMatch(/All goals done/);
-    for(let done=0;done<=5;done++)expect(firstQuestView({done}).items).toHaveLength(3);
+    expect(ids(5)).toEqual(['6*','7','8']);expect(ids(7)).toEqual(['8*','9','10']);
+    expect(ids(8)).toEqual(['8✓','9*','10']);expect(ids(9)).toEqual(['8✓','9✓','10*']);expect(ids(10)).toEqual(['8✓','9✓','10✓']);
+    expect(firstQuestView({done:0})).toMatchObject({title:'Goals',progress:'0 of 10',allDone:false,finale:''});
+    expect(firstQuestView({done:10})).toMatchObject({progress:'10 of 10',allDone:true,current:null});
+    expect(firstQuestView({done:10}).finale).toMatch(/All goals done/);
+    for(let done=0;done<=10;done++)expect(firstQuestView({done}).items).toHaveLength(3);
   });
 });
 
@@ -61,7 +74,7 @@ describe('progress is kept per device',()=>{
     expect(writeFirstQuests(storage,{done:3})).toBe(true);expect(readFirstQuests(storage)).toEqual({done:3});
     for(const raw of ['{bad','{"version":2,"done":3}','{"version":1,"done":"x"}','{"version":1,"done":1.5}'])
       {storage.setItem(FIRST_QUEST_KEY,raw);expect(readFirstQuests(storage)).toEqual({done:0});}
-    storage.setItem(FIRST_QUEST_KEY,'{"version":1,"done":99}');expect(readFirstQuests(storage)).toEqual({done:5});
+    storage.setItem(FIRST_QUEST_KEY,'{"version":1,"done":99}');expect(readFirstQuests(storage)).toEqual({done:10});
     const blocked={getItem(){throw new Error('denied');},setItem(){throw new Error('denied');}};
     expect(readFirstQuests(blocked)).toEqual({done:0});expect(writeFirstQuests(blocked,{done:1})).toBe(false);expect(readFirstQuests(null)).toEqual({done:0});
   });

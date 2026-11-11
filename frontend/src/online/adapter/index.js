@@ -171,11 +171,14 @@ export function createRealAdapter(deps = {}) {
   const handlers = {...createProfileHandlers(ctx), signOut: ctx.signOut,
     reportPosition: live.presence.reportPosition, setEmote: live.presence.setEmote};
   // signIn() and signIn({provider}) start OAuth; {upgrade: true} links a provider to a guest;
+  // {guest: true, island: 'ISLE-K7Q2M'} is the guest start from a friend's invite link (TOWER-DEFENSE.md
+  // §6): anonymous sign-in, then POST /api/island/invite/join; the server checks the island code.
   // {guest: true, code} is the guest start with a class code (Join page, projector QR), allowed only
   // while /api/config says demo.guestsByCode; the server checks the code (POST /api/demo/join).
   // {provider: 'email', email[, code][, upgrade]} sends or checks a 6-digit email code.
   handlers.signIn = async (options = {}) => {
     const provider = options.provider ?? 'github';
+    if (options.guest === true && typeof options.island === 'string') return guestIslandSignIn(options.island);
     if (options.guest === true) return guestSignIn(options.code);
     if (provider === 'email') return emailSignIn(options);
     if (options.upgrade === true) return upgradeGuest(provider);
@@ -278,6 +281,31 @@ export function createRealAdapter(deps = {}) {
     await hydrate();
     if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
     return ctx.accept(ctx.auth.read?.()?.guest === true ? 'You are playing as a guest.' : 'You joined the class harbor.');
+  }
+  async function guestIslandSignIn(island) {
+    const intent = ++authIntentGeneration;
+    const current = () => !store.isClosed() && intent === authIntentGeneration;
+    if (!session.isSignedIn()) {
+      if (!ctx.auth.signInAnonymously) return ctx.refuse('not_connected');
+      guestJoining = true;
+      let result;
+      try { result = await ctx.auth.signInAnonymously(); } catch { result = null; } finally { guestJoining = false; }
+      if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+      if (!result?.ok) {
+        store.commit({accountState: 'signed_out', auth: ctx.auth.read?.() ?? null});
+        return ctx.refuse('not_connected');
+      }
+    }
+    const reply = await ctx.api.post('/api/island/invite/join', {code: island, actionUid: newActionUid()});
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+    if (!reply.ok || reply.data?.admitted !== true) {
+      if (reply.status === 404) return {...ctx.refuse('not_connected'), reason: 'no_such_island', message: reply.message || 'There is no island with that code. Ask your friend for the link again.'};
+      if (reply.status === 429) return {...ctx.refuse('rate_limited'), message: reply.message || 'Too many tries. Wait a few minutes, then try again.'};
+      return ctx.refuse('not_connected');
+    }
+    await hydrate();
+    if (!current()) return ctx.refuse(store.isClosed() ? 'disposed' : 'session_expired');
+    return {...ctx.accept('You are playing as a guest.'), island: reply.data.island};
   }
   async function upgradeGuest(provider) {
     if (!session.isSignedIn() || ctx.auth.read?.()?.guest !== true) return ctx.refuse('invalid_request');

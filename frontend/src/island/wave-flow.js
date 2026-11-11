@@ -91,10 +91,11 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       return answer;
     }
     if (!answer.ok) { notify(answer.message, 'error'); return answer; }
+    const number = current?.wave.waveId === waveId ? current.wave.wave : undefined;
     if (current?.wave.waveId === waveId) { current.finished = true; stopTimers(); banner(null); current = null; }
     if (survived) notify(lootText(answer.data), 'success');
     else notify(`The pirates broke through. You have ${coinText(answer.data.coins)}.`, 'error');
-    emit({type: WAVE_FINISHED, survived: survived === true, waveId, ...answer.data});
+    emit({type: WAVE_FINISHED, survived: survived === true, waveId, ...(number ? {wave: number} : {}), ...answer.data});
     changed();
     return answer;
   }

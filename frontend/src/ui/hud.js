@@ -30,6 +30,8 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   // 1. Coins.
   const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
   purse.dataset.hudGroup = 'coins';purse.setAttribute('role', 'status');purse.append(purseText);
+  // The captain's level (TOWER-DEFENSE.md §10) next to the coins, once the island tells it: "⚔ 2".
+  const captainBadge = node('span', 'hud-captain');captainBadge.hidden = true;purse.append(captainBadge);
   // 2. Menu, and 3. the quest strip under it.
   const right = node('div', 'hud-right'), menu = node('button', 'hud-menu');
   menu.type = 'button';menu.dataset.hudGroup = 'menu';menu.setAttribute('aria-haspopup', 'dialog');
@@ -99,6 +101,11 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
       account = state;
     },
     setCoins(value) { if (Number.isFinite(value)) { coins = Math.round(value); drawCoins(); } },
+    setCaptainLevel(level) {
+      const known = Number.isSafeInteger(level) && level > 0;
+      captainBadge.hidden = !known;captainBadge.textContent = known ? `⚔️ ${level}` : '';
+      if (known) captainBadge.setAttribute('aria-label', `Captain level ${level}`); else captainBadge.removeAttribute('aria-label');
+    },
     // 'island' (the island API sends setCoins) or 'wallet' (the default).
     setCoinSource(source) { coinSource = source === 'island' ? 'island' : 'wallet'; },
     get coins() { return coins; },

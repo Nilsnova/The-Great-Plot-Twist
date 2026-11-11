@@ -9,8 +9,9 @@ export function startAfterPaint(ctx) {
   let disposed=false;
   // A projector QR (?join=K7QXM) opens the Join page with the code filled in, so a wrong or old
   // code gets its message and the player can type it again before the game starts.
-  // An island invitation (?visit=ISLE-K7Q2M) opens it too, with the island code filled in.
-  if((rememberJoin()||rememberVisit())&&ctx.shell?.()?.mode==='title')ctx.shell().show('join');
+  // An island invitation (?visit=ISLE-K7Q2M) opens the friend's landing instead (shell/invite.js).
+  const joined=rememberJoin(),visited=!joined&&rememberVisit();
+  if((joined||visited)&&ctx.shell?.()?.mode==='title')ctx.shell().show(visited?'invite':'join');
   const titleInput=startTitleInput({adapter:ctx.adapter,isLoading:ctx.isLoading,hasRuntime:()=>!!ctx.runtime()});
   const banner=createConnectionBanner({send:ctx.send});
   ctx.container.append(banner.element);banner.update(ctx.adapter.read());

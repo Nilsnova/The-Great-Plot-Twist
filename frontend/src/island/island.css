@@ -23,3 +23,46 @@
 .island-visit .kit-button{min-height:40px;padding:7px 12px}
 .island-banner[hidden],.island-visit[hidden]{display:none}
 @media(max-width:900px){.island-banner{top:auto;bottom:164px;padding:8px 16px 10px}.island-banner-text{font-size:20px}.island-visit{bottom:96px;flex-wrap:wrap;justify-content:center;font-size:15px}.island-code{font-size:24px}}
+/* Tower defense (docs/TOWER-DEFENSE.md): level pips, the cannon-or-mortar choice, the next level, the crew
+   rows, Play with a friend's link and the captains' name tags. */
+.island-level{display:flex;flex-wrap:wrap;align-items:center;gap:var(--u-2) var(--u-3)}
+.island-pips{display:flex;gap:4px}
+.island-pip{width:14px;height:14px;background:var(--u-deep);border:2px solid var(--u-line)}
+.island-pip.is-on{background:var(--u-gold);border-color:var(--u-brass)}
+.island-stats,.island-owner{color:var(--u-mute);font-size:var(--u-sm)}
+.island-owner{color:var(--u-gold);font-weight:700}
+.island-choices{display:grid;gap:var(--u-2)}
+.island-choice{display:grid;gap:2px;text-align:left;padding:10px 14px;min-height:56px;font:16px/1.35 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid var(--u-brass);box-shadow:inset 0 -3px #0c272c,0 3px var(--u-deep);cursor:pointer}
+.island-choice:hover:not(:disabled){background:var(--u-raise)}
+.island-choice:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
+.island-choice:disabled{cursor:default;opacity:.6;border-color:var(--u-line)}
+.island-choice-head{display:flex;justify-content:space-between;gap:var(--u-3);font-size:var(--u-md)}
+.island-choice-price{font-weight:800;color:var(--u-gold)}
+.island-choice-line{color:var(--u-mute)}
+.island-choice-reason{color:var(--u-rust);font-size:15px}
+.island-next{display:grid;gap:2px;padding:var(--u-2) var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold)}
+.island-next-label{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
+.island-next-stats{color:var(--u-ink);font-size:var(--u-sm)}
+.island-soon{color:var(--u-mute);font-size:15px;opacity:.8}
+.island-soon::before{content:"🔒 "}
+.island-hint{color:var(--u-gold)}
+.island-card-body>.island-hire{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px}
+.island-crew{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
+.island-crew-row{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line)}
+.island-crew-text{display:grid;gap:2px;min-width:0}
+.island-crew-text p{margin:0}
+.island-crew-head{display:flex;gap:var(--u-2);align-items:baseline}
+.island-crew-owned{color:var(--u-mute);font-size:15px}
+.island-crew-line{color:var(--u-mute);font-size:15px}
+.island-crew-reason{color:var(--u-rust);font-size:14px}
+.island-crew-row .kit-button{flex:none;min-width:0;white-space:nowrap}
+.island-card-invite.kit-modal{width:min(460px,calc(100vw - 32px))}
+.island-lead{font:700 var(--u-lg)/1.3 var(--u-serif);color:var(--u-gold)}
+.island-share{display:flex;gap:var(--u-2);align-items:stretch}
+.island-link{flex:1;min-width:0;font:600 16px/1.3 var(--u-font);padding:8px 10px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown)}
+.island-share .kit-button{flex:none}
+.island-copied{color:var(--u-gold);font-size:15px}
+.island-code-small{color:var(--u-mute);font-size:15px;text-align:center}
+.island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
+.island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
+@media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}

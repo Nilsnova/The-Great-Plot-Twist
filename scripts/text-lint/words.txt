@@ -183,6 +183,7 @@ being
 believes
 bell
 belong
+belongs
 below
 bench
 beneath
@@ -483,6 +484,8 @@ cutscene
 cycle
 d
 daily
+damage
+damaged
 damp
 dance
 dangerous
@@ -643,6 +646,7 @@ ever
 every
 everybody
 everyone
+everything
 evidence
 exact
 exactly
@@ -684,6 +688,7 @@ false
 family
 far
 fast
+faster
 fate
 fault
 feared
@@ -706,6 +711,7 @@ fff
 fictional
 field
 fields
+fight
 file
 files
 fill
@@ -909,10 +915,13 @@ him
 hint
 hints
 hire
+hired
 hires
 his
 historical
 history
+hit
+hits
 hold
 holding
 holdings
@@ -930,6 +939,7 @@ hotspots
 hour
 hours
 house
+houses
 how
 hr
 https
@@ -951,6 +961,7 @@ ids
 if
 image
 images
+impact
 implementations
 in
 inbox
@@ -998,6 +1009,7 @@ invitation
 invitations
 invite
 invited
+invites
 inviting
 ip
 ireland
@@ -1180,6 +1192,7 @@ man
 manage
 manifest
 manifold
+mans
 many
 map
 mapping
@@ -1611,6 +1624,7 @@ rain
 raises
 ran
 random
+range
 rate
 rather
 reach
@@ -1671,6 +1685,7 @@ relighting
 relit
 reload
 reloading
+reloads
 remain
 remaining
 remains
@@ -1681,6 +1696,7 @@ removed
 removes
 rendering
 repair
+repairs
 repeat
 repeated
 repeating
@@ -2046,10 +2062,12 @@ stormy
 story
 stranger
 streamed
+strength
 strict
 strip
 strong
 stronger
+strongest
 stuck
 student
 sturdy
@@ -2194,6 +2212,7 @@ touch
 tour
 toward
 tower
+towers
 town
 tracebacks
 trade
@@ -2258,6 +2277,7 @@ update
 updated
 updates
 upgrade
+upgrades
 upload
 us
 usage

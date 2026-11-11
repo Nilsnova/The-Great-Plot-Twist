@@ -95,11 +95,12 @@ it('moves the quest strip with the bus events of the other lanes, three goals at
     });
     expect(result.start).toEqual(['*Build a cannon','Ring the bell and win a wave','Sail to the Harbor']);
     expect(result.early).toEqual(result.start);
-    expect(result.three).toEqual(['✓Sail to the Harbor','*Place a 🪙 stake','Invite a friend']);
-    expect(result.progress).toBe('3 of 5');
+    expect(result.three).toEqual(['*Place a 🪙 stake','Invite a friend','Upgrade a cannon']);
+    expect(result.progress).toBe('3 of 10');
     expect(result.toast.at(-1)).toMatch(/Goal done: Sail to the Harbor/);
-    expect(result.done.labels).toEqual(['✓Sail to the Harbor','✓Place a 🪙 stake','✓Invite a friend']);
-    expect(result.done.finale).toMatch(/All goals done/);expect(JSON.parse(result.done.stored)).toEqual({version:1,done:5});
+    // After goal 5 the tower-defense goals follow (TOWER-DEFENSE.md §9 order).
+    expect(result.done.labels).toEqual(['*Upgrade a cannon','Build a mortar','Win wave 5']);
+    expect(result.done.finale).toBe('');expect(JSON.parse(result.done.stored)).toEqual({version:1,done:5});
     expect(result.klass).toEqual({title:'Class goals',labels:['*Wave to a captain']});expect(result.back).toBe('Goals');
   });
 });

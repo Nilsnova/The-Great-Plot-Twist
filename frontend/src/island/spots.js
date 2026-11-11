@@ -1,39 +1,64 @@
 // Where things stand on your island (BUILD-PLAN 3.3), as plain data on the home_islet place: logical
 // x/z on its coastline (src/world/places/surfaces.js, rx 20, rz 22) and its backdrop's paths (the main
 // path runs north to south at x 0, two cross paths at z -5.5 and 7.5). No DOM, no Three.js.
-//   walls   along the shore, west, north, east and south
-//   cannons on the four corners, just inside the beach
-//   tower   on the hill at the north end of the main path
-//   houses  inland, at the ends of the north cross path
+//   spots   SPOT_TABLE below (16, docs/TOWER-DEFENSE.md §2), and Pirate Point's PP_SPOT_TABLE (§5)
 //   cabin   just north of the west end of the south cross path, standing from the start (not a build spot)
 //   bell    the harbor bell on the south beach, next to where you land
-// The ids, kinds and order are the server's (backend/content/islands.json).
 import {surfaceClass} from '../world/places/surfaces.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
-  wall: Object.freeze({name: 'Wall', purpose: 'Holds the pirates back from your shore.', cost: 10}),
-  cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at pirate ships on its own.', cost: 30}),
-  watchtower: Object.freeze({name: 'Watchtower', purpose: 'Spots ships earlier, so your cannons reach further.', cost: 40}),
-  house: Object.freeze({name: 'House', purpose: 'Adds 🪙 5 loot for every wave you survive.', cost: 50}),
+  wall: Object.freeze({name: 'Wall', purpose: 'Blocks pirate ships at the shore.', cost: 10}),
+  cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at one ship at a time.', cost: 30}),
+  mortar: Object.freeze({name: 'Mortar', purpose: 'Hits every ship near the impact.', cost: 60}),
+  watchtower: Object.freeze({name: 'Watchtower', purpose: 'Gives all your towers more range.', cost: 40}),
+  house: Object.freeze({name: 'House', purpose: 'Adds 🪙 5 loot for every wave you win.', cost: 50}),
 });
-const spot = (id, kind, x, z, edge) => Object.freeze({id, kind, x, z, edge});
-export const SPOTS = Object.freeze([
-  spot('wall_1', 'wall', -18.5, -4, 'shore'), spot('wall_2', 'wall', 4, -19.5, 'shore'),
-  spot('wall_3', 'wall', 18.5, -3, 'shore'), spot('wall_4', 'wall', -6, 18.5, 'shore'),
-  spot('cannon_1', 'cannon', -12.5, -14.5, 'corner'), spot('cannon_2', 'cannon', 13, -15, 'corner'),
-  spot('cannon_3', 'cannon', 15.5, 14, 'corner'), spot('cannon_4', 'cannon', -15.5, 14.5, 'corner'),
-  spot('tower_1', 'watchtower', 0, -14, 'hill'),
-  spot('house_1', 'house', 7, -6, 'inland'), spot('house_2', 'house', -8, -6, 'inland'),
-]);
+// THE spot table (docs/TOWER-DEFENSE.md §2, 16 spots): [id, slot, x, z, edge]. slot is what may stand
+// there: wall, tower (a cannon or a mortar, chosen at the first build), watchtower or house. The
+// server's ids are the first column (the backend's ids as built, 11 Nov); if the backend renames a
+// spot, change it here (or add the old name to SPOT_ALIASES) and nothing else.
+//   walls   six along the shore (west, north twice, east, south twice)
+//   towers  cannon_1…cannon_7 (a cannon or a mortar): the four corners, west, east and the south beach
+//   tower   the watchtower on the hill at the north end of the main path
+//   houses  inland, at the ends of the north cross path
+export const SPOT_TABLE = Object.freeze([
+  ['wall_1', 'wall', -18.5, -4, 'shore'], ['wall_2', 'wall', 4, -19.5, 'shore'],
+  ['wall_3', 'wall', 18.5, -3, 'shore'], ['wall_4', 'wall', -6, 18.5, 'shore'],
+  ['wall_5', 'wall', 12, 18, 'shore'], ['wall_6', 'wall', -5, -19.5, 'shore'],
+  ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
+  ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
+  ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
+  ['tower_1', 'watchtower', 0, -14, 'hill'],
+  ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
+].map(row => Object.freeze(row)));
+// Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
+export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));
+export const localSpotId = id => SPOT_ALIASES[id] ?? id;
+const DEFAULT_KIND = {wall: 'wall', tower: 'cannon', watchtower: 'watchtower', house: 'house'};
+const spot = ([id, slot, x, z, edge]) => Object.freeze({id, slot, kind: DEFAULT_KIND[slot], x, z, edge});
+export const SPOTS = Object.freeze(SPOT_TABLE.map(spot));
+export const isTowerSlot = id => spotById(id)?.slot === 'tower' || ppSpotById(id)?.slot === 'tower';
+
+// Pirate Point's shared spots (§5) on lighthouse_isle: [id, slot, x, z]. pp_wall_1…4 and pp_tower_1…4
+// stand where its fixed defenses stood (src/pirates/pirate-point.js), pp_tower_5…6 are new.
+export const POINT_PLACE = 'lighthouse_isle';
+export const PP_SPOT_TABLE = Object.freeze([
+  ['pp_wall_1', 'wall', 20, -1], ['pp_wall_2', 'wall', 15.5, 11], ['pp_wall_3', 'wall', 12, -15.5], ['pp_wall_4', 'wall', 19.5, 5],
+  ['pp_tower_1', 'tower', 12, -12], ['pp_tower_2', 'tower', 11, 12.5], ['pp_tower_3', 'tower', 12.5, -3], ['pp_tower_4', 'tower', 3, 12.5],
+  ['pp_tower_5', 'tower', 17.5, -6.5], ['pp_tower_6', 'tower', 7, 8.5],
+].map(row => Object.freeze(row)));
+export const PP_SPOTS = Object.freeze(PP_SPOT_TABLE.map(([id, slot, x, z]) => spot([id, slot, x, z, 'point'])));
+export const ppSpotById = id => PP_SPOTS.find(item => item.id === id) ?? null;
+export const isPointSpot = id => !!ppSpotById(id);
 export const CABIN = Object.freeze({id: 'island_cabin', x: -8, z: 6});
 export const BELL = Object.freeze({id: 'island_bell', x: 8.5, z: 12});
 export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
 const ZONE_Y = 1.03, SPOT_RADIUS = 2.2, ROUND_RADIUS = 1.8;
 
-export const spotById = id => SPOTS.find(item => item.id === id) ?? null;
-export const isSpotId = id => SPOT_IDS.includes(id);
-export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === CABIN.id;
+export const spotById = id => SPOTS.find(item => item.id === localSpotId(id)) ?? null;
+export const isSpotId = id => SPOT_IDS.includes(localSpotId(id));
+export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === CABIN.id || isPointSpot(id);
 // On the island's land (beach included), never in the sea.
 export const onIsland = (x, z) => surfaceClass(ISLAND_PLACE, x, z) > 0;
 
@@ -46,15 +71,22 @@ function landward({x, z}, step = 1) {
 export function islandZones({visitor = false} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
-    ...SPOTS.map(item => { const [x, z] = landward(item); return zone(item.id, KINDS[item.kind].name, x, z, SPOT_RADIUS); }),
+    ...SPOTS.map(item => { const [x, z] = landward(item); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
   ];
 }
 
+// Pirate Point's build zones, added to lighthouse_isle's own (its bell and lamps stay its own).
+export function pointZones() {
+  return PP_SPOTS.map(item => { const [x, z] = landward(item); return {id: item.id, name: slotName(item.slot), x, z, y: ZONE_Y, radius: SPOT_RADIUS}; });
+}
+export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT_KIND[slot]]?.name ?? 'Build spot');
+
 // The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5):
-// [{id, kind, x, z}] of the built spots only.
+// [{id, kind, level, x, z}] of the built spots only (TOWER-DEFENSE.md §8).
 export function defenses(spots = []) {
-  return spots.filter(item => item?.built === true && spotById(item.id))
-    .map(item => { const where = spotById(item.id); return {id: item.id, kind: item.kind, x: where.x, z: where.z}; });
+  return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
+    .map(item => { const where = spotById(item.id) ?? ppSpotById(item.id);
+      return {id: item.id, kind: item.kind, level: Number.isSafeInteger(item.level) && item.level > 0 ? item.level : 1, x: where.x, z: where.z}; });
 }
