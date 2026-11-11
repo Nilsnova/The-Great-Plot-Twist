@@ -28,7 +28,7 @@ from fastapi import Depends, Request
 from server.errors import ApiError
 from server.game import islet_store
 from server.game.building_catalogue import Cost
-from server.island import rules, store
+from server.island import games, rules, store
 from server.island.catalogue import IslandCatalogue
 from server.island.codes import read_code, shown
 from server.island.rules import Built, SpotView
@@ -144,12 +144,17 @@ async def target_island(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, code: str | None
 ) -> tuple[Island, str | None]:
     """The island a build or upgrade is for, and the visiting payer (None on your own island).
-    The payer's own island is opened first, so a brand-new visitor holds their starting coins."""
+    The payer's own island is opened first, so a brand-new visitor holds their starting coins.
+    On somebody else's island the payer must be a member of that game (403 not_member)."""
     own = await store.open_island(admin, player_id, catalogue.starting_coins)
     if code is None:
         return own, None
     island = await find_by_code(admin, code)
-    return (own, None) if island.owner == player_id else (island, player_id)
+    if island.owner == player_id:
+        return own, None
+    # GAME-V3 section 2: only a member of the game builds or upgrades on its island.
+    await games.require_member(admin, island, player_id)
+    return island, player_id
 
 
 def not_enough_coins(name: str, price: int) -> ApiError:
@@ -209,7 +214,8 @@ async def build(
     the player's own island; with `code` on that island (co-op: the player pays, the building
     belongs to the island, the player's own unlocks count).
 
-    Errors (ApiErrors): 404 no_such_spot, 404 no_such_island, 409 spot_taken, 422 wrong_kind,
+    Errors (ApiErrors): 404 no_such_spot, 404 no_such_island, 403 not_member (a code of a game
+    the player is not in), 409 spot_taken, 422 wrong_kind,
     409 locked, 409 insufficient_funds, 404 player_not_set_up, 502 database_error, 503
     database_unavailable (outcome unknown: read the island, then repeat with the SAME actionUid).
     """
@@ -278,8 +284,8 @@ async def upgrade(
 ) -> IslandView:
     """One level up for the building on `spot_id`, on the player's own island or (with `code`)
     on a friend's island, paid by the player with their own unlocks. 404 no_such_spot, 404
-    no_such_island, 409 not_built, 409 max_level, 409 locked, 409 insufficient_funds. A repeated
-    actionUid charges nothing."""
+    no_such_island, 403 not_member, 409 not_built, 409 max_level, 409 locked, 409
+    insufficient_funds. A repeated actionUid charges nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
     island, payer = await target_island(admin, catalogue, player_id, code)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):

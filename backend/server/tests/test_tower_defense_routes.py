@@ -349,9 +349,19 @@ def test_a_guest_with_a_valid_island_code_is_admitted_without_a_class_code():
     assert response.headers["cache-control"] == "private, no-store"
     assert response.json() == {
         "admitted": True,
+        "game": {
+            "code": "ISLE-K7Q2M",
+            "hostName": "Captain Gull",
+            "role": "member",
+            "waveBest": 3,
+            "members": 2,
+            "maxMembers": 10,
+        },
         "island": {"code": "ISLE-K7Q2M", "ownerName": "Captain Gull"},
     }
     assert world.database.calls("demo_guest_admit") == [{"p_player_id": GUEST_ID}]
+    # The invite is the alias of POST /api/games/join: the guest is now a member of the game.
+    assert world.database.games.rows[PLAYER_ID][GUEST_ID]["role"] == "member"
     assert not any("class_code" in path for path in world.database.paths())
 
 
@@ -401,8 +411,38 @@ def test_an_extra_field_is_refused():
 
 
 def friends_island(world: World) -> None:
-    """The guest visits PLAYER's island ISLE-K7Q2M."""
+    """The guest plays in PLAYER's game ISLE-K7Q2M (a member since they joined it)."""
     island_of_owner(world)
+    world.database.games.add(PLAYER_ID, GUEST_ID)
+
+
+def test_somebody_who_is_not_in_the_game_cannot_build_upgrade_or_ring_the_bell_there():
+    world = world_at(2)
+    island_of_owner(world)  # PLAYER's game; the guest never joined it
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_1", "building_type": "wall"}]
+
+    build = world.build(headers=GUEST, spot="wall_2", kind="wall", code="ISLE-K7Q2M")
+    upgrade = world.post("/api/island/upgrade", headers=GUEST, spot="wall_1", code="ISLE-K7Q2M")
+    bell = world.start(headers=GUEST, where="ISLE-K7Q2M")
+
+    for response in (build, upgrade, bell):
+        assert_error(response, 403, "not_member")
+    assert world.database.calls("island_build") == []
+    assert world.database.calls("island_upgrade") == []
+    assert world.database.calls("wave_start") == []
+    # After joining, the same build goes through.
+    assert invite(world).status_code == 200
+    assert (
+        world.build(headers=GUEST, spot="wall_2", kind="wall", code="ISLE-K7Q2M").status_code == 200
+    )
+
+
+def test_a_member_who_left_cannot_build_there_any_more():
+    world = world_at(2)
+    friends_island(world)
+    world.database.games.rows[PLAYER_ID][GUEST_ID]["left"] = 99
+
+    assert_error(world.build(headers=GUEST, code="ISLE-K7Q2M"), 403, "not_member")
 
 
 def test_a_visitor_builds_on_a_friends_island_with_their_own_coins_and_unlocks():

@@ -9,8 +9,8 @@ Coins are play money only.
 Every route needs a signed-in player (a GitHub or email player, or an admitted guest: auth.py lets
 both through), then the feature flag "islands" (404 feature_off while it is off, before the body
 is checked or the database is asked). The player id always comes from the verified login, never
-from the body. Answers carry `Cache-Control: private, no-store`. The invite route is the one
-exception to the guest gate (see below).
+from the body. Answers carry `Cache-Control: private, no-store`. The invite route moved to
+routes/games.py (see below).
 
 GET /api/island
     -> {"code": "ISLE-K7Q2M", "coins": 100, "waveBest": 0, "nextWave": 1, "flags": 0,
@@ -38,13 +38,16 @@ POST /api/island/build  {"spot": "cannon_1", "kind": "cannon" | "mortar", "actio
                          "code"?: "ISLE-K7Q2M"}
     -> the island after the build, in the shape of GET /api/island
     Co-op (TOWER-DEFENSE section 6): with "code" the building goes up on that island (it
-    belongs to the island) and the player pays with their own coins and their own unlocks. The
+    belongs to the island) and the player pays with their own coins and their own unlocks. Only
+    a member of that game may (GAME-V3 section 2: 403 not_member otherwise; join it first with
+    POST /api/games/join). The
     answer is then that island (code, spots, waveBest, nextWave, flags) with the player's own
     coins, crew, captain and unlocks. Without "code", or with your own code: your own island.
     "actionUid" is made once per click (8 to 64 letters, digits, hyphens or underscores); the
     ledger ref is "island:<actionUid>", so a repeat never builds or charges twice and is answered
     with the island as it is now. Anything extra is a 422.
-    Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 spot_taken
+    Errors: 404 no_such_island (a code that names no island), 403 not_member, 404 no_such_spot,
+            409 spot_taken
             (also the cabin), 409 locked ("Unlocks after wave
             N"), 409 insufficient_funds, 422 wrong_kind, 422 validation_error, 429
             too_many_requests, 503 database_unavailable (the OUTCOME IS UNKNOWN: read the
@@ -76,16 +79,10 @@ GET /api/island/visit/{code}
     Errors: 404 no_such_island, 429 too_many_requests, and the errors of GET /api/island
 
 POST /api/island/invite/join  {"code": "ISLE-K7Q2M", "actionUid": "..."}
-    -> {"admitted": true, "island": {"code": "ISLE-K7Q2M", "ownerName": "Captain Gull"}}
-    The friend invite (TOWER-DEFENSE section 6): an anonymous guest who presents a valid island
-    code is recorded in demo_guests (demo_guest_admit, the admission of the class code) and passes
-    the guest gate from then on; no class code is needed. Any number of friends may join with one
-    code. A GitHub or email player is not recorded and gets the same answer. Like POST
-    /api/demo/join it checks the login itself (a guest comes here to get through the gate). Only
-    the one code typed is looked up, so nothing about other codes is told.
-    Errors: 401, 403 demo_closed (a guest while the flag demo is off), 404 feature_off,
-            404 no_such_island, 429 too_many_requests (10 tries in 10 minutes per player and per
-            address), 422 validation_error
+    The friend invite (TOWER-DEFENSE section 6) is now an alias of POST /api/games/join (GAME-V3
+    section 2): it lives in routes/games.py, admits a guest who presents a valid code, makes the
+    caller a member of that game (at most 10 players, 409 game_full) and answers
+    {"admitted": true, "game": {...}, "island": {"code", "ownerName"}}.
 
 Used by: the island scene and the friends panel of the game client.
 """
@@ -95,16 +92,13 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Path, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.auth import Player, PlayerDep, VerifierDep, read_bearer_token
-from server.demo.code import admit
-from server.demo.gate import demo_closed
+from server.auth import Player, PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
 from server.island import service
 from server.island.catalogue import IslandCatalogue
 from server.island.rules import SpotView
 from server.island.service import IslandCatalogueDep, IslandView
-from server.routes.demo import address_key
 from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 
@@ -223,23 +217,6 @@ class CaptainRequest(BaseModel):
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
 
 
-class InviteRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    code: str = Field(max_length=CODE_MAX_LENGTH)
-    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
-
-
-class InviteIslandOut(BaseModel):
-    code: str
-    ownerName: str
-
-
-class InviteResponse(BaseModel):
-    admitted: bool
-    island: InviteIslandOut
-
-
 def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
     return [
         SpotOut(
@@ -341,39 +318,6 @@ async def post_captain(
     request.app.state.island_build_budget.spend(player.id)
     view = await service.captain(admin, catalogue, player.id, body.actionUid)
     return island_out(view, catalogue)
-
-
-@router.post("/island/invite/join")
-async def post_invite_join(
-    body: InviteRequest,
-    request: Request,
-    response: Response,
-    verifier: VerifierDep,
-    settings: SettingsDep,
-    admin: AdminDep,
-) -> InviteResponse:
-    # The login check without the guest gate: a guest comes here to get through it.
-    player: Player = await verifier.verify(read_bearer_token(request.headers.get("Authorization")))
-    if not is_enabled("islands", settings.flags):
-        raise ApiError(404, "feature_off", "Islands are not open yet.")
-    response.headers["Cache-Control"] = NO_STORE
-    gate = request.app.state.demo_gate
-    if player.is_anonymous and not gate.flag_on:
-        raise demo_closed()
-    request.app.state.invite_budget.spend(player.id)
-    request.app.state.invite_budget.spend(address_key(request))
-    found = await service.invite(admin, body.code)
-    if player.is_anonymous:
-        if await admit(admin, player.id) == "missing":
-            raise ApiError(
-                404,
-                "player_not_set_up",
-                "Your guest login is gone. Reload the page and join again.",
-            )
-        gate.remember(player.id)
-    return InviteResponse(
-        admitted=True, island=InviteIslandOut(code=found.code, ownerName=found.owner_name)
-    )
 
 
 @router.get("/island/visit/{code}")
