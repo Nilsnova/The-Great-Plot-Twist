@@ -368,21 +368,34 @@ fixed palettes and ordered 4 × 4 (Bayer) dithering instead of smooth gradients.
 
 Shared GLSL helpers (hash, value noise, Bayer dithering, banding) live in `src/world/pixel-glsl.js`.
 
-## G31 pirate waves (lane P2)
+## G31 pirate waves and tower defense (lane P2, redrawn 11 Nov)
 
-24 original sprites, drawn as code in `scripts/pixel_art/pirates.py` and rebuilt with the rest of the kit by `python3 scripts/pixel_art/generate.py` (Pillow for authoring only). No downloaded art, font or reference image. Every size is a whole number of 16 px world units; ids, sizes and anchors live in `src/pixel/pirate-catalog.js` (also `pirateFrames` for the animations). They are `library` assets the island scene loads with `loadArt(ids)`; none enters the default preload. Gold appears only in lights: the flagship's stern windows, the watchtower lamp, the muzzle flash and the build-spot marker. Ships face right (mirror them for ships sailing left) and are cut at the waterline, so the world's sea shows below. `python3 scripts/pixel_art/pirates.py <file>` writes a 3× contact sheet for review.
+53 original sprites, drawn as code in `scripts/pixel_art/pirates.py` (Pillow for authoring only). No downloaded art, font or reference image. On 11 Nov all of them were redrawn in a **clean pixel style** at the owner's request: flat colour areas, two or three shades per material lit from the top left, crisp one-pixel dark outlines, and detail made of shapes (plank seams, rigging and ratlines, gun ports with red lids, small crew at the rails, foam and bow waves) rather than texture noise. `python3 scripts/pixel_art/pirates.py --write` rewrites only these PNGs (no other art changes); `python3 scripts/pixel_art/pirates.py <sheet.png> [old-folder]` writes a 3x contact sheet, with old and new side by side when given the previous PNGs. Ids, sizes and anchors live in `src/pixel/pirate-catalog.js`, with `pirateFrames` (animations and states), `pirateLevels` (building art for levels 1 to 3) and `crewArt`. They are `library` assets loaded with `loadArt(ids)`; none enters the default preload. Gold appears only in lights and interaction: lamps and lit windows, flashes, fire, the build-spot marker and the level pip. Ships face right (mirror them for ships sailing left) and are cut at the waterline, so the world's sea shows below.
 
 | Sprite ids | Native pixels | Purpose |
 | --- | --- | --- |
-| `pirate-sloop-1` to `-3` | 64 × 64 | Small pirate sloop, patched gaff sail, black-and-red flag; three bob frames with moving foam |
-| `pirate-brig-1` to `-3` | 96 × 80 | Two-masted brig with gunports; three bob frames |
-| `pirate-flagship-1` to `-3` | 128 × 112 | Three-masted flagship, dark canvas with red stripes, lit stern windows; three bob frames |
+| `pirate-sloop-1` to `-3` | 64 × 64 | Small sloop: gaff mainsail and jib, plank hull, three gun ports, two crew, stern lantern; three bob frames with moving foam |
+| `pirate-brig-1` to `-3` | 96 × 80 | Two-masted brig with shrouds, stays, a crow's nest, stern windows, seven gun ports, three crew |
+| `pirate-flagship-1` to `-3` | 128 × 112 | Three-masted flagship, dark canvas with red stripes, lit stern windows, two gun decks, figurehead |
+| `pirate-warship-1` to `-3` | 160 × 128 | Boss warship: near-black hull with iron strakes and a ram, two gun decks, tall stern castle with ember windows, tattered dark sails, skull flag |
 | `pirate-splash-1` to `-3` | 32 × 32 | Cannonball splash: drop, column, ring |
 | `pirate-cannonball` | 16 × 16 | Iron shot in flight |
-| `pirate-wreck` | 64 × 48 | Half-sunk hull with a snapped mast and a floating plank |
-| `island-wall`, `-damaged`, `-broken` | 48 × 48 | Stone sea wall in three damage states |
-| `island-cannon`, `island-cannon-fire` | 48 × 32 | Cannon on a wooden carriage, idle and firing (recoil, flash, smoke) |
-| `island-watchtower` | 64 × 128 | Timber lookout with a lamp and a green island pennant |
-| `island-house` | 64 × 64 | Small cottage for the house spots |
-| `pirate-flag-trophy` | 32 × 48 | Captured swallowtail flag on its pole, for the island's flagpole |
-| `build-spot`, `build-spot-glow` | 32 × 32 | Glowing ring marking a free build spot; two frames for a pulse |
+| `pirate-wreck` | 64 × 48 | Half-sunk hull with ribs, a snapped mast, torn sail, floating plank and barrel |
+| `island-wall`, `-damaged`, `-broken` | 48 × 48 | Dressed-stone sea wall in three damage states |
+| `island-wall-l2`, `island-wall-l3` | 48 × 48 | Level 2: iron-capped merlons and two iron bands; level 3: taller, iron shields, brass band, buttress, arrow slits and pennant |
+| `island-cannon`, `island-cannon-fire` | 48 × 32 | Iron cannon on a spoked carriage, idle and firing (recoil, flash, smoke) |
+| `island-cannon-l2`, `island-cannon-l3` | 48 × 32 | Bigger barrels with brass bands on a stone slab; level 3 with iron-rimmed wheels and a pile of shot |
+| `island-mortar`, `island-mortar-fire` | 48 × 32 | Squat bronze mortar tipped skyward on a timber bed and stone base; firing frame with an upward flash |
+| `island-mortar-l2`, `island-mortar-l3` | 48 × 32 | Larger mortar with iron bands and iron-bound base; level 3 brass-banded with more shells |
+| `island-watchtower` | 64 × 128 | Timber lookout on stone footings, shingled roof, lamp, ladder and a green island pennant |
+| `island-house` | 64 × 64 | Timber-framed cottage with a warm window, flower box and rain barrel |
+| `pirate-flag-trophy` | 32 × 48 | Captured swallowtail skull flag on its pole |
+| `build-spot`, `build-spot-glow` | 32 × 32 | Ring with corner brackets marking a free build spot; two frames for a pulse |
+| `crew-gunner`, `crew-carpenter`, `crew-lookout` | 16 × 32 | 16 × 24 crew figures (feet on anchor 3): gunner with ramrod, carpenter with hammer and apron, lookout with brass spyglass |
+| `captain-musket-1`, `-2` | 48 × 32 | The explorer in side view aiming and firing a musket; body centred like the 24 × 32 explorer, facing right |
+| `fx-smoke-1` to `-3` | 32 × 32 | Gun smoke puff growing and fading |
+| `fx-fire-1` to `-3` | 32 × 32 | Flames for a burning ship (anchor at the burning timbers), looping |
+| `fx-explosion-1` to `-4` | 32 × 32 | Flash, fireball, smoke with embers and debris, fading smoke |
+| `fx-musket-flash` | 16 × 16 | Small muzzle flash |
+| `fx-mortar-shell` | 16 × 16 | Mortar shell with a burning fuse |
+| `fx-level-pip` | 16 × 16 | Small brass pip for a building's level |
