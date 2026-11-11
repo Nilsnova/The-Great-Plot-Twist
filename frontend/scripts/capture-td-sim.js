@@ -1,6 +1,6 @@
 // Tower defense v2 evidence (lane S): boss wave, mortar impacts, levels with pips, crew, the break with
 // Next wave and a 25+ ship perf reading, in the real game on ?pirates=demo (fake API v2, offline).
-// node scripts/capture-td-sim.js. Writes PNGs and td-sim.json into SHOTS_DIR (a NEW folder).
+// node scripts/capture-td-sim.js [all|perf]. Writes PNGs and td-sim.json into SHOTS_DIR (a NEW folder).
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
 
@@ -25,8 +25,10 @@ const state=page=>page.evaluate(()=>{const c=window.__pirates.pirates.island,w=c
   sunk:w.state.sunk,total:w.state.total,hp:w.state.islandHp,time:w.state.time,done:w.done,inBreak:c.inBreak,boss:w.state.boss}:null;});
 async function until(page,test,timeout=60000,every=100){const end=Date.now()+timeout;while(Date.now()<end){const s=await state(page);if(await test(s))return s;await wait(page,every);}return state(page);}
 
+const mode=process.argv[2]??'all';
 try{
   const {page}=env;await page.setViewportSize({width:1280,height:720});
+  if(mode==='all'){
   // 1-2: wave 5, the boss warship against level-2 cannons, a mortar and walls; the mortar's shells land.
   await frontDoor(page,'pirates=demo&spots=cannon_1:2,cannon_2:2,cannon_3:2,mortar_1:2,wall_1:2,wall_2:1,wall_5:2&crew=gunner1,carpenter1&wave=5&captain=3');
   await stand(page,15,2);await page.keyboard.press('KeyB');
@@ -44,12 +46,14 @@ try{
   await stand(page,13,4);await page.keyboard.press('KeyB');
   await until(page,s=>s&&s.phase==='running'&&s.ships>2,40000);await wait(page,3500);await shot(page)('s05-levels-pips-crew');
   await stand(page,6,6);await wait(page,600);await shot(page)('s06-crew-mortars-closeup');
-  // 7: perf with 25+ ships: storm wave 25 on a sturdy island.
-  await frontDoor(page,'pirates=demo&full=1&weather=storm&wave=25&hp=100000');
-  await stand(page,12,6);await page.keyboard.press('KeyB');
+  }
+  // 7: perf with 25+ ships: storm wave 25 on a sturdy island (the bell rung through the harness).
+  await frontDoor(page,'pirates=demo&spots=wall_1:3,wall_2:3,wall_3:3,mortar_1:3,cannon_2:1&weather=storm&wave=25&hp=100000');
+  await stand(page,12,6);await wait(page,500);
+  report.notes.push({ring:await page.evaluate(()=>window.__pirates.ringIsland())});
   const busy=await until(page,s=>s&&s.ships>=25,120000,250);
   report.notes.push({perfState:busy});
-  report.perf['1280x720 storm wave 25 full island']={...await measure(page,240),ships:(await state(page))?.ships};
+  report.perf['1280x720 storm wave 25, walls and two guns (ships pile up)']={...await measure(page,240),ships:(await state(page))?.ships};
   await shot(page)('s07-perf-25-ships');
   report.errors=env.errors.filter(message=>!message.includes('503'));report.external=env.external;
   console.log(JSON.stringify({perf:report.perf,errors:report.errors,notes:report.notes},null,2));
