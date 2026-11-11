@@ -132,6 +132,7 @@ audition
 authenticated
 authentication
 authorised
+auto
 automatic
 automatically
 availability
@@ -213,6 +214,7 @@ boats
 body
 bold
 border
+boss
 bosun
 both
 bought
@@ -281,6 +283,7 @@ card
 cards
 care
 cargo
+carpenter
 carries
 carry
 cars
@@ -853,6 +856,7 @@ guild
 gull
 gull's
 gulls
+gunner
 h
 had
 half
@@ -897,12 +901,14 @@ hid
 hidden
 hide
 high
+highest
 highlight
 highlighted
 highlights
 him
 hint
 hints
+hire
 hires
 his
 historical
@@ -1238,6 +1244,7 @@ money
 monospace
 more
 morning
+mortar
 most
 mostly
 motion
@@ -1250,6 +1257,7 @@ moves
 moving
 multiplayer
 music
+musket
 must
 muster
 mustered
@@ -1619,6 +1627,7 @@ real
 really
 realtime
 reason
+rebuild
 receive
 received
 receives
@@ -2239,6 +2248,7 @@ units
 unknown
 unlock
 unlocked
+unlocks
 unpin
 unsubscribe
 untie
@@ -2247,6 +2257,7 @@ up
 update
 updated
 updates
+upgrade
 upload
 us
 usage
@@ -2311,6 +2322,8 @@ warm
 warmest
 warn
 warned
+warship
+warships
 was
 wasd
 washed
