@@ -77,7 +77,7 @@ GUEST_KIT = "stranger"
 GUEST_ENDING = "ending_demo"
 GUEST_MOVE_COUNT = 1
 # The coins of a guest: the starting coins of islands.json (a test keeps the two equal).
-GUEST_COINS = 100
+GUEST_COINS = 200
 
 # Cleanup: guests whose account is older than this are deleted.
 GUEST_MAX_AGE = timedelta(hours=24)

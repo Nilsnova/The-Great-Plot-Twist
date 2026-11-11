@@ -23,6 +23,7 @@ from server.wallet import find_direction
 MIGRATION = REPO_ROOT / "supabase" / "migrations" / "20261110010000_islands_and_waves.sql"
 CREWS = REPO_ROOT / "supabase" / "migrations" / "20261110020000_wave_crews.sql"
 TOWER_DEFENSE = REPO_ROOT / "supabase" / "migrations" / "20261111030000_tower_defense.sql"
+INNER_WALLS = REPO_ROOT / "supabase" / "migrations" / "20261112020000_inner_walls.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -68,6 +69,7 @@ def test_the_spots_are_the_spots_of_the_contract():
         [(f"wall_{n}", ("wall",)) for n in range(1, 7)]
         + [(f"cannon_{n}", tower) for n in range(1, 8)]
         + [("tower_1", ("watchtower",)), ("house_1", ("house",)), ("house_2", ("house",))]
+        + [(f"wall_{n}", ("wall",)) for n in range(7, 13)]  # the inner ring (section 12)
     )
     assert [(spot.id, spot.kinds) for spot in catalogue.pirate_point_spots] == (
         [(f"pp_wall_{n}", ("wall",)) for n in range(1, 5)]
@@ -235,7 +237,7 @@ def test_the_spots_are_planned_in_file_order_with_their_state():
     plans = {plan.id: plan for plan in rules.plan_spots(load_island(), built)}
 
     assert [plan.id for plan in plans.values() if plan.built] == ["wall_2", "cannon_1"]
-    assert len(plans) == 16
+    assert len(plans) == 22
     assert (plans["wall_2"].level, plans["wall_2"].upgrade_cost) == (1, 20)
     assert (plans["cannon_1"].kind, plans["cannon_1"].cost, plans["cannon_1"].upgrade_cost) == (
         "mortar",
@@ -268,13 +270,27 @@ def check_pairs(text: str, constraint: str) -> set[tuple[str, str]]:
 
 
 def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
-    pairs = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
+    # The newest rule (20261112020000, the inner ring of TOWER-DEFENSE section 12) is the file's.
+    pairs = check_pairs(INNER_WALLS.read_text(), "islet_buildings_plot_fits_building")
 
     old = {(s.plot, s.building_type) for s in load_buildings().spots if not s.stands_from_start}
     new = {(spot.id, kind) for spot in load_island().spots for kind in spot.kinds}
     first = check_pairs(migration_text(), "islet_buildings_plot_fits_building")
+    before = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
     assert pairs == old | new
-    assert first <= pairs  # every pair an existing row may use stays allowed
+    assert first <= before <= pairs  # every pair an existing row may use stays allowed
+    assert pairs - before == {(f"wall_{n}", "wall") for n in range(7, 13)}
+
+
+def test_the_inner_wall_migration_changes_only_the_spot_rule():
+    text = INNER_WALLS.read_text()
+    verbs = r"^(alter|create|drop|insert|update|delete|grant|comment)"
+    statements = [line for line in text.splitlines() if re.match(verbs, line)]
+    assert statements == [
+        "alter table public.islet_buildings",
+        "alter table public.islet_buildings",
+        "comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is",
+    ]
 
 
 def test_the_pirate_point_check_rule_is_the_spots_of_the_file():
@@ -365,5 +381,5 @@ def test_the_shared_waves_do_not_change_the_applied_migration():
 def test_pirate_point_pays_its_own_base_and_no_houses():
     loot = load_island().loot
 
-    assert loot.pirate_point_base == 20
-    assert rules.loot_cap(loot, 1, 2, pirate_point=True) == 25
+    assert loot.pirate_point_base == 40  # 40 + 10 per wave since the faster pace of 11 Nov
+    assert rules.loot_cap(loot, 1, 2, pirate_point=True) == 50

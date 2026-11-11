@@ -28,8 +28,9 @@ CONTENT_FILE = Path(__file__).resolve().parents[2] / "content" / "islands.json"
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_]{1,39}")
 # The weather states of weather/states.py. Each one needs its line in the file.
 WEATHER_KINDS = ("storm", "fog", "rain", "calm")
-# The limits the database checks too (wave_runs in the migration).
-MAX_SPOTS = 20
+# The limits the database checks too (wave_runs in the migration). MAX_SPOTS: the longest spot list
+# (22 island spots since the inner ring of TOWER-DEFENSE section 12), with room to spare.
+MAX_SPOTS = 30
 MAX_WAVE = 1000
 MAX_SECONDS = 86400
 MIN_SHIPS, MAX_SHIPS = 0.5, 3.0

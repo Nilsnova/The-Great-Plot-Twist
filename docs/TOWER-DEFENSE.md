@@ -10,13 +10,13 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 
 | Kind | What it does | Level 1 | Level 2 | Level 3 |
 |---|---|---|---|---|
-| wall | blocks ships at the shore; hp 60 / 120 / 200 | 🪙 10 | 🪙 20 | 🪙 40 |
-| cannon | single target; damage 10 / 16 / 24; range 28 / 31 / 34; reload 1.5 / 1.3 / 1.1 s | 🪙 30 | 🪙 60 | 🪙 120 |
-| mortar | area damage (radius 4) to all ships near the impact; damage 14 / 22 / 32; range 36 / 40 / 44; reload 3.5 / 3.0 / 2.6 s; cannot hit ships closer than 8 | 🪙 60 | 🪙 120 | 🪙 240 |
+| wall | stops boarders on their way to the heart until they hack it down (§12), and takes the ships' cannon fire; hp 60 / 120 / 200 | 🪙 10 | 🪙 20 | 🪙 40 |
+| cannon | single target (the boarder nearest the heart first, else a ship; 55% of its balls hit a boarder, 85% a ship); damage 10 / 16 / 24; range 28 / 31 / 34; reload 1.5 / 1.3 / 1.1 s | 🪙 30 | 🪙 60 | 🪙 120 |
+| mortar | area damage (radius 4) to all ships and boarders near the impact; damage 14 / 22 / 32; range 36 / 40 / 44; reload 3.5 / 3.0 / 2.6 s; cannot hit ships closer than 8 | 🪙 60 | 🪙 120 | 🪙 240 |
 | watchtower | +8 / +12 range to all towers, fog sight bonus | 🪙 40 | 🪙 80 | — |
 | house | +5 / +10 loot per won wave | 🪙 50 | 🪙 100 | — |
 
-**Spots on your island (16):** `wall_1`…`wall_6` (wall), `cannon_1`…`cannon_7` (cannon **or** mortar: the player chooses at the first build; an upgrade keeps the kind), `tower_1` (watchtower), `house_1`, `house_2` (house). Final ids, decided by the backend build (D036): the old `cannon_1`…`cannon_4` keep their ids, so built rows stay valid, and `cannon_5`…`cannon_7` are new.
+**Spots on your island (22):** `wall_1`…`wall_6` (shore walls), `cannon_1`…`cannon_7` (cannon **or** mortar: the player chooses at the first build; an upgrade keeps the kind), `tower_1` (watchtower), `house_1`, `house_2` (house), and the **inner ring** `wall_7`…`wall_12` (wall; added 12 Nov for boarding, §12). Final ids, decided by the backend build (D036): the old `cannon_1`…`cannon_4` keep their ids, so built rows stay valid, and `cannon_5`…`cannon_7` are new. The ring walls are ordinary walls (same prices, levels and unlocks: level 1 from the start) placed around the island's heart on the paths the boarders take: `wall_7` east (8.5, 2), `wall_8` and `wall_9` on the south cross path (4.5, 9) and (−4, 9.5), `wall_10` west north of the cabin (−9.5, −1), `wall_11` and `wall_12` on the north cross path (−4, −5.5) and (4, −5.5). The database allows them through `supabase/migrations/20261112020000_inner_walls.sql`; the server lists them in `GET /api/island` after `house_2`.
 
 ## 3. Crew (NPC support), bought once, kept
 
@@ -57,7 +57,11 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 
 ## 8. Simulation (S)
 
-`createWave({..., defenses: [{id, kind, level, x, z}], crew: {gunner, carpenter, lookout}, boss})` — towers act per section 2, crew per section 3, warship: hp 260, speed 1.1, damage 10 every 2 s, sprite = the flagship art at 70% scale without the lamps rule. Ship count and hp grow with the wave number so wave 10 is a real fight with 4 upgraded towers and wave 30 needs most of the island built and upgraded; tested balance numbers go into the report.
+`createWave({..., defenses: [{id, kind, level, x, z}], crew: {gunner, carpenter, lookout}, boss, heart})` — towers act per section 2, crew per section 3 (the carpenter also rebuilds a broken wall, §12), warship: hp 260, speed 1.45, damage 10 every 2 s, sprite = the flagship art at 70% scale without the lamps rule. Ship count and hp grow with the wave number so wave 10 is a real fight with 4 upgraded towers and wave 30 needs most of the island built and upgraded; tested balance numbers go into the report.
+
+**Pace (owner, 11 Nov: "more fast paced").** Ships sail 30% faster than the first build (sloop 2.6, brig 1.7, warship 1.45, flagship 1.05 units/s) and spawn about 30% closer together (first ship at 1.5 s, gap 5.6 s − 0.45 s per wave, at least 1.1 s, all within 48 s). Measured with the balance fixture (8 seeds): wave 1 with one cannon 17–20 s (was 20–40 s); wave 5 (boss) with 3 level-2 cannons, 2 walls and the ring about 80 s; wave 10 with the mid island about 65 s; wave 20 with the full island about 48 s. A finish earlier than 10 s is refused (`waves.minimumSeconds`, 15 before).
+
+**Boarding (§12).** An anchored ship unloads its boarders; ships shell the walls within 8 units and, with none in reach, the island at 1.5% of their damage. The wave is won when every ship is sunk and every boarder is dead (or when the pirates sail off after 150 s). Sim inputs add `{type: 'rebuild', wallId}` and `{type: 'captain_strike', by, targetId, level, x, z}`; `state()` adds `boarders: [{id, x, z, hp, maxHp, state: walking|hacking, wallId, facing}]`, `boardersLeft`, `boardersKilled`, per wall `broken`, `inner` and `rebuildReady`, and per ship `crew`; events add `ship_anchored`, `boarder_landed`, `boarder_hit`, `boarder_killed`, `captain_struck` and `wall_rebuilt`, and `wall_damaged` / `island_damaged` carry `boarderId` instead of `shipId` when a boarder did it.
 
 ## 9. Unlocks: simple at the start, deeper as you go (added 11 Nov, owner)
 
@@ -89,3 +93,28 @@ API: `GET /api/island` adds `captain: {level, nextPrice}` and `unlocks: {…}` (
 ## 11. Up to four players together
 
 The same invite link works for several friends at once (up to 4 players on one island; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
+
+## 12. Boarding and close combat (added 12 Nov, owner: "make the pirates leave the boats once boarding so we enter close quarter combat; also more wall building (to surround, and then repair once broken)")
+
+**Boarders.** A ship that reaches its anchorage off the shore drops anchor and its crew climbs out one by one, every **1.2 s**, until the crew is out or the ship sinks (its crew sinks with it):
+
+| Ship | Boarders | | Boarder | Value |
+|---|---|---|---|---|
+| sloop | 2 | | hp | 18 × the wave's hp curve (§8) |
+| brig | 3 | | speed | 2.2 units/s (× the speed curve) |
+| flagship (Pirate Point) | 4 | | hack | 2.5 hp a second on a wall (× the damage curve) |
+| warship | 6 | | at the heart | −10 ♥ (× the damage curve), then gone |
+| every ship | +1 every 15 waves (wave 16, 31, …), at most 12 | | | |
+
+A boarder wades ashore, fans out (±30°) and walks to the **island's heart**: the crossroads between the houses, the cabin and the bell (0, 2) on your island; the lamps' yard (7, −5) at Pirate Point. On the way two walls may stand in its route, fixed when it lands: the shore wall within 7 units of its landing, and the ring wall (a wall within 12 units of the heart, 6 at Pirate Point) whose bearing from the heart is closest to its heading, within 50°. A **standing** wall stops it: it hacks the wall until it breaks, then walks on over the rubble. A broken wall stops nobody. A full ring of six closes every heading, so the ring is how you **surround** the heart. The island's ♥ is lost mainly through boarders: ships at anchor shell walls in reach and the island only lightly.
+
+**One target rule.** A boarder's target is chosen in one function, `pickBoarderTarget(boarder)` in `src/pirates/sim.js`, with an `attackCaptain` hook comment: captain health, falling and reviving (a later lane) adds "the nearest captain within reach" there; captains have no hp yet.
+
+**Defenders.** Cannons take the boarder nearest the heart first (55% of balls hit a small pirate on foot), then ships as before; mortars hit boarders in their blast but keep their minimum range; the captain's musket shoots boarders too (F picks the nearest ship or boarder in range; tapping a boarder shoots it). **Close quarters:** with a boarder within **2.2** units of your captain, F and the musket button (its label becomes **Cutlass**) swing the **cutlass** instead: an instant blow at the nearest boarder, damage 14 / 18 / 24 / 30 / 38 by captain level, reload **0.5 s**. It is the sim input `{type: 'captain_strike', by, targetId, level, x, z}`, sent through the room as `captain_strike` with the musket shot's fields (`src/pirates/sync.js`, `src/net/live-rules.js`), so every player sees the same fight. All captain numbers live in `CONFIG.captain` (`levels` for the musket, `cutlass`), ready for a later skills helper to scale.
+
+**Repair once broken.** During a wave, at a damaged wall E says **Repair** (as before, +10 hp/s for 3 s; it no longer works on a broken wall); at a **broken** wall E says **Rebuild**: the wall comes back at **40%** of its hp at once (sim input `{type: 'rebuild', wallId}`, room event `wall_rebuild`), then the same wall cannot be rebuilt again for 5 s. The carpenter takes the most damaged wall, a broken one first, and rebuilds it to 40% after 8 s of work (two carpenters on one wall take half the time). After a wave every wall is whole again (a wave starts from the built levels).
+
+**Balance (8 seeds each, the fixture of `tests/pirates/balance-fixture.js`).** With nothing built wave 1 leaves the island at about 26 ♥ and waves 2 and 3 are lost. One level-1 cannon wins wave 3 in at most 2 of 8 seeds, with the inner ring all 8. Two level-1 cannons with the ring win wave 3 (8 of 8, about 97 ♥ left). The wave-5 boss: 3 level-2 cannons, 2 shore walls and the ring win 7 of 8; level-1 cannons none. Wave 10: five upgraded towers with a mortar win 8 of 8. The full island (all 22 spots, mostly level 3, crew) holds waves 15 to 29 and falls in the endless part (wave 30: 2 of 8, wave 35 and 60: 0).
+
+**Art.** `pirate-boarder-1`, `-2` (walking) and `-3` (hacking, the cutlass raised) and `captain-cutlass` (the swing) in `scripts/pixel_art/pirates.py`; boarders draw with a hit flash, small hp pips when hurt and a puff of smoke when they fall, sorted with the island by their position; the ring walls draw like the shore walls.
+

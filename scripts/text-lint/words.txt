@@ -210,6 +210,8 @@ blinking
 blocks
 blue
 board
+boarder
+boarders
 boat
 boathouse
 boats
@@ -482,6 +484,7 @@ culprit
 culture
 current
 cut
+cutlass
 cutscene
 cycle
 d
@@ -733,6 +736,7 @@ finnhub
 fire
 firefox
 fires
+firing
 first
 fish
 fisherman
@@ -1647,6 +1651,7 @@ really
 realtime
 reason
 rebuild
+rebuilt
 receive
 received
 receives
@@ -2069,6 +2074,7 @@ stranger
 streamed
 strength
 strict
+strike
 strip
 strong
 stronger

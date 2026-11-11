@@ -23,12 +23,13 @@ GET /api/island
         "unlocks": {"wave": 0, "unlocked": ["wall:1", "cannon:1", "captain:1"],
                     "locked": {"wall:2": 2, "mortar:1": 3, "crew:gunner": 5, ...}}}
     The first call makes the player's island with a new code and, for a brand-new player whose
-    wallet never moved, pays the starting coins (100, once). The 16 spots come in the order of
+    wallet never moved, pays the starting coins (once). The 22 spots come in the order of
     islands.json: wall_1..wall_6, cannon_1..cannon_7 (cannon or mortar), tower_1, house_1,
-    house_2. "kind" is what stands there, or the first kind an empty spot takes; "cost" is the
-    level-1 price of that kind; "upgradeCost" the price of the next level (null while empty or at
-    the top). Price lists are indexed by level - 1 (the first entry is the build; the captain's
-    level 1 is free). "unlocks.wave" is the best wave the player won (own island, or any Pirate
+    house_2, then the inner ring wall_7..wall_12 (TOWER-DEFENSE section 12). "kind" is what
+    stands there, or the first kind an empty spot takes; "cost" is the level-1 price of that
+    kind; "upgradeCost" the price of the next level (null while empty or at the top). Price
+    lists are indexed by level - 1 (the first entry is the build; the captain's level 1 is
+    free). "unlocks.wave" is the best wave the player won (own island, or any Pirate
     Point wave they fought in); unlock ids are "<kind>:<level>", "crew:<crew>", "captain:<level>".
     "nextWave" is the wave the next bell on this island rings.
     Errors: 401, 403 demo_closed (a guest who was not admitted), 404 feature_off,
