@@ -46,7 +46,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     stopTimers();
     current = {wave, where, joined: true, finished: false, startAt: now()};
     emit({type: WAVE_STARTED, waveId: wave.waveId, wave: wave.wave, seed: wave.seed, startsAt: wave.startsAt,
-      weather: wave.weather, flagship: wave.flagship, where, defenses: defensesOf()});
+      weather: wave.weather, flagship: wave.flagship, ...(typeof wave.boss === 'boolean' ? {boss: wave.boss} : {}), where, defenses: defensesOf()});
     countdown(wave, fresh);
     changed();
   }
