@@ -43,7 +43,7 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
-| A1 | ★★★ | M | **Walkthrough sheet** `docs/WALKTHROUGH.md`: one page per part (browser game, Python API, database and rules, live multiplayer, external APIs, class demo, tests, deployment). For each: what it does, where it lives (paths), why it was built that way, its limits, how it could change. Include the course's three sample questions with our answers: where the data is stored, what the tests cover and miss, what happens when an external API is down. | Every statement links to a file; a teammate who did not write it can answer from it; reviewed by one other member |
+| A1 | ★★★ | M | **Walkthrough sheet** [`docs/WALKTHROUGH.md`](WALKTHROUGH.md) (started 11 Nov; lane pages to be written by members): one page per part (browser game, Python API, database and rules, live multiplayer, external APIs, class demo, tests, deployment). For each: what it does, where it lives (paths), why it was built that way, its limits, how it could change. Include the course's three sample questions with our answers: where the data is stored, what the tests cover and miss, what happens when an external API is down. | Every statement links to a file; a teammate who did not write it can answer from it; reviewed by one other member |
 | A2 | ★★★ | S | **Mock walkthrough**: each member answers 6 random questions from A1 aloud, 2 minutes each, without notes; write down the questions nobody could answer and fix A1 | All four members did it once before Thu 19 Nov |
 | A3 | ★★ | S | **Folder guides**: a 5-line `README.md` in each top-level folder of `frontend/src/` and `backend/server/` that lacks one: what, why, limits, main entry file | Each folder has one; links checked |
 | A4 | ★★ | M | **Architecture at a glance**: one diagram (Mermaid in Markdown) at the top of [ARCHITECTURE.md](ARCHITECTURE.md): browser → Vercel (static site + FastAPI) → Supabase (Postgres, Auth, Realtime) → external APIs | The diagram renders on GitHub and matches the code |
@@ -82,7 +82,7 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
-| E1 | ★★ | S | **Test map** `docs/TEST-MAP.md`: per part, which test folder covers it, how to run it, what it does NOT cover (physical phones, 40 real users on one Wi-Fi, provider outages over hours) | Linked from A1 and the README |
+| E1 | ★★ | S | **Test map** [`docs/TEST-MAP.md`](TEST-MAP.md) (started 11 Nov; lane rows to be written by members): per part, which test folder covers it, how to run it, what it does NOT cover (physical phones, 40 real users on one Wi-Fi, provider outages over hours) | Linked from A1 and the README |
 | E2 | ★★ | S | **Pin every dependency exactly**: `backend/pyproject.toml` from `>=` to `==` (matching `uv.lock`), `playwright-core` in `frontend/package.json` without `^`; run `npm audit` and record the result | Lockfiles unchanged in substance; tests pass; audit output in the PR |
 | E3 | ★ | S | **Busy-laptop timing check**: `test:g8`'s "one key skips each step quickly" fails under heavy load; measure in frames instead of milliseconds | Passes under load and at normal speed |
 

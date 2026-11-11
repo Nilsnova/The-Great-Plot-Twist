@@ -17,6 +17,8 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | **Who builds what this week (lanes, contracts, tasks)** | [Build plan](docs/BUILD-PLAN.md) |
 | **The plan to the deadline (Mon 23 Nov, 23:59) and the task board** | [Final roadmap](docs/FINAL-ROADMAP.md) |
 | **A ready prompt for your coding agent** | [Agent prompt](docs/contribute/AGENT-PROMPT.md) |
+| **Answering the walkthrough questions: how each part is built, why, its limits** | [Walkthrough](docs/WALKTHROUGH.md) |
+| **What the tests cover and what they do not** | [Test map](docs/TEST-MAP.md) |
 | Branches, features, reviews and handovers | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Instructions for coding agents | [AGENTS.md](AGENTS.md) |
 | Shared technical and product decisions | [Decision log](docs/DECISIONS.md) |
