@@ -80,7 +80,7 @@ try {
   await verifyPage('/privacy.html');
 
   // The production front door under the CSP: Play, skip the lore, the goal card, the class harbor,
-  // then a sail to the Home islet (the old highlights tour left with the mystery on 10 Nov).
+  // then a sail to your island (the old highlights tour left with the mystery on 10 Nov).
   await page.goto(`${env.url}/?demo=1`, { waitUntil: 'domcontentloaded' });
   await page.locator('#play').click();
   await page.locator('dialog.cutscene[open]').waitFor();
@@ -95,8 +95,8 @@ try {
   await page.locator('.sea-chart[open]').waitFor();
   await page.locator('.sea-chart .fast-travel').check();
   await page.locator('.sea-chart [data-place="home_islet"]').click();
-  await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('HOME ISLET'), null, { timeout: 30000 });
-  check(true, 'Production sea chart sails to the Home islet');
+  await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('YOUR ISLAND'), null, { timeout: 30000 });
+  check(true, 'Production sea chart sails to your island (home_islet, "Your island")');
   check(await page.locator('.case-reveal-line, .case-modal, .intro-modal').count() === 0, 'Production game shows no case or prologue screen');
   check(await page.evaluate(() => typeof window.__island) === 'undefined', 'Production game uses no development inspection hooks');
   const finalViolations = await page.evaluate(() => window.__cspViolations ?? []);
