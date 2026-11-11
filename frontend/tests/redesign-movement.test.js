@@ -66,19 +66,24 @@ describe('responsive continuous explorer',()=>{
     Object.values(art).forEach(material=>material.dispose());character.sprite.geometry.dispose();
   });
 });
-describe('continuous camera follow and zoom',()=>{
-  it('follows movements previously rounded to zero',()=>{
+describe('continuous camera follow on the native pixel grid',()=>{
+  it('adds up tiny movements while the drawn camera stays on whole native pixels',()=>{
     const view=createCamera({pointer:{wheel:0}});view.setPlace('home_islet',{x:0,z:0});view.start();view.update(1/60,{x:.02,z:0});
-    expect(view.camera.position.x).toBeGreaterThan(0);expect(view.camera.position.x).toBeLessThan(.02);expect(Number.isInteger(view.camera.position.x*16)).toBe(false);
+    expect(view.camera.position.x).toBe(0);
+    for(let i=0;i<60;i++){view.update(1/60,{x:.2,z:0});expect(Number.isInteger(view.camera.position.x*16)).toBe(true);}
+    expect(view.camera.position.x).toBeCloseTo(.1875,10);
   });
   it('follows frame independently while preserving orientation',()=>{
     const positions=[20,30,60,144].map(frames=>{const view=createCamera({pointer:{wheel:0}});view.setPlace('home_islet',{x:0,z:0});view.start();const q=view.camera.quaternion.clone();
       for(let i=0;i<frames;i++)view.update(1/frames,{x:3,z:0});expect(view.camera.quaternion.equals(q)).toBe(true);return view.camera.position.x;});
     for(const x of positions)expect(x).toBeCloseTo(positions[0],10);
   });
-  it('smooths wheel zoom and honors reduced motion',()=>{
-    const input={pointer:{wheel:-120}},view=createCamera(input);view.start();view.update(1/60,{x:0,z:0});
-    expect(view.camera.zoom).toBeGreaterThan(1);expect(view.camera.zoom).toBeLessThan(1.12);input.pointer.wheel=0;view.start(true);view.update(1/60,{x:.1234,z:0});
-    expect(view.camera.position.x).toBeCloseTo(.1234,12);expect(view.camera.zoom).toBeCloseTo(1.12);view.overview();expect(view.camera.zoom).toBe(1);
+  it('zooms in whole device-pixel steps and honors reduced motion',()=>{
+    const input={pointer:{wheel:-1000}},view=createCamera(input);view.camera.userData.pixelScale=2;view.start();
+    const seen=new Set();for(let i=0;i<60;i++){view.update(1/60,{x:0,z:0});input.pointer.wheel=0;seen.add(view.camera.zoom);}
+    expect([...seen].every(zoom=>Number.isInteger(zoom*2))).toBe(true);expect(seen.has(2)).toBe(true);
+    view.overview();expect(view.camera.zoom).toBe(1);input.pointer.wheel=-1000;view.start(true);view.update(1/60,{x:.1234,z:0});
+    expect(view.camera.position.x).toBe(.125);expect(view.camera.zoom).toBe(2);
+    view.camera.userData.battleZoom=.59;view.update(1/60,{x:0,z:0});expect(view.camera.zoom).toBe(.5);
   });
 });

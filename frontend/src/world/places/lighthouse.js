@@ -14,7 +14,7 @@ export async function createLighthousePlace(ctx = {}) {
   const dispose = createLifetime(group, art), frameState = createFrameState(ctx, places.lighthouse_isle.spawn);
   try {
     const readBackdrop=ctx.loadBackdrop??loadBackdrop;
-    const texture = await readBackdrop('pixel/hd/ground.png').catch(()=>readBackdrop('pixel/ground.png'));
+    const texture = await readBackdrop('pixel/ground.png'); // 16 px/unit, the native grid (td-clean)
     const island = createIsland(group, art, texture), boat = createBoat(group, art);
     return { ...places.lighthouse_isle, id: 'lighthouse_isle', group, groundHeight, colliders: island.colliders,
       update(dt, state) { state = frameState(dt, state); island.update(state.player, state.time, state.night, state.weather); boat.update(state.time, state.weather); }, dispose };

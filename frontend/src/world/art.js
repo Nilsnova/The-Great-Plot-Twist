@@ -1,10 +1,12 @@
-// Source texture density is independent of the unchanged logical sprite geometry.
+// Source texture density is independent of the unchanged logical sprite geometry. The world now
+// draws 1:1 at 16 native pixels per unit (td-clean), so the 16 px/unit sources are the default:
+// every sprite shares one pixel grid with the backdrops. { detail: true } still loads the 4x files.
 import * as THREE from 'three';
 import { loadTexture } from './texture.js';
 import { pixelArtIds, pixelById, pixelSizes, snapPixel } from '../pixel/catalog.js';
 export const artSizes = pixelSizes;
 
-export async function loadArt(names = pixelArtIds, { detail = true } = {}) {
+export async function loadArt(names = pixelArtIds, { detail = false } = {}) {
   if (!Array.isArray(names)) throw new Error('Art names must be an array.');
   const ids = [...new Set(names)];
   for (const id of ids) if (!Object.hasOwn(artSizes, id)) throw new Error(`Unknown drawing: ${id}`);

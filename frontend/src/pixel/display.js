@@ -45,3 +45,36 @@ export function createFrameBudget() {
     },
   };
 }
+
+// The crisp pixel framebuffer (td-clean, 11 Nov): the world draws at exactly 16 native pixels per
+// unit into a small buffer that the browser magnifies by a whole number of DEVICE pixels with
+// image-rendering: pixelated, so every art pixel is the same square on screen. `scale` (k) is the
+// zoom-1 magnification: about 340 native rows tall (640 x 360 on a 1280 x 720 or 1920 x 1080
+// screen, 576 x 360 on a 1440 x 900 retina) and about 256 native columns wide on a phone.
+// Camera zoom is a whole-number step of device pixels too (pixelZoom), so a zoomed-out battle view
+// gets a larger buffer instead of shrunken, broken sprites. Buffers are even so a camera on the
+// native grid lines up with the drawn pixels.
+export const NATIVE_ROWS = 340, NATIVE_COLUMNS = 256;
+export function nativeScale(width, height, pixelRatio = 1) {
+  const ratio = Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1;
+  const deviceWidth = size(width) * ratio, deviceHeight = size(height) * ratio;
+  return Math.max(1, Math.min(Math.round(deviceHeight / NATIVE_ROWS), Math.round(deviceWidth / NATIVE_COLUMNS)));
+}
+// Device pixels per native pixel for a camera zoom: whole steps, or 1/2, 1/3 … below one.
+export function pixelStep(scale, zoom = 1) {
+  const value = scale * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
+  return value >= .75 ? Math.max(1, Math.round(value)) : 1 / Math.round(1 / value);
+}
+export function pixelZoom(scale, zoom = 1) { return pixelStep(scale, zoom) / scale; }
+export function nativeViewport(width, height, {pixelRatio = 1, zoom = 1} = {}) {
+  width = size(width); height = size(height);
+  const ratio = Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1;
+  const scale = nativeScale(width, height, ratio), step = pixelStep(scale, zoom);
+  const even = value => Math.max(2, Math.ceil(value / 2) * 2);
+  const nativeWidth = even(width * ratio / step), nativeHeight = even(height * ratio / step);
+  // The world bounds at camera zoom 1; three.js divides them by the (stepped) zoom.
+  const unitsWide = nativeWidth / 16 * step / scale, unitsHigh = nativeHeight / 16 * step / scale;
+  return {width, height, scale, step, nativeWidth, nativeHeight,
+    cssWidth: nativeWidth * step / ratio, cssHeight: nativeHeight * step / ratio,
+    left: -unitsWide / 2, right: unitsWide / 2, top: unitsHigh / 2, bottom: -unitsHigh / 2};
+}

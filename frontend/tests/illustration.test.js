@@ -35,8 +35,9 @@ describe('illustrated world contracts', () => {
     expect(controller.player.position.equals(start)).toBe(true);
   });
   it('keeps a fixed orthographic orientation while following and zooming', () => {
-    const input = { pointer: { x: 200, y: 100, wheel: -200 } };
+    const input = { pointer: { x: 200, y: 100, wheel: -1000 } };
     const view = createCamera(input), before = view.camera.quaternion.clone();
+    view.camera.userData.pixelScale = 2; // the renderer sets this; zoom then takes whole device-pixel steps
     view.start(true); view.update(0.1, { x: 1, z: 4 });
     expect(view.camera.isOrthographicCamera).toBe(true);
     expect(view.camera.quaternion.equals(before)).toBe(true);
