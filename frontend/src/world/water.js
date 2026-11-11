@@ -92,7 +92,7 @@ void main(){
   // Wave strokes: crisp one-pixel crest dashes of steady length, the classic pixel-art sea.
   float lineY=p.y*1.15+sin(p.x*.45+t*.6)*.2-t*.12*(1.0+uWind);
   float row=floor(lineY),period=11.0+mod(row,3.0)*4.0,dash=mod(px.x+row*13.0,period);
-  if(uDetail>.5&&d>9.0&&fract(lineY)<.065&&dash<period*.45&&pxHash(vec2(floor((px.x+row*13.0)/period),row))>.35)colour=uStroke;
+  if(uDetail>.5&&d>9.0&&fract(lineY)<.065&&dash< period*.45&&pxHash(vec2(floor((px.x+row*13.0)/period),row))>.35)colour=uStroke;
   // Shallows: two flat bands that follow the coast, their edges rippling a pixel or two.
   float ripple=sin(p.x*1.3+p.y*.7+t*.5)*1.2;
   if(d<22.0+ripple*2.0)colour=uShallow;
