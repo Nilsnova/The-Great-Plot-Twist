@@ -24,7 +24,7 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | Shared technical and product decisions | [Decision log](docs/DECISIONS.md) |
 | What we build, in which order, and the lanes | [ROADMAP.md](ROADMAP.md) |
 | What works right now, next steps per lane and the log | [Status](docs/STATUS.md) |
-| Player controls, crews and spoiler-free guidance | [How to play](docs/HOW-TO-PLAY.md) |
+| Your island, the waves, the Harbor, Pirate Point and the controls | [How to play](docs/HOW-TO-PLAY.md) |
 | Player data, deletion and play money | [Privacy](docs/PRIVACY.md) |
 | Your own first contribution and explain-back | [Teammate starter kit](docs/contribute/QUICKSTART.md) |
 | The story and its approved decisions | [Story](docs/STORY.md) |
@@ -37,24 +37,32 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 
 ## Project status
 
-*Last updated: 10 Nov 2026, the mystery leaves the game (D031).*
+*Last updated: Wed 11 Nov 2026.*
 
-On 10 Nov 2026 the team changed direction ([PITCH.md](docs/PITCH.md)): each player builds and defends
-their own island against pirate waves, everyone trades at the shared Harbor, and the class fights one
-joint Pirate Point battle. The 2-hour mystery is out of the game.
+The game is a pixel pirate game for the browser ([PITCH.md](docs/PITCH.md)). Every player builds and
+defends their own island, everyone trades at the shared Harbor, and the class fights one joint battle at
+Pirate Point. Who builds what is in the [build plan](docs/BUILD-PLAN.md); how to play is in
+[HOW-TO-PLAY.md](docs/HOW-TO-PLAY.md).
 
-- **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) runs the pixel
-  Saltreach Isles from `frontend/`, with the Python API from `backend/` behind it (`/api/health`).
-- **In the browser now:** Play (voiced lore intro, goal card, Saltreach Harbor), Join with the class
-  code, the class demo (quest strip, duel shortcut, Keeper's Lock, three lamps, projector), sea chart and
-  sailing, the Home islet build panel, live presence, Exchange, predictions, sports, real weather,
-  account and sign-in (GitHub, email code, guests), settings, audio and the host console.
-- **Removed on 10 Nov:** the Lighthouse prologue, every case screen (crew, board, searches, partners,
-  finale, accusation, reveal, relighting), the journal and hints, the festival, the bulletin and the
-  rewards page, the arena gate (the captain duel stays), Gull's Rest and the rooms. The backend case
+- **Your island:** build walls, cannons, a watchtower and houses with 🪙, ring the bell, and survive
+  pirate waves for loot. Cannons fire on their own; you can man one or repair a wall. Friends visit with
+  your island code (`ISLE-…`) or its QR and fight the same wave with you.
+- **The Harbor:** a market stall (up or down in 1 hour on a real price), a match board (real football),
+  a fortune teller (real yes or no questions), a weather board (the real weather and what it does to the
+  pirates) and the duel ring, each with stakes of 🪙 5, 10 or 25.
+- **Pirate Point:** the shared lighthouse island. Anyone rings its bell; everyone there fights the
+  armada, and three captains light the three lamps to sink the flagship. In class, phones join with the
+  class code (`HARBOR-…`) from the projector QR and land there.
+- **Done on the integration branch:** every lane task of the build plan and the voiced pirate intro.
+  **Still open:** the market calls migration on the live database, the release and the live checks.
+- **Live:** [the-great-plot-twist.vercel.app](https://the-great-plot-twist.vercel.app/) still runs the
+  9 Nov class demo until the release, with the Python API from `backend/` behind it (`/api/health`).
+- **Removed on 10 Nov:** the 2-hour mystery (D031): the prologue, every case screen, the journal and
+  hints, the festival, the bulletin, the rewards page, the arena gate and Gull's Rest. The backend case
   code is still there for a later cleanup; the browser no longer calls it and the `case` flag is off.
 - **Local development:** the [disposable local API](docs/LOCAL-TEST-SERVER.md) runs the current API
-  against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials.
+  against a fresh PostgreSQL database, with four fixture captains and no Supabase credentials. In a dev
+  build, `?islands=fake` runs the island, the waves and Pirate Point against an in-memory fake.
 
 ### What the final README must contain
 
