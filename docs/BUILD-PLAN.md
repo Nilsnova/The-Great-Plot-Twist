@@ -146,7 +146,7 @@ Value: ★★★ needed for the loop, ★★ makes it good, ★ polish. Size: S 
 | 0.4 | Pirate Point battle for the class: one shared wave for everyone in the room, the flagship that only the three lamps can sink | Done, 11 Nov |
 | 0.5 | New voiced intro (pirates), wiring day (fakes → real API), release, live checks | Part done (see below) |
 
-**Status of 0.5 on Wed 11 Nov.** Done: the voiced pirate intro (`lore_intro`) and seven more pirate cutscenes (`island_arrival`, `harbor_arrival`, `wave_won`, `wave_lost`, `armada`, `lock_opens`, `lamps_relit`), 25 voice lines in `frontend/public/audio/voice/`; the island, the waves and Pirate Point call the real routes when the flag `islands` is on, and the islands migrations are applied to the live database. Still open: applying the market calls migration `20261111010000_market_calls.sql` to the live database (D034, not applied yet), the release to the live site (it still runs the 9 Nov class demo), turning on the flag `islands` there, and the live checks after the release.
+**Status of 0.5 on Wed 11 Nov.** Done: the voiced pirate intro (`lore_intro`) and seven more pirate cutscenes (`island_arrival`, `harbor_arrival`, `wave_won`, `wave_lost`, `armada`, `lock_opens`, `lamps_relit`), 25 voice lines in `frontend/public/audio/voice/`; the island, the waves and Pirate Point call the real routes when the flag `islands` is on, and the islands migrations are applied to the live database. The market calls migration `20261111010000_market_calls.sql` (D034) is applied to the live database too. Still open: the release to the live site (it still runs the 9 Nov class demo), turning on the flag `islands` there, and the live checks after the release.
 
 ### For everyone (pick one when your lane waits)
 

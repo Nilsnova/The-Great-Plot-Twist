@@ -596,7 +596,7 @@ browser's storage unread. The `case`, crew and save routes still answer if the f
 
 ## D034 · Simple market calls instead of leverage in the game · 2026-11-11
 
-**Status:** Built by lane 0 on branch `feat/g31-market-calls`. Migration `20261111010000_market_calls.sql`, behind the existing flag `market`. Not applied yet: the owner reviews and applies it.
+**Status:** Built by lane 0 on branch `feat/g31-market-calls`. Migration `20261111010000_market_calls.sql`, behind the existing flag `market`. Applied to the live database on Wed 11 Nov 2026.
 
 **Decision:** The Harbor market stall offers one thing: "Up or down in 1 hour?" on Bitcoin, Ether, Gold (PAXG), Apple or NVIDIA, the Exchange's own company ids and price feed. A call stakes 5, 10 or 25 coins at the live price now; one hour later a right call pays 2 × stake, a wrong one 0, an unchanged price refunds, and no price within 24 hours refunds. At most 3 open calls per player; a repeated actionUid is the same call. Assets are open for calls only while the feed holds a live price (so in demo mode, and for stocks while the stock key fails, they show closed). `GET /api/market/calls` lists the assets and the player's calls and decides due calls lazily on that read; `POST /api/market/calls` opens one. Coins move only through `market_call_open()` and `market_call_settle()` (reasons `market_call_stake`, `market_call_payout`, ref `call:<id>`). The leverage Exchange routes and tables stay in the code and the database, out of the player-facing game.
 
