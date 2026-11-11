@@ -27,7 +27,7 @@ export const SPOTS = Object.freeze([
   spot('house_1', 'house', 7, -6, 'inland'), spot('house_2', 'house', -8, -6, 'inland'),
 ]);
 export const CABIN = Object.freeze({id: 'island_cabin', x: -8, z: 6});
-export const BELL = Object.freeze({id: 'island_bell', x: 5, z: 14});
+export const BELL = Object.freeze({id: 'island_bell', x: 8.5, z: 12});
 export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
 const ZONE_Y = 1.03, SPOT_RADIUS = 2.2, ROUND_RADIUS = 1.8;
 

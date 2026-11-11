@@ -123,6 +123,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       own = answer.data;
       emit({type: 'island_built', kind: spot.kind, spot: spotId});
+      // Close the card so the new building and the toast can be seen.
+      if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
       ui.toast(`${KINDS[spot.kind].name} built! You have ${coinText(own.coins)}.`);
     } else {
       cardMessage = answer.message;
@@ -161,7 +163,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function visit(code) {
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
-    visitCode = symbols; visiting = null;
+    visitCode = symbols; visiting = null; flow.reset(); ui.close();
     return true;
   }
   async function sailHome() {
@@ -199,6 +201,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },
     get island() { return own ? structuredClone(own) : null; },
     get flow() { return flow; },
+    // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
+    get dev() { return transport?.dev ?? null; },
     get ui() { return ui; },
     get active() { return ui.active || !!cutscene; },
     handleEscape() {

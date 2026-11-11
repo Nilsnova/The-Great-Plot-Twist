@@ -24,7 +24,9 @@ it('builds from the card, refuses with the reason, rings the bell and invites wi
     const open = read();
     card().querySelector('.island-card-body .kit-button').click();
     await wait(30);
-    const built = {...read(), toast: island.ui.toastText, coins: island.island.coins};
+    const built = {closed: !card(), toast: island.ui.toastText, coins: island.island.coins};
+    island.pick('cannon_1');
+    const again = read();
     island.ui.close();
     transport.dev.setCoins(10); await island.load();
     island.pick('cannon_2');
@@ -44,10 +46,11 @@ it('builds from the card, refuses with the reason, rings the bell and invites wi
     const label = {spot: island.label('cannon_3'), bell: island.label('island_bell'), cabin: island.label('island_cabin'), other: island.label('market_hall')};
     const room = island.presencePlace('home_islet');
     island.dispose();
-    return {open, built, short, bell, banner, closedAfterRing, invite, label, room, seen};
+    return {open, built, again, short, bell, banner, closedAfterRing, invite, label, room, seen};
   });
   expect(result.open).toMatchObject({title: 'Cannon', cost: '🪙 30', button: 'Build', disabled: false, reason: '', purpose: 'Fires at pirate ships on its own.'});
-  expect(result.built).toMatchObject({reason: 'Your cannon stands here.', toast: 'Cannon built! You have 🪙 70.', coins: 70});
+  expect(result.built).toEqual({closed: true, toast: 'Cannon built! You have 🪙 70.', coins: 70});
+  expect(result.again).toMatchObject({title: 'Cannon', reason: 'Your cannon stands here.'});
   expect(result.short).toMatchObject({title: 'Cannon', button: 'Build', disabled: true, reason: 'You need 🪙 20 more.'});
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});
   expect(result.banner).toBe('Pirates in 10 s! Wave 1');

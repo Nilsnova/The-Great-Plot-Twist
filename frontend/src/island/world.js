@@ -47,15 +47,32 @@ const PAINT = {
   ]),
 };
 const SIZES = {wall: [40, 24], cannon: [32, 24], watchtower: [32, 56], house: [40, 40], bell: [24, 40]};
-// A pulsing ring of light on the ground with a small diamond above it: "you can build here".
-function paintMarker(c) {
-  for (let y = 0; y < 14; y++) for (let x = 0; x < 36; x++) {
-    const r = Math.hypot((x + .5 - 18) / 17, (y + .5 - 7) / 6.5);
-    if (r > 1 || r < .62) continue;
-    c.fillStyle = r > .86 ? 'rgba(243,213,140,0.95)' : (x + y) % 2 ? 'rgba(255,240,190,0.7)' : 'rgba(232,170,70,0.55)';
-    c.fillRect(x, y + 18, 1, 1);
+// "You can build here": a glowing ring on the ground (pulses) and a floating badge with the kind
+// (bobs). Stepped, dithered light like the class demo's lamps; no smooth gradients.
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+function paintRing(c) {
+  for (let y = 0; y < 24; y++) for (let x = 0; x < 48; x++) {
+    const r = Math.hypot((x + .5 - 24) / 23, (y + .5 - 12) / 11);
+    if (r > 1) continue;
+    const edge = Math.abs(r - .78);
+    if (edge < .09) { c.fillStyle = r > .78 ? '#fff2c4' : '#f3c75a'; c.fillRect(x, y, 1, 1); continue; }
+    const glow = Math.max(0, 1 - edge / .4) + (BAYER[(y % 4) * 4 + (x % 4)] + .5) / 16 - .5;
+    if (glow <= .15) continue;
+    c.fillStyle = glow > .6 ? 'rgba(255,214,120,0.75)' : 'rgba(240,170,60,0.45)'; c.fillRect(x, y, 1, 1);
   }
-  rects(c, [[16, 2, 4, 2, '#fff2c4'], [14, 4, 8, 4, '#f3d58c'], [16, 8, 4, 2, '#d9a93b'], [17, 10, 2, 6, 'rgba(243,213,140,0.6)']]);
+}
+const GLYPHS = {
+  wall: [[4, 9, 12, 5, '#e9dfc1'], [4, 7, 3, 2, '#e9dfc1'], [9, 7, 3, 2, '#e9dfc1'], [14, 7, 2, 2, '#e9dfc1'], [7, 11, 1, 1, '#5b3a1e'], [12, 11, 1, 1, '#5b3a1e']],
+  cannon: [[5, 11, 10, 3, '#e9dfc1'], [6, 6, 10, 4, '#e9dfc1'], [15, 5, 2, 6, '#e9dfc1'], [6, 13, 3, 3, '#e9dfc1'], [12, 13, 3, 3, '#e9dfc1']],
+  watchtower: [[6, 8, 2, 8, '#e9dfc1'], [12, 8, 2, 8, '#e9dfc1'], [5, 6, 10, 2, '#e9dfc1'], [9, 2, 1, 4, '#e9dfc1'], [10, 2, 4, 2, '#f3c75a']],
+  house: [[5, 10, 10, 6, '#e9dfc1'], [3, 9, 14, 2, '#e9dfc1'], [5, 7, 10, 2, '#e9dfc1'], [7, 5, 6, 2, '#e9dfc1'], [9, 12, 2, 4, '#5b3a1e']],
+};
+function paintBadge(kind) {
+  return c => {
+    rects(c, [[2, 0, 16, 1, '#5b3a1e'], [1, 1, 18, 18, '#5b3a1e'], [2, 2, 16, 16, '#f3c75a'], [3, 3, 14, 14, '#8a5a2b'],
+      [8, 19, 4, 2, '#5b3a1e'], [9, 21, 2, 2, '#f3c75a']]);
+    rects(c, GLYPHS[kind] ?? []);
+  };
 }
 
 function canvasTexture(width, height, paint) {
@@ -82,12 +99,15 @@ export function decorateIsland(place, ctx = {}) {
   const root = new THREE.Group(); root.name = 'island'; place.group.add(root);
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(PAINT).map(([kind, paint]) => [kind, canvasTexture(...SIZES[kind], paint)]));
-  const markerTexture = canvasTexture(36, 32, paintMarker);
+  const ringTexture = canvasTexture(48, 24, paintRing);
+  const badgeTextures = Object.fromEntries(Object.keys(GLYPHS).map(kind => [kind, canvasTexture(20, 24, paintBadge(kind))]));
   const markers = new Map(), buildings = new Map();
   for (const spot of SPOTS) {
-    const marker = sprite(root, markerTexture, [36, 32], spot.x, spot.z, `island-marker:${spot.id}`);
-    marker.position.y -= .6; marker.renderOrder = 99; // on the ground, under the player
-    markers.set(spot.id, marker);
+    const ring = sprite(root, ringTexture, [48, 24], spot.x, spot.z, `island-marker:${spot.id}`);
+    ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
+    const badge = sprite(root, badgeTextures[spot.kind], [20, 24], spot.x, spot.z, `island-badge:${spot.id}`);
+    badge.position.y += .6; badge.userData.baseY = badge.position.y;
+    markers.set(spot.id, {ring, badge, set visible(value) { ring.visible = value; badge.visible = value; }});
     const building = sprite(root, textures[spot.kind], SIZES[spot.kind], spot.x, spot.z, `island-${spot.kind}:${spot.id}`);
     building.visible = false; buildings.set(spot.id, building);
   }
@@ -165,9 +185,8 @@ export function decorateIsland(place, ctx = {}) {
     update(dt, time = 0) {
       if (disposed) return;
       const still = reduced();
-      const glow = still ? .9 : .65 + .35 * Math.sin(time * 3.2);
-      markerTexture.userData.glow = glow;
-      for (const marker of markers.values()) marker.material.opacity = glow;
+      const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.round(Math.sin(time * 2.4) * 2) / UNIT;
+      for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }
       if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = Math.sin(ringing * 18) * .12 * ringing; }
       else bell.rotation.z = 0;
     },
