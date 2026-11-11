@@ -71,7 +71,7 @@ export function createDesk(ctx = {}) {
     if (question.taken) item.append(el('p', 'harbor-holding', question.taken));
     if (question.canStake) {
       if (!selections.has(question.id)) selections.set(question.id, {side: null, stake: null});
-      item.append(createPicker({name: question.id, busy, selection: selections.get(question.id), sides: question.sides,
+      item.append(createPicker({name: question.id, itemName: question.text, busy, selection: selections.get(question.id), sides: question.sides,
         stakes: question.stakes, sideGroup: FORTUNE.pickGroup, stakeGroup: MARKET.stakeGroup, choose: POOL.choose,
         hint: question.hint, confirmText: POOL.confirm,
         onConfirm: (side, amount) => place({questionId: question.id, side, amount, stakeId: adapter.makeStakeId()}, sideLabel(side))}));

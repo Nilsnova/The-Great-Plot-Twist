@@ -3,7 +3,7 @@
    harbor-. The cards also carry the old panels' marker classes (market-modal, sports-modal, desk-modal)
    for Escape and focus, so the first rules undo those panels' own frames. */
 .kit-modal.harbor-card{--harbor-ink:var(--u-ink);--harbor-quiet:var(--u-mute);--harbor-line:#3d6a6b;--harbor-good:#b9e39a;--harbor-bad:var(--u-rust);--harbor-warn:var(--u-gold);
-  width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 40px);padding:0 22px 22px;border:0;color:var(--u-ink);background:linear-gradient(#173c42,var(--u-sea) 40%);font:var(--u-sm)/1.55 var(--u-font)}
+  width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 40px);padding:0 22px 22px;border:0;color:var(--u-ink);background:linear-gradient(#173c42,var(--u-sea) 40%) var(--u-sea);font:var(--u-md)/1.55 var(--u-font)}
 .kit-modal.harbor-card .kit-modal-header{margin:0 -22px 20px;padding:10px 12px 10px 22px;background:var(--u-parch)}
 .kit-modal.harbor-card .kit-modal-body{padding:0;max-height:none;overflow:visible}
 .harbor-card :is(button,input,select,p,li,h3,small){font-family:var(--u-font)}
@@ -24,7 +24,7 @@
 .harbor-spark[data-trend=up] polyline{stroke:var(--harbor-good)}
 .harbor-spark[data-trend=down] polyline{stroke:var(--harbor-bad)}
 .harbor-quiet,.harbor-reason,.harbor-footnote{color:var(--harbor-quiet)}
-.harbor-footnote{font-size:var(--u-sm);margin:0}
+.harbor-footnote{margin:0}
 .harbor-footnote a{color:inherit;display:inline-flex;align-items:center;min-height:44px;min-width:44px}
 .harbor-empty{margin:0;font-size:var(--u-md)}
 .harbor-notice{font-weight:bold}

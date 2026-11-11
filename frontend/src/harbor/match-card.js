@@ -68,7 +68,7 @@ export function createSportsPanel({container, adapter, getToken = () => null, re
     else if (match.reason) item.append(el('p', 'harbor-reason', match.reason));
     if (match.canStake && mine) {
       if (!selections.has(match.id)) selections.set(match.id, {side: null, stake: null});
-      item.append(createPicker({name: match.id, busy, selection: selections.get(match.id), sides: match.picks, stakes: match.stakes,
+      item.append(createPicker({name: match.id, itemName: match.name, busy, selection: selections.get(match.id), sides: match.picks, stakes: match.stakes,
         sideGroup: MATCH.pickGroup(match.name), stakeGroup: MARKET.stakeGroup, choose: POOL.choose,
         hint: match.hint, confirmText: POOL.confirm, onConfirm: (pick, stake, label) => place(match.id, pick, stake, label)}));
     }

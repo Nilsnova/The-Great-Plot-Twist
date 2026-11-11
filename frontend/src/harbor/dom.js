@@ -54,8 +54,11 @@ export function signInLine(onSignIn) {
 // Pick a side, pick 5 / 10 / 25, see the promise, then confirm. Nothing is preselected, so one stray tap
 // never places a stake. `sides` is [{id, label}]; `hint(side, stake)` says what a win would bring.
 // `selection` ({side, stake}) belongs to the caller, so a refresh that redraws the card keeps the picks.
-export function createPicker({name, sides, stakes, sideGroup, stakeGroup, choose, hint, confirmText, onConfirm,
+// `itemName` (the asset, match or question) ends every button's accessible name, so a card with several
+// items never has two buttons with the same name ("Up, Bitcoin", "10 coins on Bitcoin").
+export function createPicker({name, itemName = '', sides, stakes, sideGroup, stakeGroup, choose, hint, confirmText, onConfirm,
   busy = false, selection = {side: null, stake: null}}) {
+  const named = text => (itemName ? `${text}, ${itemName}` : text);
   const box = el('div', 'harbor-picker');
   const sideRow = el('div', 'harbor-choices harbor-sides'), stakeRow = el('div', 'harbor-choices harbor-stakes');
   sideRow.setAttribute('role', 'group'); sideRow.setAttribute('aria-label', sideGroup);
@@ -68,12 +71,13 @@ export function createPicker({name, sides, stakes, sideGroup, stakeGroup, choose
   confirm.dataset.key = `${name}:confirm`;
   const sideButtons = sides.map(option => {
     const choice = button(option.label, () => { selection.side = option.id; sync(); }, 'kit-choice harbor-choice');
-    choice.dataset.side = option.id; choice.dataset.key = `${name}:side:${option.id}`; return choice;
+    choice.dataset.side = option.id; choice.dataset.key = `${name}:side:${option.id}`;
+    choice.setAttribute('aria-label', named(option.label)); return choice;
   });
   const stakeButtons = stakes.map(amount => {
     const choice = button(formatCoins(amount), () => { selection.stake = amount; sync(); }, 'kit-choice harbor-choice harbor-stake');
     choice.dataset.stake = String(amount); choice.dataset.key = `${name}:stake:${amount}`;
-    choice.setAttribute('aria-label', `${amount} coins`); return choice;
+    choice.setAttribute('aria-label', itemName ? `${amount} coins on ${itemName}` : `${amount} coins`); return choice;
   });
   function sync() {
     sideButtons.forEach((choice, index) => choice.setAttribute('aria-pressed', String(sides[index].id === selection.side)));
@@ -81,6 +85,7 @@ export function createPicker({name, sides, stakes, sideGroup, stakeGroup, choose
     const set = ready();
     line.textContent = set ? hint(selection.side, selection.stake) : choose;
     confirm.textContent = set ? confirmText(selection.stake, labelOf(selection.side)) : PLACE;
+    confirm.setAttribute('aria-label', named(confirm.textContent));
     confirm.disabled = !set || busy;
     for (const choice of [...sideButtons, ...stakeButtons]) choice.disabled = busy;
   }

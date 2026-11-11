@@ -117,7 +117,7 @@ export function createMarketEntry(ctx = {}) {
     }
     if (asset.canStake && !asset.holdings.length && portfolio) {
       if (!selections.has(asset.id)) selections.set(asset.id, {side: null, stake: null});
-      item.append(el('p', 'harbor-question', MARKET.question), createPicker({name: asset.id, busy, selection: selections.get(asset.id),
+      item.append(el('p', 'harbor-question', MARKET.question), createPicker({name: asset.id, itemName: asset.name, busy, selection: selections.get(asset.id),
         sides: [{id: 'rising', label: MARKET.up}, {id: 'falling', label: MARKET.down}], stakes: asset.stakes,
         sideGroup: MARKET.sideGroup(asset.name), stakeGroup: MARKET.stakeGroup, choose: MARKET.choose,
         hint: (_side, stake) => MARKET.promise(stake), confirmText: MARKET.confirm,
