@@ -18,7 +18,7 @@
 .pirate-banner{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;background:#1c2f27f0;border:4px solid #f3d58c;padding:16px 26px;box-shadow:4px 4px #0e1c1599;pointer-events:none;max-width:calc(100vw - 32px)}
 .pirate-banner strong{font-size:34px;color:#f3d58c}.pirate-banner span{font-size:18px}
 .pirate-bell-prompt{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);min-height:48px;font:18px/1.2 'Courier New',monospace}
-@media(max-width:760px){.pirate-bar{top:84px;min-width:0;font-size:14px}.pirate-countdown-number{font-size:64px}.pirate-countdown-words{font-size:18px}.pirate-prompt,.pirate-bell-prompt{bottom:250px}.pirate-banner strong{font-size:26px}}
+@media(max-width:760px){.pirate-bar{top:122px;min-width:0;font-size:14px}.pirate-countdown-number{font-size:64px}.pirate-countdown-words{font-size:18px}.pirate-prompt,.pirate-bell-prompt{bottom:250px}.pirate-banner strong{font-size:26px}}
 @media(prefers-reduced-motion:reduce){.pirate-pop .pirate-countdown-number{animation:none}.pirate-bar-fill{transition:none}}
 /* Pirate Point: the bell and lamp prompt, the lamps' status line under the wave bar. */
 .pirate-point-layer{position:absolute;inset:0;pointer-events:none;z-index:36}
@@ -29,4 +29,4 @@
 .pirate-point-layer .lamp-fill{position:absolute;left:50%;top:190px;transform:translateX(-50%)}
 .pirate-point-layer .lamp-hold{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;min-height:48px}
 .pirate-point-layer .lamp-hold progress{display:block;width:100%;height:10px;margin-top:6px;accent-color:#f3d58c}
-@media(max-width:760px){.pirate-point-prompt{bottom:250px}.pirate-point-layer .lamp-status{top:136px;font-size:14px}.pirate-point-layer .lamp-fill{top:200px}}
+@media(max-width:760px){.pirate-point-prompt{bottom:250px}.pirate-point-layer .lamp-status{top:172px;font-size:14px}.pirate-point-layer .lamp-fill{top:236px}}

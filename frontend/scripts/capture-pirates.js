@@ -12,10 +12,9 @@ const shooter=(page,suffix='')=>async name=>{const path=`${shotsDir}/${name}${su
 async function frontDoor(page,query){
   await page.goto(`${env.url}/?${query}`);await page.locator('#play').waitFor();
   await page.locator('#play').click();
-  await page.locator('dialog.cutscene[open]').waitFor();
-  await page.getByRole('button',{name:'Skip',exact:true}).click();
-  await page.locator('.goal-card[open]').waitFor({timeout:30000});
-  await page.getByRole('button',{name:'Got it',exact:true}).click();
+  // The intro and the goal card show on a first visit; a later visit in the same browser may skip them.
+  if(await page.locator('dialog.cutscene[open]').waitFor({timeout:20000}).then(()=>true,()=>false))await page.getByRole('button',{name:'Skip',exact:true}).click();
+  if(await page.locator('.goal-card[open]').waitFor({timeout:15000}).then(()=>true,()=>false))await page.getByRole('button',{name:'Got it',exact:true}).click();
   await page.waitForFunction(()=>window.__pirates&&window.__island?.world.current,null,{timeout:30000});
   await page.evaluate(()=>window.__pirates.ready);
   await page.waitForFunction(()=>!window.__island.world.busy&&!document.querySelector('dialog[open]'),null,{timeout:30000});
@@ -72,12 +71,12 @@ async function pointShots(page,suffix){
   await until(page,s=>s===null||s.done,90000);report.notes.push({pointEnd:await page.evaluate(()=>window.__pirates.pirates.point.controller.wave?.result??'cleaned up')});
 }
 async function perfRun(page){
-  await frontDoor(page,'pirates=demo&perf=1&spots=cannon_3,wall_1,wall_2&weather=storm&wave=9');await noon(page);await skipCutscenes(page);
-  await stand(page,13,2);await page.keyboard.press('KeyB');
+  await frontDoor(page,'pirates=demo&perf=1&spots=wall_1,wall_2&weather=storm&wave=9&hp=2000');await noon(page);await skipCutscenes(page);
+  await stand(page,12,6);await page.keyboard.press('KeyB');
   const state=await until(page,s=>s&&s.ships>=20,90000,250);
   await wait(page,500);
   const numbers=await measure(page,240);
-  report.perf['1280x720 storm wave 9']={...numbers,ships:(await waveState(page)).ships,density:await page.evaluate(()=>window.__island.renderer.userData)};
+  report.perf['1280x720 storm wave 9']={...numbers,ships:(await waveState(page))?.ships,density:await page.evaluate(()=>window.__island.renderer.userData)};
   await shooter(page)('p13-perf-20-ships');
   report.notes.push({perfState:state});
 }

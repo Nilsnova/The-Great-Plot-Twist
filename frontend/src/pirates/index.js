@@ -39,7 +39,7 @@ export function mountPirates(ctx) {
   const shared = { bus, world, sound: audio, reducedMotion: ctx.reducedMotion ?? (() => false), quality: ctx.quality ?? (() => 'high'),
     playerId: ctx.playerId };
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
-    room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet' });
+    room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {} });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };
