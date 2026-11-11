@@ -171,7 +171,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     let copied = false;
     try { await globalThis.navigator?.clipboard?.writeText(field.value); copied = !!globalThis.navigator?.clipboard; } catch { copied = false; }
     if (!copied) { field.focus(); field.select(); try { copied = document.execCommand?.('copy') === true; } catch { copied = false; } }
-    status.textContent = copied ? 'Link copied. Paste it in a message to your friend.' : 'Press Ctrl+C (or ⌘C) to copy the selected link.';
+    status.textContent = copied ? 'Link copied. Send it to your friend in a message.' : 'The link is selected. Copy it and send it to your friend.';
     status.hidden = false;
     return copied;
   }
