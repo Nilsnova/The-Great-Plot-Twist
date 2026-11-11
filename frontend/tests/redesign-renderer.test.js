@@ -1,5 +1,6 @@
-// The world draws 1:1 into a native buffer magnified by whole device pixels (td-clean). Quality,
-// density calibration and DPR never change the visible world; the CSS box covers the viewport.
+// The clean cartoon art draws at full resolution (GAME-V3.md §7): the canvas covers the viewport, its
+// backing pixels follow the device ratio within the quality budget and the frame budget. Quality,
+// density calibration and DPR never change the visible world (22 units tall, at least 16 wide).
 import {expect,it} from 'vitest';
 import {browserHarness} from './g20-browser.js';
 const evaluate=browserHarness();
@@ -18,11 +19,12 @@ it('fills desktop and phone viewports with bounded quality-independent framing',
           left:camera.left,right:camera.right,top:camera.top,bottom:camera.bottom};
         graphics.renderer.dispose();graphics.renderer.forceContextLoss();graphics.renderer.domElement.remove();return {high,low,remaining:document.querySelectorAll('canvas').length};
       });
-      const css=parseFloat(result.high.cssWidth),step=css*2/result.high.width;
-      expect(css).toBeGreaterThanOrEqual(width);expect(css-width).toBeLessThan(2);expect(Number.isInteger(step)).toBe(true);
-      expect(result.high.width*result.high.height).toBeLessThanOrEqual(1280*720);
+      expect(parseFloat(result.high.cssWidth)).toBe(width);
+      expect(result.high.width*result.high.height).toBeLessThanOrEqual(1920*1080);expect(result.low.width*result.low.height).toBeLessThanOrEqual(1280*720);
+      expect(result.high.width).toBeGreaterThan(result.low.width);
       for(const bound of ['left','right','top','bottom'])expect(result.high[bound]).toBe(result.low[bound]);
-      expect(result.high.right-result.high.left).toBeCloseTo(result.high.width/16);expect(result.remaining).toBe(0);
+      expect(result.high.top-result.high.bottom).toBeCloseTo(Math.max(22,16*height/width));
+      expect(result.high.right-result.high.left).toBeGreaterThanOrEqual(16-1e-9);expect(result.remaining).toBe(0);
     }
   });
 });
@@ -46,10 +48,10 @@ it('calibrates actual backing pixels while keeping CSS and world framing fixed',
       const viewportReset={width:canvas.width,scale:graphics.renderer.userData.densityScale};
       graphics.renderer.dispose();graphics.renderer.forceContextLoss();canvas.remove();return {before,after,paused,qualityReset,viewportReset};
     });
-    // The native buffer is already small: slow frames keep it (and the world framing) as it is.
-    expect(result.before.width).toBe(640);expect(result.after.width).toBe(result.before.width);
+    // Slow frames lower the backing pixels (never below half) and keep the CSS box and the world framing.
+    expect(result.before.width).toBe(1280);expect(result.after.width).toBeLessThan(result.before.width);expect(result.after.width).toBeGreaterThanOrEqual(640);
     expect(result.after.bounds).toEqual(result.before.bounds);expect(result.after.css).toBe(result.before.css);
     expect(result.paused).toEqual({width:result.after.width,height:result.after.height});
-    expect(result.qualityReset).toEqual({width:result.before.width,scale:1});expect(result.viewportReset).toEqual({width:376,scale:1});
+    expect(result.qualityReset).toEqual({width:result.before.width,scale:1});expect(result.viewportReset).toEqual({width:375,scale:1});
   });
 });

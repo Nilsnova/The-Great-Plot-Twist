@@ -1,8 +1,7 @@
-// Pixel effects for moments: spark bursts, expanding rings, light rays and dithered bloom. All of
-// them live in one geometry with one material (one draw call, nothing per frame on the CPU): every
-// effect is written once into a slot with its start time, and the GPU moves and fades it. Sparks
-// are whole native pixels, rings and rays are drawn on the native grid, bloom is stepped and
-// dithered. Additive, so gold stays the colour of light. Reduced motion: callers skip motion and
+// Effects for moments: spark bursts, expanding rings, light rays and soft bloom. All of them live in
+// one geometry with one material (one draw call, nothing per frame on the CPU): every effect is
+// written once into a slot with its start time, and the GPU moves and fades it. Sparks are soft
+// round dots, rings are smooth antialiased lines, rays and bloom are smooth gradients. Additive, so gold stays the colour of light. Reduced motion: callers skip motion and
 // use bloom alone; low quality halves every burst. Exposed on scene.userData.pixelFx by game.js.
 import * as THREE from 'three';
 import { pixelGlsl, toScreen } from './pixel-glsl.js';
@@ -17,9 +16,7 @@ void main(){
   float age=uTime-aTiming.x;vAge=age/aTiming.y;vKind=aTiming.w;vColour=aColour;vSize=aTiming.z;vSeed=aMotion.z;
   if(age<0.0||vAge>1.0){gl_Position=vec4(2.0,2.0,2.0,1.0);return;}
   vec2 centre=aOrigin;float extent=aTiming.z;
-  if(aTiming.w<.5){centre+=aMotion.xy*age+vec2(0.0,-aMotion.z*.5*age*age);extent=aTiming.z/32.0;
-    centre=(floor(centre*16.0)+mod(aTiming.z,2.0)*.5)/16.0;}
-  else centre=floor(centre*16.0+.5)/16.0;
+  if(aTiming.w<.5){centre+=aMotion.xy*age+vec2(0.0,-aMotion.z*.5*age*age);extent=aTiming.z/24.0+.03;}
   vCentre=centre;
   vec2 world=centre+aCorner*extent;vWorld=world;
   gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(world,0.0,1.0);
@@ -30,11 +27,11 @@ uniform float uTime;
 varying vec2 vWorld;varying vec2 vCentre;varying float vAge;varying float vKind;varying float vSize;varying vec3 vColour;varying float vSeed;
 void main(){
   float fade=1.0-vAge,alpha=0.0;
-  vec2 px=floor(vWorld*16.0),q=(px+.5)/16.0-vCentre;float r=length(q*vec2(1.0,1.25));
-  if(vKind<.5){alpha=floor((fade*1.1+.25)*3.0)/3.0;if(pxHash(vCentre*16.0+floor(uTime*12.0))<.15)alpha*=.5;}
+  vec2 px=vWorld*16.0,q=vWorld-vCentre;float r=length(q*vec2(1.0,1.25)),aa=fwidth(r)+1e-4;
+  if(vKind<.5){float rad=vSize/24.0;alpha=clamp(fade*1.1+.25,0.0,1.0)*(1.0-smoothstep(rad-aa,rad+aa,length(q)));}
   else if(vKind<1.5){
-    float radius=vSize*(1.0-pow(1.0-vAge,2.2)),width=(vAge<.35?2.0:1.0)/16.0;
-    if(abs(r-radius)< width*.75)alpha=floor(fade*3.0+.6)/3.0;
+    float radius=vSize*(1.0-pow(1.0-vAge,2.2)),width=(vAge<.35?2.4:1.4)/16.0;
+    alpha=clamp(fade*1.2,0.0,1.0)*(1.0-smoothstep(width*.5-aa,width*.5+aa,abs(r-radius)));
   }else if(vKind<2.5){
     float a=atan(q.y,q.x)+uTime*.35+vSeed*6.283,rays=.5+.5*cos(a*9.0),rays2=.5+.5*cos(a*5.0-uTime*.6);
     float reach=1.0-r/vSize,grow=min(1.0,vAge*5.0)*min(1.0,fade*3.0);
@@ -43,7 +40,7 @@ void main(){
     float grow=min(1.0,vAge*6.0)*min(1.0,fade*2.5),glow=pow(max(0.0,1.0-r/vSize),1.6)*grow;
     alpha=pxSteps(glow*1.15,4.0,px)*.62;
   }
-  if(alpha<=0.0)discard;
+  if(alpha<=.003)discard;
   gl_FragColor=vec4(vColour*alpha,1.0);
   ${toScreen}
 }`;

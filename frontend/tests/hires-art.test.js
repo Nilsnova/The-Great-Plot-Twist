@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DETAIL_DENSITY, pixelArtIds, pixelById, titleBackdrop } from '../src/pixel/catalog.js';
 import { artSizes, loadArt, placeArt } from '../src/world/art.js';
 import { loadTexture } from '../src/world/texture.js';
+import { islandFrame } from '../src/art/registry.js';
 
 vi.mock('../src/world/texture.js', () => ({ loadTexture: vi.fn() }));
 afterEach(() => vi.resetAllMocks());
@@ -40,21 +41,28 @@ describe('detailed original artwork', () => {
 
   it('loads native 16 px/unit art by default and detail sources on request', async () => {
     loadTexture.mockImplementation(async () => new THREE.Texture());
-    const art = await loadArt(['explorer', 'cottage', 'market-hall', 'explorer'], { detail: true });
+    const art = await loadArt(['lighthouse', 'cottage', 'market-hall', 'lighthouse'], { detail: true });
     expect(loadTexture.mock.calls.map(([url]) => url)).toEqual([
-      '/pixel/hd/explorer.png', '/pixel/hd/cottage.png', '/pixel/market-hall.png',
+      '/pixel/hd/lighthouse.png', '/pixel/hd/cottage.png', '/pixel/market-hall.png',
     ]);
     expect(Object.keys(art)).toHaveLength(3);
     release(art);
     loadTexture.mockClear();
-    const legacy = await loadArt(['explorer']);
-    expect(loadTexture).toHaveBeenCalledWith('/pixel/explorer.png', expect.any(THREE.TextureLoader));
+    const legacy = await loadArt(['lighthouse']);
+    expect(loadTexture).toHaveBeenCalledWith('/pixel/lighthouse.png', expect.any(THREE.TextureLoader));
     release(legacy);
+    // Cartoon frames (GAME-V3.md §7) are painted on first use: no PNG request, nothing painted yet.
+    loadTexture.mockClear();
+    const cartoon = await loadArt(['explorer', 'oak']);
+    expect(loadTexture).not.toHaveBeenCalled();
+    expect('explorer' in cartoon && Object.keys(cartoon).length === 0).toBe(true);
   });
 
   it('keeps every detailed sprite at the original size and foot anchor', async () => {
     loadTexture.mockImplementation(async () => new THREE.Texture());
-    const art = await loadArt();
+    // Pixel sprites load their files; cartoon frames share the same boxes (stand-in materials here).
+    const art = { ...Object.fromEntries(pixelArtIds.map(id => [id, new THREE.MeshBasicMaterial({ map: new THREE.Texture() })])) };
+    Object.assign(art, await loadArt(pixelArtIds.filter(id => !islandFrame(id))));
     const scene = new THREE.Scene();
     for (const id of pixelArtIds) {
       const mesh = placeArt(scene, art, id, 0, 0), [width, height, anchor] = artSizes[id];
@@ -74,7 +82,7 @@ describe('detailed original artwork', () => {
       if (url.endsWith('/cottage.png')) throw new Error('test missing drawing');
       return texture;
     });
-    await expect(loadArt(['explorer', 'cottage'])).rejects.toThrow('test missing drawing');
+    await expect(loadArt(['lighthouse', 'cottage'])).rejects.toThrow('test missing drawing');
     expect(dispose).toHaveBeenCalledOnce();
   });
 });

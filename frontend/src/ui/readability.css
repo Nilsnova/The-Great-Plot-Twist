@@ -13,10 +13,10 @@
 
 .weather-licence{white-space:nowrap;display:inline-block}
 
-.captain-status{font-size:16px;line-height:1.5;display:grid;gap:3px;padding:9px 14px;background:#263b30ef;border:2px solid #8e8058;order:1}.chapter{order:2}.captain-status span{color:#d6dfbc}.case-toolbar{position:fixed;top:88px;left:50%;transform:translateX(-50%);display:flex;gap:9px;pointer-events:auto}.case-toolbar button{font:16px 'Courier New',monospace;min-height:44px;padding:10px 14px;background:#304d3c;color:#fff0c5;border:2px solid #a7b68b}.hud:has(.case-toolbar) .toast{top:145px}@media(max-width:600px){.hud:has(.case-toolbar) .wordmark{display:none}.captain-status{order:0;max-width:190px}.case-toolbar{top:83px;gap:8px;width:calc(100vw - 24px)}.case-toolbar button{flex:1;min-width:0;padding:10px 8px}.hud:has(.case-toolbar) .location{top:145px}.hud:has(.case-toolbar) .toast{top:145px}}
+.captain-status{font-size:16px;line-height:1.5;display:grid;gap:3px;padding:9px 14px;background:#263b30ef;border:2px solid #8e8058;order:1}.chapter{order:2}.captain-status span{color:#d6dfbc}.case-toolbar{position:fixed;top:88px;left:50%;transform:translateX(-50%);display:flex;gap:9px;pointer-events:auto}.case-toolbar button{font:16px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;min-height:44px;padding:10px 14px;background:#304d3c;color:#fff0c5;border:2px solid #a7b68b}.hud:has(.case-toolbar) .toast{top:145px}@media(max-width:600px){.hud:has(.case-toolbar) .wordmark{display:none}.captain-status{order:0;max-width:190px}.case-toolbar{top:83px;gap:8px;width:calc(100vw - 24px)}.case-toolbar button{flex:1;min-width:0;padding:10px 8px}.hud:has(.case-toolbar) .location{top:145px}.hud:has(.case-toolbar) .toast{top:145px}}
 
 /* The first lazy case-screen import also has an immediate readable loading cue. */
-.case-loading{position:fixed;z-index:1000;left:50%;top:24px;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:16px;background:#263f31;color:#fff2c9;border:2px solid #f3d58c;font:16px/1.5 Courier New,monospace}
+.case-loading{position:fixed;z-index:1000;left:50%;top:24px;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:16px;background:#263f31;color:#fff2c9;border:2px solid #f3d58c;font:16px/1.5 system-ui,sans-serif}
 .captain-status{max-width:320px;min-width:0;overflow-wrap:anywhere}
 
 /* Nils's G7 readability pass: readable at actual play distance, without scaling the pixel world. */
@@ -35,4 +35,4 @@
 .chart-map button,.chart-map button span{max-width:200px}
 
 /* A distinct station glyph avoids adding another overlapping chart label. */
-.chart-station-marker{position:absolute;left:67.4%;top:71%;color:#ffe4a1;font:20px/1 Courier New,monospace;text-shadow:2px 2px #21382b;pointer-events:none}.chart-station-marker[hidden]{display:none}
+.chart-station-marker{position:absolute;left:67.4%;top:71%;color:#ffe4a1;font:20px/1 system-ui,sans-serif;text-shadow:2px 2px #21382b;pointer-events:none}.chart-station-marker[hidden]{display:none}

@@ -58,33 +58,33 @@ describe('responsive continuous explorer',()=>{
   it.each([NaN,Infinity,-1])('ignores invalid duration %s',delta=>{
     const {controller}=walker(),before=controller.player.position.clone();expect(controller.update(delta,true)).toBe(0);expect(controller.player.position.equals(before)).toBe(true);
   });
-  it('draws the explorer on the camera\'s whole-pixel grid, so it never wobbles against the ground',()=>{
+  it('draws the explorer exactly where it stands (smooth art: no pixel grid, no wobble against the ground)',()=>{
     const art=Object.fromEntries(Object.keys(artSizes).map(name=>[name,new THREE.MeshBasicMaterial()]));
     const character=createCharacter(art,{reducedMotion:true});character.group.position.set(.53,1,.0234);character.animate(1/60,WALK_SPEED);
-    expect(Number.isInteger(character.sprite.position.x*16)).toBe(true);expect(Number.isInteger(character.sprite.position.y*16)).toBe(true);
-    expect(character.sprite.position.x).toBeCloseTo(.5,10);
-    character.group.position.x+=.04;character.animate(1/60,WALK_SPEED);expect(character.sprite.position.x).toBeCloseTo(.5625,10);
+    expect(character.sprite.position.x).toBeCloseTo(.53,10);expect(character.sprite.position.y).toBeCloseTo(-.0234*.72,10);
+    character.group.position.x+=.04;character.animate(1/60,WALK_SPEED);expect(character.sprite.position.x).toBeCloseTo(.57,10);
     Object.values(art).forEach(material=>material.dispose());character.sprite.geometry.dispose();
   });
 });
-describe('continuous camera follow on the native pixel grid',()=>{
-  it('adds up tiny movements while the drawn camera stays on whole native pixels',()=>{
+describe('continuous camera follow',()=>{
+  it('adds up tiny movements smoothly (no pixel grid) and converges on the target',()=>{
     const view=createCamera({pointer:{wheel:0}});view.setPlace('home_islet',{x:0,z:0});view.start();view.update(1/60,{x:.02,z:0});
-    expect(view.camera.position.x).toBe(0);
-    for(let i=0;i<60;i++){view.update(1/60,{x:.2,z:0});expect(Number.isInteger(view.camera.position.x*16)).toBe(true);}
-    expect(view.camera.position.x).toBeCloseTo(.1875,10);
+    expect(view.camera.position.x).toBeGreaterThan(0);expect(view.camera.position.x).toBeLessThan(.02);
+    let previous=view.camera.position.x;
+    for(let i=0;i<60;i++){view.update(1/60,{x:.2,z:0});expect(view.camera.position.x).toBeGreaterThanOrEqual(previous);previous=view.camera.position.x;}
+    expect(view.camera.position.x).toBeCloseTo(.2,3);
   });
   it('follows frame independently while preserving orientation',()=>{
     const positions=[20,30,60,144].map(frames=>{const view=createCamera({pointer:{wheel:0}});view.setPlace('home_islet',{x:0,z:0});view.start();const q=view.camera.quaternion.clone();
       for(let i=0;i<frames;i++)view.update(1/frames,{x:3,z:0});expect(view.camera.quaternion.equals(q)).toBe(true);return view.camera.position.x;});
     for(const x of positions)expect(x).toBeCloseTo(positions[0],10);
   });
-  it('zooms in whole device-pixel steps and honors reduced motion',()=>{
-    const input={pointer:{wheel:-1000}},view=createCamera(input);view.camera.userData.pixelScale=2;view.start();
-    const seen=new Set();for(let i=0;i<60;i++){view.update(1/60,{x:0,z:0});input.pointer.wheel=0;seen.add(view.camera.zoom);}
-    expect([...seen].every(zoom=>Number.isInteger(zoom*2))).toBe(true);expect(seen.has(2)).toBe(true);
+  it('zooms smoothly up to 2, honors reduced motion and the battle zoom',()=>{
+    const input={pointer:{wheel:-1000}},view=createCamera(input);view.start();
+    const seen=[];for(let i=0;i<60;i++){view.update(1/60,{x:0,z:0});input.pointer.wheel=0;seen.push(view.camera.zoom);}
+    expect(seen.every((zoom,i)=>i===0||zoom>=seen[i-1])).toBe(true);expect(seen.at(-1)).toBeCloseTo(2,2);
     view.overview();expect(view.camera.zoom).toBe(1);input.pointer.wheel=-1000;view.start(true);view.update(1/60,{x:.1234,z:0});
-    expect(view.camera.position.x).toBe(.125);expect(view.camera.zoom).toBe(2);
-    view.camera.userData.battleZoom=.59;view.update(1/60,{x:0,z:0});expect(view.camera.zoom).toBe(.5);
+    expect(view.camera.position.x).toBeCloseTo(.1234,10);expect(view.camera.zoom).toBe(2);
+    view.camera.userData.battleZoom=.59;view.update(1/60,{x:0,z:0});expect(view.camera.zoom).toBe(.59);
   });
 });

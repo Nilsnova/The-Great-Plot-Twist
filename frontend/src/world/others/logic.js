@@ -4,11 +4,19 @@ export const PRESENCE_LIMITS=Object.freeze({visible:8,interpolationMs:200,extrap
 export const crewSkinByKit=Object.freeze({true_keeper:'navigator',witness:'cook',informant:'salvager',stranger:'deckhand'});
 const validArchetypes=new Set(['navigator','cook','salvager','deckhand']);
 
+// Ten captain colours (src/art/people.js): a peer's own colour (1-10) when the room hands one out,
+// else a stable pick from its id, so up to 10 players on one island can tell each other apart.
+export function captainVariant(peer){
+  const own=Number(peer?.colour);if(Number.isInteger(own)&&own>=1&&own<=10)return own;
+  let hash=0;for(const char of String(peer?.id??''))hash=(hash*31+char.charCodeAt(0))|0;
+  return (hash>>>0)%10+1;
+}
 export function resolveActorAsset(peer,{facing='front',moving=false,frame=1,hasAsset=()=>false}={}){
   const archetype=validArchetypes.has(peer?.archetype)?peer.archetype:crewSkinByKit[peer?.kit?.id];
   const view=facing==='back'?'-back':facing==='left'||facing==='right'?'-side':'';
   const walk=moving?`-walk-${frame}`:'';
-  const choices=[archetype?`crew-${archetype}${view}${walk}`:null,`explorer${view}${walk}`,`explorer${view}`,'explorer'].filter(Boolean);
+  const captain=`captain-${captainVariant(peer)}`;
+  const choices=[`${captain}${view}${walk}`,`${captain}${view}`,archetype?`crew-${archetype}${view}${walk}`:null,`explorer${view}${walk}`,`explorer${view}`,'explorer'].filter(Boolean);
   return choices.find(hasAsset)??'explorer';
 }
 

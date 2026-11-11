@@ -1,15 +1,19 @@
-// Protect native sprite files, one pixel density and integer display magnification.
+// Protect the native sprite files (kept for the pixel tools and the places not yet redrawn), the shared
+// logical geometry the cartoon art reuses, and the bounded framebuffer.
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { pixelArt, pixelArtIds, snapPixel } from '../src/pixel/catalog.js';
 import { artSizes, loadArt, placeArt } from '../src/world/art.js';
+import { islandFrame } from '../src/art/registry.js';
 import { pixelViewport } from '../src/pixel/display.js';
 
 describe('active pixel artwork', () => {
   it('registers every native PNG once and agrees with each file header', () => {
     expect([...pixelArt.map(item => item.file), 'ground.png'].sort()).toEqual(readdirSync('public/pixel').filter(name => name.endsWith('.png')).sort());
     expect(new Set(pixelArt.map(item => item.id)).size).toBe(pixelArt.length);
-    expect(Object.keys(artSizes).sort()).toEqual(pixelArt.map(item => item.id).sort());
+    // Every catalogued sprite keeps its box; the extra names are cartoon-only frames (ten captains, boarders…).
+    expect(pixelArt.every(item => Object.hasOwn(artSizes, item.id))).toBe(true);
+    expect(Object.keys(artSizes).filter(id => !Object.hasOwn(Object.fromEntries(pixelArt.map(item => [item.id, 1])), id)).every(id => islandFrame(id))).toBe(true);
     for (const item of pixelArt) {
       const bytes = readFileSync(`public/pixel/${item.file}`);
       expect(bytes.subarray(1, 4).toString()).toBe('PNG');

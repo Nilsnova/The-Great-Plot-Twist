@@ -1,6 +1,4 @@
-// The sea: one code-drawn pixel shader under every place. Flat wave bands in three teal tones,
-// two clean shallow bands and crisp 1-px foam lines that follow the actual coast, sparse sun glints, rain
-// rings and storm whitecaps, all quantised to the native pixel grid. The coast comes from the
+// The sea: one code-drawn shader under every place (clean cartoon water, see the fragment below). The coast comes from the
 // place's own backdrop: its alpha is turned once into a small distance field (water.setCoast).
 // The distance field and clock are shared with the beams (seaUniforms), so a sweeping light can
 // catch the wave crests it crosses. Low quality draws no glints, rings or moving foam.
@@ -15,8 +13,8 @@ const fieldCache = new Map();
 // Shared by water and beams: one coast texture per app, refilled on every place change.
 const coastTexture = new THREE.DataTexture(new Uint8Array(FIELD_W * FIELD_H).fill(255), FIELD_W, FIELD_H,
   THREE.RedFormat, THREE.UnsignedByteType);
-// Linear on purpose: this is a distance field, not art. Interpolated distances give smooth one-pixel
-// foam and shallow contours; every fragment still snaps to the native pixel before it samples.
+// Linear on purpose: this is a distance field, not art. Interpolated distances give smooth foam lines
+// and shallow contours.
 coastTexture.magFilter = THREE.LinearFilter; coastTexture.minFilter = THREE.LinearFilter;
 coastTexture.generateMipmaps = false; coastTexture.needsUpdate = true;
 export const seaUniforms = {
@@ -75,53 +73,69 @@ function findBackdrop(group) {
   return found;
 }
 
+// The clean cartoon sea (GAME-V3.md §7): a smooth depth gradient from turquoise shallows to deep
+// blue, soft light streaks drifting with the swell, a white foam edge and a second foam line that
+// runs up and back along the actual coast, a few soft glints, rain rings and whitecaps. Every edge is
+// antialiased with fwidth, so the sea stays clean at any resolution and zoom.
 const fragment = /* glsl */`
 ${pixelGlsl}${seaGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
 varying vec2 vWorld;
+float band(float v,float edge){float w=fwidth(v)*.75+1e-4;return smoothstep(edge-w,edge+w,v);}
 void main(){
-  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;float t=uSeaTime;
-  float d=coastDistance(p);
-  if(d < .5)discard; // land: the place backdrop covers it, so skip the work
-  // Wave bands drift towards the shore; wind makes them quicker and sharper. Flat bands with crisp
-  // edges (no dithering), so the sea reads as clean shapes.
-  float swell=sin(p.y*1.9+sin(p.x*.31+t*.35)*1.3-t*(.55+uWind*1.3));
-  float chop=sin(p.y*4.7-p.x*.62+t*(1.0+uWind*1.6))*sin(p.x*.23+p.y*.4-t*.3);
-  float shade=clamp(.5+swell*.3+chop*(.08+uWind*.14),0.0,1.0);
-  vec3 colour=shade<.3?uDeep:shade<.74?uMid:uLight;
-  // Wave strokes: crisp one-pixel crest dashes of steady length, the classic pixel-art sea.
-  float lineY=p.y*1.15+sin(p.x*.45+t*.6)*.2-t*.12*(1.0+uWind);
-  float row=floor(lineY),period=11.0+mod(row,3.0)*4.0,dash=mod(px.x+row*13.0,period);
-  if(uDetail>.5&&d>9.0&&fract(lineY)<.065&&dash< period*.45&&pxHash(vec2(floor((px.x+row*13.0)/period),row))>.35)colour=uStroke;
-  // Shallows: two flat bands that follow the coast, their edges rippling a pixel or two.
-  float ripple=sin(p.x*1.3+p.y*.7+t*.5)*1.2;
-  if(d<22.0+ripple*2.0)colour=uShallow;
-  if(d<9.0+ripple)colour=uShallow2;
-  // Surf: a fixed foam edge and one moving one-pixel foam line that runs up and back.
-  float run=.5+.5*sin(t*(.7+uWind*.5)+p.x*.21+p.y*.37);
-  float surf=3.0+run*(5.0+uWind*4.0);
-  if(uDetail>.5&&abs(d-surf)<.6&&mod(floor(px.x/6.0)+floor(px.y/3.0),5.0)>0.0)colour=run>.55?uFoam:uStroke;
-  if(d<1.6)colour=uFoam;
+  vec2 p=vWorld;float t=uSeaTime;
+  float d=coastDistance(p)/16.0; // world units to the nearest land (16 = open sea)
+  if(d < .02)discard; // land: the place's ground covers it
+  // Depth: shallows hug the coast, the open sea deepens with a slow large-scale variation.
+  float swell=sin(p.y*.55+sin(p.x*.13+t*.18)*1.4-t*(.35+uWind*.6))*.5+.5;
+  float far=pxNoise(p*.045+vec2(t*.01,0.0));
+  vec3 colour=mix(uMid,uDeep,smoothstep(.35,.9,far)*.85);
+  colour=mix(colour,uLight,swell*.22);
+  float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
+  colour=mix(colour,uShallow,shallow*.85);
+  colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9);
+  // Soft light streaks along the swell, broken into dashes by noise, drifting with the wind.
+  if(uDetail>.5){
+    float lineY=p.y*1.25+sin(p.x*.32+t*.45)*.55-t*(.18+uWind*.25);
+    float crest=abs(fract(lineY)-.5);
+    float dash=smoothstep(.45,.75,pxNoise(vec2(p.x*.22+floor(lineY)*7.3,floor(lineY)*1.7)+vec2(t*.05,0.0)));
+    float streak=(1.0-band(crest,.06))*dash*smoothstep(1.2,3.0,d);
+    colour=mix(colour,uStroke,streak*.55);
+  }
+  // Surf: a solid foam edge and a second foam line that runs up and back.
+  float run=.5+.5*sin(t*(.8+uWind*.5)+p.x*.21+p.y*.37);
+  float edge=.28+sin(p.x*2.1+p.y*1.3+t*1.2)*.05;
+  float surf=.55+run*(.6+uWind*.5);
+  if(uDetail>.5)colour=mix(colour,uFoam,(1.0-band(abs(d-surf),.07))*.75*smoothstep(.0,.25,run));
+  colour=mix(colour,uFoam,1.0-band(d,edge));
   // Whitecaps on crests once the wind picks up.
-  vec2 capCell=floor(px/vec2(9.0,4.0));float cap=pxHash(capCell+vec2(floor(t*.7),0.0));
-  if(uDetail>.5&&d>10.0&&uWind>.45&&cap>1.0-(uWind-.45)*.22&&shade>.6&&mod(px.y,4.0)==1.0&&mod(px.x+capCell.y,9.0)<4.0)colour=uFoam;
-  // Glints: a few short sparkling dashes that blink on and off (sparse, so the sea stays calm).
-  vec2 cell=floor(px/vec2(14.0,6.0)),local=px-cell*vec2(14.0,6.0);float h=pxHash(cell);
-  float blink=fract(h*13.7+t*(.22+h*.25));
-  if(uDetail>.5&&d>12.0&&blink<.03&&shade>.55&&local.y==1.0&&local.x>=2.0&&local.x<=(blink<.015?4.0:3.0))colour=uGlint;
+  if(uDetail>.5&&uWind>.45){
+    vec2 cell=floor(p/vec2(3.4,1.6));float cap=pxHash(cell+vec2(floor(t*.5),0.0));
+    vec2 local=(p-cell*vec2(3.4,1.6)-vec2(1.7,.8))*vec2(1.0,2.2);
+    float on=step(1.0-(uWind-.45)*.35,cap)*smoothstep(3.0,5.0,d);
+    colour=mix(colour,uFoam,on*(1.0-band(length(local),.35))*.85);
+  }
+  // Glints: soft four-point sparkles that blink here and there.
+  if(uDetail>.5){
+    vec2 cell=floor(p/vec2(4.2,2.4));float h=pxHash(cell);vec2 local=p-(cell+vec2(.3+h*.4,.3+fract(h*7.0)*.4))*vec2(4.2,2.4);
+    float blink=fract(h*13.7+t*(.18+h*.2)),life=smoothstep(.0,.04,blink)*(1.0-smoothstep(.04,.1,blink));
+    float star=max(1.0-band(abs(local.x)*.6+abs(local.y)*4.0,.12),1.0-band(abs(local.x)*4.0+abs(local.y)*1.4,.12));
+    colour=mix(colour,uGlint,star*life*step(.55,swell)*smoothstep(3.0,4.0,d));
+  }
   // Rain: small rings open on the water and fade.
-  if(uDetail>.5&&uRain>.01&&d>2.0){
-    vec2 rc=floor(px/vec2(14.0,9.0));float rt=t*1.6+pxHash(rc)*9.0,cycle=floor(rt),age=fract(rt);
-    vec2 centre=rc*vec2(14.0,9.0)+floor(vec2(pxHash(rc+cycle),pxHash(rc-cycle))*vec2(8.0,4.0))+vec2(3.0,2.0);
-    vec2 q=(px-centre)*vec2(1.0,1.7);float r=length(q),radius=1.0+age*4.5;
-    if(pxHash(rc+cycle*1.7)< uRain*.24&&abs(r-radius)<.55&&age<.6)colour=age<.3?uFoam:uShallow2;
+  if(uDetail>.5&&uRain>.01&&d>.3){
+    vec2 rc=floor(p/vec2(.9,.56));float rt=t*1.6+pxHash(rc)*9.0,cycle=floor(rt),age=fract(rt);
+    vec2 centre=(rc+vec2(.3,.3)+vec2(pxHash(rc+cycle),pxHash(rc-cycle))*.4)*vec2(.9,.56);
+    float r=length((p-centre)*vec2(1.0,1.7)),radius=.05+age*.3;
+    float ring=(1.0-band(abs(r-radius),.025))*step(pxHash(rc+cycle*1.7),uRain*.24)*(1.0-smoothstep(.2,.6,age));
+    colour=mix(colour,uFoam,ring*.8);
   }
   gl_FragColor=vec4(colour,1.0);
   ${toScreen}
 }`;
 
 export function createWater(scene) {
-  const colours = { uDeep: '#2c5f62', uMid: '#3d7371', uLight: '#4b8378', uShallow: '#5a9283', uShallow2: '#72a68f', uFoam: '#d8e8d2', uGlint: '#f1f7ea', uStroke: '#6aa08f' };
+  const colours = { uDeep: '#1b6aa3', uMid: '#2689bb', uLight: '#3aa6cf', uShallow: '#3fbfc9', uShallow2: '#7fe3d4', uFoam: '#ffffff', uGlint: '#ffffff', uStroke: '#8fdcf0' };
   const uniforms = { ...seaUniforms };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,

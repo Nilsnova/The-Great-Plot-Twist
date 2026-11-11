@@ -13,7 +13,7 @@
 .island-qr{justify-self:center;width:min(205px,60vw);height:auto;image-rendering:pixelated;border:3px solid var(--u-brass);background:#fff}
 .island-url{font-size:var(--u-sm);word-break:break-all;color:var(--u-mute);text-align:center}
 /* The countdown: a parchment slip in the notched brass edge, like the HUD's arrival banner. */
-.island-banner,.island-visit{box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
+.island-banner,.island-visit{box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
 .island-banner{position:fixed;left:50%;top:150px;transform:translateX(-50%);z-index:30;display:grid;justify-items:center;gap:2px;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;
   padding:10px 28px 12px;background:var(--u-parch);color:var(--u-pink);text-align:center;pointer-events:none}
 .island-banner-eyebrow{font:700 14px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown)}
@@ -33,7 +33,7 @@
 .island-stats,.island-owner{color:var(--u-mute);font-size:var(--u-sm)}
 .island-owner{color:var(--u-gold);font-weight:700}
 .island-choices{display:grid;gap:var(--u-2)}
-.island-choice{display:grid;gap:2px;text-align:left;padding:10px 14px;min-height:56px;font:16px/1.35 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid var(--u-brass);box-shadow:inset 0 -3px #0c272c,0 3px var(--u-deep);cursor:pointer}
+.island-choice{display:grid;gap:2px;text-align:left;padding:10px 14px;min-height:56px;font:16px/1.35 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid var(--u-brass);box-shadow:var(--u-bevel-quiet);border-radius:var(--u-radius-xs);cursor:pointer}
 .island-choice:hover:not(:disabled){background:var(--u-raise)}
 .island-choice:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
 .island-choice:disabled{cursor:default;opacity:.6;border-color:var(--u-line)}
@@ -67,3 +67,4 @@
 .island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
 .island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
 @media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}
+.island-choice,.island-crew-row,.island-code,.island-hint,.island-tag,.island-next,.island-share,.island-message,.island-qr,.island-level,.island-cost{border-radius:var(--u-radius-xs)}

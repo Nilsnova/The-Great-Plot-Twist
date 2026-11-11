@@ -27,7 +27,7 @@ ${pixelGlsl}
 uniform vec3 uColour;uniform float uStrength,uTime;
 varying vec2 vWorld;varying vec4 vPool;varying float vMin;
 void main(){
-  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0,q=(p-vPool.xy)/vPool.z;
+  vec2 px=(vWorld*16.0),p=(px+.5)/16.0,q=(p-vPool.xy)/vPool.z;
   if(vPool.w<.5)q.y/=.62;
   float r=length(q);if(r>1.0)discard;
   float flicker=1.0+.035*sin(uTime*6.3+vPool.x*3.1)+.02*sin(uTime*11.7+vPool.y*5.3);

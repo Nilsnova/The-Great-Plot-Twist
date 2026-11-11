@@ -1,7 +1,6 @@
 // A restrained selection of useful coastal art is placed in the active intro island.
 import * as THREE from 'three';
 import { placeArt } from './art.js';
-import { snapPixel } from '../pixel/catalog.js';
 
 export const decorationPlacements = [
   { id: 'crate', x: -8.9, z: 17.3, collider: { width: 0.8, depth: 0.8 } },
@@ -21,7 +20,7 @@ export function createDecorations(art) {
   }));
   const buoyBase = sprites.buoy.position.clone();
   return { group, colliders, update(time, weather) {
-    sprites.buoy.position.y = snapPixel(buoyBase.y + Math.sin(time * 1.1) * (0.035 + weather.wind * 0.1));
+    sprites.buoy.position.y = (buoyBase.y + Math.sin(time * 1.1) * (0.035 + weather.wind * 0.1));
     sprites.buoy.rotation.z = 0;
   } };
 }

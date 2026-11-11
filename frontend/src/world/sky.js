@@ -11,7 +11,7 @@ ${pixelGlsl}
 uniform vec3 uNightColour,uDuskColour;uniform float uNight,uDusk,uCloud;
 varying vec2 vWorld;varying vec2 vScreen;
 void main(){
-  vec2 px=floor(vWorld*16.0);
+  vec2 px=(vWorld*16.0);
   vec3 colour=mix(uNightColour,uDuskColour,uDusk*(1.0-uNight*.7));
   float alpha=uNight*.5+uDusk*.16+uCloud*.13;
   // Night vignette: only the far corners fall away, in two flat steps (no dithered rings).
@@ -25,7 +25,7 @@ ${pixelGlsl}
 uniform vec3 uFogDay,uFogNight;uniform float uFog,uNight,uTime,uWind;
 varying vec2 vWorld;
 void main(){
-  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;
+  vec2 px=(vWorld*16.0),p=(px+.5)/16.0;
   vec2 drift=vec2(uTime*(.18+uWind*.7),uTime*.04);
   float n=pxNoise((p+drift)*vec2(.08,.13))*.75+pxNoise((p-drift*.6)*vec2(.19,.27))*.25;
   // A flat haze plus a few broad banks in two flat densities with clean edges.

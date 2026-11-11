@@ -96,7 +96,7 @@ const defaultCutscene = (world, reducedMotion) => async id => {
 };
 const defaultRenderer = async options => {
   const module = await import('./render.js');
-  atlasPromise ??= module.loadAtlas().catch(error => { atlasPromise = null; throw error; });
+  atlasPromise ??= module.loadAtlas({ quality: options.quality?.() === 'low' ? 'low' : 'high' }).catch(error => { atlasPromise = null; throw error; });
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);

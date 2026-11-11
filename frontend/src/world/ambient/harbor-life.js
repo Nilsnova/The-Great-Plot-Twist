@@ -1,6 +1,5 @@
 // Small, pooled ambient details for the home islet and Saltreach Harbor.
 import * as THREE from 'three';
-import { snapPixel } from '../../pixel/catalog.js';
 
 const reduced = value => typeof value === 'function' ? value() : !!value;
 const worldY = z => -z * .72;
@@ -31,7 +30,7 @@ function litWindow(group) {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(.48, .38), new THREE.MeshBasicMaterial({
     color: '#f1c76e', transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false,
   }));
-  mesh.position.set(snapPixel(-7.45), snapPixel(worldY(6) + 1.85), .02); mesh.renderOrder = 111; group.add(mesh);
+  mesh.position.set((-7.45), (worldY(6) + 1.85), .02); mesh.renderOrder = 111; group.add(mesh);
   return mesh;
 }
 
@@ -52,15 +51,15 @@ export function createHarborLife({ place, art, ctx } = {}) {
     // Fixed particles drift as one mesh. The geometry is allocated once with the place.
     smoke = points([-.08, 0, 0, .05, .28, 0, -.04, .58, 0, .07, .9, 0], '#b5b7a7', 1.2, .22);
     smoke.userData.ambientLife = 'cabin-smoke';
-    smoke.position.set(snapPixel(-8.15), snapPixel(worldY(6) + 5.1), .03); smoke.renderOrder = 112; group.add(smoke);
+    smoke.position.set((-8.15), (worldY(6) + 5.1), .03); smoke.renderOrder = 112; group.add(smoke);
     windowLight = litWindow(group);
     windowLight.userData.ambientLife = 'cabin-window';
     greenhouseBirds = birds('#d7d1b7', .75);
-    greenhouseBirds.position.set(7, snapPixel(worldY(-7) + 4.55), .03);
+    greenhouseBirds.position.set(7, (worldY(-7) + 4.55), .03);
     greenhouseBirds.userData.ambientLife = 'greenhouse-birds';
     greenhouseBirds.renderOrder = 114; greenhouseBirds.visible = built.has('plot_4'); group.add(greenhouseBirds);
   } else {
-    harborGulls = birds('#e5dfca', .7); harborGulls.position.set(snapPixel(-1.5), snapPixel(worldY(16.5)), .03);
+    harborGulls = birds('#e5dfca', .7); harborGulls.position.set((-1.5), (worldY(16.5)), .03);
     harborGulls.userData.ambientLife = 'harbor-gulls';
     harborGulls.renderOrder = 126; group.add(harborGulls);
   }
@@ -74,12 +73,12 @@ export function createHarborLife({ place, art, ctx } = {}) {
         smoke.visible = built.has('plot_1');
         if (!still) {
           const drift = (elapsed % 2.8) * .22;
-          smoke.position.y = snapPixel(worldY(6) + 5.1 + drift);
+          smoke.position.y = (worldY(6) + 5.1 + drift);
         }
       }
       if (greenhouseBirds) {
         greenhouseBirds.visible = built.has('plot_4');
-        if (!still && greenhouseBirds.visible) greenhouseBirds.position.x = snapPixel(7 + Math.sin(elapsed * .7) * .18);
+        if (!still && greenhouseBirds.visible) greenhouseBirds.position.x = (7 + Math.sin(elapsed * .7) * .18);
       }
       if (windowLight) {
         const night = state.night ?? 0;
@@ -87,7 +86,7 @@ export function createHarborLife({ place, art, ctx } = {}) {
       }
       if (harborGulls) {
         harborGulls.visible = (state.weather?.fog ?? 0) <= .65;
-        if (!still) harborGulls.position.y = snapPixel(worldY(16.5) + Math.sin(elapsed * .45) * .12);
+        if (!still) harborGulls.position.y = (worldY(16.5) + Math.sin(elapsed * .45) * .12);
       }
     },
     dispose() { if (disposed) return; disposed = true; unsubscribe?.(); },
