@@ -93,6 +93,9 @@ export const GUARD_WINDOW_MS = 10000; // the guard averages the traffic over thi
 export const GUARD_EVERY_MS = 1000; // and looks once in this time
 export const SLOW_MS = 5 * 60 * 1000; // slow mode lasts this long
 export const CALM_MS = 60 * 1000; // after this long joined, a room's failed tries are forgotten
+// A room refused as "Unauthorized" is often only early (the seat or the token is not there yet): it is
+// tried again after these waits (15 s in all), then given up until the owner opens it again.
+export const REFUSED_RETRY_MS = [2000, 5000, 8000];
 export const NAME_BATCH = 50; // names are read from profiles this many ids at a time
 export const NAME_RETRY_MS = 30000; // a failed name read is tried again after this long
 const RETRY_BASE_MS = 1000;

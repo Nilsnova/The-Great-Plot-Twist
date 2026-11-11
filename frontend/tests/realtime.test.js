@@ -32,6 +32,13 @@ const settle = (ms = 0) => vi.advanceTimersByTimeAsync(ms);
 const ofType = (ctx, type) => ctx.events.filter(event => event.type === type);
 const states = ctx => ofType(ctx, 'live_status_changed').map(event => event.state);
 const lastView = ctx => ofType(ctx, 'live_presence_changed').at(-1);
+// Refuse a room as "Unauthorized" on its first join and on each of its three tries after (2, 5 and 8 s).
+async function refuseEveryTry(ctx, topic, error) {
+  for (let knock = 0; knock < 4; knock += 1) {
+    ctx.client.open(topic).status('CHANNEL_ERROR', error);
+    await settle(10000);
+  }
+}
 
 // Start the module with fakes. `dice.value` is what random() answers: 0 means "do not wait".
 function start(overrides = {}) {
@@ -519,11 +526,12 @@ describe('the world room and the places', () => {
     const world = await connect(ctx);
     const harbor = ctx.client.open(HARBOR_ROOM_1);
 
-    harbor.status('CHANNEL_ERROR', new Error('Unauthorized: You do not have permissions to read from this Channel topic'));
+    expect(harbor).toBeDefined();
+    await refuseEveryTry(ctx, HARBOR_ROOM_1, new Error('Unauthorized: You do not have permissions to read from this Channel topic'));
     await settle(600000);
 
     expect(world.tracks).toEqual([{ v: 1, place: HARBOR, room: null, kit: null }]);
-    expect(ctx.client.all(HARBOR_ROOM_1)).toHaveLength(1); // no second knock
+    expect(ctx.client.all(HARBOR_ROOM_1)).toHaveLength(4); // three more knocks, then no more
     expect(states(ctx).at(-1)).toBe('live'); // the world room itself is fine
   });
 });
@@ -1270,9 +1278,9 @@ describe('the crew room', () => {
     const ctx = start({ crew: { id: CREW_ID, memberIds: [ME] } });
     ctx.live.setPlace(null);
     await connect(ctx);
-    ctx.client.open(CREW_TOPIC).status('CHANNEL_ERROR', new Error(`Unauthorized: You do not have permissions to read from this Channel topic: ${CREW_TOPIC}`));
+    await refuseEveryTry(ctx, CREW_TOPIC, new Error(`Unauthorized: You do not have permissions to read from this Channel topic: ${CREW_TOPIC}`));
     await settle(600000);
-    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(1); // it does not knock again by itself
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(4); // after three more tries it does not knock again by itself
 
     ctx.live.setCrew({ id: CREW_ID, memberIds: [ME, playerId(2)] }); // the seat is there now
     await settle();
@@ -1280,7 +1288,7 @@ describe('the crew room', () => {
     again.status('SUBSCRIBED');
     again.broadcast('crew_event', { v: 1, kind: 'crew_changed', data: { version: 2 } });
 
-    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(2);
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(5);
     expect(ofType(ctx, 'live_crew_updated')).toEqual([{ type: 'live_crew_updated', kind: 'crew_changed', data: { version: 2 } }]);
   });
 
@@ -1343,16 +1351,49 @@ describe('when a room fails', () => {
     const world = await connect(ctx);
     const refusal = new Error(`Unauthorized: You do not have permissions to read from this Channel topic: ${CREW_TOPIC}`);
 
-    ctx.client.open(CREW_TOPIC).status('CHANNEL_ERROR', refusal);
+    await refuseEveryTry(ctx, CREW_TOPIC, refusal);
     await settle(600000);
-    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(1); // it never knocks again
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(4); // three more tries, then it never knocks again
     expect(states(ctx).at(-1)).toBe('live'); // and the rest goes on
 
     world.status('CHANNEL_ERROR', new Error('Unauthorized: You do not have permissions to read from this Channel topic: live:world'));
     expect(states(ctx).at(-1)).toBe('offline');
+    await settle(10000);
+    for (let knock = 0; knock < 3; knock += 1) {
+      ctx.client.open('live:world').status('CHANNEL_ERROR', new Error('Unauthorized: live:world'));
+      await settle(10000);
+    }
     await settle(600000);
-    expect(ctx.client.all('live:world')).toHaveLength(1);
+    expect(ctx.client.all('live:world')).toHaveLength(4);
     expect(states(ctx).at(-1)).toBe('offline');
+    expect(warn.mock.calls.map(call => String(call[0])).filter(line => /refused/.test(line))).toHaveLength(8); // one quiet line a refusal
+  });
+
+  it('tries a refused room again after 2, 5 and 8 seconds and joins it when the rules allow it by then', async () => {
+    const ctx = start({ crew: { id: CREW_ID, memberIds: [ME] } });
+    ctx.live.setPlace(null);
+    await connect(ctx);
+    const refusal = new Error(`Unauthorized: You do not have permissions to read from this Channel topic: ${CREW_TOPIC}`);
+
+    ctx.client.open(CREW_TOPIC).status('CHANNEL_ERROR', refusal);
+    await settle(1999);
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(1); // not before 2 seconds
+    await settle(1);
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(2);
+    ctx.client.open(CREW_TOPIC).status('CHANNEL_ERROR', refusal);
+    await settle(4999);
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(2); // the second wait is 5 seconds
+    await settle(1);
+    const third = ctx.client.open(CREW_TOPIC);
+    third.status('SUBSCRIBED'); // the seat is there now
+    third.broadcast('crew_event', { v: 1, kind: 'crew_changed', data: { version: 3 } });
+    await settle(600000);
+
+    expect(ctx.client.all(CREW_TOPIC)).toHaveLength(3);
+    expect(ofType(ctx, 'live_crew_updated')).toEqual([{ type: 'live_crew_updated', kind: 'crew_changed', data: { version: 3 } }]);
+    const lines = warn.mock.calls.map(call => String(call[0])).filter(line => /refused/.test(line));
+    expect(lines).toEqual(['Live room crew refused, trying again in 2 s (1 of 3).', 'Live room crew refused, trying again in 5 s (2 of 3).']);
+    expect(JSON.stringify(lines)).not.toContain(CREW_ID); // the warning names no room id
   });
 
   it('ignores what a room it has already removed goes on saying', async () => {
