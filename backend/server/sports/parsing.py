@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from server.settings import FOOTBALL_COMPETITION_CODES
 from server.sports.models import Match, aware
 
 FOOTBALL_STATUSES = {
@@ -10,6 +11,13 @@ FOOTBALL_STATUSES = {
     "PAUSED": "playing", "FINISHED": "finished", "POSTPONED": "postponed",
     "CANCELLED": "cancelled", "SUSPENDED": "suspended",
 }
+# A knockout game that goes beyond 90 minutes. Picks settle on the 90-minute score, which v4 sends
+# as score.regularTime; its fullTime adds extra time and, after a shoot-out, the penalties.
+BEYOND_NINETY = ("EXTRA_TIME", "PENALTY_SHOOTOUT")
+
+
+class UnreadableResult(ValueError):
+    """A football row whose 90-minute score cannot be read. Never settled; the board drops it."""
 
 
 def object_value(value: Any) -> dict:
@@ -33,26 +41,41 @@ def timestamp(value: Any) -> datetime:
 
 
 def football_match(payload: Any, requested_id: int) -> Match:
-    """football-data.org v4 /matches/{id}; only league games with regular-time scores."""
+    """football-data.org v4 match; free-plan competitions, settled on the 90-minute result."""
     data = object_value(payload)
     if positive_id(data.get("id")) != requested_id:
         raise ValueError("The sports provider returned a different match.")
     competition = object_value(data.get("competition"))
-    if competition.get("type") != "LEAGUE":
-        raise ValueError("Only football league matches are supported.")
+    if competition.get("code") not in FOOTBALL_COMPETITION_CODES:
+        raise ValueError("Only free-plan football competitions are supported.")
     status = FOOTBALL_STATUSES.get(data.get("status"))
     if status is None:
         raise ValueError("Unsupported football status; no settlement is safe.")
-    score = object_value(data.get("score"))
-    if status == "finished" and score.get("duration") != "REGULAR":
-        raise ValueError("Only football regular-time results are supported.")
-    full_time = object_value(score.get("fullTime"))
+    home, away = ninety_minutes(object_value(data.get("score")), status)
     return Match(
         f"fd-{requested_id}", "football", competition.get("name"),
         object_value(data.get("homeTeam")).get("name"),
         object_value(data.get("awayTeam")).get("name"),
-        timestamp(data.get("utcDate")), status, full_time.get("home"), full_time.get("away"),
+        timestamp(data.get("utcDate")), status, home, away,
     )
+
+
+def ninety_minutes(score: dict, status: str) -> tuple[Any, Any]:
+    """The score after 90 minutes (plus stoppage time), the only score a pick settles on."""
+    duration = score.get("duration")
+    full_time = object_value(score.get("fullTime"))
+    if duration in BEYOND_NINETY:
+        regular = score.get("regularTime")
+        if not isinstance(regular, dict):
+            raise UnreadableResult("A game beyond 90 minutes needs its 90-minute score.")
+        for side in ("home", "away"):
+            part, total = regular.get(side), full_time.get(side)
+            if type(part) is not int or (type(total) is int and part > total):
+                raise UnreadableResult("The 90-minute score does not fit the final score.")
+        return regular["home"], regular["away"]
+    if status == "finished" and duration != "REGULAR":
+        raise UnreadableResult("Only football results with a known duration can settle.")
+    return full_time.get("home"), full_time.get("away")
 
 
 def basketball_match(payload: Any, requested_id: int) -> Match:

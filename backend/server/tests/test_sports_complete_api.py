@@ -52,7 +52,7 @@ def test_actual_sports_api_stakes_and_verified_results_pay_exactly_once(status, 
     def provider(request):
         seen.append(request)
         return httpx.Response(
-            200, json={"matches": [row]} if "competitions" in request.url.path else row
+            200, json={"matches": [row]} if request.url.path == "/v4/matches" else row
         )
 
     app.state.sports = sports_from_settings(settings, transport=httpx.MockTransport(provider))

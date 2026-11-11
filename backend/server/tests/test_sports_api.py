@@ -110,7 +110,7 @@ def make_client(*, enabled=True, final=False, unavailable=False, database=None):
         if unavailable:
             return httpx.Response(503)
         return httpx.Response(
-            200, json={"matches": [row]} if "competitions" in request.url.path else row
+            200, json={"matches": [row]} if request.url.path == "/v4/matches" else row
         )
 
     source = SportsSource(settings, clock=timer, transport=httpx.MockTransport(response))

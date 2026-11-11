@@ -17,7 +17,7 @@ def football_answer():
     # Synthetic schema fixture, not a captured provider response or a real fixture id.
     return {
         "id": 101, "utcDate": "2023-08-11T19:00:00Z", "status": "FINISHED",
-        "competition": {"name": "Test league", "type": "LEAGUE"},
+        "competition": {"name": "Test league", "code": "PL", "type": "LEAGUE"},
         "homeTeam": {"name": "Home"}, "awayTeam": {"name": "Away"},
         "score": {"duration": "REGULAR", "fullTime": {"home": 0, "away": 3}},
     }
@@ -96,8 +96,14 @@ def test_timeout_propagates_without_a_result_or_retry_storm():
 @pytest.mark.parametrize("change", [
     {"id": 999}, {"utcDate": "2023-08-11T19:00:00"}, {"status": "AWARDED"},
     {"competition": {"name": "Cup", "type": "CUP"}},
+    {"competition": {"name": "Paid plan cup", "code": "FAC", "type": "CUP"}},
     {"score": {"duration": "EXTRA_TIME", "fullTime": {"home": 2, "away": 1}}},
     {"score": {"duration": "REGULAR", "fullTime": {"home": True, "away": 1}}},
+    {"score": {"fullTime": {"home": 2, "away": 1}}},
+    {"score": {"duration": "PENALTY_SHOOTOUT", "fullTime": {"home": 5, "away": 4},
+               "regularTime": {"home": None, "away": 1}}},
+    {"score": {"duration": "EXTRA_TIME", "fullTime": {"home": 2, "away": 1},
+               "regularTime": {"home": 3, "away": 1}}},
 ])
 def test_unsafe_or_mismatched_football_answers_never_settle(change):
     answer = deepcopy(football_answer())
@@ -200,3 +206,51 @@ def test_nba_overtime_final_counts_as_the_winner_of_the_game():
         lambda _request: httpx.Response(200, json=answer)
     ))
     assert outcome(asyncio.run(provider.get_match(102))) == "home"
+
+
+def knockout(duration, full_time, regular_time, extra_time=None, penalties=None):
+    # Synthetic v4 score of a Champions League knockout game that went beyond 90 minutes.
+    answer = football_answer()
+    answer["competition"] = {"name": "UEFA Champions League", "code": "CL", "type": "CUP"}
+    answer["stage"] = "LAST_16"
+    answer["score"] = {
+        "winner": "HOME_TEAM", "duration": duration, "fullTime": full_time,
+        "regularTime": regular_time, "extraTime": extra_time or {"home": 0, "away": 0},
+    }
+    if penalties is not None:
+        answer["score"]["penalties"] = penalties
+    return answer
+
+
+@pytest.mark.parametrize("answer,expected", [
+    # 1-1 after 90 minutes, 2-1 after extra time: the 90-minute draw is the result.
+    (knockout("EXTRA_TIME", {"home": 2, "away": 1}, {"home": 1, "away": 1},
+              {"home": 1, "away": 0}), "draw"),
+    # 0-1 after 90 minutes, 1-1 after extra time, shoot-out won by home: away won the 90 minutes.
+    (knockout("PENALTY_SHOOTOUT", {"home": 5, "away": 4}, {"home": 0, "away": 1},
+              {"home": 1, "away": 0}, {"home": 4, "away": 3}), "away"),
+])
+def test_champions_league_knockout_beyond_ninety_minutes_settles_on_the_ninety_minute_score(
+    answer, expected
+):
+    provider = provider_from_settings(configured(), transport=httpx.MockTransport(
+        lambda _request: httpx.Response(200, json=answer)
+    ))
+    match = asyncio.run(provider.get_match(101))
+    assert match.competition == "UEFA Champions League"
+    assert (match.home_score, match.away_score) == (
+        answer["score"]["regularTime"]["home"], answer["score"]["regularTime"]["away"]
+    )
+    assert outcome(match) == expected
+
+
+def test_competitions_setting_defaults_dedupes_and_refuses_unknown_codes_without_echoing():
+    assert Settings().sports_competitions == ("PL", "PPL", "CL")
+    assert load_settings({}).sports_competitions == ("PL", "PPL", "CL")
+    assert load_settings(
+        {"SPORTS_COMPETITIONS": " cl, PL,,cl , bl1 "}
+    ).sports_competitions == ("CL", "PL", "BL1")
+    for value in ("PL,FAC", "premier-league", "PL;PPL"):
+        with pytest.raises(SettingsError, match="SPORTS_COMPETITIONS item") as caught:
+            load_settings({"SPORTS_COMPETITIONS": value})
+        assert value.rsplit(",", 1)[-1] not in str(caught.value)

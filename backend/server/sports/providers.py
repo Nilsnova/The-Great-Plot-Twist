@@ -8,7 +8,20 @@ import httpx
 
 from server.settings import Settings
 from server.sports.models import Match
-from server.sports.parsing import basketball_match, football_match, positive_id
+from server.sports.parsing import (
+    UnreadableResult,
+    basketball_match,
+    football_match,
+    object_value,
+    positive_id,
+)
+
+# Bounds raised for several competitions (D033). The 8 dates of a board hold about 40 games of the
+# default PL, PPL and CL (a CL league-phase matchday alone has 18); 200 provider rows leave room for
+# a few more codes, and a longer list fails closed. The board keeps the earliest BOARD_SIZE games,
+# below the 50 fixtures the store reads at once (store.py).
+PROVIDER_ROWS = 200
+BOARD_SIZE = 40
 
 
 class SportsProvider:
@@ -21,12 +34,14 @@ class SportsProvider:
         key: str,
         parser: Callable[[Any, int], Match],
         *,
+        competitions: tuple[str, ...] = (),
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self.base_url = base_url
         self.header = header
         self._key = key
         self.parse = parser
+        self.competitions = competitions
         self.transport = transport
 
     async def get_match(self, match_id: int) -> Match:
@@ -45,15 +60,15 @@ class SportsProvider:
             return self.parse(response.json(), match_id)
 
     async def get_matches(self, start: date, end: date) -> tuple[Match, ...]:
-        """One fixed league and bounded page; no player-selected league or remote address."""
+        """One bounded request for the configured competitions; nothing chosen by a player."""
         football = self.base_url == "https://api.football-data.org/v4/matches"
-        url = (
-            "https://api.football-data.org/v4/competitions/PL/matches"
-            if football
-            else "https://api.balldontlie.io/nba/v1/games"
-        )
+        url = self.base_url if football else "https://api.balldontlie.io/nba/v1/games"
         params = (
-            {"dateFrom": start.isoformat(), "dateTo": end.isoformat()}
+            {
+                "competitions": ",".join(self.competitions),
+                "dateFrom": start.isoformat(),
+                "dateTo": end.isoformat(),
+            }
             if football
             else {"start_date": start.isoformat(), "end_date": end.isoformat(), "per_page": "25"}
         )
@@ -66,19 +81,26 @@ class SportsProvider:
         if not isinstance(payload, dict):
             raise ValueError("The fixture list could not be read.")
         rows = payload.get("matches" if football else "data")
-        if not isinstance(rows, list) or len(rows) > 100:
+        if not isinstance(rows, list) or len(rows) > PROVIDER_ROWS:
             raise ValueError("The fixture list is not bounded.")
         matches = []
         for row in rows:
             if not isinstance(row, dict):
                 raise ValueError("The fixture list could not be read.")
-            match = self.parse(row if football else {"data": row}, positive_id(row.get("id")))
+            if football and object_value(row.get("competition")).get("code") not in (
+                self.competitions
+            ):
+                raise ValueError("The fixture list holds a competition we did not ask for.")
+            try:
+                match = self.parse(row if football else {"data": row}, positive_id(row.get("id")))
+            except UnreadableResult:
+                continue  # e.g. a knockout game without its 90-minute score: never on the board
             if not start <= match.kickoff.date() <= end:
                 raise ValueError("The fixture is outside the requested dates.")
             matches.append(match)
         if len({match.id for match in matches}) != len(matches):
             raise ValueError("The fixture list repeats a match.")
-        return tuple(sorted(matches, key=lambda match: (match.kickoff, match.id))[:20])
+        return tuple(sorted(matches, key=lambda match: (match.kickoff, match.id))[:BOARD_SIZE])
 
 
 def provider_from_settings(
@@ -97,6 +119,7 @@ def provider_from_settings(
             "X-Auth-Token",
             key,
             football_match,
+            competitions=settings.sports_competitions,
             transport=transport,
         )
     if name == "balldontlie":
