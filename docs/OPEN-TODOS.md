@@ -90,13 +90,12 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 - [ ] README complete by Fri 20 Nov: deployed URL, every member's name and student number, the install / run / test commands on the first screen.
 - [ ] One member submits the repository link on Moodle by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59; later commits do not count); a named backup can submit if needed. Keep a screenshot of the confirmation.
 
-## 7. Status on Wed 11 Nov, ~19:50: tower defense v2 is live
+## 7. Status on Wed 11 Nov, ~20:30: multiplayer fixed and tested
 
-- **Live (main `395b309`):** your island with 16 build spots; walls, cannons and mortars up to level 3, watchtower and houses; crew (gunner, carpenter, lookout); your captain's musket (5 levels); unlocks after waves 1, 2, 3, 5 and 8; boss warships every 5th wave; waves up to 100 with a 15-second break and "Next wave"; friends join with one link (`?visit=ISLE-…`, "Join as guest", no account) and build with their own coins on your island; Pirate Point battles with shared buildings; Harbor market calls and football (Premier League, Primeira Liga, Champions League, Brazil, Spain, Italy, Germany, France, Championship, Netherlands); weather changes the waves.
-- **Database:** 24 migrations, the last `20261111030000_tower_defense` (applied and verified).
-- **Checks before release:** backend 15,876 tests, frontend 2,540, build, budgets, text lint, CSP, accessibility, panels, market and class-demo browser checks all green; live smoke 0 failures; every API answered live (weather, Binance, Finnhub, football-data).
-- **Not tested yet:** four real players on live Realtime at once. Report anything odd as a GitHub issue with steps.
-- **Known small issues (good first tasks):** outside a wave your island's buildings always look level 1 (levels show in the card and in battle); the musket pose is very short; at Pirate Point the lamp hint covers part of the island on phones.
+- **Live (main `2d0fbd9`):** tower defense v2 plus a multiplayer fix round: the host joins his own island room, musket shots pass the live room filter, simultaneous "Next wave" ends in one wave, co-op builds reach everyone within a second, friends who arrive mid-wave join automatically, a slow player keeps their loot, Pirate Point re-reads its towers before each battle. Polish: buildings show their level, pips and crew outside waves; a visible musket shot (pose, tracer, puff, "F · Musket" hint); the phone wave bar no longer covers the joystick; red edge flash on damage; coins count up after loot.
+- **New check:** `npm run test:mp` (frontend) plays a wave with 2 and then 4 browser pages on a shared fake world and asserts identical ships every second, shots crossing pages, loot, a shared Next wave and a mid-wave join.
+- **Checks before release:** frontend 2,563 tests (one Harbor overview test fails on main too, see below), build, budgets, text lint, `test:mp`, `test:a11y`, `test:demo` green; live smoke 0 failures; weather, Binance, Finnhub and football (Brazil) answered live.
+- **Known small issues (good first tasks):** `tests/harbor/cards.test.js` "lists the three stalls…" fails (cannot find the match stall button; also on the previous release); on phones the break panel is partly covered by toasts and the "Victory" caption (Auto next wave checkbox); Pirate Point with four players and lamps is reviewed but not yet in `test:mp`; a refused live room is not retried (a page reload fixes it).
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
