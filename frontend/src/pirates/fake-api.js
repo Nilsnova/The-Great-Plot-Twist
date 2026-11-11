@@ -34,7 +34,7 @@ const kindOfSpot = spot => (spot.startsWith('wall_') ? 'wall' : spot.startsWith(
 export class FakeApiError extends Error {
   constructor(status, code, message, retryAfter = null) {
     super(message);
-    Object.assign(this, { name: 'FakeApiError', status, code, retryAfter, body: { error: { code, message } } });
+    Object.assign(this, { name: new.target.name, status, code, retryAfter, body: { error: { code, message } } });
   }
 }
 const refuse = (status, code, message, retryAfter) => { throw new FakeApiError(status, code, message, retryAfter); };
@@ -110,7 +110,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async island() { return view(); },
 
     async build({ spot, kind, actionUid } = {}) {
-      if (typeof spot !== 'string' || typeof kind !== 'string' || !uid(actionUid)) invalid('Send spot, kind and actionUid.');
+      if (typeof spot !== 'string' || typeof kind !== 'string' || !uid(actionUid)) invalid('Send the spot, the kind and an action id.');
       const player = me(), island = world.islands.get(player.code);
       if (player.actions.has(`build:${actionUid}`)) return view();
       if (spot === 'cabin') refuse(409, 'spot_taken', 'Your cabin already stands there.');
@@ -130,7 +130,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     },
 
     async startWave({ where, actionUid } = {}) {
-      if (typeof where !== 'string' || !uid(actionUid)) invalid('Send where and actionUid.');
+      if (typeof where !== 'string' || !uid(actionUid)) invalid('Send where the wave starts and an action id.');
       const player = me(), repeat = player.actions.get(`start:${actionUid}`);
       if (repeat) return shape(world.waves.get(repeat));
       const place = placeOf(where);
@@ -149,7 +149,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     },
 
     async joinWave({ waveId } = {}) {
-      if (typeof waveId !== 'string') invalid('Send waveId.');
+      if (typeof waveId !== 'string') invalid('Say which wave.');
       const run = world.waves.get(waveId);
       if (!run) refuse(404, 'no_such_wave', 'There is no such wave.');
       if (!running(run)) refuse(409, 'wave_over', 'This wave is over. Ring the bell for the next one.');
@@ -158,7 +158,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     },
 
     async currentWave(where) {
-      if (typeof where !== 'string') invalid('Send where.');
+      if (typeof where !== 'string') invalid('Say where.');
       const place = placeOf(where);
       for (const run of world.waves.values()) if (run.place === place.key && running(run)) return shape(run);
       return null;
@@ -166,7 +166,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
 
     async finishWave({ waveId, survived, shipsSunk } = {}) {
       if (typeof waveId !== 'string' || typeof survived !== 'boolean' || !Number.isInteger(shipsSunk) || shipsSunk < 0 || shipsSunk > 1000) {
-        invalid('Send waveId, survived (true or false) and shipsSunk (0 to 1000).');
+        invalid('Send the wave, whether the island held and the ships sunk (0 to 1000).');
       }
       const player = me(), run = world.waves.get(waveId);
       if (!run) refuse(404, 'no_such_wave', 'There is no such wave.');
