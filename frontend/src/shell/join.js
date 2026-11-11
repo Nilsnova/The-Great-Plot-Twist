@@ -6,6 +6,7 @@ import './join.css';
 import {node,uniqueId} from '../ui/kit/dom.js';
 import {menuButton} from './screens.js';
 import {joinTarget,displayCode,readJoinCode,forgetJoinCode,JOIN_KEY} from '../front-door/logic.js';
+import {islandCode,displayIslandCode,storeVisit,readVisit,forgetVisit} from '../island/codes.js';
 
 const INVALID='This class code is not valid. Ask the presenter for the current code.';
 const REHEARSAL_CODE='TESTS'; // class-demo/harbor.js shows it in a rehearsal (?demo=1); never sent
@@ -22,7 +23,8 @@ export function fillJoinPage({body,nav,ctx,isCurrent,play,back}){
   const copy=node('p','shell-copy',invited?'You are invited to the class harbor. Press Join to start.'
     :'Enter the code you were given.');
   const hint=node('p','shell-note','In class? Scan the QR on the projector with your phone camera, or type the class code shown there.');
-  if(invited)input.value=displayCode(invited);
+  const visit=invited?null:readVisit();
+  if(invited)input.value=displayCode(invited);else if(visit)input.value=displayIslandCode(visit);
   const join=menuButton('Join',()=>{});join.type='submit';
   let busy=false;
   function refuse(text){status.textContent=text;input.focus();input.select?.();}
@@ -30,6 +32,7 @@ export function fillJoinPage({body,nav,ctx,isCurrent,play,back}){
     const rehearsal=ctx.demo===true&&code===REHEARSAL_CODE;
     const adapter=ctx.adapter;
     // Rehearsal and local play: nothing to check on a server; the class harbor still opens.
+    forgetVisit();
     if(rehearsal||adapter?.read?.().mode!=='online'){remember(JOIN_KEY,code);play();ctx.onStart?.();return;}
     busy=true;join.disabled=true;status.textContent='Checking the class code…';
     let result;
@@ -42,6 +45,9 @@ export function fillJoinPage({body,nav,ctx,isCurrent,play,back}){
   }
   form.addEventListener('submit',event=>{
     event.preventDefault();if(!isCurrent()||busy)return;
+    // An island code (ISLE-K7Q2M) sails to that player's island; the game checks it there.
+    const isle=islandCode(input.value,{requirePrefix:true});
+    if(isle){forgetJoinCode(session());storeVisit(isle);play();ctx.onStart?.();return;}
     const target=joinTarget(input.value);
     if(!target){refuse('Codes use letters and numbers only. Check the code and try again.');return;}
     if(target.kind==='class'&&target.code){void joinClass(target.code);return;}

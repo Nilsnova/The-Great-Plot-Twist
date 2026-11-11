@@ -316,6 +316,7 @@ chips
 choice
 choices
 choose
+chooses
 choosing
 chose
 chosen
@@ -437,6 +438,7 @@ costs
 cottage
 could
 count
+countdown
 counted
 counter
 counters
@@ -497,6 +499,7 @@ declined
 deduction
 deductions
 defend
+defense
 degree
 degrees
 delayed
@@ -774,6 +777,7 @@ front
 frontend
 full
 functions
+further
 g
 gain
 gallery
@@ -1768,6 +1772,7 @@ scaling
 scan
 scanned
 scanning
+scans
 scene
 scenery
 schema
@@ -2031,6 +2036,7 @@ subtitle
 subtitles
 success
 successful
+such
 summaries
 sunk
 sunny
@@ -2042,6 +2048,7 @@ supply
 support
 supported
 survey
+survive
 survived
 surviving
 suspect
@@ -2193,6 +2200,7 @@ two
 tying
 type
 typed
+types
 typing
 u
 ui
@@ -2251,6 +2259,7 @@ view
 visible
 vision
 visit
+visiting
 visitors
 visits
 visual
