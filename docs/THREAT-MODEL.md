@@ -24,7 +24,7 @@ Players and outsiders can send arbitrary requests, retry actions, race tabs, mod
 
 ## Complete API entry-point inventory
 
-The following **55 method/path pairs** are declared in the current route modules and mounted by [app.py](../backend/server/app.py). This describes source contracts, not deployed flag/configuration state. API documentation is disabled in production. Local/preview documentation is informational, not an authorization bypass.
+The following method/path pairs (55 when this list was written; the code had 69 on 11 Nov 2026 after the class code, email sign-in, islands and waves were added — see INTERFACES.md for the new ones) are declared in the current route modules and mounted by [app.py](../backend/server/app.py). This describes source contracts, not deployed flag/configuration state. API documentation is disabled in production. Local/preview documentation is informational, not an authorization bypass.
 
 | Method and path | Boundary | Definition |
 | --- | --- | --- |

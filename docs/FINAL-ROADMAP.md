@@ -67,7 +67,7 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 | C1 | ★★★ | M | **Dead code sweep**: find modules, routes, scripts and flags that nothing uses any more (for example the retired demo-window routes and UI, the `raid` flag if it stays off, scripts that drive removed title buttons). Remove them or say in the PR why they stay | Each removal has a "nothing references it" proof (search output); all tests pass |
 | C2 | ★★ | S | **Docs diet**: move the ~90 dated notes in `docs/handoff/` and finished specs into `docs/archive/` and fix links, so a grader sees the current docs first | Link check clean; README links still work |
 | C3 | ★★ | M | **One file, one job**: pick the 3 largest frontend files and the 3 largest backend modules; split only where a file mixes unrelated jobs; no behaviour change | Same tests pass; the PR explains each split in one sentence |
-| C4 | ★ | S | **Old browser scripts**: update or delete `frontend/scripts/check-festival-ui.js` and `check-friends-entry.js` (they drive removed title buttons) | They pass or are removed with a reason |
+| C4 | ★ | S | ~~Old browser scripts~~ — done: removed with the mystery on 10 Nov | — |
 
 ### D. It works, including invalid input (criterion 1, 20%)
 

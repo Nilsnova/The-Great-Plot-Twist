@@ -10,7 +10,7 @@ The details live elsewhere. One-time account setup is in [SETUP.md](SETUP.md). H
 
 | Part | What it is | Where it lives |
 |---|---|---|
-| The game | The browser client: a top-down 2D world drawn with Three.js and built with Vite, in plain JavaScript. It shows the world and sends what the player wants to do. Its art style is decision D005, written by the graphics package (G1). | `frontend/`, added by G1. It may be missing on your branch. |
+| The game | The browser client: a top-down 2D world drawn with Three.js and built with Vite, in plain JavaScript. It shows the world and sends what the player wants to do. Its art style is decision D005, written by the graphics package (G1). | `frontend/`. |
 | The API | The Python server (FastAPI). Every game rule lives here, tested with pytest. | `backend/main.py` (the entry Vercel starts) and `backend/server/` |
 | The database | Supabase: Postgres with row-level security, sign-in with GitHub (Supabase Auth), and Realtime (used for live presence only, see the next row). | `supabase/migrations/`. How to apply it: [supabase/README.md](../supabase/README.md) |
 | Live presence | Players see each other's captains move in the same place, send preset emotes, and the server tells a crew the moment something changed. It runs on Supabase Realtime in private rooms (one for who is online, numbered ones for each place, one per crew). The browser joins them with the player's login token. Our server only sends the crew events, with one HTTP request each. Built; the flag `live_presence` is off, and its migration goes live with group 2. | `frontend/src/online/realtime.js` and its parts `frontend/src/net/live-*.js` (browser), `backend/server/crew_broadcast.py` (server), `supabase/migrations/20261106050000_live_presence.sql` (access rules). Contract: [INTERFACES.md, section 7](INTERFACES.md#7-realtime-budget). Decision: D023. |
@@ -123,7 +123,7 @@ Free-tier limits that matter to us:
 | Supabase | 2 active free projects per person who is Owner or Administrator | Teammates are invited as Developer. |
 | Supabase | A project pauses after 7 days of low activity | See the keep-alive below. |
 | Supabase | Realtime: 200 connections, 100 messages a second, 2 million a month, and every delivered copy counts. Each room a player joins counts as a connection. | Small rooms that shrink as the game fills, and fewer updates the more players are online: about 66 players fit in the 200 connections, and 2 million messages cover about 8 class sessions. The budget is in [INTERFACES.md](INTERFACES.md#7-realtime-budget). |
-| Supabase | Sign-in limits count per IP address (for example 30 sign-ins per 5 minutes). The built-in mailer sends 2 emails an hour, only to team members. | A class on one Wi-Fi shares one address. We use GitHub sign-in only. |
+| Supabase | Sign-in limits count per IP address (for example 30 sign-ins per 5 minutes). The built-in mailer sends 2 emails an hour, only to team members. | A class on one Wi-Fi shares one address. Sign-in is GitHub, an email code through the team's own mail service (when switched on), or a guest with the class code (D030); the anonymous sign-in limit is raised for the class. |
 
 ### The 7-day pause and the keep-alive
 
