@@ -53,7 +53,7 @@ async function panel(name){
         window.__panel=createWeatherCard({...ctx,getWeather:()=>fx.weatherAnswer('storm')});window.__panel.open();
       }else if(name==='market'){
         const {createMarketEntry}=await import('/src/harbor/market-card.js');
-        window.__panel=createMarketEntry({...ctx,adapter:fx.fakeMarket({stocks:'open'}),now:()=>fx.NOW});await window.__panel.open();
+        window.__panel=createMarketEntry({...ctx,adapter:fx.fakeCalls({calls:[fx.marketCall(),fx.marketCall({id:'won',status:'won',settlePrice:75000,payout:20,settleAt:'2026-11-11T11:00:00Z'})]}),now:()=>fx.NOW});await window.__panel.open();
       }else if(name==='match'){
         const {createSportsPanel}=await import('/src/harbor/match-card.js');
         window.__panel=createSportsPanel({...ctx,adapter:fx.fakeSports(),getToken:()=>'token',clock:()=>fx.NOW,timeZone:'UTC'});await window.__panel.open();
