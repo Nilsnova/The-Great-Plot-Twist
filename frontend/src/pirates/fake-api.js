@@ -391,18 +391,61 @@ const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'obje
  * {get(path), post(path, body), dev, api}: the fake behind ?islands=fake, answering like online/api.js.
  * Your island is ISLE-K7Q2M with `coins` starting coins; ISLE-FR3ND (Captain Gull) is a friend's island.
  */
+// --- one fake world for several tabs (scripts/check-multiplayer.js) ------------------------------
+// ?islands=fake&fakeworld=<name>&fakeplayer=<id>&fakename=<name>: every tab of this browser with the
+// same fakeworld plays in one world kept in localStorage (read before and written after every request,
+// under a Web Lock), each tab as its own captain. fakeplayer "me" (the default) owns ISLE-K7Q2M;
+// any other id gets an island of its own. Without fakeworld nothing changes: one tab, one world.
+const SHARED_PREFIX = 'tgpt:fake-world:';
+const PLAYER_ID = /^[a-z0-9_]{1,24}$/i;
+export function fakePlayerFor(search = '') {
+  const query = new URLSearchParams(typeof search === 'string' ? search : '');
+  const name = query.get('fakeworld'), id = query.get('fakeplayer'), owner = query.get('fakename');
+  return { shared: name && PLAYER_ID.test(name) ? name : null, playerId: id && PLAYER_ID.test(id) ? id : 'me',
+    ownerName: owner && owner.length <= 24 ? owner : null };
+}
+const pack = value => JSON.stringify(value, (key, item) => {
+  if (item instanceof Map) return { $map: [...item] };
+  if (item instanceof Set) return { $set: [...item] };
+  if (key === 'island' && item && typeof item === 'object' && typeof item.code === 'string') return { $island: item.code };
+  if (key === 'random') return undefined;
+  return item;
+});
+function unpack(text) {
+  const data = JSON.parse(text, (key, item) => (item && typeof item === 'object' && Array.isArray(item.$map) ? new Map(item.$map)
+    : item && typeof item === 'object' && Array.isArray(item.$set) ? new Set(item.$set) : item));
+  for (const run of data.waves?.values?.() ?? []) if (run.island?.$island) run.island = data.islands.get(run.island.$island) ?? null;
+  return data;
+}
+/** {load(), save(world), lock(task)}: the world of one ?fakeworld name in localStorage. */
+export function createSharedFakeStore(name, { storage = globalThis.localStorage, locks = globalThis.navigator?.locks } = {}) {
+  const key = `${SHARED_PREFIX}${name}`;
+  return {
+    load() { try { const text = storage?.getItem(key); return text ? unpack(text) : null; } catch { return null; } },
+    save(world) { try { storage?.setItem(key, pack(world)); } catch { /* A full storage: this tab only. */ } },
+    lock: task => (locks?.request ? locks.request(key, task) : task()),
+  };
+}
 /** The answers' version for a page: 2 (the tower defense extras) in the browser, 1 without a page (the older tests). */
 export const fakeVersionFor = search => (typeof search !== 'string' ? 1 : new URLSearchParams(search).get('td') === '1' ? 1 : 2);
+const fromPage = fakePlayerFor(globalThis.location?.search ?? '');
 export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, now = () => Date.now(), weather = 'calm',
-  code = FAKE_OWN_CODE, ownerName = 'You', friends = [FAKE_FRIEND], seed = 7, unlocking = true,
-  version = fakeVersionFor(globalThis.location?.search) } = {}) {
+  code = FAKE_OWN_CODE, ownerName = fromPage.ownerName ?? 'You', friends = [FAKE_FRIEND], seed = 7, unlocking = true,
+  version = fakeVersionFor(globalThis.location?.search), playerId = fromPage.playerId,
+  shared = fromPage.shared ? createSharedFakeStore(fromPage.shared) : null } = {}) {
   let world, api, others = 0;
   const failures = [];
+  // A shared world (fakeworld): the other tabs' writes first, ours after, all in one synchronous step.
+  const pull = () => { const saved = shared?.load(); if (saved) Object.assign(world, saved); };
   function reset() {
     world = createFakeWorld({ seed, friends });
-    api = createFakeIslandApi({ world, playerId: 'me', ownerName, now, weather, code, unlocking, version });
-    world.players.set('me', { coins: 0, ownerName, actions: new Map(), code: null });
-    void api.island(); world.players.get('me').coins = coins;
+    pull();
+    api = createFakeIslandApi({ world, playerId, ownerName, now, weather, code: playerId === 'me' ? code : null, unlocking, version });
+    if (!world.players.has(playerId)) {
+      world.players.set(playerId, { coins: 0, ownerName, actions: new Map(), code: null });
+      void api.island(); world.players.get(playerId).coins = coins;
+    }
+    shared?.save(world);
   }
   reset();
   const ok = data => ({ ok: true, status: 200, data });
@@ -441,19 +484,25 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
     }
   }
   async function request(method, path, body) {
+    if (shared) return shared.lock(async () => { pull(); const answer = route(method, path, body); shared.save(world); return answer; });
     const kind = failures.shift();
     if (kind === undefined) return route(method, path, body);
     const failure = FAILURES[kind];
     if (failure.applies) await route(method, path, body);
     return fail(failure.status, failure.code, failure.message);
   }
-  const me = () => world.players.get('me');
+  const me = () => world.players.get(playerId);
+  // The dev helpers change the world too: in a shared world they read it first and write it after.
+  const synced = helpers => (shared ? Object.fromEntries(Object.entries(helpers).map(([name, helper]) => [name, (...args) => {
+    pull(); const answer = helper(...args); shared.save(world);
+    return answer instanceof Promise ? answer.finally(() => shared.save(world)) : answer;
+  }])) : helpers);
   return {
     get: path => request('GET', path),
     post: (path, body) => request('POST', path, body),
     get api() { return api; },
     get world() { return world; },
-    dev: {
+    dev: synced({
       setCoins(value) { if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('coins must be a whole number from 0 up.'); me().coins = value; },
       setWeather(kind) { api.setWeather(kind); },
       // Another captain rings the bell somewhere (a friend's island, so a visitor can join it).
@@ -465,13 +514,13 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
         if (!Object.hasOwn(FAILURES, kind)) throw new TypeError(`failNext knows ${Object.keys(FAILURES).join(', ')}.`);
         failures.push(kind);
       },
-      read: () => ({ coins: me().coins, built: [...world.islands.get(me().code).built], waves: world.waves.size }),
+      read: () => ({ coins: me().coins, built: [...world.islands.get(me().code).built], waves: world.waves.size, playerId }),
       // The best won wave on your island (the unlocks of §9 follow it).
       setWaveBest(value) {
         if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('waveBest must be a whole number from 0 up.');
         const island = world.islands.get(me().code); island.waveBest = value; island.nextWave = Math.min(TD_RULES.highestWave, value + 1);
       },
       reset() { reset(); failures.length = 0; },
-    },
+    }),
   };
 }

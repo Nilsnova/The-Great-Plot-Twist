@@ -4,7 +4,18 @@
 // that the core lane opens (openRoom in mountPirates). Here are two small helpers:
 //   createRoomProxy()   a stable room for the controllers while the real one comes and goes with travel
 //   createLocalRoom()   the same room between browser tabs on one computer (BroadcastChannel), for the
-//                       dev harness: two tabs with ?pirates=demo play one wave together, no server
+//                       dev harness (two tabs with ?pirates=demo) and ?islands=fake (up to four tabs on
+//                       one island, scripts/check-multiplayer.js). It keeps the live room's rules: only
+//                       the wave events of src/net/live-rules.js go out, wrapped as the presence sends
+//                       them ({v, id, seq, data}), and every arriving one must pass readWaveMessage, so a
+//                       payload the live site would drop is dropped here too.
+import { WAVE_EVENTS, readWaveMessage } from '../net/live-rules.js';
+
+const tabId = () => {
+  try { if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID(); } catch { /* below */ }
+  const hex = () => Math.floor(Math.random() * 16).toString(16);
+  return 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, hex);
+};
 export function createRoomProxy() {
   const handlers = new Map();
   let target = null, stops = [];
@@ -29,17 +40,25 @@ export function createRoomProxy() {
   };
 }
 
-export function createLocalRoom(topic, { Channel = globalThis.BroadcastChannel } = {}) {
+export function createLocalRoom(topic, { Channel = globalThis.BroadcastChannel, id = tabId() } = {}) {
   if (typeof Channel !== 'function') return null;
   const channel = new Channel(`tgpt:${topic}`), handlers = new Map();
+  let seq = 0, dropped = 0;
   channel.onmessage = event => {
     const { type, payload } = event.data ?? {};
     if (typeof type !== 'string') return;
-    for (const handler of [...(handlers.get(type) ?? [])]) handler(payload);
+    const message = readWaveMessage(type, payload);
+    if (!message) { dropped++; return; }
+    for (const handler of [...(handlers.get(type) ?? [])]) handler(message.data);
   };
   return {
     topic,
-    send(type, payload) { channel.postMessage({ type, payload }); return true; },
+    get dropped() { return dropped; },
+    send(type, payload) {
+      if (!WAVE_EVENTS.includes(type)) return false;
+      channel.postMessage({ type, payload: { v: 1, id, seq: ++seq, data: payload } });
+      return true;
+    },
     on(type, handler) {
       if (!handlers.has(type)) handlers.set(type, new Set());
       handlers.get(type).add(handler);

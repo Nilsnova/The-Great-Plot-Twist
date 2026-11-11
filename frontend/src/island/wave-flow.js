@@ -9,8 +9,11 @@ import {coinText, countdownText, lootText, secondsUntil} from './card-model.js';
 export const PLACEHOLDER_SECONDS = 20;
 const HERE_SECONDS = 3;
 
+// prepare(): awaited (at most PREPARE_MS) before a wave we are in starts, so every defender reads the
+// island once more first (a friend's co-op build) and all of them simulate the same defenses.
+export const PREPARE_MS = 2500;
 export function createWaveFlow({api, emit, notify = () => {}, banner = () => {}, onChange = () => {},
-  defensesOf = () => [], placeholder = false, hasRenderer = defaultHasRenderer,
+  defensesOf = () => [], placeholder = false, hasRenderer = defaultHasRenderer, prepare = async () => {},
   now = () => Date.now(), setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = id => clearTimeout(id)} = {}) {
   let current = null; // {wave, where, joined, finished}
   let busy = false, disposed = false;
@@ -50,27 +53,38 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     countdown(wave, fresh);
     changed();
   }
+  async function ready() {
+    let timer = null;
+    try { await Promise.race([Promise.resolve().then(prepare), new Promise(resolve => { timer = setTimer(resolve, PREPARE_MS); })]); }
+    catch { /* The island as we had it. */ } finally { if (timer !== null) clearTimer(timer); }
+  }
   async function run(task) {
     if (busy || disposed) return {ok: false, status: 0, code: 'busy', message: 'One moment…'};
     busy = true; changed();
     try { return await task(); } finally { busy = false; if (!disposed) changed(); }
   }
-  const ring = (where = 'own') => run(async () => {
+  // joinRunning: the break's "Next wave" (two friends may press it at once): when the other one's
+  // wave already runs there, join it instead of saying no.
+  const ring = (where = 'own', {joinRunning = false} = {}) => run(async () => {
     const answer = await api.startWave({where});
     if (disposed) return answer;
-    if (answer.ok) begin(answer.data, where, {fresh: true});
-    else if (answer.code === 'wave_running') await look(where);
+    if (answer.ok) { await ready(); if (!disposed) begin(answer.data, where, {fresh: true}); }
+    else if (answer.code === 'wave_running') {
+      await look(where);
+      if (joinRunning && !disposed && current && !current.joined) return joinNow(where);
+    }
     return answer;
   });
-  const join = (where = 'own') => run(async () => {
+  async function joinNow(where) {
     const waveId = current?.wave.waveId;
     if (!waveId) return {ok: false, status: 404, code: 'no_such_wave', message: 'There is no wave to join.'};
     const answer = await api.joinWave({waveId});
     if (disposed) return answer;
-    if (answer.ok) begin(answer.data, where);
+    if (answer.ok) { await ready(); if (!disposed) begin(answer.data, where); }
     else if (answer.code === 'wave_over') { current = null; changed(); }
     return answer;
-  });
+  }
+  const join = (where = 'own') => run(() => joinNow(where));
   // A friend sailing in (or a page reload) asks whether a wave runs there; it is shown, not joined.
   async function look(where = 'own') {
     const answer = await api.currentWave({where});

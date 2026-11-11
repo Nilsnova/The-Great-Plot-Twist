@@ -19,6 +19,7 @@
     "test:ui:production": "npm run build && KIT_PRODUCTION=1 node scripts/check-ui-kit.js",
     "test:weather:wiring": "node scripts/check-weather-wiring.js",
     "test:demo": "node scripts/check-demo-journey.js",
+    "test:mp": "node scripts/check-multiplayer.js",
     "capture:wow": "node scripts/capture-wow.js",
     "capture:integrated": "node scripts/capture-integrated.js",
     "test:loading": "npm run build && node scripts/check-loading.js",

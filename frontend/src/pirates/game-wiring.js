@@ -5,7 +5,14 @@
 //     code and retryAfter, so the controller tries again after 409 wave_too_early;
 //   - registerWaveRenderer: the island's placeholder finish stays off while the real wave runs;
 //   - the island's room (live:place:isle_<code>:1) follows the player: owner and visitors share shots and
-//     repairs, and a wave_start there makes every defender join the running wave (join route + room);
+//     repairs, and a wave_start there makes every defender join the running wave (join route + room).
+//     The room is checked every second as well as on arrival: the owner's code is only known once the
+//     island answered, and sailing home from a visit changes the room without a new landing. wave_start
+//     goes out again 2 and 6 s later for a friend whose room was still joining;
+//   - landing on an island where a wave runs joins it (once per landing), so a friend who comes late
+//     fights too; a "Next wave" that finds the other captain's wave running joins it (island ringBell);
+//   - co-op builds: every build or upgrade sends island_changed into the room (Pirate Point's for its
+//     spots), and every other defender reads that island again within about a second;
 //   - the island's own wall and cannon sprites step aside between wave_controller_started and _stopped;
 //   - Pirate Point: the island client (or, in a rehearsal without a server, the in-memory fake) as api.
 import {mountPirates} from './index.js';
@@ -14,6 +21,9 @@ import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wa
 import {defenses as spotDefenses} from '../island/spots.js';
 
 const ISLAND_PLACE = 'home_islet';
+export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
+export const WAVE_START_AGAIN_MS = [2000, 6000];
+const CHANGED_DELAY_MS = 400, JOIN_RETRY_MS = 1200, JOIN_TRIES = 4;
 // The island client answers {ok, data} or {ok: false, code, message, retryAfterSeconds}; lane P's code
 // wants the data or a thrown error with the code (the fake-api.js shape).
 export function throwRefusal(answer) {
@@ -39,7 +49,11 @@ export function withLevels(defenses, islandAnswer) {
 
 export function wireWaves(ctx) {
   const {island = null, on, world, openRoom = () => null, notify = () => {}} = ctx;
-  const stops = [], sent = new Set();
+  const every = ctx.every ?? ((run, ms) => { const id = setInterval(run, ms); return () => clearInterval(id); });
+  const later = ctx.later ?? ((run, ms) => { const id = setTimeout(run, ms); return () => clearTimeout(id); });
+  const stops = [], sent = new Set(), timers = new Set();
+  const after = (run, ms) => { const cancel = later(() => { timers.delete(cancel); if (!disposed) run(); }, ms); timers.add(cancel); };
+  let landed = false, changedSoon = false;
   const islandRoom = createRoomProxy();
   let realRoom = null, roomTopic = null, disposed = false;
   const stopRenderer = island ? registerWaveRenderer({name: 'pirates'}) : () => {};
@@ -55,6 +69,8 @@ export function wireWaves(ctx) {
     getCrew: () => defended()?.crew ?? null,
     getPointDefenses: () => (island?.point ? spotDefenses(island.point.spots ?? []) : null),
     captainLevel: () => own()?.captain?.level ?? 1,
+    // Pirate Point's shared spots once more before its battle, so every captain fights the same towers.
+    beforePointWave: island ? () => island.loadPoint() : null,
     startNextWave: island ? () => island.ringBell() : null});
 
   function followRoom() {
@@ -64,18 +80,60 @@ export function wireWaves(ctx) {
     realRoom?.close?.(); realRoom = topic ? openRoom(topic) : null; roomTopic = topic;
     islandRoom.attach(realRoom);
   }
+  // Join the wave running on this island (a wave_start in the room, or landing while one runs). The bell
+  // may be busy with our own ring for a moment: try again a few times.
+  // One join attempt at a time: the repeated wave_start of every defender (and the retries) would
+  // otherwise ask the server again and again (wave reads have a budget of 30 a minute).
+  let joining = false;
+  function joinRunning(waveId = null, tries = JOIN_TRIES, retry = false) {
+    if (disposed || (waveId && pirates.island.wave?.info.waveId === waveId) || (joining && !retry)) return;
+    joining = true;
+    Promise.resolve().then(() => island.joinRunningWave()).then(answer => {
+      if (answer?.code === 'busy' && tries > 1 && !disposed) { after(() => joinRunning(waveId, tries - 1, true), JOIN_RETRY_MS); return; }
+      joining = false;
+    }, () => { joining = false; });
+  }
+  // Every second: the room of the island we stand on, and once per landing a wave already running there.
+  function tick() {
+    if (disposed) return;
+    followRoom();
+    if (!landed || world.current?.id !== ISLAND_PLACE || pirates.island.wave) return;
+    const ready = island.visiting ? !!island.visiting.ownerName : !!island.island;
+    if (!ready) return;
+    landed = false;
+    joinRunning();
+  }
+  function changed() {
+    if (changedSoon) return;
+    changedSoon = true;
+    after(() => { changedSoon = false; void Promise.resolve(island.refreshDefended?.()).catch(() => {}); }, CHANGED_DELAY_MS);
+  }
   if (island) {
-    stops.push(on('arrived', followRoom), on('travel', () => { islandRoom.attach(null); realRoom?.close?.(); realRoom = null; roomTopic = null; }));
-    // A wave we are in (rung here or joined): tell the island's room once, so the other defenders join too.
+    stops.push(on('arrived', event => { if (event?.place === ISLAND_PLACE) landed = true; followRoom(); }),
+      on('travel', () => { landed = false; islandRoom.attach(null); realRoom?.close?.(); realRoom = null; roomTopic = null; }));
+    stops.push(every(tick, 1000));
+    // A wave we are in (rung here or joined): tell the island's room, so the other defenders join too;
+    // again a little later for a friend whose room was still joining (a repeat changes nothing).
     stops.push(on('wave_started_server', event => {
       if (event?.flagship === true || typeof event?.waveId !== 'string' || sent.has(event.waveId)) return;
       sent.add(event.waveId);
-      islandRoom.send('wave_start', {waveId: event.waveId, seed: event.seed, startsAt: event.startsAt});
+      const message = {waveId: event.waveId, seed: event.seed, startsAt: event.startsAt};
+      islandRoom.send('wave_start', message);
+      for (const ms of WAVE_START_AGAIN_MS) after(() => { if (pirates.island.wave?.info.waveId === event.waveId) islandRoom.send('wave_start', message); }, ms);
     }));
     stops.push(islandRoom.on('wave_start', payload => {
-      if (disposed || typeof payload?.waveId !== 'string' || pirates.island.wave?.info.waveId === payload.waveId) return;
-      void island.joinRunningWave().catch(() => {});
+      if (disposed || typeof payload?.waveId !== 'string') return;
+      joinRunning(payload.waveId);
     }));
+    // Co-op builds (TOWER-DEFENSE.md §6): ours go to the room, a friend's make us read the island again.
+    stops.push(on(SPOTS_CHANGED, event => {
+      if (typeof event?.spot !== 'string') return;
+      if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot});
+      else islandRoom.send('island_changed', {spot: event.spot});
+    }));
+    stops.push(islandRoom.on('island_changed', () => { if (!disposed) changed(); }));
+    landed = world.current?.id === ISLAND_PLACE;
+    if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).catch(() => {}); }));
     stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));
     stops.push(on('wave_controller_stopped', () => { island.setBattle(false); island.setPointBattle(false); }));
     followRoom();
@@ -88,6 +146,7 @@ export function wireWaves(ctx) {
     dispose() {
       if (disposed) return; disposed = true;
       for (const stop of stops.splice(0)) stop?.();
+      for (const cancel of [...timers]) cancel(); timers.clear();
       stopRenderer(); pirates.dispose(); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
     },
   };
