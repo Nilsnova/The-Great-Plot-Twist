@@ -12,7 +12,7 @@
 //
 // Every call answers {ok: true, status, data} or {ok: false, status, code, message, retryAfterSeconds?}
 // and never throws. The transport is online/api.js (through the panel services of the signed-in
-// session) or the in-memory fake of src/island/fake-api.js; both give that shape. The error code may
+// session) or the in-memory fake of src/pirates/fake-api.js (createFakeIslandTransport); both give that shape. The error code may
 // also come nested, as the server writes it: {"error": {"code": "spot_taken", "message": "..."}}.
 //
 // actionUid: build and start carry one id per click. When the outcome is unknown (no answer, a timeout

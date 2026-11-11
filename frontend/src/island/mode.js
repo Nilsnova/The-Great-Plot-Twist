@@ -1,6 +1,6 @@
 // Whether the island game is on (BUILD-PLAN 3.4, flag "islands"), as plain rules. game.js imports only
 // this small file; everything else in src/island/ loads after Play, in its own chunk.
-//   'fake'  ?islands=fake in a dev build: the in-memory fake server (src/island/fake-api.js)
+//   'fake'  ?islands=fake in a dev build: the in-memory fake server (src/pirates/fake-api.js, createFakeIslandTransport)
 //   'live'  /api/config says flags.islands is true: the real routes through the signed-in API
 //   'off'   neither: the old home islet and the old start in the harbor
 export function islandsMode({search = '', dev = false, flags = null} = {}) {

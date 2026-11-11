@@ -7,7 +7,7 @@ const evaluate = browserHarness();
 it('builds from the card, refuses with the reason, rings the bell and invites with a QR', async () => {
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
-    const {createFakeIslandTransport} = await window.g20Import('/src/island/fake-api.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const seen = [];
     for (const type of ['island_built', 'island_invite_opened', 'wave_started_server']) on(type, event => seen.push(event.type));
@@ -89,7 +89,7 @@ it('a server refusal shows its plain message on the card', async () => {
 it("visits a friend's island by code: their buildings, no building, the friend's room", async () => {
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
-    const {createFakeIslandTransport} = await window.g20Import('/src/island/fake-api.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const transport = createFakeIslandTransport();
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null});

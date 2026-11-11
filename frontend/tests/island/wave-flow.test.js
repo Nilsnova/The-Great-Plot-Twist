@@ -1,7 +1,7 @@
 // Bell -> wave_started_server -> 10 s countdown -> finish -> loot toast, with the fake server.
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {createWaveFlow, PLACEHOLDER_SECONDS} from '../../src/island/wave-flow.js';
-import {createFakeIslandApi} from '../../src/island/fake-api.js';
+import {createFakeIslandApi} from './fake.js';
 import {finishWave, registerWaveRenderer, onWaveStarted, WAVE_STARTED, WAVE_FINISHED} from '../../src/island/wave-hooks.js';
 import {emit as busEmit} from '../../src/core/events.js';
 
@@ -85,7 +85,7 @@ describe('the bell and the wave', () => {
   });
   it('a ring while a wave runs shows that wave; a visitor joins it', async () => {
     const test = setup(); flow = test.flow;
-    const friend = test.api.dev.startWaveAt('ISLE-FR3ND');
+    const friend = await test.api.dev.startWaveAt('ISLE-FR3ND');
     const refused = await flow.ring('ISLE-FR3ND');
     expect(refused).toMatchObject({ok: false, code: 'wave_running', message: 'A wave is already under way on this island.'});
     expect(flow.current).toMatchObject({joined: false, wave: {waveId: friend.waveId}});
@@ -97,7 +97,7 @@ describe('the bell and the wave', () => {
   it('a friend sailing in sees the running wave without joining', async () => {
     const test = setup(); flow = test.flow;
     expect((await flow.look('ISLE-FR3ND')).data).toBe(null);
-    test.api.dev.startWaveAt('ISLE-FR3ND');
+    await test.api.dev.startWaveAt('ISLE-FR3ND');
     await flow.look('ISLE-FR3ND');
     expect(flow.current.joined).toBe(false);
     expect(test.events.some(event => event.type === WAVE_STARTED)).toBe(false);

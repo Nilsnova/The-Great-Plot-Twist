@@ -13,6 +13,12 @@
 //   await api.finishWave({waveId, survived, shipsSunk}); // POST /api/waves/finish
 //   await api.fetch('/api/island', {method, body}); // the same as a fetch() Response
 // A refusal rejects with FakeApiError {status, code, message, body, retryAfter}.
+//
+// The island lane's client (src/island/api.js) reads the same fake through createFakeIslandTransport():
+// {get(path), post(path, body)} answering like online/api.js ({ok, status, data} or {ok: false, status,
+// code, message, retryAfterSeconds}), plus dev helpers (setCoins, setWeather, startWaveAt, failNext,
+// read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
+// ISLE-FR3ND (Captain Gull) to visit.
 import { createRandom } from './sim.js';
 
 export const ISLAND_RULES = Object.freeze({
@@ -55,29 +61,32 @@ export function lootFor(wave, houses, piratePoint = false) {
 }
 const iso = ms => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace('.000Z', 'Z');
 
+export const DEFAULT_FRIEND = Object.freeze({ code: 'K7Q2M', ownerName: 'Captain Wren', waveBest: 2, built: Object.freeze(['wall_1', 'cannon_1', 'cannon_2']) });
+
 /** Shared state, so several fake players (two tabs in one test) can meet on one island. */
-export function createFakeWorld({ seed = 7, neighbours = true } = {}) {
+export function createFakeWorld({ seed = 7, neighbours = true, friends = [DEFAULT_FRIEND] } = {}) {
   const world = { random: createRandom(seed), islands: new Map(), players: new Map(), waves: new Map(),
     pointBest: 0, pointFlags: 0, nextWave: 1 };
-  if (neighbours) {
-    // A friend's island to visit by code, with a few things built.
-    world.islands.set('K7Q2M', { code: 'K7Q2M', owner: 'friend', ownerName: 'Captain Wren', waveBest: 2, flags: 2,
-      built: new Set(['wall_1', 'cannon_1', 'cannon_2']) });
-    world.players.set('friend', { coins: 40, ownerName: 'Captain Wren', actions: new Map(), code: 'K7Q2M' });
-  }
+  // Friends' islands to visit by code, with a few things built.
+  if (neighbours) friends.forEach((friend, index) => {
+    const owner = index === 0 ? 'friend' : `friend_${index + 1}`;
+    world.islands.set(friend.code, { code: friend.code, owner, ownerName: friend.ownerName, waveBest: friend.waveBest ?? 0,
+      flags: friend.waveBest ?? 0, built: new Set(friend.built ?? []) });
+    world.players.set(owner, { coins: 40, ownerName: friend.ownerName, actions: new Map(), code: friend.code });
+  });
   return world;
 }
 
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
-  now = () => Date.now(), weather = 'calm' } = {}) {
+  now = () => Date.now(), weather = 'calm', code: wantedCode = null } = {}) {
   let weatherKind = weather;
   const me = () => {
     let player = world.players.get(playerId);
     if (!player) world.players.set(playerId, player = { coins: 0, ownerName, actions: new Map(), code: null });
     if (!player.code) {
-      let code;
-      do code = Array.from({ length: 5 }, () => CODE_ALPHABET[Math.floor(world.random() * CODE_ALPHABET.length)]).join('');
-      while (world.islands.has(code));
+      let code = readIslandCode(wantedCode ?? '');
+      if (code && world.islands.has(code)) code = null;
+      while (!code || world.islands.has(code)) code = Array.from({ length: 5 }, () => CODE_ALPHABET[Math.floor(world.random() * CODE_ALPHABET.length)]).join('');
       world.islands.set(code, { code, owner: playerId, ownerName: player.ownerName, waveBest: 0, flags: 0, built: new Set() });
       player.code = code; player.coins = ISLAND_RULES.startingCoins; // a brand-new captain is paid once
     }
@@ -218,4 +227,94 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     },
   };
   return api;
+}
+
+// --- the island lane's transport over the same fake ---------------------------------------------
+export const FAKE_OWN_CODE = 'K7Q2M';
+export const FAKE_FRIEND = Object.freeze({ code: 'FR3ND', ownerName: 'Captain Gull', waveBest: 2, built: Object.freeze(['wall_1', 'wall_2', 'cannon_1', 'tower_1']) });
+export const FAKE_SPOTS = Object.freeze(ISLAND_RULES.spots.map(id => Object.freeze({ id, kind: kindOfSpot(id) })));
+// Failures a test or the console can queue for the next request; a timeout still does the work.
+const FAILURES = Object.freeze({
+  timeout: { applies: true, status: 0, code: 'timeout', message: 'The server took too long to answer. Try again.' },
+  network: { applies: false, status: 0, code: 'network_error', message: 'No connection to the server. Check your internet and try again.' },
+  server: { applies: false, status: 503, code: 'database_unavailable', message: 'The database could not be reached. Try again in a moment.' },
+});
+const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionUid'], '/api/waves/start': ['where', 'actionUid'],
+  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'] });
+const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
+const exactKeys = (body, keys) => !!body && typeof body === 'object' && !Array.isArray(body)
+  && Object.keys(body).sort().join() === [...keys].sort().join();
+
+/**
+ * {get(path), post(path, body), dev, api}: the fake behind ?islands=fake, answering like online/api.js.
+ * Your island is ISLE-K7Q2M with `coins` starting coins; ISLE-FR3ND (Captain Gull) is a friend's island.
+ */
+export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, now = () => Date.now(), weather = 'calm',
+  code = FAKE_OWN_CODE, ownerName = 'You', friends = [FAKE_FRIEND], seed = 7 } = {}) {
+  let world, api, others = 0;
+  const failures = [];
+  function reset() {
+    world = createFakeWorld({ seed, friends });
+    api = createFakeIslandApi({ world, playerId: 'me', ownerName, now, weather, code });
+    world.players.set('me', { coins: 0, ownerName, actions: new Map(), code: null });
+    void api.island(); world.players.get('me').coins = coins;
+  }
+  reset();
+  const ok = data => ({ ok: true, status: 200, data });
+  const fail = (status, code, message, retryAfter) => {
+    const answer = { ok: false, status, code, message };
+    if (Number.isSafeInteger(retryAfter) && retryAfter > 0) answer.retryAfterSeconds = retryAfter;
+    return answer;
+  };
+  async function route(method, path, body) {
+    const [pathname, query = ''] = String(path).split('?');
+    if (method === 'POST') {
+      const keys = BODY_KEYS[pathname];
+      if (keys && (!exactKeys(body, keys) || (keys.includes('actionUid') && !ACTION_UID.test(String(body.actionUid))))) {
+        return fail(422, 'validation_error', `The request must hold exactly ${keys.join(', ')}.`);
+      }
+    }
+    try {
+      if (method === 'GET' && pathname === '/api/island') return ok(await api.island());
+      if (method === 'GET' && pathname.startsWith('/api/island/visit/')) return ok(await api.visit(decodeURIComponent(pathname.slice(18))));
+      if (method === 'GET' && pathname === '/api/waves/current') return ok(await api.currentWave(new URLSearchParams(query).get('where') ?? ''));
+      if (method === 'POST' && pathname === '/api/island/build') return ok(await api.build(body));
+      if (method === 'POST' && pathname === '/api/waves/start') return ok(await api.startWave(body));
+      if (method === 'POST' && pathname === '/api/waves/join') return ok(await api.joinWave(body));
+      if (method === 'POST' && pathname === '/api/waves/finish') return ok(await api.finishWave(body));
+      return fail(404, 'not_found', 'Not Found');
+    } catch (error) {
+      if (!(error instanceof FakeApiError)) throw error;
+      return fail(error.status, error.code, error.message, error.retryAfter);
+    }
+  }
+  async function request(method, path, body) {
+    const kind = failures.shift();
+    if (kind === undefined) return route(method, path, body);
+    const failure = FAILURES[kind];
+    if (failure.applies) await route(method, path, body);
+    return fail(failure.status, failure.code, failure.message);
+  }
+  const me = () => world.players.get('me');
+  return {
+    get: path => request('GET', path),
+    post: (path, body) => request('POST', path, body),
+    get api() { return api; },
+    get world() { return world; },
+    dev: {
+      setCoins(value) { if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('coins must be a whole number from 0 up.'); me().coins = value; },
+      setWeather(kind) { api.setWeather(kind); },
+      // Another captain rings the bell somewhere (a friend's island, so a visitor can join it).
+      async startWaveAt(where) {
+        const other = createFakeIslandApi({ world, playerId: `captain_${++others}`, ownerName: 'Another captain', now, weather });
+        try { return await other.startWave({ where, actionUid: `other-${others}-captain` }); } catch { return null; }
+      },
+      failNext(kind) {
+        if (!Object.hasOwn(FAILURES, kind)) throw new TypeError(`failNext knows ${Object.keys(FAILURES).join(', ')}.`);
+        failures.push(kind);
+      },
+      read: () => ({ coins: me().coins, built: [...world.islands.get(me().code).built], waves: world.waves.size }),
+      reset() { reset(); failures.length = 0; },
+    },
+  };
 }

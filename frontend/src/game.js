@@ -185,7 +185,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     islandsMode??=await resolveIslandsMode({search:location.search,dev:import.meta.env.DEV,online:adapter?.read?.().mode==='online',
       readFlags:()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;}});
     if(islandsMode==='off'||disposed)return islandsMode;
-    islandLoad??=Promise.all([import('./island/index.js'),islandsMode==='fake'&&import.meta.env.DEV?import('./island/fake-api.js'):null]).then(([module,fake])=>{
+    islandLoad??=Promise.all([import('./island/index.js'),islandsMode==='fake'&&import.meta.env.DEV?import('./pirates/fake-api.js'):null]).then(([module,fake])=>{
       if(disposed)return null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,

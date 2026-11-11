@@ -4,7 +4,7 @@ import {SPOTS, SPOT_IDS, CABIN, BELL, KINDS, islandZones, defenses, onIsland, is
 import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
 import {edgeTrees} from '../../src/world/places/layouts.js';
 import {places} from '../../src/world/places/registry.js';
-import {FAKE_SPOTS} from '../../src/island/fake-api.js';
+import {FAKE_SPOTS} from './fake.js';
 
 describe('island spots', () => {
   it('has 11 unique ids in the order and kinds of the server', () => {

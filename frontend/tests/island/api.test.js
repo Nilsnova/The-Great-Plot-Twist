@@ -2,7 +2,7 @@
 // shape and the click id that is sent again after an unknown outcome.
 import {describe, expect, it, vi} from 'vitest';
 import {createIslandApi, readFailure, PATHS} from '../../src/island/api.js';
-import {createFakeIslandTransport, createFakeIslandApi, FAKE_FRIEND_CODE} from '../../src/island/fake-api.js';
+import {createFakeIslandTransport, createFakeIslandApi, FAKE_FRIEND_CODE} from './fake.js';
 
 function setup(options = {}) {
   let n = 0;
@@ -107,7 +107,7 @@ describe('island api: every refusal keeps the server code and plain message', ()
       expect(early.retryAfterSeconds).toBe(25); // 10 s countdown + 15 s minimum
       expectRefusal(await api.finishWave({waveId: 'nope', survived: true}), 404, 'no_such_wave');
       expectRefusal(await api.joinWave({waveId: 'nope'}), 404, 'no_such_wave');
-      const friend = transport.dev.startWaveAt('ISLE-FR3ND');
+      const friend = await transport.dev.startWaveAt('ISLE-FR3ND');
       expectRefusal(await api.finishWave({waveId: friend.waveId, survived: true}), 403, 'not_in_wave');
     } finally { vi.useRealTimers(); }
   });
@@ -115,7 +115,7 @@ describe('island api: every refusal keeps the server code and plain message', ()
     vi.useFakeTimers({now: Date.parse('2026-11-11T10:00:00Z')});
     try {
       const owner = setup();
-      const friendWave = owner.transport.dev.startWaveAt('ISLE-FR3ND');
+      const friendWave = await owner.transport.dev.startWaveAt('ISLE-FR3ND');
       expect((await owner.api.currentWave({where: 'ISLE-FR3ND'})).data.waveId).toBe(friendWave.waveId);
       // The wave is closed by a finish; a captain who never joined is refused.
       vi.setSystemTime(Date.parse('2026-11-11T10:16:00Z')); // more than 900 s after startsAt

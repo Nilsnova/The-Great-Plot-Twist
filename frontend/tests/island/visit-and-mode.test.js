@@ -3,7 +3,7 @@ import {describe, expect, it} from 'vitest';
 import {islandCode, displayIslandCode, islandRoom, visitUrl, rememberVisit, readVisit, storeVisit, forgetVisit, VISIT_KEY} from '../../src/island/codes.js';
 import {islandsMode, resolveIslandsMode, startPlace} from '../../src/island/mode.js';
 import {placeTopic, isPrivatePlace} from '../../src/net/live-rules.js';
-import {createFakeIslandApi} from '../../src/island/fake-api.js';
+import {createFakeIslandApi} from './fake.js';
 
 function memory() {
   const map = new Map();
