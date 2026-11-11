@@ -1,4 +1,5 @@
 // An accessible display-only sparkline; halted is a supplied presentation state.
+import './components.css';
 import { node, uniqueId } from './dom.js';
 import { chartPoints } from './logic.js';
 export function createMiniChart({ values = [], halted = false, label = 'Price history' } = {}) {

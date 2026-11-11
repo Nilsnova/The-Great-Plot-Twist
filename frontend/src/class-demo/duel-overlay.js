@@ -93,7 +93,7 @@ export function createDuelOverlay({container, duels, reducedMotion = () => false
     if (screen === 'menu') {
       const copy = menuCopy(state.target);
       modal.setTitle(copy.title);
-      const row = node('div', 'shortcut-actions'), wave = btn(copy.wave, () => { dispatch({type: 'wave'}); onWave?.(); });
+      const row = node('div', 'shortcut-actions'), wave = btn(copy.wave, () => { dispatch({type: 'wave'}); onWave?.(); }, true); // gold only for the main action (the duel)
       row.append(wave, btn(copy.duel, () => dispatch({type: 'choose_duel'})), btn(copy.close, () => dispatch({type: 'close'}), true));
       content = node('div');content.append(node('p', 'shortcut-lead', `What would you like to do with ${state.target.name}?`), row);focus = wave;
     } else if (screen === 'picking') {

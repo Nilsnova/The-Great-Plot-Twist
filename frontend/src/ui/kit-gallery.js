@@ -1,5 +1,6 @@
 // Fictional component demonstrations. This page contains no case data or trading rules.
 import './kit/kit.css';
+import './kit/components.css';
 import './kit-gallery.css';
 import * as kit from './kit/index.js';
 import { node } from './kit/dom.js';

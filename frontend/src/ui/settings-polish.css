@@ -1,124 +1,38 @@
-/* Lazy Settings, Credits and shortcut refinements. No title or world HUD selectors. */
-.kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])[open],
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview)[open] {
-  color-scheme:dark;
-  display:flex;
-  flex-direction:column;
-  width:min(740px,calc(100vw - 28px));
-  max-width:calc(100vw - 28px);
-  max-height:calc(100dvh - 28px);
-  padding:20px;
-  overflow:hidden;
-  font:18px/1.55 system-ui,sans-serif;
-  color:#f4ecd7;
-  background:linear-gradient(135deg,#18383e,#183630);
-  background-color:#183630;
-  border:1px solid #bca77b;
-  border-radius:16px;
-  box-shadow:0 24px 80px #041c25b3;
-}
-.kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])>.kit-modal-header,
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview)>.kit-modal-header {
-  flex:none;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  margin:0 0 16px;
-  padding:0 0 14px;
-  border-bottom:1px solid #819b8f66;
-}
-.kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])>.kit-modal-header .kit-heading,
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview)>.kit-modal-header .kit-heading {
-  margin:0;
-  color:#ffe7b2;
-  font:600 clamp(23px,2.5vw,29px)/1.2 Georgia,serif;
-  text-align:left;
-  overflow-wrap:anywhere;
-}
-.kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])>.kit-modal-header .kit-icon-button,
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview)>.kit-modal-header .kit-icon-button {
-  display:grid;
-  place-items:center;
-  flex:none;
-  min-width:44px;
-  min-height:44px;
-  padding:8px;
-  font:400 27px/1 system-ui,sans-serif;
-  color:#fff0cd;
-  background:#19373b;
-  border:1px solid #849d91;
-  border-radius:8px;
-}
-.kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])>.kit-modal-body,
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview)>.kit-modal-body {
-  min-height:0;
-  min-width:0;
-  overflow:auto;
-  overscroll-behavior:contain;
-  scrollbar-gutter:stable;
-  padding:2px 6px 4px 2px;
-}
-.kit-modal.shell-screen[data-mode=settings][open] .preferences {
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
-}
-.kit-modal.shell-screen[data-mode=settings][open] .preferences>:not(.preference) { grid-column:1/-1; }
-.kit-modal.shell-screen[data-mode=settings][open] .preference {
-  min-width:0;
-  gap:8px;
-  align-content:start;
-  padding:14px;
-}
-.preference-title { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.preference-value { flex:none; width:5ch; color:#ffe7b2; text-align:right; font-variant-numeric:tabular-nums; }
-.kit-modal.shell-screen[data-mode=settings] .controls-overview h3 { margin:0 0 12px; color:#ffe7b2; }
-.kit-modal.shell-screen[data-mode=settings] .controls-overview p {
-  margin:0 0 12px;
-  padding:14px;
-  background:#1c3c3f;
-  border:1px solid #849d91;
-  border-radius:9px;
-}
-.kit-modal.shell-screen[data-mode=settings] .controls-overview strong { display:block; margin-bottom:6px; color:#ffe7b2; }
-.kit-modal.shell-screen[data-mode=settings] :is(.problem-report-description,.build-info) { font:16px/1.55 system-ui,sans-serif; }
-.kit-modal.shell-screen[data-mode=settings] .build-info { padding:14px; border:1px solid #849d91; border-radius:9px; background:#1c3c3f; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits { font:18px/1.6 system-ui,sans-serif; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits :is(p,li) { font-size:18px; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits p { margin:0 0 16px; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits h3 { margin:24px 0 10px; color:#ffe7b2; font-size:21px; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; padding:0; list-style:none; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits li { padding:10px 12px; border:1px solid #849d91; border-radius:8px; background:#1c3c3f; }
-.kit-modal.shell-screen[data-mode=credits] .shell-credits a { display:inline-flex; align-items:center; min-height:44px; padding:6px 4px; color:#f3d58c; text-underline-offset:3px; overflow-wrap:anywhere; }
-.kit-modal.shell-screen[data-mode=credits] .kit-button { min-height:44px; font:600 16px/1.4 system-ui,sans-serif; border:1px solid #849d91; border-radius:8px; background:#19373b; color:#fff0cd; }
-.kit-modal.account-modal[open] .account-screen { font-family:system-ui,sans-serif; }
-.kit-modal.account-modal[open] :is(.account-status,.account-save,.account-conflict,.account-delete-confirm) { overflow-wrap:anywhere; }
-.kit-modal:is(.account-modal,.shell-screen[data-mode=settings],.shell-screen[data-mode=credits])[open] .kit-button:hover:not(:disabled) { background:#2b4f4d; color:#fff0cd; }
-.kit-modal.account-modal[open] button:is([data-intent=deleteMyData],[data-intent=armDelete]) { background:#483a36; border-color:#dfb59b; color:#ffe0cb; }
-.kit-modal.account-modal[open] button:is([data-intent=deleteMyData],[data-intent=armDelete]):hover:not(:disabled) { background:#5a4036; color:#ffe0cb; }
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-overview { min-width:0; font:18px/1.55 system-ui,sans-serif; }
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list { grid-template-columns:minmax(150px,.65fr) minmax(0,1.35fr); gap:12px 20px; }
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list :is(dt,dd) { font-size:18px; }
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list dt { color:#ffe7b2; }
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-note { margin:18px 0 0; padding:12px 14px; border-left:3px solid #f3d58c; border-radius:0 8px 8px 0; background:#29494a; color:#f4ecd7; }
-.kit-modal:has(>.kit-modal-body>.shortcuts-overview)::backdrop { background:#06232ac9; }
-
-@media(max-width:600px) {
-  .kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])[open],
-  .kit-modal:has(>.kit-modal-body>.shortcuts-overview)[open] {
-    width:calc(100vw - 16px);
-    max-width:calc(100vw - 16px);
-    max-height:calc(100dvh - 16px);
-    padding:14px;
-    border-radius:12px;
-  }
-  .kit-modal.shell-screen[data-mode=settings][open] .preferences { grid-template-columns:minmax(0,1fr); }
-  .kit-modal.shell-screen[data-mode=credits] .shell-credits ul { grid-template-columns:minmax(0,1fr); }
-  .kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list { grid-template-columns:minmax(0,1fr); gap:4px; }
-  .kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list dd { margin-bottom:12px; }
-}
-@media(max-height:450px) {
-  .kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])[open],
-  .kit-modal:has(>.kit-modal-body>.shortcuts-overview)[open] { padding:12px 14px; }
-  .kit-modal.shell-screen:is([data-mode=settings],[data-mode=credits])>.kit-modal-header,
-  .kit-modal:has(>.kit-modal-body>.shortcuts-overview)>.kit-modal-header { margin-bottom:10px; padding-bottom:8px; }
+/* Settings, Credits and the shortcuts sheet inside the shared panel (kit.css frame, open-panels.css insides). */
+.kit-modal:has(>.kit-modal-body>.shortcuts-overview){width:min(740px,calc(100vw - 40px))}
+.kit-modal.shell-screen[data-mode=settings][open] .preferences{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--u-3);align-items:start}
+.kit-modal.shell-screen[data-mode=settings] .preference.u-choice{display:flex;flex-wrap:wrap}
+.kit-modal.shell-screen[data-mode=settings] .shell-body>.shell-section:first-child{border-top:0;padding-top:0}
+.kit-modal.shell-screen[data-mode=settings][open] .preferences>:not(.preference){grid-column:1/-1}
+.kit-modal.shell-screen[data-mode=settings] .preference{display:grid;gap:var(--u-2);align-content:start;font-size:var(--u-sm);margin:0}
+.kit-modal.shell-screen[data-mode=settings] .preference.is-wide{grid-column:1/-1}
+.kit-modal.shell-screen[data-mode=settings] .preference>span:first-child,.kit-modal.shell-screen[data-mode=settings] .preference legend{font:600 var(--u-sm)/1.4 var(--u-font);color:var(--u-ink)}
+.kit-modal.shell-screen[data-mode=settings] .preference:has(.u-switch){grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.preference-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.preference-value{flex:none;width:5ch;color:var(--u-gold);text-align:right;font-variant-numeric:tabular-nums}
+.kit-modal.shell-screen[data-mode=settings] .preference input[type=range]{width:100%;min-height:44px;accent-color:var(--u-gold)}
+.kit-modal.shell-screen[data-mode=settings] .controls-overview{border-top:2px solid #3d6a6b;padding-top:var(--u-4);font-size:var(--u-sm)}
+.kit-modal.shell-screen[data-mode=settings] .controls-overview h3{margin:0 0 var(--u-3)}
+.kit-modal.shell-screen[data-mode=settings] .controls-overview p{margin:0 0 var(--u-3)}
+.kit-modal.shell-screen[data-mode=settings] .controls-overview strong{display:block;margin-bottom:6px;color:var(--u-gold)}
+.kit-modal.shell-screen[data-mode=settings] :is(.problem-report-description,.build-info){font:16px/1.55 var(--u-font)}
+.kit-modal.shell-screen[data-mode=settings] .shell-body>:is(.kit-button,a.kit-button){justify-self:start}
+.kit-modal.shell-screen[data-mode=settings] .shell-links{display:flex;flex-wrap:wrap;gap:var(--u-2)}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits{font:18px/1.6 var(--u-font)}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits :is(p,li){font-size:18px}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits p{margin:0 0 16px}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits h3{margin:24px 0 10px;font-size:21px}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits li{padding:10px 12px;border:2px solid #3d6a6b;background:var(--u-card)}
+.kit-modal.shell-screen[data-mode=credits] .shell-credits a{display:inline-flex;align-items:center;min-height:44px;padding:6px 4px;color:var(--u-gold);text-underline-offset:3px;overflow-wrap:anywhere}
+.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-overview{min-width:0;font:18px/1.55 var(--u-font)}
+.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list{grid-template-columns:minmax(150px,.65fr) minmax(0,1.35fr);gap:12px 20px}
+.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list :is(dt,dd){font-size:18px}
+.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list dt{color:var(--u-gold)}
+.kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-note{margin:18px 0 0}
+@media(max-width:600px){
+  .kit-modal.shell-screen[data-mode=settings][open] .preferences{grid-template-columns:minmax(0,1fr)}
+  .kit-modal.shell-screen[data-mode=credits] .shell-credits ul{grid-template-columns:minmax(0,1fr)}
+  .kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list{grid-template-columns:minmax(0,1fr);gap:4px}
+  .kit-modal:has(>.kit-modal-body>.shortcuts-overview) .shortcuts-list dd{margin-bottom:12px}
 }

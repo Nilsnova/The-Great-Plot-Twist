@@ -578,6 +578,7 @@ e
 each
 eager
 earlier
+earn
 earned
 east
 edge
@@ -709,6 +710,7 @@ finishes
 finishing
 finnhub
 firefox
+fires
 first
 fish
 fisherman
@@ -804,6 +806,7 @@ glances
 glass
 glints
 glow
+glowing
 glows
 go
 goal
@@ -974,6 +977,7 @@ investigate
 investment
 invitation
 invitations
+invite
 invited
 inviting
 ip
@@ -1965,6 +1969,7 @@ staked
 stakes
 staking
 stale
+stall
 stalls
 stamp
 stamped
@@ -2022,6 +2027,7 @@ submit
 submitting
 subscribed
 subscriber
+subtitle
 subtitles
 success
 successful

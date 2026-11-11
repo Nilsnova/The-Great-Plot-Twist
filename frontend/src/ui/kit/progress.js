@@ -1,4 +1,5 @@
 // Native progress semantics with a label. Feature owners supply the values.
+import './components.css';
 import { node } from './dom.js';
 import { progressRatio } from './logic.js';
 export function createProgress({ label = 'Progress', value = 0, max = 1 } = {}) {

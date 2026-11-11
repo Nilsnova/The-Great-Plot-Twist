@@ -1,6 +1,7 @@
 import '../ui/open-panels.css';
+import '../ui/kit/components.css';
 import '../ui/settings-polish.css';
-// Readable native settings controls. Used by both the title and pause menu.
+// Readable native settings controls (segmented radios, switches, sliders). Used by the title and the pause menu.
 import '../shell/preferences.css';
 import {node,uniqueId} from '../ui/kit/dom.js';
 import {getPreferences,setPreferences} from './preferences.js';
@@ -14,17 +15,27 @@ export function createSettingsView(view) {
   function field(title,input,key,read) {
     const label=node('label','preference'),id=uniqueId('preference');input.id=id;label.htmlFor=id;
     label.append(node('span','',title),input);form.append(label);
-    input.addEventListener('change',()=>{status.textContent=setPreferences({[key]:read(input)})?'Preferences saved in this browser.':'Preferences applied for this visit; storage is unavailable.';});
+    input.addEventListener('change',()=>saved(setPreferences({[key]:read(input)})));
     return label;
   }
-  function select(title,key,options,read=value=>value) {
-    const input=node('select');input.dataset.preference=key;
-    for(const [value,label] of options){const option=node('option','',label);option.value=value;input.append(option);}
-    input.value=String(values[key]);field(title,input,key,element=>read(element.value));
+  // A short list of choices is a segmented toggle (native radios), not a dropdown.
+  function choice(title,key,options,read=value=>value) {
+    const set=node('fieldset','preference u-choice'),name=uniqueId('preference');set.dataset.preference=key;set.append(node('legend','',title));
+    for(const [value,label] of options){
+      const item=node('label'),input=node('input');input.type='radio';input.name=name;input.value=value;input.checked=String(values[key])===value;
+      input.addEventListener('change',()=>{if(input.checked)saved(setPreferences({[key]:read(value)}));});
+      item.append(input,document.createTextNode(label));set.append(item);
+    }
+    form.append(set);return set;
   }
-  select('Show other captains','showCaptains',[['everyone','Everyone · up to 8'],['crew','Crew only'],['off','Off']]);
-  select('First-time hints','hintsEnabled',[['true','On'],['false','Off']],value=>value==='true');
-  select('Quality','quality',[['high','High · full weather'],['low','Low · lighter weather']]);
+  function saved(ok){status.textContent=ok?'Saved in this browser.':'Applied for this visit; storage is unavailable.';}
+  function toggle(title,key){
+    const input=node('input','u-switch');input.type='checkbox';input.checked=values[key]===true;input.dataset.preference=key;
+    field(title,input,key,element=>element.checked);return input;
+  }
+  choice('Show other captains','showCaptains',[['everyone','Everyone'],['crew','Crew'],['off','Off']]);
+  toggle('First-time hints','hintsEnabled');
+  choice('Quality','quality',[['high','High'],['low','Low']]);
   for(const key of ['master','music','effects','voice']) {
     const input=node('input');input.type='range';input.min='0';input.max='100';input.step='1';input.value=String(Math.round(values[key]*100));input.dataset.preference=key;
     const output=node('output','preference-value',`${input.value}%`);output.setAttribute('aria-hidden','true');
@@ -33,10 +44,10 @@ export function createSettingsView(view) {
     const label=field(`${key[0].toUpperCase()+key.slice(1)} volume`,input,key,element=>Number(element.value)/100);
     const title=label.firstElementChild;title.classList.add('preference-title');title.append(output);output.htmlFor=input.id;
   }
-  select('Reduced motion','reducedMotion',[['null','Follow device preference'],['true','On · still transitions'],['false','Off · full animation']],value=>value==='null'?null:value==='true');
-  select('Cutscene subtitles','subtitleSize',[['normal','Always on · normal size'],['large','Always on · large']]);
-  select('Text speed','textSpeed',[['24','Relaxed'],['36','Steady'],['60','Quick'],['0','Instant']],Number);
-  const colour=node('input');colour.type='checkbox';colour.checked=values.colourblind;colour.dataset.preference='colourblind';field('Color-blind-safe highlights',colour,'colourblind',element=>element.checked);
+  choice('Reduced motion','reducedMotion',[['null','Device'],['true','On'],['false','Off']],value=>value==='null'?null:value==='true');
+  choice('Subtitle size','subtitleSize',[['normal','Normal'],['large','Large']]);
+  choice('Text speed','textSpeed',[['24','Relaxed'],['36','Steady'],['60','Quick'],['0','Instant']],Number).classList.add('is-wide');
+  toggle('Color-blind-safe highlights','colourblind');
   const controls=node('section','controls-overview');controls.append(node('h3','','Controls'));
   for(const [title,copy] of [
     ['Keyboard','WASD or arrows walk; Shift runs. E inspects, M opens the chart, and the wheel zooms. Escape closes or pauses. In story choices, use arrows and Enter or numbers 1 to 9.'],

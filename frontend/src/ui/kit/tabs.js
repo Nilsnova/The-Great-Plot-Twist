@@ -1,4 +1,5 @@
 // Native tabs with automatic arrow/Home/End selection and matching labelled panels.
+import './components.css';
 import { node, content, uniqueId } from './dom.js';
 export function createTabs({ items = [], selected = 0, onChange } = {}) {
   const element = node('section','kit-tabs'), bar = node('div','kit-tablist'); bar.setAttribute('role','tablist');
