@@ -37,6 +37,7 @@ addresses
 adds
 adjusts
 admission
+admits
 admitted
 advance
 advertising
@@ -236,6 +237,7 @@ browsing
 brussels
 budget
 build
+builder
 building
 buildings
 builds
@@ -281,6 +283,7 @@ card
 cards
 care
 cargo
+carpenter
 carries
 carry
 cars
@@ -604,6 +607,7 @@ email
 emblem
 emote
 emotes
+emptied
 empty
 enable
 enabled
@@ -853,6 +857,7 @@ guild
 gull
 gull's
 gulls
+gunner
 h
 had
 half
@@ -903,6 +908,7 @@ highlights
 him
 hint
 hints
+hired
 hires
 his
 historical
@@ -1043,6 +1049,7 @@ keys
 kicking
 kickoff
 kind
+kinds
 kiosk
 kit
 kits
@@ -1092,6 +1099,7 @@ let
 lets
 letters
 level
+levels
 leverage
 library
 licences
@@ -1238,6 +1246,7 @@ money
 monospace
 more
 morning
+mortar
 most
 mostly
 motion

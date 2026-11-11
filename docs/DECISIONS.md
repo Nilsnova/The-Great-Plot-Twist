@@ -612,6 +612,14 @@ browser's storage unread. The `case`, crew and save routes still answer if the f
 
 **Why:** The owner's call for the redesign: stakes on open-ended real-world questions read as a prediction market, which the game should not be. The market stall and the match board keep one clear, small stake each.
 
+## D036 · Tower defense v2: levels, crew, captain, Pirate Point builds, 100 waves · 2026-11-11
+
+**Status:** Decided by the owner on Wed 11 Nov 2026 (docs/TOWER-DEFENSE.md); backend built on branch `feat/td-backend`. Migration `20261111030000_tower_defense.sql`.
+
+**Decision:** The island gets 16 spots: `wall_1`..`wall_6`, `cannon_1`..`cannon_7` (each takes a cannon or a mortar, chosen at the first build; the old `cannon_1`..`cannon_4` keep their ids so existing rows and scenes stay valid), `tower_1`, `house_1`, `house_2`. Buildings have levels (wall, cannon, mortar 3; watchtower, house 2), crew is bought once and kept (gunner 2, carpenter 2, lookout 1), and every captain has a level 1 to 5. Prices, maximums and unlocks live in `islands.json`; the server checks them and passes them to one atomic, repeat-safe database function per action (the wallet ledger ref is the record of a click), which checks the maximum and the unlocked level again. Unlocks follow the best wave a player won (own island, or a Pirate Point wave they fought in and won: `islands.point_wave_best`). Pirate Point has ten shared spots in `pirate_point_buildings`; whoever clicks pays. Waves go up to 100, every 5th is a boss wave (`boss: true`, loot × 2), house levels count for the loot, and after a lost island wave the next bell rings the best wave minus 2, at least 1 (`islands.next_wave`; a win of the same wave beats the loss). `wave_finish()` gets a new 11-argument version next to the 8-argument one, so a server from before the migration keeps working until the new code is deployed. A friend invite (`POST /api/island/invite/join`) admits an anonymous guest who presents a valid island code through the same `demo_guests` admission as the class code; no class code is needed, and any number of friends may join one island (the wave tables have no cap).
+
+**Why:** The owner wants a deeper tower defense he can play with his brother tonight, with as little new machinery as possible: the existing islet table, ledger, guest admission and wave functions carry the new rules.
+
 ## D030 · Class code instead of the demo window · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the

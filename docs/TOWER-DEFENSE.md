@@ -16,7 +16,7 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 | watchtower | +8 / +12 range to all towers, fog sight bonus | 🪙 40 | 🪙 80 | — |
 | house | +5 / +10 loot per won wave | 🪙 50 | 🪙 100 | — |
 
-**Spots on your island (16):** `wall_1`…`wall_6` (wall), `tower_s1`…`tower_s7` (cannon **or** mortar: the player chooses at the first build; an upgrade keeps the kind), `tower_1` (watchtower), `house_1`, `house_2` (house). The old `cannon_1`…`cannon_4` spots stay valid as tower spots that accept cannon or mortar (so `tower_s1`…`tower_s4` may simply be those; the backend decides the ids and reports them).
+**Spots on your island (16):** `wall_1`…`wall_6` (wall), `cannon_1`…`cannon_7` (cannon **or** mortar: the player chooses at the first build; an upgrade keeps the kind), `tower_1` (watchtower), `house_1`, `house_2` (house). Final ids, decided by the backend build (D036): the old `cannon_1`…`cannon_4` keep their ids, so built rows stay valid, and `cannon_5`…`cannon_7` are new.
 
 ## 3. Crew (NPC support), bought once, kept
 

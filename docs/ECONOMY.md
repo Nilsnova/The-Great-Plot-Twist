@@ -19,6 +19,29 @@ puts every coin on one small scale. The numbers live in `backend/content/islands
 | Market stall call (up or down in 1 hour) | stake 5, 10 or 25; right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); no fee, so a fair call has an expected value of about 0 |
 | Other Harbor stakes, duel stake | 5, 10 or 25; 0 or 10 | lane H |
 
+### Tower defense v2 (11 Nov 2026, D036)
+
+The tables of [TOWER-DEFENSE.md](TOWER-DEFENSE.md) sections 2 to 4, 9 and 10, all in `islands.json`:
+
+| Thing | Coins (level 1 / 2 / 3) | Unlocks after wave | Where it is enforced |
+|---|---|---|---|
+| Wall | 10 / 20 / 40 | 0 / 2 / 5 | build: `islet_build()`; upgrade: `island_upgrade()` (`building_purchase`, ref `upgrade:<uid>`) |
+| Cannon | 30 / 60 / 120 | 0 / 2 / 5 | the same |
+| Mortar (on a tower spot) | 60 / 120 / 240 | 3 / 3 / 5 | the same |
+| Watchtower | 40 / 80 | 3 / 3 | the same |
+| House (+5 loot per level) | 50 / 100 | 2 / 2 | the same |
+| Gunner / carpenter / lookout | 40 / 30 / 25 each, at most 2 / 2 / 1 | 5 / 5 / 8 | `island_hire()` (`crew_hire`, ref `crew:<uid>`) |
+| Captain level 2 / 3 / 4 / 5 | 20 / 40 / 80 / 160 | 1 / 1 / 8 / 8 | `island_captain()` (`captain_upgrade`, ref `captain:<uid>`) |
+| Pirate Point spots | the same prices, paid by whoever clicks | the clicker's unlocks | `pp_build()` / `pp_upgrade()` (`building_purchase`, ref `pp:<uid>`) |
+| Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house level; Pirate Point 20 + 5 × *n*; every 5th wave (boss) × 2 | — | the 11-argument `wave_finish()` |
+
+Waves go up to 100. The unlock wave is the best wave the player won: on their own island, or any
+Pirate Point wave they fought in and won. After a lost island wave the next bell rings the best
+wave minus 2 (at least 1), so a client that always reports "lost" cannot farm low waves for more
+than the restart pays, and one that always reports "survived" climbs one wave per 25 s cycle as
+before. The highest single loot is a boss wave 100 with both houses at level 2:
+(10 + 500 + 20) × 2 = 1060 coins.
+
 Abuse bounds of the waves: the browser reports `survived`, so the server bounds what it
 can earn instead of proving it. One running wave per island, a finish no earlier than
 15 s after the countdown (refused, not paid), at most 20 wave calls per minute per player
