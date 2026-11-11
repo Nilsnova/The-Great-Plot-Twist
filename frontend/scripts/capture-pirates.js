@@ -14,6 +14,7 @@ async function frontDoor(page,query){
   await page.locator('#play').click();
   // The intro and the goal card show on a first visit; a later visit in the same browser may skip them.
   if(await page.locator('dialog.cutscene[open]').waitFor({timeout:20000}).then(()=>true,()=>false))await page.getByRole('button',{name:'Skip',exact:true}).click();
+  if(await page.locator('.tutorial-card[open]').waitFor({timeout:15000}).then(()=>true,()=>false))await page.locator('.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true}).click();
   if(await page.locator('.goal-card[open]').waitFor({timeout:15000}).then(()=>true,()=>false))await page.getByRole('button',{name:'Got it',exact:true}).click();
   await page.waitForFunction(()=>window.__pirates&&window.__island?.world.current,null,{timeout:30000});
   await page.evaluate(()=>window.__pirates.ready);

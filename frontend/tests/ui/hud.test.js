@@ -11,7 +11,7 @@ async function mount(page){
     window.events=await window.g20Import('/src/core/events.js');
     const {createHud}=await window.g20Import('/src/ui/hud.js');window.calls=[];
     const game=document.createElement('main');game.id='game';document.body.append(game);
-    window.testHud=createHud(game,{focus(){},start(){window.calls.push('start');},chart(){window.calls.push('chart');},controls(){window.calls.push('controls');},menu(){window.calls.push('menu');}});
+    window.testHud=createHud(game,{focus(){},start(){window.calls.push('start');},chart(){window.calls.push('chart');},controls(){window.calls.push('controls');},tutorial(){window.calls.push('tutorial');},menu(){window.calls.push('menu');}});
     window.testHud.start();
   });
 }
@@ -166,7 +166,7 @@ it('shows a friendly hint after 20 s standing still, and the place name for 2 s 
   });
 });
 
-it('offers the sea chart, controls and a place · weather · time line in the pause menu',async()=>{
+it('offers the sea chart, controls, How to play and a place · weather · time line in the pause menu',async()=>{
   await evaluate.withPage(async page=>{
     await mount(page);
     const result=await page.evaluate(async()=>{
@@ -174,7 +174,7 @@ it('offers the sea chart, controls and a place · weather · time line in the pa
       const extras=menuExtras();extras.forEach(extra=>extra.onSelect());
       return {labels:extras.map(extra=>extra.label),calls:window.calls,status:menuStatus()};
     });
-    expect(result.labels).toEqual(['Sea chart','Controls']);expect(result.calls).toEqual(['start','chart','controls']);
+    expect(result.labels).toEqual(['Sea chart','Controls','How to play']);expect(result.calls).toEqual(['start','chart','controls','tutorial']);
     expect(result.status).toMatch(/^Saltreach Harbor · (Fair skies|Overcast|Sea mist|Rain at sea) · \d\d:\d\d$/);
   });
 });

@@ -35,7 +35,7 @@ try {
     // Play -> lore intro -> goal card -> your island, with the island arrival cutscene once.
     const seen = [];
     for (let i = 0; i < 6; i++) {
-      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.goal-card[open]')
+      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')
         || (window.__island?.world.current?.id === 'home_islet' && !document.querySelector('dialog[open]')), null, {timeout: 30000});
       if (await page.locator('.goal-card[open]').count()) {
         seen.push('goal');
@@ -51,7 +51,7 @@ try {
           seen.push('island_arrival');
           await page.getByRole('button', {name: 'Skip', exact: true}).click({timeout: 2000}).catch(() => {});
         }
-      } else if (await page.locator('dialog.cutscene[open]').count()) {
+      } else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) {
         seen.push(await page.evaluate(() => document.querySelector('dialog.cutscene[open]')?.dataset.cutscene ?? 'cutscene'));
         await page.getByRole('button', {name: 'Skip', exact: true}).click();
       } else break;
@@ -172,10 +172,10 @@ try {
     await page.reload();
     await page.locator('#play').click();
     for (let i = 0; i < 6; i++) {
-      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.goal-card[open]')
+      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')
         || (window.__island?.world.current?.id === 'saltreach_harbor' && window.__island.classDemo && !document.querySelector('dialog[open]')), null, {timeout: 30000});
       if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
-      else if (await page.locator('dialog.cutscene[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
+      else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
       else break;
       await page.waitForTimeout(300);
     }

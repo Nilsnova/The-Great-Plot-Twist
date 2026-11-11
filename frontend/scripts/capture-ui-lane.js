@@ -20,6 +20,7 @@ async function frontDoor(url,size,shotCard){
   await page.locator('#play').waitFor();if(shotCard){await page.waitForTimeout(600);await page.screenshot({path:`${dir}/${label}-title-${size}.png`});}await page.locator('#play').click();
   await page.locator('dialog.cutscene[open]').waitFor({timeout:30000});
   await page.getByRole('button',{name:'Skip',exact:true}).click();
+  await page.locator('.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true}).click();
   await page.locator('.goal-card[open]').waitFor({timeout:30000});await page.waitForTimeout(400);
   if(shotCard)await page.screenshot({path:`${dir}/${label}-goal-card-${size}.png`});
   await page.getByRole('button',{name:/Got it|Let's go/}).click();

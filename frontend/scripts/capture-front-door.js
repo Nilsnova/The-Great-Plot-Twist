@@ -21,6 +21,8 @@ try{
   await page.waitForFunction(()=>document.querySelector('dialog.cutscene')?.dataset.line==='lore_intro_06',null,{timeout:15000});
   await page.waitForTimeout(900);await page.screenshot({path:`${outDir}/03-cutscene-harbor.png`});
   await page.getByRole('button',{name:'Skip',exact:true}).click();report.clicks++;
+  await page.locator('.tutorial-card[open]').waitFor({timeout:30000});await page.waitForTimeout(600);await page.screenshot({path:`${outDir}/04-how-to-play.png`});
+  await page.locator('.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true}).click();report.clicks++;
   await page.locator('.goal-card[open]').waitFor({timeout:30000});
   await page.waitForTimeout(600);await page.screenshot({path:`${outDir}/04-goal-card.png`});step('goal card');
   await page.getByRole('button',{name:'Got it',exact:true}).click();report.clicks++;
