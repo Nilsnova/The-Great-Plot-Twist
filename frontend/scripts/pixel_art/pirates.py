@@ -186,7 +186,10 @@ def sailor(d, x, y, cap=RED, shirt=BONE):
     d.line((x - 1, y - 2, x + 2, y - 2), fill='#3b4a5a')
 
 
-def lantern(d, x, y):
+def lantern(d, x, y, post=0):
+    """A stern lantern; post = rows of iron bracket below it down to the rail."""
+    if post:
+        d.line((x, y + 3, x, y + 2 + post), fill=INK)
     d.rectangle((x - 1, y - 1, x + 1, y + 2), fill=INK)
     d.line((x, y, x, y + 1), fill=GLOW)
     d.point((x, y), fill=GOLD_LIT)
@@ -265,7 +268,7 @@ def sloop(frame):
         port(d, x, 46 + dy)
     d.line((55, 41 + dy, 63, 36 + dy), fill=INK); d.line((55, 40 + dy, 62, 35 + dy), fill=WOOD3[1])
     sailor(d, 23, 43 + dy); sailor(d, 46, 42 + dy, cap='#3b4a5a')
-    lantern(d, 4, 36 + dy)
+    lantern(d, 5, 35 + dy, 4)
     pirate_flag(d, 36, 2 + dy, frame)
     clip_below(im, water)
     wake(d, 8, 54, water, frame, 54)
@@ -297,7 +300,7 @@ def brig(frame):
     d.line((88, 51 + dy, 95, 43 + dy), fill=INK); d.line((87, 51 + dy, 94, 43 + dy), fill=WOOD3[1])
     for x, y in [(28, 55), (52, 54), (76, 53)]:
         sailor(d, x, y + dy, cap=RED if x != 52 else '#3b4a5a')
-    lantern(d, 3, 39 + dy)
+    lantern(d, 4, 38 + dy, 3)
     pirate_flag(d, 38, 1 + dy, frame, 12, 8)
     clip_below(im, water)
     wake(d, 10, 86, water, frame, 86)
@@ -337,7 +340,7 @@ def flagship(frame):
     d.rectangle((118, 69 + dy, 121, 72 + dy), fill=INK); d.rectangle((119, 70 + dy, 120, 71 + dy), fill=BONE)  # figurehead
     for x, y in [(36, 76), (58, 76), (84, 75), (106, 75)]:
         sailor(d, x, y + dy, cap=RED if x % 2 == 0 else '#3b4a5a')
-    lantern(d, 2, 51 + dy); lantern(d, 29, 51 + dy)
+    lantern(d, 4, 50 + dy, 4); lantern(d, 27, 50 + dy, 4)
     pirate_flag(d, 72, 0 + dy, frame, 16, 9)
     pirate_flag(d, 42, 4 + dy, (frame + 1) % 3, 9, 6)
     clip_below(im, water)
@@ -381,7 +384,7 @@ def warship(frame):
     d.line((151, 67 + dy, 159, 51 + dy), fill=INK); d.line((150, 66 + dy, 158, 50 + dy), fill=WOOD3[2])
     for x, y in [(42, 78), (64, 78), (100, 78), (132, 70), (140, 70)]:
         sailor(d, x, y + dy, cap=RED_DARK, shirt='#8c928a')
-    lantern(d, 1, 48 + dy); lantern(d, 35, 48 + dy); lantern(d, 152, 63 + dy)
+    lantern(d, 4, 46 + dy, 4); lantern(d, 32, 46 + dy, 4); lantern(d, 150, 62 + dy, 4)
     pirate_flag(d, 86, 0 + dy, frame, 18, 11, skull=True)
     pirate_flag(d, 48, 6 + dy, (frame + 2) % 3, 10, 7)
     clip_below(im, water)
