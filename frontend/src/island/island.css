@@ -62,7 +62,7 @@
 .island-link{flex:1;min-width:0;font:600 16px/1.3 var(--u-font);padding:8px 10px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown)}
 .island-share .kit-button{flex:none}
 .island-copied{color:var(--u-gold);font-size:15px}
-.island-code-small{color:var(--u-mute);font-size:15px;text-align:center}
+.island-code-small{color:var(--u-mute);font-size:var(--u-sm);text-align:center}
 .island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
 .island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
 @media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}
