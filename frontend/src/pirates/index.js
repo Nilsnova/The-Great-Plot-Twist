@@ -14,6 +14,9 @@
 //   openRoom(topic) the core lane: a Realtime broadcast room {send, on, close} or null
 //                   (live:place:isle_<code>:1 for the island, live:place:pirate_point:1)
 //   islandRoom      the current island's room, if the island lane already holds one
+//   getCrew()       the island lane: {gunner, carpenter, lookout} hired on the island being defended
+//   captainLevel()  this player's captain level (GET /api/island captain.level), 1 to 5
+//   startNextWave() the island lane: the start route again, for the break's "Next wave" (§1)
 // The island lane emits `wave_started_server` on the bus after its start/join route answered.
 import { createWaveController } from './controller.js';
 import { createPiratePoint } from './pirate-point.js';
@@ -37,9 +40,10 @@ export function mountPirates(ctx) {
     },
   };
   const shared = { bus, world, sound: audio, reducedMotion: ctx.reducedMotion ?? (() => false), quality: ctx.quality ?? (() => 'high'),
-    playerId: ctx.playerId };
+    playerId: ctx.playerId, captainLevel: ctx.captainLevel ?? (() => 1) };
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
-    room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {} });
+    room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
+    getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };

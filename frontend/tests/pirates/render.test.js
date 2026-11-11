@@ -1,7 +1,7 @@
 // The wave renderer (lane P3): one atlas, batched layers, pooled effects and nothing left behind.
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { coastPoint, createWave } from '../../src/pirates/sim.js';
+import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { ATLAS_IDS, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 
@@ -40,7 +40,7 @@ describe('pirate wave renderer', () => {
     }
   });
 
-  it('draws 24 ships in a few batched layers and leaves nothing behind across waves', () => {
+  it('draws a full fleet in a few batched layers and leaves nothing behind across waves', () => {
     const scene = new THREE.Scene(), before = scene.children.length, shared = atlas();
     const runs = [];
     for (const seed of [1, 2, 3]) {
@@ -48,7 +48,7 @@ describe('pirate wave renderer', () => {
       const layers = renderer.root.children.length;
       expect(layers).toBe(3 + 5 + 1); // far sea, near sea, air, one per wall or cannon, fog
       const run = play(renderer, seed);
-      expect(run.state.total).toBe(24);
+      expect(run.state.total).toBe(CONFIG.fleet.max);
       expect(run.peak.ships).toBeGreaterThanOrEqual(6);
       expect(run.peak.instances).toBeLessThan(300);
       // Every effect has run out: the pools are empty, the layers hold no stale entries.

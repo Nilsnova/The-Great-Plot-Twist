@@ -89,7 +89,7 @@ export function createPiratePoint(ctx) {
   });
   const controller = createWaveController({ bus, world, room, sound, reducedMotion, quality: ctx.quality, playerId: ctx.playerId,
     getDefenses: () => DEFENSES.map(item => ({ ...item })), place: PLACE, listen: false, accept: info => info.flagship === true,
-    simOptions: { coast: COAST, lanes: LANES }, beamFrom: BEAM_FROM, playCutscene,
+    simOptions: { coast: COAST, lanes: LANES }, beamFrom: BEAM_FROM, playCutscene, captainLevel: ctx.captainLevel ?? (() => 1),
     finishWave: async body => { const answer = await api.finishWave(body); if (answer?.loot) notify(`Pirate Point loot: 🪙 ${answer.loot}`); return answer; },
     ...ctx.controllerOptions });
 

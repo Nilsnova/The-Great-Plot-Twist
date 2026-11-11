@@ -30,6 +30,12 @@ export function pointApiFrom(islandApi) {
   };
 }
 
+// The spots' levels from the island answer ({spots: [{id, level}]}), when the island lane leaves them out.
+export function withLevels(defenses, islandAnswer) {
+  const levels = new Map((islandAnswer?.spots ?? []).map(item => [item?.id, item?.level]));
+  return defenses.map(item => (Number.isInteger(item.level) || !Number.isInteger(levels.get(item.id)) ? item : {...item, level: levels.get(item.id)}));
+}
+
 export function wireWaves(ctx) {
   const {island = null, on, world, openRoom = () => null, notify = () => {}} = ctx;
   const stops = [], sent = new Set();
@@ -38,8 +44,16 @@ export function wireWaves(ctx) {
   const stopRenderer = island ? registerWaveRenderer({name: 'pirates'}) : () => {};
   const finishWave = async body => throwRefusal(await finishIslandWave(body));
   const api = island ? pointApiFrom(island.api) : ctx.fakeApi ?? null;
-  const pirates = mountPirates({...ctx, getDefenses: () => island?.defenses() ?? [], finishWave, api, openRoom, notify,
-    islandRoom, islandPlace: ISLAND_PLACE});
+  // Tower defense v2 (TOWER-DEFENSE.md): levels come with the defenses, crew and captain from GET /api/island,
+  // and the break's "Next wave" rings the island's bell again (own island, or the friend's we are visiting).
+  // Host and visitors must feed the sim the same island, so both read the defended island's answer (a
+  // visitor's comes from the visit route and needs its levels and crew too).
+  const own = () => island?.island ?? null, defended = () => island?.visiting ?? own();
+  const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
+    islandRoom, islandPlace: ISLAND_PLACE,
+    getCrew: () => defended()?.crew ?? null,
+    captainLevel: () => own()?.captain?.level ?? 1,
+    startNextWave: island ? () => island.flow.ring(island.visiting?.code ?? 'own') : null});
 
   function followRoom() {
     const place = island && world.current?.id === ISLAND_PLACE ? island.roomPlace() : null;

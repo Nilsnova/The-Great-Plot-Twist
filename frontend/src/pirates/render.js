@@ -10,6 +10,11 @@
 // layers have fixed capacities and the effect lists reuse their entries.
 // Reduced motion: no bobbing, no arcs (balls fly flat), no sparks, a single bloom instead. Low quality:
 // about a third of the sparks, no smoke puffs and no wakes.
+//
+// Tower defense v2: mortar shells on a high arc with an area burst, warships, tower levels (brass pips,
+// a slightly larger and brighter sprite), crew figures, the captain's musket (tracer, flash, reload ring)
+// and the lookout's early warnings. The new art (OPTIONAL_ART, made by the art lane) is loaded when its
+// PNG exists; until then each id falls back to an existing sprite (tinted or scaled) or simple quads.
 import * as THREE from 'three';
 import { pirateDimensions, pirateFrames } from '../pixel/pirate-catalog.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
@@ -18,12 +23,30 @@ const UNIT = 16, Y = .72;
 const WHITE = 'white';
 export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirateFrames.flagship, ...pirateFrames.splash,
   ...pirateFrames.wall, ...pirateFrames.cannon, 'pirate-cannonball', 'pirate-wreck'];
+// New sprites with their stand-ins: [fallback id or null, tint, scale] while the PNG is missing.
+export const OPTIONAL_ART = Object.freeze({
+  'pirate-warship-1': ['pirate-flagship-1', '#6f7a86', .7], 'pirate-warship-2': ['pirate-flagship-2', '#6f7a86', .7],
+  'pirate-warship-3': ['pirate-flagship-3', '#6f7a86', .7],
+  'island-mortar': ['island-cannon', '#b9a27a', 1], 'island-mortar-fire': ['island-cannon-fire', '#b9a27a', 1],
+  'island-cannon-l2': ['island-cannon', null, 1], 'island-cannon-l3': ['island-cannon', null, 1],
+  'island-mortar-l2': ['island-mortar', null, 1], 'island-mortar-l3': ['island-mortar', null, 1],
+  'island-wall-l2': ['island-wall', null, 1], 'island-wall-l3': ['island-wall', null, 1],
+  'crew-gunner': [null], 'crew-carpenter': [null], 'crew-lookout': [null],
+  'fx-smoke-1': [null], 'fx-smoke-2': [null], 'fx-smoke-3': [null],
+  'fx-fire-1': [null], 'fx-fire-2': [null], 'fx-fire-3': [null],
+  'fx-explosion-1': ['pirate-splash-1', '#ffb35a', 1.6], 'fx-explosion-2': ['pirate-splash-2', '#ff8a3a', 1.9],
+  'fx-explosion-3': ['pirate-splash-3', '#c9643a', 2.1], 'fx-explosion-4': ['pirate-splash-3', '#6d5a4a', 2.2],
+  'fx-musket-flash': [null], 'fx-mortar-shell': ['pirate-cannonball', '#4a4440', 1.3],
+});
+export const WARSHIP_FRAMES = ['pirate-warship-1', 'pirate-warship-2', 'pirate-warship-3'];
+const EXPLOSION_FRAMES = ['fx-explosion-1', 'fx-explosion-2', 'fx-explosion-3', 'fx-explosion-4'];
 const LAYER_ORDER = { far: 76, near: 124, air: 940, fog: 900 };
 const CAPACITY = { far: 96, near: 96, air: 320 };
 const SINK_SECONDS = 1.8, WRECK_SECONDS = 9, SPLASH_SECONDS = .5, FLASH_SECONDS = .12, FIRE_SECONDS = .22;
+const BURST_SECONDS = .6, TRACER_SECONDS = .14, POST_CAPACITY = 8;
 
 /** Shelf-packs the sprites (and a small white block for bars and the beam) into one atlas. Pure. */
-export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width = 512, pad = 2) {
+export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width = 512, pad = 2, aliases = {}) {
   const rects = {}, items = [...ids.map(id => [id, dimensions[id][0], dimensions[id][1]]), [WHITE, 8, 8]];
   items.sort((a, b) => b[2] - a[2]);
   let x = pad, y = pad, shelf = 0;
@@ -34,17 +57,33 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
   }
   let height = 16;
   while (height < y + shelf + pad) height *= 2;
+  // A missing optional sprite borrows its stand-in's rect (with the stand-in's tint and scale).
+  for (const [id, to] of Object.entries(aliases)) if (!rects[id] && rects[to]) rects[id] = { ...rects[to], alias: to };
   return { width, height, rects };
 }
 
 /** Loads the pirate PNGs into one canvas texture (browser only). Cached by the caller. */
 export async function loadAtlas({ base = import.meta.env?.BASE_URL ?? './' } = {}) {
-  const pack = packAtlas();
-  const images = await Promise.all(ATLAS_IDS.map(id => new Promise((resolve, reject) => {
+  const load = id => new Promise((resolve, reject) => {
     const image = new Image(); image.decoding = 'async';
     image.onload = () => resolve([id, image]); image.onerror = () => reject(new Error(`Drawing failed: ${id}`));
     image.src = `${base}pixel/${id}.png`;
-  })));
+  });
+  const [images, optional] = await Promise.all([Promise.all(ATLAS_IDS.map(load)),
+    Promise.all(Object.keys(OPTIONAL_ART).map(id => load(id).catch(() => null)))]);
+  const found = optional.filter(Boolean);
+  const dimensions = { ...pirateDimensions };
+  for (const [id, image] of found) {
+    const stand = dimensions[OPTIONAL_ART[id][0]];
+    dimensions[id] = pirateDimensions[id] ?? [image.naturalWidth, image.naturalHeight,
+      stand ? Math.round(stand[2] * image.naturalHeight / stand[1]) : Math.max(1, Math.round(image.naturalHeight * .12))];
+  }
+  const aliases = {};
+  for (const [id, [to]] of Object.entries(OPTIONAL_ART)) if (to && !found.some(([have]) => have === id)) aliases[id] = to;
+  // Resolve chains (island-mortar-l2 → island-mortar → island-cannon).
+  for (const id of Object.keys(aliases)) { let to = aliases[id]; while (aliases[to]) to = aliases[to]; aliases[id] = to; }
+  const pack = packAtlas([...ATLAS_IDS, ...found.map(([id]) => id)], dimensions, 512, 2, aliases);
+  images.push(...found);
   const canvas = document.createElement('canvas'); canvas.width = pack.width; canvas.height = pack.height;
   const context = canvas.getContext('2d'); context.imageSmoothingEnabled = false;
   for (const [id, image] of images) context.drawImage(image, pack.rects[id].x, pack.rects[id].y);
@@ -143,9 +182,13 @@ function pool() {
 
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
+const BRASS = colour('#e0b04a'), SKIN = colour('#e8b48a');
+const CREW_COLOUR = { gunner: colour('#c4473a'), carpenter: colour('#8a5a32'), lookout: colour('#3f6fa8') };
 const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
   const [w, h] = pirateDimensions[pirateFrames[kind][0]]; return [kind, { w: w / UNIT, h: h / UNIT }];
 }));
+SHIP_SIZE.warship = { w: SHIP_SIZE.flagship.w * .7, h: SHIP_SIZE.flagship.h * .7 };
+const FRAMES = { ...pirateFrames, warship: WARSHIP_FRAMES };
 
 /**
  * createWaveRenderer({scene, atlas, defenses, reducedMotion, quality, beamFrom}) where atlas is
@@ -162,6 +205,17 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     rect[id] = { u0: (r.x + .01) / atlas.width, u1: (r.x + r.w - .01) / atlas.width,
       v0: 1 - (r.y + r.h - .01) / atlas.height, v1: 1 - (r.y + .01) / atlas.height, w: r.w / UNIT, h: r.h / UNIT, anchor: r.anchor / UNIT };
   }
+  // Optional art: its own rect, else the stand-in's (scaled and tinted like OPTIONAL_ART says), else null.
+  for (const [id, [to, tint, scale = 1]] of Object.entries(OPTIONAL_ART)) {
+    const own = atlas.rects[id] && !atlas.rects[id].alias;
+    if (own) continue;
+    let target = to; while (target && !rect[target] && OPTIONAL_ART[target]) target = OPTIONAL_ART[target][0];
+    const base = target && rect[target];
+    if (!base) { rect[id] = null; continue; }
+    const c = tint ? colour(tint) : null;
+    rect[id] = { ...base, w: base.w * scale, h: base.h * scale, anchor: base.anchor * scale, stand: true, ...(c ? { tint: c } : {}) };
+  }
+  const tintOf = r => (r?.tint ? { r: r.tint.r, g: r.tint.g, b: r.tint.b } : {});
   const material = new THREE.ShaderMaterial({ vertexShader: spriteVertex, fragmentShader: spriteFragment,
     uniforms: { uMap: { value: atlas.texture } }, transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
   owned.push(material);
@@ -171,11 +225,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     air: createLayer('air', CAPACITY.air, material, LAYER_ORDER.air, owned),
   };
   for (const layer of Object.values(layers)) root.add(layer.mesh);
-  const posts = defenses.filter(item => item.kind === 'wall' || item.kind === 'cannon').map(item => {
-    const layer = createLayer(`defense:${item.id}`, 1, material, 100 + item.z, owned); root.add(layer.mesh);
-    return { ...item, layer, flip: false };
+  // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
+  // watchtower gets one only for the lookout.
+  const posts = defenses.filter(item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'watchtower').map(item => {
+    const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + item.z, owned); root.add(layer.mesh);
+    const level = Number.isInteger(item.level) ? Math.max(1, Math.min(3, item.level)) : 1;
+    return { ...item, level, layer, flip: false };
   });
-  const cannonsList = defenses.filter(item => item.kind === 'cannon');
+  const cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
   const fogUniforms = { uCannons: { value: Array.from({ length: 8 }, (_, i) => new THREE.Vector2(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0)) },
     uCount: { value: Math.min(8, cannonsList.length) }, uSight: { value: 28 }, uFog: { value: 0 }, uTime: { value: 0 } };
   const fogMaterial = new THREE.ShaderMaterial({ vertexShader: fogVertex, fragmentShader: fogFragment, uniforms: fogUniforms,
@@ -186,7 +243,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   root.add(fog);
 
   const ships = new Map(); // id -> {facing, phase, flashUntil, bornAt}
-  const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool();
+  const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool();
+  let captain = null;
   const fire = new Map(), wallFlash = new Map();
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
   const still = () => !!reducedMotion();
@@ -207,8 +265,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     return meta;
   }
   const frameOf = (kind, phase) => {
-    if (still()) return pirateFrames[kind][0];
-    const step = Math.floor(clock * 3.2 + phase) % 4; return pirateFrames[kind][step === 3 ? 1 : step];
+    const frames = FRAMES[kind] ?? FRAMES.sloop;
+    if (still()) return frames[0];
+    const step = Math.floor(clock * 3.2 + phase) % 4; return frames[step === 3 ? 1 : step];
   };
 
   function onEvent(event) {
@@ -260,12 +319,36 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'wall_repaired': effects()?.bloom(x, y + 1, { radius: 1.4, life: .6, colour: '#bfe6a8' }); break;
+      case 'mortar_fired': {
+        shells.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt }));
+        fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.6, flip: event.toX < event.x });
+        const post = posts.find(item => item.id === event.towerId); if (post) post.flip = event.toX < event.x;
+        effects()?.bloom(event.x, y + 1.2, { radius: 1.4, life: .45, colour: '#ffcf6a' });
+        spark(event.x, y + 1.3, { count: 14, speed: [.4, 1.4], angle: Math.PI / 2, spread: 1.2, gravity: -1, life: [.7, 1.3], colour: '#cfcabb', size: [1, 3] });
+        break;
+      }
+      case 'mortar_impact': {
+        // The area burst: a ring as wide as the blast radius, a flash, debris, and a splash in the sea.
+        bursts.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, radius: event.radius ?? 4 }));
+        effects()?.ring(x, y, { radius: event.radius ?? 4, life: .55, colour: '#ffcf6a' });
+        effects()?.bloom(x, y + .6, { radius: 2.6, life: .5, colour: '#ff9a4a' });
+        spark(x, y + .5, { count: 30, speed: [1.5, 5], angle: Math.PI / 2, spread: 2.6, gravity: 7, life: [.5, 1.1], colour: '#ffb35a', size: [1, 2] });
+        splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: true }));
+        break;
+      }
+      case 'captain_fired': {
+        tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock }));
+        effects()?.bloom(event.x, y + 1.1, { radius: .7, life: .2, colour: '#fff0b0' });
+        break;
+      }
+      case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
       default: break;
     }
   }
 
   function drawShip(ship, meta) {
     const size = SHIP_SIZE[ship.kind] ?? SHIP_SIZE.sloop, frame = frameOf(ship.kind, meta.phase), r = rect[frame];
+    if (!r) return;
     const layer = ship.z < 0 ? layers.far : layers.near, x = ship.x, y = drawnY(ship.z);
     const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? .85 : 0;
     // A wake behind a sailing ship: two pale strokes on the water.
@@ -274,10 +357,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, { a: .45 * fadeIn });
       layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, { a: .3 * fadeIn });
     }
-    layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing });
-    if (ship.hp < ship.maxHp) {
+    layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...tintOf(r) });
+    if (ship.hp < ship.maxHp || ship.boss) {
       const top = y + size.h - r.anchor + .15, w = Math.min(2.4, size.w * .5), share = Math.max(0, ship.hp / ship.maxHp);
-      const tint = ship.kind === 'flagship' && !ship.exposed ? { r: .75, g: .78, b: .8 } : share > .5 ? GREEN : share > .25 ? GOLD : RED;
+      const tint = ship.kind === 'flagship' && !ship.exposed ? { r: .75, g: .78, b: .8 } : ship.boss ? RED : share > .5 ? GREEN : share > .25 ? GOLD : RED;
       layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
       layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...tint, a: 1 });
     }
@@ -298,6 +381,71 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layers.air.push(r, x, drawnY(z) + lift, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, ball.enemy ? { r: .55, g: .45, b: .4 } : undefined);
     // The ball's shadow on the water or the sand.
     if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
+  }
+
+  // A mortar shell: a high, slow arc with its shadow racing ahead on the water.
+  function drawShell(shell) {
+    const span = Math.max(.05, shell.to - shell.from), p = Math.min(1, Math.max(0, (simNow - shell.from) / span));
+    const x = shell.x + (shell.toX - shell.x) * p, z = shell.z + (shell.toZ - shell.z) * p;
+    const distance = Math.hypot(shell.toX - shell.x, shell.toZ - shell.z), r = rect['fx-mortar-shell'] ?? rect['pirate-cannonball'];
+    const lift = still() ? 1.2 : 1.2 + (5 + distance * .18) * 4 * p * (1 - p);
+    if (!still() && p > .05) for (const back of [.04, .09, .15]) {
+      const q = Math.max(0, p - back), tx = shell.x + (shell.toX - shell.x) * q, tz = shell.z + (shell.toZ - shell.z) * q;
+      const tl = 1.2 + (5 + distance * .18) * 4 * q * (1 - q);
+      layers.air.push(rect[WHITE], tx, drawnY(tz) + tl, .3, .3, .5, .15, { r: .85, g: .82, b: .78, a: .5 - back * 2 });
+    }
+    layers.air.push(r, x, drawnY(z) + lift, r.w, r.h, .5, .55 * r.h, tintOf(r));
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .45 * (.6 + p * .6), .14, .5, 0, { ...DARK, a: .3 + p * .2 });
+    // Where it will land: a faint target mark, so the player sees the area coming.
+    if (p > .35) layers.air.push(rect[WHITE], shell.toX, drawnY(shell.toZ), 2.4 * p, .1, .5, 0, { ...RED, a: .35 * p });
+  }
+  function drawBurst(burst) {
+    const p = (clock - burst.at) / BURST_SECONDS, frame = EXPLOSION_FRAMES[Math.min(3, Math.floor(p * 4))], r = rect[frame];
+    if (!r) return;
+    const grow = r.stand ? 1 : 1.2, y = drawnY(burst.z);
+    layers.air.push(r, burst.x, y, r.w * grow, r.h * grow, .5, r.anchor * grow, { ...tintOf(r), a: 1 - Math.max(0, p - .6) * 2 });
+  }
+  function drawTracer(tracer) {
+    const p = (clock - tracer.at) / TRACER_SECONDS, fromY = drawnY(tracer.z) + 1.1, toY = drawnY(tracer.toZ) + 1;
+    const dx = tracer.toX - tracer.x, dy = toY - fromY, length = Math.hypot(dx, dy), angle = Math.atan2(dy, dx) - Math.PI / 2;
+    layers.air.push(rect[WHITE], tracer.x, fromY, .12, length, .5, 0, { r: 1, g: .95, b: .7, angle, a: .9 * (1 - p) });
+    const flash = rect['fx-musket-flash'];
+    if (flash && p < .6) layers.air.push(flash, tracer.x + Math.sign(dx) * .5, fromY, flash.w, flash.h, .5, flash.h / 2, { a: 1 - p });
+    else if (p < .5) layers.air.push(rect[WHITE], tracer.x + Math.sign(dx) * .5, fromY - .2, .5, .5, .5, 0, { r: 1, g: .9, b: .5, angle: .785, a: 1 - p * 2 });
+  }
+  function drawCaptain() {
+    // The reload ring around your own captain: 12 brass dots fill up until the musket is ready again.
+    if (!captain || captain.share >= 1) return;
+    const cx = captain.x, cy = drawnY(captain.z);
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * Math.PI * 2 - Math.PI / 2, lit = i / 12 < captain.share;
+      layers.air.push(rect[WHITE], cx + Math.cos(a) * .95, cy + .9 + Math.sin(a) * .95, .19, .19, .5, .09, lit ? { ...BRASS, a: 1 } : { ...DARK, a: .55 });
+    }
+  }
+  function drawWarning(item) {
+    const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
+    const p = coastEdge(item), colourOf = item.boss ? RED : GOLD;
+    layers.air.push(rect[WHITE], p.x, p.y, .7, .7, .5, .35, { ...colourOf, angle: .785, a: blink });
+    layers.air.push(rect[WHITE], p.x, p.y, .4, .4, .5, .2, { ...DARK, angle: .785, a: blink * .8 });
+  }
+  // A warning sits a little inside the spawn point, so it is on screen before the ship.
+  const coastEdge = item => ({ x: item.x * .78, y: drawnY(item.z * .78) + 1 });
+  // A crew member: their sprite, or a tiny figure of three quads in their colours.
+  function drawCrew(layer, kind, x, y, busy) {
+    const r = rect[`crew-${kind}`], bob = busy && !still() ? Math.abs(Math.sin(clock * 8)) * .08 : 0;
+    if (r) { layer.push(r, x, y + bob, r.w, r.h, .5, r.anchor); return; }
+    const c = CREW_COLOUR[kind];
+    layer.push(rect[WHITE], x, y + bob, .38, .3, .5, 0, { ...DARK, a: 1 });               // legs
+    layer.push(rect[WHITE], x, y + .3 + bob, .5, .45, .5, 0, { ...c, a: 1 });              // coat
+    layer.push(rect[WHITE], x, y + .75 + bob, .34, .3, .5, 0, { ...SKIN, a: 1 });          // head
+  }
+  // Level pips: 1 to 3 small brass squares above a tower or wall.
+  function drawPips(layer, x, top, level) {
+    for (let i = 0; i < level; i++) {
+      const px = x + (i - (level - 1) / 2) * .34;
+      layer.push(rect[WHITE], px, top, .28, .28, .5, .14, { ...DARK, a: .9 });
+      layer.push(rect[WHITE], px, top + .03, .19, .19, .5, .1, { ...BRASS, a: 1 });
+    }
   }
 
   function land(ball) {
@@ -322,7 +470,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const ship of state.ships) drawShip(ship, shipMeta(ship.id, ship.kind, ship.x));
       for (const sinker of sinkers.items) {
-        const age = clock - sinker.at, p = Math.min(1, age / SINK_SECONDS), r = rect[pirateFrames[sinker.kind][0]];
+        const age = clock - sinker.at, p = Math.min(1, age / SINK_SECONDS), r = rect[(FRAMES[sinker.kind] ?? FRAMES.sloop)[0]];
+        if (!r) continue;
         const tilt = still() ? 0 : sinker.facing * p * .35;
         (sinker.z < 0 ? layers.far : layers.near).push(r, sinker.x, drawnY(sinker.z) - p * r.h * .45, r.w, r.h, .5, r.anchor,
           { flip: sinker.facing < 0, angle: tilt, a: 1 - p * p, r: 1 - p * .4, g: 1 - p * .35, b: 1 - p * .25 });
@@ -333,6 +482,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         layers.air.push(r, splash.x, drawnY(splash.z), r.w * scale, r.h * scale, .5, r.anchor * scale);
       }
       for (const ball of balls.items) drawBall(ball);
+      for (const shell of shells.items) drawShell(shell);
+      for (const burst of bursts.items) drawBurst(burst);
+      for (const tracer of tracers.items) drawTracer(tracer);
+      for (const item of warnings.items) drawWarning(item);
+      drawCaptain();
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
       if (flagship) {
@@ -344,18 +498,34 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     for (const layer of Object.values(layers)) layer.end();
     const walls = new Map((state?.walls ?? []).map(wall => [wall.id, wall]));
+    const towers = new Map((state?.towers ?? []).map(tower => [tower.id, tower]));
+    const crew = state?.crew ?? {};
     for (const post of posts) {
       post.layer.begin();
-      if (visible) {
+      if (visible && post.kind === 'watchtower') {
+        if (crew.lookout) drawCrew(post.layer, 'lookout', post.x + 1.4, drawnY(post.z) - .2, false);
+      } else if (visible) {
         let id;
+        const level = post.level, suffix = level > 1 ? `-l${level}` : '';
         if (post.kind === 'wall') {
           const wall = walls.get(post.id), share = wall ? wall.hp / wall.maxHp : 1;
-          id = share > .6 ? pirateFrames.wall[0] : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
-        } else id = (fire.get(post.id)?.until ?? -1) > clock ? pirateFrames.cannon[1] : pirateFrames.cannon[0];
+          id = share > .6 ? (suffix && rect[`island-wall${suffix}`] ? `island-wall${suffix}` : pirateFrames.wall[0]) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
+        } else {
+          const firing = (fire.get(post.id)?.until ?? -1) > clock, base = post.kind === 'mortar' ? 'island-mortar' : 'island-cannon';
+          id = firing ? `${base}-fire` : suffix ? `${base}${suffix}` : base;
+          if (!rect[id]) id = firing ? pirateFrames.cannon[1] : pirateFrames.cannon[0];
+        }
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
-        const repairing = post.kind === 'wall' && walls.get(post.id)?.repairing;
-        post.layer.push(r, post.x, drawnY(post.z), r.w, r.h, .5, r.anchor, { flip: post.kind === 'cannon' && post.flip, flashing,
-          ...(repairing && !still() ? { g: 1 + Math.sin(clock * 10) * .15 } : {}) });
+        const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
+        // Higher levels: a little larger and brighter while their own art is missing.
+        const grow = r.stand || r === rect[pirateFrames.cannon[0]] || r === rect[pirateFrames.cannon[1]] || r === rect[pirateFrames.wall[0]] ? 1 + (level - 1) * .1 : 1;
+        const bright = 1 + (level - 1) * .12, tint = r.tint ?? { r: 1, g: 1, b: 1 };
+        const x = post.x, y = drawnY(post.z);
+        post.layer.push(r, x, y, r.w * grow, r.h * grow, .5, r.anchor * grow, { flip: post.kind !== 'wall' && post.flip, flashing,
+          r: tint.r * bright, g: tint.g * bright * (repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1), b: tint.b * bright });
+        if (level > 1 || post.kind !== 'wall') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
+        if (post.kind === 'wall' && walls.get(post.id)?.crew) drawCrew(post.layer, 'carpenter', x + (x > 0 ? -1.3 : 1.3), y - .3, true);
+        if (post.kind !== 'wall' && towers.get(post.id)?.manned) drawCrew(post.layer, 'gunner', x + (post.flip ? 1.2 : -1.2), y - .15, (fire.get(post.id)?.until ?? -1) > clock);
       }
       post.layer.end();
     }
@@ -367,9 +537,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   return {
     root,
     events(list) { for (const event of list ?? []) onEvent(event); },
-    update({ state, simTime = simNow, dt = 0 } = {}) {
+    update({ state, simTime = simNow, dt = 0, captain: own = null } = {}) {
       if (disposed) return;
-      clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest;
+      clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own;
+      shells.sweep(shell => simNow < shell.to);
+      bursts.sweep(item => clock - item.at < BURST_SECONDS);
+      tracers.sweep(item => clock - item.at < TRACER_SECONDS);
+      warnings.sweep(item => clock - item.at < 3.2);
       balls.sweep(ball => { if (simNow < ball.to) return true; land(ball); return false; });
       splashes.sweep(item => clock - item.at < SPLASH_SECONDS);
       sinkers.sweep(item => clock - item.at < SINK_SECONDS);
@@ -381,14 +555,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // For the pooling test and the perf panel: what the renderer holds right now.
     stats() {
       return { objects: root.children.length, owned: owned.length, ships: ships.size, balls: balls.size, splashes: splashes.size,
-        sinkers: sinkers.size, wrecks: wrecks.size, instances: layers.far.count + layers.near.count + layers.air.count };
+        sinkers: sinkers.size, wrecks: wrecks.size, shells: shells.size, bursts: bursts.size, tracers: tracers.size,
+        instances: layers.far.count + layers.near.count + layers.air.count };
     },
     dispose() {
       if (disposed) return; disposed = true;
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear();
-      for (const list of [sinkers, wrecks, balls, splashes]) list.clear();
+      for (const list of [sinkers, wrecks, balls, splashes, shells, bursts, tracers, warnings]) list.clear();
     },
   };
 }
