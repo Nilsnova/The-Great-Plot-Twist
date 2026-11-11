@@ -134,7 +134,11 @@ def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
 async def join(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, wave_id: UUID
 ) -> WaveStart:
-    """Join a running wave (a friend's island or Pirate Point). Safe to repeat."""
+    """Join a running wave (a friend's island or Pirate Point). Safe to repeat.
+
+    The joiner's own island is opened first: their best won wave (the unlocks) is kept on it,
+    so a friend who never opened their own island still gets the credit for a won wave."""
+    await store.open_island(admin, player_id, catalogue.starting_coins)
     reply = await store.join_wave(admin, player_id, str(wave_id))
     if isinstance(reply, Refusal):
         if reply.reason == "no_such_wave":

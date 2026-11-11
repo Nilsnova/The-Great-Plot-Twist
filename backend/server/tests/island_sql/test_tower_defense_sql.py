@@ -35,16 +35,31 @@ CAPTAIN = [0, 20, 40, 80, 160]
 LOOT_V2 = (10, 5, 5, 20, 5, 2, 2)  # base, perWave, perHouse, point base, bossEvery, x2, back 2
 
 
-def upgrade(database, player, plot, uid, prices=WALL, unlocked=3):
+def upgrade(database, player, plot, uid, prices=WALL, unlocked=3, owner=None):
     as_server(database)
     return call(
         database,
-        "select public.island_upgrade(%s, %s, %s, %s, %s)",
+        "select public.island_upgrade(%s, %s, %s, %s, %s, %s)",
         player,
+        owner or player,
         plot,
         uid,
         prices,
         unlocked,
+    )
+
+
+def coop_build(database, payer, owner, plot, kind, uid, price=10):
+    as_server(database)
+    return call(
+        database,
+        "select public.island_build(%s, %s, %s, %s, %s, %s)",
+        payer,
+        owner,
+        plot,
+        kind,
+        uid,
+        price,
     )
 
 
@@ -306,11 +321,52 @@ def test_a_won_pirate_point_wave_raises_the_players_own_point_best(database):
     move_start(database, wave["waveId"], 30)
     finish(database, OWNER, wave["waveId"])
 
-    assert island_row(database, OWNER, "point_wave_best") == 1
+    assert island_row(database, OWNER, "won_wave_best") == 1
+
+
+def test_a_visitor_builds_and_upgrades_on_a_friends_island_with_their_own_coins(database):
+    ready(database, OWNER, FRIEND)
+
+    built = coop_build(database, FRIEND, OWNER, "wall_2", "wall", "coop-0001")
+    again = coop_build(database, FRIEND, OWNER, "wall_2", "wall", "coop-0001")
+    taken = coop_build(database, OWNER, OWNER, "wall_2", "wall", "coop-0002")
+    raised = upgrade(database, FRIEND, "wall_2", "upgrade-0001", owner=OWNER)
+
+    assert (built["level"], built["balance"], again["repeat"]) == (1, 90, True)
+    assert taken == {"status": "refused", "reason": "spot_taken"}
+    assert (raised["level"], raised["balance"]) == (2, 70)
+    rows = database.execute(
+        "select player_id, level, coins_paid from public.islet_buildings where plot = 'wall_2'"
+    ).fetchall()
+    assert rows == [(OWNER, 2, 30)]
+    assert (balance(database, OWNER), balance(database, FRIEND)) == (100, 70)
+    poor = coop_build(database, FRIEND, OWNER, "wall_3", "wall", "coop-0003", price=500)
+    assert poor == {"status": "refused", "reason": "insufficient_funds", "price": 500}
+
+
+def test_a_win_on_a_friends_island_raises_the_visitors_own_unlock_wave(database):
+    ready(database, OWNER, FRIEND)
+    set_best(database, OWNER, 6)
+    wave = start(database, OWNER, "bell-0007", owner=OWNER)
+    as_server(database)
+    call(database, "select public.wave_join(%s, %s)", FRIEND, wave["waveId"])
+    move_start(database, wave["waveId"], 30)
+
+    finish(database, FRIEND, wave["waveId"])
+
+    assert island_row(database, FRIEND, "won_wave_best") == 7
+    assert island_row(database, FRIEND, "wave_best") == 0
 
 
 def test_the_browser_roles_get_nothing_new(database):
-    for name in ("island_upgrade", "island_hire", "island_captain", "pp_build", "pp_upgrade"):
+    for name in (
+        "island_build",
+        "island_upgrade",
+        "island_hire",
+        "island_captain",
+        "pp_build",
+        "pp_upgrade",
+    ):
         rights = database.execute(
             "select bool_or(has_function_privilege('authenticated', p.oid, 'execute')),"
             " bool_or(has_function_privilege('anon', p.oid, 'execute'))"

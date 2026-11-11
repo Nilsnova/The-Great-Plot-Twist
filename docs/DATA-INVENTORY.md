@@ -304,7 +304,7 @@ Purpose: Each player's own island for the island game: its code, so friends can 
 | `flags` | Pirate flags won on this island: one per survived wave. |
 | `next_wave` | The wave the next bell rings (the restart rule after a lost wave), or empty for the best wave + 1. |
 | `player_id` | The owner's player UUID, also the primary key. |
-| `point_wave_best` | The highest Pirate Point wave this player fought in and won; with `wave_best` it decides what is unlocked. |
+| `won_wave_best` | The highest wave this player fought in and won (any island or Pirate Point); with `wave_best` it decides what is unlocked. |
 | `updated_at` | When the best wave or the flags last changed. |
 | `wave_best` | The highest wave survived on this island. |
 

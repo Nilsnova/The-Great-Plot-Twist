@@ -14,11 +14,14 @@
 --                          server may now update a row (the level).
 --     islands              new columns: next_wave (the restart rule),
 --                          crew_gunner, crew_carpenter, crew_lookout,
---                          captain_level and point_wave_best (the best Pirate
---                          Point wave this player fought and won, for unlocks)
+--                          captain_level and won_wave_best (the best wave this
+--                          player won in any wave they fought in, for unlocks)
 --     pirate_point_buildings  one row per built spot of Pirate Point
 --
---     island_upgrade()     one level up for a building on the player's island
+--     island_build()       a visitor builds on a friend's island with their own
+--                          coins (co-op); the building belongs to that island
+--     island_upgrade()     one level up for a building on an island, paid by
+--                          the player who clicks (the owner or a visitor)
 --     island_hire()        one crew member
 --     island_captain()     one captain level up
 --     pp_build(), pp_upgrade()  build or upgrade a Pirate Point spot, paid by
@@ -28,7 +31,7 @@
 --     wave_finish()        a NEW 11-argument version next to the 8-argument
 --                          one of 20261110020000: house levels count, a boss
 --                          wave pays the multiplier, the restart rule, and the
---                          Pirate Point best of the player. The 8-argument one
+--                          player's own best won wave (won_wave_best). The 8-argument one
 --                          stays untouched, so a server from before keeps
 --                          working until the new code is deployed.
 --
@@ -44,9 +47,9 @@
 --
 -- THE RULES THAT THE DATABASE KEEPS
 --   1. Play money only; coins move only through apply_wallet_transaction().
---   2. Every paid action is safe to repeat: the ledger row (player, reason,
---      ref) is the record. Refs: upgrade:<uid>, crew:<uid>, captain:<uid>,
---      pp:<uid>. A repeat answers {status: done, repeat: true} and pays
+--   2. Every paid action is safe to repeat: the payer's ledger row (player,
+--      reason, ref) is the record. Refs: island:<uid> (a co-op build),
+--      upgrade:<uid>, crew:<uid>, captain:<uid>, pp:<uid>. A repeat answers {status: done, repeat: true} and pays
 --      nothing.
 --   3. The wallet is locked first, then the row that changes.
 --   4. A level never goes above the length of the price list the server
@@ -70,7 +73,7 @@
 --   2. The 16 spots in islet_buildings, and the right to update a level
 --   3. New columns of islands, backfilled
 --   4. Table pirate_point_buildings
---   5. island_upgrade()
+--   5. island_build() and island_upgrade()
 --   6. island_hire()
 --   7. island_captain()
 --   8. pp_build() and pp_upgrade()
@@ -93,7 +96,7 @@
 --             has_function_privilege('service_role', p.oid, 'execute') as server
 --        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 --       where n.nspname = 'public'
---         and p.proname in ('island_upgrade', 'island_hire', 'island_captain',
+--         and p.proname in ('island_build', 'island_upgrade', 'island_hire', 'island_captain',
 --                           'pp_build', 'pp_upgrade', 'wave_start', 'wave_finish');
 --   f. select column_name from information_schema.columns
 --       where table_name = 'islands' order by ordinal_position;                  -- 13 columns
@@ -173,7 +176,7 @@ alter table public.islands add column if not exists crew_gunner smallint not nul
 alter table public.islands add column if not exists crew_carpenter smallint not null default 0;
 alter table public.islands add column if not exists crew_lookout smallint not null default 0;
 alter table public.islands add column if not exists captain_level smallint not null default 1;
-alter table public.islands add column if not exists point_wave_best integer not null default 0;
+alter table public.islands add column if not exists won_wave_best integer not null default 0;
 
 alter table public.islands drop constraint if exists islands_next_wave_range;
 alter table public.islands
@@ -187,9 +190,9 @@ alter table public.islands
 alter table public.islands drop constraint if exists islands_captain_level_range;
 alter table public.islands
   add constraint islands_captain_level_range check (captain_level between 1 and 5);
-alter table public.islands drop constraint if exists islands_point_wave_best_not_negative;
+alter table public.islands drop constraint if exists islands_won_wave_best_not_negative;
 alter table public.islands
-  add constraint islands_point_wave_best_not_negative check (point_wave_best >= 0);
+  add constraint islands_won_wave_best_not_negative check (won_wave_best >= 0);
 
 comment on column public.islands.next_wave is
   'The wave the next bell on this island rings, or null for wave_best + 1. Set by wave_finish(): the wave + 1 after a won wave, wave_best - 2 (at least 1) after a lost one.';
@@ -201,20 +204,20 @@ comment on column public.islands.crew_lookout is
   'Lookouts hired (island_hire), at most the maximum of islands.json.';
 comment on column public.islands.captain_level is
   'The level of this player''s captain (musket), 1 to 5. Raised by island_captain().';
-comment on column public.islands.point_wave_best is
-  'The highest Pirate Point wave this player fought in and won (their own survived finish). With wave_best it decides the unlocks.';
+comment on column public.islands.won_wave_best is
+  'The highest wave this player won in any wave they fought in (their own survived finish, on any island or on Pirate Point). With wave_best it decides the unlocks.';
 
--- Backfill: the Pirate Point waves every player already won. Only raises.
+-- Backfill: the waves every player already won, anywhere. Only raises.
 update public.islands i
-   set point_wave_best = won.best
+   set won_wave_best = won.best
   from (
     select p.player_id, max(r.wave) as best
       from public.wave_participants p
       join public.wave_runs r on r.id = p.wave_id
-     where r.place = 'pirate_point' and p.survived and not p.expired
+     where p.survived and not p.expired
      group by p.player_id
   ) won
- where won.player_id = i.player_id and i.point_wave_best < won.best;
+ where won.player_id = i.player_id and i.won_wave_best < won.best;
 
 
 -- -----------------------------------------------------------------------------
@@ -275,7 +278,90 @@ grant select, insert, update on table public.pirate_point_buildings to service_r
 
 
 -- -----------------------------------------------------------------------------
--- 5. island_upgrade(): one level up for a building on the player's island
+-- 5. island_build() and island_upgrade(): building on an island
+-- -----------------------------------------------------------------------------
+-- island_build() is the co-op build: p_player_id pays, the building stands on
+-- the island of p_island_owner (a friend's island; the owner's own builds keep
+-- using islet_build()). The ledger ref is island:<uid> in the payer's wallet,
+-- and the building row carries the same ref. Locks the payer's wallet, then the
+-- owner's islet row, the same lock islet_build() takes, so two builds on one
+-- island run one after the other.
+--
+-- Returns {status: done, level: 1, balance, repeat} or {status: refused,
+-- reason: player_not_set_up | spot_taken | insufficient_funds}. A spot and kind
+-- that do not belong together fail the table check.
+
+create or replace function public.island_build(
+  p_player_id     uuid,
+  p_island_owner  uuid,
+  p_plot          text,
+  p_building_type text,
+  p_action_uid    text,
+  p_price         integer
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = ''  -- empty on purpose: every name inside is written in full
+as $$
+declare
+  v_ref     text;
+  v_balance bigint;
+begin
+  if p_player_id is null or p_island_owner is null or p_plot is null
+     or p_building_type is null
+     or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
+     or p_price is null or p_price < 1 then
+    raise exception 'bad_island_build';
+  end if;
+  v_ref := 'island:' || p_action_uid;
+
+  select balance into v_balance from public.wallets where player_id = p_player_id for update;
+  if not found then
+    return jsonb_build_object('status', 'refused', 'reason', 'player_not_set_up');
+  end if;
+
+  if exists (
+    select 1 from public.wallet_transactions
+     where player_id = p_player_id and reason = 'building_purchase' and ref = v_ref
+  ) then
+    return jsonb_build_object('status', 'done', 'level', 1, 'balance', v_balance, 'repeat', true);
+  end if;
+
+  insert into public.islets (player_id, timber)
+  values (p_island_owner, 0)
+  on conflict (player_id) do nothing;
+  perform 1 from public.islets where player_id = p_island_owner for update;
+
+  if exists (
+    select 1 from public.islet_buildings where player_id = p_island_owner and plot = p_plot
+  ) then
+    return jsonb_build_object('status', 'refused', 'reason', 'spot_taken');
+  end if;
+  if v_balance < p_price then
+    return jsonb_build_object('status', 'refused', 'reason', 'insufficient_funds', 'price', p_price);
+  end if;
+
+  v_balance := public.apply_wallet_transaction(p_player_id, -p_price, 'building_purchase', v_ref);
+  insert into public.islet_buildings
+    (player_id, plot, building_type, level, coins_paid, timber_paid, ref)
+  values
+    (p_island_owner, p_plot, p_building_type, 1, p_price, 0, v_ref);
+
+  return jsonb_build_object('status', 'done', 'level', 1, 'balance', v_balance, 'repeat', false);
+end;
+$$;
+
+revoke all on function public.island_build(uuid, uuid, text, text, text, integer)
+  from public, anon, authenticated, service_role;
+grant execute on function public.island_build(uuid, uuid, text, text, text, integer)
+  to service_role;
+
+comment on function public.island_build(uuid, uuid, text, text, text, integer) is
+  'The co-op build: p_player_id pays p_price (reason building_purchase, ref island:<uid>) and the building stands at level 1 on the island of p_island_owner. Locks the payer''s wallet, then the owner''s islet row. A repeat answers {status: done, repeat: true}. Refuses spot_taken and insufficient_funds, with nothing changed. Only service_role may run it.';
+
+-- island_upgrade(): one level up for a building on the island of p_island_owner,
+-- paid by p_player_id (the owner, or a visitor building with them).
 -- -----------------------------------------------------------------------------
 --   p_prices          the price list of the building's kind from islands.json,
 --                     index 1 = level 1 (the build), 2 = level 2, ...; its
@@ -288,6 +374,7 @@ grant select, insert, update on table public.pirate_point_buildings to service_r
 
 create or replace function public.island_upgrade(
   p_player_id      uuid,
+  p_island_owner   uuid,
   p_plot           text,
   p_action_uid     text,
   p_prices         integer[],
@@ -304,7 +391,7 @@ declare
   v_building public.islet_buildings;
   v_price    integer;
 begin
-  if p_player_id is null or p_plot is null or p_unlocked_level is null
+  if p_player_id is null or p_island_owner is null or p_plot is null or p_unlocked_level is null
      or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
      or p_prices is null or coalesce(array_length(p_prices, 1), 0) not between 1 and 3
      or exists (select 1 from unnest(p_prices) price where price is null or price < 1) then
@@ -319,7 +406,7 @@ begin
 
   select * into v_building
     from public.islet_buildings
-   where player_id = p_player_id and plot = p_plot
+   where player_id = p_island_owner and plot = p_plot
      for update;
 
   if exists (
@@ -349,7 +436,7 @@ begin
   v_balance := public.apply_wallet_transaction(p_player_id, -v_price, 'building_purchase', v_ref);
   update public.islet_buildings
      set level = level + 1, coins_paid = coins_paid + v_price
-   where player_id = p_player_id and plot = p_plot
+   where player_id = p_island_owner and plot = p_plot
   returning * into v_building;
 
   return jsonb_build_object(
@@ -358,13 +445,13 @@ begin
 end;
 $$;
 
-revoke all on function public.island_upgrade(uuid, text, text, integer[], integer)
+revoke all on function public.island_upgrade(uuid, uuid, text, text, integer[], integer)
   from public, anon, authenticated, service_role;
-grant execute on function public.island_upgrade(uuid, text, text, integer[], integer)
+grant execute on function public.island_upgrade(uuid, uuid, text, text, integer[], integer)
   to service_role;
 
-comment on function public.island_upgrade(uuid, text, text, integer[], integer) is
-  'Raises one building on the player''s island by one level. Locks the wallet, then the building. A repeated actionUid (ledger ref upgrade:<uid>, reason building_purchase) answers {status: done, repeat: true}. Refuses not_built, max_level (the length of p_prices), locked (above p_unlocked_level) and insufficient_funds, with nothing changed. Only service_role may run it.';
+comment on function public.island_upgrade(uuid, uuid, text, text, integer[], integer) is
+  'Raises one building on the island of p_island_owner by one level, paid by p_player_id (the owner or a visitor). Locks the payer''s wallet, then the building. A repeated actionUid (ledger ref upgrade:<uid>, reason building_purchase) answers {status: done, repeat: true}. Refuses not_built, max_level (the length of p_prices), locked (above p_unlocked_level) and insufficient_funds, with nothing changed. Only service_role may run it.';
 
 
 -- -----------------------------------------------------------------------------
@@ -829,7 +916,8 @@ comment on function public.wave_start(
 --     survived finish sets it to the wave + 1; a lost finish that closes the
 --     wave before anyone won it sets it to wave_best - p_restart_back (at
 --     least 1),
---   * a survived Pirate Point finish raises this player's point_wave_best.
+--   * a survived finish (any island or Pirate Point) raises this player's
+--     won_wave_best.
 
 create or replace function public.wave_finish(
   p_player_id         uuid,
@@ -963,11 +1051,11 @@ begin
       end if;
     end if;
 
-    -- The player's own Pirate Point best, for the unlocks.
-    if p_survived and v_run.place = 'pirate_point' then
+    -- The player's own best won wave, anywhere, for the unlocks.
+    if p_survived then
       update public.islands
-         set point_wave_best = greatest(point_wave_best, v_run.wave)
-       where player_id = p_player_id and point_wave_best < v_run.wave;
+         set won_wave_best = greatest(won_wave_best, v_run.wave)
+       where player_id = p_player_id and won_wave_best < v_run.wave;
     end if;
 
     if v_loot > 0 then
@@ -1007,4 +1095,4 @@ grant execute on function public.wave_finish(
 comment on function public.wave_finish(
   uuid, uuid, boolean, integer, integer, integer, integer, integer, integer, integer, integer
 ) is
-  'Finishes a pirate wave for one participant (tower defense v2). As the 8-argument version, plus: a house counts p_loot_per_house per level, a boss wave (wave divisible by p_boss_every) pays p_boss_multiplier times the loot, the first survived finish sets islands.next_wave to the wave + 1, a lost finish that closes the wave before anyone won it sets next_wave to wave_best - p_restart_back (at least 1), and a survived Pirate Point finish raises the player''s point_wave_best. Returns {status: done, loot, balance, survived, wave, waveBest, flags, expired, repeat, boss} or {status: refused, reason}. Only service_role may run it.';
+  'Finishes a pirate wave for one participant (tower defense v2). As the 8-argument version, plus: a house counts p_loot_per_house per level, a boss wave (wave divisible by p_boss_every) pays p_boss_multiplier times the loot, the first survived finish sets islands.next_wave to the wave + 1, a lost finish that closes the wave before anyone won it sets next_wave to wave_best - p_restart_back (at least 1), and a survived finish raises the player''s own won_wave_best (any island or Pirate Point). Returns {status: done, loot, balance, survived, wave, waveBest, flags, expired, repeat, boss} or {status: refused, reason}. Only service_role may run it.';

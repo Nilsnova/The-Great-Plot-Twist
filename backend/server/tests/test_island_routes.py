@@ -301,7 +301,7 @@ def test_a_friend_visits_an_island_by_its_code(code):
 
     assert response.status_code == 200
     body = response.json()
-    assert list(body) == ["code", "ownerName", "waveBest", "spots"]
+    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew"]
     assert (body["code"], body["ownerName"], body["waveBest"]) == ("ISLE-K7Q2M", "Captain Gull", 3)
     assert [spot["id"] for spot in body["spots"] if spot["built"]] == ["wall_2"]
 

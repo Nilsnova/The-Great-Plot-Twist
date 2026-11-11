@@ -36,7 +36,7 @@ Shared spots `pp_wall_1`…`pp_wall_4`, `pp_tower_1`…`pp_tower_6` (cannon or m
 
 ## 6. Playing with a friend (no class code needed)
 
-Menu → **Play with a friend** shows a link `…/?visit=ISLE-XXXXX` and a QR. The friend opens the link → one tap **Join** → signs in as a guest (or GitHub) → the server admits a guest who presents a **valid island code** (like a class code) → they land on your island and you defend together. Both can build on the host's island? **No**: only the owner builds on their island; a visitor's coins go to their own island; both earn loot from waves they fight.
+Menu → **Play with a friend** shows a link `…/?visit=ISLE-XXXXX` and a QR. The friend opens the link → one tap **Join** → signs in as a guest (or GitHub) → the server admits a guest who presents a **valid island code** (like a class code) → they land on your island and you defend together. Everyone on an island can build and upgrade there with their own coins (co-op, changed 11 Nov by the owner): the buildings belong to that island, the payer's own unlocks count, and everyone earns their own loot from the waves they fight. Crew and the captain stay personal (your own island, your own captain).
 
 ## 7. API (backend B; the interface I uses a fake with the same shapes until merged)
 
@@ -45,8 +45,9 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 | Route | Body | Answer / refusals |
 |---|---|---|
 | `GET /api/island` | — | adds `level` per spot, `crew: {gunner, carpenter, lookout}`, `prices` (build and upgrade per kind and level, crew prices), `waveBest`, `nextWave` |
-| `POST /api/island/build` | `{spot, kind, actionUid}` | kind may be `cannon` or `mortar` on tower spots; refusals as today plus `wrong_kind` |
-| `POST /api/island/upgrade` | `{spot, actionUid}` | the island; `409 max_level`, `409 not_built`, `409 insufficient_funds` |
+| `POST /api/island/build` | `{spot, kind, actionUid, code?}` | kind may be `cannon` or `mortar` on tower spots; refusals as today plus `wrong_kind`, `locked`. With `code: "ISLE-XXXXX"` the building goes up on that island (co-op, section 6), paid by the caller with their own unlocks; the answer is that island with the caller's own coins, crew, captain and unlocks; `404 no_such_island` |
+| `POST /api/island/upgrade` | `{spot, actionUid, code?}` | the island; `409 max_level`, `409 not_built`, `409 locked`, `409 insufficient_funds`; `code` as for a build |
+| `GET /api/island/visit/{code}` | — | `{code, ownerName, waveBest, spots, crew}`: spots in the shape of `GET /api/island` (with `kind` and `level`) and the owner's crew, so every player simulates the same defenses |
 | `POST /api/island/hire` | `{crew: gunner|carpenter|lookout, actionUid}` | the island; `409 crew_full`, `409 insufficient_funds` |
 | `GET /api/pirate-point` | — | `{spots: [{id, kind, level, built, cost, upgradeCost}], waveBest}` |
 | `POST /api/pirate-point/build` and `/upgrade` | `{spot, kind?, actionUid}` | the Pirate Point state; same refusals |
@@ -60,7 +61,7 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 
 ## 9. Unlocks: simple at the start, deeper as you go (added 11 Nov, owner)
 
-New players see only what they can use. Everything else appears with a toast "New: … unlocked!" when the player first **wins** the wave shown (best wave on their own island, or any Pirate Point wave they fought in). The server enforces it (`409 locked` with "Unlocks after wave N").
+New players see only what they can use. Everything else appears with a toast "New: … unlocked!" when the player first **wins** the wave shown (the best wave of their own island, or any wave they fought in and won: any island, a friend's too, or Pirate Point). The server enforces it (`409 locked` with "Unlocks after wave N").
 
 | Unlocks after winning wave | What appears |
 |---|---|

@@ -34,32 +34,44 @@ GET /api/island
     Errors: 401, 403 demo_closed (a guest who was not admitted), 404 feature_off,
             404 player_not_set_up, 502 database_error, 503 island_unavailable, database_unavailable
 
-POST /api/island/build  {"spot": "cannon_1", "kind": "cannon" | "mortar", "actionUid": "..."}
+POST /api/island/build  {"spot": "cannon_1", "kind": "cannon" | "mortar", "actionUid": "...",
+                         "code"?: "ISLE-K7Q2M"}
     -> the island after the build, in the shape of GET /api/island
+    Co-op (TOWER-DEFENSE section 6): with "code" the building goes up on that island (it
+    belongs to the island) and the player pays with their own coins and their own unlocks. The
+    answer is then that island (code, spots, waveBest, nextWave, flags) with the player's own
+    coins, crew, captain and unlocks. Without "code", or with your own code: your own island.
     "actionUid" is made once per click (8 to 64 letters, digits, hyphens or underscores); the
     ledger ref is "island:<actionUid>", so a repeat never builds or charges twice and is answered
     with the island as it is now. Anything extra is a 422.
-    Errors: 404 no_such_spot, 409 spot_taken (also the cabin), 409 locked ("Unlocks after wave
+    Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 spot_taken
+            (also the cabin), 409 locked ("Unlocks after wave
             N"), 409 insufficient_funds, 422 wrong_kind, 422 validation_error, 429
             too_many_requests, 503 database_unavailable (the OUTCOME IS UNKNOWN: read the
             island, then repeat with the SAME actionUid), and the errors of GET /api/island
 
-POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "..."}
-    -> the island. One level up (ledger ref upgrade:<actionUid>); the kind stays.
-    Errors: 404 no_such_spot, 409 not_built, 409 max_level, 409 locked, 409 insufficient_funds
+POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISLE-K7Q2M"}
+    -> the island. One level up (ledger ref upgrade:<actionUid>); the kind stays. "code" works
+    as for a build (co-op on a friend's island).
+    Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 not_built,
+            409 max_level, 409 locked, 409 insufficient_funds
 
 POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout", "actionUid": "..."}
-    -> the island. One crew member, kept (ledger ref crew:<actionUid>).
+    -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
     Errors: 409 crew_full, 409 locked, 409 insufficient_funds
 
 POST /api/island/captain  {"actionUid": "..."}
-    -> the island. The captain one level up (ledger ref captain:<actionUid>).
+    -> the island. The captain one level up (ledger ref captain:<actionUid>). Always your own.
     Errors: 409 max_level, 409 locked, 409 insufficient_funds
 
     Build, upgrade, hire and captain share one budget of 30 a minute per player.
 
 GET /api/island/visit/{code}
-    -> {"code": "ISLE-K7Q2M", "ownerName": "Captain Gull", "waveBest": 3, "spots": [...]}
+    -> {"code": "ISLE-K7Q2M", "ownerName": "Captain Gull", "waveBest": 3, "spots": [...],
+        "crew": {"gunner": 1, "carpenter": 0, "lookout": 0}}
+    The spots in the shape of GET /api/island (kind, kinds, level, ...) and the owner's crew, so
+    every visitor's wave simulation uses the same defenses as the owner's. An admitted guest
+    (also one admitted through the friend invite) may read it.
     The code may be written with or without "ISLE-", in any case. Your own code works too.
     Errors: 404 no_such_island, 429 too_many_requests, and the errors of GET /api/island
 
@@ -175,6 +187,7 @@ class VisitResponse(BaseModel):
     ownerName: str
     waveBest: int
     spots: list[SpotOut]
+    crew: CrewOut
 
 
 class BuildRequest(BaseModel):
@@ -185,6 +198,8 @@ class BuildRequest(BaseModel):
     spot: str = Field(pattern=ID_PATTERN)
     kind: str = Field(pattern=ID_PATTERN)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    # Co-op: build on the island with this code ("ISLE-K7Q2M"); missing means your own island.
+    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
 
 
 class UpgradeRequest(BaseModel):
@@ -192,6 +207,7 @@ class UpgradeRequest(BaseModel):
 
     spot: str = Field(pattern=ID_PATTERN)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
 
 
 class HireRequest(BaseModel):
@@ -282,7 +298,9 @@ async def post_build(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
-    view = await service.build(admin, catalogue, player.id, body.spot, body.kind, body.actionUid)
+    view = await service.build(
+        admin, catalogue, player.id, body.spot, body.kind, body.actionUid, body.code
+    )
     return island_out(view, catalogue)
 
 
@@ -295,7 +313,7 @@ async def post_upgrade(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
-    view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid)
+    view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid, body.code)
     return island_out(view, catalogue)
 
 
@@ -374,4 +392,5 @@ async def get_visit(
         ownerName=view.owner_name,
         waveBest=view.wave_best,
         spots=spots_out(view.spots),
+        crew=CrewOut(**view.crew),
     )

@@ -292,8 +292,11 @@ def test_the_tower_defense_functions_take_exactly_the_arguments_the_server_sends
         "p_loot_per_wave", "p_loot_per_house", "p_point_loot_base", "p_boss_every",
         "p_boss_multiplier", "p_restart_back",
     ]  # fmt: skip
+    assert declared_parameters("island_build", text) == [
+        "p_player_id", "p_island_owner", "p_plot", "p_building_type", "p_action_uid", "p_price",
+    ]  # fmt: skip
     assert declared_parameters("island_upgrade", text) == [
-        "p_player_id", "p_plot", "p_action_uid", "p_prices", "p_unlocked_level",
+        "p_player_id", "p_island_owner", "p_plot", "p_action_uid", "p_prices", "p_unlocked_level",
     ]  # fmt: skip
     assert declared_parameters("island_hire", text) == [
         "p_player_id", "p_crew", "p_action_uid", "p_price", "p_max",

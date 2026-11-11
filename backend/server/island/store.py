@@ -42,7 +42,7 @@ CODE_TRIES = 5
 # One player has at most 20 building rows (4 home islet plots and 16 island spots).
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
-    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,point_wave_best"
+    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best"
 )
 
 
@@ -81,7 +81,7 @@ class ProgressRow(BaseModel):
     crew_carpenter: StrictInt
     crew_lookout: StrictInt
     captain_level: StrictInt
-    point_wave_best: StrictInt
+    won_wave_best: StrictInt
 
 
 class PaidRow(BaseModel):
@@ -158,12 +158,13 @@ class Progress:
     next_wave: int | None  # None: the next bell rings wave_best + 1
     crew: dict[str, int]  # {"gunner": 0, "carpenter": 0, "lookout": 0}
     captain_level: int
-    point_wave_best: int
+    won_wave_best: int
 
     @property
     def unlock_wave(self) -> int:
-        """The best wave this player won: own island or any Pirate Point wave they fought in."""
-        return max(self.wave_best, self.point_wave_best)
+        """The best wave this player won: their island's best, or any wave they fought in and won
+        (any island, a friend's too, or Pirate Point)."""
+        return max(self.wave_best, self.won_wave_best)
 
 
 @dataclass(frozen=True)
@@ -258,7 +259,7 @@ async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
         raise unreadable()
     row = read_model(ProgressRow, rows[0])
     crew = {"gunner": row.crew_gunner, "carpenter": row.crew_carpenter, "lookout": row.crew_lookout}
-    return Progress(row.wave_best, row.next_wave, crew, row.captain_level, row.point_wave_best)
+    return Progress(row.wave_best, row.next_wave, crew, row.captain_level, row.won_wave_best)
 
 
 async def ledger_has(admin: SupabaseAdmin, player_id: str, reason: str, ref: str) -> bool:

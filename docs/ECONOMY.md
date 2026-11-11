@@ -35,8 +35,10 @@ The tables of [TOWER-DEFENSE.md](TOWER-DEFENSE.md) sections 2 to 4, 9 and 10, al
 | Pirate Point spots | the same prices, paid by whoever clicks | the clicker's unlocks | `pp_build()` / `pp_upgrade()` (`building_purchase`, ref `pp:<uid>`) |
 | Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house level; Pirate Point 20 + 5 × *n*; every 5th wave (boss) × 2 | — | the 11-argument `wave_finish()` |
 
-Waves go up to 100. The unlock wave is the best wave the player won: on their own island, or any
-Pirate Point wave they fought in and won. After a lost island wave the next bell rings the best
+Waves go up to 100. The unlock wave is the best wave the player won: their own island's best, or
+any wave they fought in and won (any island or Pirate Point). A visitor may build and upgrade on
+a friend's island with their own coins (co-op, `island_build()` / `island_upgrade()`); the
+building belongs to the island, so coins move only out of the payer's wallet. After a lost island wave the next bell rings the best
 wave minus 2 (at least 1), so a client that always reports "lost" cannot farm low waves for more
 than the restart pays, and one that always reports "survived" climbs one wave per 25 s cycle as
 before. The highest single loot is a boss wave 100 with both houses at level 2:

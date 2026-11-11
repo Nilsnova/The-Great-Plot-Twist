@@ -1,8 +1,8 @@
 """The island service: puts the rules and the database together for routes/island.py.
 
     look()     the signed-in player's own island (made on first use, with the starting coins)
-    build()    one building on one spot, paid in coins
-    upgrade()  one level up for a building (docs/TOWER-DEFENSE.md section 2)
+    build()    one building on one spot, paid in coins (own island, or a friend's with `code`)
+    upgrade()  one level up for a building (docs/TOWER-DEFENSE.md section 2), the same way
     hire()     one crew member (section 3)
     captain()  one captain level up (section 10)
     visit()    another player's island, found by its code
@@ -76,6 +76,7 @@ class VisitView:
     owner_name: str
     wave_best: int
     spots: tuple[SpotView, ...]
+    crew: dict[str, int]  # the owner's crew: every visitor simulates the same defenses
 
 
 @dataclass(frozen=True)
@@ -101,7 +102,12 @@ def view_of(
     coins: int,
     built: dict[str, Built],
     progress: Progress,
+    personal: Progress | None = None,
 ) -> IslandView:
+    """The island of `progress` (its spots, best and next wave) with the personal part (coins,
+    crew, captain, unlocks) of `personal`: the same player on their own island, the visitor
+    after a co-op build or upgrade on a friend's island."""
+    mine = progress if personal is None else personal
     return IslandView(
         code=shown(island.code),
         coins=coins,
@@ -109,10 +115,10 @@ def view_of(
         flags=island.flags,
         next_wave=rules.next_wave(catalogue, progress.wave_best, progress.next_wave),
         spots=rules.plan_spots(catalogue, built),
-        crew=progress.crew,
-        captain_level=progress.captain_level,
-        captain_next_price=rules.captain_next_price(catalogue, progress.captain_level),
-        unlocks=unlocks_of(catalogue, progress.unlock_wave),
+        crew=mine.crew,
+        captain_level=mine.captain_level,
+        captain_next_price=rules.captain_next_price(catalogue, mine.captain_level),
+        unlocks=unlocks_of(catalogue, mine.unlock_wave),
     )
 
 
@@ -122,11 +128,28 @@ async def look(admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str)
     return await look_open(admin, catalogue, island)
 
 
-async def look_open(admin: SupabaseAdmin, catalogue: IslandCatalogue, island: Island) -> IslandView:
-    coins = await islet_store.read_coins(admin, island.owner)
+async def look_open(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, island: Island, payer: str | None = None
+) -> IslandView:
+    """`island` as it is now. With `payer` (a visitor): their coins, crew, captain and unlocks."""
+    who = island.owner if payer is None else payer
+    coins = await islet_store.read_coins(admin, who)
     built = await store.read_built_spots(admin, island.owner)
     progress = await store.read_progress(admin, island.owner)
-    return view_of(catalogue, island, coins, built, progress)
+    personal = None if payer is None else await store.read_progress(admin, payer)
+    return view_of(catalogue, island, coins, built, progress, personal)
+
+
+async def target_island(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, code: str | None
+) -> tuple[Island, str | None]:
+    """The island a build or upgrade is for, and the visiting payer (None on your own island).
+    The payer's own island is opened first, so a brand-new visitor holds their starting coins."""
+    own = await store.open_island(admin, player_id, catalogue.starting_coins)
+    if code is None:
+        return own, None
+    island = await find_by_code(admin, code)
+    return (own, None) if island.owner == player_id else (island, player_id)
 
 
 def not_enough_coins(name: str, price: int) -> ApiError:
@@ -180,15 +203,20 @@ async def build(
     spot_id: str,
     kind: str,
     action_uid: str,
+    code: str | None = None,
 ) -> IslandView:
-    """Build `kind` on `spot_id` for the player and answer with the island after the build.
+    """Build `kind` on `spot_id` and answer with the island after the build. Without `code` on
+    the player's own island; with `code` on that island (co-op: the player pays, the building
+    belongs to the island, the player's own unlocks count).
 
-    Errors (ApiErrors): 404 no_such_spot, 409 spot_taken, 422 wrong_kind, 409 locked,
-    409 insufficient_funds, 404 player_not_set_up, 502 database_error, 503 database_unavailable
-    (outcome unknown: call GET /api/island, then repeat with the SAME actionUid).
+    Errors (ApiErrors): 404 no_such_spot, 404 no_such_island, 409 spot_taken, 422 wrong_kind,
+    409 locked, 409 insufficient_funds, 404 player_not_set_up, 502 database_error, 503
+    database_unavailable (outcome unknown: read the island, then repeat with the SAME actionUid).
     """
     ref = f"{REF_PREFIX}{action_uid}"
-    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    island, payer = await target_island(admin, catalogue, player_id, code)
+    if payer is not None:
+        return await build_with_friend(admin, catalogue, island, payer, spot_id, kind, action_uid)
     if await islet_store.build_exists(admin, player_id, ref):
         return await look_open(admin, catalogue, island)
 
@@ -212,30 +240,62 @@ async def build(
     return view_of(catalogue, island, outcome.balance, built, progress)
 
 
+async def build_with_friend(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    island: Island,
+    payer: str,
+    spot_id: str,
+    kind: str,
+    action_uid: str,
+) -> IslandView:
+    """The co-op build on a friend's island through island_build(). Same refusals."""
+    if not await store.ledger_has(admin, payer, "building_purchase", REF_PREFIX + action_uid):
+        built = await store.read_built_spots(admin, island.owner)
+        progress = await store.read_progress(admin, payer)
+        spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.unlock_wave)
+        arguments = {
+            "p_player_id": payer,
+            "p_island_owner": island.owner,
+            "p_plot": spot.id,
+            "p_building_type": kind,
+            "p_action_uid": action_uid,
+            "p_price": price,
+        }
+        await paid(
+            admin, "island_build", arguments, f"A {rules.kind_of(catalogue, kind).name.lower()}"
+        )
+    return await look_open(admin, catalogue, island, payer)
+
+
 async def upgrade(
     admin: SupabaseAdmin,
     catalogue: IslandCatalogue,
     player_id: str,
     spot_id: str,
     action_uid: str,
+    code: str | None = None,
 ) -> IslandView:
-    """One level up for the building on `spot_id`. 404 no_such_spot, 409 not_built, 409
-    max_level, 409 locked, 409 insufficient_funds. A repeated actionUid charges nothing."""
+    """One level up for the building on `spot_id`, on the player's own island or (with `code`)
+    on a friend's island, paid by the player with their own unlocks. 404 no_such_spot, 404
+    no_such_island, 409 not_built, 409 max_level, 409 locked, 409 insufficient_funds. A repeated
+    actionUid charges nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
-    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    island, payer = await target_island(admin, catalogue, player_id, code)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):
-        built = await store.read_built_spots(admin, player_id)
+        built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, player_id)
         spot, kind, reachable = rules.check_upgrade(catalogue, spot_id, built, progress.unlock_wave)
         arguments = {
             "p_player_id": player_id,
+            "p_island_owner": island.owner,
             "p_plot": spot.id,
             "p_action_uid": action_uid,
             "p_prices": list(kind.prices),
             "p_unlocked_level": reachable,
         }
         await paid(admin, "island_upgrade", arguments, f"The next {kind.name.lower()} level")
-    return await look_open(admin, catalogue, island)
+    return await look_open(admin, catalogue, island, payer)
 
 
 async def hire(
@@ -300,7 +360,8 @@ async def visit(admin: SupabaseAdmin, catalogue: IslandCatalogue, typed_code: st
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
     spots = rules.plan_spots(catalogue, built)
-    return VisitView(shown(island.code), owner_name, island.wave_best, spots)
+    crew = (await store.read_progress(admin, island.owner)).crew
+    return VisitView(shown(island.code), owner_name, island.wave_best, spots, crew)
 
 
 async def invite(admin: SupabaseAdmin, typed_code: str) -> InviteView:

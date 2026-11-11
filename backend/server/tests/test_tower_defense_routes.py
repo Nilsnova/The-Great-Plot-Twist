@@ -62,8 +62,8 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
     assert body["unlocks"]["locked"]["crew:gunner"] == 5
 
 
-def test_a_pirate_point_win_counts_for_the_unlocks():
-    world = world_at(0, point_wave_best=5)
+def test_a_win_anywhere_counts_for_the_unlocks():
+    world = world_at(0, won_wave_best=5)
 
     assert world.island().json()["unlocks"]["wave"] == 5
 
@@ -102,6 +102,7 @@ def test_an_upgrade_sends_the_price_list_and_the_unlocked_level():
     (call,) = world.database.calls("island_upgrade")
     assert call == {
         "p_player_id": PLAYER_ID,
+        "p_island_owner": PLAYER_ID,
         "p_plot": "wall_1",
         "p_action_uid": "click-0001",
         "p_prices": [10, 20, 40],
@@ -394,3 +395,111 @@ def test_the_invite_is_rate_limited():
 
 def test_an_extra_field_is_refused():
     assert_error(invite(World(settings=WITH_GUESTS), extra=1), 422, "validation_error")
+
+
+# --- co-op: building and upgrading on a friend's island ---
+
+
+def friends_island(world: World) -> None:
+    """The guest visits PLAYER's island ISLE-K7Q2M."""
+    island_of_owner(world)
+
+
+def test_a_visitor_builds_on_a_friends_island_with_their_own_coins_and_unlocks():
+    world = world_at(0, won_wave_best=3)  # the payer's progress (the fake answers one row)
+    friends_island(world)
+
+    response = world.build(headers=GUEST, spot="cannon_2", kind="mortar", code="ISLE-K7Q2M")
+
+    assert response.status_code == 200
+    assert response.json()["code"] == "ISLE-K7Q2M"
+    assert world.database.calls("islet_build") == []
+    (call,) = world.database.calls("island_build")
+    assert call == {
+        "p_player_id": GUEST_ID,
+        "p_island_owner": PLAYER_ID,
+        "p_plot": "cannon_2",
+        "p_building_type": "mortar",
+        "p_action_uid": "click-0001",
+        "p_price": 60,
+    }
+
+
+def test_a_co_op_build_keeps_the_refusals():
+    world = world_at(0)
+    friends_island(world)
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_1", "building_type": "wall"}]
+
+    def coop(**body):
+        return world.build(headers=GUEST, code="ISLE-K7Q2M", **body)
+
+    assert_error(coop(spot="cannon_1", kind="mortar"), 409, "locked")
+    assert_error(coop(spot="wall_1", kind="wall"), 409, "spot_taken")
+    assert_error(coop(spot="wall_2", kind="cannon"), 422, "wrong_kind")
+    assert_error(world.build(headers=GUEST, code="ISLE-ZZZZZ"), 404, "no_such_island")
+    world.database.paid_replies["island_build"] = {**REFUSED, "price": 10}
+    assert_error(coop(spot="wall_3", kind="wall"), 409, "insufficient_funds")
+    raced = {"status": "refused", "reason": "spot_taken"}
+    world.database.paid_replies["island_build"] = raced
+    assert_error(coop(spot="wall_4", kind="wall"), 409, "spot_taken")
+
+
+def test_a_repeated_co_op_build_charges_nothing():
+    world = world_at(0)
+    friends_island(world)
+    world.database.ledger_refs.add(("building_purchase", "island:click-0001"))
+
+    response = world.build(headers=GUEST, spot="wall_1", kind="wall", code="ISLE-K7Q2M")
+
+    assert response.status_code == 200
+    assert world.database.calls("island_build") == []
+
+
+def test_a_visitor_upgrades_a_building_of_the_friends_island():
+    world = world_at(2)
+    friends_island(world)
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_1", "building_type": "wall"}]
+
+    response = world.post("/api/island/upgrade", headers=GUEST, spot="wall_1", code="isle-k7q2m")
+
+    assert response.status_code == 200
+    (call,) = world.database.calls("island_upgrade")
+    assert (call["p_player_id"], call["p_island_owner"]) == (GUEST_ID, PLAYER_ID)
+    assert_error(
+        world.post("/api/island/upgrade", headers=GUEST, spot="wall_2", code="ISLE-K7Q2M"),
+        409,
+        "not_built",
+    )
+
+
+def test_your_own_code_builds_on_your_own_island():
+    world = world_at(0)
+    friends_island(world)
+
+    assert world.build(code="ISLE-K7Q2M").status_code == 200
+    assert world.database.calls("island_build") == []
+    assert len(world.database.calls("islet_build")) == 1
+
+
+def test_joining_a_friends_wave_opens_your_own_island_for_the_unlock_credit():
+    world = world_at(0)
+
+    assert world.join(headers=GUEST).status_code == 200
+    assert world.database.calls("island_open")[0]["p_player_id"] == GUEST_ID
+
+
+def test_a_visit_shows_the_levels_kinds_and_crew_so_every_visitor_simulates_the_same_island():
+    world = world_at(0, crew_gunner=1, crew_lookout=1)
+    island_of_owner(world)
+    world.database.buildings[PLAYER_ID] = [
+        {"plot": "cannon_3", "building_type": "mortar", "level": 2}
+    ]
+
+    assert invite(world).status_code == 200
+    body = world.visit("ISLE-K7Q2M", headers=GUEST).json()
+
+    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew"]
+    spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_3")
+    assert (spot["kind"], spot["level"], spot["built"]) == ("mortar", 2, True)
+    assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1}
+    assert set(spot) == set(world.island().json()["spots"][0])

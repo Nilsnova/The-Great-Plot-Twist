@@ -12,7 +12,7 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
   * GET islands?player_id=                   the tower defense columns (progress)
   * GET wallet_transactions                  the repeat check of a paid action (ledger_refs)
-  * POST rpc/island_upgrade, island_hire, island_captain, pp_build, pp_upgrade
+  * POST rpc/island_build, island_upgrade, island_hire, island_captain, pp_build, pp_upgrade
                                              paid_replies[name] (default: done)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave
 
@@ -91,7 +91,14 @@ FINISHED = {
 }
 
 
-PAID_FUNCTIONS = ("island_upgrade", "island_hire", "island_captain", "pp_build", "pp_upgrade")
+PAID_FUNCTIONS = (
+    "island_build",
+    "island_upgrade",
+    "island_hire",
+    "island_captain",
+    "pp_build",
+    "pp_upgrade",
+)
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
 
 
@@ -144,7 +151,7 @@ class FakeIslandDatabase:
             "crew_carpenter": 0,
             "crew_lookout": 0,
             "captain_level": 1,
-            "point_wave_best": 0,
+            "won_wave_best": 0,
         }
         self.ledger_refs: set[tuple[str, str]] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
