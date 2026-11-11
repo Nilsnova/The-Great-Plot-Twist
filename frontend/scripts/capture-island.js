@@ -20,7 +20,7 @@ try {
     await page.locator('#play').click();
     // Lore intro, then the island arrival cutscene, then the goal card.
     for (let i = 0; i < 3; i++) {
-      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.goal-card[open]'), null, {timeout: 30000});
+      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]'), null, {timeout: 30000});
       if (await page.locator('.goal-card[open]').count()) break;
       if (i === 1) await shot(`arrival-cutscene-${width}`);
       await page.getByRole('button', {name: 'Skip', exact: true}).click();

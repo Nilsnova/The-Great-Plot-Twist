@@ -1,14 +1,19 @@
-// Starts through the actual title menu: Play, the lore cutscene (skipped), the goal card and Saltreach
+// Starts through the actual title menu: Play, the lore cutscene (skipped), the first How to play pages
+// (skipped), the goal card and Saltreach
 // Harbor. Shared graphics checks then exercise the world. The Lighthouse prologue left on 10 Nov (D031).
 export async function startFromTitle(page) {
   await page.locator('.shell-screen[open]').waitFor();
   await page.locator('#play').click();
   const skip=page.getByRole('button',{name:'Skip',exact:true}),card=page.locator('.goal-card[open]');
-  // The lore and the card show once per device; a later Play goes straight to the harbor.
-  await page.waitForFunction(()=>document.querySelector('dialog.cutscene[open],.goal-card[open]')
+  // The lore, the first How to play pages and the card show once per device; a later Play goes straight to the harbor.
+  await page.waitForFunction(()=>document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')
     ||(window.__island?.world.current?.id==='saltreach_harbor'&&!document.querySelector('dialog[open]')),null,{timeout:30000});
-  if(await page.locator('dialog.cutscene[open]').count())await skip.click();
-  if(await card.count()||await page.locator('dialog.cutscene[open]').count()){
+  const first=await page.evaluate(()=>!!document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]'));
+  if(await page.locator('dialog.cutscene[open]').count()){
+    await skip.click();await page.waitForFunction(()=>document.querySelector('.tutorial-card[open],.goal-card[open]'),null,{timeout:30000});
+  }
+  if(await page.locator('.tutorial-card[open]').count())await page.locator('.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true}).click();
+  if(first){
     await card.waitFor({timeout:30000});await card.getByRole('button',{name:'Got it',exact:true}).click();
   }
   await page.waitForFunction(()=>window.__island?.world.current?.id==='saltreach_harbor'&&!document.querySelector('dialog[open]'),null,{timeout:30000});

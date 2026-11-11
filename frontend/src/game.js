@@ -18,6 +18,7 @@ import {getPreferences,setPreferences,onPreferences,reducedMotion,watchSystemMot
 import {startLiveWeather} from './net/weather.js';
 import {escapePriority} from './shell/escape.js';
 import {createShortcutsHost} from './shell/shortcuts-host.js';
+import {createTutorialHost} from './tutorial/host.js';
 import {createWorldExperience} from './world/experience.js';
 import {createIsletState} from './world/islet/state.js';
 import {sendIntent} from './adapter/intent.js';
@@ -57,6 +58,8 @@ import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from '
 export async function startGame({container,shell,audio,captions,adapter,isAppBlocked,openAccount,session=defaultSession}) {
   startDiagnostics();noteAdapterView(adapter?.read());
   const shortcuts=createShortcutsHost(container);
+  // Menu › How to play (src/tutorial/): the paged card, loaded on first use.
+  const tutorial=createTutorialHost(container,{onClose:()=>graphics.renderer.domElement.focus({preventScroll:true})});
   const scene = new THREE.Scene();
   const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
@@ -70,15 +73,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   let mapTouch=null;
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null,waves=null,wavesLoad=null;
   let harbor=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
-  const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
+  const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
   // No prediction market in the game (D035, 11 Nov): the fortune teller and its desk are gone.
   function panelLabel(zone){return island?.label(zone);}
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
-  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
+  const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
       isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
@@ -91,7 +94,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },controls:()=>void shortcuts.open(),
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
@@ -259,10 +262,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
-  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!classDemo?.active||shortcuts.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
+  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
     setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
+      if(tutorial.active){tutorial.close();return true;}
       if(island?.handleEscape())return true;
       if(classDemo?.handleEscape())return true;
       if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}

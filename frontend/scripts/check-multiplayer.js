@@ -42,10 +42,10 @@ async function openCaptain(name, playerId, visit = null) {
   }
   else await page.locator('#play').click();
   for (let i = 0; i < 10; i++) {
-    await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.goal-card[open]')
+    await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')
       || (window.__island?.world.current?.id === 'home_islet' && window.__island.island?.island && !document.querySelector('dialog[open]')), null, {timeout: 60000, polling: 100});
     if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
-    else if (await page.locator('dialog.cutscene[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
+    else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
     else break;
     await page.waitForTimeout(300);
   }

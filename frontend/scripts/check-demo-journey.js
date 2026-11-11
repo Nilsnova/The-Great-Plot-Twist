@@ -28,6 +28,8 @@ async function frontDoor(url){
   await page.locator('#play').click();
   await page.locator('dialog.cutscene[open]').waitFor();
   await page.getByRole('button',{name:'Skip',exact:true}).click();
+  // The first How to play pages show once per device after the lore (src/tutorial/).
+  await page.locator('.tutorial-card[open]').getByRole('button',{name:'Skip',exact:true}).click();
   await page.locator('.goal-card[open]').waitFor({timeout:30000});
   await page.getByRole('button',{name:'Got it',exact:true}).click();
   await page.waitForFunction(()=>window.__island?.classDemo&&window.__island.world.current?.id==='saltreach_harbor'&&!document.querySelector('dialog[open]'),null,{timeout:30000});

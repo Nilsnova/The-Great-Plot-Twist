@@ -94,6 +94,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   stops.push(addMenuExtras(() => [
     actions.chart && {label: 'Sea chart', onSelect: () => actions.chart()},
     actions.controls && {label: 'Controls', onSelect: () => actions.controls()},
+    actions.tutorial && {label: 'How to play', onSelect: () => actions.tutorial()},
   ].filter(Boolean)));
 
   let bannerTimer = 0;

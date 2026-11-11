@@ -89,3 +89,10 @@ API: `GET /api/island` adds `captain: {level, nextPrice}` and `unlocks: {…}` (
 ## 11. Up to four players together
 
 The same invite link works for several friends at once (up to 4 players on one island; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
+
+## 13. How to play (added 11 Nov, owner: "a longer intro, and a tutorial in the menu")
+
+- **Menu › How to play** opens a paged card (kit panel) with 10 short pages: your island and coins · build · ring the bell · your captain fights · pirates come ashore · crew and captain skills · more as you win · play with a friend · the Harbor and Pirate Point · controls. Back / Next, page dots, arrow keys, Escape, a swipe on phones; each page shows existing pixel sprites.
+- **First Play:** after the voiced lore intro, the first 4 pages (island, build, bell, captain) show once, with **Skip** and **Start playing**; then the goal card and the island arrival as before. The device remembers it (`localStorage` `plot_twist_tutorial_v1`), so returning players never see it again. A player who came with a class code skips it (the class demo keeps its own goals and must start fast).
+- **All page text** lives in one module, `frontend/src/tutorial/pages.js`; change the words there only. When a feature changes (boarders, captain skills), update its page in the same commit.
+- Browser checks that start from Play skip the pages with the card's **Skip** button (`.tutorial-card[open]`).

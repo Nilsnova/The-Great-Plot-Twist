@@ -21,9 +21,9 @@ const PLAY_MONEY='Play coins only. They cannot be bought or cashed out.';
 async function play(page){
   await playFromTitle(page);
   for(let i=0;i<8;i++){
-    await page.waitForFunction(()=>document.querySelector('dialog.cutscene[open],.goal-card[open]')
+    await page.waitForFunction(()=>document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]')
       ||(document.querySelector('.hud.exploring')&&!document.querySelector('dialog[open]')),null,{timeout:30000});
-    if(await page.locator('dialog.cutscene[open]').count())await page.getByRole('button',{name:'Skip',exact:true}).click();
+    if(await page.locator('dialog.cutscene[open],.tutorial-card[open]').count())await page.getByRole('button',{name:'Skip',exact:true}).click();
     else if(await page.locator('.goal-card[open]').count())await page.locator('.goal-card[open]').getByRole('button',{name:'Got it',exact:true}).click();
     else return;
     await page.waitForTimeout(200);
