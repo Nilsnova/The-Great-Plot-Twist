@@ -16,6 +16,7 @@ import {decorateIsland} from './world.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, isIslandZone, spotById, defenses} from './spots.js';
 import {buildCardModel, bellModel, inviteModel, coinText} from './card-model.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
+import {ISLAND_BUILT, ISLAND_INVITE_OPENED, WAVE_FINISHED} from '../ui/quest-events.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
@@ -26,9 +27,12 @@ const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
-  now, setTimer, clearTimer} = {}) {
+  onCoins = () => {}, now, setTimer, clearTimer} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0;
+  // The player's balance is the island's `coins` (GET /api/island and every answer after it); the HUD shows it.
+  const tellCoins = coins => { if (!disposed && Number.isSafeInteger(coins)) { try { onCoins(coins); } catch { /* The HUD cannot stop the island. */ } } };
+  const setOwn = next => { own = next; tellCoins(next?.coins); };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const api = createIslandApi({transport: transport ?? live});
@@ -39,8 +43,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const flow = createWaveFlow({api, emit, placeholder, now, setTimer, clearTimer,
     notify: (text, tone) => ui.toast(text, tone), banner: text => ui.banner(text), onChange: () => refreshCard(),
     defensesOf: () => defenses(target()?.spots ?? [])});
-  const stopFinished = on('wave_finished', event => {
-    if (disposed || !own || visiting) return;
+  const stopFinished = on(WAVE_FINISHED, event => {
+    if (disposed) return;
+    tellCoins(event.coins);
+    if (!own || visiting) return;
     if (Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, waveBest: event.waveBest ?? own.waveBest, flags: event.flags ?? own.flags};
     refreshCard();
   });
@@ -71,7 +77,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!visiting) {
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
-      if (answer.ok) { own = answer.data; ownMessage = ''; } else ownMessage = answer.message;
+      if (answer.ok) { setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
     }
     applyWorld(); refreshCard();
     if (target()) await flow.look(where());
@@ -121,8 +127,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (disposed) return;
     busySpot = null;
     if (answer.ok) {
-      own = answer.data;
-      emit({type: 'island_built', kind: spot.kind, spot: spotId});
+      setOwn(answer.data);
+      emit({type: ISLAND_BUILT, kind: spot.kind, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
       ui.toast(`${KINDS[spot.kind].name} built! You have ${coinText(own.coins)}.`, 'success');
@@ -131,7 +137,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (['spot_taken', 'insufficient_funds'].includes(answer.code)) {
         const fresh = await api.getIsland();
         if (disposed) return;
-        if (fresh.ok) own = fresh.data;
+        if (fresh.ok) setOwn(fresh.data);
       }
     }
     refreshCard();

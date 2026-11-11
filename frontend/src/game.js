@@ -177,7 +177,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
-        focus:()=>graphics.renderer.domElement.focus({preventScroll:true})});
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:value=>hud.setCoins(value)});
+      hud.setCoinSource('island');
       return island;
     }).catch(error=>{console.error(error);islandLoad=null;return null;});
     await islandLoad;return island?islandsMode:'off';

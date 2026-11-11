@@ -2,9 +2,10 @@
 // bell, the invite card and the loot toast. The server decides; these only describe its last answer.
 import {KINDS} from './spots.js';
 import {displayIslandCode, visitUrl} from './codes.js';
+import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 
-// Coins always read "🪙 120" (BUILD-PLAN 3.2). Lane H's formatCoins in src/lib/coins.js replaces this.
-export const coinText = n => `🪙 ${Number.isSafeInteger(n) ? n : '?'}`;
+// Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
+export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
 
 // spot: the server's {id, kind, built, cost} or null while the island is loading.
 export function buildCardModel({spotId, kind, spot = null, coins = null, visitor = false, ownerName = '',
@@ -50,7 +51,7 @@ export function inviteModel(code, base) {
       : 'Your island code is still loading.'};
 }
 
-export const lootText = ({loot, coins}) => `${coinText(loot).replace('🪙 ', '🪙 +')} loot · you have ${coinText(coins)}`;
+export const lootText = ({loot, coins}) => `${formatCoinDelta(loot)} loot · you have ${coinText(coins)}`;
 export const countdownText = (seconds, wave) => (seconds > 0 ? `Pirates in ${seconds} s! Wave ${wave}` : `Wave ${wave}: the pirates are here!`);
 // Whole seconds until startsAt. A clock far off the server's falls back to the full countdown.
 export function secondsUntil(startsAt, now = Date.now(), {fresh = false, countdown = 10} = {}) {

@@ -13,10 +13,9 @@ import {createQuestStrip} from './quest-strip.js';
 import {QUEST_EVENTS, PLACE_ARRIVED} from './quest-events.js';
 import {FIRST_QUESTS, applyQuestEvent, createIdleHint, firstQuestView, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
+import {coinsSpoken, formatCoins} from '../lib/coins.js';
 import './hud.css';
 
-// Lane H replaces this with formatCoins() from src/lib/coins.js.
-export const formatCoins = n => `🪙 ${n}`;
 export const ARRIVAL_MS = 2000;
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 const local = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
@@ -24,6 +23,9 @@ export const weatherLabel = weather => weather.rain > 0.5 ? 'Rain at sea' : weat
 
 export function createHud(container, actions, {on = defaultOn, storage = local(), toast = showToast, hintsEnabled = () => getPreferences().hintsEnabled !== false} = {}) {
   let disposed = false, place = 'saltreach_harbor', override = null, coins = null, account = 'none', lastFrame = 0;
+  // Where the balance comes from: the wallet (view.captain.coins) or, with the islands on, the island API
+  // through setCoins(). The island's own count wins once chosen, so the wallet never overwrites it.
+  let coinSource = 'wallet';
   const overlay = node('div', 'hud hud-play');
   // 1. Coins.
   const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
@@ -47,7 +49,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   function drawCoins() {
     const known = Number.isFinite(coins);
     purseText.textContent = known ? formatCoins(coins) : '🪙 …';
-    purse.setAttribute('aria-label', known ? `${coins} coins` : 'Coins not loaded yet');
+    purse.setAttribute('aria-label', known ? coinsSpoken(coins) : 'Coins not loaded yet');
   }
   drawCoins();
 
@@ -91,12 +93,15 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     get quickPanelsOpen() { return false; },
     setCaptain(view) {
       const value = view?.captain?.coins;
-      if (Number.isFinite(value)) { coins = value; drawCoins(); }
+      if (coinSource === 'wallet' && Number.isFinite(value)) { coins = value; drawCoins(); }
       const state = view?.account?.state ?? 'none';
       if (state === 'expired' && account !== 'expired') toast({text: 'Your sign-in ran out.', next: 'Sign in again from Menu › Settings to keep playing online.', tone: 'error'});
       account = state;
     },
     setCoins(value) { if (Number.isFinite(value)) { coins = Math.round(value); drawCoins(); } },
+    // 'island' (the island API sends setCoins) or 'wallet' (the default).
+    setCoinSource(source) { coinSource = source === 'island' ? 'island' : 'wallet'; },
+    get coins() { return coins; },
     // A part of the game with its own goals (the class demo) passes its view; null gives the strip back.
     setQuests(view) { override = view ?? null; draw(); },
     get quests() { return {...first, view: override ?? firstQuestView(first)}; },
