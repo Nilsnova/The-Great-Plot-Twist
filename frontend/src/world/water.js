@@ -1,5 +1,5 @@
-// The sea: one code-drawn pixel shader under every place. Gentle wave bands in three teal tones,
-// lighter shallows and animated foam lines that follow the actual coast, sparse sun glints, rain
+// The sea: one code-drawn pixel shader under every place. Flat wave bands in three teal tones,
+// two clean shallow bands and crisp 1-px foam lines that follow the actual coast, sparse sun glints, rain
 // rings and storm whitecaps, all quantised to the native pixel grid. The coast comes from the
 // place's own backdrop: its alpha is turned once into a small distance field (water.setCoast).
 // The distance field and clock are shared with the beams (seaUniforms), so a sweeping light can
@@ -15,6 +15,8 @@ const fieldCache = new Map();
 // Shared by water and beams: one coast texture per app, refilled on every place change.
 const coastTexture = new THREE.DataTexture(new Uint8Array(FIELD_W * FIELD_H).fill(255), FIELD_W, FIELD_H,
   THREE.RedFormat, THREE.UnsignedByteType);
+// Linear on purpose: this is a distance field, not art. Interpolated distances give smooth one-pixel
+// foam and shallow contours; every fragment still snaps to the native pixel before it samples.
 coastTexture.magFilter = THREE.LinearFilter; coastTexture.minFilter = THREE.LinearFilter;
 coastTexture.generateMipmaps = false; coastTexture.needsUpdate = true;
 export const seaUniforms = {
@@ -78,36 +80,36 @@ ${pixelGlsl}${seaGlsl}
 uniform vec3 uDeep,uMid,uLight,uShallow,uShallow2,uFoam,uGlint,uStroke;
 varying vec2 vWorld;
 void main(){
-  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;float t=uSeaTime,b=bayer4(px);
+  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;float t=uSeaTime;
   float d=coastDistance(p);
   if(d < .5)discard; // land: the place backdrop covers it, so skip the work
-  // Wave bands drift towards the shore; wind makes them quicker and sharper.
+  // Wave bands drift towards the shore; wind makes them quicker and sharper. Flat bands with crisp
+  // edges (no dithering), so the sea reads as clean shapes.
   float swell=sin(p.y*1.9+sin(p.x*.31+t*.35)*1.3-t*(.55+uWind*1.3));
   float chop=sin(p.y*4.7-p.x*.62+t*(1.0+uWind*1.6))*sin(p.x*.23+p.y*.4-t*.3);
   float shade=clamp(.5+swell*.3+chop*(.16+uWind*.14),0.0,1.0);
-  float level=floor(shade*3.0+b*.6-.3);
+  float level=floor(shade*3.0);
   vec3 colour=level<=0.0?uDeep:level<=1.0?uMid:uLight;
-  // Wave strokes: thin broken crest lines, the classic pixel-art sea.
+  // Wave strokes: crisp one-pixel crest dashes of steady length, the classic pixel-art sea.
   float lineY=p.y*1.15+sin(p.x*.45+t*.6)*.2-t*.12*(1.0+uWind);
-  float row=floor(lineY);vec2 seg=vec2(floor((px.x+row*13.0)/(9.0+mod(row,3.0)*3.0)),row);
-  if(uDetail>.5&&d>7.0&&fract(lineY)<.07&&pxHash(seg+floor(t*.25))>.5)colour=uStroke;
-  // Shallows: two lighter tones dithered towards the beach.
-  float shallow=1.0-clamp((d-3.0)/26.0,0.0,1.0);
-  if(shallow>.04&&shallow*shallow+b*.55>.62)colour=uShallow;
-  if(d<9.0&&(d<5.0||b>.5))colour=uShallow2;
-  // Surf: a fixed wet line and one moving foam line that runs up and back.
+  float row=floor(lineY),period=11.0+mod(row,3.0)*4.0,dash=mod(px.x+row*13.0,period);
+  if(uDetail>.5&&d>9.0&&fract(lineY)<.065&&dash<period*.45&&pxHash(vec2(floor((px.x+row*13.0)/period),row))>.35)colour=uStroke;
+  // Shallows: two flat bands that follow the coast, their edges rippling a pixel or two.
+  float ripple=sin(p.x*1.3+p.y*.7+t*.5)*1.2;
+  if(d<22.0+ripple*2.0)colour=uShallow;
+  if(d<9.0+ripple)colour=uShallow2;
+  // Surf: a fixed foam edge and one moving one-pixel foam line that runs up and back.
   float run=.5+.5*sin(t*(.7+uWind*.5)+p.x*.21+p.y*.37);
-  float surf=2.5+run*(5.0+uWind*4.0);
-  float broken=pxHash(floor(px/vec2(3.0,1.0))+floor(t*.5));
-  if(uDetail>.5&&abs(d-surf)<.75&&broken>.25)colour=mix(uShallow2,uFoam,run);
+  float surf=3.0+run*(5.0+uWind*4.0);
+  if(uDetail>.5&&abs(d-surf)<.6&&mod(floor(px.x/6.0)+floor(px.y/3.0),5.0)>0.0)colour=run>.55?uFoam:uStroke;
   if(d<1.6)colour=uFoam;
   // Whitecaps on crests once the wind picks up.
   vec2 capCell=floor(px/vec2(9.0,4.0));float cap=pxHash(capCell+vec2(floor(t*.7),0.0));
   if(uDetail>.5&&d>10.0&&uWind>.45&&cap>1.0-(uWind-.45)*.22&&shade>.6&&mod(px.y,4.0)==1.0&&mod(px.x+capCell.y,9.0)<4.0)colour=uFoam;
-  // Glints: short sparkling dashes that blink on and off.
-  vec2 cell=floor(px/vec2(7.0,4.0)),local=px-cell*vec2(7.0,4.0);float h=pxHash(cell);
+  // Glints: a few short sparkling dashes that blink on and off (sparse, so the sea stays calm).
+  vec2 cell=floor(px/vec2(14.0,6.0)),local=px-cell*vec2(14.0,6.0);float h=pxHash(cell);
   float blink=fract(h*13.7+t*(.22+h*.25));
-  if(uDetail>.5&&d>6.0&&blink<.035&&shade>.55&&local.y==1.0&&local.x>=2.0&&local.x<=(blink<.015?4.0:3.0))colour=uGlint;
+  if(uDetail>.5&&d>12.0&&blink<.03&&shade>.55&&local.y==1.0&&local.x>=2.0&&local.x<=(blink<.015?4.0:3.0))colour=uGlint;
   // Rain: small rings open on the water and fade.
   if(uDetail>.5&&uRain>.01&&d>2.0){
     vec2 rc=floor(px/vec2(14.0,9.0));float rt=t*1.6+pxHash(rc)*9.0,cycle=floor(rt),age=fract(rt);

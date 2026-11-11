@@ -1,6 +1,6 @@
 // Warm light pools at dusk and night: lanterns, lit windows, the harbor beacon and the class-demo
 // lamps. One instanced mesh (one draw call) drawn additively above the night wash, so each pool
-// cuts a dithered circle of lamplight out of the dark. Gold is for lights, so these are gold.
+// cuts three solid, crisp-edged rings of lamplight out of the dark. Gold is for lights, so these are gold.
 // set(places pools) on arrival, extra(key, pools) for owners such as the class demo.
 import * as THREE from 'three';
 import { pixelGlsl, toScreen } from './pixel-glsl.js';
@@ -30,7 +30,7 @@ void main(){
   vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0,q=(p-vPool.xy)/vPool.z;
   if(vPool.w<.5)q.y/=.62;
   float r=length(q);if(r>1.0)discard;
-  float flicker=1.0+.07*sin(uTime*6.3+vPool.x*3.1)+.04*sin(uTime*11.7+vPool.y*5.3);
+  float flicker=1.0+.035*sin(uTime*6.3+vPool.x*3.1)+.02*sin(uTime*11.7+vPool.y*5.3);
   float glow=pow(1.0-r,1.35)*max(uStrength,vMin)*flicker;
   float level=pxSteps(glow*1.1,3.0,px);
   if(level<=0.0)discard;
