@@ -2,7 +2,7 @@
 
 > **What this file is:** how we build the game in [PITCH.md](PITCH.md) by Thu 19 Nov (feature freeze), split into four lanes that can work **at the same time without blocking each other**. Every lane owns its own folders and talks to the others only through the contracts in section 3. No lane belongs to a particular person; each member picks one lane today and claims its tasks ([FINAL-ROADMAP.md](FINAL-ROADMAP.md#how-to-pick-and-claim-a-task)).
 >
-> Last updated: Tue 10 Nov 2026.
+> Last updated: Wed 11 Nov 2026 (task status added to section 4).
 
 ## 1. Today, step by step
 
@@ -108,43 +108,45 @@ Value: ★★★ needed for the loop, ★★ makes it good, ★ polish. Size: S 
 
 ### Lane P: Pirates (`frontend/src/pirates/`, new pixel art in `frontend/scripts/pixel_art/`)
 
-| ID | Value | Size | Task | Done when |
-|---|---|---|---|---|
-| P1 | ★★★ | L | **Wave simulation** `sim.js` + `fake-api.js` per section 3.5: ships sail in on 3 lanes, cannons auto-fire at the nearest ship in range, manual shots do double damage, ships that reach a wall damage it, then the island; storm = more ships, fog = shorter sight range | Unit tests for: a won wave, a lost wave, the same seed giving the same result, fog and storm, invalid inputs ignored |
-| P2 | ★★★ | M | **Pirate art**: sloop, brig, flagship (3 frames of bobbing each), cannonball, splash, wreck, wall (3 damage states), cannon, watchtower, pirate flag; original, made by the repo's Pillow scripts, credited in `frontend/ASSETS.md` | Contact sheet in the PR; sizes on the 16 px grid |
-| P3 | ★★★ | L | **Wave on screen**: ships, cannon fire, splashes, hits and wrecks drawn in the island scene from `wave.state()`; a slim wave bar (wave number, ships left, island ♥) and a 10-second countdown | Screenshot/GIF; 60 fps with 20 ships |
-| P4 | ★★ | M | **Man a cannon / repair**: walk to a cannon and tap a ship to fire; tap a damaged wall to repair (costs time, not coins); works with keyboard (E) and touch | Tests for the input mapping; GIF |
-| P5 | ★★ | S | **Sounds**: cannon, splash, bell, victory, defeat (the existing procedural audio system) | Settings volume respected |
+| ID | Value | Size | Task | Done when | Status |
+|---|---|---|---|---|---|
+| P1 | ★★★ | L | **Wave simulation** `sim.js` + `fake-api.js` per section 3.5: ships sail in on 3 lanes, cannons auto-fire at the nearest ship in range, manual shots do double damage, ships that reach a wall damage it, then the island; storm = more ships, fog = shorter sight range | Unit tests for: a won wave, a lost wave, the same seed giving the same result, fog and storm, invalid inputs ignored | Done, 11 Nov |
+| P2 | ★★★ | M | **Pirate art**: sloop, brig, flagship (3 frames of bobbing each), cannonball, splash, wreck, wall (3 damage states), cannon, watchtower, pirate flag; original, made by the repo's Pillow scripts, credited in `frontend/ASSETS.md` | Contact sheet in the PR; sizes on the 16 px grid | Done, 11 Nov |
+| P3 | ★★★ | L | **Wave on screen**: ships, cannon fire, splashes, hits and wrecks drawn in the island scene from `wave.state()`; a slim wave bar (wave number, ships left, island ♥) and a 10-second countdown | Screenshot/GIF; 60 fps with 20 ships | Done, 11 Nov |
+| P4 | ★★ | M | **Man a cannon / repair**: walk to a cannon and tap a ship to fire; tap a damaged wall to repair (costs time, not coins); works with keyboard (E) and touch | Tests for the input mapping; GIF | Done, 11 Nov |
+| P5 | ★★ | S | **Sounds**: cannon, splash, bell, victory, defeat (the existing procedural audio system) | Settings volume respected | Done, 11 Nov |
 
 ### Lane H: Harbor and coins (`frontend/src/harbor/`, `frontend/src/lib/coins.js`, the market, prediction and sports screens)
 
-| ID | Value | Size | Task | Done when |
-|---|---|---|---|---|
-| H1 | ★★★ | S | **`formatCoins()`** and replace every coin display in the game with it; remove decimals and big-number formatting | Grep shows no other coin formatting; tests |
-| H2 | ★★★ | L | **Market stall**: one card per asset (Bitcoin, Ether, two stocks): live price, a tiny chart, "Up or down in 1 hour?" with 5 / 10 / 25 🪙. Reuse the Exchange data and routes; hide leverage, positions jargon and P&L tables | Screenshot at 375 and 1280 px; works when prices are closed or offline ("Market closed, back at 15:30") |
-| H3 | ★★★ | M | **Match board** (sports) and **fortune teller** (predictions) in the same card style: pick a side, 5 / 10 / 25 🪙, see what you win | Same as H2 |
-| H4 | ★★ | M | **Weather board**: today's real weather at your place, and one line on what it does to the pirates ("Storm: 50% more ships tonight") | Uses the existing weather route; fallback text when offline |
-| H5 | ★★ | M | **Harbor stalls in the world**: walk up to a stall and press E/tap to open its card; one "Harbor" overview card listing all stalls with a one-sentence explanation each | GIF; every API explained in one sentence |
+| ID | Value | Size | Task | Done when | Status |
+|---|---|---|---|---|---|
+| H1 | ★★★ | S | **`formatCoins()`** and replace every coin display in the game with it; remove decimals and big-number formatting | Grep shows no other coin formatting; tests | Done, 11 Nov |
+| H2 | ★★★ | L | **Market stall**: one card per asset (Bitcoin, Ether, two stocks): live price, a tiny chart, "Up or down in 1 hour?" with 5 / 10 / 25 🪙. Reuse the Exchange data and routes; hide leverage, positions jargon and P&L tables | Screenshot at 375 and 1280 px; works when prices are closed or offline ("Market closed, back at 15:30") | Done, 11 Nov |
+| H3 | ★★★ | M | **Match board** (sports) and **fortune teller** (predictions) in the same card style: pick a side, 5 / 10 / 25 🪙, see what you win | Same as H2 | Done, 11 Nov |
+| H4 | ★★ | M | **Weather board**: today's real weather at your place, and one line on what it does to the pirates ("Storm: 50% more ships tonight") | Uses the existing weather route; fallback text when offline | Done, 11 Nov |
+| H5 | ★★ | M | **Harbor stalls in the world**: walk up to a stall and press E/tap to open its card; one "Harbor" overview card listing all stalls with a one-sentence explanation each | GIF; every API explained in one sentence | Done, 11 Nov |
 
 ### Lane U: Look and feel (`frontend/src/ui/`, `frontend/src/ui/kit/`, the HUD, the front door, the goal card)
 
-| ID | Value | Size | Task | Done when |
-|---|---|---|---|---|
-| U1 | ★★★ | L | **New panel style**: one beautiful card component (parchment-and-brass pixel frame, clear title, one primary button), applied to every remaining panel; consistent spacing, type scale and colors (CSS tokens); stay inside the 12 KB CSS budget | Before/after contact sheet of every panel |
-| U2 | ★★★ | M | **HUD with three things only**: 🪙 coins (top left), the quest strip (top right), the menu button. Everything else goes into the menu or appears only when needed | Screenshot during play at 375 and 1280 px |
-| U3 | ★★★ | M | **The first 3 minutes** from [PITCH.md](PITCH.md#the-first-3-minutes): goal card, the quest strip steps (build a cannon → ring the bell → sail to the Harbor → place a stake → invite a friend), friendly hints when a player is stuck for 20 s | Hallway test with one outsider; notes in the PR |
-| U4 | ★★★ | M | **Play with friends**: "Invite a friend" shows your island code + QR; Join accepts island codes (`ISLE-…`) and the class code (`HARBOR-…`) in one field; the sea chart shows only Your island, The Harbor and Pirate Point | Two-browser test GIF |
-| U5 | ★★ | S | **Toasts and feedback**: one toast style; every error shows the server's plain message and a next step | Feedback table in the PR |
+| ID | Value | Size | Task | Done when | Status |
+|---|---|---|---|---|---|
+| U1 | ★★★ | L | **New panel style**: one beautiful card component (parchment-and-brass pixel frame, clear title, one primary button), applied to every remaining panel; consistent spacing, type scale and colors (CSS tokens); stay inside the 12 KB CSS budget | Before/after contact sheet of every panel | Done, 11 Nov |
+| U2 | ★★★ | M | **HUD with three things only**: 🪙 coins (top left), the quest strip (top right), the menu button. Everything else goes into the menu or appears only when needed | Screenshot during play at 375 and 1280 px | Done, 11 Nov |
+| U3 | ★★★ | M | **The first 3 minutes** from [PITCH.md](PITCH.md#the-first-3-minutes): goal card, the quest strip steps (build a cannon → ring the bell → sail to the Harbor → place a stake → invite a friend), friendly hints when a player is stuck for 20 s | Hallway test with one outsider; notes in the PR | Done, 11 Nov |
+| U4 | ★★★ | M | **Play with friends**: "Invite a friend" shows your island code + QR; Join accepts island codes (`ISLE-…`) and the class code (`HARBOR-…`) in one field; the sea chart shows only Your island, The Harbor and Pirate Point | Two-browser test GIF | Done, 11 Nov |
+| U5 | ★★ | S | **Toasts and feedback**: one toast style; every error shows the server's plain message and a next step | Feedback table in the PR | Done, 11 Nov |
 
 ### Lane 0: Core (the project owner with Claude): server, database, class battle, release
 
-| ID | Task |
-|---|---|
-| 0.1 | Remove the mystery from the game and frontend (today) |
-| 0.2 | Islands API + migration (new spots and kinds, island codes, visit by code), the new prices; the fresh-start reset script |
-| 0.3 | Waves API + migration (wave runs, loot caps, best wave, flags), weather modifier from the real weather |
-| 0.4 | Pirate Point battle for the class: one shared wave for everyone in the room, the flagship that only the three lamps can sink |
-| 0.5 | New voiced intro (pirates), wiring day (fakes → real API), release, live checks |
+| ID | Task | Status |
+|---|---|---|
+| 0.1 | Remove the mystery from the game and frontend (today) | Done, 11 Nov |
+| 0.2 | Islands API + migration (new spots and kinds, island codes, visit by code), the new prices; the fresh-start reset script | Done, 11 Nov |
+| 0.3 | Waves API + migration (wave runs, loot caps, best wave, flags), weather modifier from the real weather | Done, 11 Nov |
+| 0.4 | Pirate Point battle for the class: one shared wave for everyone in the room, the flagship that only the three lamps can sink | Done, 11 Nov |
+| 0.5 | New voiced intro (pirates), wiring day (fakes → real API), release, live checks | Part done (see below) |
+
+**Status of 0.5 on Wed 11 Nov.** Done: the voiced pirate intro (`lore_intro`) and seven more pirate cutscenes (`island_arrival`, `harbor_arrival`, `wave_won`, `wave_lost`, `armada`, `lock_opens`, `lamps_relit`), 25 voice lines in `frontend/public/audio/voice/`; the island, the waves and Pirate Point call the real routes when the flag `islands` is on, and the islands migrations are applied to the live database. Still open: applying the market calls migration `20261111010000_market_calls.sql` to the live database (D034, not applied yet), the release to the live site (it still runs the 9 Nov class demo), turning on the flag `islands` there, and the live checks after the release.
 
 ### For everyone (pick one when your lane waits)
 
