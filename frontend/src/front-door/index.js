@@ -66,11 +66,14 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
       }
       const runtime = await game;
       if (!runtime || !current()) return false;
-      await runtime.begin(false, HARBOR_START);
+      // First Play: lore, then the goal card over your island, then the island arrival cutscene
+      // (docs/PITCH.md, the first 3 minutes). game.js plays the arrival itself on a later Play.
+      await runtime.begin(false, seen ? HARBOR_START : {...HARBOR_START, arrival: 'later'});
       if (!current()) return false;
       if (!seen) {
         await showCard();
         writeFlag(storage, FRONT_DOOR_KEY);
+        if (current()) { try { await runtime.playArrival?.(); } catch { /* The island is there without it. */ } }
       }
       if (current()) focus?.();
       return true;

@@ -36,7 +36,7 @@ async function chartLanding(page,place,label){
 async function standByBuiltStation(page){
   // Public chart round trip restores the published centerline spawn without moving any view/state hook.
   await chartLanding(page,'saltreach_harbor','Saltreach Harbor');
-  await chartLanding(page,'home_islet','Home islet');
+  await chartLanding(page,'home_islet','Your island');
   await page.locator('canvas[tabindex="0"]').focus();await page.keyboard.down('KeyW');
   try{await page.waitForFunction(()=>{const prompt=document.querySelector('.interact');
     return prompt&&!prompt.hidden&&prompt.getClientRects().length>0&&prompt.dataset.zone==='islet_signal_station';
@@ -54,7 +54,7 @@ export async function enterRecordedIslet(env){
   await page.keyboard.press('Escape');await page.locator('.account-modal').waitFor({state:'hidden'});
   await playFromTitle(page);
   await page.locator('.hud.exploring').waitFor();
-  await page.waitForFunction(()=>document.querySelector('.chapter')?.textContent.includes('Home islet'));
+  await page.waitForFunction(()=>document.querySelector('.chapter')?.textContent.includes('Your island'));
   await dismissPanels(page); // This public helper already closes the open panels; no extra Escape.
   await savedCaptain(page);
   assert.equal(await page.locator('.shell-screen[open],.account-modal[open]').count(),0,'Continue leaves the world ready for physical movement');

@@ -277,6 +277,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       }
       return false;
     },
+    // The island arrival cutscene (once per device), after the front door's goal card.
+    // The "Your island" banner shows again as the player takes over.
+    async playArrival(){if(disposed||!onOwnIsland())return;await island.playArrival();if(!disposed&&world.current)hud.arrive(world.current.id);},
     // Play lands the player outside in Saltreach Harbor (the front door's HARBOR_START), or where a
     // world continuation points. Every start loads the class demo layer (quest strip, lamps, duels).
     async begin(_resume=false,continuation){
@@ -294,7 +297,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(world.current?.id!==destination)await travel(destination,{fast:true});
       else if(destination==='home_islet')void island?.load();
       if(disposed||token!==beginRequest||shell.blocked||isAppBlocked?.()||world.current?.id!==destination)return;
-      if(destination==='home_islet')await island?.playArrival();
+      // The front door shows its goal card first on a first Play and then asks for the arrival itself.
+      if(destination==='home_islet'&&continuation?.arrival!=='later')await island?.playArrival();
       if(disposed||token!==beginRequest||shell.blocked)return;
       hud.start();
       if(continuation?.demo!==false||classDemoQuery())void loadClassDemo();

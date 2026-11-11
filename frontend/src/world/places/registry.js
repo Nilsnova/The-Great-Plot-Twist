@@ -8,7 +8,7 @@ export const places = {
     zone('market_hall', 'Market stall', -9, -2),
     zone('prediction_kiosk', 'Fortune teller', 1, -2), zone('sports_pavilion', 'Match board', 12, -2) ],
     lights: [{ id: 'harbor_light', beamOrigin: { x: 9, y: -1.6675, z: 0 } }] },
-  home_islet: { name: 'Home islet', chart: [302, 201], spawn: [0, 12], zones: [
+  home_islet: { name: 'Your island', chart: [302, 201], spawn: [0, 12], zones: [
     zone('plot_1', 'Cabin plot', -8, 7.5), zone('plot_2', 'Workshop plot', 7, 7.5),
     zone('plot_3', 'Windmill plot', -8, -5.5), zone('plot_4', 'Greenhouse plot', 7, -5.5),
     zone('islet_signal_station', 'Islet signal station', 0, -12) ],
