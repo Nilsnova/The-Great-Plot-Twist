@@ -29,7 +29,7 @@ not been verified with credentials.
 `SPORTS_API_PROVIDER` accepts empty, `football-data.org`, or `balldontlie`.
 `SPORTS_API_KEY` is server-only. Either empty setting, `DEMO_MODE=true`, or the `sports` flag off
 selects no live adapter and makes no provider request. Keys travel only in HTTPS headers to fixed
-provider hosts. Football is league/regular-time only; optional NBA is regular season. A cancelled,
+provider hosts. Football settles on the 90-minute result; optional NBA is regular season. A cancelled,
 postponed or suspended fixture refunds; unknown/incomplete results cannot settle. Picking closes
 one hour before kickoff, matching L5's minimum event lead time.
 
@@ -46,13 +46,15 @@ recording. Only explicit `DEMO_MODE=true` displays the unchanged 2023 historical
 `source: recorded`, original dates and staking disabled. No real provider account was used to
 validate this package; provider-shaped HTTP fixtures are synthetic and labelled in the tests.
 
-The default football board discovers up to 20 Premier League fixtures within the next seven days
-from football-data.org's fixed `/v4/competitions/PL/matches` endpoint. The alternative NBA board
+The default football board discovers up to 40 fixtures within the next seven days of the
+competitions in `SPORTS_COMPETITIONS` (default `PL,PPL,CL`), with one request to football-data.org's
+fixed `/v4/matches?competitions=...` endpoint (D033). The alternative NBA board
 uses one bounded page from balldontlie's `/nba/v1/games`. Discovery and individual readings are
 cached for 60 seconds; settlement always requests a fresh result and never falls back on stale
 or recorded scores. Requests are limited per server instance to 10/minute for football-data.org
-and 5/minute for balldontlie. Unknown statuses, incomplete scores, wrong identities, cup football
-and ambiguous NBA timestamps fail closed. The provider credit is supplied as `attribution` for
+and 5/minute for balldontlie. Unknown statuses, incomplete scores, wrong identities, competitions
+outside the free plan and ambiguous NBA timestamps fail closed. Football settles on the
+90-minute score (`regularTime` after extra time or penalties). The provider credit is supplied as `attribution` for
 Settings > Credits; match names remain plain text without team crests.
 
 A player stakes 1-50 play coins once per fixture, with a separate 200-coin sports cap per Lisbon

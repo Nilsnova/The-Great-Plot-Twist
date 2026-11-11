@@ -1321,7 +1321,7 @@ These rules come from Nils' feature list and from the data sources checked on 5 
 - Football primary: football-data.org, free plan: 12 competitions and 10 calls a minute. A teammate registers. Their terms forbid keys in open-source repositories, so the key lives only in Vercel, as `SPORTS_API_KEY`. Show "Football data provided by the Football-Data.org API", and use team names as text, without crests.
 - Football backup: OpenLigaDB. No key, an open licence, and made for prediction games. At most one call per league every 30 to 60 seconds during live games, from our server only. Volunteers enter the results, so confirm one with a second source before paying out.
 - Basketball (NBA): balldontlie, with a free key and 5 calls a minute.
-- Players stake play coins into a pool, and the winners share it. No bookmaker odds. Settle only on the final result. Refund everyone when a game is postponed, cancelled or suspended. Keep to league games or 90-minute results, to avoid extra-time rules.
+- Players stake play coins into a pool, and the winners share it. No bookmaker odds. Settle only on the final result. Refund everyone when a game is postponed, cancelled or suspended. Every pick settles on the 90-minute result, so extra time and penalties never count (D033).
 - Vercel Cron cannot be used with our setup (see [ARCHITECTURE.md](ARCHITECTURE.md#the-7-day-pause-and-the-keep-alive)), so no timer settles games for us. Settle when someone opens their stakes after the game.
 
 **The PvP arena (A7).**
@@ -1475,6 +1475,14 @@ Host routes enforce `HOST_PLAYER_IDS` on the server and return 403 for visitors.
 dependency used by other routes retains its existing 401 contract. Cleanup locks the crew, pins
 the host profile without waiting and returns 409 `crew_busy` if a join/deletion owns that profile;
 it changes no crew/audit row in that case. Details: [Host console](HOST-CONSOLE.md).
+
+The football board reads `SPORTS_COMPETITIONS` (default `PL,PPL,CL`: Premier League, Primeira Liga,
+Champions League; free-plan codes only, an unknown code stops start-up) with one request,
+`GET /v4/matches?competitions=..&dateFrom=..&dateTo=..`, for today and the next 7 days, and shows the
+earliest 40 fixtures. Each fixture's `competition` is the provider's name (for example "UEFA
+Champions League"); the DTO is unchanged. A pick settles on the 90-minute score: `fullTime` for
+`duration: REGULAR`, `regularTime` for `EXTRA_TIME` and `PENALTY_SHOOTOUT`. A finished game
+whose 90-minute score is missing or does not fit is left off the board and never settles (D033).
 
 Sports uses provider IDs (`fd-...` or `bdl-...`), separate fixtures/stakes, and the existing prediction
 wallet reasons with `sports:` references. Winning pools take 5% of the losing side; void/no-winner/

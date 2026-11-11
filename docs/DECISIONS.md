@@ -581,6 +581,19 @@ browser's storage unread. The `case`, crew and save routes still answer if the f
 
 **Limits:** The flagship and the three lamps are drawn and decided in the browsers; the server only flags the wave. The first cannon of the pitch's "first 3 minutes" is not free: it costs 30 like every cannon (BUILD-PLAN 3.2 is the contract). Budgets hold per server instance. The weather follows whoever rings the bell, not the island owner, because the server stores no place.
 
+## D033 · Football board: Premier League, Primeira Liga and Champions League · 2026-11-11
+
+**Status:** Built by lane 0 (task 0.6) on branch `feat/g30-sports-leagues`. No migration, no new key; nothing to set in Vercel (the default applies).
+
+**Decision:**
+
+- **Three competitions, one request.** The board asks football-data.org once for `GET /v4/matches?competitions=PL,PPL,CL&dateFrom=..&dateTo=..` (today and the next 7 days) instead of `/v4/competitions/PL/matches`. The list is the new setting `SPORTS_COMPETITIONS` (default `PL,PPL,CL`); it accepts only the 12 free-plan codes (PL, CL, PPL, BL1, SA, PD, FL1, DED, ELC, BSA, WC, EC), and an unknown code stops start-up like `AUTH_PROVIDERS`. A row of a competition we did not ask for makes the whole answer unusable (503), as before.
+- **Every pick settles on the 90-minute result.** For `score.duration` `REGULAR` it is `fullTime`; for `EXTRA_TIME` or `PENALTY_SHOOTOUT` (Champions League knockouts) it is `score.regularTime`, never `fullTime`, which adds extra time and, after a shoot-out, the penalties. A 1-1 after 90 minutes is a draw even if a team wins later. A game beyond 90 minutes without a whole-number `regularTime` that fits `fullTime`, or a finished game with an unknown duration, never settles: the board drops that row, and a stake on it stays pending. The old "league games only" check (`competition.type == LEAGUE`) is replaced by the free-plan code check, because the Champions League has type `CUP`.
+- **Bounds.** The board keeps the earliest 40 fixtures (was 20: a Champions League matchday alone has 18 games, the three competitions about 40 in a week), below the store's 50-fixture read; the provider list may hold 200 rows (was 100). The 60-second cache and the 10-calls-a-minute budget are unchanged, and three competitions still cost one call.
+- **Competition name.** Each fixture already carried `competition` (the provider's name, for example "UEFA Champions League"), which the sports panel shows; the answer's shape is unchanged.
+
+**Why:** The class is in Lisbon and the Premier League alone often leaves the board empty midweek. The Champions League rule follows the usual 1X2 convention and stays one line of code; excluding knockouts would hide the February games. Only competition codes and dates go to the provider, so the privacy page does not change.
+
 ## D030 · Class code instead of the demo window · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the
