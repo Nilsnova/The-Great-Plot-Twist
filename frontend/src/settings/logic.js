@@ -1,6 +1,6 @@
 // Bounded preferences only. Used by settings storage and tests, never for account tokens.
 export const PREFERENCES_KEY='plot_twist_preferences_v1';
-export const defaults=Object.freeze({quality:'high',master:0.7,music:0.35,effects:0.65,voice:0.8,subtitleSize:'normal',reducedMotion:null,textSpeed:36,colourblind:false,showCaptains:'everyone',hintsEnabled:true,dismissedHints:[]});
+export const defaults=Object.freeze({quality:'high',master:0.7,music:0.35,effects:0.65,voice:0.8,subtitleSize:'normal',reducedMotion:null,textSpeed:36,colourblind:false,showCaptains:'everyone',hintsEnabled:true,narrator:true,captions:true,dismissedHints:[]});
 const volume=value=>typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(1,value)):null;
 export function normalizePreferences(value={}) {
   const result={...defaults};
@@ -13,6 +13,8 @@ export function normalizePreferences(value={}) {
   if(['everyone','crew','off'].includes(value.showCaptains))result.showCaptains=value.showCaptains;
   if(typeof value.colourblind==='boolean')result.colourblind=value.colourblind;
   if(typeof value.hintsEnabled==='boolean')result.hintsEnabled=value.hintsEnabled;
+  // The narrator (src/narrator/): its voiced lines, and their caption card; both on by default.
+  for(const key of ['narrator','captions'])if(typeof value[key]==='boolean')result[key]=value[key];
   if(Array.isArray(value.dismissedHints))result.dismissedHints=[...new Set(value.dismissedHints.filter(id=>typeof id==='string'&&/^[a-z0-9_-]{1,64}$/.test(id)))].slice(0,100);
   return result;
 }

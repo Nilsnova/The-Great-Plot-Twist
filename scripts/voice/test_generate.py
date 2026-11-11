@@ -288,3 +288,113 @@ class GenerationTests(Fixture):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CreditOpener(FakeOpener):
+    """Answers the subscription GET with the given numbers (or an error) and every POST with MP3 audio."""
+
+    def __init__(self, used=0, limit=10000, credit_error=None, **kwargs):
+        super().__init__(**kwargs)
+        self.used, self.limit, self.credit_error = used, limit, credit_error
+
+    def __call__(self, request, timeout=None):
+        if request.full_url == gen.SUBSCRIPTION_URL:
+            self.requests.append(request)
+            if self.credit_error:
+                raise self.credit_error
+            return FakeResponse(json.dumps({"tier": "free", "character_count": self.used,
+                                            "character_limit": self.limit, "voice_limit": 3}).encode())
+        return super().__call__(request, timeout)
+
+
+class NarratorTests(Fixture):
+    def setUp(self):
+        super().setUp()
+        self.lines = self.root / "lines.json"
+        self.lines.write_text(json.dumps({"version": 1, "voice": "narrator", "lines": [
+            {"id": "wave_won_1", "trigger": "wave_won", "priority": 3, "text": "Another wave beaten!"},
+            {"id": "opening_1", "trigger": "game_opening", "priority": 1, "text": "The light went dark."},
+            {"id": "wave_1", "trigger": "wave_start:1", "priority": 1, "text": "Here they come."},
+            {"id": "heart_low_1", "trigger": "heart_low", "priority": 2, "text": "The heart!"},
+        ]}))
+        self.out.mkdir()
+        (self.out / "manifest.json").write_text(json.dumps({"version": 1, "note": "cutscenes", "lines": {
+            "lore_intro_01": {"file": "lore_intro_01.mp3", "seconds": 2.85}}}))
+
+    def narrate(self, *argv, opener=refuse_network):
+        return self.call("--narrator", "--lines", str(self.lines), *argv, opener=opener)
+
+    def test_dry_run_lists_narrator_files_without_key_or_network(self):
+        with mock.patch.object(gen, "read_key", side_effect=AssertionError("dry run read the key")):
+            code, text = self.narrate("--dry-run")
+        self.assertEqual(code, 0, text)
+        self.assertIn("narrator-opening_1", text)
+        self.assertIn("characters to send: 65", text)
+
+    def test_checks_credits_then_generates_everything_and_merges_the_manifest(self):
+        self.write_key()
+        opener = CreditOpener(used=1000, limit=10000)
+        code, text = self.narrate("--voice-id", "abcdefgh12345678", opener=opener)
+        self.assertEqual(code, 0, text)
+        self.assertEqual(opener.requests[0].full_url, gen.SUBSCRIPTION_URL)
+        self.assertEqual(opener.requests[0].get_method(), "GET")
+        self.assertEqual(len(opener.requests), 5)
+        self.assertIn("remaining: 9000", text)
+        manifest = json.loads((self.out / "manifest.json").read_text())
+        self.assertEqual(manifest["lines"]["lore_intro_01"], {"file": "lore_intro_01.mp3", "seconds": 2.85})
+        self.assertEqual(manifest["lines"]["narrator-opening_1"]["file"], "narrator-opening_1.mp3")
+        self.assertAlmostEqual(manifest["lines"]["narrator-opening_1"]["seconds"], 50 * 576 / 22050, places=2)
+        self.assertEqual(manifest["note"], "cutscenes")
+
+    def test_short_credits_send_the_most_important_lines_first_and_stop(self):
+        self.write_key()
+        opener = CreditOpener(used=10000 - 50, limit=10000)  # 50 left: 41 characters fit with the 20% margin
+        code, text = self.narrate("--voice-id", "abcdefgh12345678", opener=opener)
+        self.assertEqual(code, 0, text)
+        sent = [json.loads(request.data)["text"] for request in opener.requests[1:]]
+        self.assertEqual(sent, ["The light went dark.", "Here they come."])
+        self.assertIn("leaving 2 for later: heart_low_1, wave_won_1", text)
+        self.assertFalse((self.out / "narrator-wave_won_1.mp3").exists())
+
+    def test_a_key_without_the_credit_permission_sends_nothing_unless_asked(self):
+        self.write_key()
+        error = urllib.error.HTTPError(gen.SUBSCRIPTION_URL, 401, "Unauthorized", {},
+                                       io.BytesIO(b'{"detail":{"status":"missing_permissions"}}'))
+        opener = CreditOpener(credit_error=error)
+        code, text = self.narrate("--voice-id", "abcdefgh12345678", opener=opener)
+        self.assertEqual(code, 2)
+        self.assertIn("HTTP 401 to the credit check", text)
+        self.assertEqual(len(opener.requests), 1)
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):  # it needs --priority-max 1
+            self.narrate("--voice-id", "abcdefgh12345678", "--without-credit-check")
+        opener = CreditOpener(credit_error=urllib.error.HTTPError(gen.SUBSCRIPTION_URL, 401, "Unauthorized", {}, io.BytesIO(b"")))
+        code, text = self.narrate("--voice-id", "abcdefgh12345678", "--without-credit-check", "--priority-max", "1",
+                                  opener=opener)
+        self.assertEqual(code, 0, text)
+        self.assertEqual([json.loads(request.data)["text"] for request in opener.requests[1:]],
+                         ["The light went dark.", "Here they come."])
+
+    def test_credits_command_prints_numbers_only(self):
+        self.write_key()
+        out = io.StringIO()
+        code = gen.run(["--credits"], key_path=self.key, out_dir=self.out, opener=CreditOpener(used=7, limit=10), out=out)
+        self.assertEqual(code, 0)
+        self.assertEqual(out.getvalue().strip(), "Characters used: 7, limit: 10, remaining: 3.")
+        self.assertNotIn(FAKE_KEY, out.getvalue())
+
+    def test_long_lines_and_bad_priorities_are_refused(self):
+        data = json.loads(self.lines.read_text())
+        data["lines"][0]["text"] = "x" * 221
+        self.lines.write_text(json.dumps(data))
+        code, text = self.narrate("--dry-run")
+        self.assertEqual(code, 2)
+        self.assertIn("longer than 220", text)
+        data["lines"][0]["text"], data["lines"][0]["priority"] = "Fine.", 0
+        self.lines.write_text(json.dumps(data))
+        code, text = self.narrate("--dry-run")
+        self.assertIn("bad priority", text)
+
+    def test_the_real_lines_file_loads(self):
+        _, scenes = gen.load_narrator()
+        self.assertEqual(scenes[0]["id"], "narrator")
+        self.assertTrue(50 <= len(scenes[0]["lines"]) <= 70)

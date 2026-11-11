@@ -72,6 +72,7 @@ an
 analytics
 anchor
 and
+angry
 animation
 announce
 announcements
@@ -195,6 +196,8 @@ berth
 beside
 best
 bets
+better
+between
 beyond
 big
 bigger
@@ -208,6 +211,7 @@ blackness
 blank
 blanked
 blanket
+blazes
 blind
 blinking
 blocks
@@ -215,6 +219,7 @@ blue
 blunderbuss
 board
 boarder
+boarders
 boat
 boathouse
 boats
@@ -234,6 +239,7 @@ brass
 brave
 brawler
 break
+breath
 briefly
 bright
 brine
@@ -250,6 +256,7 @@ brussels
 budget
 build
 builder
+builders
 building
 buildings
 builds
@@ -293,6 +300,8 @@ cannot
 captain
 captain's
 captains
+caption
+captions
 card
 cards
 care
@@ -503,6 +512,7 @@ damage
 damaged
 damp
 dance
+danger
 dangerous
 daring
 dark
@@ -581,6 +591,7 @@ done
 doomsday
 door
 doorman
+doors
 dots
 down
 downloaded
@@ -596,6 +607,7 @@ driftline
 driftwood
 drink
 drinks
+drive
 drops
 dublin
 duel
@@ -615,6 +627,7 @@ edge
 edit
 effects
 eight
+eighty
 either
 electric
 elena
@@ -693,6 +706,7 @@ f
 face
 faded
 failed
+failing
 fails
 failures
 faint
@@ -701,6 +715,7 @@ fake
 fall
 fallback
 fallbacks
+fallen
 falling
 falls
 false
@@ -721,6 +736,7 @@ feed
 feeds
 feels
 fees
+feet
 fell
 ferries
 ferry
@@ -731,6 +747,8 @@ fff
 fictional
 field
 fields
+fifteen
+fifty
 fight
 fights
 file
@@ -743,6 +761,7 @@ final
 find
 finding
 finds
+finest
 finish
 finished
 finishes
@@ -769,6 +788,8 @@ flash
 flashed
 flashes
 flashing
+fleet
+flickers
 floor
 focus
 focused
@@ -830,6 +851,7 @@ gaps
 garden
 gate
 gather
+gathering
 gathers
 general
 generated
@@ -871,6 +893,7 @@ greyfathom's
 grid
 groan
 groundhog
+grow
 guarantee
 guaranteed
 guess
@@ -916,6 +939,8 @@ heading
 heap
 hear
 heard
+heart
+heavier
 heavy
 height
 held
@@ -937,7 +962,9 @@ highest
 highlight
 highlighted
 highlights
+hill
 him
+himself
 hint
 hints
 hire
@@ -969,6 +996,7 @@ houses
 how
 hr
 https
+hub
 hud
 hull
 human
@@ -1003,6 +1031,7 @@ informant
 information
 ink
 inline
+inner
 input
 ins
 inside
@@ -1103,6 +1132,7 @@ labelled
 labels
 lamp
 lamps
+land
 landfall
 landing
 lands
@@ -1114,6 +1144,7 @@ last
 later
 latest
 laughed
+laughing
 lay
 layer
 lazy
@@ -1124,6 +1155,7 @@ league
 leagues
 learn
 learned
+learns
 least
 leather
 leave
@@ -1196,6 +1228,7 @@ longer
 look
 looked
 lookout
+lookouts
 looks
 lookup
 lookups
@@ -1210,6 +1243,7 @@ lost
 lot
 low
 lowest
+luck
 lucky
 m
 machines
@@ -1252,6 +1286,9 @@ member
 members
 membership
 memory
+mend
+mended
+mends
 menu
 menus
 merry
@@ -1267,6 +1304,7 @@ midnight
 mighty
 migration
 migrations
+milestone
 min
 mind
 mini
@@ -1316,6 +1354,7 @@ name
 named
 names
 narration
+narrator
 narwhal
 nasdaq
 native
@@ -1346,6 +1385,7 @@ nightfall
 nights
 nils
 nimble
+ninety
 no
 noble
 nobody
@@ -1472,6 +1512,8 @@ passes
 passing
 password
 passwords
+past
+patch
 path
 paths
 patient
@@ -1530,6 +1572,7 @@ place
 placed
 places
 plain
+plans
 platform
 play
 playable
@@ -1656,8 +1699,10 @@ quoted
 r
 rack
 radio
+rages
 raid
 rain
+raise
 raises
 ran
 random
@@ -1694,6 +1739,8 @@ recovered
 red
 redacted
 redesign
+redtide
+redtide's
 reduce
 reduced
 reed
@@ -1753,6 +1800,7 @@ required
 requirements
 requires
 rescue
+research
 reservation
 reservations
 reserve
@@ -1788,6 +1836,7 @@ reveals
 review
 reviewed
 revisit
+revived
 reward
 rewards
 riddle
@@ -1829,6 +1878,7 @@ said
 sail
 sailed
 sailing
+sailors
 sails
 sale
 saltreach
@@ -1838,6 +1888,7 @@ same
 sample
 samples
 sampling
+sank
 satchel
 save
 saved
@@ -1851,6 +1902,7 @@ scan
 scanned
 scanning
 scans
+scatters
 scene
 scenery
 schema
@@ -1917,8 +1969,10 @@ settings
 settle
 settled
 settlement
+settlers
 settles
 setup
+seventy
 several
 shade
 shadow
@@ -1953,6 +2007,7 @@ shots
 should
 shoulders
 shout
+shouting
 show
 showed
 showing
@@ -1974,6 +2029,7 @@ silver
 simulated
 simulation
 since
+sing
 sink
 sinks
 siren
@@ -1981,6 +2037,7 @@ sit
 site
 site's
 sits
+sixty
 size
 sizing
 skies
@@ -2021,6 +2078,7 @@ solution
 solutions
 solve
 solved
+some
 somebody
 someone
 something
@@ -2095,6 +2153,7 @@ steps
 stick
 still
 stock
+stone
 stood
 stop
 stopped
@@ -2176,6 +2235,7 @@ team's
 teammate
 teams
 tears
+tech
 technical
 technology
 teeth
@@ -2206,16 +2266,19 @@ then
 there
 these
 they
+thicker
 thin
 things
 thinking
 third
+thirty
 this
 those
 three
 through
 throw
 thrown
+throwing
 throws
 thumping
 thumps
@@ -2225,6 +2288,7 @@ tidewright
 tidy
 tied
 tier
+tiers
 tight
 till
 timber
@@ -2259,6 +2323,7 @@ torn
 total
 totals
 touch
+tougher
 tour
 toward
 tower
@@ -2270,6 +2335,7 @@ traded
 trades
 trading
 trail
+train
 transitions
 trapped
 travel
@@ -2277,6 +2343,7 @@ traveling
 travelling
 tree
 triangles
+tricks
 tries
 troy
 true
@@ -2289,8 +2356,10 @@ try
 trying
 tsla
 turn
+turning
 turns
 twelve
+twenty
 twice
 twist
 two
@@ -2375,6 +2444,7 @@ vos's
 voyage
 w
 wait
+waited
 waiting
 waits
 waking
@@ -2389,6 +2459,7 @@ walls
 walrus
 wandering
 want
+wants
 warm
 warmest
 warn

@@ -101,6 +101,86 @@
     "armada_03": {
       "file": "armada_03.mp3",
       "seconds": 2.85
+    },
+    "narrator-opening_1": {
+      "file": "narrator-opening_1.mp3",
+      "seconds": 7.37
+    },
+    "narrator-opening_2": {
+      "file": "narrator-opening_2.mp3",
+      "seconds": 7.99
+    },
+    "narrator-wave_1": {
+      "file": "narrator-wave_1.mp3",
+      "seconds": 7.26
+    },
+    "narrator-wave_2": {
+      "file": "narrator-wave_2.mp3",
+      "seconds": 8.62
+    },
+    "narrator-wave_3": {
+      "file": "narrator-wave_3.mp3",
+      "seconds": 6.74
+    },
+    "narrator-wave_4": {
+      "file": "narrator-wave_4.mp3",
+      "seconds": 7.03
+    },
+    "narrator-wave_5": {
+      "file": "narrator-wave_5.mp3",
+      "seconds": 8.8
+    },
+    "narrator-unlock_captain": {
+      "file": "narrator-unlock_captain.mp3",
+      "seconds": 7.97
+    },
+    "narrator-unlock_houses": {
+      "file": "narrator-unlock_houses.mp3",
+      "seconds": 5.72
+    },
+    "narrator-unlock_level_2": {
+      "file": "narrator-unlock_level_2.mp3",
+      "seconds": 7.68
+    },
+    "narrator-unlock_mortar": {
+      "file": "narrator-unlock_mortar.mp3",
+      "seconds": 7.55
+    },
+    "narrator-unlock_watchtower": {
+      "file": "narrator-unlock_watchtower.mp3",
+      "seconds": 6.14
+    },
+    "narrator-unlock_gunner": {
+      "file": "narrator-unlock_gunner.mp3",
+      "seconds": 6.43
+    },
+    "narrator-unlock_market": {
+      "file": "narrator-unlock_market.mp3",
+      "seconds": 7.73
+    },
+    "narrator-unlock_inner_walls": {
+      "file": "narrator-unlock_inner_walls.mp3",
+      "seconds": 8.41
+    },
+    "narrator-unlock_carpenter": {
+      "file": "narrator-unlock_carpenter.mp3",
+      "seconds": 7.37
+    },
+    "narrator-unlock_wreck": {
+      "file": "narrator-unlock_wreck.mp3",
+      "seconds": 6.66
+    },
+    "narrator-unlock_match_board": {
+      "file": "narrator-unlock_match_board.mp3",
+      "seconds": 5.88
+    },
+    "narrator-unlock_tech_hub": {
+      "file": "narrator-unlock_tech_hub.mp3",
+      "seconds": 7.13
+    },
+    "narrator-unlock_ship": {
+      "file": "narrator-unlock_ship.mp3",
+      "seconds": 6.56
     }
   }
 }

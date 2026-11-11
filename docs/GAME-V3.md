@@ -59,6 +59,19 @@ New tower kinds later: harpoon (slows), fire tower (damage over time), for waves
 - A **narrator** speaks short lines (one to three sentences) at: the opening (Start), each wave's start for the first 5 waves, every unlock in section 4, the first boss, the first boarding, a player falling and being revived, the heart in danger (below 30%), a lost wave, every 10th wave, the final battle. Captions show the text (always, for sound off and accessibility).
 - Lines live in one data file (id, text, trigger); audio is generated with the existing pipeline `scripts/voice/generate.py` and the existing ElevenLabs key (never printed or committed); files are small mp3s loaded on demand. If a file is missing the caption still shows.
 - The narrator never blocks play: lines queue, a skip button hides the caption.
+- **Built (lane N, `feat/v3-narrator`):** 57 lines in `frontend/src/narrator/lines.json` (voice George, the villain is **Captain Redtide**), the module `frontend/src/narrator/` (one line at a time, stale lines dropped, told once per island game and stored per island code in localStorage, except "welcome back"), a caption card bottom centre with Skip ×, Settings › **Narrator** and **Narrator captions** (both on by default), the voice through the game's audio (Voice volume, music ducked while it speaks). The unlock lines follow the table in section 4 and play from the wave won today (`wave_finished`), so they work before lane P.
+- **Bus events the other lanes emit for the narrator** (the module header in `src/narrator/index.js` is the reference):
+
+| Event | Fields | Lane | Narrator line |
+|---|---|---|---|
+| `game_started` | `{code, resumed?, wave?}` | R (host presses Start) | the opening the first time on this island, else welcome back (replaces today's call from `game.js`) |
+| `campaign_unlocked` | `{wave, ids?}` | P | the `wave_unlock:<wave>` lines (each once; today they come from `wave_finished`) |
+| `boarders_ashore` | `{wave?, count?}` | C (first boarder lands in a wave) | the first boarding, once per game |
+| `heart_changed` | `{hp, max}` | C | the heart below 30%, once per wave |
+| `player_fell` / `player_revived` | `{playerId, self?, by?}` | H | a captain falls / is revived |
+| `captains_all_fallen` | `{}` | H | every captain has fallen |
+
+  Emitted today and used: `wave_started_server` / `wave_controller_started` `{waveId, wave, boss?, where}` and `wave_finished` `{waveId, survived, wave?}` (both lanes emit it; deduplicated by waveId).
 
 ## 7. Art: clean cartoon 2D (lane A)
 

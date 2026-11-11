@@ -343,6 +343,16 @@ wave_lost, armada), premade voice George, model eleven_multilingual_v2, MP3 22,0
 enters the repository; it is read from a file outside it. Attribution as the free
 plan requires: **Voices by ElevenLabs**, shown in Settings > Credits.
 
+**Narrator lines (11 Nov 2026, lane N).** `src/narrator/lines.json` holds 57 narrator lines (our own
+writing); `python3 -I scripts/voice/generate.py --narrator` turns them into
+`public/audio/voice/narrator-<id>.mp3` (same voice George, same model and format) and merges them
+into `manifest.json` as `narrator-<id>` entries. The generator first asks for the account's remaining
+characters and sends only what fits with a 20% margin, most important lines first. The team key may
+not read the subscription (it is limited to text-to-speech); then `--without-credit-check
+--priority-max 1` sends only the priority 1 lines and stops at the first refusal. First run: the 20
+priority 1 lines (opening, waves 1 to 5, the unlocks up to wave 10), 2,392 characters, 612 KB; the
+other 37 lines show their captions without audio until they are generated.
+
 **Class demo objects (G29).** The Keeper's Lock, the three lamp posts, their glow and the relight sparks in
 Saltreach Harbor are drawn in code onto small canvases (`src/class-demo/world-objects.js`), and the sky
 icons of the lock screen are SVG rectangles (`src/class-demo/lock-screen.js`). Original, no outside asset.
