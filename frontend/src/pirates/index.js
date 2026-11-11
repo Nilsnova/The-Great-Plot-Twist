@@ -1,0 +1,51 @@
+// The pirates' single entry for game.js (lane P). One line there, after the world exists:
+//
+//   const pirates = (await import('./pirates/index.js')).mountPirates({scene, camera: view.camera,
+//     canvas: graphics.renderer.domElement, container, player: controller.player, world, input, audio,
+//     reducedMotion, quality: () => settings.quality, isBlocked: () => !active || outsideBlocked(), on, emit,
+//     getDefenses, finishWave, api, openRoom});           // and pirates.dispose() in dispose()
+//
+// It runs its own frame loop, so game.js needs no other change. What the other lanes hand in:
+//   getDefenses()   the island lane: [{id, kind, x, z}] of the built walls, cannons, watchtower and
+//                   houses on the island being defended, in home_islet world units
+//   finishWave(body) the island lane: POST /api/waves/finish and show the loot; may throw the API
+//                   error ({code: 'wave_too_early', retryAfter}) so the controller retries
+//   api             {startWave, joinWave, currentWave, finishWave} for Pirate Point (fake-api.js shape)
+//   openRoom(topic) the core lane: a Realtime broadcast room {send, on, close} or null
+//                   (live:place:isle_<code>:1 for the island, live:place:pirate_point:1)
+//   islandRoom      the current island's room, if the island lane already holds one
+// The island lane emits `wave_started_server` on the bus after its start/join route answered.
+import { createWaveController } from './controller.js';
+import { createPiratePoint } from './pirate-point.js';
+import { startLoop } from '../core/loop.js';
+import * as THREE from 'three';
+
+export function mountPirates(ctx) {
+  const { scene, camera, canvas, container, player, world: places, audio, on, emit } = ctx;
+  const bus = ctx.bus ?? { on, emit };
+  const projected = new THREE.Vector3();
+  const world = {
+    scene, camera, canvas, container, player,
+    place: () => places?.current?.id ?? null,
+    isBlocked: () => !!ctx.isBlocked?.(),
+    unproject(clientX, clientY) {
+      if (!canvas || !camera) return null;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+      projected.set((clientX - rect.left) / rect.width * 2 - 1, 1 - (clientY - rect.top) / rect.height * 2, 0).unproject(camera);
+      return { x: projected.x, z: -projected.y / .72 };
+    },
+  };
+  const shared = { bus, world, sound: audio, reducedMotion: ctx.reducedMotion ?? (() => false), quality: ctx.quality ?? (() => 'high'),
+    playerId: ctx.playerId };
+  const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
+    room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet' });
+  const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input,
+    rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify }) : null;
+  const update = dt => { island.update(dt); point?.update(dt); };
+  const stopLoop = ctx.loop === false ? () => {} : startLoop(delta => update(delta), () => {});
+  return {
+    island, point, update,
+    dispose() { stopLoop(); island.dispose(); point?.dispose(); },
+  };
+}

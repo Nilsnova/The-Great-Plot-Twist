@@ -22,6 +22,23 @@ const END_BEAT_MS = 1800;             // the last ship sinks on screen before th
 const DEFAULT_WAIT_SECONDS = 5;
 let atlasPromise = null;
 
+// The wider view during a wave: cannons reach about 28 units, ships appear about 40 units out, so the
+// camera shows about 34 units either side of the player (half zoom on a 16:9 screen, 0.4 on a phone).
+export const battleZoom = camera => {
+  const half = Number.isFinite(camera.right - camera.left) ? (camera.right - camera.left) / 2 : 17.8;
+  return Math.max(.4, Math.min(.85, half / 34));
+};
+// Where the camera leans during a wave: from the player a little towards the ships (or the lanes they
+// will come in on), at most 14 units across and 9 units up or down, so the player stays on screen.
+export function battleLean(player, state, lanes = []) {
+  if (!player) return { x: 0, z: 0 };
+  const points = state?.ships?.length ? state.ships : lanes;
+  if (!points?.length) return { x: 0, z: 0 };
+  let x = 0, z = 0;
+  for (const point of points) { x += point.x; z += point.z; }
+  x = x / points.length - player.x; z = z / points.length - player.z;
+  return { x: Math.max(-14, Math.min(14, x * .5)), z: Math.max(-9, Math.min(9, z * .5)) };
+}
 const parseTime = value => (typeof value === 'number' ? value : Date.parse(value));
 export function readWaveInfo(info) {
   if (!info || typeof info !== 'object' || typeof info.waveId !== 'string' || !info.waveId) return null;
@@ -98,7 +115,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const sim = createWave({ seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0, ...simOptions });
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
-      splashesAt: [], lastCount: null, state: sim.state(), action: null };
+      splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 } };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom })).then(renderer => {
@@ -148,6 +165,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const fresh = events.filter(event => (event.t ?? 0) >= shownFrom);
     for (const event of events) {
       emit(event);
+      if (event.type === 'wave_started') current.lanes = event.lanes ?? [];
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
     if (current.shown) current.renderer?.events(fresh);
@@ -185,6 +203,15 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (current.sim.done) end(current);
     }
     if (wave !== current) return;
+    if (world.camera?.userData) {
+      const data = world.camera.userData;
+      if (current.shown && !current.finished) {
+        data.battleZoom = battleZoom(world.camera);
+        const goal = battleLean(world.player?.position, current.state, current.lanes), k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 1.2);
+        current.lean.x += (goal.x - current.lean.x) * k; current.lean.z += (goal.z - current.lean.z) * k;
+        data.battleFocus = current.lean;
+      } else { delete data.battleZoom; delete data.battleFocus; }
+    }
     const simTime = Math.max(0, Math.min(elapsed, current.ticks * TICK_SECONDS + TICK_SECONDS));
     for (let i = current.splashesAt.length - 1; i >= 0; i--) if (current.splashesAt[i] <= simTime) { current.splashesAt.splice(i, 1); cue('pirate-splash'); }
     const seconds = elapsed < 0 ? Math.ceil(-elapsed) : 0;
@@ -241,6 +268,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const current = wave;
     if (!current) return;
     wave = null; current.finished = true;
+    if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
     current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear();
     emit({ type: 'wave_controller_stopped', waveId: current.info.waveId });
   }

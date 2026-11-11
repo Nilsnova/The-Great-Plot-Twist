@@ -21,11 +21,15 @@ export function createCamera(input) {
       if (!exploring || !Number.isFinite(delta) || delta <= 0) return;
       const dt = Math.min(delta, .1), wheel = input.pointer.wheel;
       if (Number.isFinite(wheel) && wheel) targetZoom = Math.max(1, Math.min(2, targetZoom - wheel / 1000));
-      const point = projectPoint(player.x, player.z), blend = reduce ? 1 : 1 - Math.exp(-dt * 12);
+      // ...and lean towards the fight: camera.userData.battleFocus is a small logical offset {x, z}.
+      const lean = camera.userData.battleFocus, leanX = Number.isFinite(lean?.x) ? lean.x : 0, leanZ = Number.isFinite(lean?.z) ? lean.z : 0;
+      const point = projectPoint(player.x + leanX, player.z + leanZ), blend = reduce ? 1 : 1 - Math.exp(-dt * 12);
       const headroom = placeId === 'lighthouse_isle' && Math.hypot(player.x - 9, player.z + 8) < 8 ? 4.2 : 3.1;
       camera.position.x += (point.x - camera.position.x) * blend;
       camera.position.y += (point.y + headroom - camera.position.y) * blend;
-      const zoom = reduce ? targetZoom : camera.zoom + (targetZoom - camera.zoom) * (1 - Math.exp(-dt * 16));
+      // A pirate wave (lane P) may ask for a wider view while it runs: camera.userData.battleZoom (0.4-1).
+      const battle = camera.userData.battleZoom, goal = Number.isFinite(battle) ? Math.max(.4, Math.min(1, battle)) : targetZoom;
+      const zoom = reduce ? goal : camera.zoom + (goal - camera.zoom) * (1 - Math.exp(-dt * (Number.isFinite(battle) || camera.zoom < .98 ? 3 : 16)));
       if (Math.abs(zoom - camera.zoom) > .00001) {camera.zoom = zoom; camera.updateProjectionMatrix();}
     },
   };

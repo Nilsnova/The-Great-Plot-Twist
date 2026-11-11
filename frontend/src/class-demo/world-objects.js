@@ -53,7 +53,8 @@ function paintGlow(size) {
   };
 }
 
-export function createDemoObjects({scene, reducedMotion = () => false}) {
+// Pirate Point (lane P) reuses the lamp posts and the beacon at its own spots: lampSpots, beam, lock: false.
+export function createDemoObjects({scene, reducedMotion = () => false, lampSpots = LAMP_SPOTS, beam = BEAM, lock: showLock = true, poolKey = 'class-demo'}) {
   const root = new THREE.Group();root.name = 'class-demo-objects';root.visible = false;scene.add(root);
   const owned = [];
   const own = (...items) => { owned.push(...items); return items[0]; };
@@ -67,16 +68,16 @@ export function createDemoObjects({scene, reducedMotion = () => false}) {
     return mesh;
   }
   const lockTextures = {closed: own(canvasTexture(24, 24, paintLock)), open: own(canvasTexture(24, 24, paintLockOpen))};
-  const lock = sprite(lockTextures.closed, 24, 24, LOCK_SPOT.x, LOCK_SPOT.z, 0.05);lock.name = 'keepers-lock';
+  const lock = sprite(lockTextures.closed, 24, 24, LOCK_SPOT.x, LOCK_SPOT.z, 0.05);lock.name = 'keepers-lock';lock.visible = showLock;
   const lampTextures = {dark: own(canvasTexture(16, 42, paintLamp(false))), lit: own(canvasTexture(16, 42, paintLamp(true)))};
   const glowTexture = own(canvasTexture(48, 48, paintGlow(48))), beaconTexture = own(canvasTexture(96, 96, paintGlow(96)));
-  const lamps = LAMP_SPOTS.map(spot => {
+  const lamps = lampSpots.map(spot => {
     const post = sprite(lampTextures.dark, 16, 42, spot.x, spot.z, 0.03);post.name = spot.id;
     const glow = sprite(glowTexture, 48, 48, spot.x, spot.z, 0.5);glow.position.y += 2.2;glow.material.blending = THREE.AdditiveBlending;
     glow.visible = false;glow.renderOrder = post.renderOrder + 0.1;
     return {post, glow, lit: false, spot};
   });
-  const beacon = sprite(beaconTexture, 96, 96, 0, 0, 0.5);beacon.position.set(BEAM.x, BEAM.y, 0);
+  const beacon = sprite(beaconTexture, 96, 96, 0, 0, 0.5);beacon.position.set(beam.x, beam.y, 0);
   beacon.material.blending = THREE.AdditiveBlending;beacon.visible = false;beacon.renderOrder = 960;
 
   // Moments: lamp ignition, the lock's pulse and the relight, drawn by the shared pixel effects.
@@ -88,9 +89,9 @@ export function createDemoObjects({scene, reducedMotion = () => false}) {
     if (shown) {
       for (const lamp of lamps) if (lamp.lit) { const at = head(lamp); list.push({x: at.x, y: lamp.post.position.y, r: 2.6, kind: 0, min: .55}, {x: at.x, y: at.y, r: 1.2, kind: 1, min: .7}); }
       if (lockOpen) list.push({x: lock.position.x, y: lock.position.y + .7, r: 1.6, kind: 1, min: .45});
-      if (relit) list.push({x: BEAM.x, y: BEAM.y, r: 2.4, kind: 1, min: .8});
+      if (relit) list.push({x: beam.x, y: beam.y, r: 2.4, kind: 1, min: .8});
     }
-    pools()?.extra('class-demo', list);
+    pools()?.extra(poolKey, list);
   }
   function ignite(lamp) {
     const effects = fx(), at = head(lamp);
@@ -116,12 +117,12 @@ export function createDemoObjects({scene, reducedMotion = () => false}) {
   function celebrate() {
     const effects = fx();
     if (!effects) return;
-    effects.bloom(BEAM.x, BEAM.y, {radius: 2.8, life: 3.2});
+    effects.bloom(beam.x, beam.y, {radius: 2.8, life: 3.2});
     if (reducedMotion()) return;
-    effects.rays(BEAM.x, BEAM.y, {radius: 9, life: 6.5}); raysAt = time;
-    effects.ring(BEAM.x, BEAM.y, {radius: 6, life: 1.1}); effects.ring(BEAM.x, BEAM.y, {radius: 14, life: 1.6, delay: .2, colour: '#e9d39a'});
-    effects.burst(BEAM.x, BEAM.y, {count: 150, speed: [2, 7.5], angle: Math.PI / 2, spread: Math.PI * 2, gravity: 6, life: [1, 2.6]});
-    effects.burst(BEAM.x, BEAM.y, {count: 40, speed: [.5, 1.6], angle: Math.PI / 2, spread: Math.PI, gravity: -.4, life: [2, 3.2], colour: '#fff3c8', size: [1, 1]});
+    effects.rays(beam.x, beam.y, {radius: 9, life: 6.5}); raysAt = time;
+    effects.ring(beam.x, beam.y, {radius: 6, life: 1.1}); effects.ring(beam.x, beam.y, {radius: 14, life: 1.6, delay: .2, colour: '#e9d39a'});
+    effects.burst(beam.x, beam.y, {count: 150, speed: [2, 7.5], angle: Math.PI / 2, spread: Math.PI * 2, gravity: 6, life: [1, 2.6]});
+    effects.burst(beam.x, beam.y, {count: 40, speed: [.5, 1.6], angle: Math.PI / 2, spread: Math.PI, gravity: -.4, life: [2, 3.2], colour: '#fff3c8', size: [1, 1]});
   }
 
   return {
@@ -146,8 +147,8 @@ export function createDemoObjects({scene, reducedMotion = () => false}) {
       for (const lamp of lamps) if (lamp.lit) lamp.glow.material.opacity = still ? 0.9 : 0.75 + Math.sin(time * 5 + lamp.post.position.x) * 0.2;
       if (relit) beacon.material.opacity = still ? 0.9 : 0.7 + Math.sin(time * 2) * 0.25;
       // While relit, the slow rays come back every few seconds.
-      if (relit && !still && time - raysAt > 6) { raysAt = time; fx()?.rays(BEAM.x, BEAM.y, {radius: 6.5, life: 6.8, colour: '#a87f3c'}); }
+      if (relit && !still && time - raysAt > 6) { raysAt = time; fx()?.rays(beam.x, beam.y, {radius: 6.5, life: 6.8, colour: '#a87f3c'}); }
     },
-    dispose() { pools()?.extra('class-demo', []); root.removeFromParent(); for (const item of owned) item.dispose(); owned.length = 0; },
+    dispose() { pools()?.extra(poolKey, []); root.removeFromParent(); for (const item of owned) item.dispose(); owned.length = 0; },
   };
 }

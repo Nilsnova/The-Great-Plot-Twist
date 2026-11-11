@@ -228,7 +228,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       case 'ship_hit': {
         const meta = ships.get(event.shipId);
-        if (meta) meta.flashUntil = clock + FLASH_SECONDS;
+        if (meta && !event.blocked) meta.flashUntil = clock + FLASH_SECONDS;
         const size = SHIP_SIZE[event.kind] ?? SHIP_SIZE.sloop, hy = y + size.h * .35;
         if (event.blocked) { effects()?.ring(x, hy, { radius: 1.4, life: .4, colour: '#e6eef0' }); break; }
         if (event.source === 'lamps') {
@@ -289,7 +289,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const distance = Math.hypot(ball.toX - ball.x, ball.toZ - ball.z);
     const lift = still() ? .8 : (ball.enemy ? .8 : 1.2) + 4 * (distance * (ball.enemy ? .03 : .07)) * p * (1 - p);
     const r = rect['pirate-cannonball'];
-    layers.air.push(r, x, drawnY(z) + lift, r.w * .75, r.h * .75, .5, .375 * r.h, ball.enemy ? { r: .55, g: .45, b: .4 } : undefined);
+    // A short pale trail behind the ball, then the ball itself.
+    if (!still() && p > .08) for (const back of [.07, .14]) {
+      const q = Math.max(0, p - back), tx = ball.x + (ball.toX - ball.x) * q, tz = ball.z + (ball.toZ - ball.z) * q;
+      const tl = (ball.enemy ? .8 : 1.2) + 4 * (distance * (ball.enemy ? .03 : .07)) * q * (1 - q);
+      layers.air.push(rect[WHITE], tx, drawnY(tz) + tl, .25, .25, .5, .125, { r: .9, g: .9, b: .85, a: back < .1 ? .55 : .3 });
+    }
+    layers.air.push(r, x, drawnY(z) + lift, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, ball.enemy ? { r: .55, g: .45, b: .4 } : undefined);
     // The ball's shadow on the water or the sand.
     if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
   }

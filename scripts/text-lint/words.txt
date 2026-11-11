@@ -684,6 +684,7 @@ feed
 feeds
 feels
 fees
+fell
 ferries
 ferry
 festival
@@ -708,6 +709,7 @@ finished
 finishes
 finishing
 finnhub
+fire
 firefox
 first
 fish
@@ -1651,6 +1653,7 @@ remove
 removed
 removes
 rendering
+repair
 repeat
 repeated
 repeating
@@ -1709,6 +1712,7 @@ rewards
 riddle
 right
 ring
+rings
 rises
 rising
 risk
@@ -1873,6 +1877,7 @@ sht
 shut
 side
 sides
+sight
 sign
 signal
 signals
@@ -2241,6 +2246,7 @@ verdict
 verified
 version
 very
+victory
 video
 view
 visible
