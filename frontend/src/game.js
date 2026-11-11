@@ -31,6 +31,7 @@ import {islandsMode as quickIslandsMode,resolveIslandsMode,startPlace} from './i
 import {PLACE_ARRIVED} from './ui/quest-events.js';
 import {readVisit} from './island/codes.js';
 import {setOneIslandFlags,travelAllowed} from './island/one-island.js';
+import {setMenuTravel} from './shell/menu-extras.js';
 import {joinedHarbor} from './front-door/logic.js';
 import { createChart } from './ui/chart.js';
 import { createSailing } from './ui/sailing.js';
@@ -95,6 +96,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   setOneIslandFlags(()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags():null;});
   const travelOpen=()=>travelAllowed({islandsMode:islandsMode??(islandsOn()?'live':'off'),classHarbor:joinedHarbor()});
   const showChart=()=>{if(travelOpen())chart.show();};
+  setMenuTravel(travelOpen);
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus(),{visible:id=>island?.chartVisible(id)??true,label:id=>island?.chartLabel(id)??(id==='lighthouse_isle'&&waves?.point?'Pirate Point':undefined)});
   function setUserQuality(name){setPreferences({quality:name});}
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
@@ -262,7 +264,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
-    disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
+    setMenuTravel(null);disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {

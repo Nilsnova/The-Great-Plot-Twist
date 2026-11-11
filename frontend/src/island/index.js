@@ -26,6 +26,7 @@ import {readUnlocks, newUnlocks, CREW, BUILDINGS} from './td-rules.js';
 import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, lobbyModel} from './lobby.js';
+import {resolvePeer} from '../net/live-extras.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -166,7 +167,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let syncSoon = null;
   function wantSync() {
     if (syncSoon || disposed) return;
-    syncSoon = setTimeout(() => { syncSoon = null; if (!disposed) void syncGame(true); }, 1500);
+    const wait = Math.max(1500, lobbyRead + 10000 - Date.now()); // the lobby is read at most every 10 s
+    syncSoon = setTimeout(() => { syncSoon = null; if (!disposed) void syncGame(true); }, wait);
   }
   function lobby() {
     const state = game?.state ?? null, code = currentCode();
@@ -376,9 +378,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       for (const [id, name] of next) if (!here.has(id)) ui.toast(`${name} joined ${visiting?.ownerName ? `${visiting.ownerName}'s island` : visiting ? 'this island' : 'your island'}`, 'success');
     }
     presenceReady = onIsland; here = next;
-    game?.setPresence({live: onIsland, ids: [...next.keys()]});
+    // The presence shows opaque ids; the live connection turns them back into player ids (the lobby's ids).
+    const ids = [...next.keys()].map(id => { try { return resolvePeer(id) ?? id; } catch { return id; } });
+    game?.setPresence({live: onIsland, ids});
     // Somebody we do not know yet is in the room: read the lobby again (at most every 10 s).
-    if (onIsland && game && [...next.keys()].some(id => !game.knows(id))) wantSync();
+    if (onIsland && game && ids.some(id => !game.knows(id))) wantSync();
     if (ui.open === 'captains') refreshCard();
   }
   // The Menu's island entries (shell/menu-extras.js).

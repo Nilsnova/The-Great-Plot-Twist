@@ -11,13 +11,13 @@
 .games-pick:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
 .games-pick:disabled{cursor:default;opacity:.6}
 .games-pick-title{font:700 17px/1.3 var(--u-font);color:var(--u-ink)}
-.games-pick-line{color:var(--u-ink);opacity:.85;font-size:15px}
+.games-pick-line{color:var(--u-ink);opacity:.85;font-size:16px}
 .games-create .kit-button{justify-self:start;min-width:200px;min-height:52px;font-size:19px}
 .games-label{display:grid;gap:4px;font:600 16px/1.3 var(--u-font);color:var(--u-ink)}
 .games-label>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .games-join-row{display:flex;gap:8px;align-items:stretch}
-.games-code{flex:1;min-width:0;min-height:48px;box-sizing:border-box;font:700 20px/1.2 var(--u-font);letter-spacing:1px;text-transform:uppercase;padding:8px 12px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown)}
-.games-code::placeholder{color:#7c6a55;opacity:1}
+.games-card .games-code{flex:1;min-height:48px;font:700 20px/1.2 var(--u-font);letter-spacing:1px;text-transform:uppercase}
+.games-card .games-code::placeholder{color:var(--u-mute);opacity:.75}
 .games-join-row .kit-button{flex:none;min-width:110px}
 .games-status{color:var(--u-gold);font-weight:600}
 .games-status[hidden]{display:none}

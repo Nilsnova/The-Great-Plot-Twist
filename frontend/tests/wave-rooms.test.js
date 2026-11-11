@@ -25,7 +25,13 @@ describe('the wave rooms', () => {
     expect(shownLimit('pirate_point')).toBe(40);
   });
   it('pass the five wave events with exactly their fields and drop anything else', () => {
-    expect(WAVE_EVENTS).toEqual(['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed']);
+    expect(WAVE_EVENTS).toEqual(['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
+      'game_hello', 'game_state']);
+    // The game's lobby and pause (GAME-V3.md §2): no wave, only these fields.
+    expect(readWaveMessage('game_hello', msg({who: 'ben'}))).toEqual({id: ID, event: 'game_hello', seq: 4, data: {who: 'ben'}});
+    expect(readWaveMessage('game_state', msg({who: 'ben', started: true, paused: false, first: true}))).not.toBe(null);
+    for (const data of [{who: 'b e n'}, {who: 'ben', name: 'Ben'}, {}]) expect(readWaveMessage('game_hello', msg(data))).toBe(null);
+    expect(readWaveMessage('game_state', msg({who: 'ben', started: true, paused: 0, first: true}))).toBe(null);
     expect(readWaveMessage('cannon_shot', msg(shot))).toEqual({id: ID, event: 'cannon_shot', seq: 4, data: shot});
     expect(readWaveMessage('wall_repair', msg({by: 'p-abc', seq: 1, t: 3, waveId: 'w1', wallId: 'wall_2'}))).not.toBe(null);
     expect(readWaveMessage('lamps_lit', msg({by: 'p-abc', seq: 9, t: 40, waveId: 'w1'}))).not.toBe(null);

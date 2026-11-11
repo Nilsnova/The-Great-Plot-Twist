@@ -96,7 +96,7 @@ const players = count => `${count} ${count === 1 ? 'player' : 'players'}`;
 export function gameLine(game) {
   const host = game?.role === 'host' ? 'Your game' : `${game?.hostName || 'A friend'}'s game`;
   const wave = Number.isSafeInteger(game?.waveBest) && game.waveBest > 0 ? `wave ${game.waveBest}` : 'no wave yet';
-  return {title: `${host} · ${game?.code ?? ''}`, line: `${wave} · ${players(Math.max(1, game?.members ?? 1))}`};
+  return {title: host, line: `${game?.code ?? ''} · ${wave} · ${players(Math.max(1, game?.members ?? 1))}`};
 }
 // What the card says: games [{code, hostName, role, waveBest, members}] newest first (GET /api/games).
 export function gamesCopy({games = [], signedOut = false} = {}) {
