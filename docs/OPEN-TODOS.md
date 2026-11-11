@@ -39,7 +39,7 @@ Work against the fakes in BUILD-PLAN section 3 until the real API is wired in (p
 
 ## 4. Account setup (needs dashboard access; the project owner or a member with access)
 
-### 4a. Guest sign-in for the class code (3 minutes, once, after the class-code release is live)
+### 4a. ✅ Done (Wed 11 Nov): guest sign-in for the class code is on (verified: anonymous sign-ins allowed)
 
 Guests can only play with the current class code from the projector QR, so this setting stays on for good.
 1. supabase.com/dashboard > project **great-plot-twist** > **Authentication** > **Sign In / Providers** > under "User Signups" switch on **Allow anonymous sign-ins** > **Save**.
@@ -59,7 +59,7 @@ Supabase's built-in mailer only reaches the project team, so email login needs a
 5. Supabase > **Authentication** > **Sign In / Providers** > **Email**: enabled; **Confirm email** on; **Email OTP length** 6; **Email OTP expiration** 3600 s or less; Google off. **Rate Limits** > emails per hour: **100**.
 6. Tell the project owner "email is on": the game's email option is switched on (Vercel `AUTH_PROVIDERS=github,email`) after one test code arrived. Players should check their spam folder.
 
-### 4c. Stock prices: re-enter the Finnhub key (5 minutes, project owner)
+### 4c. ✅ Done (Wed 11 Nov): the Finnhub key is re-entered; live stock prices verified
 
 Finnhub answers every stock request with HTTP 401 (key rejected, seen in the live log on 10 Nov).
 1. finnhub.io > Dashboard > copy the API key (or create a new one).
@@ -83,14 +83,16 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 - [ ] README complete by Fri 20 Nov: deployed URL, every member's name and student number, the install / run / test commands on the first screen.
 - [ ] One member submits the repository link on Moodle by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59; later commits do not count); a named backup can submit if needed. Keep a screenshot of the confirmation.
 
-## 7. Lane 0 (project owner with Claude): status on Tue 10 Nov, evening
+## 7. Status on Wed 11 Nov, evening: the pirate game is live
 
-**Merge `main` into your branch now:** the mystery is gone from `main` (D031), so files you may have looked at this morning no longer exist.
+**Merge `main` into your branch before you start:** the whole game changed today.
 
-- **Live:** the class code for guests (D030) and email sign-in (hidden until 4b is done); the mystery, festival, bulletin and rewards pages removed; the islands and waves server (D032) with its database, switched off (flag `islands`) until the pirate frontend is wired in.
-- **Real API ready for wiring:** `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/join`, `/api/waves/current`, `/api/waves/finish` (BUILD-PLAN section 3.4). New players get 100 🪙 when their island opens.
-- **Next:** the new voiced pirate intro, the wiring day (Sat 14 – Sun 15 Nov), the fresh start for all players and the release on Thu 19 Nov.
-- **Known gaps:** a brand-new player has 0 🪙 until their island opens (the wiring fixes it); football shows no matches during the international break (back around 21 Nov); the prediction questions all settle after the deadline (lane H task H3 picks short-term ones).
+- **Live on https://the-great-plot-twist.vercel.app (main `48f027b`):** your own island with 11 build spots (walls, cannons, watchtower, houses), the harbor bell and pirate waves (real weather changes them), manning cannons and repairing walls, friends visiting by island code or QR and defending together, the Harbor (market stall "up or down in 1 hour?" on Bitcoin, Ether, gold and stocks with 5/10/25 🪙; football match board; weather board; duel ring), Pirate Point battles with the flagship and the three lamps, the class code that drops the class at Pirate Point, a new look (HUD with 🪙, goals and Menu), voiced pirate cutscenes.
+- **Removed:** the mystery (D031) and the prediction market (D035).
+- **Fresh start done:** every wallet is at 🪙 100; no islands or waves existed yet.
+- **Checks before release:** backend 15,827 tests, frontend 2,497 tests, build, budgets, text lint, CSP, accessibility, panels and market browser checks all passed; the class-demo browser check passed all 32 checks and fails only on a known headless-Chrome audio-device error; live smoke 0 failures.
+- **Not tested yet: two real people in one wave on live Realtime.** Do the two-phone test in section 5 now; report anything odd as an issue.
+- **Your lanes now:** extend and polish (new buildings, art, sounds, balance, more Harbor ideas), plus the walkthrough pages and tests in section 3. Small pull requests from your own account.
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
