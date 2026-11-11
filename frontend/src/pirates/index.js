@@ -44,7 +44,7 @@ export function mountPirates(ctx) {
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
     room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null });
-  const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input,
+  const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input, getDefenses: ctx.getPointDefenses,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };
   const stopLoop = ctx.loop === false ? () => {} : startLoop(delta => update(delta), () => {});

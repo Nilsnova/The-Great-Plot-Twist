@@ -312,7 +312,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const size = SHIP_SIZE[ship.kind] ?? SHIP_SIZE.sloop, frame = frameOf(ship.kind, meta.phase), r = rect[frame];
     if (!r) return;
     const layer = ship.z < 0 ? layers.far : layers.near, x = ship.x, y = drawnY(ship.z);
-    const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? .85 : 0;
+    const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .35 : .6) : 0; // a hit shows, the art stays readable under fire
     // A wake behind a sailing ship: two pale strokes on the water.
     if (ship.state === 'sailing' && !low() && !still()) {
       const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;

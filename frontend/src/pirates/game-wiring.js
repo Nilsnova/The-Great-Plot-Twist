@@ -11,6 +11,7 @@
 import {mountPirates} from './index.js';
 import {createRoomProxy} from './room.js';
 import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wave-hooks.js';
+import {defenses as spotDefenses} from '../island/spots.js';
 
 const ISLAND_PLACE = 'home_islet';
 // The island client answers {ok, data} or {ok: false, code, message, retryAfterSeconds}; lane P's code
@@ -52,6 +53,7 @@ export function wireWaves(ctx) {
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
+    getPointDefenses: () => (island?.point ? spotDefenses(island.point.spots ?? []) : null),
     captainLevel: () => own()?.captain?.level ?? 1,
     startNextWave: island ? () => island.ringBell() : null});
 
@@ -74,8 +76,8 @@ export function wireWaves(ctx) {
       if (disposed || typeof payload?.waveId !== 'string' || pirates.island.wave?.info.waveId === payload.waveId) return;
       void island.joinRunningWave().catch(() => {});
     }));
-    stops.push(on('wave_controller_started', event => { if (event?.flagship !== true) island.setBattle(true); }));
-    stops.push(on('wave_controller_stopped', () => island.setBattle(false)));
+    stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));
+    stops.push(on('wave_controller_stopped', () => { island.setBattle(false); island.setPointBattle(false); }));
     followRoom();
   }
   return {

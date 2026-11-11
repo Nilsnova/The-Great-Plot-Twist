@@ -38,6 +38,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
+  let pointBattle = false;
   let busyKind = null, point = null, pointWorld = null, pointMessage = '', busyCrew = null, busyCaptain = false, here = new Map(), presenceReady = false;
   const tellCaptain = island => { const level = island?.captain?.level; if (!disposed && Number.isSafeInteger(level)) { try { onCaptain(level); } catch { /* The HUD cannot stop the island. */ } } };
   // Once-per-device lines (the first unlock explanation, the musket hint).
@@ -93,7 +94,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
 
   function applyWorld() {
     world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: unlocks()});
-    pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: false, unlocks: null});
+    pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: null});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
 
@@ -373,6 +374,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return flow.current && !flow.current.joined ? flow.join(where()) : null;
     },
     setBattle(value) { battle = value === true; applyWorld(); },
+    // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
+    setPointBattle(value) { pointBattle = value === true; applyWorld(); },
     // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the
     // player stands (own island or the friend's), the bell swings; answers like flow.ring ({ok, ...}).
     async ringBell() {

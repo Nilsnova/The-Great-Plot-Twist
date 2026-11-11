@@ -88,7 +88,9 @@ export function createPiratePoint(ctx) {
     return module.playCutscene({ container: world.container, id, reducedMotion }).done;
   });
   const controller = createWaveController({ bus, world, room, sound, reducedMotion, quality: ctx.quality, playerId: ctx.playerId,
-    getDefenses: () => DEFENSES.map(item => ({ ...item })), place: PLACE, listen: false, accept: info => info.flagship === true,
+    // The towers and walls players built at Pirate Point (§5, GET /api/pirate-point) with their levels; the
+    // fixed defenses only while nobody has built anything there yet.
+    getDefenses: () => { const built = ctx.getDefenses?.(); return built?.length ? built : DEFENSES.map(item => ({ ...item })); }, place: PLACE, listen: false, accept: info => info.flagship === true,
     simOptions: { coast: COAST, lanes: LANES }, beamFrom: BEAM_FROM, playCutscene, captainLevel: ctx.captainLevel ?? (() => 1),
     finishWave: async body => { const answer = await api.finishWave(body); if (answer?.loot) notify(`Pirate Point loot: 🪙 ${answer.loot}`); return answer; },
     ...ctx.controllerOptions });
