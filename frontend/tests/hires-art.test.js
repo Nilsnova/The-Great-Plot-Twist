@@ -38,16 +38,16 @@ describe('detailed original artwork', () => {
     expect(readFileSync(`public/${titleBackdrop.file}`).length).toBeLessThan(350_000);
   });
 
-  it('selects detail sources while preserving ordinary library art and the legacy option', async () => {
+  it('loads native 16 px/unit art by default and detail sources on request', async () => {
     loadTexture.mockImplementation(async () => new THREE.Texture());
-    const art = await loadArt(['explorer', 'cottage', 'market-hall', 'explorer']);
+    const art = await loadArt(['explorer', 'cottage', 'market-hall', 'explorer'], { detail: true });
     expect(loadTexture.mock.calls.map(([url]) => url)).toEqual([
       '/pixel/hd/explorer.png', '/pixel/hd/cottage.png', '/pixel/market-hall.png',
     ]);
     expect(Object.keys(art)).toHaveLength(3);
     release(art);
     loadTexture.mockClear();
-    const legacy = await loadArt(['explorer'], { detail: false });
+    const legacy = await loadArt(['explorer']);
     expect(loadTexture).toHaveBeenCalledWith('/pixel/explorer.png', expect.any(THREE.TextureLoader));
     release(legacy);
   });
