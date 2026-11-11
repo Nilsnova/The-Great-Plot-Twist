@@ -120,7 +120,7 @@ export async function openMarketFixture(){
   if(coins<body.stake)return{status:409,code:'insufficient_funds'};
   coins-=body.stake;ledgerReasons.push('market_call_stake');recordLedger(-body.stake,'market_call_stake');
   const opened=Date.now(),call={id:randomUUID(),asset:asset.id,direction:body.direction,stake:body.stake,openPrice:asset.price,
-   openedAt:iso(opened),settleAt:iso(opened+3600000),status:'open',settlePrice:null,payout:null};
+   openedAt:iso(opened),settleAt:iso(opened+300000),status:'open',settlePrice:null,payout:null};
   calls.push(call);callReceipts.set(body.actionUid,call);
   return{data:{...copy(call),balance:coins}};
  }
