@@ -12,7 +12,8 @@ it('builds from the card, refuses with the reason, rings the bell and invites wi
     const seen = [];
     for (const type of ['island_built', 'island_invite_opened', 'wave_started_server']) on(type, event => seen.push(event.type));
     const transport = createFakeIslandTransport();
-    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null});
+    const coins = [];
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, onCoins: value => coins.push(value)});
     await island.load();
     const card = () => document.querySelector('.island-card[open]');
     const read = () => ({title: card()?.querySelector('.kit-heading').textContent, cost: card()?.querySelector('.island-cost')?.textContent,
@@ -24,7 +25,7 @@ it('builds from the card, refuses with the reason, rings the bell and invites wi
     const open = read();
     card().querySelector('.island-card-body .kit-button').click();
     await wait(30);
-    const built = {closed: !card(), toast: island.ui.toastText, coins: island.island.coins};
+    const built = {closed: !card(), toast: island.ui.toastText, coins: island.island.coins, reported: [...coins]};
     island.pick('cannon_1');
     const again = read();
     island.ui.close();
@@ -49,7 +50,8 @@ it('builds from the card, refuses with the reason, rings the bell and invites wi
     return {open, built, again, short, bell, banner, closedAfterRing, invite, label, room, seen};
   });
   expect(result.open).toMatchObject({title: 'Cannon', cost: '🪙 30', button: 'Build', disabled: false, reason: '', purpose: 'Fires at pirate ships on its own.'});
-  expect(result.built).toEqual({closed: true, toast: 'Cannon built! You have 🪙 70.', coins: 70});
+  // The HUD hears the island's balance: 100 from GET /api/island, then 70 after the cannon.
+  expect(result.built).toEqual({closed: true, toast: 'Cannon built! You have 🪙 70.', coins: 70, reported: [100, 70]});
   expect(result.again).toMatchObject({title: 'Cannon', reason: 'Your cannon stands here.'});
   expect(result.short).toMatchObject({title: 'Cannon', button: 'Build', disabled: true, reason: 'You need 🪙 20 more.'});
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});

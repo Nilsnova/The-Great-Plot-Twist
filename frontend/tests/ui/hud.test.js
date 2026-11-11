@@ -53,6 +53,26 @@ it('shows coins as 🪙 n, never a captain name, and warns once when the sign-in
   });
 });
 
+it('with the island as coin source, the wallet never overwrites the island balance',async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    const result=await page.evaluate(()=>{
+      const hud=window.testHud,text=()=>document.querySelector('.hud-coins').textContent;
+      const before=text();
+      hud.setCoinSource('island');hud.setCoins(100);
+      hud.setCaptain({account:{state:'signed_in'},captain:{name:'Captain Fern',coins:700}});
+      const island=text();
+      hud.setCoins(1250);const big=text();
+      hud.setCoinSource('wallet');hud.setCaptain({account:{state:'signed_in'},captain:{name:'Captain Fern',coins:700}});
+      return {before,island,big,wallet:text(),label:document.querySelector('.hud-coins').getAttribute('aria-label')};
+    });
+    expect(result.before).toBe('🪙 …');
+    expect(result.island).toBe('🪙 100');
+    expect(result.big).toBe('🪙 1,250');
+    expect(result.wallet).toBe('🪙 700');expect(result.label).toBe('700 coins');
+  });
+});
+
 it('moves the quest strip with the bus events of the other lanes, three goals at a time',async()=>{
   await evaluate.withPage(async page=>{
     await mount(page);

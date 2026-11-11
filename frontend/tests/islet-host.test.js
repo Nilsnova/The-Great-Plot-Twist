@@ -526,3 +526,26 @@ describe('explicit refresh, navigation and private identity boundaries', () => {
     } finally { f.stop(); }
   });
 });
+
+describe('with the islands on (isOff)', () => {
+  it('never reads GET /api/islet and never opens the old panel while the island game owns home_islet', async () => {
+    const reads = [];
+    const transport = {get: vi.fn(async path => { reads.push(path); return {ok: true, status: 200, data: {}}; }), post: vi.fn()};
+    let off = true;
+    const {bus, stop, loadPanel, panel} = attach({transport, isOff: () => off});
+    arrive(bus, 'home_islet');
+    click(bus, 'islet_signal_station');
+    expect(await stop.refresh()).toMatchObject({accepted: false, code: 'feature_off'});
+    expect(await stop.open()).toBe(false);
+    await settle();
+    expect(reads).toEqual([]);
+    expect(loadPanel).not.toHaveBeenCalled();
+    expect(panel.opened).toEqual([]);
+    // The flag off again: the old islet works as before.
+    off = false;
+    arrive(bus, 'home_islet');
+    await settle();
+    expect(reads.length).toBeGreaterThan(0);
+    stop();
+  });
+});
