@@ -89,7 +89,7 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 | `test:demo` | `check-demo-journey.js` | The class-demo journey with recorded API answers |
 | `test:browser`, `test:world`, `test:readability` | `check-browser.js`, `check-world.js`, `check-readability.js` | The world loads, places, text contrast |
 | `test:mobile`, `test:panels` | `check-mobile-walking.js`, `check-open-panels.js` | Touch walking at phone size; every panel a player can open (account, settings, the Harbor cards, the old islet panel, the island cards) fits at four sizes |
-| `test:market` | `check-market-hall.js` | The Harbor market stall in the production build with recorded answers: trading off, a 🪙 10 stake, closing it, the HUD wallet |
+| `test:market` | `check-market-hall.js` | The Harbor market stall ("Up or down in 1 hour?", `/api/market/calls`) in the production build with recorded answers: anonymous, the flag off, a 🪙 10 call on Up with its countdown, the request body, the HUD wallet |
 | `test:online:islet`, `test:online:islet:chaos` | `check-online-islet.js` | Islet build with intercepted accounts; failures |
 | `test:a11y`, `test:ui`, `test:help`, `test:credits` | `check-a11y.js`, `check-ui-kit.js`, `check-help.js`, `check-credits.js` | Keyboard, focus, reduced motion, hostile text (the Harbor market stall and fortune teller included), help and credits pages |
 | `test:host` | `check-host-console.js` | Host console against fake responses |
