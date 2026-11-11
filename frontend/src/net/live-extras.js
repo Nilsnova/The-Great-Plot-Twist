@@ -36,3 +36,16 @@ function readInvite() {
     return value === 'harbor' || /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/.test(value);
   } catch { return false; }
 }
+
+// The wave rooms' bridge (BUILD-PLAN 3.6), the same way: the presence attaches send(topic, event, data)
+// while connected; it sends only while we are in that very room (live:place:isle_<code>:1 or
+// live:place:pirate_point:1). Arriving messages reach the bus as live_room_message {topic, event, id, data}.
+let waveSender = null;
+export function attachWaveSender(send) {
+  waveSender = typeof send === 'function' ? send : null;
+  const mine = waveSender;
+  return () => { if (waveSender === mine) waveSender = null; };
+}
+export function sendWave(topic, event, data) {
+  try { return waveSender?.(topic, event, data) === true; } catch { return false; }
+}

@@ -21,7 +21,7 @@
 //
 // Used by: src/net/live-places.js, src/online/realtime.js and tests/realtime.test.js.
 import {
-  MIN_EMOTE_GAP_MS, MIN_EXTRA_GAP_MS, MIN_POSITION_GAP_MS, NAME_BATCH, NAME_RETRY_MS, describeError, isClassPlace,
+  MIN_EMOTE_GAP_MS, MIN_EXTRA_GAP_MS, MIN_POSITION_GAP_MS, MIN_WAVE_GAP_MS, NAME_BATCH, NAME_RETRY_MS, describeError, isClassPlace, isWavePlace, readWaveMessage, waveTopic,
   isPrivatePlace, pickShown, readCrewEvent, readEmote, readExtra, readPosition, shownLimit,
 } from './live-rules.js';
 
@@ -119,6 +119,19 @@ export function createView({ getFacts, getClient, isStopped, notify, onHeard, no
     notify({ type: 'live_peer_extra', id: data.id, event, data: data.data });
   }
 
+  // A wave message (BUILD-PLAN 3.6) in an island's room or Pirate Point's. Any captain in the room may
+  // send one (a friend who just sailed in may not be in the world's presence yet); it must pass
+  // readWaveMessage and come at most once per kind every 0.15 s from one captain. Reaches the game as
+  // live_room_message {topic, event, id, data}; the wave (src/pirates/) checks it once more.
+  function wave(event, payload) {
+    onHeard();
+    const { here } = getFacts();
+    const data = readWaveMessage(event, payload);
+    if (!data || !isWavePlace(here.place) || here.room === null) return;
+    if (!accept(data.id, data.seq, `wave_${event}`, MIN_WAVE_GAP_MS)) return;
+    notify({ type: 'live_room_message', topic: waveTopic(here.place), event, id: data.id, data: data.data });
+  }
+
   function crewEvent(payload) {
     const event = readCrewEvent(payload);
     if (event) notify({ type: 'live_crew_updated', kind: event.kind, data: event.data });
@@ -129,5 +142,5 @@ export function createView({ getFacts, getClient, isStopped, notify, onHeard, no
     for (const id of lastSeen.keys()) if (!peers.has(id)) lastSeen.delete(id);
   }
 
-  return { refresh, position, emote, extra, crewEvent, forgetGone };
+  return { refresh, position, emote, extra, wave, crewEvent, forgetGone };
 }

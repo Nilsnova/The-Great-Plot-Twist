@@ -1,7 +1,7 @@
 // A4 owns connections and rate limits; this adapter holds only cosmetic peer data and safe display IDs.
 import {emit as busEmit} from '../../core/events.js';
 import {EMOTE_COOLDOWN_MS, MAX_COORD, MIN_GAP_MS, isPlaceId, isPlayerId} from '../../net/live-rules.js';
-import {attachExtraSender, wantsClassHarbor} from '../../net/live-extras.js';
+import {attachExtraSender, attachWaveSender, wantsClassHarbor} from '../../net/live-extras.js';
 import {ONLINE_EMOTES, wireFacing, presenceStatus, projectOnlinePresence} from './presence-view.js';
 
 const BUBBLE_MS = 1800;
@@ -14,7 +14,7 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
   let status = 'off', place = null, shown = [], onlineCrew = [], memberSeats = [], hiddenCount = 0;
   let localEmote = null, cooldownUntil = 0, nextTick = Infinity;
   let hidden = Boolean(ctx.document?.hidden), restartAt = 0, lastForwardAt = -Infinity, restartWait = null, pendingPosition = null;
-  let positionSequence = 0, detachExtras = null;
+  let positionSequence = 0, detachExtras = null, detachWaves = null;
   const opaqueId = id => {
     if (!opaqueIds.has(id)) opaqueIds.set(id, `live-captain-${++serial}`);
     return opaqueIds.get(id);
@@ -44,7 +44,7 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
     const waiting = restartWait; restartWait = null;
     if (waiting) { clearTimeout(waiting.timer); waiting.resolve(); }
     const previous = record; record = null;
-    detachExtras?.(); detachExtras = null;
+    detachExtras?.(); detachExtras = null; detachWaves?.(); detachWaves = null;
     stopping = true;
     try { previous?.live.stop(); } catch { /* Always clear the held peer data. */ }
     finally { stopping = false; }
@@ -85,7 +85,7 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
       if (sample) { sample.emote = event.emote; sample.emoteUntil = ctx.now() + BUBBLE_MS; }
     }
     // Crew room events have no reader since crews left with the mystery (10 Nov); they still reach the bus.
-    if (event.type !== 'live_crew_updated') publish();
+    if (event.type !== 'live_crew_updated' && event.type !== 'live_room_message') publish();
     try { emit(event); } catch { /* Preserve A4 events without giving listeners ownership of this lifecycle. */ }
   }
   async function updateCrew(active, token) {
@@ -148,6 +148,9 @@ export function createOnlinePresence(ctx, {loadRealtime = () => import('../realt
           emit: event => receive(event, token)});
         if (!current(token)) { live.stop(); return; }
         const active = {live, crewTask: null, localPlace: null}; record = active;
+        detachWaves?.();
+        detachWaves = attachWaveSender((topic, event, data) => record === active && current(token) && !hidden
+          && active.live.waveRoom?.() === topic && active.live.wave?.(event, data) === true);
         detachExtras?.();
         detachExtras = attachExtraSender((event, data) => record === active && current(token) && !hidden
           && active.live.extra?.(event, data) === true, {

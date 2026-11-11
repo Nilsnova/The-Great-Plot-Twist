@@ -23,8 +23,8 @@
 //
 // Used by: src/online/realtime.js and tests/realtime.test.js.
 import {
-  EXTRA_EVENTS, PROTOCOL_VERSION, TRACK_GAP_MS, WORLD_TOPIC,
-  chooseRoom, isClassPlace, isKit, isPlaceId, isPrivatePlace, placeTopic, readWorld, roomsOf, roomToMoveTo, trackJitterMs,
+  EXTRA_EVENTS, PROTOCOL_VERSION, TRACK_GAP_MS, WAVE_EVENTS, WORLD_TOPIC,
+  chooseRoom, isClassPlace, isWavePlace, isKit, isPlaceId, isPrivatePlace, placeTopic, readWorld, roomsOf, roomToMoveTo, trackJitterMs,
 } from './live-rules.js';
 
 // classHarbor: true when the player came for the class harbor (G29); the first announcement then waits
@@ -150,6 +150,10 @@ export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, s
         if (isClassPlace(here.place)) for (const event of EXTRA_EVENTS) {
           channel.on('broadcast', { event }, message => channel === placeRoom?.channel && view.extra(event, message?.payload));
         }
+        // A wave room (an island's isle_<code> or pirate_point): the wave's shots, repairs, start and lamps.
+        if (isWavePlace(here.place)) for (const event of WAVE_EVENTS) {
+          channel.on('broadcast', { event }, message => channel === placeRoom?.channel && view.wave(event, message?.payload));
+        }
       },
       subscribed: () => placeJoined(number),
       refused: () => { // we may not join: say the place only
@@ -183,7 +187,7 @@ export function createPlaces({ playerId, kit, rooms, sender, view, getCrewIds, s
 
   // Two crewmates who arrived at the same moment may sit in different rooms. The one in the higher room moves down.
   function followCrewmate() {
-    if (!placeRoom || here.room === null || !here.settled || isClassPlace(here.place)) return;
+    if (!placeRoom || here.room === null || !here.settled || isClassPlace(here.place) || isWavePlace(here.place)) return;
     const lower = roomToMoveTo(here.room, roomsOf(peers, here.place, getCrewIds()).crewmateRooms);
     if (lower !== null) enterRoom(lower);
   }

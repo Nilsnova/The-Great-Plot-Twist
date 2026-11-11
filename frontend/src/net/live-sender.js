@@ -27,7 +27,7 @@
 // Used by: src/net/live-places.js, src/online/realtime.js and tests/realtime.test.js.
 import {
   EMOTES, EMOTE_COOLDOWN_MS, EXTRA_EVENTS, EXTRA_GAP_MS, FACINGS, GUARD_EVERY_MS, GUARD_WINDOW_MS, LOAD_LIMIT,
-  PROTOCOL_VERSION, REPLY_DELAY_MAX_MS, REPLY_DELAY_MIN_MS, SLOW_MS, estimatedLoad, isClassPlace, sendGapMs,
+  PROTOCOL_VERSION, REPLY_DELAY_MAX_MS, REPLY_DELAY_MIN_MS, SLOW_MS, WAVE_EVENTS, WAVE_GAP_MS, estimatedLoad, isClassPlace, isWavePlace, sendGapMs,
 } from './live-rules.js';
 
 const round2 = value => Math.round(value * 100) / 100;
@@ -35,6 +35,8 @@ const round2 = value => Math.round(value * 100) / 100;
 export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounced, isSocketOpen, onSlowChange, later, cancel, random, now }) {
   const out = { sample: null, moving: false, stop: false, reply: false, replyTimer: null, emote: null, emoteAt: -Infinity, sentAt: -Infinity, timer: null, seq: Date.now() };
   const lane = { queue: new Map(), sentAt: -Infinity, timer: null }; // the class harbor's extras lane
+  const waves = { queue: [], sentAt: -Infinity, timer: null }; // the wave room's lane (shots, repairs, lamps)
+  const WAVE_QUEUE = 20; // a burst beyond this is dropped: a wave input is only useful while it is fresh
   const heard = [], sent = []; // when we heard or sent a message in the last 10 seconds (the guard)
   let members = new Set(); // the others in our room (the ones we could hear)
   let slowUntil = 0, slowTimer = null, guardTimer = null;
@@ -129,6 +131,31 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
     return true;
   }
 
+  // ---- the wave lane (an island's room or Pirate Point): every message goes, in order, 5 a second ----
+  // The room only needs to be joined: a defender's first shot must not wait for the presence announcement.
+  function waveRoomIsOpen() {
+    const room = getRoom();
+    return Boolean(room?.subscribed) && room.channel?.state === 'joined' && isSocketOpen();
+  }
+  function wave(event, data) {
+    if (!WAVE_EVENTS.includes(event) || !isWavePlace(getPlace()) || !waveRoomIsOpen()) return false;
+    if (waves.queue.length >= WAVE_QUEUE) return false;
+    waves.queue.push([event, data]);
+    pumpWaves();
+    return true;
+  }
+  function pumpWaves() {
+    if (waves.timer || !waves.queue.length) return;
+    if (!waveRoomIsOpen()) { waves.queue.length = 0; return; }
+    const wait = waves.sentAt + WAVE_GAP_MS - now();
+    if (wait > 0) { waves.timer = later(() => { waves.timer = null; pumpWaves(); }, wait); return; }
+    const [event, data] = waves.queue.shift();
+    out.seq += 1;
+    broadcast(event, { v: PROTOCOL_VERSION, id: playerId, seq: out.seq, data });
+    waves.sentAt = now();
+    if (waves.queue.length) waves.timer = later(() => { waves.timer = null; pumpWaves(); }, WAVE_GAP_MS);
+  }
+
   // ---- the extras lane (class harbor only) ----
   function extra(event, data) {
     if (!EXTRA_EVENTS.includes(event) || !isClassPlace(getPlace()) || !roomIsOpen() || currentGap() === null) return false;
@@ -181,6 +208,9 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
     cancel(lane.timer);
     lane.timer = null;
     lane.queue.clear();
+    cancel(waves.timer);
+    waves.timer = null;
+    waves.queue.length = 0;
     out.timer = null;
     out.replyTimer = null;
     out.reply = false;
@@ -223,5 +253,5 @@ export function createSender({ playerId, getRoom, getOnline, getPlace, isAnnounc
     heard.push(now());
   }
 
-  return { update, emote, extra, joined, noteMembers, pump, reset, hear, turnOnSlow, isSlow };
+  return { update, emote, extra, wave, joined, noteMembers, pump, reset, hear, turnOnSlow, isSlow };
 }

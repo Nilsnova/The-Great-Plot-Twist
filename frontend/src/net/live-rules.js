@@ -64,6 +64,15 @@ export const CLASS_HARBOR_ROOM = 1;
 export const CLASS_ROOM_SIZE = 40; // other captains in the class room, all drawn
 export const CLASS_TRACK_JITTER_MS = 4000;
 export const EXTRA_EVENTS = ['lamp', 'duel'];
+// The wave rooms (BUILD-PLAN 3.6): an island's room isle_<code in lowercase> and Pirate Point
+// (pirate_point). Everyone defending one island, or Pirate Point, shares room 1 (up to 40 others, all
+// drawn, like the class harbor), so the wave's broadcasts reach every defender. Only these broadcast
+// events pass, each checked field by field (readWaveMessage); a malformed one is dropped.
+export const PIRATE_POINT_PLACE = 'pirate_point';
+export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp'];
+export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second)
+export const MIN_WAVE_GAP_MS = 150; // and accept one per captain and kind this often
+const ISLAND_ROOM_PLACE = /^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}$/;
 export const EXTRA_GAP_MS = 1000; // we send at most one extra this often
 export const MIN_EXTRA_GAP_MS = 800; // and accept one per captain and kind this often
 export const MAX_EXTRA_DATA_BYTES = 512;
@@ -93,8 +102,11 @@ const PRESENCE_RATE_WAIT_MS = 30000; // the server said something about presence
 // --- the class harbor ---
 
 export const isClassPlace = place => place === CLASS_HARBOR_PLACE;
+export const isWavePlace = place => place === PIRATE_POINT_PLACE || (typeof place === 'string' && ISLAND_ROOM_PLACE.test(place));
+// Places whose one shared room 1 holds a whole class (the class harbor, Pirate Point, an island's defenders).
+const isSharedPlace = place => isClassPlace(place) || isWavePlace(place);
 // The most other captains drawn in a room of this place.
-export const shownLimit = place => (isClassPlace(place) ? CLASS_ROOM_SIZE : MAX_SHOWN);
+export const shownLimit = place => (isSharedPlace(place) ? CLASS_ROOM_SIZE : MAX_SHOWN);
 export const startDelayMs = (classHarbor, random = Math.random) => (classHarbor === true ? 0 : Math.floor(random() * START_DELAY_MS));
 export const trackJitterMs = (classHarbor, random = Math.random) => random() * (classHarbor === true ? CLASS_TRACK_JITTER_MS : TRACK_JITTER_MS);
 
@@ -188,6 +200,7 @@ export function roomsOf(peers, place, crewIds) {
 // null only if all 99 rooms are full.
 // The class harbor (place class_harbor) holds 40 others in room 1 before it opens room 2.
 export function chooseRoom({ roomCounts = {}, crewmateRooms = [], online = 1, place = null } = {}) {
+  if (isWavePlace(place)) return 1; // the wave room: every defender in room 1
   if (crewmateRooms.length > 0 && !isClassPlace(place)) return Math.min(...crewmateRooms);
   const limit = isClassPlace(place) ? CLASS_ROOM_SIZE : roomLimit(online);
   for (let room = 1; room <= MAX_ROOM_NUMBER; room += 1) {
@@ -288,6 +301,35 @@ export function readExtra(event, payload) {
   if (!isPlayerId(payload.id) || !isSequence(payload.seq)) return null;
   if (!isRecord(payload.data) || jsonBytes(payload.data) > MAX_EXTRA_DATA_BYTES) return null;
   return { id: payload.id, event, seq: payload.seq, data: payload.data };
+}
+
+// The topic of a wave room: live:place:isle_k7q2m:1 or live:place:pirate_point:1. null otherwise.
+export function waveTopic(place) {
+  return isWavePlace(place) ? `live:place:${place}:1` : null;
+}
+
+// A wave message, {v, id, seq, data}: the sender's player id, its sequence number and the data of one of
+// WAVE_EVENTS with exactly its fields (src/pirates/sync.js and pirate-point.js write them). null if not valid.
+const WAVE_ID = /^[A-Za-z0-9_-]{1,64}$/, WAVE_ITEM = /^[a-z0-9_-]{1,32}$/i, WAVE_BY = /^[A-Za-z0-9_.:-]{1,64}$/;
+const isWaveTime = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 900;
+const isLampAge = value => value === null || (Number.isInteger(value) && value >= 0 && value <= 3600000);
+const hasKeys = (data, keys) => Object.keys(data).length === keys.length && keys.every(key => Object.hasOwn(data, key));
+const WAVE_DATA = {
+  wave_start: data => hasKeys(data, ['waveId', 'seed', 'startsAt']) && Number.isSafeInteger(data.seed) && data.seed >= 0
+    && typeof data.startsAt === 'string' && data.startsAt.length <= 40 && Number.isFinite(Date.parse(data.startsAt)),
+  cannon_shot: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'cannonId', 'targetId']) && WAVE_ITEM.test(String(data.cannonId)) && WAVE_ITEM.test(String(data.targetId)),
+  wall_repair: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'wallId']) && WAVE_ITEM.test(String(data.wallId)),
+  lamps_lit: data => hasKeys(data, ['by', 'seq', 't', 'waveId']),
+  lamp: data => hasKeys(data, ['v', 'lamps', 'relit', 'started', 'waveId']) && data.v === 1 && Array.isArray(data.lamps)
+    && data.lamps.length === 3 && data.lamps.every(isLampAge) && isLampAge(data.relit) && isLampAge(data.started),
+};
+export function readWaveMessage(event, payload) {
+  if (!WAVE_EVENTS.includes(event) || !isRecord(payload) || payload.v !== PROTOCOL_VERSION) return null;
+  if (!isPlayerId(payload.id) || !isSequence(payload.seq)) return null;
+  const data = payload.data;
+  if (!isRecord(data) || jsonBytes(data) > MAX_EXTRA_DATA_BYTES || typeof data.waveId !== 'string' || !WAVE_ID.test(data.waveId)) return null;
+  if (Object.hasOwn(data, 'by') && (typeof data.by !== 'string' || !WAVE_BY.test(data.by) || !isSequence(data.seq) || !isWaveTime(data.t))) return null;
+  return WAVE_DATA[event](data) ? { id: payload.id, event, seq: payload.seq, data: { ...data } } : null;
 }
 
 // A "system" message of Supabase. Only the two warnings about rates matter: they say how long to
