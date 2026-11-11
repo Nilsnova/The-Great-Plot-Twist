@@ -163,7 +163,7 @@ def test_a_guest_is_paid_the_starting_coins_of_every_new_captain():
     client.get(URL, headers=GUEST)
 
     (granted,) = database.calls("grant_entry_kit")
-    assert granted["p_kit_coins"] == GUEST_COINS == load_island().starting_coins == 100
+    assert granted["p_kit_coins"] == GUEST_COINS == load_island().starting_coins == 200
 
 
 def test_a_ready_guest_is_not_set_up_twice_and_the_admission_is_remembered():

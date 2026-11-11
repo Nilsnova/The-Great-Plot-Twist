@@ -10,7 +10,7 @@ gate lets through, the guest gets, in this order and each step only once:
 
 The default kit is the Stranger: the kit of a player who "took no side", which is what a guest who
 never played Act 1 did. Its start place is saltreach_harbor, the harbor of the class demo. A guest
-is paid GUEST_COINS (100, the starting coins of every new captain in backend/content/islands.json,
+is paid GUEST_COINS (200, the starting coins of every new captain in backend/content/islands.json,
 docs/BUILD-PLAN.md section 3.2) instead of the Stranger's 1600, so a guest starts the island game
 like everyone else; the kit still brings its profile, start place and item. The profile is stored
 with:
@@ -77,7 +77,7 @@ GUEST_KIT = "stranger"
 GUEST_ENDING = "ending_demo"
 GUEST_MOVE_COUNT = 1
 # The coins of a guest: the starting coins of islands.json (a test keeps the two equal).
-GUEST_COINS = 100
+GUEST_COINS = 200
 
 # Cleanup: guests whose account is older than this are deleted.
 GUEST_MAX_AGE = timedelta(hours=24)
