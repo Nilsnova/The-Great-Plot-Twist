@@ -135,9 +135,18 @@ export function createPiratePoint(ctx) {
     }
     return wave;
   }
+  // beforeStart(): Pirate Point's built spots read once more (at most 2.5 s), so every captain's battle
+  // has the towers somebody built a moment ago.
+  async function prepared() {
+    if (!ctx.beforeStart) return;
+    let timer = null;
+    try { await Promise.race([Promise.resolve().then(ctx.beforeStart), new Promise(resolve => { timer = setTimeout(resolve, 2500); })]); }
+    catch { /* The spots as we had them. */ } finally { clearTimeout(timer); }
+  }
   async function join(waveId) {
     if (controller.wave?.info.waveId === waveId) return;
-    try { begin(await api.joinWave({ waveId })); } catch (error) { if (error?.code !== 'wave_over') console.error(error); }
+    try { const info = await api.joinWave({ waveId }); await prepared(); if (!disposed) begin(info); }
+    catch (error) { if (error?.code !== 'wave_over') console.error(error); }
   }
   async function refresh() {
     try { const current = await api.currentWave('pirate_point'); if (current && !disposed) await join(current.waveId); }
@@ -151,6 +160,10 @@ export function createPiratePoint(ctx) {
       if (disposed) return false;
       bell?.ring(world.scene?.userData?.pixelFx, reducedMotion());
       room.send('wave_start', { waveId: info.waveId, seed: info.seed, startsAt: info.startsAt });
+      // Again a little later, for a captain whose room was still joining (a repeat changes nothing).
+      for (const ms of [2000, 6000]) setTimeout(() => { if (!disposed && controller.wave?.info.waveId === info.waveId) room.send('wave_start', { waveId: info.waveId, seed: info.seed, startsAt: info.startsAt }); }, ms);
+      await prepared();
+      if (disposed) return false;
       return !!begin(info);
     } catch (error) {
       if (error?.code === 'wave_running') { await refresh(); return true; }
