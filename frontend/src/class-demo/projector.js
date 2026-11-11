@@ -32,6 +32,8 @@ export function createProjector({container, host, isHost = () => false, rehearsa
   bellButton.hidden = typeof ringBell !== 'function';
   bellButton.addEventListener('click', async () => {
     if (bellButton.disabled) return;
+    // The focus moves to Hide first, so J and Escape keep closing the panel while the bell rests.
+    closeButton.focus({preventScroll: true});
     bellButton.disabled = true;
     try { await ringBell(); } catch { /* The Pirate Point toast says what went wrong. */ }
     setTimeout(() => { bellButton.disabled = false; }, 3000);

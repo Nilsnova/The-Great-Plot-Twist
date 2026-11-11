@@ -1,5 +1,5 @@
-// The integrated first 3 minutes with the fake island server (?islands=fake) and the local fortune desk
-// (?desk=local): title, lore, goal card, your island, a cannon, the bell and its wave, the loot toast,
+// The integrated first 3 minutes with the fake island server (?islands=fake), the local fortune desk
+// (?desk=local) and the local market stall (?market=local): title, lore, goal card, your island, a cannon, the bell and its wave, the loot toast,
 // the sea chart, the Harbor, a stake, back home and the invite card. Checks that the quest strip moves
 // through all five goals in order, and captures each step at 1280x720 and 375x812.
 //   node scripts/capture-integrated.js [output folder] [WIDTHxHEIGHT]   (default captures/integrated, both sizes)
@@ -26,7 +26,7 @@ try {
   const sizes = process.argv[3] ? [process.argv[3].split('x').map(Number)] : [[1280, 720], [375, 812]];
   for (const [width, height] of sizes) {
     await page.setViewportSize({width, height});
-    await page.goto(`${env.url}/?islands=fake&desk=local`);
+    await page.goto(`${env.url}/?islands=fake&desk=local&market=local`);
     await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* fresh device */ } });
     await page.reload();
     await page.locator('.shell-screen[open]').waitFor();
