@@ -82,6 +82,7 @@ describe('the bell when two captains ring at once', () => {
   });
 });
 
+const micro = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
 function wiringHarness({ visiting = null } = {}) {
   const handlers = new Map(), rooms = [], ticks = [], laters = [];
   const on = (type, handler) => { if (!handlers.has(type)) handlers.set(type, new Set()); handlers.get(type).add(handler); return () => handlers.get(type).delete(handler); };
@@ -134,12 +135,27 @@ describe('the island room for every defender', () => {
   it('tries the join again while the bell is busy with our own ring', async () => {
     const h = wiringHarness();
     h.state.own = { code: 'ISLE-K7Q2M', spots: [] }; h.tick(); // the landing's own look for a running wave
-    await Promise.resolve(); await Promise.resolve();
+    await micro();
     h.island.joinRunningWave.mockClear();
     h.island.joinRunningWave.mockResolvedValueOnce({ ok: false, code: 'busy' });
     h.rooms[0].hear('wave_start', { waveId: 'w-2', seed: 1, startsAt: '2026-11-11T10:00:10Z' });
     for (let i = 0; i < 4; i++) await Promise.resolve();
     await h.flush();
+    expect(h.island.joinRunningWave).toHaveBeenCalledTimes(2);
+    h.waves.dispose();
+  });
+  it('asks the server once while a join is in progress, however many wave_start arrive', async () => {
+    const h = wiringHarness();
+    h.state.own = { code: 'ISLE-K7Q2M', spots: [] }; h.tick();
+    await micro();
+    h.island.joinRunningWave.mockClear();
+    let answer; h.island.joinRunningWave.mockImplementation(() => new Promise(resolve => { answer = resolve; }));
+    for (let i = 0; i < 6; i++) h.rooms[0].hear('wave_start', { waveId: 'w-3', seed: 1, startsAt: '2026-11-11T10:00:10Z' });
+    await Promise.resolve(); await Promise.resolve();
+    expect(h.island.joinRunningWave).toHaveBeenCalledTimes(1);
+    answer(null); await micro();
+    h.rooms[0].hear('wave_start', { waveId: 'w-3', seed: 1, startsAt: '2026-11-11T10:00:10Z' });
+    await Promise.resolve(); await Promise.resolve();
     expect(h.island.joinRunningWave).toHaveBeenCalledTimes(2);
     h.waves.dispose();
   });

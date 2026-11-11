@@ -82,11 +82,16 @@ export function wireWaves(ctx) {
   }
   // Join the wave running on this island (a wave_start in the room, or landing while one runs). The bell
   // may be busy with our own ring for a moment: try again a few times.
-  function joinRunning(waveId = null, tries = JOIN_TRIES) {
-    if (disposed || (waveId && pirates.island.wave?.info.waveId === waveId)) return;
+  // One join attempt at a time: the repeated wave_start of every defender (and the retries) would
+  // otherwise ask the server again and again (wave reads have a budget of 30 a minute).
+  let joining = false;
+  function joinRunning(waveId = null, tries = JOIN_TRIES, retry = false) {
+    if (disposed || (waveId && pirates.island.wave?.info.waveId === waveId) || (joining && !retry)) return;
+    joining = true;
     Promise.resolve().then(() => island.joinRunningWave()).then(answer => {
-      if (answer?.code === 'busy' && tries > 1) after(() => joinRunning(waveId, tries - 1), JOIN_RETRY_MS);
-    }).catch(() => {});
+      if (answer?.code === 'busy' && tries > 1 && !disposed) { after(() => joinRunning(waveId, tries - 1, true), JOIN_RETRY_MS); return; }
+      joining = false;
+    }, () => { joining = false; });
   }
   // Every second: the room of the island we stand on, and once per landing a wave already running there.
   function tick() {
