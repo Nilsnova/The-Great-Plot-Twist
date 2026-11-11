@@ -55,7 +55,9 @@ describe('the bell and the wave', () => {
       expect(test.toasts.at(-1)).toBe('🪙 +15 loot · you have 🪙 115');
     } finally { stop(); }
   });
-  it('retries a finish that came too early after Retry-After', async () => {
+  // The wave renderer (src/pirates/controller.js) gets the refusal back and tries again itself after
+  // Retry-After; the flow does not retry behind its back, so the loot toast comes once.
+  it('hands a finish that came too early back to the renderer, which tries again after Retry-After', async () => {
     const stop = registerWaveRenderer();
     try {
       const test = setup(); flow = test.flow;
@@ -63,8 +65,18 @@ describe('the bell and the wave', () => {
       const early = await finishWave({waveId: answer.data.waveId, survived: true});
       expect(early).toMatchObject({ok: false, code: 'wave_too_early', retryAfterSeconds: 25});
       await vi.advanceTimersByTimeAsync(25000);
-      expect(test.events.some(event => event.type === WAVE_FINISHED)).toBe(true);
+      expect(test.events.some(event => event.type === WAVE_FINISHED)).toBe(false);
+      expect(await finishWave({waveId: answer.data.waveId, survived: true})).toMatchObject({ok: true});
+      expect(test.events.filter(event => event.type === WAVE_FINISHED)).toHaveLength(1);
+      expect(test.toasts.filter(text => /loot/.test(text))).toHaveLength(1);
     } finally { stop(); }
+  });
+  it('the placeholder finish still retries by itself after Retry-After', async () => {
+    const test = setup(); flow = test.flow;
+    const answer = await flow.ring();
+    expect(await flow.finish({waveId: answer.data.waveId, survived: true})).toMatchObject({code: 'wave_too_early'});
+    await vi.advanceTimersByTimeAsync(25000);
+    expect(test.events.some(event => event.type === WAVE_FINISHED)).toBe(true);
   });
   it('no placeholder outside the fake or ?wavedebug=1', async () => {
     const test = setup({placeholder: false}); flow = test.flow;

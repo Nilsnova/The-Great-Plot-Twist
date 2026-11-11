@@ -69,7 +69,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on});
   let mapTouch=null;
-  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null;
+  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null,waves=null,wavesLoad=null;
   let harbor=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
   const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active||chart?.open||sailing.active||stopPlots?.active);
   const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active);
@@ -107,7 +107,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
-    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??classDemo?.presencePlace(place)??place});
+    isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??(place==='lighthouse_isle'&&island?'pirate_point':null)??classDemo?.presencePlace(place)??place});
   // The class goals (class demo) show in the quest strip except on your island, where the first-3-minutes
   // goals of src/ui/first-quests.js show (BUILD-PLAN 3.6). A class-code player keeps the class goals elsewhere.
   let classQuests=null;
@@ -190,9 +190,25 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:value=>{hud.setCoinSource('island');hud.setCoins(value);}});
+      void ensureWaves();
       return island;
     }).catch(error=>{console.error(error);islandLoad=null;return null;});
     await islandLoad;return island?islandsMode:'off';
+  }
+  // The pirate waves (src/pirates/game-wiring.js): with the island game, or for the ?demo=1 rehearsal (Pirate
+  // Point on the in-memory fake, no server). Own chunk, after Play; ?pirates=demo keeps lane P's harness.
+  function ensureWaves(){
+    const query=new URLSearchParams(location.search),rehearsal=query.get('demo')==='1';
+    if(disposed||query.get('pirates')==='demo'||(!island&&!rehearsal))return null;
+    wavesLoad??=Promise.all([import('./pirates/game-wiring.js'),import('./net/wave-rooms.js'),!island||islandsMode==='fake'?import('./pirates/room.js'):null,
+      island?null:import('./pirates/fake-api.js')]).then(([module,rooms,local,fake])=>{
+      if(disposed)return null;
+      waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,
+        quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
+        rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
+      return waves;
+    }).catch(error=>{console.error(error);wavesLoad=null;return null;});
+    return wavesLoad;
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
   canvas.setAttribute('aria-label','Island exploration. Tap a clear path or drag the movement stick to walk. Arrow keys and WASD also move.');
@@ -244,9 +260,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   });
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { get island(){return island;}, scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;} };
+    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;} };
   function dispose() {
-    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
+    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
@@ -303,5 +319,6 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       // Lane P: ?pirates=demo plays waves with the fake API (src/pirates/dev-harness.js), its own lazy chunk.
       if(new URLSearchParams(location.search).get('pirates')==='demo')pirates??=import('./pirates/dev-harness.js').then(m=>disposed?null:m.startPirateDemo({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,travel})).catch(error=>{console.error(error);return null;});
       if(continuation?.demo!==false||classDemoQuery())void loadClassDemo();
+      void ensureWaves();
     }};
 }

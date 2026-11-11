@@ -23,7 +23,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const tick = () => {
       if (current?.wave.waveId !== wave.waveId) return;
       const left = Math.max(0, Math.ceil((current.startAt - now()) / 1000));
-      banner(countdownText(left, wave.wave));
+      // With the wave on screen (a registered renderer) its own HUD counts down; the banner stays away.
+      banner(hasRenderer() ? null : countdownText(left, wave.wave));
       changed();
       if (left > 0) later(tick, 1000);
       else later(() => { if (current?.wave.waveId === wave.waveId) banner(null); }, HERE_SECONDS * 1000);
@@ -80,11 +81,13 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     changed();
     return answer;
   }
-  async function finish({waveId, survived, shipsSunk = 0} = {}) {
+  // retry: the placeholder tries again itself after 409 wave_too_early; the wave renderer (finishWave in
+  // wave-hooks.js) gets the refusal back and decides when to try again.
+  async function finish({waveId, survived, shipsSunk = 0} = {}, {retry = true} = {}) {
     const answer = await api.finishWave({waveId, survived, shipsSunk});
     if (disposed) return answer;
     if (!answer.ok && answer.code === 'wave_too_early') {
-      later(() => { void finish({waveId, survived, shipsSunk}); }, (answer.retryAfterSeconds ?? 2) * 1000);
+      if (retry) later(() => { void finish({waveId, survived, shipsSunk}); }, (answer.retryAfterSeconds ?? 2) * 1000);
       return answer;
     }
     if (!answer.ok) { notify(answer.message, 'error'); return answer; }
@@ -95,7 +98,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     changed();
     return answer;
   }
-  const stopFinisher = setWaveFinisher(finish);
+  const stopFinisher = setWaveFinisher(args => finish(args, {retry: false}));
   return {
     ring, join, look, finish,
     get busy() { return busy; },

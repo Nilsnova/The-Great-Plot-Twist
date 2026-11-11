@@ -29,7 +29,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
   onCoins = () => {}, now, setTimer, clearTimer} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
-  let world = null, cutscene = null, openSpot = null, loadTicket = 0;
+  let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   // The player's balance is the island's `coins` (GET /api/island and every answer after it); the HUD shows it.
   const tellCoins = coins => { if (!disposed && Number.isSafeInteger(coins)) { try { onCoins(coins); } catch { /* The HUD cannot stop the island. */ } } };
   const setOwn = next => { own = next; tellCoins(next?.coins); };
@@ -59,7 +59,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (visiting && event.to !== ISLAND_PLACE) endVisit();
   });
 
-  function applyWorld() { world?.apply({spots: target()?.spots ?? [], visitor: !!visiting}); }
+  function applyWorld() { world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle}); }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
 
   async function load() {
@@ -202,6 +202,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     load, playArrival, visit, sailHome, pick, build,
     openInvite,
+    // The wave on screen (src/pirates/, wired in game.js): the built defenses it fights with, the client
+    // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
+    defenses: () => defenses(target()?.spots ?? []),
+    get api() { return api; },
+    roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
+    async joinRunningWave() {
+      if (disposed || !target()) return null;
+      await flow.look(where());
+      return flow.current && !flow.current.joined ? flow.join(where()) : null;
+    },
+    setBattle(value) { battle = value === true; applyWorld(); },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),
     chartLabel: id => CHART_NAMES[id],
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },

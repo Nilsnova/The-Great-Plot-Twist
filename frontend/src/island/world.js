@@ -114,16 +114,18 @@ export function decorateIsland(place, ctx = {}) {
   const bell = sprite(root, textures.bell, SIZES.bell, BELL.x, BELL.z, 'island-bell');
   if (ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false}, disposed = false;
 
-  function apply({spots = [], visitor = false} = {}) {
+  // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
+  // their damage, so the island's own wall and cannon sprites step aside until it ends.
+  function apply({spots = [], visitor = false, battle = false} = {}) {
     if (disposed) return;
-    state = {spots, visitor};
+    state = {spots, visitor, battle};
     const known = spots.length > 0;
     for (const spot of SPOTS) {
       const built = spots.find(item => item.id === spot.id)?.built === true;
-      buildings.get(spot.id).visible = built;
-      markers.get(spot.id).visible = !built && !visitor && known;
+      buildings.get(spot.id).visible = built && !(battle && (spot.kind === 'wall' || spot.kind === 'cannon'));
+      markers.get(spot.id).visible = !built && !visitor && known && !battle;
     }
     place.zones = islandZones({visitor});
     place.colliders.splice(0, place.colliders.length, ...baseColliders,

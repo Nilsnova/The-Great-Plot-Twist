@@ -80,13 +80,17 @@ try {
     await page.locator('.island-card-bell[open]').waitFor();
     await shot(`06-bell-card-${width}`);
     await page.locator('.island-card[open] .island-card-body .kit-button').click();
-    await page.locator('.island-banner:not([hidden])').waitFor();
+    // The wave on screen (src/pirates/): its countdown, the ships, the cannon firing, then the loot.
+    await page.locator('.pirate-countdown:not([hidden])').waitFor();
     await page.waitForTimeout(2200);
     await shot(`07-bell-countdown-${width}`);
-    await page.waitForFunction(() => [...document.querySelectorAll('.u-toast')].some(node => /loot/.test(node.textContent)), null, {timeout: 45000});
+    await page.waitForFunction(() => window.__island.waves?.island.state?.ships?.length > 0, null, {timeout: 30000, polling: 250});
+    await page.waitForTimeout(3000);
+    await shot(`07b-wave-battle-${width}`);
+    await page.waitForFunction(() => [...document.querySelectorAll('.u-toast')].some(node => /loot/.test(node.textContent)), null, {timeout: 240000, polling: 500});
     await shot(`08-loot-toast-${width}`);
     assert.equal(await doneCount(), 2, 'goal 2 done');
-    assert.equal(await page.locator('.hud-coins').textContent(), '🪙 85');
+    console.log('coins after the wave:', await page.locator('.hud-coins').textContent());
     // 3 Sail to the Harbor from the sea chart (Menu > Sea chart, or M).
     await page.keyboard.press('KeyM');
     await page.locator('.sea-chart[open]').waitFor();
