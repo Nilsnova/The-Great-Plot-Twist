@@ -46,8 +46,11 @@ try {
         await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
         await page.waitForFunction(() => document.querySelector('dialog.cutscene[open]') || localStorage.getItem('plot_twist_island_arrival_v1') === '1',
           null, {timeout: 30000, polling: 100}).catch(() => {});
-        // A slow headless frame can let the whole cutscene pass between two polls; its stored flag still says it played.
-        if (!await page.locator('dialog.cutscene[open]').count() && await arrivalKey() === '1') seen.push('island_arrival');
+        // The arrival plays (and stores its flag) right after the card; skip it if it is still on screen.
+        if (await arrivalKey() === '1') {
+          seen.push('island_arrival');
+          await page.getByRole('button', {name: 'Skip', exact: true}).click({timeout: 2000}).catch(() => {});
+        }
       } else if (await page.locator('dialog.cutscene[open]').count()) {
         seen.push(await page.evaluate(() => document.querySelector('dialog.cutscene[open]')?.dataset.cutscene ?? 'cutscene'));
         await page.getByRole('button', {name: 'Skip', exact: true}).click();
