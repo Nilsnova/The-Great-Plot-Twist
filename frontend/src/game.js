@@ -69,7 +69,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const controller = createController(character, input, []), view = createCamera(input);
   const isletState=createIsletState({on});
   let mapTouch=null;
-  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null;
+  let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null;
   let harbor=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
   const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active||chart?.open||sailing.active||stopPlots?.active);
   const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||desk?.active);
@@ -246,7 +246,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   if (import.meta.env.DEV) window.__island = { get island(){return island;}, scene, renderer: graphics.renderer,
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;} };
   function dispose() {
-    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;island?.dispose();island=null;
+    if(disposed)return;disposed=true;container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();desk?.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
@@ -300,6 +300,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(destination==='home_islet'&&continuation?.arrival!=='later')await island?.playArrival();
       if(disposed||token!==beginRequest||shell.blocked)return;
       hud.start();
+      // Lane P: ?pirates=demo plays waves with the fake API (src/pirates/dev-harness.js), its own lazy chunk.
+      if(new URLSearchParams(location.search).get('pirates')==='demo')pirates??=import('./pirates/dev-harness.js').then(m=>disposed?null:m.startPirateDemo({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,travel})).catch(error=>{console.error(error);return null;});
       if(continuation?.demo!==false||classDemoQuery())void loadClassDemo();
     }};
 }

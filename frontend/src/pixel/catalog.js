@@ -1,6 +1,7 @@
 // Logical sprite geometry remains 16 pixels/world unit; detailed sources add texels.
 import { storyDimensions } from './story-catalog.js';
 import { festivalDimensions } from './festival-catalog.js';
+import { pirateDimensions } from './pirate-catalog.js';
 export const PIXELS_PER_UNIT = 16;
 export const DETAIL_DENSITY = 4;
 const dimensions = {
@@ -38,6 +39,7 @@ Object.assign(staged, {
 });
 Object.assign(staged, storyDimensions);
 Object.assign(staged, festivalDimensions);
+Object.assign(staged, pirateDimensions);
 Object.assign(dimensions, staged);
 export const pixelArt = Object.entries(dimensions).map(([id, [width, height, anchor]]) => ({
   id, file: `${id}.png`, width, height, visibility: id.startsWith('character-masked-captain') ? 'finale' : 'public', usage: Object.hasOwn(staged, id) ? 'library' : 'island', size: [width / 16, height / 16, anchor / height],
