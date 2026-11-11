@@ -400,6 +400,26 @@ Purpose: Aimed bearings, lock deadlines and earned finale completion. Readers: S
 | `parted` | Whether this lock contributed when the fog parted. |
 | `post_seat_no` | Seat holding the light when aimed; distinct post seats are required. |
 
+### public.market_calls
+
+Purpose: Up-or-down market calls at the Harbor market stall: the stake, the opening price and the outcome, so each call is charged and paid once. Readers: Server only (no browser policy); the player sees their own calls through `GET /api/market/calls`. Lifetime: Removed with the player account.
+
+| Column | What it holds and why |
+|---|---|
+| `action_uid` | Retry identity of the click, scoped to the player. |
+| `asset` | The market company id (Bitcoin, Ether, Gold, Apple or NVIDIA). |
+| `direction` | up or down. |
+| `id` | The call id; the ledger ref is `call:<id>`. |
+| `open_price` | The live price when the call was opened. |
+| `opened_at` | Database time of the opening. |
+| `outcome` | won, lost or refunded once decided. |
+| `payout` | Play coins paid back. |
+| `player_id` | The player's UUID. |
+| `settle_at` | When the call is decided (1 hour after the opening). |
+| `settle_price` | The price the call was decided with. |
+| `settled_at` | When it was decided. |
+| `stake` | Play coins staked: 5, 10 or 25. |
+
 ### public.exchange_positions
 
 Purpose: Leveraged long/short positions and open/close values, fees and retry references. Readers: Owner through direct RLS. Lifetime: Open and closed rows remain until the owner deletes their account.
