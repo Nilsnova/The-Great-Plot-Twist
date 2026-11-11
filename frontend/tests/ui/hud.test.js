@@ -199,3 +199,35 @@ it('keeps the three groups apart and inside the screen at 320, 375 and 1280 px',
     }
   });
 });
+
+it('keeps the break between waves clear of the loot toasts and the victory caption at 375 and 1280 px',async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    await page.evaluate(async()=>{await window.g20Import('/src/ui/toasts.css');await window.g20Import('/src/ui/shell.css');await window.g20Import('/src/pirates/pirates.css');});
+    for(const [width,height] of [[375,812],[1280,720]]){
+      await page.setViewportSize({width,height});
+      const result=await page.evaluate(async()=>{
+        const {createWaveHud}=await window.g20Import('/src/pirates/hud.js');
+        const {showToast}=await window.g20Import('/src/ui/toasts.js');
+        const box=document.createElement('div');box.className='game-layer';document.querySelector('#game').append(box);
+        const hud=createWaveHud({container:box});
+        hud.pause({title:'Wave 1 won!',line:'3 ships sunk · 🪙 +15',seconds:14,auto:false,ready:true});
+        showToast('🪙 +15 loot · you have 🪙 325');showToast('Captain upgrades unlocked! Open Menu › Captain to make your musket stronger.');
+        const caption=document.createElement('div');caption.className='sound-caption';caption.textContent='Victory: the island holds';document.body.append(caption);
+        await new Promise(resolve=>setTimeout(resolve,300));
+        const rect=node=>node.getBoundingClientRect();
+        const overlap=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+        const brk=rect(box.querySelector('.pirate-break'));
+        const others=[...document.querySelectorAll('.u-toast'),caption].filter(node=>node.getClientRects().length);
+        const out={covered:others.filter(node=>overlap(brk,rect(node))).map(node=>node.className),toasts:others.length-1,
+          inside:brk.top>=0&&brk.bottom<=innerHeight,checkbox:overlap(rect(box.querySelector('.pirate-auto')),brk)};
+        hud.pause(null);const toastsBack=rect(document.querySelector('.u-toast')).top;
+        out.cleared=document.documentElement.style.getPropertyValue('--pirate-break-bottom')==='';
+        hud.dispose();box.remove();caption.remove();document.querySelectorAll('.u-toast').forEach(node=>node.remove());
+        out.toastsBack=toastsBack;return out;
+      });
+      expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({covered:[],toasts:2,inside:true,checkbox:true,cleared:true});
+      if(width<=760)expect(result.toastsBack).toBeLessThan(200); // the toasts go back under the goals when the break ends
+    }
+  });
+});
