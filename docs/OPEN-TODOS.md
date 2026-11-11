@@ -10,24 +10,31 @@
 >
 > Last updated: Tue 10 Nov 2026.
 
-## 1. Every member, today (30 minutes)
+## 1. If you jump in now (30 minutes to start)
 
-- [ ] Accept the GitHub invite (write access to `Nilsnova/The-Great-Plot-Twist`), set your own git name and email, clone `main`, and run the checks once ([ENGINEERING.md](ENGINEERING.md#3-commands)).
-- [ ] Pick **one lane** in [BUILD-PLAN.md](BUILD-PLAN.md#4-lanes-and-tasks): **P** pirates, **H** Harbor and coins, **U** look and feel. Lane 0 (server, database, release) is the project owner's.
-- [ ] Give your coding agent the prompt in [contribute/AGENT-PROMPT.md](contribute/AGENT-PROMPT.md) and tell it your lane.
-- [ ] Open your first **draft pull request** today from your own account, titled with the task ID (for example `[P1] Wave simulation`).
+The game is built and live; nobody waits for anyone. You extend it.
 
-## 2. Lane tasks (by Thu 19 Nov; details in BUILD-PLAN.md)
+- [ ] Accept the GitHub invite (write access), set your own git name and email, clone `main`, run the checks once ([ENGINEERING.md](ENGINEERING.md#3-commands)).
+- [ ] Read [PITCH.md](PITCH.md) and [TOWER-DEFENSE.md](TOWER-DEFENSE.md) (how the game works now) and play it once on the live site.
+- [ ] Give your coding agent the prompt in [contribute/AGENT-PROMPT.md](contribute/AGENT-PROMPT.md), pick ONE task below, and open a draft pull request from your own account, titled with the task ID.
+- [ ] Every member needs at least one merged pull request of their own before Sun 22 Nov (course rule: every member contributes code).
 
-Start with the ★★★ tasks; each member merges at least two pull requests of their own.
+## 2. Open tasks you can pick (small, independent; updated Wed 11 Nov, evening)
 
-| Lane | ★★★ first | Then |
-|---|---|---|
-| P, Pirates | P1 wave simulation + fake API · P2 pirate pixel art · P3 waves on screen | P4 man a cannon / repair · P5 sounds |
-| H, Harbor and coins | H1 `formatCoins()` 🪙 everywhere · H2 market stall "up or down?" · H3 match board (the fortune teller was removed on 11 Nov at the owner's request, D035) | H4 weather board · H5 stalls in the world |
-| U, Look and feel | U1 new panel style · U2 HUD with three things · U3 first 3 minutes · U4 play with friends | U5 toasts and feedback |
+| ID | Task | Where | Size |
+|---|---|---|---|
+| T1 | **A new tower**: e.g. a harpoon tower (slows ships) or a fire tower (damage over time): stats in the simulation, a sprite, a build-card line, tests | `frontend/src/pirates/sim.js`, `frontend/scripts/pixel_art/pirates.py`, `docs/TOWER-DEFENSE.md` | M |
+| T2 | **A new pirate ship type** (fast raider or a ship that targets towers): sprite, stats, appears from wave N, tests | same as T1 | M |
+| T3 | **Balance pass**: play waves 1–15 with friends, write down what felt too easy or too hard, tune the numbers in the simulation's CONFIG, keep the balance tests green | `frontend/src/pirates/sim.js` | S–M |
+| T4 | **Sounds**: better cannon, mortar, musket, warship horn and victory sounds with the procedural audio | `frontend/src/audio/pirates.js` | S |
+| T5 | **Island decoration**: flags that show your best wave, a statue at wave 25, trees that grow with houses | `frontend/src/island/`, art | M |
+| T6 | **Harbor idea**: one more simple stall on real data (e.g. "Will it rain in Lisbon tomorrow?" on the weather API), same card style | `frontend/src/harbor/`, backend weather | M |
+| T7 | **Leaderboard**: best waves of all islands this week (read-only route + a small card) | backend `island/`, `frontend/src/island/` | M |
+| T8 | **Walkthrough page for the part you touched** (what, where, why, limits, how it could change) | `docs/WALKTHROUGH.md` | S |
+| T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click) | `backend/server/tests/` | S |
+| T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
 
-Work against the fakes in BUILD-PLAN section 3 until the real API is wired in (planned Sat 14 – Sun 15 Nov). The real API's error shape is `{"error": {"code", "message"}}`. Lanes U and H: start from [UX-AUDIT.md](UX-AUDIT.md).
+Being built right now by the project owner with Claude (do not pick): tower upgrades and the mortar, crew (gunner, carpenter, lookout), the fighting captain, unlocks by wave, boss waves up to 100, building on Pirate Point, play-with-a-friend for up to 4 players, more detailed art, more football leagues. Merge `main` again after it lands (expected tonight).
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
