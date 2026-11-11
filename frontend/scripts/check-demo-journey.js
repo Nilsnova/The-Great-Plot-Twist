@@ -48,10 +48,14 @@ try{
   await frontDoor(env.url+'/');
   await page.waitForTimeout(800);await shot('02-harbor');
   check(await page.locator('.quest-strip').isVisible(),'The quest strip is visible in the harbor');
-  check((await page.locator('.quest-item').allTextContents()).join('|').includes("Open the Keeper's Lock"),'The strip lists wave, duel and the lock');
+  // Lane U3: before joining the class harbor the strip shows the first-3-minutes goals; the class goals
+  // (wave, duel, the lock) take over once the player joins (BUILD-PLAN 3.6).
+  check((await page.locator('.quest-item').allTextContents()).join('|').includes('Build a cannon'),'Before joining, the strip shows the first-3-minutes goals');
   check(await page.evaluate(()=>document.querySelector('#game').classList.contains('demo-path')&&!document.querySelector('.journal-toggle,.case-toolbar')),'The harbor shows the demo layer and no Journal or case tools');
   await page.getByRole('button',{name:'Menu',exact:true}).click();await page.getByRole('button',{name:'Join the class harbor'}).click();
   check(await page.evaluate(()=>window.__island.classDemo.joined&&sessionStorage.getItem('plot_twist_join_v1')==='harbor'),'Join the class harbor remembers the class harbor');
+  await page.waitForFunction(()=>[...document.querySelectorAll('.quest-item')].some(item=>item.textContent.includes("Open the Keeper's Lock")));
+  check((await page.locator('.quest-item').allTextContents()).join('|').includes("Open the Keeper's Lock"),'The strip lists wave, duel and the lock');
   check(await page.evaluate(()=>window.__island.classDemo.presencePlace('saltreach_harbor')==='class_harbor'),'A joined player announces the class harbor place');
   await page.locator('.demo-splash').waitFor();await shot('03-class-harbor-splash');
   await page.locator('.quest-item').nth(2).click();
