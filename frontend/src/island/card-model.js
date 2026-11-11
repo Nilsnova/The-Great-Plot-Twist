@@ -1,27 +1,118 @@
-// What the island's small cards say, as pure functions (no DOM): the build card of a spot, the harbor
-// bell, the invite card and the loot toast. The server decides; these only describe its last answer.
-import {KINDS} from './spots.js';
+// What the island's small cards say, as pure functions (no DOM): the build and upgrade card of a spot,
+// the crew and captain panels, the harbor bell, Play with a friend and the loot toast. The server decides; these only describe its last answer.
+import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, priceFor, statLine, captainLine, unlockWave} from './td-rules.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
 
-// spot: the server's {id, kind, built, cost} or null while the island is loading.
-export function buildCardModel({spotId, kind, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = ''} = {}) {
-  const info = KINDS[spot?.kind ?? kind] ?? {name: 'Build spot', purpose: '', cost: null};
-  const cost = spot?.cost ?? info.cost;
-  const model = {spotId, title: info.name, purpose: info.purpose, cost: coinText(cost),
-    coins: visitor || coins === null ? '' : `You have ${coinText(coins)}`, button: 'Build', disabled: true,
-    reason: '', message, built: spot?.built === true};
-  if (visitor) model.reason = spot?.built ? `${ownerName || 'The owner'} built this ${info.name.toLowerCase()}.`
-    : `Only ${ownerName || 'the owner'} can build here.`;
-  else if (!spot) model.reason = message ? '' : 'Your island is still loading.';
-  else if (spot.built) model.reason = `Your ${info.name.toLowerCase()} stands here.`;
-  else if (busy) { model.button = 'Building…'; }
-  else if (coins === null) model.reason = 'Your coins are still loading.';
-  else if (coins < cost) model.reason = `You need ${coinText(cost - coins)} more.`;
+// The build card of one spot (docs/TOWER-DEFENSE.md §2, §5, §9). spot: the server's {id, kind, built,
+// level, cost} or null while loading; slot: wall, tower, watchtower or house (spots.js); unlocks:
+// readUnlocks(island) (td-rules.js), or null on Pirate Point, where nothing is locked.
+//   mode 'choose'   an empty tower spot: choices [{kind, name, line, price, disabled, reason}]
+//   mode 'build'    an empty spot of one kind: button "Build · 🪙 10"
+//   mode 'upgrade'  a building that can go up a level: upgrade {label "Level 2 · 🪙 60", stats}
+//   mode 'info'     nothing to do here (a visitor, at the highest level, or the next level is locked)
+// One primary button at most (the build or the upgrade); `soon` is the small "Coming soon" line.
+export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
+  busy = false, message = '', unlocks = null, prices = null, point = false} = {}) {
+  const place = slot ?? (kind === 'cannon' || kind === 'mortar' ? 'tower' : kind ?? 'wall');
+  const built = spot?.built === true, standing = built ? spot.kind : null;
+  const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
+  const shown = standing ?? (place === 'tower' ? null : SLOT_KINDS[place]?.[0] ?? kind);
+  const info = BUILDINGS[shown] ?? null;
+  const allowed = k => (unlocks ? unlocks.levels[k] ?? 0 : maxLevel(k));
+  const enough = price => coins !== null && Number.isSafeInteger(price) && coins >= price;
+  const short = price => `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+  const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? 'Build a cannon or a mortar here.',
+    mode: 'info', built, kind: shown, level, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
+    button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy,
+    coins: visitor || coins === null ? '' : `You have ${coinText(coins)}`,
+    owner: point ? 'Paid by you · belongs to Pirate Point' : '', hire: false};
+  if (shown && level > 0) {
+    model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
+    model.stats = statLine(shown, level);
+  }
+  if (visitor) {
+    model.reason = built ? `${ownerName || 'The owner'} built this ${info.name.toLowerCase()}.` : `Only ${ownerName || 'the owner'} can build here.`;
+    return model;
+  }
+  if (!spot) { model.reason = message ? '' : 'Your island is still loading.'; return model; }
+  model.hire = !point && built && (place === 'tower' || place === 'wall');
+  if (!built && place === 'tower') {
+    model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';
+    for (const choice of SLOT_KINDS.tower) {
+      const price = priceFor(choice, 0, prices);
+      if (allowed(choice) < 1) { model.soon = `Coming soon: ${BUILDINGS[choice].name} · after wave ${unlockWave({kind: choice}) ?? '?'}`; continue; }
+      model.choices.push({kind: choice, name: BUILDINGS[choice].name, line: BUILDINGS[choice].line, price: coinText(price),
+        disabled: busy || !enough(price), reason: coins === null ? 'Your coins are still loading.' : enough(price) ? '' : short(price),
+        busy: busy === choice});
+    }
+    return model;
+  }
+  if (!built) {
+    const price = priceFor(shown, 0, prices);
+    model.mode = 'build'; model.cost = coinText(price);
+    model.button = busy ? 'Building…' : `Build · ${coinText(price)}`;
+    if (allowed(shown) < 1) { model.mode = 'info'; model.button = ''; model.soon = `Coming soon · after wave ${unlockWave({kind: shown}) ?? '?'}`; return model; }
+    if (busy) return model;
+    if (coins === null) model.reason = 'Your coins are still loading.';
+    else if (!enough(price)) model.reason = short(price);
+    else model.disabled = false;
+    return model;
+  }
+  // Built: the next level, if any.
+  const next = level + 1;
+  if (level >= model.maxLevel) { model.reason = 'Highest level reached.'; return model; }
+  if (allowed(shown) < next) { model.soon = `Coming soon: Level ${next} · after wave ${unlockWave({kind: shown, level: next}) ?? '?'}`; return model; }
+  const price = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(shown, level, prices);
+  model.mode = 'upgrade';
+  model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: statLine(shown, level, next)};
+  model.button = busy ? 'Upgrading…' : 'Upgrade';
+  if (busy) return model;
+  if (coins === null) model.reason = 'Your coins are still loading.';
+  else if (!enough(price)) model.reason = short(price);
+  else model.disabled = false;
+  return model;
+}
+
+// The crew panel (§3): one row per crew member that is unlocked; the locked ones in `soon`.
+export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null} = {}) {
+  const rows = [], soon = [];
+  for (const id of CREW_IDS) {
+    const info = CREW[id], owned = Number.isSafeInteger(crew?.[id]) ? crew[id] : 0;
+    const price = Number.isSafeInteger(prices?.crew?.[id]) ? prices.crew[id] : info.price;
+    if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name} · after wave ${unlockWave({crew: id}) ?? '?'}`); continue; }
+    const full = owned >= info.max;
+    const row = {id, name: info.name, line: info.line, price: coinText(price), owned: `${owned} of ${info.max}`,
+      button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: ''};
+    if (full) row.reason = info.max === 1 ? 'You have one.' : `You have ${info.max}, the most you can hire.`;
+    else if (busy) row.reason = '';
+    else if (coins === null) row.reason = 'Your coins are still loading.';
+    else if (coins < price) row.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+    else row.disabled = false;
+    rows.push(row);
+  }
+  return {title: 'Crew', lead: rows.length ? 'Crew members help on their own during every wave. You keep them.'
+    : `Crew members join after you win wave ${unlockWave({crew: 'gunner'})}.`,
+  rows, soon: soon.length ? `Coming soon: ${soon.join(', ')}` : '', message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
+}
+
+// The captain panel (§10): the musket's level and the next one.
+export function captainModel({captain = null, coins = null, unlocks = null, busy = false, message = ''} = {}) {
+  const level = Number.isSafeInteger(captain?.level) && captain.level > 0 ? captain.level : 1, next = level + 1;
+  const model = {title: 'Your captain', level, badge: `⚔ ${level}`, pips: Array.from({length: CAPTAIN_MAX}, (_, index) => index < level),
+    stats: captainLine(level), hint: 'Tap a ship to fire your musket (F).', upgrade: null, button: '', disabled: true, reason: '', soon: '', message,
+    coins: coins === null ? '' : `You have ${coinText(coins)}`};
+  if (level >= CAPTAIN_MAX) { model.reason = 'Highest level reached.'; return model; }
+  if (unlocks && unlocks.captain < next) { model.soon = `Coming soon: Level ${next} · after wave ${unlockWave({captain: next}) ?? '?'}`; return model; }
+  const price = Number.isSafeInteger(captain?.nextPrice) ? captain.nextPrice : CAPTAIN.price[level];
+  model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: captainLine(level, next)};
+  model.button = busy ? 'Upgrading…' : 'Upgrade';
+  if (busy) return model;
+  if (coins === null) model.reason = 'Your coins are still loading.';
+  else if (coins < price) model.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;
   else model.disabled = false;
   return model;
 }
@@ -44,11 +135,17 @@ export function bellModel({wave = null, joined = false, countdown = null, busy =
   return model;
 }
 
+// Play with a friend (§6, §11): the link, its QR and one line on what happens.
 export function inviteModel(code, base) {
   const shown = displayIslandCode(code);
-  return {title: 'Invite a friend', code: shown || 'Loading…', url: shown ? visitUrl(code, base) : '',
-    line: shown ? 'Your friend scans the code, or chooses Join and types it, and lands on your island.'
-      : 'Your island code is still loading.'};
+  return {title: 'Play with a friend', lead: 'Send this link to up to 3 friends', code: shown || 'Loading…', url: shown ? visitUrl(code, base) : '',
+    line: shown ? 'They tap Join, and you defend your island together.' : 'Your island code is still loading.', copy: 'Copy link'};
+}
+// The captains on your island (§11), from the presence room: name tags for the menu card.
+export function captainsModel(names = []) {
+  const list = [...new Set(names.filter(name => typeof name === 'string' && name.trim()).map(name => name.trim()))].slice(0, 3);
+  return {title: 'Captains on your island', names: list,
+    line: list.length ? `${list.length} of 3 friends here.` : 'Nobody else is here yet. Open Play with a friend and send the link.'};
 }
 
 export const lootText = ({loot, coins}) => `${formatCoinDelta(loot)} loot · you have ${coinText(coins)}`;

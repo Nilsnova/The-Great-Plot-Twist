@@ -1,8 +1,11 @@
-// The first 3 minutes (docs/PITCH.md) as plain data: five goals in order, three shown at a time, and a
+// The first 3 minutes (docs/PITCH.md) as plain data: five goals in order, then five tower-defense goals
+// that follow the unlocks (docs/TOWER-DEFENSE.md §9), three shown at a time, and a
 // friendly hint after 20 s of standing still. No DOM here; hud.js draws it with quest-strip.js.
 import {QUEST_EVENTS} from './quest-events.js';
 
 export const FIRST_QUEST_KEY = 'plot_twist_first_quests_v1';
+// The wave a wave_finished event is about: its own number, or the island's best after it.
+const waveOf = event => (Number.isSafeInteger(event?.wave) ? event.wave : Number.isSafeInteger(event?.waveBest) ? event.waveBest : 0);
 export const HARBOR_ID = 'saltreach_harbor';
 export const VISIBLE_GOALS = 3;
 export const IDLE_HINT_MS = 20000;
@@ -19,8 +22,20 @@ export const FIRST_QUESTS = Object.freeze([
     event: QUEST_EVENTS.HARBOR_STAKE_PLACED, matches: () => true},
   {id: 'invite', label: 'Invite a friend', hint: 'Open Invite a friend on your island and share your island code.',
     event: QUEST_EVENTS.ISLAND_INVITE_OPENED, matches: () => true},
+  // Tower defense (TOWER-DEFENSE.md), in the order things unlock: level 2 after wave 2, the mortar after
+  // wave 3, the crew after wave 5.
+  {id: 'upgrade', label: 'Upgrade a cannon', hint: 'Win wave 2, then tap a cannon and choose Upgrade.',
+    event: QUEST_EVENTS.ISLAND_UPGRADED, matches: event => event.kind === 'cannon'},
+  {id: 'mortar', label: 'Build a mortar', hint: 'After wave 3, tap an empty tower spot and choose Mortar.',
+    event: QUEST_EVENTS.ISLAND_BUILT, matches: event => event.kind === 'mortar'},
+  {id: 'wave5', label: 'Win wave 5', hint: 'Ring the bell and hold the island. Wave 5 is a boss wave.',
+    event: QUEST_EVENTS.WAVE_FINISHED, matches: event => event.survived === true && waveOf(event) >= 5},
+  {id: 'gunner', label: 'Hire a gunner', hint: 'Open the Menu and choose Crew, then hire a gunner for 40 🪙.',
+    event: QUEST_EVENTS.CREW_HIRED, matches: event => event.crew === 'gunner'},
+  {id: 'wave10', label: 'Win wave 10', hint: 'Upgrade your towers and bring a friend: wave 10 brings two warships.',
+    event: QUEST_EVENTS.WAVE_FINISHED, matches: event => event.survived === true && waveOf(event) >= 10},
 ]);
-export const FIRST_DONE_LINE = 'All goals done. Keep building, and defend the next wave with a friend.';
+export const FIRST_DONE_LINE = 'All goals done. Upgrade everything and see how far you get: wave 100 is the end.';
 
 // The number of goals done so far (always a prefix, because goals complete in order).
 export function readFirstQuests(storage) {

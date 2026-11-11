@@ -12,15 +12,15 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
-  it('opens an island with 100 coins and eleven spots in the contract order', async () => {
+  it('opens an island with 100 coins and the 16 spots of TOWER-DEFENSE.md §2 in the contract order', async () => {
     const api = createFakeIslandApi();
     const island = await api.island();
     expect(island.coins).toBe(100);
     expect(island.code).toMatch(/^ISLE-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/);
     expect(island.spots.map(spot => `${spot.id}:${spot.kind}:${spot.cost}:${spot.built}`)).toEqual([
-      'wall_1:wall:10:false', 'wall_2:wall:10:false', 'wall_3:wall:10:false', 'wall_4:wall:10:false',
+      'wall_1:wall:10:false', 'wall_2:wall:10:false', 'wall_3:wall:10:false', 'wall_4:wall:10:false', 'wall_5:wall:10:false', 'wall_6:wall:10:false',
       'cannon_1:cannon:30:false', 'cannon_2:cannon:30:false', 'cannon_3:cannon:30:false', 'cannon_4:cannon:30:false',
-      'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false']);
+      'tower_s5:cannon:30:false', 'tower_s6:cannon:30:false', 'tower_s7:cannon:30:false', 'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false']);
     expect((await api.island()).code).toBe(island.code);
   });
 

@@ -20,6 +20,10 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
   }else if(mode==='credits'){
     const {credits}=await import('./credits.js');if(!isCurrent())return;
     body.replaceChildren(credits(),menuButton('Back',back,true));
+  }else if(mode==='invite'){
+    const {fillInvitePage,lookupOwner}=await import('./invite.js');if(!isCurrent())return;
+    const {readVisit}=await import('../island/codes.js');const ownerName=await lookupOwner(readVisit());if(!isCurrent())return;
+    fillInvitePage({body,nav,ctx,isCurrent,play,page,back,ownerName});
   }else if(mode==='join'){
     const {fillJoinPage}=await import('./join.js');if(!isCurrent())return;
     fillJoinPage({body,nav,ctx,isCurrent,play,page,back});

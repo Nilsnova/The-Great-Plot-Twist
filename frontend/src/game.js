@@ -102,7 +102,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const onOwnIsland=()=>!!island&&world.current?.id==='home_islet';
   function showQuests(view=classQuests){classQuests=view??null;hud.setQuests(onOwnIsland()?null:classQuests);}
   const stopIslet=isletState.subscribe(built=>chart.setIsletBuilt(built)),stopActualIslet=isletState.subscribeActual(built=>adapter?.dev?.setIsletBuilt?.(built));
-  const applyView=view=>{noteAdapterView(view);classDemo?.apply(view);hud.setCaptain(view);experience.apply(view);};
+  const applyView=view=>{noteAdapterView(view);classDemo?.apply(view);hud.setCaptain(view);experience.apply(view);island?.setPresence(view?.presence);};
   const stopView=adapter?adapter.subscribe(event=>applyView(event.view)):()=>{};
   if(adapter)applyView(adapter.read());
   // Public prices and private trading share the factory's explicit-session capabilities.
@@ -175,7 +175,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
-        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:value=>{hud.setCoinSource('island');hud.setCoins(value);}});
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:value=>{hud.setCoinSource('island');hud.setCoins(value);},onCaptain:level=>hud.setCaptainLevel(level)});
+      if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;
     }).catch(error=>{console.error(error);islandLoad=null;return null;});

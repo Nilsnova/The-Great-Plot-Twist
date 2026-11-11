@@ -7,12 +7,13 @@
 import * as THREE from 'three';
 import {loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes, snapPixel} from '../pixel/catalog.js';
-import {SPOTS, CABIN, BELL, islandZones} from './spots.js';
+import {SPOTS as ISLAND_SPOTS, CABIN, BELL, islandZones} from './spots.js';
+import {SLOT_KINDS} from './td-rules.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
 export const ART_CANDIDATES = Object.freeze({
-  wall: ['wall', 'island-wall', 'wall-1'], cannon: ['cannon', 'island-cannon', 'cannon-1'],
+  wall: ['wall', 'island-wall', 'wall-1'], cannon: ['cannon', 'island-cannon', 'cannon-1'], mortar: ['mortar', 'island-mortar', 'mortar-1'],
   watchtower: ['watchtower', 'island-watchtower', 'watchtower-1'], house: ['house', 'island-house', 'house-1'],
   bell: ['harbor-bell', 'island-bell', 'bell'],
 });
@@ -31,6 +32,12 @@ const PAINT = {
     [14, 4, 16, 6, '#2d2f33'], [12, 6, 4, 6, '#3b3e44'], [28, 3, 3, 8, '#1c1d20'], [16, 5, 10, 1, '#5a5e66'], // barrel
     [5, 18, 7, 6, '#3d2a18'], [18, 18, 7, 6, '#3d2a18'], [7, 20, 3, 2, '#9b7146'], [20, 20, 3, 2, '#9b7146'], // wheels
   ]),
+  // A squat iron mortar on a wooden bed, its mouth to the sky.
+  mortar: c => rects(c, [
+    [3, 17, 26, 6, '#7a5532'], [3, 16, 26, 2, '#9b7146'], [5, 22, 5, 2, '#3d2a18'], [22, 22, 5, 2, '#3d2a18'],
+    [8, 8, 16, 9, '#2d2f33'], [6, 10, 20, 6, '#3b3e44'], [9, 5, 14, 4, '#1c1d20'], [10, 4, 12, 2, '#5a5e66'],
+    [11, 6, 10, 2, '#0e0f11'], [8, 11, 3, 3, '#5a5e66'], [24, 12, 3, 2, '#b8892c'],
+  ]),
   watchtower: c => rects(c, [
     [6, 18, 3, 38, '#6b4a2b'], [23, 18, 3, 38, '#6b4a2b'], [9, 30, 14, 2, '#7a5532'], [9, 44, 14, 2, '#7a5532'],
     [3, 14, 26, 5, '#8a6236'], [3, 12, 26, 2, '#a97b46'], [5, 6, 2, 8, '#6b4a2b'], [25, 6, 2, 8, '#6b4a2b'],
@@ -46,7 +53,7 @@ const PAINT = {
     [0, 38, 24, 2, '#4d3a14'],
   ]),
 };
-const SIZES = {wall: [40, 24], cannon: [32, 24], watchtower: [32, 56], house: [40, 40], bell: [24, 40]};
+const SIZES = {wall: [40, 24], cannon: [32, 24], mortar: [32, 24], watchtower: [32, 56], house: [40, 40], bell: [24, 40]};
 // "You can build here": a glowing ring on the ground (pulses) and a floating badge with the kind
 // (bobs). Stepped, dithered light like the class demo's lamps; no smooth gradients.
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
@@ -65,6 +72,8 @@ const GLYPHS = {
   wall: [[4, 9, 12, 5, '#e9dfc1'], [4, 7, 3, 2, '#e9dfc1'], [9, 7, 3, 2, '#e9dfc1'], [14, 7, 2, 2, '#e9dfc1'], [7, 11, 1, 1, '#5b3a1e'], [12, 11, 1, 1, '#5b3a1e']],
   cannon: [[5, 11, 10, 3, '#e9dfc1'], [6, 6, 10, 4, '#e9dfc1'], [15, 5, 2, 6, '#e9dfc1'], [6, 13, 3, 3, '#e9dfc1'], [12, 13, 3, 3, '#e9dfc1']],
   watchtower: [[6, 8, 2, 8, '#e9dfc1'], [12, 8, 2, 8, '#e9dfc1'], [5, 6, 10, 2, '#e9dfc1'], [9, 2, 1, 4, '#e9dfc1'], [10, 2, 4, 2, '#f3c75a']],
+  // A tower spot (cannon or mortar): a round tower top with a barrel.
+  tower: [[5, 9, 10, 7, '#e9dfc1'], [4, 7, 3, 2, '#e9dfc1'], [8, 7, 4, 2, '#e9dfc1'], [13, 7, 3, 2, '#e9dfc1'], [11, 4, 6, 2, '#f3c75a'], [9, 12, 2, 4, '#5b3a1e']],
   house: [[5, 10, 10, 6, '#e9dfc1'], [3, 9, 14, 2, '#e9dfc1'], [5, 7, 10, 2, '#e9dfc1'], [7, 5, 6, 2, '#e9dfc1'], [9, 12, 2, 4, '#5b3a1e']],
 };
 function paintBadge(kind) {
@@ -94,59 +103,74 @@ function sprite(group, texture, [width, height], x, z, name) {
 }
 
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id),
-// loadArt (tests)}. Returns {apply({spots, visitor}), update(dt, time), pickAt(x, z), dispose()}.
+// loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
+// Returns {apply({spots, visitor, battle, unlocks}), update(dt, time), pickAt(x, z), dispose()}.
+// A marker shows on an empty spot only when something may be built there (unlocks, TOWER-DEFENSE.md §9).
 export function decorateIsland(place, ctx = {}) {
-  const root = new THREE.Group(); root.name = 'island'; place.group.add(root);
+  const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
+  const SPOTS = layout.spots;
+  const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
+  const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(PAINT).map(([kind, paint]) => [kind, canvasTexture(...SIZES[kind], paint)]));
   const ringTexture = canvasTexture(48, 24, paintRing);
   const badgeTextures = Object.fromEntries(Object.keys(GLYPHS).map(kind => [kind, canvasTexture(20, 24, paintBadge(kind))]));
-  const markers = new Map(), buildings = new Map();
+  const markers = new Map(), buildings = new Map(); // buildings: 'spot:kind' -> mesh (a tower spot has a cannon and a mortar)
+  const slotOf = spot => spot.slot ?? (spot.kind === 'cannon' ? 'tower' : spot.kind);
+  const kindsOf = spot => SLOT_KINDS[slotOf(spot)] ?? [spot.kind];
   for (const spot of SPOTS) {
     const ring = sprite(root, ringTexture, [48, 24], spot.x, spot.z, `island-marker:${spot.id}`);
     ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
-    const badge = sprite(root, badgeTextures[spot.kind], [20, 24], spot.x, spot.z, `island-badge:${spot.id}`);
+    const badge = sprite(root, badgeTextures[slotOf(spot) === 'tower' ? 'tower' : spot.kind], [20, 24], spot.x, spot.z, `island-badge:${spot.id}`);
     badge.position.y += .6; badge.userData.baseY = badge.position.y;
     markers.set(spot.id, {ring, badge, set visible(value) { ring.visible = value; badge.visible = value; }});
-    const building = sprite(root, textures[spot.kind], SIZES[spot.kind], spot.x, spot.z, `island-${spot.kind}:${spot.id}`);
-    building.visible = false; buildings.set(spot.id, building);
+    for (const kind of kindsOf(spot)) {
+      const building = sprite(root, textures[kind], SIZES[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
+      building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
+    }
   }
-  const bell = sprite(root, textures.bell, SIZES.bell, BELL.x, BELL.z, 'island-bell');
-  if (ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  const bell = layout.bell === false ? null : sprite(root, textures.bell, SIZES.bell, BELL.x, BELL.z, 'island-bell');
+  if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false, battle: false}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false, unlocks: null}, disposed = false;
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
-  function apply({spots = [], visitor = false, battle = false} = {}) {
+  function apply({spots = [], visitor = false, battle = false, unlocks = null} = {}) {
     if (disposed) return;
-    state = {spots, visitor, battle};
+    state = {spots, visitor, battle, unlocks};
     const known = spots.length > 0;
     for (const spot of SPOTS) {
-      const built = spots.find(item => item.id === spot.id)?.built === true;
-      buildings.get(spot.id).visible = built && !(battle && (spot.kind === 'wall' || spot.kind === 'cannon'));
-      markers.get(spot.id).visible = !built && !visitor && known && !battle;
+      const answer = spots.find(item => item.id === spot.id), built = answer?.built === true;
+      const open = !unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1);
+      for (const kind of kindsOf(spot)) {
+        buildings.get(`${spot.id}:${kind}`).visible = built && (answer.kind === kind || (kindsOf(spot).length === 1))
+          && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
+      }
+      markers.get(spot.id).visible = !built && !visitor && known && !battle && open;
     }
-    place.zones = islandZones({visitor});
-    place.colliders.splice(0, place.colliders.length, ...baseColliders,
-      {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
+    if (layout.zones === islandZones) {
+      place.zones = islandZones({visitor});
+      place.colliders.splice(0, place.colliders.length, ...baseColliders,
+        {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
+    } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
   }
   apply(state);
 
   // Real art from the catalog replaces the drawn sprite of the same kind, once it has loaded.
-  const wanted = [...new Set([...SPOTS.map(spot => spot.kind), 'bell'])].map(kind => [kind, catalogArt(kind)]).filter(([, id]) => id);
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf), 'bell'])].map(kind => [kind, catalogArt(kind)]).filter(([, id]) => id);
   if (wanted.length) {
     (ctx.loadArt ?? loadArt)(wanted.map(([, id]) => id)).then(art => {
       if (disposed) { Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
       for (const [kind, id] of wanted) {
+        if (kind === 'bell') continue; // the bell keeps its drawn sprite object (it is picked by name)
         const swap = mesh => {
           const real = placeArt(root, art, id, mesh.userData.ground.x, mesh.userData.ground.z);
           real.name = mesh.name; real.visible = mesh.visible; mesh.visible = false; root.remove(mesh);
           mesh.geometry.dispose(); mesh.material.dispose();
           return real;
         };
-        if (kind === 'bell') continue; // the bell keeps its drawn sprite object (it is picked by name)
-        for (const spot of SPOTS.filter(item => item.kind === kind)) buildings.set(spot.id, swap(buildings.get(spot.id)));
+        for (const key of [...buildings.keys()].filter(item => item.endsWith(`:${kind}`))) buildings.set(key, swap(buildings.get(key)));
       }
       apply(state);
     }).catch(() => { /* The drawn sprites stay. */ });
@@ -155,7 +179,8 @@ export function decorateIsland(place, ctx = {}) {
   // The nearest pickable thing to a ground point (a tap), or null.
   function pickAt(x, z) {
     const candidates = [...SPOTS.map(spot => ({id: spot.id, x: spot.x, z: spot.z, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
-      {id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}, ...(state.visitor ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
+      ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
+      ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
       if (Math.abs(item.x - x) > item.w || z < item.z - item.h / .72 || z > item.z + .9) continue;
@@ -189,6 +214,7 @@ export function decorateIsland(place, ctx = {}) {
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.round(Math.sin(time * 2.4) * 2) / UNIT;
       for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }
+      if (!bell) return;
       if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = Math.sin(ringing * 18) * .12 * ringing; }
       else bell.rotation.z = 0;
     },

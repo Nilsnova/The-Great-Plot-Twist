@@ -47,3 +47,5 @@
 @media(max-height:500px){.hud-play .quest-strip li:not(:has([data-current=true])){display:none}}
 @media(prefers-reduced-motion:reduce){.hud-arrival{animation:none}}
 html[data-reduced-motion=true] .hud-arrival{animation:none}
+.hud-play .hud-captain{margin-left:12px;padding-left:12px;border-left:2px solid var(--u-line);color:var(--u-ink);font-size:18px}
+.hud-play .hud-captain[hidden]{display:none}
