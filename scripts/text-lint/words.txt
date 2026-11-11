@@ -316,6 +316,7 @@ chips
 choice
 choices
 choose
+chooses
 choosing
 chose
 chosen
@@ -437,6 +438,7 @@ costs
 cottage
 could
 count
+countdown
 counted
 counter
 counters
@@ -497,6 +499,7 @@ declined
 deduction
 deductions
 defend
+defense
 degree
 degrees
 delayed
@@ -709,6 +712,7 @@ finishes
 finishing
 finnhub
 firefox
+fires
 first
 fish
 fisherman
@@ -772,6 +776,7 @@ front
 frontend
 full
 functions
+further
 g
 gain
 gallery
@@ -974,6 +979,7 @@ investigate
 investment
 invitation
 invitations
+invite
 invited
 inviting
 ip
@@ -1764,6 +1770,7 @@ scaling
 scan
 scanned
 scanning
+scans
 scene
 scenery
 schema
@@ -2025,6 +2032,7 @@ subscriber
 subtitles
 success
 successful
+such
 summaries
 sunk
 sunny
@@ -2036,6 +2044,7 @@ supply
 support
 supported
 survey
+survive
 survived
 surviving
 suspect
@@ -2187,6 +2196,7 @@ two
 tying
 type
 typed
+types
 typing
 u
 ui
@@ -2245,6 +2255,7 @@ view
 visible
 vision
 visit
+visiting
 visitors
 visits
 visual
