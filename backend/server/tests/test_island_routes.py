@@ -25,8 +25,8 @@ from server.tests.island_helpers import (
 )
 
 SPOT_IDS = [
-    "wall_1", "wall_2", "wall_3", "wall_4",
-    "cannon_1", "cannon_2", "cannon_3", "cannon_4",
+    "wall_1", "wall_2", "wall_3", "wall_4", "wall_5", "wall_6",
+    "cannon_1", "cannon_2", "cannon_3", "cannon_4", "cannon_5", "cannon_6", "cannon_7",
     "tower_1", "house_1", "house_2",
 ]  # fmt: skip
 INSUFFICIENT = httpx.Response(400, json={"code": "P0001", "message": "insufficient_funds"})
@@ -53,7 +53,7 @@ def test_the_island_is_closed_while_the_flag_is_off_and_nothing_is_read():
     assert world.database.requests == []
 
 
-def test_a_new_player_sees_the_code_the_coins_and_eleven_empty_spots():
+def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     world = World()
 
     response = world.island()
@@ -61,7 +61,10 @@ def test_a_new_player_sees_the_code_the_coins_and_eleven_empty_spots():
     assert response.status_code == 200
     assert response.headers["cache-control"] == "private, no-store"
     body = response.json()
-    assert list(body) == ["code", "coins", "waveBest", "flags", "spots"]
+    assert list(body) == [
+        "code", "coins", "waveBest", "nextWave", "flags", "spots",
+        "crew", "captain", "prices", "unlocks",
+    ]  # fmt: skip
     assert (body["code"], body["coins"], body["waveBest"], body["flags"]) == (
         "ISLE-K7Q2M",
         100,
@@ -69,7 +72,11 @@ def test_a_new_player_sees_the_code_the_coins_and_eleven_empty_spots():
         0,
     )
     assert [spot["id"] for spot in body["spots"]] == SPOT_IDS
-    assert body["spots"][0] == {"id": "wall_1", "kind": "wall", "built": False, "cost": 10}
+    assert body["spots"][0] == {
+        "id": "wall_1", "kind": "wall", "kinds": ["wall"], "built": False,
+        "level": 0, "cost": 10, "upgradeCost": None,
+    }  # fmt: skip
+    assert body["nextWave"] == 1
 
 
 def test_the_prices_are_the_economy_table():
@@ -109,7 +116,7 @@ def test_built_spots_show_as_built_and_old_islet_rows_are_left_out():
     spots = world.island().json()["spots"]
 
     assert [spot["id"] for spot in spots if spot["built"]] == ["cannon_1"]
-    assert len(spots) == 11
+    assert len(spots) == 16
 
 
 def test_a_player_without_a_profile_gets_404():
@@ -194,6 +201,7 @@ def test_a_click_that_was_still_running_answers_the_island():
 def test_a_build_the_player_cannot_pay_is_refused():
     world = World()
     world.database.build_reply = INSUFFICIENT
+    world.database.progress["wave_best"] = 2  # the house unlocks after wave 2
 
     response = world.build(spot="house_1", kind="house")
 

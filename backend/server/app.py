@@ -64,6 +64,7 @@ from server.routes import (
     market,
     market_calls,
     me,
+    pirate_point,
     predictions,
     save,
     sports,
@@ -245,6 +246,13 @@ def create_app(
     app.state.island_visit_budget = PlayerBudget(
         ISLAND_VISITS_PER_MINUTE, 60, clock=clock, message="Too many visits at once. Wait a moment."
     )
+    # The friend invite (TOWER-DEFENSE 6): tries per player and per address, like the class code.
+    app.state.invite_budget = PlayerBudget(
+        demo.JOIN_TRIES,
+        demo.JOIN_SECONDS,
+        clock=clock,
+        message="Too many tries with an island code. Wait a few minutes, then try again.",
+    )
     app.state.wave_budget = PlayerBudget(
         WAVE_CALLS_PER_MINUTE, 60, clock=clock, message="Too many bells at once. Wait a moment."
     )
@@ -279,6 +287,7 @@ def create_app(
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
     app.include_router(waves.router, prefix="/api")
+    app.include_router(pirate_point.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")
     app.include_router(festival.router, prefix="/api")

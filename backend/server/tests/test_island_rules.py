@@ -1,7 +1,7 @@
 """Tests for island/catalogue.py, codes.py and rules.py, and that Python and the migration agree.
 
-The numbers are the economy table of docs/BUILD-PLAN.md section 3.2 and the spots of 3.3: a test
-here fails if islands.json drifts from the contract the frontend lanes build against.
+The numbers are the tables of docs/TOWER-DEFENSE.md (and BUILD-PLAN.md 3.2): a test here fails
+if islands.json drifts from the contract the frontend lanes build against.
 
 Used by: pytest (cd backend && uv run pytest).
 """
@@ -12,6 +12,7 @@ import re
 
 import pytest
 
+from server.errors import ApiError
 from server.game.building_catalogue import load_buildings
 from server.island import codes, rules
 from server.island.catalogue import CONTENT_FILE, IslandFileError, load_island
@@ -21,6 +22,7 @@ from server.wallet import find_direction
 
 MIGRATION = REPO_ROOT / "supabase" / "migrations" / "20261110010000_islands_and_waves.sql"
 CREWS = REPO_ROOT / "supabase" / "migrations" / "20261110020000_wave_crews.sql"
+TOWER_DEFENSE = REPO_ROOT / "supabase" / "migrations" / "20261111030000_tower_defense.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -40,28 +42,109 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
     catalogue = load_island()
 
     assert catalogue.starting_coins == 100
-    assert {kind.kind: kind.coins for kind in catalogue.kinds} == {
-        "wall": 10,
-        "cannon": 30,
-        "watchtower": 40,
-        "house": 50,
+    assert {kind.kind: kind.prices for kind in catalogue.kinds} == {
+        "wall": (10, 20, 40),
+        "cannon": (30, 60, 120),
+        "mortar": (60, 120, 240),
+        "watchtower": (40, 80),
+        "house": (50, 100),
     }
+    assert {m.crew: (m.coins, m.max, m.unlock_wave) for m in catalogue.crew} == {
+        "gunner": (40, 2, 5),
+        "carpenter": (30, 2, 5),
+        "lookout": (25, 1, 8),
+    }
+    assert catalogue.captain.prices == (0, 20, 40, 80, 160)
+    assert (catalogue.waves.highest_wave, catalogue.waves.boss_every) == (100, 5)
+    assert (catalogue.waves.restart_back, catalogue.loot.boss_multiplier) == (2, 2)
 
 
 def test_the_spots_are_the_spots_of_the_contract():
-    spots = [(spot.id, spot.kind) for spot in load_island().spots]
+    catalogue = load_island()
+    spots = [(spot.id, spot.kinds) for spot in catalogue.spots]
+    tower = ("cannon", "mortar")
 
-    assert spots == [
-        ("wall_1", "wall"), ("wall_2", "wall"), ("wall_3", "wall"), ("wall_4", "wall"),
-        ("cannon_1", "cannon"), ("cannon_2", "cannon"), ("cannon_3", "cannon"),
-        ("cannon_4", "cannon"), ("tower_1", "watchtower"), ("house_1", "house"),
-        ("house_2", "house"),
-    ]  # fmt: skip
+    assert spots == (
+        [(f"wall_{n}", ("wall",)) for n in range(1, 7)]
+        + [(f"cannon_{n}", tower) for n in range(1, 8)]
+        + [("tower_1", ("watchtower",)), ("house_1", ("house",)), ("house_2", ("house",))]
+    )
+    assert [(spot.id, spot.kinds) for spot in catalogue.pirate_point_spots] == (
+        [(f"pp_wall_{n}", ("wall",)) for n in range(1, 5)]
+        + [(f"pp_tower_{n}", tower) for n in range(1, 7)]
+    )
 
 
 @pytest.mark.parametrize(("wave", "houses", "loot"), [(1, 0, 15), (3, 0, 25), (3, 2, 35)])
 def test_the_loot_is_ten_plus_five_per_wave_plus_five_per_house(wave, houses, loot):
     assert rules.loot_cap(load_island().loot, wave, houses) == loot
+
+
+def test_a_boss_wave_is_every_fifth_and_pays_twice():
+    catalogue = load_island()
+
+    assert [wave for wave in range(1, 21) if rules.is_boss(catalogue, wave)] == [5, 10, 15, 20]
+    assert rules.loot_cap(catalogue.loot, 5, 3, boss=True) == (10 + 25 + 15) * 2
+    assert rules.loot_cap(catalogue.loot, 10, 0, pirate_point=True, boss=True) == 140
+
+
+@pytest.mark.parametrize(
+    ("best", "stored", "next_wave"), [(0, None, 1), (4, None, 5), (10, 8, 8), (100, None, 100)]
+)
+def test_the_next_wave_is_the_stored_restart_or_the_best_plus_one(best, stored, next_wave):
+    assert rules.next_wave(load_island(), best, stored) == next_wave
+
+
+def test_the_unlocks_follow_the_table_of_section_nine():
+    catalogue = load_island()
+    table = dict(rules.unlock_table(catalogue))
+
+    assert {item for item, wave in table.items() if wave == 0} == {
+        "wall:1", "cannon:1", "captain:1",
+    }  # fmt: skip
+    assert (table["captain:2"], table["captain:3"]) == (1, 1)
+    assert (table["wall:2"], table["cannon:2"], table["house:1"], table["house:2"]) == (2, 2, 2, 2)
+    assert (table["mortar:1"], table["mortar:2"], table["watchtower:1"]) == (3, 3, 3)
+    assert (table["crew:gunner"], table["crew:carpenter"], table["wall:3"]) == (5, 5, 5)
+    assert (table["mortar:3"], table["crew:lookout"]) == (5, 8)
+    assert (table["captain:4"], table["captain:5"]) == (8, 8)
+
+
+def test_a_locked_kind_level_crew_or_captain_level_is_refused_with_its_wave():
+    catalogue = load_island()
+    wall = {"wall_1": rules.Built("wall", 2)}
+
+    with pytest.raises(ApiError) as mortar:
+        rules.check_build(catalogue, "cannon_1", "mortar", {}, 2)
+    with pytest.raises(ApiError) as level:
+        rules.check_upgrade(catalogue, "wall_1", wall, 4)
+    with pytest.raises(ApiError) as crew:
+        rules.check_hire(catalogue, "lookout", 0, 7)
+    with pytest.raises(ApiError) as captain:
+        rules.check_captain(catalogue, 1, 0)
+
+    assert (mortar.value.code, mortar.value.message) == ("locked", "Unlocks after wave 3.")
+    assert [e.value.message for e in (level, crew, captain)] == [
+        "Unlocks after wave 5.", "Unlocks after wave 8.", "Unlocks after wave 1.",
+    ]  # fmt: skip
+
+
+def test_upgrade_hire_and_captain_refuse_the_top_and_a_full_crew():
+    catalogue = load_island()
+
+    with pytest.raises(ApiError, match="highest level") as top:
+        rules.check_upgrade(catalogue, "house_1", {"house_1": rules.Built("house", 2)}, 99)
+    with pytest.raises(ApiError) as empty:
+        rules.check_upgrade(catalogue, "wall_1", {}, 99)
+    with pytest.raises(ApiError) as full:
+        rules.check_hire(catalogue, "gunner", 2, 99)
+    with pytest.raises(ApiError) as captain:
+        rules.check_captain(catalogue, 5, 99)
+
+    assert [e.value.code for e in (top, empty, full, captain)] == [
+        "max_level", "not_built", "crew_full", "max_level",
+    ]  # fmt: skip
+    assert rules.check_captain(catalogue, 1, 1) == 3  # captain levels 2 and 3 open at wave 1
 
 
 @pytest.mark.parametrize(
@@ -88,9 +171,11 @@ def test_what_the_weather_does_to_the_pirates(state, kind, ships, fog):
     ("change", "message"),
     [
         (lambda data: data.update(startingCoins=0), "startingCoins"),
-        (lambda data: data["kinds"][0].update(coins=True), "coins"),
-        (lambda data: data["spots"][0].update(kind="moat"), "not in 'kinds'"),
-        (lambda data: data["spots"].append({"id": "wall_1", "kind": "wall"}), "same 'id'"),
+        (lambda data: data["kinds"][0].update(prices=[True]), "prices"),
+        (lambda data: data["spots"][0].update(kinds=["moat"]), "not in 'kinds'"),
+        (lambda data: data["spots"].append({"id": "wall_1", "kinds": ["wall"]}), "same 'id'"),
+        (lambda data: data["crew"].pop(), "one entry for each"),
+        (lambda data: data["captain"].update(prices=[5, 20, 40, 80, 160]), "level 1 is free"),
         (lambda data: data["kinds"].append(dict(data["kinds"][0])), "same 'kind'"),
         (lambda data: data["weather"].pop(), "one entry for each"),
         (lambda data: data["weather"][0].update(ships=9), "ships"),
@@ -135,16 +220,29 @@ def test_a_new_code_uses_the_alphabet_and_is_shown_with_isle():
 
 
 def test_a_build_on_a_free_spot_costs_its_kind():
-    spot, price = rules.check_build(load_island(), "tower_1", "watchtower", set())
+    spot, price = rules.check_build(load_island(), "tower_1", "watchtower", {}, 3)
+    mortar_spot, mortar = rules.check_build(load_island(), "cannon_5", "mortar", {}, 3)
 
-    assert (spot.id, price) == ("tower_1", 40)
+    assert (spot.id, price, mortar_spot.id, mortar) == ("tower_1", 40, "cannon_5", 60)
 
 
 def test_the_spots_are_planned_in_file_order_with_their_state():
-    plans = rules.plan_spots(load_island(), {"wall_2", "plot_3"})
+    built = {
+        "wall_2": rules.Built("wall", 1),
+        "cannon_1": rules.Built("mortar", 3),
+        "plot_3": rules.Built("windmill", 1),
+    }
+    plans = {plan.id: plan for plan in rules.plan_spots(load_island(), built)}
 
-    assert [plan.id for plan in plans if plan.built] == ["wall_2"]
-    assert len(plans) == 11
+    assert [plan.id for plan in plans.values() if plan.built] == ["wall_2", "cannon_1"]
+    assert len(plans) == 16
+    assert (plans["wall_2"].level, plans["wall_2"].upgrade_cost) == (1, 20)
+    assert (plans["cannon_1"].kind, plans["cannon_1"].cost, plans["cannon_1"].upgrade_cost) == (
+        "mortar",
+        60,
+        None,
+    )
+    assert (plans["cannon_2"].kind, plans["cannon_2"].kinds) == ("cannon", ("cannon", "mortar"))
 
 
 # --- Python and the migration agree ---
@@ -164,15 +262,53 @@ def declared_parameters(function_name: str, text: str | None = None) -> list[str
     return re.findall(r"^\s*(p_[a-z_]+)\s", match.group(1), re.MULTILINE)
 
 
+def check_pairs(text: str, constraint: str) -> set[tuple[str, str]]:
+    check = re.search(rf"constraint {constraint}(.*?)\)\);", text, re.DOTALL).group(1)
+    return set(re.findall(r"\('([a-z0-9_]+)',\s*'([a-z0-9_]+)'\)", check))
+
+
 def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
-    check = re.search(
-        r"add constraint islet_buildings_plot_fits_building(.*?)\)\);", migration_text(), re.DOTALL
-    ).group(1)
-    pairs = set(re.findall(r"\('([a-z0-9_]+)',\s*'([a-z0-9_]+)'\)", check))
+    pairs = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
 
     old = {(s.plot, s.building_type) for s in load_buildings().spots if not s.stands_from_start}
-    new = {(spot.id, spot.kind) for spot in load_island().spots}
+    new = {(spot.id, kind) for spot in load_island().spots for kind in spot.kinds}
+    first = check_pairs(migration_text(), "islet_buildings_plot_fits_building")
     assert pairs == old | new
+    assert first <= pairs  # every pair an existing row may use stays allowed
+
+
+def test_the_pirate_point_check_rule_is_the_spots_of_the_file():
+    pairs = check_pairs(TOWER_DEFENSE.read_text(), "pirate_point_buildings_spot_fits_kind")
+
+    catalogue = load_island()
+    assert pairs == {(s.id, kind) for s in catalogue.pirate_point_spots for kind in s.kinds}
+
+
+def test_the_tower_defense_functions_take_exactly_the_arguments_the_server_sends():
+    text = TOWER_DEFENSE.read_text()
+
+    assert declared_parameters("wave_finish", text) == [
+        "p_player_id", "p_wave_id", "p_survived", "p_ships_sunk", "p_loot_base",
+        "p_loot_per_wave", "p_loot_per_house", "p_point_loot_base", "p_boss_every",
+        "p_boss_multiplier", "p_restart_back",
+    ]  # fmt: skip
+    assert declared_parameters("island_upgrade", text) == [
+        "p_player_id", "p_plot", "p_action_uid", "p_prices", "p_unlocked_level",
+    ]  # fmt: skip
+    assert declared_parameters("island_hire", text) == [
+        "p_player_id", "p_crew", "p_action_uid", "p_price", "p_max",
+    ]  # fmt: skip
+    assert declared_parameters("island_captain", text) == [
+        "p_player_id", "p_action_uid", "p_prices", "p_unlocked_level",
+    ]  # fmt: skip
+    assert declared_parameters("pp_build", text) == [
+        "p_player_id", "p_spot", "p_kind", "p_action_uid", "p_price",
+    ]  # fmt: skip
+    assert declared_parameters("pp_upgrade", text) == [
+        "p_player_id", "p_spot", "p_kind", "p_action_uid", "p_prices", "p_unlocked_level",
+    ]  # fmt: skip
+    assert find_direction("crew_hire") == "spend"
+    assert find_direction("captain_upgrade") == "spend"
 
 
 def test_the_functions_take_exactly_the_arguments_the_server_sends():

@@ -10,6 +10,11 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * GET islands, GET profiles                a visit by code and the owner's captain name
   * POST rpc/wave_start, rpc/wave_finish     start_reply and finish_reply
   * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
+  * GET islands?player_id=                   the tower defense columns (progress)
+  * GET wallet_transactions                  the repeat check of a paid action (ledger_refs)
+  * POST rpc/island_upgrade, island_hire, island_captain, pp_build, pp_upgrade
+                                             paid_replies[name] (default: done)
+  * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave
 
 FakePlaceWeather stands in for the Keeper's Lock weather of a place (the bell-ringer's area).
 
@@ -86,6 +91,10 @@ FINISHED = {
 }
 
 
+PAID_FUNCTIONS = ("island_upgrade", "island_hire", "island_captain", "pp_build", "pp_upgrade")
+PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
+
+
 def opened(code: str = "K7Q2M", wave_best: int = 0, flags: int = 0) -> dict:
     return {
         "status": "open",
@@ -128,6 +137,19 @@ class FakeIslandDatabase:
         self.finish_reply: dict | httpx.Response = FINISHED
         self.join_reply: dict | httpx.Response = {**STARTED, "status": "joined"}
         self.current_reply: dict | None = None
+        self.progress = {
+            "wave_best": 0,
+            "next_wave": None,
+            "crew_gunner": 0,
+            "crew_carpenter": 0,
+            "crew_lookout": 0,
+            "captain_level": 1,
+            "point_wave_best": 0,
+        }
+        self.ledger_refs: set[tuple[str, str]] = set()
+        self.paid_replies: dict[str, dict | httpx.Response] = {}
+        self.point_buildings: list[dict] = []
+        self.point_best: list[dict] = []
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -144,7 +166,15 @@ class FakeIslandDatabase:
             "POST /rpc/wave_finish": lambda _: self.answer(self.finish_reply),
             "POST /rpc/wave_join": lambda _: self.answer(self.join_reply),
             "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
+            "GET /wallet_transactions": self.read_ledger,
+            "POST /rpc/demo_guest_admit": lambda _: httpx.Response(
+                200, json={"status": "admitted"}
+            ),
+            "GET /pirate_point_buildings": lambda _: httpx.Response(200, json=self.point_buildings),
+            "GET /wave_runs": lambda _: httpx.Response(200, json=self.point_best),
         }
+        for name in PAID_FUNCTIONS:
+            handlers[f"POST /rpc/{name}"] = self.paid
         return handlers[route](request)
 
     @staticmethod
@@ -165,9 +195,23 @@ class FakeIslandDatabase:
             known = ref.removeprefix("eq.") in self.known_refs
             return httpx.Response(200, json=[{"plot": "wall_1"}] if known else [])
         owner = request.url.params["player_id"].removeprefix("eq.")
-        return httpx.Response(200, json=self.buildings.get(owner, []))
+        rows = [{"level": 1, **row} for row in self.buildings.get(owner, [])]
+        return httpx.Response(200, json=rows)
+
+    def paid(self, request: httpx.Request) -> httpx.Response:
+        name = request.url.path.rsplit("/", 1)[-1]
+        return self.answer(self.paid_replies.get(name, PAID_DONE))
+
+    def read_ledger(self, request: httpx.Request) -> httpx.Response:
+        key = (
+            request.url.params["reason"].removeprefix("eq."),
+            request.url.params["ref"].removeprefix("eq."),
+        )
+        return httpx.Response(200, json=[{"id": 1}] if key in self.ledger_refs else [])
 
     def read_island(self, request: httpx.Request) -> httpx.Response:
+        if "player_id" in request.url.params:
+            return httpx.Response(200, json=[self.progress])
         code = request.url.params["code"].removeprefix("eq.")
         row = self.islands.get(code)
         return httpx.Response(200, json=[row] if row else [])
@@ -263,6 +307,11 @@ class World:
 
     def current(self, where: str = "own", headers=PLAYER) -> httpx.Response:
         return self.client.get("/api/waves/current", params={"where": where}, headers=headers)
+
+    def post(self, path: str, headers=PLAYER, **body) -> httpx.Response:
+        request = {"actionUid": "click-0001"}
+        request.update(body)
+        return self.client.post(path, json=request, headers=headers)
 
     def finish(self, headers=PLAYER, **body) -> httpx.Response:
         request = {"waveId": WAVE_ID, "survived": True, "shipsSunk": 7}

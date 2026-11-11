@@ -1,37 +1,313 @@
 {
-  "about": "Your own island and the pirate waves (docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices, the starting coins, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island. Every number changes only by pull request, and BUILD-PLAN.md section 3.2 changes with it.",
+  "about": "Your own island, Pirate Point and the pirate waves (docs/TOWER-DEFENSE.md, docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices per level, the crew, the captain, the unlocks, the starting coins, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island and GET /api/pirate-point. Every number changes only by pull request, and docs/TOWER-DEFENSE.md and docs/ECONOMY.md change with it.",
   "playMoneyNote": "Play money. No cash value. It cannot be bought or cashed out.",
   "startingCoins": 100,
   "kinds": [
-    { "kind": "wall", "name": "Wall", "coins": 10 },
-    { "kind": "cannon", "name": "Cannon", "coins": 30 },
-    { "kind": "watchtower", "name": "Watchtower", "coins": 40 },
-    { "kind": "house", "name": "House", "coins": 50 }
+    {
+      "kind": "wall",
+      "name": "Wall",
+      "prices": [
+        10,
+        20,
+        40
+      ],
+      "unlockWave": 0
+    },
+    {
+      "kind": "cannon",
+      "name": "Cannon",
+      "prices": [
+        30,
+        60,
+        120
+      ],
+      "unlockWave": 0
+    },
+    {
+      "kind": "mortar",
+      "name": "Mortar",
+      "prices": [
+        60,
+        120,
+        240
+      ],
+      "unlockWave": 3
+    },
+    {
+      "kind": "watchtower",
+      "name": "Watchtower",
+      "prices": [
+        40,
+        80
+      ],
+      "unlockWave": 3
+    },
+    {
+      "kind": "house",
+      "name": "House",
+      "prices": [
+        50,
+        100
+      ],
+      "unlockWave": 2
+    }
+  ],
+  "levelUnlockWaves": [
+    0,
+    2,
+    5
   ],
   "spots": [
-    { "id": "wall_1", "kind": "wall" },
-    { "id": "wall_2", "kind": "wall" },
-    { "id": "wall_3", "kind": "wall" },
-    { "id": "wall_4", "kind": "wall" },
-    { "id": "cannon_1", "kind": "cannon" },
-    { "id": "cannon_2", "kind": "cannon" },
-    { "id": "cannon_3", "kind": "cannon" },
-    { "id": "cannon_4", "kind": "cannon" },
-    { "id": "tower_1", "kind": "watchtower" },
-    { "id": "house_1", "kind": "house" },
-    { "id": "house_2", "kind": "house" }
+    {
+      "id": "wall_1",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_2",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_3",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_4",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_5",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_6",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "cannon_1",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "cannon_2",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "cannon_3",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "cannon_4",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "cannon_5",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "cannon_6",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "cannon_7",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "tower_1",
+      "kinds": [
+        "watchtower"
+      ]
+    },
+    {
+      "id": "house_1",
+      "kinds": [
+        "house"
+      ]
+    },
+    {
+      "id": "house_2",
+      "kinds": [
+        "house"
+      ]
+    }
   ],
-  "loot": { "base": 10, "perWave": 5, "perHouse": 5, "piratePointBase": 20 },
+  "piratePointSpots": [
+    {
+      "id": "pp_wall_1",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "pp_wall_2",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "pp_wall_3",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "pp_wall_4",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "pp_tower_1",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "pp_tower_2",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "pp_tower_3",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "pp_tower_4",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "pp_tower_5",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    },
+    {
+      "id": "pp_tower_6",
+      "kinds": [
+        "cannon",
+        "mortar"
+      ]
+    }
+  ],
+  "crew": [
+    {
+      "crew": "gunner",
+      "name": "Gunner",
+      "coins": 40,
+      "max": 2,
+      "unlockWave": 5
+    },
+    {
+      "crew": "carpenter",
+      "name": "Carpenter",
+      "coins": 30,
+      "max": 2,
+      "unlockWave": 5
+    },
+    {
+      "crew": "lookout",
+      "name": "Lookout",
+      "coins": 25,
+      "max": 1,
+      "unlockWave": 8
+    }
+  ],
+  "captain": {
+    "prices": [
+      0,
+      20,
+      40,
+      80,
+      160
+    ],
+    "unlockWaves": [
+      0,
+      1,
+      1,
+      8,
+      8
+    ]
+  },
+  "loot": {
+    "base": 10,
+    "perWave": 5,
+    "perHouse": 5,
+    "piratePointBase": 20,
+    "bossMultiplier": 2
+  },
   "waves": {
     "countdownSeconds": 10,
     "minimumSeconds": 15,
     "maximumSeconds": 900,
-    "highestWave": 50
+    "highestWave": 100,
+    "bossEvery": 5,
+    "restartBack": 2
   },
   "weather": [
-    { "kind": "storm", "label": "Storm: 50% more pirate ships", "ships": 1.5, "fog": 0 },
-    { "kind": "fog", "label": "Fog: the pirates appear later", "ships": 1.0, "fog": 0.4 },
-    { "kind": "rain", "label": "Rain: the pirates do not mind", "ships": 1.0, "fog": 0 },
-    { "kind": "calm", "label": "Calm sea", "ships": 1.0, "fog": 0 }
+    {
+      "kind": "storm",
+      "label": "Storm: 50% more pirate ships",
+      "ships": 1.5,
+      "fog": 0
+    },
+    {
+      "kind": "fog",
+      "label": "Fog: the pirates appear later",
+      "ships": 1.0,
+      "fog": 0.4
+    },
+    {
+      "kind": "rain",
+      "label": "Rain: the pirates do not mind",
+      "ships": 1.0,
+      "fog": 0
+    },
+    {
+      "kind": "calm",
+      "label": "Calm sea",
+      "ships": 1.0,
+      "fog": 0
+    }
   ]
 }

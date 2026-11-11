@@ -13,17 +13,19 @@ The wave shape (start, join, current):
     {"waveId": "6f1c...", "wave": 1, "seed": 123456789, "startsAt": "2026-11-10T12:00:10Z",
      "weather": {"kind": "storm", "label": "Storm: 50% more pirate ships", "ships": 1.5,
                  "fog": 0.0},
-     "flagship": false}
-    flagship is true on Pirate Point: the flagship that only the three lamps can sink.
+     "flagship": false, "boss": false}
+    flagship is true on Pirate Point: the flagship that only the three lamps can sink. boss is true
+    on every 5th wave (5, 10, ...): a warship comes, and the loot of that wave pays twice.
 
 POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionUid": "..."}
     -> the wave. "where" is "own" (your island; made on first use), an island code (with or
-    without "ISLE-", any case) or "pirate_point". The wave number is the best wave survived there
-    plus one (at most 50); "startsAt" is now plus the 10-second countdown. The bell-ringer is the
-    first participant. weather.kind is the real weather state where the bell was rung (Vercel's
-    city-level geo headers, never stored), else of the default place, else calm: storm gives
-    ships 1.5, fog gives fog 0.4, anything else 1.0 and 0. The weather never stops a wave. A
-    repeated actionUid answers the same wave with its stored weather.
+    without "ISLE-", any case) or "pirate_point". On an island the wave number is the won wave
+    plus one, or after a lost wave the best wave minus 2 (at least 1); on Pirate Point the best
+    wave won there plus one; at most 100. "startsAt" is now plus the 10-second countdown. The
+    bell-ringer is the first participant. weather.kind is the real weather state where the bell
+    was rung (Vercel's city-level geo headers, never stored), else of the default place, else
+    calm: storm gives ships 1.5, fog gives fog 0.4, anything else 1.0 and 0. The weather never
+    stops a wave. A repeated actionUid answers the same wave with its stored weather.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -34,9 +36,10 @@ GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
     -> the running wave there, or null. Errors: 404 no_such_island
 
 POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7}
-    -> {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1}
+    -> {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1, "boss": false}
     Every participant finishes their own part, once. A survived wave n pays this player
-    10 + 5 x n + 5 x (houses on that island), on Pirate Point 20 + 5 x n; a lost wave pays 0. A
+    10 + 5 x n + 5 x (house levels on that island), on Pirate Point 20 + 5 x n, twice that on a
+    boss wave; a lost wave pays 0. A
     finish earlier than 15 seconds after "startsAt" is refused (409 wave_too_early, Retry-After)
     and changes nothing; more than 900 seconds after it pays 0. The first finish closes the wave
     for new joins; the island's best wave and one flag are counted once, at the first survived
@@ -109,6 +112,7 @@ class WaveResponse(BaseModel):
     startsAt: str
     weather: WeatherOut
     flagship: bool
+    boss: bool
 
 
 class FinishResponse(BaseModel):
@@ -116,6 +120,7 @@ class FinishResponse(BaseModel):
     coins: int
     waveBest: int
     flags: int
+    boss: bool
 
 
 def wave_out(wave: WaveStart) -> WaveResponse:
@@ -131,6 +136,7 @@ def wave_out(wave: WaveStart) -> WaveResponse:
             fog=wave.weather.fog,
         ),
         flagship=wave.flagship,
+        boss=wave.boss,
     )
 
 
@@ -196,4 +202,5 @@ async def post_finish(
         coins=finished.coins,
         waveBest=finished.wave_best,
         flags=finished.flags,
+        boss=finished.boss,
     )

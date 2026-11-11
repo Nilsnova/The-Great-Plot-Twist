@@ -90,6 +90,9 @@ WALLET_REASONS = (
     # Added by supabase/migrations/20261111010000_market_calls.sql (the up-or-down calls).
     ("market_call_stake", SPEND),
     ("market_call_payout", EARN),
+    # Added by supabase/migrations/20261111030000_tower_defense.sql (crew and the captain).
+    ("crew_hire", SPEND),
+    ("captain_upgrade", SPEND),
 )
 
 

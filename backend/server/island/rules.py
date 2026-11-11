@@ -1,21 +1,27 @@
-"""The rules of the island: what each spot shows, what may be built, the loot cap, the weather.
+"""The rules of the island: what each spot shows, what may be built or upgraded, the unlocks, the
+loot cap and the weather.
 
 Pure Python: no network, no database, no clock. The rules take the catalogue (islands.json) and
 plain values, and give plain values back.
 
-Who enforces what: this file decides what may be built where and what the screen shows. The
-database decides what depends on what happened before (is the spot taken? can the player pay? is a
-wave running? is it too early to finish?), because only the database sees two requests at the
-same moment. The loot is worked out in the database too (wave_finish); loot_cap() below is the same
-rule in Python, for the tests and the documentation.
+Who enforces what: this file decides what may be built where, which level comes next, what is
+unlocked and what the screen shows. The database decides what depends on what happened before
+(is the spot taken? can the player pay? is a wave running?), because only the database sees two
+requests at the same moment; it also refuses a level above the maximum or above the unlocked
+level the server passes. The loot is worked out in the database too (wave_finish); loot_cap()
+below is the same rule in Python, for the tests and the documentation.
 
-Used by: service.py and the tests.
+Unlocks (docs/TOWER-DEFENSE.md section 9): a player's unlock wave is the best wave they won,
+on their own island or in any Pirate Point wave they fought in. A kind at a level is unlocked
+once that wave reaches both the kind's unlockWave and the level's levelUnlockWaves entry.
+
+Used by: service.py, pirate_point.py and the tests.
 """
 
 from dataclasses import dataclass
 
 from server.errors import ApiError
-from server.island.catalogue import IslandCatalogue, Kind, Loot, Spot, Weather
+from server.island.catalogue import Crew, IslandCatalogue, Kind, Loot, Spot, Weather
 
 # The weather state the waves use when the real weather cannot be read.
 CALM = "calm"
@@ -28,13 +34,24 @@ class BuildRefused(ApiError):
 
 
 @dataclass(frozen=True)
+class Built:
+    """A building that stands on a spot."""
+
+    kind: str
+    level: int
+
+
+@dataclass(frozen=True)
 class SpotView:
-    """One build spot as the API shows it: {id, kind, built, cost}."""
+    """One build spot as the API shows it."""
 
     id: str
-    kind: str
+    kind: str  # what stands there, or the first kind the spot takes while it is empty
+    kinds: tuple[str, ...]  # every kind the spot takes
     built: bool
-    cost: int  # the price of the kind, also once it is built
+    level: int  # 0 while empty
+    cost: int  # the level-1 price of `kind`, also once it is built
+    upgrade_cost: int | None  # the price of the next level, None while empty or at the top
 
 
 def kind_named(catalogue: IslandCatalogue, kind: str) -> Kind | None:
@@ -44,33 +61,112 @@ def kind_named(catalogue: IslandCatalogue, kind: str) -> Kind | None:
     return None
 
 
-def price_of(catalogue: IslandCatalogue, kind: str) -> int:
-    """The price of a kind. Every spot's kind is in the list (the loader checks it)."""
+def kind_of(catalogue: IslandCatalogue, kind: str) -> Kind:
+    """A kind that must exist (every spot's kinds are in the list: the loader checks it)."""
     entry = kind_named(catalogue, kind)
     if entry is None:
         raise ValueError(f"No price for the kind {kind}.")
-    return entry.coins
+    return entry
 
 
-def plan_spots(catalogue: IslandCatalogue, built_spots: set[str]) -> tuple[SpotView, ...]:
-    """Every build spot of an island, in the order of the file. Other rows are ignored."""
-    return tuple(
-        SpotView(spot.id, spot.kind, spot.id in built_spots, price_of(catalogue, spot.kind))
-        for spot in catalogue.spots
+def price_of(catalogue: IslandCatalogue, kind: str) -> int:
+    """The level-1 price of a kind."""
+    return kind_of(catalogue, kind).coins
+
+
+def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> SpotView:
+    if built is None:
+        return SpotView(
+            spot.id, spot.kind, spot.kinds, False, 0, price_of(catalogue, spot.kind), None
+        )
+    kind = kind_of(catalogue, built.kind)
+    upgrade = kind.prices[built.level] if built.level < kind.max_level else None
+    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade)
+
+
+def plan_spots(
+    catalogue: IslandCatalogue, built: dict[str, Built], spots: tuple[Spot, ...] | None = None
+) -> tuple[SpotView, ...]:
+    """Every build spot (the island's, or `spots`), in the order of the file. Other rows are
+    ignored, and so is a row whose kind does not belong on its spot."""
+    views = []
+    for spot in catalogue.spots if spots is None else spots:
+        standing = built.get(spot.id)
+        if standing is not None and standing.kind not in spot.kinds:
+            standing = None
+        views.append(spot_view(catalogue, spot, standing))
+    return tuple(views)
+
+
+def find_spot(
+    catalogue: IslandCatalogue, spot_id: str, spots: tuple[Spot, ...] | None = None
+) -> Spot:
+    for spot in catalogue.spots if spots is None else spots:
+        if spot.id == spot_id:
+            return spot
+    if spot_id == CABIN and spots is None:
+        raise BuildRefused(409, "spot_taken", "Your cabin already stands there.")
+    raise BuildRefused(404, "no_such_spot", "There is no such build spot.")
+
+
+# --- unlocks ---
+
+
+def locked(wave: int) -> ApiError:
+    return ApiError(409, "locked", f"Unlocks after wave {wave}.")
+
+
+def unlock_wave_of(catalogue: IslandCatalogue, kind: Kind, level: int) -> int:
+    """The best won wave a player needs for `kind` at `level`."""
+    return max(kind.unlock_wave, catalogue.level_unlock_waves[level - 1])
+
+
+def unlocked_level(catalogue: IslandCatalogue, kind: Kind, wave: int) -> int:
+    """The highest level of `kind` a player with this unlock wave may reach (0: not yet)."""
+    reached = 0
+    for level in range(1, kind.max_level + 1):
+        if unlock_wave_of(catalogue, kind, level) <= wave:
+            reached = level
+    return reached
+
+
+def captain_unlocked_level(catalogue: IslandCatalogue, wave: int) -> int:
+    return max(
+        level
+        for level, needed in enumerate(catalogue.captain.unlock_waves, start=1)
+        if needed <= wave
     )
 
 
-def find_spot(catalogue: IslandCatalogue, spot_id: str) -> Spot:
-    for spot in catalogue.spots:
-        if spot.id == spot_id:
-            return spot
-    if spot_id == CABIN:
-        raise BuildRefused(409, "spot_taken", "Your cabin already stands there.")
-    raise BuildRefused(404, "no_such_spot", "There is no such build spot on your island.")
+def unlock_table(catalogue: IslandCatalogue) -> list[tuple[str, int]]:
+    """Every unlockable thing with the wave it needs: ("wall:1", 0), ("crew:gunner", 5), ..."""
+    items = []
+    for kind in catalogue.kinds:
+        for level in range(1, kind.max_level + 1):
+            items.append((f"{kind.kind}:{level}", unlock_wave_of(catalogue, kind, level)))
+    for member in catalogue.crew:
+        items.append((f"crew:{member.crew}", member.unlock_wave))
+    for level, needed in enumerate(catalogue.captain.unlock_waves, start=1):
+        items.append((f"captain:{level}", needed))
+    return items
+
+
+def check_unlocked(catalogue: IslandCatalogue, kind: Kind, level: int, wave: int) -> None:
+    needed = unlock_wave_of(catalogue, kind, level)
+    if needed > wave:
+        raise locked(needed)
+
+
+# --- build, upgrade, hire, captain ---
 
 
 def check_build(
-    catalogue: IslandCatalogue, spot_id: str, kind: str, built_spots: set[str]
+    catalogue: IslandCatalogue,
+    spot_id: str,
+    kind: str,
+    built: dict[str, Built],
+    wave: int,
+    spots: tuple[Spot, ...] | None = None,
 ) -> tuple[Spot, int]:
     """Check that this kind may be built on this spot, and say what it costs.
 
@@ -79,30 +175,111 @@ def check_build(
       2. an unknown spot                          404 no_such_spot
       3. a kind that does not belong there        422 wrong_kind
       4. a spot where something stands already    409 spot_taken (the database checks it again)
+      5. a kind the player has not unlocked       409 locked
     Whether the player can pay is not asked here: the wallet answers that in the same step.
     """
-    spot = find_spot(catalogue, spot_id)
-    if kind != spot.kind:
-        wanted = kind_named(catalogue, spot.kind)
-        name = wanted.name.lower() if wanted else spot.kind
-        raise BuildRefused(422, "wrong_kind", f"Only a {name} can stand on this spot.")
-    if spot.id in built_spots:
-        raise spot_taken(catalogue, spot)
-    return spot, price_of(catalogue, spot.kind)
+    spot = find_spot(catalogue, spot_id, spots)
+    if kind not in spot.kinds:
+        names = " or a ".join(kind_of(catalogue, name).name.lower() for name in spot.kinds)
+        raise BuildRefused(422, "wrong_kind", f"Only a {names} can stand on this spot.")
+    if spot.id in built:
+        raise spot_taken(catalogue, built[spot.id].kind)
+    entry = kind_of(catalogue, kind)
+    check_unlocked(catalogue, entry, 1, wave)
+    return spot, entry.coins
 
 
-def spot_taken(catalogue: IslandCatalogue, spot: Spot) -> BuildRefused:
-    entry = kind_named(catalogue, spot.kind)
+def check_upgrade(
+    catalogue: IslandCatalogue,
+    spot_id: str,
+    built: dict[str, Built],
+    wave: int,
+    spots: tuple[Spot, ...] | None = None,
+) -> tuple[Spot, Kind, int]:
+    """Check one level up: 404 no_such_spot, 409 not_built, 409 max_level, 409 locked.
+    Returns the spot, the kind and the level the player may reach (for the database)."""
+    spot = find_spot(catalogue, spot_id, spots)
+    standing = built.get(spot.id)
+    if standing is None or standing.kind not in spot.kinds:
+        raise ApiError(409, "not_built", "Build something on this spot first.")
+    kind = kind_of(catalogue, standing.kind)
+    if standing.level >= kind.max_level:
+        raise max_level(kind.name)
+    check_unlocked(catalogue, kind, standing.level + 1, wave)
+    return spot, kind, unlocked_level(catalogue, kind, wave)
+
+
+def max_level(name: str) -> ApiError:
+    return ApiError(409, "max_level", f"{name} is at its highest level.")
+
+
+def crew_named(catalogue: IslandCatalogue, crew: str) -> Crew:
+    for member in catalogue.crew:
+        if member.crew == crew:
+            return member
+    raise ApiError(404, "no_such_crew", "There is no such crew member.")
+
+
+def check_hire(catalogue: IslandCatalogue, crew: str, hired: int, wave: int) -> Crew:
+    """409 crew_full, 409 locked."""
+    member = crew_named(catalogue, crew)
+    if hired >= member.max:
+        raise crew_full(member)
+    if member.unlock_wave > wave:
+        raise locked(member.unlock_wave)
+    return member
+
+
+def crew_full(member: Crew) -> ApiError:
+    return ApiError(409, "crew_full", f"You have every {member.name.lower()} you can hire.")
+
+
+def check_captain(catalogue: IslandCatalogue, level: int, wave: int) -> int:
+    """409 max_level, 409 locked. Returns the captain level the player may reach."""
+    captain = catalogue.captain
+    if level >= len(captain.prices):
+        raise max_level("Your captain")
+    needed = captain.unlock_waves[level]
+    if needed > wave:
+        raise locked(needed)
+    return captain_unlocked_level(catalogue, wave)
+
+
+def captain_next_price(catalogue: IslandCatalogue, level: int) -> int | None:
+    prices = catalogue.captain.prices
+    return prices[level] if level < len(prices) else None
+
+
+def spot_taken(catalogue: IslandCatalogue, kind: str) -> BuildRefused:
+    entry = kind_named(catalogue, kind)
     name = entry.name if entry else "Something"
     return BuildRefused(409, "spot_taken", f"{name} already stands on this spot.")
 
 
-def loot_cap(loot: Loot, wave: int, houses: int, pirate_point: bool = False) -> int:
-    """The loot for surviving wave `wave`: 10 + 5 x wave + 5 x houses on an island, and
-    20 + 5 x wave on Pirate Point (which has no houses)."""
+# --- waves ---
+
+
+def is_boss(catalogue: IslandCatalogue, wave: int) -> bool:
+    every = catalogue.waves.boss_every
+    return every > 0 and wave % every == 0
+
+
+def next_wave(catalogue: IslandCatalogue, wave_best: int, stored_next: int | None) -> int:
+    """The wave the next bell on an island rings (wave_start in SQL does the same)."""
+    wave = stored_next if stored_next is not None else wave_best + 1
+    return min(max(wave, 1), catalogue.waves.highest_wave)
+
+
+def loot_cap(
+    loot: Loot, wave: int, house_levels: int, pirate_point: bool = False, boss: bool = False
+) -> int:
+    """The loot for surviving wave `wave`: 10 + 5 x wave + 5 x house levels on an island, and
+    20 + 5 x wave on Pirate Point (which has no houses); a boss wave pays twice that."""
     if pirate_point:
-        return loot.pirate_point_base + loot.per_wave * wave
-    return loot.base + loot.per_wave * wave + loot.per_house * houses
+        amount = loot.pirate_point_base + loot.per_wave * wave
+    else:
+        amount = loot.base + loot.per_wave * wave + loot.per_house * house_levels
+    return amount * loot.boss_multiplier if boss else amount
 
 
 def weather_for(catalogue: IslandCatalogue, state: str | None) -> Weather:

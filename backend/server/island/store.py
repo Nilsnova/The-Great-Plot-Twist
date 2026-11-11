@@ -10,6 +10,11 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
     wave_join(player, wave)                    join a running wave (20261110020000_wave_crews.sql)
     wave_current(place, owner)                 the running wave of an island, or null
     wave_finish(...)                           one participant's result, loot, best wave, flags
+                                               (the 11-argument version of
+                                               20261111030000_tower_defense.sql: boss loot, the
+                                               restart rule, house levels)
+    island_upgrade, island_hire, island_captain, pp_build, pp_upgrade
+                                               the paid actions of tower defense v2 (same file)
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -27,14 +32,18 @@ from pydantic import AwareDatetime, BaseModel, StrictBool, StrictInt, StrictStr,
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island.codes import CODE_FORMAT, new_code
+from server.island.rules import Built
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
 
 # A new code collides with an existing one about once in 28.6 million; five tries are plenty.
 CODE_TRIES = 5
-# One player has at most 15 building rows (4 home islet plots and 11 island spots).
+# One player has at most 20 building rows (4 home islet plots and 16 island spots).
 MAX_BUILDING_ROWS = 50
+PROGRESS_COLUMNS = (
+    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,point_wave_best"
+)
 
 
 class OpenRow(BaseModel):
@@ -56,6 +65,41 @@ class IslandRow(BaseModel):
 class BuildingRow(BaseModel):
     plot: StrictStr
     building_type: StrictStr
+    level: StrictInt
+
+
+class PointBuildingRow(BaseModel):
+    spot: StrictStr
+    kind: StrictStr
+    level: StrictInt
+
+
+class ProgressRow(BaseModel):
+    wave_best: StrictInt
+    next_wave: StrictInt | None
+    crew_gunner: StrictInt
+    crew_carpenter: StrictInt
+    crew_lookout: StrictInt
+    captain_level: StrictInt
+    point_wave_best: StrictInt
+
+
+class PaidRow(BaseModel):
+    """The answer of a paid action (island_upgrade, island_hire, island_captain, pp_*)."""
+
+    status: Literal["done"]
+    balance: StrictInt
+    repeat: StrictBool
+
+
+class PaidRefusedRow(BaseModel):
+    status: Literal["refused"]
+    reason: StrictStr
+    price: StrictInt = 0
+
+
+class WaveBestRow(BaseModel):
+    wave: StrictInt
 
 
 class NameRow(BaseModel):
@@ -87,6 +131,7 @@ class FinishedRow(BaseModel):
     flags: StrictInt
     expired: StrictBool
     repeat: StrictBool
+    boss: StrictBool = False
 
 
 class RefusedRow(BaseModel):
@@ -106,11 +151,36 @@ class Island:
 
 
 @dataclass(frozen=True)
+class Progress:
+    """What tower defense v2 keeps on the island row."""
+
+    wave_best: int
+    next_wave: int | None  # None: the next bell rings wave_best + 1
+    crew: dict[str, int]  # {"gunner": 0, "carpenter": 0, "lookout": 0}
+    captain_level: int
+    point_wave_best: int
+
+    @property
+    def unlock_wave(self) -> int:
+        """The best wave this player won: own island or any Pirate Point wave they fought in."""
+        return max(self.wave_best, self.point_wave_best)
+
+
+@dataclass(frozen=True)
+class Paid:
+    """A paid action that went through (or was a repeat)."""
+
+    balance: int
+    repeat: bool
+
+
+@dataclass(frozen=True)
 class Refusal:
     """A database function said no. Nothing changed."""
 
     reason: str
     wait_seconds: int = 0
+    price: int = 0
 
 
 def unreadable() -> SupabaseRejected:
@@ -164,10 +234,10 @@ async def find_island(admin: SupabaseAdmin, code: str) -> Island | None:
     return Island(row.player_id, checked_code(row.code), row.wave_best, row.flags)
 
 
-async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, str]:
-    """{plot: building type} of every building that stands on the player's island."""
+async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Built]:
+    """{plot: Built(kind, level)} of every building that stands on the player's island."""
     query = {
-        "select": "plot,building_type",
+        "select": "plot,building_type,level",
         "player_id": f"eq.{player_id}",
         "order": "plot.asc",
         "limit": str(MAX_BUILDING_ROWS),
@@ -176,8 +246,65 @@ async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, st
     built = {}
     for row in rows:
         checked = read_model(BuildingRow, row)
-        built[checked.plot] = checked.building_type
+        built[checked.plot] = Built(checked.building_type, checked.level)
     return built
+
+
+async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
+    """The island row's tower defense columns. The island exists (open_island ran first)."""
+    query = {"select": PROGRESS_COLUMNS, "player_id": f"eq.{player_id}", "limit": "1"}
+    rows = await admin.select_rows("islands", query)
+    if not rows:
+        raise unreadable()
+    row = read_model(ProgressRow, rows[0])
+    crew = {"gunner": row.crew_gunner, "carpenter": row.crew_carpenter, "lookout": row.crew_lookout}
+    return Progress(row.wave_best, row.next_wave, crew, row.captain_level, row.point_wave_best)
+
+
+async def ledger_has(admin: SupabaseAdmin, player_id: str, reason: str, ref: str) -> bool:
+    """True if this player's wallet already has the row of this action (a repeated click)."""
+    query = {
+        "select": "id",
+        "player_id": f"eq.{player_id}",
+        "reason": f"eq.{reason}",
+        "ref": f"eq.{ref}",
+        "limit": "1",
+    }
+    return len(await admin.select_rows("wallet_transactions", query)) > 0
+
+
+async def run_paid(admin: SupabaseAdmin, name: str, arguments: dict[str, Any]) -> Paid | Refusal:
+    """Run one of the paid functions. A refusal changed nothing."""
+    reply = await admin.call_function(name, arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        refused = read_model(PaidRefusedRow, reply)
+        return Refusal(refused.reason, price=refused.price)
+    row = read_model(PaidRow, reply)
+    return Paid(row.balance, row.repeat)
+
+
+async def read_point_buildings(admin: SupabaseAdmin) -> dict[str, Built]:
+    """{spot: Built(kind, level)} of every building on Pirate Point (shared, not secret)."""
+    query = {"select": "spot,kind,level", "order": "spot.asc", "limit": str(MAX_BUILDING_ROWS)}
+    rows = await admin.select_rows("pirate_point_buildings", query)
+    built = {}
+    for row in rows:
+        checked = read_model(PointBuildingRow, row)
+        built[checked.spot] = Built(checked.kind, checked.level)
+    return built
+
+
+async def read_point_wave_best(admin: SupabaseAdmin) -> int:
+    """The best wave won on Pirate Point (the waves with flag_counted)."""
+    query = {
+        "select": "wave",
+        "place": "eq.pirate_point",
+        "flag_counted": "is.true",
+        "order": "wave.desc",
+        "limit": "1",
+    }
+    rows = await admin.select_rows("wave_runs", query)
+    return read_model(WaveBestRow, rows[0]).wave if rows else 0
 
 
 async def read_display_name(admin: SupabaseAdmin, player_id: str) -> str:
