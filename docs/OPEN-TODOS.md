@@ -24,7 +24,7 @@ Start with the ★★★ tasks; each member merges at least two pull requests of
 | Lane | ★★★ first | Then |
 |---|---|---|
 | P, Pirates | P1 wave simulation + fake API · P2 pirate pixel art · P3 waves on screen | P4 man a cannon / repair · P5 sounds |
-| H, Harbor and coins | H1 `formatCoins()` 🪙 everywhere · H2 market stall "up or down?" · H3 match board and fortune teller | H4 weather board · H5 stalls in the world |
+| H, Harbor and coins | H1 `formatCoins()` 🪙 everywhere · H2 market stall "up or down?" · H3 match board (the fortune teller was removed on 11 Nov at the owner's request, D035) | H4 weather board · H5 stalls in the world |
 | U, Look and feel | U1 new panel style · U2 HUD with three things · U3 first 3 minutes · U4 play with friends | U5 toasts and feedback |
 
 Work against the fakes in BUILD-PLAN section 3 until the real API is wired in (planned Sat 14 – Sun 15 Nov). The real API's error shape is `{"error": {"code", "message"}}`. Lanes U and H: start from [UX-AUDIT.md](UX-AUDIT.md).
@@ -66,9 +66,9 @@ Finnhub answers every stock request with HTTP 401 (key rejected, seen in the liv
 2. Vercel > project the-great-plot-twist > Settings > Environment Variables > `STOCK_API_KEY` > Edit: paste with no spaces or quotes, Production and Preview > Save.
 3. Redeploy the latest production deployment (or wait for the next push).
 
-### 4d. Approve the prediction questions (10 minutes, project owner or any member)
+### 4d. Prediction questions: no longer needed
 
-The fortune teller shows nothing because all questions in `backend/content/predictions/questions.json` still say `reviewedBy: pending`. Read each question; approve the suitable ones for a class (no politics, violence or gambling-adjacent topics) by a pull request that sets `reviewedBy` to your name; replace unsuitable ones.
+The fortune teller was removed from the game on 11 Nov at the owner's request (no prediction market, [D035](DECISIONS.md)), so the questions in `backend/content/predictions/questions.json` need no review. The backend code stays, switched off, until a later cleanup.
 
 ## 5. Before the class demo (the new game)
 
