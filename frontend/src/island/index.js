@@ -11,7 +11,7 @@
 //   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and Play with a friend
 //   setPresence(presence)                     the captains in the room, for the arrival toasts (§11)
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
-// crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
+// island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
 import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
@@ -25,6 +25,9 @@ import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
+// A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
+// room (island_changed), so every other defender reads the island again (co-op, TOWER-DEFENSE.md §6).
+export const SPOTS_CHANGED = 'island_spots_changed';
 // What this device has been told once: the unlock lines (§9) and the musket hint (§10).
 export const NEWS_KEY = 'plot_twist_td_news_v1';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
@@ -63,7 +66,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
   const where = () => (visiting ? displayIslandCode(visiting.code) : 'own');
-  const flow = createWaveFlow({api, emit, placeholder, now, setTimer, clearTimer,
+  // Before a wave we are in starts: the defended island once more, so a friend's co-op build is in it.
+  const flow = createWaveFlow({api, emit, placeholder, now, setTimer, clearTimer, prepare: () => refreshDefended(),
     notify: (text, tone) => ui.toast(text, tone), banner: text => ui.banner(text), onChange: () => refreshCard(),
     defensesOf: () => defenses(target()?.spots ?? [])});
   const stopFinished = on(WAVE_FINISHED, event => {
@@ -194,6 +198,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!disposed && fresh.ok && visiting) visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)};
   }
   async function reloadOwn() { const mine = await api.getIsland(); if (!disposed && mine.ok) setOwn(mine.data); }
+  // The island being defended, read again: after a friend built or upgraded there (island_changed in
+  // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
+  async function refreshDefended() {
+    if (disposed) return;
+    if (visiting) await reloadVisit(); else if (own) await reloadOwn(); else return;
+    refreshCard();
+  }
   async function took(answer, place) {
     if (place === 'point') { point = answer.data; if (Number.isSafeInteger(answer.data.coins)) tookCoins(answer.data.coins); else await reloadOwn(); }
     else if (place === 'visit') { await Promise.all([reloadVisit(), reloadOwn()]); }
@@ -221,6 +232,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       await took(answer, place);
       if (disposed) return;
       if (place === 'own') emit({type: ISLAND_BUILT, kind: choice, spot: spotId});
+      emit({type: SPOTS_CHANGED, place, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
       ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
@@ -241,6 +253,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const now = (place === 'point' ? point : place === 'visit' ? visiting : own)?.spots?.find(item => item.id === spotId);
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
+      emit({type: SPOTS_CHANGED, place, spot: spotId});
       ui.toast(`${name} is now level ${now?.level ?? '?'}${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
     } else await refused(answer, place);
     refreshCard();
@@ -373,6 +386,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       await flow.look(where());
       return flow.current && !flow.current.joined ? flow.join(where()) : null;
     },
+    refreshDefended,
     setBattle(value) { battle = value === true; applyWorld(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
@@ -380,7 +394,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // player stands (own island or the friend's), the bell swings; answers like flow.ring ({ok, ...}).
     async ringBell() {
       if (disposed || !target()) return {ok: false, status: 0, code: 'not_ready', message: 'Your island is still loading.'};
-      const answer = await flow.ring(where());
+      const answer = await flow.ring(where(), {joinRunning: true});
       if (!disposed && answer.ok) world?.ring();
       return answer;
     },
