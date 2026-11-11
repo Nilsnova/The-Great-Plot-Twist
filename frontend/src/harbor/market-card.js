@@ -1,6 +1,6 @@
-// The market stall card: "Up or down in 1 hour?" (INTERFACES.md, the market stall, D034). One item per asset
+// The market stall card: "Up or down in 5 minutes?" (INTERFACES.md, the market stall, D034). One item per asset
 // (Bitcoin, Ether, Gold, Apple, NVIDIA, with the server's names) with its real price, a tiny sparkline,
-// Up / Down and 5 / 10 / 25 coins. Open calls count down to their hour; decided calls show their result.
+// Up / Down and 5 / 10 / 25 coins. Open calls count down to their five minutes; decided calls show their result.
 // It talks to GET and POST /api/market/calls through calls-http.js; the server decides every number.
 //   const market = createMarketEntry(ctx);  await market.open();  market.active;  market.close();  market.dispose();
 // ctx comes from online/market-host.js: {container, resetInput, focusGame, onSignIn, request, onSessionChange};

@@ -37,7 +37,7 @@ export function fakeCalls({assets, stocks = 'closed', calls = [], balance = 100,
       if (refuse) return {ok: false, code: refuse, status: REFUSAL_STATUS[refuse] ?? 409, message: 'Server words'};
       if (!receipts.has(uid)) {
         const call = marketCall({id: `call-${requests.length}`, asset: body.asset, direction: body.direction, stake: body.stake,
-          openPrice: 74339.12, openedAt: '2026-11-11T12:00:00Z', settleAt: '2026-11-11T13:00:00Z'});
+          openPrice: 74339.12, openedAt: '2026-11-11T12:00:00Z', settleAt: '2026-11-11T12:05:00Z'});
         own = [...own, call]; coins -= body.stake; receipts.set(uid, call);
       }
       return {ok: true, data: structuredClone({...receipts.get(uid), balance: coins})};

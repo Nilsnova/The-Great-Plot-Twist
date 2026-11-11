@@ -1,4 +1,4 @@
-"""Market call routes: the Harbor market stall, "Up or down in 1 hour?" (decision D034).
+"""Market call routes: the Harbor market stall, "Up or down in 5 minutes?" (decision D034).
 
 The rules are in backend/server/market/calls.py, the database part in
 supabase/migrations/20261111010000_market_calls.sql. Coins are play money only.

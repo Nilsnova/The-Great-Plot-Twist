@@ -1,4 +1,4 @@
-// The HTTP side of the market stall: "Up or down in 1 hour?" (INTERFACES.md, the market stall, D034).
+// The HTTP side of the market stall: "Up or down in 5 minutes?" (INTERFACES.md, the market stall, D034).
 // The only file of the stall that names a route. It talks through the private request of
 // online/market-policy.js (signed in, flag `market`), so it never holds a token itself.
 //   const adapter = createCallsHttpAdapter({request});

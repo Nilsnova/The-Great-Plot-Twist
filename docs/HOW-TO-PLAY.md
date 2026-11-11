@@ -100,7 +100,7 @@ Pirate Point is the lighthouse island. Everyone shares it. Sail there from the s
 
 Open the sea chart and pick **The Harbor**. Walk to a stall and press **E**, or tap it. **Menu**, then **Harbor**, lists every stall.
 
-- **Market stall:** will a real price go up or down in 1 hour? Bitcoin, Ether, gold, Apple or Nvidia. Stake 🪙 5, 10 or 25. Right pays twice your stake. The same price gives it back.
+- **Market stall:** will a real price go up or down in 5 minutes? Bitcoin, Ether, gold, Apple or Nvidia. Stake 🪙 5, 10 or 25. Right pays twice your stake. The same price gives it back.
 - **Match board:** pick the winner of a real football match with 🪙 5, 10 or 25.
 - **Weather board:** today's real weather, and what it does to the pirates.
 - **Duel ring:** tap a captain and choose **Friendly duel (3 rounds)**.

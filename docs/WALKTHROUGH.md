@@ -450,7 +450,7 @@ These frames are **to be written by the lane's members** (what, where, why, limi
 
 ### Lane H: Harbor and coins
 - **Where it lives:** [frontend/src/harbor/](../frontend/src/harbor/) (the market stall, the match board, the weather board, the overview), [frontend/src/lib/coins.js](../frontend/src/lib/coins.js), the server parts in part 6 and [D034](DECISIONS.md).
-- **Known facts:** whole coins; stakes of 5, 10 or 25; the market stall is "Up or down in 1 hour?" with 2 × stake for a right call ([D034](DECISIONS.md)); no prediction market ([D035](DECISIONS.md)).
+- **Known facts:** whole coins; stakes of 5, 10 or 25; the market stall is "Up or down in 5 minutes?" with 2 × stake for a right call ([D034](DECISIONS.md)); no prediction market ([D035](DECISIONS.md)).
 - **Known issue:** `tests/harbor/cards.test.js` "lists the three stalls…" fails ([OPEN-TODOS.md](OPEN-TODOS.md), section 7).
 
 ### Lane U: Look and feel

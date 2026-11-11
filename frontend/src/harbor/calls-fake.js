@@ -11,9 +11,9 @@ const ASSETS = [
   {id: 'apple', name: 'Apple', price: 271.2},
   {id: 'nvidia', name: 'NVIDIA', price: 190.1, closedReason: 'outside_hours'},
 ];
-const STAKES = [5, 10, 25], MAX_OPEN = 3, KEEP_DECIDED = 10, HOUR_MS = 3600000;
+const STAKES = [5, 10, 25], MAX_OPEN = 3, KEEP_DECIDED = 10, HOLD_MS = 300000;
 
-export function createFakeCallsAdapter({settleMs = HOUR_MS, now = () => Date.now(), balance: start = 100} = {}) {
+export function createFakeCallsAdapter({settleMs = HOLD_MS, now = () => Date.now(), balance: start = 100} = {}) {
   let balance = start, count = 0;
   const assets = ASSETS.map(asset => ({...asset, closedReason: asset.closedReason ?? null}));
   const calls = [], receipts = new Map();

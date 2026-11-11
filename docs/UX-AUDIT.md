@@ -92,7 +92,7 @@ Systemic: two modal systems (monospace pixel: goal, lock, pause, festival; serif
 
 ## h. Cuts, ranked by simplicity gained
 1. The whole mystery: case screens, Journal toolbar, prologue, interiors, Full mystery/prologue menu entries. Removes about 15 screens and 2 menu items.
-2. Exchange as a trading desk: replace it with a single "Up or down in 1 h? 5 🪙" card. Kill leverage, fees, tickers and stocks.
+2. Exchange as a trading desk: replace it with a single "Up or down in 5 minutes? 5 🪙" card. Kill leverage, fees, tickers and stocks.
 3. Festival, bulletin, arena and the Rewards/Log page. The festival needs the case Relighting; the arena duplicates the captain duel.
 4. Three join systems: one Harbor code (c).
 5. HUD down to 3 elements (b). Settings down to 4 controls. Pause down to 3 items. Drop the ☷ and Controls buttons.
