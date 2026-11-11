@@ -167,7 +167,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (ui.open === 'captains') ui.captainsCard(captainsModel([...here.values()]));
   }
   function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); }
-  async function freshOwn() { if (own) return; const answer = await api.getIsland(); if (!disposed && answer.ok) { setOwn(answer.data); refreshCard(); } }
+  async function freshOwn() {
+    if (own) return null;
+    const answer = await api.getIsland();
+    if (!disposed && answer.ok) { setOwn(answer.data); refreshCard(); }
+    return answer;
+  }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
   function openCaptain() { openSpot = null; cardMessage = ''; ui.captainCard(captain(), upgradeCaptain); void freshOwn(); }
   function openCaptains() { openSpot = null; cardMessage = ''; ui.captainsCard(captainsModel([...here.values()])); }
@@ -179,7 +184,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     openSpot = null; cardMessage = '';
     ui.inviteCard(inviteModel(own?.code));
     emit({type: ISLAND_INVITE_OPENED, code: own?.code ? displayIslandCode(own.code) : null});
-    if (!own) void freshOwn();
+    if (!own) void freshOwn().then(answer => {
+      if (disposed || own || !answer || answer.ok || ui.open !== 'invite') return;
+      const problem = answer.status === 401 || answer.code === 'not_ready' ? 'signin'
+        : (answer.message || 'Your island could not be loaded.');
+      ui.inviteCard(inviteModel(null, undefined, problem));
+    });
   }
   function pick(id) {
     if (disposed) return;

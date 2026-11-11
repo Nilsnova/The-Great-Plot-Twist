@@ -135,10 +135,16 @@ export function bellModel({wave = null, joined = false, countdown = null, busy =
 }
 
 // Play with a friend (§6, §11): the link, its QR and one line on what happens.
-export function inviteModel(code, base) {
+// problem: null while loading, 'signin' when the player is not signed in (no island yet), or a
+// plain message when the island could not be read.
+export function inviteModel(code, base, problem = null) {
   const shown = displayIslandCode(code);
-  return {title: 'Play with a friend', lead: 'Send this link to up to 3 friends', code: shown || 'Loading…', url: shown ? visitUrl(code, base) : '',
+  const model = {title: 'Play with a friend', lead: 'Send this link to up to 3 friends', code: shown || 'Loading…', url: shown ? visitUrl(code, base) : '',
     line: shown ? 'They tap Join, and you defend your island together.' : 'Your island code is still loading.', copy: 'Copy link'};
+  if (shown || !problem) return model;
+  if (problem === 'signin') return {...model, code: 'Not signed in',
+    line: 'Sign in first, so your island gets its own code: Menu › Settings › Account › Sign in with GitHub. Then open this card again.'};
+  return {...model, code: 'Island not loaded', line: `${problem} Close this card and open it again to try once more.`};
 }
 // The captains on your island (§11), from the presence room: name tags for the menu card.
 export function captainsModel(names = []) {

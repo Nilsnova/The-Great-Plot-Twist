@@ -128,6 +128,10 @@ describe('bell, invite and toasts', () => {
       url: 'https://the-great-plot-twist.vercel.app/?visit=ISLE-K7Q2M', line: 'They tap Join, and you defend your island together.'});
     expect(captainsModel(['Captain Brine', 'Captain Brine', '', 'Captain Tern'])).toMatchObject({names: ['Captain Brine', 'Captain Tern'], line: '2 of 3 friends here.'});
     expect(inviteModel(null)).toMatchObject({code: 'Loading…', url: ''});
+    expect(inviteModel(null, undefined, 'signin')).toMatchObject({code: 'Not signed in', url: ''});
+    expect(inviteModel(null, undefined, 'signin').line).toContain('Sign in with GitHub');
+    expect(inviteModel(null, undefined, 'The server is busy.').line).toContain('The server is busy.');
+    expect(inviteModel('K7Q2M', undefined, 'signin').code).toBe('ISLE-K7Q2M');
   });
   it('writes coins, loot and the countdown', () => {
     expect(coinText(120)).toBe('🪙 120');
