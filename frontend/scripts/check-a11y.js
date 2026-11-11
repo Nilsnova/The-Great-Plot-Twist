@@ -68,9 +68,9 @@ try{
  await page.evaluate(()=>window.__plotTwist.adapter.dev.setAccount({state:'signed_out'}));
  await page.keyboard.press('Escape');report.accountEscapeCanvas=await page.evaluate(()=>document.activeElement?.matches('canvas'));
  await auditRequestStates(page,audit);
- // The rehearsal's simulated harbor captains hide the presence HUD; on the Home islet it shows the fake's live captains.
+ // The old islet world HUD (islands flag off). The presence list left the play HUD with lane U2 (coins,
+ // quest strip and Menu only), so it is no longer audited as a HUD panel.
  await page.evaluate(async()=>{await window.__island.world.goTo('home_islet',{fast:true});});await audit('islet-world','.hud');
- await audit('presence','.presence-hud');
  await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(async()=>{const {setPreferences}=await import('/src/settings/preferences.js');setPreferences({reducedMotion:true});});
  await page.waitForTimeout(300);
  report.reducedMotion=await page.evaluate(()=>({runningAnimations:document.getAnimations().filter(a=>a.playState==='running').map(a=>a.animationName??'unknown')}));

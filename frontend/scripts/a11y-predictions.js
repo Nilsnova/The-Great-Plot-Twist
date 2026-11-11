@@ -1,7 +1,9 @@
-// Explicit development practice is opened with real hotspot E and audited through native desk controls.
+// The fortune teller (lane H's Harbor card for the prediction desk), opened with the real hotspot E in the
+// explicit development practice (?desk=local) and audited through its native buttons: pick a side, a
+// 5 / 10 / 25 stake, place it with the keyboard, see it under My stakes, then Escape back to the game.
 import assert from 'node:assert/strict';
 import {startFromTitle} from './shell-browser-tools.js';
-const selector = '.desk-modal[open]';
+const selector = '.harbor-fortune[open]';
 async function openLocalDesk(page, url) {
   await page.emulateMedia({reducedMotion: 'reduce'});
   await page.goto(url + '/?adapter=local&desk=local'); await startFromTitle(page);
@@ -16,15 +18,16 @@ async function openLocalDesk(page, url) {
   await page.waitForFunction(() => { const prompt = document.querySelector('.interact');
     return prompt?.dataset.zone === 'prediction_kiosk' && !prompt.hidden; });
   await page.keyboard.press('KeyE'); await page.locator(selector).waitFor({state: 'visible'});
-  await page.locator(selector + ' .desk-practice').filter({hasText: 'Practice desk: not real coins'}).waitFor({state: 'visible'});
-  await page.locator(selector + ' .desk-card').first().waitFor({state: 'visible'});
+  await page.locator(selector + ' .harbor-question-item').first().waitFor({state: 'visible'});
 }
 async function prepareStake(page) {
-  const card = page.locator(selector + ' .desk-card').first();
-  await card.getByRole('radio', {name: 'No', exact: true}).check();
-  const stakeName = 'Stake ' + await card.locator('h3').innerText();
-  await card.getByRole('spinbutton').fill('17'); await card.getByRole('button', {name: stakeName, exact: true}).click();
-  await card.getByRole('button', {name: 'Confirm', exact: true}).waitFor({state: 'visible'}); return card;
+  const card = page.locator(selector + ' .harbor-question-item').first();
+  assert.equal(await card.locator('[aria-pressed="true"]').count(), 0, 'Nothing is preselected');
+  assert.ok(await card.locator('.harbor-confirm').isDisabled(), 'Place stake waits for a side and a stake');
+  const text = await card.locator('h3').innerText();
+  await card.getByRole('group', {name: 'Yes or no?', exact: true}).getByRole('button', {name: `No, ${text}`, exact: true}).click();
+  await card.getByRole('group', {name: 'Your stake', exact: true}).getByRole('button', {name: `10 coins on ${text}`, exact: true}).click();
+  await card.getByRole('button', {name: `Place 🪙 10 on No, ${text}`, exact: true}).waitFor({state: 'visible'}); return card;
 }
 async function shortDesk(page, capture) {
   await page.setViewportSize({width: 375, height: 400});
@@ -41,19 +44,15 @@ async function shortDesk(page, capture) {
 export async function auditPredictionsPanel(page, {url, audit, capture}) {
   try {
     await openLocalDesk(page, url); const modal = page.locator(selector);
-    await audit('predictions-questions', selector, 'case');
-    await prepareStake(page); await audit('predictions-confirm', selector, 'case');
-    await page.keyboard.press('Escape');
-    const confirmEscapeKeptPanel = await modal.count() === 1
-      && await modal.getByRole('button', {name: 'Confirm', exact: true}).count() === 0;
-    assert.ok(confirmEscapeKeptPanel, 'The first desk Escape cancels only its unsubmitted confirmation');
-    const card = await prepareStake(page); await card.getByRole('button', {name: 'Confirm', exact: true}).click();
-    await card.locator('.desk-your-stake').filter({hasText: '17 coins on NO'}).waitFor({state: 'visible'});
-    await audit('predictions-staked', selector, 'case');
-    await modal.getByRole('tab', {name: 'My stakes', exact: true}).click();
-    await modal.locator('.desk-stake-main').filter({hasText: '17 coins on NO'}).waitFor({state: 'visible'});
-    await audit('predictions-stakes', selector, 'case');
-    const checks = {...await shortDesk(page, capture), confirmEscapeKeptPanel};
+    await audit('fortune-questions', selector, 'case');
+    const card = await prepareStake(page); await audit('fortune-confirm', selector, 'case');
+    // Keyboard only: the place button takes Enter.
+    await card.locator('.harbor-confirm').focus(); await page.keyboard.press('Enter');
+    await card.locator('.harbor-notice').filter({hasText: 'Your 🪙 10 is on No.'}).waitFor({state: 'visible'});
+    await audit('fortune-staked', selector, 'case');
+    const listed = await modal.locator('.harbor-own-row').filter({hasText: '🪙 10 on No'}).count() > 0;
+    const checks = {...await shortDesk(page, capture), stakeListed: listed};
+    await page.setViewportSize({width: 1280, height: 900});
     await page.keyboard.press('Escape'); await modal.waitFor({state: 'hidden'});
     checks.escapeClosed = await page.locator(selector).count() === 0;
     checks.noPause = await page.locator('.shell-screen[open]').count() === 0;

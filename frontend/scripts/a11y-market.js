@@ -1,10 +1,13 @@
-// Audit the actual Exchange panel through the explicit local adapter and public native controls.
+// Audit the Harbor market stall (lane H) that the market hall hotspot opens, with public native controls.
+// The hotspot opens the card in the local game (?market=local has no prices, so it shows its unavailable
+// state); the same card is then audited with prices from the made-up fixtures of the Harbor card tests:
+// up or down, a 5 / 10 / 25 stake, the confirm button and the placed stake. No /api/market request.
 import {startFromTitle} from './shell-browser-tools.js';
 
-const selector='.market-modal[open]';
-const simulation='Simulation with play money. Real names and real prices, no real money and no prizes.';
+const selector='.harbor-market[open]';
+const playMoney='Play coins only. They cannot be bought or cashed out.';
 
-async function openLocalMarket(page,url){
+async function openFromHotspot(page,url){
   await page.goto(url+'/?adapter=local&market=local');
   await startFromTitle(page);
   await page.evaluate(async()=>{
@@ -19,17 +22,30 @@ async function openLocalMarket(page,url){
     &&document.activeElement?.matches('canvas[tabindex="0"]')===true);
   await page.keyboard.press('KeyE');
   await page.locator(selector).waitFor();
-  await page.locator(selector+' .market-prices .market-card').first().waitFor();
+  await page.locator(selector+' .harbor-footnote').waitFor();
+}
+
+// The same card with made-up prices, opened over the game the way the hotspot opens it.
+async function openWithPrices(page){
+  await page.evaluate(async()=>{
+    const fx=await import('/tests/harbor/fixtures.js');
+    const {createMarketEntry}=await import('/src/harbor/market-card.js');
+    const canvas=document.querySelector('canvas[tabindex="0"]');
+    window.__auditMarket=createMarketEntry({container:document.querySelector('#game'),adapter:fx.fakeMarket({stocks:'open'}),
+      now:()=>fx.NOW,resetInput:()=>window.__island.resetInput?.(),focusGame:()=>canvas?.focus({preventScroll:true})});
+    await window.__auditMarket.open();
+  });
+  await page.locator(selector+' .harbor-asset').first().waitFor();
 }
 
 async function notices(panel){
   return panel.evaluate((root,literal)=>{
-    const notes=[...root.querySelectorAll('.market-simulation')].filter(element=>!element.closest('[hidden]'));
+    const notes=[...root.querySelectorAll('.harbor-footnote')].filter(element=>!element.closest('[hidden]'));
     const text=root.textContent;
     return {simulationNotice:notes.length===1&&notes[0].textContent===literal,
-      creditsOnlyInSettings:!root.querySelector('a[href*="binance"],a[href*="finnhub"],a[href*="creativecommons"],.market-credits')
+      creditsOnlyInSettings:!root.querySelector('a[href*="binance"],a[href*="finnhub"],a[href*="creativecommons"]')
         &&!text.includes('Real prices from Binance market data.')&&!text.includes('Stock prices from Finnhub.')};
-  },simulation);
+  },playMoney);
 }
 
 async function shortPanel(page,capture){
@@ -46,51 +62,49 @@ async function shortPanel(page,capture){
   return checks;
 }
 
+async function closesToGame(page){
+  await page.keyboard.press('Escape');
+  await page.locator(selector).waitFor({state:'hidden'});
+  return {escapeClosed:await page.locator(selector).count()===0,
+    noPause:await page.locator('.shell-screen[open]').count()===0,
+    canvasFocus:await page.evaluate(()=>document.activeElement?.matches('canvas[tabindex="0"]')===true)};
+}
+
 export async function auditMarketPanel(page,{url,audit,capture}){
   let marketRequests=0;
   const observe=request=>{if(new URL(request.url()).pathname.startsWith('/api/market'))marketRequests++;};
   page.on('request',observe);
   try{
-    await openLocalMarket(page,url);
+    await openFromHotspot(page,url);
     const panel=page.locator(selector),checks={simulationNotice:true,creditsOnlyInSettings:true};
     const auditState=async name=>{
       await audit(name,selector,'case');
       const current=await notices(panel);
       checks.simulationNotice&&=current.simulationNotice;checks.creditsOnlyInSettings&&=current.creditsOnlyInSettings;
     };
+    await auditState('market-hotspot');
+    const hotspot=await closesToGame(page);
+    checks.hotspotEscapeClosed=hotspot.escapeClosed;checks.hotspotNoPause=hotspot.noPause;checks.hotspotCanvasFocus=hotspot.canvasFocus;
+    await openWithPrices(page);
     await auditState('market-prices');
-    const prices=panel.getByRole('tab',{name:'Prices',exact:true}),positions=panel.getByRole('tab',{name:'Your positions',exact:true});
-    await prices.focus();await page.keyboard.press('ArrowRight');
-    checks.nativeTabsArrows=await positions.evaluate(element=>element.getAttribute('aria-selected')==='true'&&document.activeElement===element);
-    await page.keyboard.press('ArrowLeft');checks.nativeTabsArrows&&=await prices.evaluate(element=>element.getAttribute('aria-selected')==='true'&&document.activeElement===element);
-    const company=panel.locator('.market-card').filter({has:page.getByRole('heading',{name:/^Tidewright Works\b/})});
-    await company.getByRole('button',{name:'Open a position in Tidewright Works',exact:true}).click();
-    const form=company.locator('.market-form:not([hidden])');await form.waitFor();
-    await auditState('market-open-form');
-    const rising=form.getByRole('radio',{name:'Rising: you gain when the price goes up',exact:true});
-    const falling=form.getByRole('radio',{name:'Falling: you gain when the price goes down',exact:true});
-    await rising.check();await rising.focus();await page.keyboard.press('ArrowRight');checks.nativeSideArrows=await falling.isChecked();
-    await page.keyboard.press('ArrowLeft');checks.nativeSideArrows&&=await rising.isChecked();
-    const stakes=form.locator('input[type="radio"][name$="-stake"]');
-    await stakes.first().check();await stakes.first().focus();await page.keyboard.press('ArrowRight');checks.nativeStakeArrows=await stakes.nth(1).isChecked();
-    await page.keyboard.press('ArrowLeft');checks.nativeStakeArrows&&=await stakes.first().isChecked();
-    const confirm=form.getByRole('button',{name:/^Open rising position for /});await confirm.waitFor();
-    await auditState('market-open-confirmation');
-    await confirm.click();
-    await page.waitForFunction(()=>document.querySelector('.market-modal[open] .market-status')?.textContent
-      .startsWith('Opened your rising position in Tidewright Works at '));
-    await positions.click();
-    const position=panel.locator('.market-position').filter({has:page.getByRole('heading',{name:/^Tidewright Works\b/})});
-    await position.waitFor();
-    await auditState('market-positions');
-    await position.getByRole('button',{name:'Close your rising position in Tidewright Works',exact:true}).click();
-    await position.getByRole('button',{name:'Yes, close it',exact:true}).waitFor();
-    await auditState('market-close-confirmation');
+    const asset=panel.locator('.harbor-asset').filter({has:page.getByRole('heading',{name:'Ether',exact:true})});
+    const sides=asset.getByRole('group',{name:'Up or down for Ether',exact:true});
+    const stakes=asset.getByRole('group',{name:'Your stake',exact:true});
+    checks.nothingPreselected=await asset.locator('[aria-pressed="true"]').count()===0
+      &&await asset.locator('.harbor-confirm').isDisabled();
+    const up=sides.getByRole('button',{name:'Up, Ether',exact:true}),ten=stakes.getByRole('button',{name:'10 coins on Ether',exact:true});
+    await up.click();await ten.click();
+    const confirm=asset.getByRole('button',{name:'Place 🪙 10 on Up, Ether',exact:true});await confirm.waitFor();
+    checks.choicesPressed=await up.getAttribute('aria-pressed')==='true'&&await ten.getAttribute('aria-pressed')==='true';
+    await auditState('market-confirm');
+    // Keyboard only: the confirm button takes Enter.
+    await confirm.focus();await page.keyboard.press('Enter');
+    await asset.locator('.harbor-notice').filter({hasText:'Your 🪙 10 is on Up.'}).waitFor();
+    await auditState('market-placed');
     Object.assign(checks,await shortPanel(page,capture));
-    await page.keyboard.press('Escape');
-    checks.escapeClosed=await page.locator(selector).count()===0;
-    checks.noPause=await page.locator('.shell-screen[open]').count()===0;
-    checks.canvasFocus=await page.evaluate(()=>document.activeElement?.matches('canvas[tabindex="0"]')===true);
+    await page.setViewportSize({width:1280,height:900});
+    Object.assign(checks,await closesToGame(page));
+    await page.evaluate(()=>{window.__auditMarket?.dispose();delete window.__auditMarket;});
     checks.noLiveMarketRequests=marketRequests===0;
     return {width:375,height:400,checks};
   }finally{page.off('request',observe);await page.setViewportSize({width:1280,height:900});}
