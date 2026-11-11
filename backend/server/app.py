@@ -62,6 +62,7 @@ from server.routes import (
     keepalive,
     lock,
     market,
+    market_calls,
     me,
     predictions,
     save,
@@ -86,6 +87,9 @@ ISLAND_BUILDS_PER_MINUTE = 30
 ISLAND_VISITS_PER_MINUTE = 30
 WAVE_CALLS_PER_MINUTE = 20
 WAVE_READS_PER_MINUTE = 30
+# Up-or-down market calls (routes/market_calls.py).
+MARKET_CALLS_PER_MINUTE = 20
+MARKET_CALL_READS_PER_MINUTE = 60
 
 
 def new_fastapi_app(settings: Settings) -> FastAPI:
@@ -244,6 +248,13 @@ def create_app(
     app.state.wave_budget = PlayerBudget(
         WAVE_CALLS_PER_MINUTE, 60, clock=clock, message="Too many bells at once. Wait a moment."
     )
+    # The market stall's up-or-down calls (D034): POST and GET budgets per player.
+    app.state.call_budget = PlayerBudget(
+        MARKET_CALLS_PER_MINUTE, 60, clock=clock, message="Too many calls at once. Wait a moment."
+    )
+    app.state.call_read_budget = PlayerBudget(
+        MARKET_CALL_READS_PER_MINUTE, 60, clock=clock, message="Too many reads. Wait a moment."
+    )
     app.state.wave_read_budget = PlayerBudget(
         WAVE_READS_PER_MINUTE, 60, clock=clock, message="Too many wave checks. Wait a moment."
     )
@@ -261,6 +272,7 @@ def create_app(
     app.include_router(delete_me.router, prefix="/api")
     app.include_router(intro.router, prefix="/api")
     app.include_router(auth_exchange.router, prefix="/api")
+    app.include_router(market_calls.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
     app.include_router(crews.router, prefix="/api")
     app.include_router(crew_orders.router, prefix="/api")

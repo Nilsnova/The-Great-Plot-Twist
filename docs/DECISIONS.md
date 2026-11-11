@@ -594,6 +594,16 @@ browser's storage unread. The `case`, crew and save routes still answer if the f
 
 **Why:** The class is in Lisbon and the Premier League alone often leaves the board empty midweek. The Champions League rule follows the usual 1X2 convention and stays one line of code; excluding knockouts would hide the February games. Only competition codes and dates go to the provider, so the privacy page does not change.
 
+## D034 · Simple market calls instead of leverage in the game · 2026-11-11
+
+**Status:** Built by lane 0 on branch `feat/g31-market-calls`. Migration `20261111010000_market_calls.sql`, behind the existing flag `market`. Not applied yet: the owner reviews and applies it.
+
+**Decision:** The Harbor market stall offers one thing: "Up or down in 1 hour?" on Bitcoin, Ether, Gold (PAXG), Apple or NVIDIA, the Exchange's own company ids and price feed. A call stakes 5, 10 or 25 coins at the live price now; one hour later a right call pays 2 × stake, a wrong one 0, an unchanged price refunds, and no price within 24 hours refunds. At most 3 open calls per player; a repeated actionUid is the same call. Assets are open for calls only while the feed holds a live price (so in demo mode, and for stocks while the stock key fails, they show closed). `GET /api/market/calls` lists the assets and the player's calls and decides due calls lazily on that read; `POST /api/market/calls` opens one. Coins move only through `market_call_open()` and `market_call_settle()` (reasons `market_call_stake`, `market_call_payout`, ref `call:<id>`). The leverage Exchange routes and tables stay in the code and the database, out of the player-facing game.
+
+**Why:** The pitch promised "real prices, no leverage jargon" and small numbers. A fixed 1-hour window and a 2× payout fit one sentence on a card and need no fees, zero points or liquidations. Lazy settlement needs no scheduler on the free hosting.
+
+**Limits:** The settle price is the first price the server reads at or after `settle_at`, not the exact price at that second; a player who looks late is decided on a later price (for a stock outside New York hours, the last close). The 2× payout has no house edge, so the expected value is about 0 for a fair coin; with only three stakes and three open calls the coin flow stays small.
+
 ## D030 · Class code instead of the demo window · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the

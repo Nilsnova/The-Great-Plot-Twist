@@ -87,6 +87,9 @@ WALLET_REASONS = (
     ("pirate_loot", EARN),
     ("starting_coins", EARN),
     ("fresh_start", EITHER),
+    # Added by supabase/migrations/20261111010000_market_calls.sql (the up-or-down calls).
+    ("market_call_stake", SPEND),
+    ("market_call_payout", EARN),
 )
 
 

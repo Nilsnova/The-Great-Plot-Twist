@@ -88,6 +88,8 @@ The ledger accepts only the reasons in `wallet_reasons`, in this order. The Pyth
 | `market_buy` | spend | Coins paid for shares bought on the Island Exchange. *Added by the second migration.* |
 | `market_sell` | earn | Coins received for shares sold on the Island Exchange. *Added by the second migration.* |
 | `market_fee` | spend | Fee paid on a trade on the Island Exchange. *Added by the second migration.* |
+| `market_call_stake` | spend | The stake of an up-or-down market call. *Added by 20261111010000 (market calls).* |
+| `market_call_payout` | earn | A market call paid out: twice the stake, or the stake back. *Same migration.* |
 | `pirate_loot` | earn | Loot for surviving a pirate wave, capped by the wave number and the houses. *Added by 20261110010000 (islands and waves).* |
 | `starting_coins` | earn | The starting coins of a brand-new captain, paid once when their island opens. *Same migration.* |
 | `fresh_start` | either | Sets a wallet to the new starting coins in the fresh start of the redesign (only `scripts/admin/fresh_start.sql`). *Same migration.* |
@@ -285,6 +287,14 @@ It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `f
 ## The shared waves migration
 
 `migrations/20261110020000_wave_crews.sql` (lane 0, task 0.4) builds on the islands and waves migration without editing it. It adds `wave_participants` (one row per player in a wave, with their own result and loot; RLS on, no policy, no browser grant), the column `wave_runs.flag_counted`, and the functions `wave_join()` (join a running wave, safe to repeat) and `wave_current()` (the running wave of an island or Pirate Point, or null). It replaces `wave_start()` (same arguments; the bell-ringer becomes the first participant) and drops the 7-argument `wave_finish()` for an 8-argument one (`p_point_loot_base`): every participant finishes for themselves, ledger ref `wave:<id>:<player>`; the first finish closes the wave run; the best wave and one flag count once (`flag_counted`). It backfills every existing wave with its bell-ringer as participant. Until the new server code is deployed, `POST /api/waves/finish` of an older server fails; the flag `islands` stays off until then.
+
+## The market calls migration
+
+`migrations/20261111010000_market_calls.sql` (lane 0, D034) adds `market_calls` (one row per up-or-down call; RLS on, no policy, no browser grant; the server reads, inserts and updates, never deletes), `market_call_open()` (locks the wallet, repeat-safe per actionUid, at most 3 open calls, stake through `apply_wallet_transaction()`), `market_call_settle()` (decides once: won 2 × stake, lost 0, refunded for the same price or no price 24 hours after `settle_at`) and the reasons `market_call_stake` and `market_call_payout`. Opt-in SQL checks: `backend/server/tests/market_calls_sql/`.
+
+| `market_calls` | read / insert / update | no access | no access | yes (through the two functions) |
+| `market_calls` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `market_call_open()`, `market_call_settle()` | run | no access | no access | yes |
 
 ## Apply the migration
 

@@ -322,7 +322,10 @@ def test_the_new_migration_adds_market_stake_and_market_payout_in_this_order():
 
 
 def test_python_ends_its_list_of_reasons_with_the_v1_three_and_the_two_new_ones():
-    assert tuple(pair for pair in WALLET_REASONS if pair[0].startswith("market_")) == (
+    # The Exchange reasons. The up-or-down calls (market_call_*) are their own feature and are
+    # checked in test_market_calls_rules.py.
+    exchange = [pair for pair in WALLET_REASONS if not pair[0].startswith("market_call_")]
+    assert tuple(pair for pair in exchange if pair[0].startswith("market_")) == (
         ("market_buy", "spend"),
         ("market_sell", "earn"),
         ("market_fee", "spend"),

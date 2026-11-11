@@ -643,6 +643,17 @@ The checks of a build come in a fixed order, and the first one that fails is the
 
 The routes need the home islet migration (`20261106070000_home_islet.sql`). Until it is applied, `GET /api/islet` answers `502 database_error`, so do not pass the live transport (`transport: api` in `frontend/src/game.js`) before the migration is applied. Until then the panel runs in unavailable mode and sends no request.
 
+### The market stall: up or down in 1 hour (lane 0, D034)
+
+The simple Harbor market of [PITCH.md](PITCH.md): "Will Bitcoin be higher in an hour? Put 10 coins on up or down." It replaces the leverage positions in the player-facing game (the Exchange routes above stay for now). The home of each route is the comment at the top of `backend/server/routes/market_calls.py`; the rules are in `backend/server/market/calls.py`; the database part in `supabase/migrations/20261111010000_market_calls.sql`. Both routes need a signed-in player (guests admitted with the class code too) and the flag `market` (`404 feature_off`). Answers carry `Cache-Control: private, no-store`. Budgets: POST 20, GET 60 requests a minute per player and server instance (`429 too_many_requests`).
+
+| Route | Answer |
+|---|---|
+| `GET /api/market/calls` | `{assets: [{id, name, price, priceAt, open, closedReason}], calls: [{id, asset, direction, stake, openPrice, openedAt, settleAt, status, settlePrice, payout}], balance}`. Assets in this order: `harbor-trust` (Bitcoin), `tidewright-works` (Ether), `greyfathom-salvage` (Gold), `apple`, `nvidia`. `open` is true while the feed holds a live price (market open, fresh price, not the demo recording); otherwise `closedReason` says why (`demo`, `source_off`, `quote_old`, a calendar reason such as `weekend`, ...). `price`, `priceAt` are `null` without a price. `calls` lists the open calls (oldest first), then the 10 newest decided ones; `status` is `open`, `won`, `lost` or `refunded`; `settlePrice` and `payout` are `null` while open. |
+| `POST /api/market/calls` `{asset, direction: "up" or "down", stake: 5, 10 or 25, actionUid}` | The new call in the shape of a `calls` entry plus `balance` (coins after the stake). `settleAt` is `openedAt` + 1 hour. A repeated `actionUid` answers the same call and charges nothing. `404 no_such_asset`, `409 insufficient_funds`, `409 market_closed` (no live price now), `409 too_many_calls` (3 open), `422 bad_stake`, `422 validation_error`. |
+
+**Lazy settlement, and its limit.** Nothing runs in the background. A call is decided when its player next reads `GET /api/market/calls` at or after `settleAt`, with the first price the server reads at or after `settleAt` (fetched at or after it and quoted after the opening), not the exact price at that second; for a stock outside New York hours that is the last close. Higher (up) or lower (down) than `openPrice`: `won`, payout 2 × stake. The other way: `lost`, 0. The same price: `refunded`. No such price within 24 hours after `settleAt` (for example the stock source is down): `refunded`. Each call is decided once (ledger ref `call:<id>`, reasons `market_call_stake` and `market_call_payout`).
+
 ### Your island and the pirate waves (lane 0, tasks 0.2 and 0.3)
 
 The new game loop of [PITCH.md](PITCH.md): every player has their own island, builds walls, cannons, a watchtower and houses with coins, and rings the bell for pirate waves. The binding contract is [BUILD-PLAN.md section 3](BUILD-PLAN.md#3-contracts-the-only-things-lanes-share); this section is the server's side of it. The routes' home is the comment at the top of `backend/server/routes/island.py` and `backend/server/routes/waves.py`; the rules are in `backend/server/island/`; the numbers in `backend/content/islands.json`; the database part in `supabase/migrations/20261110010000_islands_and_waves.sql` ([D032](DECISIONS.md#d032--islands-and-pirate-waves-10-nov--2026-11-10)).
@@ -956,6 +967,14 @@ The shared waves migration, `supabase/migrations/20261110020000_wave_crews.sql` 
 
 `island_open()` makes the island with a server-made code (answering `code_taken` so the server tries a new one) and pays the starting coins once to a wallet that never moved. `wave_start()` locks the island (or Pirate Point), answers a repeated actionUid with the same wave, closes a wave past its maximum length as expired, refuses a second running wave and writes the next one. `wave_finish()` locks the wallet, then the wave, checks the timing, works out the capped loot, raises the best wave and the flags of a survived island wave and pays through `apply_wallet_transaction()`. All three are for the server only and are not `SECURITY DEFINER`. The fresh start of the redesign is the admin script `scripts/admin/fresh_start.sql`, not a migration.
 
+The market calls migration, `supabase/migrations/20261111010000_market_calls.sql` (lane 0, D034), adds one table, two functions and two wallet reasons. The table has no browser policy or grant.
+
+| Table | One row per | A signed-in player may | The server may | Owner |
+|---|---|---|---|---|
+| `market_calls` | up-or-down call: player, asset (one of five market company ids), direction, stake (5, 10, 25), `open_price`, `opened_at`, `settle_at` (+1 hour), and once decided `settled_at`, `settle_price`, `outcome` (`won`, `lost`, `refunded`), `payout`; one per player and `action_uid` | nothing (no policy, no grant) | read, add (through `market_call_open()`), change (through `market_call_settle()`); never delete | lane 0 |
+
+`market_call_open()` locks the wallet, answers a repeated actionUid with the same call, refuses a fourth open call and takes the stake. `market_call_settle()` locks the wallet and the call and decides it once (refuses `not_due` before `settle_at` and `no_price` for a missing price before the 24-hour wait is over). Both are for the server only and not `SECURITY DEFINER`.
+
 Details that other packages rely on:
 
 - **Display names** (`profiles.display_name`): 2 to 24 characters from A-Z, a-z, 0-9, space, underscore, dot and hyphen, with no space at either end. Not unique. At sign-up every player gets a neutral placeholder: `Captain-` and the first 6 characters of their id. A name never comes from the GitHub login or any other login detail, because names appear on a projector.
@@ -1059,6 +1078,8 @@ Every reason has a direction. **earn** adds coins (an amount above 0), **spend**
 | `prediction_payout` | earn | Coins paid back from a prediction desk pool, for a win or a refund (same migration); ref `pool:<questionId>` |
 | `arena_stake` | spend | The stake of a Lantern Duel, held when a captain challenges or answers (migration `20261106110000`) |
 | `arena_payout` | earn | A Lantern Duel payout: the winnings, or a stake that comes back after a draw, a withdrawal, a decline or an expiry (same migration) |
+| `market_call_stake` | spend | The stake of an up-or-down market call (migration `20261111010000`); ref `call:<callId>` |
+| `market_call_payout` | earn | A market call paid out: 2 × stake for a right call, or the stake back (same migration); ref `call:<callId>` |
 | `pirate_loot` | earn | Loot for surviving a pirate wave, capped by the wave number and the houses (migration `20261110010000`); ref `wave:<waveId>` |
 | `starting_coins` | earn | The 100 starting coins of a brand-new captain, paid once when their island opens (same migration); fixed ref `starting_coins` |
 | `fresh_start` | either | Sets a wallet to the new starting coins in the fresh start of the redesign, only from `scripts/admin/fresh_start.sql` (same migration); ref `fresh_start:2026-11-19` |
@@ -1260,7 +1281,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 
 | Flag | Switches on | Package |
 |---|---|---|
-| `market` | the Island Exchange | L4 |
+| `market` | the Island Exchange, and the market stall's up-or-down calls (`/api/market/calls`, D034) | L4, lane 0 |
 | `predictions` | the prediction desk | L5 |
 | `sports` | sports predictions | L6 |
 | `arena` | Lantern Duels, the turn-based arena | A7 |
