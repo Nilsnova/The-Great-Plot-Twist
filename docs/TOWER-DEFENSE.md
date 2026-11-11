@@ -57,3 +57,34 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 ## 8. Simulation (S)
 
 `createWave({..., defenses: [{id, kind, level, x, z}], crew: {gunner, carpenter, lookout}, boss})` — towers act per section 2, crew per section 3, warship: hp 260, speed 1.1, damage 10 every 2 s, sprite = the flagship art at 70% scale without the lamps rule. Ship count and hp grow with the wave number so wave 10 is a real fight with 4 upgraded towers and wave 30 needs most of the island built and upgraded; tested balance numbers go into the report.
+
+## 9. Unlocks: simple at the start, deeper as you go (added 11 Nov, owner)
+
+New players see only what they can use. Everything else appears with a toast "New: … unlocked!" when the player first **wins** the wave shown (best wave on their own island, or any Pirate Point wave they fought in). The server enforces it (`409 locked` with "Unlocks after wave N").
+
+| Unlocks after winning wave | What appears |
+|---|---|
+| start | wall level 1, cannon level 1, your captain's musket (level 1) |
+| 1 | captain upgrades |
+| 2 | level 2 for wall and cannon, house |
+| 3 | mortar, watchtower |
+| 5 | crew: gunner and carpenter; level 3 |
+| 8 | lookout, captain level 4–5 |
+
+## 10. Your captain fights (added 11 Nov, owner)
+
+Every player's character carries a musket: **tap or click a ship in range** (or press F for the nearest) to shoot. It works on your island, on a friend's island and at Pirate Point.
+
+| Captain level | Damage | Range | Reload | Upgrade price |
+|---|---|---|---|---|
+| 1 | 6 | 14 | 1.2 s | — |
+| 2 | 9 | 15 | 1.05 s | 🪙 20 |
+| 3 | 13 | 16 | 0.9 s | 🪙 40 |
+| 4 | 18 | 18 | 0.75 s | 🪙 80 |
+| 5 | 24 | 20 | 0.6 s | 🪙 160 |
+
+API: `GET /api/island` adds `captain: {level, nextPrice}` and `unlocks: {…}` (what is unlocked and at which wave the rest comes); `POST /api/island/captain {actionUid}` upgrades one level (`409 max_level`, `409 locked`, `409 insufficient_funds`). Sim input `{type: 'captain_shot', by, targetId, level}` (synced in the room like cannon shots; each player's own level).
+
+## 11. Up to four players together
+
+The same invite link works for several friends at once (up to 4 players on one island; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
