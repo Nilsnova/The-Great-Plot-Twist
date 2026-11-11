@@ -35,6 +35,9 @@
 .pirate-break-title{font:700 32px/1.15 var(--u-serif);color:var(--u-pink)}.pirate-break-line{font:600 18px/1.3 var(--u-font)}
 .pirate-next{min-height:56px;min-width:220px;font:700 22px/1.2 var(--u-font)}
 .pirate-auto{display:flex;gap:8px;align-items:center;min-height:44px;font:600 17px/1.2 var(--u-font);cursor:pointer}.pirate-auto input{width:22px;height:22px;accent-color:#c9862f}
+/* Phones: the break docks under the goals strip, where the toasts begin, and while it shows the toasts
+   move below it (hud.js sets --pirate-break-bottom), so loot, unlock toasts and captions never cover it. */
+@media(max-width:760px){.pirate-break{top:172px;padding:10px 14px;gap:6px;width:calc(100vw - 24px)}.pirate-break-title{font-size:24px}html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-break-bottom,420px) 12px auto}}
 @media(max-width:760px){.pirate-bar{bottom:168px;min-width:0;width:calc(100vw - 24px)}.pirate-banner{top:42%}.pirate-countdown-number{font-size:64px}.pirate-countdown-words{font-size:18px}.pirate-prompt,.pirate-bell-prompt{bottom:250px}.pirate-banner strong{font-size:26px}}
 @media(prefers-reduced-motion:reduce){.pirate-hurt-edge.pirate-flash{animation:none}.pirate-pop .pirate-countdown-number{animation:none}.pirate-bar-fill{transition:none}}
 /* Pirate Point: the bell and lamp prompt, the lamps' status line under the wave bar. */

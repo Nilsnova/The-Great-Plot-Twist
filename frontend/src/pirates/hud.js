@@ -87,7 +87,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
     // The break: {title, line, seconds, auto, ready} or null to hide it.
     pause(info) {
-      if (!info) { pause.hidden = true; lastPause = ''; return; }
+      if (!info) { pause.hidden = true; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }
       const key = `${info.title}|${info.line}|${info.seconds}|${info.auto}|${info.ready}`;
       pause.hidden = false;
       if (key === lastPause) return;
@@ -95,6 +95,9 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       next.textContent = info.ready ? (info.seconds > 0 ? `Next wave · ${info.seconds}` : 'Next wave') : 'Counting the loot…';
       next.disabled = !info.ready; auto.checked = info.auto === true;
       if (info.ready && document.activeElement === document.body) next.focus({ preventScroll: true });
+      // Phones put the toasts below the break (pirates.css): tell them where it ends.
+      const bottom = pause.getBoundingClientRect().bottom;
+      if (bottom > 0) document.documentElement.style.setProperty('--pirate-break-bottom', `${Math.ceil(bottom) + 10}px`);
     },
     banner(title, line = '') {
       banner.replaceChildren();
@@ -103,6 +106,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (line) banner.append(node('span', '', line));
       banner.hidden = false;
     },
-    dispose() { layer.remove(); },
+    dispose() { layer.remove(); document.documentElement.style.removeProperty('--pirate-break-bottom'); },
   };
 }
