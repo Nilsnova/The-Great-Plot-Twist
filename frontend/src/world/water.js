@@ -87,9 +87,8 @@ void main(){
   // edges (no dithering), so the sea reads as clean shapes.
   float swell=sin(p.y*1.9+sin(p.x*.31+t*.35)*1.3-t*(.55+uWind*1.3));
   float chop=sin(p.y*4.7-p.x*.62+t*(1.0+uWind*1.6))*sin(p.x*.23+p.y*.4-t*.3);
-  float shade=clamp(.5+swell*.3+chop*(.16+uWind*.14),0.0,1.0);
-  float level=floor(shade*3.0);
-  vec3 colour=level<=0.0?uDeep:level<=1.0?uMid:uLight;
+  float shade=clamp(.5+swell*.3+chop*(.08+uWind*.14),0.0,1.0);
+  vec3 colour=shade<.3?uDeep:shade<.74?uMid:uLight;
   // Wave strokes: crisp one-pixel crest dashes of steady length, the classic pixel-art sea.
   float lineY=p.y*1.15+sin(p.x*.45+t*.6)*.2-t*.12*(1.0+uWind);
   float row=floor(lineY),period=11.0+mod(row,3.0)*4.0,dash=mod(px.x+row*13.0,period);

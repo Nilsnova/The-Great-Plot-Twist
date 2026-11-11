@@ -31,10 +31,10 @@ void main(){
   if(vPool.w<.5)q.y/=.62;
   float r=length(q);if(r>1.0)discard;
   float flicker=1.0+.035*sin(uTime*6.3+vPool.x*3.1)+.02*sin(uTime*11.7+vPool.y*5.3);
-  float glow=pow(1.0-r,1.35)*max(uStrength,vMin)*flicker;
-  float level=pxSteps(glow*1.1,3.0,px);
+  float glow=pow(1.0-r,1.1)*max(uStrength,vMin)*flicker;
+  float level=pxSteps(glow,3.0,px);
   if(level<=0.0)discard;
-  gl_FragColor=vec4(uColour*level*.3,1.0);
+  gl_FragColor=vec4(uColour*level*level*.3,1.0);
   ${toScreen}
 }`;
 

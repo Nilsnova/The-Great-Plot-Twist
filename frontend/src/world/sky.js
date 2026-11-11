@@ -1,7 +1,7 @@
 // Day, dusk and night as one code-drawn wash over the whole page, plus drifting pixel fog banks.
-// Dusk tints rose, night tints blue and darkens the screen edges in dithered steps, so the warm
+// Dusk tints rose, night tints blue and darkens the far corners in two flat steps, so the warm
 // light pools (light-pools.js) and beams read like lanterns in the dark. Fog banks are value noise
-// quantised to four dithered densities that drift with the wind. update(hour, weather, time).
+// quantised to three flat densities with clean edges that drift with the wind. update(hour, weather, time).
 import * as THREE from 'three';
 import { smoothstep, sunPosition } from '../core/math.js';
 import { pixelGlsl, worldVertex, toScreen } from './pixel-glsl.js';
@@ -14,9 +14,9 @@ void main(){
   vec2 px=floor(vWorld*16.0);
   vec3 colour=mix(uNightColour,uDuskColour,uDusk*(1.0-uNight*.7));
   float alpha=uNight*.5+uDusk*.16+uCloud*.13;
-  // Night vignette: corners fall away in three dithered steps.
-  float edge=smoothstep(.6,1.45,length(vScreen*vec2(1.0,1.15)));
-  alpha+=pxSteps(edge,3.0,px)*.3*uNight;
+  // Night vignette: only the far corners fall away, in two flat steps (no dithered rings).
+  float edge=smoothstep(1.0,1.5,length(vScreen*vec2(1.0,1.15)));
+  alpha+=pxSteps(edge,2.0,px)*.2*uNight;
   gl_FragColor=vec4(colour,clamp(alpha,0.0,.86));
   ${toScreen}
 }`;
