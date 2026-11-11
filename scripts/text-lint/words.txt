@@ -191,6 +191,7 @@ best
 bets
 beyond
 big
+bigger
 biggest
 billboard
 billion
@@ -287,6 +288,7 @@ case's
 cash
 cashed
 catches
+catching
 category
 cave
 cc
@@ -296,6 +298,7 @@ chair
 challenge
 challenger
 challenges
+champions
 change
 changed
 changes
@@ -463,6 +466,7 @@ crews
 crop
 crossing
 crouch
+crypto
 csp
 cues
 culprit
@@ -749,6 +753,7 @@ forgot
 forgotten
 formed
 forming
+fortune
 forty
 forward
 fought
@@ -963,6 +968,7 @@ intent
 intents
 interact
 interacts
+internationals
 internet
 interpret
 interrupted
@@ -1058,6 +1064,7 @@ lead
 leadership
 leads
 league
+leagues
 least
 leather
 leave
@@ -1084,6 +1091,7 @@ lie
 lies
 lifetime
 lift
+liga
 light
 lighter
 lighthouse
@@ -1517,6 +1525,7 @@ previewed
 previous
 price
 prices
+primeira
 print
 privacy
 private
@@ -1907,6 +1916,7 @@ slippery
 slips
 slow
 small
+smaller
 smells
 smile
 smoke
@@ -1965,6 +1975,7 @@ staked
 stakes
 staking
 stale
+stall
 stalls
 stamp
 stamped
@@ -2076,6 +2087,7 @@ technology
 teeth
 telemetry
 tell
+teller
 telling
 temporarily
 temporary

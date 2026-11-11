@@ -1,0 +1,39 @@
+/* Harbor cards (lane H). Semantic markup, every class starts with harbor-; lane U restyles with shared tokens later. */
+.harbor-card{--harbor-ink:#ece0b8;--harbor-quiet:#c9bf98;--harbor-line:#7f8a5c;--harbor-good:#b9e39a;--harbor-bad:#ffb4a0;--harbor-warn:#ffe08a;width:min(680px,calc(100vw - 24px));font-size:16px}
+.harbor-card-body{display:grid;gap:14px}
+.harbor-status:empty,.harbor-status[hidden]{display:none}
+.harbor-status{margin:0;padding:10px 12px;border:2px solid var(--harbor-line);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.harbor-status[data-tone=warn]{border-color:var(--harbor-warn);color:var(--harbor-warn)}
+.harbor-list,.harbor-stalls{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.harbor-item,.harbor-stall{border:2px solid var(--harbor-line);padding:12px 14px;display:grid;gap:8px;background:#22382c}
+.harbor-item p,.harbor-stall p{margin:0}
+.harbor-item-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.harbor-item-title{margin:0;font-size:18px;line-height:1.35;color:#f1dfaa;overflow-wrap:anywhere}
+.harbor-price{font-size:18px;font-weight:bold}
+.harbor-spark{width:96px;height:28px;align-self:center}
+.harbor-spark polyline{fill:none;stroke:var(--harbor-quiet);stroke-width:2}
+.harbor-spark[data-trend=up] polyline{stroke:var(--harbor-good)}
+.harbor-spark[data-trend=down] polyline{stroke:var(--harbor-bad)}
+.harbor-quiet,.harbor-reason,.harbor-footnote{color:var(--harbor-quiet)}
+.harbor-footnote{font-size:16px;margin:0}
+.harbor-footnote a{color:inherit}
+.harbor-empty{margin:0;font-size:18px}
+.harbor-notice{font-weight:bold}
+.harbor-good{color:var(--harbor-good)}
+.harbor-bad{color:var(--harbor-bad)}
+.harbor-holding{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.harbor-now{font-weight:bold}
+.harbor-picker{display:grid;gap:8px}
+.harbor-choices{display:flex;flex-wrap:wrap;gap:8px}
+.harbor-choice{min-width:64px;min-height:44px}
+.harbor-choice[aria-pressed=true]{background:#7b6a37;border-color:#f3d58c;color:#fff7dc;outline:2px solid #f3d58c;outline-offset:1px}
+.harbor-confirm{justify-self:start;min-height:44px}
+.harbor-button{min-height:44px}
+.harbor-sign-in{margin:0;padding:10px 12px;border:2px dashed var(--harbor-line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.harbor-own{display:grid;gap:6px}
+.harbor-own-title{margin:0;font-size:18px}
+.harbor-own-list{margin:0;padding-left:20px;display:grid;gap:4px}
+.harbor-pirates{font-size:20px;font-weight:bold}
+.harbor-weather-icon{display:inline-block;width:1.4em;text-align:center}
+@media(max-width:480px){.harbor-card{width:calc(100vw - 16px);padding:12px}.harbor-item,.harbor-stall{padding:10px}.harbor-choice{flex:1 1 30%}.harbor-confirm{justify-self:stretch}}
+@media(prefers-reduced-motion:reduce){.harbor-card *{transition:none!important;animation:none!important}}
