@@ -1,4 +1,6 @@
 // Recorded L4-v2 answers compose the generated PKCE fixture; no vendor, account or database is contacted.
+// It also answers the market stall's calls routes (GET and POST /api/market/calls, INTERFACES.md "The market
+// stall"): one open recorded asset (Bitcoin), four closed ones with their reasons, and one decided won call.
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
@@ -14,7 +16,8 @@ export async function openMarketFixture(){
  const env=await openAuthFixture(),{page}=env;
  try{
  const manifest=JSON.parse(await readFile('.test-cache/g9-online-dist/.vite/manifest.json','utf8'));
- const assets=new Set(Object.entries(manifest).filter(([key])=>key.startsWith('src/screens/market/'))
+ const assets=new Set(Object.entries(manifest).filter(([key])=>key.startsWith('src/screens/market/')
+  ||['src/harbor/market-card.js','src/harbor/calls-http.js'].includes(key))
   .flatMap(([,chunk])=>[chunk.file,...(chunk.css??[])]).map(file=>'/'+file));
  assert.ok(assets.size>0,'The production manifest contains the adopted market entries.');
  let chunks=0,flag=true,tradingEnabled=true,coins=1000,positions=[],recentlyClosed=[],closed=false;
@@ -23,6 +26,18 @@ export async function openMarketFixture(){
  const saveStats={reads:0,acceptedPuts:0,conflicts:0};
  let opens=0,closes=0,repeats=0,unknownApplied=false,sameUidRepeat=false;
  const receipts=new Map(),seen=new Map(),faults=[],ledgerReasons=[],requests=[],failures=[];
+ // The calls routes: the recorded wallet pays the stake of each new call; a repeated actionUid charges nothing.
+ let calls=[],callPosts=0,callRepeats=0,allCallBodiesExpected=true;
+ const callReceipts=new Map(),iso=ms=>new Date(ms).toISOString().replace(/\.\d{3}Z$/,'Z');
+ const callAssets=()=>[
+  {id:'harbor-trust',name:'Bitcoin',price:100,priceAt:stamp,open:tradingEnabled,closedReason:tradingEnabled?null:'demo'},
+  {id:'tidewright-works',name:'Ether',price:50.5,priceAt:stamp,open:false,closedReason:'quote_old'},
+  {id:'greyfathom-salvage',name:'Gold',price:null,priceAt:null,open:false,closedReason:'source_off'},
+  {id:'apple',name:'Apple',price:25.5,priceAt:stamp,open:false,closedReason:'weekend'},
+  {id:'nvidia',name:'NVIDIA',price:42.25,priceAt:stamp,open:false,closedReason:'outside_hours'}];
+ const wonCall=()=>({id:randomUUID(),asset:'harbor-trust',direction:'up',stake:10,openPrice:98,openedAt:'2026-11-07T10:00:00Z',
+  settleAt:'2026-11-07T11:00:00Z',status:'won',settlePrice:100,payout:20});
+ const listedCalls=()=>copy([...calls.filter(call=>call.status==='open'),...calls.filter(call=>call.status!=='open').slice(0,10)]);
  const ledgerRows=[],ledgerStats={reads:0,lastRows:0,allGet:true,allAuthorized:true,allOwnUser:true,allExpectedQuery:true};
  const recordLedger=(delta,reason)=>ledgerRows.push({id:randomUUID(),player_id:env.fixtureUserId,delta,reason,
   created_at:new Date(Date.parse(stamp)+ledgerRows.length*1000).toISOString()});
@@ -58,6 +73,7 @@ export async function openMarketFixture(){
  const resetMarket=({flag:nextFlag=true,tradingEnabled:trading=true}={})=>{
   flag=nextFlag;tradingEnabled=trading;coins=1000;positions=[];recentlyClosed=[];
   opens=closes=repeats=0;unknownApplied=sameUidRepeat=false;
+  calls=[wonCall()];callPosts=callRepeats=0;allCallBodiesExpected=true;callReceipts.clear();
   receipts.clear();seen.clear();faults.length=ledgerReasons.length=0;ledgerRows.length=0;ledgerStats.lastRows=0;
  };
  function apply(path,body){
@@ -86,6 +102,28 @@ export async function openMarketFixture(){
   receipts.set(body.actionUid,{signature:JSON.stringify(body)});
   return{status:200,data:{positionId:position.id,closedAs:'closed',closePrice:100,value:10,fee:1,coinsChange:9,coins,closedAt:stamp}};
  }
+ function answerCalls({method,authorized,body,bodyKeys,uidValid}){
+  allPrivateAuthorized&&=authorized;
+  if(!authorized)return{status:401,code:'unauthorized'};
+  if(flag!==true)return{status:404,code:'feature_off'};
+  if(method==='GET')return{data:{assets:callAssets(),calls:listedCalls(),balance:coins}};
+  const allowed=method==='POST'&&uidValid&&bodyKeys.join()==='actionUid,asset,direction,stake'&&['up','down'].includes(body.direction);
+  allCallBodiesExpected&&=allowed;
+  if(!allowed)return{status:422,code:'validation_error'};
+  callPosts++;
+  if(callReceipts.has(body.actionUid)){callRepeats++;return{data:{...copy(callReceipts.get(body.actionUid)),balance:coins}};}
+  if(![5,10,25].includes(body.stake))return{status:422,code:'bad_stake'};
+  const asset=callAssets().find(row=>row.id===body.asset);
+  if(!asset)return{status:404,code:'no_such_asset'};
+  if(!asset.open)return{status:409,code:'market_closed'};
+  if(calls.filter(call=>call.status==='open').length>=3)return{status:409,code:'too_many_calls'};
+  if(coins<body.stake)return{status:409,code:'insufficient_funds'};
+  coins-=body.stake;ledgerReasons.push('market_call_stake');recordLedger(-body.stake,'market_call_stake');
+  const opened=Date.now(),call={id:randomUUID(),asset:asset.id,direction:body.direction,stake:body.stake,openPrice:asset.price,
+   openedAt:iso(opened),settleAt:iso(opened+3600000),status:'open',settlePrice:null,payout:null};
+  calls.push(call);callReceipts.set(body.actionUid,call);
+  return{data:{...copy(call),balance:coins}};
+ }
  const fulfill=(route,reply)=>{
   if(reply.status>=400)failures.push({path:new URL(route.request().url()).pathname,status:reply.status});
   return route.fulfill({status:reply.status??200,headers:reply.status===429?{'Retry-After':'3'}:{},
@@ -93,7 +131,7 @@ export async function openMarketFixture(){
  };
  const handler=async route=>{
   const request=route.request(),path=new URL(request.url()).pathname,method=request.method();
-  const own=['/api/config','/api/me','/api/me/name','/api/save','/api/islet','/api/market','/api/market/portfolio','/api/market/open','/api/market/close'];
+  const own=['/api/config','/api/me','/api/me/name','/api/save','/api/islet','/api/market','/api/market/portfolio','/api/market/open','/api/market/close','/api/market/calls'];
   if(!own.includes(path))return route.fallback();
   const authorized=Boolean(request.headers().authorization);
   if(path==='/api/config'){
@@ -129,6 +167,7 @@ export async function openMarketFixture(){
   const uidValid=typeof uid==='string'&&/^[A-Za-z0-9_-]{8,64}$/.test(uid);
   const uidMatchesPrior=uidValid&&seen.get(uid)===signature;
   requests.push({path,method,authorized,bodyKeys,uidValid,uidMatchesPrior});
+  if(path==='/api/market/calls')return fulfill(route,answerCalls({method,authorized,body,bodyKeys,uidValid}));
   if(path==='/api/market'){
    allPublicAnonymous&&=!authorized;
    assert.equal(method,'GET','The recorded public board is read only.');
@@ -179,6 +218,8 @@ export async function openMarketFixture(){
   marketLedgerProof:()=>({...ledgerStats}),
   marketChunkCount:()=>chunks,
   faultMarket:(path,fault)=>{assert.ok(['/api/market/open','/api/market/close'].includes(path),'Faults target a published market write.');faults.push({path,...fault});},
+  callsProof:()=>({posts:callPosts,repeats:callRepeats,open:calls.filter(call=>call.status==='open').length,coins,
+   allCallBodiesExpected,allPrivateAuthorized}),
   marketProof:()=>({opens,closes,repeats,unknownApplied,sameUidRepeat,ledgerReasons:[...ledgerReasons],
    allBodiesExpected,allPublicAnonymous,allPrivateAuthorized}),
   async assertPublicMarketPrice(){await page.waitForFunction(()=>
