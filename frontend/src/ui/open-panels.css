@@ -1,8 +1,8 @@
 /* Open game panels: every .kit-modal already has the brass frame and parchment title plate (kit.css).
    This file gives their insides one surface, one type scale and one set of controls, using the tokens.
    Loaded on demand with the world and Settings; the cold title never needs it. */
-.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.lock-modal,.goal-card,.shell-screen:not([data-mode=title])){--panel-ink:var(--u-ink);--panel-muted:var(--u-mute);--panel-gold:var(--u-gold);--panel-border:#3d6a6b;--panel-surface:var(--u-sea);--panel-card:var(--u-card);font-family:var(--u-font);line-height:1.55}
-.kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-body{min-width:0;overflow-wrap:anywhere}
+.kit-modal:is(.account-modal,.market-modal,.duel-modal,.sports-modal,.islet-modal,.lock-modal,.goal-card,.shell-screen:not([data-mode=title])){--panel-ink:var(--u-ink);--panel-muted:var(--u-mute);--panel-gold:var(--u-gold);--panel-border:#3d6a6b;--panel-surface:var(--u-sea);--panel-card:var(--u-card);font-family:var(--u-font);line-height:1.55}
+.kit-modal:is(.account-modal,.market-modal,.duel-modal,.sports-modal,.islet-modal,.shell-screen[data-mode=settings])>.kit-modal-body{min-width:0;overflow-wrap:anywhere}
 
 /* One padding for every panel, whatever a panel's own sheet says, so the title plate meets the frame. */
 .kit-modal.kit-modal[open]{padding:0 22px 22px}
@@ -13,12 +13,12 @@
 .kit-modal:not(.shell-screen[data-mode=title]) .kit-modal-body h3{font-size:var(--u-lg)}
 
 /* Cards: one quiet surface inside any panel. */
-.kit-modal :is(.account-save,.market-card,.market-position,.market-closed,.desk-card,.desk-stake,.duel-card,.duel-lantern,.sports-card,.islet-spot,.preference,.build-info,.controls-overview p){min-width:0;padding:var(--u-4);border:2px solid #3d6a6b;border-radius:0;background:var(--u-card);box-shadow:inset 0 2px #ffffff0d,0 3px var(--u-deep)}
+.kit-modal :is(.account-save,.market-card,.market-position,.market-closed,.duel-card,.duel-lantern,.sports-card,.islet-spot,.preference,.build-info,.controls-overview p){min-width:0;padding:var(--u-4);border:2px solid #3d6a6b;border-radius:0;background:var(--u-card);box-shadow:inset 0 2px #ffffff0d,0 3px var(--u-deep)}
 .kit-modal :is(.islet-spot[data-state=built]){border-color:var(--u-gold)}
 
 /* Notices: a gold stripe on the left, never a second frame. */
-.kit-modal :is(.account-status,.account-banner,.account-feedback,.market-status,.market-blocked,.desk-notice,.desk-status:not(:empty),.duel-message,.duel-notice,.duel-done,.islet-status:not(:empty),.shortcuts-note){border:0;border-left:4px solid var(--u-gold);border-radius:0;background:#20494f;color:var(--u-ink);padding:12px 16px}
-.kit-modal :is(.market-note,.market-follows,.market-tagline,.desk-rule,.desk-hint,.desk-footer,.duel-intro,.duel-hint,.duel-when,.islet-note,.islet-detail,.islet-plot,.account-muted,.preferences-status,.problem-report-description){color:var(--u-mute)}
+.kit-modal :is(.account-status,.account-banner,.account-feedback,.market-status,.market-blocked,.duel-message,.duel-notice,.duel-done,.islet-status:not(:empty),.shortcuts-note){border:0;border-left:4px solid var(--u-gold);border-radius:0;background:#20494f;color:var(--u-ink);padding:12px 16px}
+.kit-modal :is(.market-note,.market-follows,.market-tagline,.duel-intro,.duel-hint,.duel-when,.islet-note,.islet-detail,.islet-plot,.account-muted,.preferences-status,.problem-report-description){color:var(--u-mute)}
 
 /* Tabs and chips inside panels follow the kit (components.css); old per-panel radii go. */
 .kit-modal :is(.kit-badge,.islet-badge,.sports-badge,.duel-chip){font-family:var(--u-font);border-radius:0}
@@ -28,8 +28,8 @@
 .kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea){box-sizing:border-box;min-height:44px;min-width:0;max-width:100%;padding:10px 12px;background:var(--u-deep);color:var(--u-ink);border:2px solid var(--u-line);border-radius:0;font:16px/1.4 var(--u-font)}
 .kit-modal :is(input:not([type=radio],[type=checkbox],[type=range]),select,textarea):focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
 .kit-modal :is(button,a,summary):focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
-:is(.market-modal,.desk-modal,.duel-modal) :is(.market-choices,.desk-fieldset,.duel-group,.duel-round){border:2px solid #3d6a6b;border-radius:0}
-:is(.market-modal,.desk-modal,.duel-modal) :is(.market-choice,.desk-choice,.duel-choice,.duel-option){border-radius:0}
+:is(.market-modal,.duel-modal) :is(.market-choices,.duel-group,.duel-round){border:2px solid #3d6a6b;border-radius:0}
+:is(.market-modal,.duel-modal) :is(.market-choice,.duel-choice,.duel-option){border-radius:0}
 .duel-modal .duel-choice:has(input:checked),.duel-modal .duel-option:has(input:checked){background:#2f6b5a;outline:2px solid var(--u-gold)}
 
 /* Danger stays rust, not gold. */
@@ -46,8 +46,8 @@
 .kit-modal.market-modal .market-position{border-left-width:6px}.kit-modal.market-modal .market-position[data-direction=up]{border-left-color:#b8d98a}
 .kit-modal.market-modal .market-position[data-direction=down]{border-left-color:#e1a46c;border-left-style:double}.kit-modal.market-modal .market-position[data-direction=even]{border-left-color:#8d9678}
 @media(max-width:600px){
-  .kit-modal:is(.account-modal,.market-modal,.desk-modal,.duel-modal,.sports-modal,.islet-modal) :is(.account-save,.market-card,.market-position,.market-closed,.desk-card,.desk-stake,.duel-card,.sports-card,.islet-spot){padding:var(--u-3)}
+  .kit-modal:is(.account-modal,.market-modal,.duel-modal,.sports-modal,.islet-modal) :is(.account-save,.market-card,.market-position,.market-closed,.duel-card,.sports-card,.islet-spot){padding:var(--u-3)}
   .account-modal :is(.account-actions,.account-save-choices)>.kit-button{flex:1 1 100%}
-  .market-modal .market-form{grid-template-columns:minmax(0,1fr)}.desk-modal .desk-choice{padding:8px}
+  .market-modal .market-form{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){.kit-modal,.kit-modal .kit-modal-body{scroll-behavior:auto}}

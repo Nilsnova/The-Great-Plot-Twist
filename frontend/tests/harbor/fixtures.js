@@ -74,29 +74,6 @@ export function fakeSports({board = sportsBoard(), stakes = [], boardFailure = n
     async settle() { return {ok: false, status: 403, code: 'forbidden', message: ''}; }};
 }
 
-export const question = (extra = {}) => ({id: 'snow-lisbon', text: 'Will it snow in Lisbon before 2027?', topic: 'weather',
-  decidedBy: 'Manifold', closesAt: '2026-12-31T12:00:00Z', status: 'open', canStake: true, outcome: null, settlement: null,
-  settledAt: null, manifold: {state: 'open', decidedAs: null, decidedAt: null},
-  sides: [{side: 'yes', label: 'Yes', coins: 30, players: 2, payoutPerCoin: 2.5}, {side: 'no', label: 'No', coins: 50, players: 4, payoutPerCoin: 1.5}],
-  totalCoins: 80, source: 'cache', fetchedAt: '2026-11-11T11:00:00Z', ...extra});
-
-// The prediction desk adapter surface (screens/predictions/adapter.js replies).
-export function fakeDesk({questions = [question()], signedIn = true, closed = false, stakes = [], refuse = null} = {}) {
-  const calls = [];
-  let own = structuredClone(stakes);
-  return {calls, makeStakeId: () => `stake-id-${calls.length}`,
-    async list() { calls.push(['list']); return closed ? {kind: 'closed', message: ''}
-      : {kind: 'ok', data: {questions: structuredClone(questions), rules: {minStake: 1, maxStake: 50, dailyCap: 200, cutPercent: 5}}}; },
-    async mine() { calls.push(['mine']); return signedIn ? {kind: 'ok', data: {coins: 100, stakedToday: 0, leftToday: 200, dailyCap: 200, stakes: structuredClone(own)}}
-      : {kind: 'signin', message: 'Sign in'}; },
-    async stake(body) {
-      calls.push(['stake', body]);
-      if (refuse) return {kind: 'refused', status: 409, code: refuse, message: 'Server words'};
-      own = [{questionId: body.questionId, text: questions[0].text, side: body.side, amount: body.amount, status: 'open', result: null, payout: null}, ...own];
-      return {kind: 'ok', data: {...body, coins: 90}};
-    }};
-}
-
 export const weatherAnswer = (state = 'storm', extra = {}) => ({cloudCover: 1, rain: 0.6, fog: 0.1, wind: 0.8, isDay: true,
   summary: {storm: 'Thunderstorm, windy', fog: 'Fog', rain: 'Light rain', calm: 'Clear sky'}[state], place: 'Carcavelos, Portugal',
   source: 'live', fetchedAt: '2026-11-11T11:50:00Z', attribution: 'Weather data by Open-Meteo.com, adapted for the game', state, ...extra});

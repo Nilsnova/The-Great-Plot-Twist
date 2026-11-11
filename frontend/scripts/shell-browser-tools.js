@@ -20,7 +20,7 @@ export async function closeSettings(page,{keyboard=false}={}) {
 }
 // Closes any open game panel so a check can continue in the world.
 export async function dismissPanels(page) {
-  for(const selector of ['.islet-modal','.duel-modal','.desk-modal','.sports-modal','.market-modal','.account-modal']){
+  for(const selector of ['.islet-modal','.duel-modal','.sports-modal','.market-modal','.account-modal']){
     const modal=page.locator(`${selector}[open]`);if(await modal.count()){await page.keyboard.press('Escape');await modal.waitFor({state:'hidden'});}
   }
 }

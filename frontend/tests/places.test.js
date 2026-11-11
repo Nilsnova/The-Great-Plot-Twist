@@ -6,8 +6,8 @@ import { createWorld } from '../src/world/places/manager.js';
 describe('place contracts', () => {
   it('contains all six places and exactly the agreed hotspot and light ids', () => {
     expect(placeIds).toEqual(['lighthouse_isle', 'saltreach_harbor', 'home_islet', 'smugglers_cove', 'wreck_point', 'the_teeth']);
-    expect(new Set(hotspotIds).size).toBe(9);
-    expect(hotspotIds.slice().sort()).toEqual('market_hall prediction_kiosk sports_pavilion plot_1 plot_2 plot_3 plot_4 islet_signal_station raid_arch'.split(' ').sort());
+    expect(new Set(hotspotIds).size).toBe(8); // the fortune teller's prediction_kiosk left on 11 Nov (D035)
+    expect(hotspotIds.slice().sort()).toEqual('market_hall sports_pavilion plot_1 plot_2 plot_3 plot_4 islet_signal_station raid_arch'.split(' ').sort());
     expect(lightIds).toEqual(['keepers_lamp', 'harbor_light', 'islet_signal_station', 'ruin_light']);
     expect(Object.keys(places.lighthouse_isle.anchors)).toEqual(['stairwell', 'lamp_room']);
   });

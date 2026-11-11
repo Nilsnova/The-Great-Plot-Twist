@@ -7,7 +7,7 @@
 //   island_built          {kind}       a building finished on the player's own island: 'wall', 'cannon', 'tower', 'house'
 //   wave_finished         {survived}   a pirate wave ended; survived is true when the island held
 //   place_arrived         {id}         the player arrived at a place id from src/world/places/registry.js
-//   harbor_stake_placed   {}           a 🪙 stake was placed at a Harbor stall (market, match or fortune)
+//   harbor_stake_placed   {}           a 🪙 stake was placed at a Harbor stall (the market stall or the match board)
 //   island_invite_opened  {}           the player opened "Invite a friend" (island code + QR)
 export const ISLAND_BUILT = 'island_built';
 export const WAVE_FINISHED = 'wave_finished';

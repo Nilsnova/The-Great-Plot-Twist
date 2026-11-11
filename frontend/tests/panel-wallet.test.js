@@ -22,7 +22,7 @@ function setup() {
   const store = createAdapterStore({session}), timers = new Map();
   let serverMe = me(1000), now = 0, nextTimer = 0;
   const reads = [], gets = [], posts = [], requests = [], transportTasks = [];
-  store.commit({me: structuredClone(serverMe), config: {flags: {market: true, predictions: true, arena: true}}});
+  store.commit({me: structuredClone(serverMe), config: {flags: {market: true, arena: true}}});
   const api = {
     get: vi.fn(path => {
       requests.push({method: 'GET', path});
@@ -63,11 +63,11 @@ afterEach(() => { for (const fixture of fixtures.splice(0)) fixture.dispose(); }
 
 describe('panel observations reconcile the shared authoritative wallet', () => {
   it('preserves exact A2 objects and bodies, never repeats a POST, and rereads the account even at the same balance', async () => {
-    const f = setup(), response = good({recorded: true}), body = {amount: 7, stakeId: randomUUID()};
+    const f = setup(), response = good({recorded: true}), body = {asset: 'harbor-trust', direction: 'up', stake: 10, actionUid: randomUUID()};
     f.posts.push(() => Promise.resolve(response));
-    expect(await f.wallet.api.post('/api/predictions/stake', body)).toBe(response);
+    expect(await f.wallet.api.post('/api/market/calls', body)).toBe(response);
     await f.wallet.waitIdle();
-    expect(f.api.post).toHaveBeenCalledExactlyOnceWith('/api/predictions/stake', body);
+    expect(f.api.post).toHaveBeenCalledExactlyOnceWith('/api/market/calls', body);
     expect(f.api.post.mock.calls[0][1]).toBe(body);
     expect(f.meReads()).toHaveLength(1);
     expect(f.ctx.onMeRefreshed).toHaveBeenCalledOnce();
@@ -75,7 +75,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     expect(view.captain.coins).toBe(1000); expect(view).not.toHaveProperty('rewards');
   });
 
-  it.each(['/api/market/open', '/api/market/close', '/api/market/calls', '/api/predictions/stake', '/api/duels',
+  it.each(['/api/market/open', '/api/market/close', '/api/market/calls', '/api/duels',
     `/api/duels/${randomUUID()}/move`, `/api/duels/${randomUUID()}/cancel`])
   ('reconciles the published wallet write %s without adopting its coin fields', async path => {
     const f = setup(), response = good({coins: 123456}); f.posts.push(() => Promise.resolve(response));
@@ -91,7 +91,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     ['500', failed(500)], ['502', failed(502)], ['uncertain 503', failed(503)],
   ])('reads rather than resending after %s', async (_label, response) => {
     const f = setup(); f.posts.push(() => Promise.resolve(response));
-    expect(await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()})).toBe(response);
+    expect(await f.wallet.api.post('/api/market/calls', {actionUid: randomUUID()})).toBe(response);
     await f.wallet.waitIdle();
     expect(f.meReads()).toHaveLength(1);
     expect(f.api.post).toHaveBeenCalledOnce();
@@ -100,9 +100,8 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
   it.each([
     ['/api/market/open', failed(503, 'market_unavailable')],
     ['/api/market/close', failed(503, 'database_not_configured')],
-    ['/api/predictions/stake', failed(503, 'predictions_unavailable')],
-    ['/api/predictions/stake', failed(503, 'source_unavailable')],
-    ['/api/predictions/stake', failed(503, 'database_not_configured')],
+    ['/api/market/calls', failed(503, 'market_unavailable')],
+    ['/api/market/calls', failed(503, 'database_not_configured')],
     ['/api/duels', failed(401, 'unauthorized')], ['/api/duels', failed(429, 'too_many_requests')],
     ['/api/duels', failed(409, 'duel_taken')], ['/api/unrelated', good({})],
   ])('does not add account reads for a definite refusal or unrelated route %s %j', async (path, response) => {
@@ -122,11 +121,11 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
   it('preserves synchronous preparation errors and asynchronous rejection identity', async () => {
     const f = setup(), error = new TypeError('Recorded invalid request');
     f.posts.push(() => { throw error; });
-    expect(() => f.wallet.api.post('/api/predictions/stake', {})).toThrow(error);
+    expect(() => f.wallet.api.post('/api/market/calls', {})).toThrow(error);
     await f.wallet.waitIdle(); expect(f.meReads()).toHaveLength(0);
     const rejection = new Error('Recorded connection lost');
     f.posts.push(() => Promise.reject(rejection));
-    await expect(f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()})).rejects.toBe(rejection);
+    await expect(f.wallet.api.post('/api/market/calls', {actionUid: randomUUID()})).rejects.toBe(rejection);
     await f.wallet.waitIdle(); expect(f.meReads()).toHaveLength(1); expect(f.api.post).toHaveBeenCalledTimes(2);
   });
 
@@ -134,13 +133,13 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     const f = setup(), held = deferred(), started = deferred();
     f.reads.push(() => { started.resolve(); return held.promise; });
     await f.wallet.api.post('/api/market/open', {actionUid: randomUUID()}); await started.promise;
-    await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()});
+    await f.wallet.api.post('/api/market/calls', {actionUid: randomUUID()});
     f.setMe(me(800)); held.resolve(good(me(900))); await f.wallet.waitIdle();
     expect(f.meReads()).toHaveLength(2);
     expect(f.store.read().captain.coins).toBe(800); expect(f.api.post).toHaveBeenCalledTimes(2);
   });
 
-  it.each(['/api/market/portfolio', '/api/predictions/mine', '/api/duels', `/api/duels/${randomUUID()}`])
+  it.each(['/api/market/portfolio', '/api/duels', `/api/duels/${randomUUID()}`])
   ('refreshes a passive authoritative payout hint on %s while leaving its answer untouched', async path => {
     const f = setup(), response = good({coins: 1100}); f.gets.push(() => Promise.resolve(response));
     f.setMe(me(1100)); expect(await f.wallet.api.get(path)).toBe(response); await f.wallet.waitIdle();
@@ -178,9 +177,9 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
   it('ignores invalid, equal and public/unrelated coin fields', async () => {
     const f = setup();
     for (const value of [-1, 1.5, Number.MAX_SAFE_INTEGER + 1, '900', null, 1000]) {
-      f.gets.push(() => Promise.resolve(good({coins: value}))); await f.wallet.api.get('/api/predictions/mine');
+      f.gets.push(() => Promise.resolve(good({coins: value}))); await f.wallet.api.get('/api/market/portfolio');
     }
-    for (const path of ['/api/predictions', '/api/market', '/api/config']) {
+    for (const path of ['/api/sports', '/api/market', '/api/config']) {
       f.gets.push(() => Promise.resolve(good({coins: 900}))); await f.wallet.api.get(path);
     }
     f.gets.push(() => Promise.resolve({...failed(503), data: {coins: 900}})); await f.wallet.api.get('/api/duels');
@@ -220,11 +219,11 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     expect(f.store.read().captain.coins).toBe(950);
     const late = deferred(), lateStarted = deferred();
     f.reads.push(() => { lateStarted.resolve(); return late.promise; });
-    await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()}); await lateStarted.promise;
+    await f.wallet.api.post('/api/market/calls', {actionUid: randomUUID()}); await lateStarted.promise;
     f.replaceIdentity(77); late.resolve(good(me(1))); await f.wallet.waitIdle();
     expect(f.store.read().captain.coins).toBe(77);
     expect(f.ctx.onMeRefreshed).toHaveBeenCalledOnce();
-    f.setMe(me(66)); await f.wallet.api.post('/api/predictions/stake', {stakeId: randomUUID()}); await f.wallet.waitIdle();
+    f.setMe(me(66)); await f.wallet.api.post('/api/market/calls', {actionUid: randomUUID()}); await f.wallet.waitIdle();
     expect(f.store.read().captain.coins).toBe(66);
   });
 

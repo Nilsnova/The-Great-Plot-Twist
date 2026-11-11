@@ -5,7 +5,7 @@ import {allowedUiActions} from './ui-actions.js';
 
 export const diagnosticScreens = Object.freeze([
   'title', 'pause', 'settings', 'credits', 'account', 'intro', 'chart',
-  'islet', 'market', 'predictions', 'duels', 'cinematic', 'world', 'loading',
+  'islet', 'market', 'duels', 'cinematic', 'world', 'loading',
 ]);
 const screens = new Set(diagnosticScreens);
 const methods = new Set(adapterMethods);

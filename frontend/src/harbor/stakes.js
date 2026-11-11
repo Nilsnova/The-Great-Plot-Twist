@@ -4,7 +4,7 @@
 import {HARBOR_STAKE_PLACED} from '../ui/quest-events.js';
 
 export const STAKES = Object.freeze([5, 10, 25]);
-// The bus event after the server accepted a stake: {type, kind: 'market' | 'match' | 'fortune', stake}.
+// The bus event after the server accepted a stake: {type, kind: 'market' | 'match', stake}.
 // The quest strip (lane U) listens for it; the name comes from src/ui/quest-events.js.
 export const STAKE_EVENT = HARBOR_STAKE_PLACED;
 

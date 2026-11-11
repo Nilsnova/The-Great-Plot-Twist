@@ -229,46 +229,8 @@ describe('match board card', () => {
   });
 });
 
-describe('fortune teller card', () => {
-  it('sends exactly 5, 10 or 25 coins on yes or no and handles empty, closed and signed-out', async () => {
-    const result = await run(async () => {
-      const {fx, events, tick, press, text} = await window.harborKit();
-      const {createDesk} = await window.g20Import('/src/harbor/fortune-card.js');
-      const sent = [];
-      for (const [stake, side] of [[5, 'yes'], [10, 'no'], [25, 'yes']]) {
-        const adapter = fx.fakeDesk();
-        const desk = createDesk({adapter});
-        await desk.open(); await tick();
-        const item = document.querySelector('[data-question="snow-lisbon"]');
-        await press(item, `[data-side="${side}"]`); await press(item, `[data-stake="${stake}"]`); await press(item, '.harbor-confirm'); await tick();
-        sent.push(...adapter.calls.filter(call => call[0] === 'stake').map(call => ({side: call[1].side, amount: call[1].amount})));
-        desk.dispose();
-      }
-      const states = {};
-      for (const [name, options] of [['empty', {questions: []}], ['closed', {closed: true}], ['signedOut', {signedIn: false}], ['refused', {refuse: 'already_staked'}]]) {
-        const desk = createDesk({adapter: fx.fakeDesk(options)});
-        await desk.open(); await tick();
-        if (name === 'refused') {
-          const item = document.querySelector('[data-question="snow-lisbon"]');
-          await press(item, '[data-side="no"]'); await press(item, '[data-stake="5"]'); await press(item, '.harbor-confirm'); await tick();
-        }
-        states[name] = {text: text(), stakes: document.querySelectorAll('dialog[open] [data-stake]').length};
-        desk.dispose();
-      }
-      return {sent, events, states};
-    });
-    expect(result.sent).toEqual([{side: 'yes', amount: 5}, {side: 'no', amount: 10}, {side: 'yes', amount: 25}]);
-    expect(result.events).toEqual([{kind: 'fortune', stake: 5}, {kind: 'fortune', stake: 10}, {kind: 'fortune', stake: 25}]);
-    expect(result.states.empty.text).toContain('No open questions right now');
-    expect(result.states.closed.text).toContain('The fortune teller is closed for now.');
-    expect(result.states.signedOut.text).toContain('Sign in or join with a class code to place a stake');
-    expect(result.states.signedOut.stakes).toBe(0);
-    expect(result.states.refused.text).toContain('You already have a stake on this one.');
-  });
-});
-
 describe('harbor overview and weather board', () => {
-  it('lists the four stalls and the duel ring with one sentence each, and opens a stall', async () => {
+  it('lists the three stalls and the duel ring with one sentence each, and opens a stall (no fortune teller, D035)', async () => {
     const result = await run(async () => {
       const {fx, tick, text} = await window.harborKit();
       const {createHarbor} = await window.g20Import('/src/harbor/host.js');
@@ -288,7 +250,7 @@ describe('harbor overview and weather board', () => {
       return {menu: menus[0]()[0].label, stalls, opened, storm, offline};
     });
     expect(result.menu).toBe('Harbor');
-    expect(result.stalls.map(stall => stall.title)).toEqual(['Market stall', 'Match board', 'Fortune teller', 'Weather board', 'Duel ring']);
+    expect(result.stalls.map(stall => stall.title)).toEqual(['Market stall', 'Match board', 'Weather board', 'Duel ring']);
     expect(result.stalls.at(-1).button).toBeNull();
     expect(result.opened).toEqual(['match']);
     expect(result.storm).toContain('Right now at Carcavelos, Portugal: Thunderstorm, windy');

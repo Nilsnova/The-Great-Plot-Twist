@@ -6,7 +6,7 @@ export const places = {
     lights: [{ id: 'keepers_lamp', beamOrigin: { ...cameraAnchors.lamp_room, z: 0 } }] },
   saltreach_harbor: { name: 'Saltreach Harbor', chart: [217, 156], spawn: [0, 19], zones: [
     zone('market_hall', 'Market stall', -9, -2),
-    zone('prediction_kiosk', 'Fortune teller', 1, -2), zone('sports_pavilion', 'Match board', 12, -2) ],
+    zone('sports_pavilion', 'Match board', 12, -2) ],
     lights: [{ id: 'harbor_light', beamOrigin: { x: 9, y: -1.6675, z: 0 } }] },
   home_islet: { name: 'Your island', chart: [302, 201], spawn: [0, 12], zones: [
     zone('plot_1', 'Cabin plot', -8, 7.5), zone('plot_2', 'Workshop plot', 7, 7.5),

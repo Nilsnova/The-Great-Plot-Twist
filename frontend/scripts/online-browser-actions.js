@@ -36,7 +36,7 @@ export async function openAccountControls(page) {
   if (await page.locator('.account-modal[open]').isVisible()) return;
   const shell = page.locator('.shell-screen[open]');
   if (!await shell.isVisible()) {
-    for (const selector of ['.islet-modal', '.duel-modal', '.desk-modal', '.sports-modal', '.market-modal']) {
+    for (const selector of ['.islet-modal', '.duel-modal', '.sports-modal', '.market-modal']) {
       const modal = page.locator(`${selector}[open]`);
       if (await modal.count()) { await page.keyboard.press('Escape'); await modal.waitFor({state: 'hidden'}); }
     }

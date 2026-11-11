@@ -21,7 +21,7 @@ export function button(label, onClick, className = 'kit-button harbor-button') {
 }
 
 // One card: a native modal dialog with a heading, a status line and a body. `marker` is the class the
-// game already looks for (market-modal, sports-modal, desk-modal) so Escape and focus keep working.
+// game already looks for (market-modal, sports-modal) so Escape and focus keep working.
 export function createCard({title, kind, marker, onClose, resetInput, focusGame}) {
   const body = el('div', 'harbor-card-body');
   const status = el('p', 'harbor-status');

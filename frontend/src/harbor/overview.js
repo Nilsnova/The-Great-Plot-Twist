@@ -5,7 +5,8 @@ import {button, createCard, el} from './dom.js';
 import {weatherView} from './weather-model.js';
 import {EXPLAIN, OPEN_STALL, TITLES} from './words.js';
 
-export const STALLS = ['market', 'match', 'fortune', 'weather', 'duel'];
+// No fortune teller: there is no prediction market in the game (D035, 11 Nov).
+export const STALLS = ['market', 'match', 'weather', 'duel'];
 
 export function createOverviewCard({container, resetInput, focusGame, openStall}) {
   const card = createCard({title: TITLES.harbor, kind: 'overview', resetInput, focusGame});

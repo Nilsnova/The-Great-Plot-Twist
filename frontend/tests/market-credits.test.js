@@ -73,7 +73,7 @@ describe('current public market credit cache',()=>{
     f.api.get.mockResolvedValueOnce(good({credits:[source('Private portfolio source')]}));
     await f.policy.request('/api/market/portfolio');expect(readMarketCredits(f.session)).toEqual(before);
     f.publicApi.get.mockResolvedValueOnce(good({credits:[source('Other public route source')]}));
-    await f.policy.publicGet('/api/predictions');expect(readMarketCredits(f.session)).toEqual(before);
+    await f.policy.publicGet('/api/sports');expect(readMarketCredits(f.session)).toEqual(before);
     f.publicApi.get.mockResolvedValueOnce(good({credits:null}));
     await f.policy.publicGet('/api/market');expect(readMarketCredits(f.session)).toEqual(before);
     f.publicApi.get.mockResolvedValueOnce(good({credits:[]}));

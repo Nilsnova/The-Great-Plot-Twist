@@ -1,6 +1,6 @@
 // The Harbor in the running game: the "Harbor" menu entry, the overview card and the weather board.
-// The market, match and fortune cards keep their own hosts in game.js (online/market-host.js,
-// screens/sports/index.js, online/predictions-entry.js), which load the cards of this folder.
+// The market and match cards keep their own hosts in game.js (online/market-host.js,
+// screens/sports/index.js), which load the cards of this folder. No fortune teller (D035).
 //   const harbor = createHarbor({container, resetInput, focusGame, getWeather, openStall, notify});
 //   harbor.openOverview(); harbor.openWeather(); harbor.active; harbor.close(); harbor.dispose();
 // Kept tiny on purpose: game.js imports it at start, the cards load on first use.
@@ -8,7 +8,6 @@ import {addMenuExtras} from '../shell/menu-extras.js';
 
 export const loadMarketCard = () => import('./market-card.js');
 export const loadMatchCard = () => Promise.all([import('../screens/sports/http.js'), import('./match-card.js')]);
-export const loadFortuneCard = () => import('./fortune-card.js');
 
 export function createHarbor({container, resetInput, focusGame, getWeather, openStall, notify,
   load = () => import('./overview.js'), menu = addMenuExtras}) {

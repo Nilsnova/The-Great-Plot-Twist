@@ -4,7 +4,6 @@ import {openWorldBrowser} from './world-browser-tools.js';
 import {auditRequestStates} from './a11y-request-states.js';
 import {auditIsletPanel} from './a11y-islet.js';
 import {auditMarketPanel} from './a11y-market.js';
-import {auditPredictionsPanel} from './a11y-predictions.js';
 const env=await openWorldBrowser({hmr:false}),{page}=env,prefix='captures/20261106_G8-A11y';
 const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:[],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
 async function audit(name,selector,context='gameplay'){
@@ -76,14 +75,12 @@ try{
  report.reducedMotion=await page.evaluate(()=>({runningAnimations:document.getAnimations().filter(a=>a.playState==='running').map(a=>a.animationName??'unknown')}));
  report.isletPanel=await auditIsletPanel(page,{url:env.url,audit,capture:prefix+'-islet-short-375x400.png'});
  report.marketPanel=await auditMarketPanel(page,{url:env.url,audit,capture:prefix+'-market-short-375x400.png'});
- report.predictionsPanel=await auditPredictionsPanel(page,{url:env.url,audit,capture:prefix+'-predictions-short-375x400.png'});
 }catch(error){report.errors.push(error.stack);}
 finally{
  report.browserErrors=env.errors;report.externalRequests=env.external;
  report.failures=report.screens.flatMap(screen=>screen.sizes.flatMap(m=>['missingNames','duplicates','smallTargets','fonts','contrast'].filter(key=>m[key].length).map(key=>({screen:screen.name,width:m.width,check:key,count:m[key].length}))));
  for(const [check,passed] of Object.entries(report.isletPanel?.checks??{isletPanelAudit:false}))if(!passed)report.failures.push({screen:'islet-short-local',width:375,height:400,check});
  for(const [check,passed] of Object.entries(report.marketPanel?.checks??{marketPanelAudit:false}))if(!passed)report.failures.push({screen:'market-short-local',width:375,height:400,check});
- for(const [check,passed] of Object.entries(report.predictionsPanel?.checks??{predictionsPanelAudit:false}))if(!passed)report.failures.push({screen:'predictions-short-local',width:375,height:400,check});
  for(const screen of report.screens){for(const m of screen.sizes){for(const key of ['overflow','documentOverflow'])if(m[key])report.failures.push({screen:screen.name,width:m.width,check:key});if(!m.fitsViewport)report.failures.push({screen:screen.name,width:m.width,check:'fitsViewport'});}if(screen.focus.positiveTabindex||screen.focus.steps.some(step=>!step.domOrder||!step.inside||!step.visible)||screen.focus.trapped===false||screen.escapeClosed===false)report.failures.push({screen:screen.name,check:'keyboard'});}
  for(const [name,caption] of [['world',report.worldCaption]])if(!caption||!caption.inside||caption.size<18||caption.nonoverlap===false||caption.between===false)report.failures.push({check:name+'Caption'});
  if(report.externalRequests.length)report.failures.push({check:'externalRequests'});for(const check of ['joinEscapeTitle','frontDoorHarbor','creditsEscapeSettings','settingsEscapeTitle','hudControlsEscape','accountEscapeCanvas'])if(report[check]!==true)report.failures.push({check});if(report.reducedMotion?.runningAnimations.length)report.failures.push({check:'reducedMotion'});

@@ -5,10 +5,9 @@ import {describe, expect, it} from 'vitest';
 import {STAKES, STAKE_EVENT, offeredStakes, poolGain} from '../../src/harbor/stakes.js';
 import {callView, callsView, countdownText, reasonText, rememberPrices} from '../../src/harbor/market-model.js';
 import {matchView} from '../../src/harbor/match-model.js';
-import {fortuneView} from '../../src/harbor/fortune-model.js';
 import {PIRATE_LINES, weatherView} from '../../src/harbor/weather-model.js';
 import {EXPLAIN, SIGN_IN, priceText, refusalText, resultText} from '../../src/harbor/words.js';
-import {NOW, callAssets, fixture, marketCall, question, sportsBoard, weatherAnswer} from './fixtures.js';
+import {NOW, callAssets, fixture, marketCall, sportsBoard, weatherAnswer} from './fixtures.js';
 
 describe('stakes', () => {
   it('are 5, 10 and 25 and nothing else', () => {
@@ -141,26 +140,6 @@ describe('match board', () => {
   });
 });
 
-describe('fortune teller', () => {
-  it('shows open questions with yes and no', () => {
-    const view = fortuneView({listReply: {kind: 'ok', data: {questions: [question()], rules: {minStake: 1, maxStake: 50, cutPercent: 5}}},
-      mineReply: {kind: 'ok', data: {stakes: []}}});
-    expect(view.questions[0]).toMatchObject({canStake: true, stakes: [5, 10, 25]});
-    expect(view.questions[0].sides.map(side => side.label)).toEqual(['Yes', 'No']);
-    expect(view.questions[0].hint('yes', 10)).toBe('If you are right you win about 🪙 11'); // 10/40 * 50 * 0.95
-  });
-  it('has a friendly empty state and a closed state', () => {
-    expect(fortuneView({listReply: {kind: 'ok', data: {questions: [question({canStake: false, status: 'closed'})], rules: {}}}}))
-      .toMatchObject({state: 'empty', line: 'No open questions right now'});
-    expect(fortuneView({listReply: {kind: 'closed'}})).toMatchObject({state: 'closed', line: 'The fortune teller is closed for now.'});
-  });
-  it('asks a signed-out player to sign in and offers no stakes', () => {
-    const view = fortuneView({listReply: {kind: 'ok', data: {questions: [question()], rules: {}}}, mineReply: {kind: 'signin'}});
-    expect(view).toMatchObject({signedIn: false, signInNeeded: true});
-    expect(view.questions[0].canStake).toBe(false);
-  });
-});
-
 describe('weather board', () => {
   it('matches the wave weather of the server (BUILD-PLAN 3.4)', () => {
     const catalogue = JSON.parse(readFileSync(new URL('../../../backend/content/islands.json', import.meta.url), 'utf8')).weather;
@@ -194,10 +173,10 @@ describe('words', () => {
     expect(refusalText('something_new')).toBe('The stall said no this time. Try again later.');
   });
   it('explain every stall in one sentence', () => {
-    for (const id of ['market', 'match', 'fortune', 'weather', 'duel']) expect(EXPLAIN[id].split(/[.:]\s/).length).toBeLessThanOrEqual(2);
+    expect(Object.keys(EXPLAIN)).toEqual(['market', 'match', 'weather', 'duel']); // no fortune teller (D035)
+    for (const id of ['market', 'match', 'weather', 'duel']) expect(EXPLAIN[id].split(/[.:]\s/).length).toBeLessThanOrEqual(2);
     expect(EXPLAIN.market).toMatch(/Binance/);
     expect(EXPLAIN.match).toMatch(/football-data\.org/);
-    expect(EXPLAIN.fortune).toMatch(/Manifold/);
     expect(EXPLAIN.weather).toMatch(/Open-Meteo/);
   });
 });

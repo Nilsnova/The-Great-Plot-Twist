@@ -8,7 +8,7 @@ import {claimPanelEntry, findPanelEntry, findPanelServices, registerPanelService
 const success = data => ({ok: true, status: 200, data});
 function deferred() { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; }
 const leases = [];
-function setup({signedIn = true, flags = {arena: true, predictions: true, market: true}, ...extra} = {}) {
+function setup({signedIn = true, flags = {arena: true, sports: true, market: true}, ...extra} = {}) {
   const session = createSession(); if (signedIn) session.setToken(`fixture-${randomUUID()}`);
   const source = randomUUID(), state = {flags, ready: true};
   const api = {
@@ -32,7 +32,7 @@ describe('private deferred panel services', () => {
     expect(findPanelServices()).toBeNull();
     expect(await first.lease.request.get('/api/duels')).toMatchObject({data: {source: first.source}});
     expect(second.api.get).not.toHaveBeenCalled();
-    expect(await second.lease.request.get('/api/predictions/mine')).toMatchObject({data: {source: second.source}});
+    expect(await second.lease.request.get('/api/sports/mine')).toMatchObject({data: {source: second.source}});
     expect(first.lease.current(second.lease.capture('arena', {privateRead: true}))).toBe(false);
     first.lease.dispose();
     expect(findPanelServices(first.session)).toBeNull(); expect(findPanelServices(second.session)).toBe(second.lease);
@@ -48,9 +48,9 @@ describe('private deferred panel services', () => {
     await f.lease.marketRequest('/api/market/open', {method: 'POST', body});
     expect(f.api.get).toHaveBeenCalledExactlyOnceWith('/api/market/portfolio');
     expect(f.api.post.mock.calls[1][1]).toBe(body);
-    await f.lease.request.publicGet('/api/predictions');
+    await f.lease.request.publicGet('/api/sports');
     await f.lease.publicGet('/api/market');
-    expect(f.publicApi.get.mock.calls).toEqual([['/api/predictions'], ['/api/market']]);
+    expect(f.publicApi.get.mock.calls).toEqual([['/api/sports'], ['/api/market']]);
     const privateCalls = f.api.get.mock.calls.length + f.api.post.mock.calls.length;
     expect(await f.lease.marketRequest('/api/market/open', {method: 'PUT', body})).toMatchObject({ok: false, status: 405});
     expect(await f.lease.marketRequest('/api/market/open', {method: 'DELETE'})).toMatchObject({code: 'method_not_allowed'});
@@ -87,9 +87,9 @@ describe('private deferred panel services', () => {
   });
 
   it.each([false, 'true', 1, undefined])('requires a strict true feature flag, received %s', value => {
-    const f = setup({flags: {arena: value, predictions: value, market: false}});
+    const f = setup({flags: {arena: value, sports: value, market: false}});
     expect(f.lease.capture('arena')).toBeNull();
-    expect(f.lease.capture('predictions', {privateRead: true})).toBeNull();
+    expect(f.lease.capture('sports', {privateRead: true})).toBeNull();
     expect(f.lease.capture('arena', {allowFlagOff: true})).toBeNull();
     expect(f.lease.capture('market', {allowFlagOff: true})).not.toBeNull();
     f.state.flags = {arena: true}; f.lease.refresh();

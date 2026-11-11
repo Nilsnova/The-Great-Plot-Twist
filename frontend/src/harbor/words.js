@@ -12,7 +12,7 @@ export const LOADING = 'Opening the stall...';
 export const PLACE = 'Place stake';
 
 export const TITLES = {
-  harbor: 'Harbor', market: 'Market stall', match: 'Match board', fortune: 'Fortune teller',
+  harbor: 'Harbor', market: 'Market stall', match: 'Match board',
   weather: 'Weather board', duel: 'Duel ring',
 };
 
@@ -20,7 +20,6 @@ export const TITLES = {
 export const EXPLAIN = {
   market: 'Real crypto and gold prices from Binance, and real stock prices from Finnhub.',
   match: 'Real football fixtures and results from football-data.org: Premier League, Primeira Liga and Champions League.',
-  fortune: 'Yes or no questions about the real world, picked by hand from Manifold, a play money forecasting site.',
   weather: 'The real weather right now from Open-Meteo, and what it does to the pirate ships.',
   duel: 'Tap any captain in the harbor to challenge them to a quick duel of three rounds.',
 };
@@ -67,15 +66,6 @@ export const MATCH = {
   draw: 'Draw',
   picksClosed: 'Picks for this match are closed.',
   yourPick: (pick, stake) => `Your pick: ${pick}, ${formatCoins(stake)}`,
-};
-
-export const FORTUNE = {
-  empty: 'No open questions right now',
-  closed: 'The fortune teller is closed for now.',
-  unavailable: 'Questions unavailable right now',
-  yes: 'Yes', no: 'No',
-  pickGroup: 'Yes or no?',
-  yourAnswer: (side, stake) => `Your answer: ${side}, ${formatCoins(stake)}`,
 };
 
 export const POOL = {

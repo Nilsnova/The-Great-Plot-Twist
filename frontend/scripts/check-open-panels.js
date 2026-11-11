@@ -24,7 +24,7 @@ page.on('request',request=>{if(!request.url().startsWith(url)&&!request.url().st
 await page.route('**/api/**',route=>route.fulfill({status:404,contentType:'application/json',body:'{"error":{"code":"feature_off","message":"Local review only."}}'}));
 
 // The panels a player can open today: the account and settings screens, the Harbor cards (overview, weather,
-// market stall, match board, fortune teller), the old islet panel (islands flag off) and the island's build,
+// market stall, match board), the old islet panel (islands flag off) and the island's build,
 // bell and invite cards. The case screens and the duel arena panel left with the mystery (10 Nov); the old
 // Exchange, sports and prediction panels were replaced in the game by the Harbor cards (lane H).
 async function panel(name){
@@ -57,9 +57,6 @@ async function panel(name){
       }else if(name==='match'){
         const {createSportsPanel}=await import('/src/harbor/match-card.js');
         window.__panel=createSportsPanel({...ctx,adapter:fx.fakeSports(),getToken:()=>'token',clock:()=>fx.NOW,timeZone:'UTC'});await window.__panel.open();
-      }else if(name==='fortune'){
-        const {createDesk}=await import('/src/harbor/fortune-card.js');
-        window.__panel=createDesk({...ctx,adapter:fx.fakeDesk()});await window.__panel.open();
       }else if(name==='islet'){
         const {createIsletPanel}=await import('/src/screens/islet/panel.js');
         const {createIsletAdapter}=await import('/src/screens/islet/adapter.js');
@@ -84,7 +81,7 @@ async function panel(name){
 }
 
 try{
-  for(const name of ['account','settings','harbor','weather','market','match','fortune','islet','build','bell','invite']){
+  for(const name of ['account','settings','harbor','weather','market','match','islet','build','bell','invite']){
     await panel(name);
     for(const viewport of [{width:1280,height:800},{width:375,height:667},{width:320,height:568},{width:844,height:390}]){
       await page.setViewportSize(viewport);

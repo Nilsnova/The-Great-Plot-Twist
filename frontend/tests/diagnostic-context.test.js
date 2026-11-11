@@ -69,8 +69,8 @@ describe('diagnostic screen detection', () => {
     selectors.set('.account-modal[open]', {});
     expect(readDiagnosticScreen(document)).toBe('account');
     selectors.clear();
-    selectors.set('.case-modal[open] .case-page-picker', {value: 'predictions'});
-    expect(readDiagnosticScreen(document)).toBe('predictions');
+    selectors.set('.case-modal[open] .case-page-picker', {value: 'market'});
+    expect(readDiagnosticScreen(document)).toBe('market');
     selectors.set('.case-modal[open] .case-page-picker', {value: 'PRIVATE'});
     expect(readDiagnosticScreen(document)).toBeNull();
   });

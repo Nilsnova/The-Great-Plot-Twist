@@ -16,14 +16,14 @@ const capture = name => page.screenshot({ path: `${captureRoot}/20261105_World-$
 const go = async id => { await page.evaluate(id => window.__island.world.goTo(id, { fast: true }), id); await settle(page); };
 // The home plots and the signal station open the islet panel (package L2) after a lazy import. Close
 // it before dismissPanels looks once, or the panel opens late and swallows the next hotspot's E.
-const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', islet_signal_station: '.islet-modal', market_hall: '.market-modal', prediction_kiosk: '.desk-modal', sports_pavilion: '.sports-modal' };
+const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', islet_signal_station: '.islet-modal', market_hall: '.market-modal', sports_pavilion: '.sports-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
 try {
   const sports = {...BOARD, source: 'recorded',
     fixtures: BOARD.fixtures.map(fixture => ({...fixture, source: 'recorded', canStake: false}))};
   await page.route('**/api/sports', route => route.request().method() === 'GET'
     ? route.fulfill({json: sports}) : route.fallback());
-  await page.goto(env.url + '?market=local&desk=local');await startFromTitle(page);
+  await page.goto(env.url + '?market=local');await startFromTitle(page);
   await page.evaluate(() => {
     window.__worldEvents = [];
     for (const type of ['travel', 'arrived', 'interact', 'plot_clicked']) window.__island.on(type, e => window.__worldEvents.push(e));
