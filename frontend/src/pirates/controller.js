@@ -29,6 +29,8 @@ const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) ar
 const END_BEAT_MS = 1800;             // the last ship sinks on screen before the cutscene
 const LOST_BEAT_MS = 4500;            // a lost run's result stays up a little longer
 const DEFAULT_WAIT_SECONDS = 5;
+const SETTLE_TICKS = 20000;           // more than the longest wave (900 s)
+const BREAK_GRACE_MS = 10000;         // with Auto next on, the break waits this long for the loot answer
 export const bossText = warships => (warships >= 2 ? '⚠ Boss wave: two warships!' : '⚠ Boss wave: a warship!');
 export const BREAK_SECONDS = 15;      // the break after a won wave (TOWER-DEFENSE.md §1)
 const BOSS_WARNING_SECONDS = 6;       // the boss warning stays this long after the wave starts
@@ -141,6 +143,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const info = raw?.startsAtMs !== undefined ? raw : readWaveInfo(raw);
     if (!info) return null;
     if (wave?.info.waveId === info.waveId) return wave;
+    // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
+    // client): play ours to its end at once, so our part is finished and paid, then start the new one.
+    if (wave && !wave.done) settle(wave);
     // A wave that starts in the break of a won one continues the run (and its loot).
     if (!wave?.pause) runLoot = 0;
     if (wave) stop();
@@ -170,6 +175,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return current;
   }
 
+  function settle(current) {
+    for (let i = 0; i < SETTLE_TICKS && !current.sim.done; i++) { current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks)); current.ticks++; }
+    current.state = current.sim.state();
+    if (current.sim.done) end(current);
+  }
   function submit(input) {
     if (!wave || wave.done || wave.state.phase !== 'running') return false;
     const entry = { by: playerId, seq: ++wave.seq, tick: wave.ticks + INPUT_LEAD_TICKS, input };
@@ -319,7 +329,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     pause.ready = current.answer !== undefined || pause.failed === true;
     if (left <= 0 && !pause.requested) {
       if (auto && pause.ready && !pause.note) next();
-      else if (!auto) { stop(); return; } // the break is over: ring the bell again for the next wave
+      // The break is over: ring the bell again for the next wave. With Auto next on, a refused try (note)
+      // or a loot answer that never came must not keep the break (and the blocked input) forever.
+      else if (!auto || pause.note || now() > pause.until + BREAK_GRACE_MS) { stop(); return; }
     }
     const loot = Number.isFinite(current.answer?.loot) ? ` · 🪙 +${current.answer.loot}` : '';
     current.hud?.pause?.({ title: `Wave ${current.info.wave} won!`, line: pause.note ?? `${current.result.shipsSunk} ${current.result.shipsSunk === 1 ? 'ship' : 'ships'} sunk${loot}`,
