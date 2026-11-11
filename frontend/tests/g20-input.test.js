@@ -43,7 +43,7 @@ it.each(['pointerup', 'pointercancel', 'lostpointercapture'])('%s releases point
   }, type)).toBe(false);
 });
 
-it('touch buttons, keyboard stick and overlay cancellation map to existing controls', async () => {
+it('the touch Use button, keyboard stick and overlay cancellation map to existing controls (chart and menu live in the HUD Menu)', async () => {
   const result = await evaluate(async () => {
     const { createTouchControls } = await window.g20Import('/src/controls/touch.js');
     Object.defineProperty(navigator, 'maxTouchPoints', { value: 1 });
@@ -56,7 +56,7 @@ it('touch buttons, keyboard stick and overlay cancellation map to existing contr
     const result = { moving, released: values.at(-1), presses, actions, hidden: document.querySelector('.touch-controls').hidden };
     controls.dispose(); result.removed = !document.querySelector('.touch-controls'); return result;
   });
-  expect(result).toEqual({ moving: { x: 0, y: 1 }, released: { x: 0, y: 0 }, presses: ['KeyE'], actions: ['chart', 'menu'], hidden: true, removed: true });
+  expect(result).toEqual({ moving: { x: 0, y: 1 }, released: { x: 0, y: 0 }, presses: ['KeyE'], actions: [], hidden: true, removed: true });
 });
 
 // G20-T1 regression: only the captured finger may release the active stick.

@@ -41,17 +41,23 @@ export function joinTarget(value) {
   if (code === CLASS_CODE_PREFIX || code.startsWith(CLASS_CODE_PREFIX) && code.length > 6) return {kind: 'class', code: null};
   return {kind: 'crew', code};
 }
-export function goalCopy() {
-  return {
-    title: 'Your goal',
-    goal: 'Meet the other captains in Saltreach Harbor, build up your Home islet and light the three lamps together.',
-    controls: [
-      ['Move', 'WASD or arrow keys, or tap where you want to walk.'],
-      ['Interact', 'Press E, or tap the button that appears next to you.'],
-    ],
-    button: 'Got it',
+// The goal card after the intro (docs/PITCH.md, the first 3 minutes). A player who came with a class
+// code gets the class goals instead; the quest strip then shows the same goals.
+export function goalCopy({classHarbor = false} = {}) {
+  return classHarbor ? {
+    title: 'The class harbor',
+    goal: "Wave to a captain, win a friendly duel and open the Keeper's Lock, then light the three lamps together.",
+    controls: GOAL_CONTROLS, button: 'Got it',
+  } : {
+    title: 'Your island',
+    goal: 'Build a cannon, then ring the bell: the pirates are coming.',
+    controls: GOAL_CONTROLS, button: 'Got it',
   };
 }
+const GOAL_CONTROLS = Object.freeze([
+  ['Walk', 'WASD or arrow keys, or tap where you want to go.'],
+  ['Use', 'Press E, or tap the Use button that appears next to you.'],
+]);
 
 // Remember the class code of a projector invitation (?join=K7QXM) for the Join page and the class
 // harbor; sessionStorage only, so it ends with the tab. Anything that is not a class code is ignored.

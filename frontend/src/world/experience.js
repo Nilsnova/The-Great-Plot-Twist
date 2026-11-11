@@ -13,7 +13,7 @@ export function createWorldExperience(ctx){
       if(disposed){releaseArt(art);return;}
       ownedArt=art;localBubble=placeArt(ctx.scene,art,'emote-wave',0,0);localBubble.name='local-captain-emote';localBubble.visible=false;localBubble.renderOrder=942;others=actors.createOtherCaptains(ctx.scene,ctx.container,{...ctx.art,...art},ctx.reducedMotion);
       coins=counter.createCoinCounter({reducedMotion:ctx.reducedMotion});
-      (ctx.container.querySelector('.captain-status')??ctx.container).append(coins.element);
+      ctx.container.querySelector('.captain-status')?.append(coins.element); // the play HUD shows 🪙 itself
       hud=ui.createPresenceHud({send:ctx.send});
       (ctx.container.querySelector('.hud')??ctx.container).append(hud.element);
       if(latest){others.ingest(latest.presence);hud.update(latest);coins.update(latest.captain.coins);}

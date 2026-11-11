@@ -1,55 +1,43 @@
-/* G29 class demo: quest strip, demo prompts, the Keeper's Lock, the duel spotlight and the projector. */
+/* G29 class demo (the quest strip itself is the HUD's, src/ui/hud.css): demo prompts, the Keeper's Lock, the duel spotlight and the projector. */
 .demo-path .island-label,.demo-path .chapter-number,.demo-path .journal-toggle,.demo-path .case-toolbar,.demo-path .tonight-chip,.demo-path .bulletin-toggle,.demo-path .onboarding,.demo-path .onboarding-hint{display:none!important}
-.quest-strip{position:absolute;right:12px;top:140px;z-index:30;display:grid;gap:6px;max-width:min(300px,calc(100vw - 24px));font:16px/1.35 'Courier New',monospace;color:#ece0b8;pointer-events:auto}
-.quest-strip h2{margin:0;font-size:13px;letter-spacing:.08em;color:#d8c48a;text-transform:uppercase}
-.quest-strip ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.quest-item{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;text-align:left;font:inherit;color:inherit;background:#263e31e6;border:2px solid #8f8a5f;padding:6px 10px;cursor:pointer}
-.quest-item:focus-visible{outline:3px solid #f3d58c;outline-offset:2px}
-.quest-check{flex:0 0 22px;height:22px;border:2px solid #c9b47c;display:grid;place-items:center;font-weight:bold;color:#203528;background:#1d3328}
-.quest-item[data-done=true]{border-color:#bad28b}.quest-item[data-done=true] .quest-check{background:#bad28b}
-.quest-item[data-done=true] .quest-label{text-decoration:line-through;text-decoration-thickness:2px;color:#cfdcb2}
-.quest-hint{margin:0;background:#1d3328f2;border:2px solid #c8b17b;padding:8px 10px;font-size:15px}
-.quest-next{margin:0;font-size:15px;color:#f3d58c;background:#263e31e6;border:2px dashed #c8b17b;padding:6px 10px}
-.demo-prompt{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:40;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:calc(100vw - 24px);background:#263e31f2;border:3px solid #c8b17b;padding:10px 14px;font:17px/1.35 'Courier New',monospace;color:#fff0c5;box-shadow:4px 4px #14281f99}
-.demo-prompt p{margin:0;width:100%;text-align:center}.demo-prompt kbd{border:2px solid #c8b17b;padding:0 6px;margin-right:4px}
-.demo-join{position:absolute;left:12px;top:86px;z-index:30}
+.demo-prompt{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:40;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:calc(100vw - 24px);background:var(--u-sea);padding:10px 14px;font:600 17px/1.35 var(--u-font);color:var(--u-ink);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
+.demo-prompt p{margin:0;width:100%;text-align:center}.demo-prompt kbd{display:inline-grid;place-items:center;min-width:26px;margin-right:8px;padding:0 5px;font:800 16px/26px var(--u-font);color:#2b1d06;background:var(--u-gold);border:2px solid var(--u-deep)}
 .demo-splash{position:absolute;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none}
-.demo-splash div{background:#1d3328f0;border:4px solid #f3d58c;padding:22px 30px;text-align:center;font:20px/1.4 'Courier New',monospace;color:#fff0c5;box-shadow:0 0 0 9999px #0d1f1855;animation:demo-splash-in 2.6s ease both}
-.demo-splash strong{display:block;font-size:30px;color:#f3d58c;margin-bottom:6px}
+.demo-splash div{background:var(--u-parch);padding:20px 34px;text-align:center;font:18px/1.4 var(--u-font);color:var(--u-pink);box-shadow:0 -3px var(--u-brass),0 3px var(--u-brass),-3px 0 var(--u-brass),3px 0 var(--u-brass),0 -6px var(--u-deep),0 6px var(--u-deep),-6px 0 var(--u-deep),6px 0 var(--u-deep),0 0 0 9999px #0d1f1855;animation:demo-splash-in 2.6s ease both}
+.demo-splash strong{display:block;font:700 30px/1.2 var(--u-serif);color:var(--u-pink);margin-bottom:6px}
 @keyframes demo-splash-in{0%{opacity:0;transform:scale(.8)}12%{opacity:1;transform:scale(1.04)}20%{transform:scale(1)}85%{opacity:1}100%{opacity:0}}
-.demo-toast{position:absolute;left:50%;top:150px;transform:translateX(-50%);z-index:50;max-width:min(560px,calc(100vw - 24px));text-align:center;background:#334d39f2;border:2px solid #bad28b;padding:8px 16px;font:17px/1.35 'Courier New',monospace;color:#fff0c5}
 /* The Keeper's Lock */
-.lock-modal .lock-question{font-size:22px;line-height:1.35;color:#f3d58c;margin:0 0 8px}
-.lock-modal .lock-note,.lock-modal .lock-source,.lock-modal .lock-attribution{margin:0 0 10px;font-size:15px;color:#cfd6b6}
+.lock-modal{width:min(820px,calc(100vw - 40px))}.lock-modal .lock-question{font:700 22px/1.35 var(--u-serif);color:var(--u-gold);margin:0 0 8px}
+.lock-modal .lock-note,.lock-modal .lock-source,.lock-modal .lock-attribution{margin:0 0 12px;font-size:16px;color:var(--u-mute)}
 .lock-place{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
 .lock-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 0 12px}
-.lock-choice{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:96px;font:18px/1.3 'Courier New',monospace;color:#fff0c5;background:#3c5740;border:3px solid #b4a372;padding:12px;cursor:pointer}
-.lock-choice:hover{background:#4a6a4b}.lock-choice:focus-visible{outline:3px solid #f3d58c;outline-offset:3px}.lock-choice:disabled{opacity:.55;cursor:default}
+.lock-choice{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:104px;font:600 17px/1.3 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid #3d6a6b;box-shadow:inset 0 2px #ffffff0f,0 3px var(--u-deep);padding:14px 10px;cursor:pointer}
+.lock-choice:hover:not(:disabled){background:var(--u-raise);border-color:var(--u-gold)}.lock-choice:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}.lock-choice:disabled{opacity:.55;cursor:default}
 .lock-choice svg{width:44px;height:44px;image-rendering:pixelated}
-.lock-status{min-height:1.5em;margin:0 0 12px;padding:8px 10px;border:2px solid transparent}
-.lock-status[data-tone=warning]{border-color:#d6a35c;background:#3e3528}.lock-status[data-tone=success]{border-color:#bad28b;background:#2f4a31}.lock-status[data-tone=info]{border-color:#7f9a74}
+.lock-status{min-height:1.5em;margin:0 0 12px;padding:10px 14px;border:0;border-left:4px solid var(--u-line);background:#20494f}
+.lock-status[data-tone=warning]{border-left-color:var(--u-rust);background:#3e3530}.lock-status[data-tone=success]{border-left-color:#a9d39a;background:#24483e}.lock-status[data-tone=info]{border-left-color:var(--u-gold)}
 .lock-status:empty{display:none}
-.lock-reward{margin:0 0 12px;font-size:17px;color:#f3d58c;border:2px dashed #c8b17b;padding:8px 10px}
-.lock-search{display:grid;gap:8px;margin:0 0 14px}.lock-search input{font:17px 'Courier New',monospace;padding:10px;min-height:44px;background:#1d3328;color:#fff0c5;border:2px solid #b4a372}
+.lock-reward{margin:0 0 12px;font:700 17px/1.4 var(--u-font);color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown);padding:10px 14px}
+.lock-search{display:grid;gap:8px;margin:0 0 14px}
 .lock-search ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .lock-actions{display:flex;flex-wrap:wrap;gap:8px}
 /* The duel spotlight */
-.duel-spotlight{background:radial-gradient(ellipse at 50% 30%,#3f5a3f 0,#1a2a22 60%,#0b1511 100%);border-color:#f3d58c}
+.duel-spotlight{width:min(620px,calc(100vw - 40px));background:radial-gradient(ellipse at 50% 0,#2c5a55 0,var(--u-sea) 60%,#0b2226 100%)}
 .duel-spotlight::backdrop{background:radial-gradient(circle at 50% 40%,#f3d58c22 0,#06100cee 55%)}
-.duel-spotlight .spotlight-beam{height:10px;margin:0 0 12px;background:linear-gradient(90deg,transparent,#f3d58c,transparent);animation:spotlight-sweep 1.6s ease-in-out infinite alternate}
+.duel-spotlight .spotlight-beam{height:6px;margin:0 0 14px;background:linear-gradient(90deg,transparent,var(--u-gold),transparent);animation:spotlight-sweep 1.6s ease-in-out infinite alternate}
 .duel-spotlight[data-motion=off] .spotlight-beam{animation:none}
 .duel-spotlight .duel-reveal{animation:spotlight-in .6s ease both}
 .duel-spotlight[data-motion=off] .duel-reveal{animation:none}
-.duel-spotlight .shortcut-lead{margin:0 0 12px;font-size:17px}
+.duel-spotlight .shortcut-lead{margin:0 0 12px;font-size:18px}
 .duel-spotlight .shortcut-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 @keyframes spotlight-sweep{from{transform:scaleX(.35);opacity:.5}to{transform:scaleX(1);opacity:1}}
 @keyframes spotlight-in{from{transform:scale(.92);filter:brightness(2)}to{transform:none;filter:none}}
-.duel-invite{position:absolute;left:50%;bottom:190px;transform:translateX(-50%);z-index:45;width:min(420px,calc(100vw - 24px));background:#263e31f7;border:3px solid #f3d58c;padding:12px 14px;font:17px/1.4 'Courier New',monospace;color:#fff0c5;box-shadow:4px 4px #14281f99}
-.duel-invite h2{margin:0 0 6px;font-size:19px;color:#f3d58c}.duel-invite p{margin:0 0 10px}.duel-invite div{display:flex;gap:8px;flex-wrap:wrap}
+.duel-invite{position:absolute;left:50%;bottom:190px;transform:translateX(-50%);z-index:45;width:min(420px,calc(100vw - 24px));background:var(--u-sea);padding:14px 16px;font:17px/1.4 var(--u-font);color:var(--u-ink);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
+.duel-invite h2{margin:0 0 6px;font:700 20px/1.3 var(--u-serif);color:var(--u-gold)}.duel-invite p{margin:0 0 10px}.duel-invite div{display:flex;gap:8px;flex-wrap:wrap}
 /* Lamps */
 .lamp-hold{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 .lamp-hold progress{display:block;width:100%;height:10px;margin-top:6px;accent-color:#f3d58c}
-.lamp-status{position:absolute;left:50%;top:92px;transform:translateX(-50%);z-index:30;background:#263e31e6;border:2px solid #c8b17b;padding:4px 10px;font:15px/1.35 'Courier New',monospace;color:#fff0c5;max-width:min(520px,calc(100vw - 24px));text-align:center}
+.lamp-status{position:absolute;left:50%;bottom:190px;transform:translateX(-50%);z-index:30;background:var(--u-sea);border:2px solid var(--u-brass);padding:6px 12px;font:600 16px/1.35 var(--u-font);color:var(--u-ink);max-width:min(520px,calc(100vw - 24px));text-align:center}
 .lamp-fill{position:absolute;left:50%;top:134px;transform:translateX(-50%);z-index:30}
 /* The projector */
 .projector{position:absolute;inset:16px;z-index:70;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center;background:#16271f;border:5px solid #f3d58c;padding:28px;font:22px/1.4 'Courier New',monospace;color:#fff0c5;overflow:auto}
@@ -66,6 +54,6 @@
 .projector .projector-confirm-text{flex:1 1 100%;margin:0;font-size:18px}
 .projector canvas[hidden]{display:none}
 .projector .projector-error{color:#f0b77a;min-height:1.4em;margin:0 0 8px;font-size:18px}
-@media(max-width:760px){.projector{grid-template-columns:1fr;font-size:18px}.projector h2{font-size:30px}.projector .projector-code{font-size:min(40px,9vw)}.quest-strip{top:auto;bottom:88px;max-width:230px}.quest-item{min-height:36px;padding:4px 8px;font-size:14px}.quest-strip h2{display:none}.demo-prompt{bottom:250px}.duel-invite{bottom:250px}.demo-toast{top:130px}}
+@media(max-width:760px){.projector{grid-template-columns:1fr;font-size:18px}.projector h2{font-size:30px}.projector .projector-code{font-size:min(40px,9vw)}.demo-prompt{bottom:250px}.duel-invite{bottom:250px}}
 @media(prefers-reduced-motion:reduce){.demo-splash div,.duel-spotlight .spotlight-beam,.duel-spotlight .duel-reveal{animation:none}}
 .demo-motion-off .demo-splash div{animation:none}

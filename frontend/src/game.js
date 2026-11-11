@@ -4,6 +4,7 @@ import './ui/styles.css';
 import './ui/travel.css';
 import './ui/readability.css';
 import './ui/kit/kit.css';
+import './ui/kit/components.css';
 import './ui/shell.css';
 import './ui/devices.css';
 import './ui/open-panels.css';
@@ -96,7 +97,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) chart.show(); },controls:()=>void shortcuts.open(),
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
@@ -149,7 +150,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;const query=new URLSearchParams(location.search);
       classDemo=module.createClassDemo({container,scene,world,player:controller.player,input,audio,reducedMotion,on,canvas:graphics.renderer.domElement,
         rehearsal:query.get('demo')==='1',present:query.get('present')==='1',send:(name,...args)=>sendIntent(adapter,name,...args),
-        canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),
+        canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),quests:view=>hud.setQuests(view),
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),resetInput:resetControls,cancelWalk:()=>mapTouch?.cancel(),
         isBlocked:()=>!active||outsideBlocked(),project:(x,z)=>{const rect=graphics.renderer.domElement.getBoundingClientRect();projected.set(x,-z*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}});
       const current=adapter?.read?.();if(current)classDemo.apply(current);
@@ -199,7 +200,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:panelLabel(zone) }); input.endFrame();
+    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:panelLabel(zone),speed,blocked:!active||outsideBlocked() }); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);

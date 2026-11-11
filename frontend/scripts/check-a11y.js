@@ -52,10 +52,10 @@ try{
  await page.getByRole('button',{name:'Skip',exact:true}).click();await page.locator('.goal-card[open]').waitFor({timeout:30000});await audit('goal-card','.goal-card[open]');
  await page.getByRole('button',{name:'Got it',exact:true}).click();await page.waitForFunction(()=>window.__island?.world.current?.id==='saltreach_harbor'&&document.activeElement?.matches('canvas'));report.frontDoorHarbor=true;
  await page.setViewportSize({width:375,height:900});await page.evaluate(()=>window.__island.audio.cue('build'));await page.locator('.sound-caption:not([hidden])').waitFor();
- report.worldCaption=await page.locator('.sound-caption:not([hidden])').evaluate(el=>{const a=el.getBoundingClientRect(),b=document.querySelector('.bottom-bar').getBoundingClientRect();return {nonoverlap:a.bottom<=b.top,inside:a.top>=0&&a.left>=0&&a.right<=innerWidth&&a.bottom<=innerHeight,size:parseFloat(getComputedStyle(el).fontSize)};});
+ report.worldCaption=await page.locator('.sound-caption:not([hidden])').evaluate(el=>{const a=el.getBoundingClientRect(),b=document.querySelector('.quest-strip').getBoundingClientRect();return {nonoverlap:a.top>=b.bottom,inside:a.top>=0&&a.left>=0&&a.right<=innerWidth&&a.bottom<=innerHeight,size:parseFloat(getComputedStyle(el).fontSize)};});
  await page.screenshot({path:prefix+'-world-caption-375.png'});
  await page.setViewportSize({width:1280,height:900});await audit('world','.hud');
- await page.getByRole('button',{name:'Controls',exact:true}).click();await page.locator('.controls:not([hidden])').waitFor();await audit('world-controls','.hud');await page.keyboard.press('Escape');report.hudControlsEscape=await page.evaluate(()=>document.querySelector('.controls')?.hidden&&document.activeElement?.matches('.controls-toggle'));
+ await page.locator('.quest-item').first().click();await page.locator('.quest-hint:not([hidden])').waitFor();await audit('world-quest-hint','.hud');await page.keyboard.press('Escape');report.hudControlsEscape=await page.evaluate(()=>document.querySelector('.quest-hint')?.hidden);
  await page.evaluate(()=>window.__plotTwist.accountHost.open());
  await audit('account','.account-modal[open]');
  for(const state of ['signing_in','signed_in','expired','error']){

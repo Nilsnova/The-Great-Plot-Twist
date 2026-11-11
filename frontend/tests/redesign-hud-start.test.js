@@ -3,62 +3,50 @@ import {expect,it} from 'vitest';
 import {browserHarness} from './g20-browser.js';
 const evaluate=browserHarness();
 
-it('keeps controls closed until requested, restores focus on Escape and offers no Journal',async()=>{
+// The play HUD keeps three things (lane U2): 🪙, the quest strip and one Menu. Details: tests/ui/hud.test.js.
+it('offers no controls panel, chart toggle or Journal on the play HUD, and Escape closes an open goal hint',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');
     const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});
-    const controls=document.querySelector('.controls'),toggle=document.querySelector('.controls-toggle');
-    const initial=[controls.hidden,toggle.getAttribute('aria-expanded')];
-    toggle.click();const opened=!controls.hidden&&toggle.getAttribute('aria-expanded')==='true';
-    window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
-    const escaped=controls.hidden&&document.activeElement===toggle;
-    const journal=!!document.querySelector('.journal-toggle,.case-toolbar,.tonight-chip');
-    hud.dispose();return {initial,opened,escaped,journal,removed:!document.querySelector('.hud')};
+    const extras=['.controls','.controls-toggle','.chart-toggle','.settings-toggle','.journal-toggle','.case-toolbar','.tonight-chip'].filter(selector=>document.querySelector(selector));
+    document.querySelector('.quest-item').click();const opened=!document.querySelector('.quest-hint').hidden;
+    const closed=hud.closeQuickPanels()&&document.querySelector('.quest-hint').hidden;
+    hud.dispose();return {extras,opened,closed,removed:!document.querySelector('.hud')};
   });
-  expect(result).toEqual({initial:[true,'false'],opened:true,escaped:true,journal:false,removed:true});
+  expect(result).toEqual({extras:[],opened:true,closed:true,removed:true});
 });
 
-it('closes controls before opening the supplied menu and keeps the wordmark inert',async()=>{
+it('opens the supplied menu from the one Menu button and has no page-reloading wordmark',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');const calls=[];
     const hud=createHud(document.body,{focus(){},start(){},chart(){calls.push('chart');},quality(){},menu:()=>calls.push('menu')});
-    document.querySelector('.controls-toggle').click();document.querySelector('.chart-toggle').click();document.querySelector('.hud-menu').click();
-    const wordmark=document.querySelector('.wordmark');
-    const inert={link:wordmark.tagName==='A'||!!wordmark.closest('a')||wordmark.hasAttribute('href'),focusable:wordmark.tabIndex>=0};
-    const controlsClosed=document.querySelector('.controls').hidden;
+    document.querySelector('.hud-menu').click();
+    const links=document.querySelectorAll('.hud a,.hud [href]').length;
     const text=document.querySelector('.hud').textContent;hud.dispose();
-    return {calls,controlsClosed,inert,mystery:/prologue|keeper’s last log|investigate/i.test(text)};
+    return {calls,links,mystery:/prologue|keeper’s last log|investigate/i.test(text)};
   });
-  expect(result).toEqual({calls:['chart','menu'],controlsClosed:true,inert:{link:false,focusable:false},mystery:false});
+  expect(result).toEqual({calls:['menu'],links:0,mystery:false});
 });
 
-it('keeps supplied captain data literal and shows no save state',async()=>{
+it('keeps supplied captain data out of the HUD and shows coins literally',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});
     hud.setCaptain({account:{state:'signed_in'},captain:{name:'<img src=x onerror=alert(1)>',coins:5}});
-    const name=document.querySelector('.captain-status strong'),save=document.querySelector('.captain-status span');
-    const result={literal:name.textContent,children:name.children.length,state:save.dataset.state,status:save.textContent,shown:!!name.getClientRects().length,statusHidden:save.hidden};hud.dispose();return result;
+    const result={coins:document.querySelector('.hud-coins').textContent,name:document.querySelector('.hud').textContent.includes('<img'),images:document.querySelectorAll('.hud img').length};hud.dispose();return result;
   });
-  expect(result).toEqual({literal:'<img src=x onerror=alert(1)>',children:0,state:'signed_in',status:'',shown:true,statusHidden:true});
+  expect(result).toEqual({coins:'🪙 5',name:false,images:0});
 });
 
-it('shows no captain text in the top bar for a player who is not signed in',async()=>{
+it('shows no account text in the HUD for a player who is not signed in',async()=>{
   const result=await evaluate(async()=>{
     const {createHud}=await window.g20Import('/src/ui/hud.js');const hud=createHud(document.body,{focus(){},start(){},chart(){},quality(){}});
-    const read=()=>{const box=document.querySelector('.captain-status');return {text:box.textContent,shown:!!box.getClientRects().length,...(box.dataset.account?{account:box.dataset.account}:{})};};
+    const read=()=>/sign in|captain pending|github/i.test(document.querySelector('.hud').textContent);
     const before=read();
-    hud.setCaptain({account:{state:'signed_out'},captain:{name:'Captain pending',coins:null}});
-    const signedOut=read();
-    hud.setCaptain({captain:{name:'Captain pending',coins:null}});
-    const noAccount=read();
-    hud.setCaptain({account:{state:'expired'},captain:{name:'Captain Fern',coins:null}});
-    const expired=read();hud.dispose();return {before,signedOut,noAccount,expired};
+    hud.setCaptain({account:{state:'signed_out'},captain:{name:'Captain pending',coins:null}});const signedOut=read();
+    hud.setCaptain({captain:{name:'Captain pending',coins:null}});const noAccount=read();
+    const coins=document.querySelector('.hud-coins').getAttribute('aria-label');hud.dispose();return {before,signedOut,noAccount,coins};
   });
-  expect(result.before).toEqual({text:'',shown:false});
-  expect(result.signedOut).toEqual({text:'',shown:false,account:'signed_out'});
-  expect(result.noAccount).toEqual({text:'',shown:false,account:'none'});
-  expect(result.expired.account).toBe('expired');
-  expect(result.expired.shown).toBe(true);expect(result.expired.text).toContain('Captain Fern');expect(result.expired.text).toContain('Sign in again');
+  expect(result).toEqual({before:false,signedOut:false,noAccount:false,coins:'Coins not loaded yet'});
 });
 
 it('offers exactly Play and Join on the title, and refuses a code that is not a class code',async()=>{
@@ -144,7 +132,7 @@ it('keeps the focused Settings account control in place while only the revision 
   });
 });
 
-it('separates status/actions inside narrow phone and desktop viewports',async()=>{
+it('keeps coins, Menu and the quest strip apart inside narrow phone and desktop viewports',async()=>{
   await evaluate.withPage(async page=>{
     await page.evaluate(async()=>{
       await window.g20Import('/src/ui/styles.css');await window.g20Import('/src/ui/readability.css');await window.g20Import('/src/ui/devices.css');
@@ -154,9 +142,10 @@ it('separates status/actions inside narrow phone and desktop viewports',async()=
       await page.setViewportSize({width,height});
       const result=await page.evaluate(()=>{
         const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};};
-        return {header:rect('.masthead'),actions:rect('.hud-actions'),overflow:document.documentElement.scrollWidth>innerWidth,controls:document.querySelector('.controls').hidden,tools:!document.querySelector('.case-toolbar')};
+        return {coins:rect('.hud-coins'),menu:rect('.hud-menu'),strip:rect('.quest-strip'),overflow:document.documentElement.scrollWidth>innerWidth,tools:!document.querySelector('.case-toolbar,.controls')};
       });
-      expect(result.overflow).toBe(false);expect(result.header.left).toBeGreaterThanOrEqual(0);expect(result.header.right).toBeLessThanOrEqual(width);expect(result.actions.right).toBeLessThanOrEqual(width);expect(result.header.bottom).toBeLessThanOrEqual(result.actions.top);expect(result.controls&&result.tools).toBe(true);
+      expect(result.overflow).toBe(false);expect(result.coins.left).toBeGreaterThanOrEqual(0);expect(result.menu.right).toBeLessThanOrEqual(width);expect(result.strip.right).toBeLessThanOrEqual(width);
+      expect(result.coins.right).toBeLessThan(result.menu.left);expect(result.menu.bottom).toBeLessThanOrEqual(result.strip.top);expect(result.tools).toBe(true);
     }
   });
 });

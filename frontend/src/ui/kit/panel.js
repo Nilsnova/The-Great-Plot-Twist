@@ -1,4 +1,5 @@
 // A labelled section that hosts another kit component or plain text.
+import './components.css';
 import { node, content, uniqueId } from './dom.js';
 export function createPanel({ title = '', body = '', tone = 'wood' } = {}) {
   const element = node('section','kit-panel'), heading = node('h2','kit-heading',title), bodyNode = node('div','kit-panel-body');

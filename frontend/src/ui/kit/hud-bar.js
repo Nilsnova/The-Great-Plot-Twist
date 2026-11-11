@@ -1,4 +1,5 @@
 // Display supplied wallet, weather and crew data without owning any game rules.
+import './components.css';
 import { node } from './dom.js';
 import { formatCoins } from './logic.js';
 export function createHudBar(data = {}) {

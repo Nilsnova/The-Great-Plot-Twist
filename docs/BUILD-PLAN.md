@@ -88,6 +88,17 @@ Events (also sent on the game's event bus): `wave_countdown`, `wave_started`, `s
 
 - Island room for live presence: `live:place:isle_<code in lowercase>:1`, where the code is the 5 symbols after `ISLE-` (`ISLE-K7Q2M` → `live:place:isle_k7q2m:1`; fits the existing Realtime rules). Pirate Point: `live:place:pirate_point:1`. The Harbor: the existing harbor rooms.
 - Broadcasts in a room during a wave: `wave_start {waveId, seed, startsAt}`, `cannon_shot {by, cannonId, targetId, t}`, `wall_repair {by, wallId, t}`. Every client feeds them as inputs into the same simulation.
+- **Quest events** (lane U, the first-3-minutes quest strip): emit these on the game's event bus (`emit` in `frontend/src/core/events.js`), importing the names from `frontend/src/ui/quest-events.js` (`QUEST_EVENTS`), never as typed strings. The strip listens only for the current goal, so the order is fixed; a wrong payload simply does not count.
+
+  | Event | Payload | Who emits it | Goal it completes |
+  |---|---|---|---|
+  | `island_built` | `{kind}`: `'wall'`, `'cannon'`, `'tower'` or `'house'` | lane P / island, when a building finishes on the player's own island | 1 Build a cannon (`kind: 'cannon'`) |
+  | `wave_finished` | `{survived}`: `true` when the island held | lane P, when a wave ends | 2 Ring the bell and win a wave (`survived: true`) |
+  | `place_arrived` | `{id}`: a place id from section 3.1 | island / world, on arrival (the world's existing `arrived {place}` counts too) | 3 Sail to the Harbor (`id: 'saltreach_harbor'`) |
+  | `harbor_stake_placed` | `{}` | lane H, when a 5 / 10 / 25 🪙 stake is accepted | 4 Place a 🪙 stake |
+  | `island_invite_opened` | `{}` | island (U4), when "Invite a friend" opens | 5 Invite a friend |
+
+  The strip shows three goals at a time, a hint toast after 20 s standing still, and the class goals instead for a player who joined by class code. Toasts for every lane: `showToast(text)` and `showError(reply)` from `frontend/src/ui/toasts.js` (one style, top-center, at most two). Coins in the HUD come from `view.captain.coins`; a lane with a local wallet passes it through `hud.setCoins(n)` in `game.js`.
 
 ## 4. Lanes and tasks
 

@@ -10,11 +10,11 @@ import {api as defaultApi} from '../online/api.js';
 import {isMe, resolvePeer, sendExtra, setClassHarbor} from '../net/live-extras.js';
 import {CLASS_HARBOR_PLACE} from '../net/live-rules.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
-import {readQuests, writeQuests, completeQuest, playerKey, questView} from './quests.js';
+import {readQuests, writeQuests, completeQuest, playerKey, questView, classQuestView} from './quests.js';
 import {HARBOR_PLACE, LOCK_SPOT, LAMP_SPOTS, arrivals, joinedText, nearestSpot, presencePlace, readInvite, rememberInvite} from './harbor.js';
 import {nearestCaptain} from './duel-shortcut.js';
 import {hasNews, isLampLit, isRelit} from './lamp-sync.js';
-import {createQuestStrip} from './quest-strip.js';
+import {showToast} from '../ui/toasts.js';
 import {createLampFinale} from './lamps.js';
 import {createDemoObjects} from './world-objects.js';
 import {createLockApi} from './lock-api.js';
@@ -36,18 +36,14 @@ export function createClassDemo(ctx) {
   if (joined) setClassHarbor(true);
 
   const layer = node('div', 'class-demo-layer');container.append(layer);
-  const strip = createQuestStrip({parent: layer, focusGame: () => ctx.focus?.()});
+  // The class goals show in the HUD's quest strip while this player is in the class harbor (joined by
+  // class code, or the ?demo=1 rehearsal); otherwise the strip shows the first-3-minutes goals.
+  const strip = {update(state) { ctx.quests?.(joined ? classQuestView(state) : null); }, closeHint: () => false};
   const prompt = node('div', 'demo-prompt');prompt.hidden = true;prompt.setAttribute('role', 'group');prompt.setAttribute('aria-label', 'Nearby');
-  const joinButton = node('button', 'kit-button demo-join', 'Join the class harbor');joinButton.type = 'button';joinButton.hidden = true;
-  joinButton.addEventListener('click', event => { joinHarbor(); if (event.detail > 0) ctx.focus?.(); });
-  const toast = node('p', 'demo-toast');toast.setAttribute('role', 'status');toast.hidden = true;
-  layer.append(prompt, joinButton, toast);
+  layer.append(prompt);
   const objects = createDemoObjects({scene, reducedMotion});
-  let toastTimer = null;
-  function say(text, ms = 3200) {
-    if (!text) return;
-    toast.textContent = text;toast.hidden = false;clearTimeout(toastTimer);toastTimer = setTimeout(() => { toast.hidden = true; }, ms);
-  }
+  // One toast style for the whole game (src/ui/toasts.js).
+  const say = (text, ms = 3600) => { if (text) showToast({text, ms}); };
 
   // ---- rehearsal: simulated captains, duel and lock (no server writes) ----
   const rehearsalTools = rehearsal ? import('./rehearsal.js').then(module => {
@@ -65,13 +61,13 @@ export function createClassDemo(ctx) {
     if (!result.changed) return;
     quests = result.state;writeQuests(storage, key, quests);strip.update(quests);
     const progress = questView(quests);
-    say(progress.allDone ? 'All three goals done! Now light the three lamps together.' : `Goal done: ${progress.items.find(item => item.id === id).label}.`);
+    showToast({text: progress.allDone ? 'All three goals done! Now light the three lamps together.' : `Goal done: ${progress.items.find(item => item.id === id).label}.`, tone: 'success'});
     audio?.cue?.('festival-claim');
   }
 
   // ---- the class harbor ----
   function joinHarbor() {
-    joined = true;rememberInvite(session);setClassHarbor(true);joinButton.hidden = true;splashShown = false;
+    joined = true;rememberInvite(session);setClassHarbor(true);splashShown = false;strip.update(quests);
   }
   function splash() {
     splashShown = true;
@@ -157,7 +153,7 @@ export function createClassDemo(ctx) {
     }
     const result = await ctx.send?.('setEmote', 'wave');
     if (result?.accepted && (view?.presence?.others?.length ?? 0) > 0) tick('wave');
-    else if (!result?.accepted) say(result?.message || 'Wait a moment before you wave again.');
+    else if (!result?.accepted) showToast({text: result?.message || 'Wait a moment before you wave again.', tone: 'error', next: result?.message ? 'Wait a moment, then try again.' : null});
   }
 
   // ---- the Keeper's Lock ----
@@ -261,7 +257,6 @@ export function createClassDemo(ctx) {
       const now = Date.now(), place = world.current?.id, inHarbor = place === HARBOR_PLACE;
       const shown = inHarbor;
       objects.setVisible(shown);objects.update(delta);
-      joinButton.hidden = !shown || joined || blocked;
       if (shown && joined && !splashShown && !blocked) splash();
       if (rehearsal && captains && inHarbor) {
         captains.step(delta, now, {x: player.position.x, z: player.position.z});
@@ -302,12 +297,11 @@ export function createClassDemo(ctx) {
     },
     handleEscape() {
       if (projector?.visible) { projector.hide(); return true; }
-      if (strip.closeHint()) return true;
       return false;
     },
     dispose() {
       if (disposed) return;
-      disposed = true;clearTimeout(toastTimer);stopMenu();for (const stop of stops) stop();
+      disposed = true;ctx.quests?.(null);stopMenu();for (const stop of stops) stop();
       canvas?.removeEventListener('click', tapCaptain);
       lock?.dispose();duel?.dispose();projector?.dispose();finale.dispose();objects.dispose();cutscene?.dispose?.();
       ctx.simulate?.(null);container.classList.remove('demo-path');layer.remove();

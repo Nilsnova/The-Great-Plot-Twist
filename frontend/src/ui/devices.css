@@ -12,4 +12,4 @@
 
 @media(max-width:600px) and (pointer:coarse){.touch-controls{bottom:82px}}
 .touch-actions button{border:1px solid #b5ba92;border-radius:9px;background:#183b39ed;color:#fff0c5;font-family:system-ui,sans-serif;box-shadow:0 3px 12px #071e2926}.touch-thumb{border-radius:50%;box-shadow:0 3px 10px #071e2955}
-@media(max-width:600px) and (pointer:coarse){.hud.hud-quiet .interact{bottom:230px}}
+@media(max-width:600px) and (pointer:coarse){.hud.hud-play .interact{bottom:230px}}

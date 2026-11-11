@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {openWorldBrowser,measure} from './world-browser-tools.js';
-import {startFromTitle,closeSettings} from './shell-browser-tools.js';
+import {startFromTitle,closeSettings,openSettingsFromMenu} from './shell-browser-tools.js';
 import {openSettingsAccount,openAccountControls} from './online-browser-actions.js';
 const env=await openWorldBrowser(),{page}=env,report={checks:[]};
 const check=(ok,label)=>{assert.ok(ok,label);report.checks.push(label);console.log(`PASS ${label}`);};
@@ -34,12 +34,12 @@ try{
   await page.keyboard.down('ArrowRight');await page.waitForTimeout(1700);await page.keyboard.up('ArrowRight');await page.waitForTimeout(600);
   const reports=await page.evaluate(()=>window.__reports);check(reports.length>=3&&reports.every((r,i)=>!i||r.at-reports[i-1].at>=490),'World requests position reports no faster than twice a second');
   check(reports.at(-1).moving===false,'A final stopped position is reported');
-  await page.getByRole('button',{name:'Open visual settings'}).click();
-  await page.locator('[data-preference=showCaptains]').selectOption('off');await page.waitForFunction(()=>window.__island.experience.stats.drawn===0);
+  await openSettingsFromMenu(page);
+  await page.locator('[data-preference=showCaptains] input[value=off]').check();await page.waitForFunction(()=>window.__island.experience.stats.drawn===0);
   check(true,'The off preference removes other captains');await closeSettings(page);
   const prior=await page.evaluate(()=>window.__reports.length);await page.keyboard.down('ArrowLeft');await page.waitForTimeout(650);await page.keyboard.up('ArrowLeft');await page.waitForTimeout(550);
   check(await page.evaluate(prior=>window.__reports.length>prior,prior),'Hiding other captains keeps this captain’s movement reports live');
-  await page.getByRole('button',{name:'Open visual settings'}).click();await page.locator('[data-preference=showCaptains]').selectOption('everyone');await closeSettings(page);
+  await openSettingsFromMenu(page);await page.locator('[data-preference=showCaptains] input[value=everyone]').check();await closeSettings(page);
   await page.waitForFunction(()=>window.__island.experience.stats.drawn>0&&window.__island.experience.stats.drawn<=8);
   await page.locator('.presence-hud').getByRole('button',{name:'Emotes',exact:true}).click();
   await page.getByRole('button',{name:'Emote wave',exact:true}).click();

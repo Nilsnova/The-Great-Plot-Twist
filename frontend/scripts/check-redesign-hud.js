@@ -23,18 +23,14 @@ try{
   await page.setViewportSize({width:1280,height:720});await startFromTitle(page);
   for(const [width,height] of [[1280,720],[375,667],[320,568]]){
     await page.setViewportSize({width,height});
-    check(await page.locator('.controls').isHidden()&&await page.locator('.case-toolbar').count()===0,`No permanent controls and no Journal at ${width}px`);
+    check(await page.locator('.hud [data-hud-group]').evaluateAll(nodes=>nodes.filter(node=>node.getClientRects().length).length)===3&&await page.locator('.case-toolbar,.controls').count()===0,`Three HUD groups and no Journal at ${width}px`);
     const layout=await page.evaluate(()=>{
-      const header=document.querySelector('.masthead').getBoundingClientRect(),actions=document.querySelector('.hud-actions').getBoundingClientRect();
-      return {header:header.toJSON(),actions:actions.toJSON(),fits:header.left>=0&&header.right<=innerWidth&&actions.right<=innerWidth&&header.bottom<=actions.top};
+      const coins=document.querySelector('.hud-coins').getBoundingClientRect(),menu=document.querySelector('.hud-menu').getBoundingClientRect(),strip=document.querySelector('.quest-strip').getBoundingClientRect();
+      return {coins:coins.toJSON(),menu:menu.toJSON(),strip:strip.toJSON(),fits:coins.left>=0&&menu.right<=innerWidth&&strip.right<=innerWidth&&coins.right<menu.left&&menu.bottom<=strip.top};
     });
     await page.screenshot({path:join(output,`world-${width}.png`)});
-    check(layout.fits,`Status and actions do not overlap at ${width}px: ${JSON.stringify(layout)}`);
+    check(layout.fits,`Coins, Menu and quest strip do not overlap at ${width}px: ${JSON.stringify(layout)}`);
   }
-  await page.getByRole('button',{name:'Controls',exact:true}).click();
-  check(await page.locator('.controls').isVisible(),'Controls open only on request');
-  await page.getByRole('button',{name:'Controls',exact:true}).click();
-  check(await page.locator('.controls').isHidden(),'Controls close again on a second press');
   await page.getByRole('button',{name:'Menu',exact:true}).click();
   check(await page.locator('.shell-screen[open]').isVisible(),'Menu keeps the supplied shell/settings entry reachable');
   if(await page.locator('.shell-screen[data-mode=pause][open]').isVisible())await page.getByRole('button',{name:'Settings',exact:true}).click();

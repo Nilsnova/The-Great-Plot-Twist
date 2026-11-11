@@ -91,7 +91,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.chapter')?.textContent.toUpperCase().includes('SALTREACH HARBOR') && !document.querySelector('dialog[open]'));
   await page.locator('.quest-strip').waitFor();
   check(true, 'Production front door lands in Saltreach Harbor with the quest strip');
-  await page.locator('.chart-toggle').evaluate(button => button.click());
+  await page.keyboard.press('KeyM');
   await page.locator('.sea-chart[open]').waitFor();
   await page.locator('.sea-chart .fast-travel').check();
   await page.locator('.sea-chart [data-place="home_islet"]').click();

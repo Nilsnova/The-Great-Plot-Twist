@@ -1,4 +1,4 @@
-import {startFromTitle,closeSettings} from './shell-browser-tools.js';
+import {startFromTitle,closeSettings,openSettingsFromMenu} from './shell-browser-tools.js';
 // Weather still drives the island; provider/licence details are available only in Settings → Credits.
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
@@ -17,12 +17,12 @@ try {
   report.checks.push('Gameplay has no provider, licence or attribution block');
   report.hud=[];
   for(const [width,height] of [[1280,800],[375,667]]){
-    await page.setViewportSize({width,height});const bounds=await page.locator('.conditions').boundingBox();
+    await page.setViewportSize({width,height});const bounds=await page.locator('.hud-coins').boundingBox();
     assert.ok(bounds.height<=80&&bounds.width<300);report.hud.push({viewport:width,...bounds});
     await page.screenshot({path:`captures/20261106_G8-Clean-Weather-HUD-${width}.png`});
   }
-  report.checks.push('Weather and time stay compact on desktop and phone');
-  await page.getByRole('button',{name:'Open visual settings'}).click();
+  report.checks.push('The HUD stays compact on desktop and phone (weather and time live in the pause menu)');
+  await openSettingsFromMenu(page);
   await page.getByRole('button',{name:'Credits',exact:true}).click();await page.locator('.shell-credits').waitFor();
   assert.ok((await page.locator('.shell-credits').textContent()).includes('adapted for the game'));
   assert.equal(await page.getByRole('link',{name:'Open-Meteo',exact:true}).getAttribute('href'),'https://open-meteo.com/');

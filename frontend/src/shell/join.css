@@ -1,4 +1,4 @@
 /* Join page: one large code field. Loaded with the page, never on the cold title. */
 .join-form{display:grid;gap:12px}.join-form .preference{display:grid;gap:6px;font-size:18px}
-.join-form input{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:20px/1.2 'Courier New',monospace;letter-spacing:2px;text-transform:uppercase;color:#15382f;background:#fff7dc;border:2px solid #a7b58c;border-radius:6px}
+.join-form input{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:20px/1.2 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:#15382f;background:#fff7dc;border:2px solid #a7b58c;border-radius:6px}
 .join-form .kit-button{min-height:48px}

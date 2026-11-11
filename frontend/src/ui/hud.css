@@ -1,0 +1,49 @@
+/* The play HUD: 🪙 top-left, Menu and the quest strip top-right; the rest appears only when needed.
+   Small pixel frames use the same notched brass edge as the panels (kit.css), drawn with box-shadow. */
+.hud-play{font-family:var(--u-font);color:var(--u-ink)}
+.hud-play .hud-coins,.hud-play .hud-menu,.hud-play .quest-strip,.hud-play .interact,.hud-arrival{box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
+.hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;min-height:44px;padding:6px 16px;background:var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
+.hud-play .hud-right{position:absolute;top:18px;right:20px;width:min(310px,calc(100vw - 40px));display:grid;justify-items:end;gap:14px}
+.hud-play .hud-menu{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;background:var(--u-sea);color:var(--u-ink);font:700 17px/1 var(--u-font);cursor:pointer;pointer-events:auto}
+.hud-play .hud-menu:hover{background:var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
+.hud-menu-icon{width:18px;height:3px;background:currentColor;box-shadow:0 -6px currentColor,0 6px currentColor}
+
+/* The quest strip */
+.hud-play .quest-strip{width:100%;box-sizing:border-box;padding:10px 12px 12px;background:#123238f0;pointer-events:auto}
+.quest-strip h2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px;font:700 18px/1.2 var(--u-serif);color:var(--u-gold)}
+.quest-strip .quest-progress{font:600 16px/1 var(--u-font);color:var(--u-mute)}
+.quest-strip ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.quest-item{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 10px 6px 6px;text-align:left;font:600 16px/1.3 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid #3d6a6b;cursor:pointer}
+.quest-item:hover{background:var(--u-raise)}.quest-item:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+.quest-check{flex:0 0 28px;height:28px;display:grid;place-items:center;font:800 16px/1 var(--u-font);color:var(--u-ink);background:var(--u-deep);border:2px solid var(--u-line)}
+.quest-item[data-current=true]{border-color:var(--u-gold);background:#1f4a4a}.quest-item[data-current=true] .quest-check{background:var(--u-gold);border-color:var(--u-deep);color:#2b1d06}
+.quest-item[data-done=true]{color:var(--u-mute);background:#173a3f}.quest-item[data-done=true] .quest-check{background:#2f6b5a;border-color:#a9d39a;color:#fff}
+.quest-item[data-done=true] .quest-label{text-decoration:line-through;text-decoration-thickness:2px}
+.quest-hint{margin:8px 0 0;padding:10px 12px;font:16px/1.45 var(--u-font);background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown)}
+.quest-next{margin:8px 0 0;font:600 16px/1.4 var(--u-font);color:var(--u-gold)}
+
+/* Contextual: the arrival banner, the E prompt */
+.hud-arrival{position:absolute;top:18%;left:50%;transform:translateX(-50%);display:grid;justify-items:center;gap:2px;width:max-content;max-width:calc(100vw - 40px);box-sizing:border-box;padding:12px 32px 14px;background:var(--u-parch);color:var(--u-pink);text-align:center;animation:hud-arrive 2s ease both;pointer-events:none}
+.hud-arrival span{font:700 16px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown)}.hud-arrival strong{font:700 30px/1.15 var(--u-serif)}
+@keyframes hud-arrive{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.hud-play .interact{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 40px);padding:8px 16px 8px 8px;background:var(--u-sea);border:0}
+.hud-play .interact kbd{display:grid;place-items:center;min-width:34px;height:34px;padding:0 6px;font:800 18px/1 var(--u-font);color:#2b1d06;background:var(--u-gold);border:2px solid var(--u-deep)}
+.hud-play .interact strong{font:600 17px/1.35 var(--u-font)}
+.hud-play .presence-hud{display:none}
+
+/* The pause menu's status line (place · weather · time), moved here from the HUD. */
+.shell-status{margin:0;padding:10px 14px;text-align:center;font:600 16px/1.4 var(--u-font);color:var(--u-mute);background:var(--u-deep);border:2px solid #3d6a6b}
+
+/* Phones and narrow windows: coins and Menu share the top row; the strip shows the current goal only. */
+@media(max-width:900px){
+  .hud-play .hud-coins{top:12px;left:12px;font-size:20px;padding:6px 12px}
+  .hud-play .hud-right{top:12px;right:12px;left:12px;width:auto;gap:12px}
+  .hud-play .quest-strip{padding:8px 10px 10px}
+  .quest-strip h2{font-size:16px;margin-bottom:6px}
+  .quest-strip li:not(:has([data-current=true])){display:none}
+  .hud-play .interact{bottom:84px;max-width:calc(100vw - 24px)}
+  .hud-arrival{top:30%}.hud-arrival strong{font-size:26px}
+}
+@media(max-height:500px){.hud-play .quest-strip li:not(:has([data-current=true])){display:none}}
+@media(prefers-reduced-motion:reduce){.hud-arrival{animation:none}}
+html[data-reduced-motion=true] .hud-arrival{animation:none}

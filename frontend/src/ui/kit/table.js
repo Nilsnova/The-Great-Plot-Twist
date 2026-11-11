@@ -1,4 +1,5 @@
 // A native data table. Values are supplied by feature owners, never calculated here.
+import './components.css';
 import { node } from './dom.js';
 export function createTable({ caption = 'Records', columns = [], rows = [] } = {}) {
   const element = node('table','kit-table'), title = node('caption','',caption), head = node('thead'), body = node('tbody');

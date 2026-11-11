@@ -7,7 +7,7 @@ import {createModal} from '../ui/kit/modal.js';
 import {createButton} from '../ui/kit/button.js';
 import {node} from '../ui/kit/dom.js';
 import {getPreferences, reducedMotion as defaultReducedMotion} from '../settings/preferences.js';
-import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy, readJoinCode, forgetJoinCode} from './logic.js';
+import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy, readJoinCode, forgetJoinCode, joinedHarbor} from './logic.js';
 
 export function createFrontDoor({container, focus, storage = safeStorage(), session = safeSession(),
   preferences = getPreferences, reducedMotion = defaultReducedMotion,
@@ -16,9 +16,9 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
 
   function showCard() {
     return new Promise(resolve => {
-      const copy = goalCopy();
-      const body = node('div', 'goal-card-body'), list = node('dl');
-      for (const [term, text] of copy.controls) list.append(node('dt', '', term), node('dd', '', text));
+      const copy = goalCopy({classHarbor: joinedHarbor(session)});
+      const body = node('div', 'goal-card-body'), list = node('dl', 'goal-controls');
+      for (const [term, text] of copy.controls) { const item = node('div', 'goal-control'); item.append(node('dt', '', term), node('dd', '', text)); list.append(item); }
       let done = false;
       const finish = () => {
         if (done) return; done = true; finishCard = null;
@@ -28,7 +28,7 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
       const ok = createButton({label: copy.button, onClick: finish});
       body.append(node('p', 'goal-lead', copy.goal), list, ok.element);
       card = createModal({title: copy.title, body, onCancel: finish});
-      card.element.classList.add('goal-card');
+      card.element.classList.add('goal-card');card.element.dataset.path = joinedHarbor(session) ? 'class' : 'island';
       card.open(container, ok.element);
     });
   }
