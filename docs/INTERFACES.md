@@ -676,6 +676,8 @@ The live room of an island is `live:place:isle_<the 5 symbols in lowercase>:1` (
 
 ### The prediction desk (package L5)
 
+> **Removed from the game on 11 Nov at the owner's request ([D035](DECISIONS.md)).** The browser no longer calls these routes and the flag `predictions` is switched off at release; the backend code below stays for a later cleanup.
+
 Hand-picked real questions from Manifold Markets (a play-money forecasting site), and play-coin pools that the winners share. The home of each route is the comment at the top of `backend/server/routes/predictions.py`; the rules are in `backend/server/predictions/` and are explained in decision D025 (provisional number, see [DECISIONS.md](DECISIONS.md)). Everything is behind the flag `predictions`, which stays off: while it is off, every route answers `404 feature_off` ("The prediction desk is closed for now."). Play money only: every answer of the list carries the line "Forecasting with play coins. Play money: no cash value. It cannot be bought or cashed out.", Manifold is credited in text, nothing links to a betting site, and Manifold's own probability is never shown.
 
 | Route | Who | What it does |
@@ -871,7 +873,7 @@ These events run on the same bus. Emit the quest events with the names exported 
 | `wave_started_server` | `{waveId, wave, seed, startsAt, weather, flagship, where, defenses}` | `src/island/wave-flow.js`, after the bell rang (`POST /api/waves/start`) or the player joined (`POST /api/waves/join`) | the wave on screen (lane P, `onWaveStarted` in `wave-hooks.js`) |
 | `wave_finished` | `{survived, waveId, loot, coins, waveBest, flags}` | `src/island/wave-flow.js`, after `POST /api/waves/finish` answered (the renderer calls `finishWave`; in fake mode a placeholder finishes the wave 20 s after the countdown) | the quest strip: goal 2 "Ring the bell and win a wave" (`survived: true`); the island (its balance and best wave) |
 | `place_arrived` | `{id}`: a place id from `src/world/places/registry.js` | `src/game.js`, on every `arrived` (the HUD also counts `arrived {place}` itself) | the quest strip: goal 3 "Sail to the Harbor" (`id: 'saltreach_harbor'`) |
-| `harbor_stake_placed` | `{kind, stake}`: `kind` is `'market'`, `'match'` or `'fortune'`, `stake` 5, 10 or 25 | `src/harbor/market-card.js`, `match-card.js` and `fortune-card.js`, once the server accepted the stake | the quest strip: goal 4 "Place a 🪙 stake" |
+| `harbor_stake_placed` | `{kind, stake}`: `kind` is `'market'` or `'match'`, `stake` 5, 10 or 25 | `src/harbor/market-card.js` and `match-card.js`, once the server accepted the stake | the quest strip: goal 4 "Place a 🪙 stake" |
 | `island_invite_opened` | `{code}`: `ISLE-…` or `null` while loading | `src/island/index.js`, when "Invite a friend" opens at the cabin | the quest strip: goal 5 "Invite a friend" |
 
 On your own island the strip always shows these five goals; a player who joined by class code (`HARBOR-…`) sees the class demo's goals everywhere else. With `islands` on (or `?islands=fake` in a dev build) the HUD's 🪙 counter shows the island's `coins` (`GET /api/island` and every build and wave answer), not the wallet's.
@@ -1282,7 +1284,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | Flag | Switches on | Package |
 |---|---|---|
 | `market` | the Island Exchange, and the market stall's up-or-down calls (`/api/market/calls`, D034) | L4, lane 0 |
-| `predictions` | the prediction desk | L5 |
+| `predictions` | the prediction desk (backend only; removed from the game on 11 Nov, D035: keep it off) | L5 |
 | `sports` | sports predictions | L6 |
 | `arena` | Lantern Duels, the turn-based arena | A7 |
 | `raid` | the phone class raid | A5, later |

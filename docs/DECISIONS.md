@@ -604,6 +604,14 @@ browser's storage unread. The `case`, crew and save routes still answer if the f
 
 **Limits:** The settle price is the first price the server reads at or after `settle_at`, not the exact price at that second; a player who looks late is decided on a later price (for a stock outside New York hours, the last close). The 2× payout has no house edge, so the expected value is about 0 for a fair coin; with only three stakes and three open calls the coin flow stays small.
 
+## D035 · No prediction market in the game (11 Nov, owner) · 2026-11-11
+
+**Status:** Decided by the owner on Wed 11 Nov 2026; done on the integration branch `integrate/g31`.
+
+**Decision:** The game has no prediction market. The fortune teller (yes or no questions from Manifold, the frontend of the prediction desk, package L5) leaves the player-facing game and the frontend: its Harbor card and overview entry, the `prediction_kiosk` hotspot (the building stays as scenery), the old desk under `frontend/src/screens/predictions/`, its tests and checks, and the Manifold credit. The browser never calls `/api/predictions*`; the owner switches the flag `predictions` off at release. The backend code (`backend/server/predictions/`, its routes and migration) stays for a later cleanup. The Harbor keeps the market stall (up or down in 1 hour, D034), the match board (football), the weather board and the duel ring; the quest goal "Place a 🪙 stake" is met at the market stall or the match board.
+
+**Why:** The owner's call for the redesign: stakes on open-ended real-world questions read as a prediction market, which the game should not be. The market stall and the match board keep one clear, small stake each.
+
 ## D030 · Class code instead of the demo window · 2026-11-09
 
 **Status:** Decided by Nils on 9 Nov 2026; implemented on branch `feat/g29-classcode`. Replaces the

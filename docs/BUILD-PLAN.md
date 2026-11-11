@@ -29,7 +29,7 @@
 | Game name | Place id in `frontend/src/world/places/registry.js` | What happens there |
 |---|---|---|
 | Your island | `home_islet` (one per player; a visitor sees the owner's buildings) | Build, ring the bell, defend waves |
-| The Harbor | `saltreach_harbor` (shared) | Market stall, match board, fortune teller, weather board, duel ring, everyone online |
+| The Harbor | `saltreach_harbor` (shared) | Market stall, match board, weather board, duel ring, everyone online (the fortune teller was removed on 11 Nov at the owner's request, D035) |
 | Pirate Point | `lighthouse_isle` (shared) | The joint armada battle and the class demo |
 
 The other places (Gull's Rest, Smugglers' Cove, Wreck Point, The Teeth) leave the sea chart.
@@ -44,7 +44,7 @@ The other places (Gull's Rest, Smugglers' Cove, Wreck Point, The Teeth) leave th
 | Watchtower (spots ships earlier, longer cannon range) | 40 |
 | House (+5 🪙 loot for every wave you survive) | 50 |
 | Loot for surviving wave *n* | 10 + 5 × *n* (+5 per house) |
-| Harbor stakes (market, match, fortune) | 5, 10 or 25, nothing else |
+| Harbor stakes (market, match) | 5, 10 or 25, nothing else |
 | Duel stake | 0 (friendly) or 10 |
 
 - Whole numbers only. Coins always appear as **`🪙 120`** through one helper, `formatCoins(n)` in `frontend/src/lib/coins.js` (lane H builds it on day 1; until then write `🪙 ${n}`).
@@ -116,13 +116,13 @@ Value: ★★★ needed for the loop, ★★ makes it good, ★ polish. Size: S 
 | P4 | ★★ | M | **Man a cannon / repair**: walk to a cannon and tap a ship to fire; tap a damaged wall to repair (costs time, not coins); works with keyboard (E) and touch | Tests for the input mapping; GIF | Done, 11 Nov |
 | P5 | ★★ | S | **Sounds**: cannon, splash, bell, victory, defeat (the existing procedural audio system) | Settings volume respected | Done, 11 Nov |
 
-### Lane H: Harbor and coins (`frontend/src/harbor/`, `frontend/src/lib/coins.js`, the market, prediction and sports screens)
+### Lane H: Harbor and coins (`frontend/src/harbor/`, `frontend/src/lib/coins.js`, the market and sports screens)
 
 | ID | Value | Size | Task | Done when | Status |
 |---|---|---|---|---|---|
 | H1 | ★★★ | S | **`formatCoins()`** and replace every coin display in the game with it; remove decimals and big-number formatting | Grep shows no other coin formatting; tests | Done, 11 Nov |
 | H2 | ★★★ | L | **Market stall**: one card per asset (Bitcoin, Ether, two stocks): live price, a tiny chart, "Up or down in 1 hour?" with 5 / 10 / 25 🪙. Reuse the Exchange data and routes; hide leverage, positions jargon and P&L tables | Screenshot at 375 and 1280 px; works when prices are closed or offline ("Market closed, back at 15:30") | Done, 11 Nov |
-| H3 | ★★★ | M | **Match board** (sports) and **fortune teller** (predictions) in the same card style: pick a side, 5 / 10 / 25 🪙, see what you win | Same as H2 | Done, 11 Nov |
+| H3 | ★★★ | M | **Match board** (sports) in the same card style: pick a side, 5 / 10 / 25 🪙, see what you win. (The fortune teller of the first plan was removed on 11 Nov at the owner's request: no prediction market in the game, D035.) | Same as H2 | Done, 11 Nov |
 | H4 | ★★ | M | **Weather board**: today's real weather at your place, and one line on what it does to the pirates ("Storm: 50% more ships tonight") | Uses the existing weather route; fallback text when offline | Done, 11 Nov |
 | H5 | ★★ | M | **Harbor stalls in the world**: walk up to a stall and press E/tap to open its card; one "Harbor" overview card listing all stalls with a one-sentence explanation each | GIF; every API explained in one sentence | Done, 11 Nov |
 

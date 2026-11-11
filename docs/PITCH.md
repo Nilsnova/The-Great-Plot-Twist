@@ -24,7 +24,6 @@
 - All the real-world features live here, each explained in one sentence:
   - 📈 **Market stall:** "Will Bitcoin be higher in an hour? Put 10 🪙 on up or down." Real prices, no leverage jargon.
   - ⚽ **Match board:** "Who wins tonight? Pick a team." Real football results pay out.
-  - 🔮 **Fortune teller:** yes/no predictions on real-world questions.
   - 🌦️ **Weather board:** the real weather at your location, and what it does to the sea (storm: more pirate ships; fog: they appear later).
   - ⚔️ **Duel ring:** challenge any captain to a quick 3-round duel in two taps.
 - You earn coins here and spend them on your island.
@@ -59,6 +58,7 @@
 
 ## What we cut
 
+- The fortune teller (yes/no predictions on real-world questions): removed on 11 Nov at the owner's request, so there is no prediction market in the game ([D035](DECISIONS.md)).
 - The 2-hour mystery: the prologue, journal, case board, clues, case crews, accusation and reveal. It leaves the game and the frontend now; the case server code is removed in a later cleanup; the database tables stay untouched.
 - Leverage trading and every big number.
 - Most menus. During play the screen keeps three things: your coins 🪙, the quest strip and a menu button.

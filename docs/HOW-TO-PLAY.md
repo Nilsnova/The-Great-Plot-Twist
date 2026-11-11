@@ -48,7 +48,6 @@ Open **Menu**, then **Sea chart**, and pick **The Harbor**. You see the other ca
 
 - **Market stall:** say whether a real price (Bitcoin, Ether, gold, Apple or Nvidia) will be up or down in 1 hour, with 🪙 5, 10 or 25. Right pays twice your stake; the same price gives it back.
 - **Match board:** pick the winner of a real football match with 🪙 5, 10 or 25.
-- **Fortune teller:** answer yes or no to a real-world question with 🪙 5, 10 or 25.
 - **Weather board:** today's real weather at your place, and what it does to the pirates.
 - **Duel ring:** tap any captain and choose **Friendly duel (3 rounds)**.
 

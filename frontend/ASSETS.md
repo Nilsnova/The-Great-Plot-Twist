@@ -35,7 +35,7 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 | `harbour-office-glow` | 128 × 160 | Matching office windows, night opacity; settlements.py |
 | `jail` | 112 × 112 | Stone building and barred windows; settlements.py |
 | `market-hall` | 144 × 128 | Island Exchange, green roof and awning; settlements.py |
-| `prediction-kiosk` | 80 × 96 | Map counter and small canopy; settlements.py |
+| `prediction-kiosk` | 80 × 96 | Map counter and small canopy; settlements.py. Scenery only since 11 Nov (the fortune teller left the game, D035) |
 | `sports-pavilion` | 144 × 128 | Neutral pavilion and pennants; settlements.py |
 | `notice-board` | 48 × 64 | Reward notice, unreadable decorative paper marks; settlements.py |
 | `captains-table` | 64 × 48 | Crew's map/clue table, no conclusions; settlements.py |

@@ -27,7 +27,7 @@ Size: 184 test files under [backend/server/tests/](../backend/server/tests/) (15
 | Sign-in, guests, hosts | `test_auth*.py`, `test_demo_gate.py`, `test_demo_join.py`, `test_hosts.py` | 125 | Bad and missing tokens, the guest gate, class-code join and its budget, host-only routes | Real GitHub OAuth; the email code with a real inbox |
 | Keeper's Lock | `test_lock_routes.py`, `test_lock_rules.py` | 39 | Sky answers, close-enough answers, cache, riddle fallback | Real Vercel geo headers |
 | Market (Exchange) | `test_market_*.py` (17 files) | 619 | Binance and Finnhub parsing, stale and closed states, no trade on stale prices, replay | Binance or Finnhub over hours; Finnhub's live key (rejected on 10 Nov, [OPEN-TODOS.md](OPEN-TODOS.md) 4c) |
-| Predictions | `test_prediction_*.py` (11 files) | 512 | Manifold parsing, recorded fallbacks, stake rules, 15-minute staleness, pools | Real Manifold answers over days |
+| Predictions (backend only) | `test_prediction_*.py` (11 files) | 512 | Manifold parsing, recorded fallbacks, stake rules, 15-minute staleness, pools; the game no longer calls these routes (removed from the frontend on 11 Nov at the owner's request, D035) | Real Manifold answers over days |
 | Sports | `test_sports_*.py` (7 files) | 51 | football-data.org parsing, the 90-minute result rule (D033), unavailable answers, stakes | Real matches; the international break |
 | Weather | `test_weather_*.py`, `test_fog_nights.py` | 260 | Open-Meteo parsing, cache, stale, recorded fallback, weather states | Open-Meteo outages over hours |
 | Duels | `test_duels_*.py` (7 files) | 309 | Signals, rounds, secrecy of sealed moves, refusals | Two real phones in one duel |
@@ -69,7 +69,6 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 | Class demo | `g29-*.test.js`, `duels-logic.test.js` | 175 | Class code parsing, quests, duel shortcut, lock states, lamp sync, projector, email and guest adapters | Real phones, real projector |
 | Realtime and presence | `live-rules.test.js`, `realtime*.test.js`, `real-presence*.test.js` | 175 | Room names, send gaps, accepted messages, the guard, join and retry, with fake channels | The live Supabase Realtime service |
 | Market | [market/](../frontend/tests/market/), `market*.test.js` | 302 | Board view, refusals, poller, formats | Live prices |
-| Predictions | [predictions/](../frontend/tests/predictions/) | 225 | Desk state, stake form, messages | Real Manifold questions |
 | Sports | [sports/](../frontend/tests/sports/) | 22 | Panel words and actions | Live fixtures |
 | Home islet | `islet*.test.js`, `real-islet*.test.js` | 229 | Build panel, outcomes, lifecycle | The new island screens (lane P/U) |
 | Sign-in, account, adapter | `auth*.test.js`, `account*.test.js`, `adapter*.test.js`, `real-adapter*.test.js`, `online*.test.js` | 200 | PKCE return, session, adapter contract and conformance | Real GitHub or email sign-in |
@@ -91,7 +90,7 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 | `test:mobile`, `test:panels` | `check-mobile-walking.js`, `check-open-panels.js` | Touch walking at phone size; every panel a player can open (account, settings, the Harbor cards, the old islet panel, the island cards) fits at four sizes |
 | `test:market` | `check-market-hall.js` | The Harbor market stall ("Up or down in 1 hour?", `/api/market/calls`) in the production build with recorded answers: anonymous, the flag off, a 🪙 10 call on Up with its countdown, the request body, the HUD wallet |
 | `test:online:islet`, `test:online:islet:chaos` | `check-online-islet.js` | Islet build with intercepted accounts; failures |
-| `test:a11y`, `test:ui`, `test:help`, `test:credits` | `check-a11y.js`, `check-ui-kit.js`, `check-help.js`, `check-credits.js` | Keyboard, focus, reduced motion, hostile text (the Harbor market stall and fortune teller included), help and credits pages |
+| `test:a11y`, `test:ui`, `test:help`, `test:credits` | `check-a11y.js`, `check-ui-kit.js`, `check-help.js`, `check-credits.js` | Keyboard, focus, reduced motion, hostile text (the Harbor market stall included; the fortune teller audit was removed on 11 Nov with the fortune teller), help and credits pages |
 | `test:host` | `check-host-console.js` | Host console against fake responses |
 | others | `test:art` (`check-pixel.js`), `test:weather:wiring`, `test:harbor:life`, `test:lifecycle`, `test:living`, `test:title-start`, `test:settings:visuals`, `test:build-stamp`, `test:problem-report`, `test:islet:world`, `test:festival` | See the first line of each script |
 | no npm script | `check-islet.js`, `check-local-dev.js`, `check-online-auth.js`, `check-online-signin-gate.js`, `check-redesign-hud.js`, `check-redesign-movement.js`, `check-sports.js`, `check-sports-hotspot.js`, `capture-integrated.js` (the first 3 minutes with `?islands=fake`, screenshots) | Run with `node scripts/<name>` |

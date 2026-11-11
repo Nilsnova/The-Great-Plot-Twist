@@ -48,8 +48,8 @@ Pirate Point. Who builds what is in the [build plan](docs/BUILD-PLAN.md); how to
   pirate waves for loot. Cannons fire on their own; you can man one or repair a wall. Friends visit with
   your island code (`ISLE-…`) or its QR and fight the same wave with you.
 - **The Harbor:** a market stall (up or down in 1 hour on a real price), a match board (real football),
-  a fortune teller (real yes or no questions), a weather board (the real weather and what it does to the
-  pirates) and the duel ring, each with stakes of 🪙 5, 10 or 25.
+  a weather board (the real weather and what it does to the pirates) and the duel ring; the market and
+  the match board take stakes of 🪙 5, 10 or 25. There is no prediction market in the game (D035).
 - **Pirate Point:** the shared lighthouse island. Anyone rings its bell; everyone there fights the
   armada, and three captains light the three lamps to sink the flagship. In class, phones join with the
   class code (`HARBOR-…`) from the projector QR and land there.

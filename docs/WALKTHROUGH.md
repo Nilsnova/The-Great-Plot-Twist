@@ -31,7 +31,7 @@ flowchart LR
     meteo["Open-Meteo<br/>weather, place search"]
     binance["Binance<br/>crypto prices"]
     finnhub["Finnhub<br/>stock prices"]
-    manifold["Manifold<br/>predictions"]
+    manifold["Manifold<br/>predictions (off, D035)"]
     football["football-data.org<br/>matches"]
   end
 
@@ -71,7 +71,7 @@ flowchart LR
 ## 1. The browser game
 
 ### What it does
-Shows the title (Play, Join, Settings), the pixel islands, the sea chart and sailing, the HUD and the panels: Exchange, predictions, sports, the Home islet build panel, account, settings. It plays voiced cutscenes and procedural sound. It never decides coins or progress: it sends intents.
+Shows the title (Play, Join, Settings), the pixel islands, the sea chart and sailing, the HUD and the panels: the Harbor cards (market stall, match board, weather board), the Home islet build panel, account, settings. It plays voiced cutscenes and procedural sound. It never decides coins or progress: it sends intents.
 
 ### Where it lives
 - Entry: [frontend/index.html](../frontend/index.html), [frontend/src/main.js](../frontend/src/main.js) (title), [frontend/src/game.js](../frontend/src/game.js) (the world, imports Three.js).
@@ -226,12 +226,12 @@ One adapter per provider, with a cache, a timeout (3 s; 5 s for football) and a 
 | Open-Meteo (wave weather) | The bell-ringer's area | Falls through to the default place, then "calm"; the weather never stops a wave ([island/wave_weather.py](../backend/server/island/wave_weather.py)) |
 | Binance (crypto) | Board accepts prices up to 60 s, a trade under 5 s | Old prices stay, marked "stale", and nobody can trade on them; the recorded replay never stands in live, only in demo mode ([market/feed.py](../backend/server/market/feed.py), [market/replay.py](../backend/server/market/replay.py)) |
 | Finnhub (stocks) | One call per symbol, within a call budget | Same as Binance: last price, stale, no trading; a closed market shows "closed" with its last price ([market/states.py](../backend/server/market/states.py)) |
-| Manifold (predictions) | 2-minute cache | Stale answer, then the recording; nobody may stake on an answer older than 15 minutes ([predictions/source.py](../backend/server/predictions/source.py)) |
+| Manifold (predictions; the game no longer calls it since 11 Nov, D035) | 2-minute cache | Stale answer, then the recording; nobody may stake on an answer older than 15 minutes ([predictions/source.py](../backend/server/predictions/source.py)) |
 | football-data.org (sports) | One request for PL, PPL and CL, 60 s cache, 10 calls a minute | `503 sports_unavailable`; there is no stale or recorded stand-in in live mode. Recorded matches exist only in demo mode and never accept stakes ([sports/source.py](../backend/server/sports/source.py), [SECURITY.md](SECURITY.md)) |
 
 ### Limits
 - **Finnhub currently rejects the key:** every stock request answered HTTP 401 in the live log on 10 Nov, so the stocks show no fresh price until the owner re-enters the key ([OPEN-TODOS.md](OPEN-TODOS.md) 4c).
-- The fortune teller shows nothing today: all 5 questions in `questions.json` still say `reviewedBy: pending`, and pending questions are never served ([predictions/questions.py](../backend/server/predictions/questions.py), [OPEN-TODOS.md](OPEN-TODOS.md) 4d).
+- The fortune teller was removed from the game on 11 Nov at the owner's request (no prediction market, [D035](DECISIONS.md)); its backend code stays, switched off, for a later cleanup.
 - Football shows no matches during the international break ([OPEN-TODOS.md](OPEN-TODOS.md), section 7).
 - Binance can refuse some countries (HTTP 451) ([market/binance.py](../backend/server/market/binance.py)). Caches are per instance.
 
@@ -355,12 +355,12 @@ These frames are **to be written by the lane's members**. Each lane builds again
 - **Contract:** `createWave({seed, wave, weather, island, defenses})` with `step`, `state`, `done`, `result`, pure and seeded (BUILD-PLAN 3.5); events `wave_started` to `wave_ended`; the API routes of 3.4.
 
 ### Lane H: Harbor and coins
-- **What it does:** to be written by the lane's members (planned: `formatCoins()`, market stall, match board, fortune teller, weather board, stalls in the world).
-- **Where it lives:** planned `frontend/src/harbor/` and `frontend/src/lib/coins.js`, plus the existing [screens/market/](../frontend/src/screens/market/), [screens/predictions/](../frontend/src/screens/predictions/) and [screens/sports/](../frontend/src/screens/sports/).
+- **What it does:** to be written by the lane's members (planned: `formatCoins()`, market stall, match board, weather board, stalls in the world; the fortune teller was removed on 11 Nov at the owner's request).
+- **Where it lives:** planned `frontend/src/harbor/` and `frontend/src/lib/coins.js`, plus the existing [screens/market/](../frontend/src/screens/market/) and [screens/sports/](../frontend/src/screens/sports/) (screens/predictions/ was removed on 11 Nov).
 - **Why it was built this way:** to be written by the lane's members.
 - **Limits:** to be written by the lane's members.
 - **How it could change:** to be written by the lane's members.
-- **Contract:** the economy of BUILD-PLAN 3.2 (whole coins, stakes 5, 10 or 25); the existing `/api/market`, `/api/predictions`, `/api/sports`, `/api/weather` routes; the fallbacks of part 6.
+- **Contract:** the economy of BUILD-PLAN 3.2 (whole coins, stakes 5, 10 or 25); the `/api/market/calls`, `/api/sports`, `/api/weather` routes (no `/api/predictions` from the browser since 11 Nov); the fallbacks of part 6.
 
 ### Lane U: Look and feel
 - **What it does:** to be written by the lane's members (planned: one panel style, a HUD with three things, the first 3 minutes, play with friends, toasts).
