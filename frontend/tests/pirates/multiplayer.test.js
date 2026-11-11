@@ -37,6 +37,7 @@ describe('the break with several captains', () => {
     h.waves.start(info('w-1'));
     while (!h.waves.inBreak && h.clock.now < START + 200000) await h.advance(500);
     expect(h.waves.inBreak).toBe(true);
+    await h.advance(300); // the loot answer arrives
     h.waves.next(); await h.advance(300);
     expect(h.huds[0].paused.line).toBe('No connection to the server.');
     await h.advance(17000);

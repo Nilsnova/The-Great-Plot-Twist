@@ -34,12 +34,12 @@ describe('pirate wave simulation', () => {
     expect(random()).toBe(createRandom('ISLE-K7Q2M')());
   });
 
-  it('lets one cannon win the first wave in 20 to 40 seconds', () => {
+  it('lets one cannon win the first wave in 15 to 30 seconds (the faster pace of 11 Nov)', () => {
     for (const seed of [1, 2, 3, 42, 2147483646]) {
       const { result, events } = play({ seed, wave: 1, defenses: pick('cannon_2') });
       expect(result.survived).toBe(true);
       expect(result.shipsSunk).toBe(3);
-      expect(result.time).toBeGreaterThanOrEqual(20); expect(result.time).toBeLessThanOrEqual(40);
+      expect(result.time).toBeGreaterThanOrEqual(15); expect(result.time).toBeLessThanOrEqual(30);
       expect(events[0]).toMatchObject({ type: 'wave_started', wave: 1, ships: 3 });
       expect(events.at(-1)).toMatchObject({ type: 'wave_ended', reason: 'all_sunk', survived: true });
       expect(count(events, 'ship_sunk')).toBe(3);
@@ -47,11 +47,17 @@ describe('pirate wave simulation', () => {
   });
 
   it('loses a wave with no defenses, and needs more defenses later', () => {
-    const { result, events, wave } = play({ seed: 5, wave: 1, defenses: [] });
+    // Wave 1 with nothing built: the boarders reach the heart and hurt it badly; wave 2 falls.
+    const first = play({ seed: 5, wave: 1, defenses: [] });
+    expect(first.result.islandHp).toBeLessThan(40);
+    const hurt = first.events.filter(event => event.type === 'island_damaged');
+    const byBoarders = hurt.filter(event => event.boarderId).reduce((sum, event) => sum + event.damage, 0);
+    expect(byBoarders).toBeGreaterThan(hurt.reduce((sum, event) => sum + event.damage, 0) / 2); // mainly through boarders
+    expect(hurt.find(event => event.boarderId)).toMatchObject({ damage: CONFIG.boarding.heartDamage });
+    const { result, events, wave } = play({ seed: 5, wave: 2, defenses: [] });
     expect(result).toMatchObject({ survived: false, shipsSunk: 0, islandHp: 0 });
     expect(wave.done).toBe(true);
     expect(events.at(-1)).toMatchObject({ type: 'wave_ended', reason: 'island_lost' });
-    expect(events.find(event => event.type === 'island_damaged')).toMatchObject({ damage: CONFIG.ships.sloop.damage });
     expect(play({ seed: 5, wave: 3, defenses: pick('cannon_2') }).result.survived).toBe(false);
     expect(play({ seed: 5, wave: 3, defenses: pick('cannon_1', 'cannon_2', 'cannon_3', 'wall_1', 'wall_2') }).result.survived).toBe(true);
     // Every wave ends within the time limit.
@@ -146,8 +152,10 @@ describe('pirate wave simulation', () => {
     const clean = play(options);
     const junk = [null, 7, 'fire', [], {}, { type: 'fire' }, { type: 'fire', cannonId: 'cannon_9', targetId: 'ship_1' },
       { type: 'fire', cannonId: 'wall_2', targetId: 'ship_1' }, { type: 'fire', cannonId: 'cannon_2', targetId: 'ship_999' },
-      { type: 'fire', cannonId: NaN, targetId: { id: 1 } }, { type: 'repair', wallId: 'cannon_2' }, { type: 'repair', wallId: 'wall_2' },
-      { type: 'repair' }, { type: 'boom' }, { type: 'lamps_lit' }, { type: '__proto__' }];
+      { type: 'fire', cannonId: NaN, targetId: { id: 1 } }, { type: 'repair', wallId: 'cannon_2' }, { type: 'repair', wallId: 'wall_9' },
+      { type: 'repair' }, { type: 'rebuild', wallId: 'cannon_2' }, { type: 'rebuild' }, { type: 'captain_strike', by: '<b>', x: 0, z: 0 },
+      { type: 'captain_strike', by: 'p', x: NaN, z: 0 }, { type: 'captain_shot', by: 'p', targetId: 'boarder_999', level: 1, x: 0, z: 0 },
+      { type: 'boom' }, { type: 'lamps_lit' }, { type: '__proto__' }];
     const noisy = play(options, { inputs: () => junk });
     expect(noisy.result).toEqual(clean.result);
     const wave = createWave(options);

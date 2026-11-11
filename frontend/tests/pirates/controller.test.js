@@ -90,7 +90,7 @@ describe('pirate wave controller', () => {
     const h = harness({ controller: { getDefenses: () => [] } });
     h.bus.emit({ type: 'wave_started_server', ...INFO, waveId: 'pp', flagship: true });
     expect(h.controller.wave).toBe(null);
-    h.bus.emit({ type: 'wave_started_server', ...INFO, waveId: 'w-lost' });
+    h.bus.emit({ type: 'wave_started_server', ...INFO, waveId: 'w-lost', wave: 2 }); // wave 1 with nothing built hurts, wave 2 falls (§12)
     await h.advance(140000, 250);
     expect(h.bus.log.find(event => event.type === 'wave_finished')).toMatchObject({ survived: false, waveId: 'w-lost' });
     expect(h.cutscenes).toEqual(['wave_lost']);

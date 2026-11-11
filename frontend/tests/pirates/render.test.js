@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
-import { ATLAS_IDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import { ATLAS_IDS, BOARDER_BANDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
 
 const at = (id, kind, bearing, radius) => {
@@ -46,13 +46,13 @@ describe('pirate wave renderer', () => {
     for (const seed of [1, 2, 3]) {
       const renderer = createWaveRenderer({ scene, atlas: shared, defenses: DEFENSES, fx: () => null });
       const layers = renderer.root.children.length;
-      expect(layers).toBe(3 + 5 + 1); // far sea, near sea, air, one per wall or cannon, fog
+      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1); // far sea, near sea, air, the boarders' z bands, one per wall or cannon, fog
       const run = play(renderer, seed);
       expect(run.state.total).toBe(CONFIG.fleet.max);
       expect(run.peak.ships).toBeGreaterThanOrEqual(6);
       expect(run.peak.instances).toBeLessThan(300);
       // Every effect has run out: the pools are empty, the layers hold no stale entries.
-      expect(run.after).toMatchObject({ ships: run.state.ships.length, balls: 0, splashes: 0, sinkers: 0, wrecks: 0, objects: layers });
+      expect(run.after).toMatchObject({ ships: run.state.ships.length, balls: 0, splashes: 0, sinkers: 0, wrecks: 0, fallen: 0, strikes: 0, objects: layers });
       runs.push({ objects: run.after.objects, owned: run.after.owned });
       renderer.dispose(); renderer.dispose();
       expect(scene.children.length).toBe(before);

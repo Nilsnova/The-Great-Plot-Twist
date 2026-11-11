@@ -278,7 +278,7 @@
   },
   "waves": {
     "countdownSeconds": 5,
-    "minimumSeconds": 15,
+    "minimumSeconds": 10,
     "maximumSeconds": 900,
     "highestWave": 100,
     "bossEvery": 5,

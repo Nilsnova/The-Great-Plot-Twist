@@ -6,12 +6,13 @@
 import './pirates.css';
 import { node } from '../ui/kit/dom.js';
 
-export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp }) =>
-  `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
+// Boarders on land (TOWER-DEFENSE.md §12) show between the ships and the heart while there are any.
+export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) =>
+  `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left${boardersLeft > 0 ? ` · ${boardersLeft} ashore` : ''} · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
 
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
-export const musketText = ready => (ready ? 'Musket' : 'No ship in range');
+export const musketText = (ready, blade = false) => (blade ? 'Cutlass' : ready ? 'Musket' : 'No pirate in range');
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
@@ -92,13 +93,17 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (next === lastPrompt) return;
       lastPrompt = next; prompt.hidden = !text; action.textContent = text ?? ''; prompt.disabled = !enabled;
     },
-    // The musket button: {share: reload 0..1, ready: a ship is in range} while the wave runs, null hides it.
+    // The musket button: {share: reload 0..1, ready: a ship or boarder is in range, blade: a boarder within
+    // cutlass reach (the button then swings the cutlass)} while the wave runs, null hides it.
     musket(info) {
       if (!info) { if (!musket.hidden) { musket.hidden = true; lastMusket = ''; release(); } return; }
       musket.hidden = false;
-      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), key = `${info.ready === true}|${Math.round(share * 20)}`;
+      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), blade = info.blade === true;
+      const key = `${info.ready === true}|${blade}|${Math.round(share * 20)}`;
       if (key === lastMusket) return;
-      lastMusket = key; musketLabel.textContent = musketText(info.ready === true);
+      lastMusket = key; musketLabel.textContent = musketText(info.ready === true, blade);
+      musket.classList.toggle('pirate-musket-blade', blade);
+      musket.setAttribute('aria-label', blade ? 'Strike with your cutlass (F)' : 'Fire your musket (F)');
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
     },

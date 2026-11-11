@@ -1,24 +1,26 @@
 // Where things stand on your island (BUILD-PLAN 3.3), as plain data on the home_islet place: logical
 // x/z on its coastline (src/world/places/surfaces.js, rx 20, rz 22) and its backdrop's paths (the main
 // path runs north to south at x 0, two cross paths at z -5.5 and 7.5). No DOM, no Three.js.
-//   spots   SPOT_TABLE below (16, docs/TOWER-DEFENSE.md §2), and Pirate Point's PP_SPOT_TABLE (§5)
+//   spots   SPOT_TABLE below (22, docs/TOWER-DEFENSE.md §2), and Pirate Point's PP_SPOT_TABLE (§5)
 //   cabin   just north of the west end of the south cross path, standing from the start (not a build spot)
 //   bell    the harbor bell on the south beach, next to where you land
 import {surfaceClass} from '../world/places/surfaces.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
-  wall: Object.freeze({name: 'Wall', purpose: 'Blocks pirate ships at the shore.', cost: 10}),
+  wall: Object.freeze({name: 'Wall', purpose: 'Stops boarders until they break it.', cost: 10}),
   cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at one ship at a time.', cost: 30}),
   mortar: Object.freeze({name: 'Mortar', purpose: 'Hits every ship near the impact.', cost: 60}),
   watchtower: Object.freeze({name: 'Watchtower', purpose: 'Gives all your towers more range.', cost: 40}),
   house: Object.freeze({name: 'House', purpose: 'Adds 🪙 5 loot for every wave you win.', cost: 50}),
 });
-// THE spot table (docs/TOWER-DEFENSE.md §2, 16 spots): [id, slot, x, z, edge]. slot is what may stand
+// THE spot table (docs/TOWER-DEFENSE.md §2, 22 spots): [id, slot, x, z, edge]. slot is what may stand
 // there: wall, tower (a cannon or a mortar, chosen at the first build), watchtower or house. The
 // server's ids are the first column (the backend's ids as built, 11 Nov); if the backend renames a
 // spot, change it here (or add the old name to SPOT_ALIASES) and nothing else.
-//   walls   six along the shore (west, north twice, east, south twice)
+//   walls   six along the shore (west, north twice, east, south twice), and the inner ring wall_7…wall_12
+//           around the island's heart (§12; the sim's CONFIG.boarding.heart, 0,2), on the paths the
+//           boarders take: east, the south cross path twice, west (north of the cabin), the north cross path twice
 //   towers  cannon_1…cannon_7 (a cannon or a mortar): the four corners, west, east and the south beach
 //   tower   the watchtower on the hill at the north end of the main path
 //   houses  inland, at the ends of the north cross path
@@ -31,6 +33,8 @@ export const SPOT_TABLE = Object.freeze([
   ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
   ['tower_1', 'watchtower', 0, -14, 'hill'],
   ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
+  ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 4.5, 9, 'ring'], ['wall_9', 'wall', -4, 9.5, 'ring'],
+  ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -4, -5.5, 'ring'], ['wall_12', 'wall', 4, -5.5, 'ring'],
 ].map(row => Object.freeze(row)));
 // Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
 export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));

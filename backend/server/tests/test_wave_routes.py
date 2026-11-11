@@ -85,7 +85,7 @@ def test_the_own_island_is_opened_and_its_owner_sent_with_the_numbers_of_the_fil
         "p_place": "island",
         "p_island_owner": PLAYER_ID,
         "p_countdown_seconds": 5,
-        "p_minimum_seconds": 15,
+        "p_minimum_seconds": 10,
         "p_maximum_seconds": 900,
         "p_highest_wave": 100,
         "p_weather_kind": "calm",

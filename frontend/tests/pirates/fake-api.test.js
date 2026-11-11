@@ -20,7 +20,8 @@ describe('fake island API', () => {
     expect(island.spots.map(spot => `${spot.id}:${spot.kind}:${spot.cost}:${spot.built}`)).toEqual([
       'wall_1:wall:10:false', 'wall_2:wall:10:false', 'wall_3:wall:10:false', 'wall_4:wall:10:false', 'wall_5:wall:10:false', 'wall_6:wall:10:false',
       'cannon_1:cannon:30:false', 'cannon_2:cannon:30:false', 'cannon_3:cannon:30:false', 'cannon_4:cannon:30:false',
-      'cannon_5:cannon:30:false', 'cannon_6:cannon:30:false', 'cannon_7:cannon:30:false', 'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false']);
+      'cannon_5:cannon:30:false', 'cannon_6:cannon:30:false', 'cannon_7:cannon:30:false', 'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false', 'wall_7:wall:10:false', 'wall_8:wall:10:false',
+      'wall_9:wall:10:false', 'wall_10:wall:10:false', 'wall_11:wall:10:false', 'wall_12:wall:10:false']);
     expect((await api.island()).code).toBe(island.code);
   });
 
@@ -31,7 +32,7 @@ describe('fake island API', () => {
     const cases = [
       [{ spot: 'cannon_1', kind: 'cannon', actionUid: 'a2' }, 409, 'spot_taken'],
       [{ spot: 'cabin', kind: 'house', actionUid: 'a3' }, 409, 'spot_taken'],
-      [{ spot: 'wall_9', kind: 'wall', actionUid: 'a4' }, 404, 'no_such_spot'],
+      [{ spot: 'wall_13', kind: 'wall', actionUid: 'a4' }, 404, 'no_such_spot'],
       [{ spot: 'wall_1', kind: 'cannon', actionUid: 'a5' }, 422, 'wrong_kind'],
       [{ spot: 'wall_1', kind: 'wall' }, 422, 'validation_error'],
       [{ spot: 7, kind: 'wall', actionUid: 'a6' }, 422, 'validation_error'],
@@ -61,7 +62,7 @@ describe('fake island API', () => {
     expect(wantsFakeIslands('?islands=fake')).toBe(true); expect(wantsFakeIslands('?islands=real')).toBe(false);
   });
 
-  it('runs a wave: countdown, one wave per island, finish no earlier than 15 s, loot once', async () => {
+  it('runs a wave: countdown, one wave per island, finish no earlier than 10 s, loot once', async () => {
     const time = clock(), api = createFakeIslandApi({ now: time.now, weather: 'storm' });
     await api.build({ spot: 'house_1', kind: 'house', actionUid: 'h1' }); // 50 coins left
     const wave = await api.startWave({ where: 'own', actionUid: 's1' });
@@ -71,7 +72,7 @@ describe('fake island API', () => {
     expect(await api.startWave({ where: 'own', actionUid: 's1' })).toEqual(wave);
     expect((await refusal(api.startWave({ where: 'own', actionUid: 's2' }))).code).toBe('wave_running');
     expect(await api.currentWave('own')).toEqual(wave);
-    time.advance(24); // 14 s after startsAt
+    time.advance(19); // 9 s after startsAt (minimumSeconds 10, the faster pace of 11 Nov)
     const early = await refusal(api.finishWave({ waveId: wave.waveId, survived: true, shipsSunk: 3 }));
     expect([early.status, early.code, early.retryAfter]).toEqual([409, 'wave_too_early', 1]);
     time.advance(1);
@@ -128,7 +129,7 @@ describe('fake island API', () => {
     expect(await (await api.fetch('/api/waves/current?where=own')).json()).toBeNull();
     const wave = await (await api.fetch('/api/waves/start', { method: 'POST', body: JSON.stringify({ where: 'own', actionUid: 'b' }) })).json();
     const early = await api.fetch('/api/waves/finish', { method: 'POST', body: JSON.stringify({ waveId: wave.waveId, survived: true, shipsSunk: 1 }) });
-    expect(early.status).toBe(409); expect(early.headers.get('retry-after')).toBe('25');
+    expect(early.status).toBe(409); expect(early.headers.get('retry-after')).toBe('20');
     expect((await api.fetch('/api/island/visit/ISLE-K7Q2M')).status).toBe(200);
     expect((await api.fetch('/api/island/visit/ISLE-22222')).status).toBe(404);
     expect((await api.fetch('/api/nowhere')).status).toBe(404);

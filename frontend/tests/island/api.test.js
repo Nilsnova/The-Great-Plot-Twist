@@ -21,14 +21,15 @@ const expectRefusal = (answer, status, code) => {
 };
 
 describe('island api: accepted answers', () => {
-  it('reads the island with its 16 spots in the server order and 100 starting coins', async () => {
+  it('reads the island with its 22 spots in the server order and 100 starting coins', async () => {
     const {api} = setup();
     const answer = await api.getIsland();
     expect(answer.ok).toBe(true);
     expect(answer.data.code).toBe('ISLE-K7Q2M');
     expect(answer.data.coins).toBe(100);
     expect(answer.data.spots.map(spot => spot.id)).toEqual(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6',
-      'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2']);
+      'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2',
+      'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']);
     expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar'], built: false, level: 0, cost: 30,
       upgradeCost: null});
     expect(answer.data.prices).toMatchObject({kinds: {wall: [10, 20, 40], mortar: [60, 120, 240]}, crew: {gunner: {price: 40, max: 2}}, captain: [0, 20, 40, 80, 160]});
@@ -110,7 +111,7 @@ describe('island api: every refusal keeps the server code and plain message', ()
       expectRefusal(await api.startWave(), 409, 'wave_running');
       const early = await api.finishWave({waveId: wave.data.waveId, survived: true});
       expectRefusal(early, 409, 'wave_too_early');
-      expect(early.retryAfterSeconds).toBe(25); // 10 s countdown + 15 s minimum
+      expect(early.retryAfterSeconds).toBe(20); // 10 s countdown + 10 s minimum
       expectRefusal(await api.finishWave({waveId: 'nope', survived: true}), 404, 'no_such_wave');
       expectRefusal(await api.joinWave({waveId: 'nope'}), 404, 'no_such_wave');
       const friend = await transport.dev.startWaveAt('ISLE-FR3ND');

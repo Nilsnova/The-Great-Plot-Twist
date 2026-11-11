@@ -2,7 +2,7 @@
 flat colour areas, two or three shades per material lit from the top left, crisp one-pixel dark
 outlines and detail made of shapes (planks, rigging, gun ports), never texture noise. Ships with
 three bob frames, the warship boss, shots, splashes, effects, the wreck, the island defences in
-three levels, crew, the captain's musket, the flag trophy and the build-spot marker. Gold only for
+three levels, crew, the captain's musket and cutlass, the boarders on foot, the flag trophy and the build-spot marker. Gold only for
 lights and interaction (lamps, flashes, fire, the build marker and the level pip). No downloaded art.
 
   python3 pirates.py --write          writes only these PNGs to public/pixel (no other art changes)
@@ -869,6 +869,83 @@ def captain(firing=False):
     return im
 
 
+def boarder(pose=0):
+    """A pirate boarder on foot (16 x 24 in a 16 x 32 tile, feet on the anchor), three-quarter view facing
+    right with a cutlass: pose 0 and 1 are the two walking frames, 2 the cutlass raised to hack a wall."""
+    im, d = canvas(16, 32)
+    ink = '#292d29'
+    shadow(d, 8, 29, 6, 2)
+    bob = 1 if pose == 1 else 0
+    # legs: dark trousers and boots, a stride in frame 0, the other leg forward in frame 1, braced in 2
+    legs = {0: [(3, 6), (9, 12)], 1: [(5, 8), (7, 10)], 2: [(2, 5), (10, 13)]}[pose]
+    for x0, x1 in legs:
+        d.rectangle((x0, 23, x1, 29), fill=ink)
+        d.rectangle((x0 + 1, 23, x1 - 1, 26), fill='#3d4452')
+        d.line((x0 + 1, 28, x1 - 1, 28), fill='#4a3a2c')
+    y = -bob
+    # torso: striped shirt under an open dark-red waistcoat, a sash with a brass buckle
+    poly(d, [(4, 14 + y), (11, 14 + y), (12, 23 + y), (3, 23 + y)], RED_DARK, ink)
+    d.rectangle((5, 15 + y, 9, 21 + y), fill=BONE)
+    for row in (16, 18, 20):
+        d.line((5, row + y, 9, row + y), fill='#3b4a5a')
+    d.rectangle((3, 21 + y, 12, 22 + y), fill=ink); d.line((4, 21 + y, 11, 21 + y), fill=RED)
+    d.point((8, 21 + y), fill=BRASS3[0])
+    d.line((4, 15 + y, 4, 21 + y), fill=RED)
+    # head: skin, an eye, a short dark beard, a red bandana with its knot at the back
+    d.rectangle((4, 7 + y, 10, 14 + y), fill=ink); d.rectangle((5, 9 + y, 9, 13 + y), fill=SKIN)
+    d.point((8, 10 + y), fill=ink); d.point((9, 11 + y), fill=SKIN_DARK)
+    d.line((6, 13 + y, 9, 13 + y), fill='#5a4331')
+    d.rectangle((4, 6 + y, 10, 9 + y), fill=ink); d.rectangle((5, 7 + y, 9, 8 + y), fill=RED)
+    d.point((6, 7 + y), fill='#d9725e')
+    d.rectangle((2, 8 + y, 4, 10 + y), fill=ink); d.point((3, 9 + y), fill=RED)
+    # back arm
+    d.rectangle((2, 15 + y, 3, 20 + y), fill=ink); d.point((2, 20 + y), fill=SKIN)
+    if pose == 2:
+        # the cutlass raised over the head, ready to come down on the wall
+        d.rectangle((11, 8 + y, 12, 15 + y), fill=ink); d.point((12, 9 + y), fill=SKIN)       # arm up
+        d.rectangle((11, 6 + y, 14, 7 + y), fill=ink); d.line((12, 6 + y, 13, 6 + y), fill=BRASS3[0])  # guard
+        poly(d, [(12, 5 + y), (13, 0), (15, 0), (14, 5 + y)], IRON3[0], ink)                  # curved blade up
+        d.line((14, 1, 14, 4 + y), fill='#e8eee8')
+    else:
+        # the cutlass held forward, its blade raised
+        swing = 1 if pose == 1 else 0
+        d.rectangle((11, 15 + y, 12, 19 + y), fill=ink); d.point((12, 19 + y), fill=SKIN)      # arm
+        d.rectangle((12, 18 + y, 14, 19 + y), fill=ink); d.point((13, 18 + y), fill=BRASS3[0])  # guard
+        poly(d, [(13, 17 + y), (14, 10 + y + swing), (15, 10 + y + swing), (15, 17 + y)], IRON3[0], ink)
+        d.line((14, 12 + y + swing, 14, 16 + y), fill='#e8eee8')
+    return im
+
+
+def captain_cutlass():
+    """The explorer in side view swinging a cutlass (the close-quarters blow), body where the musket pose has it."""
+    im, d = canvas(48, 32)
+    ox = 12
+    ink, skin, coat, light = '#292d29', '#d8ae78', '#b18a43', '#d0a555'
+    P = lambda pts: [(x + ox, y) for x, y in pts]
+    R = lambda x0, y0, x1, y1: (x0 + ox, y0, x1 + ox, y1)
+    shadow(d, 12 + 12, 29, 8, 2)
+    d.rectangle(R(6, 23, 9, 28), fill=ink); d.rectangle(R(15, 23, 18, 28), fill=ink)       # lunging stance
+    d.rectangle(R(6, 24, 8, 26), fill='#546653'); d.rectangle(R(15, 24, 17, 26), fill='#546653')
+    d.rectangle(R(5, 28, 9, 29), fill='#34352a'); d.rectangle(R(15, 28, 19, 29), fill='#34352a')
+    poly(d, P([(9, 14), (16, 14), (18, 24), (8, 25), (7, 19)]), coat, ink)
+    d.rectangle(R(6, 16, 9, 23), fill='#40584b'); d.rectangle(R(7, 17, 8, 20), fill='#6a7d59')   # pack
+    poly(d, P([(8, 6), (16, 5), (18, 9), (20, 12), (17, 14), (11, 14), (9, 11)]), skin, ink)
+    d.rectangle(R(14, 9, 15, 10), fill=ink); d.point((18 + ox, 12), fill='#aa7a53')
+    d.rectangle(R(8, 4, 15, 8), fill='#4e6549'); d.rectangle(R(7, 7, 19, 8), fill=ink); d.rectangle(R(9, 3, 14, 4), fill='#72804e')
+    d.rectangle(R(10, 14, 16, 16), fill='#477e79'); d.rectangle(R(8, 16, 10, 19), fill='#35655f')
+    # the sword arm out in front, the brass guard, the curved blade sweeping down and forward
+    d.line(R(14, 16, 22, 17), fill=ink, width=3); d.line(R(15, 16, 21, 17), fill=light)
+    d.rectangle(R(22, 15, 23, 18), fill=BRASS3[1]); d.point((22 + ox, 15), fill=BRASS3[0])
+    poly(d, P([(24, 15), (31, 13), (35, 16), (32, 17), (24, 18)]), IRON3[0], ink)
+    d.line(R(25, 16, 31, 14), fill='#e8eee8')
+    # the swish: two pale arcs behind the blade
+    for x, y in [(30, 9), (33, 11), (35, 13)]:
+        d.point((x + ox, y), fill=FOAM)
+    for x, y in [(27, 10), (29, 9)]:
+        d.point((x + ox, y), fill=FOAM_DIM)
+    return im
+
+
 # ---------------------------------------------------------------- effects
 
 def smoke(frame):
@@ -981,7 +1058,8 @@ def assets():
         'island-watchtower': watchtower(), 'island-house': cottage(), 'pirate-flag-trophy': flag_trophy(),
         'build-spot': build_spot(), 'build-spot-glow': build_spot(True),
         'crew-gunner': crew('gunner'), 'crew-carpenter': crew('carpenter'), 'crew-lookout': crew('lookout'),
-        'captain-musket-1': captain(), 'captain-musket-2': captain(True),
+        'captain-musket-1': captain(), 'captain-musket-2': captain(True), 'captain-cutlass': captain_cutlass(),
+        'pirate-boarder-1': boarder(0), 'pirate-boarder-2': boarder(1), 'pirate-boarder-3': boarder(2),
         'fx-musket-flash': musket_flash(), 'fx-mortar-shell': mortar_shell(), 'fx-level-pip': level_pip(),
     })
     for frame in range(3):
@@ -1018,7 +1096,7 @@ def contact_sheet(path, old=None, scale=3):
     for index, (label, image) in enumerate(items):
         name = label.split(' ')[-1]
         x, y = (index % cols) * cell_w, (index // cols) * cell_h
-        land = name.startswith(('island-', 'build-', 'crew-', 'captain-', 'fx-level')) or name == 'pirate-flag-trophy'
+        land = name.startswith(('island-', 'build-', 'crew-', 'captain-', 'fx-level', 'pirate-boarder')) or name == 'pirate-flag-trophy'
         if land:
             draw.rectangle((x, y, x + cell_w - 1, y + cell_h - 1), fill='#6f8f55')
         if label.startswith('old '):

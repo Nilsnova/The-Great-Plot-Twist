@@ -17,7 +17,8 @@ import { CONFIG } from './sim.js';
 export const TICK_SECONDS = CONFIG.tick;
 export const INPUT_LEAD_TICKS = 4;
 export const MAX_WAVE_SECONDS = 900;
-export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot' });
+export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot',
+  rebuild: 'wall_rebuild', captain_strike: 'captain_strike' });
 export const MAX_PLAYERS = 4; // TOWER-DEFENSE.md §11: up to four players defend one island together
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
@@ -30,9 +31,13 @@ export function toMessage(input, { by, seq, tick, waveId }) {
   const base = { by, seq, t: secondsOf(tick), waveId };
   if (input.type === 'fire') return { type: ROOM_EVENTS.fire, payload: { ...base, cannonId: input.cannonId, targetId: input.targetId } };
   if (input.type === 'repair') return { type: ROOM_EVENTS.repair, payload: { ...base, wallId: input.wallId } };
+  if (input.type === 'rebuild') return { type: ROOM_EVENTS.rebuild, payload: { ...base, wallId: input.wallId } };
   if (input.type === 'lamps_lit') return { type: ROOM_EVENTS.lamps_lit, payload: base };
   // The captain's musket: the shooter's own level and position at send time, so every client agrees.
   if (input.type === 'captain_shot') return { type: ROOM_EVENTS.captain_shot,
+    payload: { ...base, targetId: input.targetId, level: input.level, x: input.x, z: input.z } };
+  // The cutlass (TOWER-DEFENSE.md §12): the same shape as the musket shot.
+  if (input.type === 'captain_strike') return { type: ROOM_EVENTS.captain_strike,
     payload: { ...base, targetId: input.targetId, level: input.level, x: input.x, z: input.z } };
   return null;
 }
@@ -52,13 +57,17 @@ export function readMessage(type, payload, waveId) {
     if (typeof payload.wallId !== 'string' || !ID.test(payload.wallId)) return null;
     return { by, seq, tick, input: { type: 'repair', wallId: payload.wallId } };
   }
+  if (type === ROOM_EVENTS.rebuild) {
+    if (typeof payload.wallId !== 'string' || !ID.test(payload.wallId)) return null;
+    return { by, seq, tick, input: { type: 'rebuild', wallId: payload.wallId } };
+  }
   if (type === ROOM_EVENTS.lamps_lit) return { by, seq, tick, input: { type: 'lamps_lit' } };
-  if (type === ROOM_EVENTS.captain_shot) {
+  if (type === ROOM_EVENTS.captain_shot || type === ROOM_EVENTS.captain_strike) {
     const { targetId, level, x, z } = payload;
     if (typeof targetId !== 'string' || !ID.test(targetId) || !Number.isInteger(level) || level < 1 || level > 5) return null;
     if (![x, z].every(value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500)) return null;
-    // The shooter is the sender: a message cannot fire somebody else's musket.
-    return { by, seq, tick, input: { type: 'captain_shot', by, targetId, level, x, z } };
+    // The shooter is the sender: a message cannot fire somebody else's musket or swing their cutlass.
+    return { by, seq, tick, input: { type: type === ROOM_EVENTS.captain_shot ? 'captain_shot' : 'captain_strike', by, targetId, level, x, z } };
   }
   return null;
 }

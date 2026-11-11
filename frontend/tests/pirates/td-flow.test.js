@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { createWave } from '../../src/pirates/sim.js';
 import { AUTO_KEY, BREAK_SECONDS, LOST_TITLE, captainTarget, createWaveController } from '../../src/pirates/controller.js';
-import { createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
+import { BOARDER_BANDS, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { readMessage, toMessage } from '../../src/pirates/sync.js';
 import { TD_RULES, createFakeIslandApi, createFakeIslandTransport } from '../../src/pirates/fake-api.js';
 import { withLevels } from '../../src/pirates/game-wiring.js';
@@ -74,6 +74,7 @@ describe('the run between waves', () => {
     const h = harness({ controller: { startNextWave } });
     h.waves.start(info('w-1'));
     while (!h.waves.inBreak) await h.advance(500);
+    await h.advance(300); // the loot answer arrives
     h.waves.next(); await h.advance(600);
     expect(h.huds[0].paused.line).toBe('A wave is already under way on this island.');
     expect(h.huds[0].paused.ready).toBe(true);
@@ -84,7 +85,7 @@ describe('the run between waves', () => {
   it('ends the run on a lost wave with a clear result and no break', async () => {
     const startNextWave = vi.fn();
     const h = harness({ defenses: [], controller: { startNextWave } });
-    h.waves.start(info('w-lost'));
+    h.waves.start(info('w-lost', 2)); // wave 1 with nothing built hurts, wave 2 falls (§12)
     await h.advance(140000, 250);
     expect(h.huds[0].log.some(([title, line]) => title === LOST_TITLE && /Rebuild and ring the bell again/.test(line))).toBe(true);
     expect(LOST_TITLE).toBe('The pirates broke through');
@@ -182,7 +183,7 @@ describe('the v2 renderer', () => {
     const scene = new THREE.Scene(), defenses = [...ISLANDS.full.defenses];
     const renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...packAtlas() }, defenses, fx: () => null });
     const posts = defenses.filter(item => item.kind !== 'house').length;
-    expect(renderer.root.children.length).toBe(3 + posts + 1);
+    expect(renderer.root.children.length).toBe(3 + BOARDER_BANDS + posts + 1);
     const sim = createWave({ seed: 3, wave: 10, weather: { ships: 2 }, ...ISLANDS.full, crew: { gunner: 2, carpenter: 2, lookout: 1 } });
     const peak = { instances: 0, shells: 0, bursts: 0 };
     let time = 0, tick = 0;
@@ -197,7 +198,7 @@ describe('the v2 renderer', () => {
     expect(peak.shells).toBeGreaterThan(0); expect(peak.bursts).toBeGreaterThan(0);
     expect(peak.instances).toBeLessThan(320);
     for (let i = 0; i < 400; i++) renderer.update({ state: sim.state(), simTime: time += 1 / 30, dt: 1 / 30 });
-    expect(renderer.stats()).toMatchObject({ balls: 0, shells: 0, bursts: 0, tracers: 0, splashes: 0, sinkers: 0 });
+    expect(renderer.stats()).toMatchObject({ balls: 0, shells: 0, bursts: 0, tracers: 0, splashes: 0, sinkers: 0, fallen: 0, strikes: 0 });
     renderer.dispose();
     expect(scene.children.length).toBe(0);
   });
@@ -208,7 +209,7 @@ describe('the v2 fake API', () => {
   it('answers levels, prices, crew, captain and unlocks, and upgrades, hires and refuses like §7', async () => {
     const api = createFakeIslandApi({ version: 2 });
     const island = await api.island();
-    expect(island.spots).toHaveLength(16);
+    expect(island.spots).toHaveLength(22);
     expect(island.spots.find(item => item.id === 'cannon_5')).toMatchObject({ kinds: ['cannon', 'mortar'], level: 0, built: false });
     expect(island).toMatchObject({ crew: { gunner: 0, carpenter: 0, lookout: 0 }, nextWave: 1, captain: { level: 1, nextPrice: 20 },
       prices: { kinds: { mortar: [60, 120, 240], cannon: [30, 60, 120] }, crew: { gunner: { price: 40, max: 2 } } } }); // the backend's shape (routes/island.py)

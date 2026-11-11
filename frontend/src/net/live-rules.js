@@ -69,9 +69,11 @@ export const EXTRA_EVENTS = ['lamp', 'duel'];
 // drawn, like the class harbor), so the wave's broadcasts reach every defender. Only these broadcast
 // events pass, each checked field by field (readWaveMessage); a malformed one is dropped.
 export const PIRATE_POINT_PLACE = 'pirate_point';
-// captain_shot is the captain's musket (TOWER-DEFENSE.md §10); island_changed says "somebody built or
-// upgraded here, read the island again" (co-op builds, §6), and carries no wave.
-export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed'];
+// captain_shot is the captain's musket (TOWER-DEFENSE.md §10), captain_strike the cutlass and wall_rebuild
+// a broken wall put back up (§12); island_changed says "somebody built or upgraded here, read the island
+// again" (co-op builds, §6), and carries no wave.
+export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
+  'wall_rebuild', 'captain_strike'];
 export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second)
 export const MIN_WAVE_GAP_MS = 150; // and accept one per captain and kind this often
 const ISLAND_ROOM_PLACE = /^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}$/;
@@ -320,6 +322,8 @@ const isWaveTime = value => typeof value === 'number' && Number.isFinite(value) 
 const isCoord = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500;
 const isLampAge = value => value === null || (Number.isInteger(value) && value >= 0 && value <= 3600000);
 const hasKeys = (data, keys) => Object.keys(data).length === keys.length && keys.every(key => Object.hasOwn(data, key));
+const isCaptainBlow = data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'level', 'x', 'z']) && WAVE_ITEM.test(String(data.targetId))
+  && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5 && [data.x, data.z].every(isCoord);
 const WAVE_DATA = {
   wave_start: data => hasKeys(data, ['waveId', 'seed', 'startsAt']) && Number.isSafeInteger(data.seed) && data.seed >= 0
     && typeof data.startsAt === 'string' && data.startsAt.length <= 40 && Number.isFinite(Date.parse(data.startsAt)),
@@ -328,8 +332,9 @@ const WAVE_DATA = {
   lamps_lit: data => hasKeys(data, ['by', 'seq', 't', 'waveId']),
   lamp: data => hasKeys(data, ['v', 'lamps', 'relit', 'started', 'waveId']) && data.v === 1 && Array.isArray(data.lamps)
     && data.lamps.length === 3 && data.lamps.every(isLampAge) && isLampAge(data.relit) && isLampAge(data.started),
-  captain_shot: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'level', 'x', 'z']) && WAVE_ITEM.test(String(data.targetId))
-    && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5 && [data.x, data.z].every(isCoord),
+  captain_shot: data => isCaptainBlow(data),
+  captain_strike: data => isCaptainBlow(data),
+  wall_rebuild: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'wallId']) && WAVE_ITEM.test(String(data.wallId)),
   island_changed: data => hasKeys(data, ['spot']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot),
 };
 const NO_WAVE = ['island_changed'];

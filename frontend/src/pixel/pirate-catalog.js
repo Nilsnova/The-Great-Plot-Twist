@@ -22,7 +22,9 @@ Object.assign(pirateDimensions, {
   // Crew figures are 16 x 24 drawn in a 16 x 32 tile (feet on the anchor, like the explorer's 3).
   'crew-gunner': [16, 32, 3], 'crew-carpenter': [16, 32, 3], 'crew-lookout': [16, 32, 3],
   // The explorer in side view with a musket; the body sits centred like the 24 x 32 explorer, facing right.
-  'captain-musket-1': [48, 32, 3], 'captain-musket-2': [48, 32, 3],
+  'captain-musket-1': [48, 32, 3], 'captain-musket-2': [48, 32, 3], 'captain-cutlass': [48, 32, 3],
+  // A boarder on foot (TOWER-DEFENSE.md §12): 16 x 24 in a 16 x 32 tile like the crew; two walking frames and the hack.
+  'pirate-boarder-1': [16, 32, 3], 'pirate-boarder-2': [16, 32, 3], 'pirate-boarder-3': [16, 32, 3],
   'fx-musket-flash': [16, 16, 8], 'fx-mortar-shell': [16, 16, 8], 'fx-level-pip': [16, 16, 8],
 });
 for (const frame of [1, 2, 3, 4]) pirateDimensions[`fx-explosion-${frame}`] = [32, 32, 16];
@@ -38,6 +40,7 @@ export const pirateFrames = {
   warship: ['pirate-warship-1', 'pirate-warship-2', 'pirate-warship-3'],
   mortar: ['island-mortar', 'island-mortar-fire'],
   captain: ['captain-musket-1', 'captain-musket-2'],
+  boarder: ['pirate-boarder-1', 'pirate-boarder-2', 'pirate-boarder-3'],
   smoke: ['fx-smoke-1', 'fx-smoke-2', 'fx-smoke-3'],
   fire: ['fx-fire-1', 'fx-fire-2', 'fx-fire-3'],
   explosion: ['fx-explosion-1', 'fx-explosion-2', 'fx-explosion-3', 'fx-explosion-4'],

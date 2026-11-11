@@ -10,7 +10,8 @@
 // break with the switch on, calls startNextWave() (the island's start route), whose wave_started_server
 // starts the next wave. A lost wave ends the run. The HUD keeps a running "Loot this run".
 // The captain (§10): click or tap a ship in range, or press F for the nearest, to fire your musket
-// (captainLevel(), your own level), sent to the room like a cannon shot.
+// (captainLevel(), your own level), sent to the room like a cannon shot. Boarders (§12) are targets too,
+// and with one within cutlass reach F (or the button) swings the cutlass instead, synced the same way.
 //
 //   const waves = createWaveController({bus, world, getDefenses, finishWave, room, sound, reducedMotion, quality});
 //   waves.update(dt)   every frame (mountPirates drives it)       waves.start(info)  without the bus
@@ -22,7 +23,7 @@
 // room: {send(type, payload), on(type, handler) -> unsubscribe}, the island's or Pirate Point's live room.
 import { CONFIG, createWave } from './sim.js';
 import { INPUT_LEAD_TICKS, ROOM_EVENTS, TICK_SECONDS, createInputSchedule, readMessage, toMessage } from './sync.js';
-import { actionAt, inputFor, promptText, shipAt, tapInput } from './interact.js';
+import { actionAt, boarderAt, inputFor, promptText, shipAt, tapInput } from './interact.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -40,16 +41,26 @@ export const LOST_TITLE = 'The pirates broke through';
 export const LOST_LINE = 'Rebuild and ring the bell again.';
 const readAuto = () => { try { return globalThis.localStorage?.getItem(AUTO_KEY) === '1'; } catch { return false; } };
 const writeAuto = value => { try { globalThis.localStorage?.setItem(AUTO_KEY, value ? '1' : '0'); } catch { /* private mode: kept for this visit */ } };
-/** The nearest ship within the captain's range of (x, z), or null. */
+/** The nearest ship or boarder within the captain's musket range of (x, z), or null. */
 export function captainTarget(player, state, level = 1) {
   const range = CONFIG.captain.levels[Math.min(5, Math.max(1, level)) - 1].range;
   let best = null, bestDistance = range;
-  for (const ship of state?.ships ?? []) {
-    const d = Math.hypot(ship.x - player.x, ship.z - player.z);
-    if (d <= bestDistance) { best = ship; bestDistance = d; }
+  for (const item of [...(state?.boarders ?? []), ...(state?.ships ?? [])]) {
+    const d = Math.hypot(item.x - player.x, item.z - player.z);
+    if (d <= bestDistance) { best = item; bestDistance = d; }
   }
   return best;
 }
+/** The nearest boarder within cutlass reach of (x, z), or null: close quarters (TOWER-DEFENSE.md §12). */
+export function bladeTarget(player, state) {
+  let best = null, bestDistance = CONFIG.captain.cutlass.reach;
+  for (const boarder of state?.boarders ?? []) {
+    const d = Math.hypot(boarder.x - player.x, boarder.z - player.z);
+    if (d <= bestDistance) { best = boarder; bestDistance = d; }
+  }
+  return best;
+}
+const pirateById = (state, id) => state?.boarders?.find(item => item.id === id) ?? state?.ships?.find(item => item.id === id) ?? null;
 let atlasPromise = null;
 
 // The wider view during a wave: cannons reach about 28 units, ships appear about 40 units out, so the
@@ -62,7 +73,8 @@ export const battleZoom = camera => {
 // will come in on), at most 14 units across and 9 units up or down, so the player stays on screen.
 export function battleLean(player, state, lanes = []) {
   if (!player) return { x: 0, z: 0 };
-  const points = state?.ships?.length ? state.ships : lanes;
+  const pirates = [...(state?.ships ?? []), ...(state?.boarders ?? [])];
+  const points = pirates.length ? pirates : lanes;
   if (!points?.length) return { x: 0, z: 0 };
   let x = 0, z = 0;
   for (const point of points) { x += point.x; z += point.z; }
@@ -159,7 +171,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), ...simOptions });
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
-      pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity,
+      pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 } };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
@@ -201,24 +213,43 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     wave.schedule.add(entry, wave.ticks);
   }
 
-  // The captain's musket: at a ship (a tap) or the nearest in range (F), from where the player stands.
+  // The captain's musket: at a ship or boarder (a tap) or the nearest in range (F), from where the player
+  // stands. A boarder within cutlass reach gets the cutlass instead (close quarters, §12).
   function shoot(targetId = null) {
     const player = world.player?.position;
     if (!wave || wave.done || !player || !here()) return false;
     const lvl = myLevel(), stats = CONFIG.captain.levels[lvl - 1], state = wave.state;
-    const ship = targetId ? state.ships.find(item => item.id === targetId) : captainTarget(player, state, lvl);
-    if (!ship || Math.hypot(ship.x - player.x, ship.z - player.z) > stats.range) return false;
+    const named = targetId ? pirateById(state, targetId) : null;
+    const close = named?.id?.startsWith('boarder_') && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
+      ? named : !targetId ? bladeTarget(player, state) : null;
+    if (close) return strike(close);
+    const target = targetId ? named : captainTarget(player, state, lvl);
+    if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
     const t = wave.ticks * TICK_SECONDS;
     if (t - wave.captainAt < stats.reload) return false;
-    const input = { type: 'captain_shot', by: playerId, targetId: ship.id, level: lvl,
+    const input = { type: 'captain_shot', by: playerId, targetId: target.id, level: lvl,
       x: Math.round(player.x * 100) / 100, z: Math.round(player.z * 100) / 100 };
     if (!submit(input)) return false;
     wave.captainAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
     return true;
   }
+  // The cutlass: one blow at a boarder within reach, synced as captain_strike.
+  function strike(boarder) {
+    const player = world.player?.position, t = wave.ticks * TICK_SECONDS;
+    if (t - wave.bladeAt < CONFIG.captain.cutlass.reload) return false;
+    const input = { type: 'captain_strike', by: playerId, targetId: boarder.id, level: myLevel(),
+      x: Math.round(player.x * 100) / 100, z: Math.round(player.z * 100) / 100 };
+    if (!submit(input)) return false;
+    wave.bladeAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
+    return true;
+  }
   function captainShare(current) {
     const reload = CONFIG.captain.levels[myLevel() - 1].reload, t = current.ticks * TICK_SECONDS;
     return Math.max(0, Math.min(1, (t - current.captainAt) / reload));
+  }
+  function bladeShare(current) {
+    const t = current.ticks * TICK_SECONDS;
+    return Math.max(0, Math.min(1, (t - current.bladeAt) / CONFIG.captain.cutlass.reload));
   }
 
   // The break after a won wave.
@@ -245,7 +276,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
   function tap(clientX, clientY) {
     if (!wave || wave.done || blocked() || !here() || !world.unproject) return;
-    const point = world.unproject(clientX, clientY), ship = point && shipAt(point, wave.state);
+    const point = world.unproject(clientX, clientY), boarder = point && boarderAt(point, wave.state);
+    if (boarder) { if (!shoot(boarder.id)) aimAt(point, boarder); return; } // a boarder: cutlass or musket
+    const ship = point && shipAt(point, wave.state);
     const input = wave.action?.kind === 'fire' ? tapInput(wave.action, ship, wave.state) : null;
     if (input) submit(input);
     else aimAt(point, ship); // not manning a cannon (or out of its reach): the musket
@@ -261,7 +294,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     let target = ship && inRange(ship) ? ship : null;
     if (!target) {
       let best = AIM_RADIUS;
-      for (const item of wave.state.ships) {
+      for (const item of [...(wave.state.boarders ?? []), ...wave.state.ships]) {
         const d = Math.hypot(item.x - point.x, item.z - point.z);
         if (d <= best && inRange(item)) { best = d; target = item; }
       }
@@ -347,7 +380,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (pressed) { pressed = false; act(); }
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
     const running = player && current.shown && !current.done && current.state.phase === 'running';
-    current.hud?.musket?.(running ? { share: captainShare(current), ready: !!captainTarget(player, current.state, myLevel()) } : null);
+    const blade = running && !!bladeTarget(player, current.state);
+    current.hud?.musket?.(running ? { share: blade ? bladeShare(current) : captainShare(current), ready: blade || !!captainTarget(player, current.state, myLevel()), blade } : null);
     const captain = player && current.shown && !current.done ? { x: player.x, z: player.z, share: captainShare(current) } : null;
     current.renderer?.update({ state: current.state, simTime, dt, captain });
     if (shake > 0 && world.camera) {

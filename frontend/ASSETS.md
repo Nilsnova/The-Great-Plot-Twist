@@ -393,6 +393,8 @@ Shared GLSL helpers (hash, value noise, Bayer dithering, banding) live in `src/w
 | `build-spot`, `build-spot-glow` | 32 × 32 | Ring with corner brackets marking a free build spot; two frames for a pulse |
 | `crew-gunner`, `crew-carpenter`, `crew-lookout` | 16 × 32 | 16 × 24 crew figures (feet on anchor 3): gunner with ramrod, carpenter with hammer and apron, lookout with brass spyglass |
 | `captain-musket-1`, `-2` | 48 × 32 | The explorer in side view aiming and firing a musket; body centred like the 24 × 32 explorer, facing right |
+| `captain-cutlass` | 48 × 32 | The explorer in side view swinging a cutlass at a boarder (close quarters), with a pale swish; body where the musket pose has it |
+| `pirate-boarder-1`, `-2`, `-3` | 16 × 32 | A pirate boarder on foot (16 × 24, feet on the anchor): red bandana, striped shirt, cutlass; two walking frames and the cutlass raised to hack a wall |
 | `fx-smoke-1` to `-3` | 32 × 32 | Gun smoke puff growing and fading |
 | `fx-fire-1` to `-3` | 32 × 32 | Flames for a burning ship (anchor at the burning timbers), looping |
 | `fx-explosion-1` to `-4` | 32 × 32 | Flash, fireball, smoke with embers and debris, fading smoke |
