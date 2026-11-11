@@ -1,6 +1,6 @@
 // The Harbor cards on a real DOM (headless Chrome): stake buttons send exactly 5, 10 or 25, the server's
 // accepted stake raises harbor_stake_placed, and the open, closed, unavailable, signed-out, refused and
-// empty states show plain words. Fakes from fixtures.js stand in for the server.
+// empty states show plain words. The market stall follows the calls routes ("Up or down in 1 hour?"). Fakes from fixtures.js stand in for the server.
 import {describe, expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 
@@ -24,130 +24,158 @@ const run = (action, argument) => evaluate.withPage(async page => {
 });
 
 describe('market stall card', () => {
-  it('sends exactly 5, 10 or 25 coins on up or down and announces the accepted stake', async () => {
+  it('sends exactly 5, 10 or 25 coins on up or down with an actionUid and announces the accepted call', async () => {
     const result = await run(async () => {
       const {fx, events, tick, press} = await window.harborKit();
       const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
-      const sent = [], labels = [];
-      for (const [stake, side] of [[5, 'rising'], [10, 'falling'], [25, 'rising']]) {
-        const adapter = fx.fakeMarket();
-        const market = createMarketEntry({adapter, now: () => fx.NOW});
+      const sent = [], labels = [], names = [];
+      let n = 0;
+      for (const [stake, side] of [[5, 'up'], [10, 'down'], [25, 'up']]) {
+        const adapter = fx.fakeCalls();
+        const market = createMarketEntry({adapter, now: () => fx.NOW, makeUid: () => `uid-${++n}-abcdefgh`});
         await market.open(); await tick();
         const bitcoin = document.querySelector('[data-asset="harbor-trust"]');
+        names.push(bitcoin.querySelector('.harbor-question').textContent, bitcoin.querySelector(`[data-side="${side}"]`).getAttribute('aria-label'));
         await press(bitcoin, `[data-side="${side}"]`);
         await press(bitcoin, `[data-stake="${stake}"]`);
-        labels.push(bitcoin.querySelector('.harbor-confirm').textContent);
+        labels.push(bitcoin.querySelector('.harbor-confirm').getAttribute('aria-label'));
         await press(bitcoin, '.harbor-confirm'); await tick();
-        sent.push(...adapter.calls.filter(call => call[0] === 'open').map(call => call[1]));
+        sent.push(...adapter.requests.filter(call => call[0] === 'place').map(call => [call[1], call[2]]));
+        names.push(document.querySelector('[data-asset="harbor-trust"] [data-open="true"]')?.textContent);
         market.dispose();
       }
-      return {sent, labels, events};
+      return {sent, labels, names, events};
     });
-    expect(result.sent).toEqual([{companyId: 'harbor-trust', side: 'rising', stake: 5}, {companyId: 'harbor-trust', side: 'falling', stake: 10},
-      {companyId: 'harbor-trust', side: 'rising', stake: 25}]);
-    expect(result.labels).toEqual(['Place 🪙 5 on Up', 'Place 🪙 10 on Down', 'Place 🪙 25 on Up']);
+    expect(result.sent).toEqual([[{asset: 'harbor-trust', direction: 'up', stake: 5}, 'uid-1-abcdefgh'],
+      [{asset: 'harbor-trust', direction: 'down', stake: 10}, 'uid-2-abcdefgh'], [{asset: 'harbor-trust', direction: 'up', stake: 25}, 'uid-3-abcdefgh']]);
+    expect(result.labels).toEqual(['Place 🪙 5 on Up, Bitcoin', 'Place 🪙 10 on Down, Bitcoin', 'Place 🪙 25 on Up, Bitcoin']);
+    expect(result.names.slice(0, 3)).toEqual(['Up or down in 1 hour?', 'Up, Bitcoin', 'You said Up with 🪙 5.Decided in 60 min']);
     expect(result.events).toEqual([{kind: 'market', stake: 5}, {kind: 'market', stake: 10}, {kind: 'market', stake: 25}]);
   });
 
-  it('shows open, closed and unavailable assets, and only the stakes the server accepts', async () => {
+  it('shows prices, closed reasons, open calls counting down and decided results, with nothing preselected', async () => {
     const result = await run(async () => {
       const {fx, tick, text} = await window.harborKit();
       const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
-      const market = createMarketEntry({adapter: fx.fakeMarket({board: fx.marketBoard({minStake: 10})}), now: () => fx.NOW});
+      const calls = [fx.marketCall({asset: 'tidewright-works', settleAt: '2026-11-11T12:42:00Z'}),
+        fx.marketCall({id: 'won', status: 'won', settlePrice: 75000, payout: 20, settleAt: '2026-11-11T11:00:00Z'}),
+        fx.marketCall({id: 'back', asset: 'greyfathom-salvage', status: 'refunded', payout: 10, settleAt: '2026-11-11T11:10:00Z'}),
+        fx.marketCall({id: 'lost', asset: 'greyfathom-salvage', direction: 'down', stake: 5, status: 'lost', payout: 0, settleAt: '2026-11-11T11:00:00Z'})];
+      const market = createMarketEntry({adapter: fx.fakeCalls({calls}), now: () => fx.NOW});
       await market.open(); await tick();
-      const names = [...document.querySelectorAll('[data-asset] h3')].map(node => node.textContent);
-      const stakes = [...document.querySelectorAll('[data-asset="harbor-trust"] [data-stake]')].map(node => node.dataset.stake);
-      const state = {names, stakes, text: text(), confirmDisabled: document.querySelector('.harbor-confirm').disabled,
+      const piece = id => document.querySelector(`[data-asset="${id}"]`).textContent;
+      const state = {names: [...document.querySelectorAll('[data-asset] h3')].map(node => node.textContent),
+        stakes: [...document.querySelectorAll('[data-asset="harbor-trust"] [data-stake]')].map(node => node.dataset.stake),
+        pressed: document.querySelectorAll('[aria-pressed="true"]').length, text: text(),
+        bitcoin: piece('harbor-trust'), ether: piece('tidewright-works'), gold: piece('greyfathom-salvage'),
+        apple: piece('apple'), nvidia: piece('nvidia'),
+        closedPickers: document.querySelectorAll('[data-asset="apple"] .harbor-picker, [data-asset="nvidia"] .harbor-picker').length,
+        confirmDisabled: [...document.querySelectorAll('.harbor-confirm')].every(node => node.disabled),
+        closeButtons: [...document.querySelectorAll('dialog[open] .harbor-card-main button')].filter(node => /close/i.test(node.textContent + (node.getAttribute('aria-label') ?? ''))).length,
         dialog: document.querySelector('dialog[open]').matches('.harbor-card.market-modal')};
       market.dispose();
-      const broken = createMarketEntry({adapter: {...fx.fakeMarket(), board: async () => ({ok: false, code: 'network_error', status: 0})}});
+      const broken = createMarketEntry({adapter: {...fx.fakeCalls(), read: async () => ({ok: false, code: 'network_error', status: 0})}});
       await broken.open(); await tick();
       state.broken = text(); broken.dispose();
       return state;
     });
     expect(result.names).toEqual(['Bitcoin', 'Ether', 'Gold', 'Apple', 'NVIDIA']);
-    expect(result.stakes).toEqual(['10', '25']);
-    expect(result.text).toContain('Bitcoin$74,339');
-    expect(result.text).toContain('Market closed, back at 14:30 Lisbon');
-    expect(result.text).toContain('Prices unavailable right now');
-    expect(result.text).not.toMatch(/leverage|USDT|zero point|fee/i);
+    expect(result.stakes).toEqual(['5', '10', '25']);
+    expect(result.pressed).toBe(0);
     expect(result.confirmDisabled).toBe(true);
+    expect(result.text).toContain('Bitcoin$74,339');
+    expect(result.text).toContain('You have 🪙 100');
+    expect(result.ether).toContain('You said Up with 🪙 10.Decided in 42 min');
+    expect(result.bitcoin).toContain('You won 🪙 +20');
+    expect(result.gold).toContain('Refunded 🪙 10');
+    expect(result.gold).toContain('You said Down with 🪙 5.Lost');
+    expect(result.apple).toContain('Closed outside market hours');
+    expect(result.nvidia).toContain('No price yet');
+    expect(result.nvidia).toContain('Prices unavailable right now');
+    expect(result.closedPickers).toBe(0);
+    expect(result.text).not.toMatch(/leverage|USDT|zero point|fee|position|outside_hours|source_off/i);
+    expect(result.closeButtons).toBe(0); // a call is never closed early: it is decided after its hour
     expect(result.dialog).toBe(true);
     expect(result.broken).toContain('Prices unavailable right now');
     expect(result.broken).toContain('Try again');
   });
 
-  it('asks a signed-out player to sign in instead of saying the session expired', async () => {
+  it('asks a signed-out player to sign in, and says the stall is closed while the flag is off', async () => {
     const result = await run(async () => {
       const {fx, tick, text} = await window.harborKit();
       const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
       let asked = 0;
-      const market = createMarketEntry({adapter: fx.fakeMarket({signedIn: false}), onSignIn: () => asked++, now: () => fx.NOW});
+      const market = createMarketEntry({adapter: fx.fakeCalls({signedIn: false}), onSignIn: () => asked++, now: () => fx.NOW});
       await market.open(); await tick();
       const state = {text: text(), stakeButtons: document.querySelectorAll('[data-stake]').length};
       document.querySelector('.harbor-sign-in button').click();
       market.dispose();
+      const adapter = fx.fakeCalls({off: true});
+      const off = createMarketEntry({adapter, now: () => fx.NOW});
+      await off.open(); await tick();
+      state.off = text(); state.offStakes = document.querySelectorAll('[data-stake]').length;
+      state.offPlaced = adapter.requests.filter(call => call[0] === 'place').length;
+      off.dispose();
       return {...state, asked};
     });
     expect(result.text).toContain('Sign in or join with a class code to place a stake');
     expect(result.text).not.toMatch(/expired/i);
     expect(result.stakeButtons).toBe(0);
     expect(result.asked).toBe(1);
+    expect(result.off).toContain('This stall is closed for now.');
+    expect(result.off).not.toContain('Server words');
+    expect(result.offStakes).toBe(0);
+    expect(result.offPlaced).toBe(0);
   });
 
-  it('words a refusal, and shows the result in coins when a stake is closed', async () => {
-    const result = await run(async () => {
-      const {fx, tick, text, press} = await window.harborKit();
-      const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
-      const refused = createMarketEntry({adapter: fx.fakeMarket({refuse: 'insufficient_funds'}), now: () => fx.NOW});
-      await refused.open(); await tick();
-      const ether = document.querySelector('[data-asset="tidewright-works"]');
-      await press(ether, '[data-side="rising"]'); await press(ether, '[data-stake="25"]'); await press(ether, '.harbor-confirm'); await tick();
-      const refusal = text(); refused.dispose();
-      const holding = createMarketEntry({adapter: fx.fakeMarket({portfolio: fx.emptyPortfolio({positions: [fx.openPosition()]})}), now: () => fx.NOW});
-      await holding.open(); await tick();
-      const before = document.querySelector('[data-asset="harbor-trust"]').textContent;
-      const close = document.querySelector('[data-key="close:pos-1"]');
-      const label = close.getAttribute('aria-label');
-      close.click(); await tick(60);
-      const after = document.querySelector('[data-asset="harbor-trust"]').textContent;
-      holding.dispose();
-      return {refusal, before, label, after};
-    });
-    expect(result.refusal).toContain('You do not have enough coins for this stake.');
-    expect(result.refusal).not.toContain('Server words');
-    expect(result.before).toContain('You said Up with 🪙 10.');
-    expect(result.before).toContain('Now 🪙 +3');
-    expect(result.label).toBe('Close your Up stake on Bitcoin');
-    expect(result.after).toContain('You won 🪙 +10');
-  });
-
-  // Replaces the browser chaos journey of the old Exchange panel (check-online-market.js --chaos).
-  it('says it did not hear back and sends the very same stake again, with the same actionUid', async () => {
+  it('words refusals in plain words and announces nothing', async () => {
     const result = await run(async () => {
       const {fx, events, tick, text, press} = await window.harborKit();
       const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
-      const adapter = fx.fakeMarket();
-      const open = adapter.open.bind(adapter);
+      const out = {};
+      for (const code of ['insufficient_funds', 'market_closed', 'too_many_calls']) {
+        const refused = createMarketEntry({adapter: fx.fakeCalls({refuse: code}), now: () => fx.NOW});
+        await refused.open(); await tick();
+        const ether = document.querySelector('[data-asset="tidewright-works"]');
+        await press(ether, '[data-side="up"]'); await press(ether, '[data-stake="25"]'); await press(ether, '.harbor-confirm'); await tick();
+        out[code] = text(); refused.dispose();
+      }
+      return {out, events};
+    });
+    expect(result.out.insufficient_funds).toContain('You do not have enough coins for this stake.');
+    expect(result.out.market_closed).toContain('The market just closed. Try again when it opens.');
+    expect(result.out.too_many_calls).toContain('You have 3 calls waiting. Place a new one once one is decided.');
+    for (const words of Object.values(result.out)) expect(words).not.toContain('Server words');
+    expect(result.events).toEqual([]);
+  });
+
+  // Replaces the browser chaos journey of the old Exchange panel (check-online-market.js --chaos).
+  it('says it did not hear back and sends the very same call again, with the same actionUid', async () => {
+    const result = await run(async () => {
+      const {fx, events, tick, text, press} = await window.harborKit();
+      const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
+      const adapter = fx.fakeCalls();
+      const place = adapter.place.bind(adapter);
       let first = true;
-      adapter.open = async (body, options) => { if (first) { first = false; adapter.calls.push(['open', body, options.uid]); return {ok: false, status: 0, code: 'outcome_unknown', message: ''}; } return open(body, options); };
+      adapter.place = async (body, options) => { if (first) { first = false; adapter.requests.push(['place', body, options.uid]); return {ok: false, status: 0, code: 'outcome_unknown', message: ''}; } return place(body, options); };
       const market = createMarketEntry({adapter, now: () => fx.NOW, makeUid: (() => { let n = 0; return () => `uid-${++n}-abcdefgh`; })()});
       await market.open(); await tick();
       const ether = document.querySelector('[data-asset="tidewright-works"]');
-      await press(ether, '[data-side="falling"]'); await press(ether, '[data-stake="10"]'); await press(ether, '.harbor-confirm'); await tick();
+      await press(ether, '[data-side="down"]'); await press(ether, '[data-stake="10"]'); await press(ether, '.harbor-confirm'); await tick();
       const unknown = text(), again = [...document.querySelectorAll('dialog[open] .harbor-status button')].map(button => button.textContent);
       document.querySelector('dialog[open] .harbor-status button').click(); await tick(60);
-      const opens = adapter.calls.filter(call => call[0] === 'open').map(call => [call[1], call[2]]);
+      const places = adapter.requests.filter(call => call[0] === 'place').map(call => [call[1], call[2]]);
       const after = document.querySelector('[data-asset="tidewright-works"]').textContent;
       market.dispose();
-      return {unknown, again, opens, after, events};
+      return {unknown, again, places, after, events};
     });
     expect(result.unknown).toContain('We did not hear back.');
     expect(result.again).toEqual(['Send again']);
-    expect(result.opens).toHaveLength(2);
-    expect(result.opens[1]).toEqual(result.opens[0]);
-    expect(result.opens[0][1]).toBe('uid-1-abcdefgh');
+    expect(result.places).toHaveLength(2);
+    expect(result.places[1]).toEqual(result.places[0]);
+    expect(result.places[0]).toEqual([{asset: 'tidewright-works', direction: 'down', stake: 10}, 'uid-1-abcdefgh']);
     expect(result.after).toContain('Your 🪙 10 is on Down.');
+    expect(result.after).toContain('You said Down with 🪙 10.Decided in 60 min');
     expect(result.events).toEqual([{kind: 'market', stake: 10}]);
   });
 });

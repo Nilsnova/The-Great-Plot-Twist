@@ -1,7 +1,8 @@
-// Audit the Harbor market stall (lane H) that the market hall hotspot opens, with public native controls.
-// The hotspot opens the card in the local game (?market=local has no prices, so it shows its unavailable
-// state); the same card is then audited with prices from the made-up fixtures of the Harbor card tests:
-// up or down, a 5 / 10 / 25 stake, the confirm button and the placed stake. No /api/market request.
+// Audit the Harbor market stall (lane H, "Up or down in 1 hour?") that the market hall hotspot opens, with
+// public native controls. The hotspot opens the card in the local game (?market=local: the in-memory
+// calls fake, with prices and calls); the same card is then audited with the made-up calls fixture of the
+// Harbor card tests: up or down, a 5 / 10 / 25 stake, the confirm button and the placed call with its
+// countdown. No /api/market* request.
 import {startFromTitle} from './shell-browser-tools.js';
 
 const selector='.harbor-market[open]';
@@ -23,6 +24,7 @@ async function openFromHotspot(page,url){
   await page.keyboard.press('KeyE');
   await page.locator(selector).waitFor();
   await page.locator(selector+' .harbor-footnote').waitFor();
+  await page.locator(selector+' .harbor-asset .harbor-picker').first().waitFor();
 }
 
 // The same card with made-up prices, opened over the game the way the hotspot opens it.
@@ -31,7 +33,7 @@ async function openWithPrices(page){
     const fx=await import('/tests/harbor/fixtures.js');
     const {createMarketEntry}=await import('/src/harbor/market-card.js');
     const canvas=document.querySelector('canvas[tabindex="0"]');
-    window.__auditMarket=createMarketEntry({container:document.querySelector('#game'),adapter:fx.fakeMarket({stocks:'open'}),
+    window.__auditMarket=createMarketEntry({container:document.querySelector('#game'),adapter:fx.fakeCalls({stocks:'open'}),
       now:()=>fx.NOW,resetInput:()=>window.__island.resetInput?.(),focusGame:()=>canvas?.focus({preventScroll:true})});
     await window.__auditMarket.open();
   });
@@ -82,6 +84,9 @@ export async function auditMarketPanel(page,{url,audit,capture}){
       const current=await notices(panel);
       checks.simulationNotice&&=current.simulationNotice;checks.creditsOnlyInSettings&&=current.creditsOnlyInSettings;
     };
+    checks.hotspotPrices=await panel.locator('.harbor-asset').count()===5
+      &&/^\$[\d,.]+$/.test(await panel.locator('.harbor-asset .harbor-price').first().textContent())
+      &&await panel.locator('.harbor-question').first().textContent()==='Up or down in 1 hour?';
     await auditState('market-hotspot');
     const hotspot=await closesToGame(page);
     checks.hotspotEscapeClosed=hotspot.escapeClosed;checks.hotspotNoPause=hotspot.noPause;checks.hotspotCanvasFocus=hotspot.canvasFocus;
@@ -100,6 +105,7 @@ export async function auditMarketPanel(page,{url,audit,capture}){
     // Keyboard only: the confirm button takes Enter.
     await confirm.focus();await page.keyboard.press('Enter');
     await asset.locator('.harbor-notice').filter({hasText:'Your 🪙 10 is on Up.'}).waitFor();
+    checks.placedCountdown=await asset.locator('.harbor-call[data-open="true"] .harbor-now').textContent()==='Decided in 60 min';
     await auditState('market-placed');
     Object.assign(checks,await shortPanel(page,capture));
     await page.setViewportSize({width:1280,height:900});

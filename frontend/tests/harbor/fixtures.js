@@ -2,56 +2,45 @@
 // each fake records what it was sent and answers what the test asked for. Prices and teams are invented.
 export const NOW = Date.parse('2026-11-11T12:00:00Z');
 
-const company = (id, name, follows, kind, price, extra = {}) => ({id, name, ticker: id.slice(0, 4).toUpperCase(), kind, follows,
-  market: kind === 'stock' ? 'us' : 'always', currency: kind === 'stock' ? 'USD' : 'USDT', priceDecimals: 2, price,
-  priceAt: '2026-11-11T11:59:30Z', source: 'live', status: 'open', reason: null, holiday: null, opensAt: null, closesAt: null,
-  delisted: false, canOpen: true, canClose: true, zeroPrices: {rising: price * 0.9, falling: price * 1.1}, ...extra});
+// GET /api/market/calls assets (INTERFACES.md, the market stall). stocks: 'closed' (Apple closed outside
+// market hours, NVIDIA without a price because its source is off) or 'open'.
+export const callAsset = (id, name, price, extra = {}) => ({id, name, price, priceAt: '2026-11-11T11:59:30Z', open: true,
+  closedReason: null, ...extra});
+export const callAssets = ({stocks = 'closed', priceShift = 0} = {}) => [
+  callAsset('harbor-trust', 'Bitcoin', 74339.12 + priceShift),
+  callAsset('tidewright-works', 'Ether', 3412.55),
+  callAsset('greyfathom-salvage', 'Gold', 3987.4),
+  callAsset('apple', 'Apple', 271.2, stocks === 'open' ? {} : {open: false, closedReason: 'outside_hours'}),
+  callAsset('nvidia', 'NVIDIA', 190.1, stocks === 'open' ? {} : {open: false, closedReason: 'source_off', price: null, priceAt: null}),
+];
+// One call; the default is open on Bitcoin, decided at 12:18, 18 minutes after NOW.
+export const marketCall = (extra = {}) => ({id: 'call-1', asset: 'harbor-trust', direction: 'up', stake: 10, openPrice: 74000,
+  openedAt: '2026-11-11T11:18:00Z', settleAt: '2026-11-11T12:18:00Z', status: 'open', settlePrice: null, payout: null, ...extra});
+const REFUSAL_STATUS = {insufficient_funds: 409, market_closed: 409, too_many_calls: 409, bad_stake: 422, no_such_asset: 404,
+  validation_error: 422, too_many_requests: 429};
 
-export function marketBoard({minStake = 5, maxStake = 500, tradingEnabled = true, stocks = 'closed', priceShift = 0} = {}) {
-  const closed = {status: 'closed', reason: 'outside_hours', opensAt: '2026-11-11T14:30:00Z', canOpen: false, canClose: false, zeroPrices: null};
-  const none = {status: 'unavailable', reason: 'no_price', price: null, priceAt: null, source: 'none', canOpen: false, canClose: false, zeroPrices: null};
-  const stockState = stocks === 'open' ? {} : stocks === 'none' ? none : closed;
-  return {generatedAt: '2026-11-11T12:00:00Z', demo: false, demoNote: null, tradingEnabled, relit: false,
-    companies: [
-      company('harbor-trust', 'Saltreach Harbor Trust', 'Bitcoin', 'island', 74339.12 + priceShift),
-      company('tidewright-works', 'Tidewright Works', 'Ether', 'island', 3412.55),
-      company('swiftwater-ferries', 'Swiftwater Ferries', 'Solana', 'island', 162.84),
-      company('greyfathom-salvage', 'Greyfathom Salvage', 'Gold (PAXG, one troy ounce)', 'island', 3987.4),
-      company('apple', 'Apple', 'Apple Inc. shares (Nasdaq)', 'stock', 271.2, stockState),
-      company('nvidia', 'NVIDIA', 'NVIDIA Corporation shares (Nasdaq)', 'stock', 190.1, stocks === 'open' ? {} : none),
-      company('tesla', 'Tesla', 'Tesla Inc. shares (Nasdaq)', 'stock', 318.4),
-    ],
-    rules: {leverage: 10, zeroPointMovePercent: 10, feePercent: 2, minStake, maxStake, dailyStakeCap: 2000, maxOpenPositions: 20,
-      stakeChoices: [5, 10, 25, 50].filter(stake => stake >= minStake).map(stake => ({stake, fee: 1, total: stake + 1}))},
-    credits: [], simulationNote: 'Play money only.'};
-}
-
-export const emptyPortfolio = (extra = {}) => ({coins: 100, demo: false, feePercent: 2, stakedToday: 0, dailyStakeCap: 2000,
-  openCount: 0, maxOpenPositions: 20, positions: [], recentlyClosed: [], generatedAt: '2026-11-11T12:00:00Z', ...extra});
-export const openPosition = (extra = {}) => ({id: 'pos-1', companyId: 'harbor-trust', name: 'Saltreach Harbor Trust', side: 'rising',
-  mode: 'live', stake: 10, openFee: 1, entryPrice: 74000, zeroPrice: 66600, price: 74339, value: 10, profit: 0, result: 3,
-  closeFee: 1, wouldReceive: 13, canClose: true, companyStatus: 'open', ...extra});
-
-// The Exchange adapter surface (screens/market/http.js): every call resolves, none throws.
-export function fakeMarket({board = marketBoard(), portfolio = emptyPortfolio(), signedIn = true, refuse = null, closedAs = null} = {}) {
-  const calls = [];
-  let current = structuredClone(portfolio);
-  return {calls,
-    async board() { calls.push(['board']); return {ok: true, data: structuredClone(board)}; },
-    async portfolio() { calls.push(['portfolio']); return signedIn ? {ok: true, data: structuredClone(current)}
-      : {ok: false, code: 'unauthorized', status: 401, message: 'Session expired. Sign in again.'}; },
-    async open(body, {uid} = {}) {
-      calls.push(['open', body, uid]);
-      if (refuse) return {ok: false, code: refuse, status: 409, message: 'Server words'};
-      current = {...current, positions: [openPosition({id: `pos-${calls.length}`, companyId: body.companyId, side: body.side, stake: body.stake, result: -1})]};
-      return {ok: true, data: {positionId: `pos-${calls.length}`, ...body}};
+// The market stall adapter surface (src/harbor/calls-http.js): read() and place(body, {uid}); every call resolves.
+// `requests` records what the card sent: ['read'] and ['place', body, uid].
+export function fakeCalls({assets, stocks = 'closed', calls = [], balance = 100, signedIn = true, off = false, refuse = null} = {}) {
+  const requests = [], board = assets ?? callAssets({stocks});
+  let own = structuredClone(calls), coins = balance;
+  const receipts = new Map();
+  return {requests,
+    async read() {
+      requests.push(['read']);
+      if (!signedIn) return {ok: false, code: 'unauthorized', status: 401, message: 'Session expired. Sign in again.'};
+      if (off) return {ok: false, code: 'feature_off', status: 404, message: 'Server words'};
+      return {ok: true, data: structuredClone({assets: board, calls: own, balance: coins})};
     },
-    async close(body, {uid} = {}) {
-      calls.push(['close', body, uid]);
-      const position = current.positions.find(row => row.id === body.positionId);
-      current = {...current, positions: current.positions.filter(row => row.id !== body.positionId),
-        recentlyClosed: [{...position, closedAs: closedAs ?? 'closed', coinsChange: 21, result: 10}, ...current.recentlyClosed]};
-      return {ok: true, data: {positionId: body.positionId, closedAs: 'closed', coinsChange: 21, coins: 121}};
+    async place(body, {uid} = {}) {
+      requests.push(['place', body, uid]);
+      if (refuse) return {ok: false, code: refuse, status: REFUSAL_STATUS[refuse] ?? 409, message: 'Server words'};
+      if (!receipts.has(uid)) {
+        const call = marketCall({id: `call-${requests.length}`, asset: body.asset, direction: body.direction, stake: body.stake,
+          openPrice: 74339.12, openedAt: '2026-11-11T12:00:00Z', settleAt: '2026-11-11T13:00:00Z'});
+        own = [...own, call]; coins -= body.stake; receipts.set(uid, call);
+      }
+      return {ok: true, data: structuredClone({...receipts.get(uid), balance: coins})};
     },
     signIn() { signedIn = true; }};
 }

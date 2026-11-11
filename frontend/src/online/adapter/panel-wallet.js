@@ -5,14 +5,14 @@ const nothingDone = {
   predictions: new Set(['predictions_unavailable', 'source_unavailable', 'database_not_configured']),
 };
 function writeKind(path) {
-  if (path === '/api/market/open' || path === '/api/market/close') return 'market';
+  if (path === '/api/market/open' || path === '/api/market/close' || path === '/api/market/calls') return 'market';
   if (path === '/api/predictions/stake') return 'predictions';
   if (path === '/api/island/build' || path === '/api/waves/finish') return 'island';
   if (path === '/api/duels' || /^\/api\/duels\/[^/?#]+\/(move|cancel)$/.test(path)) return 'arena';
   return null;
 }
 function walletRead(path) {
-  return ['/api/market/portfolio', '/api/predictions/mine', '/api/duels', '/api/island'].includes(path)
+  return ['/api/market/portfolio', '/api/market/calls', '/api/predictions/mine', '/api/duels', '/api/island'].includes(path)
     || /^\/api\/duels\/[^/?#]+$/.test(path);
 }
 function mayHaveChanged(kind, result) {
@@ -79,9 +79,10 @@ export function createPanelWallet(ctx) {
       if (kind && mayHaveChanged(kind, result)) { record.hint = null; nudge(record); }
       return;
     }
-    if (!walletRead(path) || result?.ok !== true || !coins(result?.data?.coins)) return;
+    // GET /api/market/calls names the wallet `balance` (a due call is paid on that read).
+    const hint = path === '/api/market/calls' ? result?.data?.balance : result?.data?.coins;
+    if (!walletRead(path) || result?.ok !== true || !coins(hint)) return;
     if (record.basis !== ctx.state.me) { record.basis = ctx.state.me; record.hint = null; }
-    const hint = result.data.coins;
     if (hint === record.hint) return;
     record.hint = hint;
     if (hint !== ctx.state.me?.coins) nudge(record);

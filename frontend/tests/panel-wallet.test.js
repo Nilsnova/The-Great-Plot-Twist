@@ -75,7 +75,7 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     expect(view.captain.coins).toBe(1000); expect(view).not.toHaveProperty('rewards');
   });
 
-  it.each(['/api/market/open', '/api/market/close', '/api/predictions/stake', '/api/duels',
+  it.each(['/api/market/open', '/api/market/close', '/api/market/calls', '/api/predictions/stake', '/api/duels',
     `/api/duels/${randomUUID()}/move`, `/api/duels/${randomUUID()}/cancel`])
   ('reconciles the published wallet write %s without adopting its coin fields', async path => {
     const f = setup(), response = good({coins: 123456}); f.posts.push(() => Promise.resolve(response));
@@ -146,6 +146,15 @@ describe('panel observations reconcile the shared authoritative wallet', () => {
     f.setMe(me(1100)); expect(await f.wallet.api.get(path)).toBe(response); await f.wallet.waitIdle();
     expect(f.meReads()).toHaveLength(1);
     expect(f.store.read().captain.coins).toBe(1100); expect(f.api.post).not.toHaveBeenCalled();
+  });
+
+  it('takes the balance of GET /api/market/calls (a due call is paid on that read) as a passive hint', async () => {
+    const f = setup(), response = good({assets: [], calls: [], balance: 1020}); f.gets.push(() => Promise.resolve(response));
+    expect(await f.wallet.api.get('/api/market/calls')).toBe(response); await f.wallet.waitIdle();
+    expect(f.meReads()).toHaveLength(1); expect(f.api.post).not.toHaveBeenCalled();
+    f.gets.push(() => Promise.resolve(good({assets: [], calls: [], coins: 1030})));
+    await f.wallet.api.get('/api/market/calls'); await f.wallet.waitIdle();
+    expect(f.meReads()).toHaveLength(1);
   });
 
   it('does not become a retry owner for one failed passive hint; a new hint, basis or write re-arms it', async () => {
