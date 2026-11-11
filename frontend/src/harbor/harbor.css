@@ -1,42 +1,49 @@
-/* Harbor cards (lane H). Semantic markup, every class starts with harbor-; lane U restyles with shared tokens later. */
-.harbor-card{--harbor-ink:#ece0b8;--harbor-quiet:#c9bf98;--harbor-line:#7f8a5c;--harbor-good:#b9e39a;--harbor-bad:#ffb4a0;--harbor-warn:#ffe08a;width:min(680px,calc(100vw - 24px));font-size:16px}
-.harbor-card-body,.harbor-card-main{display:grid;gap:14px}
+/* Harbor cards (lane H) in the UI kit's tokens and type (src/ui/kit/kit.css): the one brass panel, the
+   kit font inside, gold only for the chosen side, stake and the confirm button. Every class starts with
+   harbor-. The cards also carry the old panels' marker classes (market-modal, sports-modal, desk-modal)
+   for Escape and focus, so the first rules undo those panels' own frames. */
+.kit-modal.harbor-card{--harbor-ink:var(--u-ink);--harbor-quiet:var(--u-mute);--harbor-line:#3d6a6b;--harbor-good:#b9e39a;--harbor-bad:var(--u-rust);--harbor-warn:var(--u-gold);
+  width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 40px);padding:0 22px 22px;border:0;color:var(--u-ink);background:linear-gradient(#173c42,var(--u-sea) 40%);font:var(--u-sm)/1.55 var(--u-font)}
+.kit-modal.harbor-card .kit-modal-header{margin:0 -22px 20px;padding:10px 12px 10px 22px;background:var(--u-parch)}
+.kit-modal.harbor-card .kit-modal-body{padding:0;max-height:none;overflow:visible}
+.harbor-card :is(button,input,select,p,li,h3,small){font-family:var(--u-font)}
+.harbor-card-body,.harbor-card-main{display:grid;gap:var(--u-3)}
 .harbor-list:empty{display:none}
 .harbor-stall>button{justify-self:start}
 .harbor-status:empty,.harbor-status[hidden]{display:none}
-.harbor-status{margin:0;padding:10px 12px;border:2px solid var(--harbor-line);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.harbor-status{margin:0;padding:10px 12px;border:2px solid var(--harbor-line);background:var(--u-deep);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .harbor-status[data-tone=warn]{border-color:var(--harbor-warn);color:var(--harbor-warn)}
-.harbor-list,.harbor-stalls{display:grid;gap:12px;margin:0;padding:0;list-style:none}
-.harbor-item,.harbor-stall{border:2px solid var(--harbor-line);padding:12px 14px;display:grid;gap:8px;background:#22382c}
+.harbor-list,.harbor-stalls{display:grid;gap:var(--u-3);margin:0;padding:0;list-style:none}
+.harbor-item,.harbor-stall{border:2px solid var(--harbor-line);padding:12px 14px;display:grid;gap:var(--u-2);background:var(--u-card);box-shadow:inset 0 2px #ffffff0f,0 3px var(--u-deep)}
 .harbor-item p,.harbor-stall p{margin:0}
 .harbor-item-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
-.harbor-item-title{margin:0;font-size:18px;line-height:1.35;color:#f1dfaa;overflow-wrap:anywhere}
-.harbor-price{font-size:18px;font-weight:bold}
+.harbor-item-title{margin:0;font:700 var(--u-md)/1.35 var(--u-serif);color:var(--u-gold);overflow-wrap:anywhere}
+.harbor-price{font-size:var(--u-md);font-weight:bold}
 .harbor-spark{width:96px;height:28px;align-self:center}
 .harbor-spark polyline{fill:none;stroke:var(--harbor-quiet);stroke-width:2}
 .harbor-spark[data-trend=up] polyline{stroke:var(--harbor-good)}
 .harbor-spark[data-trend=down] polyline{stroke:var(--harbor-bad)}
 .harbor-quiet,.harbor-reason,.harbor-footnote{color:var(--harbor-quiet)}
-.harbor-footnote{font-size:16px;margin:0}
+.harbor-footnote{font-size:var(--u-sm);margin:0}
 .harbor-footnote a{color:inherit}
-.harbor-empty{margin:0;font-size:18px}
+.harbor-empty{margin:0;font-size:var(--u-md)}
 .harbor-notice{font-weight:bold}
 .harbor-good{color:var(--harbor-good)}
 .harbor-bad{color:var(--harbor-bad)}
 .harbor-holding{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
 .harbor-now{font-weight:bold}
-.harbor-picker{display:grid;gap:8px}
-.harbor-choices{display:flex;flex-wrap:wrap;gap:8px}
-.harbor-choices .harbor-choice{display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:88px;min-height:44px;text-align:center}
-.harbor-choice[aria-pressed=true]{background:#7b6a37;border-color:#f3d58c;color:#fff7dc;outline:2px solid #f3d58c;outline-offset:1px}
+.harbor-picker{display:grid;gap:var(--u-2)}
+.harbor-choices{display:flex;flex-wrap:wrap;gap:var(--u-2)}
+.harbor-choices .harbor-choice{display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:88px;min-height:44px;text-align:center;font:600 var(--u-sm)/1.3 var(--u-font);background:var(--u-sea)}
+.harbor-choice[aria-pressed=true]{background:var(--u-gold);border-color:var(--u-deep);color:#2b1d06;box-shadow:inset 0 -3px #b5873a}
 .harbor-confirm{justify-self:start;min-height:44px}
-.harbor-confirm:not(:disabled){background:#8a6f2c;border-color:#f3d58c;color:#fff7dc}
 .harbor-button{min-height:44px}
-.harbor-sign-in{margin:0;padding:10px 12px;border:2px dashed var(--harbor-line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.harbor-sign-in{margin:0;padding:10px 12px;border:2px dashed var(--harbor-line);display:flex;flex-wrap:wrap;gap:var(--u-2);align-items:center}
 .harbor-own{display:grid;gap:6px}
-.harbor-own-title{margin:0;font-size:18px}
+.harbor-own-title{margin:0;font:700 var(--u-md)/1.35 var(--u-serif);color:var(--u-gold)}
 .harbor-own-list{margin:0;padding-left:20px;display:grid;gap:4px}
 .harbor-pirates{font-size:20px;font-weight:bold}
 .harbor-weather-icon{display:inline-block;width:1.4em;text-align:center}
-@media(max-width:480px){.harbor-card{width:calc(100vw - 16px);padding:12px}.harbor-item,.harbor-stall{padding:10px}.harbor-choices .harbor-choice{flex:1 1 30%}.harbor-confirm{justify-self:stretch}}
+@media(max-width:600px){.kit-modal.harbor-card{width:calc(100vw - 16px);padding:0 14px 16px}.kit-modal.harbor-card .kit-modal-header{margin:0 -14px 16px;padding:8px 8px 8px 14px}}
+@media(max-width:480px){.harbor-item,.harbor-stall{padding:10px}.harbor-choices .harbor-choice{flex:1 1 30%;min-width:0}.harbor-confirm{justify-self:stretch}}
 @media(prefers-reduced-motion:reduce){.harbor-card *{transition:none!important;animation:none!important}}
