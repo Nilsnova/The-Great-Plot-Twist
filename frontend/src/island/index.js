@@ -49,7 +49,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return true;
   }
   // The player's balance is the island's `coins` (GET /api/island and every answer after it); the HUD shows it.
-  const tellCoins = coins => { if (!disposed && Number.isSafeInteger(coins)) { try { onCoins(coins); } catch { /* The HUD cannot stop the island. */ } } };
+  const tellCoins = (coins, options) => { if (!disposed && Number.isSafeInteger(coins)) { try { onCoins(coins, options); } catch { /* The HUD cannot stop the island. */ } } };
   // A fresh island answer: coins and captain to the HUD, and a toast for every unlock it brings (§9).
   const setOwn = next => {
     const before = own; own = next; tellCoins(next?.coins); tellCaptain(next);
@@ -68,7 +68,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     defensesOf: () => defenses(target()?.spots ?? [])});
   const stopFinished = on(WAVE_FINISHED, event => {
     if (disposed) return;
-    tellCoins(event.coins);
+    tellCoins(event.coins, {tick: true}); // the loot counts up in the HUD
     if (!own) return;
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();

@@ -40,7 +40,9 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   auto.type = 'checkbox'; auto.addEventListener('change', () => onAuto(auto.checked));
   autoLabel.append(auto, node('span', '', 'Auto next wave'));
   pause.append(pauseTitle, pauseLine, next, autoLabel);
-  layer.append(bar, countdown, warning, prompt, banner, pause); container.append(layer);
+  // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
+  const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
+  layer.append(edge, bar, countdown, warning, prompt, banner, pause); container.append(layer);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', hurtUntil = 0, hp = null;
 
   return {
@@ -58,7 +60,10 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (!state) { bar.hidden = true; return; }
       const text = waveBarText(state);
       bar.hidden = false;
-      if (hp !== null && state.islandHp < hp) hurtUntil = performance.now() + 400;
+      if (hp !== null && state.islandHp < hp) {
+        hurtUntil = performance.now() + 400;
+        if (!reducedMotion()) { edge.classList.remove('pirate-flash'); void edge.offsetWidth; edge.classList.add('pirate-flash'); }
+      }
       hp = state.islandHp;
       musket.hidden = !(state.wave <= MUSKET_HINT_WAVES);
       bar.classList.toggle('pirate-hurt', performance.now() < hurtUntil);

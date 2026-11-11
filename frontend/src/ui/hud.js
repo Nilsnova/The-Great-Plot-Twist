@@ -7,7 +7,8 @@ import {places} from '../world/places/registry.js';
 import {settings} from '../config.js';
 import {getWeather} from '../world/weather.js';
 import {on as defaultOn} from '../core/events.js';
-import {getPreferences} from '../settings/preferences.js';
+import {getPreferences, reducedMotion} from '../settings/preferences.js';
+import {counterValue} from './coin-counter.js';
 import {addMenuExtras, addMenuStatus} from '../shell/menu-extras.js';
 import {createQuestStrip} from './quest-strip.js';
 import {QUEST_EVENTS, PLACE_ARRIVED} from './quest-events.js';
@@ -17,6 +18,7 @@ import {coinsSpoken, formatCoins} from '../lib/coins.js';
 import './hud.css';
 
 export const ARRIVAL_MS = 2000;
+export const COIN_TICK_MS = 900;
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
 const local = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 export const weatherLabel = weather => weather.rain > 0.5 ? 'Rain at sea' : weather.fog > 0.7 ? 'Sea mist' : weather.cloudCover > 0.6 ? 'Overcast' : 'Fair skies';
@@ -48,10 +50,24 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   overlay.append(purse, right, banner, chapter, prompt);
   container.append(overlay);
 
+  let tickFrame = 0;
   function drawCoins() {
+    cancelAnimationFrame(tickFrame);
     const known = Number.isFinite(coins);
     purseText.textContent = known ? formatCoins(coins) : '🪙 …';
     purse.setAttribute('aria-label', known ? coinsSpoken(coins) : 'Coins not loaded yet');
+  }
+  // Loot: the number counts up to the new balance (the label says the new balance at once).
+  function tickCoins(from) {
+    drawCoins();
+    const target = coins, start = performance.now();
+    const step = () => {
+      if (disposed || coins !== target) return;
+      const fraction = Math.min(1, (performance.now() - start) / COIN_TICK_MS);
+      purseText.textContent = formatCoins(counterValue(from, target, fraction));
+      if (fraction < 1) tickFrame = requestAnimationFrame(step);
+    };
+    step();
   }
   drawCoins();
 
@@ -100,7 +116,12 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
       if (state === 'expired' && account !== 'expired') toast({text: 'Your sign-in ran out.', next: 'Sign in again from Menu › Settings to keep playing online.', tone: 'error'});
       account = state;
     },
-    setCoins(value) { if (Number.isFinite(value)) { coins = Math.round(value); drawCoins(); } },
+    // {tick: true} (loot after a wave): an increase counts up, unless motion is reduced.
+    setCoins(value, {tick = false} = {}) {
+      if (!Number.isFinite(value)) return;
+      const from = coins; coins = Math.round(value);
+      if (tick && Number.isFinite(from) && coins > from && !reducedMotion()) tickCoins(from); else drawCoins();
+    },
     setCaptainLevel(level) {
       const known = Number.isSafeInteger(level) && level > 0;
       captainBadge.hidden = !known;captainBadge.textContent = known ? `⚔️ ${level}` : '';
@@ -119,7 +140,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
       showBanner(places[place]?.name ?? '');
       actions.focus();
     },
-    dispose() { if (disposed) return; disposed = true; clearTimeout(bannerTimer); stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
+    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
     arrive,
     message(text, options = {}) { toast({text, ...options}); },
     notify() { /* The E prompt already names the hotspot; no extra toast. */ },

@@ -73,6 +73,43 @@ it('with the island as coin source, the wallet never overwrites the island balan
   });
 });
 
+it('counts the loot up to the new balance and says the new balance at once',async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    const result=await page.evaluate(async()=>{
+      const hud=window.testHud,text=()=>document.querySelector('.hud-coins').textContent,label=()=>document.querySelector('.hud-coins').getAttribute('aria-label');
+      hud.setCoinSource('island');hud.setCoins(100);
+      hud.setCoins(160,{tick:true});const first={text:text(),label:label(),coins:hud.coins};
+      await new Promise(resolve=>setTimeout(resolve,400));const middle=Number(text().replace(/\D/g,''));
+      await new Promise(resolve=>setTimeout(resolve,800));const done=text();
+      hud.setCoins(130,{tick:true});const spent=text(); // spending never counts
+      return {first,middle,done,spent};
+    });
+    expect(result.first).toEqual({text:'🪙 100',label:'160 coins',coins:160});
+    expect(result.middle).toBeGreaterThan(100);expect(result.middle).toBeLessThan(160);
+    expect(result.done).toBe('🪙 160');expect(result.spent).toBe('🪙 130');
+  });
+});
+
+it('flashes the screen edge red when the island takes damage, never with reduced motion',async()=>{
+  await evaluate.withPage(async page=>{
+    const result=await page.evaluate(async()=>{
+      const {createWaveHud}=await window.g20Import('/src/pirates/hud.js');
+      const run=still=>{
+        const box=document.createElement('div');document.body.append(box);
+        const hud=createWaveHud({container:box,reducedMotion:()=>still});
+        hud.bar({wave:1,shipsLeft:3,islandHp:100,maxIslandHp:100});hud.bar({wave:1,shipsLeft:3,islandHp:90,maxIslandHp:100});
+        const out={flash:box.querySelector('.pirate-hurt-edge').classList.contains('pirate-flash'),hint:!box.querySelector('.pirate-musket-hint').hidden};
+        hud.bar({wave:3,shipsLeft:3,islandHp:90,maxIslandHp:100});out.hintLater=!box.querySelector('.pirate-musket-hint').hidden;
+        hud.dispose();box.remove();return out;
+      };
+      return {moving:run(false),still:run(true)};
+    });
+    expect(result.moving).toEqual({flash:true,hint:true,hintLater:false});
+    expect(result.still.flash).toBe(false);
+  });
+});
+
 it('moves the quest strip with the bus events of the other lanes, three goals at a time',async()=>{
   await evaluate.withPage(async page=>{
     await mount(page);
