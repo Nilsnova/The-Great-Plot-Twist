@@ -6,7 +6,7 @@
 // §2: per kind, per level (index 0 = level 1). price[n] is the price of building (n = 0) or of the
 // upgrade to level n + 1.
 export const BUILDINGS = Object.freeze({
-  wall: Object.freeze({name: 'Wall', line: 'Blocks pirate ships at the shore.', price: [10, 20, 40],
+  wall: Object.freeze({name: 'Wall', line: 'Stops boarders until they break it; ships shell it.', price: [10, 20, 40],
     stats: [{hp: 60}, {hp: 120}, {hp: 200}]}),
   cannon: Object.freeze({name: 'Cannon', line: 'Fires at one ship at a time.', price: [30, 60, 120],
     stats: [{damage: 10, range: 28}, {damage: 16, range: 31}, {damage: 24, range: 34}]}),

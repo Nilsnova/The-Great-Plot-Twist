@@ -65,8 +65,9 @@ describe('crew', () => {
     expect(manned.towers.find(tower => tower.manned).id).toBe('tower_s1'); // the level-2 cannon
     const shots = crew => runWave({ ...base, crew }).events.filter(event => event.type === 'cannon_fired' && event.cannonId === 'tower_s1');
     const gaps = list => list.slice(1).map((shot, i) => Math.round((shot.t - list[i].t) * 100) / 100);
-    expect(Math.min(...gaps(shots({ gunner: 1 })))).toBeCloseTo(1.3 * .75, 1);
-    expect(Math.min(...gaps(shots({})))).toBeCloseTo(1.3, 1);
+    const reload = 1.3 * CONFIG.pace.reload; // the level-2 cannon's 1.3 s at the faster pace of 11 Nov
+    expect(Math.min(...gaps(shots({ gunner: 1 })))).toBeCloseTo(reload * .75, 1);
+    expect(Math.min(...gaps(shots({})))).toBeCloseTo(reload, 1);
     expect(createWave({ ...base, crew: { gunner: 5 } }).state().crew.gunner).toBe(CONFIG.crew.gunner.max);
   });
 

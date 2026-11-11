@@ -32,6 +32,8 @@
 .pirate-musket-meter{display:block;height:6px;background:var(--u-deep);border:1px solid var(--u-line)}
 .pirate-musket-fill{display:block;height:100%;width:100%;background:var(--u-gold)}
 .pirate-musket.pirate-musket-idle{opacity:.72}.pirate-musket.pirate-musket-idle .pirate-musket-label{font-size:15px;font-weight:600}
+/* Close quarters (TOWER-DEFENSE.md §12): the same button swings the cutlass; its meter turns steel. */
+.pirate-musket.pirate-musket-blade .pirate-musket-fill{background:var(--u-line)}.pirate-musket.pirate-musket-blade{outline:2px solid var(--u-gold);outline-offset:1px}
 @media(pointer:coarse){.pirate-musket kbd{display:none}.pirate-hud>.pirate-musket{grid-template-columns:1fr}}
 .pirate-bar-loot{text-align:center;font:600 15px/1.2 var(--u-font);color:var(--u-gold)}
 .pirate-boss{position:absolute;left:50%;top:104px;transform:translateX(-50%);background:#4a2a24;color:#ffe08a;padding:8px 18px;font:700 22px/1.25 var(--u-serif);text-align:center;pointer-events:none;max-width:calc(100vw - 32px);box-sizing:border-box;box-shadow:0 -2px #d8553f,0 2px #d8553f,-2px 0 #d8553f,2px 0 #d8553f,0 8px #0006}

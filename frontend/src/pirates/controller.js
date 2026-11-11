@@ -327,6 +327,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       } else if (event.type === 'mortar_fired') cue('pirate-cannon');
       else if (event.type === 'mortar_impact') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
       else if (event.type === 'captain_fired') cue('pirate-cannon-manual'); else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');
+      else if (event.type === 'captain_struck' || event.type === 'boarder_killed') cue('pirate-hit');
       else if (event.type === 'ship_sunk') { cue('pirate-sunk'); if (event.kind === 'flagship') kick(.5); }
       else if (event.type === 'wall_damaged') cue('pirate-wall');
       else if (event.type === 'island_damaged') { cue('pirate-wall'); kick(.18); }

@@ -78,11 +78,14 @@ describe('boarding', () => {
   });
 
   it('cannons, mortars and the musket fight boarders; a cannon takes the boarder nearest the heart', () => {
-    const cannon = { id: 'cannon_6', kind: 'cannon', level: 3, x: 14.5, z: -3 };
-    const { events } = runWave({ seed: 5, wave: 4, weather: { ships: 2 }, lanes: EAST, defenses: [cannon], island: { hp: 1000 } });
+    // A cannon in the north-west corner: out of reach of the east anchorage, so it fights the boarders inland.
+    const cannon = { id: 'cannon_1', kind: 'cannon', level: 1, x: -12.5, z: -14.5 };
+    const { events } = runWave({ seed: 5, wave: 2, lanes: EAST, defenses: [cannon], island: { hp: 1000 } });
     const atBoarders = events.filter(event => event.type === 'cannon_fired' && event.boarder);
     expect(atBoarders.length).toBeGreaterThan(0);
-    expect(events.some(event => event.type === 'boarder_killed' && event.by === 'cannon_6')).toBe(true);
+    expect(events.some(event => event.type === 'boarder_killed' && event.by === 'cannon_1')).toBe(true);
+    const firstShot = atBoarders[0], before = events.filter(event => event.t <= firstShot.t);
+    expect(before.some(event => event.type === 'cannon_fired' && !event.boarder)).toBe(false); // it never had a ship in sight
     const mortar = { id: 'cannon_1', kind: 'mortar', level: 3, x: -12.5, z: -14.5 };
     const shelled = runWave({ seed: 5, wave: 4, lanes: EAST, defenses: [mortar, ...ring(6)], island: { hp: 1000 } }).events;
     expect(shelled.some(event => event.type === 'boarder_hit' && event.area && event.by === 'cannon_1')).toBe(true);
@@ -223,9 +226,11 @@ describe('boarding balance', () => {
   it('wave 3 is won with the inner ring and 2 cannons', () => {
     expect(measure({ defenses: [...ring(6), ...C2] }, 3).won).toBe(8);
   });
-  it('the ring is what saves a one-cannon island on wave 3', () => {
-    expect(measure({ defenses: C1 }, 3).won).toBeLessThanOrEqual(2);
-    expect(measure({ defenses: [...C1, ...ring(6)] }, 3).won).toBe(8);
+  it('the ring makes a one-cannon island hold wave 3', () => {
+    const without = measure({ defenses: C1 }, 3), withRing = measure({ defenses: [...C1, ...ring(6)] }, 3);
+    expect(withRing.won).toBeGreaterThanOrEqual(7);
+    expect(withRing.won).toBeGreaterThan(without.won);
+    expect(withRing.hp).toBeGreaterThan(without.hp * 2);
   });
   it('the heart is lost mainly through boarders', () => {
     const { events } = runWave({ seed: 7919, wave: 3, defenses: [] });

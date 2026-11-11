@@ -34,12 +34,12 @@ describe('pirate wave simulation', () => {
     expect(random()).toBe(createRandom('ISLE-K7Q2M')());
   });
 
-  it('lets one cannon win the first wave in 15 to 30 seconds (the faster pace of 11 Nov)', () => {
+  it('lets one cannon win the first wave in 12 to 30 seconds (the faster pace of 11 Nov)', () => {
     for (const seed of [1, 2, 3, 42, 2147483646]) {
       const { result, events } = play({ seed, wave: 1, defenses: pick('cannon_2') });
       expect(result.survived).toBe(true);
       expect(result.shipsSunk).toBe(3);
-      expect(result.time).toBeGreaterThanOrEqual(15); expect(result.time).toBeLessThanOrEqual(30);
+      expect(result.time).toBeGreaterThanOrEqual(12); expect(result.time).toBeLessThanOrEqual(30);
       expect(events[0]).toMatchObject({ type: 'wave_started', wave: 1, ships: 3 });
       expect(events.at(-1)).toMatchObject({ type: 'wave_ended', reason: 'all_sunk', survived: true });
       expect(count(events, 'ship_sunk')).toBe(3);
@@ -118,14 +118,17 @@ describe('pirate wave simulation', () => {
     }
     expect(ship).toBeTruthy();
     wave.step(.6); // the cannon has just fired on its own; a manual shot may follow after the short cooldown
-    expect(wave.state().cannons[0].reload).toBeLessThan(CONFIG.cannon.reload - .5);
+    const reload = CONFIG.cannon.reload * CONFIG.pace.reload; // the faster pace of 11 Nov
+    expect(wave.state().cannons[0].reload).toBeLessThan(reload - .4);
     const events = wave.step(.05, [{ type: 'fire', cannonId: 'cannon_2', targetId: ship.id }]);
     const shot = events.find(event => event.type === 'cannon_fired' && event.manual);
     expect(shot).toMatchObject({ cannonId: 'cannon_2', targetId: ship.id, hit: true, damage: CONFIG.cannon.damage * 2 });
-    expect(wave.state().cannons[0].reload).toBeGreaterThan(CONFIG.cannon.reload - .2);
+    expect(wave.state().cannons[0].reload).toBeGreaterThan(reload - .2);
     const later = [];
     for (let i = 0; i < 40; i++) later.push(...wave.step(.05));
-    expect(later.find(event => event.type === 'ship_hit' && event.manual)).toMatchObject({ damage: 20, shipId: ship.id });
+    const hit = later.find(event => event.type === 'ship_hit' && event.manual);
+    expect(hit).toMatchObject({ shipId: ship.id }); // 20, or what the lighter sloop (24 hp) had left
+    expect(hit.damage).toBe(Math.min(20, hit.damage + hit.hp));
     // A second manual shot right away is refused by the cooldown.
     const spam = wave.step(.05, [{ type: 'fire', cannonId: 'cannon_2', targetId: wave.state().ships[0]?.id }]);
     expect(spam.filter(event => event.type === 'cannon_fired' && event.manual)).toHaveLength(0);

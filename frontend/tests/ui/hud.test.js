@@ -101,7 +101,7 @@ it('flashes the screen edge red when the island takes damage, never with reduced
         hud.bar({wave:1,shipsLeft:3,islandHp:100,maxIslandHp:100});hud.bar({wave:1,shipsLeft:3,islandHp:90,maxIslandHp:100});
         const button=box.querySelector('.pirate-musket'),out={flash:box.querySelector('.pirate-hurt-edge').classList.contains('pirate-flash'),hint:!button.hidden};
         hud.musket({share:.5,ready:true});out.musket=[!button.hidden,button.textContent.includes('Musket')];
-        hud.musket({share:1,ready:false});out.idle=button.textContent.includes('No ship in range');
+        hud.musket({share:1,ready:false});out.idle=button.textContent.includes('No pirate in range');
         hud.musket(null);out.hintLater=!button.hidden;
         hud.dispose();box.remove();return out;
       };

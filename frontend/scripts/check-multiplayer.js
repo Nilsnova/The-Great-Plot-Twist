@@ -3,7 +3,8 @@
 // the BroadcastChannel room with the live room's rules (pirates/room.js). Two pages first, then four:
 //   the owner builds a cannon; a friend opens ?visit=ISLE-K7Q2M and joins; the friend builds a wall co-op
 //   and the owner's island shows it; the owner rings the bell; both run the same wave (the same ships at
-//   the same tick); both captains fire their musket and each shot reaches the other page; both finish with
+//   the same tick, and the same boarders ashore: TOWER-DEFENSE.md §12); both captains fire their musket and
+//   each shot reaches the other page; both finish with
 //   loot; both press "Next wave" at the same moment and end up in one wave 2; two more friends land
 //   mid-wave and join it.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
@@ -64,7 +65,8 @@ async function openCaptain(name, playerId, visit = null) {
       if (wave && !wave.done && wave.ticks > 0) {
         const last = window.__mp.samples.at(-1);
         if (!last || last.ticks !== wave.ticks) window.__mp.samples.push({waveId: wave.info.waveId, ticks: wave.ticks,
-          ships: wave.state.ships.map(ship => ship.id).sort().join(','), hp: Math.round(wave.state.ships.reduce((sum, ship) => sum + ship.hp, 0))});
+          ships: wave.state.ships.map(ship => ship.id).sort().join(','), hp: Math.round(wave.state.ships.reduce((sum, ship) => sum + ship.hp, 0)),
+          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0});
         if (window.__mp.samples.length > 6000) window.__mp.samples.splice(0, 3000);
       }
       requestAnimationFrame(sample);
@@ -107,19 +109,25 @@ async function musket(captain) {
   }
   return false;
 }
-// The same wave on two pages: for every sample of `a`, the sample of `b` at the same tick (±1) has the same ships.
+// The same wave on two pages: for every sample of `a`, the sample of `b` at the same tick (±1) has the same
+// ships and the same boarders ashore (boarding, TOWER-DEFENSE.md §12).
 async function compare(a, b, waveId) {
   const [left, right] = await Promise.all([a, b].map(captain => captain.page.evaluate(id => window.__mp.samples.filter(item => item.waveId === id), waveId)));
   const byTick = new Map(right.map(item => [item.ticks, item]));
-  let checked = 0, same = 0, worst = 0;
+  const size = list => list.split(',').filter(Boolean).length;
+  let checked = 0, same = 0, worst = 0, sameBoarders = 0, worstBoarders = 0, withBoarders = 0;
   for (const sample of left.filter((_, index) => index % 10 === 0)) {
     const other = byTick.get(sample.ticks) ?? byTick.get(sample.ticks - 1) ?? byTick.get(sample.ticks + 1);
     if (!other) continue;
     checked++;
     if (other.ships === sample.ships) same++;
-    worst = Math.max(worst, Math.abs(other.ships.split(',').filter(Boolean).length - sample.ships.split(',').filter(Boolean).length));
+    if (other.boarders === sample.boarders) sameBoarders++;
+    if (sample.boarders) withBoarders++;
+    worst = Math.max(worst, Math.abs(size(other.ships) - size(sample.ships)));
+    worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
   }
-  return {checked, same, worst};
+  const landed = Math.max(0, ...left.map(item => item.landed));
+  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed};
 }
 
 const results = [];
@@ -173,7 +181,10 @@ try {
   results.push(`wave 1 loot: ${pages.map((captain, index) => `${captain.name} ${loot[index]}`).join(', ')}`);
   const sync1 = await compare(host, ben, first.waveId);
   results.push(`wave 1 sync owner/friend: ${sync1.same}/${sync1.checked} samples with the same ships at the same tick, worst count gap ${sync1.worst}`);
+  results.push(`wave 1 boarders owner/friend: ${sync1.sameBoarders}/${sync1.checked} samples with the same boarders ashore (${sync1.withBoarders} with boarders, ${sync1.landed} landed), worst count gap ${sync1.worstBoarders}`);
   assert.ok(sync1.checked >= 5 && sync1.same / sync1.checked >= .9 && sync1.worst <= 1, 'the two pages ran the same wave');
+  assert.ok(sync1.landed > 0 && sync1.withBoarders > 0, 'boarders came ashore in the synced wave');
+  assert.ok(sync1.sameBoarders / sync1.checked >= .9 && sync1.worstBoarders <= 1, 'the two pages saw the same boarders');
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
@@ -189,8 +200,8 @@ try {
   await shot('05-four-captains-mid-wave');
   for (const captain of [ben, ana, max]) {
     const sync = await compare(host, captain, second.waveId);
-    results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same, worst count gap ${sync.worst}`);
-    assert.ok(sync.checked >= 3 && sync.worst <= 1, `${captain.name} runs the owner's wave 2`);
+    results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);
+    assert.ok(sync.checked >= 3 && sync.worst <= 1 && sync.worstBoarders <= 1, `${captain.name} runs the owner's wave 2`);
   }
   for (const captain of pages) await until(captain, state => !state || state.pause || state.done, 'the end of wave 2', 240000);
   await shot('06-wave2-end');

@@ -30,17 +30,18 @@ export const CONFIG = freeze({
   fleet: {
     // ships = (base + perWave × (min(wave, steepUntil) − 1) + latePerWave × (wave − steepUntil)) × weather.ships
     base: 3, perWave: 2, steepUntil: 6, latePerWave: 0.6, max: 36,
-    // Spawn timing: the faster pace of 11 Nov (owner: "more fast paced"): about 30% closer together.
-    firstSpawn: 1.5, gap: 5.6, gapPerWave: 0.45, minGap: 1.1, window: 48,
+    // Spawn timing: the faster pace of 11 Nov (owner: "more fast paced"): about 45% closer together.
+    firstSpawn: 1.5, gap: 4.4, gapPerWave: 0.4, minGap: .8, window: 36,
     lanesPerWave: 1,          // wave 1 uses 1 lane, wave 2 two lanes, wave 3+ all three
     brigFromWave: 3, brigShare: 0.15, brigMaxShare: 0.5,
   },
-  // Speeds are 30% up on the first build (faster pace, 11 Nov). crew: boarders aboard (TOWER-DEFENSE.md §12).
+  // Faster pace (11 Nov): speeds 30% up and hulls about 25% lighter than the first build, since the
+  // boarders are now the main threat. crew: boarders aboard (TOWER-DEFENSE.md §12).
   ships: {
-    sloop: { hp: 30, speed: 2.6, damage: 3, interval: 1.5, crew: 2 },
-    brig: { hp: 80, speed: 1.7, damage: 6, interval: 2, crew: 3 },
+    sloop: { hp: 24, speed: 2.6, damage: 3, interval: 1.5, crew: 2 },
+    brig: { hp: 60, speed: 1.7, damage: 6, interval: 2, crew: 3 },
     flagship: { hp: 600, speed: 1.05, damage: 10, interval: 2.5, crew: 4 },
-    warship: { hp: 260, speed: 1.45, damage: 10, interval: 2, crew: 6 },
+    warship: { hp: 200, speed: 1.45, damage: 10, interval: 2, crew: 6 },
   },
   // Boarding (TOWER-DEFENSE.md §12): an anchored ship lets its crew climb out one by one; they walk inland
   // to the island's heart, hack every standing wall in their way, and a boarder who reaches the heart
@@ -59,7 +60,7 @@ export const CONFIG = freeze({
     meadow: 6,                // with no ring wall in the way they cross the ring this far from the heart
     contact: 1.1,             // they hack a wall from this far in front of it
     spread: .7,               // ± units sideways, so a crowd at a wall does not stand in one spot
-    hp: 18, speed: 2.2, hack: 2.5, hackEvery: 1, heartDamage: 10, heartRadius: 1.2,
+    hp: 20, speed: 2.8, hack: 2.5, hackEvery: 1, heartDamage: 14, heartRadius: 1.2,
     shellShare: .015,          // an anchored ship with no wall in reach shells the island at this share
   },
   // The difficulty curve to wave 100: hp, speed and damage grow with the wave number (× per ship kind).
@@ -119,6 +120,8 @@ export const CONFIG = freeze({
   // reach: a ship shells walls this close; rebuild: a broken wall comes back at this share of its hp,
   // and the same wall cannot be rebuilt again for rebuildCooldown seconds.
   wall: { hp: 60, reach: 8, repairRate: 10, repairSeconds: 3, rebuild: .4, rebuildCooldown: 5 },
+  // The faster pace (11 Nov): every cannon and mortar reloads in 70% of its table time (§2's reloads × 0.7).
+  pace: { reload: .7 },
   maxWave: 100,
 });
 
@@ -260,7 +263,7 @@ export function createWave(options = {}) {
   // Cannons and mortars, in id order; the gunners man the strongest (damage per second, then level).
   const towers = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar').map(item => {
     const stats = C.levels[item.kind][item.level - 1], range = stats.range + towerBonus;
-    return { ...item, damage: stats.damage, baseReload: stats.reload, range, sight: range * fogShare, manned: false,
+    return { ...item, damage: stats.damage, baseReload: round2(stats.reload * C.pace.reload), range, sight: range * fogShare, manned: false,
       reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0 };
   });
   const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
@@ -533,13 +536,29 @@ export function createWave(options = {}) {
     const ux = dx / length, uz = dz / length;
     return { x: w.x + ux * B.contact - uz * boarder.side, z: w.z + uz * B.contact + ux * boarder.side };
   }
+  // What a boarder goes for right now: the ONE place a boarder's target is chosen (TOWER-DEFENSE.md §12).
+  // Its route is fixed when it lands (the shore wall at its landing, the ring wall it heads for, the
+  // heart); a broken wall on it is rubble and skipped. Returns {kind: 'wall', wall, leg} (hack it),
+  // {kind: 'point', leg} (walk there) or {kind: 'heart', leg} (walk there and hurt the island).
+  // attackCaptain (hook for lane H, captain health, not built yet): put "the nearest captain within
+  // reach" first here, e.g. return {kind: 'captain', by} from the captains' positions sent with their
+  // inputs, and let moveBoarder strike at it; keep it O(captains) per boarder (up to 10 players).
+  function pickBoarderTarget(boarder) {
+    while (boarder.leg < boarder.route.length - 1) {
+      const leg = boarder.route[boarder.leg];
+      if (!(leg.wall && leg.wall.hp <= 0)) return leg.wall ? { kind: 'wall', wall: leg.wall, leg } : { kind: 'point', leg };
+      boarder.leg++; boarder.goal = null;
+    }
+    return { kind: 'heart', leg: boarder.route[boarder.route.length - 1] };
+  }
+  // One tick of a boarder: hack the wall it stands at, or walk towards its target. True at the heart.
   function moveBoarder(boarder, events) {
     if (boarder.state === 'hacking') {
-      const wall = wallById.get(boarder.wallId);
-      if (!wall || wall.hp <= 0) { boarder.state = 'walking'; boarder.wallId = null; boarder.leg++; boarder.goal = null; return false; }
+      const target = pickBoarderTarget(boarder);
+      if (target.kind !== 'wall' || target.wall.id !== boarder.wallId) { boarder.state = 'walking'; boarder.wallId = null; boarder.goal = null; return false; }
       if ((boarder.hackIn -= C.tick) > 1e-9) return false;
       boarder.hackIn += B.hackEvery;
-      const damage = Math.min(wall.hp, boarder.hack);
+      const wall = target.wall, damage = Math.min(wall.hp, boarder.hack);
       wall.hp = round2(Math.max(0, wall.hp - damage));
       if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
       events.push({ type: 'wall_damaged', t: now(), wallId: wall.id, boarderId: boarder.id, damage: round2(damage), hp: wall.hp,
@@ -547,24 +566,22 @@ export function createWave(options = {}) {
       return false;
     }
     let budget = boarder.speed * C.tick;
-    while (budget > 1e-9 && boarder.leg < boarder.route.length) {
-      const leg = boarder.route[boarder.leg];
-      // A wall on the route stops the boarder only while it stands: a broken one is rubble to walk over.
-      if (leg.wall && leg.wall.hp <= 0) { boarder.leg++; boarder.goal = null; continue; }
+    while (budget > 1e-9) {
+      const target = pickBoarderTarget(boarder), leg = target.leg, heart = target.kind === 'heart';
       const goal = boarder.goal ??= legPoint(boarder, leg), dx = goal.x - boarder.x, dz = goal.z - boarder.z, d = Math.hypot(dx, dz);
-      const reach = leg.heart ? B.heartRadius : .05;
+      const reach = heart ? B.heartRadius : .05;
       if (d <= reach) {
-        if (leg.wall) { boarder.state = 'hacking'; boarder.wallId = leg.wall.id; boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0; return false; }
-        if (leg.heart) return true;
+        if (target.kind === 'wall') { boarder.state = 'hacking'; boarder.wallId = target.wall.id; boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0; return false; }
+        if (heart) return true;
         boarder.leg++; boarder.goal = null; continue;
       }
-      const step = Math.min(budget, d - (leg.heart ? reach * .5 : 0));
+      const step = Math.min(budget, d - (heart ? reach * .5 : 0));
       boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
       if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
       boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
       if (step <= 1e-9) break;
     }
-    return boarder.leg < boarder.route.length && boarder.route[boarder.leg].heart && toHeart(boarder) <= B.heartRadius + 1e-6;
+    return pickBoarderTarget(boarder).kind === 'heart' && toHeart(boarder) <= B.heartRadius + 1e-6;
   }
 
   function tick(events) {
