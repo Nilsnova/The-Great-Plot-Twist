@@ -24,10 +24,12 @@ async function ringAndFight({name, captain = false, boss = false}) {
   if (boss) await until(state => state && state.boss, 5000);
   if (captain) {
     // Walk to the shore in front of the first ship, then F: the musket pose, its tracer and flash.
-    await page.waitForFunction(() => { const s = window.__island.waves.island.wave?.state; return s?.ships?.some(ship => Math.hypot(ship.x, ship.z) < 34); }, null, {timeout: 60000, polling: 200});
+    // Stand on the beach (radius 14) facing the nearest ship, and wait until it is within the musket's 14 units.
+    await page.waitForFunction(() => { const s = window.__island.waves.island.wave?.state; return s?.ships?.length > 0; }, null, {timeout: 60000, polling: 200});
     await page.evaluate(() => { const g = window.__island, ship = g.waves.island.wave.state.ships.reduce((a, b) => (Math.hypot(a.x, a.z) < Math.hypot(b.x, b.z) ? a : b));
-      const d = Math.hypot(ship.x, ship.z), x = ship.x * (d - 11) / d, z = ship.z * (d - 11) / d; g.player.position.set(x, g.world.current.groundHeight?.(x, z) ?? 1.03, z); });
-    await page.waitForTimeout(400);
+      const d = Math.hypot(ship.x, ship.z), x = ship.x * 14 / d, z = ship.z * 14 / d; g.player.position.set(x, g.world.current.groundHeight?.(x, z) ?? 1.03, z); });
+    await page.waitForFunction(() => { const g = window.__island, p = g.player.position, s = g.waves.island.wave?.state;
+      return s?.ships?.some(ship => Math.hypot(ship.x - p.x, ship.z - p.z) < 13); }, null, {timeout: 60000, polling: 100});
     await page.keyboard.press('KeyF'); await page.waitForTimeout(140);
     await page.screenshot({path: `${out}/${name}-${width}.png`}); console.log(`${name}-${width}`);
     return;
