@@ -189,8 +189,8 @@ describe('error words', () => {
 
   it('names the coins needed when there are not enough, using the total the server sent for the stake', () => {
     const error = { code: 'insufficient_funds', message: 'Not enough coins.' };
-    expect(errorWords(error, { total: 102 })).toBe('You need 102 coins for this stake and its fee.');
-    expect(errorWords(error, { total: 1020 })).toBe('You need 1,020 coins for this stake and its fee.');
+    expect(errorWords(error, { total: 102 })).toBe('You need 🪙 102 for this stake and its fee.');
+    expect(errorWords(error, { total: 1020 })).toBe('You need 🪙 1,020 for this stake and its fee.');
     expect(errorWords(error, {})).toBe('Not enough coins.');
   });
 
@@ -214,10 +214,10 @@ describe('small words', () => {
   });
 
   it('says up or down in words and keeps the sign, never only a colour', () => {
-    expect(profitWords(15, 15)).toEqual({ direction: 'up', text: 'Up 15 coins (15.00 %)' });
-    expect(profitWords(-20, -20)).toEqual({ direction: 'down', text: 'Down 20 coins (-20.00 %)' });
+    expect(profitWords(15, 15)).toEqual({ direction: 'up', text: 'Up 🪙 15 (15.00 %)' });
+    expect(profitWords(-20, -20)).toEqual({ direction: 'down', text: 'Down 🪙 20 (-20.00 %)' });
     expect(profitWords(0, 0)).toEqual({ direction: 'even', text: 'Unchanged (0.00 %)' });
-    expect(profitWords(1, 1)).toEqual({ direction: 'up', text: 'Up 1 coin (1.00 %)' });
+    expect(profitWords(1, 1)).toEqual({ direction: 'up', text: 'Up 🪙 1 (1.00 %)' });
     expect(profitWords(null, null)).toEqual({ direction: 'even', text: 'Profit unknown' });
   });
 });

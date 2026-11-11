@@ -1,5 +1,6 @@
 // Plain presentation labels only. Betting eligibility, caps, results and payouts come from the API.
 import { formatLocalTime } from '../predictions/time-labels.js';
+import { formatCoins } from '../../lib/coins.js';
 export const SIMULATION = 'Simulation · play money only. Coins cannot be bought or cashed out. No real prizes.';
 export const UNKNOWN = 'The stake outcome is unknown. Retry the same stake below; its reference is kept so you cannot pay twice.';
 export const when = iso => formatLocalTime(iso) || 'Time unavailable';
@@ -15,6 +16,6 @@ export function fixtureStatus(fixture, now = Date.now()) {
 }
 export function settlementText(stake) {
   if (stake.status !== 'settled') return 'Waiting for a verified result. No payout has been confirmed.';
-  if (stake.settlement?.startsWith('refund_')) return `Refunded · ${stake.payout} coins returned`;
-  return `${stake.payout > 0 ? 'Paid' : 'Settled'} · ${stake.payout} coins returned`;
+  if (stake.settlement?.startsWith('refund_')) return `Refunded · ${formatCoins(stake.payout)} returned`;
+  return `${stake.payout > 0 ? 'Paid' : 'Settled'} · ${formatCoins(stake.payout)} returned`;
 }

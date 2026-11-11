@@ -108,11 +108,11 @@ describe('openPreview', () => {
     const rising = openPreview(row, 'rising', hundred, RULES);
     expect(rising.ready).toBe(true);
     expect(rising.zeroText).toBe('Zero point: 68,543.29 USDT (estimate; set by the price at the moment you open)');
-    expect(rising.lossText).toBe('You can lose at most 102 coins');
-    expect(rising.confirmLabel).toBe('Open rising position for 102 coins');
+    expect(rising.lossText).toBe('You can lose at most 🪙 102');
+    expect(rising.confirmLabel).toBe('Open rising position for 🪙 102');
     const falling = openPreview(row, 'falling', hundred, RULES);
     expect(falling.zeroText).toBe('Zero point: 83,775.13 USDT (estimate; set by the price at the moment you open)');
-    expect(falling.confirmLabel).toBe('Open falling position for 102 coins');
+    expect(falling.confirmLabel).toBe('Open falling position for 🪙 102');
   });
 
   it('states the 10x rule with the numbers of the server rules', () => {
@@ -127,11 +127,11 @@ describe('openPreview', () => {
   it('is not ready until a side and a stake are chosen, but still shows what it can', () => {
     expect(openPreview(row, null, null, RULES)).toMatchObject({ ready: false, zeroText: null, lossText: null, confirmLabel: 'Choose a side and a stake' });
     expect(openPreview(row, 'rising', null, RULES)).toMatchObject({ ready: false, confirmLabel: 'Choose a stake' });
-    expect(openPreview(row, null, hundred, RULES)).toMatchObject({ ready: false, lossText: 'You can lose at most 102 coins', confirmLabel: 'Choose a side' });
+    expect(openPreview(row, null, hundred, RULES)).toMatchObject({ ready: false, lossText: 'You can lose at most 🪙 102', confirmLabel: 'Choose a side' });
   });
 
   it('accepts the stake as a plain number too', () => {
-    expect(openPreview(row, 'rising', 100, RULES).confirmLabel).toBe('Open rising position for 102 coins');
+    expect(openPreview(row, 'rising', 100, RULES).confirmLabel).toBe('Open rising position for 🪙 102');
     expect(openPreview(row, 'rising', 77, RULES).ready).toBe(false);
   });
 
@@ -166,18 +166,18 @@ describe('positionRows', () => {
 
   it('summarises the account', () => {
     const view = positionRows(PORTFOLIO, withDecimals, at);
-    expect(view.coinsText).toBe('940 coins');
-    expect(view.stakedText).toBe('Staked today: 100 of 2,000 coins');
+    expect(view.coinsText).toBe('🪙 940');
+    expect(view.stakedText).toBe('Staked today: 🪙 100 of 🪙 2,000');
     expect(view.openCountText).toBe('Open positions: 1 of 20');
   });
 
   it('shows an open position with value, profit in words and what closing would pay', () => {
     const [row] = positionRows(PORTFOLIO, withDecimals, at).open;
     expect(row).toMatchObject({
-      id: '7b3e', heading: 'Saltreach Harbor Trust', sideText: 'Rising', stakeText: '100 coins',
+      id: '7b3e', heading: 'Saltreach Harbor Trust', sideText: 'Rising', stakeText: '🪙 100',
       entryText: '75,000.00 USDT', zeroText: '67,500.00 USDT', priceLabel: 'Price now', priceText: '76,159.21 USDT',
-      priceAtText: '12:05', valueText: '115 coins', profitText: 'Up 15 coins (15.00 %)', direction: 'up',
-      canClose: true, receiveText: 'If you close now: you receive 113 coins', confirmText: 'Close and receive about 113 coins?',
+      priceAtText: '12:05', valueText: '🪙 115', profitText: 'Up 🪙 15 (15.00 %)', direction: 'up',
+      canClose: true, receiveText: 'If you close now: you receive 🪙 113', confirmText: 'Close and receive about 🪙 113?',
       closeLabel: 'Close your rising position in Saltreach Harbor Trust', blockedText: null,
     });
   });
@@ -185,7 +185,7 @@ describe('positionRows', () => {
   it('says down for a loss', () => {
     const losing = { ...PORTFOLIO.positions[0], value: 80, profit: -20, profitPercent: -20, wouldReceive: 78, result: -24 };
     const [row] = positionRows({ ...PORTFOLIO, positions: [losing] }, withDecimals, at).open;
-    expect(row.profitText).toBe('Down 20 coins (-20.00 %)');
+    expect(row.profitText).toBe('Down 🪙 20 (-20.00 %)');
     expect(row.direction).toBe('down');
   });
 
@@ -230,10 +230,10 @@ describe('positionRows', () => {
   it('describes a position closed by the player and one that closed at zero', () => {
     const { closed } = positionRows(PORTFOLIO, withDecimals, at);
     expect(closed[0].line).toBe('Closed at zero: the price reached 2.6512 USDT (your zero point was 2.6400 USDT)');
-    expect(closed[0].resultText).toBe('Result after both fees: -51 coins');
+    expect(closed[0].resultText).toBe('Result after both fees: 🪙 −51');
     expect(closed[0].zeroed).toBe(true);
-    expect(closed[1].line).toBe('Closed by you: +118 coins');
-    expect(closed[1].resultText).toBe('Result after both fees: +16 coins');
+    expect(closed[1].line).toBe('Closed by you: 🪙 +118');
+    expect(closed[1].resultText).toBe('Result after both fees: 🪙 +16');
     expect(closed[1].zeroed).toBe(false);
   });
 

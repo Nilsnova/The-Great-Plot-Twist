@@ -85,7 +85,7 @@ describe('placing a stake', () => {
     await stakeOn(adapter, open[0]);
     const reply = await stakeOn(adapter, open[0], { side: 'no', amount: 5 });
     expect(reply).toMatchObject({ kind: 'refused', code: 'already_staked' });
-    expect(reply.message).toBe('You already staked 20 coins on YES for this question. One stake per question.');
+    expect(reply.message).toBe('You already staked 🪙 20 on YES for this question. One stake per question.');
     expect((await adapter.mine()).data.coins).toBe(980);
   });
 
@@ -109,7 +109,7 @@ describe('placing a stake', () => {
     await stakeOn(adapter, open[0], { amount: 50 });
     const reply = await stakeOn(adapter, open[1], { amount: 20 });
     expect(reply).toMatchObject({ kind: 'refused', code: 'daily_stake_cap' });
-    expect(reply.message).toBe('You can stake at most 60 coins a day at the desk. You can still stake 10 coins today.');
+    expect(reply.message).toBe('You can stake at most 🪙 60 a day at the desk. You can still stake 🪙 10 today.');
   });
 
   it('refuses a stake when the player has too few coins', async () => {
@@ -139,7 +139,7 @@ describe('placing a stake', () => {
     expect(mine.stakes).toHaveLength(1);
   });
 
-  it('refuses 0, -3 and 51 coins, and a stake that is not a whole number', async () => {
+  it('refuses 0, -3 and 51, and a stake that is not a whole number', async () => {
     const { adapter } = makeDesk();
     const { open } = await questionsByStatus(adapter);
     expect(await stakeOn(adapter, open[0], { amount: 0 })).toMatchObject({ kind: 'refused', code: 'stake_too_small' });

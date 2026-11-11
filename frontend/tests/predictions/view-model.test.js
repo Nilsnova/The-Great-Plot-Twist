@@ -40,10 +40,10 @@ describe('the fixed lines', () => {
 
 describe('units', () => {
   it('writes coins and captains with the right number', () => {
-    expect(coinsText(1)).toBe('1 coin');
-    expect(coinsText(0)).toBe('0 coins');
-    expect(coinsText(20)).toBe('20 coins');
-    expect(coinsText(1200)).toBe('1,200 coins');
+    expect(coinsText(1)).toBe('🪙 1');
+    expect(coinsText(0)).toBe('🪙 0');
+    expect(coinsText(20)).toBe('🪙 20');
+    expect(coinsText(1200)).toBe('🪙 1,200');
     expect(captainsText(1)).toBe('1 captain');
     expect(captainsText(4)).toBe('4 captains');
   });
@@ -81,12 +81,12 @@ describe('the pool lines', () => {
   const emptyNo = { side: 'no', label: 'No', coins: 0, players: 0, payoutPerCoin: null };
 
   it('writes a side with stakes', () => {
-    expect(sideLine(yes)).toBe('YES: 120 coins from 4 captains. If YES wins, each coin brings back about 1.62 coins.');
+    expect(sideLine(yes)).toBe('YES: 🪙 120 from 4 captains. If YES wins, each coin brings back about 1.62 coins.');
   });
 
   it('writes a side with one coin from one captain', () => {
     const line = sideLine({ ...no, coins: 1, players: 1, payoutPerCoin: 1 });
-    expect(line).toBe('NO: 1 coin from 1 captain. If NO wins, each coin brings back about 1.00 coins.');
+    expect(line).toBe('NO: 🪙 1 from 1 captain. If NO wins, each coin brings back about 1.00 coins.');
   });
 
   it('writes the one-sided note for a side nobody picked', () => {
@@ -100,7 +100,7 @@ describe('the pool lines', () => {
 
   it('leaves the "if it wins" sentence out once the question is settled', () => {
     const settled = question({ status: 'settled', outcome: 'yes', settlement: 'winners' });
-    expect(poolLines(settled)).toEqual(['YES: 120 coins from 4 captains.', 'NO: 80 coins from 3 captains.']);
+    expect(poolLines(settled)).toEqual(['YES: 🪙 120 from 4 captains.', 'NO: 🪙 80 from 3 captains.']);
     expect(sideLine(emptyNo, { settled: true })).toBe('Nobody picked NO.');
     const nobody = question({ status: 'settled', totalCoins: 0, sides: [{ ...emptyNo, side: 'yes', label: 'Yes' }, emptyNo] });
     expect(poolLines(nobody)).toEqual(['Nobody staked on this question.']);
@@ -177,8 +177,8 @@ describe('the stake input', () => {
   });
 
   it('refuses 0 and -3 as too small', () => {
-    expect(check('0')).toEqual({ ok: false, field: 'amount', message: 'A stake must be at least 1 coin.' });
-    expect(check('-3')).toEqual({ ok: false, field: 'amount', message: 'A stake must be at least 1 coin.' });
+    expect(check('0')).toEqual({ ok: false, field: 'amount', message: 'A stake must be at least 🪙 1.' });
+    expect(check('-3')).toEqual({ ok: false, field: 'amount', message: 'A stake must be at least 🪙 1.' });
   });
 
   it('refuses 2.5, "abc" and "1e1" as not whole numbers', () => {
@@ -191,7 +191,7 @@ describe('the stake input', () => {
     expect(check('51')).toEqual({
       ok: false,
       field: 'amount',
-      message: 'You can stake at most 50 coins on one question.',
+      message: 'You can stake at most 🪙 50 on one question.',
     });
   });
 
@@ -199,7 +199,7 @@ describe('the stake input', () => {
     expect(check('40', { leftToday: 30 })).toEqual({
       ok: false,
       field: 'amount',
-      message: 'You can still stake 30 coins today.',
+      message: 'You can still stake 🪙 30 today.',
     });
   });
 
@@ -209,7 +209,7 @@ describe('the stake input', () => {
   });
 
   it('says come back tomorrow when nothing is left today', () => {
-    expect(check('5', { leftToday: 0 }).message).toBe("You have reached today's limit of 200 coins. Try again tomorrow.");
+    expect(check('5', { leftToday: 0 }).message).toBe("You have reached today's limit of 🪙 200. Try again tomorrow.");
   });
 
   it('skips the left-today check when the number is not known', () => {
@@ -223,34 +223,34 @@ describe('the stake input', () => {
 
   it('uses the limits the server sent', () => {
     const rules = { ...RULES, minStake: 5, maxStake: 10 };
-    expect(check('4', { rules }).message).toBe('A stake must be at least 5 coins.');
-    expect(check('11', { rules }).message).toBe('You can stake at most 10 coins on one question.');
+    expect(check('4', { rules }).message).toBe('A stake must be at least 🪙 5.');
+    expect(check('11', { rules }).message).toBe('You can stake at most 🪙 10 on one question.');
   });
 });
 
 describe('the stake form text', () => {
   it('writes the confirm question', () => {
-    expect(stakeConfirmText({ side: 'yes', amount: 20 })).toBe('Stake 20 coins on YES? You cannot change or take back a stake.');
-    expect(stakeConfirmText({ side: 'no', amount: 1 })).toBe('Stake 1 coin on NO? You cannot change or take back a stake.');
+    expect(stakeConfirmText({ side: 'yes', amount: 20 })).toBe('Stake 🪙 20 on YES? You cannot change or take back a stake.');
+    expect(stakeConfirmText({ side: 'no', amount: 1 })).toBe('Stake 🪙 1 on NO? You cannot change or take back a stake.');
   });
 
   it('writes the hint with the coins left today', () => {
-    expect(hintLine(130, 200)).toBe('You can still stake 130 coins today.');
-    expect(hintLine(1, 200)).toBe('You can still stake 1 coin today.');
-    expect(hintLine(0, 200)).toBe("You have reached today's limit of 200 coins. Try again tomorrow.");
+    expect(hintLine(130, 200)).toBe('You can still stake 🪙 130 today.');
+    expect(hintLine(1, 200)).toBe('You can still stake 🪙 1 today.');
+    expect(hintLine(0, 200)).toBe("You have reached today's limit of 🪙 200. Try again tomorrow.");
   });
 
   it('writes the line that says a stake is in', () => {
-    expect(stakePlacedLine({ side: 'yes', amount: 20 })).toBe('Your stake is in: 20 coins on YES.');
-    expect(stakePlacedLine({ side: 'no', amount: 1 })).toBe('Your stake is in: 1 coin on NO.');
+    expect(stakePlacedLine({ side: 'yes', amount: 20 })).toBe('Your stake is in: 🪙 20 on YES.');
+    expect(stakePlacedLine({ side: 'no', amount: 1 })).toBe('Your stake is in: 🪙 1 on NO.');
   });
 
   it('writes the stake line that replaces the form', () => {
-    expect(stakeSummary({ side: 'yes', amount: 20 })).toBe('Your stake: 20 coins on YES');
+    expect(stakeSummary({ side: 'yes', amount: 20 })).toBe('Your stake: 🪙 20 on YES');
   });
 
   it('writes the total staked today', () => {
-    expect(todayLine(mineAnswer())).toBe('Today you staked 70 of 200 coins.');
+    expect(todayLine(mineAnswer())).toBe('Today you staked 🪙 70 of 🪙 200.');
   });
 });
 
@@ -259,12 +259,12 @@ describe('the result lines of My stakes', () => {
 
   it('writes a win with the gain', () => {
     const stake = stakeRow({ status: 'settled', result: 'won', payout: 34, settlement: 'winners', outcome: 'yes', amount: 20 });
-    expect(stakeResultLine(stake)).toBe('Won: 34 coins back (14 more than your stake)');
+    expect(stakeResultLine(stake)).toBe('Won: 🪙 34 back (14 more than your stake)');
   });
 
   it('writes a win with no gain', () => {
     const stake = stakeRow({ status: 'settled', result: 'won', payout: 1, amount: 1, settlement: 'winners', outcome: 'yes' });
-    expect(stakeResultLine(stake)).toBe('Won: 1 coin back (the same as your stake)');
+    expect(stakeResultLine(stake)).toBe('Won: 🪙 1 back (the same as your stake)');
   });
 
   it('writes a loss with the side that won', () => {
@@ -275,13 +275,13 @@ describe('the result lines of My stakes', () => {
   it('writes each refund reason in plain words', () => {
     const refunded = settlement => stakeRow({ status: 'settled', result: 'refunded', payout: 20, settlement });
     expect(stakeResultLine(refunded('refund_void'))).toBe(
-      'Refunded: 20 coins back, because the question was cancelled or unclear on Manifold',
+      'Refunded: 🪙 20 back, because the question was cancelled or unclear on Manifold',
     );
     expect(stakeResultLine(refunded('refund_no_winners'))).toBe(
-      'Refunded: 20 coins back, because nobody picked the winning answer',
+      'Refunded: 🪙 20 back, because nobody picked the winning answer',
     );
     expect(stakeResultLine(refunded('refund_one_sided'))).toBe(
-      'Refunded: 20 coins back, because everybody picked the same answer',
+      'Refunded: 🪙 20 back, because everybody picked the same answer',
     );
   });
 
@@ -405,28 +405,28 @@ describe('a whole question card', () => {
       amountLabel: 'Coins (1 to 50)',
       min: 1,
       max: 50,
-      hint: 'You can still stake 130 coins today.',
+      hint: 'You can still stake 🪙 130 today.',
     });
   });
 
   it('replaces the form with the stake line once the player has staked', () => {
     const mine = mineAnswer({ stakes: [stakeRow()] });
     const card = cardModel(question(), { ...context, mine });
-    expect(card.yourStake).toBe('Your stake: 20 coins on YES');
+    expect(card.yourStake).toBe('Your stake: 🪙 20 on YES');
     expect(card.own).toEqual({ side: 'yes', amount: 20 });
     expect(card.form).toBeNull();
   });
 
   it('shows the stake line from a stake the server just confirmed, before "mine" lists it', () => {
     const card = cardModel(question(), { ...context, placed: { side: 'no', amount: 15 } });
-    expect(card.yourStake).toBe('Your stake: 15 coins on NO');
+    expect(card.yourStake).toBe('Your stake: 🪙 15 on NO');
     expect(card.form).toBeNull();
   });
 
   it('prefers the stake listed in "mine" over the one just confirmed', () => {
     const mine = mineAnswer({ stakes: [stakeRow({ side: 'yes', amount: 20 })] });
     const card = cardModel(question(), { ...context, mine, placed: { side: 'no', amount: 15 } });
-    expect(card.yourStake).toBe('Your stake: 20 coins on YES');
+    expect(card.yourStake).toBe('Your stake: 🪙 20 on YES');
   });
 
   it('shows the reason instead of the form when staking is off', () => {

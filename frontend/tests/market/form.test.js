@@ -53,7 +53,7 @@ describe('market form lifetime', () => {
     expect(onSubmit).toHaveBeenCalledTimes(2);
     fresh.resolve({kind: 'refused'}); await second;
     expect(confirm.disabled).toBe(false);
-    expect(confirm.textContent).toBe('Open rising position for 102 coins');
+    expect(confirm.textContent).toBe('Open rising position for 🪙 102');
   });
 
   it('blocks direct confirmation during the server countdown and resumes the same choices afterward', async () => {

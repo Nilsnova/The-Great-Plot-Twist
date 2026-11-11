@@ -23,7 +23,7 @@ describe('after a stake', () => {
   it('a 200 is done, goes back to the plain form and drops the id', () => {
     const next = afterStake(ok({ questionId: 'q-one', side: 'yes', amount: 20 }));
     expect(next).toMatchObject({ done: true, step: 'edit', keepId: false });
-    expect(next.notice).toBe('Your stake is in: 20 coins on YES.');
+    expect(next.notice).toBe('Your stake is in: 🪙 20 on YES.');
   });
 
   it('already_applied counts as done and still asks for fresh numbers', () => {
@@ -33,9 +33,9 @@ describe('after a stake', () => {
   });
 
   it('shows the server message for a refusal and goes back to the form', () => {
-    const next = afterStake(refused('daily_stake_cap', 'You can still stake 30 coins today.'));
+    const next = afterStake(refused('daily_stake_cap', 'You can still stake 🪙 30 today.'));
     expect(next).toMatchObject({ done: false, step: 'edit', keepId: false });
-    expect(next.notice).toBe('You can still stake 30 coins today.');
+    expect(next.notice).toBe('You can still stake 🪙 30 today.');
   });
 
   it('falls back to the sentence for the code when the refusal has no message', () => {
@@ -86,13 +86,13 @@ describe('after a settlement', () => {
   it('shows who won and the receipt', () => {
     const next = afterSettle(ok(receipt));
     expect(next).toMatchObject({ done: true, step: 'edit', refresh: true });
-    expect(next.notice).toBe('Settled: YES won. Paid 4 captains 196 coins. 4 coins left the game.');
+    expect(next.notice).toBe('Settled: YES won. Paid 4 captains 🪙 196. 🪙 4 left the game.');
   });
 
   it('shows a void receipt in plain words', () => {
     const next = afterSettle(ok({ ...receipt, outcome: 'void', settlement: 'refund_void', paidCoins: 200, cutCoins: 0 }));
     expect(next.notice).toBe(
-      'Settled: the question was cancelled or unclear on Manifold, so everybody got their coins back. Paid 4 captains 200 coins. 0 coins left the game.',
+      'Settled: the question was cancelled or unclear on Manifold, so everybody got their coins back. Paid 4 captains 🪙 200. 🪙 0 left the game.',
     );
   });
 
@@ -178,6 +178,6 @@ describe('the stake flow', () => {
     const adapter = fakeAdapter(ok({ outcome: 'no', settlement: 'winners', paidPlayers: 1, paidCoins: 9, cutCoins: 1 }));
     const result = await createDeskFlow({ adapter }).settle({ questionId: 'q-one', outcome: 'no' });
     expect(adapter.sent[0]).toEqual({ call: 'settle', questionId: 'q-one', outcome: 'no' });
-    expect(result.notice).toBe('Settled: NO won. Paid 1 captain 9 coins. 1 coin left the game.');
+    expect(result.notice).toBe('Settled: NO won. Paid 1 captain 🪙 9. 🪙 1 left the game.');
   });
 });

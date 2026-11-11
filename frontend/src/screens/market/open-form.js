@@ -79,7 +79,7 @@ export function createOpenForm({ onSubmit, onCancel }) {
     update(nextRow, nextRules, options = {}) {
       row = nextRow; rules = nextRules; disabled = Boolean(options.disabled);
       const choices = rules?.stakeChoices ?? [];
-      stake.setOptions(choices.map(choice => ({ value: choice.stake, label: `${coinsText(choice.stake)} coins + ${coinsText(choice.fee)} fee` })));
+      stake.setOptions(choices.map(choice => ({ value: choice.stake, label: `${coinsText(choice.stake)} + ${coinsText(choice.fee)} fee` })));
       refresh();
     },
     reset() { generation += 1; busy = false; side.clear(); stake.clear(); refresh(); },
