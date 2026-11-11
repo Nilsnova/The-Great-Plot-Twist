@@ -84,6 +84,7 @@ any
 anymore
 anyone
 api
+appear
 appearing
 appears
 apple
@@ -99,6 +100,7 @@ are
 area
 aren't
 arena
+armada
 around
 arrests
 arrival
@@ -156,6 +158,7 @@ barnacle
 basket
 basketball
 batteries
+battle
 bay
 be
 beach
@@ -165,6 +168,7 @@ beam's
 beams
 bearing
 beat
+beaten
 beats
 become
 been
@@ -184,6 +188,7 @@ beneath
 berth
 beside
 best
+bets
 beyond
 big
 biggest
@@ -191,6 +196,7 @@ billboard
 billion
 binance
 bitcoin
+black
 blackness
 blank
 blanked
@@ -213,11 +219,13 @@ box
 boy
 brass
 brave
+break
 briefly
 bright
 brine
 bring
 brings
+broke
 broken
 browse
 browser
@@ -261,6 +269,8 @@ can't
 cancel
 canceled
 cancelled
+cannon
+cannons
 cannot
 captain
 captain's
@@ -358,6 +368,7 @@ coin
 coins
 cola
 cold
+collect
 color
 colorblind
 colored
@@ -517,6 +528,7 @@ differ
 different
 differently
 digit
+digits
 direction
 directly
 disappear
@@ -690,6 +702,7 @@ filter
 final
 find
 finding
+finds
 finish
 finished
 finishes
@@ -707,6 +720,7 @@ fixtures
 fizzy
 flag
 flags
+flagship
 flash
 flashed
 flashes
@@ -737,6 +751,7 @@ formed
 forming
 forty
 forward
+fought
 found
 four
 fps
@@ -885,6 +900,7 @@ holiday
 home
 honest
 hook
+horizon
 host
 hosting
 hot
@@ -892,6 +908,7 @@ hotspot
 hotspots
 hour
 hours
+house
 how
 hr
 https
@@ -1056,12 +1073,14 @@ less
 let
 lets
 letters
+level
 leverage
 library
 licences
 license
 licenses
 lid
+lie
 lies
 lifetime
 lift
@@ -1113,6 +1132,7 @@ looks
 lookup
 lookups
 loop
+loot
 lore
 lose
 losing
@@ -1241,6 +1261,7 @@ neither
 nested
 net
 network
+network's
 never
 new
 newest
@@ -1269,6 +1290,7 @@ notebook
 notes
 nothing
 notice
+noticed
 notices
 november
 now
@@ -1363,6 +1385,7 @@ parameters
 paris
 part
 participant
+participants
 participation
 partner
 partner's
@@ -1424,6 +1447,7 @@ pinnable
 pinned
 pinning
 pins
+pirate
 pirates
 pixel
 pixels
@@ -1446,6 +1470,7 @@ please
 plot
 plots
 plucky
+plunder
 plus
 png
 pocket
@@ -1557,6 +1582,7 @@ raid
 rain
 raises
 ran
+random
 rate
 rather
 reach
@@ -1586,6 +1612,7 @@ records
 recovered
 red
 redacted
+redesign
 reduce
 reduced
 reed
@@ -1632,6 +1659,7 @@ replace
 replaces
 replay
 report
+reported
 reports
 repository
 request
@@ -1702,6 +1730,7 @@ ruin
 rules
 rumors
 run
+rung
 running
 runs
 rustles
@@ -1714,6 +1743,7 @@ said
 sail
 sailed
 sailing
+sails
 sale
 saltreach
 salvage
@@ -1769,6 +1799,7 @@ section
 sections
 security
 see
+seed
 seen
 sees
 select
@@ -1816,6 +1847,7 @@ she's
 shell
 shells
 shift
+ship
 shipped
 ships
 shoal
@@ -1852,6 +1884,7 @@ silver
 simulated
 simulation
 since
+sinks
 siren
 sit
 site
@@ -1980,6 +2013,7 @@ streamed
 strict
 strip
 strong
+stronger
 stuck
 student
 sturdy
@@ -1992,6 +2026,7 @@ subtitles
 success
 successful
 summaries
+sunk
 sunny
 supabase
 supabase's
@@ -2001,6 +2036,7 @@ supply
 support
 supported
 survey
+survived
 surviving
 suspect
 suspects
@@ -2233,6 +2269,7 @@ walks
 wall
 wallet
 wallets
+walls
 walrus
 wandering
 want
@@ -2249,6 +2286,7 @@ watches
 watching
 watchtower
 water
+waters
 wave
 waves
 way
@@ -2303,6 +2341,7 @@ won
 word
 words
 work
+worked
 working
 works
 workshop

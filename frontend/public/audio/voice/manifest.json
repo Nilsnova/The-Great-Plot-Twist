@@ -1,70 +1,106 @@
 {
   "version": 1,
-  "note": "Voice lines by id, generated with ElevenLabs text-to-speech (voice George, model eleven_multilingual_v2) by scripts/voice/generate.py. Voices by ElevenLabs.",
+  "note": "Voice lines by id, generated with ElevenLabs text-to-speech (voice George, model eleven_multilingual_v2) by scripts/voice/generate.py. Pirate-game narration, 11 Nov 2026. Voices by ElevenLabs.",
   "lines": {
     "lore_intro_01": {
       "file": "lore_intro_01.mp3",
-      "seconds": 3.68
+      "seconds": 2.85
     },
     "lore_intro_02": {
       "file": "lore_intro_02.mp3",
-      "seconds": 3.6
+      "seconds": 3.08
     },
     "lore_intro_03": {
       "file": "lore_intro_03.mp3",
-      "seconds": 4.23
+      "seconds": 2.38
     },
     "lore_intro_04": {
       "file": "lore_intro_04.mp3",
-      "seconds": 3.79
+      "seconds": 2.79
     },
     "lore_intro_05": {
       "file": "lore_intro_05.mp3",
-      "seconds": 2.98
+      "seconds": 3.21
     },
     "lore_intro_06": {
       "file": "lore_intro_06.mp3",
-      "seconds": 3.87
+      "seconds": 3.5
     },
     "harbor_arrival_01": {
       "file": "harbor_arrival_01.mp3",
-      "seconds": 1.83
+      "seconds": 1.93
     },
     "harbor_arrival_02": {
       "file": "harbor_arrival_02.mp3",
-      "seconds": 2.85
+      "seconds": 3.19
     },
     "lock_opens_01": {
       "file": "lock_opens_01.mp3",
-      "seconds": 2.12
+      "seconds": 1.93
     },
     "lock_opens_02": {
       "file": "lock_opens_02.mp3",
-      "seconds": 2.85
+      "seconds": 3.08
     },
     "lock_opens_03": {
       "file": "lock_opens_03.mp3",
-      "seconds": 3.4
+      "seconds": 3.03
     },
     "lock_opens_04": {
       "file": "lock_opens_04.mp3",
-      "seconds": 3.08
+      "seconds": 3.81
     },
     "lamps_relit_01": {
       "file": "lamps_relit_01.mp3",
-      "seconds": 2.38
+      "seconds": 2.06
     },
     "lamps_relit_02": {
       "file": "lamps_relit_02.mp3",
-      "seconds": 2.43
+      "seconds": 2.38
     },
     "lamps_relit_03": {
       "file": "lamps_relit_03.mp3",
-      "seconds": 3.21
+      "seconds": 3.45
     },
     "lamps_relit_04": {
       "file": "lamps_relit_04.mp3",
-      "seconds": 3.4
+      "seconds": 3.03
+    },
+    "island_arrival_01": {
+      "file": "island_arrival_01.mp3",
+      "seconds": 2.3
+    },
+    "island_arrival_02": {
+      "file": "island_arrival_02.mp3",
+      "seconds": 2.35
+    },
+    "wave_won_01": {
+      "file": "wave_won_01.mp3",
+      "seconds": 2.43
+    },
+    "wave_won_02": {
+      "file": "wave_won_02.mp3",
+      "seconds": 2.43
+    },
+    "wave_lost_01": {
+      "file": "wave_lost_01.mp3",
+      "seconds": 2.95
+    },
+    "wave_lost_02": {
+      "file": "wave_lost_02.mp3",
+      "seconds": 2.77
+    },
+    "armada_01": {
+      "file": "armada_01.mp3",
+      "seconds": 3.21
+    },
+    "armada_02": {
+      "file": "armada_02.mp3",
+      "seconds": 2.14
+    },
+    "armada_03": {
+      "file": "armada_03.mp3",
+      "seconds": 2.85
     }
   }
 }

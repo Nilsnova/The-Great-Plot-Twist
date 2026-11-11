@@ -9,8 +9,10 @@ const total=id=>findScript(data,id).lines.reduce((sum,line)=>sum+line.seconds,0)
 const publicFile=path=>new URL(`../public/${path}`,import.meta.url);
 
 describe('cutscene scripts',()=>{
-  it('holds the four kept scripts with their target lengths',()=>{
-    expect(data.scripts.map(script=>script.id)).toEqual(['lore_intro','harbor_arrival','lock_opens','lamps_relit']);
+  it('holds the pirate-game scripts with their target lengths',()=>{
+    expect(data.scripts.map(script=>script.id)).toEqual(['lore_intro','harbor_arrival','lock_opens','lamps_relit','island_arrival','wave_won','wave_lost','armada']);
+    for(const id of ['island_arrival','wave_won','wave_lost']){expect(total(id)).toBeGreaterThanOrEqual(5);expect(total(id)).toBeLessThanOrEqual(8);}
+    expect(total('armada')).toBeGreaterThanOrEqual(8);expect(total('armada')).toBeLessThanOrEqual(15);
     expect(total('lore_intro')).toBeGreaterThanOrEqual(22);expect(total('lore_intro')).toBeLessThanOrEqual(28);
     expect(total('harbor_arrival')).toBeGreaterThanOrEqual(5);expect(total('harbor_arrival')).toBeLessThanOrEqual(8);
     for(const id of ['lock_opens','lamps_relit']){expect(total(id)).toBeGreaterThanOrEqual(15);expect(total(id)).toBeLessThanOrEqual(30);}
@@ -28,7 +30,8 @@ describe('cutscene scripts',()=>{
       expect(line.text).not.toMatch(/culprit|guilty|masked|schooner|false light|accus|confess|kidnap|murder/i);
     }
   });
-  it('builds scenes only from existing local art and never from reveal art',()=>{
+  it('builds a scene for every script, only from existing local art and never from the removed mystery art',()=>{
+    for(const script of data.scripts)expect(scenes[script.id],script.id).toBeDefined();
     for(const [id,shots] of Object.entries(scenes)){
       const script=findScript(data,id);expect(script).not.toBeNull();
       for(const shot of shots){
@@ -36,7 +39,8 @@ describe('cutscene scripts',()=>{
         for(const layer of shot.layers){
           expect(layer.art).toMatch(/^(places|pixel)\/[a-z0-9-]+\.(png|webp)$/);
           expect(existsSync(publicFile(layer.art)),layer.art).toBe(true);
-          expect(layer.art).not.toMatch(/ghost-schooner|masked|false-light|dark-schooner/);
+          // Since the mystery left the game (D031) the dark schooner is the pirate ship; the case portraits stay out.
+          expect(layer.art).not.toMatch(/ghost-schooner|masked|false-light|character-elena/);
         }
       }
     }

@@ -334,10 +334,11 @@ tests in `tests/qr/` include an independent test-only reader.
 **Voices.** `scripts/voice/generate.py` turns the cutscene scripts into MP3 lines
 in `public/audio/voice/` with the ElevenLabs text-to-speech API, plus a manifest
 with durations. Credit line for Settings > Credits: **Voices by ElevenLabs.** The
-scripts are our own writing (`src/cutscenes/scripts.json`). Generated on 9 Nov 2026
-with the team's own ElevenLabs account: 16 lines in four scenes (lore_intro,
-harbor_arrival, lock_opens, lamps_relit), premade voice George, model
-eleven_multilingual_v2, MP3 22,050 Hz 32 kbit/s, 232 KB in total, files named
+scripts are our own writing (`src/cutscenes/scripts.json`). Regenerated on 11 Nov 2026
+for the pirate game with the team's own ElevenLabs account: 25 lines in eight scenes
+(lore_intro, harbor_arrival, lock_opens, lamps_relit, island_arrival, wave_won,
+wave_lost, armada), premade voice George, model eleven_multilingual_v2, MP3 22,050 Hz
+32 kbit/s, 282 KB in total (the first set of 16 lines from 9 Nov was replaced), files named
 `<line id>.mp3` with durations in `public/audio/voice/manifest.json`. The key never
 enters the repository; it is read from a file outside it. Attribution as the free
 plan requires: **Voices by ElevenLabs**, shown in Settings > Credits.
