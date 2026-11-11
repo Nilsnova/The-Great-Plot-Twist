@@ -30,6 +30,9 @@ export function attachIsletPanel({
   loadFake = import.meta.env.DEV ? () => import('./fake-transport.js') : null,
   search = globalThis.location?.search ?? '',
   dev = import.meta.env.DEV,
+  // true while the island game (src/island/, flag "islands") owns home_islet: then this old panel never
+  // opens and never reads GET /api/islet.
+  isOff = () => false,
 }) {
   const mode = chooseMode({dev, loadFake, search, transport: suppliedAdapter ?? transport});
   const fake = mode === 'local' ? lazyFake(loadFake) : null;
@@ -51,8 +54,9 @@ export function attachIsletPanel({
     return panelModule;
   }
 
+  const off = () => { try { return isOff() === true; } catch { return false; } };
   async function openAt(plot) {
-    if (stopped) return false;
+    if (stopped || off()) return false;
     const mine = ++ticket;
     opening = true;
     try {
@@ -77,6 +81,7 @@ export function attachIsletPanel({
 
   function refresh() {
     if (stopped) return Promise.resolve(refused('disposed'));
+    if (off()) return Promise.resolve(refused('feature_off'));
     if (mode === 'live' && !canAsk()) return Promise.resolve(refused('sign_in_required'));
     if (refreshing?.identity === identity) return refreshing.promise;
     const task = {identity, promise: null};

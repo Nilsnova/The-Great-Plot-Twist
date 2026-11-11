@@ -143,9 +143,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     if (event.id === 'prediction_kiosk') { openDesk(); return; }
     if (event.id === 'market_hall') { openMarket(); return; }
   });
+  // With the islands on, the old islet panel never opens and never reads GET /api/islet.
+  function islandsOn(){
+    if(islandsMode)return islandsMode!=='off';
+    const services=findPanelServices(session);
+    return quickIslandsMode({search:location.search,dev:import.meta.env.DEV,flags:services?.isReady()?services.getFlags():null})!=='off';
+  }
   const stopPlots = createIsletHost({session,attach:attachIsletPanel,container,on,emit,
     resetInput:resetControls,focus:()=>graphics.renderer.domElement.focus(),
-    resetWorld:()=>isletState.resetAccount(),
+    resetWorld:()=>isletState.resetAccount(),isOff:islandsOn,
     isDemo:()=>new URLSearchParams(location.search).get('demo')==='1'});
   void stopPlots.refresh();
   const stopArrivals = on('arrived', event => {hud.arrive(event.place);showQuests();emit({type:PLACE_ARRIVED,id:event.place});});
