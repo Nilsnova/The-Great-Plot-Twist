@@ -37,6 +37,7 @@ addresses
 adds
 adjusts
 admission
+admits
 admitted
 advance
 advertising
@@ -239,6 +240,7 @@ browsing
 brussels
 budget
 build
+builder
 building
 buildings
 builds
@@ -610,6 +612,7 @@ email
 emblem
 emote
 emotes
+emptied
 empty
 enable
 enabled
@@ -1061,6 +1064,7 @@ keys
 kicking
 kickoff
 kind
+kinds
 kiosk
 kit
 kits
@@ -1110,6 +1114,7 @@ let
 lets
 letters
 level
+levels
 leverage
 library
 licences

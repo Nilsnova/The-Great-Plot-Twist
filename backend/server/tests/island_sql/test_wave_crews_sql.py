@@ -177,7 +177,9 @@ def test_no_browser_role_may_read_participants_or_run_the_new_functions(database
                (select count(*) from pg_proc where proname = 'wave_finish')
         """
     ).fetchone()
-    assert rights == (False, False, False, False, 1)
+    # Two versions: the 8-argument one of this migration and the 11-argument one of
+    # 20261111030000_tower_defense.sql, which the server uses now.
+    assert rights == (False, False, False, False, 2)
     assert (
         call(database, "select count(*) from pg_policies where tablename = 'wave_participants'")
         == 0

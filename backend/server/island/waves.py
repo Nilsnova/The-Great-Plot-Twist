@@ -5,6 +5,11 @@
     current()  the running wave of an island or of Pirate Point, or None
     finish()   one participant's result: their own loot, the coins, the best wave and the flags
 
+Tower defense v2 (docs/TOWER-DEFENSE.md): up to wave 100, every 5th wave a boss wave (boss: true,
+its loot pays twice), and after a lost island wave the next bell rings the best wave minus 2 (at
+least 1). The database keeps both rules (wave_start and the 11-argument wave_finish of
+20261111030000_tower_defense.sql); the numbers come from islands.json.
+
 The weather of a new wave comes from wave_weather.py (the bell-ringer's area, else the default
 place, else calm); a joined or current wave carries the weather stored with it. A Pirate Point wave
 says flagship: true, so the client shows the flagship that only the three lamps can sink.
@@ -27,7 +32,7 @@ from server.game.islet_store import player_not_set_up
 from server.island import store
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
-from server.island.rules import weather_for
+from server.island.rules import is_boss, weather_for
 from server.island.service import no_such_island
 from server.island.store import Refusal, WaveRow
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -48,6 +53,7 @@ class WaveStart:
     starts_at: datetime
     weather: Weather
     flagship: bool  # True on Pirate Point: the flagship only the three lamps can sink
+    boss: bool  # every 5th wave (islands.json bossEvery): a warship, and the loot pays twice
 
 
 @dataclass(frozen=True)
@@ -56,6 +62,7 @@ class WaveFinish:
     coins: int
     wave_best: int
     flags: int
+    boss: bool
 
 
 async def find_place(
@@ -120,13 +127,18 @@ def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
     stored = weather_for(catalogue, row.weatherKind)
     weather = Weather(stored.kind, stored.label, row.ships, row.fog)
     flagship = row.place == PIRATE_POINT
-    return WaveStart(row.waveId, row.wave, row.seed, row.startsAt, weather, flagship)
+    boss = is_boss(catalogue, row.wave)
+    return WaveStart(row.waveId, row.wave, row.seed, row.startsAt, weather, flagship, boss)
 
 
 async def join(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, wave_id: UUID
 ) -> WaveStart:
-    """Join a running wave (a friend's island or Pirate Point). Safe to repeat."""
+    """Join a running wave (a friend's island or Pirate Point). Safe to repeat.
+
+    The joiner's own island is opened first: their best won wave (the unlocks) is kept on it,
+    so a friend who never opened their own island still gets the credit for a won wave."""
+    await store.open_island(admin, player_id, catalogue.starting_coins)
     reply = await store.join_wave(admin, player_id, str(wave_id))
     if isinstance(reply, Refusal):
         if reply.reason == "no_such_wave":
@@ -185,8 +197,11 @@ async def finish(
         "p_loot_per_wave": loot.per_wave,
         "p_loot_per_house": loot.per_house,
         "p_point_loot_base": loot.pirate_point_base,
+        "p_boss_every": catalogue.waves.boss_every,
+        "p_boss_multiplier": loot.boss_multiplier,
+        "p_restart_back": catalogue.waves.restart_back,
     }
     reply = await store.finish_wave(admin, arguments)
     if isinstance(reply, Refusal):
         raise finish_refusal(reply)
-    return WaveFinish(reply.loot, reply.balance, reply.waveBest, reply.flags)
+    return WaveFinish(reply.loot, reply.balance, reply.waveBest, reply.flags, reply.boss)

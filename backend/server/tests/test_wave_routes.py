@@ -66,6 +66,7 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
         "startsAt": "2026-11-10T12:00:10Z",
         "weather": {"kind": "calm", "label": "Calm sea", "ships": 1.0, "fog": 0.0},
         "flagship": False,
+        "boss": False,
     }
 
 
@@ -86,7 +87,7 @@ def test_the_own_island_is_opened_and_its_owner_sent_with_the_numbers_of_the_fil
         "p_countdown_seconds": 10,
         "p_minimum_seconds": 15,
         "p_maximum_seconds": 900,
-        "p_highest_wave": 50,
+        "p_highest_wave": 100,
         "p_weather_kind": "calm",
         "p_weather_ships": 1.0,
         "p_weather_fog": 0.0,
@@ -238,7 +239,7 @@ def test_a_finished_wave_answers_the_loot_the_coins_the_best_wave_and_the_flags(
     response = world.finish()
 
     assert response.status_code == 200
-    assert response.json() == {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1}
+    assert response.json() == {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1, "boss": False}
     (call,) = world.database.calls("wave_finish")
     assert call == {
         "p_player_id": PLAYER_ID,
@@ -249,6 +250,9 @@ def test_a_finished_wave_answers_the_loot_the_coins_the_best_wave_and_the_flags(
         "p_loot_per_wave": 5,
         "p_loot_per_house": 5,
         "p_point_loot_base": 20,
+        "p_boss_every": 5,
+        "p_boss_multiplier": 2,
+        "p_restart_back": 2,
     }
 
 
@@ -256,7 +260,13 @@ def test_a_repeated_finish_answers_the_stored_result():
     world = World()
     world.database.finish_reply = {**FINISHED, "repeat": True}
 
-    assert world.finish().json() == {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1}
+    assert world.finish().json() == {
+        "loot": 15,
+        "coins": 115,
+        "waveBest": 1,
+        "flags": 1,
+        "boss": False,
+    }
 
 
 def test_a_lost_wave_pays_nothing():
@@ -275,6 +285,7 @@ def test_a_lost_wave_pays_nothing():
         "coins": 100,
         "waveBest": 0,
         "flags": 0,
+        "boss": False,
     }
 
 

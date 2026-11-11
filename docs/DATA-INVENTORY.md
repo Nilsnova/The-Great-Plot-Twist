@@ -29,7 +29,7 @@ Schema sources, in timestamp order:
 - [demo window](../supabase/migrations/20261109010000_demo_window.sql).
 - [class code](../supabase/migrations/20261109020000_class_code.sql).
 
-The sections below cover **all 45 current application tables and all 333 current columns**. The three old `market_*` tables were dropped by Exchange v2 (`090000`); their replacements are `exchange_positions` and `exchange_events`. Derived views such as `prediction_pool_sides` contain no separate stored rows.
+The sections below cover **all 46 current application tables and all 346 current columns**. The three old `market_*` tables were dropped by Exchange v2 (`090000`); their replacements are `exchange_positions` and `exchange_events`. Derived views such as `prediction_pool_sides` contain no separate stored rows.
 
 Each table has RLS enabled. Visitors have no direct application-table access. Signed-in players receive only the read grants and row filters stated below; all game writes go through server-authorised operations. New case/world/festival/host/sports/demo tables are server-only, with purpose-built API views rather than browser table grants. Authorised database operators can inspect data beyond these player views.
 
@@ -280,12 +280,12 @@ Purpose: Accepted building levels and timber/play-coin costs. Readers: Owner thr
 
 | Column | What it holds and why |
 |---|---|
-| `building_type` | What stands on the plot: workshop, windmill, greenhouse or signal_station on the home islet, or wall, cannon, watchtower or house on the island (migration 20261110010000). Each plot holds only its own kind of building (a check rule). The finale counts the rows of type signal_station. |
+| `building_type` | What stands on the plot: workshop, windmill, greenhouse or signal_station on the home islet, or wall, cannon, mortar, watchtower or house on the island (migrations 20261110010000 and 20261111030000). Each plot holds only its own kind of building (a check rule). The finale counts the rows of type signal_station. |
 | `built_at` | When the database transaction of the build started. |
 | `coins_paid` | Whole coins the player paid for the building, at least 1. The wallet ledger has the matching row (reason building_purchase, the same ref). |
-| `level` | The level of the building, from 1 to 3. islet_build() builds level 1. Levels 2 and 3 come with the upgrades of a later migration. |
+| `level` | The level of the building, from 1 to 3. islet_build() builds level 1; island_upgrade() raises it one level per paid click (migration 20261111030000). |
 | `player_id` | The player whose islet the building stands on. With plot it is the primary key, so a plot holds one building. Deleting the islet deletes this row. |
-| `plot` | The spot: plot_2, plot_3, plot_4 or islet_signal_station (backend/content/buildings.json), or wall_1..4, cannon_1..4, tower_1, house_1..2 (backend/content/islands.json). The cabin has no row. |
+| `plot` | The spot: plot_2, plot_3, plot_4 or islet_signal_station (backend/content/buildings.json), or wall_1..6, cannon_1..7, tower_1, house_1..2 (backend/content/islands.json). The cabin has no row. |
 | `ref` | islet: (home islet) or island: (island) plus the actionUid the browser made for the click, at most 120 characters. For one player the same ref can be used only once, so a repeated request cannot build or charge twice. The wallet ledger row of the build uses the same ref. |
 | `timber_paid` | Whole pieces of timber the building took from the islet. Timber has no ledger, so this column is the only record of it. |
 
@@ -295,12 +295,32 @@ Purpose: Each player's own island for the island game: its code, so friends can 
 
 | Column | What it holds and why |
 |---|---|
-| `code` | The island code (5 symbols, shown as ISLE-<code>), made by the server at random. Not a secret: it lets another player look at the island and defend it. |
+| `captain_level` | The level of the owner's captain (1 to 5), raised by paid clicks. |
+| `code` | The island code (5 symbols, shown as ISLE-<code>), made by the server at random. Not a secret: it lets another player look at the island and defend it, and a friend's invite with it admits a guest. |
 | `created_at` | When the island was first opened. |
+| `crew_carpenter` | Carpenters hired for the island (at most 2). |
+| `crew_gunner` | Gunners hired for the island (at most 2). |
+| `crew_lookout` | Lookouts hired for the island (at most 1). |
 | `flags` | Pirate flags won on this island: one per survived wave. |
+| `next_wave` | The wave the next bell rings (the restart rule after a lost wave), or empty for the best wave + 1. |
 | `player_id` | The owner's player UUID, also the primary key. |
+| `won_wave_best` | The highest wave this player fought in and won (any island or Pirate Point); with `wave_best` it decides what is unlocked. |
 | `updated_at` | When the best wave or the flags last changed. |
 | `wave_best` | The highest wave survived on this island. |
+
+### public.pirate_point_buildings
+
+Purpose: The shared buildings of Pirate Point (migration 20261111030000): anyone builds or upgrades a spot with their own coins and the building belongs to Pirate Point. Readers: Server only (no browser policy); `GET /api/pirate-point` shows every signed-in player the spots, kinds and levels, never who built them. Lifetime: Kept between battles; `built_by` is emptied when that player's account is deleted.
+
+| Column | What it holds and why |
+|---|---|
+| `built_at` | When the spot was first built. |
+| `built_by` | The player UUID of the first builder, so a row can be traced; never shown. Emptied when that account is deleted. |
+| `coins_paid` | All coins paid for this spot by everyone (build and upgrades); the wallet ledger has each payer's row. |
+| `kind` | wall, cannon or mortar (chosen at the first build and kept). |
+| `level` | The level, 1 to 3. |
+| `spot` | pp_wall_1..4 or pp_tower_1..6, also the primary key. |
+| `updated_at` | When the spot last changed. |
 
 ### public.wave_runs
 

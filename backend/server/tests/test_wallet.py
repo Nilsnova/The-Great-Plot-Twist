@@ -88,6 +88,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("fresh_start", "either"),
         ("market_call_stake", "spend"),
         ("market_call_payout", "earn"),
+        ("crew_hire", "spend"),
+        ("captain_upgrade", "spend"),
     )
 
 
@@ -130,6 +132,8 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "fresh_start",
         "market_call_stake",
         "market_call_payout",
+        "crew_hire",
+        "captain_upgrade",
     ]
 
 

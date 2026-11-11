@@ -1,10 +1,11 @@
 """The island and its waves, loaded from backend/content/islands.json.
 
-The spots, the prices of the four kinds, the starting coins, the loot rule, the wave timing and
-what each weather state does to the pirates live in a data file (decision D016), so a price changes
+The spots (also Pirate Point's), the prices per level of the five kinds, the crew, the captain,
+the unlocks, the starting coins, the loot rule, the wave timing and what each weather state does
+to the pirates live in a data file (decision D016), so a price changes
 by editing the file, not the code. This file reads it, checks every field and hands out an
 IslandCatalogue. A mistake stops only the island routes (503 island_unavailable), never the whole
-API. The numbers are the economy table of docs/BUILD-PLAN.md section 3.2; change both together.
+API. The numbers are the tables of docs/TOWER-DEFENSE.md and docs/ECONOMY.md; change them together.
 
 The file is for the server only. The browser gets what it needs through GET /api/island.
 
@@ -32,6 +33,11 @@ MAX_SPOTS = 20
 MAX_WAVE = 1000
 MAX_SECONDS = 86400
 MIN_SHIPS, MAX_SHIPS = 0.5, 3.0
+# A building has at most 3 levels and a captain 5 (the check rules of the migration).
+MAX_LEVEL = 3
+MAX_CAPTAIN_LEVEL = 5
+# The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these three.
+CREW_KINDS = ("gunner", "carpenter", "lookout")
 
 
 class IslandFileError(ValueError):
@@ -42,21 +48,51 @@ class IslandFileError(ValueError):
 class Kind:
     kind: str  # "wall"
     name: str  # "Wall"
-    coins: int  # the price of one
+    prices: tuple[int, ...]  # index 0 = level 1 (the build), 1 = level 2, ...; length = max level
+    unlock_wave: int  # the best won wave a player needs before this kind can be built
+
+    @property
+    def coins(self) -> int:
+        """The price of building one (level 1)."""
+        return self.prices[0]
+
+    @property
+    def max_level(self) -> int:
+        return len(self.prices)
 
 
 @dataclass(frozen=True)
 class Spot:
     id: str  # "wall_1": the marker in the island scene and the plot in islet_buildings
-    kind: str  # what can stand here
+    kinds: tuple[str, ...]  # what can stand here; the first is shown on an empty spot
+
+    @property
+    def kind(self) -> str:
+        return self.kinds[0]
+
+
+@dataclass(frozen=True)
+class Crew:
+    crew: str  # gunner, carpenter or lookout
+    name: str
+    coins: int  # the price of one
+    max: int  # at most this many per island
+    unlock_wave: int
+
+
+@dataclass(frozen=True)
+class Captain:
+    prices: tuple[int, ...]  # index 0 = level 1 (free), 1 = level 2, ...; length = max level
+    unlock_waves: tuple[int, ...]  # the same index: the best won wave each level needs
 
 
 @dataclass(frozen=True)
 class Loot:
-    base: int  # loot for surviving wave n: base + per_wave * n + per_house * houses
+    base: int  # loot for surviving wave n: base + per_wave * n + per_house * house levels
     per_wave: int
     per_house: int
     pirate_point_base: int  # the base on Pirate Point, where there are no houses
+    boss_multiplier: int  # a boss wave pays this many times the loot
 
 
 @dataclass(frozen=True)
@@ -65,6 +101,8 @@ class WaveTiming:
     minimum_seconds: int  # a finish earlier than this after the countdown is refused
     maximum_seconds: int  # after this the wave is over and pays nothing
     highest_wave: int  # the wave number never goes above this
+    boss_every: int  # every boss_every-th wave is a boss wave
+    restart_back: int  # after a lost wave the next bell rings best wave minus this (at least 1)
 
 
 @dataclass(frozen=True)
@@ -80,7 +118,11 @@ class IslandCatalogue:
     play_money_note: str
     starting_coins: int
     kinds: tuple[Kind, ...]
+    level_unlock_waves: tuple[int, ...]  # index 0 = level 1: the best won wave a level needs
     spots: tuple[Spot, ...]  # in the order of the file
+    pirate_point_spots: tuple[Spot, ...]
+    crew: tuple[Crew, ...]
+    captain: Captain
     loot: Loot
     waves: WaveTiming
     weather: tuple[Weather, ...]
@@ -137,12 +179,23 @@ def read_object(data: dict, name: str) -> dict:
     return value
 
 
+def read_whole_list(entry: dict, name: str, where: str, lowest: int, longest: int) -> tuple:
+    values = entry.get(name)
+    if not isinstance(values, list) or not 1 <= len(values) <= longest:
+        raise IslandFileError(f"{where}: '{name}' must be a list of 1 to {longest} whole numbers.")
+    return tuple(
+        read_whole({"value": value}, "value", f"{where}.{name}", lowest, MAX_DELTA)
+        for value in values
+    )
+
+
 def read_kinds(data: dict) -> tuple[Kind, ...]:
     kinds = tuple(
         Kind(
             kind=read_id(entry, "kind", f"kinds[{index}]"),
             name=read_text(entry, "name", f"kinds[{index}]", 40),
-            coins=read_whole(entry, "coins", f"kinds[{index}]", 1, MAX_DELTA),
+            prices=read_whole_list(entry, "prices", f"kinds[{index}]", 1, MAX_LEVEL),
+            unlock_wave=read_whole(entry, "unlockWave", f"kinds[{index}]", 0, MAX_WAVE),
         )
         for index, entry in enumerate(read_list(data, "kinds", MAX_SPOTS))
     )
@@ -151,20 +204,54 @@ def read_kinds(data: dict) -> tuple[Kind, ...]:
     return kinds
 
 
-def read_spots(data: dict, kinds: tuple[Kind, ...]) -> tuple[Spot, ...]:
+def read_spots(data: dict, name: str, kinds: tuple[Kind, ...]) -> tuple[Spot, ...]:
     known = {kind.kind for kind in kinds}
     spots = []
-    for index, entry in enumerate(read_list(data, "spots", MAX_SPOTS)):
+    for index, entry in enumerate(read_list(data, name, MAX_SPOTS)):
+        where = f"{name}[{index}]"
+        spot_kinds = entry.get("kinds")
+        if not isinstance(spot_kinds, list) or not 1 <= len(spot_kinds) <= 4:
+            raise IslandFileError(f"{where}: 'kinds' must be a list of 1 to 4 kinds.")
         spot = Spot(
-            id=read_id(entry, "id", f"spots[{index}]"),
-            kind=read_id(entry, "kind", f"spots[{index}]"),
+            id=read_id(entry, "id", where),
+            kinds=tuple(read_id({"kind": kind}, "kind", where) for kind in spot_kinds),
         )
-        if spot.kind not in known:
-            raise IslandFileError(f"spots[{index}]: the kind '{spot.kind}' is not in 'kinds'.")
+        unknown = [kind for kind in spot.kinds if kind not in known]
+        if unknown:
+            raise IslandFileError(f"{where}: the kind '{unknown[0]}' is not in 'kinds'.")
         spots.append(spot)
     if len({spot.id for spot in spots}) != len(spots):
-        raise IslandFileError("Two spots share the same 'id'.")
+        raise IslandFileError(f"Two entries of '{name}' share the same 'id'.")
     return tuple(spots)
+
+
+def read_crew(data: dict) -> tuple[Crew, ...]:
+    crew = tuple(
+        Crew(
+            crew=read_id(entry, "crew", f"crew[{index}]"),
+            name=read_text(entry, "name", f"crew[{index}]", 40),
+            coins=read_whole(entry, "coins", f"crew[{index}]", 1, MAX_DELTA),
+            max=read_whole(entry, "max", f"crew[{index}]", 1, 10),
+            unlock_wave=read_whole(entry, "unlockWave", f"crew[{index}]", 0, MAX_WAVE),
+        )
+        for index, entry in enumerate(read_list(data, "crew", len(CREW_KINDS)))
+    )
+    if sorted(member.crew for member in crew) != sorted(CREW_KINDS):
+        raise IslandFileError(f"'crew' must have one entry for each of {', '.join(CREW_KINDS)}.")
+    return crew
+
+
+def read_captain(data: dict) -> Captain:
+    entry = read_object(data, "captain")
+    captain = Captain(
+        prices=read_whole_list(entry, "prices", "captain", 0, MAX_CAPTAIN_LEVEL),
+        unlock_waves=read_whole_list(entry, "unlockWaves", "captain", 0, MAX_CAPTAIN_LEVEL),
+    )
+    if len(captain.prices) != len(captain.unlock_waves):
+        raise IslandFileError("captain: 'prices' and 'unlockWaves' must be equally long.")
+    if captain.prices[0] != 0 or 0 in captain.prices[1:]:
+        raise IslandFileError("captain: level 1 is free (0) and every later level costs coins.")
+    return captain
 
 
 def read_loot(data: dict) -> Loot:
@@ -174,6 +261,7 @@ def read_loot(data: dict) -> Loot:
         per_wave=read_whole(entry, "perWave", "loot", 0, 1000),
         per_house=read_whole(entry, "perHouse", "loot", 0, 1000),
         pirate_point_base=read_whole(entry, "piratePointBase", "loot", 0, 1000),
+        boss_multiplier=read_whole(entry, "bossMultiplier", "loot", 1, 10),
     )
 
 
@@ -184,6 +272,8 @@ def read_waves(data: dict) -> WaveTiming:
         minimum_seconds=read_whole(entry, "minimumSeconds", "waves", 0, MAX_SECONDS),
         maximum_seconds=read_whole(entry, "maximumSeconds", "waves", 1, MAX_SECONDS),
         highest_wave=read_whole(entry, "highestWave", "waves", 1, MAX_WAVE),
+        boss_every=read_whole(entry, "bossEvery", "waves", 0, MAX_WAVE),
+        restart_back=read_whole(entry, "restartBack", "waves", 0, MAX_WAVE),
     )
     if timing.minimum_seconds > timing.maximum_seconds:
         raise IslandFileError("waves: 'minimumSeconds' cannot be more than 'maximumSeconds'.")
@@ -221,7 +311,11 @@ def load_island(path: Path = CONTENT_FILE) -> IslandCatalogue:
         play_money_note=read_text(data, "playMoneyNote", path.name, 200),
         starting_coins=read_whole(data, "startingCoins", path.name, 1, MAX_DELTA),
         kinds=kinds,
-        spots=read_spots(data, kinds),
+        level_unlock_waves=read_whole_list(data, "levelUnlockWaves", path.name, 0, MAX_LEVEL),
+        spots=read_spots(data, "spots", kinds),
+        pirate_point_spots=read_spots(data, "piratePointSpots", kinds),
+        crew=read_crew(data),
+        captain=read_captain(data),
         loot=read_loot(data),
         waves=read_waves(data),
         weather=read_weather(data),
