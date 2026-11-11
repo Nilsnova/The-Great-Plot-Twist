@@ -3,12 +3,12 @@
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {STAKES, STAKE_EVENT, offeredStakes, poolGain} from '../../src/harbor/stakes.js';
-import {closedReason, marketView, newlyClosed, pickAssets, rememberPrices} from '../../src/harbor/market-model.js';
+import {callView, callsView, countdownText, reasonText, rememberPrices} from '../../src/harbor/market-model.js';
 import {matchView} from '../../src/harbor/match-model.js';
 import {fortuneView} from '../../src/harbor/fortune-model.js';
 import {PIRATE_LINES, weatherView} from '../../src/harbor/weather-model.js';
-import {EXPLAIN, SIGN_IN, lisbonWhen, priceText, refusalText, resultText} from '../../src/harbor/words.js';
-import {NOW, emptyPortfolio, fixture, marketBoard, openPosition, question, sportsBoard, weatherAnswer} from './fixtures.js';
+import {EXPLAIN, SIGN_IN, priceText, refusalText, resultText} from '../../src/harbor/words.js';
+import {NOW, callAssets, fixture, marketCall, question, sportsBoard, weatherAnswer} from './fixtures.js';
 
 describe('stakes', () => {
   it('are 5, 10 and 25 and nothing else', () => {
@@ -30,8 +30,9 @@ describe('stakes', () => {
 });
 
 describe('market stall', () => {
-  it('keeps Bitcoin, Ether, gold and two stocks, and hides the rest', () => {
-    expect(pickAssets(marketBoard().companies).map(asset => asset.name)).toEqual(['Bitcoin', 'Ether', 'Gold', 'Apple', 'NVIDIA']);
+  const board = (extra = {}) => ({assets: callAssets(), calls: [], balance: 100, ...extra});
+  it('shows one item per asset with the server names, in the server order', () => {
+    expect(callsView({answer: board(), now: NOW}).assets.map(asset => asset.name)).toEqual(['Bitcoin', 'Ether', 'Gold', 'Apple', 'NVIDIA']);
   });
   it('shows plain dollar prices; real prices may be big', () => {
     expect(priceText(74339.12)).toBe('$74,339');
@@ -39,64 +40,70 @@ describe('market stall', () => {
     expect(priceText(0.5123)).toBe('$0.5123');
     expect(priceText(null)).toBeNull();
   });
-  it('is open with stakes when trading is on and the player is signed in', () => {
-    const view = marketView({board: marketBoard(), portfolio: emptyPortfolio(), now: NOW});
-    expect(view.state).toBe('open');
-    const bitcoin = view.assets[0];
-    expect(bitcoin).toMatchObject({name: 'Bitcoin', price: '$74,339', reason: null, canStake: true, stakes: [5, 10, 25]});
+  it('is open with the stakes 5, 10 and 25 on an open asset, and says the balance', () => {
+    const view = callsView({answer: board(), now: NOW});
+    expect(view).toMatchObject({state: 'open', balance: 100, full: false});
+    expect(view.assets[0]).toMatchObject({id: 'harbor-trust', name: 'Bitcoin', price: '$74,339', reason: null, canStake: true,
+      stakes: [5, 10, 25], calls: []});
   });
-  it('says when a closed stock opens again, in Lisbon time', () => {
-    const view = marketView({board: marketBoard(), portfolio: emptyPortfolio(), now: NOW});
-    expect(view.assets[3]).toMatchObject({name: 'Apple', reason: 'Market closed, back at 14:30 Lisbon', canStake: false});
-    expect(lisbonWhen('2026-11-16T14:30:00Z', NOW)).toBe('Monday 14:30');
-  });
-  it('says prices are unavailable when Finnhub has no price', () => {
-    const view = marketView({board: marketBoard(), portfolio: emptyPortfolio(), now: NOW});
+  it('words why a closed asset takes no call, from the server reason', () => {
+    const view = callsView({answer: board(), now: NOW});
+    expect(view.assets[3]).toMatchObject({name: 'Apple', price: '$271.20', reason: 'Closed outside market hours', canStake: false});
     expect(view.assets[4]).toMatchObject({name: 'NVIDIA', price: 'No price yet', reason: 'Prices unavailable right now', canStake: false});
+    expect(['weekend', 'holiday', 'quote_old', 'source_off', 'demo', 'delisted', 'something_new'].map(reasonText)).toEqual([
+      'Closed for the weekend', 'Closed for a holiday', 'Prices are catching up. Try again in a minute.', 'Prices unavailable right now',
+      'Recorded prices only, so no calls right now', 'This stall takes no new stakes.', 'Market closed for now']);
+    expect(['weekend', 'quote_old', 'source_off', 'demo'].map(reasonText).join(' ')).not.toMatch(/_|leverage|fee|position/i);
   });
-  it('is unavailable without any board, and loading before the first answer', () => {
-    expect(marketView({boardFailure: {ok: false, code: 'network_error', status: 0}})).toMatchObject({state: 'unavailable', line: 'Prices unavailable right now'});
-    expect(marketView({}).state).toBe('loading');
+  it('counts an open call down to its hour', () => {
+    expect(countdownText('2026-11-11T12:42:00Z', NOW)).toBe('Decided in 42 min');
+    expect(countdownText('2026-11-11T12:41:30Z', NOW)).toBe('Decided in 42 min');
+    expect(countdownText('2026-11-11T12:00:30Z', NOW)).toBe('Decided in under a minute');
+    expect(countdownText('2026-11-11T11:59:00Z', NOW)).toBe('Being decided now...');
+    expect(callView(marketCall(), NOW)).toMatchObject({open: true, line: 'You said Up with 🪙 10.', state: 'Decided in 18 min', tone: 'info'});
+  });
+  it('says won with the payout, refunded with the coins back, and lost', () => {
+    const decided = extra => callView(marketCall({status: 'won', settlePrice: 75000, payout: 20, ...extra}), NOW);
+    expect(decided()).toMatchObject({open: false, state: 'You won 🪙 +20', tone: 'good'});
+    expect(decided({status: 'refunded', payout: 10})).toMatchObject({state: 'Refunded 🪙 10', tone: 'info'});
+    expect(decided({status: 'lost', direction: 'down', payout: 0})).toMatchObject({line: 'You said Down with 🪙 10.', state: 'Lost', tone: 'bad'});
+  });
+  it('lists the open calls and the two newest decided ones under their asset', () => {
+    const calls = [marketCall(), marketCall({id: 'old', status: 'lost', payout: 0, settleAt: '2026-11-11T09:00:00Z'}),
+      marketCall({id: 'new', status: 'won', payout: 20, settleAt: '2026-11-11T11:00:00Z'}),
+      marketCall({id: 'mid', status: 'refunded', payout: 10, settleAt: '2026-11-11T10:00:00Z'}),
+      marketCall({id: 'gold', asset: 'greyfathom-salvage', direction: 'down', stake: 5})];
+    const view = callsView({answer: board({calls}), now: NOW});
+    expect(view.assets[0].calls.map(call => call.id)).toEqual(['call-1', 'new', 'mid']);
+    expect(view.assets[2].calls.map(call => call.state)).toEqual(['Decided in 18 min']);
+  });
+  it('takes no new call once 3 calls are open', () => {
+    const calls = [1, 2, 3].map(n => marketCall({id: `c${n}`}));
+    const view = callsView({answer: board({calls}), now: NOW});
+    expect(view.full).toBe(true);
+    expect(view.assets.every(asset => !asset.canStake)).toBe(true);
+  });
+  it('is unavailable without any answer, and loading before the first answer', () => {
+    expect(callsView({failure: {ok: false, code: 'network_error', status: 0}})).toMatchObject({state: 'unavailable', line: 'Prices unavailable right now'});
+    expect(callsView({}).state).toBe('loading');
+    expect(callsView({answer: board(), failure: {ok: false, code: 'network_error', status: 0}, now: NOW}).state).toBe('open');
   });
   it('asks a signed-out player to sign in, never "Session expired"', () => {
-    const view = marketView({board: marketBoard(), portfolioFailure: {ok: false, code: 'unauthorized', status: 401, message: 'Session expired. Sign in again.'}, now: NOW});
-    expect(view.state).toBe('signed_out');
-    expect(view.assets.every(asset => !asset.canStake)).toBe(true);
+    const view = callsView({answer: board(), failure: {ok: false, code: 'unauthorized', status: 401, message: 'Session expired. Sign in again.'}, now: NOW});
+    expect(view).toMatchObject({state: 'signed_out', assets: []});
     expect(JSON.stringify(view)).not.toMatch(/expired/i);
     expect(SIGN_IN).toBe('Sign in or join with a class code to place a stake');
   });
-  it('waits when trading is switched off', () => {
-    const view = marketView({board: marketBoard({tradingEnabled: false}), portfolio: emptyPortfolio(), now: NOW});
-    expect(view.state).toBe('off');
-    expect(view.assets[0]).toMatchObject({reason: 'Stakes open later.', canStake: false});
-  });
-  it('offers only the stakes the Exchange accepts today (10 and 25)', () => {
-    const view = marketView({board: marketBoard({minStake: 10}), portfolio: emptyPortfolio(), now: NOW});
-    expect(view.assets[0].stakes).toEqual([10, 25]);
-  });
-  it('shows an open stake with Close and its gain in coins only', () => {
-    const view = marketView({board: marketBoard(), portfolio: emptyPortfolio({positions: [openPosition()]}), now: NOW});
-    expect(view.assets[0].holdings[0]).toMatchObject({line: 'You said Up with 🪙 10.', now: 'Now 🪙 +3', canClose: true,
-      closeLabel: 'Close your Up stake on Bitcoin'});
-  });
-  it('notices positions that closed since the last look, once', () => {
-    const seen = new Set(['old']);
-    const portfolio = emptyPortfolio({recentlyClosed: [{id: 'old', result: 5}, {id: 'new', result: -10}]});
-    expect(newlyClosed(portfolio, seen).map(row => row.id)).toEqual(['new']);
-    expect(newlyClosed(portfolio, seen)).toEqual([]);
+  it('says the stall is closed while the market flag is off', () => {
+    expect(callsView({failure: {ok: false, code: 'feature_off', status: 404}})).toMatchObject({state: 'off', line: 'This stall is closed for now.', assets: []});
   });
   it('remembers prices for the sparkline only when the quote changed', () => {
     const history = new Map();
-    rememberPrices(history, marketBoard().companies);
-    rememberPrices(history, marketBoard().companies);
+    rememberPrices(history, callAssets());
+    rememberPrices(history, callAssets());
     expect(history.get('harbor-trust')).toHaveLength(1);
-    rememberPrices(history, marketBoard({priceShift: 50}).companies.map(row => ({...row, priceAt: '2026-11-11T12:00:30Z'})));
+    rememberPrices(history, callAssets({priceShift: 50}).map(row => ({...row, priceAt: '2026-11-11T12:00:30Z'})));
     expect(history.get('harbor-trust')).toHaveLength(2);
-  });
-  it('words every reason without the jargon of the trading desk', () => {
-    const reasons = [closedReason({delisted: true}), closedReason({status: 'stale'}), closedReason({status: 'closed', opensAt: null})];
-    expect(reasons).toEqual(['This stall takes no new stakes.', 'Prices are catching up. Try again in a minute.', 'Market closed for now']);
-    expect(reasons.join(' ')).not.toMatch(/leverage|zero point|fee|position/i);
   });
 });
 
@@ -182,6 +189,8 @@ describe('words', () => {
   });
   it('turn refusals into plain words and never repeat the server message', () => {
     expect(refusalText('insufficient_funds')).toBe('You do not have enough coins for this stake.');
+    expect(refusalText('too_many_calls')).toBe('You have 3 calls waiting. Place a new one once one is decided.');
+    expect(refusalText('market_closed')).toBe('The market just closed. Try again when it opens.');
     expect(refusalText('something_new')).toBe('The stall said no this time. Try again later.');
   });
   it('explain every stall in one sentence', () => {

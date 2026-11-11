@@ -1,96 +1,83 @@
-// The market stall card: one row per asset (Bitcoin, Ether, gold, two stocks) with its real price, a tiny
-// sparkline and "Up or down?" with 5 / 10 / 25 coins. It talks to the Exchange routes through the
-// Exchange's own HTTP adapter (screens/market/http.js); the server decides every number.
+// The market stall card: "Up or down in 1 hour?" (INTERFACES.md, the market stall, D034). One item per asset
+// (Bitcoin, Ether, Gold, Apple, NVIDIA, with the server's names) with its real price, a tiny sparkline,
+// Up / Down and 5 / 10 / 25 coins. Open calls count down to their hour; decided calls show their result.
+// It talks to GET and POST /api/market/calls through calls-http.js; the server decides every number.
 //   const market = createMarketEntry(ctx);  await market.open();  market.active;  market.close();  market.dispose();
-// ctx comes from online/market-host.js: {container, resetInput, focusGame, onSignIn, request, publicGet,
-// getToken, onSessionChange}; tests pass `adapter` instead. game.js hands this file to createMarketHost.
-// The backend has no automatic close after one hour, so an open stake shows "Close" and its gain or loss.
+// ctx comes from online/market-host.js: {container, resetInput, focusGame, onSignIn, request, onSessionChange};
+// tests pass `adapter` instead. game.js hands this file to createMarketHost. In a dev build ?market=local
+// uses the in-memory calls-fake.js.
 import {emit} from '../core/events.js';
 import {makeActionUid} from '../screens/market/uid.js';
 import {button, createCard, createPicker, el, replaceKeepingFocus, signInLine, sparkline} from './dom.js';
 import {STAKE_EVENT} from './stakes.js';
-import {SIDES, closedResult, marketView, newlyClosed, rememberPrices} from './market-model.js';
+import {SIDES, callsView, rememberPrices} from './market-model.js';
 import {LOADING, MARKET, NOT_HEARD, PLAY_MONEY, SEND_AGAIN, TITLES, TRY_AGAIN, refusalText} from './words.js';
 
-const BOARD_MS = 30000, PORTFOLIO_MS = 15000;
+const READ_MS = 15000; // a countdown in minutes stays right, and well inside the GET budget of 60 a minute
 const history = new Map(); // survives closing the card, so the sparkline grows during a session
 
 async function makeAdapter(ctx) {
   if (ctx.adapter) return ctx.adapter;
   const search = globalThis.location?.search ?? '';
+  // import.meta.env.DEV stands in front on purpose: the build then drops this branch and the fake is not shipped.
   if (import.meta.env.DEV && new URLSearchParams(search).get('market') === 'local') {
-    const {createFakeMarketAdapter} = await import('../screens/market/fake.js');
-    return createFakeMarketAdapter({scenario: new URLSearchParams(search).get('scenario') ?? undefined});
+    const {createFakeCallsAdapter} = await import('./calls-fake.js');
+    return createFakeCallsAdapter();
   }
-  const {createMarketHttpAdapter} = await import('../screens/market/http.js');
-  return createMarketHttpAdapter({getToken: ctx.getToken, request: ctx.request, publicGet: ctx.publicGet});
+  const {createCallsHttpAdapter} = await import('./calls-http.js');
+  return createCallsHttpAdapter({request: ctx.request});
 }
 
 export function createMarketEntry(ctx = {}) {
   const {container, resetInput, focusGame, onSignIn, onSessionChange, makeUid = makeActionUid, now = () => Date.now()} = ctx;
-  let adapter = null, board = null, boardFailure = null, portfolio = null, portfolioFailure = null;
-  let busy = false, attempt = null, seen = null, timers = [], disposed = false, opening = false, generation = 0;
+  let adapter = null, answer = null, failure = null;
+  let busy = false, attempt = null, timer = null, disposed = false, opening = false, generation = 0;
   const notices = new Map(), selections = new Map();
   const card = createCard({title: TITLES.market, kind: 'market', marker: 'market-modal', resetInput, focusGame,
-    onClose: () => { generation += 1; stopTimers(); }});
+    onClose: () => { generation += 1; stopTimer(); }});
   const live = scope => !disposed && scope === generation && card.active;
 
-  function stopTimers() { for (const timer of timers) clearInterval(timer); timers = []; }
+  function stopTimer() { if (timer) clearInterval(timer); timer = null; }
   const hidden = () => globalThis.document?.hidden === true;
-  async function readBoard(scope) {
-    const answer = await adapter.board();
+  async function read(scope) {
+    const reply = await adapter.read();
     if (!live(scope)) return;
-    if (answer.ok) { board = answer.data; boardFailure = null; rememberPrices(history, board.companies); }
-    else boardFailure = answer;
-    render();
-  }
-  async function readPortfolio(scope) {
-    const answer = await adapter.portfolio();
-    if (!live(scope)) return;
-    if (answer.ok) {
-      portfolio = answer.data; portfolioFailure = null;
-      if (!seen) seen = new Set((portfolio.recentlyClosed ?? []).map(position => position.id));
-      for (const position of newlyClosed(portfolio, seen)) notices.set(position.companyId, {tone: tone(position.result), text: closedResult(position)});
-    } else {
-      portfolioFailure = answer;
-      if (answer.status === 401 || answer.code === 'unauthorized') portfolio = null;
+    if (reply.ok) { answer = reply.data; failure = null; rememberPrices(history, answer.assets); }
+    else {
+      failure = reply;
+      if (reply.status === 401 || reply.code === 'unauthorized' || reply.code === 'feature_off') answer = null;
     }
     render();
   }
-  const tone = gain => (gain > 0 ? 'good' : gain < 0 ? 'bad' : 'info');
 
-  async function trade(kind, body, assetId, uid = makeUid()) {
+  // One confirmed click sends one call. "Send again" repeats it with the very same actionUid.
+  async function place(body, uid = makeUid()) {
     if (busy) return;
     const scope = generation;
-    busy = true; attempt = {kind, body, assetId, uid}; card.say(''); render();
-    const answer = kind === 'open' ? await adapter.open(body, {uid}) : await adapter.close(body, {uid});
+    busy = true; attempt = {body, uid}; card.say(''); render();
+    const reply = await adapter.place(body, {uid});
     if (!live(scope)) { busy = false; return; }
     busy = false;
-    if (answer.ok || answer.code === 'already_applied') {
-      attempt = null;
-      if (kind === 'open') {
-        selections.delete(assetId);
-        notices.set(assetId, {tone: 'good', text: MARKET.placed(body.stake, SIDES[body.side])});
-        emit({type: STAKE_EVENT, kind: 'market', stake: body.stake});
+    if (reply.ok) {
+      attempt = null; selections.delete(body.asset);
+      notices.set(body.asset, {tone: 'good', text: MARKET.placed(body.stake, SIDES[body.direction])});
+      emit({type: STAKE_EVENT, kind: 'market', stake: body.stake});
+      if (answer && !answer.calls.some(call => call.id === reply.data.id)) {
+        const {balance, ...call} = reply.data;
+        answer = {...answer, calls: [call, ...answer.calls], balance: Number.isSafeInteger(balance) ? balance : answer.balance};
       }
-      await readPortfolio(scope);
-      if (kind === 'close' && live(scope)) {
-        const done = (portfolio?.recentlyClosed ?? []).find(position => position.id === body.positionId);
-        seen?.add(body.positionId);
-        notices.set(assetId, {tone: tone(done?.result), text: closedResult(done ?? answer.data)});
-        render();
-      }
+      await read(scope);
       return;
     }
-    if (answer.code === 'outcome_unknown') {
-      card.say(NOT_HEARD, 'warn', [button(SEND_AGAIN, () => { const held = attempt; if (held) trade(held.kind, held.body, held.assetId, held.uid); })]);
-      await readPortfolio(scope);
+    if (reply.code === 'outcome_unknown') {
+      card.say(NOT_HEARD, 'warn', [button(SEND_AGAIN, () => { const held = attempt; if (held) place(held.body, held.uid); })]);
+      await read(scope);
       return;
     }
     attempt = null;
-    if (answer.status === 401 || answer.code === 'unauthorized') { portfolioFailure = answer; portfolio = null; }
-    else notices.set(assetId, {tone: 'bad', text: refusalText(answer.code)});
-    if (answer.code === 'market_closed' || answer.code === 'prices_stale') await readBoard(scope);
+    if (reply.status === 401 || reply.code === 'unauthorized' || reply.code === 'feature_off') { failure = reply; answer = null; }
+    else notices.set(body.asset, {tone: 'bad', text: refusalText(reply.code)});
+    if (['market_closed', 'too_many_calls', 'insufficient_funds'].includes(reply.code)) await read(scope);
     render();
   }
 
@@ -104,36 +91,34 @@ export function createMarketEntry(ctx = {}) {
     item.append(top);
     if (asset.reason) item.append(el('p', 'harbor-reason', asset.reason));
     const notice = notices.get(asset.id);
-    if (notice) { const line = el('p', `harbor-notice harbor-${notice.tone}`, notice.text); item.append(line); }
-    for (const holding of asset.holdings) {
-      const row = el('div', 'harbor-holding');
-      row.append(el('p', '', holding.line), el('p', 'harbor-now', holding.now));
-      if (holding.canClose && portfolio) {
-        const close = button(MARKET.close, () => trade('close', {positionId: holding.id}, asset.id));
-        close.setAttribute('aria-label', holding.closeLabel); close.dataset.key = `close:${holding.id}`; close.disabled = busy;
-        row.append(close);
-      }
+    if (notice) item.append(el('p', `harbor-notice harbor-${notice.tone}`, notice.text));
+    for (const call of asset.calls) {
+      const row = el('div', 'harbor-holding harbor-call'); row.dataset.call = call.id; row.dataset.open = String(call.open);
+      row.append(el('p', '', call.line), el('p', `harbor-now harbor-${call.tone}`, call.state));
       item.append(row);
     }
-    if (asset.canStake && !asset.holdings.length && portfolio) {
+    if (asset.canStake) {
       if (!selections.has(asset.id)) selections.set(asset.id, {side: null, stake: null});
-      item.append(el('p', 'harbor-question', MARKET.question), createPicker({name: asset.id, itemName: asset.name, busy, selection: selections.get(asset.id),
-        sides: [{id: 'rising', label: MARKET.up}, {id: 'falling', label: MARKET.down}], stakes: asset.stakes,
-        sideGroup: MARKET.sideGroup(asset.name), stakeGroup: MARKET.stakeGroup, choose: MARKET.choose,
+      item.append(el('p', 'harbor-question', MARKET.question), createPicker({name: asset.id, itemName: asset.name, busy,
+        selection: selections.get(asset.id), sides: [{id: 'up', label: MARKET.up}, {id: 'down', label: MARKET.down}],
+        stakes: asset.stakes, sideGroup: MARKET.sideGroup(asset.name), stakeGroup: MARKET.stakeGroup, choose: MARKET.choose,
         hint: (_side, stake) => MARKET.promise(stake), confirmText: MARKET.confirm,
-        onConfirm: (side, stake) => trade('open', {companyId: asset.id, side, stake}, asset.id)}));
+        onConfirm: (direction, stake) => place({asset: asset.id, direction, stake})}));
     }
     return item;
   }
 
   function render() {
     if (disposed) return;
-    const view = marketView({board, boardFailure, portfolio, portfolioFailure, history, now: now()});
+    const view = callsView({answer, failure, history, now: now()});
     const nodes = [];
     if (view.state === 'loading') nodes.push(el('p', 'harbor-quiet', LOADING));
+    else if (view.state === 'signed_out') nodes.push(signInLine(onSignIn));
+    else if (view.state === 'off') nodes.push(el('p', 'harbor-empty', view.line));
     else if (view.state === 'unavailable') nodes.push(el('p', 'harbor-empty', view.line), button(TRY_AGAIN, () => refresh()));
     else {
-      if (view.state === 'signed_out') nodes.push(signInLine(onSignIn));
+      if (view.balance !== null) nodes.push(el('p', 'harbor-quiet harbor-balance', MARKET.balance(view.balance)));
+      if (view.full) nodes.push(el('p', 'harbor-quiet', MARKET.full));
       const listNode = el('div', 'harbor-list');
       listNode.append(...view.assets.map(assetNode));
       nodes.push(listNode);
@@ -142,13 +127,10 @@ export function createMarketEntry(ctx = {}) {
     replaceKeepingFocus(card.main, ...nodes);
   }
 
-  function refresh() {
-    const scope = generation;
-    return Promise.all([readBoard(scope), readPortfolio(scope)]);
-  }
+  const refresh = () => read(generation);
   const stopSession = typeof onSessionChange === 'function' ? onSessionChange(() => {
-    portfolio = null; portfolioFailure = null; attempt = null; seen = null; notices.clear(); card.say('');
-    if (card.active) readPortfolio(generation);
+    answer = null; failure = null; attempt = null; notices.clear(); selections.clear(); card.say('');
+    if (card.active) { render(); void refresh(); }
   }) : null;
 
   return {
@@ -161,15 +143,15 @@ export function createMarketEntry(ctx = {}) {
         if (disposed) return;
         generation += 1; card.say(''); render(); card.open(container);
         const scope = generation;
-        timers = [setInterval(() => { if (!hidden() && live(scope)) readBoard(scope); }, BOARD_MS),
-          setInterval(() => { if (!hidden() && live(scope)) readPortfolio(scope); }, PORTFOLIO_MS)];
+        stopTimer();
+        timer = setInterval(() => { if (!hidden() && live(scope)) read(scope); }, READ_MS);
         void refresh();
       } finally { opening = false; }
     },
     close() { const was = opening || card.active; opening = false; card.close(); return was; },
     dispose() {
       if (disposed) return;
-      disposed = true; generation += 1; stopTimers();
+      disposed = true; generation += 1; stopTimer();
       if (typeof stopSession === 'function') stopSession();
       card.dispose();
     },

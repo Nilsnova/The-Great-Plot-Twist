@@ -1,93 +1,79 @@
-// What the market stall shows, worked out from the Exchange answers (GET /api/market and
-// /api/market/portfolio). Pure: no DOM, no fetch, no trading rules. The server decides every number.
-//   marketView({board, boardFailure, portfolio, portfolioFailure, history, now}) -> {state, line, assets}
-// Kept assets: Bitcoin, Ether, gold and at most two stocks, in that order. The rest stays hidden.
-import {offeredStakes} from './stakes.js';
-import {MARKET, priceText, lisbonWhen, resultText} from './words.js';
+// What the market stall shows, worked out from GET /api/market/calls (INTERFACES.md, the market stall, D034):
+// {assets: [{id, name, price, priceAt, open, closedReason}], calls: [...], balance}. Pure: no DOM, no fetch,
+// no rules. The server decides every price, every result and every coin.
+//   callsView({answer, failure, history, now}) -> {state, line, balance, full, assets}
+// state is loading, unavailable, signed_out, off (flag market off) or open. One item per asset, in the
+// server's order and with the server's names (Bitcoin, Ether, Gold, Apple, NVIDIA).
+import {STAKES} from './stakes.js';
+import {MARKET, priceText} from './words.js';
 
-const CRYPTO = [
-  {id: 'harbor-trust', follows: 'Bitcoin', name: 'Bitcoin'},
-  {id: 'tidewright-works', follows: 'Ether', name: 'Ether'},
-  {id: 'greyfathom-salvage', follows: 'Gold', name: 'Gold'},
-];
-const MAX_STOCKS = 2;
-export const SIDES = Object.freeze({rising: MARKET.up, falling: MARKET.down});
+export const SIDES = Object.freeze({up: MARKET.up, down: MARKET.down});
+export const MAX_OPEN_CALLS = 3;
+const DECIDED_SHOWN = 2; // per asset: the newest decided calls, so the card stays short
 
 const list = value => (Array.isArray(value) ? value : []);
-function cryptoName(company) {
-  const known = CRYPTO.find(entry => entry.id === company.id
-    || (typeof company.follows === 'string' && company.follows.startsWith(entry.follows)));
-  return known?.name ?? null;
+const signedOut = failure => failure?.code === 'unauthorized' || failure?.status === 401;
+const switchedOff = failure => failure?.code === 'feature_off' || failure?.code === 'demo_closed';
+
+// Why an asset takes no call right now, in plain words (the server's closedReason codes).
+const REASONS = {
+  weekend: MARKET.weekend, holiday: MARKET.holiday, outside_hours: MARKET.outsideHours, no_calendar: MARKET.closedNow,
+  closed: MARKET.closedNow,
+  quote_old: MARKET.catchingUp, source_away: MARKET.catchingUp, waiting_first_price: MARKET.catchingUp, stale: MARKET.catchingUp,
+  source_off: MARKET.unavailable, not_in_recording: MARKET.unavailable, no_price: MARKET.unavailable, unavailable: MARKET.unavailable,
+  demo: MARKET.demo, delisted: MARKET.retired,
+};
+export const reasonText = code => REASONS[code] ?? MARKET.closedNow;
+
+// "Decided in 42 min" until settleAt; the server decides on the first read at or after it.
+export function countdownText(settleAt, now = Date.now()) {
+  const left = Date.parse(settleAt) - now;
+  if (!Number.isFinite(left) || left <= 0) return MARKET.deciding;
+  if (left < 60000) return MARKET.decidedSoon;
+  return MARKET.decidedIn(Math.ceil(left / 60000));
 }
 
-// The companies the stall keeps, each with the plain name a player knows.
-export function pickAssets(companies) {
-  const all = list(companies).filter(company => company && typeof company.id === 'string');
-  const crypto = CRYPTO.map(entry => all.find(company => cryptoName(company) === entry.name))
-    .filter(Boolean).map(company => ({company, name: cryptoName(company)}));
-  const stocks = all.filter(company => company.kind === 'stock').slice(0, MAX_STOCKS)
-    .map(company => ({company, name: String(company.name ?? company.id)}));
-  return [...crypto, ...stocks];
+// One call as the card shows it: what the player said, and the countdown or the result.
+export function callView(call, now = Date.now()) {
+  const side = SIDES[call.direction] ?? String(call.direction);
+  const base = {id: call.id, open: call.status === 'open', line: MARKET.call(side, call.stake)};
+  if (call.status === 'open') return {...base, tone: 'info', state: countdownText(call.settleAt, now)};
+  if (call.status === 'won') return {...base, tone: 'good', state: MARKET.won(call.payout ?? call.stake * 2)};
+  if (call.status === 'refunded') return {...base, tone: 'info', state: MARKET.refunded(call.payout ?? call.stake)};
+  return {...base, tone: 'bad', state: MARKET.lost};
 }
 
-// Why an asset cannot take a stake right now, in words, or null when it can.
-export function closedReason(company, board, now) {
-  if (company.delisted) return MARKET.retired;
-  if (company.status === 'closed') {
-    const when = lisbonWhen(company.opensAt, now);
-    return when ? MARKET.closedUntil(when) : MARKET.closedNow;
-  }
-  if (company.status === 'unavailable') return MARKET.unavailable;
-  if (company.status === 'stale') return MARKET.catchingUp;
-  if (board?.tradingEnabled === false || company.canOpen !== true) return MARKET.later;
-  return null;
-}
-
-function holdingView(position, name) {
-  const side = SIDES[position.side] ?? position.side;
-  return {id: position.id, side, stake: position.stake, canClose: position.canClose === true,
-    line: MARKET.holding(side, position.stake),
-    now: Number.isFinite(position.result) ? MARKET.now(position.result) : MARKET.nowUnknown,
-    closeLabel: MARKET.closeLabel(side, name)};
-}
-
-// The whole result of a closed position, both fees counted by the server.
-export const closedResult = position => resultText(position?.result ?? (Number.isFinite(position?.coinsChange)
-  && Number.isFinite(position?.stake) ? position.coinsChange - position.stake - (position.openFee ?? 0) : NaN));
-
-export function marketView({board, boardFailure = null, portfolio = null, portfolioFailure = null,
-  history = new Map(), now = Date.now()} = {}) {
-  if (!board) return {state: boardFailure ? 'unavailable' : 'loading', line: boardFailure ? MARKET.unavailable : null, assets: []};
-  const signedOut = portfolioFailure?.code === 'unauthorized' || portfolioFailure?.status === 401;
-  const tradingOff = board.tradingEnabled === false || portfolioFailure?.code === 'feature_off';
-  const stakes = offeredStakes(board.rules);
-  const assets = pickAssets(board.companies).map(({company, name}) => {
-    const reason = tradingOff ? (closedReason(company, board, now) ?? MARKET.later) : closedReason(company, board, now);
-    const holdings = list(portfolio?.positions).filter(position => position.companyId === company.id)
-      .map(position => holdingView(position, name));
-    return {id: company.id, name, price: priceText(company.price) ?? MARKET.noPrice,
-      history: list(history.get(company.id)), reason, holdings, stakes,
-      canStake: reason === null && !signedOut && stakes.length > 0};
+export function callsView({answer = null, failure = null, history = new Map(), now = Date.now()} = {}) {
+  if (signedOut(failure)) return {state: 'signed_out', line: null, balance: null, full: false, assets: []};
+  if (switchedOff(failure)) return {state: 'off', line: MARKET.closed, balance: null, full: false, assets: []};
+  if (!answer) return {state: failure ? 'unavailable' : 'loading', line: failure ? MARKET.unavailable : null,
+    balance: null, full: false, assets: []};
+  const calls = list(answer.calls).filter(call => call && typeof call.id === 'string');
+  const full = calls.filter(call => call.status === 'open').length >= MAX_OPEN_CALLS;
+  const assets = list(answer.assets).filter(asset => asset && typeof asset.id === 'string').map(asset => {
+    const own = calls.filter(call => call.asset === asset.id);
+    const decided = own.filter(call => call.status !== 'open')
+      .sort((a, b) => String(b.settleAt).localeCompare(String(a.settleAt))).slice(0, DECIDED_SHOWN);
+    const price = priceText(asset.price);
+    const open = asset.open === true && price !== null;
+    return {id: asset.id, name: String(asset.name ?? asset.id), price: price ?? MARKET.noPrice,
+      history: list(history.get(asset.id)), reason: open ? null : reasonText(asset.closedReason ?? (price ? null : 'no_price')),
+      canStake: open && !full, stakes: [...STAKES],
+      calls: [...own.filter(call => call.status === 'open'), ...decided].map(call => callView(call, now))};
   });
-  return {state: signedOut ? 'signed_out' : tradingOff ? 'off' : 'open', line: null, assets};
+  const balance = Number.isSafeInteger(answer.balance) ? answer.balance : null;
+  return {state: 'open', line: null, balance, full, assets};
 }
 
-// Keeps a few recent prices per asset, so a sparkline can appear once the board was read twice.
-export function rememberPrices(history, companies, limit = 30) {
-  for (const company of list(companies)) {
-    if (typeof company?.price !== 'number' || !Number.isFinite(company.price)) continue;
-    const points = history.get(company.id) ?? [];
+// Keeps a few recent prices per asset, so a sparkline can appear once the stall was read twice.
+export function rememberPrices(history, assets, limit = 30) {
+  for (const asset of list(assets)) {
+    if (typeof asset?.price !== 'number' || !Number.isFinite(asset.price)) continue;
+    const points = history.get(asset.id) ?? [];
     const last = points.at(-1);
-    if (!last || last.at !== company.priceAt) points.push({at: company.priceAt, price: company.price});
+    if (!last || last.at !== asset.priceAt) points.push({at: asset.priceAt, price: asset.price});
     while (points.length > limit) points.shift();
-    history.set(company.id, points);
+    history.set(asset.id, points);
   }
   return history;
-}
-
-// Closed positions the player has not seen yet, newest first (an automatic close at zero included).
-export function newlyClosed(portfolio, seen) {
-  const fresh = list(portfolio?.recentlyClosed).filter(position => position?.id && !seen.has(position.id));
-  for (const position of fresh) seen.add(position.id);
-  return fresh;
 }

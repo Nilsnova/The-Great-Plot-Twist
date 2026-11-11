@@ -26,25 +26,35 @@ export const EXPLAIN = {
 };
 export const OPEN_STALL = name => `Open the ${name.toLowerCase()}`;
 
+// The market stall: "Up or down in 1 hour?" (INTERFACES.md, the market stall, D034). A won call shows
+// the server's payout (2 x stake: a 🪙 10 call on the right side shows "You won 🪙 +20"), a refunded
+// call the coins that came back, a lost call just "Lost".
 export const MARKET = {
-  question: 'Will it go up or down?',
+  question: 'Up or down in 1 hour?',
   up: 'Up', down: 'Down',
   stakeGroup: 'Your stake',
   sideGroup: name => `Up or down for ${name}`,
-  promise: stake => `You put in ${formatCoins(stake)}. Close it when you like to collect what it is worth.`,
+  promise: stake => `Right in 1 hour: you get ${formatCoins(stake * 2)}. Wrong: the ${formatCoins(stake)} is gone.`,
   choose: 'Pick up or down, then a stake.',
   confirm: (stake, side) => `Place ${formatCoins(stake)} on ${side}`,
   placed: (stake, side) => `Your ${formatCoins(stake)} is on ${side}.`,
-  holding: (side, stake) => `You said ${side} with ${formatCoins(stake)}.`,
-  now: result => `Now ${formatCoinDelta(result)}`,
-  nowUnknown: 'Now: waiting for a price',
-  close: 'Close',
-  closeLabel: (side, name) => `Close your ${side} stake on ${name}`,
+  call: (side, stake) => `You said ${side} with ${formatCoins(stake)}.`,
+  decidedIn: minutes => `Decided in ${minutes} min`,
+  decidedSoon: 'Decided in under a minute',
+  deciding: 'Being decided now...',
+  won: payout => `You won ${formatCoinDelta(payout)}`,
+  refunded: stake => `Refunded ${formatCoins(stake)}`,
+  lost: 'Lost',
+  balance: coins => `You have ${formatCoins(coins)}`,
+  full: 'You have 3 calls waiting. Place a new one once one is decided.',
+  closed: 'This stall is closed for now.',
   closedNow: 'Market closed for now',
-  closedUntil: when => `Market closed, back at ${when} Lisbon`,
+  weekend: 'Closed for the weekend',
+  holiday: 'Closed for a holiday',
+  outsideHours: 'Closed outside market hours',
   unavailable: 'Prices unavailable right now',
   catchingUp: 'Prices are catching up. Try again in a minute.',
-  later: 'Stakes open later.',
+  demo: 'Recorded prices only, so no calls right now',
   retired: 'This stall takes no new stakes.',
   noPrice: 'No price yet',
 };
@@ -102,12 +112,14 @@ const REFUSALS = {
   prices_stale: 'Prices are catching up. Try again in a minute.',
   company_unavailable: 'Prices unavailable right now',
   company_delisted: 'This stall takes no new stakes.',
-  too_many_positions: 'Close a stake before you place a new one.',
+  too_many_calls: 'You have 3 calls waiting. Place a new one once one is decided.',
+  no_such_asset: 'This stall does not offer that one.',
+  bad_stake: 'Pick one of the stakes on the stall.',
+  demo_closed: 'This stall is closed for now.',
   stake_too_small: 'This stall needs a bigger stake.',
   stake_too_big: 'This stall needs a smaller stake.',
   already_staked: 'You already have a stake on this one.',
   pool_closed: 'Picks for this one are closed.',
-  position_closed: 'This stake was already closed.',
   feature_off: 'This stall is closed for now.',
   source_unavailable: 'The stall cannot check the real world right now. Try again soon.',
   busy: 'Waiting for the server...',
@@ -120,16 +132,6 @@ export function priceText(price) {
   if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
   const digits = price >= 1000 ? 0 : price >= 1 ? 2 : 4;
   return `$${dollars(digits).format(price)}`;
-}
-
-const lisbonParts = (date, options) => new Intl.DateTimeFormat('en-GB', {timeZone: 'Europe/Lisbon', ...options}).format(date);
-// "15:30", or "Monday 14:30" when the market opens on another Lisbon day.
-export function lisbonWhen(iso, now = Date.now()) {
-  const date = new Date(iso);
-  if (!iso || Number.isNaN(date.getTime())) return null;
-  const time = lisbonParts(date, {hour: '2-digit', minute: '2-digit', hourCycle: 'h23'});
-  const sameDay = lisbonParts(date, {dateStyle: 'short'}) === lisbonParts(new Date(now), {dateStyle: 'short'});
-  return sameDay ? time : `${lisbonParts(date, {weekday: 'long'})} ${time}`;
 }
 
 // "Sat 20:00" in the player's own time zone, for a match kickoff.
