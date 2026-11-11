@@ -17,7 +17,7 @@ const teleport=(x,z)=>page.evaluate(([x,z])=>{const g=window.__island,p=g.player
 const escapeAll=async()=>{for(let i=0;i<4&&await page.locator('dialog[open]').count();i++){await page.keyboard.press('Escape');await page.waitForTimeout(250);}};
 async function frontDoor(url,size,shotCard){
   await page.goto(url);await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});await page.goto(url);
-  await page.locator('#play').waitFor();await page.locator('#play').click();
+  await page.locator('#play').waitFor();if(shotCard){await page.waitForTimeout(600);await page.screenshot({path:`${dir}/${label}-title-${size}.png`});}await page.locator('#play').click();
   await page.locator('dialog.cutscene[open]').waitFor({timeout:30000});
   await page.getByRole('button',{name:'Skip',exact:true}).click();
   await page.locator('.goal-card[open]').waitFor({timeout:30000});await page.waitForTimeout(400);
@@ -39,6 +39,7 @@ try{
     await page.waitForTimeout(350);await shot('toast');await page.waitForTimeout(3500);
     await page.keyboard.press('Escape');await page.locator('.shell-screen[open][data-mode=pause]').waitFor();await page.waitForTimeout(300);await shot('pause-menu');
     await page.getByRole('button',{name:'Settings',exact:true}).click();await page.locator('.preferences').waitFor();await page.waitForTimeout(400);await shot('settings');
+    await page.getByRole('button',{name:'Credits',exact:true}).click();await page.locator('.shell-credits').waitFor();await page.waitForTimeout(300);await shot('credits');
     await escapeAll();
     // Keeper's Lock: join the class harbor, walk to the lock, press E.
     await page.evaluate(()=>{sessionStorage.setItem('plot_twist_join_v1','harbor');});

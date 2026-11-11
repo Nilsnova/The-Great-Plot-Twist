@@ -23,7 +23,7 @@
 .quest-next{margin:8px 0 0;font:600 16px/1.4 var(--u-font);color:var(--u-gold)}
 
 /* Contextual: the arrival banner, the E prompt */
-.hud-arrival{position:absolute;top:18%;left:50%;transform:translateX(-50%);display:grid;justify-items:center;gap:2px;max-width:calc(100vw - 40px);padding:12px 32px 14px;background:var(--u-parch);color:var(--u-pink);text-align:center;animation:hud-arrive 2s ease both;pointer-events:none}
+.hud-arrival{position:absolute;top:18%;left:50%;transform:translateX(-50%);display:grid;justify-items:center;gap:2px;width:max-content;max-width:calc(100vw - 40px);box-sizing:border-box;padding:12px 32px 14px;background:var(--u-parch);color:var(--u-pink);text-align:center;animation:hud-arrive 2s ease both;pointer-events:none}
 .hud-arrival span{font:700 16px/1.3 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:var(--u-brown)}.hud-arrival strong{font:700 30px/1.15 var(--u-serif)}
 @keyframes hud-arrive{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 .hud-play .interact{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 40px);padding:8px 16px 8px 8px;background:var(--u-sea);border:0}
