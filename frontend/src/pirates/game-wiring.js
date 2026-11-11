@@ -69,6 +69,8 @@ export function wireWaves(ctx) {
     getCrew: () => defended()?.crew ?? null,
     getPointDefenses: () => (island?.point ? spotDefenses(island.point.spots ?? []) : null),
     captainLevel: () => own()?.captain?.level ?? 1,
+    captainSkills: () => island?.captainLoadout?.().skills ?? [],
+    captainWeapon: () => island?.captainLoadout?.().weapon ?? 'musket',
     // Pirate Point's shared spots once more before its battle, so every captain fights the same towers.
     beforePointWave: island ? () => island.loadPoint() : null,
     startNextWave: island ? () => island.ringBell() : null});

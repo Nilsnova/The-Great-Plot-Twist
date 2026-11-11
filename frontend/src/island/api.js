@@ -13,6 +13,9 @@
 //   await api.build({spot, kind, code: 'ISLE-FR3ND'}) // on a friend's island, paid with your coins
 //   await api.hire({crew: 'gunner'});                 // POST /api/island/hire
 //   await api.upgradeCaptain();                       // POST /api/island/captain     (§10)
+//   await api.learnSkill({skill: 'steady_aim'});      // POST /api/island/skill       (§14)
+//   await api.buyWeapon({weapon: 'pistols'});         // POST /api/island/weapon/buy  (§15)
+//   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
 //   await api.pointBuild({spot, kind}) / api.pointUpgrade({spot})   // POST /api/pirate-point/build|upgrade
 //   await api.joinInvite('ISLE-K7Q2M');               // POST /api/island/invite/join (§6)
@@ -31,12 +34,14 @@
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
+import {SKILL_BY_ID, WEAPON_BY_ID} from '../pirates/captain-ids.js';
 
 export const PATHS = Object.freeze({
   island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish',
   current: where => `/api/waves/current?where=${encodeURIComponent(where)}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
+  skill: '/api/island/skill', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
@@ -47,6 +52,8 @@ export const MESSAGES = Object.freeze({
   badCode: 'Island codes look like ISLE-K7Q2M. Check the code and try again.',
   badWave: 'There is no such wave.',
   badCrew: 'Choose a gunner, a carpenter or a lookout.',
+  badSkill: 'There is no such skill.',
+  badWeapon: 'There is no such weapon.',
 });
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
@@ -158,6 +165,20 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
     },
     upgradeCaptain() {
       return writeSpots('captain', actionUid => transport.post(PATHS.captain, {actionUid}), isIsland);
+    },
+    // §14: learn one skill (no coins: skill points). The click id makes a repeat safe.
+    learnSkill({skill} = {}) {
+      if (!Object.hasOwn(SKILL_BY_ID, skill ?? '')) return refuse(400, 'bad_skill', MESSAGES.badSkill);
+      return writeSpots(`skill:${skill}`, actionUid => transport.post(PATHS.skill, {skill, actionUid}), isIsland);
+    },
+    // §15: buy a weapon once with coins, then equip it (equipping again changes nothing, so no click id).
+    buyWeapon({weapon} = {}) {
+      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
+      return writeSpots(`weapon:${weapon}`, actionUid => transport.post(PATHS.weaponBuy, {weapon, actionUid}), isIsland);
+    },
+    equipWeapon({weapon} = {}) {
+      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
+      return askSpots(() => transport.post(PATHS.weaponEquip, {weapon}), isIsland);
     },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {

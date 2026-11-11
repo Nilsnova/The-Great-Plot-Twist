@@ -4,8 +4,8 @@ export const REACH = 2.6;          // world units from a cannon or wall to man o
 export const TAP_RADIUS = 2.4;     // world units around a ship's middle that count as tapping it
 const SHIP_MIDDLE = { sloop: 1.6, brig: 2.2, flagship: 3.2 }; // drawn units above the waterline
 
-const near = (list, player) => {
-  let best = null, bestDistance = REACH;
+const near = (list, player, reach = REACH) => {
+  let best = null, bestDistance = reach;
   for (const item of list) {
     const d = Math.hypot(item.x - player.x, item.z - player.z);
     if (d <= bestDistance) { best = item; bestDistance = d; }
@@ -16,13 +16,14 @@ const near = (list, player) => {
 /**
  * What the player can do: {kind: 'fire', cannonId, targetId|null} next to a cannon, {kind: 'repair',
  * wallId, hp} next to a damaged wall, else null. defenses: [{id, kind, x, z}]; state: wave.state().
+ * repairReach: how far you reach a wall (captain-stats.js: Long reach adds 2 units, §14).
  */
-export function actionAt(player, defenses, state) {
+export function actionAt(player, defenses, state, { repairReach = REACH } = {}) {
   if (!player || !state || state.phase !== 'running') return null;
   const cannon = near(defenses.filter(item => item.kind === 'cannon'), player);
   const walls = new Map((state.walls ?? []).map(wall => [wall.id, wall]));
   const damaged = defenses.filter(item => item.kind === 'wall' && walls.has(item.id) && walls.get(item.id).hp < walls.get(item.id).maxHp);
-  const wall = near(damaged, player);
+  const wall = near(damaged, player, Number.isFinite(repairReach) && repairReach > 0 ? repairReach : REACH);
   const toCannon = cannon ? Math.hypot(cannon.x - player.x, cannon.z - player.z) : Infinity;
   const toWall = wall ? Math.hypot(wall.x - player.x, wall.z - player.z) : Infinity;
   if (cannon && toCannon <= toWall) {

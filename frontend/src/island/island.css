@@ -67,3 +67,47 @@
 .island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
 .island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
 @media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}
+/* Menu › Captain and skills (docs/TOWER-DEFENSE.md §10, §14, §15): the musket, the 3×3 skill tree and the
+   weapon shop, in the kit's tabs. Each skill is a ≥44 px button; a line joins the tiers of a branch (gold
+   once the tier above is learned); cost dots under the name; learned / can learn / locked by colour and mark. */
+.island-card-captain.kit-modal{width:min(480px,calc(100vw - 32px))}
+.island-captain-tabs .kit-tablist{gap:6px;padding-bottom:var(--u-2)}
+.island-captain-tabs .kit-tab{padding:8px 12px;font-size:15px}
+.island-captain-tabs .kit-tabpanel{padding-top:var(--u-3);min-height:0}
+.island-captain-musket,.island-skills,.island-weapons{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-3);min-width:0}
+.island-card-captain .island-card-body,.island-captain-tabs,.island-captain-tabs .kit-tabpanel{min-width:0;grid-template-columns:minmax(0,1fr)}
+.island-captain-musket>.kit-button{justify-self:start;min-width:160px}
+.island-points{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
+.island-tree{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+.island-branch{display:grid;gap:6px;align-content:start;min-width:0}
+.island-branch-head{margin:0;display:flex;flex-direction:column;align-items:center;gap:0;text-align:center;min-width:0}
+/* Beats the modal's h3 size (src/ui/open-panels.css), keeps its serif and gold. */
+.island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:16px;line-height:1.2;overflow-wrap:anywhere}
+.island-branch-icon{font-size:20px;line-height:1.2}
+.island-branch-nodes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.island-tier{position:relative}
+.island-tier+.island-tier::before{content:'';position:absolute;left:50%;top:-14px;width:4px;height:14px;margin-left:-2px;background:var(--u-line)}
+.island-tier.is-linked::before{background:var(--u-gold)}
+.island-skill{width:100%;min-height:58px;display:grid;justify-items:center;align-content:center;gap:3px;padding:6px 4px;position:relative;
+  font:700 13px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:var(--u-card);border:2px solid var(--u-line);box-shadow:0 3px var(--u-deep)}
+.island-skill:hover{background:var(--u-raise)}
+.island-skill:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+.island-skill.is-learned{background:#3b5a2c;border-color:#9fd26a}
+.island-skill.is-ready{border-color:var(--u-gold);box-shadow:0 3px var(--u-deep),0 0 0 2px #f3d58c55}
+.island-skill.is-locked{background:var(--u-deep);color:var(--u-mute)}
+.island-skill.is-picked{outline:3px solid var(--u-gold);outline-offset:-1px}
+.island-skill-name{overflow-wrap:anywhere}
+.island-skill-cost{display:flex;gap:3px}
+.island-skill-dot{width:7px;height:7px;background:var(--u-gold);border:1px solid var(--u-deep)}
+.island-skill.is-locked .island-skill-dot{background:var(--u-line)}
+.island-skill-mark{position:absolute;top:2px;right:4px;font-size:11px;line-height:1}
+.island-skill-mark[hidden]{display:none}
+.island-skill-detail{display:grid;gap:6px;padding:var(--u-2) var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold)}
+.island-skill-detail-head{display:flex;justify-content:space-between;gap:var(--u-2);align-items:baseline}
+.island-skill-detail-head strong{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
+.island-skill-detail-cost{color:var(--u-mute);font-size:15px;white-space:nowrap}
+.island-skill-line{color:var(--u-ink);font-size:15px}
+.island-skill-detail>.kit-button{justify-self:start;min-width:140px}
+.island-skills-how{color:var(--u-mute);font-size:15px}
+.island-weapon.is-equipped{border-color:var(--u-gold)}
+@media(max-width:400px){.island-card-captain.kit-modal{padding:0 14px 16px}.island-tree{gap:4px}.island-skill{font-size:13px;padding:6px 2px}.island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:14px}}

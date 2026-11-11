@@ -13,6 +13,7 @@
 // repaired afterwards; the server trusts each player's finish only within its caps (loot per wave,
 // shipsSunk 0 to 1000), so a drift never pays more than an honest wave.
 import { CONFIG } from './sim.js';
+import { DEFAULT_WEAPON, isSkillList, isWeapon, readSkills, readWeapon } from './captain-stats.js';
 
 export const TICK_SECONDS = CONFIG.tick;
 export const INPUT_LEAD_TICKS = 4;
@@ -21,6 +22,7 @@ export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_re
 export const MAX_PLAYERS = 4; // TOWER-DEFENSE.md §11: up to four players defend one island together
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
+const isAim = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500;
 
 export const tickOf = seconds => Math.round(seconds / TICK_SECONDS);
 export const secondsOf = tick => Math.round(tick * TICK_SECONDS * 1000) / 1000;
@@ -29,11 +31,16 @@ export const secondsOf = tick => Math.round(tick * TICK_SECONDS * 1000) / 1000;
 export function toMessage(input, { by, seq, tick, waveId }) {
   const base = { by, seq, t: secondsOf(tick), waveId };
   if (input.type === 'fire') return { type: ROOM_EVENTS.fire, payload: { ...base, cannonId: input.cannonId, targetId: input.targetId } };
-  if (input.type === 'repair') return { type: ROOM_EVENTS.repair, payload: { ...base, wallId: input.wallId } };
+  // A repair carries the repairer's skills (Quick fix, Master shipwright: §14), so every client repairs as fast.
+  if (input.type === 'repair') return { type: ROOM_EVENTS.repair, payload: { ...base, wallId: input.wallId, skills: readSkills(input.skills) } };
   if (input.type === 'lamps_lit') return { type: ROOM_EVENTS.lamps_lit, payload: base };
-  // The captain's musket: the shooter's own level and position at send time, so every client agrees.
-  if (input.type === 'captain_shot') return { type: ROOM_EVENTS.captain_shot,
-    payload: { ...base, targetId: input.targetId, level: input.level, x: input.x, z: input.z } };
+  // The captain's gun: the shooter's own level, skills, weapon and position at send time (and the aim
+  // point for a spray or a bomb), so every client agrees (§10, §14, §15).
+  if (input.type === 'captain_shot') {
+    const aim = isAim(input.ax) && isAim(input.az) ? { ax: input.ax, az: input.az } : {};
+    return { type: ROOM_EVENTS.captain_shot, payload: { ...base, targetId: typeof input.targetId === 'string' ? input.targetId : null,
+      level: input.level, x: input.x, z: input.z, skills: readSkills(input.skills), weapon: readWeapon(input.weapon), ...aim } };
+  }
   return null;
 }
 
@@ -50,15 +57,19 @@ export function readMessage(type, payload, waveId) {
   }
   if (type === ROOM_EVENTS.repair) {
     if (typeof payload.wallId !== 'string' || !ID.test(payload.wallId)) return null;
-    return { by, seq, tick, input: { type: 'repair', wallId: payload.wallId } };
+    if (payload.skills !== undefined && !isSkillList(payload.skills)) return null;
+    return { by, seq, tick, input: { type: 'repair', wallId: payload.wallId, skills: readSkills(payload.skills) } };
   }
   if (type === ROOM_EVENTS.lamps_lit) return { by, seq, tick, input: { type: 'lamps_lit' } };
   if (type === ROOM_EVENTS.captain_shot) {
-    const { targetId, level, x, z } = payload;
-    if (typeof targetId !== 'string' || !ID.test(targetId) || !Number.isInteger(level) || level < 1 || level > 5) return null;
-    if (![x, z].every(value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500)) return null;
-    // The shooter is the sender: a message cannot fire somebody else's musket.
-    return { by, seq, tick, input: { type: 'captain_shot', by, targetId, level, x, z } };
+    const { targetId = null, level, x, z, skills = [], weapon = DEFAULT_WEAPON, ax, az } = payload;
+    if (targetId !== null && (typeof targetId !== 'string' || !ID.test(targetId))) return null;
+    if (!Number.isInteger(level) || level < 1 || level > 5 || !isSkillList(skills) || !isWeapon(weapon)) return null;
+    if (![x, z].every(isAim) || ((ax !== undefined || az !== undefined) && ![ax, az].every(isAim))) return null;
+    if (targetId === null && ax === undefined) return null; // a shot needs a ship or an aim point
+    // The shooter is the sender: a message cannot fire somebody else's gun.
+    const aim = ax !== undefined ? { ax, az } : {};
+    return { by, seq, tick, input: { type: 'captain_shot', by, targetId, level, x, z, skills: readSkills(skills), weapon, ...aim } };
   }
   return null;
 }

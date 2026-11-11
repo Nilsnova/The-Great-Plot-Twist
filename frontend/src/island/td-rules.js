@@ -47,7 +47,7 @@ export const UNLOCK_STEPS = Object.freeze([
 ]);
 // What one unlock step is called in its toast and its first-time line.
 export const UNLOCK_NEWS = Object.freeze({
-  1: {title: 'Captain upgrades unlocked!', line: 'Open Menu › Captain to make your musket stronger.'},
+  1: {title: 'Captain upgrades unlocked!', line: 'Open Menu › Captain and skills to make your musket stronger.'},
   2: {title: 'Level 2 and the house unlocked!', line: 'Tap a cannon or wall to upgrade it. Houses add loot after every won wave.'},
   3: {title: 'New: Mortar unlocked!', line: 'A mortar hits every ship near the impact. Build one on a tower spot.'},
   5: {title: 'New: Crew and level 3 unlocked!', line: 'Hire a gunner or a carpenter in Menu › Crew.'},

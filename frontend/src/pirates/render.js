@@ -35,6 +35,17 @@ const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 8;
 // The musket (§10): the firing pose and its flash stay ~250 ms, a short tracer runs to the target, a puff on the hit.
 export const MUSKET = Object.freeze({ fire: .25, tracerMin: .12, tracerLength: 1.6, puff: .4, muzzleX: 1.5, muzzleY: 1 });
 const musketLife = item => Math.max(POSE_SECONDS, item.flight + MUSKET.puff);
+// Each weapon's shot looks its own (TOWER-DEFENSE.md §15): the tracer's colour, width and streak length
+// (in world units; the rifle draws the whole line at once), the muzzle flash's size and the hit puff's.
+export const GUN_LOOKS = Object.freeze({
+  musket: Object.freeze({ r: 1, g: .93, b: .62, width: .125, length: 1.6, flash: 1, puff: .75 }),
+  pistols: Object.freeze({ r: 1, g: 1, b: .86, width: .08, length: .8, flash: .6, puff: .5 }),
+  blunderbuss: Object.freeze({ r: 1, g: .62, b: .3, width: .11, length: .7, flash: 1.5, puff: .6 }),
+  long_rifle: Object.freeze({ r: .78, g: .95, b: 1, width: .07, length: 60, flash: 1.2, puff: .9 }),
+  fire_bombs: Object.freeze({ r: 1, g: .55, b: .2, width: .1, length: 1, flash: .7, puff: 1 }),
+});
+const lookOf = weapon => GUN_LOOKS[weapon] ?? GUN_LOOKS.musket;
+const BOMB_BURST = { r: 1, g: .5, b: .2 };
 
 /** Shelf-packs the sprites (and a small white block for bars and the beam) into one atlas. Pure. */
 export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width = 512, pad = 2) {
@@ -285,7 +296,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       case 'wall_repaired': effects()?.bloom(x, y + 1, { radius: 1.4, life: .6, colour: '#bfe6a8' }); break;
       case 'mortar_fired': {
-        shells.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt }));
+        shells.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: false, radius: event.radius ?? 4 }));
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.6, flip: event.toX < event.x });
         const post = posts.find(item => item.id === event.towerId); if (post) post.flip = event.toX < event.x;
         effects()?.bloom(event.x, y + 1.2, { radius: 1.4, life: .45, colour: '#ffcf6a' });
@@ -294,7 +305,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       case 'mortar_impact': {
         // The area burst: a ring as wide as the blast radius, a flash, debris, and a splash in the sea.
-        bursts.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, radius: event.radius ?? 4 }));
+        bursts.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, radius: event.radius ?? 4, fire: false }));
         effects()?.ring(x, y, { radius: event.radius ?? 4, life: .55, colour: '#ffcf6a' });
         effects()?.bloom(x, y + .6, { radius: 2.6, life: .5, colour: '#ff9a4a' });
         spark(x, y + .5, { count: 30, speed: [1.5, 5], angle: Math.PI / 2, spread: 2.6, gravity: 7, life: [.5, 1.1], colour: '#ffb35a', size: [1, 2] });
@@ -302,10 +313,43 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'captain_fired': {
-        const flight = Math.max(MUSKET.tracerMin, Number.isFinite(event.impactAt) && Number.isFinite(event.t) ? event.impactAt - event.t : 0);
-        tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock, flight }));
+        const weapon = GUN_LOOKS[event.weapon] ? event.weapon : 'musket', look = lookOf(weapon);
+        const flightTo = impactAt => Math.max(MUSKET.tracerMin, Number.isFinite(impactAt) && Number.isFinite(event.t) ? impactAt - event.t : 0);
         const dir = event.toX < event.x ? -1 : 1;
-        effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .8, life: MUSKET.fire, colour: '#fff0b0' });
+        if (weapon === 'fire_bombs') {
+          // A bomb on a low arc, then its burst (captain_blast); the pose throws it.
+          shells.add(item => Object.assign(item, { x: event.x + dir * .6, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
+          tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
+          effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
+          break;
+        }
+        // One streak per ship hit (the blunderbuss sprays up to three, the rifle goes through to a second).
+        let shots = Array.isArray(event.targets) && event.targets.length ? event.targets.map(item => ({ toX: item.toX, toZ: item.toZ, impactAt: item.impactAt })) : [];
+        if (!shots.length && weapon === 'blunderbuss' && Number.isFinite(event.heading)) {
+          // A spray at nothing: three streaks fanned over the cone.
+          const reach = Math.hypot(event.toX - event.x, event.toZ - event.z), half = (event.cone ?? 50) / 2 * Math.PI / 180;
+          shots = [-1, 0, 1].map(k => ({ toX: event.x + Math.cos(event.heading + k * half * .8) * reach, toZ: event.z + Math.sin(event.heading + k * half * .8) * reach, impactAt: event.impactAt }));
+        }
+        if (!shots.length) shots = [{ toX: event.toX, toZ: event.toZ, impactAt: event.impactAt }];
+        if (weapon === 'long_rifle' && shots.length > 1) shots = [shots[shots.length - 1]]; // one line through both ships
+        shots.forEach((shot, index) => tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: shot.toX, toZ: shot.toZ, at: clock,
+          flight: flightTo(shot.impactAt), weapon, pose: index === 0, line: true })));
+        effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
+        if (weapon === 'blunderbuss' && !low() && !still()) {
+          // The cone puff: grey smoke rolling out of the wide muzzle.
+          const heading = Number.isFinite(event.heading) ? event.heading : Math.atan2(event.toZ - event.z, event.toX - event.x);
+          const angle = Math.atan2(-Math.sin(heading) * Y, Math.cos(heading)); // the cone's direction on screen
+          spark(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
+            gravity: -.6, life: [.4, .8], colour: '#d9d6c8', size: [1, 3] });
+        }
+        break;
+      }
+      case 'captain_blast': {
+        // A fire bomb bursts: explosion art with flames, an orange ring as wide as the blast.
+        bursts.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, radius: event.radius ?? 3, fire: true }));
+        effects()?.ring(x, y, { radius: event.radius ?? 3, life: .55, colour: '#ff8a3a' });
+        effects()?.bloom(x, y + .5, { radius: 2.2, life: .5, colour: '#ff7a2a' });
+        spark(x, y + .4, { count: 26, speed: [1.2, 4.2], angle: Math.PI / 2, spread: 2.6, gravity: 5, life: [.5, 1.1], colour: '#ff9a3a', size: [1, 2] });
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
@@ -360,6 +404,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const span = Math.max(.05, shell.to - shell.from), p = Math.min(1, Math.max(0, (simNow - shell.from) / span));
     const x = shell.x + (shell.toX - shell.x) * p, z = shell.z + (shell.toZ - shell.z) * p;
     const distance = Math.hypot(shell.toX - shell.x, shell.toZ - shell.z), r = rect['fx-mortar-shell'] ?? rect['pirate-cannonball'];
+    if (shell.bomb) { drawBomb(shell, p, x, z, distance); return; }
     const lift = still() ? 1.2 : 1.2 + (5 + distance * .18) * 4 * p * (1 - p);
     if (!still() && p > .05) for (const back of [.04, .09, .15]) {
       const q = Math.max(0, p - back), tx = shell.x + (shell.toX - shell.x) * q, tz = shell.z + (shell.toZ - shell.z) * q;
@@ -371,28 +416,56 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // Where it will land: a faint target mark, so the player sees the area coming.
     if (p > .35) layers.air.push(rect[WHITE], shell.toX, drawnY(shell.toZ), 2.4 * p, .1, .5, 0, { ...RED, a: .35 * p });
   }
+  // A fire bomb: a small dark ball on a low arc with a flickering flame and sparks, its landing ring in orange.
+  function drawBomb(shell, p, x, z, distance) {
+    const lift = still() ? 1 : 1 + (2 + distance * .12) * 4 * p * (1 - p), ball = rect['pirate-cannonball'];
+    const flame = rect[pirateFrames.fire[(still() ? 0 : Math.floor(clock * 10)) % 3]];
+    if (ball) layers.air.push(ball, x, drawnY(z) + lift, ball.w * .8, ball.h * .8, .5, .55 * ball.h * .8, { r: .5, g: .35, b: .3 });
+    if (flame) layers.air.push(flame, x, drawnY(z) + lift + .25, flame.w * .45, flame.h * .45, .5, flame.anchor * .45, { a: .95 });
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .35 * (.6 + p * .6), .12, .5, 0, { ...DARK, a: .3 + p * .2 });
+    if (p > .25) layers.air.push(rect[WHITE], shell.toX, drawnY(shell.toZ), (shell.radius ?? 3) * 2 * p, .1, .5, 0, { ...BOMB_BURST, a: .45 * p });
+  }
   function drawBurst(burst) {
     const p = (clock - burst.at) / BURST_SECONDS, frame = EXPLOSION_FRAMES[Math.min(3, Math.floor(p * 4))], r = rect[frame];
     if (!r) return;
     const grow = 1.2, y = drawnY(burst.z);
     layers.air.push(r, burst.x, y, r.w * grow, r.h * grow, .5, r.anchor * grow, { ...tintOf(r), a: 1 - Math.max(0, p - .6) * 2 });
+    if (!burst.fire) return;
+    // A fire bomb's flames: three tongues of the fire art around the blast, fading out.
+    for (let i = 0; i < 3; i++) {
+      const flame = rect[pirateFrames.fire[(i + (still() ? 0 : Math.floor(clock * 8))) % 3]];
+      if (!flame) continue;
+      const a = i / 3 * Math.PI * 2 + .5, spread = burst.radius * .45;
+      layers.air.push(flame, burst.x + Math.cos(a) * spread, y + Math.sin(a) * spread * Y, flame.w * .7, flame.h * .7, .5, flame.anchor * .7, { a: 1 - p });
+    }
   }
   // The shot: the firing pose with its flash, a short tracer from the muzzle to the ship, a puff on the hit.
   function drawTracer(tracer) {
-    drawPose(tracer);
+    if (tracer.pose !== false) drawPose(tracer);
+    if (tracer.line === false) return;
+    const look = lookOf(tracer.weapon);
     const age = clock - tracer.at, dir = tracer.toX < tracer.x ? -1 : 1;
     const mx = tracer.x + dir * MUSKET.muzzleX, my = drawnY(tracer.z) + MUSKET.muzzleY;
     const tx = tracer.toX, ty = drawnY(tracer.toZ) + .7, dx = tx - mx, dy = ty - my, length = Math.hypot(dx, dy) || 1;
     const flash = rect['fx-musket-flash'];
-    if (flash && age < MUSKET.fire) layers.air.push(flash, mx + dir * .3, my, flash.w, flash.h, .5, flash.h / 2, { flip: dir < 0, a: age < MUSKET.fire * .6 ? 1 : .6 });
-    if (age < tracer.flight) {
+    if (flash && age < MUSKET.fire && tracer.pose !== false) {
+      layers.air.push(flash, mx + dir * .3, my, flash.w * look.flash, flash.h * look.flash, .5, flash.h * look.flash / 2, { flip: dir < 0, a: age < MUSKET.fire * .6 ? 1 : .6 });
+    }
+    const angle = Math.atan2(dy, dx) - Math.PI / 2;
+    if (tracer.weapon === 'long_rifle' && age < tracer.flight + .18) {
+      // The rifle: one thin, pale line from the muzzle through both ships, fading fast.
+      const fade = Math.max(0, 1 - Math.max(0, age - tracer.flight) / .18);
+      layers.air.push(rect[WHITE], mx, my, look.width * 2.6, length, .5, 0, { r: look.r, g: look.g, b: look.b, angle, a: .25 * fade });
+      layers.air.push(rect[WHITE], mx, my, look.width, length, .5, 0, { r: look.r, g: look.g, b: look.b, angle, a: .95 * fade });
+    } else if (age < tracer.flight) {
       // Reduced motion: the whole line for a moment instead of a moving streak.
-      const p = still() ? 1 : age / tracer.flight, head = Math.min(1, p), tail = still() ? 0 : Math.max(0, head - MUSKET.tracerLength / length);
-      const x0 = mx + dx * tail, y0 = my + dy * tail, span = (head - tail) * length, angle = Math.atan2(dy, dx) - Math.PI / 2;
-      if (span > .05) layers.air.push(rect[WHITE], x0, y0, .125, span, .5, 0, { r: 1, g: .93, b: .62, angle, a: .95 });
-    } else if (age < tracer.flight + MUSKET.puff) {
+      const p = still() ? 1 : age / tracer.flight, head = Math.min(1, p), tail = still() ? 0 : Math.max(0, head - look.length / length);
+      const x0 = mx + dx * tail, y0 = my + dy * tail, span = (head - tail) * length;
+      if (span > .05) layers.air.push(rect[WHITE], x0, y0, look.width, span, .5, 0, { r: look.r, g: look.g, b: look.b, angle, a: .95 });
+    }
+    if (age >= tracer.flight && age < tracer.flight + MUSKET.puff) {
       const p = (age - tracer.flight) / MUSKET.puff, puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
-      if (puff) layers.air.push(puff, tx, ty - .3, puff.w * .75, puff.h * .75, .5, puff.anchor * .75, { a: 1 - p * p });
+      if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, { a: 1 - p * p });
     }
   }
   // The musket pose: the captain-musket art at the shooter, firing (frame 2) for MUSKET.fire, then aiming.

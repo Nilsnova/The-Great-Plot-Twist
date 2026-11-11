@@ -7,6 +7,7 @@
 // places/surfaces.js. Ships sail in on three sea lanes, stop just off the shore and attack the
 // nearest standing wall, else the island. Cannons fire on their own at the nearest ship they can see.
 import { surfaces } from '../world/places/surfaces.js';
+import { captainStats, readSkills } from './captain-stats.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -187,7 +188,8 @@ function shuffle(list, random) {
  * level (1-3) and crew are optional: an old caller without them gets level 1 and no crew. boss is
  * optional too: without it every 5th wave is a boss wave (TOWER-DEFENSE.md §1), never with the flagship.
  * Inputs to step(): {type: 'fire', cannonId, targetId}, {type: 'repair', wallId}, {type: 'lamps_lit'},
- * {type: 'captain_shot', by, targetId, level, x, z} (the shooter's own position and captain level).
+ * {type: 'captain_shot', by, targetId, level, skills, weapon, x, z, ax, az} (the shooter's own position, captain
+ * level, skills and weapon; targetId and/or the aim point ax, az) and {type: 'repair', wallId, skills}.
  */
 export function createWave(options = {}) {
   const C = CONFIG, random = createRandom(options?.seed);
@@ -316,18 +318,66 @@ export function createWave(options = {}) {
   const armoured = ship => ship.kind === 'flagship' && !lampsLit && ships.length > 1; // escorts first while armoured
   const shoreOrder = (a, b) => (a.state === 'attacking') !== (b.state === 'attacking') ? (a.state === 'attacking' ? -1 : 1) : a.left - b.left;
 
+  // The captain's gun (§10, §14, §15): the shooter's own level, skills and weapon decide the numbers
+  // (captain-stats.js), so every client resolves the same hits. targetId names the ship (single and
+  // pierce shots); ax, az is the aim point (the cone's direction, the bomb's landing spot).
   function captainShot(input, events) {
     const by = typeof input.by === 'string' && /^[A-Za-z0-9_.:-]{1,64}$/.test(input.by) ? input.by : null;
+    if (!by || !finite(input.x) || !finite(input.z)) return;
+    const level = Number.isInteger(input.level) ? clamp(input.level, 1, C.captain.levels.length) : 1;
+    const skills = readSkills(input.skills), stats = captainStats(level, skills, input.weapon), t = ticks * C.tick;
     const ship = typeof input.targetId === 'string' ? ships.find(item => item.id === input.targetId) : undefined;
-    if (!by || !ship || !finite(input.x) || !finite(input.z)) return;
-    const level = Number.isInteger(input.level) ? clamp(input.level, 1, C.captain.levels.length) : 1, stats = C.captain.levels[level - 1];
-    const d = distance(input.x, input.z, ship.x, ship.z), t = ticks * C.tick;
-    if (d > stats.range || t - (captains.get(by) ?? -Infinity) < stats.reload - 1e-9) return;
+    const aimed = finite(input.ax) && finite(input.az) ? { x: input.ax, z: input.az } : ship ? { x: ship.x, z: ship.z } : null;
+    if (!aimed || t - (captains.get(by) ?? -Infinity) < stats.reload - 1e-9) return;
+    const x = input.x, z = input.z, base = { type: 'captain_fired', by, level, weapon: stats.weapon, mode: stats.mode, damage: stats.damage,
+      reload: stats.reload, x: round2(x), z: round2(z) };
+    const shotAt = (target, from = { x, z }) => round2(t + distance(from.x, from.z, target.x, target.z) / stats.shotSpeed);
+    const hit = (target, impactAt) => balls.push({ cannonId: `captain:${by}`, shipId: target.id, hit: true, damage: stats.damage, manual: true, captain: true, impactAt });
+    if (stats.mode === 'area') {
+      // A bomb: thrown at the aim point (at most the gun's range away), it bursts there after its flight.
+      const d = distance(x, z, aimed.x, aimed.z), reach = Math.min(d, stats.range), k = d > 0 ? reach / d : 0;
+      const toX = round2(x + (aimed.x - x) * k), toZ = round2(z + (aimed.z - z) * k), impactAt = round2(t + stats.flight + reach * stats.flightPerUnit);
+      captains.set(by, t);
+      shells.push({ towerId: `captain:${by}`, x: round2(x), z: round2(z), toX, toZ, damage: stats.damage, impactAt, from: now(), radius: stats.radius, captain: true });
+      events.push({ ...base, t: now(), targetId: ship?.id ?? null, toX, toZ, impactAt, radius: stats.radius, targets: [] });
+      return;
+    }
+    if (stats.mode === 'cone') {
+      // A spray of shot: the nearest ships inside the cone towards the aim point, up to stats.targets.
+      const heading = Math.atan2(aimed.z - z, aimed.x - x), half = stats.cone / 2 * Math.PI / 180;
+      const inCone = ships.map(item => {
+        const d = distance(x, z, item.x, item.z);
+        let turn = Math.abs(Math.atan2(item.z - z, item.x - x) - heading);
+        if (turn > Math.PI) turn = 2 * Math.PI - turn;
+        return { item, d, turn };
+      }).filter(entry => entry.d <= stats.range && entry.turn <= half + 1e-9)
+        .sort((a, b) => a.d - b.d || (a.item.id < b.item.id ? -1 : 1)).slice(0, stats.targets);
+      captains.set(by, t);
+      const targets = inCone.map(({ item }) => { const impactAt = shotAt(item); hit(item, impactAt); return { id: item.id, toX: round2(item.x), toZ: round2(item.z), impactAt }; });
+      const end = { x: x + Math.cos(heading) * stats.range, z: z + Math.sin(heading) * stats.range };
+      events.push({ ...base, t: now(), targetId: targets[0]?.id ?? null, toX: round2(targets[0]?.toX ?? end.x), toZ: round2(targets[0]?.toZ ?? end.z),
+        impactAt: targets[0]?.impactAt ?? round2(t + stats.range / stats.shotSpeed), cone: stats.cone, heading: round2(heading), targets });
+      return;
+    }
+    // single and pierce: the ship named, in range.
+    if (!ship || distance(x, z, ship.x, ship.z) > stats.range) return;
     captains.set(by, t);
-    const impactAt = round2(t + d / C.captain.shotSpeed);
-    balls.push({ cannonId: `captain:${by}`, shipId: ship.id, hit: true, damage: stats.damage, manual: true, captain: true, impactAt });
-    events.push({ type: 'captain_fired', t: now(), by, targetId: ship.id, level, damage: stats.damage, reload: stats.reload,
-      x: round2(input.x), z: round2(input.z), toX: round2(ship.x), toZ: round2(ship.z), impactAt });
+    const impactAt = shotAt(ship);
+    hit(ship, impactAt);
+    const targets = [{ id: ship.id, toX: round2(ship.x), toZ: round2(ship.z), impactAt }];
+    if (stats.mode === 'pierce') {
+      // The ball goes through: the nearest other ship behind the first on the same line.
+      const d0 = distance(x, z, ship.x, ship.z) || 1, ux = (ship.x - x) / d0, uz = (ship.z - z) / d0;
+      let behind = null, best = Infinity;
+      for (const item of ships) {
+        if (item === ship) continue;
+        const along = (item.x - x) * ux + (item.z - z) * uz, side = Math.abs((item.x - x) * uz - (item.z - z) * ux);
+        if (along > d0 && along - d0 <= stats.pierceDepth && side <= stats.pierceWidth && along < best) { behind = item; best = along; }
+      }
+      if (behind) { const at = shotAt(behind); hit(behind, at); targets.push({ id: behind.id, toX: round2(behind.x), toZ: round2(behind.z), impactAt: at }); }
+    }
+    const last = targets[targets.length - 1];
+    events.push({ ...base, t: now(), targetId: ship.id, toX: last.toX, toZ: last.toZ, impactAt: last.impactAt, targets });
   }
 
   function applyInput(input, events) {
@@ -343,6 +393,8 @@ export function createWave(options = {}) {
       if (!wall || wall.hp >= wall.maxHp) return;
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
+      // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes.
+      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier);
     } else if (input.type === 'lamps_lit') {
       if (!withFlagship || lampsLit) return;
       lampsLit = true; // the beam strikes the flagship on the next tick, or as soon as it appears
@@ -457,9 +509,10 @@ export function createWave(options = {}) {
       const shell = shells[i];
       if (shell.impactAt > t + 1e-9) { i++; continue; }
       shells.splice(i, 1);
-      const hits = ships.filter(ship => distance(ship.x, ship.z, shell.toX, shell.toZ) <= C.mortar.radius);
-      events.push({ type: 'mortar_impact', t: now(), towerId: shell.towerId, x: shell.toX, z: shell.toZ, radius: C.mortar.radius, hits: hits.length });
-      for (const ship of hits) damageShip(ship, shell.damage, shell.towerId, events, { area: true });
+      const radius = shell.radius ?? C.mortar.radius, hits = ships.filter(ship => distance(ship.x, ship.z, shell.toX, shell.toZ) <= radius);
+      events.push({ type: shell.captain ? 'captain_blast' : 'mortar_impact', t: now(), [shell.captain ? 'by' : 'towerId']: shell.towerId,
+        x: shell.toX, z: shell.toZ, radius, hits: hits.length });
+      for (const ship of hits) damageShip(ship, shell.damage, shell.towerId, events, shell.captain ? { area: true, manual: true, captain: true } : { area: true });
     }
     for (const tower of towers) {
       tower.reload = Math.max(0, tower.reload - C.tick);
@@ -471,7 +524,7 @@ export function createWave(options = {}) {
     for (const wall of walls) {
       wall.crew = false;
       if (wall.repairLeft <= 0) continue;
-      const amount = Math.min(C.wall.repairRate * C.tick, wall.maxHp - wall.hp);
+      const amount = Math.min((wall.repairRate ?? C.wall.repairRate) * C.tick, wall.maxHp - wall.hp);
       wall.hp = round2(wall.hp + amount); wall.repaired += amount; wall.repairLeft -= C.tick;
       if (wall.hp >= wall.maxHp || wall.repairLeft <= 1e-9) {
         wall.repairLeft = 0;

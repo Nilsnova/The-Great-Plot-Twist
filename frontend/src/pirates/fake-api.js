@@ -14,6 +14,9 @@
 //   await api.upgrade({spot, actionUid});        // POST /api/island/upgrade      (TOWER-DEFENSE.md §7)
 //   await api.hire({crew, actionUid});           // POST /api/island/hire
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
+//   await api.learnSkill({skill, actionUid});    // POST /api/island/skill        (§14)
+//   await api.buyWeapon({weapon, actionUid});    // POST /api/island/weapon/buy   (§15)
+//   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
 //   await api.pointBuild({spot, kind, actionUid}) / api.pointUpgrade({spot, actionUid})
 //   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6)
@@ -32,6 +35,7 @@
 // ISLE-FR3ND (Captain Gull) to visit.
 import { createRandom } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
+import { SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -150,8 +154,20 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     const player = me(), island = world.islands.get(player.code), captain = island.captain ?? 1;
     return { code: `ISLE-${island.code}`, coins: player.coins, waveBest: island.waveBest, flags: island.flags, spots: spots(island),
       crew: { ...island.crew }, prices: PRICES, nextWave: island.nextWave ?? island.waveBest + 1,
-      captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: unlocksOf(island) };
+      captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: unlocksOf(island),
+      skills: skillsOf(player, island), weapons: weaponsOf(island) };
   };
+  // §14: skill points from the best wave you won anywhere (won_wave_best on the server), one per two waves.
+  const wonOf = (player, island) => Math.max(player.wonBest ?? 0, island.waveBest ?? 0, player.pointBest ?? 0);
+  const SKILL_TREE = SKILLS.map(skill => ({ id: skill.id, branch: skill.branch, tier: skill.tier, cost: skill.cost, needs: skillNeeds(skill.id) }));
+  const skillsOf = (player, island) => {
+    const known = readSkills(island.skills ?? []), spent = pointsSpent(known);
+    return { points: Math.max(0, pointsEarned(wonOf(player, island)) - spent), spent, known, tree: SKILL_TREE };
+  };
+  // §15: the weapons you own, the one you carry and the shop (price, the wave it unlocks after).
+  const SHOP = WEAPONS.map(weapon => ({ id: weapon.id, name: weapon.name, price: weapon.price, unlockWave: weapon.unlockWave }));
+  const weaponsOf = island => ({ owned: WEAPONS.map(weapon => weapon.id).filter(id => id === 'musket' || (island.weapons ?? []).includes(id)),
+    equipped: readWeapon(island.equipped), shop: SHOP });
   const pointView = () => ({ spots: ISLAND_RULES.pointSpots.map(id => spotView(world.point, id)), waveBest: world.pointBest, coins: me().coins });
   // A build or upgrade with `code`: on that island (a friend's), paid with your coins; answers that island.
   const visited = code => {
@@ -239,6 +255,38 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.coins -= CAPTAIN.price[level]; island.captain = level + 1; player.actions.set(`captain:${actionUid}`, true);
       return view();
     },
+    async learnSkill({ skill, actionUid } = {}) {
+      if (!uid(actionUid)) invalid('Send the skill and an action id.');
+      if (!Object.hasOwn(SKILL_BY_ID, skill ?? '')) refuse(400, 'bad_skill', 'There is no such skill.');
+      const player = me(), island = world.islands.get(player.code), known = readSkills(island.skills ?? []);
+      if (player.actions.has(`skill:${actionUid}`)) return view();
+      if (known.includes(skill)) refuse(409, 'known', `You know ${SKILL_BY_ID[skill].name} already.`);
+      const needs = skillNeeds(skill);
+      if (needs && !known.includes(needs)) refuse(409, 'locked', `Learn ${SKILL_BY_ID[needs].name} first.`);
+      if (skillsOf(player, island).points < SKILL_BY_ID[skill].cost) refuse(409, 'no_points', 'Win new waves to earn skill points.');
+      island.skills = readSkills([...known, skill]); player.actions.set(`skill:${actionUid}`, true);
+      return view();
+    },
+    async buyWeapon({ weapon, actionUid } = {}) {
+      if (!uid(actionUid)) invalid('Send the weapon and an action id.');
+      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
+      const player = me(), island = world.islands.get(player.code), info = WEAPON_BY_ID[weapon];
+      if (player.actions.has(`weapon:${actionUid}`)) return view();
+      if (weaponsOf(island).owned.includes(weapon)) refuse(409, 'owned', `You own the ${info.name.toLowerCase()} already.`);
+      const wave = unlocking ? Math.max(island.waveBest, player.pointBest ?? 0) : 99;
+      if (wave < info.unlockWave) refuse(409, 'locked', lockedMessage(info.unlockWave));
+      if (player.coins < info.price) refuse(409, 'insufficient_funds', `The ${info.name.toLowerCase()} costs ${info.price} coins. You need more coins.`);
+      player.coins -= info.price; island.weapons = [...(island.weapons ?? []), weapon]; island.equipped = weapon;
+      player.actions.set(`weapon:${actionUid}`, true);
+      return view();
+    },
+    async equipWeapon({ weapon } = {}) {
+      if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
+      const player = me(), island = world.islands.get(player.code);
+      if (!weaponsOf(island).owned.includes(weapon)) refuse(409, 'not_owned', `Buy the ${WEAPON_BY_ID[weapon].name.toLowerCase()} first.`);
+      island.equipped = weapon;
+      return view();
+    },
     async piratePoint() { me(); return pointView(); },
     async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, null); return pointView(); },
     async pointUpgrade(body = {}) { upgradeOn(world.point, ISLAND_RULES.pointSpots, body, null); return pointView(); },
@@ -316,6 +364,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         .reduce((sum, id) => sum + ((run.island.levels?.get(id) ?? 1) >= 2 ? 10 : 5), 0) : 0;
       const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus) * (isBoss(run) ? 2 : 1) : 0;
       if (survived && !late && !run.island) player.pointBest = Math.max(player.pointBest ?? 0, run.wave);
+      if (survived && !late) player.wonBest = Math.max(player.wonBest ?? 0, run.wave); // won_wave_best: any wave you fought and won
       if (!run.finishedAt) { run.finishedAt = nowMs(); run.expired = late; }
       if (run.island && !run.nextSet) {
         run.nextSet = true;
@@ -348,6 +397,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/upgrade') return reply(200, await api.upgrade(body));
         if (route === 'POST /api/island/hire') return reply(200, await api.hire(body));
         if (route === 'POST /api/island/captain') return reply(200, await api.captain(body));
+        if (route === 'POST /api/island/skill') return reply(200, await api.learnSkill(body));
+        if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
+        if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'GET /api/pirate-point') return reply(200, await api.piratePoint());
         if (route === 'POST /api/pirate-point/build') return reply(200, await api.pointBuild(body));
@@ -379,6 +431,7 @@ const FAILURES = Object.freeze({
 });
 const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionUid'], '/api/waves/start': ['where', 'actionUid'],
   '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
+  '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'] });
 // Keys a body may also carry: `code` builds or upgrades on a friend's island.
@@ -470,6 +523,9 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/upgrade') return ok(await api.upgrade(body));
       if (method === 'POST' && pathname === '/api/island/hire') return ok(await api.hire(body));
       if (method === 'POST' && pathname === '/api/island/captain') return ok(await api.captain(body));
+      if (method === 'POST' && pathname === '/api/island/skill') return ok(await api.learnSkill(body));
+      if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
+      if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'GET' && pathname === '/api/pirate-point') return ok(await api.piratePoint());
       if (method === 'POST' && pathname === '/api/pirate-point/build') return ok(await api.pointBuild(body));
@@ -519,6 +575,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       setWaveBest(value) {
         if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('waveBest must be a whole number from 0 up.');
         const island = world.islands.get(me().code); island.waveBest = value; island.nextWave = Math.min(TD_RULES.highestWave, value + 1);
+        me().wonBest = Math.max(me().wonBest ?? 0, value); // you won those waves yourself: skill points follow (§14)
       },
       reset() { reset(); failures.length = 0; },
     }),

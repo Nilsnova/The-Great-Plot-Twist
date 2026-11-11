@@ -15,6 +15,8 @@
 // The topic patterns match the policies in supabase/migrations/20261106050000_live_presence.sql,
 // and a test reads that file to make sure.
 
+import { isSkillList, isWeapon } from '../pirates/captain-ids.js';
+
 // --- the shapes everybody agrees on ---
 
 export const PROTOCOL_VERSION = 1; // the "v" in every payload, so a newer shape can be refused
@@ -320,16 +322,26 @@ const isWaveTime = value => typeof value === 'number' && Number.isFinite(value) 
 const isCoord = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500;
 const isLampAge = value => value === null || (Number.isInteger(value) && value >= 0 && value <= 3600000);
 const hasKeys = (data, keys) => Object.keys(data).length === keys.length && keys.every(key => Object.hasOwn(data, key));
+// The keys `keys`, plus any of `optional` and nothing else.
+const hasKeysWith = (data, keys, optional) => keys.every(key => Object.hasOwn(data, key))
+  && Object.keys(data).every(key => keys.includes(key) || optional.includes(key));
+// A captain's skills (TOWER-DEFENSE.md §14) and weapon (§15), checked like the level: known ids only.
+const isSkills = value => value === undefined || isSkillList(value);
+const isGun = value => value === undefined || isWeapon(value);
 const WAVE_DATA = {
   wave_start: data => hasKeys(data, ['waveId', 'seed', 'startsAt']) && Number.isSafeInteger(data.seed) && data.seed >= 0
     && typeof data.startsAt === 'string' && data.startsAt.length <= 40 && Number.isFinite(Date.parse(data.startsAt)),
   cannon_shot: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'cannonId', 'targetId']) && WAVE_ITEM.test(String(data.cannonId)) && WAVE_ITEM.test(String(data.targetId)),
-  wall_repair: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'wallId']) && WAVE_ITEM.test(String(data.wallId)),
+  wall_repair: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'wallId'], ['skills']) && WAVE_ITEM.test(String(data.wallId)) && isSkills(data.skills),
   lamps_lit: data => hasKeys(data, ['by', 'seq', 't', 'waveId']),
   lamp: data => hasKeys(data, ['v', 'lamps', 'relit', 'started', 'waveId']) && data.v === 1 && Array.isArray(data.lamps)
     && data.lamps.length === 3 && data.lamps.every(isLampAge) && isLampAge(data.relit) && isLampAge(data.started),
-  captain_shot: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'level', 'x', 'z']) && WAVE_ITEM.test(String(data.targetId))
-    && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5 && [data.x, data.z].every(isCoord),
+  // targetId may be null for a free-aim shot (a spray or a bomb at the aim point ax, az).
+  captain_shot: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'targetId', 'level', 'x', 'z'], ['skills', 'weapon', 'ax', 'az'])
+    && (data.targetId === null ? Object.hasOwn(data, 'ax') : typeof data.targetId === 'string' && WAVE_ITEM.test(data.targetId))
+    && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5 && [data.x, data.z].every(isCoord)
+    && Object.hasOwn(data, 'ax') === Object.hasOwn(data, 'az') && (!Object.hasOwn(data, 'ax') || [data.ax, data.az].every(isCoord))
+    && isSkills(data.skills) && isGun(data.weapon),
   island_changed: data => hasKeys(data, ['spot']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot),
 };
 const NO_WAVE = ['island_changed'];

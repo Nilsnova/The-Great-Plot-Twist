@@ -101,7 +101,7 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
   expect(result.room).toBe('isle_k7q2m');
   expect(result.seen).toEqual(['island_built', 'island_upgraded', 'island_built', 'island_upgraded', 'wave_started_server', 'island_invite_opened']);
   expect(result.captain[0]).toBe(1);
-  expect(result.entries).toEqual(['Play with a friend', 'Crew', 'Captain']);
+  expect(result.entries).toEqual(['Play with a friend', 'Crew', 'Captain and skills']);
 });
 
 it('the crew and captain panels: locked, hire, full, short of coins; a friend arriving gets a toast', async () => {
