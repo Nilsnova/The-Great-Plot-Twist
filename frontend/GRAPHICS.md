@@ -1078,3 +1078,16 @@ storm at night 60 / 59 fps, at most 99 calls and 285 triangles. During the relig
 200 sparks) about 101 calls and 1,581 triangles. Cold title JavaScript 20,606 bytes (limit 21,080),
 CSS 11,404 bytes (limit 12,000). Numbers taken while another agent ran browser suites were noisy
 (as low as 31 fps before and after) and are not used.
+
+## Clean look (td-clean, 11 November)
+
+The world draws 1:1 at 16 native pixels per unit into a small buffer that the browser magnifies by a
+whole number of device pixels (`image-rendering: pixelated`): 640 × 360 at 1280 × 720 and 1080p,
+480 × 300 at 1440 × 900, 576 × 360 at 1440 × 900 retina, 282 × 610 on a 375 × 812 phone
+(`nativeViewport` in pixel/display.js, core/renderer.js). The camera sits on whole native pixels and
+its zoom takes whole device-pixel steps, so the battle view gets a bigger buffer, not shrunken sprites.
+Sprites load the 16 px/unit sources by default (`loadArt(ids, {detail: true})` still loads hd/).
+`pxSteps`/`pxBands` no longer dither: sea, night corners, fog, light pools, beam and moments are flat
+bands with crisp edges. Ground and place backdrops have calm grass bands, clustered tufts, a few
+flower clusters, flat paths with a one-pixel rim. The coast distance field keeps linear filtering on
+purpose (it is a distance field, not art). Measured at 1280 × 720 with `?perf=1`: 60 fps, 55 calls.
