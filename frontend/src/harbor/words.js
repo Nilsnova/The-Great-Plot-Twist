@@ -9,6 +9,7 @@ export const TRY_AGAIN = 'Try again';
 export const SEND_AGAIN = 'Send again';
 export const NOT_HEARD = 'We did not hear back. Look at My stakes before you send it again.';
 export const LOADING = 'Opening the stall...';
+export const PLACE = 'Place stake';
 
 export const TITLES = {
   harbor: 'Harbor', market: 'Market stall', match: 'Match board', fortune: 'Fortune teller',

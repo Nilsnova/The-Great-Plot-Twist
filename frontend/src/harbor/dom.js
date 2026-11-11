@@ -3,7 +3,7 @@
 import './harbor.css';
 import {createModal} from '../ui/kit/modal.js';
 import {formatCoins} from '../lib/coins.js';
-import {MY_STAKES, SIGN_IN, SIGN_IN_BUTTON} from './words.js';
+import {MY_STAKES, PLACE, SIGN_IN, SIGN_IN_BUTTON} from './words.js';
 
 let ids = 0;
 export const uid = prefix => `harbor-${prefix}-${++ids}`;
@@ -63,7 +63,7 @@ export function createPicker({name, sides, stakes, sideGroup, stakeGroup, choose
   const line = el('p', 'harbor-hint', choose);
   const labelOf = id => sides.find(option => option.id === id)?.label ?? id;
   const ready = () => sides.some(option => option.id === selection.side) && stakes.includes(selection.stake);
-  const confirm = button(choose, () => { if (ready() && !busy) onConfirm(selection.side, selection.stake, labelOf(selection.side)); },
+  const confirm = button(PLACE, () => { if (ready() && !busy) onConfirm(selection.side, selection.stake, labelOf(selection.side)); },
     'kit-button harbor-button harbor-confirm');
   confirm.dataset.key = `${name}:confirm`;
   const sideButtons = sides.map(option => {
@@ -80,7 +80,7 @@ export function createPicker({name, sides, stakes, sideGroup, stakeGroup, choose
     stakeButtons.forEach((choice, index) => choice.setAttribute('aria-pressed', String(stakes[index] === selection.stake)));
     const set = ready();
     line.textContent = set ? hint(selection.side, selection.stake) : choose;
-    confirm.textContent = set ? confirmText(selection.stake, labelOf(selection.side)) : choose;
+    confirm.textContent = set ? confirmText(selection.stake, labelOf(selection.side)) : PLACE;
     confirm.disabled = !set || busy;
     for (const choice of [...sideButtons, ...stakeButtons]) choice.disabled = busy;
   }
