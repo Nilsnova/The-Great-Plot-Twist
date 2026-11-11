@@ -37,6 +37,13 @@ export const LAMP_SPOTS = Object.freeze([
   Object.freeze({ id: 'point_lamp_2', index: 1, x: 9, z: -3.5, radius: 1.6 }),
   Object.freeze({ id: 'point_lamp_3', index: 2, x: 13.5, z: -8, radius: 1.6 }),
 ]);
+export const LAMP_HINT_SECONDS = 6, LAMP_HINT_NEAR = 3;
+/** The lamp hint's clock: shown for LAMP_HINT_SECONDS, again when the wave's phase or the lit count changes or near a lamp. Pure. */
+export function lampHint(prev, { key, lit, near, dt = 0 }) {
+  const fresh = prev.key !== key || prev.lit !== lit || near;
+  const age = fresh ? 0 : prev.age + Math.max(0, dt);
+  return { age, key, lit, tucked: age > LAMP_HINT_SECONDS };
+}
 export const BEAM_FROM = Object.freeze({ x: cameraAnchors.lamp_room.x, y: cameraAnchors.lamp_room.y });
 
 const nearest = (spots, player) => {
@@ -79,6 +86,8 @@ export function createPiratePoint(ctx) {
   const room = createRoomProxy();
   let realRoom = null, finale = null, objects = null, bell = null, disposed = false, busy = false, pressed = false;
   let relitPending = false, relitShown = false, lampsShownFor = null, sentLampsAt = null, promptKey = '';
+  // The lamp hint tucks itself away after LAMP_HINT_SECONDS and comes back near a lamp or when a lamp lights.
+  let hint = { age: 0, key: null, lit: -1, tucked: false };
   const armadaShown = new Set(), stops = [];
   const here = () => (world.place?.() ?? null) === PLACE;
   const notify = ctx.notify ?? (() => {});
@@ -215,7 +224,11 @@ export function createPiratePoint(ctx) {
         const lampSpot = shown && running && player && !blocked ? nearest(LAMP_SPOTS, player) : null;
         const state = finale.update({ lampSpot, heldE: !!lampSpot && !!input?.held?.has?.('KeyE'), shown: shown && running && !blocked });
         progress = state?.progress ?? 0;
-        objects?.setLamps?.(finale.state.lamps.map((_, index) => finale.lit(index)));
+        const lamps = finale.state.lamps.map((_, index) => finale.lit(index));
+        objects?.setLamps?.(lamps);
+        const lit = lamps.filter(Boolean).length, near = shown && running && player && LAMP_SPOTS.some(spot => Math.hypot(spot.x - player.x, spot.z - player.z) <= LAMP_HINT_NEAR);
+        hint = lampHint(hint, { key: `${wave?.info.waveId}:${wave?.state.phase}`, lit, near, dt });
+        layer?.classList.toggle('lamp-hint-tucked', hint.tucked);
         // One caption at the lamps moment: once the lighthouse burns again, its status line says so alone.
         if (lampSpot && !relitShown) next = { kind: 'lamp', index: lampSpot.index, lit: state?.lit };
       }

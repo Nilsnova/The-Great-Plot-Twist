@@ -21,7 +21,8 @@
 .pirate-banner strong{font:700 34px/1.15 var(--u-serif);color:var(--u-pink)}.pirate-banner span{font:600 18px/1.3 var(--u-font);color:var(--u-brown)}
 .pirate-bell-prompt{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);min-height:48px;font:700 18px/1.2 var(--u-font)}
 /* Tower defense v2: loot this run under the bar, the boss warning, the break between waves. */
-.pirate-musket-hint{text-align:center;font:600 14px/1.2 var(--u-font);color:var(--u-ink);opacity:.9}
+.pirate-bar-extra{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px}.pirate-bar-extra:empty,.pirate-bar-extra:not(:has(>:not([hidden]))){display:none}
+.pirate-musket-hint{text-align:center;font:600 16px/1.2 var(--u-font);color:var(--u-ink);opacity:.9}
 .pirate-musket-key{display:inline-block;border:2px solid currentColor;padding:0 5px;margin-right:2px}
 .pirate-musket-tap{display:none}
 @media(pointer:coarse){.pirate-musket-key{display:none}.pirate-musket-tap{display:inline}}
@@ -36,12 +37,17 @@
 /* Pirate Point: the bell and lamp prompt, the lamps' status line under the wave bar. */
 .pirate-point-layer{position:absolute;inset:0;pointer-events:none;z-index:36}
 .pirate-point-layer>*{pointer-events:auto}
-.pirate-point-prompt{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:calc(100vw - 24px);background:var(--u-sea);padding:8px 12px;font:600 17px/1.35 var(--u-font);color:var(--u-ink);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
+.pirate-point-prompt{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:max-content;box-sizing:border-box;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:calc(100vw - 24px);background:var(--u-sea);padding:8px 12px;font:600 17px/1.35 var(--u-font);color:var(--u-ink);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
 .pirate-point-prompt p{margin:0;width:100%;text-align:center}.pirate-point-prompt kbd{border:2px solid currentColor;padding:0 6px;margin-right:6px}
 .pirate-point-layer .lamp-status{position:absolute;left:50%;top:auto;bottom:222px;transform:translateX(-50%);background:var(--u-parch);color:var(--u-pink);padding:6px 12px;font:600 16px/1.35 var(--u-font);box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006;max-width:min(520px,calc(100vw - 24px));text-align:center}
 .pirate-point-layer .lamp-fill{position:absolute;left:50%;top:190px;transform:translateX(-50%)}
+.pirate-point-layer.lamp-hint-tucked .lamp-status{display:none}
 .pirate-point-layer .lamp-hold{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;min-height:48px}
 .pirate-point-layer .lamp-hold progress{display:block;width:100%;height:10px;margin-top:6px;accent-color:#f3d58c}
-@media(max-width:760px){.pirate-point-prompt{bottom:250px}.pirate-point-layer .lamp-status{top:auto;bottom:320px;font-size:16px}.pirate-point-layer .lamp-fill{top:236px}}
+@media(max-width:760px){.pirate-point-prompt{bottom:318px}.pirate-point-layer .lamp-status{top:auto;bottom:258px;font-size:16px;line-height:1.25;padding:4px 10px;width:max-content;max-width:min(340px,calc(100vw - 24px));box-sizing:border-box}.pirate-point-layer .lamp-fill{top:236px}}
 /* Phones: the boss warning sits under the quest strip and the toasts, above the wave bar. */
 @media(max-width:900px){.pirate-boss{top:auto;bottom:330px;font-size:18px;width:max-content}}
+/* Phones with touch controls (stick bottom-left, 82 to 223 px from the bottom): the wave bar docks under
+   them at the very bottom, the prompts and the lamp hint sit just above them. */
+@media(max-width:760px) and (pointer:coarse){.pirate-bar{bottom:6px;padding:4px 10px 6px;gap:3px}.pirate-prompt{bottom:232px}
+.pirate-point-layer .lamp-status{bottom:232px}.pirate-point-prompt{bottom:294px}}

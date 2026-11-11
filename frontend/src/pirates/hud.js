@@ -24,11 +24,12 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   prompt.append(key, action);
   prompt.addEventListener('click', event => { event.preventDefault(); onAction(); });
   const banner = node('div', 'pirate-banner'); banner.setAttribute('role', 'status'); banner.hidden = true;
-  const loot = node('span', 'pirate-bar-loot'); loot.hidden = true; bar.append(loot);
+  const loot = node('span', 'pirate-bar-loot'); loot.hidden = true;
+  const extra = node('span', 'pirate-bar-extra'); bar.append(extra); extra.append(loot);
   // The musket hint (§10) in the first two waves: "F · Musket" (on a touch screen "Tap a ship · Musket").
   const musket = node('span', 'pirate-musket-hint'); musket.hidden = true;
   musket.append(node('span', 'pirate-musket-key', 'F'), node('span', 'pirate-musket-tap', 'Tap a ship'), node('span', '', ' · Musket'));
-  bar.append(musket);
+  extra.append(musket);
   const warning = node('div', 'pirate-boss'); warning.setAttribute('role', 'alert'); warning.hidden = true;
   // The break between two won waves: seconds left, the big button and the switch (kept by the controller).
   const pause = node('div', 'pirate-break'); pause.hidden = true;

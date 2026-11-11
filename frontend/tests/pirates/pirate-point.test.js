@@ -1,7 +1,7 @@
 // Pirate Point (task 0.4): the bell, joining a running wave, and the three lamps sending lamps_lit once.
 import { describe, expect, it } from 'vitest';
 import { createFakeIslandApi, createFakeWorld } from '../../src/pirates/fake-api.js';
-import { BELL_SPOT, COAST, DEFENSES, LAMP_SPOTS, LANES, PLACE, ROOM_TOPIC, createPiratePoint } from '../../src/pirates/pirate-point.js';
+import { BELL_SPOT, COAST, DEFENSES, LAMP_SPOTS, LANES, PLACE, ROOM_TOPIC, createPiratePoint, lampHint, LAMP_HINT_SECONDS } from '../../src/pirates/pirate-point.js';
 import { createWave } from '../../src/pirates/sim.js';
 
 function createBus() {
@@ -84,5 +84,19 @@ describe('Pirate Point', () => {
     expect(h.room.sent.filter(item => item.type === 'lamps_lit')).toHaveLength(0);
     expect(h.point.controller.state.lampsLit).toBe(true);
     h.point.dispose();
+  });
+});
+
+describe('the lamp hint', () => {
+  it('tucks away after 6 s and comes back near a lamp, when a lamp lights or when the ships come', () => {
+    let hint = lampHint({ age: 0, key: null, lit: -1 }, { key: 'w:countdown', lit: 0, near: false });
+    for (let i = 0; i < 70; i++) hint = lampHint(hint, { key: 'w:countdown', lit: 0, near: false, dt: .1 });
+    expect(hint.tucked).toBe(true); expect(LAMP_HINT_SECONDS).toBe(6);
+    hint = lampHint(hint, { key: 'w:running', lit: 0, near: false, dt: .1 });
+    expect(hint.tucked).toBe(false);
+    for (let i = 0; i < 70; i++) hint = lampHint(hint, { key: 'w:running', lit: 0, near: false, dt: .1 });
+    expect(hint.tucked).toBe(true);
+    expect(lampHint(hint, { key: 'w:running', lit: 0, near: true, dt: .1 }).tucked).toBe(false);
+    expect(lampHint(hint, { key: 'w:running', lit: 1, near: false, dt: .1 }).tucked).toBe(false);
   });
 });
