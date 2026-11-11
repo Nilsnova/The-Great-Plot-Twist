@@ -5,7 +5,7 @@
 > of the [walkthrough](WALKTHROUGH.md#q2-what-do-the-tests-cover-and-what-do-they-not-cover).
 >
 > **Counts** were taken on Wed 11 Nov 2026 at `b0b6fd3` with `ls` and `grep -c`, not by running the
-> suites: a "test" is one `def test_` (Python) or one `it(`/`test(` line (Vitest). Parametrized
+> suites; the island, pirate and tower-defense rows and the totals were refreshed at `e9cbf5d` (evening): a "test" is one `def test_` (Python) or one `it(`/`test(` line (Vitest). Parametrized
 > cases count once, so the number of cases that run is higher.
 
 ## How to read it
@@ -18,11 +18,12 @@
 
 Command for all of them: `cd backend && uv run pytest` (paths `server/tests` and `plot_twist/tests`, set in [backend/pyproject.toml](../backend/pyproject.toml)). One file: `cd backend && uv run pytest -q server/tests/test_wave_routes.py`.
 
-Size: 184 test files under [backend/server/tests/](../backend/server/tests/) (157 at the top, 27 in subfolders, the opt-in SQL files included) and 5 in [backend/plot_twist/tests/](../backend/plot_twist/tests/); about 3,900 test functions in all.
+Size: 188 test files under [backend/server/tests/](../backend/server/tests/) (159 at the top, 29 in subfolders, the opt-in SQL files included) and 5 in [backend/plot_twist/tests/](../backend/plot_twist/tests/); about 4,060 test functions in all.
 
 | Area | Files (examples) | Tests | What it covers | Does not cover |
 |---|---|---|---|---|
-| Islands and waves | `test_island_routes.py`, `test_island_rules.py`, `test_wave_routes.py` | 83 | Prices from `islands.json`, wrong kind or spot, repeats, `feature_off`, budgets, loot caps, timing refusals | The real SQL (see section 2); the pirate frontend, not built |
+| Islands and waves | `test_island_routes.py`, `test_island_rules.py`, `test_wave_routes.py` | 90 | Prices from `islands.json`, wrong kind or spot, repeats, `feature_off`, budgets, loot caps (boss × 2, house levels), timing refusals, `shipsSunk` bounds | The real SQL (see section 2); whether `survived` is true |
+| Tower defense v2 | `test_tower_defense_routes.py` | 35 | Upgrades and `max_level`, `locked` with its wave, crew and captain, co-op builds with `code`, Pirate Point builds, the friend invite (admitted guest, `no_such_island`, budget, `demo_closed`) | Real anonymous sign-in; the browser's simulation |
 | Wallet and accounts | `test_wallet.py`, `test_wallet_matches_migration.py`, `test_me.py`, `test_delete_me.py`, `test_saves.py` | 352 | Reasons and directions match the migrations, zero, negative and repeated amounts, delete my data | A real Supabase project |
 | Sign-in, guests, hosts | `test_auth*.py`, `test_demo_gate.py`, `test_demo_join.py`, `test_hosts.py` | 125 | Bad and missing tokens, the guest gate, class-code join and its budget, host-only routes | Real GitHub OAuth; the email code with a real inbox |
 | Keeper's Lock | `test_lock_routes.py`, `test_lock_rules.py` | 39 | Sky answers, close-enough answers, cache, riddle fallback | Real Vercel geo headers |
@@ -46,7 +47,7 @@ Command pattern (from `backend/`):
 
 | Suite | Files | Tests | What it covers | Extra for the command |
 |---|---|---|---|---|
-| [island_sql/](../backend/server/tests/island_sql/) | 2 | 33 | `island_open`, `wave_start`, `wave_join`, `wave_finish`, loot caps, one wave per island, `fresh_start.sql` | none |
+| [island_sql/](../backend/server/tests/island_sql/) | 3 | 48 | `island_open`, `wave_start`, `wave_join`, `wave_finish`, loot caps, one wave per island, `fresh_start.sql`; the tower-defense functions (`island_build`, `island_upgrade`, `island_hire`, `island_captain`, `pp_build`, `pp_upgrade`), levels and unlock checks, boss loot and house levels, the restart rule, four players with their own loot, no new browser rights | none |
 | [demo_sql/](../backend/server/tests/demo_sql/) | 2 | 28 | Class code, `demo_guests`, the guest guard in policies | none |
 | [sports_sql/](../backend/server/tests/sports_sql/) | 2 | 21 | Atomic stakes and settlement, deletion | none |
 | [case_sql/](../backend/server/tests/case_sql/) | 5 | 65 | Case phases 1 to 4 (unused since D031) | none |
@@ -62,10 +63,12 @@ Command pattern (from `backend/`):
 
 Command: `cd frontend && npm test` (runs `vitest run`; files `tests/**/*.test.js`, one file at a time, set in [frontend/vite.config.js](../frontend/vite.config.js)). Input only: `npm run test:input`.
 
-Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/`test` lines.
+Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/`test` lines (the run before the 11 Nov release reported 2,563 tests, because of `it.each`; one Harbor overview test fails, [OPEN-TODOS.md](OPEN-TODOS.md) section 7).
 
 | Area | Files (examples) | Tests | What it covers | Does not cover |
 |---|---|---|---|---|
+| Pirate waves | [pirates/](../frontend/tests/pirates/) (`sim`, `td-sim`, `fog-balance`, `multiplayer`, `controller`, `td-flow`, `pirate-point`, `render`, `art`, `fake-api`) | 72 | Same seed and inputs give the same wave at any frame rate; the balance curve (wave 1 with one cannon, the wave 5 boss, wave 10, wave 20, below wave 30 with a full island); mortar, crew, captain musket and bad shots; boss waves; the break, Next wave and Auto next; two captains ringing at once; the single-flight join; re-sent `wave_start` | The real Realtime room; slow phones; drift after late packets |
+| Island | [island/](../frontend/tests/island/) | 71 | Cards and prices, spots, the invite link and landing, visits and fake mode, start/join/finish flow, art placement | The live API |
 | Class demo | `g29-*.test.js`, `duels-logic.test.js` | 175 | Class code parsing, quests, duel shortcut, lock states, lamp sync, projector, email and guest adapters | Real phones, real projector |
 | Realtime and presence | `live-rules.test.js`, `realtime*.test.js`, `real-presence*.test.js` | 175 | Room names, send gaps, accepted messages, the guard, join and retry, with fake channels | The live Supabase Realtime service |
 | Market | [market/](../frontend/tests/market/), `market*.test.js` | 302 | Board view, refusals, poller, formats | Live prices |
@@ -77,7 +80,7 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 
 ## 4. Browser checks (`frontend/scripts/check-*.js`)
 
-39 scripts. They drive an **installed Chrome** through `playwright-core`, mostly against a built copy with fake or recorded API answers; none signs in for real. Several build first (`npm run build && ...`). Run one at a time from `frontend/`.
+38 scripts. They drive an **installed Chrome** through `playwright-core`, mostly against a built copy with fake or recorded API answers; none signs in for real. Several build first (`npm run build && ...`). Run one at a time from `frontend/`.
 
 | npm script (`cd frontend && npm run ...`) | Script | Checks |
 |---|---|---|
@@ -86,6 +89,7 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 | `test:csp`, `test:csp:inventory` | `check-csp.js`, `check-csp-inventory.js` | The built site under the production CSP; no forbidden inline code |
 | `test:production` | `check-production.js` | The production build end to end with an offline API stub |
 | `test:demo` | `check-demo-journey.js` | The class-demo journey with recorded API answers |
+| `test:mp` | `check-multiplayer.js` | Two, then four pages on one island against the shared fake server (`?islands=fake`) and a BroadcastChannel room with the live room's rules: a co-op build shows on the owner's page, identical ships every second, musket shots cross pages, loot for each, one shared Next wave, a mid-wave join. **Not** the real Supabase Realtime, real accounts or the network; Pirate Point with four players and the lamps is not in it yet |
 | `test:browser`, `test:world`, `test:readability` | `check-browser.js`, `check-world.js`, `check-readability.js` | The world loads, places, text contrast |
 | `test:mobile`, `test:panels` | `check-mobile-walking.js`, `check-open-panels.js` | Touch walking at phone size; every panel a player can open (account, settings, the Harbor cards, the old islet panel, the island cards) fits at four sizes |
 | `test:market` | `check-market-hall.js` | The Harbor market stall ("Up or down in 1 hour?", `/api/market/calls`) in the production build with recorded answers: anonymous, the flag off, a 🪙 10 call on Up with its countdown, the request body, the HUD wallet |
@@ -119,13 +123,14 @@ Size: 180 test files in [frontend/tests/](../frontend/tests/), about 1,700 `it`/
 - Provider outages over hours, and Vercel running several instances with separate caches and budgets.
 - The email flow end to end with a real inbox and the Brevo mail service ([OPEN-TODOS.md](OPEN-TODOS.md) 4b).
 - Real audio output on a device.
-- The pirate frontend (lanes P, H, U): not built yet; the server side has the tests in sections 1 and 2.
+- The real Supabase Realtime room with four devices: `test:mp` uses a BroadcastChannel stand-in with the same message rules.
+- Pirate Point with four players and the three lamps in one automated run.
 - Whether the browser's `survived` in a wave is true: by design the server only bounds the loot ([D032](DECISIONS.md)).
 
 ## 8. Lane rows (to be filled by the lane's members)
 
 | Lane | Tests (files) | Command | What they cover | What they do not cover |
 |---|---|---|---|---|
-| P, Pirates (`frontend/src/pirates/`) | to be written by the lane's members | | BUILD-PLAN P1 asks for: a won wave, a lost wave, same seed same result, fog and storm, invalid inputs ignored | |
+| P, Pirates (`frontend/src/pirates/`) | [tests/pirates/](../frontend/tests/pirates/) (10 files), `check-multiplayer.js` | `cd frontend && npx vitest run tests/pirates` and `npm run test:mp` | Determinism, the balance curve to wave 100, towers, crew, captain, boss waves, the break, room sync with a stand-in room | The real Realtime room, physical phones, drift after late packets |
 | H, Harbor and coins (`frontend/src/harbor/`, `lib/coins.js`) | to be written by the lane's members | | | |
 | U, Look and feel (`frontend/src/ui/`) | to be written by the lane's members | | | |
