@@ -15,6 +15,9 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
                                                restart rule, house levels)
     island_upgrade, island_hire, island_captain, pp_build, pp_upgrade
                                                the paid actions of tower defense v2 (same file)
+    island_learn_skill, island_weapon_buy, island_weapon_equip
+                                               the captain's skills and weapons
+                                               (20261112030000_captain_skills.sql)
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -42,7 +45,8 @@ CODE_TRIES = 5
 # One player has at most 20 building rows (4 home islet plots and 16 island spots).
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
-    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best"
+    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best,"
+    "captain_skills,weapons_owned,weapon_equipped"
 )
 
 
@@ -82,6 +86,25 @@ class ProgressRow(BaseModel):
     crew_lookout: StrictInt
     captain_level: StrictInt
     won_wave_best: StrictInt
+    captain_skills: list[StrictStr]
+    weapons_owned: list[StrictStr]
+    weapon_equipped: StrictStr
+
+
+class LearnedRow(BaseModel):
+    """The answer of island_learn_skill."""
+
+    status: Literal["done"]
+    skills: list[StrictStr]
+    points: StrictInt
+    repeat: StrictBool
+
+
+class EquippedRow(BaseModel):
+    """The answer of island_weapon_equip."""
+
+    status: Literal["done"]
+    weapon: StrictStr
 
 
 class PaidRow(BaseModel):
@@ -159,6 +182,9 @@ class Progress:
     crew: dict[str, int]  # {"gunner": 0, "carpenter": 0, "lookout": 0}
     captain_level: int
     won_wave_best: int
+    skills: tuple[str, ...] = ()  # the captain's learnt skills, in the order learnt
+    weapons_owned: tuple[str, ...] = ("musket",)
+    weapon_equipped: str = "musket"
 
     @property
     def unlock_wave(self) -> int:
@@ -259,7 +285,16 @@ async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
         raise unreadable()
     row = read_model(ProgressRow, rows[0])
     crew = {"gunner": row.crew_gunner, "carpenter": row.crew_carpenter, "lookout": row.crew_lookout}
-    return Progress(row.wave_best, row.next_wave, crew, row.captain_level, row.won_wave_best)
+    return Progress(
+        row.wave_best,
+        row.next_wave,
+        crew,
+        row.captain_level,
+        row.won_wave_best,
+        tuple(row.captain_skills),
+        tuple(row.weapons_owned),
+        row.weapon_equipped,
+    )
 
 
 async def ledger_has(admin: SupabaseAdmin, player_id: str, reason: str, ref: str) -> bool:
@@ -282,6 +317,30 @@ async def run_paid(admin: SupabaseAdmin, name: str, arguments: dict[str, Any]) -
         return Refusal(refused.reason, price=refused.price)
     row = read_model(PaidRow, reply)
     return Paid(row.balance, row.repeat)
+
+
+async def skill_learnt(admin: SupabaseAdmin, player_id: str, ref: str) -> bool:
+    """True if this click (ref skill:<uid>) learnt a skill already (a repeated click)."""
+    query = {"select": "ref", "player_id": f"eq.{player_id}", "ref": f"eq.{ref}", "limit": "1"}
+    return len(await admin.select_rows("captain_skill_learns", query)) > 0
+
+
+async def learn_skill(admin: SupabaseAdmin, arguments: dict[str, Any]) -> LearnedRow | Refusal:
+    """Run island_learn_skill. A refusal changed nothing."""
+    reply = await admin.call_function("island_learn_skill", arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        return Refusal(read_model(PaidRefusedRow, reply).reason)
+    return read_model(LearnedRow, reply)
+
+
+async def equip_weapon(admin: SupabaseAdmin, player_id: str, weapon: str) -> EquippedRow | Refusal:
+    """Run island_weapon_equip. A refusal changed nothing."""
+    reply = await admin.call_function(
+        "island_weapon_equip", {"p_player_id": player_id, "p_weapon": weapon}
+    )
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        return Refusal(read_model(PaidRefusedRow, reply).reason)
+    return read_model(EquippedRow, reply)
 
 
 async def read_point_buildings(admin: SupabaseAdmin) -> dict[str, Built]:

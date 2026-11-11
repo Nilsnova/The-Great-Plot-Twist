@@ -21,7 +21,13 @@ GET /api/island
         "prices": {"kinds": {"wall": [10, 20, 40], ...}, "crew": {"gunner": {"price": 40,
                    "max": 2}, ...}, "captain": [0, 20, 40, 80, 160]},
         "unlocks": {"wave": 0, "unlocked": ["wall:1", "cannon:1", "captain:1"],
-                    "locked": {"wall:2": 2, "mortar:1": 3, "crew:gunner": 5, ...}}}
+                    "locked": {"wall:2": 2, "mortar:1": 3, "crew:gunner": 5, ...}},
+        "skills": {"points": 1, "spent": 1, "known": ["steady_aim"],
+                   "tree": [{"id": "steady_aim", "name": "Steady aim", "branch": "marksman",
+                             "tier": 1, "cost": 1, "needs": null}, ...]},
+        "weapons": {"owned": ["musket"], "equipped": "musket",
+                    "shop": [{"id": "pistols", "name": "Pistols", "price": 60,
+                              "unlockWave": 2}, ...]}}
     The first call makes the player's island with a new code and, for a brand-new player whose
     wallet never moved, pays the starting coins (100, once). The 16 spots come in the order of
     islands.json: wall_1..wall_6, cannon_1..cannon_7 (cannon or mortar), tower_1, house_1,
@@ -30,7 +36,10 @@ GET /api/island
     the top). Price lists are indexed by level - 1 (the first entry is the build; the captain's
     level 1 is free). "unlocks.wave" is the best wave the player won (own island, or any Pirate
     Point wave they fought in); unlock ids are "<kind>:<level>", "crew:<crew>", "captain:<level>".
-    "nextWave" is the wave the next bell on this island rings.
+    "nextWave" is the wave the next bell on this island rings. "skills" (TOWER-DEFENSE section
+    14): one skill point per two waves the player won anywhere (won_wave_best), minus the costs
+    of "known" (tier n costs n). "weapons" (section 15): what the player owns (always the
+    musket), carries, and what the shop sells after which won wave.
     Errors: 401, 403 demo_closed (a guest who was not admitted), 404 feature_off,
             404 player_not_set_up, 502 database_error, 503 island_unavailable, database_unavailable
 
@@ -64,7 +73,24 @@ POST /api/island/captain  {"actionUid": "..."}
     -> the island. The captain one level up (ledger ref captain:<actionUid>). Always your own.
     Errors: 409 max_level, 409 locked, 409 insufficient_funds
 
-    Build, upgrade, hire and captain share one budget of 30 a minute per player.
+POST /api/island/skill  {"skill": "steady_aim", "actionUid": "..."}
+    -> the island. One skill of the captain's skill tree, paid with skill points (no coins).
+    A repeated actionUid learns nothing (captain_skill_learns ref skill:<actionUid>).
+    Errors: 400 bad_skill, 409 known, 409 locked ("Learn Steady aim first."),
+            409 no_points ("Win new waves to earn skill points.")
+
+POST /api/island/weapon/buy  {"weapon": "pistols", "actionUid": "..."}
+    -> the island. One weapon, bought once with coins and equipped at once (ledger ref
+    weapon:<actionUid>, reason weapon_purchase).
+    Errors: 400 bad_weapon, 409 owned, 409 locked ("Unlocks after wave N."),
+            409 insufficient_funds
+
+POST /api/island/weapon/equip  {"weapon": "musket"}
+    -> the island. The captain carries this weapon from now on. Safe to repeat.
+    Errors: 400 bad_weapon, 409 not_owned
+
+    Build, upgrade, hire, captain, skill and the weapon routes share one budget of 30 a
+    minute per player.
 
 GET /api/island/visit/{code}
     -> {"code": "ISLE-K7Q2M", "ownerName": "Captain Gull", "waveBest": 3, "spots": [...],
@@ -167,6 +193,35 @@ class UnlocksOut(BaseModel):
     locked: dict[str, int]
 
 
+class SkillOut(BaseModel):
+    id: str
+    name: str
+    branch: str
+    tier: int
+    cost: int
+    needs: str | None
+
+
+class SkillsOut(BaseModel):
+    points: int
+    spent: int
+    known: list[str]
+    tree: list[SkillOut]
+
+
+class WeaponOut(BaseModel):
+    id: str
+    name: str
+    price: int
+    unlockWave: int
+
+
+class WeaponsOut(BaseModel):
+    owned: list[str]
+    equipped: str
+    shop: list[WeaponOut]
+
+
 class IslandResponse(BaseModel):
     """camelCase on purpose: these are the JSON keys of BUILD-PLAN 3.4 and TOWER-DEFENSE 7."""
 
@@ -180,6 +235,8 @@ class IslandResponse(BaseModel):
     captain: CaptainOut
     prices: PricesOut
     unlocks: UnlocksOut
+    skills: SkillsOut
+    weapons: WeaponsOut
 
 
 class VisitResponse(BaseModel):
@@ -221,6 +278,27 @@ class CaptainRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+
+
+class SkillRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Any short text: an unknown skill is a 400 bad_skill (rules.py), not a 422.
+    skill: str = Field(min_length=1, max_length=40)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+
+
+class WeaponBuyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    weapon: str = Field(min_length=1, max_length=40)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+
+
+class WeaponEquipRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    weapon: str = Field(min_length=1, max_length=40)
 
 
 class InviteRequest(BaseModel):
@@ -278,6 +356,35 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
             wave=view.unlocks.wave,
             unlocked=list(view.unlocks.unlocked),
             locked=view.unlocks.locked,
+        ),
+        skills=SkillsOut(
+            points=view.skills.points,
+            spent=view.skills.spent,
+            known=list(view.skills.known),
+            tree=[
+                SkillOut(
+                    id=skill.skill,
+                    name=skill.name,
+                    branch=skill.branch,
+                    tier=skill.tier,
+                    cost=skill.cost,
+                    needs=skill.needs,
+                )
+                for skill in catalogue.skills.tree
+            ],
+        ),
+        weapons=WeaponsOut(
+            owned=list(view.weapons.owned),
+            equipped=view.weapons.equipped,
+            shop=[
+                WeaponOut(
+                    id=weapon.weapon,
+                    name=weapon.name,
+                    price=weapon.coins,
+                    unlockWave=weapon.unlock_wave,
+                )
+                for weapon in catalogue.weapons
+            ],
         ),
     )
 
@@ -340,6 +447,45 @@ async def post_captain(
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
     view = await service.captain(admin, catalogue, player.id, body.actionUid)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/skill")
+async def post_skill(
+    body: SkillRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.learn_skill(admin, catalogue, player.id, body.skill, body.actionUid)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/weapon/buy")
+async def post_weapon_buy(
+    body: WeaponBuyRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.buy_weapon(admin, catalogue, player.id, body.weapon, body.actionUid)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/weapon/equip")
+async def post_weapon_equip(
+    body: WeaponEquipRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.equip_weapon(admin, catalogue, player.id, body.weapon)
     return island_out(view, catalogue)
 
 

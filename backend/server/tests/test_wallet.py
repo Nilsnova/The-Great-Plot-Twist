@@ -90,6 +90,7 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("market_call_payout", "earn"),
         ("crew_hire", "spend"),
         ("captain_upgrade", "spend"),
+        ("weapon_purchase", "spend"),
     )
 
 
@@ -134,6 +135,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "market_call_payout",
         "crew_hire",
         "captain_upgrade",
+        "weapon_purchase",
     ]
 
 

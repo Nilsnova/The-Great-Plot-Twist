@@ -63,7 +63,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     body = response.json()
     assert list(body) == [
         "code", "coins", "waveBest", "nextWave", "flags", "spots",
-        "crew", "captain", "prices", "unlocks",
+        "crew", "captain", "prices", "unlocks", "skills", "weapons",
     ]  # fmt: skip
     assert (body["code"], body["coins"], body["waveBest"], body["flags"]) == (
         "ISLE-K7Q2M",

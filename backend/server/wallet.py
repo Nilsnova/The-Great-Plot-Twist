@@ -93,6 +93,8 @@ WALLET_REASONS = (
     # Added by supabase/migrations/20261111030000_tower_defense.sql (crew and the captain).
     ("crew_hire", SPEND),
     ("captain_upgrade", SPEND),
+    # Added by supabase/migrations/20261112030000_captain_skills.sql (the weapon shop).
+    ("weapon_purchase", SPEND),
 )
 
 

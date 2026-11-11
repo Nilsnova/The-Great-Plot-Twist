@@ -5,6 +5,8 @@
     upgrade()  one level up for a building (docs/TOWER-DEFENSE.md section 2), the same way
     hire()     one crew member (section 3)
     captain()  one captain level up (section 10)
+    learn_skill()  one skill of the captain's skill tree, paid with skill points (section 14)
+    buy_weapon(), equip_weapon()  the weapon shop (section 15)
     visit()    another player's island, found by its code
     invite()   the friend invite: an anonymous guest with a valid island code is admitted
 
@@ -41,6 +43,8 @@ REF_PREFIX = "island:"
 UPGRADE_PREFIX = "upgrade:"
 CREW_PREFIX = "crew:"
 CAPTAIN_PREFIX = "captain:"
+SKILL_PREFIX = "skill:"
+WEAPON_PREFIX = "weapon:"
 # The island has no timber any more (BUILD-PLAN 3.2): coins only.
 NO_TIMBER = 0
 
@@ -50,6 +54,23 @@ class Unlocks:
     wave: int  # the best wave the player won (own island or Pirate Point)
     unlocked: tuple[str, ...]  # "wall:1", "crew:gunner", "captain:2", ...
     locked: dict[str, int]  # the rest, with the wave each one needs
+
+
+@dataclass(frozen=True)
+class SkillsView:
+    """The skill tree of GET /api/island (section 14)."""
+
+    points: int  # left to spend
+    spent: int
+    known: tuple[str, ...]  # in the order learnt
+
+
+@dataclass(frozen=True)
+class WeaponsView:
+    """The weapon shop of GET /api/island (section 15)."""
+
+    owned: tuple[str, ...]  # in the order of the shop, always with the musket
+    equipped: str
 
 
 @dataclass(frozen=True)
@@ -66,6 +87,8 @@ class IslandView:
     captain_level: int
     captain_next_price: int | None
     unlocks: Unlocks
+    skills: SkillsView
+    weapons: WeaponsView
 
 
 @dataclass(frozen=True)
@@ -119,7 +142,24 @@ def view_of(
         captain_level=mine.captain_level,
         captain_next_price=rules.captain_next_price(catalogue, mine.captain_level),
         unlocks=unlocks_of(catalogue, mine.unlock_wave),
+        skills=skills_of(catalogue, mine),
+        weapons=weapons_of(catalogue, mine),
     )
+
+
+def skills_of(catalogue: IslandCatalogue, progress: Progress) -> SkillsView:
+    points, spent = rules.skill_points(catalogue, progress.won_wave_best, progress.skills)
+    return SkillsView(points, spent, progress.skills)
+
+
+def weapons_of(catalogue: IslandCatalogue, progress: Progress) -> WeaponsView:
+    owned = tuple(
+        weapon.weapon
+        for weapon in catalogue.weapons
+        if weapon.coins == 0 or weapon.weapon in progress.weapons_owned
+    )
+    equipped = progress.weapon_equipped if progress.weapon_equipped in owned else owned[0]
+    return WeaponsView(owned, equipped)
 
 
 async def look(admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str) -> IslandView:
@@ -342,6 +382,93 @@ async def captain(
             "p_unlocked_level": reachable,
         }
         await paid(admin, "island_captain", arguments, "The next captain level")
+    return await look_open(admin, catalogue, island)
+
+
+async def learn_skill(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, skill: str, action_uid: str
+) -> IslandView:
+    """One skill (section 14), paid with skill points: one per two won waves (won_wave_best),
+    minus the points spent. 400 bad_skill, 409 known, 409 locked ("Learn X first"), 409 no_points.
+    A repeated actionUid learns nothing and answers the island as it is now."""
+    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    entry = rules.skill_named(catalogue, skill)
+    if await store.skill_learnt(admin, player_id, f"{SKILL_PREFIX}{action_uid}"):
+        return await look_open(admin, catalogue, island)
+    progress = await store.read_progress(admin, player_id)
+    rules.check_skill(catalogue, entry.skill, progress.skills, progress.won_wave_best)
+    arguments = {
+        "p_player_id": player_id,
+        "p_skill": entry.skill,
+        "p_action_uid": action_uid,
+        "p_tree": [
+            {"skill": item.skill, "needs": item.needs, "cost": item.cost}
+            for item in catalogue.skills.tree
+        ],
+        "p_waves_per_point": catalogue.skills.waves_per_point,
+    }
+    outcome = await store.learn_skill(admin, arguments)
+    if isinstance(outcome, Refusal):
+        raise skill_refusal(catalogue, outcome, entry.skill, progress)
+    return await look_open(admin, catalogue, island)
+
+
+def skill_refusal(
+    catalogue: IslandCatalogue, refusal: Refusal, skill: str, progress: Progress
+) -> ApiError:
+    """The error for a skill that island_learn_skill() refused (another click won the race)."""
+    entry = rules.skill_named(catalogue, skill)
+    if refusal.reason == "known":
+        return ApiError(409, "known", f"You know {entry.name} already.")
+    if refusal.reason == "locked" and entry.needs is not None:
+        return rules.skill_locked(catalogue, entry.needs)
+    if refusal.reason == "no_points":
+        return rules.no_points()
+    if refusal.reason == "bad_skill":
+        return ApiError(400, "bad_skill", "There is no such skill.")
+    return SupabaseRejected()
+
+
+async def buy_weapon(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, weapon: str, action_uid: str
+) -> IslandView:
+    """One weapon from the shop (section 15), bought once with coins and equipped at once (ledger
+    ref weapon:<actionUid>, reason weapon_purchase). 400 bad_weapon, 409 owned, 409 locked, 409
+    insufficient_funds. A repeated actionUid charges nothing."""
+    ref = f"{WEAPON_PREFIX}{action_uid}"
+    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    if not await store.ledger_has(admin, player_id, "weapon_purchase", ref):
+        progress = await store.read_progress(admin, player_id)
+        entry = rules.check_weapon_buy(
+            catalogue, weapon, progress.weapons_owned, progress.unlock_wave
+        )
+        arguments = {
+            "p_player_id": player_id,
+            "p_weapon": entry.weapon,
+            "p_action_uid": action_uid,
+            "p_price": entry.coins,
+            "p_unlock_wave": entry.unlock_wave,
+        }
+        outcome = await store.run_paid(admin, "island_weapon_buy", arguments)
+        if isinstance(outcome, Refusal):
+            if outcome.reason == "owned":
+                raise rules.weapon_owned(entry)
+            raise paid_refusal(outcome, f"The {entry.name.lower()}")
+    return await look_open(admin, catalogue, island)
+
+
+async def equip_weapon(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, weapon: str
+) -> IslandView:
+    """Carry a weapon you own (section 15). 400 bad_weapon, 409 not_owned. Safe to repeat."""
+    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    progress = await store.read_progress(admin, player_id)
+    entry = rules.check_weapon_equip(catalogue, weapon, weapons_of(catalogue, progress).owned)
+    outcome = await store.equip_weapon(admin, player_id, entry.weapon)
+    if isinstance(outcome, Refusal):
+        if outcome.reason == "not_owned":
+            raise rules.weapon_not_owned(entry)
+        raise paid_refusal(outcome, entry.name)
     return await look_open(admin, catalogue, island)
 
 

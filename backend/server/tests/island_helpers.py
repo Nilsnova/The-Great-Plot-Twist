@@ -12,8 +12,11 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
   * GET islands?player_id=                   the tower defense columns (progress)
   * GET wallet_transactions                  the repeat check of a paid action (ledger_refs)
-  * POST rpc/island_build, island_upgrade, island_hire, island_captain, pp_build, pp_upgrade
-                                             paid_replies[name] (default: done)
+  * POST rpc/island_build, island_upgrade, island_hire, island_captain, pp_build, pp_upgrade,
+    island_weapon_buy                        paid_replies[name] (default: done)
+  * GET captain_skill_learns                 the repeat check of a skill (skill_refs)
+  * POST rpc/island_learn_skill, island_weapon_equip
+                                             paid_replies[name] (default: LEARNED, EQUIPPED)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave
 
 FakePlaceWeather stands in for the Keeper's Lock weather of a place (the bell-ringer's area).
@@ -98,8 +101,11 @@ PAID_FUNCTIONS = (
     "island_captain",
     "pp_build",
     "pp_upgrade",
+    "island_weapon_buy",
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
+LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": False}
+EQUIPPED = {"status": "done", "weapon": "musket"}
 
 
 def opened(code: str = "K7Q2M", wave_best: int = 0, flags: int = 0) -> dict:
@@ -152,8 +158,12 @@ class FakeIslandDatabase:
             "crew_lookout": 0,
             "captain_level": 1,
             "won_wave_best": 0,
+            "captain_skills": [],
+            "weapons_owned": ["musket"],
+            "weapon_equipped": "musket",
         }
         self.ledger_refs: set[tuple[str, str]] = set()
+        self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
         self.point_best: list[dict] = []
@@ -174,6 +184,12 @@ class FakeIslandDatabase:
             "POST /rpc/wave_join": lambda _: self.answer(self.join_reply),
             "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
             "GET /wallet_transactions": self.read_ledger,
+            "GET /captain_skill_learns": lambda request: httpx.Response(
+                200,
+                json=[{"ref": "x"}]
+                if request.url.params["ref"].removeprefix("eq.") in self.skill_refs
+                else [],
+            ),
             "POST /rpc/demo_guest_admit": lambda _: httpx.Response(
                 200, json={"status": "admitted"}
             ),
@@ -182,6 +198,12 @@ class FakeIslandDatabase:
         }
         for name in PAID_FUNCTIONS:
             handlers[f"POST /rpc/{name}"] = self.paid
+        handlers["POST /rpc/island_learn_skill"] = lambda request: self.answer(
+            self.paid_replies.get("island_learn_skill", LEARNED)
+        )
+        handlers["POST /rpc/island_weapon_equip"] = lambda request: self.answer(
+            self.paid_replies.get("island_weapon_equip", EQUIPPED)
+        )
         return handlers[route](request)
 
     @staticmethod
