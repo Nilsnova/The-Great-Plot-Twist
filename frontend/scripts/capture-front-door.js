@@ -27,7 +27,7 @@ try{
   // The production preview hides window.__island, so the HUD's place name stands in there.
   const dev=await page.evaluate(()=>!!window.__island);
   await page.waitForFunction(dev=>!document.querySelector('dialog[open]')&&(dev?window.__island.world.current?.id==='saltreach_harbor'
-    :document.querySelector('.masthead')?.textContent.includes('Saltreach Harbor')),dev);
+    :document.querySelector('.hud .chapter')?.textContent.includes('Saltreach Harbor')),dev);
   await page.waitForTimeout(1500);await page.screenshot({path:`${outDir}/05-harbor-start.png`});
   const where=await page.evaluate(()=>window.__island?{place:window.__island.world.current.id,
     player:{x:+window.__island.player.position.x.toFixed(2),z:+window.__island.player.position.z.toFixed(2)},

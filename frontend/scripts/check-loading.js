@@ -4,7 +4,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {gzipSync} from 'node:zlib';
 import {openWorldBrowser} from './world-browser-tools.js';
-import {startFromTitle} from './shell-browser-tools.js';
+import {startFromTitle,openSettingsFromMenu} from './shell-browser-tools.js';
 const captureDir=process.env.CAPTURE_DIR||'captures',prefix=process.env.CAPTURE_PREFIX||'20261105_G5';
 await mkdir(captureDir,{recursive:true});
 const env=await openWorldBrowser({preview:true}),{page}=env,report={checked:new Date().toISOString(),checks:[]};
@@ -48,7 +48,7 @@ try {
   });check(report.contrast>=4.5,'Primary pixel buttons exceed WCAG AA normal-text contrast');await page.screenshot({path:capture('Title.png')});
   await page.setViewportSize({width:375,height:667});check(await page.locator('.shell-logo').evaluate(canvas=>Number.isInteger(canvas.getBoundingClientRect().width/canvas.width)),'Phone title emblem uses an integer pixel scale');await page.setViewportSize({width:1440,height:900});
   await startFromTitle(page);check(await page.evaluate(()=>typeof window.__island)==='undefined','The loaded production world exposes no dev inspection object');
-  await page.getByRole('button',{name:'Open visual settings'}).click();await page.locator('[data-preference=quality]').selectOption('low');await page.screenshot({path:capture('Settings.png')});
+  await openSettingsFromMenu(page);await page.locator('[data-preference=quality] input[value=low]').check();await page.screenshot({path:capture('Settings.png')});
   check(env.errors.length===0&&env.external.length===0,'Production title and world have no browser errors or external asset requests');console.log(JSON.stringify(report,null,2));
 } finally {
   report.browser={pageErrorTypes:env.pageErrors,consoleErrors:env.consoleErrors};

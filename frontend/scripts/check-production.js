@@ -1,6 +1,6 @@
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
-import {startFromTitle,closeSettings} from './shell-browser-tools.js';
+import {startFromTitle,closeSettings,openSettingsFromMenu} from './shell-browser-tools.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
 // Checks the built static site, including the absence of dev-only inspection/FPS.
@@ -27,9 +27,9 @@ try {
   assert.equal(await page.locator('canvas[tabindex="0"]:visible').count(), 1);
   assert.equal(await page.evaluate(() => typeof window.__island), 'undefined');
   assert.equal(await page.locator('.performance').count(), 0);
-  await page.getByRole('button', { name: 'Open visual settings' }).click();
-  await page.locator('[data-preference=quality]').selectOption('low'); await page.waitForTimeout(500);
-  assert.equal(await page.locator('[data-preference=quality]').inputValue(),'low');
+  await openSettingsFromMenu(page);
+  await page.locator('[data-preference=quality] input[value=low]').check(); await page.waitForTimeout(500);
+  assert.equal(await page.locator('[data-preference=quality] input:checked').inputValue(),'low');
   await closeSettings(page,{keyboard:true});
   assert.equal(await page.locator('.shell-screen').isHidden(),true);
   assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'CANVAS');

@@ -1,5 +1,6 @@
 // Recorded L4-v2 journeys use public controls and intercepted endpoints, never game hooks.
 import assert from 'node:assert/strict';
+import {openSettingsFromMenu} from './shell-browser-tools.js';
 import {signInFromTitle} from './online-chaos-signin.js';
 import {openAccountControls, playFromTitle} from './online-browser-actions.js';
 
@@ -49,7 +50,7 @@ async function recordedRewards(env){
   return true;
 }
 async function recordedMarketCredits(page){
-  await page.getByRole('button',{name:'Open visual settings',exact:true}).click();
+  await openSettingsFromMenu(page);
   await page.locator('.shell-screen[open][data-mode="settings"]').waitFor();
   await page.getByRole('button',{name:'Credits',exact:true}).click();
   const credits=page.locator('.shell-credits'),link=credits.getByRole('link',{name:'Recorded market price source',exact:true});

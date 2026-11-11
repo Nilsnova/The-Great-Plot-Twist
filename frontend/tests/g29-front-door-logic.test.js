@@ -43,7 +43,8 @@ describe('front door rules',()=>{
   it('explains the goal in one sentence and both control schemes',()=>{
     const copy=goalCopy();
     expect(copy.goal.split(/[.!?](\s|$)/).filter(Boolean).length).toBe(1);
-    expect(copy.controls.map(([name])=>name)).toEqual(['Move','Interact']);
+    expect(copy.controls.map(([name])=>name)).toEqual(['Walk','Use']);expect(copy.goal).toMatch(/cannon/);expect(copy.goal).toMatch(/bell/);
+    expect(goalCopy({classHarbor:true}).goal).toMatch(/Keeper's Lock/);
     expect(copy.controls[0][1]).toMatch(/WASD/);expect(copy.controls[0][1]).toMatch(/arrow/);expect(copy.controls[0][1]).toMatch(/tap/);
     expect(copy.controls[1][1]).toMatch(/\bE\b/);expect(copy.controls[1][1]).toMatch(/tap/);
     expect(copy.button).toBe('Got it');

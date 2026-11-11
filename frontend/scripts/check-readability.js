@@ -1,4 +1,4 @@
-import {startFromTitle,closeSettings} from './shell-browser-tools.js';
+import {startFromTitle,closeSettings,openSettingsFromMenu} from './shell-browser-tools.js';
 // Check readable DOM text and panel bounds at laptop and large-desktop resolutions.
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
@@ -10,7 +10,7 @@ try {
   await page.evaluate(async () => { await window.__island.world.goTo('saltreach_harbor', { fast: true }); window.__island.player.position.set(-8,1.03,10.3); window.__island.settings.hour = 12; });
   for (const [width, height] of [[1365,768],[1920,1080],[1100,700]]) {
     await page.setViewportSize({ width, height }); await settle(page);
-    const fonts = await page.evaluate(() => Object.fromEntries(['.wordmark','.chapter','.controls','.conditions','.interact strong'].map(selector => [selector, parseFloat(getComputedStyle(document.querySelector(selector)).fontSize)])));
+    const fonts = await page.evaluate(() => Object.fromEntries(['.hud-coins','.hud-menu','.quest-item','.quest-progress'].map(selector => [selector, parseFloat(getComputedStyle(document.querySelector(selector)).fontSize)])));
     assert.ok(Object.values(fonts).every(size => size >= 14), 'Primary game labels are at least 14 CSS px');
     await page.screenshot({ path:`captures/20261105_World-Readable-${width}.png` });
     await page.keyboard.press('KeyM'); await page.locator('.sea-chart').waitFor({ state:'visible' });
@@ -25,7 +25,7 @@ try {
     for (const [i,a] of chart.labels.entries()) for (const b of chart.labels.slice(i+1)) assert.ok(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top, `Chart labels do not overlap: ${JSON.stringify(a)} / ${JSON.stringify(b)}`);
     await page.screenshot({ path:`captures/20261105_World-Readable-Chart-${width}.png` });
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name:'Open visual settings' }).click();
+    await openSettingsFromMenu(page);
     const panel = await page.locator('.shell-screen').evaluate(node => { const r=node.getBoundingClientRect(); return { left:r.left,top:r.top,right:r.right,bottom:r.bottom }; });
     assert.ok(panel.left >= 0 && panel.top >= 0 && panel.right <= width && panel.bottom <= height, 'Settings fit the viewport');
     await closeSettings(page); report.viewports.push({ width,height,fonts,chart,panel });

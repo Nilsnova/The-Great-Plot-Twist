@@ -1,11 +1,16 @@
-// Extra pause-menu entries that a lazily loaded part of the game offers while it runs (G29: the
-// host's projector panel and "Join the class harbor"). The pause menu reads them when it opens.
-// Each provider returns [{label, onSelect}] and must not throw.
-const providers = new Set();
+// Extra pause-menu entries that a lazily loaded part of the game offers while it runs (the HUD's sea
+// chart and controls, the host's projector panel, "Join the class harbor"), plus one status line
+// (place · weather · time) that the HUD moved here. The pause menu reads both when it opens.
+// Each provider returns [{label, onSelect}] (or a status string) and must not throw.
+const providers = new Set(), statuses = new Set();
 
 export function addMenuExtras(provider) {
   providers.add(provider);
   return () => providers.delete(provider);
+}
+export function addMenuStatus(provider) {
+  statuses.add(provider);
+  return () => statuses.delete(provider);
 }
 
 export function menuExtras() {
@@ -16,4 +21,10 @@ export function menuExtras() {
     } catch { /* A broken provider cannot break the pause menu. */ }
   }
   return entries;
+}
+export function menuStatus() {
+  for (const provider of statuses) {
+    try { const text = provider(); if (typeof text === 'string' && text.trim()) return text.trim(); } catch { /* ignored */ }
+  }
+  return '';
 }

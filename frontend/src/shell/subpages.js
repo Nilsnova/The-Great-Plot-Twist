@@ -16,7 +16,7 @@ async function accountSummary(ctx,section){
 export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,back}){
   if(mode==='pause'){
     const {fillPauseMenu}=await import('./pause.js');if(!isCurrent())return;
-    fillPauseMenu(nav,{play,page,show,openAccount:ctx.openAccount});body.replaceChildren(nav);
+    body.replaceChildren(...fillPauseMenu(nav,{play,page,show}));
   }else if(mode==='credits'){
     const {credits}=await import('./credits.js');if(!isCurrent())return;
     body.replaceChildren(credits(),menuButton('Back',back,true));
@@ -31,10 +31,11 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
     if(ctx.adapter)await accountSummary(ctx,account);
     else if(ctx.openAccount)account.append(menuButton('Account',ctx.openAccount,true));
     if(!isCurrent())return;
-    body.replaceChildren(account,story,...(settings?[settings]:[]),menuButton('Credits',()=>show('credits'),true));
+    const links=node('div','shell-links');links.append(menuButton('Credits',()=>show('credits'),true));
+    body.replaceChildren(account,story,...(settings?[settings]:[]),links);
     for(const [label,path] of [['How to play','help.html'],['Privacy','privacy.html']]){
       const link=document.createElement('a');link.className='kit-button kit-quiet';link.textContent=label;
-      link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';body.append(link);
+      link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';links.append(link);
     }
     const about=settings?.querySelector('.build-info');if(about){const section=node('section','shell-section');section.append(node('h3','','About'),about);body.append(section);}
     body.append(menuButton('Back',back,true));

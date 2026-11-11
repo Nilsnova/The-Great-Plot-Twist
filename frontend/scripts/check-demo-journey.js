@@ -50,7 +50,7 @@ try{
   check(await page.locator('.quest-strip').isVisible(),'The quest strip is visible in the harbor');
   check((await page.locator('.quest-item').allTextContents()).join('|').includes("Open the Keeper's Lock"),'The strip lists wave, duel and the lock');
   check(await page.evaluate(()=>document.querySelector('#game').classList.contains('demo-path')&&!document.querySelector('.journal-toggle,.case-toolbar')),'The harbor shows the demo layer and no Journal or case tools');
-  await page.getByRole('button',{name:'Join the class harbor'}).click();
+  await page.getByRole('button',{name:'Menu',exact:true}).click();await page.getByRole('button',{name:'Join the class harbor'}).click();
   check(await page.evaluate(()=>window.__island.classDemo.joined&&sessionStorage.getItem('plot_twist_join_v1')==='harbor'),'Join the class harbor remembers the class harbor');
   check(await page.evaluate(()=>window.__island.classDemo.presencePlace('saltreach_harbor')==='class_harbor'),'A joined player announces the class harbor place');
   await page.locator('.demo-splash').waitFor();await shot('03-class-harbor-splash');
@@ -68,8 +68,8 @@ try{
   await page.locator('.lock-choice[data-choice=clear]').click();
   await page.locator('dialog.cutscene[open]').waitFor({timeout:10000});await page.waitForTimeout(1200);await shot('07-lock-opens-cutscene');
   check(await cutsceneTitle()==="The Keeper's Lock",'The lock opens with the cutscene "lock opens"');
-  await page.getByRole('button',{name:'Skip',exact:true}).click();await page.locator('.demo-toast:not([hidden])',{hasText:'Reward'}).waitFor();await shot('08-lock-open-reward');
-  check((await page.locator('.demo-toast').textContent()).includes('brass lamp key'),'After the cutscene a reward line shows');
+  await page.getByRole('button',{name:'Skip',exact:true}).click();await page.locator('.u-toast',{hasText:'Reward'}).waitFor();await shot('08-lock-open-reward');
+  check((await page.locator('.u-toast',{hasText:'Reward'}).textContent()).includes('brass lamp key'),'After the cutscene a reward line shows');
   check(await page.evaluate(()=>window.__island.classDemo.debug.quests.lock===true),'The lock goal is ticked');
   check(report.lockRequests.filter(request=>request.method==='POST').every(request=>/^[A-Za-z0-9_-]{8,64}$/.test(request.body.actionUid)),'Every answer carries a valid action id');
   check(new Set(report.lockRequests.filter(request=>request.method==='POST').map(request=>request.body.actionUid)).size===2,'Two answers, two action ids');
@@ -104,7 +104,7 @@ try{
   await page.locator('dialog.cutscene[open]').waitFor({timeout:12000});await page.waitForTimeout(1500);await shot('26-lamps-relight-cutscene');
   check(await cutsceneTitle()==='The three lamps','All three lamps within 20 s relight the lighthouse with the cutscene');
   await page.getByRole('button',{name:'Skip',exact:true}).click();await page.waitForTimeout(800);await shot('27-lighthouse-relit');
-  check(await page.evaluate(()=>[...document.querySelectorAll('.demo-toast,.lamp-status,.sound-caption')].filter(node=>!node.hidden&&node.getClientRects().length&&node.textContent.trim()).length)===1,'The relit lighthouse shows one caption, not three');
+  check(await page.evaluate(()=>[...document.querySelectorAll('.u-toast,.lamp-status,.sound-caption')].filter(node=>!node.hidden&&node.getClientRects().length&&node.textContent.trim()).length)===1,'The relit lighthouse shows one caption, not three');
   await page.keyboard.press('KeyJ');await page.locator('.projector:not([hidden]) canvas').waitFor();await page.waitForTimeout(300);await shot('28-projector');
   check(await page.evaluate(()=>{const canvas=document.querySelector('.projector canvas');return canvas.width>200&&!canvas.hidden&&document.querySelector('.projector-code').textContent==='HARBOR-TESTS'
     &&canvas.getAttribute('aria-label')==='QR code for https://the-great-plot-twist.vercel.app/?join=TESTS';}),'J shows the projector panel with the QR canvas for the practice class code HARBOR-TESTS');

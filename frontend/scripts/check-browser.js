@@ -1,7 +1,7 @@
 import {pixelViewport} from '../src/pixel/display.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {readHttp} from './http-read.js';
-import {startFromTitle,closeSettings} from './shell-browser-tools.js';
+import {startFromTitle,closeSettings,openSettingsFromMenu} from './shell-browser-tools.js';
 // Live data is isolated by a deterministic fixture in these presentation checks.
 import {stubWeather} from './weather-browser-fixture.js';
 // Real-browser smoke checks using an installed Chrome. Saves review screenshots.
@@ -94,7 +94,7 @@ try {
   await page.evaluate(() => { const game = window.__island; game.player.position.set(-7, 4, 7); });
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700); await page.keyboard.up('KeyW');
   await dismissPanels(page);
-  await page.waitForFunction(() => document.querySelector('.toast').hidden);
+  await page.waitForFunction(() => !document.querySelector('.u-toast'));
   await capture('Exploration');
   await page.evaluate(() => { window.__island.player.position.set(-1, 0, 10);
     window.__island.view.overview(); window.__island.settings.hour = 0;
@@ -107,13 +107,13 @@ try {
   await measure('noon-high'); await capture('Daylight');
   await page.evaluate(() => { window.__island.settings.hour = 18.4; });
   await measure('dusk-high'); await capture('Dusk');
-  await page.getByRole('button', { name: 'Open visual settings' }).click();
+  await openSettingsFromMenu(page);
   await page.evaluate(()=>window.__island.setWeather({fog:1,rain:0}));
-  await page.locator('[data-preference=quality]').selectOption('low'); await measure('fog-low');
+  await page.locator('[data-preference=quality] input[value=low]').check(); await measure('fog-low');
   await page.evaluate(()=>window.__island.setWeather({fog:0.38,rain:1,wind:1})); await measure('storm-low');
   check(!report.modes['fog-low'].shadows && report.modes['fog-low'].pixelRatio <= 1, 'Low quality keeps its approved pixel-ratio cap and reduces effect density');
-  await page.locator('[data-preference=quality]').selectOption('high'); await page.keyboard.press('Tab');
-  await page.locator('[data-preference=quality]').focus();await closeSettings(page,{keyboard:true});
+  await page.locator('[data-preference=quality] input[value=high]').check(); await page.keyboard.press('Tab');
+  await page.locator('[data-preference=quality] input:checked').focus();await closeSettings(page,{keyboard:true});
   check(await page.locator('.shell-screen').isHidden(), 'Escape closes settings while a form control has focus');
   check(external.length === 0, 'The game makes no external network requests');
   check(errors.length === 0, `No browser or WebGL errors (${errors.join('; ')})`);

@@ -24,3 +24,8 @@ export async function dismissPanels(page) {
     const modal=page.locator(`${selector}[open]`);if(await modal.count()){await page.keyboard.press('Escape');await modal.waitFor({state:'hidden'});}
   }
 }
+// The play HUD's Menu (pause) leads to Settings; the old ☷ visual-settings button left with lane U2.
+export async function openSettingsFromMenu(page) {
+  await page.getByRole('button',{name:'Menu',exact:true}).click();await page.locator('.shell-screen[open][data-mode="pause"]').waitFor();
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.locator('.preferences').waitFor();
+}

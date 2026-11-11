@@ -51,3 +51,10 @@ export function questView(state) {
   return {items, doneCount, allDone: doneCount === QUESTS.length,
     summary: `${doneCount} of ${QUESTS.length} done`};
 }
+
+// What the shared HUD strip draws for the class demo (src/ui/quest-strip.js).
+export function classQuestView(state) {
+  const view = questView(state), current = view.items.findIndex(item => !item.done);
+  return {kind: 'class', title: 'Class goals', progress: view.summary, allDone: view.allDone, finale: FINALE_HINT,
+    items: view.items.map((item, index) => ({id: item.id, label: item.label, hint: item.hint, step: index + 1, done: item.done, current: index === current}))};
+}

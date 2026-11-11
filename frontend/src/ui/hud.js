@@ -1,97 +1,125 @@
-// Local DOM interface: masthead, place toast, interaction prompt, controls and visual debug settings.
-import { node } from './kit/dom.js';
-import { places } from '../world/places/registry.js';
-import { settings } from '../config.js';
-import { getWeather, presets, setWeather } from '../world/weather.js';
-import './quiet-hud.css';
+// The play HUD keeps three things (docs/PITCH.md): 🪙 coins top-left, the quest strip top-right and one
+// Menu button. Everything else appears only when it matters: the place name as a 2-second arrival
+// banner, the E prompt next to a hotspot, toasts (src/ui/toasts.js) and a hint after 20 s standing still.
+// Controls help, the sea chart and the place · weather · time line moved into the pause menu.
+import {node} from './kit/dom.js';
+import {places} from '../world/places/registry.js';
+import {settings} from '../config.js';
+import {getWeather} from '../world/weather.js';
+import {on as defaultOn} from '../core/events.js';
+import {getPreferences} from '../settings/preferences.js';
+import {addMenuExtras, addMenuStatus} from '../shell/menu-extras.js';
+import {createQuestStrip} from './quest-strip.js';
+import {QUEST_EVENTS, PLACE_ARRIVED} from './quest-events.js';
+import {FIRST_QUESTS, applyQuestEvent, createIdleHint, firstQuestView, readFirstQuests, writeFirstQuests} from './first-quests.js';
+import {showToast} from './toasts.js';
+import './hud.css';
 
+// Lane H replaces this with formatCoins() from src/lib/coins.js.
+export const formatCoins = n => `🪙 ${n}`;
+export const ARRIVAL_MS = 2000;
 const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(z => [z.id, z.name])));
-export function createHud(container, actions) {
-  let disposed=false;
-  const overlay = document.createElement('div'); overlay.className = 'hud hud-quiet';
-  overlay.innerHTML = `
-    <header class="masthead"><span class="wordmark" aria-hidden="true"><span class="mark">✦</span> <span class="hud-brand">Saltreach</span></span>
-      <div class="chapter"><span class="status-dot"></span> Saltreach Harbor </div></header>
-    <div class="location" hidden><span class="eyebrow">YOU HAVE ARRIVED</span><strong>Saltreach Harbor</strong><span>Meet the captains and explore the isles.</span></div>
-    <div class="interact" role="status" hidden><kbd>E</kbd><div><small>Press E</small><strong></strong></div><span aria-hidden="true">↗</span></div>
-    <div class="toast" role="status" hidden></div>
-    <div class="hud-actions"><button class="controls-toggle" aria-expanded="false">Controls</button><button class="hud-menu">Menu</button></div>
-    <footer class="bottom-bar"><div class="controls" hidden><span><kbd>W A S D</kbd> move</span><span><kbd>⇧</kbd> run</span><span><kbd>E</kbd> interact</span><span><kbd>SCROLL</kbd> zoom</span><button class="chart-toggle" aria-label="Open sea chart">Sea chart <kbd>M</kbd></button></div>
-      <div class="conditions"><span class="weather-label">Fair skies</span><span class="divider"></span><time>18:24</time><button class="settings-toggle" aria-label="Open visual settings" aria-expanded="false">☷</button></div></footer>
-    <section class="debug" aria-label="Visual settings" hidden>
-      <div class="panel-heading"><strong>Island atmosphere</strong><button class="close-settings" aria-label="Close visual settings">×</button></div>
-      <label for="hour">Time of day <span class="hour-value"></span></label><input id="hour" type="range" min="0" max="23.99" step="0.01" value="${settings.hour}">
-      <div class="preset-buttons">${Object.keys(presets).map((name, i) => `<button data-preset="${name}">${i + 1} ${name}</button>`).join('')}</div>
-      <label for="quality">Quality</label><select id="quality"><option value="high">High · full weather</option><option value="low">Low · lighter weather</option></select>
-      <label class="check"><input id="fast-time" type="checkbox"> Speed up time <kbd>T</kbd></label>
-      <p class="settings-note">Try midnight, sea mist or a passing storm.</p>
-      ${import.meta.env.DEV ? '<output class="performance">Measuring rendering…</output>' : ''}
-    </section>`;
-  // Signed-out players see no account text up here; Settings > Account keeps the captain details.
-  const captain=node('div','captain-status'),captainName=node('strong'),save=node('span');captainName.hidden=true;save.hidden=true;save.setAttribute('role','status');captain.append(captainName,save);overlay.querySelector('.masthead').append(captain);
+const local = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
+export const weatherLabel = weather => weather.rain > 0.5 ? 'Rain at sea' : weather.fog > 0.7 ? 'Sea mist' : weather.cloudCover > 0.6 ? 'Overcast' : 'Fair skies';
+
+export function createHud(container, actions, {on = defaultOn, storage = local(), toast = showToast, hintsEnabled = () => getPreferences().hintsEnabled !== false} = {}) {
+  let disposed = false, place = 'saltreach_harbor', override = null, coins = null, account = 'none', lastFrame = 0;
+  const overlay = node('div', 'hud hud-play');
+  // 1. Coins.
+  const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
+  purse.dataset.hudGroup = 'coins';purse.setAttribute('role', 'status');purse.append(purseText);
+  // 2. Menu, and 3. the quest strip under it.
+  const right = node('div', 'hud-right'), menu = node('button', 'hud-menu');
+  menu.type = 'button';menu.dataset.hudGroup = 'menu';menu.setAttribute('aria-haspopup', 'dialog');
+  const bars = node('span', 'hud-menu-icon');bars.setAttribute('aria-hidden', 'true');menu.append(bars, document.createTextNode('Menu'));
+  menu.addEventListener('click', () => (actions.menu ?? actions.settings)?.());
+  right.append(menu);
+  const strip = createQuestStrip({parent: right, focusGame: () => actions.focus?.()});
+  // Contextual: arrival banner (and a screen-reader place status), the E prompt.
+  const banner = node('div', 'hud-arrival'), bannerEyebrow = node('span', '', 'You have arrived'), bannerName = node('strong');
+  banner.hidden = true;banner.setAttribute('aria-hidden', 'true');banner.append(bannerEyebrow, bannerName);
+  const chapter = node('p', 'chapter');chapter.classList.add('kit-sr-only');chapter.setAttribute('role', 'status');chapter.setAttribute('aria-atomic', 'true');
+  const prompt = node('div', 'interact'), promptLabel = node('strong');
+  prompt.setAttribute('role', 'status');prompt.hidden = true;prompt.append(node('kbd', '', 'E'), promptLabel);
+  overlay.append(purse, right, banner, chapter, prompt);
   container.append(overlay);
-  const controls=overlay.querySelector('.controls'),controlsToggle=overlay.querySelector('.controls-toggle');
-  controls.setAttribute('aria-label','Game controls');controls.id='island-controls';controlsToggle.setAttribute('aria-controls',controls.id);
-  function toggleControls(open){controls.hidden=open===undefined?!controls.hidden:!open;controlsToggle.setAttribute('aria-expanded',String(!controls.hidden));}
-  controlsToggle.onclick=()=>toggleControls();
-  overlay.querySelector('.hud-menu').onclick=()=>{toggleControls(false);(actions.menu??actions.settings)?.();};
-  function closeQuickPanels(){if(document.querySelector('dialog[open]')||controls.hidden)return false;toggleControls(false);controlsToggle.focus({preventScroll:true});return true;}
-  const escape=event=>{if(event.key==='Escape'&&!event.repeat&&closeQuickPanels()){event.preventDefault();event.stopImmediatePropagation();}};
-  window.addEventListener('keydown',escape,true);
-  const timers = [];
-  const select = selector => overlay.querySelector(selector);
-  const panel = select('.debug'), toggle = select('.settings-toggle');
-  select('.chapter').setAttribute('role','status');select('.chapter').setAttribute('aria-atomic','true');
-  if(actions.settings){toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','dialog');}
-  function togglePanel(open) {
-    panel.hidden = open === undefined ? !panel.hidden : !open;
-    toggle.setAttribute('aria-expanded', String(!panel.hidden));
-    if (panel.hidden) actions.focus();
+
+  function drawCoins() {
+    const known = Number.isFinite(coins);
+    purseText.textContent = known ? formatCoins(coins) : '🪙 …';
+    purse.setAttribute('aria-label', known ? `${coins} coins` : 'Coins not loaded yet');
   }
-  select('.chart-toggle').onclick = () => actions.chart();
-  toggle.onclick = () => actions.settings ? actions.settings() : togglePanel(); select('.close-settings').onclick = () => togglePanel(false);
-  function start() {
-    select('.location').hidden = false;
-    overlay.classList.add('exploring'); actions.start();
-    timers.push(window.setTimeout(() => { select('.location').hidden = true; }, 5000));
-    actions.focus();
+  drawCoins();
+
+  // ---- quests: the first 3 minutes unless a part of the game (the class demo) shows its own ----
+  let first = readFirstQuests(storage);
+  const idle = createIdleHint();
+  const draw = () => strip.render(override ?? firstQuestView(first));
+  function progress(event) {
+    const result = applyQuestEvent(first, event);
+    if (!result.changed || disposed) return;
+    first = result.state;writeFirstQuests(storage, first);idle.progress();
+    if (override) return;
+    draw();
+    toast({text: first.done >= FIRST_QUESTS.length ? 'All goals done!' : `Goal done: ${result.completed.label}`, tone: 'success'});
   }
-  select('#hour').oninput = event => { settings.hour = Number(event.target.value); };
-  select('#quality').value = settings.quality;
-  select('#quality').onchange = event => actions.quality(event.target.value);
-  select('#fast-time').onchange = event => { settings.fastTime = event.target.checked; };
-  overlay.querySelectorAll('[data-preset]').forEach(button => { button.onclick = () => {
-    setWeather(presets[button.dataset.preset]); actions.focus();
-  }; });
-  let toastUntil = 0, syncAt = 0;
-  return {get quickPanelsOpen(){return !controls.hidden;},setCaptain(view){const known=['signed_in','expired'].includes(view.account?.state);captain.dataset.account=view.account?.state??'none';captainName.hidden=!known;save.hidden=!known;if(!known){captainName.textContent='';captainName.removeAttribute('title');save.textContent='';delete save.dataset.state;return;}captainName.textContent=view.captain.name;captainName.title=captainName.textContent;save.dataset.state=view.account.state;save.textContent=view.account.state==='expired'?'Sign in again to keep playing online':'';save.hidden=!save.textContent;},togglePanel,toggleControls,closeQuickPanels,start,
-    dispose() { if(disposed)return;disposed=true;window.removeEventListener('keydown',escape,true);timers.forEach(clearTimeout); overlay.remove(); },
-    arrive(id) {
-      select('.chapter').childNodes[1].textContent = ` ${places[id].name} `;
-      select('.location strong').textContent = places[id].name;
+  const stops = Object.values(QUEST_EVENTS).map(type => on(type, progress));
+  // The world's own arrival event counts as place_arrived too.
+  stops.push(on('arrived', event => progress({type: PLACE_ARRIVED, id: event.place})));
+  draw();
+
+  // ---- what moved into the pause menu ----
+  const clock = () => { const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60); return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; };
+  stops.push(addMenuStatus(() => `${places[place]?.name ?? ''} · ${weatherLabel(getWeather())} · ${clock()}`));
+  stops.push(addMenuExtras(() => [
+    actions.chart && {label: 'Sea chart', onSelect: () => actions.chart()},
+    actions.controls && {label: 'Controls', onSelect: () => actions.controls()},
+  ].filter(Boolean)));
+
+  let bannerTimer = 0;
+  function showBanner(text) {
+    clearTimeout(bannerTimer);bannerName.textContent = text;banner.hidden = false;
+    bannerTimer = setTimeout(() => { banner.hidden = true; }, ARRIVAL_MS);
+  }
+  function arrive(id) {
+    place = id;const name = places[id]?.name ?? '';chapter.textContent = name;
+    if (overlay.classList.contains('exploring')) showBanner(name);
+  }
+  arrive(place);
+
+  return {
+    get quickPanelsOpen() { return false; },
+    setCaptain(view) {
+      const value = view?.captain?.coins;
+      if (Number.isFinite(value)) { coins = value; drawCoins(); }
+      const state = view?.account?.state ?? 'none';
+      if (state === 'expired' && account !== 'expired') toast({text: 'Your sign-in ran out.', next: 'Sign in again from Menu › Settings to keep playing online.', tone: 'error'});
+      account = state;
     },
-    message(text) { select('.toast').textContent = text; select('.toast').hidden = false; toastUntil = performance.now() + 3000; },
-    notify(id) {
-      const toast = select('.toast');
-      toast.textContent = names[id]; toast.hidden = false;
-      toastUntil = performance.now() + 2600;
+    setCoins(value) { if (Number.isFinite(value)) { coins = Math.round(value); drawCoins(); } },
+    // A part of the game with its own goals (the class demo) passes its view; null gives the strip back.
+    setQuests(view) { override = view ?? null; draw(); },
+    get quests() { return {...first, view: override ?? firstQuestView(first)}; },
+    togglePanel() {}, toggleControls() {},
+    closeQuickPanels() { return strip.closeHint(); },
+    start() {
+      overlay.classList.add('exploring');actions.start();
+      showBanner(places[place]?.name ?? '');
+      actions.focus();
     },
-    update(zone, stats) {
-      overlay.classList.toggle('night', stats?.night > 0.4);
-      const prompt = select('.interact'); prompt.hidden = !zone; prompt.dataset.zone = zone || '';
-      if (zone) prompt.querySelector('strong').textContent = stats?.interactionLabel??names[zone];
-      const now = performance.now();
-      select('.toast').hidden = now > toastUntil;
-      if (now < syncAt) return;
-      syncAt = now + 150; // Clock and diagnostics need not rewrite the DOM every frame.
-      const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60);
-      const clock = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      select('time').textContent = clock; select('.hour-value').textContent = clock;
-      if (document.activeElement !== select('#hour')) select('#hour').value = settings.hour;
-      select('#fast-time').checked = settings.fastTime;
-      const weather = getWeather();
-      select('.weather-label').textContent = weather.rain > 0.5 ? 'Rain at sea' : weather.fog > 0.7 ? 'Sea mist' : weather.cloudCover > 0.6 ? 'Overcast' : 'Fair skies';
-      if (import.meta.env.DEV && stats) select('.performance').textContent = `${stats.fps} FPS · ${stats.calls} calls · ${stats.triangles.toLocaleString()} triangles`;
+    dispose() { if (disposed) return; disposed = true; clearTimeout(bannerTimer); stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
+    arrive,
+    message(text, options = {}) { toast({text, ...options}); },
+    notify() { /* The E prompt already names the hotspot; no extra toast. */ },
+    update(zone, stats = {}) {
+      const now = performance.now(), delta = lastFrame ? Math.min(250, now - lastFrame) : 0;lastFrame = now;
+      overlay.classList.toggle('night', stats.night > 0.4);
+      prompt.hidden = !zone;prompt.dataset.zone = zone || '';
+      if (zone) promptLabel.textContent = stats.interactionLabel ?? names[zone] ?? '';
+      if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring')})) {
+        const item = strip.current;
+        if (item && !item.done && hintsEnabled()) toast({text: `Need a hand? ${item.hint}`, ms: 7000});
+      }
     },
   };
 }
