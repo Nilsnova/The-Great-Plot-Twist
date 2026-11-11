@@ -5,7 +5,7 @@
 // sync, see sync.js), and when the sim is done calls finishWave once (again after waitSeconds on
 // 409 wave_too_early), emits `wave_finished`, plays wave_won or wave_lost and cleans up.
 //
-// The run (TOWER-DEFENSE.md §1): with startNextWave given, a won wave opens a 15-second break with a big
+// The run (TOWER-DEFENSE.md §1): with startNextWave given, a won wave opens an 8-second break with a big
 // "Next wave" button and the "Auto next wave" switch (kept in localStorage); the button, or the end of the
 // break with the switch on, calls startNextWave() (the island's start route), whose wave_started_server
 // starts the next wave. A lost wave ends the run. The HUD keeps a running "Loot this run".
@@ -15,7 +15,7 @@
 //   const waves = createWaveController({bus, world, getDefenses, finishWave, room, sound, reducedMotion, quality});
 //   waves.update(dt)   every frame (mountPirates drives it)       waves.start(info)  without the bus
 //   waves.fire(cannonId, targetId) / waves.repair(wallId) / waves.lampsLit()      waves.dispose()
-//   waves.shoot(targetId?) the captain's musket    waves.next() / waves.setAuto(on)  the break
+//   waves.shoot(targetId?) the captain's musket   waves.aim({x, z}) free aim   waves.next() / waves.setAuto(on)  the break
 //
 // world: {scene, camera, canvas, container, player: {position}, place(): current place id,
 //   isBlocked(): an overlay is open, unproject(clientX, clientY): logical {x, z}}; every field optional.
@@ -29,10 +29,11 @@ const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) ar
 const END_BEAT_MS = 1800;             // the last ship sinks on screen before the cutscene
 const LOST_BEAT_MS = 4500;            // a lost run's result stays up a little longer
 const DEFAULT_WAIT_SECONDS = 5;
+const AIM_RADIUS = 8;                 // free aim: a ship this close to the aim point is hit
 const SETTLE_TICKS = 20000;           // more than the longest wave (900 s)
 const BREAK_GRACE_MS = 10000;         // with Auto next on, the break waits this long for the loot answer
 export const bossText = warships => (warships >= 2 ? '⚠ Boss wave: two warships!' : '⚠ Boss wave: a warship!');
-export const BREAK_SECONDS = 15;      // the break after a won wave (TOWER-DEFENSE.md §1)
+export const BREAK_SECONDS = 8;       // the break after a won wave (TOWER-DEFENSE.md §1; faster pace, owner 11 Nov)
 const BOSS_WARNING_SECONDS = 6;       // the boss warning stays this long after the wave starts
 export const AUTO_KEY = 'tgpt:pirates:auto-next';
 export const LOST_TITLE = 'The pirates broke through';
@@ -247,7 +248,34 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const point = world.unproject(clientX, clientY), ship = point && shipAt(point, wave.state);
     const input = wave.action?.kind === 'fire' ? tapInput(wave.action, ship, wave.state) : null;
     if (input) submit(input);
-    else if (ship) shoot(ship.id); // not manning a cannon (or out of its reach): the musket
+    else aimAt(point, ship); // not manning a cannon (or out of its reach): the musket
+  }
+  // Free aim (owner, 11 Nov: "shooting when not pressing on something"): a click or tap anywhere fires the
+  // musket that way. It hits the ship tapped, else the ship in range nearest to the aim point (within
+  // AIM_RADIUS of it); with none there the shot is a visible miss on this screen only (nothing to sync).
+  function aimAt(point, ship) {
+    const player = world.player?.position;
+    if (!wave || wave.done || !point || !player || wave.state.phase !== 'running') return false;
+    const lvl = myLevel(), stats = CONFIG.captain.levels[lvl - 1];
+    const inRange = item => Math.hypot(item.x - player.x, item.z - player.z) <= stats.range;
+    let target = ship && inRange(ship) ? ship : null;
+    if (!target) {
+      let best = AIM_RADIUS;
+      for (const item of wave.state.ships) {
+        const d = Math.hypot(item.x - point.x, item.z - point.z);
+        if (d <= best && inRange(item)) { best = d; target = item; }
+      }
+    }
+    if (target) return shoot(target.id);
+    const t = wave.ticks * TICK_SECONDS;
+    if (t - wave.captainAt < stats.reload) return false;
+    wave.captainAt = t;
+    const dx = point.x - player.x, dz = point.z - player.z, length = Math.hypot(dx, dz) || 1, reach = Math.min(length, stats.range);
+    const toX = player.x + dx / length * reach, toZ = player.z + dz / length * reach;
+    wave.renderer?.events([{ type: 'captain_fired', t, by: playerId, level: lvl, x: player.x, z: player.z, toX, toZ,
+      impactAt: t + reach / CONFIG.captain.shotSpeed, miss: true }]);
+    cue('pirate-cannon-manual');
+    return true;
   }
 
   function handle(events, current, simTime) {
@@ -398,7 +426,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     get wave() { return wave; },
     get state() { return wave?.state ?? null; },
     fire: (cannonId, targetId) => submit({ type: 'fire', cannonId, targetId }),
-    shoot, next, setAuto,
+    shoot, aim: point => aimAt(point, null), next, setAuto,
     get auto() { return auto; },
     get runLoot() { return runLoot; },
     get inBreak() { return !!wave?.pause; },

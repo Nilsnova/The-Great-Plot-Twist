@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { createWave } from '../../src/pirates/sim.js';
-import { AUTO_KEY, LOST_TITLE, captainTarget, createWaveController } from '../../src/pirates/controller.js';
+import { AUTO_KEY, BREAK_SECONDS, LOST_TITLE, captainTarget, createWaveController } from '../../src/pirates/controller.js';
 import { createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { readMessage, toMessage } from '../../src/pirates/sync.js';
 import { TD_RULES, createFakeIslandApi, createFakeIslandTransport } from '../../src/pirates/fake-api.js';
@@ -34,7 +34,7 @@ function harness({ defenses = STRONG, controller = {}, finishWave = vi.fn(async 
 }
 
 describe('the run between waves', () => {
-  it('opens a 15-second break after a won wave; Next wave calls the start route and the run keeps its loot', async () => {
+  it('opens an 8-second break after a won wave; Next wave calls the start route and the run keeps its loot', async () => {
     const startNextWave = vi.fn(async () => ({ ok: true }));
     const h = harness({ controller: { startNextWave } });
     h.waves.start(info('w-1'));
@@ -43,7 +43,7 @@ describe('the run between waves', () => {
     await h.advance(300);
     const hud = h.huds[0];
     expect(hud.paused).toMatchObject({ title: 'Wave 1 won!', ready: true, auto: false });
-    expect(hud.paused.seconds).toBeGreaterThan(13);
+    expect(hud.paused.seconds).toBeGreaterThan(BREAK_SECONDS - 2);
     expect(h.waves.runLoot).toBe(15);
     expect(hud.lootValue).toBe(15);
     expect(h.waves.next()).toBe(true);
@@ -62,7 +62,7 @@ describe('the run between waves', () => {
     expect(saveAuto).toHaveBeenCalledWith(true);
     h.waves.start(info('w-1'));
     while (!h.waves.inBreak) await h.advance(500);
-    await h.advance(14000);
+    await h.advance((BREAK_SECONDS - 1) * 1000);
     expect(startNextWave).not.toHaveBeenCalled();
     await h.advance(1500);
     expect(startNextWave).toHaveBeenCalledTimes(1);
@@ -121,6 +121,31 @@ describe('the captain and four players', () => {
     expect(captainTarget({ x: 0, z: 0 }, state, 1)?.id).toBe('near');
     expect(captainTarget({ x: -10, z: 0 }, state, 1)).toBe(null);
     expect(captainTarget({ x: -10, z: 0 }, state, 5)?.id).toBe('near');
+  });
+
+  it('fires the musket where the player clicks: the ship near the aim point, else a visible miss that is not sent', async () => {
+    const shared = room(), sent = [], inbox = shared.join(), position = { x: 17, z: -1.5 };
+    inbox.on('captain_shot', payload => sent.push(payload));
+    const drawn = [];
+    const h = harness({ defenses: [spot('cannon_2', 'cannon', -45, .75)], controller: { room: shared.join(), playerId: 'anna',
+      world: { scene: {}, container: {}, player: { position } }, captainLevel: () => 5 } });
+    h.waves.start(info('w-aim', 3));
+    let aimed = false;
+    for (let step = 0; step < 1800 && !aimed; step++) {
+      h.clock.now += 100; h.waves.update(.1); await Promise.resolve();
+      const ship = h.waves.state?.phase === 'running' && h.waves.state.ships.find(item => Math.hypot(item.x - position.x, item.z - position.z) < 18);
+      if (ship) aimed = h.waves.aim({ x: ship.x + 3, z: ship.z + 2 });
+    }
+    expect(aimed).toBe(true);
+    shared.deliver();
+    expect(sent).toHaveLength(1);
+    if (h.waves.wave) h.waves.wave.renderer = { events: list => drawn.push(...list), update() {}, setVisible() {}, dispose() {} };
+    expect(h.waves.aim({ x: 17, z: 40 })).toBe(false); // still reloading
+    for (let i = 0; i < 10; i++) { h.clock.now += 100; h.waves.update(.1); }
+    expect(h.waves.aim({ x: position.x, z: position.z + 60 })).toBe(true); // nothing there: a miss on this screen
+    shared.deliver();
+    expect(sent).toHaveLength(1);
+    expect(drawn.some(event => event.type === 'captain_fired' && event.miss)).toBe(true);
   });
 
   it('keeps four friends identical with cannon shots, repairs and captain shots from all of them', async () => {

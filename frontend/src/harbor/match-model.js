@@ -3,7 +3,18 @@
 import {offeredStakes, poolGain} from './stakes.js';
 import {MATCH, MY_STAKES, POOL, kickoffText, refundedText, resultText} from './words.js';
 
-const MAX_MATCHES = 10;
+// More games to pick from (owner, 11 Nov): up to 30 matches of the coming week, at most 5 per
+// competition, so one busy league cannot fill the board.
+export const MAX_MATCHES = 30;
+export const PER_COMPETITION = 5;
+function spread(fixtures) {
+  const seen = new Map();
+  return fixtures.filter(fixture => {
+    const key = fixture.competition ?? '', count = seen.get(key) ?? 0;
+    seen.set(key, count + 1);
+    return count < PER_COMPETITION;
+  });
+}
 const list = value => (Array.isArray(value) ? value : []);
 export const pickLabel = (pick, match) => (pick === 'home' ? match.home : pick === 'away' ? match.away : MATCH.draw);
 export const matchName = match => `${match.home} v ${match.away}`;
@@ -35,8 +46,8 @@ export function matchView({board, boardFailure = null, mine = null, signedIn = f
   }
   const stakes = offeredStakes(board.rules), cut = board.rules?.poolCutPercent ?? 0;
   const own = list(mine?.stakes);
-  const matches = list(board.fixtures).filter(fixture => fixture.status === 'scheduled' && fixture.source === 'live')
-    .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff)).slice(0, MAX_MATCHES)
+  const matches = spread(list(board.fixtures).filter(fixture => fixture.status === 'scheduled' && fixture.source === 'live')
+    .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))).slice(0, MAX_MATCHES)
     .map(fixture => {
       const taken = own.find(stake => stake.fixtureId === fixture.id);
       const open = canPick(fixture, now);

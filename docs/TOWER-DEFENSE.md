@@ -4,7 +4,7 @@
 
 ## 1. The loop
 
-Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew → fight harder waves. Waves go up to **100**; every **5th wave is a boss wave** (a warship); every **10th** brings two. After a won wave a **15-second break** with a big "Next wave" button (or it starts by itself when the break ends, if "Auto next wave" is on). A lost wave ends the run: you keep your buildings and coins, and the next bell restarts at your best wave minus 2 (at least 1).
+Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew → fight harder waves. Waves go up to **100**; every **5th wave is a boss wave** (a warship); every **10th** brings two. After a won wave an **8-second break** (faster pace, owner 11 Nov; the bell's countdown is 5 s) with a big "Next wave" button (or it starts by itself when the break ends, if "Auto next wave" is on). A lost wave ends the run: you keep your buildings and coins, and the next bell restarts at your best wave minus 2 (at least 1).
 
 ## 2. What you can build (coins only, whole numbers)
 
@@ -28,7 +28,7 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 
 ## 4. Loot
 
-Won wave *n*: `10 + 5n` + houses bonus; a boss wave pays ×2. Every participant gets their own loot (as today). A lost wave pays 0.
+Won wave *n*: `25 + 10n` + 10 per house (Pirate Point `40 + 10n`); a boss wave pays ×2 (more money, owner 11 Nov; new players start with 🪙 200). Every participant gets their own loot (as today). A lost wave pays 0.
 
 ## 5. Pirate Point (the joint island)
 

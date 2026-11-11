@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {STAKES, STAKE_EVENT, offeredStakes, poolGain} from '../../src/harbor/stakes.js';
 import {callView, callsView, countdownText, reasonText, rememberPrices} from '../../src/harbor/market-model.js';
-import {matchView} from '../../src/harbor/match-model.js';
+import {matchView, MAX_MATCHES, PER_COMPETITION} from '../../src/harbor/match-model.js';
 import {PIRATE_LINES, weatherView} from '../../src/harbor/weather-model.js';
 import {EXPLAIN, SIGN_IN, priceText, refusalText, resultText} from '../../src/harbor/words.js';
 import {NOW, callAssets, fixture, marketCall, sportsBoard, weatherAnswer} from './fixtures.js';
@@ -178,5 +178,19 @@ describe('words', () => {
     expect(EXPLAIN.market).toMatch(/Binance/);
     expect(EXPLAIN.match).toMatch(/football-data\.org/);
     expect(EXPLAIN.weather).toMatch(/Open-Meteo/);
+  });
+});
+
+describe('more games on the match board', () => {
+  it('shows up to 30 matches, at most 5 per competition, soonest first', () => {
+    const fixture = (i, competition) => ({id: `fd-${competition}-${i}`, home: `H${i}`, away: `A${i}`, competition, status: 'scheduled', source: 'live',
+      kickoff: new Date(Date.UTC(2026, 10, 12, 12) + i * 60000).toISOString(), closesAt: new Date(Date.UTC(2026, 10, 12, 11)).toISOString(), picks: ['home', 'draw', 'away']});
+    const fixtures = [...Array.from({length: 20}, (_, i) => fixture(i, 'Premier League')),
+      ...Array.from({length: 40}, (_, i) => fixture(100 + i, 'Série A')), ...Array.from({length: 3}, (_, i) => fixture(200 + i, 'Bundesliga')),
+      ...Array.from({length: 30}, (_, i) => fixture(300 + i, `Cup ${i}`))];
+    const view = matchView({board: {fixtures, rules: {}}, now: Date.UTC(2026, 10, 12, 10)});
+    expect(view.matches).toHaveLength(MAX_MATCHES);
+    const per = name => view.matches.filter(match => match.when.startsWith(name)).length;
+    expect([per('Premier League'), per('Série A'), per('Bundesliga')]).toEqual([PER_COMPETITION, PER_COMPETITION, 3]);
   });
 });

@@ -41,7 +41,7 @@ def write_island(tmp_path, change):
 def test_the_prices_and_the_starting_coins_are_the_economy_table():
     catalogue = load_island()
 
-    assert catalogue.starting_coins == 100
+    assert catalogue.starting_coins == 200
     assert {kind.kind: kind.prices for kind in catalogue.kinds} == {
         "wall": (10, 20, 40),
         "cannon": (30, 60, 120),
@@ -75,8 +75,8 @@ def test_the_spots_are_the_spots_of_the_contract():
     )
 
 
-@pytest.mark.parametrize(("wave", "houses", "loot"), [(1, 0, 15), (3, 0, 25), (3, 2, 35)])
-def test_the_loot_is_ten_plus_five_per_wave_plus_five_per_house(wave, houses, loot):
+@pytest.mark.parametrize(("wave", "houses", "loot"), [(1, 0, 35), (3, 0, 55), (3, 2, 75)])
+def test_the_loot_is_twenty_five_plus_ten_per_wave_plus_ten_per_house(wave, houses, loot):
     assert rules.loot_cap(load_island().loot, wave, houses) == loot
 
 
@@ -84,8 +84,8 @@ def test_a_boss_wave_is_every_fifth_and_pays_twice():
     catalogue = load_island()
 
     assert [wave for wave in range(1, 21) if rules.is_boss(catalogue, wave)] == [5, 10, 15, 20]
-    assert rules.loot_cap(catalogue.loot, 5, 3, boss=True) == (10 + 25 + 15) * 2
-    assert rules.loot_cap(catalogue.loot, 10, 0, pirate_point=True, boss=True) == 140
+    assert rules.loot_cap(catalogue.loot, 5, 3, boss=True) == (25 + 50 + 30) * 2
+    assert rules.loot_cap(catalogue.loot, 10, 0, pirate_point=True, boss=True) == 280
 
 
 @pytest.mark.parametrize(
