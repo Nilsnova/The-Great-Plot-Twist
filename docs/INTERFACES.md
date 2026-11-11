@@ -850,6 +850,21 @@ Starting it in the game is a separate step, because `frontend/` belongs to the g
 | `{type: 'finale', stage}`, listened to by G4 | L3 | draft; defined by the story round (S0, D018) |
 | `live_status_changed`, `live_presence_changed`, `live_peer_moved`, `live_peer_emoted`, `live_crew_updated` | A4 | built, flag `live_presence` off; payloads in [section 7](#events-for-the-screens) |
 
+### The island, the waves and the quest strip (lanes U, H, P and the island)
+
+These events run on the same bus. Emit the quest events with the names exported by `frontend/src/ui/quest-events.js` (`QUEST_EVENTS`), never as typed strings; `wave_started_server` and `wave_finished` are also exported by `frontend/src/island/wave-hooks.js` for the wave lane. Extra fields are ignored; a wrong payload simply does not count. The quest strip listens only for its current goal, so the goals complete in this order ([BUILD-PLAN.md section 3.6](BUILD-PLAN.md#36-playing-together)).
+
+| Event | Payload | Emitted by | Listened to by |
+|---|---|---|---|
+| `island_built` | `{kind, spot}`: `kind` is `'wall'`, `'cannon'`, `'tower'` or `'house'` | `src/island/index.js`, after `POST /api/island/build` answers on your own island | the quest strip: goal 1 "Build a cannon" (`kind: 'cannon'`) |
+| `wave_started_server` | `{waveId, wave, seed, startsAt, weather, flagship, where, defenses}` | `src/island/wave-flow.js`, after the bell rang (`POST /api/waves/start`) or the player joined (`POST /api/waves/join`) | the wave on screen (lane P, `onWaveStarted` in `wave-hooks.js`) |
+| `wave_finished` | `{survived, waveId, loot, coins, waveBest, flags}` | `src/island/wave-flow.js`, after `POST /api/waves/finish` answered (the renderer calls `finishWave`; in fake mode a placeholder finishes the wave 20 s after the countdown) | the quest strip: goal 2 "Ring the bell and win a wave" (`survived: true`); the island (its balance and best wave) |
+| `place_arrived` | `{id}`: a place id from `src/world/places/registry.js` | `src/game.js`, on every `arrived` (the HUD also counts `arrived {place}` itself) | the quest strip: goal 3 "Sail to the Harbor" (`id: 'saltreach_harbor'`) |
+| `harbor_stake_placed` | `{kind, stake}`: `kind` is `'market'`, `'match'` or `'fortune'`, `stake` 5, 10 or 25 | `src/harbor/market-card.js`, `match-card.js` and `fortune-card.js`, once the server accepted the stake | the quest strip: goal 4 "Place a 🪙 stake" |
+| `island_invite_opened` | `{code}`: `ISLE-…` or `null` while loading | `src/island/index.js`, when "Invite a friend" opens at the cabin | the quest strip: goal 5 "Invite a friend" |
+
+On your own island the strip always shows these five goals; a player who joined by class code (`HARBOR-…`) sees the class demo's goals everywhere else. With `islands` on (or `?islands=fake` in a dev build) the HUD's 🪙 counter shows the island's `coins` (`GET /api/island` and every build and wave answer), not the wallet's.
+
 ### Talking to the API: api.js and session.js (package A2)
 
 `frontend/src/online/session.js` holds the login token **in memory only**, and `frontend/src/online/api.js` is the one way the browser calls our own server. The sign-in screen (a later package, pending Nils' decision on the sign-in approach) fills the session with the token after the GitHub sign-in. There is no sign-in button yet. The home of both files is their header comment.
