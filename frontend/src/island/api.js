@@ -17,6 +17,8 @@
 //   await api.learnSkill({skill: 'steady_aim'});      // POST /api/island/skill       (§14)
 //   await api.buyWeapon({weapon: 'pistols'});         // POST /api/island/weapon/buy  (§15)
 //   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
+//   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
+//   await api.demolish({spot, code?});                 // POST /api/island/demolish   (between waves; half back to each payer)
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
 //   await api.pointBuild({spot, kind}) / api.pointUpgrade({spot})   // POST /api/pirate-point/build|upgrade
 //   await api.joinInvite('ISLE-K7Q2M');               // POST /api/island/invite/join (§6)
@@ -53,6 +55,8 @@ export const PATHS = Object.freeze({
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
+  demolish: '/api/island/demolish',
+  demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
 export const MESSAGES = Object.freeze({
@@ -111,6 +115,12 @@ export function isWave(data) {
 }
 // Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
 export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
+// A tear-down's quote (GAME-V3.md §4.2): {spot, kind, name, level, refunds: [{id, name, coins, you}]}.
+const isRefund = item => !!item && isText(item.id) && typeof item.name === 'string' && isCount(item.coins) && typeof item.you === 'boolean';
+export const isDemolishQuote = data => !!data && isText(data.spot) && isText(data.kind) && Number.isSafeInteger(data.level) && data.level >= 1
+  && Array.isArray(data.refunds) && data.refunds.length <= 10 && data.refunds.every(isRefund);
+// A tear-down answers the island (with your coins) and `demolished`, the quote's shape as paid.
+export const isDemolished = data => hasSpots(data) && isCount(data.coins) && isDemolishQuote(data.demolished);
 export function isFinish(data) {
   return !!data && isCount(data.loot) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags);
 }
@@ -229,6 +239,20 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return writeSpots(`wreck:${where}:${amount}`, actionUid => transport.post(PATHS.wreck, {amount, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
+    },
+    // GAME-V3.md §4.2: what tearing a building down gives back (the server works it out), then the tear-down
+    // itself, between waves only; code: the game's island (ISLE-XXXXX), without it your own.
+    demolishQuote({spot, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return ask(() => transport.get(PATHS.demolishQuote(sent(spot), where)), isDemolishQuote)
+        .then(answer => (answer.ok ? {...answer, data: {...answer.data, spot: localSpotId(answer.data.spot)}} : answer));
+    },
+    demolish({spot, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(`demolish:${where}:${spot}`, actionUid => transport.post(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
+        isDemolished);
     },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {

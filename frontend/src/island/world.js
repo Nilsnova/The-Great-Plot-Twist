@@ -8,6 +8,7 @@ import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
+import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
 import {TIER_ART, crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
@@ -96,6 +97,11 @@ export function campaignArt(building, campaign) {
 }
 // A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
 export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
+// The first wave any of the spot's kinds opens after (the house after 1, the watchtower after 3), or null.
+export function lockWave(kinds, unlocks) {
+  const waves = kinds.map(kind => unlocks?.locked?.[`${kind}:1`] ?? waveOf(`${kind}:1`)).filter(Number.isSafeInteger);
+  return waves.length ? Math.min(...waves) : null;
+}
 
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
@@ -108,19 +114,29 @@ export function decorateIsland(place, ctx = {}) {
   const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(DRAWN).map(([kind, name]) => [kind, drawn(name)]));
-  const ringTexture = drawn('build-ring');
-  const badgeTextures = Object.fromEntries(['wall', 'tower', 'watchtower', 'house', 'locked'].map(kind => [kind, drawn(`build-badge-${kind}`)]));
+  // The marker (src/art/island.js): a gold ring on the ground and a gold "+" badge; a spot that opens later a
+  // slate ring and a padlock badge with the wave it opens after (src/art/campaign.js).
+  const ringTexture = drawn('build-ring'), lockRingTexture = drawn('build-ring-locked'), badgeTexture = drawn('build-badge');
+  const lockTextures = new Map();
+  const lockTexture = wave => {
+    const name = LOCK_WAVES.includes(wave) ? `build-badge-locked-${wave}` : 'build-badge-locked';
+    if (!lockTextures.has(name)) lockTextures.set(name, drawn(name));
+    return lockTextures.get(name);
+  };
   const markers = new Map(), buildings = new Map(); // buildings: 'spot:kind' -> mesh (a tower spot has a cannon and a mortar)
   const slotOf = spot => spot.slot ?? (spot.kind === 'cannon' ? 'tower' : spot.kind);
   const kindsOf = spot => SLOT_KINDS[slotOf(spot)] ?? [spot.kind];
   for (const spot of SPOTS) {
     const ring = sprite(root, ringTexture, spot.x, spot.z, `island-marker:${spot.id}`);
     ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
-    const badge = sprite(root, badgeTextures[slotOf(spot) === 'tower' ? 'tower' : spot.kind], spot.x, spot.z, `island-badge:${spot.id}`);
+    const badge = sprite(root, badgeTexture, spot.x, spot.z, `island-badge:${spot.id}`);
     badge.position.y += .6; badge.userData.baseY = badge.position.y;
-    const lock = sprite(root, badgeTextures.locked, spot.x, spot.z, `island-lock:${spot.id}`);
+    const lockRing = sprite(root, lockRingTexture, spot.x, spot.z, `island-lock-ring:${spot.id}`);
+    lockRing.position.y -= .75; lockRing.renderOrder = 99; lockRing.visible = false;
+    const lock = sprite(root, lockTexture(null), spot.x, spot.z, `island-lock:${spot.id}`);
     lock.position.y += .6; lock.visible = false;
-    markers.set(spot.id, {ring, badge, lock, set visible(value) { ring.visible = value; badge.visible = value; }});
+    markers.set(spot.id, {ring, badge, lock, lockRing, wave: null, set visible(value) { ring.visible = value; badge.visible = value; },
+      set locked(value) { lock.visible = value; lockRing.visible = value; }});
     for (const kind of kindsOf(spot)) {
       const building = sprite(root, textures[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
       building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
@@ -196,8 +212,12 @@ export function decorateIsland(place, ctx = {}) {
           && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
       }
       if (art) showSpot(spot, answer, hidden);
-      markers.get(spot.id).visible = !built && known && !battle && open; // a visitor builds too, with their own coins
-      markers.get(spot.id).lock.visible = !built && known && !battle && !open;
+      const marker = markers.get(spot.id);
+      marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
+      marker.locked = !built && known && !battle && !open;
+      // The wave the padlock shows: the campaign step of the spot, else the first wave its kind opens after.
+      const wave = open ? null : spotLocked(spot, campaign) ? spotWave(spot.id) : lockWave(kindsOf(spot), unlocks);
+      if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
@@ -266,6 +286,7 @@ export function decorateIsland(place, ctx = {}) {
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       for (const id of [...shown.keys()]) clear(id);
+      for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
     },
   };

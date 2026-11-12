@@ -366,7 +366,8 @@ const WAVE_DATA = {
   captain_strike: data => isCaptainBlow(data),
   // A rebuild carries the rebuilder's skills (Master shipwright: 60% instead of 40%).
   wall_rebuild: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'wallId'], ['skills']) && WAVE_ITEM.test(String(data.wallId)) && isSkills(data.skills),
-  island_changed: data => hasKeys(data, ['spot']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot),
+  island_changed: data => hasKeysWith(data, ['spot'], ['demolished']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot)
+    && (!Object.hasOwn(data, 'demolished') || isDemolishedNote(data.demolished)),
   game_hello: data => hasKeys(data, ['who']) && typeof data.who === 'string' && WAVE_BY.test(data.who),
   game_state: data => hasKeys(data, ['who', 'started', 'paused', 'first']) && typeof data.who === 'string' && WAVE_BY.test(data.who)
     && typeof data.started === 'boolean' && typeof data.paused === 'boolean' && typeof data.first === 'boolean',
@@ -378,6 +379,14 @@ const WAVE_DATA = {
     && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord),
 };
 const NO_WAVE = ['island_changed', 'game_hello', 'game_state'];
+// A tear-down's note on island_changed (GAME-V3.md §4.2): who did it, what came down and who got how many
+// coins back (at most 6: a building has 5 levels, plus the host). Only a toast reads it; coins are the server's.
+function isDemolishedNote(note) {
+  return isRecord(note) && hasKeysWith(note, ['kind', 'level', 'refunds'], ['who']) && typeof note.kind === 'string' && WAVE_ITEM.test(note.kind)
+    && Number.isInteger(note.level) && note.level >= 1 && note.level <= 5 && (!Object.hasOwn(note, 'who') || (typeof note.who === 'string' && WAVE_BY.test(note.who)))
+    && Array.isArray(note.refunds) && note.refunds.length <= 6 && note.refunds.every(item => isRecord(item) && hasKeys(item, ['id', 'coins'])
+      && typeof item.id === 'string' && WAVE_BY.test(item.id) && Number.isSafeInteger(item.coins) && item.coins >= 0 && item.coins <= 1000000);
+}
 export function readWaveMessage(event, payload) {
   if (!WAVE_EVENTS.includes(event) || !isRecord(payload) || payload.v !== PROTOCOL_VERSION) return null;
   if (!isPlayerId(payload.id) || !isSequence(payload.seq)) return null;

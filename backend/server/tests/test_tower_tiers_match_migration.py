@@ -58,10 +58,13 @@ def test_the_upgrade_functions_change_only_the_length_of_the_price_list():
 
 
 def test_the_migration_is_the_last_word_on_the_upgrade_functions():
-    later = [
-        path.name
+    # 20261112080000_demolish.sql replaces island_upgrade() once more, with one addition only (its
+    # payment row); test_demolish_matches_migration.py checks that against this file.
+    later = {
+        path.name: re.findall(r"function public\.(island_upgrade|pp_upgrade)\(", path.read_text())
         for path in sorted(MIGRATIONS.glob("*.sql"))
         if path.name > TIERS.name
-        and re.search(r"function public\.(island_upgrade|pp_upgrade)\(", path.read_text())
-    ]
-    assert later == []
+    }
+    assert {name: found for name, found in later.items() if found} == {
+        "20261112080000_demolish.sql": ["island_upgrade"] * 4
+    }

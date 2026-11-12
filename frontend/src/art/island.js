@@ -303,26 +303,30 @@ function bell(c, {w, h}) {
   part(c, rect(cx - 8.4, g - 18.4, 16.8, 2.6, 1.2), '#e09a2a', {width: 1, shade: false});
   part(c, ellipse(cx, g - 15, 1.6), '#6b4a14', {width: .8, shade: false});
 }
-// "You can build here": a glowing gold ring on the ground (48 x 24) and a floating badge (20 x 24).
-function buildRing(c, {w, h}) {
-  c.save(); c.fillStyle = radial(c, w / 2, h / 2, w / 2, [[0, '#ffe8a033'], [.7, '#ffd36a55'], [1, '#ffd36a00']]); c.fill(ellipse(w / 2, h / 2, w / 2 - .5, h / 2 - .5)); c.restore();
-  c.save(); c.setLineDash([3.2, 2.2]); c.lineDashOffset = 0; stroke(c, ellipse(w / 2, h / 2, w / 2 - 4, h / 2 - 3.2), '#fff4c8', 2); c.restore();
-  stroke(c, ellipse(w / 2, h / 2, w / 2 - 7, h / 2 - 5.4), '#f2c14e', 1.2, .8);
+// "You can build here" (owner, 12 Nov: the old pin with white blocks looked odd): a warm gold ring lying on
+// the ground (48 x 24) and, floating above it, a round gold badge with a bold cream "+" (24 x 24), both with
+// the bold ink edge and two-tone shading of the rest of the island. One badge for every kind of spot: the
+// prompt and the card say what goes there. The ring pulses (world.js), so it draws its own outline.
+const PLUS_GOLD = '#f6a93b', PLUS_GOLD_DARK = '#d27a22', PLUS_CREAM = '#fff6e0';
+function groundRing(c, {w, h}, {band, light, glow, dash = null}) {
+  const cx = w / 2, cy = h / 2, outer = [w / 2 - 2, h / 2 - 2], inner = [w / 2 - 8.5, h / 2 - 5.6];
+  c.save(); c.fillStyle = radial(c, cx, cy, w / 2, [[0, glow], [1, '#00000000']]); c.fill(ellipse(cx, cy, outer[0], outer[1])); c.restore();
+  const ring = new Path2D(); ring.addPath(ellipse(cx, cy, outer[0], outer[1])); ring.addPath(ellipse(cx, cy, inner[0], inner[1]));
+  c.save(); c.fillStyle = band; c.fill(ring, 'evenodd');
+  // The lit upper rim: the same band nudged up, a lighter tone, clipped to the band.
+  c.clip(ring, 'evenodd'); c.translate(0, -1.4); c.fillStyle = light; c.fill(ring, 'evenodd'); c.restore();
+  c.save(); if (dash) c.setLineDash(dash);
+  stroke(c, ellipse(cx, cy, outer[0], outer[1]), INK, 1.5); stroke(c, ellipse(cx, cy, inner[0], inner[1]), INK, 1.2); c.restore();
 }
-const GLYPH = {
-  wall: c => { for (const [x, y] of [[5, 9], [11, 9], [8, 13.5]]) part(c, rect(x - 2.6, y - 2, 5.2, 4, .8), '#fff6dc', {line: false, shade: false}); },
-  tower: c => { part(c, rect(4.4, 8, 10, 3.4, 1.6), '#fff6dc', {line: false, shade: false}); part(c, ellipse(6.4, 13, 2.2), '#fff6dc', {line: false, shade: false}); part(c, ellipse(12.4, 13, 2.2), '#fff6dc', {line: false, shade: false}); },
-  watchtower: c => { part(c, poly([[5, 9], [10, 4.5], [15, 9]], .6), '#fff6dc', {line: false, shade: false}); part(c, rect(6.2, 9, 7.6, 6.4, .8), '#fff6dc', {line: false, shade: false}); },
-  house: c => { part(c, poly([[4.6, 10], [10, 5], [15.4, 10]], .6), '#fff6dc', {line: false, shade: false}); part(c, rect(6, 10, 8, 5.6, .8), '#fff6dc', {line: false, shade: false}); },
-};
-GLYPH.cannon = GLYPH.tower;
-function badge(kind) {
-  return (c, {w}) => {
-    part(c, poly([[w / 2 - 3, 18], [w / 2, 22.4], [w / 2 + 3, 18]], .8), '#c98a2a', {width: 1.1, shade: false});
-    part(c, ellipse(w / 2, 10.2, 8.4), '#2c7f8c', {depth: 1.6, width: 1.3, gloss: ellipse(w / 2 - 3, 6.4, 3, 1.4), light: '#4fb0bc'});
-    stroke(c, ellipse(w / 2, 10.2, 7), '#f2c14e', 1.2);
-    GLYPH[kind]?.(c);
-  };
+function buildRing(c, size) { groundRing(c, size, {band: '#d9902e', light: '#ffd36a', glow: '#ffe8a055'}); }
+function plusBadge(c, {w}) {
+  const cx = w / 2, cy = 12;
+  part(c, ellipse(cx, cy, 10.6), PLUS_CREAM, {width: 1.6, depth: 1.2, shade: '#e9cf9a'});
+  part(c, ellipse(cx, cy, 8.2), PLUS_GOLD, {depth: 2, width: 1.1, shade: PLUS_GOLD_DARK, gloss: ellipse(cx - 3.2, cy - 4, 2.8, 1.4), light: '#ffd889'});
+  // A bold "+": stroke both bars, then fill them over the inner half, so the crossing has no seam.
+  const bars = [rect(cx - 5.6, cy - 1.8, 11.2, 3.6, 1.5), rect(cx - 1.8, cy - 5.6, 3.6, 11.2, 1.5)];
+  c.save(); c.lineWidth = 1.6; c.lineJoin = 'round'; c.strokeStyle = INK; for (const bar of bars) c.stroke(bar); c.restore();
+  c.save(); c.fillStyle = PLUS_CREAM; for (const bar of bars) c.fill(bar); c.restore();
 }
 function levelPip(c, {w, h}) {
   const cx = w / 2, cy = h / 2, star = [];
@@ -365,8 +369,11 @@ export function islandFrames() {
     'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip], 'fx-level-pip-gold': [16, 16, 8, tierPip],
     'island-bell': [24, 40, 0, bell], 'build-ring': [48, 24, 0, buildRing],
   };
-  for (const kind of ['wall', 'tower', 'cannon', 'watchtower', 'house']) frames[`build-badge-${kind}`] = [20, 24, 0, badge(kind)];
+  frames['build-badge'] = [24, 24, 0, plusBadge];
+  // The old per-kind names stay (every kind shows the same "+" now).
+  for (const kind of ['wall', 'tower', 'cannon', 'watchtower', 'house']) frames[`build-badge-${kind}`] = [24, 24, 0, plusBadge];
   return frames;
 }
-// The ring and the badges glow on their own: no ink silhouette around them.
-export const NO_OUTLINE = new Set(['build-ring', 'build-spot-glow']);
+export {groundRing};
+// The rings glow on their own and draw their own ink edge: no silhouette around them.
+export const NO_OUTLINE = new Set(['build-ring', 'build-ring-locked', 'build-spot-glow']);

@@ -71,7 +71,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     body.append(reason, line('island-soon', model.soon), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
   }
 
-  // handlers: {build(spotId, kind), upgrade(spotId), hire()}
+  // handlers: {build(spotId, kind), upgrade(spotId), hire(), specialise(spotId, spec), demolish(spotId)}
   function buildCard(model, handlers) {
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
     open('build', model.title, body => {
@@ -129,7 +129,37 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         const hire = button('Hire crew', () => on.hire(), true); hire.classList.add('island-hire'); hire.dataset.focus = 'hire';
         body.append(hire); focusable ??= hire;
       }
+      // GAME-V3.md §4.2: Tear down, secondary and red-outlined, never the focus the card opens with.
+      if (model.demolish && on.demolish) {
+        const tear = button(model.demolish.label, () => on.demolish(model.spotId), true); tear.classList.add('island-teardown');
+        tear.dataset.focus = 'demolish'; tear.disabled = model.demolish.disabled;
+        body.append(tear);
+        if (model.demolish.reason) {
+          const why = line('island-teardown-why', model.demolish.reason); why.id = `island-teardown-why-${model.spotId}`;
+          tear.setAttribute('aria-describedby', why.id); body.append(why);
+        }
+      }
       return focusable;
+    });
+  }
+  // GAME-V3.md §4.2: "Tear down this Cannon (level 3)?" with who gets what back. handlers: {confirm(), keep()}.
+  // "Keep it" takes the focus; Escape closes the card and keeps the building.
+  function demolishCard(model, handlers = {}) {
+    open('demolish', model.title, body => {
+      body.append(line('island-purpose island-demolish-question', model.question));
+      if (model.lines.length) {
+        const list = node('ul', 'island-refunds'); list.setAttribute('aria-label', 'Coins back');
+        for (const text of model.lines) list.append(node('li', 'island-refund', text));
+        body.append(list);
+      }
+      body.append(line('island-demolish-note', model.note), line('island-demolish-after', model.after));
+      const row = node('div', 'island-demolish-actions');
+      const keep = button(model.keep, () => handlers.keep?.(), true); keep.dataset.focus = 'keep';
+      const go = button(model.button, () => handlers.confirm?.()); go.dataset.focus = 'confirm'; go.disabled = model.disabled;
+      go.classList.add('island-teardown-confirm');
+      row.append(keep, go);
+      body.append(row, line('island-message', model.message, 'alert'));
+      return keep;
     });
   }
   // --- the campaign's buildings (GAME-V3.md §4, §5) ---
@@ -412,7 +442,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     });
   }
   return {
-    buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, close, copyLink,
+    buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, demolishCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
