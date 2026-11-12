@@ -26,7 +26,7 @@ describe('island codes', () => {
   });
   it('remembers a visit link for the tab only', () => {
     const storage = memory();
-    expect(visitUrl('K7Q2M')).toBe('https://the-great-plot-twist.vercel.app/?visit=ISLE-K7Q2M');
+    expect(visitUrl('K7Q2M')).toBe('https://the-great-plot-twist.vercel.app/?game=ISLE-K7Q2M');
     expect(rememberVisit('?visit=isle-fr3nd', storage)).toBe('FR3ND');
     expect(storage.map.get(VISIT_KEY)).toBe('FR3ND');
     expect(readVisit(storage)).toBe('FR3ND');

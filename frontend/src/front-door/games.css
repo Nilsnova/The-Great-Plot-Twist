@@ -1,0 +1,24 @@
+/* The games card after Play (docs/GAME-V3.md §2): Continue, Create a game, Join a game. Kit panel and tokens. */
+.games-card.kit-modal{width:min(520px,calc(100vw - 32px))}
+.games-card-body{display:grid;gap:16px}
+.games-card-body p{margin:0}
+.games-section{display:grid;gap:8px;padding:12px 14px;background:var(--u-card);border:2px solid #3d6a6b;box-shadow:0 3px var(--u-deep)}
+.games-heading{margin:0;font:700 16px/1.3 var(--u-font);letter-spacing:1.5px;text-transform:uppercase;color:var(--u-gold)}
+.games-line{color:var(--u-ink);font:17px/1.4 var(--u-font)}
+.games-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(240px,30vh);overflow:auto}
+.games-pick{display:grid;gap:2px;width:100%;text-align:left;padding:10px 14px;min-height:56px;font:16px/1.35 var(--u-font);color:var(--u-ink);background:var(--u-raise,#24484d);border:2px solid var(--u-brass);box-shadow:inset 0 -3px #0c272c,0 3px var(--u-deep);cursor:pointer}
+.games-pick:hover:not(:disabled){filter:brightness(1.12)}
+.games-pick:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
+.games-pick:disabled{cursor:default;opacity:.6}
+.games-pick-title{font:700 17px/1.3 var(--u-font);color:var(--u-ink)}
+.games-pick-line{color:var(--u-ink);opacity:.85;font-size:16px}
+.games-create .kit-button{justify-self:start;min-width:200px;min-height:52px;font-size:19px}
+.games-label{display:grid;gap:4px;font:600 16px/1.3 var(--u-font);color:var(--u-ink)}
+.games-label>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.games-join-row{display:flex;gap:8px;align-items:stretch}
+.games-card .games-code{flex:1;min-height:48px;font:700 20px/1.2 var(--u-font);letter-spacing:1px;text-transform:uppercase}
+.games-card .games-code::placeholder{color:var(--u-mute);opacity:.75}
+.games-join-row .kit-button{flex:none;min-width:110px}
+.games-status{color:var(--u-gold);font-weight:600}
+.games-status[hidden]{display:none}
+@media(max-width:520px){.games-create .kit-button{justify-self:stretch}.games-join-row{flex-direction:column}}

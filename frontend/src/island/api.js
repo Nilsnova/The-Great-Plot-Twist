@@ -19,6 +19,12 @@
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
 //   await api.pointBuild({spot, kind}) / api.pointUpgrade({spot})   // POST /api/pirate-point/build|upgrade
 //   await api.joinInvite('ISLE-K7Q2M');               // POST /api/island/invite/join (§6)
+// The games of GAME-V3 §2 (a game is an island; its code is the game's code):
+//   await api.createGame();                           // POST /api/games          your own game
+//   await api.joinGame('ISLE-K7Q2M' | 'K7Q2M');       // POST /api/games/join     member for good
+//   await api.games();                                // GET  /api/games          Continue
+//   await api.lobby('ISLE-K7Q2M');                    // GET  /api/games/{code}   host and members
+//   await api.leaveGame('ISLE-K7Q2M');                // POST /api/games/leave
 //
 // Spot ids: answers are read through spots.js's one mapping table (localSpotId), so a backend that
 // says tower_s1 for cannon_1 works unchanged; requests send back the id the server last used.
@@ -43,6 +49,7 @@ export const PATHS = Object.freeze({
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
   skill: '/api/island/skill', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
+  games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
 export const MESSAGES = Object.freeze({
@@ -50,6 +57,7 @@ export const MESSAGES = Object.freeze({
   unreadable: 'The answer could not be read. Try again.',
   unknown: 'Something went wrong. Try again.',
   badCode: 'Island codes look like ISLE-K7Q2M. Check the code and try again.',
+  badGameCode: 'Game codes look like ISLE-K7Q2M or K7Q2M. Check the code and try again.',
   badWave: 'There is no such wave.',
   badCrew: 'Choose a gunner, a carpenter or a lookout.',
   badSkill: 'There is no such skill.',
@@ -79,6 +87,17 @@ export const hasSpots = data => !!data && Array.isArray(data.spots) && data.spot
 export function isInvite(data) {
   return !!data && data.admitted === true && !!data.island && isText(data.island.code) && typeof data.island.ownerName === 'string';
 }
+// A game (GAME-V3 §2): {code, hostName, role: host | member, waveBest, members, maxMembers}.
+export function isGame(game) {
+  return !!game && isText(game.code) && typeof game.hostName === 'string' && (game.role === 'host' || game.role === 'member')
+    && isCount(game.waveBest) && isCount(game.members) && (game.maxMembers === undefined || isCount(game.maxMembers));
+}
+export const isCreated = data => !!data && isGame(data.game) && typeof data.created === 'boolean';
+export const isJoined = data => !!data && data.admitted === true && isGame(data.game);
+export const isGames = data => !!data && Array.isArray(data.games) && data.games.every(isGame);
+const isMember = member => !!member && isText(member.id) && typeof member.name === 'string' && (member.role === 'host' || member.role === 'member');
+export const isLobby = data => !!data && isGame(data.game) && Array.isArray(data.members) && data.members.length > 0 && data.members.every(isMember);
+export const isLeft = data => !!data && typeof data.left === 'boolean';
 export function isWave(data) {
   return !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
@@ -191,6 +210,25 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       const symbols = islandCode(code);
       if (!symbols) return refuse(422, 'validation_error', MESSAGES.badCode);
       return write(`invite:${symbols}`, actionUid => transport.post(PATHS.inviteJoin, {code: displayIslandCode(symbols), actionUid}), isInvite);
+    },
+    createGame() {
+      return write('game:create', actionUid => transport.post(PATHS.games, {actionUid}), isCreated);
+    },
+    joinGame(code) {
+      const symbols = islandCode(code);
+      if (!symbols) return refuse(422, 'validation_error', MESSAGES.badGameCode);
+      return write(`game:join:${symbols}`, actionUid => transport.post(PATHS.gameJoin, {code: displayIslandCode(symbols), actionUid}), isJoined);
+    },
+    games: () => ask(() => transport.get(PATHS.games), isGames),
+    lobby(code) {
+      const symbols = islandCode(code);
+      if (!symbols) return refuse(422, 'validation_error', MESSAGES.badGameCode);
+      return ask(() => transport.get(PATHS.game(displayIslandCode(symbols))), isLobby);
+    },
+    leaveGame(code) {
+      const symbols = islandCode(code);
+      if (!symbols) return refuse(422, 'validation_error', MESSAGES.badGameCode);
+      return ask(() => transport.post(PATHS.gameLeave, {code: displayIslandCode(symbols)}), isLeft);
     },
     visit(code) {
       const symbols = islandCode(code);

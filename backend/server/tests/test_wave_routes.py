@@ -158,6 +158,7 @@ def test_the_bell_on_a_friends_island_by_its_code(where):
         "wave_best": 2,
         "flags": 2,
     }
+    world.database.games.add(FRIEND_ID, PLAYER_ID)  # a member of the friend's game
 
     assert world.start(where=where).status_code == 200
 

@@ -53,7 +53,7 @@ async function play(){
   if(!disposed&&token===playRequest&&shell.mode==='playing')await game?.begin(false,{kind:'world',place:'saltreach_harbor',demo:true});
 }
 // Play and the intro replay load their routes only when chosen.
-const routes=()=>import('./shell/routes.js'),flow={adapter,container,focus,loadGame,play,
+const routes=()=>import('./shell/routes.js'),flow={adapter,container,focus,loadGame,play,openAccount,
   claim(){const token=++playRequest;return ()=>!disposed&&token===playRequest&&shell.mode==='playing';},
   get door(){return door;},set door(value){door=value;}};
 function onEscape(){

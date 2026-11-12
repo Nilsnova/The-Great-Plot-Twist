@@ -12,7 +12,7 @@ import {counterValue} from './coin-counter.js';
 import {addMenuExtras, addMenuStatus} from '../shell/menu-extras.js';
 import {createQuestStrip} from './quest-strip.js';
 import {QUEST_EVENTS, PLACE_ARRIVED} from './quest-events.js';
-import {FIRST_QUESTS, applyQuestEvent, createIdleHint, firstQuestView, readFirstQuests, writeFirstQuests} from './first-quests.js';
+import {applyQuestEvent, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
 import {coinsSpoken, formatCoins} from '../lib/coins.js';
 import './hud.css';
@@ -74,14 +74,17 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   // ---- quests: the first 3 minutes unless a part of the game (the class demo) shows its own ----
   let first = readFirstQuests(storage);
   const idle = createIdleHint();
-  const draw = () => strip.render(override ?? firstQuestView(first));
+  // actions.travel() says whether the sea chart is there (docs/GAME-V3.md §2 "one island": no, by default).
+  const travel = () => { try { return actions.travel ? actions.travel() !== false : false; } catch { return false; } };
+  const quests = () => questsFor(travel());
+  const draw = () => strip.render(override ?? firstQuestView(first, quests()));
   function progress(event) {
-    const result = applyQuestEvent(first, event);
+    const result = applyQuestEvent(first, event, quests());
     if (!result.changed || disposed) return;
     first = result.state;writeFirstQuests(storage, first);idle.progress();
     if (override) return;
     draw();
-    toast({text: first.done >= FIRST_QUESTS.length ? 'All goals done!' : `Goal done: ${result.completed.label}`, tone: 'success'});
+    toast({text: first.done >= quests().length ? 'All goals done!' : `Goal done: ${result.completed.label}`, tone: 'success'});
   }
   const stops = Object.values(QUEST_EVENTS).map(type => on(type, progress));
   // The world's own arrival event counts as place_arrived too.
@@ -92,7 +95,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   const clock = () => { const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60); return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; };
   stops.push(addMenuStatus(() => `${places[place]?.name ?? ''} · ${weatherLabel(getWeather())} · ${clock()}`));
   stops.push(addMenuExtras(() => [
-    actions.chart && {label: 'Sea chart', onSelect: () => actions.chart()},
+    actions.chart && (!actions.travel || travel()) && {label: 'Sea chart', onSelect: () => actions.chart()},
     actions.controls && {label: 'Controls', onSelect: () => actions.controls()},
     actions.tutorial && {label: 'How to play', onSelect: () => actions.tutorial()},
   ].filter(Boolean)));
@@ -133,7 +136,9 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     get coins() { return coins; },
     // A part of the game with its own goals (the class demo) passes its view; null gives the strip back.
     setQuests(view) { override = view ?? null; draw(); },
-    get quests() { return {...first, view: override ?? firstQuestView(first)}; },
+    get quests() { return {...first, view: override ?? firstQuestView(first, quests())}; },
+    // The goals again (the island game decided on one island or travel after the first Play).
+    refreshQuests() { draw(); },
     togglePanel() {}, toggleControls() {},
     closeQuickPanels() { return strip.closeHint(); },
     start() {

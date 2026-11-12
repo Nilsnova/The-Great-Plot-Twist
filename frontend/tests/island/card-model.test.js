@@ -123,10 +123,10 @@ describe('bell, invite and toasts', () => {
     expect(bellModel({wave: {wave: 2}, visitor: true, ownerName: 'Captain Gull'})).toMatchObject({action: 'join', button: 'Join the defense', line: "Wave 2 is under way on Captain Gull's island."});
     expect(bellModel({wave: {wave: 1}, joined: true, countdown: 7})).toMatchObject({action: 'none', disabled: true, line: 'Wave 1 arrives in 7 s.'});
   });
-  it('invites with ISLE-code and a visit link, for up to 3 friends', () => {
-    expect(inviteModel('K7Q2M')).toMatchObject({title: 'Play with a friend', lead: 'Send this link to up to 3 friends', code: 'ISLE-K7Q2M',
-      url: 'https://the-great-plot-twist.vercel.app/?visit=ISLE-K7Q2M', line: 'They tap Join, and you defend your island together.'});
-    expect(captainsModel(['Captain Brine', 'Captain Brine', '', 'Captain Tern'])).toMatchObject({names: ['Captain Brine', 'Captain Tern'], line: '2 of 3 friends here.'});
+  it('invites with ISLE-code and a game link, for up to 9 friends (10 players)', () => {
+    expect(inviteModel('K7Q2M')).toMatchObject({title: 'Play with a friend', lead: 'Send this link to up to 9 friends', code: 'ISLE-K7Q2M',
+      url: 'https://the-great-plot-twist.vercel.app/?game=ISLE-K7Q2M', line: 'They tap Join, and you defend your island together.'});
+    expect(captainsModel(['Captain Brine', 'Captain Brine', '', 'Captain Tern'])).toMatchObject({names: ['Captain Brine', 'Captain Tern'], line: '2 of 9 friends here.'});
     expect(inviteModel(null)).toMatchObject({code: 'Loading…', url: ''});
     expect(inviteModel(null, undefined, 'signin')).toMatchObject({code: 'Not signed in', url: ''});
     expect(inviteModel(null, undefined, 'signin').line).toContain('Sign in with GitHub');

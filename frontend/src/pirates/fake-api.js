@@ -19,7 +19,15 @@
 //   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
 //   await api.pointBuild({spot, kind, actionUid}) / api.pointUpgrade({spot, actionUid})
-//   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6)
+//   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6, an alias of joinGame)
+// The games of GAME-V3.md §2 (a game is an island; at most 10 players; members build, upgrade and ring there):
+//   await api.createGame();                      // POST /api/games
+//   await api.joinGame({code, actionUid});       // POST /api/games/join           (409 game_full)
+//   await api.games();                           // GET  /api/games                (Continue, newest first)
+//   await api.lobby(code);                       // GET  /api/games/{code}         (403 not_member)
+//   await api.leaveGame({code});                 // POST /api/games/leave          (409 host_cannot_leave)
+// In a fresh world your captain ("me") is already a member of the friends' games (ISLE-FR3ND), so Continue
+// shows two games; another captain joins first, as on the server.
 // Waves (§1, §4): numbers to 100, every 5th a boss wave (`boss: true`, loot × 2), houses pay by level, and the
 // next bell carries on after a win and restarts at best − 2 (at least 1) after a loss (`nextWave`).
 // Spot ids: the island's tower spots are cannon_1…cannon_7; tower_s1…tower_s7 are accepted as the same spots.
@@ -111,11 +119,16 @@ export function lootFor(wave, houses, piratePoint = false) {
 const iso = ms => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace('.000Z', 'Z');
 
 export const DEFAULT_FRIEND = Object.freeze({ code: 'K7Q2M', ownerName: 'Captain Wren', waveBest: 2, built: Object.freeze(['wall_1', 'cannon_1', 'cannon_2']) });
+// GAME-V3.md §2: the host plus up to 9 friends (the server's game_join cap).
+export const MAX_MEMBERS = 10;
+const GAME_FULL = `This game has ${MAX_MEMBERS} players already.`;
 
 /** Shared state, so several fake players (two tabs in one test) can meet on one island. */
 export function createFakeWorld({ seed = 7, neighbours = true, friends = [DEFAULT_FRIEND] } = {}) {
   const world = { random: createRandom(seed), islands: new Map(), players: new Map(), waves: new Map(),
-    pointBest: 0, pointFlags: 0, nextWave: 1,
+    pointBest: 0, pointFlags: 0, nextWave: 1, clock: 0,
+    // The games (island_members): code -> player -> {role, joined, opened, left}.
+    members: new Map(),
     point: { built: new Set(), levels: new Map(), kinds: new Map() } };
   // Friends' islands to visit by code, with a few things built.
   if (neighbours) friends.forEach((friend, index) => {
@@ -124,6 +137,9 @@ export function createFakeWorld({ seed = 7, neighbours = true, friends = [DEFAUL
       flags: friend.waveBest ?? 0, built: new Set(friend.built ?? []), levels: new Map((friend.built ?? []).map(id => [id, 1])), kinds: new Map(),
       crew: { gunner: 0, carpenter: 0, lookout: 0 }, captain: 1, nextWave: (friend.waveBest ?? 0) + 1 });
     world.players.set(owner, { coins: 40, ownerName: friend.ownerName, actions: new Map(), code: friend.code });
+    // The friend hosts the game, and your captain ("me") is in it already.
+    world.members.set(friend.code, new Map([[owner, { role: 'host', joined: 0, opened: 0, left: null }],
+      ['me', { role: 'member', joined: 0, opened: 0, left: null }]]));
   });
   return world;
 }
@@ -147,6 +163,34 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return player;
   };
   const spots = island => ISLAND_RULES.spots.map(id => spotView(island, id));
+  // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
+  const membersOf = code => {
+    if (!(world.members instanceof Map)) world.members = new Map();
+    let rows = world.members.get(code);
+    if (!(rows instanceof Map)) world.members.set(code, rows = new Map());
+    return rows;
+  };
+  const stamp = () => { world.clock = (world.clock ?? 0) + 1; return world.clock; };
+  const activeOf = island => 1 + [...membersOf(island.code)].filter(([id, row]) => id !== island.owner && !row.left).length;
+  const isMember = (island, id = playerId) => island.owner === id || (!!membersOf(island.code).get(id) && !membersOf(island.code).get(id).left);
+  const mustBeMember = island => { if (!isMember(island)) refuse(403, 'not_member', 'Join this game first: open its link or type its code.'); };
+  const nameOf = id => world.players.get(id)?.ownerName ?? world.islands.get(world.players.get(id)?.code ?? '')?.ownerName ?? 'A captain';
+  const gameView = (island, role) => ({ code: `ISLE-${island.code}`, hostName: island.ownerName, role, waveBest: island.waveBest,
+    members: activeOf(island), maxMembers: MAX_MEMBERS });
+  function enterGame(island) {
+    const rows = membersOf(island.code), row = rows.get(playerId), at = stamp();
+    if (island.owner === playerId) { rows.set(playerId, { role: 'host', joined: row?.joined ?? at, opened: at, left: null }); return 'host'; }
+    if (row && !row.left) { row.opened = at; return 'member'; }
+    if (activeOf(island) >= MAX_MEMBERS) refuse(409, 'game_full', GAME_FULL);
+    rows.set(playerId, { role: 'member', joined: at, opened: at, left: null });
+    return 'member';
+  }
+  const gameByCode = (code, missing = 'no_such_game') => {
+    const found = readIslandCode(code ?? ''), island = found && world.islands.get(found);
+    if (!island) refuse(404, missing, missing === 'no_such_game' ? 'There is no game with that code. Check the code.'
+      : 'There is no island with that code. Ask your friend for the link again.');
+    return island;
+  };
   // The answer's unlocks (the backend's shape); the checks below read them back through readUnlocks.
   const unlocksOf = island => unlocksAt(unlocking ? Math.max(island.waveBest, island.owner === playerId ? me().pointBest ?? 0 : 0) : 99);
   const allowed = island => readUnlocks({ unlocks: unlocksOf(island) });
@@ -173,6 +217,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const visited = code => {
     const found = readIslandCode(code ?? ''), island = found && world.islands.get(found);
     if (!island) refuse(404, 'no_such_island', 'There is no island with that code.');
+    if (island.owner !== playerId) mustBeMember(island); // GAME-V3.md §2: members build and upgrade there
     return island;
   };
   const visitedView = island => ({ code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island), coins: me().coins });
@@ -210,7 +255,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (where === 'own') { const code = me().code; return { key: code, island: world.islands.get(code) }; }
     const code = readIslandCode(where), island = code && world.islands.get(code);
     if (!island) refuse(404, 'no_such_island', 'There is no island with that code.');
-    return { key: code, island };
+    return { key: code, island, member: isMember(island) };
   };
   const nowMs = () => { const value = now(); return value instanceof Date ? value.getTime() : Number(value); };
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
@@ -292,11 +337,49 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async pointUpgrade(body = {}) { upgradeOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
     piratePointBuild(body) { return api.pointBuild(body); },
     piratePointUpgrade(body) { return api.pointUpgrade(body); },
+    // The friend invite (§6) is an alias of joinGame (GAME-V3.md §2); only its 404 code differs.
     async inviteJoin({ code, actionUid } = {}) {
       if (typeof code !== 'string' || !uid(actionUid)) invalid('Send the island code and an action id.');
-      const found = readIslandCode(code), island = found && world.islands.get(found);
-      if (!island) refuse(404, 'no_such_island', 'There is no island with that code. Ask your friend for the link again.');
-      return { admitted: true, island: { code: `ISLE-${island.code}`, ownerName: island.ownerName } };
+      return api.joinGame({ code, actionUid }, 'no_such_island');
+    },
+    async createGame() {
+      const created = !world.players.get(playerId)?.code, island = world.islands.get(me().code);
+      enterGame(island);
+      return { game: gameView(island, 'host'), created };
+    },
+    async joinGame({ code, actionUid } = {}, missing = 'no_such_game') {
+      if (typeof code !== 'string' || !uid(actionUid)) invalid('Send the game code and an action id.');
+      const island = gameByCode(code, missing);
+      me();
+      const role = enterGame(island);
+      return { admitted: true, game: gameView(island, role), island: { code: `ISLE-${island.code}`, ownerName: island.ownerName } };
+    },
+    async games() {
+      me();
+      // Your own island counts once it was opened as a game or played on (the server lists it once
+      // island_open made it, which the fake does at once for every captain).
+      const played = island => membersOf(island.code).has(playerId) || island.waveBest > 0 || island.built.size > 0;
+      const mine = [...world.islands.values()].filter(island => isMember(island) && (island.owner !== playerId || played(island)))
+        .map(island => ({ island, opened: membersOf(island.code).get(playerId)?.opened ?? 0 }))
+        .sort((a, b) => b.opened - a.opened);
+      return { games: mine.slice(0, 20).map(({ island }) => gameView(island, island.owner === playerId ? 'host' : 'member')) };
+    },
+    async lobby(code) {
+      const island = gameByCode(code);
+      mustBeMember(island);
+      const rows = [...membersOf(island.code)].filter(([id, row]) => id !== island.owner && !row.left).sort((a, b) => a[1].joined - b[1].joined);
+      const members = [{ id: island.owner, name: island.ownerName, role: 'host', you: island.owner === playerId },
+        ...rows.map(([id]) => ({ id, name: nameOf(id), role: 'member', you: id === playerId }))];
+      return { game: gameView(island, island.owner === playerId ? 'host' : 'member'), members };
+    },
+    async leaveGame({ code } = {}) {
+      if (typeof code !== 'string') invalid('Send the game code.');
+      const island = gameByCode(code);
+      if (island.owner === playerId) refuse(409, 'host_cannot_leave', 'You host this game, so you cannot leave it.');
+      const row = membersOf(island.code).get(playerId);
+      if (!row || row.left) return { left: false };
+      row.left = stamp();
+      return { left: true };
     },
 
     async visit(code) {
@@ -312,6 +395,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const player = me(), repeat = player.actions.get(`start:${actionUid}`);
       if (repeat) return shape(world.waves.get(repeat));
       const place = placeOf(where);
+      if (place.island && place.member === false) mustBeMember(place.island); // only members ring the bell there
       for (const run of world.waves.values()) {
         if (run.place === place.key && !run.finishedAt && !running(run)) { run.finishedAt = nowMs(); run.expired = true; }
         if (run.place === place.key && running(run)) refuse(409, 'wave_running', 'A wave is already under way on this island.');
@@ -401,6 +485,11 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
+        if (route === 'POST /api/games') return reply(200, await api.createGame(body));
+        if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
+        if (route === 'GET /api/games') return reply(200, await api.games());
+        if (route === 'POST /api/games/leave') return reply(200, await api.leaveGame(body));
+        if (method === 'GET' && pathname.startsWith('/api/games/')) return reply(200, await api.lobby(decodeURIComponent(pathname.slice(11))));
         if (route === 'GET /api/pirate-point') return reply(200, await api.piratePoint());
         if (route === 'POST /api/pirate-point/build') return reply(200, await api.pointBuild(body));
         if (route === 'POST /api/pirate-point/upgrade') return reply(200, await api.pointUpgrade(body));
@@ -433,9 +522,10 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
   '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
-  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'] });
+  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'],
+  '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'] });
 // Keys a body may also carry: `code` builds or upgrades on a friend's island.
-const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'] });
+const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();
@@ -527,6 +617,11 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
+      if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
+      if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));
+      if (method === 'GET' && pathname === '/api/games') return ok(await api.games());
+      if (method === 'POST' && pathname === '/api/games/leave') return ok(await api.leaveGame(body));
+      if (method === 'GET' && pathname.startsWith('/api/games/')) return ok(await api.lobby(decodeURIComponent(pathname.slice(11))));
       if (method === 'GET' && pathname === '/api/pirate-point') return ok(await api.piratePoint());
       if (method === 'POST' && pathname === '/api/pirate-point/build') return ok(await api.pointBuild(body));
       if (method === 'POST' && pathname === '/api/pirate-point/upgrade') return ok(await api.pointUpgrade(body));
@@ -564,7 +659,10 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       // Another captain rings the bell somewhere (a friend's island, so a visitor can join it).
       async startWaveAt(where) {
         const other = createFakeIslandApi({ world, playerId: `captain_${++others}`, ownerName: 'Another captain', now, weather });
-        try { return await other.startWave({ where, actionUid: `other-${others}-captain` }); } catch { return null; }
+        try {
+          if (where !== 'pirate_point') await other.joinGame({ code: where, actionUid: `other-${others}-join` });
+          return await other.startWave({ where, actionUid: `other-${others}-captain` });
+        } catch { return null; }
       },
       failNext(kind) {
         if (!Object.hasOwn(FAILURES, kind)) throw new TypeError(`failNext knows ${Object.keys(FAILURES).join(', ')}.`);

@@ -23,7 +23,8 @@ export function createHarbor({container, resetInput, focusGame, getWeather, open
     return pending;
   }
   async function show(name) { const loaded = await ready(); if (loaded && !disposed) loaded[name].open(); }
-  const stopMenu = menu(() => [{label: 'Harbor', onSelect: () => void show('overview')}]);
+  // travel: the Harbor leaves the Menu on the one island (docs/GAME-V3.md §2) until it is a building there.
+  const stopMenu = menu(() => [{label: 'Harbor', onSelect: () => void show('overview'), travel: true}]);
   return {
     openOverview: () => show('overview'), openWeather: () => show('weather'),
     get active() { return Boolean(cards?.overview.active || cards?.weather.active); },

@@ -81,3 +81,32 @@ export function joinedHarbor(storage = safeSession()) {
   try { const value = storage?.getItem(JOIN_KEY); return value === JOINED_WITHOUT_CODE || !!classCode(value ?? ''); } catch { return false; }
 }
 function safeSession() { try { return globalThis.sessionStorage ?? null; } catch { return null; } }
+
+// --- the games card (docs/GAME-V3.md §2): Continue, Create a game, Join a game ---
+// A game code: ISLE-K7Q2M, its 5 symbols, any case, with spaces or dashes ("isle k7q2m", "k7q-2m").
+const GAME_SYMBOLS = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/;
+export function readGameCode(value) {
+  if (typeof value !== 'string' || value.length > 32) return null;
+  let code = value.replace(/[\s-]/g, '').toUpperCase();
+  if (code.length === 9 && code.startsWith('ISLE')) code = code.slice(4);
+  return GAME_SYMBOLS.test(code) ? `ISLE-${code}` : null;
+}
+const players = count => `${count} ${count === 1 ? 'player' : 'players'}`;
+// One line of Continue: whose game, the wave reached and how many are in it.
+export function gameLine(game) {
+  const host = game?.role === 'host' ? 'Your game' : `${game?.hostName || 'A friend'}'s game`;
+  const wave = Number.isSafeInteger(game?.waveBest) && game.waveBest > 0 ? `wave ${game.waveBest}` : 'no wave yet';
+  return {title: host, line: `${game?.code ?? ''} · ${wave} · ${players(Math.max(1, game?.members ?? 1))}`};
+}
+// What the card says: games [{code, hostName, role, waveBest, members}] newest first (GET /api/games).
+export function gamesCopy({games = [], signedOut = false} = {}) {
+  const list = Array.isArray(games) ? games.filter(game => game && typeof game.code === 'string') : [];
+  const hosting = list.some(game => game.role === 'host');
+  return {
+    continue: list.length ? {title: 'Continue', games: list.map(game => ({...gameLine(game), code: game.code, raw: game}))} : null,
+    create: {title: 'Create a game', button: 'Create a game',
+      line: hosting ? 'Your island is your game, so Create opens it. Up to 10 players.' : 'Start on your own island. Up to 10 players can join.'},
+    join: {title: 'Join a game', label: 'Game code', button: 'Join',
+      line: signedOut ? 'Got a code from a friend? Type it here. You join as a guest.' : 'Got a code from a friend? Type it here.'},
+  };
+}

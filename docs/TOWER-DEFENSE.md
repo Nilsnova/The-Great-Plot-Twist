@@ -36,6 +36,8 @@ Shared spots `pp_wall_1`…`pp_wall_4`, `pp_tower_1`…`pp_tower_6` (cannon or m
 
 ## 6. Playing with a friend (no class code needed)
 
+> **v3 (GAME-V3.md §2):** the link is now `?game=ISLE-XXXXX` (`?visit=` still works), joining makes you a member of that game for good (at most 10 players), and only members build, upgrade and ring the bell there.
+
 Menu → **Play with a friend** shows a link `…/?visit=ISLE-XXXXX` and a QR. The friend opens the link → one tap **Join** → signs in as a guest (or GitHub) → the server admits a guest who presents a **valid island code** (like a class code) → they land on your island and you defend together. Everyone on an island can build and upgrade there with their own coins (co-op, changed 11 Nov by the owner): the buildings belong to that island, the payer's own unlocks count, and everyone earns their own loot from the waves they fight. Crew and the captain stay personal (your own island, your own captain).
 
 ## 7. API (backend B; the interface I uses a fake with the same shapes until merged)
@@ -54,7 +56,7 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 | `POST /api/island/weapon/equip` | `{weapon}` | the island (§15); `400 bad_weapon`, `409 not_owned`. Safe to repeat |
 | `GET /api/pirate-point` | — | `{spots: [{id, kind, level, built, cost, upgradeCost}], waveBest}` |
 | `POST /api/pirate-point/build` and `/upgrade` | `{spot, kind?, actionUid}` | the Pirate Point state; same refusals |
-| `POST /api/island/invite/join` | `{code: "ISLE-XXXXX", actionUid}` | admits an anonymous guest who presents a valid island code (same admission table as the class code) → `{admitted: true, island: {code, ownerName}}`; `404 no_such_island`, `429` |
+| `POST /api/island/invite/join` | `{code: "ISLE-XXXXX", actionUid}` | admits an anonymous guest who presents a valid island code (same admission table as the class code) → `{admitted: true, island: {code, ownerName}}`; `404 no_such_island`, `429`. v3: an alias of `POST /api/games/join` (also answers `game`, `409 game_full`, GAME-V3.md §2) |
 | `POST /api/waves/start` | as today | `wave` can now reach 100; answer adds `boss: true|false` |
 | `POST /api/waves/finish` | as today | loot per section 4 |
 
@@ -95,9 +97,9 @@ API: `GET /api/island` adds `captain: {level, nextPrice}` and `unlocks: {…}` (
 
 Menu › **Captain and skills** has three tabs: Captain (the musket level, as above), Skills (§14) and Weapons (§15). A click anywhere on the water fires the equipped weapon that way (free aim); the musket button shows the weapon's name.
 
-## 11. Up to four players together
+## 11. Up to ten players together
 
-The same invite link works for several friends at once (up to 4 players on one island; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
+The same invite link works for several friends at once (up to 10 players on one island since GAME-V3.md §2, before that 4; the presence room shows them all with name tags). Every participant's captain fights and earns loot.
 
 ## 12. Boarding and close combat (added 12 Nov, owner: "make the pirates leave the boats once boarding so we enter close quarter combat; also more wall building (to surround, and then repair once broken)")
 
@@ -127,6 +129,7 @@ A boarder wades ashore, fans out (±30°) and walks to the **island's heart**: t
 
 - **Menu › How to play** opens a paged card (kit panel) with 10 short pages: your island and coins · build · ring the bell · your captain fights · pirates come ashore · crew and captain skills · more as you win · play with a friend · the Harbor and Pirate Point · controls. Back / Next, page dots, arrow keys, Escape, a swipe on phones; each page shows existing pixel sprites.
 - **First Play:** after the voiced lore intro, the first 4 pages (island, build, bell, captain) show once, with **Skip** and **Start playing**; then the goal card and the island arrival as before. The device remembers it (`localStorage` `plot_twist_tutorial_v1`), so returning players never see it again. A player who came with a class code skips it (the class demo keeps its own goals and must start fast).
+- **One island only** (GAME-V3.md §2, flag `one_island`): page 9 becomes **The Harbor** (a building on the island that opens after wave 4; no Pirate Point) and the controls drop M › Sea chart (`ONE_ISLAND_PAGES`).
 - **All page text** lives in one module, `frontend/src/tutorial/pages.js`; change the words there only. When a feature changes (boarders, captain skills), update its page in the same commit.
 - Browser checks that start from Play skip the pages with the card's **Skip** button (`.tutorial-card[open]`).
 

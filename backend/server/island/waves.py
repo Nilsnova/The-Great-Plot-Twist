@@ -29,7 +29,7 @@ from uuid import UUID
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import store
+from server.island import games, store
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import is_boss, weather_for
@@ -66,9 +66,14 @@ class WaveFinish:
 
 
 async def find_place(
-    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, where: str
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    where: str,
+    members_only: bool = False,
 ) -> tuple[str, str | None]:
-    """("island", owner id) or ("pirate_point", None) for "own", an island code or Pirate Point."""
+    """("island", owner id) or ("pirate_point", None) for "own", an island code or Pirate Point.
+    With members_only (the bell), somebody else's island needs a member of its game (403)."""
     if where == PIRATE_POINT:
         return PIRATE_POINT, None
     if where == OWN:
@@ -78,6 +83,8 @@ async def find_place(
     island = await store.find_island(admin, code) if code is not None else None
     if island is None:
         raise no_such_island()
+    if members_only:
+        await games.require_member(admin, island, player_id)
     return "island", island.owner
 
 
@@ -99,7 +106,7 @@ async def start(
     make_seed: Callable[[int], int] = secrets.randbelow,
 ) -> WaveStart:
     """Ring the bell. A repeated actionUid answers with the same wave (and its weather)."""
-    place, owner = await find_place(admin, catalogue, player_id, where)
+    place, owner = await find_place(admin, catalogue, player_id, where, members_only=True)
     timing = catalogue.waves
     arguments = {
         "p_player_id": player_id,

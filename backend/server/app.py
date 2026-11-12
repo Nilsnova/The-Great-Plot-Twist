@@ -53,6 +53,7 @@ from server.routes import (
     duels,
     festival,
     finale,
+    games,
     health,
     host_case,
     host_console,
@@ -88,6 +89,7 @@ ISLAND_BUILDS_PER_MINUTE = 30
 ISLAND_VISITS_PER_MINUTE = 30
 WAVE_CALLS_PER_MINUTE = 20
 WAVE_READS_PER_MINUTE = 30
+GAME_CALLS_PER_MINUTE = 30
 # Up-or-down market calls (routes/market_calls.py).
 MARKET_CALLS_PER_MINUTE = 20
 MARKET_CALL_READS_PER_MINUTE = 60
@@ -253,6 +255,10 @@ def create_app(
         clock=clock,
         message="Too many tries with an island code. Wait a few minutes, then try again.",
     )
+    # The games of GAME-V3 section 2 (routes/games.py): create, join, list, lobby, leave.
+    app.state.games_budget = PlayerBudget(
+        GAME_CALLS_PER_MINUTE, 60, clock=clock, message="Too many game requests. Wait a moment."
+    )
     app.state.wave_budget = PlayerBudget(
         WAVE_CALLS_PER_MINUTE, 60, clock=clock, message="Too many bells at once. Wait a moment."
     )
@@ -286,6 +292,7 @@ def create_app(
     app.include_router(crew_orders.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
+    app.include_router(games.router, prefix="/api")
     app.include_router(waves.router, prefix="/api")
     app.include_router(pirate_point.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")

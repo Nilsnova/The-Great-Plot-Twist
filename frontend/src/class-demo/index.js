@@ -103,7 +103,7 @@ export function createClassDemo(ctx) {
   const stopMenu = addMenuExtras(() => {
     const entries = [];
     if (isHostLike()) entries.push({label: 'Projector: Join the harbor (J)', onSelect: () => void toggleProjector()});
-    if (!joined) entries.push({label: 'Join the class harbor', onSelect: joinHarbor});
+    if (!joined) entries.push({label: 'Join the class harbor', onSelect: joinHarbor, travel: true});
     return entries;
   });
 

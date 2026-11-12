@@ -19,6 +19,8 @@
 //   captainSkills() this player's learnt skills (GET /api/island skills.known, TOWER-DEFENSE.md §14)
 //   captainWeapon() this player's equipped weapon (GET /api/island weapons.equipped, §15)
 //   startNextWave() the island lane: the start route again, for the break's "Next wave" (§1)
+//   holdBreak()     the game's room-wide Pause (GAME-V3.md §2): null, or {paused, line, label, canToggle}
+//   toggleHold()    the break card's Pause / Resume button
 // The island lane emits `wave_started_server` on the bus after its start/join route answered.
 import { createWaveController } from './controller.js';
 import { createPiratePoint } from './pirate-point.js';
@@ -46,7 +48,8 @@ export function mountPirates(ctx) {
     captainWeapon: ctx.captainWeapon ?? (() => 'musket') };
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
     room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
-    getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null });
+    getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
+    holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input, getDefenses: ctx.getPointDefenses,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify, beforeStart: ctx.beforePointWave ?? null }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };

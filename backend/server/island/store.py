@@ -236,6 +236,17 @@ async def open_island(
     make_code: Callable[[], str] = new_code,
 ) -> Island:
     """The player's island, made the first time with a new code (and the starting coins, once)."""
+    island, _ = await open_island_made(admin, player_id, starting_coins, make_code)
+    return island
+
+
+async def open_island_made(
+    admin: SupabaseAdmin,
+    player_id: str,
+    starting_coins: int,
+    make_code: Callable[[], str] = new_code,
+) -> tuple[Island, bool]:
+    """open_island() and whether the island was made just now (POST /api/games says so)."""
     for _ in range(CODE_TRIES):
         reply = await admin.call_function(
             "island_open",
@@ -246,7 +257,7 @@ async def open_island(
             raise player_not_set_up()
         if status != "code_taken":
             row = read_model(OpenRow, reply)
-            return Island(player_id, checked_code(row.code), row.waveBest, row.flags)
+            return Island(player_id, checked_code(row.code), row.waveBest, row.flags), row.created
     logger.error("No free island code after %s tries.", CODE_TRIES)
     raise ApiError(503, "island_unavailable", "Your island could not be opened. Try again soon.")
 

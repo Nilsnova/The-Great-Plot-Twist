@@ -24,7 +24,7 @@ describe('How to play pages',()=>{
     expect(Object.isFrozen(TUTORIAL_PAGES)).toBe(true);expect(TUTORIAL_PAGES.every(page=>Object.isFrozen(page)&&Object.isFrozen(page.text))).toBe(true);
     const all=TUTORIAL_PAGES.map(page=>[page.title,...page.text,...(page.keys??[]).flat()].join(' ')).join(' ');
     for(const fact of ['16 build spots','press E','level 3','Every 5th wave','Next wave','Press F','hold F','musket button','on foot','Marksman, Brawler or Shipwright',
-      'Menu › Captain','Menu › Play with a friend','Up to 4','after 5 minutes','three lamps','flagship','joystick','Sea chart','Zoom'])expect(all).toContain(fact);
+      'Menu › Captain','Create a game','Up to 10','after 5 minutes','three lamps','flagship','joystick','Sea chart','Zoom'])expect(all).toContain(fact);
     expect(TUTORIAL_TITLE).toBe('How to play');expect(TUTORIAL_KEY).toBe('plot_twist_tutorial_v1');
   });
   it('lists the controls as keys on the last page',()=>{
@@ -64,5 +64,18 @@ describe('How to play pages',()=>{
     expect(wantsFirstRun()).toBe(true);
     expect(wantsFirstRun({seen:true})).toBe(false);
     expect(wantsFirstRun({classHarbor:true})).toBe(false);
+  });
+});
+
+describe('one island only (GAME-V3.md §2)',()=>{
+  it('the Harbor page says it is a building that opens after wave 4, without Pirate Point or the sea chart',async()=>{
+    const {ONE_ISLAND_PAGES,tutorialPages}=await import('../src/tutorial/pages.js');
+    expect(tutorialPages()).toBe(ONE_ISLAND_PAGES);expect(tutorialPages(false)).toBe(TUTORIAL_PAGES);
+    expect(ONE_ISLAND_PAGES.map(page=>page.id)).toEqual(TUTORIAL_PAGES.map(page=>page.id));
+    const places=ONE_ISLAND_PAGES.find(page=>page.id==='places');
+    expect(places.title).toBe('The Harbor');expect(places.text.join(' ')).toContain('After wave 4');
+    const all=ONE_ISLAND_PAGES.map(page=>[page.title,...page.text,...(page.keys??[]).flat()].join(' ')).join(' ');
+    expect(all).not.toContain('Pirate Point');expect(all).not.toContain('Sea chart');
+    for(const page of ONE_ISLAND_PAGES){expect(Object.isFrozen(page)).toBe(true);for(const s of page.text)expect(s.length).toBeLessThanOrEqual(110);}
   });
 });

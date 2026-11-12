@@ -93,15 +93,15 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});
   expect(result.banner).toBe('Pirates in 10 s! Wave 6');
   expect(result.closedAfterRing).toBe(true);
-  expect(result.invite).toMatchObject({title: 'Play with a friend', lead: 'Send this link to up to 3 friends', copy: 'Copy link',
-    link: 'https://the-great-plot-twist.vercel.app/?visit=ISLE-K7Q2M', images: 0});
+  expect(result.invite).toMatchObject({title: 'Play with a friend', lead: 'Send this link to up to 9 friends', copy: 'Copy link',
+    link: 'https://the-great-plot-twist.vercel.app/?game=ISLE-K7Q2M', images: 0});
   expect(result.invite.line).toContain('They tap Join, and you defend your island together.');
   expect(result.invite.qr).toBeGreaterThan(100);
-  expect(result.label).toEqual({spot: 'Build a tower', built: 'Cannon · level 3', wall: 'Build a wall · 🪙 10', bell: 'Ring the harbor bell', cabin: 'Play with a friend', other: undefined});
+  expect(result.label).toEqual({spot: 'Build a tower', built: 'Cannon · level 3', wall: 'Build a wall · 🪙 10', bell: 'Ring the harbor bell', cabin: 'Players and invite', other: undefined});
   expect(result.room).toBe('isle_k7q2m');
   expect(result.seen).toEqual(['island_built', 'island_upgraded', 'island_built', 'island_upgraded', 'wave_started_server', 'island_invite_opened']);
   expect(result.captain[0]).toBe(1);
-  expect(result.entries).toEqual(['Play with a friend', 'Crew', 'Captain and skills']);
+  expect(result.entries).toEqual(['Players and invite', 'Crew', 'Captain and skills']);
 });
 
 it('the crew and captain panels: locked, hire, full, short of coins; a friend arriving gets a toast', async () => {
@@ -230,11 +230,15 @@ it("visits a friend's island by code: their buildings, building there with your 
     island.ui.close();
     const room = island.presencePlace('home_islet'), cabin = island.label('island_cabin');
     island.pick('island_cabin');
-    const noInvite = !document.querySelector('.island-card[open]');
+    // GAME-V3.md §2: on a friend's island the cabin opens the game's lobby (the players and the invite).
+    await new Promise(resolve => setTimeout(resolve, 40));
+    const noInvite = !!document.querySelector('.island-card-lobby[open]') && !document.querySelector('.island-card-invite[open]');
+    const lobbyRows = [...document.querySelectorAll('.island-lobby-name')].map(node => node.textContent);
+    island.ui.close();
     await island.sailHome();
     const home = {room: island.presencePlace('home_islet'), visitHidden: document.querySelector('.island-visit').hidden, code: island.island.code};
     island.dispose();
-    return {visit, built, wallCard, paid, room, cabin, noInvite, home};
+    return {visit, built, wallCard, paid, room, cabin, noInvite, lobbyRows, home};
   });
   expect(result.visit).toContain("Visiting Captain Gull's island · ISLE-FR3ND");
   expect(result.built).toEqual({owner: "You pay · it stays on Captain Gull's island", pips: 'Level 1 of 3', soon: 'Coming soon: Level 2 · after wave 2', hire: false});
@@ -242,6 +246,7 @@ it("visits a friend's island by code: their buildings, building there with your 
   expect(result.paid).toEqual({toast: "Wall built on Captain Gull's island! You have 🪙 90.", coins: 90, theirs: true, mine: false});
   expect(result.room).toBe('isle_fr3nd');
   expect(result.noInvite).toBe(true);
+  expect(result.lobbyRows[0]).toBe('Captain Gull');
   expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M'});
 });
 

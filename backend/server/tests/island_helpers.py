@@ -18,6 +18,10 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/island_learn_skill, island_weapon_equip
                                              paid_replies[name] (default: LEARNED, EQUIPPED)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave
+  * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
+                                             the games of GAME-V3 section 2 (FakeGames below:
+                                             the SQL rules of 20261112040000_game_rooms.sql,
+                                             the 10-member cap included)
 
 FakePlaceWeather stands in for the Keeper's Lock weather of a place (the bell-ringer's area).
 
@@ -167,6 +171,7 @@ class FakeIslandDatabase:
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
         self.point_best: list[dict] = []
+        self.games = FakeGames(self)
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -195,6 +200,11 @@ class FakeIslandDatabase:
             ),
             "GET /pirate_point_buildings": lambda _: httpx.Response(200, json=self.point_buildings),
             "GET /wave_runs": lambda _: httpx.Response(200, json=self.point_best),
+            "POST /rpc/game_join": self.games.join,
+            "POST /rpc/game_leave": self.games.leave,
+            "POST /rpc/game_list": self.games.list,
+            "POST /rpc/game_members": self.games.members,
+            "GET /island_members": self.games.read_membership,
         }
         for name in PAID_FUNCTIONS:
             handlers[f"POST /rpc/{name}"] = self.paid
@@ -255,6 +265,137 @@ class FakeIslandDatabase:
 
     def paths(self) -> list[str]:
         return [f"{r.method} {r.url.path.removeprefix('/rest/v1')}" for r in self.requests]
+
+
+class FakeGames:
+    """The games of 20261112040000_game_rooms.sql in memory, with the same rules: the host is the
+    island's owner and never leaves, at most p_max_members active members (the host counted once),
+    a repeat only stamps opened_at, a member who left joins again like a new one."""
+
+    def __init__(self, database: "FakeIslandDatabase") -> None:
+        self.database = database
+        # owner -> player -> {"role", "joined", "opened", "left"}; a counter stands in for time.
+        self.rows: dict[str, dict[str, dict]] = {}
+        self.no_profile: set[str] = set()
+        self.clock = 0
+
+    def now(self) -> int:
+        self.clock += 1
+        return self.clock
+
+    def island_exists(self, owner: str, caller: str) -> bool:
+        # The caller's own island is always there (island_open ran first, as in the server).
+        return owner == caller or any(
+            row["player_id"] == owner for row in self.database.islands.values()
+        )
+
+    def active(self, owner: str) -> int:
+        """Active members, the host counted once whether or not the host row exists."""
+        rows = self.rows.get(owner, {})
+        return 1 + sum(1 for who, row in rows.items() if who != owner and row["left"] is None)
+
+    def add(self, owner: str, player: str) -> None:
+        """A member row as if the player had joined (for the tests' starting state)."""
+        now = self.now()
+        role = "host" if owner == player else "member"
+        self.rows.setdefault(owner, {})[player] = {
+            "role": role, "joined": now, "opened": now, "left": None,
+        }  # fmt: skip
+
+    def join(self, request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        player, owner, most = body["p_player_id"], body["p_island_owner"], body["p_max_members"]
+        assert 2 <= most <= 50, "bad_game_join"
+        if not self.island_exists(owner, player):
+            return refused_game("no_such_game")
+        if player in self.no_profile:
+            return refused_game("player_not_set_up")
+        rows = self.rows.setdefault(owner, {})
+        before = rows.get(player)
+        now = self.now()
+        if player == owner:
+            if before is None:
+                rows[player] = {"role": "host", "joined": now, "opened": now, "left": None}
+            else:
+                before["opened"] = now
+            repeat = before is not None
+        elif before is not None and before["left"] is None:
+            before["opened"] = now
+            repeat = True
+        else:
+            members = self.active(owner)
+            if members >= most:
+                return refused_game("game_full", members)
+            rows[player] = {"role": "member", "joined": now, "opened": now, "left": None}
+            repeat = False
+        role = "host" if player == owner else "member"
+        reply = {"status": "joined", "role": role, "members": self.active(owner), "repeat": repeat}
+        return httpx.Response(200, json=reply)
+
+    def leave(self, request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        player, owner = body["p_player_id"], body["p_island_owner"]
+        if not self.island_exists(owner, player):
+            return refused_game("no_such_game")
+        if player == owner:
+            return refused_game("host_cannot_leave")
+        row = self.rows.get(owner, {}).get(player)
+        if row is None or row["left"] is not None:
+            return httpx.Response(200, json={"status": "left", "repeat": True})
+        row["left"] = self.now()
+        return httpx.Response(200, json={"status": "left", "repeat": False})
+
+    def islands(self) -> list[dict]:
+        return list(self.database.islands.values())
+
+    def list(self, request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        player, limit = body["p_player_id"], body["p_limit"]
+        games = []
+        for island in self.islands():
+            owner = island["player_id"]
+            row = self.rows.get(owner, {}).get(player)
+            if owner != player and (row is None or row["left"] is not None):
+                continue
+            games.append(
+                {
+                    "code": island["code"],
+                    "hostId": owner,
+                    "hostName": self.database.names[owner],
+                    "role": "host" if owner == player else "member",
+                    "waveBest": island["wave_best"],
+                    "members": self.active(owner),
+                    # The SQL sorts ISO times; a zero-padded counter sorts the same way.
+                    "openedAt": f"2026-11-12T00:00:{row['opened'] if row else 0:02d}Z",
+                }
+            )
+        games.sort(key=lambda game: game["openedAt"], reverse=True)
+        return httpx.Response(200, json=games[: max(1, min(limit, 50))])
+
+    def members(self, request: httpx.Request) -> httpx.Response:
+        owner = json.loads(request.content)["p_island_owner"]
+        names = self.database.names
+        listed = [{"id": owner, "name": names[owner], "role": "host"}]
+        rows = sorted(self.rows.get(owner, {}).items(), key=lambda item: item[1]["joined"])
+        listed += [
+            {"id": who, "name": names[who], "role": "member"}
+            for who, row in rows
+            if who != owner and row["left"] is None
+        ]
+        return httpx.Response(200, json=listed)
+
+    def read_membership(self, request: httpx.Request) -> httpx.Response:
+        params = request.url.params
+        assert params["left_at"] == "is.null"
+        owner = params["island_owner"].removeprefix("eq.")
+        player = params["player_id"].removeprefix("eq.")
+        row = self.rows.get(owner, {}).get(player)
+        found = row is not None and row["left"] is None
+        return httpx.Response(200, json=[{"player_id": player}] if found else [])
+
+
+def refused_game(reason: str, members: int = 0) -> httpx.Response:
+    return httpx.Response(200, json={"status": "refused", "reason": reason, "members": members})
 
 
 class FakePlaceWeather:

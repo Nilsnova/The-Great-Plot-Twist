@@ -76,6 +76,15 @@ try{
  report.reducedMotion=await page.evaluate(()=>({runningAnimations:document.getAnimations().filter(a=>a.playState==='running').map(a=>a.animationName??'unknown')}));
  report.isletPanel=await auditIsletPanel(page,{url:env.url,audit,capture:prefix+'-islet-short-375x400.png'});
  report.marketPanel=await auditMarketPanel(page,{url:env.url,audit,capture:prefix+'-market-short-375x400.png'});
+ // The games card and the lobby (docs/GAME-V3.md §2) with the fake islands: Play › Create a game › lobby.
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.setViewportSize({width:1280,height:900});
+ await page.goto(env.url+'/?islands=fake&fakeworld=a11y'+Date.now().toString(36));
+ await page.evaluate(()=>{for(const key of ['plot_twist_front_door_v1','plot_twist_tutorial_v1','plot_twist_island_arrival_v1'])localStorage.setItem(key,'1');});
+ await page.reload();await page.locator('#play').click();await page.locator('.games-card[open] .games-pick').first().waitFor({timeout:60000});
+ await audit('games-card','.games-card[open]');
+ await page.locator('.games-card[open]').getByRole('button',{name:'Create a game',exact:true}).click();
+ await page.locator('.island-card-lobby[open] .island-lobby-player').first().waitFor({timeout:60000});
+ await audit('lobby','.island-card-lobby[open]');
 }catch(error){report.errors.push(error.stack);}
 finally{
  report.browserErrors=env.errors;report.externalRequests=env.external;

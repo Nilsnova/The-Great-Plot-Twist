@@ -8,6 +8,9 @@ export const TUTORIAL_TITLE = 'How to play';
 
 const art = (file, w, h, scale) => Object.freeze({file, w, h, scale});
 
+const freezePage = page => Object.freeze({...page, text: Object.freeze(page.text), art: Object.freeze(page.art),
+  ...(page.keys ? {keys: Object.freeze(page.keys.map(pair => Object.freeze(pair)))} : {})});
+
 export const TUTORIAL_PAGES = Object.freeze([
   {id: 'island', title: 'Your island and coins',
     text: ['This island is yours to defend.', 'You start with 🪙 100 coins.', 'Win waves to earn more.'],
@@ -43,9 +46,9 @@ export const TUTORIAL_PAGES = Object.freeze([
       'Each new wave you win can unlock more: houses, mortars, a watchtower, crew and level 3.'],
     alt: 'A big mortar and a pirate flag won in battle',
     art: [art('island-mortar-l3.png', 48, 32, 2), art('pirate-flag-trophy.png', 32, 48, 2)]},
-  {id: 'friend', title: 'Play with a friend',
-    text: ['Open Menu › Play with a friend and send the link.',
-      'Up to 4 captains defend one island together, and everyone earns their own loot.'],
+  {id: 'friend', title: 'Play with friends',
+    text: ['Play › Create a game, then send its link or code. Friends choose Join a game.',
+      'Up to 10 captains defend one island together, and everyone earns their own loot.'],
     alt: 'A captain waves hello',
     art: [art('explorer.png', 24, 32, 3), art('emote-wave.png', 24, 24, 2)]},
   {id: 'places', title: 'The Harbor and Pirate Point',
@@ -58,8 +61,24 @@ export const TUTORIAL_PAGES = Object.freeze([
     keys: [['WASD or arrows', 'Walk'], ['E', 'Build, use, repair'], ['F', 'Fire your musket'], ['M', 'Sea chart'], ['Mouse wheel', 'Zoom']],
     alt: 'A brass compass',
     art: [art('compass.png', 32, 32, 3)]},
-].map(page => Object.freeze({...page, text: Object.freeze(page.text), art: Object.freeze(page.art),
-  ...(page.keys ? {keys: Object.freeze(page.keys.map(pair => Object.freeze(pair)))} : {})})));
+].map(freezePage));
+
+// One island only (docs/GAME-V3.md §2, the flag one_island, on by default): no sea chart and no Pirate
+// Point; the Harbor is a building on the island that opens after wave 4.
+const ONE_ISLAND = Object.freeze({
+  places: freezePage({id: 'places', title: 'The Harbor',
+    text: ['After wave 4 the Harbor opens as a building on your island.',
+      'Make market calls there, decided after 5 minutes. Its football board opens later.'],
+    alt: 'The market hall',
+    art: [art('market-hall.png', 144, 128, 1)]}),
+});
+export const ONE_ISLAND_PAGES = Object.freeze(TUTORIAL_PAGES.map(page => {
+  if (ONE_ISLAND[page.id]) return ONE_ISLAND[page.id];
+  if (page.id === 'controls') return freezePage({...page, keys: page.keys.filter(([key]) => key !== 'M')});
+  return page;
+}));
+// The pages for this game: the one-island pages while the flag is on (src/island/one-island.js).
+export const tutorialPages = (one = true) => (one ? ONE_ISLAND_PAGES : TUTORIAL_PAGES);
 
 // The pages a first Play shows: island, build, bell and captain.
 export const firstRunPages = (pages = TUTORIAL_PAGES) => pages.slice(0, FIRST_RUN_PAGES);

@@ -1,7 +1,7 @@
 // Lane U3: the first-3-minutes quest sequence, its storage, the 3-goal window and the idle hint.
 import {describe,expect,it} from 'vitest';
 import {QUEST_EVENTS,ISLAND_BUILT,WAVE_FINISHED,PLACE_ARRIVED,HARBOR_STAKE_PLACED,ISLAND_INVITE_OPENED,ISLAND_UPGRADED,CREW_HIRED} from '../../src/ui/quest-events.js';
-import {FIRST_QUESTS,FIRST_QUEST_KEY,IDLE_HINT_MS,applyQuestEvent,createIdleHint,firstQuestView,readFirstQuests,writeFirstQuests} from '../../src/ui/first-quests.js';
+import {FIRST_QUESTS,TRAVEL_QUESTS,questsFor,FIRST_QUEST_KEY,IDLE_HINT_MS,applyQuestEvent,createIdleHint,firstQuestView,readFirstQuests,writeFirstQuests} from '../../src/ui/first-quests.js';
 
 const memory=()=>{const map=new Map();return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),map};};
 const run=(events,state={done:0})=>events.reduce((current,event)=>applyQuestEvent(current,event).state,state);
@@ -17,16 +17,27 @@ describe('quest event names',()=>{
 
 describe('the first-3-minutes sequence',()=>{
   it('has the five goals of the pitch, then five tower-defense goals in the order they unlock',()=>{
-    expect(FIRST_QUESTS.map(quest=>quest.label)).toEqual(['Build a cannon','Ring the bell and win a wave','Sail to the Harbor','Place a 🪙 stake','Invite a friend',
+    // One island (GAME-V3.md §2, on by default): island goals where the travel list sails to the Harbor.
+    expect(FIRST_QUESTS.map(quest=>quest.label)).toEqual(['Build a cannon','Ring the bell and win a wave','Build a wall','Win wave 3','Invite a friend',
       'Upgrade a cannon','Build a mortar','Win wave 5','Hire a gunner','Win wave 10']);
-    expect(FIRST_QUESTS.every(quest=>quest.hint.length>20)).toBe(true);
+    expect(TRAVEL_QUESTS.map(quest=>quest.label)).toEqual(['Build a cannon','Ring the bell and win a wave','Sail to the Harbor','Place a 🪙 stake','Invite a friend',
+      'Upgrade a cannon','Build a mortar','Win wave 5','Hire a gunner','Win wave 10']);
+    expect(questsFor(true)).toBe(TRAVEL_QUESTS);expect(questsFor(false)).toBe(FIRST_QUESTS);
+    expect([...FIRST_QUESTS,...TRAVEL_QUESTS].every(quest=>quest.hint.length>20)).toBe(true);
+    expect(FIRST_QUESTS.some(quest=>/Harbor|Sea chart|Pirate Point/.test(quest.label+quest.hint))).toBe(false);
   });
   it('completes each goal only from its own event and payload, in order',()=>{
     const full=[{type:ISLAND_BUILT,kind:'cannon'},{type:WAVE_FINISHED,survived:true},{type:PLACE_ARRIVED,id:'saltreach_harbor'},{type:HARBOR_STAKE_PLACED},{type:ISLAND_INVITE_OPENED}];
     let state={done:0};const completed=[];
-    for(const event of full){const result=applyQuestEvent(state,event);expect(result.changed).toBe(true);completed.push(result.completed.id);state=result.state;}
+    for(const event of full){const result=applyQuestEvent(state,event,TRAVEL_QUESTS);expect(result.changed).toBe(true);completed.push(result.completed.id);state=result.state;}
     expect(completed).toEqual(['cannon','wave','harbor','stake','invite']);expect(state).toEqual({done:5});
     expect(applyQuestEvent(state,{type:ISLAND_INVITE_OPENED})).toMatchObject({changed:false,completed:null});
+    // The one island's goals 3 and 4: a wall, then wave 3.
+    const island=[{type:ISLAND_BUILT,kind:'cannon'},{type:WAVE_FINISHED,survived:true,wave:1},{type:ISLAND_BUILT,kind:'wall'},{type:WAVE_FINISHED,survived:true,wave:2},
+      {type:WAVE_FINISHED,survived:true,wave:3},{type:ISLAND_INVITE_OPENED}];
+    let own={done:0};const ids=[];
+    for(const event of island){const result=applyQuestEvent(own,event);if(result.changed)ids.push(result.completed.id);own=result.state;}
+    expect(ids).toEqual(['cannon','wave','wall','wave3','invite']);
   });
   it('goes on with the tower-defense goals after goal 5',()=>{
     const ignored=[{type:ISLAND_UPGRADED,kind:'wall'},{type:ISLAND_BUILT,kind:'cannon'}];

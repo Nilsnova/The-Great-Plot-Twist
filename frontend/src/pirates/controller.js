@@ -9,6 +9,9 @@
 // "Next wave" button and the "Auto next wave" switch (kept in localStorage); the button, or the end of the
 // break with the switch on, calls startNextWave() (the island's start route), whose wave_started_server
 // starts the next wave. A lost wave ends the run. The HUD keeps a running "Loot this run".
+// The game's Pause (GAME-V3.md §2): holdBreak() says whether the room paused the break ({paused, line, label,
+// canToggle} or null); while paused the break stays open, Auto next and "Next wave" wait, and the card shows
+// "Paused by <name>"; toggleHold() is the card's Pause / Resume button.
 // The captain (§10): click or tap a ship in range, or press F for the nearest, to fire your gun
 // (captainLevel(), captainSkills() and captainWeapon(): your own level, skills §14 and weapon §15, whose
 // numbers come from captain-stats.js), sent to the room like a cannon shot. A click anywhere else aims
@@ -124,7 +127,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id), onEvents = null,
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket',
   startNextWave = null, breakSeconds = BREAK_SECONDS,
-  loadAuto = readAuto, saveAuto = writeAuto } = {}) {
+  loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null } = {}) {
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
   let runLoot = 0, auto = !!loadAuto(), level = null, skills = null, weapon = null;
   const myLevel = () => { const value = Number(level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
@@ -191,6 +194,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     if (world.container) {
       Promise.resolve(createHud({ container: world.container, onAction: () => act(), onNext: () => next(), onAuto: value => setAuto(value),
+        onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
         onShoot: held => { shootHeld = held === true; if (held) shootPressed = true; },
         reducedMotion })).then(hud => {
         if (disposed || wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
@@ -301,9 +305,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   // The break after a won wave.
   function setAuto(value) { auto = value === true; saveAuto(auto); }
+  const held = () => { try { return holdBreak?.() ?? null; } catch { return null; } };
   function next() {
     const current = wave;
     if (!current?.pause || !current.pause.ready || current.pause.requested || !startNextWave) return false;
+    if (held()?.paused) return false; // the room paused the break: Resume first
     current.pause.requested = true;
     Promise.resolve().then(() => startNextWave({ wave: current.info.wave + 1, waveId: current.info.waveId })).then(answer => {
       if (wave !== current || answer?.ok !== false) return;
@@ -420,17 +426,21 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const countdownBar = current => ({ wave: current.info.wave, shipsLeft: current.state.total, islandHp: current.state.islandHp, maxIslandHp: current.state.maxIslandHp });
 
   function updatePause(current) {
-    const pause = current.pause, left = Math.max(0, Math.ceil((pause.until - now()) / 1000 - 1e-9));
+    const pause = current.pause, hold = held();
+    // Paused by the room: the break keeps its full length until Resume.
+    if (hold?.paused) pause.until = Math.max(pause.until, now() + breakSeconds * 1000);
+    const left = Math.max(0, Math.ceil((pause.until - now()) / 1000 - 1e-9));
     pause.ready = current.answer !== undefined || pause.failed === true;
-    if (left <= 0 && !pause.requested) {
+    if (left <= 0 && !pause.requested && !hold?.paused) {
       if (auto && pause.ready && !pause.note) next();
       // The break is over: ring the bell again for the next wave. With Auto next on, a refused try (note)
       // or a loot answer that never came must not keep the break (and the blocked input) forever.
       else if (!auto || pause.note || now() > pause.until + BREAK_GRACE_MS) { stop(); return; }
     }
     const loot = Number.isFinite(current.answer?.loot) ? ` · 🪙 +${current.answer.loot}` : '';
-    current.hud?.pause?.({ title: `Wave ${current.info.wave} won!`, line: pause.note ?? `${current.result.shipsSunk} ${current.result.shipsSunk === 1 ? 'ship' : 'ships'} sunk${loot}`,
-      seconds: left, auto, ready: pause.ready && !pause.requested });
+    current.hud?.pause?.({ title: `Wave ${current.info.wave} won!`, line: hold?.paused ? hold.line : pause.note ?? `${current.result.shipsSunk} ${current.result.shipsSunk === 1 ? 'ship' : 'ships'} sunk${loot}`,
+      seconds: hold?.paused ? 0 : left, auto, ready: pause.ready && !pause.requested && !hold?.paused, paused: !!hold?.paused,
+      hold: hold && toggleHold ? { label: hold.label, enabled: hold.canToggle === true } : null });
   }
 
   function end(current) {
