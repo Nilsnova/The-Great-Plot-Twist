@@ -40,9 +40,9 @@ export function createEventArt({ container, canvas: world = null, project, reduc
     const a = at(0, 0), b = at(1, 0);
     return a && b ? Math.max(1, Math.abs(b.x - a.x)) : 16;
   }
-  const hole = (x, y, r, soft = .35) => {
+  const hole = (x, y, r, soft = .35, clear = 1) => {
     const g = ctx.createRadialGradient(x, y, r * (1 - soft), x, y, r);
-    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    g.addColorStop(0, `rgba(0,0,0,${clear})`); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
   };
   // A wash over everything with soft holes where it is clear (destination-out).
@@ -50,16 +50,15 @@ export function createEventArt({ container, canvas: world = null, project, reduc
     const { w, h } = size();
     ctx.fillStyle = colour; ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'destination-out';
-    for (const [x, y, r, soft] of holes) hole(x, y, r, soft);
+    for (const [x, y, r, soft, clear] of holes) hole(x, y, r, soft, clear);
     ctx.globalCompositeOperation = 'source-over';
   }
 
   function drawFog(state, u) {
-    const sight = (state.towers ?? []).map(tower => { const p = at(tower.x, tower.z); return p ? [p.x, p.y, tower.range * u, .3] : null; }).filter(Boolean);
-    for (const tower of state.event.watchtowers ?? []) { const p = at(tower.x, tower.z); if (p) sight.push([p.x, p.y, state.event.clear * u, .45]); }
-    const heart = state.heart ? at(state.heart.x, state.heart.z) : null;
-    if (heart) sight.push([heart.x, heart.y, 12 * u, .5]);
-    wash('rgba(226,233,236,.74)', sight);
+    // Clear within each tower's sight (thinning towards its edge), most of all near the watchtower; a light mist stays.
+    const sight = (state.towers ?? []).map(tower => { const p = at(tower.x, tower.z); return p ? [p.x, p.y, tower.range * u, .55, .8] : null; }).filter(Boolean);
+    for (const tower of state.event.watchtowers ?? []) { const p = at(tower.x, tower.z); if (p) sight.push([p.x, p.y, state.event.clear * u, .4, .95]); }
+    wash('rgba(226,233,236,.86)', sight);
     // Drifting banks: soft white ellipses with a pale blue underside.
     const { w, h } = size(), n = low() ? 5 : 10;
     for (let i = 0; i < n; i++) {
@@ -101,18 +100,19 @@ export function createEventArt({ container, canvas: world = null, project, reduc
 
   function drawNight(state, u) {
     const lights = [];
-    for (const tower of state.towers ?? []) { const p = at(tower.x, tower.z); if (p) lights.push([p.x, p.y, Math.max(6, tower.range) * u, .45]); }
+    // A lamp's glow round every tower, the heart's light, fires and burning hulls; dusk stays everywhere else.
+    for (const tower of state.towers ?? []) { const p = at(tower.x, tower.z); if (p) lights.push([p.x, p.y, 7 * u, .6, .8]); }
     const heart = state.heart ? at(state.heart.x, state.heart.z) : null;
-    if (heart) lights.push([heart.x, heart.y, (state.event.heart ?? 10) * u, .5]);
-    for (const fire of state.fires ?? []) { const p = at(fire.x, fire.z); if (p) lights.push([p.x, p.y, (fire.radius + (state.event.fire ?? 4)) * u, .5]); }
-    for (const ship of state.ships) if (ship.kind === 'fireship' || ship.hp / ship.maxHp < .5) { const p = at(ship.x, ship.z); if (p) lights.push([p.x, p.y, 4 * u, .6]); }
-    wash('rgba(8,14,36,.80)', lights);
+    if (heart) lights.push([heart.x, heart.y, (state.event.heart ?? 10) * u, .55, .85]);
+    for (const fire of state.fires ?? []) { const p = at(fire.x, fire.z); if (p) lights.push([p.x, p.y, (fire.radius + (state.event.fire ?? 4)) * u, .5, .85]); }
+    for (const ship of state.ships) if (ship.kind === 'fireship' || ship.hp / ship.maxHp < .5) { const p = at(ship.x, ship.z); if (p) lights.push([p.x, p.y, 4 * u, .6, .85]); }
+    wash('rgba(8,14,36,.78)', lights);
     // Lanterns: every ship outside the light is a warm dot with a halo (its hull hides in the dark).
-    const lit = (x, y) => lights.some(([lx, ly, r]) => Math.hypot(x - lx, y - ly) < r * .8);
+    const lit = (x, y) => lights.some(([lx, ly, r]) => Math.hypot(x - lx, y - ly) < r * .7);
     for (const ship of state.ships) {
       if (ship.kind === 'tentacle') continue;
       const p = at(ship.x, ship.z, 1.6); if (!p || lit(p.x, p.y)) continue;
-      const pulse = still() ? 1 : .85 + Math.sin(clock * 5 + ship.x) * .15, r = 3.2 + u * .12;
+      const pulse = still() ? 1 : .85 + Math.sin(clock * 5 + ship.x) * .15, r = 4 + u * .25;
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 5);
       g.addColorStop(0, `rgba(255,214,120,${.55 * pulse})`); g.addColorStop(1, 'rgba(255,214,120,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, TAU); ctx.fill();
@@ -134,8 +134,8 @@ export function createEventArt({ container, canvas: world = null, project, reduc
   function drawFireShips(state, u) {
     for (const ship of state.ships) {
       if (ship.kind !== 'fireship') continue;
-      const p = at(ship.x, ship.z, .9); if (!p) continue;
-      const s = Math.max(6, u * .55);
+      const p = at(ship.x, ship.z, 1.2); if (!p) continue;
+      const s = Math.max(10, u * 1.1);
       if (!low()) for (let i = 0; i < 3; i++) {
         const rise = still() ? i * .3 : (clock * .7 + i / 3) % 1;
         ctx.fillStyle = `rgba(60,52,56,${.45 * (1 - rise)})`; ctx.beginPath(); ctx.arc(p.x + (i - 1) * s * .5, p.y - s * 1.8 - rise * s * 3, s * (.5 + rise * .7), 0, TAU); ctx.fill();
@@ -209,9 +209,9 @@ export function createEventArt({ container, canvas: world = null, project, reduc
     const base = at(ship.x, ship.z); if (!base) return;
     const born = rises.get(ship.id) ?? (rises.set(ship.id, clock), clock), grow = still() ? 1 : Math.min(1, (clock - born) / 1.2);
     const slam = smashes.find(item => item.id === ship.id && clock - item.at < .5), hit = slam ? 1 - (clock - slam.at) / .5 : 0;
-    const height = u * 5.2 * grow * (1 - hit * .55), sway = still() ? 0 : Math.sin(clock * 2.2 + ship.x) * u * .8;
+    const height = u * 8.5 * grow * (1 - hit * .55), sway = still() ? 0 : Math.sin(clock * 2.2 + ship.x) * u * 1.2;
     const lean = Math.sign(ship.x || 1) * -1, tipX = base.x + lean * u * (1.6 + hit * 2.4) + sway, tipY = base.y - height;
-    const w = Math.max(5, u * .9);
+    const w = Math.max(8, u * 1.4);
     const path = (width) => {
       ctx.beginPath(); ctx.moveTo(base.x - width, base.y);
       ctx.bezierCurveTo(base.x - width, base.y - height * .5, tipX - lean * u * 1.8 - width * .4, tipY + height * .2, tipX, tipY);

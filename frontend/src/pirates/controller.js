@@ -156,8 +156,9 @@ const defaultFinisherScene = async options => {
   scene.dispose = () => { water?.setSeaPace?.(1); dispose(); };
   return scene;
 };
+export const FINISHER_FRAME_Z = 7;     // units: the camera looks this far south of the boss, so it shows above the panel
 export const EVENT_BANNER_SECONDS = 8;   // the event's line shows this long under the wave bar, then its title alone
-export const EVENT_ICONS = Object.freeze({ fog_bank: '🌫', storm: '⛈', night_raid: '🌙', fire_ships: '🔥', pincer: '⚔', armada: '⛵',
+export const EVENT_ICONS = Object.freeze({ fog_bank: '☁', storm: '⛈', night_raid: '🌙', fire_ships: '🔥', pincer: '⚔', armada: '⛵',
   siege_barge: '💣', treasure_galleon: '💰', smugglers: '🛶', kraken: '🐙' });
 const readEasy = () => { try { return getPreferences()?.easyFinishers === true; } catch { return false; } };
 
@@ -559,7 +560,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const boss = finishing(current) ? current.state.finisher : null, standing = world.player?.position;
     if (world.camera?.userData && boss && current.shown && standing) {
       // The camera pushes in on the boss (the camera eases there; with reduced motion it simply goes).
-      world.camera.userData.battleZoom = 1; world.camera.userData.battleFocus = { x: boss.x - standing.x, z: boss.z - standing.z };
+      world.camera.userData.battleZoom = 1; world.camera.userData.battleFocus = { x: boss.x - standing.x, z: boss.z - standing.z + FINISHER_FRAME_Z };
     } else if (world.camera?.userData) {
       const data = world.camera.userData;
       if (current.shown && !current.finished) {

@@ -2,13 +2,13 @@
 // (fake API, offline). Events at 1280 × 800 (fog, storm, night, fire ships, kraken and the galleon at 390 × 844
 // too); each finisher kind mid-task, a success and a failure. An in-page player steers the finisher through
 // real key and pointer events (the needle to the zone, the sight to the weak spot, the arrow shown).
-//   node scripts/capture-waves.js [folder] [all|events|finishers]
+//   node scripts/capture-waves.js [folder] [all|events|finishers] [id,id: only these events]
 import {mkdir,writeFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
 
 const out=process.argv[2]??`/Users/nilslenke/Developer/fri6-integration/td-shots/v3-t17-waves-${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}`;
 await mkdir(out,{recursive:true});
-const mode=process.argv[3]??'all';
+const mode=process.argv[3]??'all', only=process.argv[4]?.split(',') ?? null;
 const env=await openWorldBrowser(),report={shots:[],notes:[]};
 const {page}=env;
 const wait=ms=>page.waitForTimeout(ms);
@@ -43,11 +43,11 @@ async function ring(){await page.evaluate(()=>window.__pirates.ringIsland());awa
 const LIGHT='spots=cannon_2:1,wall_1:2,wall_2:2,wall_3:2,wall_5:2';
 const EVENTS=[
   ['fog_bank',12,s=>s.time>6,true,[-2,10]],['storm',12,s=>s.time>6,true,[-2,10]],['night_raid',12,s=>s.time>9,true,[-2,10]],
-  ['fire_ships',12,s=>s.kinds.includes('fireship')&&s.time>7,true,[10,6]],['pincer',12,s=>s.time>3.5,false,[-2,10]],['armada',12,s=>s.kinds.filter(k=>k==='cutter').length>5,false,[-2,10]],
+  ['fire_ships',12,s=>s.kinds.includes('fireship')&&s.time>12,true,[10,6],LIGHT],['pincer',12,s=>s.time>7.5,false,[-2,10],LIGHT],['armada',12,s=>s.kinds.filter(k=>k==='cutter').length>5,false,[-2,10]],
   ['siege_barge',12,s=>(s.event?.shells?.length??0)>0,false,[10,6],LIGHT],['treasure_galleon',12,s=>s.kinds.includes('galleon')&&s.time>12,true,[0,14],LIGHT],
   ['smugglers',12,s=>s.kinds.includes('longboat'),false,[0,-12],LIGHT],['kraken',20,s=>s.kinds.includes('tentacle')&&s.time>13,true,[12,4]],
 ];
-for(const [id,wave,ready,phone,[x,z],island='full=1'] of mode==='finishers'?[]:EVENTS){
+for(const [id,wave,ready,phone,[x,z],island='full=1'] of mode==='finishers'?[]:EVENTS.filter(([id])=>!only||only.includes(id))){
   await frontDoor(`pirates=demo&${island}&wave=${wave}&event=${id}&hp=100000`);
   await stand(x,z);await ring();
   const s=await until(ready,90000);await quiet();await wait(400);

@@ -31,6 +31,8 @@
   border-radius:18px;box-shadow:0 0 0 5px var(--finisher-ink);animation:finisher-pop .45s cubic-bezier(.2,1.6,.4,1) both}
 .finisher-result-title{font:900 clamp(32px,6vw,56px)/1 var(--u-serif, Georgia, serif);color:#2f6fa8}
 .finisher[data-phase=failed] .finisher-result-title{color:#b23a2e}
+/* Wide screens: the panel docks at the right, so the boss in the middle stays in view. */
+@media(min-width:900px){.finisher-panel{left:auto;right:24px;transform:none;width:min(440px,calc(100vw - 48px))}}
 @media(pointer:fine){.finisher-hold,.finisher-left,.finisher-right,.finisher-fire,.finisher-pad{opacity:.92}}
 @media(max-width:760px){.finisher-panel{padding:8px 8px 10px}.finisher-task-title{font-size:17px}.finisher-how{font-size:13px}.finisher-caption{font-size:15px}.finisher-pad{grid-template-columns:repeat(4,1fr);width:100%}
   .finisher-card{padding:14px 20px}}
@@ -38,3 +40,5 @@
 @keyframes finisher-pop{from{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-8deg)}}
 @media(prefers-reduced-motion:reduce){.finisher *,.finisher-dim{animation:none!important;transition:none!important}}
 html[data-reduced-motion=true] .finisher *{animation:none!important;transition:none!important}
+/* The scene's own caption bar says the narrator's line (always): the narrator's card steps aside meanwhile. */
+html:has(.finisher:not([hidden])) .narrator-card{display:none}
