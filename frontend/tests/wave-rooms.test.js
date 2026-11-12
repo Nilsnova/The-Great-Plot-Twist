@@ -3,7 +3,7 @@
 import {describe, expect, it} from 'vitest';
 import {WAVE_EVENTS, chooseRoom, isWavePlace, readWaveMessage, shownLimit, waveTopic} from '../src/net/live-rules.js';
 import {openRoom} from '../src/net/wave-rooms.js';
-import {ROOM_EVENTS, toMessage} from '../src/pirates/sync.js';
+import {ROOM_EVENTS, readMessage, toMessage} from '../src/pirates/sync.js';
 import {attachWaveSender, sendWave} from '../src/net/live-extras.js';
 
 const ID = '0b5e2c4a-1f2d-4c3b-9a8e-7d6c5b4a3f21';
@@ -26,7 +26,7 @@ describe('the wave rooms', () => {
   });
   it('pass the wave events with exactly their fields and drop anything else', () => {
     expect(WAVE_EVENTS).toEqual(['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
-      'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive']);
+      'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive', 'finisher_input']);
     // The game's lobby and pause (GAME-V3.md §2): no wave, only these fields.
     expect(readWaveMessage('game_hello', msg({who: 'ben'}))).toEqual({id: ID, event: 'game_hello', seq: 4, data: {who: 'ben'}});
     expect(readWaveMessage('game_state', msg({who: 'ben', started: true, paused: false, first: true}))).not.toBe(null);
@@ -70,12 +70,25 @@ describe('the wave rooms', () => {
       ['captain_revive', {...revive, z: 'near'}],
     ]) expect(readWaveMessage(event, msg(data)), JSON.stringify(data)).toBe(null);
   });
+  it('pass a boss finisher\'s samples (v3 waves) with exactly their fields', () => {
+    const input = {by: 'p-abc', seq: 8, t: 20, waveId: 'w1', from: 16, marks: [-1, 50, 100, 0, 3]};
+    expect(readWaveMessage('finisher_input', msg(input))).toEqual({id: ID, event: 'finisher_input', seq: 4, data: input});
+    expect(readWaveMessage('finisher_input', msg({...input, easy: true}))).not.toBe(null);
+    for (const data of [{...input, from: -1}, {...input, from: 3001}, {...input, from: 1.5}, {...input, marks: []}, {...input, marks: Array(25).fill(1)},
+      {...input, marks: [101]}, {...input, marks: [-2]}, {...input, marks: [1.5]}, {...input, marks: 'x'}, {...input, easy: false}, {...input, score: 9},
+      {...input, waveId: undefined}]) expect(readWaveMessage('finisher_input', msg(data)), JSON.stringify(data)).toBe(null);
+    // sync.js: the sender plays only for themselves, and the same checks.
+    expect(readMessage('finisher_input', {...input}, 'w1')).toEqual({by: 'p-abc', seq: 8, tick: 400, input: {type: 'finisher_input', by: 'p-abc', from: 16, marks: [-1, 50, 100, 0, 3]}});
+    expect(readMessage('finisher_input', {...input, marks: [200]}, 'w1')).toBe(null);
+    expect(toMessage({type: 'finisher_input', from: 0, marks: []}, {by: 'p-abc', seq: 1, tick: 1, waveId: 'w1'})).toBe(null);
+  });
   it('pass every input the wave controller sends, exactly as sync.js writes it (the live room must not drop one)', () => {
     const inputs = [{type: 'fire', cannonId: 'cannon_2', targetId: 'ship_1'}, {type: 'repair', wallId: 'wall_1'}, {type: 'lamps_lit'},
       {type: 'captain_shot', by: 'p-abc', targetId: 'ship_4', level: 3, x: 12.5, z: -3.25},
       {type: 'captain_strike', by: 'p-abc', targetId: 'boarder_4', level: 3, x: 2.5, z: 3.25}, {type: 'rebuild', wallId: 'wall_9'},
       {type: 'captain_move', by: 'p-abc', x: 4.5, z: -2.25, colour: 3}, {type: 'captain_move', by: 'p-abc', x: 4.5, z: -2.25, away: true},
-      {type: 'captain_revive', by: 'p-abc', targetId: 'p-ben', x: 1, z: 2}];
+      {type: 'captain_revive', by: 'p-abc', targetId: 'p-ben', x: 1, z: 2},
+      {type: 'finisher_input', by: 'p-abc', from: 16, marks: Array(24).fill(100)}, {type: 'finisher_input', by: 'p-abc', from: 40, marks: [-1, 2], easy: true}];
     for (const input of inputs) {
       const message = toMessage(input, {by: 'p-abc', seq: 2, tick: 104, waveId: 'fake-wave-3'});
       expect(Object.values(ROOM_EVENTS)).toContain(message.type);

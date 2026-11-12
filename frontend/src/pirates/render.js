@@ -229,6 +229,15 @@ export const SHIP_VARIANTS = Object.freeze({
   ironclad: Object.freeze({ frames: 'brig', tint: Object.freeze({ r: .6, g: .67, b: .8 }), scale: 1.1 }),
   dreadnought: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: .56, g: .5, b: .62 }), scale: 1.25 }),
   redtide: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: 1, g: .42, b: .4 }), scale: 1.5 }),
+  // v3 waves (wave-events.js): the event ships. Fire ships are charred hulls (their flames: wave-events-art.js),
+  // the armada's cutters small teal sloops, the barge a broad grey hull, the galleon a gold warship, the
+  // smugglers' longboats tiny dark boats; the kraken's tentacles are drawn by wave-events-art.js alone.
+  fireship: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .5, g: .36, b: .3 }), scale: 1 }),
+  cutter: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .62, g: .92, b: .9 }), scale: .72 }),
+  barge: Object.freeze({ frames: 'brig', tint: Object.freeze({ r: .66, g: .66, b: .62 }), scale: 1.3 }),
+  galleon: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: 1, g: .86, b: .45 }), scale: 1.1 }),
+  longboat: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .55, g: .5, b: .44 }), scale: .6 }),
+  tentacle: Object.freeze({ frames: 'sloop', hidden: true, scale: 1 }),
 });
 export const BRUTE_LOOK = Object.freeze({ tint: Object.freeze({ r: 1, g: .7, b: .58 }), scale: 1.3 });
 
@@ -314,6 +323,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
 
   function onEvent(event) {
     const x = event.x, y = drawnY(event.z ?? 0);
+    // v3 waves: the siege barge's shells fly like a mortar's; a fire ship bursts like a fire bomb.
+    if (event.type === 'barge_fired') { onEvent({ ...event, type: 'mortar_fired', towerId: event.shipId }); return; }
+    if (event.type === 'barge_impact') { onEvent({ ...event, type: 'mortar_impact' }); return; }
+    if (event.type === 'fireship_burst') { onEvent({ ...event, type: 'captain_blast' }); return; }
     switch (event.type) {
       case 'ship_spawned': shipMeta(event.shipId, event.kind, event.x, event.toX); break;
       case 'cannon_fired': {
@@ -343,7 +356,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       case 'ship_sunk': {
         const meta = ships.get(event.shipId) ?? shipMeta(event.shipId, event.kind, event.x);
-        sinkers.add(item => Object.assign(item, { kind: event.kind, x: event.x, z: event.z, facing: meta.facing, at: clock }));
+        if (!SHIP_VARIANTS[event.kind]?.hidden) sinkers.add(item => Object.assign(item, { kind: SHIP_VARIANTS[event.kind]?.frames ?? event.kind, x: event.x, z: event.z, facing: meta.facing, at: clock })); // v3 waves: a variant sinks as its own hull
         wrecks.add(item => Object.assign(item, { x: event.x, z: event.z, facing: meta.facing, at: clock + SINK_SECONDS * .6, big: event.kind !== 'sloop' }));
         ships.delete(event.shipId);
         splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: true }));
@@ -486,6 +499,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
 
   function drawShip(ship, meta) {
     const variant = SHIP_VARIANTS[ship.kind] ?? null, kind = variant?.frames ?? ship.kind, k = variant?.scale ?? 1;
+    if (variant?.hidden) return; // v3 waves: drawn by wave-events-art.js
     const base = SHIP_SIZE[kind] ?? SHIP_SIZE.sloop, size = { w: base.w * k, h: base.h * k }, frame = frameOf(kind, meta.phase), drawn = rect[frame];
     if (!drawn) return;
     const r = k === 1 ? drawn : { ...drawn, w: drawn.w * k, h: drawn.h * k, anchor: drawn.anchor * k };

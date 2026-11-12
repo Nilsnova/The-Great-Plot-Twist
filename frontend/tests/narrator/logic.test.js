@@ -7,10 +7,10 @@ import {indexLines, selectLines, parseTrigger, ruleFor, startTriggers, finishTri
 const memoryStorage = () => { const map = new Map(); return {getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, String(value)), map}; };
 
 describe('the lines file', () => {
-  it('holds 50 to 70 short narrator lines with unique ids and known triggers', () => {
+  it('holds 50 to 90 short narrator lines with unique ids and known triggers', () => {
     const lines = data.lines;
     expect(lines.length).toBeGreaterThanOrEqual(50);
-    expect(lines.length).toBeLessThanOrEqual(70);
+    expect(lines.length).toBeLessThanOrEqual(90); // 57 lines, plus 22 for the wave events and the boss finishers (v3 waves)
     expect(new Set(lines.map(line => line.id)).size).toBe(lines.length);
     for (const line of lines) {
       expect(line.id).toMatch(/^[a-z0-9_]{1,48}$/);
@@ -29,6 +29,11 @@ describe('the lines file', () => {
       ...[10, 20, 30, 40, 50, 60, 70, 80, 90].map(wave => `wave_every_ten:${wave}`),
       ...[25, 50, 75].map(wave => `wave_milestone:${wave}`)];
     for (const trigger of needed) expect(index.get(trigger)?.length ?? 0, trigger).toBeGreaterThan(0);
+    // v3 waves: every wave event's first time, and each finisher kind's start, success and failure.
+    for (const id of ['fog_bank', 'storm', 'night_raid', 'fire_ships', 'pincer', 'armada', 'siege_barge', 'treasure_galleon', 'smugglers', 'kraken'])
+      expect(index.get(`wave_event:${id}`)?.length, id).toBe(1);
+    for (const kind of ['haul', 'cannon', 'duel', 'redtide']) for (const phase of ['start', 'won', 'failed'])
+      expect(index.get(`finisher_${phase}:${kind}`)?.length, `${phase} ${kind}`).toBe(1);
     expect(index.get('wave_won').length).toBeGreaterThanOrEqual(3);
     expect(index.get('wave_lost').length).toBeGreaterThanOrEqual(3);
     // One line for each thing the table opens: captain and houses after wave 1, level 2 and the mortar after 2 ...

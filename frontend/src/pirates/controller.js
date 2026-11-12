@@ -45,6 +45,10 @@ import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
 import { INPUT_LEAD_TICKS, ROOM_EVENTS, TICK_SECONDS, createInputSchedule, readMessage, toMessage } from './sync.js';
 import { actionAt, boarderAt, inputFor, promptText, shipAt, tapInput } from './interact.js';
+// v3 waves (GAME-V3.md §4.2, §4.3): the wave's event (its banner, art and narrator line) and the boss finisher.
+import { EVENT_TEXT, eventFor } from './wave-events.js';
+import { createFinisherRecorder } from './finisher/input.js';
+import { getPreferences } from '../settings/preferences.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -142,6 +146,22 @@ const defaultRenderer = async options => {
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
+// v3 waves: the event's drawing and the finisher's scene load with their first wave; the finisher slows the sea.
+const defaultEventArt = async options => (typeof document === 'undefined' ? null : (await import('./wave-events-art.js')).createEventArt(options));
+const defaultFinisherScene = async options => {
+  if (typeof document === 'undefined') return null; // no page (a headless test): the sim alone
+  const [module, water] = await Promise.all([import('./finisher/scene.js'), import('../world/water.js').catch(() => null)]);
+  const scene = module.createFinisherScene(options);
+  if (!options.reducedMotion?.()) water?.setSeaPace?.(.25);
+  const dispose = scene.dispose;
+  scene.dispose = () => { water?.setSeaPace?.(1); dispose(); };
+  return scene;
+};
+export const FINISHER_FRAME_Z = 7;     // units: the camera looks this far south of the boss, so it shows above the panel
+export const EVENT_BANNER_SECONDS = 8;   // the event's line shows this long under the wave bar, then its title alone
+export const EVENT_ICONS = Object.freeze({ fog_bank: '☁', storm: '⛈', night_raid: '🌙', fire_ships: '🔥', pincer: '⚔', armada: '⛵',
+  siege_barge: '💣', treasure_galleon: '💰', smugglers: '🛶', kraken: '🐙' });
+const readEasy = () => { try { return getPreferences()?.easyFinishers === true; } catch { return false; } };
 
 export function createWaveController({ bus, world = {}, getDefenses = () => [], finishWave = async () => null, room = null,
   sound = null, reducedMotion = () => false, quality = () => 'high', playerId = `p-${Math.random().toString(36).slice(2, 10)}`,
@@ -151,7 +171,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id), onEvents = null,
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
-  loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null } = {}) {
+  loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
+  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
@@ -207,15 +228,20 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (wave) stop();
     const defenses = getDefenses() ?? [];
     const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
+    // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
+    // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
+    const event = info.flagship ? null : eventFor(info.wave, info.seed);
     const sim = createWave({ seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
-      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), ...simOptions });
+      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, gapMs: waveGapMs, ...simOptions });
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
       // Captain health: the last position sent, your fall (pin: where you lie on this screen), a revive you hold.
-      moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false };
+      moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false,
+      // v3 waves: the event's id and drawing, the finisher's scene and this player's recorder of its samples.
+      eventId: first.event?.id ?? null, eventArt: null, finisher: null };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0) })).then(renderer => {
@@ -231,6 +257,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         if (disposed || wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
       }).catch(error => console.error(error));
     }
+    if (current.eventId && world.container) {
+      Promise.resolve(createEventArt({ container: world.container, canvas: world.canvas, project: (x, z, lift) => world.project?.(x, z, lift) ?? null,
+        reducedMotion, quality })).then(art => { if (disposed || wave !== current || current.finished) art?.dispose(); else current.eventArt = art; })
+        .catch(error => console.error(error));
+    }
     current.shown = here();
     cue('pirate-bell');
     return current;
@@ -241,6 +272,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.state = current.sim.state();
     if (current.sim.done) end(current);
   }
+  // v3 waves: a boss finisher is running (the battle stands still: no shots, repairs or prompts meanwhile).
+  const finishing = current => current?.state?.finisher?.active === true;
   function submit(input, lead = INPUT_LEAD_TICKS) {
     if (!wave || wave.done || wave.state.phase !== 'running') return false;
     const entry = { by: playerId, seq: ++wave.seq, tick: wave.ticks + lead, input };
@@ -262,7 +295,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
   function shoot(targetId = null) {
     const player = world.player?.position;
-    if (!wave || wave.done || !player || !here() || isDown(wave)) return false;
+    if (!wave || wave.done || !player || !here() || isDown(wave) || finishing(wave)) return false;
     const stats = myStats(), state = wave.state;
     const named = targetId ? pirateById(state, targetId) : null;
     const close = named?.id?.startsWith('boarder_') && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
@@ -290,7 +323,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // hits, ships and boarders alike).
   function aimAt(point, target) {
     const player = world.player?.position;
-    if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running' || isDown(wave)) return false;
+    if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running' || isDown(wave) || finishing(wave)) return false;
     const stats = myStats();
     if (stats.mode === 'cone' || stats.mode === 'area') return fireAt(stats, player, target ?? null, target ?? point);
     const inRange = item => Math.hypot(item.x - player.x, item.z - player.z) <= stats.range;
@@ -346,7 +379,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // Your position for the sims: after a move (MOVE_STEP) once the gap passed, else at least every
   // HEARD_EVERY_MS; once `away` when the island is no longer on screen (another place) during the wave.
   function sendPosition(current, player) {
-    if (current.done || current.state.phase !== 'running') return;
+    if (current.done || current.state.phase !== 'running' || finishing(current)) return; // v3 waves: no moves while the battle stands still
     if (!current.shown || !player) {
       if (current.moveSent && !current.awaySent && submit({ type: 'captain_move', by: playerId, ...current.moveSent, away: true }, moveLead(current))) current.awaySent = true;
       return;
@@ -437,13 +470,13 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
 
   function act() {
-    if (!wave || blocked() || !here() || isDown(wave)) return;
+    if (!wave || blocked() || !here() || isDown(wave) || finishing(wave)) return;
     const input = inputFor(wave.action);
     // A repair or a rebuild carries your skills (Shipwright: faster repairs, Master shipwright rebuilds to 60%).
     if (input) submit(input.type === 'repair' || input.type === 'rebuild' ? { ...input, skills: mySkills() } : input);
   }
   function tap(clientX, clientY) {
-    if (!wave || wave.done || blocked() || !here() || !world.unproject || isDown(wave)) return;
+    if (!wave || wave.done || blocked() || !here() || !world.unproject || isDown(wave) || finishing(wave)) return;
     const point = world.unproject(clientX, clientY), boarder = point && boarderAt(point, wave.state);
     if (boarder) { if (!shoot(boarder.id)) aimAt(point, boarder); return; } // a boarder: cutlass or musket
     const ship = point && shipAt(point, wave.state);
@@ -452,9 +485,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     else aimAt(point, ship); // not manning a cannon (or out of its reach): your gun
   }
 
-  function handle(events, current, simTime) {
-    const shownFrom = simTime - SHOWN_LATE_SECONDS;
-    const fresh = events.filter(event => (event.t ?? 0) >= shownFrom);
+  function handle(events, current, fresh) {
     for (const event of events) {
       emit(event);
       if (event.type === 'wave_started') current.lanes = event.lanes ?? [];
@@ -471,6 +502,14 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
     if (current.shown) { current.renderer?.events(fresh); poses.note(fresh); }
+    if (current.shown) current.eventArt?.events(fresh);
+    // v3 waves, for the narrator: the wave's event (its line the first time in this game) and a boss finisher.
+    for (const event of fresh) {
+      if (event.type === 'wave_event') emit({ type: 'wave_event_announced', event: event.event, wave: event.wave });
+      else if (event.type === 'finisher_started') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'start' }); cue('pirate-bell'); }
+      else if (event.type === 'finisher_won') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'won' }); cue('pirate-victory'); }
+      else if (event.type === 'finisher_failed') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'failed' }); cue('pirate-wall'); }
+    }
     // Captain health for the narrator (GAME-V3.md §6): only what happens now, not a late joiner's catching up.
     for (const event of fresh) {
       if (event.type === 'captain_fell') emit({ type: 'player_fell', playerId: event.captainId, self: event.captainId === playerId });
@@ -505,17 +544,31 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!current.done && elapsed >= 0) {
       const due = Math.floor(elapsed / TICK_SECONDS + 1e-6);
       let budget = MAX_TICKS_PER_FRAME;
-      const events = [];
+      const events = [], recent = [];
+      // v3 waves: an event is fresh by the tick it came from, not by its sim time (a finisher freezes the
+      // sim's clock while real time runs on, so its outcome's t lies seconds behind).
+      const lateTicks = Math.round(SHOWN_LATE_SECONDS / TICK_SECONDS);
       while (current.ticks < due && budget-- > 0 && !current.sim.done) {
-        events.push(...current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks)));
+        const out = current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks));
+        events.push(...out); if (current.ticks >= due - lateTicks) recent.push(...out);
         current.ticks++;
       }
       current.state = current.sim.state();
-      if (events.length) handle(events, current, elapsed);
+      if (events.length) handle(events, current, recent);
       if (current.sim.done) end(current);
     }
     if (wave !== current) return;
-    if (world.camera?.userData) {
+    // v3 waves: the event's banner and drawing, and a running finisher's scene.
+    current.hud?.event?.(current.eventId && !current.done ? { id: current.eventId, icon: EVENT_ICONS[current.eventId], ...EVENT_TEXT[current.eventId],
+      open: current.state.time < EVENT_BANNER_SECONDS } : null);
+    current.eventArt?.setVisible(current.shown && !current.done);
+    current.eventArt?.update({ state: current.state, dt });
+    updateFinisher(current, dt);
+    const boss = finishing(current) ? current.state.finisher : null, standing = world.player?.position;
+    if (world.camera?.userData && boss && current.shown && standing) {
+      // The camera pushes in on the boss (the camera eases there; with reduced motion it simply goes).
+      world.camera.userData.battleZoom = 1; world.camera.userData.battleFocus = { x: boss.x - standing.x, z: boss.z - standing.z + FINISHER_FRAME_Z };
+    } else if (world.camera?.userData) {
       const data = world.camera.userData;
       if (current.shown && !current.finished) {
         data.battleZoom = battleZoom(world.camera);
@@ -542,7 +595,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const running = player && current.shown && !current.done && current.state.phase === 'running';
     const reviveTarget = running && !fallen && !blocked() ? fallenNear(current, player) : null;
     holdRevive(current, reviveTarget, player);
-    current.action = !current.done && current.shown && !blocked() && player && !fallen
+    current.action = !current.done && current.shown && !blocked() && player && !fallen && !finishing(current)
       ? (reviveTarget ? { kind: 'revive', targetId: reviveTarget.id, price: helpPrice(current), x: reviveTarget.x, z: reviveTarget.z }
         : actionAt({ x: player.x, z: player.z }, current.defenses, current.state, { repairReach: stats.repairReach })) : null;
     if (current.action?.kind === 'revive') current.hud?.prompt(revivePrompt(current), true, current.revive?.share ?? 0);
@@ -551,7 +604,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
     // The button: "Cutlass" with a boarder in strike reach, else the equipped weapon's name (none while fallen).
     const blade = running && !!bladeTarget(player, current.state);
-    current.hud?.musket?.(running && !fallen ? { share: blade ? bladeShare(current) : captainShare(current),
+    current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
     current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
     current.hud?.down?.(fallen && current.shown ? { seconds: Math.max(0, Math.floor(current.state.time - (me.downAt ?? current.state.time))),
@@ -564,6 +617,31 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       const t = now() / 1000;
       world.camera.position.x += Math.sin(t * 61) * shake * .35; world.camera.position.y += Math.cos(t * 53) * shake * .25;
       shake = Math.max(0, shake - dt * 1.6);
+    }
+  }
+  // A running finisher: the scene (loaded once per finisher), this player's samples to the room in windows.
+  function updateFinisher(current, dt) {
+    const f = current.state.finisher, key = f?.active ? `${f.shipId}:${f.kind}` : null;
+    if (current.finisher && current.finisher.key !== key) { current.finisher.scene?.dispose(); current.finisher = null; }
+    if (!key) return;
+    if (!current.finisher) {
+      const players = f.players.length;
+      const entry = current.finisher = { key, scene: null, recorder: createFinisherRecorder({ players, gapMs: waveGapMs(players) }) };
+      if (world.container) {
+        Promise.resolve(createFinisherScene({ container: world.container, me: playerId, easy: () => !!easyFinishers(), reducedMotion, recorder: entry.recorder }))
+          .then(scene => { if (disposed || current.finisher !== entry || current.finished) scene?.dispose(); else entry.scene = scene; })
+          .catch(error => console.error(error));
+      }
+    }
+    const entry = current.finisher;
+    if (entry.scene) {
+      entry.scene.element && (entry.scene.element.hidden = !current.shown);
+      entry.scene.update({ finisher: f, dt, boss: world.project?.(f.x, f.z, 1.5) ?? null });
+    }
+    if (!f.players.includes(playerId) || f.outcome || !(f.phase === 'task' || f.phase === 'grace')) return;
+    const easy = !!easyFinishers();
+    for (const { from, marks } of entry.recorder.take(now(), f.sample, f.tasks, { force: f.sample >= f.taskEnd })) {
+      submit({ type: 'finisher_input', by: playerId, from, marks, ...(easy ? { easy: true } : {}) });
     }
   }
   const countdownBar = current => ({ wave: current.info.wave, shipsLeft: current.state.total, islandHp: current.state.islandHp, maxIslandHp: current.state.maxIslandHp });
@@ -613,7 +691,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   async function submitFinish(current) {
     if (current.finishing) return;
     current.finishing = true;
-    const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk };
+    // v3 waves: the bonuses the sim saw (the galleon sunk, a finisher won); the server pays them only where the wave allows.
+    const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
+      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}) };
     const attempt = async () => {
       try {
         current.answer = (await finishWave(body)) ?? null;
@@ -634,6 +714,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     wave = null; current.finished = true;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
     current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); poses.clear();
+    current.eventArt?.dispose(); current.finisher?.scene?.dispose(); current.finisher = null;
     emit({ type: 'wave_controller_stopped', waveId: current.info.waveId });
   }
 

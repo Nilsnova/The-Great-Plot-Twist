@@ -22,7 +22,9 @@
 //   hold first, let go: nothing is paid), pays 20 + 5 × wave and helps him up; both pages see the same
 //   fall and the same revive at the same tick; the owner has picked the Medic role (captain tree): the friend's lobby shows
 //   the 🩹 icon on Nils, the hold needs only 1.2 s and the friend stands up with 75% hp on both pages (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
-//   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js).
+//   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js). v3 waves: wave 3's event (fog bank or
+//   storm) is the same on both pages; the wave-5 boss finisher on four pages: every page hears every captain's
+//   samples and decides the same scores and outcome.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -80,7 +82,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: []};
+    // v3 waves: the event each wave brought, and every finisher's outcome as this page's sim decided it.
+    g.on('wave_event', event => window.__mp.events.push({wave: event.wave, event: event.event}));
+    g.on('finisher_won', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals}));
+    g.on('finisher_failed', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals, hp: event.hp}));
     g.on('captain_fell', event => window.__mp.fell.push({captainId: event.captainId, t: event.t}));
     g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t, hp: event.hp}));
     g.on('game_started', event => window.__mp.started.push(event));
@@ -97,7 +103,8 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
           ships: wave.state.ships.map(ship => ship.id).sort().join(','), hp: Math.round(wave.state.ships.reduce((sum, ship) => sum + ship.hp, 0)),
           boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0,
           // A Barracks' militia (GAME-V3.md "Houses"): where each stands, its hp and what it does.
-          militia: (wave.state.militia ?? []).map(item => `${item.id}@${item.x},${item.z}:${item.hp}:${item.state}`).join('|')});
+          militia: (wave.state.militia ?? []).map(item => `${item.id}@${item.x},${item.z}:${item.hp}:${item.state}`).join('|'),
+          event: wave.state.event ? JSON.stringify(wave.state.event) : null});
         if (window.__mp.samples.length > 6000) window.__mp.samples.splice(0, 3000);
       }
       requestAnimationFrame(sample);
@@ -597,6 +604,14 @@ try {
   // Whether a militia meets a boarder depends on where this wave's boarders land; the fight itself is covered by
   // tests/pirates/houses.test.js. Here only the sync is required: both pages show the militia the same.
   if (!sync1.fighting) results.push("wave 1 militia: no boarder came near the Barracks in this wave's samples");
+  // v3 waves (GAME-V3.md §4.2): wave 3 always brings an event (fog bank or storm); both pages ran the same one,
+  // with the same event state, and the samples above (the same ships at the same tick) are of that event wave.
+  const eventsSeen = await Promise.all([host, ben].map(captain => captain.page.evaluate(wave => window.__mp.events.filter(item => item.wave === wave), first.wave)));
+  const eventState = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.samples.find(item => item.waveId === id && item.event)?.event ?? null, first.waveId)));
+  results.push(`wave ${first.wave} event: owner ${JSON.stringify(eventsSeen[0])}, friend ${JSON.stringify(eventsSeen[1])}`);
+  assert.equal(eventsSeen[0].length, 1, 'the event wave announced its event once');
+  assert.deepEqual(eventsSeen[1], eventsSeen[0], 'both pages ran the same event');
+  assert.ok(eventState[0] && eventState[0] === eventState[1], 'both pages hold the same event state');
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
@@ -632,6 +647,48 @@ try {
   }
   for (const captain of pages) await until(captain, state => !state || state.pause || state.done, 'the end of wave 2', 240000);
   await shot('06-wave2-end');
+  // 7 v3 waves (GAME-V3.md §4.3): the wave-5 boss finisher on four pages. Every captain plays the haul through real
+  // key events; every page must hear every captain's samples and decide the same scores and the same outcome.
+  await island(host, async i => { i.dev.setWaveBest(4); i.dev.setCoins(900); await i.load(); });
+  for (const captain of pages) await captain.page.waitForFunction(() => !window.__island.waves.island.wave || window.__island.waves.island.wave.done, null, {timeout: 60000});
+  await island(host, async i => i.ringBell());
+  const boss = await until(host, state => state?.wave === 5 && state.ships > 0, 'the boss wave 5', 60000);
+  for (const captain of pages) await until(captain, state => state?.waveId === boss.waveId, `${captain.name} in the boss wave`, 30000);
+  for (const captain of pages) {
+    await stand(captain, SAFE);
+    await captain.page.evaluate(async () => {
+      const rules = await import('/src/pirates/finisher/rules.js');
+      let held = false;
+      const step = () => {
+        requestAnimationFrame(step);
+        const c = window.__island.waves.island, f = c.state?.finisher, scene = c.wave?.finisher?.scene;
+        if (!f || !scene || f.phase !== 'task' || f.tasks[f.task].task !== 'haul') return;
+        const want = scene.needle < rules.zoneAt(f.sample - f.tasks[f.task].from + 2, f.salt);
+        if (want !== held) { held = want; window.dispatchEvent(new KeyboardEvent(want ? 'keydown' : 'keyup', {code: 'Space', bubbles: true})); }
+      };
+      step();
+    });
+  }
+  const finisherOf = captain => captain.page.evaluate(() => { const f = window.__island.waves.island.state?.finisher;
+    return f ? {kind: f.kind, phase: f.phase, players: f.players, heard: f.heard, outcome: f.outcome, scores: f.tasks.map(t => t.players)} : null; });
+  const ids = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__island.waves.island.playerId)));
+  for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'task', null, {timeout: 200000, polling: 200});
+  await host.page.waitForTimeout(4000);
+  await shot('07-finisher-haul-mid-task');
+  const midway = await Promise.all(pages.map(finisherOf));
+  results.push(`finisher: ${midway[0].kind} for ${midway[0].players.join(', ')}; heard so far ${midway.map(item => item.heard.length).join(' / ')}`);
+  for (const item of midway) assert.deepEqual([...item.players].sort(), [...ids].sort(), 'every captain in the wave is in the finisher');
+  for (const captain of pages) await captain.page.waitForFunction(() => window.__mp.finishers.length > 0, null, {timeout: 60000, polling: 100});
+  const outcomes = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__mp.finishers[0])));
+  results.push(`finisher outcome on the four pages: ${outcomes.map(item => `${item.type} ${item.scores}/${item.goals}`).join(' · ')}`);
+  for (const item of outcomes.slice(1)) assert.deepEqual(item, outcomes[0], 'every page decided the same finisher');
+  const heard = await Promise.all(pages.map(finisherOf));
+  for (const [index, item] of heard.entries()) {
+    if (!item) continue; // the outro may be over on a fast page
+    assert.deepEqual([...item.heard].sort(), [...ids].sort(), `${pages[index].name}'s page heard every captain's samples`);
+    for (const id of ids) assert.ok((item.scores[0][id] ?? 0) > 0, `${pages[index].name}'s page counts ${id}'s input`);
+  }
+  await shot('07-finisher-outcome');
   await Promise.all(captainShots);
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text) && !audio.includes(text));

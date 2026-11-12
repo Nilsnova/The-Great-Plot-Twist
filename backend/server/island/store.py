@@ -458,11 +458,12 @@ class WavePlaceRow(BaseModel):
     place: Literal["island", "pirate_point"]
     island_owner: StrictStr | None = None
     wave: StrictInt | None = None
+    seed: StrictInt | None = None  # v3 waves: the wave's event follows from it (wave_events.py)
 
 
 async def read_wave_place(admin: SupabaseAdmin, wave_id: str) -> WavePlaceRow | None:
-    """Where a wave runs (an island and its owner, or Pirate Point), or None for no such wave."""
-    query = {"select": "place,island_owner,wave", "id": f"eq.{wave_id}", "limit": "1"}
+    """Where a wave runs (an island and its owner, or Pirate Point), its number and seed."""
+    query = {"select": "place,island_owner,wave,seed", "id": f"eq.{wave_id}", "limit": "1"}
     rows = await admin.select_rows("wave_runs", query)
     return read_model(WavePlaceRow, rows[0]) if rows else None
 

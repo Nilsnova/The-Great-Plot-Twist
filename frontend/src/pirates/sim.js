@@ -10,6 +10,9 @@ import { surfaces } from '../world/places/surfaces.js';
 import { captainStats, readSkills } from './captain-stats.js';
 import { readBonus, readSpec } from '../campaign/tech.js';
 import { ROLE_RADIUS } from '../campaign/houses.js';
+// v3 waves (GAME-V3.md §4.2, §4.3): the wave's event and the boss finisher, each in its own module.
+import { createEventRules } from './wave-events.js';
+import { createFinisher } from './finisher/rules.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -415,6 +418,9 @@ function shuffle(list, random) {
  * Captain health (GAME-V3.md §3): {type: 'captain_move', by, x, z, colour?, away?} says where a captain stands
  * (the first one adds them to the wave with full hp; away: true takes them out) and
  * {type: 'captain_revive', by, targetId, x, z} stands a fallen teammate up (the server charged the reviver).
+ * v3 waves: event (an id of wave-events.js, eventFor(wave, seed) in the controller) brings the wave's event;
+ * finishers: true lets a boss below a quarter of its hull start a finisher (finisher/rules.js), whose input is
+ * {type: 'finisher_input', by, from, marks, easy?}; gapMs(players) is the room's wave gap (its grace time).
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
@@ -430,6 +436,11 @@ export function createWave(options = {}) {
   const boss = typeof options?.boss === 'boolean' ? options.boss : !withFlagship && waveNumber % C.boss.every === 0;
   const defenses = readDefenses(options?.defenses), crew = readCrew(options?.crew);
   const curve = curveFor(waveNumber);
+  // v3 waves: the wave's event (none without options.event, never with the flagship) and the boss finisher.
+  const happening = createEventRules(withFlagship ? null : options?.event, { seed: options?.seed, wave: waveNumber, curve, coastPoint,
+    coast: readCoast(options?.coast), heart, defenses, stopRadius: C.stopRadius, spawnRadius: C.spawnRadius, firstSpawn: C.fleet.firstSpawn });
+  const finisher = createFinisher({ wave: waveNumber, seed: options?.seed, enabled: options?.finishers === true && !withFlagship,
+    gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null, trigger: options?.finisherTrigger }); // trigger: the demo harness only
   const lookouts = defenses.filter(item => item.kind === 'watchtower'), watchtowers = lookouts.map(item => C.levels.watchtower[item.level - 1]);
   // High tower (tier 2): the watchtower lends more range.
   const towerBonus = Math.max(0, ...lookouts.map((item, i) => round2(watchtowers[i].range * bonusOf(item, 'range', C)))), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
@@ -451,7 +462,7 @@ export function createWave(options = {}) {
     const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
     const radius = item.kind === 'mortar' ? round2(C.mortar.radius * bonusOf(item, 'radius', C)) : undefined;
     return { ...item, skill: spec, damage: round2(stats.damage * (spec.damage ?? 1) * spotted * boost), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums),
-      range, sight: range * fogShare, manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0,
+      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0,
       ...(radius !== undefined ? { radius } : {}) };
   });
   const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
@@ -486,8 +497,9 @@ export function createWave(options = {}) {
   if (towers.length) lanes.sort((a, b) => a.cover - b.cover); // the first waves come where the guns are
   const laneCount = clamp(C.fleet.lanesPerWave * waveNumber, 1, lanes.length);
   const { count, kinds: fleetKinds, bosses, tier } = fleetOf(waveNumber, { shipFactor, boss });
-  const kinds = shuffle([...fleetKinds], random);
-  const gap = Math.min(Math.max(C.fleet.minGap, C.fleet.gap - C.fleet.gapPerWave * (waveNumber - 1)), C.fleet.window / count);
+  const kinds = shuffle(happening.kinds([...fleetKinds]), random); // v3 waves: fire ships, the armada
+  const gap = happening.gap(Math.min(Math.max(C.fleet.minGap, C.fleet.gap - C.fleet.gapPerWave * (waveNumber - 1)),
+    C.fleet.window / (happening.id ? kinds.length : count)));
   const plan = kinds.map((kind, index) => ({ kind, lane: lanes[index % laneCount], at: C.fleet.firstSpawn + index * gap }));
   for (let i = 0; i < bosses; i++) {
     // The boss sails in after a few escorts; a second one a little later on another lane.
@@ -502,12 +514,14 @@ export function createWave(options = {}) {
     const at = C.fleet.firstSpawn + Math.min(C.flagship.afterShips, count) * gap;
     plan.push({ kind: 'flagship', lane: lanes[0], at });
   }
+  const eventLanes = happening.plan(plan, { lanes, laneCount, gap }); // v3 waves: the event's ships and lanes
   plan.sort((a, b) => a.at - b.at);
   for (const entry of plan) {
-    const a = entry.lane.a + (random() * 2 - 1) * C.laneSpread * Math.PI / 180;
+    if (entry.fixed) continue; // an event ship with its own route (the galleon)
+    const a = entry.lane.a + (random() * 2 - 1) * (entry.spread ?? C.laneSpread) * Math.PI / 180;
     const stopR = C.stopRadius + (random() * 2 - 1) * C.stopJitter;
     entry.a = a; entry.from = coastPoint(a, C.spawnRadius, coast);
-    entry.to = coastPoint(a, ['flagship', 'warship', 'dreadnought', 'redtide'].includes(entry.kind) ? C.stopRadius + .1 : stopR, coast);
+    entry.to = entry.toward ?? coastPoint(a, entry.stop ?? (['flagship', 'warship', 'dreadnought', 'redtide'].includes(entry.kind) ? C.stopRadius + .1 : stopR), coast);
   }
 
   let ticks = 0, rest = 0, nextSpawn = 0, nextWarn = 0, nextShipId = 1, sunk = 0, islandHp = maxHp, done = false;
@@ -524,20 +538,23 @@ export function createWave(options = {}) {
   const now = () => round2(ticks * C.tick);
   const flagshipAfloat = () => ships.some(ship => ship.kind === 'flagship') ||
     plan.slice(nextSpawn).some(entry => entry.kind === 'flagship');
-  const statsOf = kind => C.ships[kind];
+  const statsOf = kind => C.ships[kind] ?? happening.statsOf(kind);
 
   function damageShip(ship, amount, by, events, extra = {}) {
     let damage = amount;
     if (ship.kind === 'flagship' && extra.source !== 'lamps') damage *= lampsLit ? C.flagship.exposed : C.flagship.armor;
     damage = Math.min(ship.hp, round2(damage));
     ship.hp = round2(ship.hp - damage);
+    // v3 waves: a boss below a quarter of its hull is held at 1 hp for its finisher (finisher/rules.js).
+    if (finisher.watch(ship) || finisher.holds(ship)) { const before = ship.hp + damage; ship.hp = Math.max(1, ship.hp); damage = round2(before - ship.hp); }
     events.push({ type: 'ship_hit', t: now(), shipId: ship.id, kind: ship.kind, by, damage, hp: ship.hp,
       x: round2(ship.x), z: round2(ship.z), blocked: damage === 0, ...extra });
     if (ship.hp > 0) return;
     ships.splice(ships.indexOf(ship), 1); sunk++;
     wrecks.push({ id: ship.id, kind: ship.kind, x: round2(ship.x), z: round2(ship.z), t: now() });
     events.push({ type: 'ship_sunk', t: now(), shipId: ship.id, kind: ship.kind, by, boss: ship.boss, x: round2(ship.x), z: round2(ship.z),
-      ...(ship.crew > 0 ? { crewLost: ship.crew } : {}) });
+      ...(ship.crew > 0 ? { crewLost: ship.crew } : {}), ...(extra.finisher ? { finisher: true } : {}) });
+    happening.onSunk(ship, events);
   }
   function damageBoarder(boarder, amount, by, events, extra = {}) {
     const damage = Math.min(boarder.hp, round2(amount));
@@ -547,6 +564,22 @@ export function createWave(options = {}) {
     boarders.splice(boarders.indexOf(boarder), 1); killed++;
     events.push({ type: 'boarder_killed', t: now(), boarderId: boarder.id, by, x: round2(boarder.x), z: round2(boarder.z), ...extra });
   }
+  // v3 waves: what the wave's event and the finisher may do to the battle (wave-events.js, finisher/rules.js).
+  function hitWall(wall, amount, events, extra = {}) {
+    const damage = Math.min(wall.hp, round2(amount));
+    wall.hp = round2(Math.max(0, wall.hp - damage));
+    if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
+    events.push({ type: 'wall_damaged', t: now(), wallId: wall.id, damage, hp: wall.hp, broken: wall.hp === 0, x: wall.x, z: wall.z, ...extra });
+  }
+  function hurtIsland(amount, events, extra = {}) {
+    const damage = Math.min(islandHp, round2(amount));
+    islandHp = round2(islandHp - damage);
+    events.push({ type: 'island_damaged', t: now(), damage, hp: islandHp, x: heart.x, z: heart.z, ...extra });
+    if (islandHp <= 0) end('island_lost', events);
+  }
+  const removeShip = ship => { const at = ships.indexOf(ship); if (at >= 0) ships.splice(at, 1); };
+  happening.bind({ ships, walls, towers, tick: C.tick, now: () => now(), newShipId: () => `ship_${nextShipId++}`, remove: removeShip, hitWall, hurtIsland });
+  finisher.bind({ party, ships, presentAt: (hero, t) => presentAt(hero, t), damageShip, now: () => now() });
   const damageTarget = (target, amount, by, events, extra) => (target.boarder
     ? damageBoarder(target, amount, by, events, extra) : damageShip(target, amount, by, events, extra));
   const findTarget = id => (typeof id !== 'string' ? undefined
@@ -565,8 +598,10 @@ export function createWave(options = {}) {
     const flight = distance(cannon.x, cannon.z, target.x, target.z) / C.cannon.ballSpeed;
     const aim = ahead(target, flight);
     let toX = aim.x, toZ = aim.z;
-    const hit = manual || random() < (target.boarder ? cannon.skill?.accuracy ?? C.cannon.boarderAccuracy : C.cannon.accuracy);
+    const hit = manual || random() < (target.boarder ? cannon.skill?.accuracy ?? C.cannon.boarderAccuracy : C.cannon.accuracy) * happening.aim(target);
     if (!hit) { const a = random() * Math.PI * 2, r = 1 + random() * (C.cannon.missSpread - 1); toX += Math.cos(a) * r; toZ += Math.sin(a) * r; }
+    const blown = !hit && happening.drift(1); // v3 waves: the storm's wind carries a miss away
+    if (blown) { toX += blown.x; toZ += blown.z; }
     const damage = cannon.damage * (manual ? C.cannon.manualMultiplier : 1);
     const impactAt = round2(ticks * C.tick + flight);
     const ball = { cannonId: cannon.id, targetId: target.id, ...targetKey(target), hit, damage, manual, impactAt,
@@ -585,8 +620,9 @@ export function createWave(options = {}) {
 
   function lob(mortar, target, events) {
     const d = distance(mortar.x, mortar.z, target.x, target.z), flight = round2(C.mortar.flight + d * C.mortar.flightPerUnit);
-    const aim = ahead(target, flight), a = random() * Math.PI * 2, r = random() * C.mortar.scatter;
-    const toX = round2(aim.x + Math.cos(a) * r), toZ = round2(aim.z + Math.sin(a) * r), impactAt = round2(ticks * C.tick + flight);
+    const aim = ahead(target, flight), a = random() * Math.PI * 2, r = random() * (C.mortar.scatter + happening.scatter());
+    const blown = happening.drift(.5) ?? { x: 0, z: 0 }; // v3 waves: the storm pushes the shells downwind
+    const toX = round2(aim.x + Math.cos(a) * r + blown.x), toZ = round2(aim.z + Math.sin(a) * r + blown.z), impactAt = round2(ticks * C.tick + flight);
     const radius = mortar.radius ?? C.mortar.radius;
     shells.push({ towerId: mortar.id, x: mortar.x, z: mortar.z, toX, toZ, damage: mortar.damage, impactAt, from: now(),
       ...(radius !== C.mortar.radius ? { radius } : {}),
@@ -597,7 +633,9 @@ export function createWave(options = {}) {
   }
 
   const pending = target => balls.reduce((sum, ball) => sum + (ball.targetId === target.id && ball.hit ? ball.damage : 0), 0);
-  const visible = (cannon, target) => distance(cannon.x, cannon.z, target.x, target.z) <= cannon.sight;
+  // v3 waves: at night a lit target (near the heart, a fire, or burning) is seen at the full range.
+  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= tower.range * fogShare);
+  const visible = (cannon, target) => sees(cannon, target, distance(cannon.x, cannon.z, target.x, target.z));
   const armoured = ship => ship.kind === 'flagship' && !lampsLit && ships.length > 1; // escorts first while armoured
   const shoreOrder = (a, b) => (a.state === 'attacking') !== (b.state === 'attacking') ? (a.state === 'attacking' ? -1 : 1) : a.left - b.left;
   const toHeart = item => distance(item.x, item.z, heart.x, heart.z);
@@ -812,6 +850,9 @@ export function createWave(options = {}) {
 
   function applyInput(input, events) {
     if (!input || typeof input !== 'object' || typeof input.type !== 'string') return;
+    // v3 waves: while a finisher runs the battle stands still: only positions and the finisher's own input count.
+    if (input.type === 'finisher_input') { finisher.input(input); return; }
+    if (finisher.active && input.type !== 'captain_move') return;
     if (input.type === 'fire') {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;
       const target = findTarget(input.targetId);
@@ -856,7 +897,7 @@ export function createWave(options = {}) {
       const all = [...boarders, ...ships];
       for (const item of all) {
         const d = distance(tower.x, tower.z, item.x, item.z);
-        if (d > tower.sight || d < C.mortar.minRange || (!item.boarder && armoured(item))) continue;
+        if (!sees(tower, item, d) || d < C.mortar.minRange || (!item.boarder && armoured(item))) continue;
         let score = 0;
         for (const other of all) if (distance(other.x, other.z, item.x, item.z) <= C.mortar.radius) score++;
         const rank = tower.manned
@@ -875,7 +916,7 @@ export function createWave(options = {}) {
     if (target) return target;
     for (const ship of ships) {
       const d = distance(tower.x, tower.z, ship.x, ship.z);
-      if (d > tower.sight || pending(ship) >= ship.hp || armoured(ship)) continue;
+      if (!sees(tower, ship, d) || pending(ship) >= ship.hp || armoured(ship)) continue;
       if (tower.manned ? !target || shoreOrder(ship, target) < 0 : d < best) { target = ship; best = d; }
     }
     return target;
@@ -1057,9 +1098,10 @@ export function createWave(options = {}) {
     if (started === null) {
       started = true;
       events.push({ type: 'wave_started', t: 0, wave: waveNumber, ships: plan.length, flagship: withFlagship, boss, warships: bosses,
-        ...(tier.final && !withFlagship ? { final: true } : {}),
+        ...(tier.final && !withFlagship ? { final: true } : {}), ...(happening.id ? { event: happening.id } : {}),
         fog, sight: round2(sight), heart: { x: heart.x, z: heart.z },
-        lanes: lanes.slice(0, laneCount).map(lane => ({ id: lane.id, x: round2(lane.stop.x), z: round2(lane.stop.z) })) });
+        lanes: (eventLanes ?? lanes.slice(0, laneCount)).map(lane => ({ id: lane.id, x: round2(lane.stop.x), z: round2(lane.stop.z) })) });
+      if (happening.id) events.push({ type: 'wave_event', t: 0, event: happening.id, wave: waveNumber });
       // The Barracks' militia walk out of their doors (CONFIG.houses.barracks), the same on every screen.
       const G = HO.barracks;
       for (const house of barracks) for (let k = 0; k < G.units[house.level - 1] && militia.length < G.max; k++) {
@@ -1074,6 +1116,8 @@ export function createWave(options = {}) {
     for (const input of queued) applyInput(input, events);
     queued = [];
     if (done) return;
+    // v3 waves: a running finisher freezes the battle (its own clock runs; the battle's ticks stand still).
+    if (finisher.tick(events)) return;
     ticks++;
     const t = ticks * C.tick;
     // The lookout calls the ships out before they appear.
@@ -1087,16 +1131,17 @@ export function createWave(options = {}) {
       const length = distance(entry.from.x, entry.from.z, entry.to.x, entry.to.z);
       const hp = entry.kind === 'flagship' ? stats.hp : Math.round(stats.hp * curve.hp * (entry.boss && entry.kind === 'warship' ? tier.bossHp : 1));
       const ship = { id: `ship_${nextShipId++}`, kind: entry.kind, boss: entry.boss === true, lane: entry.lane.id, x: entry.from.x, z: entry.from.z,
-        hp, maxHp: hp, speed: round2(stats.speed * (entry.kind === 'flagship' ? 1 : curve.speed)), left: length,
+        hp, maxHp: hp, speed: round2(stats.speed * (entry.kind === 'flagship' ? 1 : curve.speed * happening.speedOf(entry))), left: length,
         damage: round2(stats.damage * (entry.kind === 'flagship' ? 1 : curve.damage)), dx: (entry.to.x - entry.from.x) / length,
         dz: (entry.to.z - entry.from.z) / length, to: entry.to, a: entry.a, state: 'sailing', attackIn: 0, target: null,
-        crew: crewFor(entry.kind, waveNumber), unloadIn: 0 };
+        crew: happening.crewOf(entry.kind) ?? crewFor(entry.kind, waveNumber), unloadIn: 0, ...(entry.route ? { route: entry.route.map(point => ({ ...point })) } : {}) };
       ships.push(ship);
       events.push({ type: 'ship_spawned', t: now(), shipId: ship.id, kind: ship.kind, boss: ship.boss, lane: ship.lane, hp: ship.hp,
         x: round2(ship.x), z: round2(ship.z), toX: round2(entry.to.x), toZ: round2(entry.to.z), crew: ship.crew });
     }
     for (const ship of [...ships]) {
       const stats = statsOf(ship.kind);
+      if (happening.shipTick(ship, t, events)) { if (done) return; continue; } // v3 waves: fire ships, the galleon, the barge, the kraken
       if (ship.state === 'sailing') {
         const slowed = ship.slowUntil !== undefined && ship.slowUntil > t + 1e-9 ? 1 - (ship.slowBy ?? S.chain.slow) : 1;
         const move = Math.min(ship.speed * slowed * C.tick, ship.left);
@@ -1139,6 +1184,8 @@ export function createWave(options = {}) {
         }
       }
     }
+    happening.tick(t, events); // v3 waves: the kraken rises, the barge's shells land
+    if (done) return;
     for (const boarder of [...boarders]) {
       if (!moveBoarder(boarder, events)) continue;
       // At the heart: the island is hurt and the boarder is gone.
@@ -1213,6 +1260,7 @@ export function createWave(options = {}) {
       for (const boarder of boarders.filter(item => distance(item.x, item.z, fire.x, fire.z) <= fire.radius)) damageBoarder(boarder, fire.damage, fire.towerId, events, { area: true, fire: true });
     }
     for (const tower of towers) {
+      if (happening.silenced(tower, t)) continue; // v3 waves: shelled by the siege barge
       tower.reload = Math.max(0, tower.reload - C.tick);
       if (tower.reload > 1e-9) continue;
       const target = aimTower(tower);
@@ -1255,13 +1303,15 @@ export function createWave(options = {}) {
         if (wall.hp >= wall.maxHp) events.push({ type: 'wall_repaired', t: now(), wallId: wall.id, hp: wall.hp, by: 'carpenter', x: wall.x, z: wall.z });
       }
     }
-    if (nextSpawn >= plan.length && ships.length === 0 && boarders.length === 0) end('all_sunk', events);
+    finisher.begin(events); // v3 waves: a boss held for its finisher: the next ticks run the finisher
+    if (nextSpawn >= plan.length && ships.length === 0 && boarders.length === 0 && !happening.busy() && !finisher.pending) end('all_sunk', events);
     else if (t + 1e-9 >= C.maxTime) end('timeout', events);
   }
 
   function result() {
     const survived = islandHp > 0 && !(endReason === 'timeout' && flagshipAfloat()) && endReason !== null && endReason !== 'captains_fallen';
-    return { survived, shipsSunk: sunk, boardersKilled: killed, islandHp, time: now() };
+    const bonuses = [...happening.bonuses(), ...finisher.bonuses()]; // v3 waves: the galleon, a won finisher (server-checked)
+    return { survived, shipsSunk: sunk, boardersKilled: killed, islandHp, time: now(), ...(bonuses.length ? { bonuses } : {}) };
   }
 
   return {
@@ -1303,8 +1353,10 @@ export function createWave(options = {}) {
         captains: Object.fromEntries([...captains].map(([by, at]) => [by, round2(at)])),
         blades: Object.fromEntries([...blades].map(([by, at]) => [by, round2(at)])),
         crew: { ...crew }, heart: { x: heart.x, z: heart.z },
-        islandHp, maxIslandHp: maxHp, sunk, shipsLeft: plan.length - sunk, total: plan.length, lampsLit, fog, sight: round2(sight),
+        islandHp, maxIslandHp: maxHp, sunk, shipsLeft: plan.length + happening.extra - sunk - happening.gone, total: plan.length, lampsLit, fog, sight: round2(sight),
         boardersLeft: boarders.length, boardersKilled: killed, boardersLanded: landed,
+        // v3 waves: the event's state (wind, lanes, the barge's shells…) and the finisher's, both null without one.
+        event: happening.id ? happening.state(t) : null, finisher: finisher.state(),
       };
     },
     get done() { return done; },

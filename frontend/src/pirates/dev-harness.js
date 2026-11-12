@@ -6,12 +6,14 @@
 // URL extras: &spots=cannon_2,wall_1 (defenses), &weather=storm|fog|rain|calm, &wave=N (force a wave
 // number), &hp=N (a sturdier island, for the perf reading with 20+ ships), &lamps=real (no rehearsal help).
 // Tower defense v2: &spots=cannon_2:3,mortar_1:2 (id:level), &full=1 (the whole island at level 3),
-// &crew=gunner2,carpenter2,lookout, &captain=1..5, &auto=1 (auto next wave). F fires your musket; after a
+// &crew=gunner2,carpenter2,lookout, &captain=1..5, &auto=1 (auto next wave). v3 waves: &event=fog_bank (any id of
+// wave-events.js: that event instead of the seed's), &trigger=0.98 (a boss finisher starts below this share of its hull). F fires your musket; after a
 // won wave the break offers Next wave (the fake's start route again, the next wave number).
 import { coastPoint } from './sim.js';
 import { createFakeIslandApi, createFakeWorld } from './fake-api.js';
 import { createLocalRoom } from './room.js';
 import { mountPirates } from './index.js';
+import { isEventId } from './wave-events.js';
 
 const at = (id, kind, bearing, radius) => {
   const p = coastPoint(bearing * Math.PI / 180, radius);
@@ -59,7 +61,8 @@ export function startPirateDemo(ctx) {
   const pirates = mountPirates({ ...ctx, api, getDefenses: () => defenses, rehearsal: query.get('lamps') !== 'real', host: true, notify,
     finishWave: async body => { const answer = await api.finishWave(body); notify(answer.loot ? `Loot: 🪙 ${answer.loot}` : 'No loot this time.'); return answer; },
     openRoom: topic => { const room = createLocalRoom(topic); if (room) rooms.set(topic, room); return room; },
-    islandRoom, islandSimOptions: hardy > 0 ? { island: { hp: hardy } } : {},
+    islandRoom, islandSimOptions: { ...(hardy > 0 ? { island: { hp: hardy } } : {}), ...(isEventId(query.get('event')) ? { event: query.get('event') } : {}),
+      ...(Number(query.get('trigger')) > 0 && Number(query.get('trigger')) < 1 ? { finisherTrigger: Number(query.get('trigger')) } : {}) },
     getCrew: () => crew, captainLevel: () => captain, startNextWave: () => ringIsland({ next: true }) });
   // Like the island lane: the bell's answer becomes wave_started_server on the bus.
   async function ringIsland({ next = false } = {}) {

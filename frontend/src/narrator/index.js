@@ -27,6 +27,8 @@
 //   captains_all_fallen {}                              (health lane H) every captain is down.
 //   house_role_picked {spot, role, first}               (houses, src/island/index.js) a house picked a role:
 //       the house_role line, once per island game (caption only until its voice file is made).
+//   wave_event_announced {event, wave}                  (v3 waves) a wave's event: its line the first time in this game.
+//   finisher_moment {kind, phase: start|won|failed}     (v3 waves) a boss finisher starts or ends.
 import data from './lines.json';
 import {createNarratorCard} from './card.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
@@ -197,6 +199,11 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     on('player_revived', event => say('player_revived', {seed: event?.self ? 0 : 1})),
     on('captains_all_fallen', () => say('all_fallen')),
     on('house_role_picked', () => say('house_role')), // src/island/index.js; once per island game
+    // v3 waves (src/pirates/controller.js): a wave's event, the first time it comes in this game, and a boss finisher.
+    on('wave_event_announced', event => { if (typeof event?.event === 'string') say(`wave_event:${event.event}`, {seed: Number(event.wave) || 0}); }),
+    on('finisher_moment', event => {
+      if (typeof event?.kind === 'string' && ['start', 'won', 'failed'].includes(event?.phase)) say(`finisher_${event.phase}:${event.kind}`);
+    }),
     on('heart_changed', event => {
       const hp = Number(event?.hp), max = Number(event?.max);
       if (!(max > 0) || !(hp >= 0) || hp / max >= HEART_LOW || heartWarned) return;

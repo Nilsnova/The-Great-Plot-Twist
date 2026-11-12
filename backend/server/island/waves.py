@@ -30,7 +30,7 @@ from uuid import UUID
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import games, store
+from server.island import games, store, wave_events
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import is_boss, loot_rates, weather_for
@@ -207,16 +207,28 @@ async def finish(
     wave_id: UUID,
     survived: bool,
     ships_sunk: int,
+    bonuses: list[str] | None = None,
 ) -> WaveFinish:
     """End this player's part of a wave. A repeat answers the stored result and pays nothing.
     Past wave lateFrom the loot grows more slowly (rules.loot_rates): the wave's number is read
-    first, so the rates go to wave_finish as plain arguments."""
+    first, so the rates go to wave_finish as plain arguments. v3 waves: `bonuses` (the treasure
+    galleon sunk, a boss finisher won) raise the base, but only those the wave's place, number and
+    seed allow (wave_events.allowed_bonuses); the boss multiplier applies after, like all loot."""
     loot = catalogue.loot
     base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
-    if loot.late_from:
+    if loot.late_from or bonuses:
         where = await store.read_wave_place(admin, str(wave_id))
         if where is not None and where.wave is not None:
-            base, per_wave, point_base = loot_rates(loot, where.wave)
+            if loot.late_from:
+                base, per_wave, point_base = loot_rates(loot, where.wave)
+            allowed = wave_events.allowed_bonuses(
+                bonuses,
+                place=where.place,
+                wave=where.wave,
+                seed=where.seed,
+                boss_every=catalogue.waves.boss_every,
+            )
+            base += wave_events.bonus_base(allowed, where.wave)
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),

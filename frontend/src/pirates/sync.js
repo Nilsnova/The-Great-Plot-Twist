@@ -19,11 +19,17 @@ export const TICK_SECONDS = CONFIG.tick;
 export const INPUT_LEAD_TICKS = 4;
 export const MAX_WAVE_SECONDS = 900;
 export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot',
-  rebuild: 'wall_rebuild', captain_strike: 'captain_strike', captain_move: 'captain_move', captain_revive: 'captain_revive' });
+  rebuild: 'wall_rebuild', captain_strike: 'captain_strike', captain_move: 'captain_move', captain_revive: 'captain_revive',
+  finisher_input: 'finisher_input' }); // v3 waves: a boss finisher's samples (finisher/rules.js)
 export const MAX_PLAYERS = 10; // GAME-V3.md §2: up to ten players defend one island together (was 4)
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
 const isAim = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500;
+// A boss finisher's input (finisher/rules.js): `from` the first sample (100 ms each, from the finisher's
+// start), `marks` one value per sample (-1 nothing, 0-100 a needle or a crosshair, 0-3 an arrow).
+export const FINISHER_MAX_SAMPLE = 3000, FINISHER_MAX_MARKS = 24;
+export const isFinisherMarks = (from, marks) => Number.isInteger(from) && from >= 0 && from <= FINISHER_MAX_SAMPLE
+  && Array.isArray(marks) && marks.length >= 1 && marks.length <= FINISHER_MAX_MARKS && marks.every(value => Number.isInteger(value) && value >= -1 && value <= 100);
 
 export const tickOf = seconds => Math.round(seconds / TICK_SECONDS);
 export const secondsOf = tick => Math.round(tick * TICK_SECONDS * 1000) / 1000;
@@ -54,6 +60,11 @@ export function toMessage(input, { by, seq, tick, waveId }) {
     return { type: ROOM_EVENTS.captain_move, payload: { ...base, x: input.x, z: input.z, ...colour, ...(input.away === true ? { away: true } : {}) } };
   }
   if (input.type === 'captain_revive') return { type: ROOM_EVENTS.captain_revive, payload: { ...base, targetId: input.targetId, x: input.x, z: input.z, skills: readSkills(input.skills) } };
+  // A boss finisher: one window of the sender's samples, and whether they play with Easier finishers.
+  if (input.type === 'finisher_input') {
+    if (!isFinisherMarks(input.from, input.marks)) return null;
+    return { type: ROOM_EVENTS.finisher_input, payload: { ...base, from: input.from, marks: [...input.marks], ...(input.easy === true ? { easy: true } : {}) } };
+  }
   return null;
 }
 
@@ -108,6 +119,12 @@ export function readMessage(type, payload, waveId) {
     if (typeof targetId !== 'string' || !BY.test(targetId) || targetId === by || ![x, z].every(isAim) || !isSkillList(skills)) return null;
     // The reviver is the sender (who paid for it on the server); their role sets how much hp the captain gets back.
     return { by, seq, tick, input: { type: 'captain_revive', by, targetId, x, z, skills: readSkills(skills) } };
+  }
+  if (type === ROOM_EVENTS.finisher_input) {
+    const { from, marks, easy } = payload;
+    if (!isFinisherMarks(from, marks) || (easy !== undefined && easy !== true)) return null;
+    // The samples are the sender's own: a message cannot play for somebody else.
+    return { by, seq, tick, input: { type: 'finisher_input', by, from, marks: [...marks], ...(easy ? { easy: true } : {}) } };
   }
   return null;
 }

@@ -37,8 +37,13 @@ POST /api/waves/join  {"waveId": "6f1c..."}
 GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
     -> the running wave there, or null. Errors: 404 no_such_island
 
-POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7}
+POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
+                         "bonuses": ["galleon"]}
     -> {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1, "boss": false}
+    bonuses (optional, v3 waves, docs/GAME-V3.md 4.2 and 4.3): "galleon" (the treasure galleon was
+    sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
+    won wave n (content/wave_events.json), only on an island wave whose seed brings the galleon or
+    on a boss wave; any other bonus is dropped, never refused.
     Every participant finishes their own part, once. A survived wave n pays this player
     10 + 5 x n + 5 x (house levels on that island), on Pirate Point 20 + 5 x n, twice that on a
     boss wave; a lost wave pays 0. A
@@ -75,7 +80,7 @@ too_many_requests, 502 database_error, 503 database_unavailable.
 Used by: the bell, the wave bar and the Pirate Point battle of the game client (lane P).
 """
 
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
@@ -119,6 +124,8 @@ class FinishRequest(BaseModel):
     waveId: UUID
     survived: StrictBool
     shipsSunk: StrictInt = Field(ge=0, le=MAX_SHIPS_SUNK)
+    # v3 waves: the treasure galleon sunk, a boss finisher won (paid only where the wave allows it).
+    bonuses: list[Literal["galleon", "finisher"]] | None = Field(default=None, max_length=2)
 
 
 class ReviveRequest(BaseModel):
@@ -234,7 +241,13 @@ async def post_finish(
 ) -> FinishResponse:
     request.app.state.wave_budget.spend(player.id)
     finished = await waves.finish(
-        admin, catalogue, player.id, body.waveId, body.survived, body.shipsSunk
+        admin,
+        catalogue,
+        player.id,
+        body.waveId,
+        body.survived,
+        body.shipsSunk,
+        sorted(set(body.bonuses or [])),
     )
     return FinishResponse(
         loot=finished.loot,

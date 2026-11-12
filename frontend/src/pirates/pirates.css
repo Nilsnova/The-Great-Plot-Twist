@@ -110,3 +110,12 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 .pirate-prompt-fill{display:block;height:100%;width:0;background:var(--u-gold)}
 @media(max-width:760px){.pirate-down{font-size:13px;margin:2px -6px 0;padding:2px 6px}}
 @media(prefers-reduced-motion:reduce){.pirate-health.pirate-flash{animation:none}.pirate-health-fill{transition:none}}
+/* v3 waves: the wave's event under the wave's numbers (hud.js event), a banner at the start, then a chip. */
+.pirate-event{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:2px -6px 0;padding:4px 8px;border-radius:var(--u-radius-sm);background:#22394a;color:#f3ead2;font:600 14px/1.3 var(--u-font)}
+.pirate-event[hidden]{display:none}.pirate-event-title{font:700 15px/1.25 var(--u-serif);color:#ffe08a}.pirate-event-icon{font-size:15px}
+.pirate-event.is-open{padding:6px 10px;box-shadow:0 0 0 2px #ffcf6a}.pirate-event.is-open .pirate-event-title{font-size:18px}.pirate-event-line{flex-basis:100%}
+.pirate-event[data-event=fire_ships],.pirate-event[data-event=kraken]{background:#4a2a24}.pirate-event[data-event=treasure_galleon]{background:#4a3a14}
+.pirate-hud:has(.pirate-event.is-open) .pirate-boss{top:168px}
+@media(max-width:900px){.pirate-hud:has(.pirate-event.is-open) .pirate-boss{top:auto}}
+@media(max-width:760px){.pirate-event{font-size:13px}.pirate-event.is-open .pirate-event-title{font-size:16px}}
+.pirate-event-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
