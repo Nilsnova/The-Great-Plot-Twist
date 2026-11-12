@@ -1,5 +1,5 @@
 // Owns optional live actors and their HUD. Receives snapshots; sends bounded position/emote intents only.
-import {loadArt,placeArt,projectPoint} from './art.js';
+import {loadArt,mergeArt,placeArt,projectPoint} from './art.js';
 import {characterArtIds} from '../pixel/story-catalog.js';
 import {createPositionReporter} from '../controls/presence-report.js';
 export function createWorldExperience(ctx){
@@ -8,10 +8,11 @@ export function createWorldExperience(ctx){
   async function prepare(){
     if(pending||others||disposed)return;
     const ids=['deckhand','navigator','cook','salvager'].flatMap(role=>characterArtIds(`crew-${role}`));
+    for(let n=1;n<=10;n++)for(const view of ['','-back','-side'])ids.push(`captain-${n}${view}`,`captain-${n}${view}-walk-1`,`captain-${n}${view}-walk-2`);
     ids.push('lantern',...['wave','cheer','point','lantern','shrug'].map(id=>`emote-${id}`));
     pending=Promise.all([import('./others/index.js'),import('../screens/presence/index.js'),loadArt(ids),import('../ui/coin-counter.js')]).then(([actors,ui,art,counter])=>{
       if(disposed){releaseArt(art);return;}
-      ownedArt=art;localBubble=placeArt(ctx.scene,art,'emote-wave',0,0);localBubble.name='local-captain-emote';localBubble.visible=false;localBubble.renderOrder=942;others=actors.createOtherCaptains(ctx.scene,ctx.container,{...ctx.art,...art},ctx.reducedMotion);
+      ownedArt=art;localBubble=placeArt(ctx.scene,art,'emote-wave',0,0);localBubble.name='local-captain-emote';localBubble.visible=false;localBubble.renderOrder=942;others=actors.createOtherCaptains(ctx.scene,ctx.container,mergeArt(ctx.art,art),ctx.reducedMotion);
       coins=counter.createCoinCounter({reducedMotion:ctx.reducedMotion});
       ctx.container.querySelector('.captain-status')?.append(coins.element); // the play HUD shows 🪙 itself
       hud=ui.createPresenceHud({send:ctx.send});

@@ -1,17 +1,27 @@
-// Source texture density is independent of the unchanged logical sprite geometry. The world now
-// draws 1:1 at 16 native pixels per unit (td-clean), so the 16 px/unit sources are the default:
-// every sprite shares one pixel grid with the backdrops. { detail: true } still loads the 4x files.
+// World sprites (GAME-V3.md §7, clean cartoon 2D): every name with a cartoon drawing (src/art/) is
+// painted at runtime at the screen's density into a smooth, mipmapped, premultiplied texture, lazily
+// on first use. Names without one yet (other places, story props, emotes) still load the old pixel
+// PNG with nearest filtering. Logical geometry is unchanged: 16 logical px per world unit, the same
+// boxes and anchors, so every caller keeps its numbers. Positions are continuous (no pixel grid).
 import * as THREE from 'three';
 import { loadTexture } from './texture.js';
-import { pixelArtIds, pixelById, pixelSizes, snapPixel } from '../pixel/catalog.js';
-export const artSizes = pixelSizes;
+import { pixelArtIds, pixelById, pixelSizes } from '../pixel/catalog.js';
+import { islandFrame, islandSizes } from '../art/registry.js';
+import { lazyMaterials, screenDensity } from '../art/textures.js';
+// The pixel catalog's boxes, plus the frames only the cartoon set has (ten captains, boarders, the bell…).
+export const artSizes = { ...islandSizes(), ...pixelSizes };
 
-export async function loadArt(names = pixelArtIds, { detail = false } = {}) {
+let quality = 'high';
+/** The art density follows the quality setting (low: smaller textures); set before loading. */
+export function setArtQuality(name) { quality = name === 'low' ? 'low' : 'high'; }
+
+export async function loadArt(names = pixelArtIds, { detail = false, density = screenDensity(quality) } = {}) {
   if (!Array.isArray(names)) throw new Error('Art names must be an array.');
   const ids = [...new Set(names)];
   for (const id of ids) if (!Object.hasOwn(artSizes, id)) throw new Error(`Unknown drawing: ${id}`);
-  const loader = new THREE.TextureLoader(), materials = {};
-  const results = await Promise.allSettled(ids.map(async name => {
+  const cartoon = ids.filter(id => islandFrame(id)), materials = lazyMaterials(cartoon, density);
+  const pixel = ids.filter(id => !islandFrame(id)), loader = new THREE.TextureLoader();
+  const results = await Promise.allSettled(pixel.map(async name => {
     const item = pixelById[name];
     const path = `pixel/${detail && item.detail ? item.detail.file : item.file}`;
     const texture = await loadTexture(`${import.meta.env.BASE_URL}${path}`, loader);
@@ -25,15 +35,24 @@ export async function loadArt(names = pixelArtIds, { detail = false } = {}) {
   if (failed) { Object.values(materials).forEach(material => { material.map.dispose(); material.dispose(); }); throw failed.reason; }
   return materials;
 }
+/** Two art objects as one (lazy cartoon materials keep painting on first use). */
+export function mergeArt(...sources) {
+  const list = sources.filter(Boolean), owner = key => list.findLast(source => key in source);
+  return new Proxy({}, {
+    get: (_, key) => owner(key)?.[key], has: (_, key) => !!owner(key),
+    getOwnPropertyDescriptor: (_, key) => { const source = owner(key); return source ? {value: source[key], enumerable: true, configurable: true, writable: true} : undefined; },
+    ownKeys: () => [...new Set(list.flatMap(source => Reflect.ownKeys(source)))],
+  });
+}
 export function projectPoint(x, z) { return { x, y: -z * 0.72 }; }
 export function placeArt(scene, art, name, x, z, scale = 1) {
   if (!Object.hasOwn(artSizes, name) || !Object.hasOwn(art, name)) throw new Error(`Load drawing before placing it: ${name}`);
-  if (pixelById[name]) scale = Math.max(1, Math.round(scale));
+  if (pixelById[name] && !islandFrame(name)) scale = Math.max(1, Math.round(scale));
   const [width, height, anchor] = artSizes[name];
   const geometry = new THREE.PlaneGeometry(width * scale, height * scale);
   geometry.translate(0, height * scale * (0.5 - anchor), 0);
   const mesh = new THREE.Mesh(geometry, art[name]);
-  const point = projectPoint(x, z); mesh.position.set(snapPixel(point.x), snapPixel(point.y), 0);
+  const point = projectPoint(x, z); mesh.position.set(point.x, point.y, 0);
   mesh.renderOrder = 100 + z; mesh.frustumCulled = false;
   mesh.userData = { asset: name, ground: { x, z } }; scene.add(mesh);
   return mesh;

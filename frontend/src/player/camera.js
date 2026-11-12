@@ -1,28 +1,26 @@
-// Orthographic follow on the native pixel grid (td-clean): the follow itself stays continuous (so
-// tiny movements still add up), but the drawn camera sits on whole native pixels and its zoom on
-// whole device-pixel steps (pixel/display.js), so the art never shimmers or stretches unevenly.
+// Orthographic follow for the smooth cartoon art (GAME-V3.md §7): the follow and the zoom are
+// continuous; an exponential ease keeps the camera steady, and the smooth (linear, mipmapped)
+// textures need no pixel grid, so the art never shimmers at any position or zoom.
 import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
-import {pixelZoom} from '../pixel/display.js';
-const snap = value => Math.round(value * 16) / 16;
 
 export function createCamera(input) {
   const camera = new THREE.OrthographicCamera(-15, 15, 10, -10, .1, 200);
   const start = projectPoint(-1, 10);
   camera.position.set(start.x, start.y + 3.1, 100); camera.lookAt(camera.position.x, camera.position.y, 0);
-  camera.userData.viewHeight = 20;
+  camera.userData.viewHeight = 22; // world units tall at zoom 1 (at least 16 wide on a phone)
   let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1;
   const follow = new THREE.Vector2(camera.position.x, camera.position.y);
-  function place(x, y) { follow.set(x, y); camera.position.set(snap(x), snap(y), 100); }
+  function place(x, y) { follow.set(x, y); camera.position.set(x, y, 100); }
   function applyZoom(value) {
-    zoom = value; const stepped = pixelZoom(camera.userData.pixelScale ?? 1, value);
-    if (Math.abs(stepped - camera.zoom) > 1e-6) { camera.zoom = stepped; camera.updateProjectionMatrix(); }
+    zoom = value;
+    if (Math.abs(value - camera.zoom) > 1e-6) { camera.zoom = value; camera.updateProjectionMatrix(); }
   }
   return {camera, get yaw() { return 0; },
     setPlace(id, player) {
       placeId = id; targetZoom = 1; const point = projectPoint(player.x, player.z);
       place(point.x, point.y + 3.1); zoom = 1;
-      camera.zoom = pixelZoom(camera.userData.pixelScale ?? 1, 1); camera.updateProjectionMatrix();
+      camera.zoom = 1; camera.updateProjectionMatrix();
     },
     pause() { exploring = false; },
     overview() { exploring = false; targetZoom = 1; applyZoom(1); },

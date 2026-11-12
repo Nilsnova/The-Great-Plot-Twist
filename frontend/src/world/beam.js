@@ -13,7 +13,7 @@ const fragment = /* glsl */`
 ${pixelGlsl}${seaGlsl}
 uniform float strength,uAngle;uniform vec3 highlight;uniform vec2 uOrigin;varying vec2 vWorld;
 void main(){
-  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0,q=p-uOrigin,dir=vec2(cos(uAngle),sin(uAngle));
+  vec2 px=(vWorld*16.0),p=(px+.5)/16.0,q=p-uOrigin,dir=vec2(cos(uAngle),sin(uAngle));
   float along=dot(q,dir)/31.0,across=abs(dot(q,vec2(-dir.y,dir.x)));
   if(along<=0.0||along>1.0)discard;
   float edge=1.0-across/max(.02,along*4.5);

@@ -1,5 +1,7 @@
 # Saltreach Isles graphics
 
+> **12 Nov 2026: clean cartoon 2D replaces the pixel art** ([GAME-V3.md §7](../docs/GAME-V3.md), section *Clean cartoon art (v3)* at the end). The pixel sections below stay as history; the pixel PNGs and generators stay in place for the places not yet redrawn.
+
 > **10 Nov 2026: the mystery left the game** (D031 in [DECISIONS.md](../docs/DECISIONS.md), [PITCH.md](../docs/PITCH.md)). The sections below on Act 1 in the browser, the demo tour, the case adapter, board, finale, reveal, relighting, rewards, partners in the world, the Captain’s Log and hints, the golden path, Gull’s Rest, the Chapter 2 hook, the presenter kit, the festival frontend and the bulletin describe screens and checks that were removed on 10 Nov. They stay as history; their files and `npm run` scripts no longer exist.
 
 
@@ -1091,3 +1093,15 @@ Sprites load the 16 px/unit sources by default (`loadArt(ids, {detail: true})` s
 bands with crisp edges. Ground and place backdrops have calm grass bands, clustered tufts, a few
 flower clusters, flat paths with a one-pixel rim. The coast distance field keeps linear filtering on
 purpose (it is a distance field, not art). Measured at 1280 × 720 with `?perf=1`: 60 fps, 55 calls.
+
+## Clean cartoon art (v3, 12 November)
+
+The owner asked for super clean art in the direction of mobile strategy games instead of pixel art. Every sprite the home island shows is now vector paths drawn with Canvas 2D at runtime (`src/art/`), with original designs: smooth shapes, a bold dark outline (each part stroked, plus one silhouette ring around the whole sprite), a two-tone shade on the side away from the top-left light, a few highlights, warm saturated colours.
+
+- **Module.** `src/art/paint.js` (the kit: path builders, `part()` fill + shade + outline, `paint()` rasterises a drawing into a canvas at a density), `people.js` (ten captain colours with front/back/side and two walk frames, the musket pose, gunner/carpenter/lookout, the boarders `boarder`, `boarder-walk-1/2`, `boarder-hit`), `island.js` (trees, props, the cabin, the bell, build ring and badges, walls/cannons/mortars by level, watchtower, house), `fleet.js` (sloop, brig, flagship, warship with three bobbing frames each, wreck, shots, splashes, smoke, fire, explosions, musket flash; its own lazy chunk), `ground.js` (the home island's sand, meadow and paths), `registry.js` (which names exist) and `textures.js` (Three.js glue).
+- **Same names and boxes.** Every frame keeps the old atlas name, box and anchor (16 logical px per world unit), so `placeArt`, the wave renderer and the island decorations did not change their numbers. Names without a drawing yet (other places, story props, emotes) still load their pixel PNG with nearest filtering.
+- **Textures.** Painted once per frame name at the screen's density (texels per logical px: about what the screen shows at zoom 1, high quality up to 4, low up to 2), linear filtering with mipmaps, premultiplied alpha (`spriteMaterial`, a class so clones keep the program). Island sprites are painted lazily on first use (`lazyMaterials`), so ten captain colours cost nothing until someone wears one. The wave atlas packs every fleet, fx, building and crew frame into one texture fitted to a budget (40 MB high, 12 MB low with mipmaps). The ground is 16 to 32 texels per world unit.
+- **Rendering.** `core/renderer.js` draws at full resolution (device ratio within the quality budget and the frame budget, `pixel/display.js`), framed at 22 world units tall and at least 16 wide. Camera follow, zoom and every sprite position are continuous; the shared GLSL helpers return smooth ramps, the sea (`world/water.js`) is a smooth depth gradient with soft light streaks, antialiased foam lines along the coast and soft glints; sparks are round, rings antialiased.
+- **HUD.** `ui/kit/kit.css` tokens: rounded deep-teal panels with a thin brass rim and a soft shadow (`--u-frame`, `--u-radius*`), warm parchment plates, buttons with a slight bevel (`--u-bevel`, `--u-bevel-quiet`), the system sans-serif (rounded where the platform has one) instead of the monospace.
+- **Tools.** `node scripts/art-sheet.js <out.png> [density] [regex]` renders every drawing on one sheet; `node scripts/capture-art.js <folder> 1280x800 [label] [ratio]` captures the island, a wave, the HUD, 40 ships and night, with frame rates.
+

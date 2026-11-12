@@ -67,7 +67,7 @@ export function bladeTarget(player, state) {
   return best;
 }
 const pirateById = (state, id) => state?.boarders?.find(item => item.id === id) ?? state?.ships?.find(item => item.id === id) ?? null;
-let atlasPromise = null;
+let atlasPromise = null, atlasKey = null;
 
 // The wider view during a wave: cannons reach about 28 units, ships appear about 40 units out, so the
 // camera shows about 34 units either side of the player (half zoom on a 16:9 screen, 0.4 on a phone).
@@ -114,7 +114,10 @@ const defaultCutscene = (world, reducedMotion) => async id => {
 };
 const defaultRenderer = async options => {
   const module = await import('./render.js');
-  atlasPromise ??= module.loadAtlas().catch(error => { atlasPromise = null; throw error; });
+  // One atlas at a time, painted again when your lobby colour (the musket and cutlass poses) changes.
+  const key = `${options.quality?.() === 'low' ? 'low' : 'high'}:${options.colour ?? 0}`;
+  if (atlasKey !== key) { atlasPromise = null; atlasKey = key; }
+  atlasPromise ??= module.loadAtlas({ quality: key.split(':')[0], colour: options.colour ?? 0 }).catch(error => { atlasPromise = null; throw error; });
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
@@ -125,7 +128,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   simOptions = {}, beamFrom = null, cutsceneFor = (result, summary) => (summary.lampsRelit ? 'lamps_relit' : result.survived ? 'wave_won' : 'wave_lost'),
   playCutscene = defaultCutscene(world, reducedMotion), createRenderer = defaultRenderer, createHud = defaultHud,
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id), onEvents = null,
-  getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket',
+  getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null } = {}) {
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
@@ -188,7 +191,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 } };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
-      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom })).then(renderer => {
+      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0) })).then(renderer => {
         if (disposed || wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
     }

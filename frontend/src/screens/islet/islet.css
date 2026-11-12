@@ -30,7 +30,7 @@
 .islet-detail { color: #d1dabc; }
 
 /* The badge says the state in words. Its border and fill differ too, so colour is never the only cue. */
-.islet-badge { padding: 3px 8px; border: 2px solid #8da474; font: 18px/1.4 'Courier New', monospace; white-space: nowrap; background: #3a5741; color: #ece0b8; }
+.islet-badge { padding: 3px 8px; border: 2px solid #8da474; font: 18px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; white-space: nowrap; background: #3a5741; color: #ece0b8; }
 .islet-badge[data-tone='built'] { background: var(--kit-gold, #f3d58c); border-color: var(--kit-gold, #f3d58c); color: #20392d; font-weight: bold; }
 .islet-badge[data-tone='locked'] { border-style: dashed; background: transparent; color: #d1dabc; }
 

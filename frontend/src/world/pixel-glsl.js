@@ -1,8 +1,8 @@
 // Shared GLSL for the code-drawn world effects (water, sky, rain, fog, beams, light pools, sparks).
-// Every effect works on the native pixel grid: 16 pixels per world unit, so a fragment first snaps
-// its drawn position to the pixel it belongs to, then picks one colour from a small palette.
-// Ramps become a few flat colour bands with crisp one-pixel edges (td-clean): no salt-and-pepper
-// dithering. bayer4 stays for callers that still want an ordered pattern; the world effects do not.
+// With the clean cartoon art (GAME-V3.md §7) the effects are smooth: pxSteps and pxBands keep their
+// names and arguments but return the continuous value (no flat bands), and callers sample their
+// drawn position directly instead of snapping it to the old 16 px/unit grid. bayer4 stays for
+// callers that still want an ordered pattern; the world effects do not.
 export const PIXELS_PER_UNIT = 16;
 
 export const pixelGlsl = /* glsl */`
@@ -20,10 +20,9 @@ float bayer4(vec2 px){
 }
 float pxNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
   return mix(mix(pxHash(i),pxHash(i+vec2(1,0)),f.x),mix(pxHash(i+vec2(0,1)),pxHash(i+vec2(1,1)),f.x),f.y);}
-// Quantise v (0..1) to steps flat levels (px is kept so every caller stays on the native grid).
-float pxSteps(float v,float steps,vec2 px){return floor(clamp(v,0.0,1.0)*steps+.5)/steps;}
-// Flat bands with a clean edge between them (spread is accepted and ignored: no dithered seam).
-float pxBands(float v,float steps,vec2 px,float spread){return floor(clamp(v,0.0,1.0)*steps+.5)/steps;}
+// Smooth ramps: v clamped to 0..1 (steps, px and spread are accepted for the old callers and ignored).
+float pxSteps(float v,float steps,vec2 px){return clamp(v,0.0,1.0);}
+float pxBands(float v,float steps,vec2 px,float spread){return clamp(v,0.0,1.0);}
 `;
 
 // Last line of every fragment shader: linear colour to the screen's sRGB.

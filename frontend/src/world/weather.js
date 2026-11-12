@@ -30,11 +30,11 @@ ${pixelGlsl}${seaGlsl}
 uniform float uTime,uAmount,uLean,uSplash,uNight;uniform vec3 uDrop;
 varying vec2 vWorld;
 void main(){
-  vec2 px=floor(vWorld*16.0),p=(px+.5)/16.0;float alpha=0.0;vec3 colour=uDrop;
+  vec2 px=floor(vWorld*32.0),p=(px+.5)/32.0;float alpha=0.0;vec3 colour=uDrop;
   float sx=floor(px.x+px.y*uLean);
   if(mod(sx,3.0)==0.0){
     float lane=sx/3.0,h=pxHash1(lane*1.37+.11);
-    float period=64.0+h*72.0,y=px.y+uTime*(290.0+h*110.0)+h*517.0,m=mod(y,period);
+    float period=64.0+h*72.0,y=px.y+uTime*(580.0+h*220.0)+h*517.0,m=mod(y,period);
     float len=4.0+floor(h*5.0);
     if(m< len&&pxHash1(lane*3.17+floor(y/period)*7.1)< uAmount*.82)alpha=m<1.0?.62:m< len*.5?.42:.26;
   }

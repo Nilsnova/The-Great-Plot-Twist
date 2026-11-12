@@ -36,7 +36,7 @@ import {joinedHarbor} from './front-door/logic.js';
 import { createChart } from './ui/chart.js';
 import { createSailing } from './ui/sailing.js';
 import { settings } from './config.js';
-import { loadArt } from './world/art.js';
+import { loadArt, setArtQuality } from './world/art.js';
 import { pixelArtIds } from './pixel/catalog.js';
 import { createRenderer } from './core/renderer.js';
 import { createInput } from './core/input.js';
@@ -103,7 +103,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   setMenuTravel(travelOpen);
   chart = createChart(container, world, travel, () => graphics.renderer.domElement.focus(),{visible:id=>island?.chartVisible(id)??true,label:id=>island?.chartLabel(id)??(id==='lighthouse_isle'&&waves?.point?'Pirate Point':undefined)});
   function setUserQuality(name){setPreferences({quality:name});}
-  function quality(name) { settings.quality = name; graphics.setQuality(name); water.setQuality(name); }
+  function quality(name) { settings.quality = name; setArtQuality(name); graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) showChart(); },travel:()=>travelOpen(),controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),

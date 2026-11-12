@@ -49,3 +49,4 @@ button.u-chip{min-height:44px;cursor:pointer}.u-chip[aria-pressed=true],.u-chip.
 @media(max-width:650px){.kit-dialogue{padding:16px;gap:14px;flex-direction:column}.kit-panel{padding:var(--u-4)}.kit-table th,.kit-table td{padding:9px 5px}}
 @media(prefers-reduced-motion:reduce){.u-switch::before{transition:none}}
 .kit-portrait[hidden],.kit-dialogue[hidden],.kit-panel[hidden],.kit-button[hidden],.kit-tabpanel[hidden]{display:none!important}
+.kit-panel,.kit-paper,.kit-dialogue,.kit-tab,.u-choice label,.kit-choice,.kit-hud-bar,.kit-mini-chart,.kit-progress,.kit-badge,.u-chip{border-radius:var(--u-radius-xs)}

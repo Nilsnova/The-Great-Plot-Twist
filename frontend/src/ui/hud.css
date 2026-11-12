@@ -1,7 +1,7 @@
 /* The play HUD: 🪙 top-left, Menu and the quest strip top-right; the rest appears only when needed.
-   Small pixel frames use the same notched brass edge as the panels (kit.css), drawn with box-shadow. */
+   Small frames use the same rounded brass rim and soft shadow as the panels (kit.css tokens). */
 .hud-play{font-family:var(--u-font);color:var(--u-ink)}
-.hud-play .hud-coins,.hud-play .hud-menu,.hud-play .quest-strip,.hud-play .interact,.hud-arrival{box-shadow:0 -2px var(--u-brass),0 2px var(--u-brass),-2px 0 var(--u-brass),2px 0 var(--u-brass),-2px -2px var(--u-deep),2px -2px var(--u-deep),-2px 2px var(--u-deep),2px 2px var(--u-deep),0 -4px var(--u-deep),0 4px var(--u-deep),-4px 0 var(--u-deep),4px 0 var(--u-deep),0 8px #0006}
+.hud-play .hud-coins,.hud-play .hud-menu,.hud-play .quest-strip,.hud-play .interact,.hud-arrival{box-shadow:var(--u-frame);border-radius:var(--u-radius-sm)}
 .hud-play .hud-coins{position:absolute;top:18px;left:20px;display:flex;align-items:center;min-height:44px;padding:6px 16px;background:var(--u-sea);font:800 22px/1 var(--u-font);color:var(--u-gold);font-variant-numeric:tabular-nums;letter-spacing:.5px;pointer-events:auto}
 .hud-play .hud-right{position:absolute;top:18px;right:20px;width:min(310px,calc(100vw - 40px));display:grid;justify-items:end;gap:14px}
 .hud-play .hud-menu{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;background:var(--u-sea);color:var(--u-ink);font:700 17px/1 var(--u-font);cursor:pointer;pointer-events:auto}
@@ -52,3 +52,4 @@
 html[data-reduced-motion=true] .hud-arrival{animation:none}
 .hud-play .hud-captain{margin-left:12px;padding-left:12px;border-left:2px solid var(--u-line);color:var(--u-ink);font-size:18px}
 .hud-play .hud-captain[hidden]{display:none}
+.quest-item,.quest-hint{border-radius:var(--u-radius-xs)}.quest-check{border-radius:8px}

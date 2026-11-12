@@ -22,6 +22,9 @@ import { crewArt, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 
 const UNIT = 16, Y = .72;
+// Characters on foot (boarders, the cutlass swing, the musket pose) are drawn this much larger in a wave, so
+// they read at the zoomed-out battle camera (GAME-V3.md §7 polish; 1 is the atlas box).
+export const CHARACTER_SCALE = 1.4;
 const WHITE = 'white';
 export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirateFrames.flagship, ...pirateFrames.warship,
   ...pirateFrames.splash, ...pirateFrames.wall, ...pirateFrames.cannon, ...pirateFrames.mortar,
@@ -69,23 +72,27 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
   return { width, height, rects };
 }
 
-/** Loads the pirate PNGs into one canvas texture (browser only). Cached by the caller. */
-export async function loadAtlas({ base = import.meta.env?.BASE_URL ?? './' } = {}) {
-  const load = id => new Promise((resolve, reject) => {
-    const image = new Image(); image.decoding = 'async';
-    image.onload = () => resolve([id, image]); image.onerror = () => reject(new Error(`Drawing failed: ${id}`));
-    image.src = `${base}pixel/${id}.png`;
-  });
-  const images = await Promise.all(ATLAS_IDS.map(load));
-  const pack = packAtlas();
-  const canvas = document.createElement('canvas'); canvas.width = pack.width; canvas.height = pack.height;
-  const context = canvas.getContext('2d'); context.imageSmoothingEnabled = false;
-  for (const [id, image] of images) context.drawImage(image, pack.rects[id].x, pack.rects[id].y);
-  const white = pack.rects[WHITE]; context.fillStyle = '#fff'; context.fillRect(white.x, white.y, white.w, white.h);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false;
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return { texture, ...pack };
+// Frames the cartoon set adds to the atlas (the boarders, GAME-V3.md §3), drawn in src/art/people.js; they
+// replace the pixel boarders (PIXEL_ONLY_IDS) in the cartoon atlas. drawBoarder() takes the cartoon frame
+// when the atlas has it, else the pixel one (pixel packAtlas, tests).
+export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack'];
+export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
+const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], hack: ['boarder', 'boarder-hack'], hit: 'boarder-hit', still: 'boarder' });
+/**
+ * Paints every atlas sprite in the clean cartoon style (src/art/) into one smooth texture (browser
+ * only; cached by the caller): linear filtering with mipmaps, premultiplied alpha, at the screen's
+ * density within the atlas budget. rects, width and height stay in logical px (16 per world unit).
+ */
+export async function loadAtlas({ quality = 'high', colour = 0 } = {}) {
+  const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
+  const { setPoseColour } = await import('../art/people.js');
+  setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS])];
+  const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
+  const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
+  context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
+  return { texture: smoothTexture(atlas.image), width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density,
+    rects: atlas.rects, density: atlas.density };
 }
 
 const spriteVertex = /* glsl */`
@@ -96,7 +103,7 @@ void main(){
   vec2 local=vec2((corner.x-iSize.z)*iSize.x,corner.y*iSize.y-iSize.w);
   float c=cos(iPos.z),s=sin(iPos.z);
   local=vec2(local.x*c-local.y*s,local.x*s+local.y*c);
-  vec2 origin=floor(iPos.xy*16.0+.5)/16.0;
+  vec2 origin=iPos.xy;
   vUv=mix(iUv.xy,iUv.zw,corner);vTint=iTint;vFlash=iFlash;
   gl_Position=projectionMatrix*viewMatrix*vec4(origin+local,0.0,1.0);
 }`;
@@ -104,8 +111,9 @@ const spriteFragment = /* glsl */`
 uniform sampler2D uMap;varying vec2 vUv;varying vec4 vTint;varying float vFlash;
 void main(){
   vec4 t=texture2D(uMap,vUv);float a=t.a*vTint.a;
-  if(a<.03)discard;
-  gl_FragColor=vec4(mix(t.rgb*vTint.rgb,vec3(1.0,.96,.82),vFlash),a);
+  if(a<.004)discard;
+  // Premultiplied: the texel's colour already carries its alpha; the tint's alpha fades both.
+  gl_FragColor=vec4(mix(t.rgb*vTint.rgb,vec3(1.0,.96,.82)*t.a,vFlash)*vTint.a,a);
   ${toScreen}
 }`;
 const fogVertex = /* glsl */`varying vec2 vWorld;void main(){vec4 w=modelMatrix*vec4(position,1.0);vWorld=w.xy;gl_Position=projectionMatrix*viewMatrix*w;}`;
@@ -113,13 +121,13 @@ const fogFragment = /* glsl */`
 ${pixelGlsl}
 uniform vec2 uCannons[8];uniform float uCount,uSight,uFog,uTime;varying vec2 vWorld;
 void main(){
-  vec2 px=floor(vWorld*16.0);vec2 p=(px+.5)/16.0;vec2 logical=vec2(p.x,-p.y/.72);
+  vec2 p=vWorld;vec2 logical=vec2(p.x,-p.y/.72);
   float d=1e4;
   for(int i=0;i<8;i++){if(float(i)>=uCount)break;d=min(d,length(logical-uCannons[i]));}
   float drift=pxNoise(vec2(p.x*.09+uTime*.05,p.y*.16))*.35;
   float edge=smoothstep(uSight-1.5,uSight+5.0,d+drift*3.0);
-  float a=pxSteps(edge*(.32+.42*uFog)+drift*edge*.15,4.0,px);
-  if(a<=0.0)discard;
+  float a=clamp(edge*(.32+.42*uFog)+drift*edge*.15,0.0,1.0);
+  if(a<=.002)discard;
   gl_FragColor=vec4(vec3(.80,.85,.84),a);
   ${toScreen}
 }`;
@@ -194,13 +202,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const rect = {};
   for (const [id, r] of Object.entries(atlas.rects)) {
-    // Half a texel in from every edge so neighbours never bleed in.
+    // A hair in from every edge so neighbours never bleed in.
     rect[id] = { u0: (r.x + .01) / atlas.width, u1: (r.x + r.w - .01) / atlas.width,
       v0: 1 - (r.y + r.h - .01) / atlas.height, v1: 1 - (r.y + .01) / atlas.height, w: r.w / UNIT, h: r.h / UNIT, anchor: r.anchor / UNIT };
   }
   const tintOf = r => (r?.tint ? { r: r.tint.r, g: r.tint.g, b: r.tint.b } : {});
   const material = new THREE.ShaderMaterial({ vertexShader: spriteVertex, fragmentShader: spriteFragment,
-    uniforms: { uMap: { value: atlas.texture } }, transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
+    uniforms: { uMap: { value: atlas.texture } }, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
   owned.push(material);
   const layers = {
     far: createLayer('far-sea', CAPACITY.far, material, LAYER_ORDER.far, owned),
@@ -439,13 +447,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawBoarder(boarder) {
     const meta = boarderMeta(boarder.id), layer = bands[bandOf(boarder.z)], x = boarder.x, y = drawnY(boarder.z);
     meta.facing = boarder.facing ?? meta.facing;
-    const frames = FRAMES.boarder, hacking = boarder.state === 'hacking';
+    const frames = FRAMES.boarder, hacking = boarder.state === 'hacking', hit = clock < meta.flashUntil;
     const step = still() ? 0 : Math.floor(clock * (hacking ? 3 : 5) + meta.phase) % 2;
-    const r = rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
+    const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : still() ? BOARDER_ART.still : BOARDER_ART.walk[step];
+    const r = rect[cartoon] ?? rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
     if (!r) return;
-    layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, flashing: clock < meta.flashUntil ? .7 : 0 });
+    layer.push(r, x, y, r.w * CHARACTER_SCALE, r.h * CHARACTER_SCALE, .5, r.anchor * CHARACTER_SCALE, { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0 });
     if (boarder.hp < boarder.maxHp) {
-      const top = y + r.h - r.anchor - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
+      const top = y + (r.h - r.anchor) * CHARACTER_SCALE - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });
       layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? GOLD : RED), a: 1 });
     }
@@ -453,14 +462,14 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   // A fallen boarder: the sprite sinks and fades under a puff of smoke.
   function drawFallen(item) {
     const p = Math.min(1, (clock - item.at) / FALL_SECONDS), layer = bands[bandOf(item.z)], y = drawnY(item.z);
-    const r = rect[FRAMES.boarder[0]];
-    if (r) layer.push(r, item.x, y, r.w, r.h * (1 - p * .5), .5, r.anchor, { flip: item.facing < 0, a: 1 - p, flashing: .5 * (1 - p) });
+    const r = rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = CHARACTER_SCALE;
+    if (r) layer.push(r, item.x, y, r.w * k, r.h * k * (1 - p * .5), .5, r.anchor * k, { flip: item.facing < 0, a: 1 - p, flashing: .5 * (1 - p) });
     const puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
     if (puff) layer.push(puff, item.x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
   }
   function drawStrike(item) {
-    const r = rect['captain-cutlass'];
-    if (r) bands[bandOf(item.z)].push(r, item.x, drawnY(item.z), r.w, r.h, .5, r.anchor, { flip: item.dir < 0 });
+    const r = rect['captain-cutlass'], k = CHARACTER_SCALE;
+    if (r) bands[bandOf(item.z)].push(r, item.x, drawnY(item.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: item.dir < 0 });
   }
 
   function drawBall(ball) {
@@ -553,8 +562,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawPose(tracer) {
     const age = clock - tracer.at;
     if (age >= POSE_SECONDS) return;
-    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]];
-    layers.air.push(r, tracer.x, drawnY(tracer.z), r.w, r.h, .5, r.anchor, { flip: tracer.toX < tracer.x });
+    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]], k = CHARACTER_SCALE;
+    layers.air.push(r, tracer.x, drawnY(tracer.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: tracer.toX < tracer.x });
   }
   function drawCaptain() {
     // The reload ring around your own captain: 12 brass dots fill up until the musket is ready again.
