@@ -21,9 +21,14 @@
 /* Visiting a friend: a slim chip under the coins (top left), clear of the prompts at the bottom. */
 .island-visit{position:fixed;left:20px;top:82px;z-index:25;display:flex;gap:var(--u-3);align-items:center;box-sizing:border-box;
   font:600 15px/1.35 var(--u-font);color:var(--u-ink);background:var(--u-sea);padding:6px 6px 6px 12px;max-width:min(420px,calc(100vw - 32px))}
-.island-visit .kit-button{min-height:40px;padding:6px 10px;font-size:15px}
+.island-visit .kit-button{min-height:40px;padding:6px 10px;font-size:15px;flex:none}
+/* One line, so the chip keeps one height: a long host name ends in "…" (the whole text is still read out). */
+.island-visit>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .island-banner[hidden],.island-visit[hidden]{display:none}
 @media(max-width:900px){.island-banner{top:auto;bottom:164px;padding:8px 16px 10px}.island-banner-text{font-size:20px}.island-visit{left:12px;top:70px;max-width:calc(100vw - 24px);font-size:14px}.island-code{font-size:24px}}
+/* Phones: the goals strip spans the width under the Menu (src/ui/hud.css), where the chip sits (70 to 122 px).
+   While the chip shows, the strip starts under it (130 px) instead of under the Menu (68 px). */
+@media(max-width:900px){html:has(.island-visit:not([hidden])) .hud-play .quest-strip{margin-top:62px}}
 /* Tower defense (docs/TOWER-DEFENSE.md): level pips, the cannon-or-mortar choice, the next level, the crew
    rows, Play with a friend's link and the captains' name tags. */
 .island-level{display:flex;flex-wrap:wrap;align-items:center;gap:var(--u-2) var(--u-3)}
