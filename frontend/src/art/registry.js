@@ -4,9 +4,10 @@
 import {peopleFrames} from './people.js';
 import {islandFrames} from './island.js';
 import {campaignFrames} from './campaign.js';
+import {extraFrames} from './extras.js';
 
 let local = null;
-const island = () => (local ??= {...peopleFrames(), ...islandFrames(), ...campaignFrames()});
+const island = () => (local ??= {...peopleFrames(), ...islandFrames(), ...campaignFrames(), ...extraFrames()});
 let fleet = null;
 const FLEET = /^(pirate-|fx-)/;
 /** True when a cartoon drawing exists for the frame name (fleet names are known by their prefix). */
