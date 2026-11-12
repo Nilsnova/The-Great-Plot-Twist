@@ -39,6 +39,7 @@
 //   isBlocked(): an overlay is open, unproject(clientX, clientY): logical {x, z}, project(x, z, lift): the
 //   point on screen {x, y} in px of the container (the timers over fallen captains)}; every field optional.
 // room: {send(type, payload), on(type, handler) -> unsubscribe}, the island's or Pirate Point's live room.
+import { createPoses } from './poses.js';
 import { CONFIG, createWave, revivePrice } from './sim.js';
 import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
@@ -151,6 +152,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null } = {}) {
+  // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
+  const poses = createPoses({ now: () => now() / 1000 });
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
   let holdE = false, holdPrompt = false; // E or the prompt held down (a revive)
   let figures = null; // the presence figures' positions of the other captains (setFigures)
@@ -305,8 +308,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     wave.captainAt = t;
     const dx = point.x - player.x, dz = point.z - player.z, length = Math.hypot(dx, dz) || 1, reach = Math.min(length, stats.range);
     const toX = player.x + dx / length * reach, toZ = player.z + dz / length * reach;
-    wave.renderer?.events([{ type: 'captain_fired', t, by: playerId, level: stats.level, weapon: stats.weapon, mode: stats.mode,
-      x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, miss: true, targets: [] }]);
+    const shot = [{ type: 'captain_fired', t, by: playerId, level: stats.level, weapon: stats.weapon, mode: stats.mode,
+      x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, miss: true, targets: [] }];
+    wave.renderer?.events(shot); poses.note(shot);
     cue('pirate-cannon-manual');
     return true;
   }
@@ -463,7 +467,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       }
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
-    if (current.shown) current.renderer?.events(fresh);
+    if (current.shown) { current.renderer?.events(fresh); poses.note(fresh); }
     // Captain health for the narrator (GAME-V3.md §6): only what happens now, not a late joiner's catching up.
     for (const event of fresh) {
       if (event.type === 'captain_fell') emit({ type: 'player_fell', playerId: event.captainId, self: event.captainId === playerId });
@@ -626,7 +630,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!current) return;
     wave = null; current.finished = true;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
-    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear();
+    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); poses.clear();
     emit({ type: 'wave_controller_stopped', waveId: current.info.waveId });
   }
 
@@ -645,6 +649,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     get captainDown() { return isDown(wave); },
     get revive() { return wave?.revive ? { targetId: wave.revive.targetId, share: wave.revive.share, paying: wave.revive.paying } : null; },
     get playerId() { return playerId; },
+    // The pose of a captain of the wave on screen ({kind, flip, age} from poses.js, or null): your own by
+    // playerId, a teammate's by their sim id. Drawing only.
+    pose(by) { return wave && !wave.finished && wave.shown ? poses.get(by) : null; },
     // Where the presence draws the other captains (src/pirates/figures.js figurePositions: sim id -> {x, z}),
     // so their hp bars sit over the figures; null draws them where the sim has them.
     setFigures(value) { figures = value instanceof Map ? value : null; },

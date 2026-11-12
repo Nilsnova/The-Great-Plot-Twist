@@ -186,6 +186,39 @@ async function compare(a, b, waveId) {
   return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed};
 }
 
+// The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
+// page, the owner's figure switch to the musket pose; no second captain is drawn where the shot was fired.
+const poseSeen = (page, figure) => page.waitForFunction(figure => { let on = false;
+  window.__island.scene.traverse(item => { if (item.name === 'captain-pose' && item.visible && (item.parent?.parent?.name === 'other-captains') === figure) on = true; });
+  return on; }, figure, {timeout: 3000, polling: 16}).then(() => true, () => false);
+async function musketPose(host, ben) {
+  let seen = {own: false, figure: false}, probe = null;
+  for (let attempt = 0; attempt < 3 && !(seen.own && seen.figure); attempt++) {
+    const spot = await host.page.evaluate(() => { const ships = window.__island.waves.island.wave?.state?.ships ?? [];
+      if (!ships.length) return null; const ship = ships.reduce((a, b) => (Math.hypot(a.x, a.z) < Math.hypot(b.x, b.z) ? a : b)), d = Math.hypot(ship.x, ship.z);
+      return {x: ship.x * 14 / d, z: ship.z * 14 / d, bx: ship.x * 10 / d, bz: ship.z * 10 / d}; });
+    if (!spot) break;
+    await stand(host, spot); await stand(ben, {x: spot.bx, z: spot.bz});
+    // ?islands=fake has no live presence, so the friend's page draws no figure for the owner (a shooter
+    // without a figure shows only the flash, tracer and puff). Stand one in for it where the owner is,
+    // under his member id (his lobby colour), through the presence's own simulate().
+    await ben.page.evaluate(([x, z, id]) => { const g = window.__island, place = g.island.presencePlace('home_islet');
+      g.experience.simulate({status: 'live', place, others: [{id, name: 'Nils', x, y: z, facing: 'front', moving: false, place}], hiddenCount: 0, sampledAt: Date.now()}); },
+      [spot.x, spot.z, host.playerId]);
+    await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
+    let fired = false;
+    for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(() => window.__island.waves.island.shoot()); if (!fired) await host.page.waitForTimeout(300); }
+    if (!fired) continue;
+    const [own, figure] = await Promise.all([poseSeen(host.page, false), poseSeen(ben.page, true)]);
+    if (own && !seen.own) await host.page.screenshot({path: `${out}/05b-musket-pose-own-${host.playerId}.png`});
+    if (figure && !seen.figure) await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-${ben.playerId}.png`});
+    seen = {own: seen.own || own, figure: seen.figure || figure};
+    if (!figure) probe = await ben.page.evaluate(() => { const g = window.__island, w = g.waves;
+      return {figures: g.experience.figures(), party: (w.island.state?.party ?? []).map(h => ({id: h.id, colour: h.colour, present: h.present, x: h.x, z: h.z})), mine: w.island.playerId}; });
+  }
+  await ben.page.evaluate(() => window.__island.experience.simulate(null));
+  return {seen, probe};
+}
 const results = [];
 const captainShots = [];
 // Where nobody fights: north of the heart, away from the three sea lanes (east, south, west).
@@ -449,6 +482,12 @@ try {
   assert.deepEqual([...members].sort(), ['Ana', 'Ben', 'Max', 'Nils'], 'all four are members of the game');
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
+  {
+    const {seen, probe} = await musketPose(host, ben);
+    results.push(`musket pose: the owner's own body ${seen.own ? 'posed' : 'not seen posing'}, his figure on the friend's page ${seen.figure ? 'posed' : 'not seen posing'}`);
+    if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
+    assert.ok(seen.own, "the owner's own character takes the musket pose when he fires");
+  }
   for (const captain of [ben, ana, max]) {
     const sync = await compare(host, captain, second.waveId);
     results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);

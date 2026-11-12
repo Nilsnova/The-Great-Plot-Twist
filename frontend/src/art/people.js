@@ -225,6 +225,13 @@ export function peopleFrames() {
   frames['captain-musket-1'] = [48, 32, 3, c => musketPose(posePalette(), false)(c)];
   frames['captain-musket-2'] = [48, 32, 3, c => musketPose(posePalette(), true)(c)];
   frames['captain-cutlass'] = [48, 32, 3, c => cutlassPose(posePalette())(c)];
+  // Every colour's poses, for the captain's own body (src/pirates/poses.js): your character and a teammate's
+  // figure fire and strike in their own colour instead of a second captain drawn where the shot was fired.
+  CAPTAIN_PALETTES.forEach((pal, i) => {
+    frames[`captain-${i + 1}-musket-1`] = [48, 32, 3, musketPose(pal, false)];
+    frames[`captain-${i + 1}-musket-2`] = [48, 32, 3, musketPose(pal, true)];
+    frames[`captain-${i + 1}-cutlass`] = [48, 32, 3, cutlassPose(pal)];
+  });
   // Captain health: every colour's fallen captain (a wave shows each captain who is down in their colour).
   CAPTAIN_PALETTES.forEach((pal, i) => { frames[`captain-down-${i + 1}`] = [40, 24, 3, fallenCaptain(pal)]; });
   for (const kind of ['gunner', 'carpenter', 'lookout']) frames[`crew-${kind}`] = [16, 32, 3, crewFigure(kind)];
