@@ -422,6 +422,11 @@
     "piratePointBase": 40,
     "bossMultiplier": 2
   },
+  "revive": {
+    "about": "Captain health (docs/GAME-V3.md section 3): a teammate who helps a fallen captain up during wave n pays base + perWave x n coins (reason captain_revive). The same numbers are CONFIG.health.revive in frontend/src/pirates/sim.js; a test keeps them equal.",
+    "base": 20,
+    "perWave": 5
+  },
   "waves": {
     "countdownSeconds": 5,
     "minimumSeconds": 10,

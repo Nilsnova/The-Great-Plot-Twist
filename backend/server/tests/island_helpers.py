@@ -10,6 +10,7 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * GET islands, GET profiles                a visit by code and the owner's captain name
   * POST rpc/wave_start, rpc/wave_finish     start_reply and finish_reply
   * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
+  * POST rpc/wave_revive                     revive_reply (captain health, default REVIVED)
   * GET islands?player_id=                   the tower defense columns (progress)
   * GET wallet_transactions                  the repeat check of a paid action (ledger_refs)
   * POST rpc/island_build, island_upgrade, island_hire, island_captain, pp_build, pp_upgrade,
@@ -110,6 +111,7 @@ PAID_FUNCTIONS = (
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
 LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": False}
+REVIVED = {"status": "done", "price": 35, "balance": 65, "repeat": False}
 EQUIPPED = {"status": "done", "weapon": "musket"}
 
 
@@ -155,6 +157,7 @@ class FakeIslandDatabase:
         self.finish_reply: dict | httpx.Response = FINISHED
         self.join_reply: dict | httpx.Response = {**STARTED, "status": "joined"}
         self.current_reply: dict | None = None
+        self.revive_reply: dict | httpx.Response = REVIVED
         self.progress = {
             "wave_best": 0,
             "next_wave": None,
@@ -193,6 +196,7 @@ class FakeIslandDatabase:
             "POST /rpc/wave_finish": lambda _: self.answer(self.finish_reply),
             "POST /rpc/wave_join": lambda _: self.answer(self.join_reply),
             "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
+            "POST /rpc/wave_revive": lambda _: self.answer(self.revive_reply),
             "GET /wallet_transactions": self.read_ledger,
             "GET /captain_skill_learns": lambda request: httpx.Response(
                 200,
@@ -499,3 +503,8 @@ class World:
         request = {"waveId": WAVE_ID, "survived": True, "shipsSunk": 7}
         request.update(body)
         return self.client.post("/api/waves/finish", json=request, headers=headers)
+
+    def revive(self, headers=PLAYER, **body) -> httpx.Response:
+        request = {"waveId": WAVE_ID, "fallen": "p-k3x9q2", "actionUid": "help-0001"}
+        request.update(body)
+        return self.client.post("/api/waves/revive", json=request, headers=headers)

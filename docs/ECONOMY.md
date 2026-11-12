@@ -33,6 +33,7 @@ The tables of [TOWER-DEFENSE.md](TOWER-DEFENSE.md) sections 2 to 4, 9 and 10, al
 | Gunner / carpenter / lookout | 40 / 30 / 25 each, at most 2 / 2 / 1 | 5 / 5 / 8 | `island_hire()` (`crew_hire`, ref `crew:<uid>`) |
 | Captain level 2 / 3 / 4 / 5 | 20 / 40 / 80 / 160 | 1 / 1 / 8 / 8 | `island_captain()` (`captain_upgrade`, ref `captain:<uid>`) |
 | Pirate Point spots | the same prices, paid by whoever clicks | the clicker's unlocks | `pp_build()` / `pp_upgrade()` (`building_purchase`, ref `pp:<uid>`) |
+| Helping a fallen captain up in wave *n* ([GAME-V3.md](GAME-V3.md) §3) | 20 + 5 × *n*, paid by the helper | — | `wave_revive()` (`captain_revive`, ref `revive:<uid>`), migration `20261112050000_captain_revive.sql` |
 | Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house level; Pirate Point 20 + 5 × *n*; every 5th wave (boss) × 2 | — | the 11-argument `wave_finish()` |
 
 Waves go up to 100. The unlock wave is the best wave the player won: their own island's best, or

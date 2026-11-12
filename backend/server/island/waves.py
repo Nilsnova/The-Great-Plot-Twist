@@ -4,6 +4,7 @@
     join()     join a running wave, so a friend or a Pirate Point captain fights it too
     current()  the running wave of an island or of Pirate Point, or None
     finish()   one participant's result: their own loot, the coins, the best wave and the flags
+    revive()   a teammate helps a fallen captain up and pays 20 + 5 x wave (GAME-V3 section 3)
 
 Tower defense v2 (docs/TOWER-DEFENSE.md): up to wave 100, every 5th wave a boss wave (boss: true,
 its loot pays twice), and after a lost island wave the next bell rings the best wave minus 2 (at
@@ -54,6 +55,13 @@ class WaveStart:
     weather: Weather
     flagship: bool  # True on Pirate Point: the flagship only the three lamps can sink
     boss: bool  # every 5th wave (islands.json bossEvery): a warship, and the loot pays twice
+
+
+@dataclass(frozen=True)
+class WaveRevive:
+    price: int  # what the helper paid (also on a repeat: what the first click paid)
+    coins: int  # the helper's coins after it
+    repeat: bool
 
 
 @dataclass(frozen=True)
@@ -219,3 +227,53 @@ async def finish(
     if isinstance(reply, Refusal):
         raise finish_refusal(reply)
     return WaveFinish(reply.loot, reply.balance, reply.waveBest, reply.flags, reply.boss)
+
+
+def revive_refusal(refusal: Refusal) -> ApiError:
+    if refusal.reason == "player_not_set_up":
+        return player_not_set_up()
+    if refusal.reason == "no_such_wave":
+        return no_such_wave()
+    if refusal.reason == "not_member":
+        return games.not_member()
+    if refusal.reason == "not_in_wave":
+        return ApiError(403, "not_in_wave", "Join the wave first: you are not in this wave.")
+    if refusal.reason == "wave_over":
+        return ApiError(409, "wave_over", "This wave is over: everybody stands up at the break.")
+    if refusal.reason == "insufficient_funds":
+        message = f"Helping a captain up costs {refusal.price} coins. You need more coins."
+        return ApiError(409, "insufficient_funds", message)
+    return SupabaseRejected()
+
+
+async def revive(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    wave_id: UUID,
+    fallen: str,
+    action_uid: str,
+) -> WaveRevive:
+    """Captain health (docs/GAME-V3.md section 3): the signed-in player helped a fallen captain
+    up in this wave and pays catalogue.revive.base + per_wave x the wave number (the database
+    reads the wave number itself). Only a member of the game (on an island; the owner always)
+    who is in the wave and has not finished it, while it runs. A repeated actionUid pays nothing
+    more and answers the same price. The fall and the standing up are the browsers' (the wave's
+    simulation); fallen is only recorded."""
+    where = await store.read_wave_place(admin, str(wave_id))
+    if where is None:
+        raise no_such_wave()
+    if where.place == "island" and where.island_owner is not None:
+        await games.require_member_of(admin, where.island_owner, player_id)
+    arguments = {
+        "p_player_id": player_id,
+        "p_wave_id": str(wave_id),
+        "p_fallen": fallen,
+        "p_action_uid": action_uid,
+        "p_base": catalogue.revive.base,
+        "p_per_wave": catalogue.revive.per_wave,
+    }
+    reply = await store.revive_captain(admin, arguments)
+    if isinstance(reply, Refusal):
+        raise revive_refusal(reply)
+    return WaveRevive(reply.price, reply.balance, reply.repeat)

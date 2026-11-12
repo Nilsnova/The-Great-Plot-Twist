@@ -18,6 +18,8 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
     island_learn_skill, island_weapon_buy, island_weapon_equip
                                                the captain's skills and weapons
                                                (20261112030000_captain_skills.sql)
+    wave_revive(...)                           a teammate helps a fallen captain up and pays
+                                               (20261112050000_captain_revive.sql)
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -422,6 +424,24 @@ async def current_wave(admin: SupabaseAdmin, place: str, owner: str | None) -> W
     """Run wave_current: the running wave of an island or Pirate Point, or None."""
     reply = await admin.call_function("wave_current", {"p_place": place, "p_island_owner": owner})
     return None if reply is None else read_model(WaveRow, reply)
+
+
+class RevivedRow(BaseModel):
+    """The answer of wave_revive: what the helper paid and their coins after it."""
+
+    status: Literal["done"]
+    price: StrictInt
+    balance: StrictInt
+    repeat: StrictBool
+
+
+async def revive_captain(admin: SupabaseAdmin, arguments: dict[str, Any]) -> RevivedRow | Refusal:
+    """Run wave_revive (captain health). A refusal changed nothing."""
+    reply = await admin.call_function("wave_revive", arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        refused = read_model(PaidRefusedRow, reply)
+        return Refusal(refused.reason, price=refused.price)
+    return read_model(RevivedRow, reply)
 
 
 async def finish_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> FinishedRow | Refusal:

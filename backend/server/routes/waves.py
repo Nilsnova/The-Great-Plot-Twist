@@ -50,6 +50,19 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7}
     Errors: 403 not_in_wave (never joined), 404 no_such_wave, 404 player_not_set_up,
             409 wave_too_early, 503 database_unavailable (outcome unknown: repeat the same finish)
 
+POST /api/waves/revive  {"waveId": "6f1c...", "fallen": "p-k3x9q2", "actionUid": "..."}
+    -> {"price": 35, "coins": 80, "repeat": false}
+    Captain health (docs/GAME-V3.md section 3): the signed-in player stood next to a fallen
+    teammate, held E for 2 s, and pays for helping them up: 20 + 5 x the wave number
+    (islands.json "revive"; the database reads the wave number). "fallen" is the teammate's id
+    in the wave's simulation, recorded only: the fall and the standing up happen in every
+    browser. Only a member of the game (the island's owner always; Pirate Point: everybody)
+    who is in the wave and has not finished it yet, while it runs. One payment per actionUid
+    (ledger reason captain_revive, ref revive:<actionUid>): a repeat pays nothing and answers
+    the first price with repeat true. Shares the budget of start, join and finish.
+    Errors: 403 not_member, 403 not_in_wave, 404 no_such_wave, 404 player_not_set_up,
+            409 wave_over, 409 insufficient_funds
+
 Every route also: 401, 403 demo_closed, 404 feature_off, 422 validation_error, 429
 too_many_requests, 502 database_error, 503 database_unavailable.
 
@@ -76,6 +89,8 @@ router = APIRouter()
 
 # "own", "pirate_point" or an island code with or without ISLE- (codes.read_code decides).
 WHERE_PATTERN = r"^[A-Za-z0-9_ -]{1,32}$"
+# A captain's id in the wave's simulation (frontend/src/pirates/sync.js BY).
+CAPTAIN_PATTERN = r"^[A-Za-z0-9_.:-]{1,64}$"
 MAX_SHIPS_SUNK = 1000
 
 
@@ -98,6 +113,20 @@ class FinishRequest(BaseModel):
     waveId: UUID
     survived: StrictBool
     shipsSunk: StrictInt = Field(ge=0, le=MAX_SHIPS_SUNK)
+
+
+class ReviveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    waveId: UUID
+    fallen: str = Field(pattern=CAPTAIN_PATTERN)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+
+
+class ReviveResponse(BaseModel):
+    price: int
+    coins: int
+    repeat: bool
 
 
 class WeatherOut(BaseModel):
@@ -206,3 +235,18 @@ async def post_finish(
         flags=finished.flags,
         boss=finished.boss,
     )
+
+
+@router.post("/waves/revive")
+async def post_revive(
+    body: ReviveRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> ReviveResponse:
+    request.app.state.wave_budget.spend(player.id)
+    revived = await waves.revive(
+        admin, catalogue, player.id, body.waveId, body.fallen, body.actionUid
+    )
+    return ReviveResponse(price=revived.price, coins=revived.coins, repeat=revived.repeat)

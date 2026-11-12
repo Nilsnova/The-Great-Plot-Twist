@@ -137,6 +137,15 @@ class Loot:
 
 
 @dataclass(frozen=True)
+class Revive:
+    base: int  # helping a fallen captain up during wave n costs the helper base + per_wave * n
+    per_wave: int
+
+    def price(self, wave: int) -> int:
+        return self.base + self.per_wave * wave
+
+
+@dataclass(frozen=True)
 class WaveTiming:
     countdown_seconds: int  # from the bell to the first ship
     minimum_seconds: int  # a finish earlier than this after the countdown is refused
@@ -167,6 +176,7 @@ class IslandCatalogue:
     skills: SkillTree
     weapons: tuple[Weapon, ...]
     loot: Loot
+    revive: Revive  # captain health (docs/GAME-V3.md section 3)
     waves: WaveTiming
     weather: tuple[Weather, ...]
 
@@ -359,6 +369,15 @@ def read_loot(data: dict) -> Loot:
     )
 
 
+def read_revive(data: dict) -> Revive:
+    entry = read_object(data, "revive")
+    read_text(entry, "about", "revive", 1000)  # the entry explains itself; checked only
+    return Revive(
+        base=read_whole(entry, "base", "revive", 1, 1000),
+        per_wave=read_whole(entry, "perWave", "revive", 0, 1000),
+    )
+
+
 def read_waves(data: dict) -> WaveTiming:
     entry = read_object(data, "waves")
     timing = WaveTiming(
@@ -413,6 +432,7 @@ def load_island(path: Path = CONTENT_FILE) -> IslandCatalogue:
         skills=read_skills(data),
         weapons=read_weapons(data),
         loot=read_loot(data),
+        revive=read_revive(data),
         waves=read_waves(data),
         weather=read_weather(data),
     )
