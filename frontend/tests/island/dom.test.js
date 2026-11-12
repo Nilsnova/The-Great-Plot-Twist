@@ -218,7 +218,13 @@ it("visits a friend's island by code: their buildings, building there with your 
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null});
     island.visit('isle-fr3nd');
     await island.load();
-    const visit = document.querySelector('.island-visit').textContent;
+    const chip = document.querySelector('.island-visit');
+    const visit = {text: chip.textContent, button: chip.querySelector('button').textContent, label: chip.querySelector('button').getAttribute('aria-label')};
+    // GAME-V3.md §2, one island: the chip is the game and opens its lobby (no "Sail home").
+    chip.querySelector('button').click();
+    await new Promise(resolve => setTimeout(resolve, 40));
+    visit.lobby = !!document.querySelector('.island-card-lobby[open]');
+    island.ui.close();
     island.pick('cannon_1');
     let card = document.querySelector('.island-card[open]');
     const built = {owner: card.querySelector('.island-owner').textContent, pips: card.querySelector('.island-pips').getAttribute('aria-label'),
@@ -244,7 +250,7 @@ it("visits a friend's island by code: their buildings, building there with your 
     island.dispose();
     return {visit, built, wallCard, paid, room, cabin, noInvite, lobbyRows, home};
   });
-  expect(result.visit).toContain("Visiting Captain Gull's island · ISLE-FR3ND");
+  expect(result.visit).toEqual({text: "Captain Gull's game · ISLE-FR3ND" + 'Players', button: 'Players', label: 'Players and invite', lobby: true});
   // The friend's island has won wave 2: level 2 is open there (its own campaign decides, GAME-V3.md §4).
   expect(result.built).toEqual({owner: "You pay · it stays on Captain Gull's island", pips: 'Level 1 of 3', soon: '', hire: false});
   expect(result.wallCard).toEqual({owner: "You pay · it stays on Captain Gull's island", button: 'Build · 🪙 10'});
@@ -253,6 +259,27 @@ it("visits a friend's island by code: their buildings, building there with your 
   expect(result.noInvite).toBe(true);
   expect(result.lobbyRows[0]).toBe('Captain Gull');
   expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M'});
+});
+
+it("with travel (one island off) the old visit chip stays: Visiting the friend's island, Sail home", async () => {
+  const result = await evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport: createFakeIslandTransport(), storage: null,
+      menu: () => () => {}, travel: () => true});
+    island.visit('isle-fr3nd');
+    await island.load();
+    const chip = document.querySelector('.island-visit');
+    const shown = {text: chip.querySelector('span').textContent, button: chip.querySelector('button').textContent};
+    chip.querySelector('button').click();
+    await new Promise(resolve => setTimeout(resolve, 60));
+    const home = {visiting: !!island.visiting, hidden: document.querySelector('.island-visit').hidden, room: island.presencePlace('home_islet')};
+    island.dispose();
+    return {shown, home};
+  });
+  expect(result.shown).toEqual({text: "Visiting Captain Gull's island · ISLE-FR3ND", button: 'Sail home'});
+  expect(result.home).toEqual({visiting: false, hidden: true, room: 'isle_k7q2m'});
 });
 
 it('the sea chart shows only Your island, The Harbor and Pirate Point', async () => {

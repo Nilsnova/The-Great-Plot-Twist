@@ -36,6 +36,7 @@ import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
+import {travelAllowed, visitChip} from './one-island.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -54,7 +55,8 @@ const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
-  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {}} = {}) {
+  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {},
+  travel = () => travelAllowed({islandsMode: mode})} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
@@ -170,6 +172,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
+  // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
+  // island off); with one island the game itself and a way to its lobby (GAME-V3.md §2).
+  function showVisit() {
+    if (!visiting) { ui.visit(null); return; }
+    let canTravel = false;
+    try { canTravel = travel() === true; } catch { canTravel = false; }
+    const chip = visitChip({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code), travel: canTravel});
+    ui.visit(chip, () => (chip.action === 'home' ? void sailHome() : openLobby()));
+  }
 
   // A friend's game: join it first (once per page), so building and the bell are allowed (GAME-V3.md §2).
   // A full game or an unknown code ends the visit: the player lands on their own island instead.
@@ -203,7 +214,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
         if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; noteCampaign(visiting); }
-        ui.visit({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code)}, () => void sailHome());
+        showVisit();
       } else {
         endVisit(); ui.toast(answer.message, 'error');
       }

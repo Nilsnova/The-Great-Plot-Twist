@@ -32,3 +32,12 @@ export function travelAllowed({islandsMode = 'off', classHarbor = false, ...rest
   if (!islandsMode || islandsMode === 'off' || classHarbor) return true;
   return !oneIsland(rest);
 }
+
+// The chip at the top left while you are in somebody else's game. With travel (one_island off) it is the old
+// visit: "Visiting Gull's island · ISLE-FR3ND" with Sail home. With one island a game is shared, so nobody is
+// visiting and there is no home to sail to: "Gull's game · ISLE-FR3ND" with Players (the game's lobby).
+export function visitChip({ownerName = '', code = '', travel = false} = {}) {
+  const name = typeof ownerName === 'string' ? ownerName.trim() : '';
+  if (travel) return {text: `Visiting ${name || 'a friend'}'s island · ${code}`, label: 'Sail home', action: 'home'};
+  return {text: `${name || 'A friend'}'s game · ${code}`, label: 'Players', action: 'lobby'};
+}

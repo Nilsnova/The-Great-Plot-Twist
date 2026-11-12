@@ -417,11 +417,15 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     get open() { return kind; },
     get active() { return !!modal; },
     banner(text) { bannerText.textContent = text ?? ''; banner.hidden = !text; },
-    visit(info, onHome) {
+    // The chip of the game on screen ({text, label} from one-island.js visitChip), or null to hide it.
+    visit(chip, onAction) {
       visit.replaceChildren();
-      visit.hidden = !info;
-      if (!info) return;
-      visit.append(node('span', '', `Visiting ${info.ownerName || 'a friend'}'s island · ${info.code}`), button('Sail home', onHome, true));
+      visit.hidden = !chip;
+      if (!chip) return;
+      visit.dataset.action = chip.action ?? '';
+      const go = button(chip.label, onAction, true);
+      if (chip.action === 'lobby') go.setAttribute('aria-label', 'Players and invite');
+      visit.append(node('span', '', chip.text), go);
     },
     // tone: 'info', 'success' (a building, loot) or 'error' (the server's plain message).
     toast(text, tone = 'info', next = '') {

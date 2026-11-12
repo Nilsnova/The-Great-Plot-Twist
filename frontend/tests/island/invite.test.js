@@ -69,5 +69,6 @@ it('a signed-out friend taps Join as guest and lands on the island', async () =>
     buttons: ['Join as guest', 'Sign in with GitHub', 'Not now'], focused: 'Join as guest', inputs: 0});
   expect(result.joined).toEqual({played: 1, started: 1, visit: 'FR3ND', calls: [{guest: true, island: 'ISLE-FR3ND'}]});
   expect(result.landed.visiting).toBe('Captain Gull');
-  expect(result.landed.banner).toContain("Visiting Captain Gull's island · ISLE-FR3ND");
+  // One island (GAME-V3.md §2): the friend's game, not a visit.
+  expect(result.landed.banner).toContain("Captain Gull's game · ISLE-FR3ND");
 });
