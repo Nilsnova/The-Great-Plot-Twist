@@ -181,6 +181,154 @@
     "narrator-unlock_ship": {
       "file": "narrator-unlock_ship.mp3",
       "seconds": 6.56
+    },
+    "narrator-welcome_back_1": {
+      "file": "narrator-welcome_back_1.mp3",
+      "seconds": 6.79
+    },
+    "narrator-welcome_back_2": {
+      "file": "narrator-welcome_back_2.mp3",
+      "seconds": 8.15
+    },
+    "narrator-unlock_tier_12": {
+      "file": "narrator-unlock_tier_12.mp3",
+      "seconds": 9.95
+    },
+    "narrator-unlock_tier_15": {
+      "file": "narrator-unlock_tier_15.mp3",
+      "seconds": 7.08
+    },
+    "narrator-unlock_tier_20": {
+      "file": "narrator-unlock_tier_20.mp3",
+      "seconds": 9.64
+    },
+    "narrator-unlock_tier_30": {
+      "file": "narrator-unlock_tier_30.mp3",
+      "seconds": 9.48
+    },
+    "narrator-unlock_tier_50": {
+      "file": "narrator-unlock_tier_50.mp3",
+      "seconds": 8.99
+    },
+    "narrator-boarders_ashore": {
+      "file": "narrator-boarders_ashore.mp3",
+      "seconds": 6.66
+    },
+    "narrator-player_fell_1": {
+      "file": "narrator-player_fell_1.mp3",
+      "seconds": 4.39
+    },
+    "narrator-player_fell_2": {
+      "file": "narrator-player_fell_2.mp3",
+      "seconds": 4.39
+    },
+    "narrator-player_revived_1": {
+      "file": "narrator-player_revived_1.mp3",
+      "seconds": 3.21
+    },
+    "narrator-player_revived_2": {
+      "file": "narrator-player_revived_2.mp3",
+      "seconds": 3.55
+    },
+    "narrator-all_fallen": {
+      "file": "narrator-all_fallen.mp3",
+      "seconds": 5.88
+    },
+    "narrator-heart_low_1": {
+      "file": "narrator-heart_low_1.mp3",
+      "seconds": 3.97
+    },
+    "narrator-heart_low_2": {
+      "file": "narrator-heart_low_2.mp3",
+      "seconds": 4.05
+    },
+    "narrator-wave_lost_1": {
+      "file": "narrator-wave_lost_1.mp3",
+      "seconds": 5.3
+    },
+    "narrator-wave_lost_2": {
+      "file": "narrator-wave_lost_2.mp3",
+      "seconds": 7.31
+    },
+    "narrator-wave_lost_3": {
+      "file": "narrator-wave_lost_3.mp3",
+      "seconds": 6.24
+    },
+    "narrator-wave_won_1": {
+      "file": "narrator-wave_won_1.mp3",
+      "seconds": 3.97
+    },
+    "narrator-wave_won_2": {
+      "file": "narrator-wave_won_2.mp3",
+      "seconds": 4.05
+    },
+    "narrator-wave_won_3": {
+      "file": "narrator-wave_won_3.mp3",
+      "seconds": 3.97
+    },
+    "narrator-wave_won_4": {
+      "file": "narrator-wave_won_4.mp3",
+      "seconds": 5.12
+    },
+    "narrator-wave_10": {
+      "file": "narrator-wave_10.mp3",
+      "seconds": 5.77
+    },
+    "narrator-wave_20": {
+      "file": "narrator-wave_20.mp3",
+      "seconds": 6.01
+    },
+    "narrator-wave_30": {
+      "file": "narrator-wave_30.mp3",
+      "seconds": 5.9
+    },
+    "narrator-wave_40": {
+      "file": "narrator-wave_40.mp3",
+      "seconds": 5.72
+    },
+    "narrator-wave_50": {
+      "file": "narrator-wave_50.mp3",
+      "seconds": 4.86
+    },
+    "narrator-wave_60": {
+      "file": "narrator-wave_60.mp3",
+      "seconds": 4.1
+    },
+    "narrator-wave_70": {
+      "file": "narrator-wave_70.mp3",
+      "seconds": 4.99
+    },
+    "narrator-wave_80": {
+      "file": "narrator-wave_80.mp3",
+      "seconds": 4.65
+    },
+    "narrator-wave_90": {
+      "file": "narrator-wave_90.mp3",
+      "seconds": 4.65
+    },
+    "narrator-milestone_25": {
+      "file": "narrator-milestone_25.mp3",
+      "seconds": 5.69
+    },
+    "narrator-milestone_50": {
+      "file": "narrator-milestone_50.mp3",
+      "seconds": 5.96
+    },
+    "narrator-milestone_75": {
+      "file": "narrator-milestone_75.mp3",
+      "seconds": 6.48
+    },
+    "narrator-final_battle": {
+      "file": "narrator-final_battle.mp3",
+      "seconds": 8.2
+    },
+    "narrator-victory_1": {
+      "file": "narrator-victory_1.mp3",
+      "seconds": 5.69
+    },
+    "narrator-victory_2": {
+      "file": "narrator-victory_2.mp3",
+      "seconds": 7.68
     }
   }
 }
