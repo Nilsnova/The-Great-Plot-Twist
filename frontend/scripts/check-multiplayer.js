@@ -92,7 +92,9 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
         const last = window.__mp.samples.at(-1);
         if (!last || last.ticks !== wave.ticks) window.__mp.samples.push({waveId: wave.info.waveId, ticks: wave.ticks,
           ships: wave.state.ships.map(ship => ship.id).sort().join(','), hp: Math.round(wave.state.ships.reduce((sum, ship) => sum + ship.hp, 0)),
-          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0});
+          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0,
+          // A Barracks' militia (GAME-V3.md "Houses"): where each stands, its hp and what it does.
+          militia: (wave.state.militia ?? []).map(item => `${item.id}@${item.x},${item.z}:${item.hp}:${item.state}`).join('|')});
         if (window.__mp.samples.length > 6000) window.__mp.samples.splice(0, 3000);
       }
       requestAnimationFrame(sample);
@@ -183,7 +185,17 @@ async function compare(a, b, waveId) {
     worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
   }
   const landed = Math.max(0, ...left.map(item => item.landed));
-  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed};
+  // The militia at exactly the same tick (they move every tick, so ±1 would differ).
+  let militiaChecked = 0, sameMilitia = 0, fighting = 0;
+  const exact = new Map(right.map(item => [item.ticks, item]));
+  for (const sample of left.filter(item => item.militia)) {
+    const other = exact.get(sample.ticks);
+    if (!other) continue;
+    militiaChecked++;
+    if (other.militia === sample.militia) sameMilitia++;
+    if (sample.militia.includes(':fighting')) fighting++;
+  }
+  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting};
 }
 
 const results = [];
@@ -373,6 +385,24 @@ try {
   await island(ben, async i => { await i.specialise('cannon_1', 'rapid'); });
   const rapid = await seesSpec(host, 'cannon_1', 'rapid', "the friend's cannon skill");
   results.push(`tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after ${rapid.took} ms`);
+  // 2e House roles (GAME-V3.md "Houses"): below level 2 the card says what comes; at level 2 the owner picks the
+  // Barracks on house_1 and the friend sees it on the map and the card; it fights in wave 3 below.
+  await island(host, async i => { await i.build('house_1', 'house'); });
+  const lowCard = await host.page.evaluate(async () => {
+    const game = window.__island.island; game.pick('house_1'); await new Promise(resolve => setTimeout(resolve, 80));
+    const line = document.querySelector('.island-card[open] .island-skills-line')?.textContent ?? ''; game.ui.close(); return line;
+  });
+  assert.equal(lowCard, 'Level 2: choose Barracks, Tavern or Workshop.', 'a level-1 house says what comes at level 2');
+  await island(host, async i => { await i.upgrade('house_1'); await i.specialise('house_1', 'barracks'); });
+  const barracks = await seesSpec(ben, 'house_1', 'barracks', "the owner's house role");
+  const looks = await ben.page.evaluate(() => { let art = ''; window.__island.scene.traverse(object => { if (object.name === 'island-house:house_1') art = object.userData.art; }); return art; });
+  assert.equal(looks, 'island-house-barracks', "the friend's map shows the Barracks look");
+  results.push(`house role: the owner's Barracks on house_1 on the friend's island, card ("${barracks.title}") and map (${looks}) after ${barracks.took} ms`);
+  await island(ben, async i => { await i.specialise('house_1', 'workshop'); });
+  const workshop = await seesSpec(host, 'house_1', 'workshop', "the friend's house role");
+  results.push(`house role: the friend's Workshop on house_1 on the owner's island and card after ${workshop.took} ms`);
+  await island(host, async i => { await i.specialise('house_1', 'barracks'); });
+  await seesSpec(ben, 'house_1', 'barracks', "the owner's house role again");
   // 3 Wave 3 (more ships, so both muskets find a target) with one more cannon and the inner wall ring
   // (TOWER-DEFENSE.md §12: two cannons let boarders come ashore, the ring holds them); the owner rings.
   await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); });
@@ -429,6 +459,9 @@ try {
   assert.ok(sync1.checked >= 5 && sync1.same / sync1.checked >= .9 && sync1.worst <= 1, 'the two pages ran the same wave');
   assert.ok(sync1.landed > 0 && sync1.withBoarders > 0, 'boarders came ashore in the synced wave');
   assert.ok(sync1.sameBoarders / sync1.checked >= .9 && sync1.worstBoarders <= 1, 'the two pages saw the same boarders');
+  results.push(`wave 1 militia owner/friend: ${sync1.sameMilitia}/${sync1.militiaChecked} samples at the same tick identical (place, hp, state), ${sync1.fighting} fighting`);
+  assert.ok(sync1.militiaChecked >= 5 && sync1.sameMilitia === sync1.militiaChecked, "the Barracks' militia did the same on both pages");
+  assert.ok(sync1.fighting > 0, "the Barracks' militia fought boarders");
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
