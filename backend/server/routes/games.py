@@ -26,7 +26,8 @@ POST /api/island/invite/join  (the same, kept for older links and clients)
     -> {"admitted": true, "game": <game>, "island": {"code": "ISLE-K7Q2M", "ownerName": "..."}}
     Joins the game for good (until you leave it). An anonymous guest who presents a valid game
     code is admitted like with a class code (demo_guest_admit) and passes the guest gate from then
-    on. At most 10 active members, the host included. Joining a game you are in again only moves
+    on, but only once the game took them: a guest refused (409 game_full) is not admitted. At most
+    10 active members, the host included. Joining a game you are in again only moves
     it to the top of Continue. A code you are not in yet spends the code budget (10 tries in 10
     minutes per player); a code that names no game also spends the budget of the address, so
     guessing codes stays slow while ten friends on one home network can all join.
@@ -51,8 +52,9 @@ POST /api/games/leave  {"code": "ISLE-K7Q2M"}
     Errors: 404 no_such_game, 409 host_cannot_leave, 422, 429
 
 Being a member is the rule on the game's island: POST /api/island/build and /upgrade with
-"code" and POST /api/waves/start with an island code answer 403 not_member to a player who is
-not in that game (the host is always in).
+"code", POST /api/waves/start with an island code, POST /api/waves/join of a wave on that
+island and GET /api/island/visit/{code} answer 403 not_member to a player who is not in that
+game (the host is always in). Joining (this route or the invite alias) is the way in.
 
 Used by: the front door's games card (Create, Join, Continue), the lobby and the Menu's Leave.
 """
@@ -201,6 +203,10 @@ async def join_game(
     if island is None:
         request.app.state.invite_budget.spend(address_key(request))
         raise missing()
+    # The door first (game_join counts the members under a lock of the island row and changes
+    # nothing when it refuses), the guest gate after: a guest turned away with 409 game_full (or
+    # any other refusal) is never admitted by a game they did not get into.
+    game = await games.join(admin, island, player.id)
     if player.is_anonymous:
         if await admit(admin, player.id) == "missing":
             raise ApiError(
@@ -209,7 +215,6 @@ async def join_game(
                 "Your guest login is gone. Reload the page and join again.",
             )
         gate.remember(player.id)
-    game = await games.join(admin, island, player.id)
     return JoinResponse(
         admitted=True,
         game=game_out(game),

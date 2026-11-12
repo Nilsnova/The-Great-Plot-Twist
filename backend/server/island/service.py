@@ -487,9 +487,14 @@ async def find_by_code(admin: SupabaseAdmin, typed_code: str) -> Island:
     return island
 
 
-async def visit(admin: SupabaseAdmin, catalogue: IslandCatalogue, typed_code: str) -> VisitView:
-    """Another player's island by its code. 404 if none."""
+async def visit(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, typed_code: str, player_id: str
+) -> VisitView:
+    """An island by its code, for a member of its game (GAME-V3 section 2; the owner always).
+    404 no_such_island, 403 not_member: a code alone shows nothing, joining the game comes first
+    (POST /api/games/join or /api/island/invite/join)."""
     island = await find_by_code(admin, typed_code)
+    await games.require_member(admin, island, player_id)
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
     spots = rules.plan_spots(catalogue, built)

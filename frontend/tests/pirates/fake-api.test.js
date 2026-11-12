@@ -94,12 +94,19 @@ describe('fake island API', () => {
     const code = (await owner.island()).code;
     const wave = await owner.startWave({ where: 'own', actionUid: 'x' });
     expect(await friend.currentWave(code.toLowerCase())).toEqual(wave);
+    // GAME-V3.md §2: a wave on a game's island is for its members; joining the game is the way in.
+    expect((await refusal(friend.joinWave({ waveId: wave.waveId }))).code).toBe('not_member');
+    expect((await refusal(friend.visit(code))).code).toBe('not_member');
+    await friend.joinGame({ code, actionUid: 'join-1' });
+    expect((await friend.visit(code)).code).toBe(code);
     expect(await friend.joinWave({ waveId: wave.waveId })).toEqual(wave);
     expect(await friend.joinWave({ waveId: wave.waveId })).toEqual(wave);
     expect((await refusal(friend.joinWave({ waveId: 'nope' }))).code).toBe('no_such_wave');
     time.advance(30);
     expect((await refusal(outsider.finishWave({ waveId: wave.waveId, survived: true, shipsSunk: 0 }))).status).toBe(403);
     expect((await owner.finishWave({ waveId: wave.waveId, survived: true, shipsSunk: 3 })).loot).toBe(15);
+    expect((await refusal(outsider.joinWave({ waveId: wave.waveId }))).code).toBe('not_member');
+    await outsider.joinGame({ code, actionUid: 'join-2' });
     expect((await refusal(outsider.joinWave({ waveId: wave.waveId }))).code).toBe('wave_over');
     expect(await friend.finishWave({ waveId: wave.waveId, survived: true, shipsSunk: 2 })).toMatchObject({ loot: 15, coins: 115, waveBest: 1, flags: 1 });
     const point = await friend.startWave({ where: 'pirate_point', actionUid: 'pp' });

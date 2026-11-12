@@ -11,15 +11,16 @@ buildings and its best wave are their first game, and nothing moves.
     mine()        GET /api/games: your games for Continue, newest first
     lobby()       GET /api/games/{code}: the host and the members, for the lobby card
     leave()       POST /api/games/leave: a member leaves (the host cannot)
-    require_member()  the rule of the co-op build, upgrade and bell: only a member of a game
-                  (or its host) builds, upgrades or rings the bell on its island (403 not_member)
+    require_member()  the rule of the co-op build, upgrade, bell, wave join and visit: only a
+                  member of a game (or its host) builds, upgrades, rings the bell, joins a
+                  wave or reads the island by its code (403 not_member)
 
 The database part is supabase/migrations/20261112040000_game_rooms.sql: game_join (the cap,
 under a lock of the island row), game_leave, game_list and game_members. Who is online is not
 stored: it comes from the presence of the island's room on the client.
 
-Used by: routes/games.py, routes/island.py (the invite alias), service.py (co-op build and
-upgrade), waves.py (the bell) and the tests.
+Used by: routes/games.py, routes/island.py (the invite alias), service.py (co-op build,
+upgrade and the visit), waves.py (the bell and the wave join) and the tests.
 """
 
 import logging
@@ -141,11 +142,16 @@ async def find(admin: SupabaseAdmin, typed_code: str) -> Island:
 
 async def is_member(admin: SupabaseAdmin, island: Island, player_id: str) -> bool:
     """True for the host and for every active member of the game of `island`."""
-    if island.owner == player_id:
+    return await is_member_of(admin, island.owner, player_id)
+
+
+async def is_member_of(admin: SupabaseAdmin, owner: str, player_id: str) -> bool:
+    """The same by the island owner's id (the game of a wave names only its owner)."""
+    if owner == player_id:
         return True
     query = {
         "select": "player_id",
-        "island_owner": f"eq.{island.owner}",
+        "island_owner": f"eq.{owner}",
         "player_id": f"eq.{player_id}",
         "left_at": "is.null",
         "limit": "1",
@@ -155,8 +161,13 @@ async def is_member(admin: SupabaseAdmin, island: Island, player_id: str) -> boo
 
 
 async def require_member(admin: SupabaseAdmin, island: Island, player_id: str) -> None:
-    """The co-op rule (GAME-V3 section 2): only members build, upgrade or ring the bell there."""
-    if not await is_member(admin, island, player_id):
+    """The co-op rule (GAME-V3 section 2): only members build, upgrade, ring the bell, join a
+    wave or look at the island there (the host always)."""
+    await require_member_of(admin, island.owner, player_id)
+
+
+async def require_member_of(admin: SupabaseAdmin, owner: str, player_id: str) -> None:
+    if not await is_member_of(admin, owner, player_id):
         raise not_member()
 
 

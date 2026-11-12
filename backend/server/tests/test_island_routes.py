@@ -13,6 +13,7 @@ import httpx
 import pytest
 
 from server.flags import parse_flags
+from server.tests import island_helpers
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import (
     FRIEND_ID,
@@ -291,6 +292,7 @@ def friend_island(world: World) -> None:
     }
     world.database.names[FRIEND_ID] = "Captain Gull"
     world.database.buildings[FRIEND_ID] = [{"plot": "wall_2", "building_type": "wall"}]
+    world.database.games.add(FRIEND_ID, PLAYER_ID)  # PLAYER joined the friend's game
 
 
 @pytest.mark.parametrize("code", ["ISLE-K7Q2M", "isle-k7q2m", "K7Q2M", "k7q-2m"])
@@ -313,6 +315,28 @@ def test_an_unknown_or_malformed_code_is_no_island(code):
     friend_island(world)
 
     assert_error(world.visit(code), 404, "no_such_island")
+
+
+def test_a_visit_needs_a_member_of_that_game_and_the_owner_always_gets_in():
+    world = World()
+    friend_island(world)
+    world.database.games.rows[FRIEND_ID].pop(PLAYER_ID)  # PLAYER never joined
+
+    assert_error(world.visit("ISLE-K7Q2M"), 403, "not_member")
+    assert world.database.calls("island_open") == []
+    # The owner looks at their own island by its code without a member row.
+    owner = {"Authorization": "Bearer test.friend.signature"}
+    users = dict(island_helpers.USERS)
+    users[owner["Authorization"]] = {"id": FRIEND_ID, "is_anonymous": False}
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(island_helpers, "USERS", users)
+        assert world.visit("ISLE-K7Q2M", headers=owner).status_code == 200
+    # Joining the game is the way in.
+    world.database.games.add(FRIEND_ID, PLAYER_ID)
+    assert world.visit("ISLE-K7Q2M").status_code == 200
+    # A member who left is out again.
+    world.database.games.rows[FRIEND_ID][PLAYER_ID]["left"] = 99
+    assert_error(world.visit("ISLE-K7Q2M"), 403, "not_member")
 
 
 def test_a_visit_does_not_open_an_island():

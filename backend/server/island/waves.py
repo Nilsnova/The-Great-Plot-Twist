@@ -144,7 +144,14 @@ async def join(
     """Join a running wave (a friend's island or Pirate Point). Safe to repeat.
 
     The joiner's own island is opened first: their best won wave (the unlocks) is kept on it,
-    so a friend who never opened their own island still gets the credit for a won wave."""
+    so a friend who never opened their own island still gets the credit for a won wave.
+    A wave on somebody else's island needs a member of its game (GAME-V3 section 2, 403
+    not_member; the owner always); Pirate Point is open to everybody."""
+    where = await store.read_wave_place(admin, str(wave_id))
+    if where is None:
+        raise no_such_wave()
+    if where.place == "island" and where.island_owner is not None:
+        await games.require_member_of(admin, where.island_owner, player_id)
     await store.open_island(admin, player_id, catalogue.starting_coins)
     reply = await store.join_wave(admin, player_id, str(wave_id))
     if isinstance(reply, Refusal):

@@ -17,7 +17,8 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * GET captain_skill_learns                 the repeat check of a skill (skill_refs)
   * POST rpc/island_learn_skill, island_weapon_equip
                                              paid_replies[name] (default: LEARNED, EQUIPPED)
-  * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave
+  * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
+                                             wave runs (wave_places, by id)
   * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
                                              the games of GAME-V3 section 2 (FakeGames below:
                                              the SQL rules of 20261112040000_game_rooms.sql,
@@ -171,6 +172,10 @@ class FakeIslandDatabase:
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
         self.point_best: list[dict] = []
+        # Where each wave runs (GET wave_runs?id=): WAVE_ID is on PLAYER's island by default.
+        self.wave_places: dict[str, dict] = {
+            WAVE_ID: {"place": "island", "island_owner": PLAYER_ID}
+        }
         self.games = FakeGames(self)
         self.requests: list[httpx.Request] = []
 
@@ -199,7 +204,7 @@ class FakeIslandDatabase:
                 200, json={"status": "admitted"}
             ),
             "GET /pirate_point_buildings": lambda _: httpx.Response(200, json=self.point_buildings),
-            "GET /wave_runs": lambda _: httpx.Response(200, json=self.point_best),
+            "GET /wave_runs": self.read_wave_runs,
             "POST /rpc/game_join": self.games.join,
             "POST /rpc/game_leave": self.games.leave,
             "POST /rpc/game_list": self.games.list,
@@ -253,6 +258,13 @@ class FakeIslandDatabase:
             return httpx.Response(200, json=[self.progress])
         code = request.url.params["code"].removeprefix("eq.")
         row = self.islands.get(code)
+        return httpx.Response(200, json=[row] if row else [])
+
+    def read_wave_runs(self, request: httpx.Request) -> httpx.Response:
+        wave_id = request.url.params.get("id")
+        if wave_id is None:
+            return httpx.Response(200, json=self.point_best)
+        row = self.wave_places.get(wave_id.removeprefix("eq."))
         return httpx.Response(200, json=[row] if row else [])
 
     def read_name(self, request: httpx.Request) -> httpx.Response:

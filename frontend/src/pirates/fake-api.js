@@ -20,7 +20,8 @@
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
 //   await api.pointBuild({spot, kind, actionUid}) / api.pointUpgrade({spot, actionUid})
 //   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6, an alias of joinGame)
-// The games of GAME-V3.md §2 (a game is an island; at most 10 players; members build, upgrade and ring there):
+// The games of GAME-V3.md §2 (a game is an island; at most 10 players; members build, upgrade, ring, join its
+// waves and visit it there):
 //   await api.createGame();                      // POST /api/games
 //   await api.joinGame({code, actionUid});       // POST /api/games/join           (409 game_full)
 //   await api.games();                           // GET  /api/games                (Continue, newest first)
@@ -385,6 +386,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async visit(code) {
       const found = readIslandCode(code), island = found && world.islands.get(found);
       if (!island) refuse(404, 'no_such_island', 'There is no island with that code.');
+      mustBeMember(island); // GAME-V3.md §2: join the game first (the owner always gets in)
       // The crew and the captain too, so host and visitors run the same wave (§8).
       return { code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island),
         crew: { ...island.crew }, captain: { level: island.captain ?? 1 } };
@@ -414,6 +416,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (typeof waveId !== 'string') invalid('Say which wave.');
       const run = world.waves.get(waveId);
       if (!run) refuse(404, 'no_such_wave', 'There is no such wave.');
+      if (run.island) mustBeMember(run.island); // a wave on a game's island: its members (Pirate Point: anybody)
       if (!running(run)) refuse(409, 'wave_over', 'This wave is over. Ring the bell for the next one.');
       run.participants.add(playerId); me();
       return shape(run);

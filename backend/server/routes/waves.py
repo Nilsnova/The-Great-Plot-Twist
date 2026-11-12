@@ -30,7 +30,9 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
 
 POST /api/waves/join  {"waveId": "6f1c..."}
     -> the wave. Only while it runs (nobody finished it yet, not past 900 s after startsAt).
-    Joining again answers the same wave. Errors: 404 no_such_wave, 409 wave_over
+    Joining again answers the same wave. A wave on somebody else's island needs a member of
+    that game (GAME-V3 section 2; the owner always), a Pirate Point wave is open to everybody.
+    Errors: 403 not_member, 404 no_such_wave, 409 wave_over
 
 GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
     -> the running wave there, or null. Errors: 404 no_such_island

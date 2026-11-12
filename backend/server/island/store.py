@@ -400,6 +400,18 @@ async def start_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> WaveRow
     return refusal_or_none(reply) or read_model(WaveRow, reply)
 
 
+class WavePlaceRow(BaseModel):
+    place: Literal["island", "pirate_point"]
+    island_owner: StrictStr | None = None
+
+
+async def read_wave_place(admin: SupabaseAdmin, wave_id: str) -> WavePlaceRow | None:
+    """Where a wave runs (an island and its owner, or Pirate Point), or None for no such wave."""
+    query = {"select": "place,island_owner", "id": f"eq.{wave_id}", "limit": "1"}
+    rows = await admin.select_rows("wave_runs", query)
+    return read_model(WavePlaceRow, rows[0]) if rows else None
+
+
 async def join_wave(admin: SupabaseAdmin, player_id: str, wave_id: str) -> WaveRow | Refusal:
     """Run wave_join: the player joins a running wave (safe to repeat)."""
     reply = await admin.call_function("wave_join", {"p_player_id": player_id, "p_wave_id": wave_id})

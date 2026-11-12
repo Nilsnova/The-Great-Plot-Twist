@@ -192,6 +192,23 @@ def test_join_admits_a_guest_who_brings_a_valid_code():
     assert world.database.games.rows[PLAYER_ID][GUEST_ID]["role"] == "member"
 
 
+def test_a_guest_turned_away_by_a_full_game_is_not_admitted():
+    world = game_world()
+    for number in range(1, 10):  # the host plus 9 friends: full
+        assert join(world, headers=crew(number)).status_code == 200
+
+    assert_error(join(world, headers=GUEST), 409, "game_full")
+
+    # Nothing let the guest in: no admission, the guest gate does not know them, no member row.
+    assert world.database.calls("demo_guest_admit") == []
+    assert GUEST_ID not in world.app.state.demo_gate.admitted
+    assert GUEST_ID not in world.database.games.rows[PLAYER_ID]
+    # Once somebody leaves, the guest gets in and is admitted then.
+    assert leave(world, headers=crew(1)).json() == {"left": True}
+    assert join(world, headers=GUEST).status_code == 200
+    assert world.database.calls("demo_guest_admit") == [{"p_player_id": GUEST_ID}]
+
+
 def test_join_needs_a_login_the_flag_and_for_guests_the_demo_flag():
     world = game_world()
     assert_error(join(world, headers={}), 401, "unauthorized")

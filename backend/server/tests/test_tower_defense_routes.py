@@ -523,6 +523,7 @@ def test_your_own_code_builds_on_your_own_island():
 
 def test_joining_a_friends_wave_opens_your_own_island_for_the_unlock_credit():
     world = world_at(0)
+    world.database.games.add(PLAYER_ID, GUEST_ID)  # the guest joined the friend's game first
 
     assert world.join(headers=GUEST).status_code == 200
     assert world.database.calls("island_open")[0]["p_player_id"] == GUEST_ID

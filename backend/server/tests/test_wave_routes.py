@@ -451,9 +451,37 @@ def test_a_join_that_does_not_fit_is_refused(body):
 
 def test_an_admitted_guest_joins_like_a_player():
     world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands,demo")))
+    world.database.games.add(PLAYER_ID, GUEST_ID)  # the guest joined PLAYER's game
 
     assert world.join(headers=GUEST).status_code == 200
     assert world.database.calls("wave_join")[0]["p_player_id"] == GUEST_ID
+
+
+def test_a_wave_on_somebody_elses_island_needs_a_member_of_that_game():
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands,demo")))
+
+    assert_error(world.join(headers=GUEST), 403, "not_member")
+    assert world.database.calls("wave_join") == []
+    assert world.database.calls("island_open") == []
+    # The owner of the island always joins their own wave.
+    assert world.join().status_code == 200
+    # A member joins; a member who left is out again.
+    world.database.games.add(PLAYER_ID, GUEST_ID)
+    assert world.join(headers=GUEST).status_code == 200
+    world.database.games.rows[PLAYER_ID][GUEST_ID]["left"] = 99
+    assert_error(world.join(headers=GUEST), 403, "not_member")
+
+
+def test_pirate_point_waves_are_open_to_everybody_and_an_unknown_wave_is_404():
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands,demo")))
+    world.database.wave_places[WAVE_ID] = {"place": "pirate_point", "island_owner": None}
+    world.database.join_reply = {**STARTED, "status": "joined", "place": "pirate_point"}
+
+    assert world.join(headers=GUEST).status_code == 200
+
+    world.database.wave_places.clear()
+    assert_error(world.join(headers=GUEST), 404, "no_such_wave")
+    assert len(world.database.calls("wave_join")) == 1
 
 
 # --- GET /api/waves/current ---

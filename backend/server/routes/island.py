@@ -103,7 +103,10 @@ GET /api/island/visit/{code}
     every visitor's wave simulation uses the same defenses as the owner's. An admitted guest
     (also one admitted through the friend invite) may read it.
     The code may be written with or without "ISLE-", in any case. Your own code works too.
-    Errors: 404 no_such_island, 429 too_many_requests, and the errors of GET /api/island
+    Only for members of that game (GAME-V3 section 2; join it first with POST /api/games/join
+    or /api/island/invite/join); the owner always.
+    Errors: 403 not_member, 404 no_such_island, 429 too_many_requests, and the errors of GET
+    /api/island
 
 POST /api/island/invite/join  {"code": "ISLE-K7Q2M", "actionUid": "..."}
     The friend invite (TOWER-DEFENSE section 6) is now an alias of POST /api/games/join (GAME-V3
@@ -477,7 +480,7 @@ async def get_visit(
 ) -> VisitResponse:
     # A budget, because a visit looks a code up: guessing codes stays slow.
     request.app.state.island_visit_budget.spend(player.id)
-    view = await service.visit(admin, catalogue, code)
+    view = await service.visit(admin, catalogue, code, player.id)
     return VisitResponse(
         code=view.code,
         ownerName=view.owner_name,
