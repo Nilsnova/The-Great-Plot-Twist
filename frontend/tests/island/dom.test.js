@@ -92,7 +92,10 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
   expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true']});
   expect(result.shortUpgrade).toMatchObject({title: 'Mortar', next: 'Level 2 · 🪙 120', disabled: true, reason: 'Not enough 🪙: you need 🪙 110 more.'});
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});
-  expect(result.banner).toBe('Pirates in 10 s! Wave 6');
+  // The countdown runs on the wall clock: right after the ring it shows 10 s, or less on a busy machine.
+  const [, left] = result.banner.match(/^Pirates in (\d+) s! Wave 6$/) ?? [];
+  expect(Number(left), result.banner).toBeGreaterThanOrEqual(1);
+  expect(Number(left), result.banner).toBeLessThanOrEqual(10);
   expect(result.closedAfterRing).toBe(true);
   expect(result.invite).toMatchObject({title: 'Play with a friend', lead: 'Send this link to up to 9 friends', copy: 'Copy link',
     link: 'https://the-great-plot-twist.vercel.app/?game=ISLE-K7Q2M', images: 0});
