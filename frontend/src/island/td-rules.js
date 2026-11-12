@@ -18,8 +18,9 @@ export const BUILDINGS = Object.freeze({
   // From level 3 the watchtower also adds damage to every cannon and mortar (boost, in percent).
   watchtower: Object.freeze({name: 'Watchtower', line: 'Gives all your towers more range, from level 3 more damage too.', price: [40, 80, 160, 320, 640],
     stats: [{range: 8, boost: 0}, {range: 12, boost: 0}, {range: 14, boost: 5}, {range: 16, boost: 10}, {range: 18, boost: 15}]}),
-  house: Object.freeze({name: 'House', line: 'Adds loot for every wave you win.', price: [50, 100],
-    stats: [{loot: 5}, {loot: 10}]}),
+  // From level 2 a house also picks a role (src/campaign/houses.js); level 3 opens after wave 5.
+  house: Object.freeze({name: 'House', line: 'Adds loot for every wave you win.', price: [50, 100, 200],
+    stats: [{loot: 5}, {loot: 10}, {loot: 15}]}),
 });
 export const maxLevel = kind => BUILDINGS[kind]?.price.length ?? 1;
 // The kinds a spot of each slot accepts (§2): a tower spot takes a cannon or a mortar, chosen once.

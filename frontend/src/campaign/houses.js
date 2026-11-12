@@ -6,9 +6,9 @@
 // the sim (CONFIG.houses in src/pirates/sim.js). No DOM here.
 export const ROLE_LEVEL = 2;
 export const ROLES = Object.freeze({
-  barracks: Object.freeze({name: 'Barracks', line: 'A militia fighter walks out each wave and fights boarders near the house.'}),
-  tavern: Object.freeze({name: 'Tavern', line: 'Captains near it heal 2 hp a second. Helping a captain up costs 25% less.'}),
-  workshop: Object.freeze({name: 'Workshop', line: 'Walls near it repair 30% faster, and a broken one mends by itself.'}),
+  barracks: Object.freeze({name: 'Barracks', line: 'Militia walk out each wave and fight boarders near the house: 1 at level 2, 2 at level 3.'}),
+  tavern: Object.freeze({name: 'Tavern', line: 'Captains near it heal 2 a second, also in a wave. Helping a captain up costs 25% less.'}),
+  workshop: Object.freeze({name: 'Workshop', line: 'Walls near it repair and rebuild 30% faster, and a broken one mends by itself.'}),
 });
 export const ROLE_IDS = Object.freeze(Object.keys(ROLES));
 // How far each role reaches from its house, in world units: the Barracks' guard, the Tavern's healing, the

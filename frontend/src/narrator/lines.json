@@ -33,7 +33,7 @@
     {"id": "unlock_tier_30", "trigger": "wave_unlock:30", "priority": 2, "voice": "narrator", "text": "Thirty waves. Redtide's iron ships join the fleet, and his ships grow tougher with every wave. Research at the Tech hub and fight as one crew."},
     {"id": "unlock_tier_50", "trigger": "wave_unlock:50", "priority": 2, "voice": "narrator", "text": "Redtide sends his dreadnoughts now. No tower holds them alone. Bring the whole crew, every tower at level five, and every skill you have."},
 
-    {"id": "house_role", "trigger": "house_role", "priority": 3, "voice": "narrator", "text": "A house with a job! A Barracks sends out militia, a Tavern patches up tired captains, and a Workshop keeps the walls standing."},
+    {"id": "house_role", "trigger": "house_role", "priority": 3, "voice": "narrator", "text": "A house with a job! A Barracks sends out militia, captains heal at a Tavern, and a Workshop keeps the walls standing."},
     {"id": "boarders_ashore", "trigger": "boarders_ashore", "priority": 2, "voice": "narrator", "text": "Boarders on the beach! They are running for the heart of the island. Fight them up close, or let your walls hold them back."},
     {"id": "player_fell_1", "trigger": "player_fell", "priority": 2, "voice": "narrator", "text": "A captain has fallen! Stand next to them and hold E to help them back up."},
     {"id": "player_fell_2", "trigger": "player_fell", "priority": 2, "voice": "narrator", "text": "One of the crew is down. Reach them quickly, and hold E to bring them back."},

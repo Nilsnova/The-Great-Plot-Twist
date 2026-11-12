@@ -529,9 +529,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         refuse(409, 'wave_too_early', `The wave is not over yet. Try again in ${wait} seconds.`, wait);
       }
       const late = elapsed > ISLAND_RULES.waves.maximumSeconds;
-      // §4: houses pay 5 or 10 by level, a boss wave pays double.
+      // §4: houses pay 5 a level (5, 10, 15), a boss wave pays double.
       const houseBonus = run.island ? [...run.island.built].filter(id => id.startsWith('house_'))
-        .reduce((sum, id) => sum + ((run.island.levels?.get(id) ?? 1) >= 2 ? 10 : 5), 0) : 0;
+        .reduce((sum, id) => sum + 5 * (run.island.levels?.get(id) ?? 1), 0) : 0;
       const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus) * (isBoss(run) ? 2 : 1) : 0;
       if (survived && !late && !run.island) player.pointBest = Math.max(player.pointBest ?? 0, run.wave);
       if (survived && !late) player.wonBest = Math.max(player.wonBest ?? 0, run.wave); // won_wave_best: any wave you fought and won

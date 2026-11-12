@@ -107,7 +107,7 @@ export const CONFIG = freeze({
       { damage: 42, range: 46, reload: 2.4 }, { damage: 54, range: 48, reload: 2.2 }],
     wall: [{ hp: 60 }, { hp: 120 }, { hp: 200 }, { hp: 300 }, { hp: 420 }],
     watchtower: [{ range: 8, boost: 1 }, { range: 12, boost: 1 }, { range: 14, boost: 1.05 }, { range: 16, boost: 1.1 }, { range: 18, boost: 1.15 }],
-    house: [{}, {}],
+    house: [{}, {}, {}], // level 3 (after wave 5): more loot, and a Barracks sends two tougher militia (CONFIG.houses)
   },
   mortar: { radius: 4, minRange: 8, flight: 1.3, flightPerUnit: 0.025, scatter: 1.2, firstReload: 1 },
   crew: {
@@ -182,11 +182,13 @@ export const CONFIG = freeze({
   // same role: the effects stack up to the caps below. Distances from the house's spot.
   houses: {
     level: 2,
-    // Barracks: `each` militia fighter per Barracks walks out of the door at the start of a wave (at most `max`
-    // on the island), goes for the nearest boarder within `guard` of the door, lets go past `leash` and walks
-    // home with none in reach. hp and the blow grow with the wave's hp curve (like the boarders); boarders fight
-    // a militia like a captain (GAME-V3.md §3) and can kill it. A fallen militia is back at the next wave.
-    barracks: { each: 1, max: 2, hp: 60, damage: 7, every: 1, reach: 1.1, guard: ROLE_RADIUS.barracks, leash: ROLE_RADIUS.barracks + 2, speed: 2.6, door: 1.6 },
+    // Barracks: a level-2 Barracks sends 1 militia out of its door at the start of a wave, a level-3 one 2 tougher
+    // ones (`units`, `hp`, `damage` by house level, index 0 = level 1), at most `max` on the island. Each goes for
+    // the boarder nearest its door within `guard`, lets go past `leash` and walks home with none in reach. hp and
+    // the blow grow with the wave's hp curve (like the boarders); boarders fight a militia like a captain
+    // (GAME-V3.md §3) and can kill it. A fallen militia is back at the next wave.
+    barracks: { units: [0, 1, 2], hp: [0, 60, 80], damage: [0, 7, 9], max: 3, every: 1, reach: 1.1,
+      guard: ROLE_RADIUS.barracks, leash: ROLE_RADIUS.barracks + 2, speed: 2.6, door: 1.6 },
     // Tavern: a standing captain within `radius` gains `heal` hp a second per Tavern, at most `max` together;
     // with a Tavern on the island a revive costs `revive` percent less (the server checks it: wave_revive()).
     tavern: { radius: ROLE_RADIUS.tavern, heal: 2, max: 3, revive: 25 },
@@ -290,10 +292,10 @@ export function revivePrice(wave, { tavern = false } = {}) {
   const price = R.base + R.perWave * n;
   return tavern ? Math.floor(price * (100 - CONFIG.houses.tavern.revive) / 100) : price;
 }
-/** The houses of an island's defenses that act with a role (level 2 and up): [{id, role, x, z}] in id order. */
+/** The houses of an island's defenses that act with a role (level 2 and up): [{id, role, level, x, z}] in id order. */
 export function houseRoles(defenses) {
   return readDefenses(defenses).filter(item => item.kind === 'house' && item.level >= CONFIG.houses.level && item.spec)
-    .map(item => ({ id: item.id, role: item.spec, x: item.x, z: item.z }));
+    .map(item => ({ id: item.id, role: item.spec, level: item.level, x: item.x, z: item.z }));
 }
 /** True when the island has a Tavern (the revive discount of wave_revive()). */
 export const hasTavern = defenses => houseRoles(defenses).some(item => item.role === 'tavern');
@@ -1003,10 +1005,11 @@ export function createWave(options = {}) {
         lanes: lanes.slice(0, laneCount).map(lane => ({ id: lane.id, x: round2(lane.stop.x), z: round2(lane.stop.z) })) });
       // The Barracks' militia walk out of their doors (CONFIG.houses.barracks), the same on every screen.
       const G = HO.barracks;
-      for (const house of barracks) for (let k = 0; k < G.each && militia.length < G.max; k++) {
-        const id = `militia_${militia.length + 1}`, hp = Math.round(G.hp * curve.hp);
-        const unit = { id, militia: true, houseId: house.id, homeX: house.x + (k ? .8 : 0), homeZ: house.z + G.door, x: house.x, z: house.z + .6,
-          hp, maxHp: hp, damage: round2(G.damage * curve.hp), state: 'walking', foe: null, hitIn: G.every / 2, facing: 1 };
+      for (const house of barracks) for (let k = 0; k < G.units[house.level - 1] && militia.length < G.max; k++) {
+        const id = `militia_${militia.length + 1}`, hp = Math.round(G.hp[house.level - 1] * curve.hp);
+        const unit = { id, militia: true, houseId: house.id, homeX: round2(house.x + (k ? .9 : 0) - (G.units[house.level - 1] > 1 ? .45 : 0)),
+          homeZ: round2(house.z + G.door), x: house.x, z: round2(house.z + .6), hp, maxHp: hp, damage: round2(G.damage[house.level - 1] * curve.hp),
+          state: 'walking', foe: null, hitIn: G.every / 2, facing: 1, level: house.level };
         militia.push(unit); militiaById.set(id, unit);
         events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: house.id, hp, x: round2(unit.x), z: round2(unit.z) });
       }
@@ -1211,7 +1214,7 @@ export function createWave(options = {}) {
           colour: hero.colour, present: presentAt(hero, t) })),
         // The house roles (GAME-V3.md "Houses"): the Barracks' militia in the wave, and the houses that act.
         militia: militia.map(unit => ({ id: unit.id, houseId: unit.houseId, x: unit.x, z: unit.z, hp: unit.hp, maxHp: unit.maxHp,
-          state: unit.state, foe: unit.foe, facing: unit.facing })),
+          state: unit.state, foe: unit.foe, facing: unit.facing, level: unit.level })),
         militiaFell, houses: roles.map(item => ({ ...item })),
         wrecks: wrecks.map(item => ({ ...item })),
         walls: walls.map(wall => ({ id: wall.id, level: wall.level, ...(wall.spec ? { spec: wall.spec } : {}), hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
