@@ -233,3 +233,55 @@ it('keeps the break between waves clear of the loot toasts and the victory capti
     }
   });
 });
+
+it("names a friend's game in the arrival banner, and follows when the host's name arrives late",async()=>{
+  await evaluate.withPage(async page=>{
+    const result=await page.evaluate(async()=>{
+      for(const sheet of ['/src/ui/base.css','/src/ui/kit/kit.css','/src/ui/styles.css'])await window.g20Import(sheet);
+      localStorage.clear();
+      const {createHud}=await window.g20Import('/src/ui/hud.js');
+      const game=document.createElement('main');game.id='game';document.body.append(game);
+      let name=null;
+      const hud=createHud(game,{focus(){},start(){},travel(){return false;},placeName:id=>id==='home_islet'?name:null});
+      hud.start();
+      const banner=()=>({shown:!document.querySelector('.hud-arrival').hidden,text:document.querySelector('.hud-arrival strong').textContent,status:document.querySelector('.hud .chapter').textContent});
+      hud.arrive('home_islet');const own=banner();
+      name="A friend's game";hud.arrive('home_islet');const early=banner();
+      name="Nils's game";hud.renamePlace();const late=banner();
+      hud.dispose();
+      return {own,early,late};
+    });
+    expect(result.own).toEqual({shown:true,text:'Your island',status:'Your island'});
+    expect(result.early).toEqual({shown:true,text:"A friend's game",status:"A friend's game"});
+    expect(result.late).toEqual({shown:true,text:"Nils's game",status:"Nils's game"});
+  });
+});
+
+it("keeps a friend's game chip and the goals strip apart at 390, 375 and 1280 px",async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    await page.evaluate(async()=>{
+      await window.g20Import('/src/island/island.css');
+      const {createIslandUi}=await window.g20Import('/src/island/ui.js');
+      const {visitChip}=await window.g20Import('/src/island/one-island.js');
+      window.testIslandUi=createIslandUi({container:document.querySelector('#game')});
+      window.testIslandUi.visit(visitChip({ownerName:'Captain Bartholomew Longname',code:'ISLE-FR3ND'}),()=>{});
+    });
+    for(const [width,height] of [[390,844],[375,812],[1280,800]]){
+      await page.setViewportSize({width,height});
+      const result=await page.evaluate(()=>{
+        const box=selector=>document.querySelector(selector).getBoundingClientRect();
+        const boxes={coins:box('.hud-coins'),menu:box('.hud-menu'),strip:box('.quest-strip'),chip:box('.island-visit')};
+        const overlap=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+        const pairs=Object.keys(boxes).filter(name=>name!=='chip'&&overlap(boxes.chip,boxes[name]));
+        const inside=Object.values(boxes).every(r=>r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight);
+        return {pairs,inside,overflow:document.documentElement.scrollWidth>innerWidth,chip:[boxes.chip.top,boxes.chip.bottom].map(Math.round),strip:Math.round(boxes.strip.top)};
+      });
+      expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({pairs:[],inside:true,overflow:false});
+    }
+    // Without the chip the strip goes back under the Menu.
+    await page.setViewportSize({width:390,height:844});
+    const back=await page.evaluate(()=>{window.testIslandUi.visit(null);return Math.round(document.querySelector('.quest-strip').getBoundingClientRect().top);});
+    expect(back).toBeLessThan(80);
+  });
+});
