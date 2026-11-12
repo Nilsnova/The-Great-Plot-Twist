@@ -42,7 +42,7 @@ PRICES = {
     "cannon": [30, 60, 120, 240, 480],
     "mortar": [60, 120, 240, 480, 960],
     "watchtower": [40, 80, 160, 320, 640],
-    "house": [50, 100],
+    "house": [50, 100, 200],
 }
 
 
@@ -293,3 +293,116 @@ def test_a_bad_argument_is_a_server_bug(database):
     game(database)
     with pytest.raises(psycopg.errors.RaiseException, match="bad_demolish"):
         demolish(database, OWNER, "wall_1", "short")
+
+
+@pytest.mark.parametrize("bad", [0, -5, 2.5, None, "10"])
+def test_a_price_that_is_not_a_positive_whole_number_is_a_server_bug(database, bad):
+    game(database)
+    coop_build(database, MEMBER, OWNER, "wall_6", "wall", "build-0071", 10)
+    prices = {**PRICES, "wall": [10, bad, 40, 80, 160]}
+    as_server(database)
+    for sql, arguments in (
+        (
+            "select public.island_demolish(%s, %s, %s, %s, %s)",
+            (MEMBER, OWNER, "wall_6", "tear-0071"),
+        ),
+        ("select public.island_demolish_quote(%s, %s, %s, %s)", (MEMBER, OWNER, "wall_6")),
+    ):
+        database.execute("savepoint before_call")
+        with pytest.raises(psycopg.errors.RaiseException, match="bad_demolish"):
+            database.execute(sql, (*arguments, json.dumps(prices)))
+        database.execute("rollback to savepoint before_call")
+    assert standing(database, "wall_6") == ("wall", 1, None)
+    assert ledger(database, MEMBER, "building_refund") == []
+
+
+# The two checks below need a second connection: they stop the click at the island row lock, as a
+# second player would, change the game, and let the click go on. The data is committed, so it is
+# removed again by hand.
+RACE_PLAYERS = (OWNER, MEMBER, OTHER, STRANGER)
+
+
+def cleanup_committed(uri):
+    with psycopg.connect(uri, autocommit=True) as clean:
+        clean.execute("delete from auth.users where id = any(%s)", (list(RACE_PLAYERS),))
+
+
+def click_blocked_at_the_island_lock(scratch_server, change):
+    """Run a member's demolish of wall_7 while another transaction holds the island row, run
+    `change(other_connection)` in that transaction, commit it, and return the click's answer."""
+    import threading
+    import time
+
+    uri = scratch_server.get_uri()
+    result = {}
+
+    def click():
+        with psycopg.connect(uri) as connection:
+            as_server(connection)
+            result["answer"] = call(
+                connection,
+                "select public.island_demolish(%s, %s, %s, %s, %s)",
+                MEMBER,
+                OWNER,
+                "wall_7",
+                "tear-0081",
+                json.dumps(PRICES),
+            )
+
+    with psycopg.connect(uri) as setup, psycopg.connect(uri) as other:
+        game(setup)
+        coop_build(setup, MEMBER, OWNER, "wall_7", "wall", "build-0081", 10)
+        setup.commit()
+        other.execute("select 1 from public.islands where player_id = %s for update", (OWNER,))
+        thread = threading.Thread(target=click)
+        thread.start()
+        for _ in range(100):  # wait until the click stands at the lock
+            waiting = setup.execute("select count(*) from pg_locks where not granted").fetchone()[0]
+            setup.commit()
+            if waiting:
+                break
+            time.sleep(0.05)
+        change(other)
+        other.commit()
+        thread.join(timeout=10)
+        assert not thread.is_alive()
+    return result["answer"]
+
+
+def test_a_member_who_left_while_the_click_waited_is_refused(database, scratch_server):
+    def leave_the_game(other):
+        other.execute(
+            "update public.island_members set left_at = now()"
+            " where island_owner = %s and player_id = %s",
+            (OWNER, MEMBER),
+        )
+
+    try:
+        answer = click_blocked_at_the_island_lock(scratch_server, leave_the_game)
+        assert answer == {"status": "refused", "reason": "not_member"}
+        with psycopg.connect(scratch_server.get_uri()) as check:
+            assert standing(check, "wall_7") == ("wall", 1, None)
+            assert ledger(check, MEMBER, "building_refund") == []
+    finally:
+        cleanup_committed(scratch_server.get_uri())
+
+
+def test_a_building_rebuilt_while_the_click_waited_answers_busy(database, scratch_server):
+    def rebuild(other):
+        other.execute(
+            "delete from public.islet_buildings where player_id = %s and plot = 'wall_7'", (OWNER,)
+        )
+        other.execute(
+            "insert into public.islet_buildings (player_id, plot, building_type, level, coins_paid,"
+            " timber_paid, ref) values (%s, 'wall_7', 'wall', 1, 10, 0, 'island:build-0082')",
+            (OWNER,),
+        )
+
+    try:
+        answer = click_blocked_at_the_island_lock(scratch_server, rebuild)
+        assert answer == {"status": "refused", "reason": "busy"}
+        with psycopg.connect(scratch_server.get_uri()) as check:
+            assert standing(check, "wall_7") == ("wall", 1, None)
+            assert ledger(check, MEMBER, "building_refund") == []
+    finally:
+        cleanup_committed(scratch_server.get_uri())
