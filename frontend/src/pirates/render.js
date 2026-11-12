@@ -21,7 +21,7 @@
 // fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
-import { crewArt, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+import { TIER_ART, crewArt, levelArt, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
 
@@ -90,6 +90,9 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
 export const DOWN_IDS = Array.from({ length: 10 }, (_, i) => `captain-down-${i + 1}`);
 export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS];
 export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
+// Levels 4 and 5 of walls, cannons and mortars and their gold pips (GAME-V3.md §4.1): cartoon-only, so a pixel
+// atlas (tests) draws a tier building with its level-3 art and plain pips.
+export const TIER_IDS = [...Object.values(TIER_ART).flat(), 'fx-level-pip-gold'];
 const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], hack: ['boarder', 'boarder-hack'], hit: 'boarder-hit', still: 'boarder' });
 /**
  * Paints every atlas sprite in the clean cartoon style (src/art/) into one smooth texture (browser
@@ -100,7 +103,7 @@ export async function loadAtlas({ quality = 'high', colour = 0 } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
-  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS])];
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -245,7 +248,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
   // watchtower gets one only for the lookout.
   const hasPost = item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'watchtower';
-  const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(3, item.level)) : 1);
+  const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(5, item.level)) : 1);
+  // A level's art, or level 3's when the atlas has no tier frame (the pixel atlas).
+  const levelFrame = (kind, level) => { const id = levelArt(kind, level); return rect[id] ? id : pirateLevels[kind][Math.min(3, level) - 1]; };
   const makePost = item => {
     const layer = createLayer(`defense:${item.id}`, POST_CAPACITY, material, 100 + item.z, owned); root.add(layer.mesh);
     return { ...item, level: levelOf(item), layer, flip: false };
@@ -650,9 +655,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const r = rect[crewArt[kind]], bob = busy && !still() ? Math.abs(Math.sin(clock * 8)) * .08 : 0;
     layer.push(r, x, y + bob, r.w, r.h, .5, r.anchor);
   }
-  // Level pips: 1 to 3 brass pips (fx-level-pip) above a tower or wall.
+  // Level pips: 1 to 3 brass pips (fx-level-pip) above a tower or wall; 4 and 5 gold stars on teal (fx-level-pip-gold).
   function drawPips(layer, x, top, level) {
-    const r = rect['fx-level-pip'];
+    const r = (level >= 4 && rect['fx-level-pip-gold']) || rect['fx-level-pip'];
     for (let i = 0; i < level; i++) layer.push(r, x + (i - (level - 1) / 2) * r.w * .7, top, r.w, r.h, .5, r.anchor);
   }
 
@@ -724,12 +729,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         let smoking = false;
         if (post.kind === 'wall') {
           const wall = walls.get(post.id), share = wall ? wall.hp / wall.maxHp : 1;
-          id = share > .6 ? pirateLevels.wall[level - 1] : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
+          id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
         } else {
           // Each kind and level has its own art; firing shows the kind's firing frame (a mortar stays a mortar).
           const firing = (fire.get(post.id)?.until ?? -1) > clock, kind = post.kind === 'mortar' ? 'mortar' : 'cannon';
-          id = firing ? pirateFrames[kind][1] : pirateLevels[kind][level - 1];
+          id = firing ? pirateFrames[kind][1] : levelFrame(kind, level);
         }
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);

@@ -4,12 +4,12 @@
 // asset, no data: URL); the level art (walls, cannons, mortars by level) replaces the stand-ins once loaded. Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
-import {loadArt, placeArt, projectPoint} from '../world/art.js';
+import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {SLOT_KINDS} from './td-rules.js';
-import {crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
+import {TIER_ART, crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 
@@ -22,9 +22,15 @@ export const ART_CANDIDATES = Object.freeze({
 });
 export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ?? []).find(id => Object.hasOwn(sizes, id)) ?? null;
 // Outside a wave a built spot shows its real kind and level: the art lane's level art (pirateLevels) for
-// walls, cannons and mortars, the watchtower and the house (one drawing each; their pips tell the level).
-export const LEVEL_ART = Object.freeze({...pirateLevels, watchtower: ['island-watchtower'], house: ['island-house']});
+// walls, cannons and mortars, the watchtower and the house (one drawing each up to level 3; their pips tell
+// the level). Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
+// and gold stars on a teal disc as pips (PIP_TIER_ART).
+const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
+export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'),
+  watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
 export const PIP_ART = 'fx-level-pip';
+export const PIP_TIER_ART = 'fx-level-pip-gold';
+export const pipArt = level => (level >= 4 ? PIP_TIER_ART : PIP_ART);
 export function buildingArt(kind, level = 1) {
   const list = LEVEL_ART[kind];
   if (!list) return null;
@@ -33,7 +39,7 @@ export function buildingArt(kind, level = 1) {
 }
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
 export const pipCount = (kind, level = 1) => {
-  const n = Number.isSafeInteger(level) && level > 0 ? Math.min(3, level) : 1;
+  const n = Number.isSafeInteger(level) && level > 0 ? Math.min(5, level) : 1;
   return kind === 'cannon' || kind === 'mortar' || n > 1 ? n : 0;
 };
 // Where the hired crew stand outside a wave (TOWER-DEFENSE.md §3): gunners beside the strongest towers
@@ -153,9 +159,9 @@ export function decorateIsland(place, ctx = {}) {
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
-    const meshes = [mesh], [, height, anchor] = pixelSizes[id], top = height * (1 - anchor) + .15;
+    const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     for (let i = 0; i < pips; i++) {
-      const pip = put(PIP_ART, spot.x + (i - (pips - 1) / 2) * .6, spot.z, top, .01); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+      const pip = put(pipArt(level), spot.x + (i - (pips - 1) / 2) * .6, spot.z, top, .01); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
     }
     shown.set(spot.id, {key, meshes});
   }
@@ -204,8 +210,8 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), PIP_ART, ...Object.values(crewArt)])]
-    .filter(id => Object.hasOwn(pixelSizes, id));
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+    .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
     art = loaded;

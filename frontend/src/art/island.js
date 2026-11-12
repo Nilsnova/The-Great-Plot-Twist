@@ -6,6 +6,35 @@ import {INK, ellipse, line, mix, part, poly, radial, rect, shadow, stroke} from 
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
 const IRON = '#3e4250', BRASS = '#f2c14e', ROOF = '#d4553e', LEAF = '#5cb84a', LEAF_DARK = '#3d8f3c', PINE = '#2f8f5a';
+// The tower tiers (GAME-V3.md §4.1): levels 4 and 5 wear gold trim and the island's banner, teal at level 4,
+// royal blue with a gold star at level 5 (Redtide's ships fly red, so the defenders never do).
+const GOLD = '#ffcf3f', GOLD_DARK = '#c98a2a', BANNER = {4: '#2c9aa6', 5: '#2f56b0'};
+// A banner on a pole: the pole's foot at (x, foot), `tall` high; a swallow-tailed flag with a gold edge, a gold
+// knob on top and, at level 5, a gold star on the cloth. `size` scales the cloth.
+function banner(c, x, foot, tall, level, size = 1) {
+  const top = foot - tall, fw = 12 * size, fh = 8 * size, cloth = BANNER[level] ?? BANNER[4];
+  part(c, rect(x - .9, top, 1.8, tall, .6), WOOD_DARK, {width: .8});
+  part(c, poly([[x + .9, top + 1], [x + .9 + fw, top + 1], [x + .9 + fw - 3 * size, top + 1 + fh / 2], [x + .9 + fw, top + 1 + fh], [x + .9, top + 1 + fh]], .6),
+    cloth, {depth: 1, width: 1, gloss: rect(x + 2, top + 2, fw * .5, 1, .4), light: mix(cloth, '#ffffff', .35)});
+  stroke(c, line([[x + .9, top + 1.6], [x + .9 + fw - .6, top + 1.6]]), GOLD, .9);
+  stroke(c, line([[x + .9, top + fh + .4], [x + .9 + fw - .6, top + fh + .4]]), GOLD, .9);
+  if (level >= 5) part(c, starPath(x + .9 + fw * .4, top + 1 + fh / 2, 2.6 * size, 1.1 * size), GOLD, {width: .6, shade: false});
+  part(c, ellipse(x, top - .6, 1.6), GOLD, {width: .7, shade: false, gloss: ellipse(x - .5, top - 1.1, .5)});
+}
+// A cloth banner hanging on a wall's face: gold rod and edges, a swallow tail, the star at level 5.
+function hangingBanner(c, x, y, w, h, level) {
+  const cloth = BANNER[level] ?? BANNER[4];
+  part(c, poly([[x, y], [x + w, y], [x + w, y + h], [x + w / 2, y + h - 3.4], [x, y + h]], .5), cloth,
+    {depth: 1.2, width: 1, gloss: rect(x + 1.2, y + 1.6, 1, h - 6, .4), light: mix(cloth, '#ffffff', .35)});
+  stroke(c, line([[x + 1, y + 1], [x + 1, y + h - 1.4]]), GOLD, .8); stroke(c, line([[x + w - 1, y + 1], [x + w - 1, y + h - 1.4]]), GOLD, .8);
+  part(c, rect(x - 1.6, y - 1.6, w + 3.2, 2.4, 1), GOLD, {width: .8, shade: GOLD_DARK});
+  if (level >= 5) part(c, starPath(x + w / 2, y + h / 2 - 1.2, w * .34, w * .15), GOLD, {width: .6, shade: false});
+}
+function starPath(cx, cy, outer, inner) {
+  const points = [];
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? inner : outer; points.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+  return poly(points, .3);
+}
 
 // --- Nature -------------------------------------------------------------------------------------
 // A cluster of round blobs with one outline around the whole: stroke every edge, then fill the union
@@ -112,7 +141,8 @@ function sign(c, {w, h}) {
 
 // --- Buildings -----------------------------------------------------------------------------------
 // A wall section by level: a log palisade, a stone wall with merlons, a tall stone rampart with iron
-// bands and a banner. The damaged and broken frames show any level beaten down.
+// bands and a pennant, gold-capped merlons and the island's banner (4), a gold band and the starred
+// royal banner (5). The damaged and broken frames show any level beaten down.
 function wall(level) {
   return (c, {w, h}) => {
     const g = h - 6; shadow(c, w / 2, g + 1, 22, 4);
@@ -125,7 +155,7 @@ function wall(level) {
       for (const y of [g - 17, g - 7]) part(c, rect(2.5, y, w - 5, 2.6, 1.2), WOOD_DARK, {depth: .6, width: .9});
       return;
     }
-    const tall = level === 3 ? 30 : 24, top = g - tall;
+    const tall = level >= 3 ? 30 : 24, top = g - tall;
     part(c, rect(3, top + 4, w - 6, tall - 4, 2), STONE, {depth: 2.6, width: 1.3});
     part(c, rect(3, top, w - 6, 6, 2), STONE_LIGHT, {depth: 1, width: 1.2});
     // Stone courses: staggered blocks.
@@ -136,13 +166,17 @@ function wall(level) {
     }
     c.restore();
     for (let i = 0; i < 4; i++) part(c, rect(5 + i * 10.3, top - 6, 7, 7, 1.4), STONE_LIGHT, {depth: 1.4, width: 1.2, gloss: rect(6, top - 5, 3, 1, .5)});
+    if (level >= 4) for (let i = 0; i < 4; i++) part(c, rect(4.6 + i * 10.3, top - 7, 7.8, 2.4, 1), GOLD, {width: .9, shade: GOLD_DARK, gloss: rect(6, top - 6.6, 3, .6, .3)});
+    if (level >= 3) {
+      for (const y of [top + 9, g - 6]) part(c, rect(2, y, w - 4, 2.6, 1), level >= 5 && y === top + 9 ? GOLD : IRON, {depth: .6, width: .9, ...(level >= 5 && y === top + 9 ? {shade: GOLD_DARK} : {})});
+      for (let x = 8; x < w - 4; x += 10) part(c, ellipse(x, top + 10.3, .9), level >= 5 ? IRON : BRASS, {line: false, shade: false});
+    }
     if (level === 3) {
-      for (const y of [top + 9, g - 6]) part(c, rect(2, y, w - 4, 2.6, 1), IRON, {depth: .6, width: .9});
-      for (let x = 8; x < w - 4; x += 10) part(c, ellipse(x, top + 10.3, .9), BRASS, {line: false, shade: false});
       part(c, rect(w / 2 - 1, top - 20, 2, 16, .8), WOOD_DARK, {width: .8});
       part(c, poly([[w / 2 + 1, top - 20], [w / 2 + 13, top - 17], [w / 2 + 1, top - 12]], .8), '#2c9aa6', {depth: 1, width: 1});
       part(c, ellipse(w / 2 + 5.5, top - 16.2, 1.6), BRASS, {width: .6, shade: false});
     }
+    if (level >= 4) hangingBanner(c, w / 2 - 5, top + 3, 10, level >= 5 ? 20 : 16, level);
   };
 }
 function wallDamaged(c, {w, h}) {
@@ -159,23 +193,29 @@ function wallBroken(c, {w, h}) {
   part(c, poly([[24, g - 13], [28, g - 20], [33, g - 18], [31, g - 11]], 1), WOOD, {depth: .8, width: .9});
 }
 // A cannon by level, facing right on the ground line: a wheeled carriage (1), on a stone pad with
-// brass rings (2), on a round bastion with a gold-trimmed long barrel (3). Firing kicks the barrel back.
+// brass rings (2), on a round bastion with a gold-trimmed long barrel (3), a gilded muzzle, a gold-edged
+// pad and the island's banner behind it (4), a longer, wholly gilded barrel and the starred banner (5).
+// Firing kicks the barrel back.
 function cannon(level, firing = false) {
   return (c, {w, h}) => {
     const g = h - 5, cx = 22; shadow(c, cx, g, 18, 3.6);
-    if (level >= 2) part(c, rect(4, g - 6, 38, 7, 3), level === 3 ? STONE_LIGHT : STONE, {depth: 2, width: 1.2, gloss: rect(7, g - 5.4, 26, 1.2, .6)});
-    if (level === 3) for (let x = 8; x < 40; x += 8) stroke(c, line([[x, g - 5], [x, g + 1]]), mix(STONE, INK, .4), .8);
+    if (level >= 2) part(c, rect(4, g - 6, 38, 7, 3), level >= 3 ? STONE_LIGHT : STONE, {depth: 2, width: 1.2, gloss: rect(7, g - 5.4, 26, 1.2, .6)});
+    if (level >= 3) for (let x = 8; x < 40; x += 8) stroke(c, line([[x, g - 5], [x, g + 1]]), mix(STONE, INK, .4), .8);
+    if (level >= 4) stroke(c, line([[5.5, g - 6], [40.5, g - 6]]), GOLD, 1.3);
     const base = level >= 2 ? g - 6 : g, kick = firing ? -3 : 0;
     part(c, poly([[cx - 12, base - 2], [cx - 9, base - 9], [cx + 8, base - 9], [cx + 10, base - 2]], 1.4), WOOD, {depth: 1.6, width: 1.2});
-    const length = level === 3 ? 28 : level === 2 ? 25 : 22, thick = level === 3 ? 8.4 : level === 2 ? 7.6 : 7;
+    const length = [22, 25, 28, 28, 30][level - 1] ?? 22, thick = [7, 7.6, 8.4, 8.6, 9][level - 1] ?? 7;
     c.save(); c.translate(cx - 8 + kick, base - 11); c.rotate(-.12);
     const barrel = new Path2D(); barrel.moveTo(-1, -thick / 2 - .6); barrel.lineTo(length - 2, -thick / 2 + .8); barrel.lineTo(length, -thick / 2 + .4);
     barrel.lineTo(length, thick / 2 - .4); barrel.lineTo(length - 2, thick / 2 - .8); barrel.lineTo(-1, thick / 2 + .6); barrel.arc(-1, 0, thick / 2 + .6, Math.PI / 2, Math.PI * 1.5); barrel.closePath();
-    part(c, barrel, IRON, {depth: 2, width: 1.3, gloss: rect(1, -thick / 2 + .8, length - 6, 1.3, .6), light: '#7b8296'});
-    if (level >= 2) for (const x of level === 3 ? [3, 11, length - 3] : [4, length - 3]) part(c, rect(x - 1, -thick / 2 - .3, 2.4, thick + .6, .8), BRASS, {width: .7, shade: false});
+    part(c, barrel, level >= 5 ? GOLD : IRON, level >= 5 ? {depth: 2, width: 1.3, shade: GOLD_DARK, gloss: rect(1, -thick / 2 + .8, length - 6, 1.3, .6), light: '#fff1b8'}
+      : {depth: 2, width: 1.3, gloss: rect(1, -thick / 2 + .8, length - 6, 1.3, .6), light: '#7b8296'});
+    if (level >= 2) for (const x of level >= 3 ? [3, 11, length - 3] : [4, length - 3]) part(c, rect(x - 1, -thick / 2 - .3, 2.4, thick + .6, .8), level >= 5 ? IRON : BRASS, {width: .7, shade: false});
+    if (level === 4) part(c, rect(length - 4.6, -thick / 2 - .5, 4.6, thick + 1, 1), GOLD, {width: .8, shade: GOLD_DARK});
     part(c, ellipse(length, 0, 1.4, thick / 2 - .2), '#14161c', {width: .8, shade: false});
     c.restore();
     for (const x of [cx - 7, cx + 6]) { part(c, ellipse(x, base - 2.4, 4.6), WOOD_DARK, {depth: 1, width: 1.2}); part(c, ellipse(x, base - 2.4, 1.6), level >= 2 ? BRASS : '#c9a06a', {width: .8, shade: false}); }
+    if (level >= 4) banner(c, 4.5, base - 1, level >= 5 ? 19 : 17, level, .8);
     if (firing) {
       const mx = cx - 8 + kick + length * Math.cos(.12) + 2, my = base - 11 - length * Math.sin(.12);
       part(c, ellipse(mx + 4, my, 5.2, 4), '#fff3c4', {line: '#f29e38', width: 1, shade: false});
@@ -184,38 +224,50 @@ function cannon(level, firing = false) {
   };
 }
 // A mortar by level: a squat iron pot on a wooden bed aimed at the sky (1), banded in brass (2), on a
-// stone ring (3). Firing: a puff from the mouth.
+// stone ring (3), a gold rim, a gold-edged ring and the island's banner (4), a wholly gilded pot and the
+// starred banner (5). Firing: a puff from the mouth.
 function mortar(level, firing = false) {
   return (c, {w, h}) => {
     const g = h - 5, cx = w / 2; shadow(c, cx, g, 16, 3.4);
-    if (level === 3) part(c, ellipse(cx, g - 3, 17, 5), STONE, {depth: 1.6, width: 1.2, gloss: ellipse(cx - 6, g - 5, 6, 1.2), light: STONE_LIGHT});
-    const base = level === 3 ? g - 4 : g;
+    if (level >= 3) part(c, ellipse(cx, g - 3, 17, 5), STONE, {depth: 1.6, width: 1.2, gloss: ellipse(cx - 6, g - 5, 6, 1.2), light: STONE_LIGHT});
+    if (level >= 4) stroke(c, ellipse(cx, g - 3.4, 15.6, 4), GOLD, 1.1);
+    const base = level >= 3 ? g - 4 : g;
     part(c, rect(cx - 13, base - 7, 26, 7, 2), WOOD, {depth: 1.6, width: 1.2, gloss: rect(cx - 11, base - 6.4, 18, 1, .5), light: WOOD_LIGHT});
-    const s = level === 1 ? 1 : level === 2 ? 1.1 : 1.18;
+    const s = [1, 1.1, 1.18, 1.2, 1.24][level - 1] ?? 1;
     c.save(); c.translate(cx, base - 9); c.scale(s, s); c.rotate(-.35);
-    part(c, poly([[-8, 4], [-9, -4], [-6.5, -10], [6.5, -10], [9, -4], [8, 4]], [3, 3, 1, 1, 3, 3]), IRON, {depth: 2.2, width: 1.3, gloss: rect(-6, -7, 2, 9, 1), light: '#7b8296'});
-    part(c, ellipse(0, -10, 7.4, 2.6), '#2a2d36', {width: 1.1, shade: false});
+    part(c, poly([[-8, 4], [-9, -4], [-6.5, -10], [6.5, -10], [9, -4], [8, 4]], [3, 3, 1, 1, 3, 3]), level >= 5 ? GOLD : IRON,
+      level >= 5 ? {depth: 2.2, width: 1.3, shade: GOLD_DARK, gloss: rect(-6, -7, 2, 9, 1), light: '#fff1b8'} : {depth: 2.2, width: 1.3, gloss: rect(-6, -7, 2, 9, 1), light: '#7b8296'});
+    part(c, ellipse(0, -10, 7.4, 2.6), level >= 4 ? GOLD : '#2a2d36', {width: 1.1, shade: false});
     part(c, ellipse(0, -10, 5.2, 1.6), '#101218', {line: false, shade: false});
-    if (level >= 2) part(c, rect(-9, -3.6, 18, 2.4, 1), BRASS, {width: .7, shade: false});
-    if (level === 3) part(c, rect(-8, -8.4, 16, 1.8, .8), BRASS, {width: .7, shade: false});
+    if (level >= 2) part(c, rect(-9, -3.6, 18, 2.4, 1), level >= 5 ? IRON : BRASS, {width: .7, shade: false});
+    if (level >= 3) part(c, rect(-8, -8.4, 16, 1.8, .8), level >= 5 ? IRON : BRASS, {width: .7, shade: false});
     c.restore();
     for (const x of [cx - 9, cx + 9]) part(c, ellipse(x, base - 3.4, 2.2), WOOD_DARK, {width: .9, shade: false});
+    if (level >= 4) banner(c, cx + 13, base - 2, level >= 5 ? 19 : 17, level, .8);
     if (firing) for (const [x, y, r] of [[cx + 6, base - 24, 4.6], [cx + 10, base - 27, 3.4], [cx + 2, base - 27, 3]]) part(c, ellipse(x, y, r), '#f4efe6', {line: '#8c8a92', width: .9, shade: '#cfcad6'});
   };
 }
-function watchtower(c, {w, h}) {
+// The watchtower; at levels 4 and 5 (GAME-V3.md §4.1) a gold-trimmed roof and the island's banner instead of
+// the pennant, at 5 a gold railing and the starred royal banner.
+function watchtower(level) { return (c, size) => watchtowerAt(c, size, level); }
+function watchtowerAt(c, {w, h}, level) {
   const g = h - 8, cx = w / 2; shadow(c, cx, g, 24, 5);
   for (const x of [cx - 17, cx + 13]) part(c, rect(x, g - 70, 4.5, 71, 1.4), WOOD_DARK, {depth: 1.2, width: 1.2});
   for (const [y0, y1] of [[g - 8, g - 34], [g - 34, g - 60]]) { stroke(c, line([[cx - 14, y0], [cx + 14, y1]]), INK, 3); stroke(c, line([[cx - 14, y0], [cx + 14, y1]]), WOOD, 1.6);
     stroke(c, line([[cx + 14, y0], [cx - 14, y1]]), INK, 3); stroke(c, line([[cx + 14, y0], [cx - 14, y1]]), WOOD, 1.6); }
   for (const y of [g - 34, g - 8]) part(c, rect(cx - 18, y - 2, 36, 3.6, 1.4), WOOD, {depth: .8, width: 1});
   // The lookout's hut: a plank box with a railing and a pointed roof with a pennant.
-  part(c, rect(cx - 23, g - 74, 46, 6, 2), WOOD_LIGHT, {depth: 1.6, width: 1.3});
+  part(c, rect(cx - 23, g - 74, 46, 6, 2), level >= 5 ? GOLD : WOOD_LIGHT, level >= 5 ? {depth: 1.6, width: 1.3, shade: GOLD_DARK} : {depth: 1.6, width: 1.3});
   part(c, rect(cx - 20, g - 92, 40, 19, 2.4), WOOD, {depth: 2.4, width: 1.3});
   for (let x = cx - 16; x < cx + 18; x += 6) stroke(c, line([[x, g - 91], [x, g - 74]]), WOOD_DARK, .9);
   part(c, rect(cx - 10, g - 89, 20, 8, 1.6), '#3a2a24', {shade: false, width: 1});
   part(c, ellipse(cx + 2, g - 85, 2, 2.2), '#f3c39b', {width: .8, shade: false});
   part(c, poly([[cx - 27, g - 90], [cx, g - 112], [cx + 27, g - 90]], [2, 2, 2]), ROOF, {depth: 3, dx: -1, width: 1.4, gloss: poly([[cx - 18, g - 92], [cx - 2, g - 107], [cx - 6, g - 93]], 1), light: '#ef7e62'});
+  if (level >= 4) {
+    stroke(c, line([[cx - 26, g - 90.6], [cx, g - 111], [cx + 26, g - 90.6]]), GOLD, 1.6);
+    banner(c, cx, g - 111, 10, level, level >= 5 ? 1.15 : 1);
+    return;
+  }
   part(c, rect(cx - .8, g - 122, 1.8, 12, .6), WOOD_DARK, {width: .8});
   part(c, poly([[cx + 1, g - 122], [cx + 13, g - 119], [cx + 1, g - 115]], .8), BRASS, {depth: .8, width: 1});
 }
@@ -277,6 +329,13 @@ function levelPip(c, {w, h}) {
   for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 2.6 : 5.6; star.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
   part(c, poly(star, .7), BRASS, {depth: 1, width: 1, gloss: ellipse(cx - 1.2, cy - 1.6, 1.4, .8), light: '#fff1b8'});
 }
+// The star of levels 4 and 5: brighter gold on a teal disc with a gold ring, so a tier tower reads at a glance.
+function tierPip(c, {w, h}) {
+  const cx = w / 2, cy = h / 2;
+  part(c, ellipse(cx, cy, 7, 7), BANNER[4], {depth: .8, width: .9, shade: false});
+  stroke(c, ellipse(cx, cy, 6.1), GOLD, .9);
+  part(c, starPath(cx, cy, 5, 2.3), GOLD, {depth: 1, width: .9, gloss: ellipse(cx - 1.1, cy - 1.5, 1.2, .7), light: '#fff6c8'});
+}
 function buildSpot(glow) {
   return (c, {w, h}) => {
     const cy = h - 10;
@@ -292,14 +351,18 @@ export function islandFrames() {
     oak: [80, 104, 8, oak], pine: [80, 112, 8, pine], birch: [80, 104, 8, palm(false)], 'birch-tall': [80, 104, 8, palm(true)],
     rock: [48, 36, 4, rock], shrub: [40, 32, 4, shrub], flowers: [24, 24, 3, flowers], 'grass-tuft': [32, 32, 4, grassTuft],
     bench: [48, 32, 3, bench], barrel: [24, 32, 3, barrel], lantern: [16, 24, 2, lantern], crate: [24, 24, 3, crate], sign: [32, 40, 3, sign],
-    cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house], 'island-watchtower': [64, 128, 8, watchtower],
+    cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house], 'island-watchtower': [64, 128, 8, watchtower(1)],
+    'island-watchtower-l4': [64, 128, 8, watchtower(4)], 'island-watchtower-l5': [64, 128, 8, watchtower(5)],
     'island-wall': [48, 48, 6, wall(1)], 'island-wall-l2': [48, 48, 6, wall(2)], 'island-wall-l3': [48, 48, 6, wall(3)],
+    'island-wall-l4': [48, 48, 6, wall(4)], 'island-wall-l5': [48, 48, 6, wall(5)],
     'island-wall-damaged': [48, 48, 6, wallDamaged], 'island-wall-broken': [48, 48, 6, wallBroken],
     'island-cannon': [48, 32, 5, cannon(1)], 'island-cannon-l2': [48, 32, 5, cannon(2)], 'island-cannon-l3': [48, 32, 5, cannon(3)],
+    'island-cannon-l4': [48, 32, 5, cannon(4)], 'island-cannon-l5': [48, 32, 5, cannon(5)],
     'island-cannon-fire': [48, 32, 5, cannon(1, true)],
     'island-mortar': [48, 32, 5, mortar(1)], 'island-mortar-l2': [48, 32, 5, mortar(2)], 'island-mortar-l3': [48, 32, 5, mortar(3)],
+    'island-mortar-l4': [48, 32, 5, mortar(4)], 'island-mortar-l5': [48, 32, 5, mortar(5)],
     'island-mortar-fire': [48, 32, 5, mortar(1, true)],
-    'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip],
+    'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip], 'fx-level-pip-gold': [16, 16, 8, tierPip],
     'island-bell': [24, 40, 0, bell], 'build-ring': [48, 24, 0, buildRing],
   };
   for (const kind of ['wall', 'tower', 'cannon', 'watchtower', 'house']) frames[`build-badge-${kind}`] = [20, 24, 0, badge(kind)];

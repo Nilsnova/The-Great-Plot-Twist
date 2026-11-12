@@ -51,5 +51,16 @@ export const pirateLevels = {
   cannon: ['island-cannon', 'island-cannon-l2', 'island-cannon-l3'],
   mortar: ['island-mortar', 'island-mortar-l2', 'island-mortar-l3'],
 };
+// Levels 4 and 5 (GAME-V3.md §4.1): cartoon-only frames (src/art/island.js, gold trim and the island's banner),
+// no pixel PNG; levelArt() gives the frame of any level 1-5.
+export const TIER_ART = {
+  wall: ['island-wall-l4', 'island-wall-l5'],
+  cannon: ['island-cannon-l4', 'island-cannon-l5'],
+  mortar: ['island-mortar-l4', 'island-mortar-l5'],
+};
+export const levelArt = (kind, level) => {
+  const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1));
+  return n <= 3 ? pirateLevels[kind]?.[n - 1] ?? null : TIER_ART[kind]?.[n - 4] ?? null;
+};
 export const crewArt = { gunner: 'crew-gunner', carpenter: 'crew-carpenter', lookout: 'crew-lookout' };
 export const pirateArtIds = Object.keys(pirateDimensions);

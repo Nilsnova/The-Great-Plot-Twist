@@ -1,7 +1,7 @@
 // Outside a wave the island shows each building's real kind and level, its pips and the hired crew.
 import {describe, expect, it} from 'vitest';
-import {buildingArt, crewPlaces, pipCount, LEVEL_ART, PIP_ART} from '../../src/island/world.js';
-import {pixelSizes} from '../../src/pixel/catalog.js';
+import {buildingArt, crewPlaces, pipCount, LEVEL_ART, PIP_ART, PIP_TIER_ART} from '../../src/island/world.js';
+import {artSizes} from '../../src/world/art.js';
 import {crewArt} from '../../src/pixel/pirate-catalog.js';
 
 describe('island building art', () => {
@@ -12,12 +12,14 @@ describe('island building art', () => {
     expect(buildingArt('mortar', 3)).toBe('island-mortar-l3');
     expect(buildingArt('watchtower', 2)).toBe('island-watchtower');
     expect(buildingArt('house', 2)).toBe('island-house');
-    expect(buildingArt('cannon', 9)).toBe('island-cannon-l3');
+    expect(buildingArt('cannon', 5)).toBe('island-cannon-l5'); // the tower tiers (GAME-V3.md §4.1)
+    expect(buildingArt('cannon', 9)).toBe('island-cannon-l5');
     expect(buildingArt('cannon', undefined)).toBe('island-cannon');
     expect(buildingArt('ghost', 1)).toBeNull();
   });
   it('every drawing it asks for is in the catalog', () => {
-    for (const id of [...Object.values(LEVEL_ART).flat(), PIP_ART, ...Object.values(crewArt)]) expect(Object.hasOwn(pixelSizes, id), id).toBe(true);
+    // Levels 4 and 5 are cartoon-only drawings: in the art sizes (src/world/art.js), not the pixel catalog.
+    for (const id of [...Object.values(LEVEL_ART).flat(), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)]) expect(Object.hasOwn(artSizes, id), id).toBe(true);
   });
   it('shows pips on towers always and on the rest from level 2', () => {
     expect(pipCount('cannon', 1)).toBe(1);
