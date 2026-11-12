@@ -3,7 +3,7 @@
 import { layout } from '../config.js';
 import { groundHeight, moveWithCollisions } from './collision.js';
 
-export const WALK_SPEED = 6.5;
+export const WALK_SPEED = 9;
 
 export function createController(character, input, colliders) {
   const player = character.group;

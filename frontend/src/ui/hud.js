@@ -93,7 +93,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
 
   // ---- what moved into the pause menu ----
   const clock = () => { const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60); return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; };
-  stops.push(addMenuStatus(() => `${places[place]?.name ?? ''} · ${weatherLabel(getWeather())} · ${clock()}`));
+  stops.push(addMenuStatus(() => `${placeName(place)} · ${weatherLabel(getWeather())} · ${clock()}`));
   stops.push(addMenuExtras(() => [
     actions.chart && (!actions.travel || travel()) && {label: 'Sea chart', onSelect: () => actions.chart()},
     actions.controls && {label: 'Controls', onSelect: () => actions.controls()},
@@ -105,8 +105,14 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     clearTimeout(bannerTimer);bannerName.textContent = text;banner.hidden = false;
     bannerTimer = setTimeout(() => { banner.hidden = true; }, ARRIVAL_MS);
   }
+  // The place's name: actions.placeName(id) names a friend's game ("Nils's game", src/island/one-island.js),
+  // else the registry's ("Your island").
+  function placeName(id) {
+    try { const named = actions.placeName?.(id); if (typeof named === 'string' && named) return named; } catch { /* the registry's */ }
+    return places[id]?.name ?? '';
+  }
   function arrive(id) {
-    place = id;const name = places[id]?.name ?? '';chapter.textContent = name;
+    place = id;const name = placeName(id);chapter.textContent = name;
     if (overlay.classList.contains('exploring')) showBanner(name);
   }
   arrive(place);
@@ -143,11 +149,17 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     closeQuickPanels() { return strip.closeHint(); },
     start() {
       overlay.classList.add('exploring');actions.start();
-      showBanner(places[place]?.name ?? '');
+      showBanner(placeName(place));
       actions.focus();
     },
     dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
     arrive,
+    // The place on screen got its name late (a friend's game learned its host): the place status and a
+    // banner still showing follow; no new banner.
+    renamePlace() {
+      const name = placeName(place);chapter.textContent = name;
+      if (!banner.hidden) bannerName.textContent = name;
+    },
     message(text, options = {}) { toast({text, ...options}); },
     notify() { /* The E prompt already names the hotspot; no extra toast. */ },
     update(zone, stats = {}) {

@@ -1,7 +1,7 @@
 // The wave's words on screen: a slim wave bar at the top (wave N · ships left · ♥ island · loot this run),
 // the musket button (bottom right: hold it or F to keep firing, its frame fills while it reloads), the
 // 10-second countdown, the boss warning, the "E · Fire" / "E · Repair" prompt next to a cannon or wall,
-// the end banner and the break between waves (a big "Next wave" button and the "Auto next wave" switch).
+// the end banner and the break between waves (a compact card: "Next wave", Pause and the "Auto next wave" switch).
 // Captain health (GAME-V3.md §3): your hp under the wave bar, the slim "You have fallen" strip with its timer
 // (inside the bar, so the fight stays in view),
 // a timer over every fallen captain, and the prompt held down (E or a finger) to help a teammate up.
@@ -91,7 +91,12 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   // The game's room-wide Pause (GAME-V3.md §2): the host (or anyone when the host is away) holds the break.
   const hold = node('button', 'kit-button kit-quiet pirate-hold'); hold.type = 'button'; hold.hidden = true;
   hold.addEventListener('click', event => { event.preventDefault(); if (!hold.disabled) onHold(); });
-  pause.append(close, pauseTitle, pauseLine, next, hold, autoLabel);
+  // A compact card (owner, 12 Nov): the title and loot line beside the × (its own corner, never over the
+  // title), Next wave and Pause side by side, the Auto switch as a small line below. pirates.css places it
+  // under the Menu on a wide screen (the goals' slot, empty during a wave) and under the wave bar on a phone.
+  const pauseHead = node('div', 'pirate-break-head'), pauseText = node('div', 'pirate-break-text'), pauseActions = node('div', 'pirate-break-actions');
+  pauseText.append(pauseTitle, pauseLine); pauseHead.append(pauseText, close); pauseActions.append(next, hold);
+  pause.append(pauseHead, pauseActions, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
   layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
