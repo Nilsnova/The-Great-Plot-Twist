@@ -1,124 +1,168 @@
 # How to play The Great Plot Twist
 
-A short guide for players. You build towers on your own island and hold it against pirate waves, alone or with up to three friends. You trade at the Harbor. You fight the armada with everyone at Pirate Point.
+A short guide for players. Every game is one island. Up to 10 captains defend it together against 100 waves of pirates. A narrator tells the story and introduces each new thing as it arrives.
 
 ## The loop in one line
 
 **Fight a wave → earn 🪙 loot → build and upgrade → fight a harder wave.**
 
-You start with 🪙 100. Coins are play money only. You cannot buy them or cash them out.
+You start with 🪙 200. Coins are play money only. You cannot buy them or cash them out.
 
-## Start
+## Start a game
 
-1. On the title screen, press **Play**. The first time, a short voiced intro plays. Skip it with the Skip button, Escape or a tap.
-2. You land on **your island**. Empty build spots glow.
-3. A friend's link or a class QR brings you straight to their island or to Pirate Point. Or press **Join** and type a code: `ISLE-K7Q2M` for an island, `HARBOR-K7QXM` for the class.
+1. On the title screen, press **Play**. The first time, a short voiced intro and the first pages of How to play show. Skip them with the Skip button, Escape or a tap.
+2. The games card opens. Choose one:
+   - **Create a game.** It makes your game and its code, like `ISLE-K7Q2M`. You are the host.
+   - **Join a game.** Type or paste a friend's code, or open their link. No account needed: you can play as a guest.
+   - **Continue.** The games you are in, newest first, with the wave reached and who plays.
+3. The **lobby** opens over the island. It shows the code, a Copy link button, a QR code and who is online.
+4. The host presses **Start**. If the host is away for 60 seconds, any player can press it.
+
+A game holds 1 to 10 players. Once you join, you stay a member until you leave. To leave a friend's game, open **Menu**, then **Leave this game**. In class, Join with the class code from the projector instead: you land in Saltreach Harbor with the class goals.
+
+## One island, your own coins
+
+- Everyone plays on the same island and sees the same ships.
+- Every player keeps their own coins. You build and upgrade with your own coins, and the buildings stay on the island.
+- Everyone who wins a wave gets their own loot.
+- Your captain, crew and skills stay your own.
+- In a friend's game, the chip at the top left says whose game it is, like **Nils's game · ISLE-K7Q2M**. Its **Players** button opens the lobby.
 
 ## Build
 
-Walk to a glowing spot. Press **E** or tap it. The card shows the price and your coins. Press **Build**.
+Walk to a glowing spot and press **E**, or tap it. The card shows the price and your coins. Press **Build**.
 
 | Building | Level 1 | What it does |
 |---|---|---|
-| Wall | 🪙 10 | Blocks ships at the shore. Six spots. |
-| Cannon | 🪙 30 | Fires at one ship on its own. Seven tower spots. |
-| Mortar | 🪙 60 | Hits every ship near the impact. Not at close range. Uses a tower spot. |
-| Watchtower | 🪙 40 | All towers reach further. Sees further in fog. One spot. |
-| House | 🪙 50 | 🪙 5 more loot per won wave, 🪙 10 at level 2. Two spots. |
+| Wall | 🪙 10 | Stops pirates who come ashore. |
+| Cannon | 🪙 30 | Fires at one ship on its own. |
+| Mortar | 🪙 60 | Hits every ship near the impact. Not at close range. |
+| Watchtower | 🪙 40 | Towers reach further. From level 3 they also hit harder. |
+| House | 🪙 50 | 🪙 10 more loot per won wave. |
 
-On a tower spot you choose cannon or mortar at the first build. An upgrade keeps the kind.
+The island has 16 build spots. After wave 5, six more spots form an inner ring of walls around the heart. On a tower spot you choose cannon or mortar at the first build. An upgrade keeps the kind.
+
+## Upgrade
+
+Open a built spot's card and press **Upgrade**. Each level costs twice the one before. Pips above a building show its level: brass stars for levels 1 to 3, gold stars on teal for 4 and 5.
+
+| Kind | Levels | Level 4 opens | Level 5 opens |
+|---|---|---|---|
+| Wall | 1 to 5 | after wave 12 | after wave 20 |
+| Cannon | 1 to 5 | after wave 12 | after wave 20 |
+| Mortar | 1 to 5 | after wave 15 | after wave 20 |
+| Watchtower | 1 to 5 | after wave 15 (level 3 after wave 12) | after wave 20 |
+| House | 1 to 2 | | |
+
+Levels 4 and 5 have their own look: gold trim and the island's banner. A locked level says on its card when it opens.
 
 ## Ring the bell
 
-The **harbor bell** stands on the south beach, where you land. Press **E** next to it, or tap it, and choose **Ring the bell**.
+The **harbor bell** stands near the south beach. Press **E** next to it, or tap it, and choose **Ring the bell**.
 
-- A **10-second countdown** starts. Then the ships sail in.
-- Towers fire on their own. Ships that reach the shore attack a wall, then the island.
-- Stand at a damaged wall and press **E** to patch it.
-- The wave bar shows the wave, the ships left and your island's health.
+- A short countdown starts. Then the ships sail in.
+- Towers fire on their own.
+- The wave bar at the top shows the wave, the ships left and the ♥ of the island.
 - **The weather is real.** A storm brings more ships. Fog hides them longer.
-
-## Waves
-
-- Waves go up to **100**. Each one is a bit harder.
-- **Every 5th wave is a boss wave:** a warship. Every 10th brings two. A boss wave pays double loot.
-- **Loot** for a won wave *n*: 🪙 10 + 5 × *n*, plus your houses. A lost wave pays nothing.
-- After a won wave you get a **15-second break**. Press **Next wave**, or switch on **Auto next wave** and it starts by itself.
+- **Every 5th wave is a boss wave** with a warship. A boss wave pays double loot.
+- **Loot** for a won wave *n*: 🪙 25 + 10 × *n*, plus 🪙 10 for each house. From wave 30 it grows more slowly. A lost wave pays nothing.
 - A lost wave ends the run. You keep your buildings and coins. The next bell starts at your best wave minus 2.
 
-## Upgrades and unlocks
+## The break, Pause and Continue
 
-Open a built spot's card and press **Upgrade**. Walls, cannons and mortars go to level 3. The watchtower and houses go to level 2. Each level costs twice the one before.
+After a won wave a short card shows your loot and a **break** of 8 seconds.
 
-New things appear when you first **win** a wave. A toast says "New: … unlocked!". A win on a friend's island or at Pirate Point counts too.
-
-| Win wave | You get |
-|---|---|
-| Start | Wall, cannon, your captain's musket |
-| 1 | Captain upgrades |
-| 2 | Level 2 for walls and cannons, houses |
-| 3 | Mortar, watchtower |
-| 5 | Gunner and carpenter, level 3 |
-| 8 | Lookout, captain levels 4 and 5 |
-
-## Crew
-
-Open **Menu**, then **Crew**. You buy crew once and keep them.
-
-- **Gunner** (🪙 40, up to 2): your strongest tower reloads faster.
-- **Carpenter** (🪙 30, up to 2): repairs your most damaged wall during a wave.
-- **Lookout** (🪙 25, one): sees further in fog. Ships show 3 seconds earlier.
+- Press **Next wave** when you are ready, or tick **Auto next wave** and the next wave starts by itself.
+- The **×** closes the card. A small Next wave button stays under the wave bar.
+- The host can press **Pause** to hold the break for everyone. Every player sees who paused. **Resume** ends the pause. If the host is away for 60 seconds, any player can pause or resume.
+- You can leave at any time. The island, its buildings and the wave reached are saved. Any player can open the game again from **Continue** and ring the next wave, alone or with others.
 
 ## Your captain
 
-You carry a musket. **Click or tap a ship in range** to shoot. Or press **F** to shoot the nearest one. It works on your island, on a friend's island and at Pirate Point.
+You carry a musket.
 
-Open **Menu**, then **Captain**, to upgrade it. Level 5 hits four times as hard as level 1 and reloads twice as fast. Upgrades cost 🪙 20, 40, 80 and 160.
+- **Click** anywhere to aim and fire there. On a phone, tap where to fire.
+- Press **F** to fire at the nearest ship or pirate. Hold F to keep firing. On a phone, use the musket button at the bottom right.
+- Up close to a pirate on foot, F swings your **cutlass** instead.
 
-## Play with friends
+Open **Menu**, then **Captain and skills**. There you raise your captain's level (🪙 20, 40, 80 and 160), spend skill points and buy other guns. You earn skill points by winning new waves.
 
-1. Open **Menu**, then **Play with a friend**. You see a link and a QR. Or walk to your cabin.
-2. Send the link to up to 3 friends.
-3. Your friend opens it and presses **Join**. No account needed: they play as a guest. They land on your island.
-4. Ring the bell together. You all see the same ships. Every shot and repair shows on every screen.
-5. Everyone can build and upgrade on the island with their own coins. The buildings stay on the island. Crew and captain stay your own.
-6. Everyone gets their own loot.
+## Pirates come ashore
 
-If a wave already runs when a friend arrives, they join it.
+Ships that reach the shore let **boarders** climb out. They walk to the heart of the island and attack any captain nearby.
 
-## Pirate Point and the lamps
+- A standing wall stops them until they break it.
+- Press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
+- Your gun and your cutlass beat them.
 
-Pirate Point is the lighthouse island. Everyone shares it. Sail there from the sea chart (**M**). With a class code you land there at once.
+## The heart of the island
 
-- Anyone can build and upgrade its towers and walls with their own coins.
-- Anyone can ring the **Pirate Point bell**. Everyone there fights the same wave.
-- The armada brings a **flagship**. Cannons cannot sink it. Only the lighthouse beam can.
-- **Light the three lamps.** Three lamp posts stand by the lighthouse. Stand at one and hold **E**, or hold the button, for 2 seconds. A lamp burns for 20 seconds. Each lamp needs its own captain. When all three burn at once, the beam burns the flagship.
-- Everyone who survives gets 🪙 20 + 5 × the wave number.
+The heart stands in the middle of the island. Its ♥ shows in the wave bar. Boarders who get past the walls attack it. When the ♥ reaches 0, the wave is lost for everyone. The inner ring of walls after wave 5 is how you guard it.
+
+## Health, falling and helping up
+
+- Every captain has 100 health. A small bar shows over each captain, and yours also shows under the wave bar.
+- After too many hits from boarders you **fall**. You cannot walk, shoot or build. A red ring and a timer show over you.
+- A teammate next to you holds **E** for 2 seconds to help you up. It costs the helper 🪙 20 + 5 for each wave number (🪙 35 at wave 3). You stand up with half your health.
+- If nobody helps, you stand up at the next break.
+- If every captain on the island falls, the wave is lost.
+
+## Crew
+
+Open **Menu**, then **Crew**. You hire crew once and keep them.
+
+- **Gunner** (🪙 40, up to 2): your strongest tower reloads faster. After wave 3.
+- **Carpenter** (🪙 30, up to 2): repairs your most damaged wall during a wave. After wave 5.
+- **Lookout** (🪙 25, one): sees further in fog. Ships show 3 seconds earlier. After wave 8.
+
+## What opens when
+
+New things open when your game first **wins** a wave. A toast and the narrator say what is new. The Harbor, the wreck and the Tech hub stand on the island from the start as building sites with a sign showing the wave.
+
+| Win wave | What opens |
+|---|---|
+| Start | Walls, cannons, your captain's musket |
+| 1 | Captain upgrades, houses |
+| 2 | Level 2, the mortar |
+| 3 | The watchtower, the gunner |
+| 4 | **The Harbor** and its market stall |
+| 5 | Level 3, the inner ring of walls, the carpenter |
+| 6 | **A wreck washes ashore.** Anyone can pay into her repair. |
+| 7 | The football match board at the Harbor |
+| 8 | **The Tech hub**, the lookout, captain levels 4 and 5 |
+| 12 | Level 4 for cannons and walls, watchtower level 3, fast raiders |
+| 15 | Level 4 for mortars, watchtower level 4, tougher bosses |
+| 20 | Level 5 for all four, brutes ashore |
+| 30, 50 | Iron-plated ships, then dreadnoughts |
+| 99 | The final battle is next: wave 100 |
+
+What you may build follows the best wave won on that island, whoever pays. Your captain, crew and weapons follow your own best wave.
 
 ## The Harbor
 
-Open the sea chart and pick **The Harbor**. Walk to a stall and press **E**, or tap it. **Menu**, then **Harbor**, lists every stall.
+The Harbor is a building on the east beach. Walk to it and press **E**, or tap it.
 
-- **Market stall:** will a real price go up or down in 5 minutes? Bitcoin, Ether, gold, Apple or Nvidia. Stake 🪙 5, 10 or 25. Right pays twice your stake. The same price gives it back.
-- **Match board:** pick the winner of a real football match with 🪙 5, 10 or 25.
-- **Weather board:** today's real weather, and what it does to the pirates.
-- **Duel ring:** tap a captain and choose **Friendly duel (3 rounds)**.
+- **Market stall** (after wave 4): will a real price go up or down in 5 minutes? Stake 🪙 5, 10 or 25. Right pays twice your stake. The same price gives it back.
+- **Match board** (after wave 7): pick the winner of a real football match with 🪙 5, 10 or 25.
+
+## The Tech hub and the wreck
+
+- **Tech hub** (after wave 8): research a skill tree once for a kind of tower, and every tower of that kind on the island can use it. Then each tower picks one skill on its upgrade card, for free.
+- **The wreck** (after wave 6): any player pays 🪙 25 or 🪙 100 into her repair, up to 🪙 500. Sailing out comes later.
 
 ## Controls
 
 | Action | Keyboard and mouse | Touch | Standard gamepad |
 |---|---|---|---|
 | Walk | WASD or arrow keys | Drag the movement stick, or tap a clear spot | Left stick or D-pad |
-| Run | Hold Shift while walking | No separate run button | No separate run button |
-| Use (build, ring, repair, light) | E near a prompt | The Use button, or tap the thing | A |
-| Musket | Click a ship, or F for the nearest | Tap a ship | No separate aim |
-| Sea chart | M, or Menu then Sea chart | Menu then Sea chart | Y |
+| Use (build, ring, repair, help up) | E near a prompt; hold E to help up | The Use button, or tap the thing; hold the prompt to help up | A |
+| Fire | Click to aim and fire, or F for the nearest target | Tap where to fire, or the musket button | No separate aim |
+| Cutlass | F next to a pirate on foot | The musket button next to a pirate | No separate button |
 | Close a card / pause | Escape | Close button / Menu | B in a menu; Menu closes or pauses |
 | Zoom | Mouse wheel over the world | No separate zoom button | No separate zoom button |
 | Menus | Tab / Shift+Tab; Enter or Space on buttons | Tap the labeled control | D-pad to focus, A to activate |
 
-Click or tap the game after closing another view if movement has lost focus.
+There is one walking speed. Click or tap the game after closing another view if movement has lost focus.
 
 ## Keep your progress
 
@@ -126,7 +170,7 @@ A guest account is temporary: the host deletes guest accounts older than 24 hour
 
 ## Settings and accessibility
 
-Open **Settings** from the Menu or the title screen. Try **Low** quality if the game runs slowly. Set master, music and effects volumes separately. **Reduced motion: On** gives still transitions and calmer waves. **Color-blind-safe highlights** are there too.
+Open **Settings** from the Menu or the title screen. Try **Low** quality if the game runs slowly. Set master, music, effects and voice volumes separately. **Narrator** and **Narrator captions** can each be turned off. **Reduced motion: On** gives still transitions and calmer waves. **Color-blind-safe highlights** are there too.
 
 Settings are stored in this browser. If storage is blocked, they last for this visit only. Buttons have text labels and keyboard focus. The WebGL world may not work with every assistive technology. Name the control in an accessibility report so it can be checked.
 
@@ -138,4 +182,4 @@ Include the device and browser, what you expected, what happened and short steps
 
 ## Privacy in short
 
-Quest ticks and settings use local browser storage. A code you visit is kept only for this tab. Guest play uses Supabase's anonymous sign-in with a class code or an island link. The account screen offers **Delete my data**, then **Confirm deletion**. It removes your own game data, including your island, coins and stakes. Read the [privacy notice](PRIVACY.md).
+Quest ticks and settings use local browser storage. A code you visit is kept only for this tab. Guest play uses Supabase's anonymous sign-in with a class code or a game link. The account screen offers **Delete my data**, then **Confirm deletion**. It removes your own game data, including your island, coins and stakes. Read the [privacy notice](PRIVACY.md).

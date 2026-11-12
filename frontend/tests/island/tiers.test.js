@@ -8,7 +8,8 @@ import {CONFIG} from '../../src/pirates/sim.js';
 import {BUILDINGS, maxLevel, statLine, unlockWave} from '../../src/island/td-rules.js';
 import {LEVEL_ART, PIP_ART, PIP_TIER_ART, buildingArt, pipArt, pipCount} from '../../src/island/world.js';
 import {islandFrame} from '../../src/art/registry.js';
-import {TIER_ART, levelArt} from '../../src/pixel/pirate-catalog.js';
+import {FIRE_ART, PIP_TIER, TIER_ART, fireArt, levelArt, pipRow, pirateFrames} from '../../src/pixel/pirate-catalog.js';
+import {FIRE_LEVEL_IDS, towerFrame} from '../../src/pirates/render.js';
 
 const islands = JSON.parse(readFileSync(new URL('../../../backend/content/islands.json', import.meta.url), 'utf8'));
 const TOWERS = ['wall', 'cannon', 'mortar', 'watchtower'];
@@ -62,5 +63,58 @@ describe('tower levels 4 and 5', () => {
     for (const id of [...Object.values(TIER_ART).flat(), 'island-watchtower-l4', 'island-watchtower-l5', PIP_TIER_ART]) expect(islandFrame(id), id).not.toBeNull();
     expect([1, 2, 3, 4, 5].map(level => pipCount('cannon', level))).toEqual([1, 2, 3, 4, 5]);
     expect([1, 3, 4, 5].map(level => pipArt(level))).toEqual([PIP_ART, PIP_ART, PIP_TIER_ART, PIP_TIER_ART]);
+  });
+});
+
+describe('level pips at 4 and 5', () => {
+  // The gold pip is a teal disc of radius 7 in a 16 px frame (src/art/island.js tierPip), with its outline about 15 px wide.
+  const DISC = 15 / 16;
+  it('stand apart in one row, smaller than the brass ones, the row of five no wider than before', () => {
+    for (const level of [4, 5]) {
+      const row = pipRow(level);
+      expect(row.art).toBe(PIP_TIER_ART);
+      expect(row.offsets).toHaveLength(level);
+      const gaps = row.offsets.slice(1).map((offset, i) => offset - row.offsets[i]);
+      for (const gap of gaps) expect(gap, `level ${level}`).toBeGreaterThan(DISC * row.scale);
+      expect(row.offsets[0]).toBeCloseTo(-row.offsets.at(-1), 6); // centred over the building
+    }
+    // Five used to span 4 x .7 + 1 = 3.8 pip widths, discs overlapping; now under 3.6 and none touching.
+    const five = pipRow(5);
+    expect(five.offsets.at(-1) - five.offsets[0] + five.scale).toBeLessThan(3.6);
+    expect(PIP_TIER.scale).toBeLessThan(1);
+    // Levels 1 to 3 keep the brass stars at full size, each renderer's own spacing.
+    expect(pipRow(3)).toEqual({art: PIP_ART, scale: 1, offsets: [-.7, 0, .7]});
+    expect(pipRow(2, {step: .6})).toEqual({art: PIP_ART, scale: 1, offsets: [-.3, .3]});
+    expect(pipRow(9).offsets).toHaveLength(5);
+  });
+});
+
+describe('the firing frame follows the level', () => {
+  it('has a firing drawing for every level of the cannon and the mortar', () => {
+    for (const kind of ['cannon', 'mortar']) {
+      expect(FIRE_ART[kind][0]).toBe(pirateFrames[kind][1]);
+      expect([1, 2, 3, 4, 5].map(level => fireArt(kind, level))).toEqual(FIRE_ART[kind]);
+      for (const id of FIRE_ART[kind]) expect(islandFrame(id), id).not.toBeNull();
+    }
+    expect(FIRE_LEVEL_IDS).toHaveLength(8);
+  });
+  it('picks the level\'s firing frame while a tower fires, its still art otherwise', () => {
+    expect(towerFrame('cannon', 3, true)).toBe('island-cannon-fire-l3');
+    expect(towerFrame('cannon', 1, true)).toBe('island-cannon-fire');
+    expect(towerFrame('cannon', 5, true)).toBe('island-cannon-fire-l5');
+    expect(towerFrame('mortar', 2, true)).toBe('island-mortar-fire-l2');
+    expect(towerFrame('mortar', 4, true)).toBe('island-mortar-fire-l4');
+    expect(towerFrame('cannon', 3, false)).toBe('island-cannon-l3');
+    expect(towerFrame('mortar', 5, false)).toBe('island-mortar-l5');
+    for (const kind of ['cannon', 'mortar']) for (const level of [2, 3, 4, 5]) {
+      expect(towerFrame(kind, level, true), `${kind} ${level}`).not.toBe(towerFrame(kind, 1, true));
+      expect(towerFrame(kind, level, true), `${kind} ${level}`).not.toBe(towerFrame(kind, level, false));
+    }
+  });
+  it('falls back to level 1\'s firing frame and level 3\'s art in an atlas without the cartoon frames', () => {
+    const pixel = id => !FIRE_LEVEL_IDS.includes(id) && !Object.values(TIER_ART).flat().includes(id);
+    expect(towerFrame('cannon', 3, true, pixel)).toBe('island-cannon-fire');
+    expect(towerFrame('mortar', 5, true, pixel)).toBe('island-mortar-fire');
+    expect(towerFrame('cannon', 5, false, pixel)).toBe('island-cannon-l3');
   });
 });
