@@ -11,6 +11,7 @@
 //   await api.joinWave({waveId});                // POST /api/waves/join
 //   await api.currentWave(where);                // GET  /api/waves/current?where=
 //   await api.finishWave({waveId, survived, shipsSunk}); // POST /api/waves/finish
+//   await api.reviveCaptain({waveId, fallen, actionUid}); // POST /api/waves/revive  (GAME-V3.md §3: you pay 20 + 5 × wave)
 //   await api.upgrade({spot, actionUid});        // POST /api/island/upgrade      (TOWER-DEFENSE.md §7)
 //   await api.hire({crew, actionUid});           // POST /api/island/hire
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
@@ -42,7 +43,7 @@
 // code, message, retryAfterSeconds}), plus dev helpers (setCoins, setWeather, startWaveAt, failNext,
 // read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
 // ISLE-FR3ND (Captain Gull) to visit.
-import { createRandom } from './sim.js';
+import { createRandom, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 
@@ -468,6 +469,26 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return { loot, coins: player.coins, ...placeBest(), ...runInfo() };
     },
 
+    // Captain health (GAME-V3.md §3): the reviver pays 20 + 5 × wave, once per actionUid; only a member of
+    // the game who is in this wave and has not finished it yet (the rules of wave_revive()).
+    async reviveCaptain({ waveId, fallen, actionUid } = {}) {
+      if (typeof waveId !== 'string' || typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen) || !uid(actionUid)) {
+        invalid('Send the wave, the fallen captain and an action id.');
+      }
+      const player = me(), repeat = player.actions.get(`revive:${actionUid}`);
+      if (repeat) return { price: repeat, coins: player.coins, repeat: true };
+      const run = world.waves.get(waveId);
+      if (!run) refuse(404, 'no_such_wave', 'There is no such wave.');
+      if (run.island) mustBeMember(run.island);
+      if (!run.participants.has(playerId)) refuse(403, 'not_in_wave', 'Join the wave first: you are not in this wave.');
+      const elapsed = (nowMs() - run.startsAtMs) / 1000;
+      if (run.results.has(playerId) || elapsed < 0 || elapsed > ISLAND_RULES.waves.maximumSeconds) refuse(409, 'wave_over', 'This wave is over.');
+      const price = revivePrice(run.wave);
+      if (player.coins < price) refuse(409, 'insufficient_funds', `Helping a captain up costs ${price} coins. You need more coins.`);
+      player.coins -= price; player.actions.set(`revive:${actionUid}`, price);
+      return { price, coins: player.coins, repeat: false };
+    },
+
     /** fetch()-shaped access: the same routes and JSON as the real server. */
     async fetch(url, init = {}) {
       const { pathname, searchParams } = new URL(String(url), 'http://fake.local');
@@ -501,6 +522,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/waves/join') return reply(200, await api.joinWave(body));
         if (route === 'GET /api/waves/current') return reply(200, await api.currentWave(searchParams.get('where')));
         if (route === 'POST /api/waves/finish') return reply(200, await api.finishWave(body));
+        if (route === 'POST /api/waves/revive') return reply(200, await api.reviveCaptain(body));
         return reply(404, { error: { code: 'not_found', message: 'There is no such route.' } });
       } catch (error) {
         if (!(error instanceof FakeApiError)) throw error;
@@ -525,7 +547,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
   '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
-  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'],
+  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'] });
 // Keys a body may also carry: `code` builds or upgrades on a friend's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'] });
@@ -636,6 +658,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/waves/start') return ok(await api.startWave(body));
       if (method === 'POST' && pathname === '/api/waves/join') return ok(await api.joinWave(body));
       if (method === 'POST' && pathname === '/api/waves/finish') return ok(await api.finishWave(body));
+      if (method === 'POST' && pathname === '/api/waves/revive') return ok(await api.reviveCaptain(body));
       return fail(404, 'not_found', 'Not Found');
     } catch (error) {
       if (!(error instanceof FakeApiError)) throw error;

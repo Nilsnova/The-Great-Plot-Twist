@@ -246,7 +246,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     }
     settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
-    const speed=controller.update(delta, active && !outsideBlocked());
+    // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
+    const captainDown=!!(waves?.island.captainDown||waves?.point?.controller.captainDown);controller.player.visible=!captainDown;
+    const speed=controller.update(delta, active && !outsideBlocked() && !captainDown);
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
@@ -255,7 +257,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     characterScale=inBattle?characterScaleFor(view.camera.zoom):1;scene.userData.characterScale=characterScale;
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
     view.update(delta, controller.player.position);experience.update(delta,{speed});
-    const zone = active&&!outsideBlocked() ? findZone(controller.player.position, world.current?.zones ?? []) : null;
+    const zone = active&&!outsideBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     touch.update(zone,active&&!outsideBlocked());
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
     // During a wave E belongs to the wave's own prompt (fire, repair, rebuild: TOWER-DEFENSE.md §12) when it has one,

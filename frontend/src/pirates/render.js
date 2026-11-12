@@ -17,6 +17,9 @@
 // foot walking (two frames) and hacking walls, with a hit flash, small hp pips and a puff when they fall,
 // sorted with the island by their z in a few 2-unit bands; the captain's cutlass swing. Every sprite is the art
 // lane's own (src/pixel/pirate-catalog.js); nothing is tinted or borrowed any more.
+// Captain health (GAME-V3.md §3): a small hp bar over every captain in the wave (yours where you stand), a
+// fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
+// on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
 import { crewArt, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
@@ -84,7 +87,8 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
 // Frames the cartoon set adds to the atlas (the boarders, GAME-V3.md §3), drawn in src/art/people.js; they
 // replace the pixel boarders (PIXEL_ONLY_IDS) in the cartoon atlas. drawBoarder() takes the cartoon frame
 // when the atlas has it, else the pixel one (pixel packAtlas, tests).
-export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack'];
+export const DOWN_IDS = Array.from({ length: 10 }, (_, i) => `captain-down-${i + 1}`);
+export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS];
 export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
 const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], hack: ['boarder', 'boarder-hack'], hit: 'boarder-hit', still: 'boarder' });
 /**
@@ -251,7 +255,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const ships = new Map(); // id -> {facing, phase, flashUntil, bornAt}
   const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool();
   const fallen = pool(), strikes = pool(), crew = new Map(); // boarders: id -> {phase, flashUntil}
-  let captain = null;
+  let captain = null, revive = null;
   const fire = new Map(), wallFlash = new Map();
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
   const still = () => !!reducedMotion();
@@ -467,7 +471,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawBoarder(boarder) {
     const meta = boarderMeta(boarder.id), layer = bands[bandOf(boarder.z)], x = boarder.x, y = drawnY(boarder.z);
     meta.facing = boarder.facing ?? meta.facing;
-    const frames = FRAMES.boarder, hacking = boarder.state === 'hacking', hit = clock < meta.flashUntil;
+    const frames = FRAMES.boarder, hacking = boarder.state === 'hacking' || boarder.state === 'fighting', hit = clock < meta.flashUntil;
     const step = still() ? 0 : Math.floor(clock * (hacking ? 3 : 5) + meta.phase) % 2;
     const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : still() ? BOARDER_ART.still : BOARDER_ART.walk[step];
     const r = rect[cartoon] ?? rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
@@ -594,6 +598,32 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layers.air.push(rect[WHITE], cx + Math.cos(a) * .95, cy + .9 + Math.sin(a) * .95, .19, .19, .5, .09, lit ? { ...BRASS, a: 1 } : { ...DARK, a: .55 });
     }
   }
+  // Captain health: a captain's hp bar (over the head, drawn units above where they stand), a fallen
+  // captain in their colour with the red ring, and your revive's gold dots filling around them.
+  function drawHealthBar(x, z, hp, maxHp) {
+    const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + 2.05 * K();
+    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
+    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
+  }
+  function drawDown(hero, x, z, reviving) {
+    const y = drawnY(z), pulse = still() ? .8 : .55 + .35 * Math.abs(Math.sin(clock * 3)), k = K();
+    for (let i = 0; i < 20; i++) {
+      const a = i / 20 * Math.PI * 2 - Math.PI / 2, lit = reviving !== null && i / 20 < reviving;
+      const dx = x + Math.cos(a) * 1.9 * k, dy = y + .15 + Math.sin(a) * .8 * k;
+      layers.air.push(rect[WHITE], dx, dy, .44, .44, .5, .22, { ...DARK, a: .55 });
+      layers.air.push(rect[WHITE], dx, dy, .3, .3, .5, .15, lit ? { ...BRASS, a: 1 } : { ...RED, a: pulse });
+    }
+    const r = rect[DOWN_IDS[Math.max(0, Math.min(9, hero.colour ?? 0))]];
+    if (r) bands[bandOf(z)].push(r, x, y, r.w * k, r.h * k, .5, r.anchor * k);
+  }
+  function drawParty(state) {
+    for (const hero of state.party ?? []) {
+      if (!hero.present) continue;
+      const mine = captain && hero.id === captain.id, x = mine ? captain.x : hero.x, z = mine ? captain.z : hero.z;
+      if (hero.down) drawDown(hero, x, z, revive?.targetId === hero.id ? revive.share : null);
+      else drawHealthBar(x, z, hero.hp, hero.maxHp);
+    }
+  }
   function drawWarning(item) {
     const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
     const p = coastEdge(item), colourOf = item.boss ? RED : GOLD;
@@ -656,6 +686,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const tracer of tracers.items) drawTracer(tracer);
       for (const item of warnings.items) drawWarning(item);
       drawCaptain();
+      drawParty(state);
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
       if (flagship) {
@@ -710,9 +741,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   return {
     root,
     events(list) { for (const event of list ?? []) onEvent(event); },
-    update({ state, simTime = simNow, dt = 0, captain: own = null } = {}) {
+    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null } = {}) {
       if (disposed) return;
-      clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own;
+      clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own; revive = helping;
       shells.sweep(shell => simNow < shell.to);
       bursts.sweep(item => clock - item.at < BURST_SECONDS);
       tracers.sweep(item => clock - item.at < musketLife(item));

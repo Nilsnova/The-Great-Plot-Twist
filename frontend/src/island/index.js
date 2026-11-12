@@ -617,6 +617,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return flow.current && !flow.current.joined ? flow.join(where()) : null;
     },
     refreshDefended,
+    // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
+    async reviveCaptain({waveId, fallen} = {}) {
+      const answer = await api.reviveCaptain({waveId, fallen});
+      if (!disposed && answer.ok) tookCoins(answer.data.coins);
+      return answer;
+    },
     setBattle(value) { battle = value === true; applyWorld(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },

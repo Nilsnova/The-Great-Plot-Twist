@@ -21,6 +21,9 @@
 //   startNextWave() the island lane: the start route again, for the break's "Next wave" (§1)
 //   holdBreak()     the game's room-wide Pause (GAME-V3.md §2): null, or {paused, line, label, canToggle}
 //   toggleHold()    the break card's Pause / Resume button
+//   captainColour() your lobby colour 0-9 (your poses, and your fallen captain on every screen)
+//   reviveCaptain({waveId, fallen})  captain health (GAME-V3.md §3): POST /api/waves/revive, the reviver pays
+//                   20 + 5 × wave; throws the refusal (its message is shown). Without it a revive is free.
 // The island lane emits `wave_started_server` on the bus after its start/join route answered.
 import { createWaveController } from './controller.js';
 import { createPiratePoint } from './pirate-point.js';
@@ -42,10 +45,19 @@ export function mountPirates(ctx) {
       projected.set((clientX - rect.left) / rect.width * 2 - 1, 1 - (clientY - rect.top) / rect.height * 2, 0).unproject(camera);
       return { x: projected.x, z: -projected.y / .72 };
     },
+    // The other way: island units (lifted `lift` drawn units) to px inside the container, or null.
+    project(x, z, lift = 0) {
+      if (!canvas || !camera) return null;
+      const rect = canvas.getBoundingClientRect(), box = container?.getBoundingClientRect?.() ?? rect;
+      if (!rect.width || !rect.height) return null;
+      projected.set(x, -z * .72 + lift, 0).project(camera);
+      return { x: rect.left - box.left + (projected.x + 1) / 2 * rect.width, y: rect.top - box.top + (1 - projected.y) / 2 * rect.height };
+    },
   };
   const shared = { bus, world, sound: audio, reducedMotion: ctx.reducedMotion ?? (() => false), quality: ctx.quality ?? (() => 'high'),
     playerId: ctx.playerId, captainLevel: ctx.captainLevel ?? (() => 1), captainSkills: ctx.captainSkills ?? (() => []),
-    captainWeapon: ctx.captainWeapon ?? (() => 'musket') };
+    captainWeapon: ctx.captainWeapon ?? (() => 'musket'), captainColour: ctx.captainColour ?? (() => 0),
+    reviveCaptain: ctx.reviveCaptain ?? null };
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
     room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,

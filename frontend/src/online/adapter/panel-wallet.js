@@ -5,7 +5,7 @@ const nothingDone = {
 };
 function writeKind(path) {
   if (path === '/api/market/open' || path === '/api/market/close' || path === '/api/market/calls') return 'market';
-  if (path === '/api/island/build' || path === '/api/waves/finish') return 'island';
+  if (path === '/api/island/build' || path === '/api/waves/finish' || path === '/api/waves/revive') return 'island';
   if (path === '/api/duels' || /^\/api\/duels\/[^/?#]+\/(move|cancel)$/.test(path)) return 'arena';
   return null;
 }

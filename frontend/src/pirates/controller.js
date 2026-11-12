@@ -20,16 +20,26 @@
 // there (free aim): the ship or boarder in range nearest the aim point, a spray or a bomb towards it.
 // Boarders (§12) are targets too, and with one within cutlass reach F (or the button) swings the cutlass
 // instead (its damage and reload scaled by the Brawler skills), synced the same way.
+// Captain health (GAME-V3.md §3): while the wave runs and you are on its island, your position goes to the
+// room as captain_move (every MOVE_EVERY_MS or 2 × the room's wave gap when you moved, at least every
+// HEARD_EVERY_MS), so every sim lets the same boarders go for you. At 0 hp you fall: you cannot move, shoot
+// or build (the world asks captainDown), the HUD says so with a timer. Next to a fallen teammate, hold E (or
+// the prompt) for 2 s: reviveCaptain({waveId, fallen}) pays 20 + 5 × wave on the server, then the revive
+// goes to the room (captain_revive). For the narrator: player_fell {playerId, self}, player_revived
+// {playerId, self, by} and captains_all_fallen {} (every captain down: the wave is lost).
 //
 //   const waves = createWaveController({bus, world, getDefenses, finishWave, room, sound, reducedMotion, quality});
 //   waves.update(dt)   every frame (mountPirates drives it)       waves.start(info)  without the bus
 //   waves.fire(cannonId, targetId) / waves.repair(wallId) / waves.lampsLit()      waves.dispose()
 //   waves.shoot(targetId?) the captain's gun   waves.aim({x, z}) free aim   waves.next() / waves.setAuto(on)  the break
+//   waves.captainDown  true while your captain has fallen          waves.revive  {targetId, share} while you hold E
 //
 // world: {scene, camera, canvas, container, player: {position}, place(): current place id,
-//   isBlocked(): an overlay is open, unproject(clientX, clientY): logical {x, z}}; every field optional.
+//   isBlocked(): an overlay is open, unproject(clientX, clientY): logical {x, z}, project(x, z, lift): the
+//   point on screen {x, y} in px of the container (the timers over fallen captains)}; every field optional.
 // room: {send(type, payload), on(type, handler) -> unsubscribe}, the island's or Pirate Point's live room.
-import { CONFIG, createWave } from './sim.js';
+import { CONFIG, createWave, revivePrice } from './sim.js';
+import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
 import { INPUT_LEAD_TICKS, ROOM_EVENTS, TICK_SECONDS, createInputSchedule, readMessage, toMessage } from './sync.js';
 import { actionAt, boarderAt, inputFor, promptText, shipAt, tapInput } from './interact.js';
@@ -42,6 +52,11 @@ const DEFAULT_WAIT_SECONDS = 5;
 const AIM_RADIUS = 8;                 // free aim: a ship this close to the aim point is hit
 const SETTLE_TICKS = 20000;           // more than the longest wave (900 s)
 const BREAK_GRACE_MS = 10000;         // with Auto next on, the break waits this long for the loot answer
+export const MOVE_EVERY_MS = 500;     // captain health: your position at most this often (or 2 × the room's wave gap)
+export const HEARD_EVERY_MS = 3000;   // and at least this often while you stand still (the sim's stale is 8 s)
+const MOVE_STEP = .4;                 // units: a smaller move waits for the next HEARD_EVERY_MS
+const NOTE_MS = 3000;                 // a refused revive's words stay this long
+export const LOST_FALLEN = 'Every captain fell.';
 export const bossText = warships => (warships >= 2 ? '⚠ Boss wave: two warships!' : '⚠ Boss wave: a warship!');
 export const BREAK_SECONDS = 8;       // the break after a won wave (TOWER-DEFENSE.md §1; faster pace, owner 11 Nov)
 const BOSS_WARNING_SECONDS = 6;       // the boss warning stays this long after the wave starts
@@ -134,8 +149,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id), onEvents = null,
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
-  loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null } = {}) {
+  loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null } = {}) {
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
+  let holdE = false, holdPrompt = false; // E or the prompt held down (a revive)
   let runLoot = 0, auto = !!loadAuto(), level = null, skills = null, weapon = null;
   const myLevel = () => { const value = Number(level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
@@ -160,10 +176,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (event.code !== 'KeyE' && event.code !== 'KeyF') return;
     const target = event.target;
     if (target instanceof HTMLElement && target.closest('input, select, textarea, button, [contenteditable=true]')) return;
-    if (event.code === 'KeyF') { shootHeld = true; if (!event.repeat) shootPressed = true; } else if (!event.repeat) pressed = true;
+    if (event.code === 'KeyF') { shootHeld = true; if (!event.repeat) shootPressed = true; } else { holdE = true; if (!event.repeat) pressed = true; }
   };
-  const keyup = event => { if (event.code === 'KeyF') shootHeld = false; };
-  const letGo = () => { shootHeld = false; };
+  const keyup = event => { if (event.code === 'KeyF') shootHeld = false; if (event.code === 'KeyE') holdE = false; };
+  const letGo = () => { shootHeld = false; holdE = false; holdPrompt = false; };
   const pointerdown = event => { if (event.button === 0) down = [event.clientX, event.clientY]; };
   const pointerup = event => {
     if (!down || event.button !== 0 || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 8) { down = null; return; }
@@ -192,7 +208,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
-      splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 } };
+      splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
+      // Captain health: the last position sent, your fall (pin: where you lie on this screen), a revive you hold.
+      moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0) })).then(renderer => {
@@ -201,6 +219,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     if (world.container) {
       Promise.resolve(createHud({ container: world.container, onAction: () => act(), onNext: () => next(), onAuto: value => setAuto(value),
+        onPromptHold: held => { holdPrompt = held === true; },
         onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
         onShoot: held => { shootHeld = held === true; if (held) shootPressed = true; },
         reducedMotion })).then(hud => {
@@ -217,9 +236,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.state = current.sim.state();
     if (current.sim.done) end(current);
   }
-  function submit(input) {
+  function submit(input, lead = INPUT_LEAD_TICKS) {
     if (!wave || wave.done || wave.state.phase !== 'running') return false;
-    const entry = { by: playerId, seq: ++wave.seq, tick: wave.ticks + INPUT_LEAD_TICKS, input };
+    const entry = { by: playerId, seq: ++wave.seq, tick: wave.ticks + lead, input };
     wave.schedule.add(entry, wave.ticks);
     const message = toMessage(input, { ...entry, waveId: wave.info.waveId });
     if (message) try { room?.send?.(message.type, message.payload); } catch (error) { console.error(error); }
@@ -238,7 +257,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
   function shoot(targetId = null) {
     const player = world.player?.position;
-    if (!wave || wave.done || !player || !here()) return false;
+    if (!wave || wave.done || !player || !here() || isDown(wave)) return false;
     const stats = myStats(), state = wave.state;
     const named = targetId ? pirateById(state, targetId) : null;
     const close = named?.id?.startsWith('boarder_') && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
@@ -266,7 +285,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // hits, ships and boarders alike).
   function aimAt(point, target) {
     const player = world.player?.position;
-    if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running') return false;
+    if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running' || isDown(wave)) return false;
     const stats = myStats();
     if (stats.mode === 'cone' || stats.mode === 'area') return fireAt(stats, player, target ?? null, target ?? point);
     const inRange = item => Math.hypot(item.x - player.x, item.z - player.z) <= stats.range;
@@ -310,6 +329,83 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return Math.max(0, Math.min(1, (t - current.bladeAt) / bladeReload()));
   }
 
+  // Captain health (GAME-V3.md §3).
+  const meIn = current => current?.state?.party?.find(hero => hero.id === playerId) ?? null;
+  const isDown = current => !!current && !current.done && meIn(current)?.down === true;
+  const colourNow = () => { const value = Number(read(captainColour, 0)); return Number.isInteger(value) && value >= 0 && value <= 9 ? value : 0; };
+  const roomSize = current => Math.max(1, current.state.party?.length ?? 1);
+  // A position may wait in the room's send queue for one gap, so it is stamped that much further ahead:
+  // it still arrives before its tick on every screen.
+  const moveLead = current => INPUT_LEAD_TICKS + Math.ceil(waveGapMs(roomSize(current)) / 1000 / TICK_SECONDS);
+  // Your position for the sims: after a move (MOVE_STEP) once the gap passed, else at least every
+  // HEARD_EVERY_MS; once `away` when the island is no longer on screen (another place) during the wave.
+  function sendPosition(current, player) {
+    if (current.done || current.state.phase !== 'running') return;
+    if (!current.shown || !player) {
+      if (current.moveSent && !current.awaySent && submit({ type: 'captain_move', by: playerId, ...current.moveSent, away: true }, moveLead(current))) current.awaySent = true;
+      return;
+    }
+    const t = now(), gap = Math.max(MOVE_EVERY_MS, 2 * waveGapMs(roomSize(current)));
+    const at = current.pin ?? player; // a fallen captain lies where they fell
+    const moved = !current.moveSent || current.awaySent || Math.hypot(at.x - current.moveSent.x, at.z - current.moveSent.z) >= MOVE_STEP;
+    if (t - current.moveSentAt < (moved ? gap : Math.max(gap, HEARD_EVERY_MS))) return;
+    const round = value => Math.round(value * 100) / 100, x = round(at.x), z = round(at.z);
+    if (!submit({ type: 'captain_move', by: playerId, x, z, colour: colourNow() }, moveLead(current))) return;
+    current.moveSentAt = t; current.moveSent = { x, z }; current.awaySent = false;
+  }
+  // The fallen teammate within revive reach of where you stand (never yourself), or null.
+  function fallenNear(current, player) {
+    let best = null, near = CONFIG.health.revive.reach;
+    for (const hero of current.state.party ?? []) {
+      if (!hero.down || !hero.present || hero.id === playerId) continue;
+      const d = Math.hypot(hero.x - player.x, hero.z - player.z);
+      if (d <= near) { best = hero; near = d; }
+    }
+    return best;
+  }
+  // Holding E (or the prompt) next to a fallen teammate: after revive.hold seconds the server charges you
+  // (reviveCaptain), then the revive goes to the room. Let go or walk off and it starts over; after a
+  // refusal, let go before trying again.
+  function holdRevive(current, target, player) {
+    const holding = (holdE || holdPrompt) && !blocked();
+    if (!holding) current.reviveWait = false;
+    if (current.revive?.paying) return;
+    if (!target || !holding || current.reviveWait) { current.revive = null; return; }
+    const t = now();
+    if (current.revive?.targetId !== target.id) current.revive = { targetId: target.id, since: t, share: 0, paying: false };
+    current.revive.share = Math.min(1, (t - current.revive.since) / (CONFIG.health.revive.hold * 1000));
+    if (current.revive.share < 1) return;
+    current.revive.paying = true; current.reviveWait = true;
+    const round = value => Math.round(value * 100) / 100, at = { x: round(player.x), z: round(player.z) };
+    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id }) : null)).then(() => {
+      if (wave !== current) return;
+      current.revive = null;
+      submit({ type: 'captain_revive', by: playerId, targetId: target.id, ...at });
+    }).catch(error => {
+      if (wave !== current) return;
+      current.revive = null;
+      current.reviveNote = { text: error?.message || 'That did not work. Try again.', until: now() + NOTE_MS };
+    });
+  }
+  function revivePrompt(current) {
+    if (current.reviveNote && now() < current.reviveNote.until) return current.reviveNote.text;
+    current.reviveNote = null;
+    if (current.revive?.paying) return 'Helping up…';
+    return `Hold to help up · 🪙 ${revivePrice(current.info.wave)}`;
+  }
+  // The timers over fallen captains (yours where you lie, a teammate's where their sim has them).
+  function fallenMarks(current, player) {
+    if (!world.project || current.done || !current.shown) return [];
+    const marks = [];
+    for (const hero of current.state.party ?? []) {
+      if (!hero.down || !hero.present) continue;
+      const mine = hero.id === playerId, at = mine && current.pin ? current.pin : hero;
+      const point = world.project(at.x, at.z, 2.6);
+      if (point) marks.push({ id: hero.id, x: point.x, y: point.y, seconds: Math.max(0, Math.floor(current.state.time - (hero.downAt ?? current.state.time))), mine });
+    }
+    return marks;
+  }
+
   // The break after a won wave.
   function setAuto(value) { auto = value === true; saveAuto(auto); }
   const held = () => { try { return holdBreak?.() ?? null; } catch { return null; } };
@@ -330,13 +426,13 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
 
   function act() {
-    if (!wave || blocked() || !here()) return;
+    if (!wave || blocked() || !here() || isDown(wave)) return;
     const input = inputFor(wave.action);
     // A repair or a rebuild carries your skills (Shipwright: faster repairs, Master shipwright rebuilds to 60%).
     if (input) submit(input.type === 'repair' || input.type === 'rebuild' ? { ...input, skills: mySkills() } : input);
   }
   function tap(clientX, clientY) {
-    if (!wave || wave.done || blocked() || !here() || !world.unproject) return;
+    if (!wave || wave.done || blocked() || !here() || !world.unproject || isDown(wave)) return;
     const point = world.unproject(clientX, clientY), boarder = point && boarderAt(point, wave.state);
     if (boarder) { if (!shoot(boarder.id)) aimAt(point, boarder); return; } // a boarder: cutlass or musket
     const ship = point && shipAt(point, wave.state);
@@ -364,6 +460,12 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
     if (current.shown) current.renderer?.events(fresh);
+    // Captain health for the narrator (GAME-V3.md §6): only what happens now, not a late joiner's catching up.
+    for (const event of fresh) {
+      if (event.type === 'captain_fell') emit({ type: 'player_fell', playerId: event.captainId, self: event.captainId === playerId });
+      else if (event.type === 'captain_revived') emit({ type: 'player_revived', playerId: event.captainId, self: event.captainId === playerId, by: event.by });
+      else if (event.type === 'wave_ended' && event.reason === 'captains_fallen') emit({ type: 'captains_all_fallen' });
+    }
     for (const event of fresh) {
       if (event.type === 'cannon_fired') {
         cue(event.manual ? 'pirate-cannon-manual' : 'pirate-cannon');
@@ -422,18 +524,31 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.hud?.bar(current.done && !current.finished ? current.state : current.state.phase === 'countdown' ? countdownBar(current) : current.state);
     const player = world.player?.position;
     const stats = myStats();
-    current.action = !current.done && current.shown && !blocked() && player
-      ? actionAt({ x: player.x, z: player.z }, current.defenses, current.state, { repairReach: stats.repairReach }) : null;
-    current.hud?.prompt(promptText(current.action), !!inputFor(current.action));
+    // Captain health: fallen, you lie where you fell (no walking: game.js asks captainDown too).
+    const fallen = isDown(current), me = meIn(current);
+    if (fallen && player) { current.pin ??= { x: player.x, z: player.z }; player.x = current.pin.x; player.z = current.pin.z; } else current.pin = null;
+    sendPosition(current, player);
+    const running = player && current.shown && !current.done && current.state.phase === 'running';
+    const reviveTarget = running && !fallen && !blocked() ? fallenNear(current, player) : null;
+    holdRevive(current, reviveTarget, player);
+    current.action = !current.done && current.shown && !blocked() && player && !fallen
+      ? (reviveTarget ? { kind: 'revive', targetId: reviveTarget.id, price: revivePrice(current.info.wave), x: reviveTarget.x, z: reviveTarget.z }
+        : actionAt({ x: player.x, z: player.z }, current.defenses, current.state, { repairReach: stats.repairReach })) : null;
+    if (current.action?.kind === 'revive') current.hud?.prompt(revivePrompt(current), true, current.revive?.share ?? 0);
+    else current.hud?.prompt(promptText(current.action), !!inputFor(current.action));
     if (pressed) { pressed = false; act(); }
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
-    const running = player && current.shown && !current.done && current.state.phase === 'running';
-    // The button: "Cutlass" with a boarder in strike reach, else the equipped weapon's name.
+    // The button: "Cutlass" with a boarder in strike reach, else the equipped weapon's name (none while fallen).
     const blade = running && !!bladeTarget(player, current.state);
-    current.hud?.musket?.(running ? { share: blade ? bladeShare(current) : captainShare(current),
+    current.hud?.musket?.(running && !fallen ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
-    const captain = player && current.shown && !current.done ? { x: player.x, z: player.z, share: captainShare(current) } : null;
-    current.renderer?.update({ state: current.state, simTime, dt, captain });
+    current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
+    current.hud?.down?.(fallen && current.shown ? { seconds: Math.max(0, Math.floor(current.state.time - (me.downAt ?? current.state.time))),
+      alone: !(current.state.party ?? []).some(hero => hero.id !== playerId && hero.present && !hero.down) } : null);
+    current.hud?.marks?.(fallenMarks(current, player));
+    const captain = player && current.shown && !current.done ? { id: playerId, x: player.x, z: player.z, share: captainShare(current), down: fallen } : null;
+    current.renderer?.update({ state: current.state, simTime, dt, captain,
+      revive: current.revive && !current.revive.paying ? { targetId: current.revive.targetId, share: current.revive.share } : null });
     if (shake > 0 && world.camera) {
       const t = now() / 1000;
       world.camera.position.x += Math.sin(t * 61) * shake * .35; world.camera.position.y += Math.cos(t * 53) * shake * .25;
@@ -464,10 +579,12 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (current.done) return;
     current.done = true;
     const result = current.result = current.sim.result();
-    const run = typeof startNextWave === 'function';
+    const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
+    current.revive = null; current.pin = null;
+    current.hud?.down?.(null); current.hud?.health?.(null); current.hud?.marks?.([]);
     if (run && result.survived) current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
-    else if (run) current.hud?.banner(LOST_TITLE, `${LOST_LINE} Loot this run: 🪙 ${runLoot}`);
-    else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
+    else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE} Loot this run: 🪙 ${runLoot}`);
+    else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', fallenAll ? LOST_FALLEN : `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
     cue(result.survived ? 'pirate-victory' : 'pirate-defeat');
     emit({ type: 'wave_finished', waveId: current.info.waveId, survived: result.survived, shipsSunk: result.shipsSunk });
     void submitFinish(current);
@@ -518,6 +635,12 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     get auto() { return auto; },
     get runLoot() { return runLoot; },
     get inBreak() { return !!wave?.pause; },
+    // Captain health (GAME-V3.md §3): your captain in the sim ({id, x, z, hp, maxHp, down, ...} or null),
+    // whether you are down (no walking, shooting or building), and the revive you hold ({targetId, share}).
+    get captain() { return meIn(wave); },
+    get captainDown() { return isDown(wave); },
+    get revive() { return wave?.revive ? { targetId: wave.revive.targetId, share: wave.revive.share, paying: wave.revive.paying } : null; },
+    get playerId() { return playerId; },
     // The island changed (an upgrade or a new building, ours or a friend's): once the wave is decided, in the
     // break, its posts show the new levels. A wave under way keeps the defenses it started with.
     refreshDefenses() {

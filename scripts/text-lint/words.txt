@@ -1837,6 +1837,7 @@ reveals
 review
 reviewed
 revisit
+revive
 revived
 reward
 rewards

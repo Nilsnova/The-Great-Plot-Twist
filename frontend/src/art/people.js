@@ -128,6 +128,20 @@ function cutlassPose(pal) {
     c.restore();
   };
 }
+// A fallen captain (GAME-V3.md §3, captain health), 40 x 24: the side view laid on its back, head to the
+// left and face up, a flat shadow under it and three dizzy stars over the head. One per lobby colour.
+const star = (x, y, r) => poly([[x, y - r], [x + r * .32, y - r * .32], [x + r, y], [x + r * .32, y + r * .32], [x, y + r],
+  [x - r * .32, y + r * .32], [x - r, y], [x - r * .32, y - r * .32]], .25);
+function fallenCaptain(pal) {
+  return c => {
+    shadow(c, 20, 21.4, 16, 2.4);
+    // The body's own ground shadow would not turn with it: it is dropped, the flat one above stands in.
+    const kept = c.shadows; c.shadows = [];
+    c.save(); c.translate(4.6, 22.6); c.rotate(-Math.PI / 2); captainBody(c, pal, '-side', ''); c.restore();
+    c.shadows = kept;
+    for (const [x, y, r] of [[8.6, 3, 1.9], [14.2, 1.9, 1.5], [19.6, 3.4, 1.3]]) part(c, star(x, y, r), GOLD, {width: .55, shade: false});
+  };
+}
 // Crew figures (16 x 32): smaller, with the tool of their trade.
 function crewFigure(kind) {
   const look = {gunner: {shirt: '#e8e2d2', stripe: '#c8423b', cap: '#c8423b'}, carpenter: {shirt: '#d8a35a', stripe: null, cap: '#5a6b7a'},
@@ -211,6 +225,8 @@ export function peopleFrames() {
   frames['captain-musket-1'] = [48, 32, 3, c => musketPose(posePalette(), false)(c)];
   frames['captain-musket-2'] = [48, 32, 3, c => musketPose(posePalette(), true)(c)];
   frames['captain-cutlass'] = [48, 32, 3, c => cutlassPose(posePalette())(c)];
+  // Captain health: every colour's fallen captain (a wave shows each captain who is down in their colour).
+  CAPTAIN_PALETTES.forEach((pal, i) => { frames[`captain-down-${i + 1}`] = [40, 24, 3, fallenCaptain(pal)]; });
   for (const kind of ['gunner', 'carpenter', 'lookout']) frames[`crew-${kind}`] = [16, 32, 3, crewFigure(kind)];
   frames.boarder = [24, 32, 3, boarder()];
   frames['boarder-walk-1'] = [24, 32, 3, boarder('-walk-1')];

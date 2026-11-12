@@ -105,6 +105,7 @@ export function createPiratePoint(ctx) {
     getDefenses: () => { const built = ctx.getDefenses?.(); return built?.length ? built : DEFENSES.map(item => ({ ...item })); }, place: PLACE, listen: false, accept: info => info.flagship === true,
     simOptions: { coast: COAST, lanes: LANES, heart: HEART }, beamFrom: BEAM_FROM, playCutscene, captainLevel: ctx.captainLevel ?? (() => 1),
     captainSkills: ctx.captainSkills ?? (() => []), captainWeapon: ctx.captainWeapon ?? (() => 'musket'),
+    captainColour: ctx.captainColour ?? (() => 0), reviveCaptain: ctx.reviveCaptain ?? null,
     finishWave: async body => { const answer = await api.finishWave(body); if (answer?.loot) notify(`Pirate Point loot: 🪙 ${answer.loot}`); return answer; },
     ...ctx.controllerOptions });
 

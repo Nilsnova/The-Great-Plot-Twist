@@ -82,6 +82,9 @@ export function wireWaves(ctx) {
     captainSkills: () => island?.captainLoadout?.().skills ?? [],
     captainWeapon: () => island?.captainLoadout?.().weapon ?? 'musket',
     captainColour: () => island?.captainColour?.() ?? 0,
+    // Captain health (GAME-V3.md §3): the reviver pays on the server (the in-memory fake in a rehearsal).
+    reviveCaptain: island ? async body => throwRefusal(await island.reviveCaptain(body))
+      : ctx.fakeApi?.reviveCaptain ? body => ctx.fakeApi.reviveCaptain({...body, actionUid: `revive-${Date.now().toString(36)}`}) : null,
     // Pirate Point's shared spots once more before its battle, so every captain fights the same towers.
     beforePointWave: island ? () => island.loadPoint() : null,
     startNextWave: island ? () => island.ringBell() : null,

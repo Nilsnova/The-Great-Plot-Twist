@@ -9,6 +9,7 @@
 //   await api.joinWave({waveId});                     // POST /api/waves/join
 //   await api.currentWave({where: 'own'});            // GET  /api/waves/current?where=
 //   await api.finishWave({waveId, survived, shipsSunk});   // POST /api/waves/finish
+//   await api.reviveCaptain({waveId, fallen});        // POST /api/waves/revive    (GAME-V3.md §3, you pay)
 //   await api.upgrade({spot});                        // POST /api/island/upgrade     (TOWER-DEFENSE.md §7)
 //   await api.build({spot, kind, code: 'ISLE-FR3ND'}) // on a friend's island, paid with your coins
 //   await api.hire({crew: 'gunner'});                 // POST /api/island/hire
@@ -44,7 +45,7 @@ import {SKILL_BY_ID, WEAPON_BY_ID} from '../pirates/captain-ids.js';
 
 export const PATHS = Object.freeze({
   island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
-  start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish',
+  start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
   current: where => `/api/waves/current?where=${encodeURIComponent(where)}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
   skill: '/api/island/skill', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
@@ -103,6 +104,8 @@ export function isWave(data) {
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
     && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
 }
+// Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
+export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
 export function isFinish(data) {
   return !!data && isCount(data.loot) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags);
 }
@@ -253,6 +256,12 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0};
       return ask(() => transport.post(PATHS.finish, body), isFinish);
+    },
+    // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim.
+    reviveCaptain({waveId, fallen} = {}) {
+      if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
+      if (typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen)) return refuse(422, 'validation_error', MESSAGES.unknown);
+      return write(`revive:${waveId}:${fallen}`, actionUid => transport.post(PATHS.revive, {waveId, fallen, actionUid}), isRevive);
     },
     // For tests and the console: the click id kept for an unknown outcome, if any.
     heldActionUid: key => held.get(key) ?? null,
