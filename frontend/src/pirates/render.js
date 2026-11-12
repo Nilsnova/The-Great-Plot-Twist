@@ -264,7 +264,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const ships = new Map(); // id -> {facing, phase, flashUntil, bornAt}
   const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool();
   const fallen = pool(), strikes = pool(), crew = new Map(); // boarders: id -> {phase, flashUntil}
-  let captain = null, revive = null;
+  let captain = null, revive = null, figures = null;
   const fire = new Map(), wallFlash = new Map();
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
   const still = () => !!reducedMotion();
@@ -633,8 +633,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     for (const hero of state.party ?? []) {
       if (!hero.present) continue;
       const mine = captain && hero.id === captain.id, x = mine ? captain.x : hero.x, z = mine ? captain.z : hero.z;
-      if (hero.down) drawDown(hero, x, z, revive?.targetId === hero.id ? revive.share : null);
-      else drawHealthBar(x, z, hero.hp, hero.maxHp);
+      if (hero.down) { drawDown(hero, x, z, revive?.targetId === hero.id ? revive.share : null); continue; }
+      // A teammate's bar sits over their presence figure when it is drawn (src/pirates/figures.js).
+      const figure = mine ? null : figures?.get?.(hero.id);
+      drawHealthBar(figure ? figure.x : x, figure ? figure.z : z, hero.hp, hero.maxHp);
     }
   }
   function drawWarning(item) {
@@ -754,9 +756,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   return {
     root,
     events(list) { for (const event of list ?? []) onEvent(event); },
-    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null } = {}) {
+    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null, figures: drawnAt = null } = {}) {
       if (disposed) return;
       clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own; revive = helping;
+      figures = drawnAt instanceof Map ? drawnAt : null;
       shells.sweep(shell => simNow < shell.to);
       bursts.sweep(item => clock - item.at < BURST_SECONDS);
       tracers.sweep(item => clock - item.at < musketLife(item));

@@ -77,7 +77,9 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
     ingested++;
   }
   // max: how many captains are drawn (40 in the class harbor); emoteScale: bigger emote bubbles there.
-  function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false,max=PRESENCE_LIMITS.visible,emoteScale=1}={}){
+  // hide: ids not to draw now (a captain who has fallen in the wave lies in the wave's own drawing,
+  // src/pirates/figures.js); they stay chosen, so figures() still knows where they are.
+  function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false,max=PRESENCE_LIMITS.visible,emoteScale=1,hide=null}={}){
     if(disposed)return stats;clock=Number.isFinite(now)?now:clock+Math.max(0,dt||0)*1000;
     const {selected,hidden}=selectNearby([...records.values()],{place,player:{x:player?.x??0,y:player?.y??0},now:clock,filter,blocked,max});
     const chosen=new Set(selected.map(record=>record.id));
@@ -87,8 +89,9 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
       if(record.leavingAt!==null&&clock-record.leavingAt>=PRESENCE_LIMITS.fadeMs){removeRecord(record);continue;}
       if(chosen.has(record.id))attachRenderable(record,assets.get(record.id));else releaseRenderable(record);
     }
+    const hiddenNow=id=>!!hide&&typeof hide.has==='function'&&hide.has(id);
     for(const record of selected){
-      record.group.visible=true;
+      record.group.visible=!hiddenNow(record.id);
       const point=positionAt(record,clock),placePoint=projectPoint(point.x,point.y);record.group.position.set(placePoint.x,placePoint.y,0);record.body.userData.logical=point;
       if(!record.announced){record.announced=true;if(!record.quiet&&clock-record.joinedAt<1500)arrive(placePoint,motionOff);}
       const bodyAsset=assets.get(record.id);record.asset=bodyAsset;record.body.userData.asset=bodyAsset;const fadeIn=clamp((clock-record.joinedAt)/260,0,1),fadeOut=record.leavingAt===null?1:clamp(1-(clock-record.leavingAt)/PRESENCE_LIMITS.fadeMs,0,1),alpha=fadeIn*fadeOut;
@@ -103,7 +106,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
       record.label.textContent=record.peer.name;record.label.title=record.peer.kit?.name??'Captain';record.label.hidden=true;
       record.label.style.opacity=String(alpha);record.label.style.fontSize='16px';record.label.style.display='none';
     }
-    const labels=selected.filter(()=>!blocked&&canvas&&camera).map(record=>({record,point:screenPoint(positionAt(record,clock).x,positionAt(record,clock).y,camera,canvas,container)}));
+    const labels=selected.filter(record=>!blocked&&canvas&&camera&&!hiddenNow(record.id)).map(record=>({record,point:screenPoint(positionAt(record,clock).x,positionAt(record,clock).y,camera,canvas,container)}));
     const box=container.getBoundingClientRect?.()??{width:container.clientWidth??375,height:container.clientHeight??667};
     const positions=placePresenceLabels(labels,{width:box.width||375,height:box.height||667,maxLabels:(box.width||375)<=450?2:4});
     for(const position of positions){
@@ -112,5 +115,16 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
     }
     stats={drawn:selected.length,hidden:(input.hiddenCount??0)+hidden,ids:selected.map(record=>record.id)};return stats;
   }
-  return {ingest,update,get stats(){return {...stats,ids:[...stats.ids]};},dispose(){if(disposed)return;disposed=true;for(const record of [...records.values()])removeRecord(record);root.removeFromParent();}};
+  // The figures chosen in the last update, where they stand now: [{id, x, z, colour}] (colour: the lobby
+  // colour 0-9, or null when not known), for the wave to match its captains to (src/pirates/figures.js).
+  function figures(){
+    const list=[];
+    for(const record of records.values()){
+      if(!record.group||record.leavingAt!==null)continue;
+      const point=positionAt(record,clock);let colour=null;try{colour=colourOf(record.id);}catch{colour=null;}
+      list.push({id:record.id,x:point.x,z:point.y,colour:Number.isInteger(colour)&&colour>=0&&colour<10?colour:null});
+    }
+    return list;
+  }
+  return {ingest,update,figures,get stats(){return {...stats,ids:[...stats.ids]};},dispose(){if(disposed)return;disposed=true;for(const record of [...records.values()])removeRecord(record);root.removeFromParent();}};
 }

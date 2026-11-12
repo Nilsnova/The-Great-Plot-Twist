@@ -270,7 +270,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const me = state?.me ?? answered?.members?.find(member => member.you)?.id ?? null;
     return {map: captainColours(members), me};
   }
-  const colourOf = id => (typeof id === 'string' ? colours().map.get(id) ?? null : null);
+  // id: a member's id, or the presence's opaque id of a captain on screen (live-captain-N), turned back
+  // into the member's id first, so the figures of the others wear their lobby colours too.
+  const colourOf = id => {
+    if (typeof id !== 'string') return null;
+    const map = colours().map;
+    if (map.has(id)) return map.get(id);
+    let member = null;
+    try { member = resolvePeer(id); } catch { member = null; }
+    return (member && map.get(member)) ?? null;
+  };
   const captainColour = () => { const {map, me} = colours(); return (me && map.get(me)) ?? 0; };
   function startGame() {
     if (!game?.start()) { refreshCard(); return; }

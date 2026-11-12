@@ -34,7 +34,8 @@ export function createWorldExperience(ctx){
     if(simulated){void prepare();others?.ingest(simulated);}
     else others?.ingest(latest?.presence??{status:'off',place:null,others:[],hiddenCount:0,sampledAt:Date.now()});
   }
-  function update(dt,{speed=0}={}){
+  // hide: presence ids not to draw now (a fallen captain lies in the wave's drawing instead).
+  function update(dt,{speed=0,hide=null}={}){
     if((!latest&&!simulated)||disposed)return;
     // The class harbor (G29) stands in Saltreach Harbor but is its own presence place, with 40 drawn.
     const worldPlace=ctx.world.current?.id,place=ctx.presencePlace?.(worldPlace)??worldPlace,player=ctx.player,classRoom=place!==worldPlace;
@@ -48,11 +49,11 @@ export function createWorldExperience(ctx){
     const emote=presence.localEmote;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z),scale=classRoom?2:1;localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.scale.setScalar(scale);localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05+(scale-1)*.75)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
     if(!others)return;
     const stats=others.update(dt,{place,player:previous,camera:ctx.camera,canvas:ctx.canvas,now:Date.now(),
-      filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),...(classRoom?{max:40,emoteScale:2}:{})});
+      filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),hide,...(classRoom?{max:40,emoteScale:2}:{})});
     hud?.setCounts(stats);
     if(hud)hud.element.hidden=!!simulated||presence.status==='off'||ctx.isBlocked();
   }
-  return {apply,update,simulate,get stats(){return others?.stats??{drawn:0,hidden:0,ids:[]};},
+  return {apply,update,simulate,figures:()=>others?.figures?.()??[],get stats(){return others?.stats??{drawn:0,hidden:0,ids:[]};},
     dispose(){if(disposed)return;disposed=true;reporter.reset();others?.dispose();hud?.dispose();coins?.dispose();localBubble?.removeFromParent();localBubble?.geometry.dispose();releaseArt(ownedArt);},
   };
 }

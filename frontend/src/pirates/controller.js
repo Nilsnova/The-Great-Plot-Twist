@@ -152,6 +152,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null } = {}) {
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
   let holdE = false, holdPrompt = false; // E or the prompt held down (a revive)
+  let figures = null; // the presence figures' positions of the other captains (setFigures)
   let runLoot = 0, auto = !!loadAuto(), level = null, skills = null, weapon = null;
   const myLevel = () => { const value = Number(level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
@@ -547,7 +548,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       alone: !(current.state.party ?? []).some(hero => hero.id !== playerId && hero.present && !hero.down) } : null);
     current.hud?.marks?.(fallenMarks(current, player));
     const captain = player && current.shown && !current.done ? { id: playerId, x: player.x, z: player.z, share: captainShare(current), down: fallen } : null;
-    current.renderer?.update({ state: current.state, simTime, dt, captain,
+    current.renderer?.update({ state: current.state, simTime, dt, captain, figures,
       revive: current.revive && !current.revive.paying ? { targetId: current.revive.targetId, share: current.revive.share } : null });
     if (shake > 0 && world.camera) {
       const t = now() / 1000;
@@ -641,6 +642,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     get captainDown() { return isDown(wave); },
     get revive() { return wave?.revive ? { targetId: wave.revive.targetId, share: wave.revive.share, paying: wave.revive.paying } : null; },
     get playerId() { return playerId; },
+    // Where the presence draws the other captains (src/pirates/figures.js figurePositions: sim id -> {x, z}),
+    // so their hp bars sit over the figures; null draws them where the sim has them.
+    setFigures(value) { figures = value instanceof Map ? value : null; },
     // The island changed (an upgrade or a new building, ours or a friend's): once the wave is decided, in the
     // break, its posts show the new levels. A wave under way keeps the defenses it started with.
     refreshDefenses() {

@@ -22,6 +22,7 @@ import {createGameRoom} from '../island/game-room.js';
 import {createRoomProxy} from './room.js';
 import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wave-hooks.js';
 import {defenses as spotDefenses} from '../island/spots.js';
+import {figurePositions, hiddenFigures, matchFigures} from './figures.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -177,6 +178,19 @@ export function wireWaves(ctx) {
     get island() { return pirates.island; },
     get game() { return game; },
     ringPiratePoint: () => pirates.point?.ringBell() ?? Promise.resolve(false),
+    // Captain health (GAME-V3.md §3): the presence figures drawn now ([{id, x, z, colour}], world/others)
+    // against the running wave's captains. Answers the figures to hide (a captain down in the sim lies in
+    // the wave's own drawing, not standing as well) and puts the hp bars over the figures; null outside a wave.
+    figures(list = []) {
+      const controllers = [pirates.island, pirates.point?.controller];
+      for (const controller of controllers) if (controller && !controller.wave) controller.setFigures?.(null);
+      const controller = controllers.find(item => item?.wave && !item.wave.finished);
+      const party = controller?.state?.party;
+      if (!controller || !Array.isArray(party) || !party.length) return null;
+      const matches = matchFigures({party, figures: list, mine: controller.playerId});
+      controller.setFigures?.(figurePositions(matches));
+      return hiddenFigures(matches, party);
+    },
     dispose() {
       if (disposed) return; disposed = true;
       for (const stop of stops.splice(0)) stop?.();
