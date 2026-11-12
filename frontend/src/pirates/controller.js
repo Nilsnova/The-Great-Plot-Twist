@@ -40,7 +40,7 @@
 //   point on screen {x, y} in px of the container (the timers over fallen captains)}; every field optional.
 // room: {send(type, payload), on(type, handler) -> unsubscribe}, the island's or Pirate Point's live room.
 import { createPoses } from './poses.js';
-import { CONFIG, createWave, revivePrice } from './sim.js';
+import { CONFIG, createWave, hasTavern, revivePrice } from './sim.js';
 import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
 import { INPUT_LEAD_TICKS, ROOM_EVENTS, TICK_SECONDS, createInputSchedule, readMessage, toMessage } from './sync.js';
@@ -399,8 +399,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (current.reviveNote && now() < current.reviveNote.until) return current.reviveNote.text;
     current.reviveNote = null;
     if (current.revive?.paying) return 'Helping up…';
-    return `Hold to help up · 🪙 ${revivePrice(current.info.wave)}`;
+    return `Hold to help up · 🪙 ${helpPrice(current)}`;
   }
+  // A Tavern on the island (GAME-V3.md "Houses") takes 25% off; the server checks the island's buildings as
+  // they are now, so the island's latest answer decides, else the wave's own defenses.
+  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(getDefenses() ?? current.defenses) });
   // The timers over fallen captains (yours where you lie, a teammate's where their sim has them).
   function fallenMarks(current, player) {
     if (!world.project || current.done || !current.shown) return [];
@@ -540,7 +543,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const reviveTarget = running && !fallen && !blocked() ? fallenNear(current, player) : null;
     holdRevive(current, reviveTarget, player);
     current.action = !current.done && current.shown && !blocked() && player && !fallen
-      ? (reviveTarget ? { kind: 'revive', targetId: reviveTarget.id, price: revivePrice(current.info.wave), x: reviveTarget.x, z: reviveTarget.z }
+      ? (reviveTarget ? { kind: 'revive', targetId: reviveTarget.id, price: helpPrice(current), x: reviveTarget.x, z: reviveTarget.z }
         : actionAt({ x: player.x, z: player.z }, current.defenses, current.state, { repairReach: stats.repairReach })) : null;
     if (current.action?.kind === 'revive') current.hud?.prompt(revivePrompt(current), true, current.revive?.share ?? 0);
     else current.hud?.prompt(promptText(current.action), !!inputFor(current.action));

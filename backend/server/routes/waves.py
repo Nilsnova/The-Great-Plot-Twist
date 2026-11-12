@@ -55,7 +55,9 @@ POST /api/waves/revive  {"waveId": "6f1c...", "fallen": "p-k3x9q2", "downAt": 41
     -> {"price": 35, "coins": 80, "repeat": false}
     Captain health (docs/GAME-V3.md section 3): the signed-in player stood next to a fallen
     teammate, held E for 2 s, and pays for helping them up: 20 + 5 x the wave number
-    (islands.json "revive"; the database reads the wave number). "fallen" is the teammate's id
+    (islands.json "revive"; the database reads the wave number), 25% less rounded down on an
+    island with a Tavern (a house role, docs/GAME-V3.md "Houses": the database checks the
+    island's buildings, so "price" is what was paid). "fallen" is the teammate's id
     in the wave's simulation, recorded only: the fall and the standing up happen in every
     browser. Only a member of the game (the island's owner always; Pirate Point: everybody)
     who is in the wave and has not finished it yet, while it runs. One payment per actionUid

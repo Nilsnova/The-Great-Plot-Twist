@@ -8,7 +8,8 @@
     learn_skill()  one skill of the captain's skill tree, paid with skill points (section 14)
     buy_weapon(), equip_weapon()  the weapon shop (section 15)
     research()    the Tech hub: one research branch for the island, paid by any member (GAME-V3 5)
-    specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5)
+    specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5), or a
+                  house of level 2 a role (GAME-V3 "Houses")
     repair_wreck()  coins into the island's wreck (GAME-V3 section 4)
     harbor_wave() the best wave of the games a player is in: the Harbor opens after wave 4
     visit()    another player's island, found by its code
@@ -591,8 +592,10 @@ async def specialise(
     code: str | None = None,
 ) -> IslandView:
     """A tower on the island picks one skill of its researched branch (no coins; picking again
-    changes it, for the next wave). 400 bad_spec, 404 no_such_spot, 404 no_such_island, 403
-    not_member, 409 not_built, 422 wrong_kind, 409 not_researched. Safe to repeat."""
+    changes it, for the next wave). A house of level 2 or more picks a role (barracks, tavern,
+    workshop) the same way, with no research (docs/GAME-V3.md "Houses"). 400 bad_spec, 404
+    no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 422 wrong_kind, 409
+    not_researched, 409 house_level. Safe to repeat."""
     island, payer = await target_island(admin, catalogue, player_id, code)
     built = await store.read_built_spots(admin, island.owner)
     done = await store.read_research(admin, island.owner)
@@ -607,11 +610,15 @@ async def specialise(
     reply = await admin.call_function("island_specialise", arguments)
     refusal = store.refusal_or_none(reply)
     if refusal is not None:
-        name = rules.research_named(catalogue, branch).name
         if refusal.reason == "not_built":
             raise ApiError(409, "not_built", "Build something on this spot first.")
         if refusal.reason == "wrong_kind":
             raise rules.BuildRefused(422, "wrong_kind", "Something else stands on this spot.")
+        if refusal.reason == "house_level":
+            raise rules.house_level()
+        if branch == "house":
+            raise campaign_refusal(refusal, catalogue, "tech_hub", "House roles")
+        name = rules.research_named(catalogue, branch).name
         raise campaign_refusal(refusal, catalogue, "tech_hub", name)
     return await look_open(admin, catalogue, island, payer)
 

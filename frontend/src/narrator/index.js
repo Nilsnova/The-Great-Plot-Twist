@@ -25,6 +25,8 @@
 //   heart_changed {hp, max}                             (boarding lane C) the island's heart; below 30% warns.
 //   player_fell {playerId, self?} / player_revived {playerId, by?, self?}  (health lane H)
 //   captains_all_fallen {}                              (health lane H) every captain is down.
+//   house_role_picked {spot, role, first}               (houses, src/island/index.js) a house picked a role:
+//       the house_role line, once per island game (caption only until its voice file is made).
 import data from './lines.json';
 import {createNarratorCard} from './card.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
@@ -194,6 +196,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     on('player_fell', event => say('player_fell', {seed: event?.self ? 1 : 0})),
     on('player_revived', event => say('player_revived', {seed: event?.self ? 0 : 1})),
     on('captains_all_fallen', () => say('all_fallen')),
+    on('house_role_picked', () => say('house_role')), // src/island/index.js; once per island game
     on('heart_changed', event => {
       const hp = Number(event?.hp), max = Number(event?.max);
       if (!(max > 0) || !(hp >= 0) || hp / max >= HEART_LOW || heartWarned) return;

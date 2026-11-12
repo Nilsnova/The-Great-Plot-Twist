@@ -33,7 +33,7 @@
     },
     {
       "wave": 5,
-      "opens": ["ring_walls", "crew:carpenter", "wall:3", "cannon:3", "mortar:3"],
+      "opens": ["ring_walls", "crew:carpenter", "wall:3", "cannon:3", "mortar:3", "house:3"],
       "title": "New: The inner wall ring and level 3!",
       "line": "Raise the six walls around the heart. Hire a carpenter to mend walls during a wave."
     },

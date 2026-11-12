@@ -271,15 +271,84 @@ function watchtowerAt(c, {w, h}, level) {
   part(c, rect(cx - .8, g - 122, 1.8, 12, .6), WOOD_DARK, {width: .8});
   part(c, poly([[cx + 1, g - 122], [cx + 13, g - 119], [cx + 1, g - 115]], .8), BRASS, {depth: .8, width: 1});
 }
-function house(c, {w, h}) {
-  const g = h - 8, cx = w / 2; shadow(c, cx, g, 27, 5);
-  part(c, rect(cx - 22, g - 26, 44, 26, 2), '#f2dfb6', {depth: 3, width: 1.3, gloss: rect(cx - 19, g - 24, 3, 20, 1), light: '#fff1d0'});
-  for (let y = g - 21; y < g; y += 5) stroke(c, line([[cx - 21, y], [cx + 21, y]]), '#d9bf8e', .8);
-  part(c, rect(cx - 5, g - 17, 10, 17, 4.5), WOOD, {depth: 1.4, width: 1.2}); part(c, ellipse(cx + 2.6, g - 8, .9), BRASS, {line: false, shade: false});
-  for (const x of [cx - 16, cx + 9]) { part(c, rect(x, g - 20, 8, 8, 1.6), '#7fd0e0', {depth: 1, width: 1.1, gloss: rect(x + 1.4, g - 18.6, 2, 2.6, .6)}); stroke(c, line([[x + 4, g - 20], [x + 4, g - 12]]), INK, .8); }
-  part(c, rect(cx + 9, g - 46, 6, 14, 1), '#9e958a', {depth: 1, width: 1.1});
-  part(c, poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4]), ROOF, {depth: 3.4, dx: -1, width: 1.4, gloss: poly([[cx - 20, g - 27], [cx - 10, g - 41], [cx - 4, g - 41], [cx - 14, g - 27]], 1), light: '#ef7e62'});
-  c.save(); c.clip(poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4])); for (let y = g - 30; y > g - 44; y -= 6) stroke(c, line([[cx - 30, y], [cx + 30, y]]), mix(ROOF, INK, .35), .8); c.restore();
+// The house, and its three roles from level 2 (GAME-V3.md "Houses"): the Barracks (stone walls, a teal roof with
+// crossed swords on a shield and the island's flag on the ridge), the Tavern (warm lit windows, a hanging sign with
+// a frothy mug and a barrel by the door) and the Workshop (plank walls, a slate roof, a gear sign with a hammer on
+// a post and a saw by the wall). A role house is drawn in a wider box (80 x 72) so its sign has room.
+const HOUSE_LOOKS = {
+  plain: {wall: '#f2dfb6', light: '#fff1d0', seam: '#d9bf8e', roof: ROOF, roofLight: '#ef7e62', window: '#7fd0e0'},
+  barracks: {wall: '#d8d0c2', light: '#ece6da', seam: '#b5ab9b', roof: '#2c7f8c', roofLight: '#4fb0bc', window: '#7fd0e0'},
+  tavern: {wall: '#f2dfb6', light: '#fff1d0', seam: '#d9bf8e', roof: '#c8423b', roofLight: '#ef7e62', window: '#ffd36a'},
+  workshop: {wall: WOOD_LIGHT, light: '#ddb07a', seam: WOOD, roof: '#6b7280', roofLight: '#9aa3b0', window: '#7fd0e0'},
+};
+function gear(c, x, y, r) {
+  const teeth = [];
+  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, out = i % 2 ? r * .74 : r; teeth.push([x + Math.cos(a) * out, y + Math.sin(a) * out]); }
+  part(c, poly(teeth, .5), '#b8bec8', {depth: 1, width: 1, gloss: ellipse(x - r * .35, y - r * .4, r * .3, r * .18), light: '#e6eaf0'});
+  part(c, ellipse(x, y, r * .34), '#5a6270', {width: .8, shade: false});
+}
+function house(role = null) {
+  const look = HOUSE_LOOKS[role] ?? HOUSE_LOOKS.plain;
+  return (c, {w, h}) => {
+    const g = h - 8, cx = w / 2; shadow(c, cx, g, role ? 31 : 27, 5);
+    if (role === 'workshop') { // a saw leaning on the left wall
+      part(c, poly([[cx - 27, g], [cx - 23, g - 15], [cx - 20, g - 14], [cx - 23, g]], .5), '#cfd5dc', {depth: .6, width: .9});
+      part(c, rect(cx - 25, g - 19, 5, 5, 1.2), WOOD_DARK, {width: .9});
+    }
+    part(c, rect(cx - 22, g - 26, 44, 26, 2), look.wall, {depth: 3, width: 1.3, gloss: rect(cx - 19, g - 24, 3, 20, 1), light: look.light});
+    if (role === 'barracks') {
+      for (let y = g - 21, row = 0; y < g; y += 5, row++) {
+        stroke(c, line([[cx - 21, y], [cx + 21, y]]), look.seam, .8);
+        for (let x = cx - 18 + (row % 2) * 4; x < cx + 20; x += 8) stroke(c, line([[x, y], [x, y + 5]]), look.seam, .7);
+      }
+    } else if (role === 'workshop') {
+      for (let x = cx - 16; x < cx + 22; x += 6) stroke(c, line([[x, g - 25], [x, g]]), look.seam, .8);
+    } else for (let y = g - 21; y < g; y += 5) stroke(c, line([[cx - 21, y], [cx + 21, y]]), look.seam, .8);
+    part(c, rect(cx - 5, g - 17, 10, 17, 4.5), role === 'barracks' ? WOOD_DARK : WOOD, {depth: 1.4, width: 1.2}); part(c, ellipse(cx + 2.6, g - 8, .9), BRASS, {line: false, shade: false});
+    if (role === 'barracks') for (const y of [g - 12, g - 5]) part(c, rect(cx - 5, y, 10, 1.4, .4), IRON, {line: false, shade: false});
+    for (const x of [cx - 16, cx + 9]) {
+      part(c, rect(x, g - 20, 8, 8, 1.6), look.window, {depth: 1, width: 1.1, gloss: rect(x + 1.4, g - 18.6, 2, 2.6, .6)}); stroke(c, line([[x + 4, g - 20], [x + 4, g - 12]]), INK, .8);
+      if (role === 'tavern') { c.save(); c.globalAlpha = .35; c.fillStyle = radial(c, x + 4, g - 16, 7, [[0, '#ffe8a0'], [1, '#ffe8a000']]); c.fill(ellipse(x + 4, g - 16, 7, 6)); c.restore(); }
+    }
+    part(c, rect(cx + 9, g - 46, 6, 14, 1), '#9e958a', {depth: 1, width: 1.1});
+    const roof = poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4]);
+    part(c, roof, look.roof, {depth: 3.4, dx: -1, width: 1.4, gloss: poly([[cx - 20, g - 27], [cx - 10, g - 41], [cx - 4, g - 41], [cx - 14, g - 27]], 1), light: look.roofLight});
+    c.save(); c.clip(roof); for (let y = g - 30; y > g - 44; y -= 6) stroke(c, line([[cx - 30, y], [cx + 30, y]]), mix(look.roof, INK, .35), .8); c.restore();
+    if (role === 'barracks') {
+      // The island's flag on the ridge, and a shield with two crossed cutlasses on the roof.
+      banner(c, cx - 7, g - 43, 14, 4, .9);
+      part(c, poly([[cx - 6, g - 39], [cx + 6, g - 39], [cx + 6, g - 33], [cx, g - 27.5], [cx - 6, g - 33]], 1.2), BANNER[4], {depth: 1, width: 1.1, light: mix(BANNER[4], '#ffffff', .35)});
+      stroke(c, poly([[cx - 4.6, g - 37.8], [cx + 4.6, g - 37.8], [cx + 4.6, g - 33.4], [cx, g - 29.2], [cx - 4.6, g - 33.4]], 1), GOLD, .8);
+      for (const s of [-1, 1]) {
+        c.save(); c.translate(cx, g - 33.6); c.rotate(s * .78);
+        part(c, rect(-.7, -7.4, 1.4, 10, .5), '#dfe6ea', {depth: .4, width: .8});
+        part(c, rect(-2.2, 2.2, 4.4, 1.1, .4), GOLD, {width: .7, shade: false});
+        part(c, rect(-.7, 3.2, 1.4, 2.4, .5), WOOD_DARK, {width: .7, shade: false});
+        c.restore();
+      }
+    } else if (role === 'tavern') {
+      // A barrel by the door and, on an iron bracket at the left, a swinging sign with a frothy mug.
+      part(c, rect(cx + 23, g - 9, 8, 9, 2.6), WOOD, {depth: 1.2, width: 1.1});
+      for (const y of [g - 7, g - 2.4]) stroke(c, line([[cx + 23.4, y], [cx + 30.6, y]]), IRON, .9);
+      stroke(c, line([[cx - 22, g - 30], [cx - 35, g - 30]]), IRON, 1.6);
+      stroke(c, line([[cx - 22, g - 26], [cx - 26, g - 30]]), IRON, 1.1);
+      for (const x of [cx - 33.5, cx - 25.5]) stroke(c, line([[x, g - 30], [x, g - 27]]), IRON, .8);
+      part(c, rect(cx - 36, g - 27.5, 13, 12, 1.6), WOOD_LIGHT, {depth: 1.2, width: 1.1, light: '#ddb07a'});
+      part(c, rect(cx - 32.6, g - 23.5, 5.6, 6.4, 1), GOLD, {depth: .8, width: .9, light: '#ffe79a'});
+      stroke(c, ellipse(cx - 26, g - 20.4, 1.7, 2.2), INK, .9);
+      part(c, ellipse(cx - 29.8, g - 24.2, 3.6, 1.8), '#fff8ec', {width: .8, shade: false});
+      for (const x of [cx - 31.6, cx - 28.6]) part(c, ellipse(x, g - 25.4, 1.3, 1.1), '#fff8ec', {width: .7, shade: false});
+    } else if (role === 'workshop') {
+      // A post at the right with a big gear sign and a hammer across it.
+      part(c, rect(cx + 27, g - 24, 2.6, 24, .8), WOOD_DARK, {depth: .8, width: 1});
+      gear(c, cx + 28.3, g - 30, 6.4);
+      c.save(); c.translate(cx + 28.3, g - 30); c.rotate(-.7);
+      part(c, rect(-.7, -2, 1.4, 11, .5), WOOD, {depth: .4, width: .8});
+      part(c, rect(-3.6, -3.6, 7.2, 3, .8), IRON, {depth: .6, width: .9, gloss: rect(-3, -3.2, 3, .6, .3)});
+      c.restore();
+      gear(c, cx - 9, g - 34, 3.2);
+    }
+  };
 }
 function cabin(c, {w, h}) {
   const g = h - 12, cx = w / 2; shadow(c, cx, g, 40, 7);
@@ -351,7 +420,8 @@ export function islandFrames() {
     oak: [80, 104, 8, oak], pine: [80, 112, 8, pine], birch: [80, 104, 8, palm(false)], 'birch-tall': [80, 104, 8, palm(true)],
     rock: [48, 36, 4, rock], shrub: [40, 32, 4, shrub], flowers: [24, 24, 3, flowers], 'grass-tuft': [32, 32, 4, grassTuft],
     bench: [48, 32, 3, bench], barrel: [24, 32, 3, barrel], lantern: [16, 24, 2, lantern], crate: [24, 24, 3, crate], sign: [32, 40, 3, sign],
-    cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house], 'island-watchtower': [64, 128, 8, watchtower(1)],
+    cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house()], 'island-watchtower': [64, 128, 8, watchtower(1)],
+    'island-house-barracks': [80, 72, 8, house('barracks')], 'island-house-tavern': [80, 72, 8, house('tavern')], 'island-house-workshop': [80, 72, 8, house('workshop')],
     'island-watchtower-l4': [64, 128, 8, watchtower(4)], 'island-watchtower-l5': [64, 128, 8, watchtower(5)],
     'island-wall': [48, 48, 6, wall(1)], 'island-wall-l2': [48, 48, 6, wall(2)], 'island-wall-l3': [48, 48, 6, wall(3)],
     'island-wall-l4': [48, 48, 6, wall(4)], 'island-wall-l5': [48, 48, 6, wall(5)],

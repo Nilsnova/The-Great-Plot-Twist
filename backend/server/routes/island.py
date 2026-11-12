@@ -94,9 +94,12 @@ POST /api/island/research  {"branch": "cannon", "actionUid": "...", "code"?: "IS
 
 POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "code"?: "ISLE-K7Q2M"}
     -> the island. The tower on the spot picks one skill of its researched branch (no coins;
-    picking another one changes it, for the next wave). Safe to repeat.
+    picking another one changes it, for the next wave). Safe to repeat. A house of level 2 or
+    more picks a role the same way: "spec" barracks, tavern or workshop, with no research
+    (docs/GAME-V3.md "Houses"); the spot then carries it as "spec".
     Errors: 400 bad_spec, 403 not_member, 404 no_such_spot, 404 no_such_island, 409 not_built,
-            409 not_researched, 422 wrong_kind
+            409 not_researched, 409 house_level ("Raise this house to level 2 first."),
+            422 wrong_kind
 
 POST /api/island/wreck  {"amount": 25, "actionUid": "...", "code"?: "ISLE-K7Q2M"}
     -> the island. Coins into the island's wreck (GAME-V3 section 4, after wave 6; ledger ref

@@ -206,6 +206,49 @@ function boarder(step = '', hit = false) {
   };
 }
 const blade = () => poly([[-.8, 6.6], [.8, 6.6], [1.1, 11], [-.2, 13.4], [-.9, 11.6]], .4);
+// The island's militia (a Barracks house, GAME-V3.md "Houses"): defenders, not captains, so no tricorn and no long
+// coat. A round brass helmet with a crest, a teal tunic with a white cross-belt (the island's banner colour; the
+// pirates wear red), a round wooden shield with a gold star and a spear. Facing right; 24 x 32 like a boarder.
+const MILITIA = {tunic: '#2c9aa6', dark: '#1f6f78', belt: '#f6efe0', helmet: '#e2b75a', crest: '#3a6fd8'};
+function militiaFigure(step = '', {strike = false, hit = false} = {}) {
+  return c => {
+    const cx = 11; shadow(c, cx + 1, 29.2, 6.4, 1.8);
+    c.save();
+    if (hit) { c.translate(cx, 29); c.rotate(-.16); c.translate(-cx, -29); }
+    const lift = step === '-walk-1' ? 1 : step === '-walk-2' ? 2 : 0;
+    for (const [x, up] of [[cx - 4.2, lift === 1], [cx + .6, lift === 2]]) {
+      part(c, rect(x, 23.2 - (up ? 1.2 : 0), 3.6, 5.8, 1.2), '#3b4466', {depth: .8});
+      part(c, rect(x - .3, 26.6 - (up ? 1.2 : 0), 4.2, 2.6, 1.2), BOOT, {depth: .6});
+    }
+    // The spear behind the body: upright while walking, thrust level when striking.
+    const spear = () => {
+      if (strike) { part(c, rect(cx - 2, 18.4, 15, 1.3, .6), '#8a5a36', {depth: .4, width: .8}); part(c, poly([[cx + 13, 17.4], [cx + 17.6, 19], [cx + 13, 20.6]], .4), '#dfe6ea', {depth: .4, width: .8}); return; }
+      part(c, rect(cx + 5.6, 3.6, 1.3, 24, .6), '#8a5a36', {depth: .4, width: .8});
+      part(c, poly([[cx + 4.8, 4.2], [cx + 6.25, -.2], [cx + 7.7, 4.2]], .4), '#dfe6ea', {depth: .4, width: .8});
+    };
+    spear();
+    const tunic = poly([[cx - 5, 15.4], [cx + 5, 15.4], [cx + 5.8, 24.6], [cx - 5.8, 24.6]], [3, 3, 1.6, 1.6]);
+    part(c, tunic, MILITIA.tunic, {depth: 1.8, gloss: ellipse(cx - 2.6, 17.6, 1.2, 2), light: mix(MILITIA.tunic, '#ffffff', .3)});
+    c.save(); c.clip(tunic); c.strokeStyle = MILITIA.belt; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx - 5, 15.6); c.lineTo(cx + 5.6, 23.6); c.stroke(); c.restore();
+    part(c, rect(cx - 5.6, 21.4, 11.2, 1.8, .6), '#3a2a24', {depth: .4, width: .8});
+    part(c, rect(cx - 1.1, 21.1, 2.2, 2.4, .5), GOLD, {width: .6, shade: false});
+    // The spear hand (forward when striking), then the shield on the near arm.
+    part(c, ellipse(strike ? cx + 4.4 : cx + 6.2, strike ? 19 : 18.6, 1.5), SKIN, {depth: .6});
+    part(c, ellipse(cx - 4.4, 19.6, 4.4, 4.6), '#a8693a', {depth: 1.2, width: 1.1, light: '#c98a4e'});
+    stroke(c, ellipse(cx - 4.4, 19.6, 3.4, 3.6), '#7a4a2a', .7);
+    part(c, poly([[cx - 4.4, 17.2], [cx - 3.7, 18.9], [cx - 2, 19.6], [cx - 3.7, 20.3], [cx - 4.4, 22], [cx - 5.1, 20.3], [cx - 6.8, 19.6], [cx - 5.1, 18.9]], .2), GOLD, {width: .6, shade: false});
+    // The head, a short beard and the round helmet with its crest.
+    part(c, ellipse(cx, 11, 5.1, 4.8), SKIN, {depth: 1.5, shade: SKIN_DARK});
+    if (hit) { stroke(c, line([[cx + .4, 10.6], [cx + 2.2, 11.8]]), INK, .8); stroke(c, line([[cx + .4, 11.8], [cx + 2.2, 10.6]]), INK, .8); }
+    else { part(c, ellipse(cx + 1.6, 11.2, .8, 1.1), INK, {line: false, shade: false}); c.fillStyle = '#fff'; c.fill(ellipse(cx + 1.85, 10.8, .28, .32)); }
+    part(c, ellipse(cx + 3.6, 13.2, .9, .6), '#ef9f86', {line: false, shade: false, alpha: .6});
+    part(c, poly([[cx - 3.6, 13], [cx + 3.4, 13], [cx + 2, 16], [cx - 2.2, 16]], 1.2), '#7a4a2e', {depth: .5, width: .8});
+    part(c, poly([[cx - 6.6, 9.2], [cx + 6.6, 9.2], [cx + 5.4, 10.6], [cx - 5.4, 10.6]], .6), mix(MILITIA.helmet, INK, .15), {depth: .5, width: .9});
+    part(c, ellipse(cx, 8.6, 4.6, 3.9), MILITIA.helmet, {depth: 1.2, width: 1, gloss: ellipse(cx - 1.8, 7, 1.4, .8), light: '#ffe08a'});
+    part(c, poly([[cx - 3.4, 5.2], [cx + .4, 3], [cx + 3.6, 5.2], [cx, 4.8]], .6), MILITIA.crest, {depth: .5, width: .8});
+    c.restore();
+  };
+}
 
 /** Every people frame: name -> [width, height, anchor, draw]. */
 export function peopleFrames() {
@@ -240,5 +283,10 @@ export function peopleFrames() {
   frames['boarder-walk-2'] = [24, 32, 3, boarder('-walk-2')];
   frames['boarder-hit'] = [24, 32, 3, boarder('', true)];
   frames['boarder-hack'] = [24, 32, 3, boarder('-hack')];
+  frames.militia = [24, 32, 3, militiaFigure()];
+  frames['militia-walk-1'] = [24, 32, 3, militiaFigure('-walk-1')];
+  frames['militia-walk-2'] = [24, 32, 3, militiaFigure('-walk-2')];
+  frames['militia-strike'] = [24, 32, 3, militiaFigure('', {strike: true})];
+  frames['militia-hit'] = [24, 32, 3, militiaFigure('', {hit: true})];
   return frames;
 }

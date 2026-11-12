@@ -6,6 +6,7 @@ import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds} from '../pirates/captain-ids.js';
 import {opensText, spotWave, waveOf, isOpen} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, readSpec} from '../campaign/tech.js';
+import {ROLES, ROLE_IDS, ROLE_LEVEL, readRole} from '../campaign/houses.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -80,8 +81,10 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   }
   // Built: its tower skill (GAME-V3.md §5), then the next level, if any.
   if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy);
+  // GAME-V3.md "Houses": a house keeps its loot and, from level 2, picks a role (free, changeable between waves).
+  if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
   const next = level + 1;
-  if (level >= model.maxLevel) { model.reason = 'Highest level reached.'; return model; }
+  if (level >= model.maxLevel) { model.reason = shown === 'house' ? '' : 'Highest level reached.'; return model; }
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }
   const price = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(shown, level, prices);
   model.mode = 'upgrade';
@@ -103,6 +106,17 @@ function skillsOf(kind, spot, campaign, busy) {
   if (!campaign.research.done.has(kind)) return {title, line: `Research ${branch.name.toLowerCase()} at the Tech hub first.`, choices: [], current};
   return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one skill for this tower. It costs nothing.', current,
     choices: branch.specs.map(id => ({id, name: SPECS[id].name, line: SPECS[id].line, active: id === current,
+      disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
+}
+
+// The roles of a built house (GAME-V3.md "Houses"): below level 2 one line says what comes; from level 2 the
+// three roles with one plain line each, the active one marked. In the shape of skillsOf (the same card box).
+function rolesOf(spot, level, busy) {
+  const current = level >= ROLE_LEVEL ? readRole('house', spot?.spec) : null;
+  const title = current ? `Role: ${ROLES[current].name}` : 'House role';
+  if (level < ROLE_LEVEL) return {title, line: `Level ${ROLE_LEVEL}: choose ${ROLE_IDS.map(id => ROLES[id].name).join(', ').replace(/, (?=[^,]*$)/, ' or ')}.`, choices: [], current, role: true};
+  return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one role for this house. It costs nothing.', current, role: true,
+    choices: ROLE_IDS.map(id => ({id, name: ROLES[id].name, line: ROLES[id].line, active: id === current,
       disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
 }
 

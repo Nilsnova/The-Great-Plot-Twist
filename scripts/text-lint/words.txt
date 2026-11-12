@@ -162,6 +162,7 @@ balances
 balldontlie
 bank
 barnacle
+barracks
 barrel
 basket
 basketball
@@ -945,6 +946,7 @@ he'll
 head
 headers
 heading
+heal
 heap
 hear
 heard
@@ -1317,6 +1319,7 @@ mighty
 migration
 migrations
 milestone
+militia
 min
 mind
 mini
@@ -1866,6 +1869,8 @@ rising
 risk
 risks
 rival
+role
+roles
 room
 rope
 rose
@@ -2250,6 +2255,7 @@ talk
 tap
 target
 task
+tavern
 tea
 team
 team's
@@ -2298,8 +2304,8 @@ those
 three
 through
 throw
-thrown
 throwing
+thrown
 throws
 thumping
 thumps

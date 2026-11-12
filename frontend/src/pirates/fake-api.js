@@ -43,11 +43,12 @@
 // code, message, retryAfterSeconds}), plus dev helpers (setCoins, setWeather, startWaveAt, failNext,
 // read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
 // ISLE-FR3ND (Captain Gull) to visit.
-import { createRandom, revivePrice } from './sim.js';
+import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, readSpec } from '../campaign/tech.js';
+import { ROLES, ROLE_LEVEL } from '../campaign/houses.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -378,7 +379,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.coins -= entry.price; island.research.push(branch); player.actions.set(`research:${actionUid}`, true);
       return island === mine ? view() : visitedView(island);
     },
-    // A tower picks one skill of its researched kind (free; picking again changes it).
+    // A tower picks one skill of its researched kind (free; picking again changes it). A house of level 2 or
+    // more picks a role the same way (GAME-V3.md "Houses"), with no research.
     async specialise({ spot, spec, code } = {}) {
       if (typeof spot !== 'string' || typeof spec !== 'string') invalid('Send the spot and the skill.');
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
@@ -386,6 +388,13 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
       if (!island.built.has(spot)) refuse(409, 'not_built', 'Build something on this spot first.');
       const info = SPECS[spec], kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
+      if (Object.hasOwn(ROLES, spec)) {
+        if (kind !== 'house') refuse(422, 'wrong_kind', `A ${ISLAND_RULES.kinds[kind][0].toLowerCase()} cannot take a house role.`);
+        if ((island.levels?.get(spot) ?? 1) < ROLE_LEVEL) refuse(409, 'house_level', 'Raise this house to level 2 first.');
+        if (!(island.specs instanceof Map)) island.specs = new Map();
+        island.specs.set(spot, spec);
+        return island === mine ? view() : visitedView(island);
+      }
       if (!info) refuse(400, 'bad_spec', 'There is no such tower skill.');
       if (info.branch !== kind) refuse(422, 'wrong_kind', `A ${ISLAND_RULES.kinds[kind][0].toLowerCase()} cannot learn that skill.`);
       if (!(island.research ?? []).includes(kind)) refuse(409, 'not_researched', `Research ${BRANCH_BY_ID[kind].name.toLowerCase()} at the Tech hub first.`);
@@ -520,9 +529,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         refuse(409, 'wave_too_early', `The wave is not over yet. Try again in ${wait} seconds.`, wait);
       }
       const late = elapsed > ISLAND_RULES.waves.maximumSeconds;
-      // §4: houses pay 5 or 10 by level, a boss wave pays double.
+      // §4: houses pay 5 a level (5, 10, 15), a boss wave pays double.
       const houseBonus = run.island ? [...run.island.built].filter(id => id.startsWith('house_'))
-        .reduce((sum, id) => sum + ((run.island.levels?.get(id) ?? 1) >= 2 ? 10 : 5), 0) : 0;
+        .reduce((sum, id) => sum + 5 * (run.island.levels?.get(id) ?? 1), 0) : 0;
       const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus) * (isBoss(run) ? 2 : 1) : 0;
       if (survived && !late && !run.island) player.pointBest = Math.max(player.pointBest ?? 0, run.wave);
       if (survived && !late) player.wonBest = Math.max(player.wonBest ?? 0, run.wave); // won_wave_best: any wave you fought and won
@@ -558,7 +567,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!run.participants.has(playerId)) refuse(403, 'not_in_wave', 'Join the wave first: you are not in this wave.');
       const elapsed = (nowMs() - run.startsAtMs) / 1000;
       if (run.results.has(playerId) || elapsed < 0 || elapsed > ISLAND_RULES.waves.maximumSeconds) refuse(409, 'wave_over', 'This wave is over.');
-      const price = revivePrice(run.wave);
+      // A Tavern on the island (level 2 or more) takes 25% off, as wave_revive() checks the island's buildings.
+      const tavern = !!run.island && hasTavern([...run.island.built].map(id => ({ ...spotView(run.island, id), x: 0, z: 0 })));
+      const price = revivePrice(run.wave, { tavern });
       if (player.coins < price) refuse(409, 'insufficient_funds', `Helping a captain up costs ${price} coins. You need more coins.`);
       run.revived ??= new Set();
       const fall = `${fallen}@${downAt}`;

@@ -43,6 +43,7 @@ import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, WEAPON_BY_ID} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
+import {isRole} from '../campaign/houses.js';
 
 export const PATHS = Object.freeze({
   island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
@@ -218,7 +219,7 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
     // A tower picks one skill of its researched kind (no coins, the same every time: no click id).
     specialise({spot, spec, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
-      if (!Object.hasOwn(SPECS, spec ?? '')) return refuse(400, 'bad_spec', MESSAGES.badSpec);
+      if (!Object.hasOwn(SPECS, spec ?? '') && !isRole(spec)) return refuse(400, 'bad_spec', MESSAGES.badSpec);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return askSpots(() => transport.post(PATHS.specialise, {spot: sent(spot), spec, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
     },
