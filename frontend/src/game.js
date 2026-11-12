@@ -198,7 +198,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(disposed)return null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
-        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level)});
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),
+        // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
+        openHarborStall:id=>void(id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null)});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;

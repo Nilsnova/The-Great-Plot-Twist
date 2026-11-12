@@ -127,3 +127,38 @@
 .island-lobby-line{color:var(--u-gold);text-align:center}
 @media(max-height:760px){.island-lobby-qr{width:min(120px,34vw)}.island-lobby-code{font-size:24px}}
 .island-choice,.island-crew-row,.island-code,.island-hint,.island-tag,.island-next,.island-share,.island-message,.island-qr,.island-level,.island-cost{border-radius:var(--u-radius-xs)}
+/* The campaign (GAME-V3.md §4, §5): locked things say when they open; the Tech hub, the tower skills and the wreck. */
+.island-choice.is-locked{border-style:dashed}
+.island-choice.is-locked .island-choice-reason{color:var(--u-mute);font-weight:700}
+.island-card-body.is-locked .island-soon{opacity:1;font-weight:700;color:var(--u-ink)}
+.island-campaign-locked{display:flex;align-items:center;gap:var(--u-3);padding:var(--u-3);background:var(--u-deep);border:2px dashed var(--u-line);border-radius:var(--u-radius-xs)}
+.island-campaign-lock{font-size:28px;line-height:1}
+.island-skills-pick{display:grid;gap:var(--u-2);padding:var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold);border-radius:var(--u-radius-xs)}
+.island-skills-title{margin:0;font:800 var(--u-md)/1.2 var(--u-font);color:var(--u-gold)}
+.island-skills-line{margin:0;color:var(--u-mute);font-size:15px}
+.island-spec-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--u-2)}
+.island-spec{position:relative;display:grid;gap:2px;text-align:left;padding:10px 12px;min-height:56px;font:16px/1.3 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid var(--u-brass);box-shadow:var(--u-bevel-quiet);border-radius:var(--u-radius-xs);cursor:pointer}
+.island-spec:hover:not(:disabled){background:var(--u-raise)}
+.island-spec:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
+.island-spec:disabled{cursor:default}
+.island-spec.is-active{border-color:var(--u-gold);background:var(--u-raise)}
+.island-spec-line{color:var(--u-mute);font-size:14px}
+.island-spec-mark{position:absolute;top:6px;right:10px;color:var(--u-gold);font-weight:800}
+.island-stalls,.island-research{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
+.island-stall,.island-research-row{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
+.island-stall.is-locked,.island-research-row.is-locked{border-style:dashed}
+.island-research-row.is-done{border-color:var(--u-gold)}
+.island-stall-text,.island-research-text{display:grid;gap:2px;min-width:0}
+.island-stall-text p,.island-research-text p{margin:0}
+.island-stall-line,.island-research-skills{color:var(--u-mute);font-size:15px}
+.island-stall-reason,.island-research-reason{color:var(--u-ink);font-size:14px;font-weight:700}
+.island-research-head{display:flex;gap:var(--u-2);align-items:baseline;justify-content:space-between}
+.island-research-price{font-weight:800;color:var(--u-gold)}
+.island-stall .kit-button,.island-research-row .kit-button{flex:none;min-width:0;white-space:nowrap}
+.island-wreck-bar{height:18px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:999px;overflow:hidden}
+.island-wreck-fill{display:block;height:100%;background:var(--u-gold);border-radius:999px;transition:width .3s}
+.island-wreck-progress{margin:0;color:var(--u-ink);font-weight:700}
+.island-wreck-done{margin:0;padding:var(--u-2) var(--u-3);background:var(--u-raise);border-left:4px solid var(--u-gold);font-weight:800;color:var(--u-gold)}
+.island-wreck-gifts{display:flex;flex-wrap:wrap;gap:var(--u-2)}
+@media(max-width:520px){.island-stall,.island-research-row{flex-direction:column;align-items:stretch}.island-spec-list{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.island-wreck-fill{transition:none}}

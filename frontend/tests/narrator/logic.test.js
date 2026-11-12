@@ -72,11 +72,13 @@ describe('line selection', () => {
     expect(startTriggers(5, {boss: true})).toEqual(['wave_start:5']);
     expect(startTriggers(100)).toEqual(['wave_start:100']);
     expect(startTriggers(0)).toEqual([]);
-    expect(finishTriggers(3, true)).toEqual(['wave_unlock:3', 'wave_milestone:3']);
+    // The unlock lines come with campaign_unlocked (GAME-V3.md §4), not with the wave's result.
+    expect(finishTriggers(3, true)).toEqual(['wave_milestone:3']);
     expect(finishTriggers(100, true)).toEqual(['victory']);
     expect(finishTriggers(4, false)).toEqual(['wave_lost']);
     expect(finishTriggers(null, true)).toEqual(['wave_won']);
-    expect([wonLineDue(4), wonLineDue(11), wonLineDue(12)]).toEqual([true, false, true]);
+    // A wave that opens something (4, 12) waits for its unlock lines; 9 opens nothing, 11 is not every third.
+    expect([wonLineDue(4), wonLineDue(9), wonLineDue(11), wonLineDue(12), wonLineDue(21)]).toEqual([false, true, false, false, true]);
   });
   it('gives a caption without audio a reading time between 3 and 11 seconds', () => {
     expect(readingMs('Hi.')).toBe(3000);

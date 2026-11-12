@@ -97,6 +97,9 @@ WALLET_REASONS = (
     ("weapon_purchase", SPEND),
     # Added by supabase/migrations/20261112050000_captain_revive.sql (helping a fallen captain up).
     ("captain_revive", SPEND),
+    # Added by supabase/migrations/20261112060000_tech_hub.sql (the Tech hub and the wreck).
+    ("tech_research", SPEND),
+    ("wreck_repair", SPEND),
 )
 
 

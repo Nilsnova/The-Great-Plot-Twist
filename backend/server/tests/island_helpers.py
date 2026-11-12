@@ -16,6 +16,9 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/island_build, island_upgrade, island_hire, island_captain, pp_build, pp_upgrade,
     island_weapon_buy                        paid_replies[name] (default: done)
   * GET captain_skill_learns                 the repeat check of a skill (skill_refs)
+  * GET island_research                      the Tech hub's research of an island (research)
+  * POST rpc/island_research, island_wreck_repair  paid_replies[name] (default: done)
+  * POST rpc/island_specialise               paid_replies[name] (default: SPECIALISED)
   * POST rpc/island_learn_skill, island_weapon_equip
                                              paid_replies[name] (default: LEARNED, EQUIPPED)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
@@ -108,11 +111,14 @@ PAID_FUNCTIONS = (
     "pp_build",
     "pp_upgrade",
     "island_weapon_buy",
+    "island_research",
+    "island_wreck_repair",
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
 LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": False}
 REVIVED = {"status": "done", "price": 35, "balance": 65, "repeat": False}
 EQUIPPED = {"status": "done", "weapon": "musket"}
+SPECIALISED = {"status": "done", "plot": "cannon_1", "spec": "rapid"}
 
 
 def opened(code: str = "K7Q2M", wave_best: int = 0, flags: int = 0) -> dict:
@@ -169,7 +175,10 @@ class FakeIslandDatabase:
             "captain_skills": [],
             "weapons_owned": ["musket"],
             "weapon_equipped": "musket",
+            "wreck_paid": 0,
         }
+        # The Tech hub's research rows of every island ({"branch": "cannon"}), one list for all.
+        self.research: list[dict] = []
         self.ledger_refs: set[tuple[str, str]] = set()
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
@@ -214,6 +223,10 @@ class FakeIslandDatabase:
             "POST /rpc/game_list": self.games.list,
             "POST /rpc/game_members": self.games.members,
             "GET /island_members": self.games.read_membership,
+            "GET /island_research": lambda _: httpx.Response(200, json=self.research),
+            "POST /rpc/island_specialise": lambda _: self.answer(
+                self.paid_replies.get("island_specialise", SPECIALISED)
+            ),
         }
         for name in PAID_FUNCTIONS:
             handlers[f"POST /rpc/{name}"] = self.paid

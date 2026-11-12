@@ -24,7 +24,9 @@ const run = (wave, until, limit = 4000) => {
 describe('boarding', () => {
   it('lets an anchored ship unload its crew one by one, more with the wave number', () => {
     expect(['sloop', 'brig', 'warship', 'flagship'].map(kind => crewFor(kind, 1))).toEqual([2, 3, 6, 4]);
-    expect([crewFor('sloop', 15), crewFor('sloop', 16), crewFor('sloop', 31), crewFor('warship', 100)]).toEqual([2, 3, 4, CONFIG.boarding.crewMax]);
+    expect([crewFor('sloop', 15), crewFor('sloop', 16), crewFor('sloop', 31), crewFor('warship', 100)]).toEqual([2, 3, 4, 10]);
+    // From wave 46 the crews grow only every 30 waves (GAME-V3.md §4: the late waves stay fightable), never past crewMax.
+    expect([crewFor('sloop', 45), crewFor('sloop', 46), crewFor('sloop', 75), crewFor('sloop', 76), crewFor('redtide', 100)]).toEqual([4, 5, 5, 6, CONFIG.boarding.crewMax]);
     const wave = createWave({ seed: 3, wave: 1, lanes: EAST, island: { hp: 1000 } });
     const events = run(wave, () => wave.state().boardersLanded >= 6);
     const anchored = events.find(event => event.type === 'ship_anchored');

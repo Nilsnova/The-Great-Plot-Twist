@@ -6,7 +6,8 @@
 import * as THREE from 'three';
 import {loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
-import {SPOTS as ISLAND_SPOTS, CABIN, BELL, islandZones} from './spots.js';
+import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
+import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {SLOT_KINDS} from './td-rules.js';
 import {crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
@@ -77,6 +78,19 @@ function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name)
   return mesh;
 }
 
+// The campaign (GAME-V3.md §4): which frame a campaign building shows. A building that is not open yet is a
+// building site whose sign shows the wave it opens after; the wreck shows mended once her repair is paid.
+export function campaignArt(building, campaign) {
+  if (!campaign || !isOpen(campaign, building.item)) {
+    const wave = waveOf(building.item);
+    return [4, 5, 6, 8].includes(wave) ? `island-site-${wave}` : 'island-site';
+  }
+  if (building.mended && campaign.wreck && campaign.wreck.paid >= campaign.wreck.goal) return building.mended;
+  return building.art;
+}
+// A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
+export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
+
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
 // Returns {apply({spots, visitor, battle, unlocks}), update(dt, time), pickAt(x, z), dispose()}.
@@ -89,7 +103,7 @@ export function decorateIsland(place, ctx = {}) {
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(DRAWN).map(([kind, name]) => [kind, drawn(name)]));
   const ringTexture = drawn('build-ring');
-  const badgeTextures = Object.fromEntries(['wall', 'tower', 'watchtower', 'house'].map(kind => [kind, drawn(`build-badge-${kind}`)]));
+  const badgeTextures = Object.fromEntries(['wall', 'tower', 'watchtower', 'house', 'locked'].map(kind => [kind, drawn(`build-badge-${kind}`)]));
   const markers = new Map(), buildings = new Map(); // buildings: 'spot:kind' -> mesh (a tower spot has a cannon and a mortar)
   const slotOf = spot => spot.slot ?? (spot.kind === 'cannon' ? 'tower' : spot.kind);
   const kindsOf = spot => SLOT_KINDS[slotOf(spot)] ?? [spot.kind];
@@ -98,16 +112,31 @@ export function decorateIsland(place, ctx = {}) {
     ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
     const badge = sprite(root, badgeTextures[slotOf(spot) === 'tower' ? 'tower' : spot.kind], spot.x, spot.z, `island-badge:${spot.id}`);
     badge.position.y += .6; badge.userData.baseY = badge.position.y;
-    markers.set(spot.id, {ring, badge, set visible(value) { ring.visible = value; badge.visible = value; }});
+    const lock = sprite(root, badgeTextures.locked, spot.x, spot.z, `island-lock:${spot.id}`);
+    lock.position.y += .6; lock.visible = false;
+    markers.set(spot.id, {ring, badge, lock, set visible(value) { ring.visible = value; badge.visible = value; }});
     for (const kind of kindsOf(spot)) {
       const building = sprite(root, textures[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
       building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
     }
   }
   const bell = layout.bell === false ? null : sprite(root, textures.bell, BELL.x, BELL.z, 'island-bell');
+  // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
+  const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
+  const campaignTextures = new Map();
+  if (layout.bell !== false) for (const building of CAMPAIGN_BUILDINGS) {
+    const names = [...new Set([building.art, building.mended, 'island-site', ...[4, 5, 6, 8].map(n => `island-site-${n}`)].filter(Boolean))];
+    const meshes = {};
+    for (const name of names) {
+      const texture = campaignTextures.get(name) ?? drawn(name); campaignTextures.set(name, texture);
+      const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
+      mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
+    }
+    campaignMeshes.set(building.id, meshes);
+  }
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null}, disposed = false;
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
@@ -142,13 +171,19 @@ export function decorateIsland(place, ctx = {}) {
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
-  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null} = {}) {
+  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null} = {}) {
     if (disposed) return;
-    state = {spots, visitor, battle, unlocks, crew};
+    state = {spots, visitor, battle, unlocks, crew, campaign};
     const known = spots.length > 0;
+    for (const [id, meshes] of campaignMeshes) {
+      const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
+      for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
+    }
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true;
-      const open = !unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1);
+      // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
+      // open yet, shows a lock badge instead of the glowing ring.
+      const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
       const hidden = battle && ['wall', 'cannon', 'mortar'].includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
@@ -156,6 +191,7 @@ export function decorateIsland(place, ctx = {}) {
       }
       if (art) showSpot(spot, answer, hidden);
       markers.get(spot.id).visible = !built && known && !battle && open; // a visitor builds too, with their own coins
+      markers.get(spot.id).lock.visible = !built && known && !battle && !open;
     }
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
@@ -181,6 +217,7 @@ export function decorateIsland(place, ctx = {}) {
   function pickAt(x, z) {
     const candidates = [...SPOTS.map(spot => ({id: spot.id, x: spot.x, z: spot.z, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
+      ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
     for (const item of candidates) {

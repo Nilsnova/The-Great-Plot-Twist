@@ -13,18 +13,25 @@
 //   setPresence(presence)                     the captains in the room, for the arrival toasts (§11)
 //   enterGame({code, role}) / openLobby()       the games of GAME-V3.md §2: which game Play opens, its lobby
 //   attachGame(room)                           the game's room state (game-room.js, from the wave wiring)
+//   openHarbor(id) / openTechHub() / openWreck()  the campaign's buildings (GAME-V3.md §4, §5)
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
+// campaign_unlocked {wave, ids, code} (a won wave opened something on the island on screen, once per
+// island and wave on this page; the narrator plays its lines), tower_specialised {spot, spec},
 // island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
 import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
 import {decorateIsland} from './world.js';
-import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName} from './spots.js';
-import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText} from './card-model.js';
+import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
+  campaignBuilding} from './spots.js';
+import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
+  harborModel, techModel, wreckModel} from './card-model.js';
+import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
+import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
 import {SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
-import {readUnlocks, newUnlocks, CREW, BUILDINGS} from './td-rules.js';
+import {readUnlocks, CREW, BUILDINGS} from './td-rules.js';
 import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
@@ -36,6 +43,9 @@ export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 export const SPOTS_CHANGED = 'island_spots_changed';
 // What this device has been told once: the unlock lines (§9) and the musket hint (§10).
 export const NEWS_KEY = 'plot_twist_td_news_v1';
+// GAME-V3.md §4: a won wave opened something on the island on screen.
+export const CAMPAIGN_UNLOCKED = 'campaign_unlocked';
+export const TOWER_SPECIALISED = 'tower_specialised';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
 const notReady = () => Promise.resolve({ok: false, status: 503, code: 'not_ready',
   message: 'Sign in to build on your island. You can keep exploring.'});
@@ -44,7 +54,7 @@ const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
-  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer} = {}) {
+  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {}} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
@@ -64,10 +74,28 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   // The player's balance is the island's `coins` (GET /api/island and every answer after it); the HUD shows it.
   const tellCoins = (coins, options) => { if (!disposed && Number.isSafeInteger(coins)) { try { onCoins(coins, options); } catch { /* The HUD cannot stop the island. */ } } };
-  // A fresh island answer: coins and captain to the HUD, and a toast for every unlock it brings (§9).
+  // The campaign of the island on screen (GAME-V3.md §4): the best won wave seen per island code on this page.
+  // A higher one than before means a win opened something: campaign_unlocked {wave, ids} once per island and
+  // wave (the narrator plays its lines once per island game), and its toast.
+  const campaignSeen = new Map(), campaignTold = new Set();
+  function noteCampaign(answer) {
+    const code = islandCode(answer?.code ?? ''), wave = campaignOf(answer).wave;
+    if (!code) return;
+    const before = campaignSeen.get(code);
+    campaignSeen.set(code, Math.max(before ?? 0, wave));
+    if (before === undefined || wave <= before) return;
+    for (const step of openedBetween(before, wave)) {
+      const key = `${code}:${step.wave}`;
+      if (campaignTold.has(key)) continue;
+      campaignTold.add(key);
+      ui.toast(step.title, 'success', firstTime(`campaign_${step.wave}`) ? step.line : '');
+      emit({type: CAMPAIGN_UNLOCKED, wave: step.wave, ids: step.ids, code: displayIslandCode(code)});
+    }
+  }
+  // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
   const setOwn = next => {
     const before = own; own = next; tellCoins(next?.coins); tellCaptain(next);
-    for (const step of newUnlocks(before, next)) ui.toast(step.title, 'success', firstTime(`unlock_${step.wave}`) ? step.line : '');
+    if (!visiting) noteCampaign(next);
     if (!before || !next) return;
     // A won wave may bring a skill point (§14) or a weapon in the shop (§15).
     const from = readUnlocks(before).wonWave, to = readUnlocks(next).wonWave;
@@ -78,6 +106,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
   };
   const unlocks = () => (own ? readUnlocks(own) : null);
+  // What may be built on the island on screen (GAME-V3.md §4): its own campaign decides the kinds and levels;
+  // crew and captain levels stay the player's own.
+  const islandUnlocks = () => {
+    const mine = unlocks();
+    if (!visiting) return mine;
+    const there = readUnlocks({waveBest: campaignOf(visiting).wave});
+    return mine ? {...there, crew: mine.crew, captain: mine.captain} : there;
+  };
+  const campaign = () => (target() ? campaignOf(target()) : null);
   // Reads and writes of one island can cross: a read asked before our own build or upgrade may answer after
   // it, with the island as it was. reading(kind) gives a check for the answer: false when a newer read was
   // already used or a write answered meanwhile (that answer is newer than the read), so the island on screen
@@ -105,8 +142,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!own) return;
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();
-    // A won wave may unlock something (§9): read the island again; setOwn toasts what is new.
-    if (event.survived === true) { const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } }); }
+    // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
+    if (event.survived === true) {
+      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
+      if (visiting) void reloadVisit().then(() => { if (!disposed) refreshCard(); });
+    }
   });
   // The musket hint (§10), once per device, when the first wave starts.
   const stopStarted = on(WAVE_STARTED, () => {
@@ -126,7 +166,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   });
 
   function applyWorld() {
-    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: unlocks(), crew: target()?.crew ?? null});
+    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign()});
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
@@ -162,7 +202,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current() || !visiting) visiting = {...answer.data, code: islandCode(answer.data.code)};
+        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; noteCampaign(visiting); }
         ui.visit({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code)}, () => void sailHome());
       } else {
         endVisit(); ui.toast(answer.message, 'error');
@@ -263,7 +303,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     return buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
-      unlocks: own ? unlocks() : null, prices: own?.prices ?? null});
+      unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign()});
   }
   const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices});
   const captain = () => {
@@ -276,7 +316,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { captainTab = id; },
     pick: id => { pickedSkill = id; cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
     buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
-  const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), hire: () => openCrew()};
+  const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), hire: () => openCrew(),
+    specialise: (spotId, spec) => void specialise(spotId, spec)};
+  // The campaign's buildings (GAME-V3.md §4, §5): the Harbor, the Tech hub and the wreck.
+  let busyResearch = null, busyGift = null;
+  const harbor = () => harborModel({campaign: campaign()});
+  const tech = () => techModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyResearch, message: cardMessage || (!target() ? ownMessage : '')});
+  const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : '')});
+  const harborHandlers = {open: id => { ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
+  const techHandlers = {research: branch => void research(branch)};
+  const wreckHandlers = {give: amount => void giveWreck(amount)};
   function bell() {
     const wave = flow.current;
     return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: flow.secondsLeft(), busy: flow.busy,
@@ -292,7 +341,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (ui.open === 'crew') ui.crewCard(crew(), hire);
     else if (ui.open === 'captain') ui.captainCard(captain(), captainHandlers);
     else if (ui.open === 'captains') ui.captainsCard(captainsModel([...here.values()]));
+    else if (ui.open === 'harbor') ui.harborCard(harbor(), harborHandlers);
+    else if (ui.open === 'tech') ui.techCard(tech(), techHandlers);
+    else if (ui.open === 'wreck') ui.wreckCard(wreck(), wreckHandlers);
   }
+  function openHarbor() { openSpot = null; cardMessage = ''; ui.harborCard(harbor(), harborHandlers); }
+  function openTechHub() { openSpot = null; cardMessage = ''; ui.techCard(tech(), techHandlers); void freshOwn(); }
+  function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); }
   function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); }
   async function freshOwn() {
     if (own) return null;
@@ -325,6 +380,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (disposed) return;
     if (id === BELL.id) void openBell();
     else if (id === CABIN.id) openLobby();
+    else if (id === 'island_harbor') openHarbor();
+    else if (id === 'island_techhub') openTechHub();
+    else if (id === 'island_wreck') openWreck();
     else if (spotById(id) || isPointSpot(id)) openBuild(id);
   }
 
@@ -335,7 +393,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function reloadVisit() {
     if (!visiting) return;
     const current = reading('visit'), fresh = await api.visit(visiting.code);
-    if (!disposed && fresh.ok && visiting && current()) visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)};
+    if (!disposed && fresh.ok && visiting && current()) { visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(visiting); }
   }
   async function reloadOwn() { const current = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && current()) setOwn(mine.data); }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
@@ -397,6 +455,56 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       ui.toast(`${name} is now level ${now?.level ?? '?'}${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
     } else await refused(answer, place);
+    refreshCard();
+  }
+  // GAME-V3.md §5: a tower picks a skill (free); research a kind at the Tech hub; §4: coins into the wreck.
+  // Each answer is the island; the room hears island_changed, so every screen reads it again.
+  const placeCode = () => (visiting ? {code: visiting.code} : {});
+  async function landed(answer, spot) {
+    if (visiting) { wrote('visit'); wrote('own'); await Promise.all([reloadVisit(), reloadOwn()]); }
+    else { wrote('own'); setOwn(answer.data); }
+    emit({type: SPOTS_CHANGED, place: visiting ? 'visit' : 'own', spot});
+  }
+  async function specialise(spotId, spec) {
+    if (busySpot || !SPECS[spec]) return;
+    busySpot = spotId; busyKind = `spec:${spec}`; cardMessage = ''; refreshCard();
+    const answer = await api.specialise({spot: spotId, spec, ...placeCode()});
+    if (disposed) return;
+    busySpot = null; busyKind = null;
+    if (answer.ok) {
+      await landed(answer, spotId);
+      if (disposed) return;
+      emit({type: TOWER_SPECIALISED, spot: spotId, spec});
+      ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
+    } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind'].includes(answer.code)) await refreshDefended(); }
+    refreshCard();
+  }
+  async function research(branch) {
+    if (busyResearch || !BRANCH_BY_ID[branch]) return;
+    busyResearch = branch; cardMessage = ''; refreshCard();
+    const answer = await api.research({branch, ...placeCode()});
+    if (disposed) return;
+    busyResearch = null;
+    if (answer.ok) {
+      await landed(answer, 'tech_hub');
+      if (disposed) return;
+      emit({type: 'tech_researched', branch});
+      ui.toast(`${BRANCH_BY_ID[branch].name} researched! Tap a ${KINDS[branch].name.toLowerCase()} to pick its skill.`, 'success');
+    } else { cardMessage = answer.message; if (['known', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+    refreshCard();
+  }
+  async function giveWreck(amount) {
+    if (busyGift) return;
+    busyGift = amount; cardMessage = ''; refreshCard();
+    const answer = await api.repairWreck({amount, ...placeCode()});
+    if (disposed) return;
+    busyGift = null;
+    if (answer.ok) {
+      await landed(answer, 'wreck');
+      if (disposed) return;
+      const now = campaign()?.wreck;
+      ui.toast(now && now.paid >= now.goal ? 'The wreck is repaired! Sailing opens later.' : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
+    } else { cardMessage = answer.message; if (['repaired', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   async function hire(id) {
@@ -572,6 +680,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     label(zone) {
       if (zone === BELL.id) return flow.current && !flow.current.joined ? 'Join the defense' : 'Ring the harbor bell';
       if (zone === CABIN.id) return 'Players and invite';
+      const building = campaignBuilding(zone);
+      if (building) {
+        const shown = campaign();
+        return shown?.open.has(building.item) ? building.name : `${building.name} · ${opensText(waveOf(building.item))}`;
+      }
       const pointSpot = isPointSpot(zone), spot = pointSpot ? ppSpotById(zone) : spotById(zone);
       if (!spot) return undefined;
       const answer = (pointSpot ? point : target())?.spots.find(item => item.id === zone);
@@ -588,7 +701,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       colour: captainColour()}),
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,
-    openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame,
+    openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
+    specialise, research, giveWreck,
+    // The campaign of the island on screen (GAME-V3.md §4): {wave, open, locked, later, research, wreck}.
+    get campaign() { return campaign(); },
     // The game's room state (src/island/game-room.js), handed in by the wave wiring.
     attachGame(room) {
       stopGame(); game = room ?? null; gameCode = null;

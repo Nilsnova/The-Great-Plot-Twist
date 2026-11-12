@@ -52,6 +52,6 @@ it('the Pirate Point card offers the next level only when you have won the wave 
     return {locked, open};
   });
   expect(result.locked.upgrade).toBe(false);
-  expect(result.locked.soon).toMatch(/Level 2 · after wave 2/);
+  expect(result.locked.soon).toMatch(/Level 2: Opens after wave 2/);
   expect(result.open.upgrade).toBe(true);
 });

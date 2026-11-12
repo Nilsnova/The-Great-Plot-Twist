@@ -48,8 +48,10 @@ CODE_TRIES = 5
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
     "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best,"
-    "captain_skills,weapons_owned,weapon_equipped"
+    "captain_skills,weapons_owned,weapon_equipped,wreck_paid"
 )
+# The Tech hub's research of an island (20261112060000_tech_hub.sql): at most one row per branch.
+MAX_RESEARCH_ROWS = 10
 
 
 class OpenRow(BaseModel):
@@ -72,6 +74,11 @@ class BuildingRow(BaseModel):
     plot: StrictStr
     building_type: StrictStr
     level: StrictInt
+    spec: StrictStr | None = None
+
+
+class ResearchRow(BaseModel):
+    branch: StrictStr
 
 
 class PointBuildingRow(BaseModel):
@@ -91,6 +98,7 @@ class ProgressRow(BaseModel):
     captain_skills: list[StrictStr]
     weapons_owned: list[StrictStr]
     weapon_equipped: StrictStr
+    wreck_paid: StrictInt = 0
 
 
 class LearnedRow(BaseModel):
@@ -187,6 +195,7 @@ class Progress:
     skills: tuple[str, ...] = ()  # the captain's learnt skills, in the order learnt
     weapons_owned: tuple[str, ...] = ("musket",)
     weapon_equipped: str = "musket"
+    wreck_paid: int = 0  # the coins paid into this island's wreck so far (GAME-V3 section 4)
 
     @property
     def unlock_wave(self) -> int:
@@ -277,7 +286,7 @@ async def find_island(admin: SupabaseAdmin, code: str) -> Island | None:
 async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Built]:
     """{plot: Built(kind, level)} of every building that stands on the player's island."""
     query = {
-        "select": "plot,building_type,level",
+        "select": "plot,building_type,level,spec",
         "player_id": f"eq.{player_id}",
         "order": "plot.asc",
         "limit": str(MAX_BUILDING_ROWS),
@@ -286,8 +295,20 @@ async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Bu
     built = {}
     for row in rows:
         checked = read_model(BuildingRow, row)
-        built[checked.plot] = Built(checked.building_type, checked.level)
+        built[checked.plot] = Built(checked.building_type, checked.level, checked.spec)
     return built
+
+
+async def read_research(admin: SupabaseAdmin, owner: str) -> tuple[str, ...]:
+    """The research branches done on the island of `owner` (island_research), in branch order."""
+    query = {
+        "select": "branch",
+        "island_owner": f"eq.{owner}",
+        "order": "branch.asc",
+        "limit": str(MAX_RESEARCH_ROWS),
+    }
+    rows = await admin.select_rows("island_research", query)
+    return tuple(read_model(ResearchRow, row).branch for row in rows)
 
 
 async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
@@ -307,6 +328,7 @@ async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
         tuple(row.captain_skills),
         tuple(row.weapons_owned),
         row.weapon_equipped,
+        row.wreck_paid,
     )
 
 
@@ -405,11 +427,12 @@ async def start_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> WaveRow
 class WavePlaceRow(BaseModel):
     place: Literal["island", "pirate_point"]
     island_owner: StrictStr | None = None
+    wave: StrictInt | None = None
 
 
 async def read_wave_place(admin: SupabaseAdmin, wave_id: str) -> WavePlaceRow | None:
     """Where a wave runs (an island and its owner, or Pirate Point), or None for no such wave."""
-    query = {"select": "place,island_owner", "id": f"eq.{wave_id}", "limit": "1"}
+    query = {"select": "place,island_owner,wave", "id": f"eq.{wave_id}", "limit": "1"}
     rows = await admin.select_rows("wave_runs", query)
     return read_model(WavePlaceRow, rows[0]) if rows else None
 

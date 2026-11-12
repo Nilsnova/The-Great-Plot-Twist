@@ -67,6 +67,8 @@ also
 alternatives
 always
 american
+amount
+amounts
 amsterdam
 an
 analytics
@@ -211,6 +213,7 @@ blackness
 blank
 blanked
 blanket
+blasts
 blazes
 blind
 blinking
@@ -253,6 +256,7 @@ browser's
 browsers
 browsing
 brussels
+brutes
 budget
 build
 builder
@@ -321,6 +325,7 @@ cave
 cc
 cdn
 center
+chain
 chair
 challenge
 challenger
@@ -386,6 +391,7 @@ cloud
 cloudy
 clue
 clues
+cluster
 coast
 coastal
 coastguard
@@ -603,6 +609,7 @@ drawer
 drawing
 drawn
 draws
+dreadnoughts
 driftline
 driftwood
 drink
@@ -892,6 +899,7 @@ greyfathom
 greyfathom's
 grid
 groan
+ground
 groundhog
 grow
 guarantee
@@ -911,6 +919,7 @@ gulls
 gun
 gunner
 h
+hack
 had
 half
 hall
@@ -1000,6 +1009,7 @@ hub
 hud
 hull
 human
+hurt
 i
 i'd
 i'll
@@ -1069,6 +1079,7 @@ inviting
 ip
 ireland
 iron
+ironclads
 is
 island
 islands
@@ -1702,12 +1713,14 @@ rack
 radio
 rages
 raid
+raiders
 rain
 raise
 raises
 ran
 random
 range
+rapid
 rate
 rather
 reach
@@ -1782,6 +1795,7 @@ removed
 removes
 rendering
 repair
+repaired
 repairs
 repeat
 repeated
@@ -1802,6 +1816,7 @@ requirements
 requires
 rescue
 research
+researched
 reservation
 reservations
 reserve
@@ -2059,6 +2074,8 @@ slippery
 slips
 sloop
 slow
+slower
+slows
 small
 smaller
 smells
@@ -2102,6 +2119,7 @@ spelling
 spend
 spends
 spent
+spiked
 spiral
 spoiler
 spoken
@@ -2110,6 +2128,7 @@ sports
 spot
 spotify
 spots
+spotter
 spray
 sprite
 sprites

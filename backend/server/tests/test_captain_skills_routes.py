@@ -147,7 +147,7 @@ def test_a_weapon_refuses_a_bad_id_owned_locked_and_too_few_coins():
     assert_error(buy(world_at(9, weapons_owned=["musket", "pistols"]), "pistols"), 409, "owned")
     locked = buy(world_at(3), "long_rifle")
     assert_error(locked, 409, "locked")
-    assert locked.json()["error"]["message"] == "Unlocks after wave 6."
+    assert locked.json()["error"]["message"] == "Opens after wave 6."
     poor = world_at(9)
     poor.database.paid_replies["island_weapon_buy"] = REFUSED
     assert_error(buy(poor, "pistols"), 409, "insufficient_funds")

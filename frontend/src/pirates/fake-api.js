@@ -46,6 +46,8 @@
 import { createRandom, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
+import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
+import { BRANCHES, BRANCH_BY_ID, SPECS, readSpec } from '../campaign/tech.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -54,8 +56,11 @@ export const ISLAND_RULES = Object.freeze({
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
   pointSpots: Object.freeze(['pp_wall_1', 'pp_wall_2', 'pp_wall_3', 'pp_wall_4', 'pp_tower_1', 'pp_tower_2', 'pp_tower_3', 'pp_tower_4', 'pp_tower_5', 'pp_tower_6']),
-  loot: Object.freeze({ base: 10, perWave: 5, perHouse: 5, piratePointBase: 20 }),
-  waves: Object.freeze({ countdownSeconds: 10, minimumSeconds: 10, maximumSeconds: 900, highestWave: 50 }),
+  // lateFrom, latePerWave: from wave lateFrom on, each wave adds latePerWave instead of perWave (islands.json).
+  loot: Object.freeze({ base: 10, perWave: 5, perHouse: 5, piratePointBase: 20, lateFrom: 30, latePerWave: 2 }),
+  waves: Object.freeze({ countdownSeconds: 10, minimumSeconds: 10, maximumSeconds: 900, highestWave: 100 }),
+  // GAME-V3.md §4 and §5: the wreck's repair and the Tech hub's research (the server's numbers, islands.json).
+  wreck: Object.freeze({ goal: 500, gifts: Object.freeze([25, 100]) }),
   weather: Object.freeze({
     storm: Object.freeze({ kind: 'storm', label: 'Storm: 50% more pirate ships', ships: 1.5, fog: 0 }),
     fog: Object.freeze({ kind: 'fog', label: 'Fog: the pirates appear later', ships: 1.0, fog: 0.4 }),
@@ -92,9 +97,22 @@ export function unlocksAt(wave) {
 function spotView(island, id) {
   const level = island.levels?.get(id) ?? (island.built.has(id) ? 1 : 0), kind = island.kinds?.get(id) ?? kindOfSpot(id);
   const prices = BUILDINGS[kind].price;
-  return { id, kind, kinds: [...SLOT_KINDS[slotOfSpot(id)]], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null };
+  return { id, kind, kinds: [...SLOT_KINDS[slotOfSpot(id)]], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null,
+    spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null };
 }
-const lockedMessage = wave => `Unlocks after wave ${wave}.`;
+const lockedMessage = wave => `Opens after wave ${wave}.`;
+// The campaign of an island (GAME-V3.md §4), in the shape of GET /api/island's `campaign`.
+export function campaignAt(island) {
+  const wave = island.waveBest ?? 0, open = [], locked = {}, later = [];
+  for (const step of CAMPAIGN_STEPS) for (const id of step.opens) {
+    if (step.later) later.push(id); else if (step.wave <= wave) open.push(id); else locked[id] = step.wave;
+  }
+  return { wave, open, locked, later,
+    research: { done: BRANCHES.map(item => item.branch).filter(branch => (island.research ?? []).includes(branch)),
+      branches: BRANCHES.map(item => ({ branch: item.branch, name: item.name, price: item.price,
+        specs: item.specs.map(id => ({ id, name: SPECS[id].name })) })) },
+    wreck: { paid: Math.min(ISLAND_RULES.wreck.goal, island.wreck ?? 0), goal: ISLAND_RULES.wreck.goal, gifts: [...ISLAND_RULES.wreck.gifts] } };
+}
 
 export class FakeApiError extends Error {
   constructor(status, code, message, retryAfter = null) {
@@ -115,8 +133,9 @@ export function readIslandCode(text) {
 export const wantsFakeIslands = (search = '') => new URLSearchParams(search).get('islands') === 'fake';
 export const islandRoom = code => `live:place:isle_${readIslandCode(code)?.toLowerCase()}:1`;
 export function lootFor(wave, houses, piratePoint = false) {
-  const { base, perWave, perHouse, piratePointBase } = ISLAND_RULES.loot;
-  return piratePoint ? piratePointBase + perWave * wave : base + perWave * wave + perHouse * houses;
+  const { base, perWave, perHouse, piratePointBase, lateFrom, latePerWave } = ISLAND_RULES.loot;
+  const waves = perWave * Math.min(wave, lateFrom) + latePerWave * Math.max(0, wave - lateFrom);
+  return piratePoint ? piratePointBase + waves : base + waves + perHouse * houses;
 }
 const iso = ms => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace('.000Z', 'Z');
 
@@ -196,12 +215,20 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // The answer's unlocks (the backend's shape); the checks below read them back through readUnlocks.
   const unlocksOf = island => unlocksAt(unlocking ? Math.max(island.waveBest, island.owner === playerId ? me().pointBest ?? 0 : 0) : 99);
   const allowed = island => readUnlocks({ unlocks: unlocksOf(island) });
+  // GAME-V3.md §4: what may be built on an island follows that island's own best won wave, whoever pays.
+  const islandAllowed = island => readUnlocks({ unlocks: unlocksAt(unlocking ? island.waveBest : 99) });
+  const answerUnlocks = island => {
+    const mine = unlocksOf(island), there = unlocksAt(unlocking ? island.waveBest : 99);
+    const personal = id => id.startsWith('crew:') || id.startsWith('captain:');
+    return { wave: mine.wave, unlocked: [...mine.unlocked.filter(personal), ...there.unlocked.filter(id => !personal(id))],
+      locked: Object.fromEntries([...Object.entries(mine.locked).filter(([id]) => personal(id)), ...Object.entries(there.locked).filter(([id]) => !personal(id))]) };
+  };
   const view = () => {
     const player = me(), island = world.islands.get(player.code), captain = island.captain ?? 1;
     return { code: `ISLE-${island.code}`, coins: player.coins, waveBest: island.waveBest, flags: island.flags, spots: spots(island),
       crew: { ...island.crew }, prices: PRICES, nextWave: island.nextWave ?? island.waveBest + 1,
-      captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: unlocksOf(island),
-      skills: skillsOf(player, island), weapons: weaponsOf(island) };
+      captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: answerUnlocks(island),
+      skills: skillsOf(player, island), weapons: weaponsOf(island), campaign: campaignAt(island) };
   };
   // §14: skill points from the best wave you won anywhere (won_wave_best on the server), one per two waves.
   const wonOf = (player, island) => Math.max(player.wonBest ?? 0, island.waveBest ?? 0, player.pointBest ?? 0);
@@ -222,7 +249,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (island.owner !== playerId) mustBeMember(island); // GAME-V3.md §2: members build and upgrade there
     return island;
   };
-  const visitedView = island => ({ code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island), coins: me().coins });
+  const visitedView = island => ({ code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island), coins: me().coins,
+    campaign: campaignAt(island) });
   // Building and upgrading, shared by your island and Pirate Point (§5: same prices, same refusals).
   const once = (player, key, answer) => { if (player.actions.has(key)) return true; player.actions.set(key, true); return answer; };
   function buildOn(place, ids, { spot, kind, actionUid }, unlocks) {
@@ -237,6 +265,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     const [name, price] = ISLAND_RULES.kinds[kind];
     if (place.built.has(spot)) refuse(409, 'spot_taken', `${ISLAND_RULES.kinds[place.kinds.get(spot) ?? kindOfSpot(spot)][0]} already stands on this spot.`);
     if (unlocks && (unlocks.levels[kind] ?? 0) < 1) refuse(409, 'locked', lockedMessage(unlockWave({ kind, level: 1 })));
+    // A spot of a later campaign step (the inner wall ring after wave 5), on an island only.
+    if (unlocking && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
     if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     player.coins -= price; place.built.add(spot); place.levels.set(spot, 1); place.kinds.set(spot, kind); once(player, `build:${actionUid}`);
   }
@@ -273,13 +303,13 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async build({ code, ...body } = {}) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
-      buildOn(island, ISLAND_RULES.spots, body, allowed(mine));
+      buildOn(island, ISLAND_RULES.spots, body, islandAllowed(island));
       return island === mine ? view() : visitedView(island);
     },
     async upgrade({ code, ...body } = {}) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
-      upgradeOn(island, ISLAND_RULES.spots, body, allowed(mine));
+      upgradeOn(island, ISLAND_RULES.spots, body, islandAllowed(island));
       return island === mine ? view() : visitedView(island);
     },
     async hire({ crew, actionUid } = {}) {
@@ -333,6 +363,49 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!weaponsOf(island).owned.includes(weapon)) refuse(409, 'not_owned', `Buy the ${WEAPON_BY_ID[weapon].name.toLowerCase()} first.`);
       island.equipped = weapon;
       return view();
+    },
+    // GAME-V3.md §5: research a tower kind once for the island (yours, or the game of `code`), with coins.
+    async research({ branch, actionUid, code } = {}) {
+      if (typeof branch !== 'string' || !uid(actionUid)) invalid('Send the research and an action id.');
+      const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code), player = me();
+      const entry = BRANCH_BY_ID[branch];
+      if (!entry) refuse(400, 'bad_research', 'There is no such research.');
+      if (player.actions.has(`research:${actionUid}`)) return island === mine ? view() : visitedView(island);
+      if (unlocking && island.waveBest < waveOf('tech_hub')) refuse(409, 'locked', lockedMessage(waveOf('tech_hub')));
+      island.research = island.research ?? [];
+      if (island.research.includes(branch)) refuse(409, 'known', `${entry.name} are researched on this island already.`);
+      if (player.coins < entry.price) refuse(409, 'insufficient_funds', `${entry.name} cost ${entry.price} coins. You need more coins.`);
+      player.coins -= entry.price; island.research.push(branch); player.actions.set(`research:${actionUid}`, true);
+      return island === mine ? view() : visitedView(island);
+    },
+    // A tower picks one skill of its researched kind (free; picking again changes it).
+    async specialise({ spot, spec, code } = {}) {
+      if (typeof spot !== 'string' || typeof spec !== 'string') invalid('Send the spot and the skill.');
+      const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
+      spot = canonicalSpot(spot);
+      if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
+      if (!island.built.has(spot)) refuse(409, 'not_built', 'Build something on this spot first.');
+      const info = SPECS[spec], kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
+      if (!info) refuse(400, 'bad_spec', 'There is no such tower skill.');
+      if (info.branch !== kind) refuse(422, 'wrong_kind', `A ${ISLAND_RULES.kinds[kind][0].toLowerCase()} cannot learn that skill.`);
+      if (!(island.research ?? []).includes(kind)) refuse(409, 'not_researched', `Research ${BRANCH_BY_ID[kind].name.toLowerCase()} at the Tech hub first.`);
+      if (!(island.specs instanceof Map)) island.specs = new Map();
+      island.specs.set(spot, spec);
+      return island === mine ? view() : visitedView(island);
+    },
+    // GAME-V3.md §4: coins into the island's wreck, never past the goal.
+    async repairWreck({ amount, actionUid, code } = {}) {
+      if (!Number.isSafeInteger(amount) || !uid(actionUid)) invalid('Send the amount and an action id.');
+      const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code), player = me();
+      if (!ISLAND_RULES.wreck.gifts.includes(amount)) refuse(400, 'bad_gift', 'Pick one of the amounts shown.');
+      if (player.actions.has(`wreck:${actionUid}`)) return island === mine ? view() : visitedView(island);
+      if (unlocking && island.waveBest < waveOf('wreck')) refuse(409, 'locked', lockedMessage(waveOf('wreck')));
+      const paid = island.wreck ?? 0, goal = ISLAND_RULES.wreck.goal;
+      if (paid >= goal) refuse(409, 'repaired', 'The wreck is repaired. Sailing opens later.');
+      const gift = Math.min(amount, goal - paid);
+      if (player.coins < gift) refuse(409, 'insufficient_funds', `That costs ${gift} coins. You need more coins.`);
+      player.coins -= gift; island.wreck = paid + gift; player.actions.set(`wreck:${actionUid}`, true);
+      return island === mine ? view() : visitedView(island);
     },
     async piratePoint() { me(); return pointView(); },
     async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
@@ -390,7 +463,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       mustBeMember(island); // GAME-V3.md §2: join the game first (the owner always gets in)
       // The crew and the captain too, so host and visitors run the same wave (§8).
       return { code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island),
-        crew: { ...island.crew }, captain: { level: island.captain ?? 1 } };
+        crew: { ...island.crew }, captain: { level: island.captain ?? 1 }, campaign: campaignAt(island) };
     },
 
     async startWave({ where, actionUid } = {}) {
@@ -508,6 +581,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/skill') return reply(200, await api.learnSkill(body));
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
+        if (route === 'POST /api/island/research') return reply(200, await api.research(body));
+        if (route === 'POST /api/island/tower-skill') return reply(200, await api.specialise(body));
+        if (route === 'POST /api/island/wreck') return reply(200, await api.repairWreck(body));
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'POST /api/games') return reply(200, await api.createGame(body));
         if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
@@ -548,9 +624,11 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'actionUid'],
-  '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'] });
-// Keys a body may also carry: `code` builds or upgrades on a friend's island.
-const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'] });
+  '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
+  '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'] });
+// Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
+const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
+  '/api/island/research': ['code'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();
@@ -646,6 +724,9 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/skill') return ok(await api.learnSkill(body));
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
+      if (method === 'POST' && pathname === '/api/island/research') return ok(await api.research(body));
+      if (method === 'POST' && pathname === '/api/island/tower-skill') return ok(await api.specialise(body));
+      if (method === 'POST' && pathname === '/api/island/wreck') return ok(await api.repairWreck(body));
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
       if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));

@@ -1,7 +1,9 @@
-// The tower-defense numbers of docs/TOWER-DEFENSE.md as plain data (sections 2, 3, 9 and 10), for the
+// The tower-defense numbers of docs/TOWER-DEFENSE.md as plain data (sections 2, 3 and 10), for the
 // cards only: what a building does, what the next level costs and gives, what a crew member does, when
-// something unlocks. The server decides every price and refusal; an island answer's `prices`, `level`,
-// `crew`, `captain` and `unlocks` win over these tables whenever they are present. No DOM here.
+// something opens (the campaign table of docs/GAME-V3.md section 4, src/campaign/). The server decides
+// every price and refusal; an island answer's `prices`, `level`, `crew`, `captain` and `unlocks` win over
+// these tables whenever they are present. No DOM here.
+import {STEPS as CAMPAIGN_STEPS, opensText} from '../campaign/index.js';
 
 // §2: per kind, per level (index 0 = level 1). price[n] is the price of building (n = 0) or of the
 // upgrade to level n + 1.
@@ -36,23 +38,25 @@ export const CAPTAIN = Object.freeze({
 });
 export const CAPTAIN_MAX = CAPTAIN.stats.length;
 
-// §9: after winning wave N, these unlock. Levels are "the highest level allowed"; crew are "may hire".
-export const UNLOCK_STEPS = Object.freeze([
-  Object.freeze({wave: 0, levels: {wall: 1, cannon: 1}, captain: 1, crew: []}),
-  Object.freeze({wave: 1, captain: 3, crew: []}),
-  Object.freeze({wave: 2, levels: {wall: 2, cannon: 2, house: 1}, crew: []}),
-  Object.freeze({wave: 3, levels: {mortar: 1, watchtower: 1}, crew: []}),
-  Object.freeze({wave: 5, levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 2}, crew: ['gunner', 'carpenter']}),
-  Object.freeze({wave: 8, captain: 5, crew: ['lookout']}),
-]);
-// What one unlock step is called in its toast and its first-time line.
-export const UNLOCK_NEWS = Object.freeze({
-  1: {title: 'Captain upgrades unlocked!', line: 'Open Menu › Captain and skills to make your musket stronger.'},
-  2: {title: 'Level 2 and the house unlocked!', line: 'Tap a cannon or wall to upgrade it. Houses add loot after every won wave.'},
-  3: {title: 'New: Mortar unlocked!', line: 'A mortar hits every ship near the impact. Build one on a tower spot.'},
-  5: {title: 'New: Crew and level 3 unlocked!', line: 'Hire a gunner or a carpenter in Menu › Crew.'},
-  8: {title: 'New: Lookout unlocked!', line: 'The lookout spots ships earlier. Your captain can reach level 5.'},
-});
+// After winning wave N, these open (the levels, crew and captain levels of the campaign table, GAME-V3.md
+// section 4). Levels are "the highest level allowed"; crew are "may hire". Built from src/campaign/campaign.json.
+export const UNLOCK_STEPS = Object.freeze(CAMPAIGN_STEPS.map(step => {
+  const levels = {}, crew = [];
+  let captain = null;
+  for (const id of step.opens) {
+    const [name, value] = id.split(':');
+    if (name === 'crew') crew.push(value);
+    else if (name === 'captain') captain = Math.max(captain ?? 0, Number(value));
+    else if (Object.hasOwn(BUILDINGS, name) && value) levels[name] = Math.max(levels[name] ?? 0, Number(value));
+  }
+  if (!Object.keys(levels).length && !crew.length && captain === null) return null;
+  return Object.freeze({wave: step.wave, ...(Object.keys(levels).length ? {levels: Object.freeze(levels)} : {}),
+    ...(captain !== null ? {captain} : {}), crew: Object.freeze(crew)});
+}).filter(Boolean));
+// What one step is called in its toast and its first-time line (every step of the campaign table).
+export const UNLOCK_NEWS = Object.freeze(Object.fromEntries(CAMPAIGN_STEPS.filter(step => !step.later && step.wave > 0)
+  .map(step => [step.wave, Object.freeze({title: step.title, line: step.line})])));
+export {opensText};
 
 // The unlocks for a won wave, as one plain object:
 //   {wonWave, levels: {wall, cannon, mortar, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
@@ -79,7 +83,7 @@ export function unlockWave({kind = null, level = 1, crew = null, captain = null}
   return null;
 }
 
-// The island answer's unlocks (the backend's shape, TOWER-DEFENSE.md §9):
+// The island answer's unlocks (the backend's shape, TOWER-DEFENSE.md §9, GAME-V3.md §4):
 //   {wave, unlocked: ["wall:1", "cannon:1", "captain:1", "crew:gunner", ...], locked: {"mortar:1": 3, ...}}
 // read into the plain object of unlocksFor(), plus `locked` (id -> wave). Without `unlocked` it is
 // derived from unlocks.wave (or waveBest) with the table above.

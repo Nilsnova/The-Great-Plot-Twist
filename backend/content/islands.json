@@ -1,5 +1,5 @@
 {
-  "about": "Your own island, Pirate Point and the pirate waves (docs/TOWER-DEFENSE.md, docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices per level, the crew, the captain, the captain's skill tree and weapon shop, the unlocks, the starting coins, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island and GET /api/pirate-point. Every number changes only by pull request, and docs/TOWER-DEFENSE.md and docs/ECONOMY.md change with it.",
+  "about": "Your own island, Pirate Point and the pirate waves (docs/TOWER-DEFENSE.md, docs/BUILD-PLAN.md sections 3.2 to 3.4). The build spots, the prices per level, the crew, the captain, the captain's skill tree and weapon shop, the starting coins, the tower research of the Tech hub, the wreck, the loot and the wave timing. Server only, never served: the browser gets everything through GET /api/island and GET /api/pirate-point. Every number changes only by pull request, and docs/TOWER-DEFENSE.md and docs/ECONOMY.md change with it. What opens after which won wave lives in campaign.json (docs/GAME-V3.md section 4).",
   "playMoneyNote": "Play money. No cash value. It cannot be bought or cashed out.",
   "startingCoins": 200,
   "kinds": [
@@ -10,8 +10,7 @@
         10,
         20,
         40
-      ],
-      "unlockWave": 0
+      ]
     },
     {
       "kind": "cannon",
@@ -20,8 +19,7 @@
         30,
         60,
         120
-      ],
-      "unlockWave": 0
+      ]
     },
     {
       "kind": "mortar",
@@ -30,8 +28,7 @@
         60,
         120,
         240
-      ],
-      "unlockWave": 3
+      ]
     },
     {
       "kind": "watchtower",
@@ -39,8 +36,7 @@
       "prices": [
         40,
         80
-      ],
-      "unlockWave": 3
+      ]
     },
     {
       "kind": "house",
@@ -48,14 +44,8 @@
       "prices": [
         50,
         100
-      ],
-      "unlockWave": 2
+      ]
     }
-  ],
-  "levelUnlockWaves": [
-    0,
-    2,
-    5
   ],
   "spots": [
     {
@@ -271,22 +261,19 @@
       "crew": "gunner",
       "name": "Gunner",
       "coins": 40,
-      "max": 2,
-      "unlockWave": 5
+      "max": 2
     },
     {
       "crew": "carpenter",
       "name": "Carpenter",
       "coins": 30,
-      "max": 2,
-      "unlockWave": 5
+      "max": 2
     },
     {
       "crew": "lookout",
       "name": "Lookout",
       "coins": 25,
-      "max": 1,
-      "unlockWave": 8
+      "max": 1
     }
   ],
   "captain": {
@@ -296,13 +283,6 @@
       40,
       80,
       160
-    ],
-    "unlockWaves": [
-      0,
-      1,
-      1,
-      8,
-      8
     ]
   },
   "captainSkills": {
@@ -415,12 +395,99 @@
       "unlockWave": 10
     }
   ],
+  "research": {
+    "about": "The Tech hub (docs/GAME-V3.md section 5): research a tower kind once per island with coins (any member pays), then every tower of that kind on the island may pick one of its skills. The ids repeat frontend/src/campaign/tech.js and the check rules of supabase/migrations/20261112060000_tech_hub.sql.",
+    "branches": [
+      {
+        "branch": "cannon",
+        "name": "Cannon skills",
+        "coins": 180,
+        "specs": [
+          {
+            "spec": "rapid",
+            "name": "Rapid"
+          },
+          {
+            "spec": "heavy",
+            "name": "Heavy shot"
+          },
+          {
+            "spec": "chain",
+            "name": "Chain shot"
+          }
+        ]
+      },
+      {
+        "branch": "mortar",
+        "name": "Mortar skills",
+        "coins": 220,
+        "specs": [
+          {
+            "spec": "cluster",
+            "name": "Cluster"
+          },
+          {
+            "spec": "fire_pot",
+            "name": "Fire pot"
+          },
+          {
+            "spec": "long_range",
+            "name": "Long range"
+          }
+        ]
+      },
+      {
+        "branch": "wall",
+        "name": "Wall skills",
+        "coins": 120,
+        "specs": [
+          {
+            "spec": "stone",
+            "name": "Stone"
+          },
+          {
+            "spec": "spiked",
+            "name": "Spiked"
+          },
+          {
+            "spec": "quick_mend",
+            "name": "Quick mend"
+          }
+        ]
+      },
+      {
+        "branch": "watchtower",
+        "name": "Watchtower skills",
+        "coins": 160,
+        "specs": [
+          {
+            "spec": "spotter",
+            "name": "Spotter"
+          },
+          {
+            "spec": "signal_fire",
+            "name": "Signal fire"
+          }
+        ]
+      }
+    ]
+  },
+  "wreck": {
+    "about": "The wreck (docs/GAME-V3.md section 4, after wave 6): members pay coins into her repair; the island keeps the coins paid so far. Sailing out comes later.",
+    "goal": 500,
+    "gifts": [
+      25,
+      100
+    ]
+  },
   "loot": {
     "base": 25,
     "perWave": 10,
     "perHouse": 10,
     "piratePointBase": 40,
-    "bossMultiplier": 2
+    "bossMultiplier": 2,
+    "lateFrom": 30,
+    "latePerWave": 4
   },
   "revive": {
     "about": "Captain health (docs/GAME-V3.md section 3): a teammate who helps a fallen captain up during wave n pays base + perWave x n coins (reason captain_revive). The same numbers are CONFIG.health.revive in frontend/src/pirates/sim.js; a test keeps them equal.",

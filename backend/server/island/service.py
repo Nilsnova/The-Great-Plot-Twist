@@ -7,6 +7,10 @@
     captain()  one captain level up (section 10)
     learn_skill()  one skill of the captain's skill tree, paid with skill points (section 14)
     buy_weapon(), equip_weapon()  the weapon shop (section 15)
+    research()    the Tech hub: one research branch for the island, paid by any member (GAME-V3 5)
+    specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5)
+    repair_wreck()  coins into the island's wreck (GAME-V3 section 4)
+    harbor_wave() the best wave of the games a player is in: the Harbor opens after wave 4
     visit()    another player's island, found by its code
     invite()   the friend invite: an anonymous guest with a valid island code is admitted
 
@@ -45,6 +49,8 @@ CREW_PREFIX = "crew:"
 CAPTAIN_PREFIX = "captain:"
 SKILL_PREFIX = "skill:"
 WEAPON_PREFIX = "weapon:"
+RESEARCH_PREFIX = "research:"
+WRECK_PREFIX = "wreck:"
 # The island has no timber any more (BUILD-PLAN 3.2): coins only.
 NO_TIMBER = 0
 
@@ -54,6 +60,19 @@ class Unlocks:
     wave: int  # the best wave the player won (own island or Pirate Point)
     unlocked: tuple[str, ...]  # "wall:1", "crew:gunner", "captain:2", ...
     locked: dict[str, int]  # the rest, with the wave each one needs
+
+
+@dataclass(frozen=True)
+class CampaignView:
+    """The campaign of the island on screen (docs/GAME-V3.md section 4)."""
+
+    wave: int  # the island's best won wave: it decides what is open there
+    opened: tuple[str, ...]
+    locked: dict[str, int]  # id -> the wave it opens after
+    later: tuple[str, ...]  # named in the table, not built yet (the ship)
+    research: tuple[str, ...]  # the Tech hub's researched branches
+    wreck_paid: int  # coins paid into the wreck so far
+    wreck_goal: int
 
 
 @dataclass(frozen=True)
@@ -89,6 +108,7 @@ class IslandView:
     unlocks: Unlocks
     skills: SkillsView
     weapons: WeaponsView
+    campaign: CampaignView
 
 
 @dataclass(frozen=True)
@@ -100,6 +120,7 @@ class VisitView:
     wave_best: int
     spots: tuple[SpotView, ...]
     crew: dict[str, int]  # the owner's crew: every visitor simulates the same defenses
+    campaign: CampaignView
 
 
 @dataclass(frozen=True)
@@ -112,11 +133,32 @@ def no_such_island() -> ApiError:
     return ApiError(404, "no_such_island", "There is no island with that code.")
 
 
-def unlocks_of(catalogue: IslandCatalogue, wave: int) -> Unlocks:
+def unlocks_of(catalogue: IslandCatalogue, wave: int, island_wave: int | None = None) -> Unlocks:
+    """The unlocks of GET /api/island. `wave` is the player's own unlock wave (crew and captain);
+    the building levels follow `island_wave`, the best wave won on the island on screen
+    (docs/GAME-V3.md section 4). Without it both follow `wave`."""
+    island = wave if island_wave is None else island_wave
     table = rules.unlock_table(catalogue)
-    unlocked = tuple(item for item, needed in table if needed <= wave)
-    locked = {item: needed for item, needed in table if needed > wave}
+    personal = lambda item: item.startswith(("crew:", "captain:"))  # noqa: E731
+    reached = {item: (wave if personal(item) else island) >= needed for item, needed in table}
+    unlocked = tuple(item for item, _ in table if reached[item])
+    locked = {item: needed for item, needed in table if not reached[item]}
     return Unlocks(wave, unlocked, locked)
+
+
+def campaign_of(
+    catalogue: IslandCatalogue, wave: int, research: tuple[str, ...] = (), wreck_paid: int = 0
+) -> CampaignView:
+    opened, locked, later = rules.campaign_table(catalogue, wave)
+    return CampaignView(
+        wave,
+        tuple(opened),
+        locked,
+        tuple(later),
+        tuple(research),
+        min(wreck_paid, catalogue.wreck.goal),
+        catalogue.wreck.goal,
+    )
 
 
 def view_of(
@@ -126,10 +168,11 @@ def view_of(
     built: dict[str, Built],
     progress: Progress,
     personal: Progress | None = None,
+    research: tuple[str, ...] = (),
 ) -> IslandView:
-    """The island of `progress` (its spots, best and next wave) with the personal part (coins,
-    crew, captain, unlocks) of `personal`: the same player on their own island, the visitor
-    after a co-op build or upgrade on a friend's island."""
+    """The island of `progress` (its spots, best and next wave, campaign) with the personal part
+    (coins, crew, captain, unlocks) of `personal`: the same player on their own island, the
+    visitor after a co-op build or upgrade on a friend's island."""
     mine = progress if personal is None else personal
     return IslandView(
         code=shown(island.code),
@@ -141,9 +184,10 @@ def view_of(
         crew=mine.crew,
         captain_level=mine.captain_level,
         captain_next_price=rules.captain_next_price(catalogue, mine.captain_level),
-        unlocks=unlocks_of(catalogue, mine.unlock_wave),
+        unlocks=unlocks_of(catalogue, mine.unlock_wave, progress.wave_best),
         skills=skills_of(catalogue, mine),
         weapons=weapons_of(catalogue, mine),
+        campaign=campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid),
     )
 
 
@@ -177,7 +221,8 @@ async def look_open(
     built = await store.read_built_spots(admin, island.owner)
     progress = await store.read_progress(admin, island.owner)
     personal = None if payer is None else await store.read_progress(admin, payer)
-    return view_of(catalogue, island, coins, built, progress, personal)
+    research = await store.read_research(admin, island.owner)
+    return view_of(catalogue, island, coins, built, progress, personal, research)
 
 
 async def target_island(
@@ -268,7 +313,8 @@ async def build(
 
     built = await store.read_built_spots(admin, player_id)
     progress = await store.read_progress(admin, player_id)
-    spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.unlock_wave)
+    # GAME-V3 section 4: the island's own best won wave decides what may be built on it.
+    spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.wave_best)
     validate_transaction(-price, "building_purchase", ref)
     arguments = islet_store.build_arguments(
         player_id, spot.id, kind, Cost(price, NO_TIMBER), NO_TIMBER, ref
@@ -283,7 +329,8 @@ async def build(
     if not outcome.done:
         raise refusal_error(outcome, catalogue, kind)
     built[spot.id] = Built(kind, 1)
-    return view_of(catalogue, island, outcome.balance, built, progress)
+    research = await store.read_research(admin, island.owner)
+    return view_of(catalogue, island, outcome.balance, built, progress, None, research)
 
 
 async def build_with_friend(
@@ -295,11 +342,12 @@ async def build_with_friend(
     kind: str,
     action_uid: str,
 ) -> IslandView:
-    """The co-op build on a friend's island through island_build(). Same refusals."""
+    """The co-op build on a friend's island through island_build(). Same refusals; the friend's
+    island's best won wave decides what is open there (GAME-V3 section 4)."""
     if not await store.ledger_has(admin, payer, "building_purchase", REF_PREFIX + action_uid):
         built = await store.read_built_spots(admin, island.owner)
-        progress = await store.read_progress(admin, payer)
-        spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.unlock_wave)
+        progress = await store.read_progress(admin, island.owner)
+        spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.wave_best)
         arguments = {
             "p_player_id": payer,
             "p_island_owner": island.owner,
@@ -323,15 +371,16 @@ async def upgrade(
     code: str | None = None,
 ) -> IslandView:
     """One level up for the building on `spot_id`, on the player's own island or (with `code`)
-    on a friend's island, paid by the player with their own unlocks. 404 no_such_spot, 404
-    no_such_island, 403 not_member, 409 not_built, 409 max_level, 409 locked, 409
-    insufficient_funds. A repeated actionUid charges nothing."""
+    on a friend's island, paid by the player; the island's best won wave decides the levels that
+    are open (GAME-V3 section 4). 404 no_such_spot, 404 no_such_island, 403 not_member, 409
+    not_built, 409 max_level, 409 locked, 409 insufficient_funds. A repeated actionUid charges
+    nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
     island, payer = await target_island(admin, catalogue, player_id, code)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):
         built = await store.read_built_spots(admin, island.owner)
-        progress = await store.read_progress(admin, player_id)
-        spot, kind, reachable = rules.check_upgrade(catalogue, spot_id, built, progress.unlock_wave)
+        progress = await store.read_progress(admin, island.owner)
+        spot, kind, reachable = rules.check_upgrade(catalogue, spot_id, built, progress.wave_best)
         arguments = {
             "p_player_id": player_id,
             "p_island_owner": island.owner,
@@ -478,6 +527,136 @@ async def equip_weapon(
     return await look_open(admin, catalogue, island)
 
 
+# --- the Tech hub, tower skills and the wreck (docs/GAME-V3.md sections 4 and 5) ---
+
+
+def campaign_refusal(
+    refusal: Refusal, catalogue: IslandCatalogue, item: str, name: str
+) -> ApiError:
+    """The error for a research, a tower skill or a wreck gift that its function refused."""
+    reason = refusal.reason
+    if reason == "not_member":
+        return games.not_member()
+    if reason == "locked":
+        return rules.locked(catalogue.campaign.wave_of(item) or 0)
+    if reason == "known":
+        return ApiError(409, "known", f"{name} are researched on this island already.")
+    if reason == "not_researched":
+        return ApiError(409, "not_researched", f"Research {name.lower()} at the Tech hub first.")
+    if reason == "repaired":
+        return rules.wreck_repaired()
+    return paid_refusal(refusal, name)
+
+
+async def research(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    branch: str,
+    action_uid: str,
+    code: str | None = None,
+) -> IslandView:
+    """One research branch at the Tech hub of the island (your own, or with `code` the game you
+    are in), paid by the player with coins (ledger ref research:<actionUid>, reason
+    tech_research). Every tower of that kind on the island may then pick one of its skills.
+    400 bad_research, 404 no_such_island, 403 not_member, 409 locked (after wave 8), 409 known,
+    409 insufficient_funds. A repeated actionUid charges nothing."""
+    entry = rules.research_named(catalogue, branch)
+    island, payer = await target_island(admin, catalogue, player_id, code)
+    ref = f"{RESEARCH_PREFIX}{action_uid}"
+    if not await store.ledger_has(admin, player_id, "tech_research", ref):
+        progress = await store.read_progress(admin, island.owner)
+        done = await store.read_research(admin, island.owner)
+        rules.check_research(catalogue, entry.branch, done, progress.wave_best)
+        arguments = {
+            "p_player_id": player_id,
+            "p_island_owner": island.owner,
+            "p_branch": entry.branch,
+            "p_action_uid": action_uid,
+            "p_price": entry.coins,
+            "p_unlock_wave": catalogue.campaign.wave_of("tech_hub") or 0,
+        }
+        outcome = await store.run_paid(admin, "island_research", arguments)
+        if isinstance(outcome, Refusal):
+            raise campaign_refusal(outcome, catalogue, "tech_hub", entry.name)
+    return await look_open(admin, catalogue, island, payer)
+
+
+async def specialise(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    spot_id: str,
+    spec: str,
+    code: str | None = None,
+) -> IslandView:
+    """A tower on the island picks one skill of its researched branch (no coins; picking again
+    changes it, for the next wave). 400 bad_spec, 404 no_such_spot, 404 no_such_island, 403
+    not_member, 409 not_built, 422 wrong_kind, 409 not_researched. Safe to repeat."""
+    island, payer = await target_island(admin, catalogue, player_id, code)
+    built = await store.read_built_spots(admin, island.owner)
+    done = await store.read_research(admin, island.owner)
+    spot, branch = rules.check_specialise(catalogue, spot_id, spec, built, done)
+    arguments = {
+        "p_player_id": player_id,
+        "p_island_owner": island.owner,
+        "p_plot": spot.id,
+        "p_branch": branch,
+        "p_spec": spec,
+    }
+    reply = await admin.call_function("island_specialise", arguments)
+    refusal = store.refusal_or_none(reply)
+    if refusal is not None:
+        name = rules.research_named(catalogue, branch).name
+        if refusal.reason == "not_built":
+            raise ApiError(409, "not_built", "Build something on this spot first.")
+        if refusal.reason == "wrong_kind":
+            raise rules.BuildRefused(422, "wrong_kind", "Something else stands on this spot.")
+        raise campaign_refusal(refusal, catalogue, "tech_hub", name)
+    return await look_open(admin, catalogue, island, payer)
+
+
+async def repair_wreck(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    amount: int,
+    action_uid: str,
+    code: str | None = None,
+) -> IslandView:
+    """Coins into the wreck of the island (your own, or the game of `code`): ledger ref
+    wreck:<actionUid>, reason wreck_repair. Never more than the repair still needs. 400 bad_gift,
+    404 no_such_island, 403 not_member, 409 locked (after wave 6), 409 repaired, 409
+    insufficient_funds. A repeated actionUid charges nothing."""
+    island, payer = await target_island(admin, catalogue, player_id, code)
+    ref = f"{WRECK_PREFIX}{action_uid}"
+    if not await store.ledger_has(admin, player_id, "wreck_repair", ref):
+        progress = await store.read_progress(admin, island.owner)
+        rules.check_wreck_gift(catalogue, amount, progress.wreck_paid, progress.wave_best)
+        arguments = {
+            "p_player_id": player_id,
+            "p_island_owner": island.owner,
+            "p_amount": amount,
+            "p_action_uid": action_uid,
+            "p_goal": catalogue.wreck.goal,
+            "p_unlock_wave": catalogue.campaign.wave_of("wreck") or 0,
+        }
+        outcome = await store.run_paid(admin, "island_wreck_repair", arguments)
+        if isinstance(outcome, Refusal):
+            raise campaign_refusal(outcome, catalogue, "wreck", "The wreck repair")
+    return await look_open(admin, catalogue, island, payer)
+
+
+async def harbor_wave(admin: SupabaseAdmin, player_id: str) -> int | None:
+    """The best wave won in any game the player is in (their own island and the games they
+    joined), or None for a player with no island game at all (the class demo). The Harbor's
+    market calls open after wave 4 of the campaign (docs/GAME-V3.md section 4)."""
+    listed = await games.mine(admin, player_id)
+    if not listed:
+        return None
+    return max(game.wave_best for game in listed)
+
+
 async def find_by_code(admin: SupabaseAdmin, typed_code: str) -> Island:
     """The island of a typed code (with or without ISLE-, any case). 404 if none."""
     code = read_code(typed_code)
@@ -498,8 +677,12 @@ async def visit(
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
     spots = rules.plan_spots(catalogue, built)
-    crew = (await store.read_progress(admin, island.owner)).crew
-    return VisitView(shown(island.code), owner_name, island.wave_best, spots, crew)
+    progress = await store.read_progress(admin, island.owner)
+    research = await store.read_research(admin, island.owner)
+    campaign = campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid)
+    return VisitView(
+        shown(island.code), owner_name, island.wave_best, spots, progress.crew, campaign
+    )
 
 
 async def invite(admin: SupabaseAdmin, typed_code: str) -> InviteView:

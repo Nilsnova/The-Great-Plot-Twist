@@ -1,4 +1,4 @@
-// The narrator on the bus: once per game, welcome back, the unlock lines from the wave won, the queue,
+// The narrator on the bus: once per game, welcome back, the unlock lines of campaign_unlocked, the queue,
 // missing audio, settings; then the real caption card and its Skip button in Chromium.
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {createNarrator, narratorVoices} from '../../src/narrator/index.js';
@@ -96,7 +96,7 @@ describe('the narrator on the bus', () => {
     narrator.dispose();
   });
 
-  it('teaches waves once, unlocks from the wave won, and deduplicates the two wave_finished events', async () => {
+  it('teaches waves once, plays the unlocks of campaign_unlocked once, and deduplicates the two wave_finished events', async () => {
     const {narrator, events} = make();
     events.emit({type: 'wave_started_server', waveId: 'w1', wave: 1, where: 'own'});
     events.emit({type: 'wave_controller_started', waveId: 'w1', wave: 1});
@@ -106,12 +106,21 @@ describe('the narrator on the bus', () => {
     events.emit({type: 'wave_finished', waveId: 'w1', survived: true, shipsSunk: 3}); // pirates lane, no number
     events.emit({type: 'wave_finished', waveId: 'w1', survived: true, wave: 1});      // island lane
     await flush(0);
+    // The win alone says nothing about unlocks (and no generic "wave won" on a wave that opens something).
+    expect(narrator.speaking).toBe(null);
+    // The island answer says what opened (src/island/index.js): campaign_unlocked plays its lines.
+    events.emit({type: 'campaign_unlocked', wave: 1, ids: ['captain:2', 'captain:3', 'house:1'], code: 'ISLE-K7Q2M'});
+    await flush(0);
     expect(narrator.speaking).toBe('unlock_captain');
-    expect(narrator.queued).toEqual(['unlock_houses']); // the unlock is news: no generic "wave won" line
+    expect(narrator.queued).toEqual(['unlock_houses']);
     await flush(30000);
-    // Wave 1 again on the same island (a lost run restarted): nothing new to tell, the won line plays.
-    events.emit({type: 'wave_started_server', waveId: 'w1b', wave: 1});
-    events.emit({type: 'wave_finished', waveId: 'w1b', survived: true});
+    // Told once per island game: the same event again (another tab, a reload) says nothing.
+    events.emit({type: 'campaign_unlocked', wave: 1, ids: ['house:1'], code: 'ISLE-K7Q2M'});
+    await flush(0);
+    expect(narrator.speaking).toBe(null);
+    // Wave 2 (it opens something too): the won line waits for campaign_unlocked; wave 9 opens nothing: it plays.
+    events.emit({type: 'wave_started_server', waveId: 'w9', wave: 9});
+    events.emit({type: 'wave_finished', waveId: 'w9', survived: true});
     await flush(0);
     expect(narrator.speaking).toBe('wave_won_2');
     narrator.dispose();

@@ -31,11 +31,14 @@ describe('island api: accepted answers', () => {
       'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2',
       'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']);
     expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar'], built: false, level: 0, cost: 30,
-      upgradeCost: null});
+      upgradeCost: null, spec: null});
     expect(answer.data.prices).toMatchObject({kinds: {wall: [10, 20, 40], mortar: [60, 120, 240]}, crew: {gunner: {price: 40, max: 2}}, captain: [0, 20, 40, 80, 160]});
     expect(answer.data.crew).toEqual({gunner: 0, carpenter: 0, lookout: 0});
     expect(answer.data.captain).toEqual({level: 1, nextPrice: 20});
-    expect(answer.data.unlocks).toMatchObject({wave: 0, unlocked: ['wall:1', 'cannon:1', 'captain:1'], locked: {'mortar:1': 3, 'crew:gunner': 5, 'captain:2': 1}});
+    expect(answer.data.unlocks).toMatchObject({wave: 0, unlocked: ['captain:1', 'wall:1', 'cannon:1'], locked: {'mortar:1': 2, 'crew:gunner': 3, 'captain:2': 1}});
+    // The campaign of the island (GAME-V3.md §4): what is open, what opens after which wave, the Tech hub and the wreck.
+    expect(answer.data.campaign).toMatchObject({wave: 0, locked: {harbor: 4, ring_walls: 5, wreck: 6, tech_hub: 8}, later: ['ship'],
+      research: {done: []}, wreck: {paid: 0, goal: 500, gifts: [25, 100]}});
   });
   it('builds a cannon for 30 coins and answers the new island', async () => {
     const {api, sent} = setup();
@@ -186,15 +189,18 @@ describe('island api: one click id per build and per bell', () => {
     expect(built.data.spots.find(spot => spot.id === 'wall_3')).toMatchObject({built: true, level: 1});
     expect(transport.dev.read().coins).toBe(90);
     expect((await api.getIsland()).data.spots.find(spot => spot.id === 'wall_3').built).toBe(false);
-    expect((await api.upgrade({spot: 'cannon_1', code: 'ISLE-FR3ND'}))).toMatchObject({ok: false, code: 'locked', message: 'Unlocks after wave 2.'});
+    // The friend's island has won wave 2, so level 2 is open there (GAME-V3.md §4: the island's campaign
+    // decides); its inner wall ring opens after wave 5.
+    expect((await api.upgrade({spot: 'cannon_1', code: 'ISLE-FR3ND'}))).toMatchObject({ok: true});
+    expect((await api.build({spot: 'wall_7', kind: 'wall', code: 'ISLE-FR3ND'}))).toMatchObject({ok: false, code: 'locked', message: 'Opens after wave 5.'});
     expect(await api.build({spot: 'wall_3', kind: 'wall', code: 'nope'})).toMatchObject({ok: false, code: 'validation_error'});
     const point = await api.piratePoint();
-    expect(point.data).toMatchObject({waveBest: 0, coins: 90});
+    expect(point.data).toMatchObject({waveBest: 0, coins: 30});
   });
   it('the function-level fake has the same names', () => {
     const api = createFakeIslandApi();
     expect(Object.keys(api).sort()).toEqual(['build', 'buyWeapon', 'createGame', 'currentWave', 'dev', 'equipWeapon', 'finishWave', 'games', 'getIsland',
       'heldActionUid', 'hire', 'joinGame', 'joinInvite', 'joinWave', 'learnSkill', 'leaveGame', 'lobby', 'piratePoint', 'pointBuild', 'pointUpgrade',
-      'reviveCaptain', 'startWave', 'upgrade', 'upgradeCaptain', 'visit']);
+      'repairWreck', 'research', 'reviveCaptain', 'specialise', 'startWave', 'upgrade', 'upgradeCaptain', 'visit']);
   });
 });

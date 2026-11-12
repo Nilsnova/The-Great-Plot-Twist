@@ -5,6 +5,7 @@
 //   cabin   just north of the west end of the south cross path, standing from the start (not a build spot)
 //   bell    the harbor bell on the south beach, next to where you land
 import {surfaceClass} from '../world/places/surfaces.js';
+import {readSpec} from '../campaign/tech.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -57,12 +58,23 @@ export const ppSpotById = id => PP_SPOTS.find(item => item.id === id) ?? null;
 export const isPointSpot = id => !!ppSpotById(id);
 export const CABIN = Object.freeze({id: 'island_cabin', x: -8, z: 6});
 export const BELL = Object.freeze({id: 'island_bell', x: 8.5, z: 12});
+// The campaign's buildings (docs/GAME-V3.md §4 and §5): they stand from the start as a building site with a
+// sign "opens after wave N" and become the building once the island has won that wave. item: the campaign id
+// that opens it (src/campaign/campaign.json); art: its cartoon frame (src/art/campaign.js), mended: the frame
+// once the wreck is repaired. Places on free ground: the Harbor east of the bell's beach, the Tech hub north-east
+// between the watchtower hill and the corner cannon, the wreck on the west beach.
+export const CAMPAIGN_BUILDINGS = Object.freeze([
+  Object.freeze({id: 'island_harbor', item: 'harbor', name: 'The Harbor', x: 13, z: 7.5, art: 'island-harbor', w: 4.4, h: 4.2}),
+  Object.freeze({id: 'island_techhub', item: 'tech_hub', name: 'Tech hub', x: 8.5, z: -12.5, art: 'island-techhub', w: 4.4, h: 5.4}),
+  Object.freeze({id: 'island_wreck', item: 'wreck', name: 'The wreck', x: -16.5, z: 5, art: 'island-wreck', mended: 'island-wreck-mended', w: 5.2, h: 3.6}),
+]);
+export const campaignBuilding = id => CAMPAIGN_BUILDINGS.find(item => item.id === id) ?? null;
 export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
 const ZONE_Y = 1.03, SPOT_RADIUS = 2.2, ROUND_RADIUS = 1.8;
 
 export const spotById = id => SPOTS.find(item => item.id === localSpotId(id)) ?? null;
 export const isSpotId = id => SPOT_IDS.includes(localSpotId(id));
-export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === CABIN.id || isPointSpot(id);
+export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === CABIN.id || isPointSpot(id) || !!campaignBuilding(id);
 // On the island's land (beach included), never in the sea.
 export const onIsland = (x, z) => surfaceClass(ISLAND_PLACE, x, z) > 0;
 
@@ -77,6 +89,7 @@ export function islandZones({visitor = false} = {}) {
   return [
     ...SPOTS.map(item => { const [x, z] = landward(item); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
+    ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, SPOT_RADIUS); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
   ];
 }
@@ -88,9 +101,11 @@ export function pointZones() {
 export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT_KIND[slot]]?.name ?? 'Build spot');
 
 // The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5):
-// [{id, kind, level, x, z}] of the built spots only (TOWER-DEFENSE.md §8).
+// [{id, kind, level, x, z, spec?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower skill it
+// picked at the Tech hub (GAME-V3.md §5), read by the sim, so every screen fights the same island.
 export function defenses(spots = []) {
   return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
-    .map(item => { const where = spotById(item.id) ?? ppSpotById(item.id);
-      return {id: item.id, kind: item.kind, level: Number.isSafeInteger(item.level) && item.level > 0 ? item.level : 1, x: where.x, z: where.z}; });
+    .map(item => { const where = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
+      return {id: item.id, kind: item.kind, level: Number.isSafeInteger(item.level) && item.level > 0 ? item.level : 1, x: where.x, z: where.z,
+        ...(spec ? {spec} : {})}; });
 }

@@ -10,7 +10,11 @@
 //   all_fallen          every captain is down (variant)       heart_low          the heart below 30% (variant)
 // A line may list `covers` (other triggers it also answers): wave_5 is also the first boss.
 
+import {STEPS} from '../campaign/index.js';
+
 export const STORE_KEY = 'tgpt:narrator:v1';
+// The waves whose win opens something on the island (the campaign table, src/campaign/campaign.json).
+const CAMPAIGN_WAVES = new Set(STEPS.filter(step => !step.later && step.wave > 0).map(step => step.wave));
 export const MAX_GAMES = 30;
 export const QUEUE_LIMIT = 6;
 export const HEART_LOW = 0.3;
@@ -81,14 +85,18 @@ export function startTriggers(wave, {boss = false} = {}) {
   if (boss && wave !== 5) triggers.push('boss_first');
   return triggers;
 }
+// What a wave's result brings. The unlock lines (wave_unlock:N) are not here: they come with the campaign's
+// campaign_unlocked {wave, ids} (src/island/index.js, GAME-V3.md §4), once the island answer says what opened.
 export function finishTriggers(wave, survived) {
   if (!survived) return ['wave_lost'];
   if (!Number.isSafeInteger(wave) || wave < 1) return ['wave_won'];
   if (wave >= 100) return ['victory'];
-  return [`wave_unlock:${wave}`, `wave_milestone:${wave}`];
+  return [`wave_milestone:${wave}`];
 }
-// The generic "wave won" line, when a win brings nothing else: every wave up to 10, then every third.
-export const wonLineDue = wave => !Number.isSafeInteger(wave) || wave <= 10 || wave % 3 === 0;
+// The generic "wave won" line, when a win brings nothing else: every wave up to 10, then every third, never
+// a wave that opens something (its campaign_unlocked lines follow a moment later).
+export const wonLineDue = wave => !Number.isSafeInteger(wave)
+  || (!CAMPAIGN_WAVES.has(wave) && (wave <= 10 || wave % 3 === 0));
 
 // Reading time for a caption without audio: about 15 characters a second, at least 3 s, at most 11 s.
 export const readingMs = text => Math.max(3000, Math.min(11000, 1200 + String(text ?? '').length * 65));

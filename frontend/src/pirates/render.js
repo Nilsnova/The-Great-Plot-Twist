@@ -203,6 +203,15 @@ const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
 }));
 { const [w, h] = pirateDimensions[pirateFrames.warship[0]]; SHIP_SIZE.warship = { w: w / UNIT, h: h / UNIT }; }
 const FRAMES = pirateFrames;
+// The campaign's pirate types (docs/GAME-V3.md §4, src/pirates/sim.js CONFIG.tiers): each sails as one of the
+// fleet's drawings with its own colour and size, so a new tier reads at a glance. Pure data.
+export const SHIP_VARIANTS = Object.freeze({
+  raider: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: 1, g: .52, b: .46 }), scale: .9 }),
+  ironclad: Object.freeze({ frames: 'brig', tint: Object.freeze({ r: .6, g: .67, b: .8 }), scale: 1.1 }),
+  dreadnought: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: .56, g: .5, b: .62 }), scale: 1.25 }),
+  redtide: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: 1, g: .42, b: .4 }), scale: 1.5 }),
+});
+export const BRUTE_LOOK = Object.freeze({ tint: Object.freeze({ r: 1, g: .7, b: .58 }), scale: 1.3 });
 
 /**
  * createWaveRenderer({scene, atlas, defenses, reducedMotion, quality, beamFrom}) where atlas is
@@ -424,8 +433,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   }
 
   function drawShip(ship, meta) {
-    const size = SHIP_SIZE[ship.kind] ?? SHIP_SIZE.sloop, frame = frameOf(ship.kind, meta.phase), r = rect[frame];
-    if (!r) return;
+    const variant = SHIP_VARIANTS[ship.kind] ?? null, kind = variant?.frames ?? ship.kind, k = variant?.scale ?? 1;
+    const base = SHIP_SIZE[kind] ?? SHIP_SIZE.sloop, size = { w: base.w * k, h: base.h * k }, frame = frameOf(kind, meta.phase), drawn = rect[frame];
+    if (!drawn) return;
+    const r = k === 1 ? drawn : { ...drawn, w: drawn.w * k, h: drawn.h * k, anchor: drawn.anchor * k };
     const layer = ship.z < 0 ? layers.far : layers.near, x = ship.x, y = drawnY(ship.z);
     // A hit shows as a short warm flash, kept light so a ship under steady fire never turns white.
     const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .2 : .3) : 0;
@@ -436,7 +447,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, { a: .45 * fadeIn });
       layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, { a: .3 * fadeIn });
     }
-    layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...damageTint(tintOf(r), share) });
+    layer.push(drawn, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...damageTint(variant?.tint ?? tintOf(drawn), share) });
     // A burning ship below a third of its hull: dark smoke rising and the fire on deck, drawn over the hull
     // and big enough to read at the battle zoom (bigger ships burn in two places).
     if (burning) {
@@ -476,7 +487,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : still() ? BOARDER_ART.still : BOARDER_ART.walk[step];
     const r = rect[cartoon] ?? rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
     if (!r) return;
-    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0 });
+    // A brute (wave 20+) is bigger and redder than the rest of the crowd.
+    const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
+    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0, ...look });
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });

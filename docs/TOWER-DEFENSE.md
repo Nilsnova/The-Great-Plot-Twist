@@ -70,6 +70,8 @@ All errors `{"error": {"code", "message"}}` with a plain message.
 
 ## 9. Unlocks: simple at the start, deeper as you go (added 11 Nov, owner)
 
+> **v3 (GAME-V3.md §4.1, 12 Nov):** the table below is replaced by the campaign table (`backend/content/campaign.json`): the mortar opens after wave 2, the house after 1, the gunner after 3, the inner wall ring after 5. What may be built on an island follows that island's best won wave; the captain, the crew and the weapons keep the player's own. The refusal now reads "Opens after wave N."
+
 New players see only what they can use. Everything else appears with a toast "New: … unlocked!" when the player first **wins** the wave shown (the best wave of their own island, or any wave they fought in and won: any island, a friend's too, or Pirate Point). The server enforces it (`409 locked` with "Unlocks after wave N").
 
 | Unlocks after winning wave | What appears |

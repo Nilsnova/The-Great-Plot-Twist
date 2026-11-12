@@ -8,6 +8,7 @@
 // nearest standing wall, else the island. Cannons fire on their own at the nearest ship they can see.
 import { surfaces } from '../world/places/surfaces.js';
 import { captainStats, readSkills } from './captain-stats.js';
+import { readSpec } from '../campaign/tech.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -43,6 +44,11 @@ export const CONFIG = freeze({
     brig: { hp: 60, speed: 1.7, damage: 6, interval: 2, crew: 3 },
     flagship: { hp: 600, speed: 1.05, damage: 10, interval: 2.5, crew: 4 },
     warship: { hp: 200, speed: 1.45, damage: 10, interval: 2, crew: 6 },
+    // The campaign's tiers (docs/GAME-V3.md §4): new pirate types as stat variants with their own look.
+    raider: { hp: 18, speed: 3.4, damage: 3, interval: 1.3, crew: 2 },       // wave 12+: fast red-sailed sloops
+    ironclad: { hp: 150, speed: 1.35, damage: 8, interval: 2, crew: 4 },     // wave 30+: iron-plated brigs
+    dreadnought: { hp: 400, speed: 1.2, damage: 14, interval: 2, crew: 9 },  // wave 50+: the boss warships (no extra boss hp)
+    redtide: { hp: 1500, speed: 1.0, damage: 18, interval: 2, crew: 12 },    // wave 100: Captain Redtide's own ship
   },
   // Boarding (TOWER-DEFENSE.md §12): an anchored ship lets its crew climb out one by one; they walk inland
   // to the island's heart, hack every standing wall in their way, and a boarder who reaches the heart
@@ -53,6 +59,7 @@ export const CONFIG = freeze({
                               // walls within `ring` of it are the inner ring, the rest are shore walls
     interval: 1.2,            // seconds between two boarders climbing out of one ship
     crewEvery: 15,            // one more boarder per ship every 15 waves (wave 16, 31, …)
+    crewLateFrom: 46, crewLateEvery: 30, // from wave 46 one more only every 30 waves (76): the crowd stays fightable
     crewMax: 12,
     landRadius: .9,           // in coast radii: where they step onto the beach
     fan: 30,                  // ± degrees: they fan out inland from their landing
@@ -67,12 +74,24 @@ export const CONFIG = freeze({
   // The difficulty curve to wave 100: hp, speed and damage grow with the wave number (× per ship kind).
   curve: {
     hpFrom: 4, hpPerWave: 0.07,       // hp × (1 + hpPerWave × (wave − hpFrom)) from wave hpFrom on
-    hpLateFrom: 30, hpLatePerWave: 0.1,  // and faster after wave 30: the endless part
+    hpLateFrom: 30, hpLatePerWave: 0.015, // and a little faster after wave 30 (the tiers bring the rest)
     speedPerWave: 0.004, speedMax: 1.35,
     damageFrom: 10, damagePerWave: 0.04,
-    warshipsFrom: 21, warshipsEvery: 10, // regular warships in the fleet: one more every 10 waves from wave 21
+    damageLateFrom: 30, damageLatePerWave: 0.01, // past wave 30 the hits grow slower: the tiers and the numbers carry it
+    warshipsFrom: 21, warshipsEvery: 15, // regular warships in the fleet: one more every 15 waves from wave 21
   },
   boss: { every: 5, doubleEvery: 10, afterShips: 3 }, // every 5th wave a warship, every 10th two
+  // The tiers of the campaign (docs/GAME-V3.md §4, waves 12, 15, 20, 30, 50 and 100). Shares grow by `grow`
+  // per wave from their first wave up to `max`; a share of sloops sails as raiders, of brigs as ironclads, of
+  // boarders as brutes (every n-th boarder, no dice, so every screen agrees).
+  tiers: {
+    raiders: { from: 12, share: .2, grow: .01, max: .45 },
+    bossHp: [[15, 1.25], [30, 1.5]],            // the boss warships are tougher from these waves on
+    brutes: { from: 20, share: .2, grow: .005, max: .35, hp: 2.2, speed: .8, hack: 1.6, heart: 1.5 },
+    ironclads: { from: 30, share: .2, grow: .01, max: .6 },
+    dreadnoughtsFrom: 50,                       // the boss warships are dreadnoughts from here on
+    final: 100,                                 // the final battle: Redtide's own ship with the bosses
+  },
   // Towers by level (index 0 = level 1). Cannon: one ball at one ship. Mortar: a shell on an arc that
   // hurts every ship within `radius` of the impact, never at ships closer than minRange.
   levels: {
@@ -135,6 +154,21 @@ export const CONFIG = freeze({
   // The faster pace (11 Nov): every cannon and mortar reloads in 70% of its table time (§2's reloads × 0.7).
   pace: { reload: .7 },
   maxWave: 100,
+  // The tower skills of the Tech hub (docs/GAME-V3.md §5), one per building, read from the island's spots
+  // (defense.spec), so every screen fights the same island.
+  specs: {
+    rapid: { reload: .7 },                       // cannon: reload −30%
+    heavy: { damage: 1.6, reload: 1.25 },        // cannon: damage +60%, slower
+    chain: { slow: .4, seconds: 3 },             // cannon: a hit slows the ship 40% for 3 s
+    cluster: { blasts: 3, damage: .55, radius: 2.8, spread: 2.4 }, // mortar: 3 smaller blasts around the impact
+    fire_pot: { seconds: 4, radius: 3, share: .3, every: .5 },     // mortar: the ground burns 4 s (share of the shell's damage per second)
+    long_range: { range: 12 },                   // mortar: +12 range
+    stone: { hp: 2 },                            // wall: hp ×2
+    spiked: { damage: 5 },                       // wall: a boarder takes this (× the hp curve) at every hack
+    quick_mend: { repair: 2 },                   // wall: repairs ×2 (a player's and the carpenter's)
+    spotter: { damage: 1.15, radius: 22 },       // watchtower: +15% damage to the towers within radius
+    signal_fire: { warn: 5 },                    // watchtower: ships show 5 s earlier
+  },
 });
 
 const KINDS = new Set(['wall', 'cannon', 'mortar', 'watchtower', 'house']);
@@ -173,7 +207,8 @@ function readDefenses(list) {
     if (!item || typeof item !== 'object' || typeof item.id !== 'string' || !item.id || seen.has(item.id)) continue;
     if (!KINDS.has(item.kind) || !finite(item.x) || !finite(item.z)) continue;
     const levels = CONFIG.levels[item.kind].length, level = Number.isInteger(item.level) ? clamp(item.level, 1, levels) : 1;
-    seen.add(item.id); out.push({ id: item.id, kind: item.kind, level, x: item.x, z: item.z });
+    const spec = readSpec(item.kind, item.spec); // a skill of another kind is no skill
+    seen.add(item.id); out.push({ id: item.id, kind: item.kind, level, x: item.x, z: item.z, ...(spec ? { spec } : {}) });
   }
   return out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
@@ -203,7 +238,9 @@ function readHeart(heart) {
 /** How many boarders one ship of `kind` carries on `wave`. */
 export function crewFor(kind, wave) {
   const B = CONFIG.boarding, base = CONFIG.ships[kind]?.crew ?? 0;
-  return base ? Math.min(B.crewMax, base + Math.floor(Math.max(0, wave - 1) / B.crewEvery)) : 0;
+  const early = Math.floor(Math.max(0, Math.min(wave, B.crewLateFrom - 1) - 1) / B.crewEvery);
+  const late = wave >= B.crewLateFrom ? 1 + Math.floor((wave - B.crewLateFrom) / B.crewLateEvery) : 0;
+  return base ? Math.min(B.crewMax, base + early + late) : 0;
 }
 const angleGap = (a, b) => Math.abs(((a - b) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
 
@@ -225,6 +262,51 @@ export function revivePrice(wave) {
   const R = CONFIG.health.revive, n = Number.isInteger(wave) && wave > 0 ? Math.min(wave, CONFIG.maxWave) : 1;
   return R.base + R.perWave * n;
 }
+/** The share of a tier at `wave` (0 before it begins). */
+export function tierShare(tier, wave) {
+  return wave < tier.from ? 0 : Math.min(tier.max, tier.share + tier.grow * (wave - tier.from));
+}
+/** The pirate types of a wave, without the dice (docs/GAME-V3.md §4): {raiders, ironclads, brutes} shares and the
+ * boss kind and hp multiplier. */
+export function tierFor(wave) {
+  const T = CONFIG.tiers;
+  const bossHp = T.bossHp.reduce((value, [from, k]) => (wave >= from ? k : value), 1);
+  return { raiders: tierShare(T.raiders, wave), ironclads: tierShare(T.ironclads, wave), brutes: tierShare(T.brutes, wave),
+    boss: wave >= T.dreadnoughtsFrom ? 'dreadnought' : 'warship', bossHp, final: wave >= T.final };
+}
+/**
+ * The ships of a wave before the dice (the plan of createWave shuffles them): {count, kinds (the escorts and
+ * regular warships), bosses, tier}. The campaign's tiers: some sloops sail as raiders (12+), some brigs as
+ * ironclads (30+), with the same list length, so the dice of the waves before a tier are untouched.
+ */
+export function fleetOf(wave, { shipFactor = 1, boss = wave % CONFIG.boss.every === 0 } = {}) {
+  const C = CONFIG, count = clamp(Math.round(fleetSize(wave) * shipFactor), 1, C.fleet.max);
+  const brigs = wave >= C.fleet.brigFromWave
+    ? Math.round(count * Math.min(C.fleet.brigMaxShare, (wave - C.fleet.brigFromWave + 1) * C.fleet.brigShare)) : 0;
+  const { bosses, regular } = warshipsFor(wave, boss);
+  const escorts = Math.max(0, count - regular), tier = tierFor(wave);
+  const sloops = escorts - Math.min(brigs, escorts), brigsIn = Math.min(brigs, escorts);
+  const raiders = Math.round(sloops * tier.raiders), ironclads = Math.round(brigsIn * tier.ironclads);
+  const kinds = [...Array(sloops - raiders).fill('sloop'), ...Array(raiders).fill('raider'),
+    ...Array(brigsIn - ironclads).fill('brig'), ...Array(ironclads).fill('ironclad'), ...Array(Math.min(regular, count)).fill('warship')];
+  return { count, kinds, bosses, tier };
+}
+/**
+ * How hard a wave is, as one number (docs/GAME-V3.md §4, the scaling test): every ship's hull and every
+ * boarder's hp, weighted by how fast they come and how hard they hit. Pure, no dice.
+ */
+export function threatOf(wave, { boss = wave % CONFIG.boss.every === 0 } = {}) {
+  const C = CONFIG, curve = curveFor(wave), { kinds, bosses, tier } = fleetOf(wave, { boss });
+  const brute = tier.brutes, boarderHp = C.boarding.hp * curve.hp * (1 + brute * (C.tiers.brutes.hp - 1));
+  const one = (kind, bossy) => {
+    const stats = C.ships[kind], hp = stats.hp * curve.hp * (bossy && kind === 'warship' ? tier.bossHp : 1);
+    return (hp * (stats.speed * curve.speed) ** .5 + crewFor(kind, wave) * boarderHp) * curve.damage;
+  };
+  let total = kinds.reduce((sum, kind) => sum + one(kind, false), 0);
+  for (let i = 0; i < bosses; i++) total += one(tier.boss, true);
+  if (tier.final) total += one('redtide', true);
+  return Math.round(total);
+}
 /** The fleet's size before the weather: steep for the first waves, then slower. */
 export function fleetSize(wave) {
   const F = CONFIG.fleet;
@@ -236,7 +318,8 @@ export function curveFor(wave) {
   return {
     hp: round2(1 + K.hpPerWave * Math.max(0, wave - K.hpFrom) + K.hpLatePerWave * Math.max(0, wave - K.hpLateFrom)),
     speed: round2(Math.min(K.speedMax, 1 + K.speedPerWave * (wave - 1))),
-    damage: round2(1 + K.damagePerWave * Math.max(0, wave - K.damageFrom)),
+    damage: round2(1 + K.damagePerWave * Math.max(0, Math.min(wave, K.damageLateFrom) - K.damageFrom)
+      + K.damageLatePerWave * Math.max(0, wave - K.damageLateFrom)),
   };
 }
 
@@ -278,15 +361,20 @@ export function createWave(options = {}) {
   const defenses = readDefenses(options?.defenses), crew = readCrew(options?.crew);
   const curve = curveFor(waveNumber);
   const towerBonus = Math.max(0, ...defenses.filter(item => item.kind === 'watchtower').map(item => C.levels.watchtower[item.level - 1].range));
+  const S = C.specs, spotters = defenses.filter(item => item.kind === 'watchtower' && item.spec === 'spotter');
+  const signal = defenses.some(item => item.kind === 'watchtower' && item.spec === 'signal_fire') ? S.signal_fire.warn : 0;
   let fogShare = waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog;
   if (crew.lookout && fog > 0) fogShare = Math.min(1, fogShare * C.crew.lookout.sight);
-  const warnLead = crew.lookout ? C.crew.lookout.warn : 0;
+  const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
   // Cannons and mortars, in id order; the gunners man the strongest (damage per second, then level).
   const towers = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar').map(item => {
-    const stats = C.levels[item.kind][item.level - 1], range = stats.range + towerBonus;
-    return { ...item, damage: stats.damage, baseReload: round2(stats.reload * C.pace.reload), range, sight: range * fogShare, manned: false,
-      reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0 };
+    const stats = C.levels[item.kind][item.level - 1], spec = S[item.spec] ?? {};
+    const range = stats.range + towerBonus + (spec.range ?? 0);
+    // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
+    const spotted = spotters.some(tower => distance(tower.x, tower.z, item.x, item.z) <= S.spotter.radius) ? S.spotter.damage : 1;
+    return { ...item, damage: round2(stats.damage * (spec.damage ?? 1) * spotted), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1)),
+      range, sight: range * fogShare, manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0 };
   });
   const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
   [...towers].sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
@@ -295,7 +383,7 @@ export function createWave(options = {}) {
   // The sight the island shows (fog edge, the manual-fire reach): the level-1 cannon's, or the best cannon's.
   const sight = Math.max(C.cannon.range + towerBonus, ...cannons.map(item => item.range)) * fogShare;
   const walls = defenses.filter(item => item.kind === 'wall').map(item => {
-    const hp = C.levels.wall[item.level - 1].hp;
+    const hp = C.levels.wall[item.level - 1].hp * (item.spec === 'stone' ? S.stone.hp : 1);
     return { ...item, hp, maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
       inner: distance(item.x, item.z, heart.x, heart.z) <= heart.ring, bearing: Math.atan2(item.z - heart.z, item.x - heart.x) };
   });
@@ -311,19 +399,18 @@ export function createWave(options = {}) {
   shuffle(lanes, random);
   if (towers.length) lanes.sort((a, b) => a.cover - b.cover); // the first waves come where the guns are
   const laneCount = clamp(C.fleet.lanesPerWave * waveNumber, 1, lanes.length);
-  const count = clamp(Math.round(fleetSize(waveNumber) * shipFactor), 1, C.fleet.max);
-  const brigs = waveNumber >= C.fleet.brigFromWave
-    ? Math.round(count * Math.min(C.fleet.brigMaxShare, (waveNumber - C.fleet.brigFromWave + 1) * C.fleet.brigShare)) : 0;
-  const { bosses, regular } = warshipsFor(waveNumber, boss);
-  const escorts = Math.max(0, count - regular);
-  const kinds = shuffle([...Array(escorts - Math.min(brigs, escorts)).fill('sloop'), ...Array(Math.min(brigs, escorts)).fill('brig'),
-    ...Array(Math.min(regular, count)).fill('warship')], random);
+  const { count, kinds: fleetKinds, bosses, tier } = fleetOf(waveNumber, { shipFactor, boss });
+  const kinds = shuffle([...fleetKinds], random);
   const gap = Math.min(Math.max(C.fleet.minGap, C.fleet.gap - C.fleet.gapPerWave * (waveNumber - 1)), C.fleet.window / count);
   const plan = kinds.map((kind, index) => ({ kind, lane: lanes[index % laneCount], at: C.fleet.firstSpawn + index * gap }));
   for (let i = 0; i < bosses; i++) {
     // The boss sails in after a few escorts; a second one a little later on another lane.
     const at = C.fleet.firstSpawn + (Math.min(C.boss.afterShips, count) + i * 3) * gap;
-    plan.push({ kind: 'warship', boss: true, lane: lanes[i % laneCount], at }); // where the guns are, like the flagship
+    plan.push({ kind: tier.boss, boss: true, lane: lanes[i % laneCount], at }); // where the guns are, like the flagship
+  }
+  // Wave 100, the final battle (GAME-V3.md §4): Captain Redtide sails in himself, after his bosses.
+  if (tier.final && !withFlagship) {
+    plan.push({ kind: 'redtide', boss: true, final: true, lane: lanes[0], at: C.fleet.firstSpawn + (Math.min(C.boss.afterShips, count) + bosses * 3) * gap });
   }
   if (withFlagship) {
     const at = C.fleet.firstSpawn + Math.min(C.flagship.afterShips, count) * gap;
@@ -334,13 +421,13 @@ export function createWave(options = {}) {
     const a = entry.lane.a + (random() * 2 - 1) * C.laneSpread * Math.PI / 180;
     const stopR = C.stopRadius + (random() * 2 - 1) * C.stopJitter;
     entry.a = a; entry.from = coastPoint(a, C.spawnRadius, coast);
-    entry.to = coastPoint(a, entry.kind === 'flagship' || entry.kind === 'warship' ? C.stopRadius + .1 : stopR, coast);
+    entry.to = coastPoint(a, ['flagship', 'warship', 'dreadnought', 'redtide'].includes(entry.kind) ? C.stopRadius + .1 : stopR, coast);
   }
 
   let ticks = 0, rest = 0, nextSpawn = 0, nextWarn = 0, nextShipId = 1, sunk = 0, islandHp = maxHp, done = false;
   let started = countdown === 0 ? null : false, lastCountdown = null, lampsLit = false, endReason = null;
   let nextBoarderId = 1, killed = 0, landed = 0;
-  const ships = [], wrecks = [], balls = [], shells = [], captains = new Map(), blades = new Map(), boarders = [];
+  const ships = [], wrecks = [], balls = [], shells = [], captains = new Map(), blades = new Map(), boarders = [], fires = [];
   // Captain health (GAME-V3.md §3): id -> {id, x, z, hp, maxHp, down, downAt, seen, colour, away}.
   const H = C.health, party = new Map();
   let queued = [];
@@ -392,7 +479,8 @@ export function createWave(options = {}) {
     if (!hit) { const a = random() * Math.PI * 2, r = 1 + random() * (C.cannon.missSpread - 1); toX += Math.cos(a) * r; toZ += Math.sin(a) * r; }
     const damage = cannon.damage * (manual ? C.cannon.manualMultiplier : 1);
     const impactAt = round2(ticks * C.tick + flight);
-    balls.push({ cannonId: cannon.id, targetId: target.id, ...targetKey(target), hit, damage, manual, impactAt });
+    balls.push({ cannonId: cannon.id, targetId: target.id, ...targetKey(target), hit, damage, manual, impactAt,
+      ...(cannon.spec === 'chain' && !target.boarder ? { chain: true } : {}) });
     cannon.reload = cannon.baseReload; cannon.lastShot = ticks * C.tick; cannon.shots++;
     events.push({ type: 'cannon_fired', t: now(), cannonId: cannon.id, targetId: target.id, manual, hit, damage, level: cannon.level,
       x: cannon.x, z: cannon.z, toX: round2(toX), toZ: round2(toZ), impactAt, ...(target.boarder ? { boarder: true } : {}) });
@@ -402,7 +490,8 @@ export function createWave(options = {}) {
     const d = distance(mortar.x, mortar.z, target.x, target.z), flight = round2(C.mortar.flight + d * C.mortar.flightPerUnit);
     const aim = ahead(target, flight), a = random() * Math.PI * 2, r = random() * C.mortar.scatter;
     const toX = round2(aim.x + Math.cos(a) * r), toZ = round2(aim.z + Math.sin(a) * r), impactAt = round2(ticks * C.tick + flight);
-    shells.push({ towerId: mortar.id, x: mortar.x, z: mortar.z, toX, toZ, damage: mortar.damage, impactAt, from: now() });
+    shells.push({ towerId: mortar.id, x: mortar.x, z: mortar.z, toX, toZ, damage: mortar.damage, impactAt, from: now(),
+      ...(mortar.spec === 'cluster' || mortar.spec === 'fire_pot' ? { spec: mortar.spec } : {}) });
     mortar.reload = mortar.baseReload; mortar.lastShot = ticks * C.tick; mortar.shots++;
     events.push({ type: 'mortar_fired', t: now(), towerId: mortar.id, targetId: target.id, damage: mortar.damage, level: mortar.level,
       x: mortar.x, z: mortar.z, toX, toZ, impactAt, radius: C.mortar.radius });
@@ -615,7 +704,7 @@ export function createWave(options = {}) {
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
       // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes.
-      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier);
+      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1));
     } else if (input.type === 'rebuild') {
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
       if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < C.wall.rebuildCooldown - 1e-9) return;
@@ -691,11 +780,15 @@ export function createWave(options = {}) {
     }
     route.push(ring ? { wall: ring } : { x: heart.x + Math.cos(heading) * B.meadow, z: heart.z + Math.sin(heading) * B.meadow });
     route.push({ x: heart.x, z: heart.z, heart: true });
-    const hp = Math.round(B.hp * curve.hp * 10) / 10;
+    // Brutes (wave 20+): every n-th boarder is a big one, by its number, so every screen agrees.
+    const T = C.tiers.brutes, every = tier.brutes > 0 ? Math.max(1, Math.round(1 / tier.brutes)) : 0;
+    const brute = every > 0 && nextBoarderId % every === 0;
+    const hp = Math.round(B.hp * curve.hp * (brute ? T.hp : 1) * 10) / 10;
     const startX = ship.x + (landing.x - ship.x) * .25, startZ = ship.z + (landing.z - ship.z) * .25;
     const boarder = { id: `boarder_${nextBoarderId++}`, boarder: true, shipId: ship.id, x: startX, z: startZ, vx: 0, vz: 0,
-      hp, maxHp: hp, speed: round2(B.speed * curve.speed), hack: round2(B.hack * curve.damage), damage: round2(B.heartDamage * curve.damage),
-      route, leg: 0, goal: null, side, state: 'walking', wallId: null, hackIn: 0, facing: landing.x < ship.x ? -1 : 1 };
+      hp, maxHp: hp, speed: round2(B.speed * curve.speed * (brute ? T.speed : 1)), hack: round2(B.hack * curve.damage * (brute ? T.hack : 1)),
+      damage: round2(B.heartDamage * curve.damage * (brute ? T.heart : 1)),
+      route, leg: 0, goal: null, side, state: 'walking', wallId: null, hackIn: 0, facing: landing.x < ship.x ? -1 : 1, ...(brute ? { brute: true } : {}) };
     boarders.push(boarder); landed++;
     events.push({ type: 'boarder_landed', t: now(), boarderId: boarder.id, shipId: ship.id, hp, x: round2(startX), z: round2(startZ),
       left: ship.crew });
@@ -736,6 +829,8 @@ export function createWave(options = {}) {
       if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
       events.push({ type: 'wall_damaged', t: now(), wallId: wall.id, boarderId: boarder.id, damage: round2(damage), hp: wall.hp,
         broken: wall.hp === 0, x: wall.x, z: wall.z });
+      // Spiked (GAME-V3.md §5): the wall bites back at every hack.
+      if (wall.spec === 'spiked') damageBoarder(boarder, round2(S.spiked.damage * curve.hp), `wall:${wall.id}`, events, { spikes: true });
       return false;
     }
     if (boarder.state === 'fighting') {
@@ -793,6 +888,7 @@ export function createWave(options = {}) {
     if (started === null) {
       started = true;
       events.push({ type: 'wave_started', t: 0, wave: waveNumber, ships: plan.length, flagship: withFlagship, boss, warships: bosses,
+        ...(tier.final && !withFlagship ? { final: true } : {}),
         fog, sight: round2(sight), heart: { x: heart.x, z: heart.z },
         lanes: lanes.slice(0, laneCount).map(lane => ({ id: lane.id, x: round2(lane.stop.x), z: round2(lane.stop.z) })) });
     }
@@ -810,7 +906,7 @@ export function createWave(options = {}) {
     while (nextSpawn < plan.length && plan[nextSpawn].at <= t + 1e-9) {
       const entry = plan[nextSpawn++], stats = statsOf(entry.kind);
       const length = distance(entry.from.x, entry.from.z, entry.to.x, entry.to.z);
-      const hp = entry.kind === 'flagship' ? stats.hp : Math.round(stats.hp * curve.hp);
+      const hp = entry.kind === 'flagship' ? stats.hp : Math.round(stats.hp * curve.hp * (entry.boss && entry.kind === 'warship' ? tier.bossHp : 1));
       const ship = { id: `ship_${nextShipId++}`, kind: entry.kind, boss: entry.boss === true, lane: entry.lane.id, x: entry.from.x, z: entry.from.z,
         hp, maxHp: hp, speed: round2(stats.speed * (entry.kind === 'flagship' ? 1 : curve.speed)), left: length,
         damage: round2(stats.damage * (entry.kind === 'flagship' ? 1 : curve.damage)), dx: (entry.to.x - entry.from.x) / length,
@@ -823,7 +919,8 @@ export function createWave(options = {}) {
     for (const ship of [...ships]) {
       const stats = statsOf(ship.kind);
       if (ship.state === 'sailing') {
-        const move = Math.min(ship.speed * C.tick, ship.left);
+        const slowed = ship.slowUntil !== undefined && ship.slowUntil > t + 1e-9 ? 1 - S.chain.slow : 1;
+        const move = Math.min(ship.speed * slowed * C.tick, ship.left);
         ship.x += ship.dx * move; ship.z += ship.dz * move; ship.left -= move;
         if (ship.left <= 1e-9) {
           ship.x = ship.to.x; ship.z = ship.to.z; ship.left = 0; ship.state = 'attacking'; ship.attackIn = stats.interval / 2;
@@ -878,7 +975,11 @@ export function createWave(options = {}) {
       if (ball.impactAt > t + 1e-9) continue;
       balls.splice(i, 1);
       const target = findTarget(ball.targetId);
-      if (ball.hit && target) damageTarget(target, ball.damage, ball.cannonId, events, ball.captain ? { manual: true, captain: true } : { manual: ball.manual });
+      if (ball.hit && target) {
+        damageTarget(target, ball.damage, ball.cannonId, events, ball.captain ? { manual: true, captain: true } : { manual: ball.manual });
+        // Chain shot (GAME-V3.md §5): a ship that floats on is slowed for a few seconds.
+        if (ball.chain && !target.boarder && target.hp > 0) { target.slowUntil = round2(t + S.chain.seconds); events.push({ type: 'ship_slowed', t: now(), shipId: target.id, until: target.slowUntil }); }
+      }
     }
     for (let i = 0; i < shells.length;) {
       const shell = shells[i];
@@ -886,12 +987,34 @@ export function createWave(options = {}) {
       shells.splice(i, 1);
       // A mortar shell or a captain's fire bomb: every ship and every boarder within its radius.
       const radius = shell.radius ?? C.mortar.radius, extra = shell.captain ? { area: true, manual: true, captain: true } : { area: true };
-      const hits = ships.filter(ship => distance(ship.x, ship.z, shell.toX, shell.toZ) <= radius);
-      const crowdHits = boarders.filter(boarder => distance(boarder.x, boarder.z, shell.toX, shell.toZ) <= radius);
-      events.push({ type: shell.captain ? 'captain_blast' : 'mortar_impact', t: now(), [shell.captain ? 'by' : 'towerId']: shell.towerId,
-        x: shell.toX, z: shell.toZ, radius, hits: hits.length + crowdHits.length });
-      for (const ship of hits) damageShip(ship, shell.damage, shell.towerId, events, extra);
-      for (const boarder of crowdHits) damageBoarder(boarder, shell.damage, shell.towerId, events, extra);
+      // Cluster (GAME-V3.md §5): three smaller blasts around the impact instead of one.
+      const blasts = shell.spec === 'cluster'
+        ? Array.from({ length: S.cluster.blasts }, (_, k) => { const a = k / S.cluster.blasts * Math.PI * 2 + shell.toX;
+          return { x: round2(shell.toX + Math.cos(a) * S.cluster.spread), z: round2(shell.toZ + Math.sin(a) * S.cluster.spread),
+            radius: S.cluster.radius, damage: round2(shell.damage * S.cluster.damage) }; })
+        : [{ x: shell.toX, z: shell.toZ, radius, damage: shell.damage }];
+      for (const blast of blasts) {
+        const hits = ships.filter(ship => distance(ship.x, ship.z, blast.x, blast.z) <= blast.radius);
+        const crowdHits = boarders.filter(boarder => distance(boarder.x, boarder.z, blast.x, blast.z) <= blast.radius);
+        events.push({ type: shell.captain ? 'captain_blast' : 'mortar_impact', t: now(), [shell.captain ? 'by' : 'towerId']: shell.towerId,
+          x: blast.x, z: blast.z, radius: blast.radius, hits: hits.length + crowdHits.length, ...(shell.spec ? { spec: shell.spec } : {}) });
+        for (const ship of hits) damageShip(ship, blast.damage, shell.towerId, events, extra);
+        for (const boarder of crowdHits) damageBoarder(boarder, blast.damage, shell.towerId, events, extra);
+      }
+      // Fire pot (GAME-V3.md §5): the ground burns where it lands for a few seconds.
+      if (shell.spec === 'fire_pot') {
+        fires.push({ towerId: shell.towerId, x: shell.toX, z: shell.toZ, radius: S.fire_pot.radius, until: round2(t + S.fire_pot.seconds),
+          damage: round2(shell.damage * S.fire_pot.share * S.fire_pot.every), next: round2(t + S.fire_pot.every) });
+        events.push({ type: 'fire_lit', t: now(), towerId: shell.towerId, x: shell.toX, z: shell.toZ, radius: S.fire_pot.radius, until: round2(t + S.fire_pot.seconds) });
+      }
+    }
+    for (let i = fires.length - 1; i >= 0; i--) {
+      const fire = fires[i];
+      if (fire.until <= t + 1e-9) { fires.splice(i, 1); continue; }
+      if (fire.next > t + 1e-9) continue;
+      fire.next = round2(fire.next + S.fire_pot.every);
+      for (const ship of ships.filter(item => distance(item.x, item.z, fire.x, fire.z) <= fire.radius)) damageShip(ship, fire.damage, fire.towerId, events, { area: true, fire: true });
+      for (const boarder of boarders.filter(item => distance(item.x, item.z, fire.x, fire.z) <= fire.radius)) damageBoarder(boarder, fire.damage, fire.towerId, events, { area: true, fire: true });
     }
     for (const tower of towers) {
       tower.reload = Math.max(0, tower.reload - C.tick);
@@ -924,7 +1047,7 @@ export function createWave(options = {}) {
           if (wall.rebuilding + 1e-9 >= C.crew.carpenter.rebuild) rebuild(wall, 'carpenter', events);
           continue;
         }
-        wall.hp = round2(Math.min(wall.maxHp, wall.hp + C.crew.carpenter.rate * C.tick));
+        wall.hp = round2(Math.min(wall.maxHp, wall.hp + C.crew.carpenter.rate * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1) * C.tick));
         if (wall.hp >= wall.maxHp) events.push({ type: 'wall_repaired', t: now(), wallId: wall.id, hp: wall.hp, by: 'carpenter', x: wall.x, z: wall.z });
       }
     }
@@ -953,20 +1076,21 @@ export function createWave(options = {}) {
         ships: ships.map(ship => ({ id: ship.id, kind: ship.kind, lane: ship.lane, x: round2(ship.x), z: round2(ship.z),
           hp: ship.hp, maxHp: ship.maxHp, state: ship.state, crew: ship.crew, ...(ship.boss ? { boss: true } : {}),
           ...(ship.kind === 'flagship' ? { exposed: lampsLit } : {}) })),
-        boarders: boarders.map(item => ({ id: item.id, x: round2(item.x), z: round2(item.z), hp: item.hp, maxHp: item.maxHp,
+        boarders: boarders.map(item => ({ id: item.id, ...(item.brute ? { brute: true } : {}), x: round2(item.x), z: round2(item.z), hp: item.hp, maxHp: item.maxHp,
           state: item.state, wallId: item.wallId, facing: item.facing, foe: item.foe ?? null })),
         // Captain health (GAME-V3.md §3), by id: present is false for a captain who is away or not heard lately.
         party: [...party.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(hero => ({ id: hero.id,
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
           colour: hero.colour, present: presentAt(hero, t) })),
         wrecks: wrecks.map(item => ({ ...item })),
-        walls: walls.map(wall => ({ id: wall.id, level: wall.level, hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
+        walls: walls.map(wall => ({ id: wall.id, level: wall.level, ...(wall.spec ? { spec: wall.spec } : {}), hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
           broken: wall.hp <= 0, inner: wall.inner, rebuildReady: wall.hp <= 0 && t - wall.rebuildAt >= C.wall.rebuildCooldown - 1e-9 })),
         cannons: cannons.map(cannon => ({ id: cannon.id, x: cannon.x, z: cannon.z, reload: round2(cannon.reload), range: round2(cannon.sight) })),
-        towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, x: tower.x, z: tower.z, manned: tower.manned,
+        towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), x: tower.x, z: tower.z, manned: tower.manned,
           reload: round2(tower.reload), range: round2(tower.sight) })),
         balls: balls.map(ball => ({ ...ball })),
         shells: shells.map(shell => ({ ...shell })),
+        fires: fires.map(fire => ({ x: fire.x, z: fire.z, radius: fire.radius, until: fire.until })),
         captains: Object.fromEntries([...captains].map(([by, at]) => [by, round2(at)])),
         blades: Object.fromEntries([...blades].map(([by, at]) => [by, round2(at)])),
         crew: { ...crew }, heart: { x: heart.x, z: heart.z },

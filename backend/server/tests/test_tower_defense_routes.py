@@ -49,7 +49,7 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_1")
     assert spot == {
         "id": "cannon_1", "kind": "mortar", "kinds": ["cannon", "mortar"], "built": True,
-        "level": 2, "cost": 60, "upgradeCost": 240,
+        "level": 2, "cost": 60, "upgradeCost": 240, "spec": None,
     }  # fmt: skip
     assert (body["waveBest"], body["nextWave"]) == (3, 2)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 0}
@@ -59,7 +59,27 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
     assert body["prices"]["captain"] == [0, 20, 40, 80, 160]
     assert body["unlocks"]["wave"] == 3
     assert "mortar:1" in body["unlocks"]["unlocked"]
-    assert body["unlocks"]["locked"]["crew:gunner"] == 5
+    assert "crew:gunner" in body["unlocks"]["unlocked"]
+    assert body["unlocks"]["locked"]["crew:carpenter"] == 5
+    # The campaign of this island (GAME-V3 section 4): what is open after wave 3, what comes later.
+    campaign = body["campaign"]
+    assert campaign["wave"] == 3 and "watchtower:1" in campaign["open"]
+    assert (campaign["locked"]["harbor"], campaign["locked"]["tech_hub"]) == (4, 8)
+    assert campaign["later"] == ["ship"]
+    assert campaign["wreck"] == {"paid": 0, "goal": 500, "gifts": [25, 100]}
+    assert [b["branch"] for b in campaign["research"]["branches"]] == [
+        "cannon", "mortar", "wall", "watchtower",
+    ]  # fmt: skip
+    assert campaign["research"]["done"] == []
+
+
+def test_the_building_levels_follow_the_islands_own_best_wave_not_a_win_elsewhere():
+    # GAME-V3 section 4: a win on a friend's island opens the captain, not this island's mortar.
+    world = world_at(0, won_wave_best=5)
+
+    body = world.island().json()
+    assert "mortar:1" in body["unlocks"]["locked"] and "captain:3" in body["unlocks"]["unlocked"]
+    assert_error(world.build(spot="cannon_5", kind="mortar"), 409, "locked")
 
 
 def test_a_win_anywhere_counts_for_the_unlocks():
@@ -71,12 +91,12 @@ def test_a_win_anywhere_counts_for_the_unlocks():
 # --- POST /api/island/build: the mortar and the unlocks ---
 
 
-def test_a_mortar_on_a_tower_spot_is_locked_before_wave_three_and_built_after():
-    early = world_at(2)
+def test_a_mortar_on_a_tower_spot_is_locked_before_wave_two_and_built_after():
+    early = world_at(1)
     assert_error(early.build(spot="cannon_5", kind="mortar"), 409, "locked")
     assert early.database.calls("islet_build") == []
 
-    later = world_at(3)
+    later = world_at(2)
     later.database.build_reply = {"status": "done", "balance": 40, "timber": 0, "level": 1}
     response = later.build(spot="cannon_5", kind="mortar")
 
@@ -121,7 +141,7 @@ def test_an_upgrade_refuses_not_built_max_level_locked_and_no_such_spot():
     assert_error(world.post("/api/island/upgrade", spot="house_1"), 409, "max_level")
     locked = world.post("/api/island/upgrade", spot="wall_1")
     assert_error(locked, 409, "locked")
-    assert locked.json()["error"]["message"] == "Unlocks after wave 5."
+    assert locked.json()["error"]["message"] == "Opens after wave 5."
     assert_error(world.post("/api/island/upgrade", spot="moat_1"), 404, "no_such_spot")
     assert world.database.calls("island_upgrade") == []
 
@@ -274,7 +294,7 @@ def test_two_players_build_and_upgrade_pirate_point_each_paying_themselves():
 
 
 def test_pirate_point_refusals():
-    world = world_at(2)
+    world = world_at(1)
     world.database.point_buildings = [{"spot": "pp_wall_1", "kind": "wall", "level": 3}]
 
     assert_error(
@@ -445,8 +465,10 @@ def test_a_member_who_left_cannot_build_there_any_more():
     assert_error(world.build(headers=GUEST, code="ISLE-K7Q2M"), 403, "not_member")
 
 
-def test_a_visitor_builds_on_a_friends_island_with_their_own_coins_and_unlocks():
-    world = world_at(0, won_wave_best=3)  # the payer's progress (the fake answers one row)
+def test_a_visitor_builds_on_a_friends_island_with_their_own_coins_and_its_campaign():
+    # GAME-V3 section 4: the friend's island's best wave (2) opens the mortar there. The fake
+    # answers one progress row for every player, so it stands for the owner's island here.
+    world = world_at(2)
     friends_island(world)
 
     response = world.build(headers=GUEST, spot="cannon_2", kind="mortar", code="ISLE-K7Q2M")
@@ -539,7 +561,7 @@ def test_a_visit_shows_the_levels_kinds_and_crew_so_every_visitor_simulates_the_
     assert invite(world).status_code == 200
     body = world.visit("ISLE-K7Q2M", headers=GUEST).json()
 
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew"]
+    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign"]
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_3")
     assert (spot["kind"], spot["level"], spot["built"]) == ("mortar", 2, True)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1}

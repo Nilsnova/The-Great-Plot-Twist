@@ -60,6 +60,8 @@ class FakeCallsDatabase:
         self.balances = {PLAYER_ID: 100, GUEST_ID: 100}
         self.rows: list[dict] = []
         self.requests: list[httpx.Request] = []
+        # The player's games for rpc/game_list (the Harbor's campaign check): their best waves.
+        self.game_waves: list[int] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
@@ -69,8 +71,17 @@ class FakeCallsDatabase:
             "GET /market_calls": self.read_calls,
             "POST /rpc/market_call_open": self.open,
             "POST /rpc/market_call_settle": self.settle,
+            "POST /rpc/game_list": self.list_games,
         }
         return handlers[route](request)
+
+    def list_games(self, request: httpx.Request) -> httpx.Response:
+        rows = [
+            {"code": "K7Q2M", "hostId": "h", "hostName": "Host", "role": "member",
+             "waveBest": wave, "members": 2, "openedAt": "2026-11-12T00:00:00Z"}
+            for wave in self.game_waves
+        ]  # fmt: skip
+        return httpx.Response(200, json=rows)
 
     def read_wallet(self, request: httpx.Request) -> httpx.Response:
         player = request.url.params["player_id"].removeprefix("eq.")

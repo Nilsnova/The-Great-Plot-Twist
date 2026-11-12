@@ -1,0 +1,105 @@
+{
+  "about": "The campaign (docs/GAME-V3.md section 4): what opens on an island after each won wave. One table for the server and the browser: the server reads this file (catalogue.py), the browser a copy in frontend/src/campaign/campaign.json, and a test keeps the two equal. The island's best won wave decides what is open on it. Ids: <kind>:<level> for a building level, crew:<crew>, captain:<level>, a spot group of 'spots' (ring_walls), and the island's services (harbor, market_calls, football_board, wreck, tech_hub). A step with later: true is shown as coming later and is not built yet.",
+  "steps": [
+    {
+      "wave": 0,
+      "opens": ["wall:1", "cannon:1", "captain:1"],
+      "title": "Walls and cannons",
+      "line": "Build walls and cannons on the glowing spots. Your captain carries a musket."
+    },
+    {
+      "wave": 1,
+      "opens": ["captain:2", "captain:3", "house:1"],
+      "title": "New: Captain upgrades and houses!",
+      "line": "Open Menu › Captain and skills to make your musket stronger. Houses add loot after every won wave."
+    },
+    {
+      "wave": 2,
+      "opens": ["wall:2", "cannon:2", "mortar:1", "mortar:2", "house:2"],
+      "title": "New: Level 2 and the mortar!",
+      "line": "Tap a cannon or a wall to raise it to level 2. A mortar hits every ship near the impact."
+    },
+    {
+      "wave": 3,
+      "opens": ["watchtower:1", "watchtower:2", "crew:gunner"],
+      "title": "New: Watchtower and gunner!",
+      "line": "The watchtower gives every tower more range. Hire a gunner in Menu › Crew."
+    },
+    {
+      "wave": 4,
+      "opens": ["harbor", "market_calls"],
+      "title": "New: The Harbor is open!",
+      "line": "Walk to the Harbor on the beach. Its market stall takes calls: up or down in 5 minutes?"
+    },
+    {
+      "wave": 5,
+      "opens": ["ring_walls", "crew:carpenter", "wall:3", "cannon:3", "mortar:3"],
+      "title": "New: The inner wall ring and level 3!",
+      "line": "Raise the six walls around the heart. Hire a carpenter to mend walls during a wave."
+    },
+    {
+      "wave": 6,
+      "opens": ["wreck"],
+      "title": "A wreck washed ashore!",
+      "line": "Everyone can pay coins into her repair, a little after every wave."
+    },
+    {
+      "wave": 7,
+      "opens": ["football_board"],
+      "title": "New: The match board at the Harbor!",
+      "line": "Pick who wins a real football match at the Harbor."
+    },
+    {
+      "wave": 8,
+      "opens": ["tech_hub", "crew:lookout", "captain:4", "captain:5"],
+      "title": "New: The Tech hub!",
+      "line": "Research a tower kind once, and every tower of that kind on the island can pick a skill."
+    },
+    {
+      "wave": 10,
+      "opens": ["ship"],
+      "later": true,
+      "title": "The repaired ship",
+      "line": "Sailing out to fight at sea comes later."
+    },
+    {
+      "wave": 12,
+      "opens": ["tier_12"],
+      "title": "Raiders join the fleet!",
+      "line": "Fast red-sailed raiders sail in from now on."
+    },
+    {
+      "wave": 15,
+      "opens": ["tier_15"],
+      "title": "Bigger warships!",
+      "line": "The boss warships are tougher from now on."
+    },
+    {
+      "wave": 20,
+      "opens": ["tier_20"],
+      "title": "Brutes come ashore!",
+      "line": "Big brutes hack walls faster and take more hits."
+    },
+    {
+      "wave": 30,
+      "opens": ["tier_30"],
+      "title": "Ironclads!",
+      "line": "Iron-plated brigs join the fleet. Research and skills matter now."
+    },
+    {
+      "wave": 50,
+      "opens": ["tier_50"],
+      "title": "Dreadnoughts!",
+      "line": "Redtide sends his dreadnoughts. It takes the whole crew now."
+    },
+    {
+      "wave": 99,
+      "opens": ["final_battle"],
+      "title": "The final battle is next!",
+      "line": "Wave 100 brings Captain Redtide himself."
+    }
+  ],
+  "spots": {
+    "ring_walls": ["wall_7", "wall_8", "wall_9", "wall_10", "wall_11", "wall_12"]
+  }
+}
