@@ -40,7 +40,7 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
   });
   it('a building shows its level pips and the upgrade with the new numbers', () => {
     const model = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 100, unlocks: wave3});
-    expect(model).toMatchObject({mode: 'upgrade', title: 'Cannon', pips: [true, false, false], stats: 'Damage 10 · Range 28',
+    expect(model).toMatchObject({mode: 'upgrade', title: 'Cannon', pips: [true, false, false, false, false], stats: 'Damage 10 · Range 28',
       upgrade: {label: 'Level 2 · 🪙 60', stats: 'Damage 10 → 16 · Range 28 → 31'}, button: 'Upgrade', disabled: false, hire: true});
     expect(buildCardModel({spotId: 'wall_1', slot: 'wall', spot: wall(true, 2), coins: 100, unlocks: wave5}).upgrade)
       .toEqual({label: 'Level 3 · 🪙 40', stats: 'Strength 120 → 200'});
@@ -48,8 +48,15 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
   it('the upgrade is off with the reason: not enough coins, highest level, or locked until a wave', () => {
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true, 'mortar'), coins: 50, unlocks: wave5}))
       .toMatchObject({title: 'Mortar', upgrade: {label: 'Level 2 · 🪙 120'}, disabled: true, reason: 'Not enough 🪙: you need 🪙 70 more.'});
+    // A level-3 cannon after wave 5: level 4 opens after wave 12 (GAME-V3.md §4.1), the card says so; at level 5 it is the top.
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true, 'cannon', 3), coins: 999, unlocks: wave5}))
-      .toMatchObject({mode: 'info', pips: [true, true, true], upgrade: null, button: '', reason: 'Highest level reached.'});
+      .toMatchObject({mode: 'info', pips: [true, true, true, false, false], upgrade: null, button: '', soon: 'Level 4: Opens after wave 12.'});
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true, 'cannon', 3), coins: 999, unlocks: unlocksFor(12)}).upgrade)
+      .toEqual({label: 'Level 4 · 🪙 240', stats: 'Damage 24 → 30 · Range 34 → 36'});
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true, 'mortar', 3), coins: 999, unlocks: unlocksFor(12)}))
+      .toMatchObject({mode: 'info', soon: 'Level 4: Opens after wave 15.'});
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true, 'cannon', 5), coins: 999, unlocks: unlocksFor(20)}))
+      .toMatchObject({mode: 'info', pips: [true, true, true, true, true], upgrade: null, button: '', reason: 'Highest level reached.'});
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 999, unlocks: fresh}))
       .toMatchObject({mode: 'info', upgrade: null, soon: 'Level 2: Opens after wave 2.'});
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: {...tower(true), upgradeCost: 55}, coins: 999, unlocks: wave3}).upgrade.label).toBe('Level 2 · 🪙 55');
@@ -111,7 +118,10 @@ describe('unlocks (GAME-V3.md §4, the campaign table)', () => {
     expect(unlocksFor(2)).toMatchObject({levels: {wall: 2, cannon: 2, house: 2, mortar: 2}, captain: 3});
     expect(wave3).toMatchObject({levels: {watchtower: 2}, crew: {gunner: true, carpenter: false}});
     expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 2}, crew: {gunner: true, carpenter: true, lookout: false}, next: {wave: 8}});
-    expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: null});
+    expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: {wave: 12}});
+    expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 2}, next: {wave: 15}});
+    expect(unlocksFor(15)).toMatchObject({levels: {mortar: 4, watchtower: 4}, next: {wave: 20}});
+    expect(unlocksFor(20)).toMatchObject({levels: {wall: 5, cannon: 5, mortar: 5, watchtower: 5, house: 2}, next: null});
   });
   it('reads the server unlocks first and names what a won wave brings', () => {
     // The backend's shape: ids "<kind>:<level>", "crew:<crew>", "captain:<level>" with the wave the rest needs.

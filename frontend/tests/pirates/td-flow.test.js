@@ -213,7 +213,7 @@ describe('the v2 fake API', () => {
     expect(island.spots).toHaveLength(22);
     expect(island.spots.find(item => item.id === 'cannon_5')).toMatchObject({ kinds: ['cannon', 'mortar'], level: 0, built: false });
     expect(island).toMatchObject({ crew: { gunner: 0, carpenter: 0, lookout: 0 }, nextWave: 1, captain: { level: 1, nextPrice: 20 },
-      prices: { kinds: { mortar: [60, 120, 240], cannon: [30, 60, 120] }, crew: { gunner: { price: 40, max: 2 } } } }); // the backend's shape (routes/island.py)
+      prices: { kinds: { mortar: [60, 120, 240, 480, 960], cannon: [30, 60, 120, 240, 480] }, crew: { gunner: { price: 40, max: 2 } } } }); // the backend's shape (routes/island.py)
     const code = async promise => { try { await promise; } catch (error) { return error.code; } return 'ok'; };
     expect(await code(api.build({ spot: 'tower_s5', kind: 'mortar', actionUid: 'b1' }))).toBe('locked'); // after wave 3
     expect(await code(api.build({ spot: 'wall_5', kind: 'mortar', actionUid: 'b2' }))).toBe('wrong_kind');
@@ -245,7 +245,8 @@ describe('the v2 fake API', () => {
     await api.build({ spot: 'tower_s5', kind: 'mortar', actionUid: 'm1' });
     expect((await api.upgrade({ spot: 'tower_s5', actionUid: 'm2' })).spots.find(item => item.id === 'cannon_5')).toMatchObject({ kind: 'mortar', level: 2, upgradeCost: 240 });
     await api.upgrade({ spot: 'tower_s5', actionUid: 'm3' });
-    await expect(api.upgrade({ spot: 'tower_s5', actionUid: 'm4' })).rejects.toMatchObject({ code: 'max_level' });
+    // Level 4 of the mortar opens after wave 15 (GAME-V3.md §4.1): the best wave is 10.
+    await expect(api.upgrade({ spot: 'tower_s5', actionUid: 'm4' })).rejects.toMatchObject({ code: 'locked', message: 'Opens after wave 15.' });
     await api.hire({ crew: 'lookout', actionUid: 'l1' });
     await expect(api.hire({ crew: 'lookout', actionUid: 'l2' })).rejects.toMatchObject({ code: 'crew_full' });
     expect((await api.captain({ actionUid: 'c1' })).captain).toEqual({ level: 2, nextPrice: 40 });

@@ -54,7 +54,7 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
     assert (body["waveBest"], body["nextWave"]) == (3, 2)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 0}
     assert body["captain"] == {"level": 2, "nextPrice": 40}
-    assert body["prices"]["kinds"]["mortar"] == [60, 120, 240]
+    assert body["prices"]["kinds"]["mortar"] == [60, 120, 240, 480, 960]
     assert body["prices"]["crew"]["lookout"] == {"price": 25, "max": 1}
     assert body["prices"]["captain"] == [0, 20, 40, 80, 160]
     assert body["unlocks"]["wave"] == 3
@@ -125,7 +125,7 @@ def test_an_upgrade_sends_the_price_list_and_the_unlocked_level():
         "p_island_owner": PLAYER_ID,
         "p_plot": "wall_1",
         "p_action_uid": "click-0001",
-        "p_prices": [10, 20, 40],
+        "p_prices": [10, 20, 40, 80, 160],
         "p_unlocked_level": 2,
     }
 
@@ -171,6 +171,76 @@ def test_the_database_has_the_last_word_on_the_level():
     world.database.paid_replies["island_upgrade"] = {"status": "refused", "reason": "max_level"}
 
     assert_error(world.post("/api/island/upgrade", spot="wall_1"), 409, "max_level")
+
+
+# --- Levels 4 and 5 (docs/GAME-V3.md section 4.1) ---
+
+
+def level_three_island(wave: int) -> World:
+    world = world_at(wave)
+    world.database.buildings[PLAYER_ID] = [
+        {"plot": "cannon_1", "building_type": "cannon", "level": 3},
+        {"plot": "cannon_2", "building_type": "mortar", "level": 3},
+        {"plot": "wall_1", "building_type": "wall", "level": 3},
+        {"plot": "tower_1", "building_type": "watchtower", "level": 2},
+    ]
+    return world
+
+
+def test_level_four_is_refused_before_wave_twelve():
+    world = level_three_island(11)
+
+    for spot in ("cannon_1", "wall_1", "tower_1"):
+        locked = world.post("/api/island/upgrade", spot=spot)
+        assert_error(locked, 409, "locked")
+        assert locked.json()["error"]["message"] == "Opens after wave 12."
+    assert world.database.calls("island_upgrade") == []
+    body = world.island().json()
+    assert body["unlocks"]["locked"]["cannon:4"] == 12
+    assert body["unlocks"]["locked"]["mortar:4"] == 15
+    assert body["unlocks"]["locked"]["wall:5"] == 20
+    assert next(s for s in body["spots"] if s["id"] == "cannon_1")["upgradeCost"] == 240
+
+
+def test_level_four_opens_after_wave_twelve_the_mortar_after_fifteen():
+    world = level_three_island(12)
+
+    assert world.post("/api/island/upgrade", spot="cannon_1").status_code == 200
+    (call,) = world.database.calls("island_upgrade")
+    assert (call["p_prices"], call["p_unlocked_level"]) == ([30, 60, 120, 240, 480], 4)
+    mortar = world.post("/api/island/upgrade", spot="cannon_2", actionUid="click-0002")
+    assert_error(mortar, 409, "locked")
+    assert mortar.json()["error"]["message"] == "Opens after wave 15."
+
+    later = level_three_island(15)
+    assert later.post("/api/island/upgrade", spot="cannon_2").status_code == 200
+    (call,) = later.database.calls("island_upgrade")
+    assert (call["p_prices"], call["p_unlocked_level"]) == ([60, 120, 240, 480, 960], 4)
+
+
+def test_level_five_opens_after_wave_twenty():
+    world = world_at(19)
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_1", "building_type": "wall", "level": 4}]
+    locked = world.post("/api/island/upgrade", spot="wall_1")
+    assert_error(locked, 409, "locked")
+    assert locked.json()["error"]["message"] == "Opens after wave 20."
+
+    world = world_at(20)
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_1", "building_type": "wall", "level": 4}]
+    assert world.post("/api/island/upgrade", spot="wall_1").status_code == 200
+    (call,) = world.database.calls("island_upgrade")
+    assert (call["p_prices"], call["p_unlocked_level"]) == ([10, 20, 40, 80, 160], 5)
+    world.database.buildings[PLAYER_ID] = [{"plot": "wall_1", "building_type": "wall", "level": 5}]
+    assert_error(
+        world.post("/api/island/upgrade", spot="wall_1", actionUid="click-0002"), 409, "max_level"
+    )
+
+
+def test_level_four_follows_the_islands_own_best_wave_not_a_win_elsewhere():
+    world = level_three_island(11)
+    world.database.progress.update(won_wave_best=30)
+
+    assert_error(world.post("/api/island/upgrade", spot="cannon_1"), 409, "locked")
 
 
 # --- POST /api/island/hire ---
@@ -288,14 +358,14 @@ def test_two_players_build_and_upgrade_pirate_point_each_paying_themselves():
     assert (build["p_player_id"], build["p_kind"], build["p_price"]) == (PLAYER_ID, "mortar", 60)
     assert (upgrade["p_player_id"], upgrade["p_prices"], upgrade["p_unlocked_level"]) == (
         GUEST_ID,
-        [60, 120, 240],
+        [60, 120, 240, 480, 960],
         2,
     )
 
 
 def test_pirate_point_refusals():
     world = world_at(1)
-    world.database.point_buildings = [{"spot": "pp_wall_1", "kind": "wall", "level": 3}]
+    world.database.point_buildings = [{"spot": "pp_wall_1", "kind": "wall", "level": 5}]
 
     assert_error(
         world.post("/api/pirate-point/build", spot="pp_wall_1", kind="wall"), 409, "spot_taken"

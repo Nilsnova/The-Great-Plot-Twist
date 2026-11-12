@@ -23,12 +23,12 @@ puts every coin on one small scale. The numbers live in `backend/content/islands
 
 The tables of [TOWER-DEFENSE.md](TOWER-DEFENSE.md) sections 2 to 4, 9 and 10, all in `islands.json`:
 
-| Thing | Coins (level 1 / 2 / 3) | Unlocks after wave | Where it is enforced |
+| Thing | Coins (level 1 / 2 / 3 / 4 / 5) | Unlocks after wave | Where it is enforced |
 |---|---|---|---|
-| Wall | 10 / 20 / 40 | 0 / 2 / 5 | build: `islet_build()`; upgrade: `island_upgrade()` (`building_purchase`, ref `upgrade:<uid>`) |
-| Cannon | 30 / 60 / 120 | 0 / 2 / 5 | the same |
-| Mortar (on a tower spot) | 60 / 120 / 240 | 3 / 3 / 5 | the same |
-| Watchtower | 40 / 80 | 3 / 3 | the same |
+| Wall | 10 / 20 / 40 / 80 / 160 | 0 / 2 / 5 / 12 / 20 | build: `islet_build()`; upgrade: `island_upgrade()` (`building_purchase`, ref `upgrade:<uid>`) |
+| Cannon | 30 / 60 / 120 / 240 / 480 | 0 / 2 / 5 / 12 / 20 | the same |
+| Mortar (on a tower spot) | 60 / 120 / 240 / 480 / 960 | 2 / 2 / 5 / 15 / 20 | the same |
+| Watchtower | 40 / 80 / 160 / 320 / 640 | 3 / 3 / 12 / 15 / 20 | the same |
 | House (+5 loot per level) | 50 / 100 | 2 / 2 | the same |
 | Gunner / carpenter / lookout | 40 / 30 / 25 each, at most 2 / 2 / 1 | 5 / 5 / 8 | `island_hire()` (`crew_hire`, ref `crew:<uid>`) |
 | Captain level 2 / 3 / 4 / 5 | 20 / 40 / 80 / 160 | 1 / 1 / 8 / 8 | `island_captain()` (`captain_upgrade`, ref `captain:<uid>`) |

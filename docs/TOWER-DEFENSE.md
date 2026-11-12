@@ -8,13 +8,15 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 
 ## 2. What you can build (coins only, whole numbers)
 
-| Kind | What it does | Level 1 | Level 2 | Level 3 |
-|---|---|---|---|---|
-| wall | stops boarders on their way to the heart until they hack it down (§12), and takes the ships' cannon fire; hp 60 / 120 / 200 | 🪙 10 | 🪙 20 | 🪙 40 |
-| cannon | single target (the boarder nearest the heart first, else a ship; 55% of its balls hit a boarder, 85% a ship); damage 10 / 16 / 24; range 28 / 31 / 34; reload 1.5 / 1.3 / 1.1 s | 🪙 30 | 🪙 60 | 🪙 120 |
-| mortar | area damage (radius 4) to all ships and boarders near the impact; damage 14 / 22 / 32; range 36 / 40 / 44; reload 3.5 / 3.0 / 2.6 s; cannot hit ships closer than 8 | 🪙 60 | 🪙 120 | 🪙 240 |
-| watchtower | +8 / +12 range to all towers, fog sight bonus | 🪙 40 | 🪙 80 | — |
-| house | +5 / +10 loot per won wave | 🪙 50 | 🪙 100 | — |
+> **v3 (GAME-V3.md §4.1, 12 Nov):** levels 4 and 5 for walls, cannons, mortars and the watchtower (which gets levels 3 to 5), the last two columns below; they open after waves 12, 15 and 20.
+
+| Kind | What it does | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 |
+|---|---|---|---|---|---|---|
+| wall | stops boarders on their way to the heart until they hack it down (§12), and takes the ships' cannon fire; hp 60 / 120 / 200 / 300 / 420 | 🪙 10 | 🪙 20 | 🪙 40 | 🪙 80 | 🪙 160 |
+| cannon | single target (the boarder nearest the heart first, else a ship; 55% of its balls hit a boarder, 85% a ship); damage 10 / 16 / 24 / 30 / 38; range 28 / 31 / 34 / 36 / 38; reload 1.5 / 1.3 / 1.1 / 1.05 / 1.0 s | 🪙 30 | 🪙 60 | 🪙 120 | 🪙 240 | 🪙 480 |
+| mortar | area damage (radius 4) to all ships and boarders near the impact; damage 14 / 22 / 32 / 42 / 54; range 36 / 40 / 44 / 46 / 48; reload 3.5 / 3.0 / 2.6 / 2.4 / 2.2 s; cannot hit ships closer than 8 | 🪙 60 | 🪙 120 | 🪙 240 | 🪙 480 | 🪙 960 |
+| watchtower | +8 / +12 / +14 / +16 / +18 range to all towers, fog sight bonus; from level 3 +5% / +10% / +15% damage to every cannon and mortar | 🪙 40 | 🪙 80 | 🪙 160 | 🪙 320 | 🪙 640 |
+| house | +5 / +10 loot per won wave | 🪙 50 | 🪙 100 | — | — | — |
 
 **Spots on your island (22):** `wall_1`…`wall_6` (shore walls), `cannon_1`…`cannon_7` (cannon **or** mortar: the player chooses at the first build; an upgrade keeps the kind), `tower_1` (watchtower), `house_1`, `house_2` (house), and the **inner ring** `wall_7`…`wall_12` (wall; added 12 Nov for boarding, §12). Final ids, decided by the backend build (D036): the old `cannon_1`…`cannon_4` keep their ids, so built rows stay valid, and `cannon_5`…`cannon_7` are new. The ring walls are ordinary walls (same prices, levels and unlocks: level 1 from the start) placed around the island's heart on the paths the boarders take: `wall_7` east (8.5, 2), `wall_8` and `wall_9` on the south cross path (4.5, 9) and (−4, 9.5), `wall_10` west north of the cabin (−9.5, −1), `wall_11` and `wall_12` on the north cross path (−4, −5.5) and (4, −5.5). The database allows them through `supabase/migrations/20261112020000_inner_walls.sql`; the server lists them in `GET /api/island` after `house_2`.
 
