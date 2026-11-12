@@ -48,7 +48,7 @@ export const CONFIG = freeze({
     raider: { hp: 18, speed: 3.4, damage: 3, interval: 1.3, crew: 2 },       // wave 12+: fast red-sailed sloops
     ironclad: { hp: 150, speed: 1.35, damage: 8, interval: 2, crew: 4 },     // wave 30+: iron-plated brigs
     dreadnought: { hp: 400, speed: 1.2, damage: 14, interval: 2, crew: 9 },  // wave 50+: the boss warships (no extra boss hp)
-    redtide: { hp: 1500, speed: 1.0, damage: 18, interval: 2, crew: 12 },    // wave 100: Captain Redtide's own ship
+    redtide: { hp: 1200, speed: 1.0, damage: 18, interval: 2, crew: 12 },    // wave 100: Captain Redtide's own ship (1200 × the hp curve)
   },
   // Boarding (TOWER-DEFENSE.md §12): an anchored ship lets its crew climb out one by one; they walk inland
   // to the island's heart, hack every standing wall in their way, and a boarder who reaches the heart
@@ -73,8 +73,11 @@ export const CONFIG = freeze({
   },
   // The difficulty curve to wave 100: hp, speed and damage grow with the wave number (× per ship kind).
   curve: {
-    hpFrom: 4, hpPerWave: 0.07,       // hp × (1 + hpPerWave × (wave − hpFrom)) from wave hpFrom on
-    hpLateFrom: 30, hpLatePerWave: 0.015, // and a little faster after wave 30 (the tiers bring the rest)
+    // hp × (1 + each step's perWave over the waves it covers, [from, perWave]): +7% a wave from wave 4 (waves
+    // 1–29 as TOWER-DEFENSE.md §8), +28% a wave from 30 to 50 (levels 4–5, research and the whole crew answer
+    // it), then the hulls stay and the crowd, the warships and the tiers carry the rest, so a full, strong
+    // crew can still win the final battle (GAME-V3.md §4.1, tests/pirates/late-game.test.js).
+    hpSteps: [[4, 0.07], [30, 0.28], [50, 0]],
     speedPerWave: 0.004, speedMax: 1.35,
     damageFrom: 10, damagePerWave: 0.04,
     damageLateFrom: 30, damageLatePerWave: 0.01, // past wave 30 the hits grow slower: the tiers and the numbers carry it
@@ -94,11 +97,15 @@ export const CONFIG = freeze({
   },
   // Towers by level (index 0 = level 1). Cannon: one ball at one ship. Mortar: a shell on an arc that
   // hurts every ship within `radius` of the impact, never at ships closer than minRange.
+  // Levels 4 and 5 (the tower tiers of the campaign, docs/GAME-V3.md §4.1) open after waves 12, 15 and 20.
+  // A watchtower's boost multiplies the damage of every cannon and mortar (levels 3 to 5).
   levels: {
-    cannon: [{ damage: 10, range: 28, reload: 1.5 }, { damage: 16, range: 31, reload: 1.3 }, { damage: 24, range: 34, reload: 1.1 }],
-    mortar: [{ damage: 14, range: 36, reload: 3.5 }, { damage: 22, range: 40, reload: 3.0 }, { damage: 32, range: 44, reload: 2.6 }],
-    wall: [{ hp: 60 }, { hp: 120 }, { hp: 200 }],
-    watchtower: [{ range: 8 }, { range: 12 }],
+    cannon: [{ damage: 10, range: 28, reload: 1.5 }, { damage: 16, range: 31, reload: 1.3 }, { damage: 24, range: 34, reload: 1.1 },
+      { damage: 30, range: 36, reload: 1.05 }, { damage: 38, range: 38, reload: 1.0 }],
+    mortar: [{ damage: 14, range: 36, reload: 3.5 }, { damage: 22, range: 40, reload: 3.0 }, { damage: 32, range: 44, reload: 2.6 },
+      { damage: 42, range: 46, reload: 2.4 }, { damage: 54, range: 48, reload: 2.2 }],
+    wall: [{ hp: 60 }, { hp: 120 }, { hp: 200 }, { hp: 300 }, { hp: 420 }],
+    watchtower: [{ range: 8, boost: 1 }, { range: 12, boost: 1 }, { range: 14, boost: 1.05 }, { range: 16, boost: 1.1 }, { range: 18, boost: 1.15 }],
     house: [{}, {}],
   },
   mortar: { radius: 4, minRange: 8, flight: 1.3, flightPerUnit: 0.025, scatter: 1.2, firstReload: 1 },
@@ -316,7 +323,8 @@ export function fleetSize(wave) {
 export function curveFor(wave) {
   const K = CONFIG.curve;
   return {
-    hp: round2(1 + K.hpPerWave * Math.max(0, wave - K.hpFrom) + K.hpLatePerWave * Math.max(0, wave - K.hpLateFrom)),
+    hp: round2(1 + K.hpSteps.reduce((sum, [from, perWave], i) =>
+      sum + perWave * Math.max(0, Math.min(wave, K.hpSteps[i + 1]?.[0] ?? Infinity) - from), 0)),
     speed: round2(Math.min(K.speedMax, 1 + K.speedPerWave * (wave - 1))),
     damage: round2(1 + K.damagePerWave * Math.max(0, Math.min(wave, K.damageLateFrom) - K.damageFrom)
       + K.damageLatePerWave * Math.max(0, wave - K.damageLateFrom)),
@@ -334,7 +342,7 @@ function shuffle(list, random) {
 /**
  * createWave({seed, wave, weather: {ships, fog}, island: {hp}, defenses: [{id, kind, level, x, z}],
  *   crew: {gunner, carpenter, lookout}, boss, flagship, countdown, coast, lanes}).
- * level (1-3) and crew are optional: an old caller without them gets level 1 and no crew. boss is
+ * level (1-5) and crew are optional: an old caller without them gets level 1 and no crew. boss is
  * optional too: without it every 5th wave is a boss wave (TOWER-DEFENSE.md §1), never with the flagship.
  * Inputs to step(): {type: 'fire', cannonId, targetId}, {type: 'repair', wallId, skills},
  * {type: 'rebuild', wallId, skills}, {type: 'lamps_lit'},
@@ -360,7 +368,8 @@ export function createWave(options = {}) {
   const boss = typeof options?.boss === 'boolean' ? options.boss : !withFlagship && waveNumber % C.boss.every === 0;
   const defenses = readDefenses(options?.defenses), crew = readCrew(options?.crew);
   const curve = curveFor(waveNumber);
-  const towerBonus = Math.max(0, ...defenses.filter(item => item.kind === 'watchtower').map(item => C.levels.watchtower[item.level - 1].range));
+  const watchtowers = defenses.filter(item => item.kind === 'watchtower').map(item => C.levels.watchtower[item.level - 1]);
+  const towerBonus = Math.max(0, ...watchtowers.map(item => item.range)), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
   const S = C.specs, spotters = defenses.filter(item => item.kind === 'watchtower' && item.spec === 'spotter');
   const signal = defenses.some(item => item.kind === 'watchtower' && item.spec === 'signal_fire') ? S.signal_fire.warn : 0;
   let fogShare = waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog;
@@ -373,7 +382,7 @@ export function createWave(options = {}) {
     const range = stats.range + towerBonus + (spec.range ?? 0);
     // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
     const spotted = spotters.some(tower => distance(tower.x, tower.z, item.x, item.z) <= S.spotter.radius) ? S.spotter.damage : 1;
-    return { ...item, damage: round2(stats.damage * (spec.damage ?? 1) * spotted), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1)),
+    return { ...item, damage: round2(stats.damage * (spec.damage ?? 1) * spotted * boost), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1)),
       range, sight: range * fogShare, manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0 };
   });
   const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
