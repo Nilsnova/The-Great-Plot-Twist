@@ -182,6 +182,10 @@ select friends.island_owner, friends.player_id, 'member', friends.first_at, frie
      group by r.island_owner, p.player_id
   ) friends
  where friends.rank <= 9
+   -- First run only: an island that already has members keeps them, so running this again by hand
+   -- after live joins and leaves never goes past the cap of 10.
+   and not exists (select 1 from public.island_members m
+                    where m.island_owner = friends.island_owner and m.role = 'member')
 on conflict (island_owner, player_id) do nothing;
 
 

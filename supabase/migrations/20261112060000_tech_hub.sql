@@ -137,7 +137,8 @@ comment on column public.islands.wreck_paid is
 create table if not exists public.island_research (
   island_owner  uuid not null references public.islands (player_id) on delete cascade,
   branch        text not null,
-  researched_by uuid not null references public.profiles (id) on delete cascade,
+  -- set null, not cascade: research belongs to the island, so it stays when the member who paid deletes their account.
+  researched_by uuid references public.profiles (id) on delete set null,
   coins_paid    integer not null,
   ref           text not null,
   researched_at timestamptz not null default now(),
