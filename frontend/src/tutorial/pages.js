@@ -30,7 +30,7 @@ export const TUTORIAL_PAGES = Object.freeze([
     art: [art('captain-musket-2.png', 48, 32, 3), art('pirate-sloop-1.png', 64, 64, 2)]},
   {id: 'ashore', title: 'Pirates come ashore',
     text: ['Pirates that reach the shore climb out and attack on foot.',
-      'Walls stop them; walk up to a broken wall and press E to repair it.', 'Your musket and cutlass beat them.'],
+      'Walls stop them: press E at a damaged wall to repair it, at a broken one to rebuild it.', 'Your gun beats them, and up close F swings your cutlass.'],
     alt: 'A pirate sloop, a cracked wall and your captain with a musket',
     art: [art('pirate-sloop-1.png', 64, 64, 1), art('island-wall-damaged.png', 48, 48, 2), art('captain-musket-1.png', 48, 32, 2)]},
   {id: 'crew', title: 'Crew and captain skills',
