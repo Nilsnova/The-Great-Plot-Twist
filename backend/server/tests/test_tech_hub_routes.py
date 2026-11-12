@@ -65,6 +65,9 @@ def test_research_opens_after_wave_eight_and_sends_the_price_of_islands_json():
         "p_action_uid": "click-0001",
         "p_price": 220,
         "p_unlock_wave": 8,
+        "p_tier": 1,
+        "p_choice": None,
+        "p_change": False,
     }
 
 

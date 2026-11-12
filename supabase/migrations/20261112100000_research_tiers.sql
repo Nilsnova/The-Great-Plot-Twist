@@ -106,8 +106,8 @@ alter table public.island_research drop constraint if exists island_research_cho
 alter table public.island_research
   add constraint island_research_choice_fits check (
     (choice_2 is null or (branch, choice_2) in (
-      ('cannon', 'gun_drill'), ('cannon', 'long_guns'),
-      ('mortar', 'shell_drill'), ('mortar', 'heavy_shells'),
+      ('cannon', 'rapid_2'), ('cannon', 'long_guns'),
+      ('mortar', 'quick_fuse'), ('mortar', 'heavy_shells'),
       ('wall', 'mason_drill'), ('wall', 'thick_walls'),
       ('watchtower', 'lookout_drill'), ('watchtower', 'high_tower')
     ))
@@ -220,8 +220,8 @@ begin
      or p_change is null
      or (p_tier = 1 and p_choice is not null)
      or (p_tier in (2, 3) and (p_choice is null or (p_branch, p_tier, p_choice) not in (
-       ('cannon', 2, 'gun_drill'), ('cannon', 2, 'long_guns'),
-       ('mortar', 2, 'shell_drill'), ('mortar', 2, 'heavy_shells'),
+       ('cannon', 2, 'rapid_2'), ('cannon', 2, 'long_guns'),
+       ('mortar', 2, 'quick_fuse'), ('mortar', 2, 'heavy_shells'),
        ('wall', 2, 'mason_drill'), ('wall', 2, 'thick_walls'),
        ('watchtower', 2, 'lookout_drill'), ('watchtower', 2, 'high_tower'),
        ('cannon', 3, 'broadside'), ('cannon', 3, 'grapeshot'),

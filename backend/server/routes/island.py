@@ -36,7 +36,7 @@ GET /api/island
                                   "tierWaves": [8, 15, 25], "branches": [{"branch": "cannon",
                                   "name": "Cannon skills", "price": 180, "prices": [180, 360, 630],
                                   "specs": [{"id": "rapid", "name": "Rapid"}, ...],
-                                  "tier2": [{"id": "gun_drill", "name": "Gun drill"}, ...],
+                                  "tier2": [{"id": "rapid_2", "name": "Rapid II"}, ...],
                                   "tier3": [{"id": "broadside", "name": "Broadside"}, ...]},
                                   ...]},
                      "wreck": {"paid": 125, "goal": 500, "gifts": [25, 100]}}}

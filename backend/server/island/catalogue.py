@@ -75,8 +75,8 @@ RESEARCH_SPECS = {
 # 20261112100000_research_tiers.sql and frontend/src/campaign/tech.js list the same ids.
 RESEARCH_TOP_TIER = 3
 RESEARCH_BONUSES = {
-    "cannon": ("gun_drill", "long_guns"),
-    "mortar": ("shell_drill", "heavy_shells"),
+    "cannon": ("rapid_2", "long_guns"),
+    "mortar": ("quick_fuse", "heavy_shells"),
     "wall": ("mason_drill", "thick_walls"),
     "watchtower": ("lookout_drill", "high_tower"),
 }

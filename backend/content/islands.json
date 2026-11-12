@@ -431,8 +431,8 @@
         ],
         "tier2": [
           {
-            "id": "gun_drill",
-            "name": "Gun drill"
+            "id": "rapid_2",
+            "name": "Rapid II"
           },
           {
             "id": "long_guns",
@@ -474,8 +474,8 @@
         ],
         "tier2": [
           {
-            "id": "shell_drill",
-            "name": "Shell drill"
+            "id": "quick_fuse",
+            "name": "Quick fuse"
           },
           {
             "id": "heavy_shells",

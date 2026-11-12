@@ -52,7 +52,7 @@ def best(database, player, wave):
 
 
 def research(database, player, branch, uid, price=60, wave=8, owner=OWNER):
-    # Tier 1 of the research tiers of 20261112100000_research_tiers.sql (test_research_tiers_sql.py).
+    # Tier 1 of 20261112100000_research_tiers.sql (the other tiers: test_research_tiers_sql.py).
     as_server(database)
     return call(
         database,
