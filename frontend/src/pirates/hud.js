@@ -2,7 +2,8 @@
 // the musket button (bottom right: hold it or F to keep firing, its frame fills while it reloads), the
 // 10-second countdown, the boss warning, the "E · Fire" / "E · Repair" prompt next to a cannon or wall,
 // the end banner and the break between waves (a big "Next wave" button and the "Auto next wave" switch).
-// Captain health (GAME-V3.md §3): your hp under the wave bar, the "You have fallen" card with its timer,
+// Captain health (GAME-V3.md §3): your hp under the wave bar, the slim "You have fallen" strip with its timer
+// (inside the bar, so the fight stays in view),
 // a timer over every fallen captain, and the prompt held down (E or a finger) to help a teammate up.
 // DOM only, built with the kit's safe text helpers; the controller decides what to show.
 import './pirates.css';
@@ -22,8 +23,7 @@ export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'C
 export const healthText = ({ hp, maxHp }) => `Captain ${Math.max(0, Math.ceil(hp))} / ${maxHp}`;
 export const clockText = seconds => { const s = Math.max(0, Math.floor(seconds) || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 export const DOWN_TITLE = 'You have fallen';
-export const downLine = alone => (alone ? 'Every captain is down.'
-  : 'A teammate can stand next to you and hold E to help you up. If nobody does, you stand up at the break.');
+export const downLine = alone => (alone ? 'every captain is down' : 'a teammate can hold E next to you');
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {},
   onPromptHold = () => {}, reducedMotion = () => false }) {
@@ -47,18 +47,21 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   prompt.addEventListener('keydown', event => { if ((event.code === 'Space' || event.code === 'Enter') && !event.repeat && !promptMeter.hidden) { event.preventDefault(); onPromptHold(true); } });
   prompt.addEventListener('keyup', event => { if (event.code === 'Space' || event.code === 'Enter') letPromptGo(); });
   prompt.addEventListener('contextmenu', event => { if (!promptMeter.hidden) event.preventDefault(); });
-  // Your hp under the wave bar (role=status with the bar), the card while you are down, the timers.
+  // Your hp under the wave bar (role=status with the bar), the strip while you are down, the timers.
   const health = node('span', 'pirate-health'), healthLabel = node('span', 'pirate-health-text'), healthMeter = node('span', 'pirate-health-meter');
   const healthFill = node('span', 'pirate-health-fill'); healthMeter.append(healthFill); healthMeter.setAttribute('aria-hidden', 'true');
   health.append(healthLabel, healthMeter); health.hidden = true;
-  const down = node('div', 'pirate-down'); down.setAttribute('role', 'status'); down.hidden = true;
+  // While you are down: one slim line under the wave's numbers, "You have fallen · a teammate can hold E
+  // next to you · 0:12", inside the bar (its role=status reads it once; the ticking clock is not read out).
+  const down = node('div', 'pirate-down'); down.hidden = true;
   const downTitle = node('strong', 'pirate-down-title', DOWN_TITLE), downLineEl = node('span', 'pirate-down-line'), downClock = node('span', 'pirate-down-clock');
+  downClock.setAttribute('aria-hidden', 'true');
   down.append(downTitle, downLineEl, downClock);
   const marks = node('div', 'pirate-marks'); marks.setAttribute('aria-hidden', 'true');
   const markPool = new Map();
   const banner = node('div', 'pirate-banner'); banner.setAttribute('role', 'status'); banner.hidden = true;
   const loot = node('span', 'pirate-bar-loot'); loot.hidden = true;
-  const extra = node('span', 'pirate-bar-extra'); bar.append(extra); extra.append(health, loot);
+  const extra = node('span', 'pirate-bar-extra'); bar.append(extra, down); extra.append(health, loot);
   // The captain's musket (§10): a big button, held to keep firing at the nearest ship in range (or F).
   const musket = node('button', 'kit-button pirate-musket'); musket.type = 'button'; musket.hidden = true;
   const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
@@ -91,7 +94,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   pause.append(close, pauseTitle, pauseLine, next, hold, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
-  layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini, down); container.append(layer);
+  layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
   let lastHealth = '', lastDown = '', ownHp = null;
 
@@ -144,13 +147,13 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       healthFill.style.width = `${Math.round(share * 100)}%`;
       healthFill.dataset.level = share > .5 ? 'good' : share > .25 ? 'low' : 'bad';
     },
-    // While you are down: {seconds, alone}; null hides the card.
+    // While you are down: {seconds, alone}; null hides the strip.
     down(info) {
       const key = info ? `${info.alone === true}|${clockText(info.seconds)}` : '';
       if (key === lastDown) return;
       lastDown = key; down.hidden = !info;
       if (!info) return;
-      downLineEl.textContent = downLine(info.alone === true); downClock.textContent = `⏱ ${clockText(info.seconds)}`;
+      downLineEl.textContent = downLine(info.alone === true); downClock.textContent = clockText(info.seconds);
     },
     // A timer over every fallen captain: [{id, x, y, seconds, mine}] in px of the container.
     marks(list = []) {

@@ -75,7 +75,7 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 .pirate-hud>.pirate-next-mini{position:absolute;left:50%;top:104px;transform:translateX(-50%);min-height:48px;padding:8px 20px;font:700 18px/1.2 var(--u-font)}
 @media(max-width:760px){.pirate-hud>.pirate-next-mini{top:160px}}
 .pirate-next,.pirate-next-mini,.pirate-musket,.pirate-musket-meter,.pirate-musket-fill,.pirate-bar-meter,.pirate-bar-fill,.pirate-countdown-words,.pirate-bell-prompt,.pirate-prompt,.pirate-auto,.pirate-break-close{border-radius:var(--u-radius-xs)}
-/* Captain health (GAME-V3.md §3): your hp under the wave bar, the card while you are down, the timers over
+/* Captain health (GAME-V3.md §3): your hp under the wave bar, the strip while you are down, the timers over
    fallen captains, and the prompt held down to help a teammate up. */
 .pirate-health{display:flex;align-items:center;gap:6px;font:600 15px/1.2 var(--u-font)}
 .pirate-health-text{white-space:nowrap}
@@ -84,9 +84,13 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 .pirate-health-fill[data-level=low]{background:#f3c35c}.pirate-health-fill[data-level=bad]{background:#d8553f}
 .pirate-health.pirate-flash{animation:pirate-health-hit .35s steps(3) both}
 @keyframes pirate-health-hit{0%,60%{color:#ffb0a0}100%{color:inherit}}
-.pirate-down{position:absolute;left:50%;top:104px;transform:translateX(-50%);width:max-content;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;background:var(--u-parch);color:var(--u-brown);padding:14px 24px;max-width:min(460px,calc(100vw - 32px));box-sizing:border-box;box-shadow:0 0 0 3px #d8553f,var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none}
-.pirate-down-title{font:700 28px/1.15 var(--u-serif);color:#b8432f}.pirate-down-line{font:600 17px/1.3 var(--u-font)}
-.pirate-down-clock{font:700 22px/1.2 var(--u-font);color:var(--u-pink)}
+/* While you are down: one slim strip inside the wave bar, under its numbers, so the fight stays in view
+   ("You have fallen · a teammate can hold E next to you · 0:12"; it wraps to two short lines on a phone). */
+.pirate-down{display:block;margin:2px -8px 0;padding:3px 8px;text-align:center;text-wrap:balance;background:#4a2a24;color:#ffe08a;font:600 14px/1.3 var(--u-font);box-shadow:inset 0 0 0 1px #d8553f;border-radius:var(--u-radius-xs)}
+.pirate-down[hidden]{display:none}
+.pirate-down-title{font-weight:800;color:#ffb0a0}
+.pirate-down-line::before,.pirate-down-clock::before{content:' · ' / '';color:#d8a07a}
+.pirate-down-clock{font-weight:800;font-variant-numeric:tabular-nums;color:#fff}
 .pirate-hud>.pirate-marks{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .pirate-mark{position:absolute;left:0;top:0;transform:translate(-50%,-100%);background:#4a2a24;color:#ffe08a;padding:2px 8px;font:700 14px/1.2 var(--u-font);border-radius:var(--u-radius-sm);box-shadow:0 0 0 2px #d8553f;white-space:nowrap}
 .pirate-mark.is-mine{box-shadow:0 0 0 2px var(--u-gold)}
@@ -94,5 +98,5 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 .pirate-prompt-meter{display:block;flex-basis:100%;height:8px;background:var(--u-deep);border:1px solid var(--u-line)}
 .pirate-prompt-meter[hidden]{display:none}
 .pirate-prompt-fill{display:block;height:100%;width:0;background:var(--u-gold)}
-@media(max-width:760px){.pirate-down{top:158px;padding:10px 14px}.pirate-down-title{font-size:22px}.pirate-down-line{font-size:15px}}
+@media(max-width:760px){.pirate-down{font-size:13px;margin:2px -6px 0;padding:2px 6px}}
 @media(prefers-reduced-motion:reduce){.pirate-health.pirate-flash{animation:none}.pirate-health-fill{transition:none}}

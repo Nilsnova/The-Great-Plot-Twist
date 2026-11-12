@@ -318,12 +318,12 @@ describe('captain health: the controller', () => {
 });
 
 describe('captain health: the HUD words and the art', () => {
-  it('says your hp, the fallen card and the timers in plain words', () => {
+  it('says your hp, the fallen strip and the timers in plain words', () => {
     expect(healthText({ hp: 72.4, maxHp: 100 })).toBe('Captain 73 / 100');
     expect([clockText(0), clockText(9.7), clockText(75)]).toEqual(['0:00', '0:09', '1:15']);
     expect(DOWN_TITLE).toBe('You have fallen');
-    expect(downLine(false)).toMatch(/hold E to help you up/);
-    expect(downLine(true)).toBe('Every captain is down.');
+    expect(downLine(false)).toBe('a teammate can hold E next to you');
+    expect(downLine(true)).toBe('every captain is down');
   });
   it('draws a fallen captain in each of the ten lobby colours', () => {
     const frames = peopleFrames();
