@@ -19,7 +19,8 @@ describe('clean cartoon art', () => {
     // The pixel boarders (16 px wide) are replaced by the cartoon ones (24 px, the cutlass needs the room).
     expect(PIXEL_ONLY_IDS).toEqual(['pirate-boarder-1', 'pirate-boarder-2', 'pirate-boarder-3']);
     expect(frames['captain-cutlass'].slice(0, 3)).toEqual(pirateDimensions['captain-musket-1']);
-    for (const id of CARTOON_EXTRA_IDS) expect(frames[id].slice(0, 3)).toEqual([24, 32, 3]);
+    // The boarders keep the captain's box; a fallen captain (captain health, GAME-V3.md §3) lies in a 40 x 24 one.
+    for (const id of CARTOON_EXTRA_IDS) expect(frames[id].slice(0, 3)).toEqual(id.startsWith('captain-down-') ? [40, 24, 3] : [24, 32, 3]);
   });
   it('draws the island: level art, pips, the explorer frames and the scenery of the home island', () => {
     const names = [...Object.values(LEVEL_ART).flat(), PIP_ART, 'cabin', 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft', 'bench', 'barrel', 'lantern',

@@ -248,7 +248,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
     const captainDown=!!(waves?.island.captainDown||waves?.point?.controller.captainDown);controller.player.visible=!captainDown;
-    const speed=controller.update(delta, active && !outsideBlocked() && !captainDown);
+    const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !outsideBlocked());
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
