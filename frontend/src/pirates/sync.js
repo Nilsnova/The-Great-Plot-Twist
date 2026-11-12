@@ -19,7 +19,7 @@ export const TICK_SECONDS = CONFIG.tick;
 export const INPUT_LEAD_TICKS = 4;
 export const MAX_WAVE_SECONDS = 900;
 export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot',
-  rebuild: 'wall_rebuild', captain_strike: 'captain_strike' });
+  rebuild: 'wall_rebuild', captain_strike: 'captain_strike', captain_move: 'captain_move', captain_revive: 'captain_revive' });
 export const MAX_PLAYERS = 10; // GAME-V3.md §2: up to ten players defend one island together (was 4)
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
@@ -47,6 +47,13 @@ export function toMessage(input, { by, seq, tick, waveId }) {
   // The cutlass (TOWER-DEFENSE.md §12): the musket shot's fields and the striker's skills (Brawler, §14).
   if (input.type === 'captain_strike') return { type: ROOM_EVENTS.captain_strike,
     payload: { ...base, targetId: input.targetId, level: input.level, x: input.x, z: input.z, skills: readSkills(input.skills) } };
+  // Captain health (GAME-V3.md §3): where the sender's captain stands (their lobby colour for the fallen
+  // drawing; away: true when they left the island), and a revive the server already charged.
+  if (input.type === 'captain_move') {
+    const colour = Number.isInteger(input.colour) && input.colour >= 0 && input.colour <= 9 ? { colour: input.colour } : {};
+    return { type: ROOM_EVENTS.captain_move, payload: { ...base, x: input.x, z: input.z, ...colour, ...(input.away === true ? { away: true } : {}) } };
+  }
+  if (input.type === 'captain_revive') return { type: ROOM_EVENTS.captain_revive, payload: { ...base, targetId: input.targetId, x: input.x, z: input.z } };
   return null;
 }
 
@@ -88,6 +95,19 @@ export function readMessage(type, payload, waveId) {
     if (![x, z].every(isAim) || !isSkillList(skills)) return null;
     // The striker is the sender: a message cannot swing somebody else's cutlass.
     return { by, seq, tick, input: { type: 'captain_strike', by, targetId, level, x, z, skills: readSkills(skills) } };
+  }
+  if (type === ROOM_EVENTS.captain_move) {
+    const { x, z, colour, away } = payload;
+    if (![x, z].every(isAim) || (colour !== undefined && !(Number.isInteger(colour) && colour >= 0 && colour <= 9))) return null;
+    if (away !== undefined && away !== true) return null;
+    // The sender moves only their own captain.
+    return { by, seq, tick, input: { type: 'captain_move', by, x, z, ...(colour !== undefined ? { colour } : {}), ...(away ? { away: true } : {}) } };
+  }
+  if (type === ROOM_EVENTS.captain_revive) {
+    const { targetId, x, z } = payload;
+    if (typeof targetId !== 'string' || !BY.test(targetId) || targetId === by || ![x, z].every(isAim)) return null;
+    // The reviver is the sender (who paid for it on the server).
+    return { by, seq, tick, input: { type: 'captain_revive', by, targetId, x, z } };
   }
   return null;
 }

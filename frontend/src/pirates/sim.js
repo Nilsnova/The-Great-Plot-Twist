@@ -102,6 +102,17 @@ export const CONFIG = freeze({
       levels: [{ damage: 14 }, { damage: 18 }, { damage: 24 }, { damage: 30 }, { damage: 38 }],
     },
   },
+  // Captain health (GAME-V3.md §3, lane H). Every captain who sent a position (captain_move) has hp. A
+  // boarder within `reach` of a standing captain goes for the nearest one (at most `crowd` boarders on one
+  // captain; the rest walk on to the heart), strikes from `contact` once every `every` seconds (damage × the
+  // wave's damage curve) and lets go when the captain is more than `leash` away. `most` captains per wave. At 0 hp the captain falls: no moving, shooting or building. A
+  // teammate within revive.reach who holds E for revive.hold seconds (and pays 20 + 5 × wave coins on the
+  // server) stands them up with revive.share of their hp; a new wave starts everybody at full hp. A captain
+  // not heard for `stale` seconds is away (no target, not counted). Every captain down: the wave is lost.
+  health: {
+    hp: 100, reach: 3, leash: 5, contact: 1, damage: 4, every: 1, crowd: 3, stale: 8, most: 12,
+    revive: { reach: 2.2, slack: .8, hold: 2, share: .5, base: 20, perWave: 5 },
+  },
   flagship: {
     afterShips: 2,            // appears after this many escorts
     armor: 0,                 // damage multiplier before the three lamps are lit
@@ -209,6 +220,11 @@ export function warshipsFor(wave, boss = wave % CONFIG.boss.every === 0) {
   const regular = wave >= K.warshipsFrom ? 1 + Math.floor((wave - K.warshipsFrom) / K.warshipsEvery) : 0;
   return { bosses, regular };
 }
+/** The coins a revive costs on `wave` (paid by the reviver, checked by the server): 20 + 5 × wave. */
+export function revivePrice(wave) {
+  const R = CONFIG.health.revive, n = Number.isInteger(wave) && wave > 0 ? Math.min(wave, CONFIG.maxWave) : 1;
+  return R.base + R.perWave * n;
+}
 /** The fleet's size before the weather: steep for the first waves, then slower. */
 export function fleetSize(wave) {
   const F = CONFIG.fleet;
@@ -243,6 +259,9 @@ function shuffle(list, random) {
  * level, skills and weapon; targetId a ship or a boarder and/or the aim point ax, az) and
  * {type: 'captain_strike', by, targetId, level, skills, x, z} (the cutlass, a boarder within reach). The
  * skills are the sender's own (captain-stats.js). heart: {x, z, ring} where the boarders walk (TOWER-DEFENSE.md §12).
+ * Captain health (GAME-V3.md §3): {type: 'captain_move', by, x, z, colour?, away?} says where a captain stands
+ * (the first one adds them to the wave with full hp; away: true takes them out) and
+ * {type: 'captain_revive', by, targetId, x, z} stands a fallen teammate up (the server charged the reviver).
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
@@ -322,6 +341,8 @@ export function createWave(options = {}) {
   let started = countdown === 0 ? null : false, lastCountdown = null, lampsLit = false, endReason = null;
   let nextBoarderId = 1, killed = 0, landed = 0;
   const ships = [], wrecks = [], balls = [], shells = [], captains = new Map(), blades = new Map(), boarders = [];
+  // Captain health (GAME-V3.md §3): id -> {id, x, z, hp, maxHp, down, downAt, seen, colour, away}.
+  const H = C.health, party = new Map();
   let queued = [];
   const now = () => round2(ticks * C.tick);
   const flagshipAfloat = () => ships.some(ship => ship.kind === 'flagship') ||
@@ -400,7 +421,7 @@ export function createWave(options = {}) {
   // pierce shots); ax, az is the aim point (the cone's direction, the bomb's landing spot).
   function captainShot(input, events) {
     const by = captainBy(input);
-    if (!by || !finite(input.x) || !finite(input.z)) return;
+    if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
     const level = captainLevel(input), skills = readSkills(input.skills), stats = captainStats(level, skills, input.weapon), t = ticks * C.tick;
     // The named target: a ship or a boarder on foot (§12); every gun hits both where it makes sense.
     const named = findTarget(input.targetId);
@@ -465,7 +486,7 @@ export function createWave(options = {}) {
   // wind), and with Sweep every other boarder within sweepRadius of the struck one takes sweepShare.
   function captainStrike(input, events) {
     const by = captainBy(input);
-    if (!by || !finite(input.x) || !finite(input.z)) return;
+    if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
     const level = captainLevel(input), stats = captainStats(level, readSkills(input.skills));
     const blade = C.captain.cutlass, reach = blade.reach + blade.slack, t = ticks * C.tick;
     const reload = round2(blade.reload * stats.strikeReloadMultiplier);
@@ -491,6 +512,85 @@ export function createWave(options = {}) {
     damageBoarder(target, damage, `captain:${by}`, events, { captain: true, blade: true });
     const share = round2(damage * stats.sweepShare);
     for (const item of swept) damageBoarder(item, share, `captain:${by}`, events, { captain: true, blade: true, sweep: true });
+  }
+
+  // Captain health (GAME-V3.md §3). A captain is in the wave from their first captain_move; a shot or a
+  // blow of a known captain also says where they stand. A fallen captain's shots and blows do nothing.
+  const presentAt = (hero, t) => !hero.away && t - hero.seen <= H.stale + 1e-9;
+  function standing(by, input) {
+    const hero = party.get(by);
+    if (!hero) return true; // not in the party (an older client, a test): the gun works as before
+    if (hero.down) return false;
+    hero.seen = ticks * C.tick; hero.away = false; hero.x = input.x; hero.z = input.z;
+    return true;
+  }
+  function captainMove(input, events) {
+    const by = captainBy(input);
+    if (!by || !finite(input.x) || !finite(input.z)) return;
+    const t = ticks * C.tick;
+    let hero = party.get(by);
+    if (!hero) {
+      if (input.away === true || party.size >= H.most) return;
+      hero = { id: by, x: input.x, z: input.z, hp: H.hp, maxHp: H.hp, down: false, downAt: null, seen: t, colour: 0, away: false };
+      party.set(by, hero);
+      events.push({ type: 'captain_joined', t: now(), captainId: by, hp: hero.hp, x: round2(input.x), z: round2(input.z) });
+    }
+    hero.seen = t; hero.away = input.away === true;
+    if (Number.isInteger(input.colour) && input.colour >= 0 && input.colour <= 9) hero.colour = input.colour;
+    if (!hero.down) { hero.x = input.x; hero.z = input.z; } // a fallen captain stays where they fell
+  }
+  // A teammate next to a fallen captain (within revive reach of where the helper stood) stands them up.
+  function captainRevive(input, events) {
+    const by = captainBy(input), R = H.revive;
+    if (!by || !finite(input.x) || !finite(input.z) || typeof input.targetId !== 'string') return;
+    const helper = party.get(by), hero = party.get(input.targetId);
+    if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
+    if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
+    helper.seen = ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
+    hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * R.share));
+    events.push({ type: 'captain_revived', t: now(), captainId: hero.id, by, hp: hero.hp, x: round2(hero.x), z: round2(hero.z) });
+  }
+  // A boarder's blow at a captain; at 0 hp the captain falls and every boarder on them walks on.
+  function hurtCaptain(hero, boarder, events) {
+    const damage = Math.min(hero.hp, round2(H.damage * curve.damage));
+    hero.hp = round2(hero.hp - damage);
+    events.push({ type: 'captain_hit', t: now(), captainId: hero.id, boarderId: boarder.id, damage, hp: hero.hp,
+      x: round2(hero.x), z: round2(hero.z) });
+    if (hero.hp > 0) return;
+    hero.down = true; hero.downAt = now();
+    events.push({ type: 'captain_fell', t: now(), captainId: hero.id, x: round2(hero.x), z: round2(hero.z) });
+    for (const other of boarders) if (other.foe === hero.id) { other.foe = null; other.goal = null; if (other.state === 'fighting') other.state = 'walking'; }
+  }
+  // The captain a boarder goes for: the one it is on while they stand within the leash, else the nearest
+  // standing captain within reach (ties: the lower id), else none. O(captains) per boarder.
+  function foeOf(boarder) {
+    if (!party.size) return null;
+    const t = ticks * C.tick;
+    if (boarder.foe) {
+      const hero = party.get(boarder.foe);
+      if (hero && !hero.down && presentAt(hero, t) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9) return hero;
+      boarder.foe = null; boarder.goal = null;
+    }
+    let best = null, near = H.reach + 1e-9;
+    for (const hero of party.values()) {
+      if (hero.down || !presentAt(hero, t) || crowdOn(hero) >= H.crowd) continue;
+      const d = distance(boarder.x, boarder.z, hero.x, hero.z);
+      if (d < near - 1e-9 || (best && Math.abs(d - near) <= 1e-9 && hero.id < best.id)) { best = hero; near = d; }
+    }
+    if (best) { boarder.foe = best.id; boarder.goal = null; }
+    return best;
+  }
+  // How many boarders are on this captain already: at most H.crowd at once, the rest walk on.
+  const crowdOn = hero => { let n = 0; for (const other of boarders) if (other.foe === hero.id) n++; return n; };
+  // Every captain in the wave has fallen (at least one is in it): the island cannot hold.
+  function allFallen(t) {
+    let present = 0;
+    for (const hero of party.values()) {
+      if (!presentAt(hero, t)) continue;
+      if (!hero.down) return false;
+      present++;
+    }
+    return present > 0;
   }
 
   // A broken wall comes back at `share` of its hp: the rebuilder's rebuildShare (Master shipwright 60%),
@@ -526,6 +626,8 @@ export function createWave(options = {}) {
       lampsLit = true; // the beam strikes the flagship on the next tick, or as soon as it appears
     } else if (input.type === 'captain_shot') captainShot(input, events);
     else if (input.type === 'captain_strike') captainStrike(input, events);
+    else if (input.type === 'captain_move') captainMove(input, events);
+    else if (input.type === 'captain_revive') captainRevive(input, events);
   }
 
   function end(reason, events) {
@@ -610,10 +712,11 @@ export function createWave(options = {}) {
   // Its route is fixed when it lands (the shore wall at its landing, the ring wall it heads for, the
   // heart); a broken wall on it is rubble and skipped. Returns {kind: 'wall', wall, leg} (hack it),
   // {kind: 'point', leg} (walk there) or {kind: 'heart', leg} (walk there and hurt the island).
-  // attackCaptain (hook for lane H, captain health, not built yet): put "the nearest captain within
-  // reach" first here, e.g. return {kind: 'captain', by} from the captains' positions sent with their
-  // inputs, and let moveBoarder strike at it; keep it O(captains) per boarder (up to 10 players).
+  // attackCaptain (lane H, GAME-V3.md §3): first of all {kind: 'captain', hero}, the nearest standing
+  // captain within reach (foeOf, from the positions of captain_move), whom moveBoarder strikes.
   function pickBoarderTarget(boarder) {
+    const foe = foeOf(boarder);
+    if (foe) return { kind: 'captain', hero: foe };
     while (boarder.leg < boarder.route.length - 1) {
       const leg = boarder.route[boarder.leg];
       if (!(leg.wall && leg.wall.hp <= 0)) return leg.wall ? { kind: 'wall', wall: leg.wall, leg } : { kind: 'point', leg };
@@ -635,9 +738,34 @@ export function createWave(options = {}) {
         broken: wall.hp === 0, x: wall.x, z: wall.z });
       return false;
     }
+    if (boarder.state === 'fighting') {
+      // Toe to toe with a captain: a blow every `every` seconds while they stand within contact.
+      const target = pickBoarderTarget(boarder);
+      if (target.kind !== 'captain' || distance(boarder.x, boarder.z, target.hero.x, target.hero.z) > H.contact + .3) {
+        boarder.state = 'walking'; boarder.goal = null; return false;
+      }
+      if ((boarder.hitIn -= C.tick) > 1e-9) return false;
+      boarder.hitIn += H.every;
+      hurtCaptain(target.hero, boarder, events);
+      return false;
+    }
     let budget = boarder.speed * C.tick;
     while (budget > 1e-9) {
-      const target = pickBoarderTarget(boarder), leg = target.leg, heart = target.kind === 'heart';
+      const target = pickBoarderTarget(boarder);
+      if (target.kind === 'captain') {
+        // After a captain: walk up to them and start fighting.
+        const hero = target.hero, dx = hero.x - boarder.x, dz = hero.z - boarder.z, d = Math.hypot(dx, dz);
+        if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
+        if (d <= H.contact + 1e-9) {
+          boarder.state = 'fighting'; boarder.wallId = null; boarder.hitIn = H.every / 2; boarder.vx = boarder.vz = 0; return false;
+        }
+        const step = Math.min(budget, d - H.contact * .9);
+        boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
+        boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
+        if (step <= 1e-9) break;
+        continue;
+      }
+      const leg = target.leg, heart = target.kind === 'heart';
       const goal = boarder.goal ??= legPoint(boarder, leg), dx = goal.x - boarder.x, dz = goal.z - boarder.z, d = Math.hypot(dx, dz);
       const reach = heart ? B.heartRadius : .05;
       if (d <= reach) {
@@ -744,6 +872,7 @@ export function createWave(options = {}) {
       events.push({ type: 'island_damaged', t: now(), boarderId: boarder.id, damage, hp: islandHp, x: round2(boarder.x), z: round2(boarder.z) });
       if (islandHp <= 0) { end('island_lost', events); return; }
     }
+    if (party.size && allFallen(t)) { end('captains_fallen', events); return; }
     for (let i = balls.length - 1; i >= 0; i--) {
       const ball = balls[i];
       if (ball.impactAt > t + 1e-9) continue;
@@ -804,7 +933,7 @@ export function createWave(options = {}) {
   }
 
   function result() {
-    const survived = islandHp > 0 && !(endReason === 'timeout' && flagshipAfloat()) && endReason !== null;
+    const survived = islandHp > 0 && !(endReason === 'timeout' && flagshipAfloat()) && endReason !== null && endReason !== 'captains_fallen';
     return { survived, shipsSunk: sunk, boardersKilled: killed, islandHp, time: now() };
   }
 
@@ -825,7 +954,11 @@ export function createWave(options = {}) {
           hp: ship.hp, maxHp: ship.maxHp, state: ship.state, crew: ship.crew, ...(ship.boss ? { boss: true } : {}),
           ...(ship.kind === 'flagship' ? { exposed: lampsLit } : {}) })),
         boarders: boarders.map(item => ({ id: item.id, x: round2(item.x), z: round2(item.z), hp: item.hp, maxHp: item.maxHp,
-          state: item.state, wallId: item.wallId, facing: item.facing })),
+          state: item.state, wallId: item.wallId, facing: item.facing, foe: item.foe ?? null })),
+        // Captain health (GAME-V3.md §3), by id: present is false for a captain who is away or not heard lately.
+        party: [...party.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(hero => ({ id: hero.id,
+          x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
+          colour: hero.colour, present: presentAt(hero, t) })),
         wrecks: wrecks.map(item => ({ ...item })),
         walls: walls.map(wall => ({ id: wall.id, level: wall.level, hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
           broken: wall.hp <= 0, inner: wall.inner, rebuildReady: wall.hp <= 0 && t - wall.rebuildAt >= C.wall.rebuildCooldown - 1e-9 })),
@@ -842,6 +975,8 @@ export function createWave(options = {}) {
       };
     },
     get done() { return done; },
+    // Why the wave ended: all_sunk, timeout, island_lost or captains_fallen (null while it runs).
+    get endReason() { return endReason; },
     result,
   };
 }

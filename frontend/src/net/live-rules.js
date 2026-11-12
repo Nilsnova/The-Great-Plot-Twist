@@ -75,8 +75,10 @@ export const PIRATE_POINT_PLACE = 'pirate_point';
 // a broken wall put back up (§12); island_changed says "somebody built or upgraded here, read the island
 // again" (co-op builds, §6), and carries no wave. game_hello and game_state are the game's lobby and pause
 // (GAME-V3.md §2, src/island/game-room.js): no wave either.
+// captain_move (where a captain stands, so the boarders find them) and captain_revive (a fallen teammate
+// stood up) are captain health (GAME-V3.md §3).
 export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
-  'wall_rebuild', 'captain_strike', 'game_hello', 'game_state'];
+  'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive'];
 export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second) in a small room
 export const MIN_WAVE_GAP_MS = 150; // and accept one per captain and kind this often
 // Up to 10 players on one island (GAME-V3.md §2). Every message in a wave room is delivered to every other
@@ -368,6 +370,12 @@ const WAVE_DATA = {
   game_hello: data => hasKeys(data, ['who']) && typeof data.who === 'string' && WAVE_BY.test(data.who),
   game_state: data => hasKeys(data, ['who', 'started', 'paused', 'first']) && typeof data.who === 'string' && WAVE_BY.test(data.who)
     && typeof data.started === 'boolean' && typeof data.paused === 'boolean' && typeof data.first === 'boolean',
+  // Captain health: a position (the lobby colour 0-9 and away: true optional), and a revive of a teammate.
+  captain_move: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'x', 'z'], ['colour', 'away']) && [data.x, data.z].every(isCoord)
+    && (!Object.hasOwn(data, 'colour') || (Number.isInteger(data.colour) && data.colour >= 0 && data.colour <= 9))
+    && (!Object.hasOwn(data, 'away') || data.away === true),
+  captain_revive: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'x', 'z']) && typeof data.targetId === 'string'
+    && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord),
 };
 const NO_WAVE = ['island_changed', 'game_hello', 'game_state'];
 export function readWaveMessage(event, payload) {
